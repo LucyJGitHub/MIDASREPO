@@ -1,0 +1,98 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE PDP New Available Balance Computation')      */
+/*******************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LE000495 - Midas LE PDP Available Balance Computation       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CLE164 *CREATE     Date 18Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2014')
+ 
+             CHGJOB     SWS(00000000)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Main Processing Control */
+             SNDPGMMSG  MSG('Midas LE PDP New Available Balance +
+                          Computation') TOMSGQ(MRUNQ)
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
+                           VALUE('N'))
+ 
+/** Check the current status of this component */
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Update Component Status */
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             CALL       PGM(LE000495)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Reset Component Status */
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Commit Database Changes */
+             COMMIT
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Job terminated, component does not +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             IF         COND(&FLAG *EQ 'Y') THEN(ENDCMTCTL)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+             ENDPGM

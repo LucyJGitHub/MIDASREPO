@@ -1,0 +1,546 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - P&P Retrieval Routine')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4010E - Periods & Penalities Retrieval Routine         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDUF  E           K        DISK         KCOMIT       A
+      *
+      *****************************************************************
+      *
+      ** Convert counter to (binary) bit settings
+      *
+     IDSCVT       DS
+     I                                    B   1   20WEIGHT
+     I                                        2   2 BYTE
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Period and Penalty details
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      ** Constants
+      *
+     I              '0000000000'          C         CZEROS
+      *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   7
+      *
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  10
+     C                     PARM           PACSQ   2
+     C                     PARM           PDATE   50
+      *
+     C                     PARM           PEVNT   1
+     C                     PARM           PITEM   50
+     C                     PARM           PVDAT   50
+     C                     PARM           PMDAT   50
+     C                     PARM           PCEDE   50
+     C                     PARM           PFREQ   1
+     C                     PARM           PNDPD   30
+     C                     PARM           PNMPD   20
+     C                     PARM           PIRLI   1
+     C                     PARM           PTPRD   1
+      *
+     C                     PARM           PDRIB   2
+     C                     PARM           PDRIS  117
+     C                     PARM           PDICT   2
+     C                     PARM           PDCST   50
+     C                     PARM           PDRIC   10
+     C                     PARM           PDNIR   1
+     C                     PARM           PDRIF   1
+     C                     PARM           PDACP  24
+     C                     PARM           PNDID   50
+     C                     PARM           PDRDY   40
+      *
+     C                     PARM           PCRIB   2
+     C                     PARM           PCRIS  117
+     C                     PARM           PCICT   2
+     C                     PARM           PCCST   50
+     C                     PARM           PCRIC   10
+     C                     PARM           PCNIR   1
+     C                     PARM           PCRIF   1
+     C                     PARM           PCACP  24
+     C                     PARM           PNCID   50
+     C                     PARM           PCRDY   40
+      *
+     C                     PARM           PRTTD   5
+     C                     PARM           PDYBD   1
+     C                     PARM           PDRST   1
+     C                     PARM           PRTTC   5
+     C                     PARM           PDYBC   1
+     C                     PARM           PCRST   1
+     C                     PARM           PDAYM   20
+     C                     PARM           PKEY1  24
+     C                     PARM           PBALN  150
+      *
+     C                     PARM           PRTCD   7
+      *                                                                                       139279
+     C                     PARM           PSTAT   1                                           139279
+     C                     PARM           MAINT   7                                           139279
+      *                                                                                       CRE073
+     C                     PARM           PDCSP  117                                          CRE073
+     C                     PARM           PDCSG   1                                           CRE073
+     C                     PARM           PDRMT   7                                           CRE073
+     C                     PARM           PDRFD   4                                           CRE073
+      *                                                                                       CRE073
+     C                     PARM           PCCSP  117                                          CRE073
+     C                     PARM           PCCSG   1                                           CRE073
+     C                     PARM           PCRMT   7                                           CRE073
+     C                     PARM           PCRFD   4                                           CRE073
+      *
+      ** Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** Free Mode
+      *
+     C           PMODE     IFEQ '*FREE'
+     C                     CALL 'ZFRQB5'                                                      118466
+     C                     PARM *BLANKS   ZFREQ   1                                           118466
+     C                     PARM           ZDAYNO  50                                          118466
+     C                     PARM           ZMDAY   20                                          118466
+     C                     PARM           ZCCY    3                                           118466
+     C                     PARM           ZLOC    3                                           118466
+     C                     PARM           ZDIREC  1                                           118466
+     C                     PARM *BLANKS   ZRTRN   7                                           118466
+     C                     FREE 'ZFRQB5'                                                      118466
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Enquire Mode
+      *
+     C           PMODE     IFEQ '*ENQ'
+     C           PMODE     OREQ '*ENQEFF'                                                     117540
+     C                     EXSR ENQ
+     C                     END
+      *
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  ENQ    - Enquiry                                             *
+      *                                                               *
+      *****************************************************************
+     C           ENQ       BEGSR
+      *
+      ** Position to first record (active)
+      *
+     C                     EXSR DEFAUL
+     C           PEVNT     IFEQ 'A'
+     C                     MOVEL'A'       E2EVNT
+     C                     ELSE
+     C                     MOVELPEVNT     E2EVNT
+     C                     END
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD            N    81
+      *
+     C           MAINT     IFEQ '*NEW'
+     C                     EXSR CALDAT
+     C                     ENDIF
+      *
+      * Move values in output parameters
+      *
+     C                     EXSR MOVPAR
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialization                              *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Bank details
+      *
+     C           BKFMT     IFEQ *BLANKS
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+     C                     END
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *
+     C           KPRPN2    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CALDAT - Date Calculations                                   *
+      *                                                               *
+      *****************************************************************
+     C           CALDAT    BEGSR
+      *
+     C                     MOVE BJRDNB    RUNCHG
+     C                     CALL 'RETNDAT1'
+     C                     PARM           REPFMT
+     C                     PARM           MAINT
+     C                     PARM           RUNCHG  5
+     C                     PARM           PDATE   50
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'RETNDAT1'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MOVPAR                                                       *
+      *                                                               *
+      *****************************************************************
+     C           MOVPAR    BEGSR
+      *
+     C                     MOVELE2EVNT    PEVNT
+     C                     Z-ADDE2ITEM    PITEM
+     C                     Z-ADDE2VDAT    PVDAT
+     C                     Z-ADDE2MDAT    PMDAT
+     C                     Z-ADDE2CEDE    PCEDE
+     C                     Z-ADDE2NDPD    PNDPD
+     C                     Z-ADDE2NMPD    PNMPD
+     C                     MOVELE2FREQ    PFREQ
+     C                     MOVELE2IRLI    PIRLI
+     C                     MOVELE2TPRD    PTPRD
+     C                     MOVELE2DRIB    PDRIB
+     C                     MOVELE2DRIS    PDRIS
+     C                     MOVELE2DICT    PDICT
+     C                     MOVELE2DCST    PDCST
+     C                     MOVELE2DRIC    PDRIC
+     C                     MOVELE2DNIR    PDNIR
+     C                     MOVELE2DRIF    PDRIF
+     C                     MOVELE2DACP    PDACP
+     C                     MOVELE2CRIB    PCRIB
+     C                     MOVELE2CRIS    PCRIS
+     C                     MOVELE2CICT    PCICT
+     C                     MOVELE2CCST    PCCST
+     C                     MOVELE2CRIC    PCRIC
+     C                     MOVELE2CNIR    PCNIR
+     C                     MOVELE2CRIF    PCRIF
+     C                     MOVELE2CACP    PCACP
+     C                     MOVELE2RTTD    PRTTD
+     C                     MOVELE2DYBD    PDYBD
+     C                     MOVELE2DRST    PDRST
+     C                     MOVELE2RTTC    PRTTC
+     C                     MOVELE2DYBC    PDYBC
+     C                     MOVELE2CRST    PCRST
+     C                     Z-ADDE2DAYM    PDAYM
+     C                     Z-ADDE2NDID    PNDID
+     C                     Z-ADDE2DRDY    PDRDY
+     C                     Z-ADDE2NCID    PNCID
+     C                     Z-ADDE2CRDY    PCRDY
+     C                     Z-ADDE2BALN    PBALN
+     C                     MOVELE2KEY1    PKEY1
+     C                     MOVELE2DCSP    PDCSP                                               CRE073
+     C                     MOVELE2DCSG    PDCSG                                               CRE073
+     C                     MOVELE2DRMT    PDRMT                                               CRE073
+     C                     MOVELE2DRFD    PDRFD                                               CRE073
+     C                     MOVELE2CCSP    PCCSP                                               CRE073
+     C                     MOVELE2CCSG    PCCSG                                               CRE073
+     C                     MOVELE2CRMT    PCRMT                                               CRE073
+     C                     MOVELE2CRFD    PCRFD                                               CRE073
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DEFAUL                                                       *
+      *                                                               *
+      *****************************************************************
+     C           DEFAUL    BEGSR
+      *
+      ** Find period details according to weight
+      **   1. ACSQ
+      **   2. CNUM
+      **   4. BRCA
+      **   8. CCY
+      **  16. ACOD
+      *
+     C                     MOVEL*BLANKS   FOUND   1
+     C                     Z-ADD0         TRIES   30
+     C                     Z-ADD31        WEIGHT
+     C           FOUND     DOUEQ'Y'
+      *
+      ** From right to left, bit setting relates to field
+      ** (on=select field)
+      *
+     C                     Z-ADD0         E2ACSQ
+     C                     TESTB'7'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PACSQ     E2ACSQ
+     C                     END
+      *
+     C                     MOVE *BLANKS   E2CNUM
+     C                     TESTB'6'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PCNUM     E2CNUM
+     C                     END
+      *
+     C                     MOVEL*BLANKS   E2BRCA
+     C                     TESTB'5'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVELPBRCA     E2BRCA
+     C                     END
+      *
+     C                     MOVEL*BLANKS   E2CCY
+     C                     TESTB'4'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVELPCCY      E2CCY
+     C                     END
+      *
+     C                     Z-ADD0         E2ACOD
+     C                     TESTB'3'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PACOD     E2ACOD
+     C                     END
+      *
+     C           PEVNT     IFEQ ' '
+     C           PEVNT     OREQ 'A'
+     C                     MOVEL'A'       E2EVNT
+     C                     ELSE
+     C                     MOVELPEVNT     E2EVNT
+     C                     END
+      *
+     C                     Z-ADD0         E2ITEM
+      *
+     C                     ADD  1         TRIES
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD            N    81
+      *
+     C           *IN81     IFEQ '0'
+     C                     MOVEL'Y'       FOUND
+     C                     END
+     C           *IN81     IFEQ '1'
+     C                     SUB  1         WEIGHT
+     C           WEIGHT    IFLT 0
+      *
+      ** Active
+      *
+     C                     MOVEL'A'       E2EVNT
+     C                     Z-ADD1         E2ITEM
+     C                     Z-ADD0         E2VDAT
+     C                     Z-ADD364       E2MDAT
+     C                     Z-ADD1         E2CEDE
+     C                     Z-ADD365       E2NDPD
+     C                     MOVEL*BLANKS   E2FREQ
+     C                     MOVEL'F'       E2IRLI
+     C                     MOVEL'T'       E2TPRD
+     C                     MOVEL*ZEROS    E2DRIB
+     C                     MOVEL*ZEROS    E2DRIS
+     C                     MOVEL*ZEROS    E2DICT
+     C                     MOVEL*ZEROS    E2DCST
+     C                     MOVEL'1'       E2DRIC
+     C                     MOVEL'D'       E2DNIR
+     C                     MOVEL'Z'       E2DRIF
+     C                     MOVEL*BLANKS   E2DRBR
+     C                     MOVEL*BLANKS   E2DACP
+     C                     MOVEL*ZEROS    E2CRIB
+     C                     MOVEL*ZEROS    E2CRIS
+     C                     MOVEL*ZEROS    E2CICT
+     C                     MOVEL*ZEROS    E2CCST
+     C                     MOVEL'1'       E2CRIC
+     C                     MOVEL'D'       E2CNIR
+     C                     MOVEL'Z'       E2CRIF
+     C                     MOVEL*BLANKS   E2CRBR
+     C                     MOVEL*BLANKS   E2CACP
+     C                     MOVEL*BLANKS   E2RTTD
+     C                     MOVEL' '       E2DYBD
+     C                     MOVEL' '       E2DRST
+     C                     MOVEL*BLANKS   E2RTTC
+     C                     MOVEL' '       E2DYBC
+     C                     MOVEL' '       E2CRST
+     C                     Z-ADD0         E2DAYM
+     C                     Z-ADD0         E2DTWD
+     C                     Z-ADD26664     E2NDID
+     C                     Z-ADD0         E2DRDY
+     C                     Z-ADD26664     E2NCID
+     C                     Z-ADD0         E2CRDY
+     C                     MOVEL*BLANKS   E2KEY1
+     C                     MOVEL*ZEROS    E2DCSP                                              CRE073
+     C                     MOVEL' '       E2DCSG                                              CRE073
+     C                     MOVEL*BLANKS   E2DRMT                                              CRE073
+     C                     MOVEL*BLANKS   E2DRFD                                              CRE073
+     C                     MOVEL*ZEROS    E2CCSP                                              CRE073
+     C                     MOVEL' '       E2CCSG                                              CRE073
+     C                     MOVEL*BLANKS   E2CRMT                                              CRE073
+     C                     MOVEL*BLANKS   E2CRFD                                              CRE073
+     C                     WRITEREPRPND0
+      *
+      ** Termination
+      *
+     C                     MOVEL'Z'       E2EVNT
+     C                     Z-ADD1         E2ITEM
+     C                     Z-ADD25204     E2VDAT
+     C                     Z-ADD26664     E2MDAT
+     C                     Z-ADD26664     E2CEDE
+     C                     Z-ADD0         E2NDPD
+     C                     MOVEL*BLANKS   E2FREQ
+     C                     MOVEL'F'       E2IRLI
+     C                     MOVEL'T'       E2TPRD
+     C                     MOVEL*ZEROS    E2DRIB
+     C                     MOVEL*ZEROS    E2DRIS
+     C                     MOVEL*ZEROS    E2DICT
+     C                     MOVEL*ZEROS    E2DCST
+     C                     MOVEL'1'       E2DRIC
+     C                     MOVEL'D'       E2DNIR
+     C                     MOVEL'M'       E2DRIF
+     C                     MOVEL*BLANKS   E2DRBR
+     C                     MOVEL*BLANKS   E2DACP
+     C                     MOVEL*ZEROS    E2CRIB
+     C                     MOVEL*ZEROS    E2CRIS
+     C                     MOVEL*ZEROS    E2CICT
+     C                     MOVEL*ZEROS    E2CCST
+     C                     MOVEL'1'       E2CRIC
+     C                     MOVEL'D'       E2CNIR
+     C                     MOVEL'M'       E2CRIF
+     C                     MOVEL*BLANKS   E2CRBR
+     C                     MOVEL*BLANKS   E2CACP
+     C                     MOVEL*BLANKS   E2RTTD
+     C                     MOVEL' '       E2DYBD
+     C                     MOVEL' '       E2DRST
+     C                     MOVEL*BLANKS   E2RTTC
+     C                     MOVEL' '       E2DYBC
+     C                     MOVEL' '       E2CRST
+     C                     Z-ADD0         E2DAYM
+     C                     Z-ADD0         E2DTWD
+     C                     Z-ADD26664     E2NDID
+     C                     Z-ADD3101      E2DRDY
+     C                     Z-ADD26664     E2NCID
+     C                     Z-ADD3101      E2CRDY
+     C                     MOVEL*BLANKS   E2KEY1
+     C                     MOVEL*ZEROS    E2DCSP                                              CRE073
+     C                     MOVEL' '       E2DCSG                                              CRE073
+     C                     MOVEL*BLANKS   E2DRMT                                              CRE073
+     C                     MOVEL*BLANKS   E2DRFD                                              CRE073
+     C                     MOVEL*ZEROS    E2CCSP                                              CRE073
+     C                     MOVEL' '       E2CCSG                                              CRE073
+     C                     MOVEL*BLANKS   E2CRMT                                              CRE073
+     C                     MOVEL*BLANKS   E2CRFD                                              CRE073
+     C                     WRITEREPRPND0
+      *
+      ** Reposition to active record
+      *
+     C           KPRPN3    CHAINREPRPNPD            N81
+     C                     MOVEL'Y'       FOUND
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Existing or new account, or default
+      *
+     C           PBRCA     IFNE *BLANKS
+     C           PCNUM     ANDNE*BLANKS
+     C           PCCY      ANDNE*BLANKS
+     C           PACOD     ANDGTCZEROS
+     C           PACSQ     ANDGT'00'
+     C           TRIES     IFEQ 1
+     C                     MOVEL'*EXIST ' MAINT   7
+     C                     ELSE
+     C                     MOVEL'*NEW   ' MAINT
+     C                     END
+     C                     ELSE
+     C                     MOVEL'*DFT   ' MAINT
+     C                     MOVEL' '       PSTAT                                               139279
+     C           TRIES     IFNE 1                                                             139279
+     C                     MOVEL'N'       PSTAT                                               139279
+     C                     END                                                                139279
+     C                     END
+      *
+      ** First rcd found is greater than search, so change search
+      *
+     C           E2EVNT    IFGT PEVNT
+     C                     MOVELE2EVNT    PEVNT
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR

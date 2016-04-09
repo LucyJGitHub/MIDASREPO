@@ -1,0 +1,105 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP User Security Audit Report File Extract')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC004110 - Midas GP User Security Audit Report File        */
+/*                   Extract                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1059289          Date 23Nov12              */
+/*       Prev Amend No. CBF022  *CREATE    Date 16Jul12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1059289 - Global program compilation issues               */
+/*       CBF022 - BF Infrastructure: Auditability                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&FGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WZONE) TYPE(*CHAR) LEN(2) VALUE(' ')
+             DCL        VAR(&WGLOB) TYPE(*CHAR) LEN(2) VALUE(' ')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/***********COPY*SDCPYSRC,SDSVALDCL****/                                               /*AR1059289*/
+/*/COPY GPCPYSRCG,GPSVALDCL   */                                                       /*AR1059289*/
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Call AOSVALR0 to get system values for 'BrgMidasSystemPrefix' */
+ 
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'BrgMidasSystemPrefix' &SVAL1 +
+                          'BrgMidasGlobalPrefix' &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+ 
+             CHGVAR     VAR(&WZONE) VALUE(&SVAL1)
+             CHGVAR     VAR(&WGLOB) VALUE(&SVAL2)
+ 
+/** Set up library names for the PFs and LFs used in this program  */
+ 
+             CHGVAR     VAR(&FGTALIB) VALUE(&WGLOB *TCAT 'GTALIB')
+             CHGVAR     VAR(&FDTALIB) VALUE(&WZONE *TCAT 'DTALIB')
+             CHGVAR     VAR(&TDPLIB)  VALUE(&WZONE *TCAT 'DPLIB')
+ 
+/** Check if `from' file exists; if not then end  */
+ 
+             CHKOBJ     OBJ(&FDTALIB/MBRBSDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&FDTALIB/MBROSDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&FDTALIB/MCMPSDD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Security Audit Report File Extract utility */
+ 
+             CLRPFM     FILE(GPBRCBPD)
+/**********  CALL       PGM(GP004111) */                                               /*AR1059289*/
+             CALL       PGM(SD004111)                                                  /*AR1059289*/
+             MONMSG     MSGID(CPF0000 MCH0000) CMPDTA(*NONE) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CLRPFM     FILE(GPBRCOPD)
+/**********  CALL       PGM(GP004112) */                                               /*AR1059289*/
+             CALL       PGM(SD004112)                                                  /*AR1059289*/
+             MONMSG     MSGID(CPF0000 MCH0000) CMPDTA(*NONE) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CLRPFM     FILE(GPCMPSPD)
+/**********  CALL       PGM(GP004113) */                                               /*AR1059289*/
+             CALL       PGM(SD004113)                                                  /*AR1059289*/
+             MONMSG     MSGID(CPF0000 MCH0000) CMPDTA(*NONE) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('GPC004110 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

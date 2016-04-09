@@ -1,0 +1,562 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Deals/loans Type Omission')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0220 - Deals/Loans Type/subtype Omission Maintenance   *
+      *                                                               *
+      *  Function:  Insert, view or delete Type for Omission.         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. UPG402             Date 06Oct04               *
+      *                 ULX043             Date 18Sep01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC Bank details               Retrieval index       Prefix BJ.
+      *
+     FILOMISPDUF  E           K        DISK         KINFSR *PSSR A
+      ***  IBLC Omission file
+      *
+     FIL0220DFCF  E                    WORKSTN      KINFDS INFDS
+     F                                        RRN1  KSFILE IL0220S1
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    ARR        50  3 0
+     E                    MSG         6  1
+      /COPY ZSRSRC,ZEDITZ1
+     E***  Arrays for copyright
+     E                    CPY@    1   1 80               COPYRIGHT
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+     I            DS
+      **  ZSEDIT data structure
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+      *
+     ILDA       E DSLDA                         256
+      **  Local Data Area for Database Error Details
+      *
+     IPSDS       SDS
+      ***   Program Status Data Structure.
+     I                                        1  10 PGMID
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     IINFDS     E DSY2I#DSP
+      *                                                                                       CER001
+      ** First DS for access programs, SHORT DATA STRUCTURE                                   CER001
+     IDSFDY     E DSDSFDY                                                                     CER001
+      *                                                                                       CER001
+      ** External DS for SAR details                                                          CER001
+     ISCSARD    E DSSCSARDPD                                                                  CER001
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      **  Main processing
+      *-------------------------------------------------------------------------
+      *
+     C                     MOVEACPY@      CPY@2  80        Copyrights
+      *
+      ***   Do until F3
+      *
+     C           *INKC     DOUEQ*ON
+      *
+      ***  Write records format
+      *
+     C                     WRITEIL0220C0
+     C                     EXFMTIL0220C1
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR #VALID
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***   Terminate
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *-------------------------------------------------------------------
+      ***   End of processing
+      *-------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   #VALID : CHECK WHETHER A INPUT IS MADE ON FIELDS
+      ***   CALLED : MAINLINES
+      ***   CALLING: *PSSR
+      ***
+      *-------------------------------------------------------------------
+      *
+     C           #VALID    BEGSR
+      *
+     C                     Z-ADD@#SFRC    RRN1             Subfile page
+     C           SACTN     IFNE *BLANKS
+      *
+      ***  Perform treatment depending of SACTN
+      *
+     C                     SELEC
+     C           SACTN     WHEQ 'I'                        Insertion
+     C                     EXSR #INSRT
+      *
+     C           SACTN     WHEQ 'D'                        Deletion
+     C                     EXSR #DELT
+      *
+     C                     OTHER                           not valid
+     C                     MOVE *ON       *IN31
+      *
+      *** SEND ' Action Code : 'I' to insert or 'D' to delete entry.'
+      *
+     C                     MOVEL'IL22002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDSL
+      *
+     C                     ELSE                            SACTN is *BLANKS
+      *
+      ***  Use Details As Positioning Values If Changed
+      *
+     C           SMODI     IFNE KMODI
+     C           STYPE     ORNE KTYPE
+     C           SSTYP     ORNE KSTYPE
+     C           SCLAS     ORNE KCLAS                                                         CER001
+     C           CDL038    ANDEQ'Y'                                                           CER001
+     C                     EXSR #SFLC
+     C                     MOVE SMODI     KMODI
+     C                     MOVE STYPE     KTYPE
+     C                     MOVE SSTYP     KSTYPE
+     C                     MOVE SCLAS     KCLAS                                               CER001
+     C           KOMIS     SETLLILOMISPD
+      *
+     C                     EXSR #SFLW
+     C                     MOVEA'0000'    *IN,31
+     C                     MOVE *OFF      *IN35                                               CER001
+     C                     MOVE *BLANKS   SACTN            Reset
+     C                     MOVE *BLANKS   SMODI
+     C                     MOVE *BLANKS   STYPE
+     C                     MOVE *BLANKS   SSTYP
+     C                     MOVE *BLANKS   SCLAS                                               CER001
+     C                     ENDIF                           NEW INPUT
+     C                     ENDIF                           SACTN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   #INSRT : CHECK WHETHER A INSERT could be made
+      ***   CALLED : #VALID
+      ***   CALLING: *PSSR
+      ***
+      *-------------------------------------------------------------------
+      *
+     C           #INSRT    BEGSR
+      *
+     C                     MOVE *OFF      *IN30            Global Error
+      *
+     C                     DO
+     C           SMODI     IFEQ *BLANKS
+     C           STYPE     OREQ *BLANKS
+     C           SSTYP     OREQ *BLANKS
+     C           SCLAS     OREQ *BLANKS                                                       CER001
+     C           CDL038    ANDEQ'Y'                                                           CER001
+     C           SMODI     ANDEQ'DL'                                                          CER001
+     C                     MOVE *ON       *IN30            Error
+     C                     MOVEA'111'     *IN,32
+     C           CDL038    IFEQ 'Y'                                                           CER001
+     C                     MOVE *ON       *IN35                                               CER001
+     C                     ENDIF                                                              CER001
+      *
+      *** SEND ' Please enter Complete Combination.'
+      *
+     C                     MOVEL'IL22003' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ***  Otherwise Check if record may be inserted
+      ***  Check MODULE ID : DL, LE, FT
+      *
+     C           SMODI     IFNE 'DL'
+     C           SMODI     ANDNE'LE'
+     C           SMODI     ANDNE'FT'
+     C                     MOVE *ON       *IN30            Error
+     C                     MOVE *ON       *IN32
+      *
+      *** SEND 'Module Id. : DL (Dealing), LE (LEnding) or FT (Funds Transfer).
+      *
+     C                     MOVEL'IL22004' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ***  Other fields aren't validated
+      ***  So check whether insertion may be done
+      *
+     C                     MOVE SMODI     KMODI
+     C                     MOVE STYPE     KTYPE
+     C                     MOVE SSTYP     KSTYPE
+     C                     MOVE SCLAS     KCLAS                                               CER001
+     C           KOMIS     SETLLILOMISD0                 30
+     C           *IN30     IFEQ *ON                        Already Exist
+     C                     MOVEA'111'     *IN,32
+     C           CDL038    IFEQ 'Y'                                                           CER001
+     C           KMODI     ANDEQ'DL'                                                          CER001
+     C                     MOVE *ON       *IN35                                               CER001
+     C                     ENDIF                                                              CER001
+      *
+      *** SEND 'Combination Already exists.'
+      *
+     C                     MOVEL'IL22005' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     LEAVE
+     C                     ELSE                            Not Found
+      *
+      ***  Add IT
+      *
+     C                     CLEARILOMISD0
+     C                     MOVE SMODI     OMMODI
+     C                     MOVE STYPE     OMTYPE
+     C                     MOVE SSTYP     OMSTYP
+     C                     MOVE SCLAS     OMCLAS                                              CER001
+     C                     WRITEILOMISD0
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           *IN30     IFEQ *OFF                       Rebuild
+     C                     EXSR #SFLC
+     C                     MOVE *BLANKS   KMODI
+     C                     MOVE *BLANKS   KTYPE
+     C                     MOVE *BLANKS   KSTYPE
+     C                     MOVE *BLANKS   KCLAS                                               CER001
+     C           KOMIS     SETLLILOMISPD
+     C                     EXSR #SFLW
+     C                     MOVEA'0000'    *IN,31
+     C                     MOVE *OFF      *IN35                                               CER001
+     C                     MOVE *BLANKS   SACTN            Reset
+     C                     MOVE *BLANKS   SMODI
+     C                     MOVE *BLANKS   STYPE
+     C                     MOVE *BLANKS   SSTYP
+     C                     MOVE *BLANKS   SCLAS                                               CER001
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   #DELT  : DELETE DETAILS
+      ***   CALLED : #VALID
+      ***   CALLING: *PSSR
+      ***
+      *-------------------------------------------------------------------
+      *
+     C           #DELT     BEGSR
+      *
+      ***  Delete Record
+      *
+     C                     MOVE SMODI     KMODI
+     C                     MOVE STYPE     KTYPE
+     C                     MOVE SSTYP     KSTYPE
+     C                     MOVE SCLAS     KCLAS                                               CER001
+     C           KOMIS     DELETILOMISD0             30
+      *
+      ***  Then rebuild subfile
+      *
+     C                     EXSR #SFLC
+     C                     MOVE *BLANKS   KMODI
+     C                     MOVE *BLANKS   KTYPE
+     C                     MOVE *BLANKS   KSTYPE
+     C                     MOVE *BLANKS   KCLAS                                               CER001
+     C           KOMIS     SETLLILOMISPD
+     C                     EXSR #SFLW
+     C                     MOVEA'0000'    *IN,31
+     C                     MOVE *OFF      *IN35                                               CER001
+     C                     MOVE *BLANKS   SACTN            Reset
+     C                     MOVE *BLANKS   SMODI
+     C                     MOVE *BLANKS   STYPE
+     C                     MOVE *BLANKS   SSTYP
+     C                     MOVE *BLANKS   SCLAS                                               CER001
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   *INZSR : To initialize static fields and access standing
+      ***            data
+      ***   CALLED : Once at start of program from main processing.
+      ***   CALLING: *PSSR
+      ***
+      *-------------------------------------------------------------------
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***   Select the program MSGQ for error msg.
+      ***   Initialize program's message queue.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ILUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***   Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'IL0220 ' ZAPGM  10        Message queue
+     C**********           MOVEL'ILUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+     C                     MOVE '0'       *IN98
+     C                     MOVEA'0000'    *IN,31           ERROR INDS.
+     C                     MOVE *OFF      *IN35                                               CER001
+      *
+      ***  Access to SDBANKL1 file
+      *
+     C                     READ SDBANKL1                 70
+      *
+      ***  If not found perform database error.
+      *
+     C           *IN70     IFEQ *ON
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            **DB ERROR 002*
+     C                     MOVEL'SDBANKL1'DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                                       CER001
+      ** Access AOSARDR0 and check if CDL038 is installed                                     CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*VERIFY' POPTN   7                                           CER001
+     C                     PARM 'ULX004'  PSARD   6                                           CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           PRTCD     ANDNE'*NRF    '                                                    CER001
+     C                     Z-ADD2         DBASE                                               CER001
+     C                     MOVE 'SCSARDPD'DBFILE                                              CER001
+     C                     MOVEL'CDL038'  DBKEY                                               CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       CDL038  1                                           CER001
+     C                     MOVE *ON       *IN50                                               CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       CDL038                                              CER001
+     C                     MOVE *OFF      *IN50                                               CER001
+     C                     ENDIF                                                              CER001
+      *
+      ***  Initialize display fields.
+      *
+     C                     MOVE USER      SUSER
+     C                     MOVE JOB       SWSID
+     C                     MOVEL'IL0220 ' SJOB
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ***  Define key
+      *
+     C           KOMIS     KLIST
+     C                     KFLD           KMODI   2        MODULE ID
+     C                     KFLD           KTYPE   2         Type
+     C                     KFLD           KSTYPE  2         Subtype
+     C                     KFLD           KCLAS   4                                           CER001
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ***  Clear Omission subile
+      *
+     C                     EXSR #SFLC
+      *
+      ***  Read ILOMISPD to fill in Subfile
+      *
+     C           *LOVAL    SETLLILOMISPD
+     C                     EXSR #SFLW
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   #SFLC  : Clear IL0220C1 subfile
+      ***   CALLED : #SCR2 review screen processing
+      ***   CALLING: none
+      *
+      *-------------------------------------------------------------------
+      *
+     C           #SFLC     BEGSR
+      *
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *ON       *IN61            SFLCLR
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN30
+     C                     Z-ADD0         RRN1
+     C                     WRITEIL0220C1
+     C                     MOVE *OFF      *IN61
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   #SFLW : fill up the subfile
+      ***   CALLED :
+      ***   CALLING: ZASNMS
+      *
+      *-------------------------------------------------------------------
+      *
+     C           #SFLW     BEGSR
+      *
+     C                     READ ILOMISPD            N    30 No lock
+      *
+     C           *IN30     DOWEQ*OFF
+     C                     MOVE OMMODI    BMODI
+     C                     MOVE OMTYPE    BTYPE
+     C                     MOVE OMSTYP    BSTYPE
+     C                     MOVE OMCLAS    BCLAS                                               CER001
+     C                     ADD  1         RRN1
+     C                     WRITEIL0220S1
+     C                     READ ILOMISPD            N    30
+     C                     ENDDO
+      *
+      ***  Rollup allowed or not
+      *
+     C           *IN30     IFEQ *ON
+     C                     MOVE *ON       *IN62
+     C                     ELSE
+     C                     MOVE *OFF      *IN62
+     C                     ENDIF
+      *
+      ***  Display SFLTCTL if no data
+      *
+     C           RRN1      IFGT 0
+     C                     MOVE *OFF      *IN60
+     C                     ELSE
+     C                     MOVE *ON       *IN60
+     C                     MOVEL'IL22001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     Z-ADD1         RRN1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   ZASNMS : Send message to program's message queue
+      ***   CALLED : #ENTER
+      ***            #ERROR
+      ***   CALLING: Y2SNMSG
+      *
+      *-------------------------------------------------------------------
+      *
+     C           ZASNMS    BEGSR
+      *
+      ***  message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      ***   *PSSR   - Error subroutine                                  *
+      ***   CALLED : #SCR1
+      ***   CALLING: none
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ***  Update data area LDA
+      *
+     C                     MOVEL'IL0220'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     ROLBK
+     C                     DUMP
+      *
+      ***  Call Standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      /COPY ZSRSRC,ZEDITZ2
+      /COPY ZSRSRC,ZALIGNZ2
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

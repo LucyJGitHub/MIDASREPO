@@ -1,0 +1,719 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC002051 - Shell for database upgrade of global layer      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REDUNDANTDate 01Aug14              */
+/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*                      CBF012             Date 04Jul11              */
+/*                      AR690181           Date 11Jan11              */
+/*                      CUP003             Date 20Aug10              */
+/*                      CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256038             Date 25Aug08              */
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK023             Date 06Dec05              */
+/*                      CSM005             Date 21Sep05              */
+/*                      CUP030             Date 23Dec04              */
+/*                      CPK021             Date 20Sep04              */
+/*                      CPK018  *CREATE    Date 23Feb04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       AR690181 - Incorrect file name passed to program. (Reopen)  */
+/*                  (Child: AR690182)                                */
+/*       CUP003 - Handle validation list.                            */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       256038 - Handle triggering.                                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CPK023 - No specific library reference for UPSTAT.          */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CUP030 - Some overrides are not correct.                    */
+/*       CPK021 - Journal individual items during upgrade.           */
+/*       CPK018 - MidasPlus packaging.  Handle global layer.         */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+/**********  PGM        PARM(&GPFXSVAL &BRGSVAL &SRCSVAL)  */                  /*CUP033*/ /*CBF012*/
+/**********  PGM        PARM(&GPFXSVAL &BRGSVAL &SRCSVAL &MODE)               */ /*CBF012 A1076141*/
+             PGM        PARM(&GPFXSVAL &BRGSVAL &SRCSVAL)                               /*A1076141*/
+ 
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                         */ /*CBF012 A1076141*/
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+             DCL        VAR(&SRCSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WRAP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&GPOWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPSTATPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+ 
+/* Change 'message queue full' handling so that job doesn't crash. */
+             RTVJOBA    JOBMSGQFL(&WRAP)
+             CHGJOB     JOBMSGQFL(*PRTWRAP)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/**Retrieve*system*values*needed*for*upgrade.**/ /*                                    */ /*CUP033*/
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+ 
+/**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
+/**********  IF         COND(&PTFUPG *EQ ' ' *OR &PTFSRC *EQ ' ' *OR +                 */ /*CUP033*/
+/**********               &GPSBSID *EQ ' ') THEN(DO)                                   */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &SRCSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFSRC) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC002051' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Save library list. */
+             SAVLIBL    SAVDTL(UPC002051)
+ 
+/* Set up global layer library list. */
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+ 
+/* Set up global layer owner and authorisation list for database. */
+             CHGVAR     VAR(&OWNER) VALUE(&GPSBSID *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&GPSBSID *TCAT 'DATABASE')
+ 
+/* Set up library name where objects are to be moved to. */
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &GPSBSID *TCAT +
+                          'GMLIB')
+             CHKOBJ     OBJ(&LIBMOV) OBJTYPE(*LIB)
+/* If library does not exist then create it; check if user has */
+/*  authority to the command. */
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHKOBJ     OBJ(CRTLIB) OBJTYPE(*CMD) AUT(*USE)
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   RTVMSG     MSGID(UPM0013) MSGF(UTMSGF) MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   RTVMSG     MSGID(UPM0014) MSGF(UTMSGF) +
+                          MSGDTA(&LIBMOV) MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC002051' 'ENTER' ' ')
+                   GOTO       CMDLBL(END)
+                ENDDO
+                RTVJOBA    DATE(&TODAY)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             CRTLIB     LIB(&LIBMOV) TEXT('Temporary for BRIDGE' +
+                          *BCAT &TODAY) ASPDEV(&IASP)                                     /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+                CRTLIB     LIB(&LIBMOV) TEXT('Temporary for +
+                          BRIDGE' *BCAT &TODAY)
+             ENDDO                                                                        /*CSC043*/
+                GOTO       CMDLBL(UPGRADE)
+             ENDDO
+ 
+/* If library already exists then ask user what is required. */
+             CALL       PGM(UPC0352) PARM(&LIBMOV &RETURN)
+             IF         COND(&RETURN *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             IF         COND(&RETURN *EQ 'F') THEN(DO)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                         MSGDTA('UPC0352') MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                         joblog for details')
+                CALL       PGM(SCC0010) PARM('UPC0352' 'JOBLOG' 'Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ UPGRADE:
+             RMVLIBLE   LIB(&PTFUPG)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&PTFUPG) POSITION(*FIRST)
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+ 
+/**********  RTVDTAARA  DTAARA(&PTFUPG/UPSTAT) RTNVAR(&UPSTAT)                         */ /*CPK023*/
+             RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)                                    /*CPK023*/
+ 
+/* Call program to handle field reference files unless already run. */
+             IF         COND(%SST(&UPSTAT 13 1) *NE 'Y') THEN(DO)
+                CALL       PGM(UPC0013) PARM(&GPSBSID &PTFSRC &OWNER +
+                             &AUTL &RETURN)
+/* Call access object to free driving file. */
+                CALL       PGM(UPDLVCR0) PARM(' ' '*FREE' ' ' ' ' ' ')
+/*If the program ended abnormally then display general message. */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                                MSGDTA('UPC0013') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0013' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/**********     CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (13 1)) VALUE('Y')                    */ /*CPK023*/
+                CHGDTAARA  DTAARA(UPSTAT (13 1)) VALUE('Y')                               /*CPK023*/
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0200 - Preparatory DSPFDs, DSPDBRs etc.                     */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0200 has already successfully run then it will not be run */
+/* again.                                                          */
+             IF         COND(%SST(&UPSTAT 3 1) *NE 'Y') THEN(DO)
+                OVRDBF     FILE(UPDLVCL7) TOFILE(UPDLVCLG) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0200) PARM(&PTFUPG &RETURN)                          */ /*CBF012*/
+/**********     CALL       PGM(UPC0200) PARM(&PTFUPG &RETURN &MODE)           */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0200) PARM(&PTFUPG &RETURN)                           /*A1076141*/
+                DLTOVR     FILE(UPDLVCL7) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0200') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0200' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+                CHGVAR     VAR(&UPSTATPOS) VALUE(3)
+                CALL       PGM(UPC0015) PARM('UPDLVCLG' 'UPC0200' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0205 - Delete logical files                                 */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0205 has already successfully run then it will not be run */
+/* again.                                                          */
+             IF         COND(%SST(&UPSTAT 4 1) *NE 'Y') THEN(DO)
+                OVRDBF     FILE(UPDLVCLA) TOFILE(UPDLVCLJ) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0205) PARM(&RETURN)                                  */ /*CBF012*/
+/**********     CALL       PGM(UPC0205) PARM(&RETURN &MODE)                   */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0205) PARM(&RETURN)                                   /*A1076141*/
+                DLTOVR     FILE(UPDLVCLA) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0205') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0205' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+                CHGVAR     VAR(&UPSTATPOS) VALUE(4)
+                CALL       PGM(UPC0015) PARM('UPDLVCLJ' 'UPC0205' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0210 - Manage 'foreign' logical files                       */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0210 has already successfully run then it will not be run */
+/* again.                                                          */
+             IF         COND(%SST(&UPSTAT 5 1) *NE 'Y') THEN(DO)
+                CALL       PGM(UPC0210) PARM(&PTFUPG &RETURN)
+/*If the program ended with error then take appropriate action */
+                IF         COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+/**********     CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (5 1)) VALUE('Y')                     */ /*CPK023*/
+                CHGDTAARA  DTAARA(UPSTAT (5 1)) VALUE('Y')                                /*CPK023*/
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0245 - Upgrade physical files                               */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0245 has already successfully run then it will not be run */
+/* again.                                                          */
+             IF         COND(%SST(&UPSTAT 6 1) *NE 'Y') THEN(DO)
+                OVRDBF     FILE(UPDLVCL5) TOFILE(UPDLVCLE) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0245) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                          &OWNER &AUTL &RETURN)                                        */ /*CBF012*/
+/**********     CALL       PGM(UPC0245) PARM(&PTFSRC &LIBMOV &GPSBSID +              */ /*A1076141*/
+/**********               &OWNER &AUTL &RETURN &MODE)                         */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0245) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                             &OWNER &AUTL &RETURN)                                      /*A1076141*/
+                DLTOVR     FILE(UPDLVCL5) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0245') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0245' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+                CHGVAR     VAR(&UPSTATPOS) VALUE(6)
+                CALL       PGM(UPC0015) PARM('UPDLVCLE' 'UPC0245' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/*******************************************************************/                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*  UPC0247 - Journal physical files                               */                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*******************************************************************/                     /*CPK021*/
+                                                                                          /*CPK021*/
+/* If UPC0247 has already successfully run then it will not be run */                     /*CPK021*/
+/* again.                                                          */                     /*CPK021*/
+             IF         COND(%SST(&UPSTAT 14 1) *NE 'Y') THEN(DO)                         /*CPK021*/
+                OVRDBF     FILE(UPDLVCL5) TOFILE(UPDLVCLE) OVRSCOPE(*JOB)                 /*CPK021*/
+/**********     CALL       PGM(UPC0247) PARM('GPJRN' &RETURN)               */ /*CPK021*/ /*CBF012*/
+/**********     CALL       PGM(UPC0247) PARM('GPJRN' &RETURN &MODE)           */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0247) PARM('GPJRN' &RETURN)                           /*A1076141*/
+                DLTOVR     FILE(UPDLVCL5) LVL(*JOB)                                       /*CPK021*/
+/*If the program ended abnormally then display general message */                         /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0247') MSG(&MESSAGE)                                 /*CPK021*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   /*CPK021*/
+                   CALL       PGM(SCC0010) PARM('UPC0247' 'JOBLOG' 'Y')                   /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+/*If the program encountered errors then display specific messages */                     /*CPK021*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(14)                                      /*CPK021*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLE' 'UPC0247' +
+                             &UPSTATPOS &RETURN)                                          /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+             ENDDO                                                                        /*CPK021*/
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0255 - Create logical files                                 */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0255 has already successfully run then it will not be run */
+/* again.                                                          */
+             IF         COND(%SST(&UPSTAT 7 1) *NE 'Y') THEN(DO)
+                OVRDBF     FILE(UPDLVCL3) TOFILE(UPDLVCLC) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0255) PARM(&PTFSRC &GPSBSID &OWNER +
+                          &AUTL &RETURN)                                               */ /*CBF012*/
+/**********     CALL       PGM(UPC0255) PARM(&PTFSRC &GPSBSID &OWNER +               */ /*A1076141*/
+/**********               &AUTL &RETURN &MODE)                                */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0255) PARM(&PTFSRC &GPSBSID &OWNER +
+                             &AUTL &RETURN)                                             /*A1076141*/
+                DLTOVR     FILE(UPDLVCL3) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0255') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0255' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+                CHGVAR     VAR(&UPSTATPOS) VALUE(7)
+                CALL       PGM(UPC0015) PARM('UPDLVCLC' 'UPC0255' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0260 - Restore 'foreign' logical files                      */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0260 has already successfully run then it will not be run */
+/* again                                                           */
+             IF         COND(%SST(&UPSTAT 8 1) *NE 'Y') THEN(DO)
+                CALL       PGM(UPC0260) PARM(&PTFUPG &RETURN)
+/*If the program ended with error then take appropriate action */
+                IF         COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*********      CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (8 1)) VALUE('Y')                     */ /*CPK023*/
+                CHGDTAARA  DTAARA(UPSTAT (8 1)) VALUE('Y')                                /*CPK023*/
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0265 - Rebuild multi-member logical files                   */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0265 has already successfully run then it will not be run */
+/* again                                                           */
+             IF         COND(%SST(&UPSTAT 9 1) *NE 'Y') THEN(DO)
+                CALL       PGM(UPC0265) PARM(&PTFUPG &RETURN)
+/*If the program ended with error then take appropriate action */
+                IF      COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+/**********     CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (9 1)) VALUE('Y')                     */ /*CPK023*/
+                CHGDTAARA  DTAARA(UPSTAT (9 1)) VALUE('Y')                                /*CPK023*/
+             ENDDO
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0272 - Upgrade data queues                                  */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0272 has already successfully run then it will not be run */
+/* again.                                                          */
+/**********  IF         COND(%SST(&UPSTAT 15 1) *NE 'Y') THEN(DO)                      */ /*CPK021*/
+             IF         COND(%SST(&UPSTAT 1 1) *NE 'Y') THEN(DO)                          /*CPK021*/
+                OVRDBF     FILE(UPDLVCLL) TOFILE(UPDLVCLM) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0272) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                             &OWNER &AUTL &RETURN)                                     */ /*CBF012*/
+/**********     CALL       PGM(UPC0272) PARM(&PTFSRC &LIBMOV &GPSBSID +              */ /*A1076141*/
+/**********                  &OWNER &AUTL &RETURN &MODE)                      */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0272) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                             &OWNER &AUTL &RETURN)                                      /*A1076141*/
+                DLTOVR     FILE(UPDLVCLL) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('UPC0272') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0272' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+/**********     CHGVAR     VAR(&UPSTATPOS) VALUE(15)                                   */ /*CPK021*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(1)                                       /*CPK021*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLM' 'UPC0272' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/*******************************************************************/                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*  UPC0273 - Journal data queues                                  */                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*******************************************************************/                     /*CPK021*/
+                                                                                          /*CPK021*/
+/* If UPC0273 has already successfully run then it will not be run */                     /*CPK021*/
+/* again.                                                          */                     /*CPK021*/
+             IF         COND(%SST(&UPSTAT 2 1) *NE 'Y') THEN(DO)                          /*CPK021*/
+                OVRDBF     FILE(UPDLVCLL) TOFILE(UPDLVCLM) OVRSCOPE(*JOB)                 /*CPK021*/
+/**********     CALL       PGM(UPC0273) PARM('GPJRN' '*DTAQ' &RETURN)       */ /*CPK021*/ /*CBF012*/
+/**********     CALL       PGM(UPC0273) PARM('GPJRN' '*DTAQ' &RETURN &MODE)   */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0273) PARM('GPJRN' '*DTAQ' &RETURN)                   /*A1076141*/
+                DLTOVR     FILE(UPDLVCLL) LVL(*JOB)                                       /*CPK021*/
+/*If the program ended abnormally then display general message */                         /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('UPC0273') MSG(&MESSAGE)                              /*CPK021*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   /*CPK021*/
+                   CALL       PGM(SCC0010) PARM('UPC0273' 'JOBLOG' 'Y')                   /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+/*If the program encountered errors then display specific messages */                     /*CPK021*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(2)                                       /*CPK021*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLM' 'UPC0273' +
+                             &UPSTATPOS &RETURN)                                          /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+             ENDDO                                                                        /*CPK021*/
+ 
+/*******************************************************************/
+/*                                                                 */
+/*  UPC0275 - Upgrade data areas                                   */
+/*                                                                 */
+/*******************************************************************/
+ 
+/* If UPC0275 has already successfully run then it will not be run */                     /*CPK021*/
+/* again.                                                          */                     /*CPK021*/
+             IF         COND(%SST(&UPSTAT 10 1) *NE 'Y') THEN(DO)                         /*CPK021*/
+                OVRDBF     FILE(UPDLVCL6) TOFILE(UPDLVCLF) OVRSCOPE(*JOB)
+/**********     CALL       PGM(UPC0275) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                             &OWNER &AUTL &RETURN)                                     */ /*CBF012*/
+/**********     CALL       PGM(UPC0275) PARM(&PTFSRC &LIBMOV &GPSBSID +              */ /*A1076141*/
+/**********                  &OWNER &AUTL &RETURN &MODE)                      */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0275) PARM(&PTFSRC &LIBMOV &GPSBSID +
+                             &OWNER &AUTL &RETURN)                                      /*A1076141*/
+                DLTOVR     FILE(UPDLVCL6) LVL(*JOB)
+/*If the program ended abnormally then display general message */
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('UPC0275') MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   CALL       PGM(SCC0010) PARM('UPC0275' 'JOBLOG' 'Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+/*If the program encountered errors then display specific messages */
+/**********  CHGVAR     VAR(&UPSTATPOS) VALUE(0)                                       */ /*CPK021*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(10)                                      /*CPK021*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLF' 'UPC0275' +
+                             &UPSTATPOS &RETURN)
+                IF         COND(&RETURN *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO                                                                        /*CPK021*/
+ 
+/*******************************************************************/                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*  UPC0273 - Journal data areas                                   */                     /*CPK021*/
+/*                                                                 */                     /*CPK021*/
+/*******************************************************************/                     /*CPK021*/
+                                                                                          /*CPK021*/
+/* If UPC0273 has already successfully run second time then it     */                     /*CPK021*/
+/*  will not be run again.                                         */                     /*CPK021*/
+             IF         COND(%SST(&UPSTAT 11 1) *NE 'Y') THEN(DO)                         /*CPK021*/
+/**********     OVRDBF     FILE(UPDLVCL6) TOFILE(UPDLVCLF) OVRSCOPE(*JOB)   */ /*CPK021*/ /*CUP030*/
+                OVRDBF     FILE(UPDLVCLL) TOFILE(UPDLVCLF) OVRSCOPE(*JOB)                 /*CUP030*/
+/**********     CALL       PGM(UPC0273) PARM('GPJRN' '*DTAQ' &RETURN)       */ /*CPK021*/ /*CUP030*/
+/**********     CALL       PGM(UPC0273) PARM('GPJRN' '*DTAARA' &RETURN)     */ /*CUP030*/ /*CBF012*/
+/**********     CALL       PGM(UPC0273) PARM('GPJRN' '*DTAARA' &RETURN &MODE) */ /*CBF012 A1076141*/
+                CALL       PGM(UPC0273) PARM('GPJRN' '*DTAARA' &RETURN)                 /*A1076141*/
+/**********     DLTOVR     FILE(UPDLVCL6) LVL(*JOB)                         */ /*CPK021*/ /*CUP030*/
+                DLTOVR     FILE(UPDLVCLL) LVL(*JOB)                                       /*CUP030*/
+/*If the program ended abnormally then display general message */                         /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('UPC0273') MSG(&MESSAGE)                              /*CPK021*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   /*CPK021*/
+                   CALL       PGM(SCC0010) PARM('UPC0273' 'JOBLOG' 'Y')                   /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+/*If the program encountered errors then display specific messages */                     /*CPK021*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(11)                                      /*CPK021*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLF' 'UPC0273' +
+                             &UPSTATPOS &RETURN)                                          /*CPK021*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CPK021*/
+                   GOTO       CMDLBL(END)                                                 /*CPK021*/
+                ENDDO                                                                     /*CPK021*/
+             ENDDO                                                                        /*CPK021*/
+ 
+/*******************************************************************/                     /*256038*/
+/*                                                                 */                     /*256038*/
+/*  UPC000008 - Add triggers                                       */                     /*256038*/
+/*                                                                 */                     /*256038*/
+/*******************************************************************/                     /*256038*/
+ 
+/* If UPC000008 has already successfully run then it will not be run */                   /*256038*/
+/* again.                                                            */                   /*256038*/
+             IF         COND(%SST(&UPSTAT 15 1) *NE 'Y') THEN(DO)                         /*256038*/
+                OVRDBF     FILE(UPDLVCL5) TOFILE(UPDLVCLE) OVRSCOPE(*JOB)                 /*256038*/
+/**********     CALL       PGM(UPC000008) PARM(&RETURN)                     */ /*256038*/ /*CBF012*/
+/**********     CALL       PGM(UPC000008) PARM(&RETURN &MODE)                 */ /*CBF012 A1076141*/
+                CALL       PGM(UPC000008) PARM(&RETURN)                                 /*A1076141*/
+                DLTOVR     FILE(UPDLVCL5) LVL(*JOB)                                       /*256038*/
+/*If the program ended abnormally then display general message. */                        /*256038*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*256038*/
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                                MSGDTA('UPC000008') MSG(&MESSAGE)                         /*256038*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   /*256038*/
+                   CALL       PGM(SCC0010) PARM('UPC000008' 'JOBLOG' 'Y')                 /*256038*/
+                   GOTO       CMDLBL(END)                                                 /*256038*/
+                ENDDO                                                                     /*256038*/
+/*If the program encountered errors then display specific messages. */                    /*256038*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(15)                                      /*256038*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLE' 'UPC000008' +
+                             &UPSTATPOS &RETURN)                                          /*256038*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*256038*/
+                   GOTO       CMDLBL(END)                                                 /*256038*/
+                ENDDO                                                                     /*256038*/
+             ENDDO                                                                        /*256038*/
+ 
+/*******************************************************************/                     /*CUP003*/
+/*                                                                 */                     /*CUP003*/
+/*  UPC000026 - Create validation lists                            */                     /*CUP003*/
+/*                                                                 */                     /*CUP003*/
+/*******************************************************************/                     /*CUP003*/
+ 
+/* If this has already successfully run then it will not be run again. */                 /*CUP003*/
+             IF         COND(%SST(&UPSTAT 16 1) *NE 'Y') THEN(DO)                         /*CUP003*/
+                OVRDBF     FILE(UPDLVCL4) TOFILE(UPDLVCLD) OVRSCOPE(*JOB)                 /*CUP003*/
+/**********     CALL       PGM(UPC000026) PARM(&PTFSRC &GPSBSID &OWNER +
+                             &AUTL &RETURN)                                 */ /*CUP003*/ /*CBF012*/
+/**********     CALL       PGM(UPC000026) PARM(&PTFSRC &GPSBSID &OWNER +             */ /*A1076141*/
+/**********                  &AUTL &RETURN &MODE)                             */ /*CBF012 A1076141*/
+                CALL       PGM(UPC000026) PARM(&PTFSRC &GPSBSID &OWNER +
+                             &AUTL &RETURN)                                             /*A1076141*/
+                DLTOVR     FILE(UPDLVCL4) LVL(*JOB)                                       /*CUP003*/
+/*If the program ended abnormally then display general message. */                        /*CUP003*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CUP003*/
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                                MSGDTA('UPC000026') MSG(&MESSAGE)                         /*CUP003*/
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                   /*CUP003*/
+                   CALL       PGM(SCC0010) PARM('UPC000026' 'JOBLOG' 'Y')                 /*CUP003*/
+                   GOTO       CMDLBL(END)                                                 /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+/*If the program encountered errors then display specific messages. */                    /*CUP003*/
+                CHGVAR     VAR(&UPSTATPOS) VALUE(16)                                      /*CUP003*/
+/**********     CALL       PGM(UPC0015) PARM('UPDLVCL4' 'UPC000026' +                */ /*AR690181*/
+/**********                  &UPSTATPOS &RETURN)                          */ /*CUP003*/ /*AR690181*/
+                CALL       PGM(UPC0015) PARM('UPDLVCLD' 'UPC000026' +
+                             &UPSTATPOS &RETURN)                                        /*AR690181*/
+                IF         COND(&RETURN *NE ' ') THEN(DO)                                 /*CUP003*/
+                   GOTO       CMDLBL(END)                                                 /*CUP003*/
+                ENDDO                                                                     /*CUP003*/
+             ENDDO                                                                        /*CUP003*/
+ 
+/*******************************************************************/ /*    */ /*CPK021*/ /*256038*/
+/*******************************************************************/ /*    */ /*CPK021*/ /*256038*/
+/***GPJRNNOT*-*End*journaling*for*anything*on*GPNJRNPD**************/ /*    */ /*CPK021*/ /*256038*/
+/*******************************************************************/ /*    */ /*CPK021*/ /*256038*/
+/*******************************************************************/ /*    */ /*CPK021*/ /*256038*/
+/**********  CALL       PGM(GPJRNNOT)                                       */ /*CPK021*/ /*256038*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                    */ /*CPK021*/ /*256038*/
+/**********     RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +                               */ /*256038*/
+/**********                  MSGDTA('GPJRNNOT') MSG(&MESSAGE)               */ /*CPK021*/ /*256038*/
+/**********     CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)        */ /*CPK021*/ /*256038*/
+/**********     CALL       PGM(SCC0010) PARM('GPJRNNOT' 'JOBLOG' 'Y')       */ /*CPK021*/ /*256038*/
+/**********     GOTO       CMDLBL(END)                                      */ /*CPK021*/ /*256038*/
+/**********  ENDDO                                                          */ /*CPK021*/ /*256038*/
+ 
+/**********  CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (3 7)) VALUE(' ')                        */ /*CPK021*/
+/**********  CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (13 1)) VALUE(' ')                       */ /*CPK021*/
+/**********  CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (15 1)) VALUE(' ')                       */ /*CPK021*/
+/**********  CHGDTAARA  DTAARA(&PTFUPG/UPSTAT (1 14)) VALUE(' ')            */ /*CPK021*/ /*CPK023*/
+/**********  CHGDTAARA  DTAARA(UPSTAT (1 14)) VALUE(' ')                    */ /*CPK023*/ /*256038*/
+/**********  CHGDTAARA  DTAARA(UPSTAT (1 15)) VALUE(' ')                    */ /*256038*/ /*CUP003*/
+             CHGDTAARA  DTAARA(UPSTAT (1 16)) VALUE(' ')                                  /*CUP003*/
+             GOTO       CMDLBL(END)
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+ 
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC002051') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC002051' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGJOB     JOBMSGQFL(&WRAP)
+ 
+/* Restore original library list. */
+             RSTLIBL    SAVEDLIBL(UPC002051)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

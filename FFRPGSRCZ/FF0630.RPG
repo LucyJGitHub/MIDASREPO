@@ -1,0 +1,186 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Generated Entries Trailers Merge')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0630  -  GENERATED ENTRIES FILE MERGE (COB)                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*   LAST AMEND NO. S01117             DATE 16MAR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMGEFFZZ IP  E                    DISK
+     F            APOSTZZF                          KRENAMEMAPOSTZF
+     FGEFFZZ  O   E                    DISK
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       60        Live record found on MGEFFZZ
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**      M  A  I  N     P  R  O  C  E  S  S  I  N  G                *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           *LIKE     DEFN NORE1     TNORE
+     C*
+     C**  Process live records - set on 60 if live found
+     C*
+     C           RECI      IFEQ 'T'
+     C                     SETON                     60
+     C*
+     C** Accumulate total records and allow for header and trailer
+     C*
+     C                     ADD  NORE1     TNORE
+     C                     SUB  2         TNORE
+     C*
+     C** Accumulate hash totals via ZZADD
+     C*
+     C           HRDC      DIV  1000      ZZAMT
+     C                     ADD  HRWN      ZZAMT
+     C                     EXSR ZZADD
+     C*
+     C                     END
+     C********************************************************************
+     C**                                                                 *
+     C**      T  O  T  A  L     T  I  M  E     C  A  L  C  S             *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     CLR                   EXSR LAST
+     C**
+     C/EJECT
+      *
+      *================================================================***
+      **                                                                 *
+      **             S  U  B  R  O  U  T  I  N  E  S                     *
+      **                                                                 *
+      *================================================================***
+      *
+      *================================================================
+      **
+      **        LAST  - HANDLES DB-ERRORS AND OUTPUT
+      **        ZZADD - ACCUMULATES HASH TOTALS
+      **        *PSSR - HANDLES ADNORMAL ERROR CONDITIONS                 S01117
+      **
+      *================================================================
+      *================================================================
+      *
+      *  S.R. LAST  - SUB-ROUTINE PERFORM ERROR AND OUTPUT
+      *
+      *  CALLED BY PROGRAM TOTAL TIME
+      *  CALLS SR. ZZADD
+      *
+      *================================================================
+      *
+      *
+     C           LAST      BEGSR
+      *
+      **  If no records on file or no live records - db-error 01
+      *
+     C           *IN60     IFEQ '0'
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'FF0630'  DBPGM
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C                     Z-ADD1         DBASE            **DBERROR 001**S01117
+     C                     MOVEL'MGEFF'   DBFILE           ***************
+     C                     MOVEL'TRAILER' DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+      *
+      **  Allow for header and trailer on new merged file
+      *
+     C                     ADD  2         TNORE
+      *
+      **  Move totals to output fields....
+      *
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     Z-ADDTNORE     NORE1
+      *
+      **   ....and write record
+      *
+     C                     WRITEAPOSTZZF
+     C                     ENDSR
+      *
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

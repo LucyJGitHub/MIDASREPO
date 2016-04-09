@@ -1,0 +1,848 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Outgoing message compression')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                                    *
+      *                                                               *
+      *   MS5090 - OUTGOING MESSAGES COMPRESSION                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 14Sep00               *
+      *                 CFT013             Date 14Sep00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                 123742             Date 24Mar98               *
+      *                  113352            DATE 13FEB97               *
+      *                  S01408            DATE 04NOV96               *
+      *                  S01408            DATE 14SEP95               *
+      *                  CSW095            DATE 10APR95               *
+      *                  S01431            DATE 16SEP93               *
+      *                  E29588            DATE 23OCT91               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  CFT014 - MT103 Message Generation for FT                     *
+      *  CFT013 - MT103 Message Generation for Non-FT                 *
+      *           joint change with CFT014                            *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   123742 - Amend program to allow blank message field data,   *
+      *            as fields 15A/B/C introduced for SWIFT97 are       *
+      *            mandatory and are always blank.                    *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *   S01408 - Addition of Core Hook MS5090IIP1                   *
+      *            Addition of Core Hook MS5090EEP1                   *
+      *            Addition of Core Hook MS5090CCP4                   *
+      *            Addition of Core Hook MS5090CCP3                   *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *            ST200 can handle 8100 character messages;          *
+      *            ST400 can handle 2000 charceter messages;          *
+      *            MERVA/2 can handle 9999 character messages;        *
+      *   S01431 - Merva/2 interface. If link fails ensure that       *
+      *            failed message is the first to be re-tried.        *
+      *   E29588 - POST-COLLECTION SWIFT RATIONALISATION AMENDMENTS   *
+      *          - MAKE COMPRESSION WAKE UP EVERY 10 SECONDS, RATHER  *
+      *            THAN WAITING ON DTQA.                              *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+     FMS5090P1O   E                    PRINTER                        UC
+     F*ABTB10*IF**E********            DISK                               S01310
+     F*SIXD***UF**E********   K        DISK                               S01310
+     FSDBANKPDIF  E                    DISK                               S01310
+     FMGOREFL3UF  E           K        DISK                               S01310
+     F                                              KCOMIT
+     F*SMSOPF*IF**E********   K        DISK                               S01310
+     FMGOMSGPDIF  E           K        DISK                               S01310
+     F/COPY WNCPYSRC,MS5090F001
+      *
+      * ID F  C  H  L    Function of indicators
+      **10***************EOF MSIXD                                        S01310
+      **15***************EOF MSMSOPF                                      S01310
+      **99***************EOF TABTB10                                      S01310
+      * 10               EOF MGOREFL3                                     S01310
+      * 15               EOF MGOMSGPD                                     S01310
+      * 17               Message tag (MTAG) found in Table/TAB1           CDL008
+      * 30               MS5090P1 open
+      * 31               LOKUP error
+      * 99               EOF SDBANKPD                                     S01310
+      * U7U8LR           DB error
+      *
+     E                    IMSG      256  1               incoming msg
+     E***********         OMSG     2000  1               compressed msg   CSW095
+     E                    OMSG     9999  1               compressed msg   CSW095
+     E                    MSG      1000  1               1000 bytes of msg
+     E/COPY WNCPYSRC,MS5090E001
+     E                    CPY@    1   1 80                                S01310
+     E********************TAB1    1   1  5                         CDL008 CFT014
+     E                    TAB1    1   2  5                                CFT014
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,MS5090EEP1                                           S01408
+     E*                                                                   S01408
+      *
+     I************DS*******                                               S01310
+     I*********************                   1 256 MDTA                  S01310
+     I*********************                   1 256 IMSG                  S01310
+      ***Data*structure*to*move MDTA into IMSG array                      S01310
+      *
+     IDTQB        DS
+     I                                        1   1 AIND                  CSW095
+     I                                        2   30NRECS                 CSW095
+     I                                        4   50RECNO                 CSW095
+     I                                        6  21 TRN                   CSW095
+     I                                       221021 MSG                   CSW095
+     I***********                             1   1 AIND                  CSW095
+     I***********                             2   20NRECS                 CSW095
+     I***********                             3   30RECNO                 CSW095
+     I*********************                   4   4 MIND                  S01310
+     I*********************                   5  19 TRN                   S01310
+     I***********                             4  19 TRN            S01310 CSW095
+     I***********                            201019 MSG                   CSW095
+      **  Data structure for compressed message output
+      *
+     I*EYM********DS*******                                               S01310
+     I*********************                   1   1 MSMI                  S01310
+     I*********************                   2  16 TNRF                  S01310
+      ****Data*structure*for MSMSOPF key                                  S01310
+     I/COPY WNCPYSRC,MS5090I001
+      *
+     IMSSTAT      DS                            256
+     I                                       22  22 QFIND
+     I                                       23  23 CPAIND
+     I                                       60  75 RETRY                 S01431
+      **  MSSTAT data structure
+      *
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     I            DS
+     I*********************                   1  43 @SW1                  S01310
+     I*********************                   4  15 @SND1                 S01310
+     I*********************                  24  26 @TYP1                 S01310
+     I*********************                  28  29 @PRY1                 S01310
+     I                                       32  43 @DST1
+     I                                       40  43 @WK4
+     I                                       41  43 @WK3
+     I                                       40  42 @WL3
+     I                                       43  43 @WK1
+      ****SWIFT*I*message*header                                          S01310
+      **  Destination address data structure                              S01310
+      *
+     I            DS
+     I*********************                   1  48 @SW2                  S01310
+     I                                        1  49 @SW2                  S01310
+     I                                        1   6 TXT1
+     I                                        7  18 @SND2
+     I                                       19  33 TXT2
+     I*********************                  34  36 @TYP2                 S01310
+     I                                       34  36 MTPY                  S01310
+     I                                       37  48 @DST2
+     I                                       49  49 MPRY                  S01310
+      **  SWIFT II message header
+      *
+     I            DS                                                      S01310
+     I                                        1   5 MTAG                  S01310
+     I                                        5   5 @WL1                  S01310
+      **  Field tag data structure                                        S01310
+      *                                                                   S01310
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,MS5090IIP1                                           S01408
+     I*                                                                   S01408
+     ISDMGME    E DSSDMGMEPD                                              S01431
+      **  Data structure for MG/ME Installation Control Data              S01431
+      *                                                                   S01431
+     ISCSARD    E DSSCSARDPD                                              CSW095
+     I** EXTERNAL DS FOR SAR DETAILS                                      CSW095
+     I*                                                                   CSW095
+     IDSFDY     E DSDSFDY                                                 CSW095
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CSW095
+     I*                                                                   CSW095
+     IDSSDY     E DSDSSDY                                                 CSW095
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                CSW095
+     I*                                                                   CSW095
+     C***********MKEY******KLIST                                          S01310
+     C*********************KFLD           MSMI                            S01310
+     C*********************KFLD           TNRF                            S01310
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   IDTA  - process input record                                *
+      *   WRIT  - output record                                       *
+      *   REPT  - process error report                                *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           QRCVDTAQ receive DATAQ                              *
+      *           REPT  - process error report                        *
+      *           *PSSR - error handling                              *
+      *           IDTA  - process input record                        *
+      *           WRIT  - output record                               *
+      *****************************************************************
+      *
+      **  Execute initial process
+     C                     EXSR INIT
+      *
+     C           DTQA      DOWNE'T'
+      *
+      **  Receive data queue
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTAQ   10
+     C                     PARM           LIB    10
+     C                     PARM           LENA    50
+     C                     PARM           DTQA    1
+     C                     PARM           WAIT    50
+      *
+     C********** DTQA      IFEQ 'C'                                       E29588
+      *
+      **  Read message reference file
+     C************LOVAL****SETLLMSIXD                                     S01310
+     C*********************READ MSIXD                    10               S01310
+      *                                                                   S01431
+      **  S01431: If re-start after link failure, attempt to send         S01431
+      **  failed message first.                                           S01431
+     C           @RETRY    IFNE *BLANKS                                   S01431
+     C           @RETRY    SETLLMGOREFL3                                  S01431
+     C                     MOVE *BLANKS   @RETRY                          S01431
+     C                     ELSE                                           S01431
+     C           *LOVAL    SETLLMGOREFL3                                  S01310
+     C                     END                                            S01431
+     C                     READ MGOREFL3                 10               S01310
+      *
+      **  Do until EOF message reference file
+     C           *IN10     DOWEQ'0'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MS5090CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      **  Process message
+     C***********MKEY******SETLLMSMSOPF                  15               S01310
+     C           TRNO      SETLLMGOMSGPD                                  S01310
+     C           PTDL      DOUNE'D'                                       S01310
+     C           *IN15     OREQ '1'                                       S01310
+     C           TRNO      READEMGOMSGPD                 15               S01310
+     C                     END
+      *
+     C           *IN15     IFEQ '1'
+     C*********************MOVE 'MSMSOPF' DBFILE                          S01310
+     C*********************MOVELKEYM      DBKEY            * DB ERROR 02 *S01310
+     C                     MOVE 'MGOMSGPD'DBFILE                          S01310
+     C                     MOVELTRNO      DBKEY            * DB ERROR 02 *S01310
+     C                     Z-ADD02        DBASE
+     C                     OPEN MS5090P1
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ****Read*outgoing*message file                                      S01310
+     C***********MKEY******READEMSMSOPF                  15               S01310
+      *********************                                               S01310
+      ****Convert*SWIFT*I*header into SWIFT II header                     S01310
+     C*********************MOVEAIMSG      @SW1                            S01310
+     C*********************MOVE @SND1     @SND2                           S01310
+     C*********************MOVE @TYP1     @TYP2                           S01310
+      *
+      **  Expand address to 12 characters with Xs
+     C                     MOVELNWDS      @DST1                           S01310
+     C           @WK4      IFEQ '    '
+     C                     MOVE @DST1     @DST2
+     C                     MOVE 'XXXX'    @DST2
+     C                     ELSE
+     C           @WK3      IFEQ '   '
+     C                     MOVE @DST1     @DST2
+     C                     MOVE 'XXX'     @DST2
+     C                     ELSE
+     C           @WK1      IFEQ ' '
+     C                     MOVEL'X'       @WL4    4
+     C                     MOVE @WL3      @WL4
+     C                     MOVE @DST1     @DST2
+     C                     MOVE @WL4      @DST2
+     C                     ELSE
+     C                     MOVE @DST1     @DST2
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MS5090CCP4                                           S01408
+     C*                                                                   S01408
+      *
+      **  Write SWIFT II header to message array                          S01310
+     C                     MOVELNWSN      @SND2                           S01310
+     C                     MOVE *BLANKS   OMSG                            S01310
+     C                     MOVEA@SW2      OMSG                            S01310
+     C                     Z-ADD50        O       50                      CSW095
+     C***********          Z-ADD50        O       40               S01310 CSW095
+     C/COPY WNCPYSRC,MS5090C009
+      *                                                                   S01310
+      **  Write delivery notification to message array if not blank       S01310
+     C           DELC      IFNE *BLANKS                                   S01310
+     C                     MOVE DELC      OMSG,O                          S01310
+     C                     ADD  1         O                               S01310
+     C                     END                                            S01310
+     C/COPY WNCPYSRC,MS5090C008
+      *                                                                   CDL008
+      ** Output all Block 3 details first before Block 4                  CDL008
+      *                                                                   CDL008
+     C           *IN15     IFEQ *OFF                                      CDL008
+      *                                                                   CDL008
+     C           MTAG      LOKUPTAB1                     17               CDL008
+      *                                                                   CDL008
+     C           *IN17     IFEQ *ON                                       CDL008
+      *                                                                   CDL008
+     C                     MOVEATXT4      OMSG,O                          CDL008
+     C                     ADD  4         O                               CDL008
+      *                                                                   CDL008
+     C           *IN15     DOWEQ*OFF                                      CDL008
+     C           *IN17     ANDEQ*ON                                       CDL008
+      *                                                                   CDL008
+     C                     MOVELMTAG      WBLK3   5                       CDL008
+     C                     MOVEL'{'       WBLK3                           CDL008
+     C                     MOVEAWBLK3     OMSG,O                          CDL008
+     C                     ADD  5         O                               CDL008
+      *                                                                   CDL008
+     C                     MOVEAMFLD      OMSG,O                          CDL008
+     C           OMSG,O    DOWNE*BLANK                                    CDL008
+     C                     ADD  1         O                               CDL008
+     C                     ENDDO                                          CDL008
+     C                     MOVEA'}'       OMSG,O                          CDL008
+     C                     ADD  1         O                               CDL008
+      *                                                                   CDL008
+     C           PTDL      DOUNE'D'                                       CDL008
+     C           *IN15     OREQ *ON                                       CDL008
+     C           TRNO      READEMGOMSGPD                 15               CDL008
+     C                     ENDDO                                          CDL008
+     C           *IN15     IFEQ *OFF                                      CDL008
+     C           MTAG      LOKUPTAB1                     17               CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+     C                     ENDDO                                          CDL008
+      *                                                                   CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+      ** Output Block 4 for remaining records                             CDL008
+      *                                                                   CDL008
+     C                     MOVEATXT3      OMSG,O                          S01310
+     C                     ADD  6         O                               S01310
+      *                                                                   S01310
+      ****Convert*priority*'02' to 'N'                                    S01310
+      *********************'01' to 'U3', '11' to 'U1', '12' to 'N2'       S01310
+     C***********@PRY1*****IFEQ '02'                                      S01310
+     C*********************Z-ADD49        O                               S01310
+     C*********************MOVEA'N'       OMSG,O                          S01310
+     C*********************Z-ADD50        O                               S01310
+     C*********************MOVEA'}{4:'    OMSG,O                          S01310
+     C*********************Z-ADD53        O       40                      S01310
+     C*********************Z-ADD53        S       40                      S01310
+     C*********************ELSE                                           S01310
+     C*********************Z-ADD49        O                               S01310
+     C***********@PRY1*****IFEQ '01'                                      S01310
+     C*********************MOVEA'U3'      OMSG,O                          S01310
+     C*********************END                                            S01310
+     C***********@PRY1*****IFEQ '11'                                      S01310
+     C*********************MOVEA'U1'      OMSG,O                          S01310
+     C*********************END                                            S01310
+     C***********@PRY1*****IFEQ '12'                                      S01310
+     C*********************MOVEA'N2'      OMSG,O                          S01310
+     C*********************END                                            S01310
+     C*********************Z-ADD51        O                               S01310
+     C*********************MOVEA'}{4:'    OMSG,O                          S01310
+     C*********************Z-ADD54        O                               S01310
+     C*********************Z-ADD54        S                               S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+      ****Set*counters*****                                               S01310
+     C/COPY WNCPYSRC,MS5090C001
+     C*********************Z-ADD44        I       30                      S01310
+     C*********************MOVE 'N'       END     1                       S01310
+     C/COPY WNCPYSRC,MS5090C002
+      *
+      **  Process rest
+     C           *IN15     DOWEQ'0'
+     C/COPY WNCPYSRC,MS5090C004
+      *
+      **  Write field tag to message array if not blank                   S01310
+     C           MTAG      IFNE *BLANKS                                   S01310
+     C                     MOVEAMTAG      OMSG,O                          S01310
+     C           @WL1      IFEQ *BLANKS                                   S01310
+     C                     ADD  4         O                               S01310
+     C                     ELSE                                           S01310
+     C                     ADD  5         O                               S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write all non blank characters in field to message array        S01310
+     C                     MOVE *BLANKS   IMSG                            S01310
+     C           MFLD      IFNE ' '                                       123742
+     C                     MOVEAMFLD      IMSG                            S01310
+     C                     Z-ADD50        I       40                      S01310
+     C           IMSG,I    DOWEQ' '                                       S01310
+     C                     SUB  1         I                               S01310
+     C                     END                                            S01310
+     C                     ELSE                                           123742
+     C                     Z-ADD0         I                               123742
+     C                     END                                            123742
+      *                                                                   S01310
+     C                     Z-ADDI         S       40                      S01310
+     C                     Z-ADD1         I                               S01310
+     C           S         DOWGEI                                         S01310
+     C                     MOVE IMSG,I    OMSG,O                          S01310
+     C                     ADD  1         I                               S01310
+     C                     ADD  1         O                               S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write CRLF to message array if not blank                        S01310
+     C           CTRC      IFNE *BLANKS                                   S01310
+     C                     MOVEACTRC      OMSG,O                          S01310
+     C                     ADD  2         O                               S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      ****Process*all*bytes of record                                     S01310
+     C***********I*********DOWLT257                                       S01310
+     C***********END*******ANDNE'Y'                                       S01310
+     C*********************EXSR IDTA                                      S01310
+     C*********************END                                            S01310
+      *
+      **  Read outgoing messages file but ignore deleted parts.
+     C           PTDL      DOUNE'D'
+     C           *IN15     OREQ '1'
+     C***********MKEY******READEMSMSOPF                  15               S01310
+     C/COPY WNCPYSRC,MS5090C003
+     C*********************Z-ADD1         I                               S01310
+     C           TRNO      READEMGOMSGPD                 15               S01310
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MS5090C005
+      *
+      **  Write end of text block & ETX to message array                  S01310
+     C                     MOVEA'-}'      OMSG,O                          S01310
+     C                     ADD  2         O                               S01310
+     C                     MOVEAETX       OMSG,O                          S01310
+     C                     ADD  1         O                               S01310
+      *
+     C****If*compressed*msg*is*greater*than*2000*bytes*output*report******CSW095
+     C***********O         IFGT 2000                                      CSW095
+      **  If compressed msg is greater in length than the transmission    CSW095
+      **  limit of the ST Device, output exception report.                CSW095
+     C           O         IFGT LIMIT                                     CSW095
+     C                     EXSR REPT
+      *
+      **  Otherwise output message
+     C                     ELSE
+     C                     EXSR WRIT
+     C                     END
+     C/COPY WNCPYSRC,MS5090C015
+      *
+      **  Read message reference file
+     C*********************READ MSIXD                    10               S01310
+     C                     READ MGOREFL3                 10               S01310
+     C                     END
+     C******************** END                                            E29588
+     C                     END
+      *
+     C/COPY WNCPYSRC,MS5090C010
+      **  Send 'T' entry to data queue MSDTQB
+     C*********************MOVE *BLANKS   MIND                            S01310
+     C                     MOVE *BLANKS   TRN
+     C                     MOVE *BLANKS   MSG
+     C                     MOVE 'T'       AIND
+     C                     Z-ADD0         RECNO
+     C                     Z-ADD0         NRECS
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTBQ
+     C                     PARM           LIB
+     C                     PARM           LENB
+     C                     PARM           DTQB
+     C/COPY WNCPYSRC,MS5090C011
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Calls - REPT process error report                           *
+      *           *PSSR error handling                                *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Reserve data area
+     C           *NAMVAR   DEFN           MS0200  1
+     C           *LOCK     IN   MS0200
+      *
+      **  Set up LDA
+     C                     MOVE *BLANKS   DBFILE                          S01310
+     C                     MOVE *BLANKS   DBKEY                           S01310
+     C                     MOVE 'MS5090  'DBPGM
+     C                     MOVE *BLANKS   DBASE                           S01310
+      *
+      ****Access*TABTB10*to find run date                                 S01310
+     C*********************READ TABTB10                  99               S01310
+      **  Access SDBANKL0 to find run date                                S01310
+     C                     READ SDBANKPD                 99               S01310
+      *
+     C           *IN99     IFEQ '1'
+     C***********RECI******ORNE 'D'                                       S01310
+     C                     SETON                     U7U8LR
+     C*********************MOVE 'TABTB10' DBFILE                          S01310
+     C                     MOVE 'SDBANKPD'DBFILE                          S01310
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE
+     C                     OPEN MS5090P1
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   S01431
+      **  S01431: Access SDMGMEPD for MG/ME Installation Control Data     S01431
+     C                     CALL 'AOMGMER0'                                S01431
+     C                     PARM '*MSG   ' @RTCD   7                       S01431
+     C                     PARM '*FIRST ' @OPTN   7                       S01431
+     C                     PARM           SDMGME                          S01431
+      *                                                                   S01431
+     C           @RTCD     IFNE *BLANKS                                   S01431
+     C                     MOVE '003'     DBASE            * * * * * * * *S01431
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 003  *S01431
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *S01431
+     C                     OPEN MS5090P1                                  S01431
+     C                     WRITEHEADER                                    S01431
+     C                     WRITEDBERROR                                   S01431
+     C                     EXSR *PSSR                                     S01431
+     C                     END                             EndIf          S01431
+      *                                                                   S01431
+      **  If Merva/2 interface in use (comms protocol on ICD is 'APPC')   S01431
+      **  check for TRN of message to retry on MSSTAT. This will have     S01431
+      **  been set up by Merva/2 comms if it fell over trying to send     S01431
+      **  a message.                                                      S01431
+     C           *LOCK     IN   MSSTAT                                    S01431
+     C                     MOVELRETRY     @RETRY 16                       S01431
+     C                     MOVE *BLANKS   RETRY                           S01431
+     C                     OUT  MSSTAT                                    S01431
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      **  Initialise text fields
+     C                     MOVE '{1:F01'  TXT1
+     C                     MOVEL'99999999'TXT2
+     C                     MOVE '99}{2:I' TXT2
+     C                     MOVEL'}{3:'    TXT4    4                       CDL008
+     C                     MOVEL'}{4:'    TXT3                            S01310
+     C                     MOVE CRLF      TXT3    6                       S01310
+     C/COPY WNCPYSRC,MS5090C014
+      *
+      **  Setup data queue parameters
+     C                     MOVEL'MSDTQA'  DTAQ
+     C                     MOVEL'MSDTQB'  DTBQ
+     C                     MOVEL'*LIBL'   LIB
+     C                     Z-ADD1         LENA
+     C                     Z-ADD1021      LENB                            CSW095
+     C***********          Z-ADD1019      LENB                            CSW095
+     C******************** Z-SUB1         WAIT                            E29588
+     C                     Z-ADD10        WAIT                            E29588
+      *
+      **  Seton indicator to reset PAGE field for reports
+     C                     SETON                     40
+     C/COPY WNCPYSRC,MS5090C006
+      *                                                                   CSW095
+      **  To determine the maximum number of characters that can be       CSW095
+      **  transmitted, we must determine which communication device       CSW095
+      **  is being used to connect to S.W.I.F.T.                          CSW095
+      **  Device  Protocol  SWITCH  Limit                                 CSW095
+      **  ======  ========  ======  =====                                 CSW095
+      **  ST200   3270              8100                                  CSW095
+      **  ST400   3270      S01436  2000                                  CSW095
+      **  MERVA   APPC              9999                                  CSW095
+      **                                                                  CSW095
+     C           ENPRUS    IFEQ '3270'                                    CSW095
+     C                     CALL 'AOSARDR0'                                CSW095
+     C                     PARM '*MSG   ' @RTCD   7                       CSW095
+     C                     PARM '*KEY   ' @OPTN   7                       CSW095
+     C                     PARM 'S01436'  @SARD   6                       CSW095
+     C           SCSARD    PARM SCSARD    DSFDY                           CSW095
+      *                                                                   CSW095
+      **  ST400 Installed                                                 CSW095
+     C           @RTCD     IFEQ *BLANKS                                   CSW095
+     C                     Z-ADD2000      LIMIT   50                      CSW095
+      **  ST200 Installed                                                 CSW095
+     C                     ELSE                                           CSW095
+     C                     Z-ADD8100      LIMIT                           CSW095
+     C                     ENDIF                                          CSW095
+     C                     ENDIF                                          CSW095
+     C/COPY WNCPYSRC,MS5090C012
+      *                                                                   CSW095
+      ** MERVA/2 Installed.                                               CSW095
+     C           ENPRUS    IFEQ 'APPC'                                    CSW095
+     C                     Z-ADD9999      LIMIT                           CSW095
+     C                     ENDIF                                          CSW095
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MS5090CCP3                                           S01408
+     C*                                                                   S01408
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MS5090C007
+     C*EJECT                                                              S01310
+      *****************************************************************   S01310
+      ****IDTA*-*process*input record (1 byte or CRLF)                *   S01310
+      ****Called*by*-*main*process                                    *   S01310
+      *****************************************************************   S01310
+      *********************                                               S01310
+     C***********IDTA******BEGSR                                          S01310
+      *********************                                               S01310
+     C***********IMSG,I****IFEQ ETX                                       S01310
+     C*********************MOVE 'Y'       END                             S01310
+     C*********************MOVE '}'       IMSG,I                          S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+      ****Write*CRLF*after*last non blank byte                            S01310
+      ****if*last*non*blank byte was CRLF no write                        S01310
+      ****(exclude*trailing blanks & empty subfields)                     S01310
+     C***********IMSG,I****IFEQ CR                                        S01310
+     C***********OMSG,S****IFNE LF                                        S01310
+     C***********S*********ADD  1         O                               S01310
+     C*********************MOVEACRLF      OMSG,O                          S01310
+     C*********************ADD  2         S                               S01310
+     C*********************END                                            S01310
+     C*********************ADD  2         I                               S01310
+     C*********************ADD  2         O                               S01310
+      *********************                                               S01310
+      ****Write*to*next*free position                                     S01310
+      ****if*last*non*blank byte was CRLF write immediately after CRLF    S01310
+      ****otherwise*write*in next available output position               S01310
+      ****(exclude*any*leading blanks)                                    S01310
+     C*********************ELSE                                           S01310
+     C***********OMSG,S****IFEQ LF                                        S01310
+     C***********S*********ADD  1         O                               S01310
+     C*********************MOVE IMSG,I    OMSG,O                          S01310
+     C*********************ELSE                                           S01310
+     C*********************MOVE IMSG,I    OMSG,O                          S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+      ****Save*output*position of last non blank byte                     S01310
+     C***********IMSG,I****IFNE ' '                                       S01310
+     C*********************Z-ADDO         S                               S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+     C*********************ADD  1         I                               S01310
+     C*********************ADD  1         O                               S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+     C*********************ENDSR                                          S01310
+     C/EJECT
+      *****************************************************************
+      *   WRIT - output record                                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           WRIT      BEGSR
+      *
+     C           *NAMVAR   DEFN           MSSTAT
+     C           *LOCK     IN   MSSTAT
+     C                     OUT  MSSTAT
+      *
+      **  If transmission program inactive end program
+     C           CPAIND    IFEQ 'N'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      **  If Ready queue full indicator is 'Y' return to wait for next
+      **  data queue record
+     C           QFIND     IFEQ 'Y'
+      *
+      **  Seton end of file indicator for Message Reference file
+     C                     SETON                     10
+     C                     ELSE
+      *
+      ****Check*message*for 'End of Text' (CrLf-) and 'End of Message'    S01310
+      ****(X'03').*If*missing, add to end. NB. This should only happen    S01310
+      ****on*a*multiple*message where the last part has been deleted.     S01310
+     C*********************SETON                     17                   S01310
+     C*********************Z-ADDO         OSAVE   40                      S01310
+      *********************                                               S01310
+      ****Check*first*for*'End of Message'.                               S01310
+     C*********************Z-ADD1         O                               S01310
+     C***********ETX*******LOKUPOMSG,O                   16               S01310
+      *********************                                               S01310
+      ****Assume*that*if*'End of Message' is present, then so is          S01310
+      ****'End*of*Text'.*Check for 'End of Text' if 'End of Message' is   S01310
+      ****missing.*********                                               S01310
+     C************IN16*****IFEQ '0'                                       S01310
+     C*********************Z-ADDOSAVE     O                               S01310
+     C************IN17*****DOUEQ'1'                                       S01310
+     C***********O*********ORLE 4                                         S01310
+     C*********************SETOF                     17                   S01310
+     C*********************SUB  1         O                               S01310
+     C***********OMSG,O****IFEQ '-'                                       S01310
+     C*********************SUB  1         O                               S01310
+     C***********OMSG,O****IFEQ LF                                        S01310
+     C*********************SUB  1         O                               S01310
+     C***********OMSG,O****COMP CR                       17               S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+      ****Output*'End*of*Text' and 'End of Message' if required.          S01310
+      ****Note:*If*'End*of*Text' is missing, it is only necessary to      S01310
+      ****add*the*hyphen*to the end of the message because the last       S01310
+      ****characters*in*the message will always be 'CrLf'.                S01310
+     C*********************Z-ADDOSAVE     O                               S01310
+     C************IN17*****IFEQ '0'                                       S01310
+     C*********************MOVE '-'       OMSG,O                          S01310
+     C*********************ADD  1         O                               S01310
+     C*********************END                                            S01310
+      *********************                                               S01310
+     C************IN16*****IFEQ '0'                                       S01310
+     C*********************MOVE ETX       OMSG,O                          S01310
+     C*********************ADD  1         O                               S01310
+     C*********************END                                            S01310
+      *
+      **  Finalise Control characters
+     C                     MOVE 'S'       AIND
+     C                     Z-ADD1         RECNO
+     C                     Z-ADD1         Y       50                      CSW095
+     C***********          Z-ADD1         Y       40                      CSW095
+      *
+     C***********O         IFGT 1000                                      CSW095
+     C***********          Z-ADD2         NRECS                           CSW095
+     C***********          ELSE                                           CSW095
+     C***********          Z-ADD1         NRECS                           CSW095
+     C***********          END                                            CSW095
+      *
+     C                     MOVE TRNO      TRN                             S01310
+      *                                                                   CSW095
+      ** Calculate the no. of 1000 character blocks that                  CSW095
+      ** make up the message.                                             CSW095
+     C           O         DIV  1000      NRECS   20                      CSW095
+     C                     MVR            REMD    50                      CSW095
+     C           REMD      IFNE 0                                         CSW095
+     C                     ADD  1         NRECS                           CSW095
+     C                     ENDIF                                          CSW095
+      *                                                                   CSW095
+     C*********************MOVE MSMI      MIND                            S01310
+     C*********************MOVE TNRF      TRN                             S01310
+      *
+      **  Send output to MSDTQB in 1021 byte records                      CSW095
+      ****Send*output*to*MSDTQB*in*1019*byte*records*******************   CSW095
+     C                     DO   NRECS     RECNO
+      *
+     C                     MOVEAOMSG,Y    MSG
+      *
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM           DTBQ   10
+     C                     PARM           LIB    10
+     C                     PARM           LENB    50
+     C                     PARM           DTQB
+      *
+     C           Y         ADD  1000      Y
+     C/COPY WNCPYSRC,MS5090C013
+     C                     END
+      *
+      **  Reset output msg array                                          S01310
+     C*********************MOVE *BLANKS   OMSG                            S01310
+      *
+      **  Update status on Message Reference file
+     C*********************MOVE 'P'       MSTS                            S01310
+     C*********************UPDATMSIXOPFF                                  S01310
+     C                     MOVE 'PEND'    MGST                            S01310
+     C                     MOVE '2'       MGSG                            S01310
+     C                     UPDATMGOREFD0                                  S01310
+     C                     COMIT
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - process error report                                 *
+      *   Called by - main process                                    *
+      *               INIT initial process                            *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      ** Update message reference record to 'A' if                        CSW095
+      **  message > 8100 for ST200                                        CSW095
+      **  message > 2000 for ST400                                        CSW095
+      **  message > 9999 for MERVA/2                                      CSW095
+      **Update*message*reference*record*to*'A'*if*message*>*2000*******   CSW095
+     C************INU7*****IFEQ '0'                                       S01310
+     C*********************MOVE 'A'       MSTS                            S01310
+     C*********************UPDATMSIXOPFF                                  S01310
+     C                     MOVE 'AMND'    MGST                            S01310
+     C                     MOVE '1'       MGSG                            S01310
+     C                     UPDATMGOREFD0                                  S01310
+     C                     COMIT
+     C*********************END                                            S01310
+      *
+      * Output error report
+     C                     MOVE LIMIT     LIMITS  4                       CSW095
+     C                     OPEN MS5090P1               30
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C                     CLOSEMS5090P1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - main process                                    *
+      *               INIT initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MS5090CCP2                                           S01408
+     C*                                                                   S01408
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** TAB1                                                                   CDL008
+:103:                                                                     CDL008
+:119:                                                                     CFT014

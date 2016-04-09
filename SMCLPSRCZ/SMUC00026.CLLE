@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update CLOANCL')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00026 - Correct NOPS field (number of parts. sold)      */
+/*                   in matured/live loans within PF/CLOANCL.        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BG26993            Date 26Jan10              */
+/*       Prev Amend No. 201762 *CREATE     Date 28Feb02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed S201762C01.                               */
+/*       201762  - NOPS field of the original loan is not properly   */
+/*                 updated upon maturity of the attached parts sold  */
+/*                 loan.                                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Copy CLOANCL to template file. */
+             CPYF       FROMFILE(CLOANCL) TOFILE(SMU002PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(SMU00063) PARM('U')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If program succssful then copy version of CLOANCL back. */
+             CPYF       FROMFILE(SMU002PD) TOFILE(CLOANCL) +
+                          MBROPT(*REPLACE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

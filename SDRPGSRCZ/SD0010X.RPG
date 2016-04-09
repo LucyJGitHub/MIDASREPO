@@ -1,0 +1,909 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Delete customers after one year')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0010X - Purge Deleted Customers After One Year.            *
+      *                                                               *
+      *  Function:  This program physically deletes all customers     *
+      *             that have been logically deleted for at least     *
+      *             one year.                                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER070             Date 19Aug14               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 BUG23518           Date 30Mar09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL032             Date 05Jul04               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW024             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27OCT97               *
+      *                 S01408             DATE 11NOV96               *
+      *                 S01408             DATE 31MAY96               *
+      *                 CDL001             DATE 13OCT95               *
+      *                 CCF001             DATE 11APR95               *
+      *                 S01505             DATE 18JUL94               *
+      *                 S01437             DATE 20JAN94               *
+      *                 S01459             DATE 20JAN94               *
+      *                 S01413             DATE 25JUN93               *
+      *                 LN1104             DATE 15FEB91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  BUG23518 - Produce Annual Tax Deducted Statement upon        *
+      *             Customer Closure                                  *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL032 - Automatic Exchange of Information                   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  CSD007 - Customer Closing (Recompiled over SDCUSTL0)         *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *           (Recompiled over changed SDCUSTPD)                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01408 - Addition of core hook:                              *
+      *           SD0010XEPG                                          *
+      *  S01408 - Addition of core hooks:                             *
+      *           SD0010XFPG                                          *
+      *           SD0010XDAU                                          *
+      *           SD0010XDBU                                          *
+      *  CDL001 - Recompiled over changed SDCUSTPD.                   *
+      *  CCF001 - Recompiled over changed SDCUSTPD.                   *
+      *  S01505 - Recompiled over the new 'M.A. Analysis by Assoc.    *
+      *           Cust' field.                                        *
+      *  S01437 - Recompiled over the new Midas Export module field.  *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01413 - Retail 3 incorporation:- Retail Customer Group      *
+      *           added to SDCUSTPD. Recompile only.                  *
+      *  LN1104 - Recompiled owing to change to SDCUSTPD.             *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SD0010XFPG
+     FSDCUSTL8IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Deleted customers awaiting drop
+      *
+     FSDALTNL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Alternate names and address retrieval
+      *
+     FSDALTNL0UF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Alternate names and address update
+      *
+     FSDCUSTL0UF  E           K        DISK                           UC
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Customer details update
+     FSDACUSL0UF  E           K        DISK                           UC                    BUG23518
+     F                                              KINFDS ID0005                           BUG23518
+     F                                              KINFSR *PSSR                            BUG23518
+      *                                                                                     BUG23518
+      ** UPD : Midas SD Additional Customer Details Update                                  BUG23518
+      *                                                                                     BUG23518
+     FSDACTXL0UF  E           K        DISK                           UC                    BUG23518
+     F                                              KINFDS ID0006                           BUG23518
+     F                                              KINFSR *PSSR                            BUG23518
+      *                                                                                     BUG23518
+      ** UPD : Midas SD Customer by Country of Tax Details                                  BUG23518
+      *                                                                                     BUG23518
+     F/COPY WNCPYSRC,SD0010XF01
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     E/COPY WNCPYSRC,SD0010XEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY WNCPYSRC,SD0010XIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IWUDELR      DS
+     I                                        1 250 WUDR01
+     I                                      251 500 WUDR02
+     I                                      501 750 WUDR03
+     I                                      7511000 WUDR04
+     I                                     10011250 WUDR05
+     I                                     12511500 WUDR06
+     I                                     15011750 WUDR07
+     I                                     17512000 WUDR08
+     I                                     20012250 WUDR09
+     I                                     22512500 WUDR00
+     I                                     25012750 WUDR11
+     I                                     27513000 WUDR12
+      * Outward parameters
+     IPARC        DS                           3064
+      * RCD : Midas SD Deleted records file retrieval
+      * I :  File name
+     I                                        1  10 PAFNME
+      * I :  Long Key
+     I                                       11  60 PALKEY
+      * I :  Deleted Data Record Pt1
+     I                                       61 310 PADR01
+      * I :  Deleted Data Record Pt2
+     I                                      311 560 PADR02
+      * I :  Deleted Data Record Pt3
+     I                                      561 810 PADR03
+      * I :  Deleted Data Record Pt4
+     I                                      8111060 PADR04
+      * I :  Deleted Data Record Pt5
+     I                                     10611310 PADR05
+      * I :  Deleted Data Record Pt6
+     I                                     13111560 PADR06
+      * I :  Deleted Data Record Pt7
+     I                                     15611810 PADR07
+      * I :  Deleted Data Record Pt8
+     I                                     18112060 PADR08
+      * I :  Deleted Data Record Pt9
+     I                                     20612310 PADR09
+      * I :  Deleted Data Record Pt10
+     I                                     23112560 PADR00
+      * I :  Deleted Data Record Pt11
+     I                                     25612810 PADR11
+      * I :  Deleted Data Record Pt12
+     I                                     28113060 PADR12
+      * I :  Last Change Date
+     I                                    P306130630PALCD
+      * I :  Type of Last Change
+     I                                     30643064 PATYLC
+      *
+     IYRSW0A      DS                           9999
+     IYRSW0B      DS                           9999
+     IYRSW0C      DS                           9999
+     IYRSW0D      DS                           9999
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+     IID0005      DS                            528                                         BUG23518
+      *                                                                                     BUG23518
+     IID0006      DS                            528                                         BUG23518
+      *                                                                                     BUG23518
+     I@1DBRC    E DSSDCUSTL0
+      * UPD : Midas SD Customer details update
+      * Deletion information data structure
+      *
+      ** Midas SD Additional Customer Details Update                                        BUG23518
+      *                                                                                     BUG23518
+     ISDCCTX    E DSSDACTXL0                                                                BUG23518
+      *                                                                                     BUG23518
+      ** Midas SD Additional Customer Details Update                                        BUG23518
+      *                                                                                     BUG23518
+     ISDACUS    E DSSDACUSL0                                                                BUG23518
+     I/COPY WNCPYSRC,SD0010XI01
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Delete Customers after yr
+      * Start of change S01459.
+      * SD0010X Precompiler - Client Details  *
+      * Remove Last Amend Box and Creation Parameters functions.
+      * End of change S01459.
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Define ##MRDT - Holidays  *
+     C                     MOVE ##MRDT    ##MRDT  7
+     C           WURDNB    SUB  365       WULYDN           Last Year Day N
+      *                                                                                       CGL032
+      ** If CGL032 is installed, Subtract 731 from WURDNB                                     CGL032
+      *                                                                                       CGL032
+     C           CGL032    IFEQ 'Y'                                                           CGL032
+     C           WURDNB    SUB  731       WULYDN                                              CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL032
+      * Read deleted customers - Client Details  *
+     C                     EXSR SARVGN
+      * 00/Copy Member SD0010XCPG - Client Details  *
+     C/COPY WNCPYSRC,SD0010XCPG
+      * 00/Copy Member SD0010XEPG - Client Details  *
+      * 00/Copy Member SD0010XFPG - Client Details  *
+      * 00/Copy Member SD0010XIPG - Client Details  *
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Read deleted customers - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSA     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVEL*BLANK    BBCUST           Customer Number
+     C           KPSSA     SETLL@CUSTIQ                    *
+     C                     READ @CUSTIQ                  90*
+      * Data record not found
+     C   90                MOVEL'USR0081' W0RTN   7
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+      * CASE: DB1.Date Deleted LE PAR.Last Year Day Number
+     C           BBDTDL    IFLE WULYDN                     *IF
+      * check to see if an alternative name & address records
+      * exist and if they do delete them from the system.
+      * Check/Delete record - Alternate Names & Address  *
+     C                     EXSR SBRVGN
+      *                                                                                     BUG23518
+      ** Check to see if Additional Details exist for the Customer                          BUG23518
+      *                                                                                     BUG23518
+     C                     EXSR SBRACU                                                      BUG23518
+      *                                                                                     BUG23518
+      ** Check to see if Customer by Country of Tax Details exist                           BUG23518
+      *                                                                                     BUG23518
+     C                     EXSR SBRCCT                                                      BUG23518
+      *                                                                                     BUG23518
+     C/COPY WNCPYSRC,SD0010XC03
+      * Delete the customer record
+      * Delete Client - Client Details  *
+     C                     EXSR SDDLRC
+     C                     END                             *FI
+     C                     READ @CUSTIQ                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      *****************************************************************                     BUG23518
+      /EJECT
+      *****************************************************************                     BUG23518
+      *                                                               *                     BUG23518
+      *  SBRACU - Process Additional Customer Details                 *                     BUG23518
+      *                                                               *                     BUG23518
+      *  Called By: SARVGN                                            *                     BUG23518
+      *                                                               *                     BUG23518
+      *  Calls: None                                                  *                     BUG23518
+      *                                                               *                     BUG23518
+      *****************************************************************                     BUG23518
+     C           SBRACU    BEGSR                                                            BUG23518
+      *                                                                                     BUG23518
+      ** Define Keylist                                                                     BUG23518
+      *                                                                                     BUG23518
+     C           KLACUS    KLIST                                                            BUG23518
+     C                     KFLD           KFACUS  6                                         BUG23518
+      *                                                                                     BUG23518
+      ** Move fields to key list                                                            BUG23518
+      *                                                                                     BUG23518
+     C                     MOVELBBCUST    KFACUS                                            BUG23518
+      *                                                                                     BUG23518
+     C           KLACUS    CHAINSDACUSL0             9091                                   BUG23518
+      *                                                                                     BUG23518
+     C           *IN90     IFEQ '1'                                                         BUG23518
+      *                                                                                     BUG23518
+      ** Record already deleted                                                             BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0009' W0RTN   7                                         BUG23518
+      *                                                                                     BUG23518
+      ** Send message '*Record no longer on file'                                           BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0009' ZAMSID                                            BUG23518
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            BUG23518
+     C                     EXSR ZASNMS                                                      BUG23518
+     C                     GOTO SEEXIT                                                      BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C           *IN91     IFEQ '1'                                                         BUG23518
+      *                                                                                     BUG23518
+      ** Record locked                                                                      BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0004' W0RTN   7                                         BUG23518
+      *                                                                                     BUG23518
+      ** Send message '*Database operation error'                                           BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0004' ZAMSID                                            BUG23518
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            BUG23518
+     C                     EXSR ZASNMS                                                      BUG23518
+     C                     GOTO SEEXIT                                                      BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C                     DELET@ACUSL0                91                                   BUG23518
+      *                                                                                     BUG23518
+      ** Delete error detected                                                              BUG23518
+      *                                                                                     BUG23518
+     C           *IN91     IFEQ '1'                                                         BUG23518
+     C                     MOVEL'Y2U0004' W0RTN   7                                         BUG23518
+     C                     ELSE                                                             BUG23518
+      *                                                                                     BUG23518
+      ** Write Deleted Record - SD Deleted Records File                                     BUG23518
+      *                                                                                     BUG23518
+     C                     MOVELE5CUST    WULKEY    P                                       BUG23518
+     C                     MOVELSDACUS    WUDELR                                            BUG23518
+     C                     CLEARPARC                                                        BUG23518
+     C                     MOVEL'SDACUSPD'PAFNME                                            BUG23518
+     C                     MOVELWULKEY    PALKEY                                            BUG23518
+     C                     MOVELWUDR01    PADR01                                            BUG23518
+     C                     MOVELWUDR02    PADR02                                            BUG23518
+     C                     MOVELWUDR03    PADR03                                            BUG23518
+     C                     MOVELWUDR04    PADR04                                            BUG23518
+     C                     MOVELWUDR05    PADR05                                            BUG23518
+     C                     MOVELWUDR06    PADR06                                            BUG23518
+     C                     MOVELWUDR07    PADR07                                            BUG23518
+     C                     MOVELWUDR08    PADR08                                            BUG23518
+     C                     MOVELWUDR09    PADR09                                            BUG23518
+     C                     MOVELWUDR00    PADR00                                            BUG23518
+     C                     MOVELWUDR11    PADR11                                            BUG23518
+     C                     MOVELWUDR12    PADR12                                            BUG23518
+     C                     Z-ADDWURDNB    PALCD                                             BUG23518
+     C                     MOVEL'D'       PATYLC                                            BUG23518
+      *                                                                                     BUG23518
+     C                     CALL 'SD0520X'              90                                   BUG23518
+     C                     PARM *BLANKS   W0RTN   7                                         BUG23518
+     C                     PARM           PARC                                              BUG23518
+      *                                                                                     BUG23518
+     C           *IN90     IFEQ '1'                                                         BUG23518
+      *                                                                                     BUG23518
+      ** Call to program ended in error                                                     BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0032' W0RTN                                             BUG23518
+     C                     MOVEL*BLANKS   W0CLPG 10                                         BUG23518
+     C                     MOVEL'SD0520X' W0CLPG                                            BUG23518
+      *                                                                                     BUG23518
+      ** Send message '*Error occured on CALL...'                                           BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0032' ZAMSID                                            BUG23518
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            BUG23518
+     C                     MOVELW0CLPG    ZAMSDA           Message data                     BUG23518
+     C                     EXSR ZASNMS                                                      BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+      ** Error detected?                                                                    BUG23518
+      *                                                                                     BUG23518
+     C           W0RTN     IFNE *BLANKS                                                     BUG23518
+     C                     SETON                     99                                     BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C           SEEXIT    ENDSR                                                            BUG23518
+      *****************************************************************                     BUG23518
+      /EJECT                                                                                BUG23518
+      *****************************************************************                     BUG23518
+      *                                                               *                     BUG23518
+      *  SBRCCT - Process Customer by Country of Tax Details          *                     BUG23518
+      *                                                               *                     BUG23518
+      *  Called By: SARVGN                                            *                     BUG23518
+      *                                                               *                     BUG23518
+      *  Calls: None                                                  *                     BUG23518
+      *                                                               *                     BUG23518
+      *****************************************************************                     BUG23518
+     C           SBRCCT    BEGSR                                                            BUG23518
+      *                                                                                     BUG23518
+      ** Define Keylist                                                                     BUG23518
+      *                                                                                     BUG23518
+     C           KLCCTX    KLIST                                                            BUG23518
+     C                     KFLD           KFCUST  6                                         BUG23518
+      *                                                                                     BUG23518
+      ** Move fields to key list                                                            BUG23518
+      *                                                                                     BUG23518
+     C                     MOVELBBCUST    KFCUST                                            BUG23518
+      *                                                                                     BUG23518
+     C           KLCCTX    SETLLSDACTXL0                                                    BUG23518
+     C           KLCCTX    READESDACTXL0                 90                                 BUG23518
+      *                                                                                     BUG23518
+      ** Data record not found                                                              BUG23518
+      *                                                                                     BUG23518
+     C   90                MOVEL'USR0083' W0RTN   7                                         BUG23518
+     C           *IN90     DOWEQ'0'                                                         BUG23518
+      *                                                                                     BUG23518
+     C                     DELETSDACTXD0               91                                   BUG23518
+      *                                                                                     BUG23518
+      ** Delete error detected                                                              BUG23518
+      *                                                                                     BUG23518
+     C           *IN91     IFEQ '1'                                                         BUG23518
+     C                     MOVEL'Y2U0004' W0RTN   7                                         BUG23518
+     C                     ELSE                                                             BUG23518
+      *                                                                                     BUG23518
+      ** Write Deleted Record - SD Deleted Records File                                     BUG23518
+      *                                                                                     BUG23518
+     C           AXCUST    CAT  AXCTTX    WULKEY    P                                       BUG23518
+     C                     MOVELSDACUS    WUDELR                                            BUG23518
+     C                     CLEARPARC                                                        BUG23518
+     C                     MOVEL'SDCTTXPD'PAFNME                                            BUG23518
+     C                     MOVELWULKEY    PALKEY                                            BUG23518
+     C                     MOVELWUDR01    PADR01                                            BUG23518
+     C                     MOVELWUDR02    PADR02                                            BUG23518
+     C                     MOVELWUDR03    PADR03                                            BUG23518
+     C                     MOVELWUDR04    PADR04                                            BUG23518
+     C                     MOVELWUDR05    PADR05                                            BUG23518
+     C                     MOVELWUDR06    PADR06                                            BUG23518
+     C                     MOVELWUDR07    PADR07                                            BUG23518
+     C                     MOVELWUDR08    PADR08                                            BUG23518
+     C                     MOVELWUDR09    PADR09                                            BUG23518
+     C                     MOVELWUDR00    PADR00                                            BUG23518
+     C                     MOVELWUDR11    PADR11                                            BUG23518
+     C                     MOVELWUDR12    PADR12                                            BUG23518
+     C                     Z-ADDWURDNB    PALCD                                             BUG23518
+     C                     MOVEL'D'       PATYLC                                            BUG23518
+      *                                                                                     BUG23518
+     C                     CALL 'SD0520X'              90                                   BUG23518
+     C                     PARM *BLANKS   W0RTN   7                                         BUG23518
+     C                     PARM           PARC                                              BUG23518
+      *                                                                                     BUG23518
+     C           *IN90     IFEQ '1'                                                         BUG23518
+      *                                                                                     BUG23518
+      ** Call to program ended in error                                                     BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0032' W0RTN                                             BUG23518
+     C                     MOVEL*BLANKS   W0CLPG 10                                         BUG23518
+     C                     MOVEL'SD0520X' W0CLPG                                            BUG23518
+      *                                                                                     BUG23518
+      ** Send message '*Error occured on CALL...'                                           BUG23518
+      *                                                                                     BUG23518
+     C                     MOVEL'Y2U0032' ZAMSID                                            BUG23518
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            BUG23518
+     C                     MOVELW0CLPG    ZAMSDA                                            BUG23518
+     C                     EXSR ZASNMS                                                      BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+      ** Error detected?                                                                    BUG23518
+      *                                                                                     BUG23518
+     C           W0RTN     IFNE *BLANKS                                                     BUG23518
+     C                     SETON                     99                                     BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C                     ENDIF                                                            BUG23518
+      *                                                                                     BUG23518
+     C           KLCCTX    READESDACTXL0                 90                                 BUG23518
+     C                     ENDDO                                                            BUG23518
+      *                                                                                     BUG23518
+     C           SFEXIT    ENDSR                                                            BUG23518
+      *****************************************************************                     BUG23518
+      /EJECT                                                                                BUG23518
+      *****************************************************************                     BUG23518
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Check/Delete record - Alternate Names & Address  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN BCCUST    WQSB01           Customer Number
+      * Define keylist
+     C           KPSSB     KLIST
+     C                     KFLD           WQSB01           Customer Number
+     C                     KFLD           BCADCD           Address Code
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           WQSB01           Customer Number
+      * Move fields to key list
+     C                     MOVELBBCUST    WQSB01           Customer Number
+     C                     MOVEL*BLANK    BCADCD           Address Code
+     C           KPSSB     SETLL@BCREDE                    *
+     C           KRSSB     READE@BCREDE                  90*
+      * Data record not found
+     C   90                MOVEL'USR0083' W0RTN   7
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+      * Delete record - Alternate Names & Address  *
+     C                     EXSR SCDLRC
+     C           KRSSB     READE@BCREDE                  90*
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCDLRC    BEGSR
+      *================================================================
+      * Delete record - Alternate Names & Address  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @BCREDD
+      *
+     C           KLDLSC    KLIST
+     C                     KFLD           BCCUST           Customer Number
+     C                     KFLD           BCADCD           Address Code
+     C           KLDLSC    CHAIN@BCREDD              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      *................................................................
+     C                     DELET@BCREDD                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+      * Start of change 122096
+     C           BCCUST    CAT  BCADCD    WULKEY    P      Long Key
+      * WUDELR Data Structure - SD Deleted Records File  *
+     C                     MOVEL@1DBRC    WUDELR
+      * Write Deleted Record - SD Deleted Records File  *
+     C                     CLEARPARC
+     C                     MOVEL'SDALTNPD'PAFNME           File name
+     C                     MOVELWULKEY    PALKEY           Long Key
+     C                     MOVELWUDR01    PADR01           Deleted Data Re
+     C                     MOVELWUDR02    PADR02           Deleted Data Re
+     C                     MOVELWUDR03    PADR03           Deleted Data Re
+     C                     MOVELWUDR04    PADR04           Deleted Data Re
+     C                     MOVELWUDR05    PADR05           Deleted Data Re
+     C                     MOVELWUDR06    PADR06           Deleted Data Re
+     C                     MOVELWUDR07    PADR07           Deleted Data Re
+     C                     MOVELWUDR08    PADR08           Deleted Data Re
+     C                     MOVELWUDR09    PADR09           Deleted Data Re
+     C                     MOVELWUDR00    PADR00           Deleted Data Re
+     C                     MOVELWUDR11    PADR11           Deleted Data Re
+     C                     MOVELWUDR12    PADR12           Deleted Data Re
+     C                     Z-ADDWURDNB    PALCD            Last Change Dat
+     C                     MOVEL'D'       PATYLC           Type of Last Ch
+      *
+     C                     CALL 'SD0520X'              90  Write Deleted R
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             RCD: SD Deleted
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0520X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * End of change 122096
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDDLRC    BEGSR
+      *================================================================
+      * Delete Client - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * USER: Processing before Data update
+      * 00/Copy Member SD0010XDBU - Client Details  *
+     C/COPY WNCPYSRC,SD0010XDBU
+      * Move key fields to @BBREBG
+      *
+     C           KLDLSD    KLIST
+     C                     KFLD           BBCUST           Customer Number
+     C           KLDLSD    CHAIN@BBREBG              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SDEXIT
+     C                     END
+      *
+      *................................................................
+     C                     DELET@BBREBG                91  *
+     C/COPY WNCPYSRC,SD0010XC05
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+      * 00/Copy Member SD0010XDAU - Client Details  *
+     C/COPY WNCPYSRC,SD0010XDAU
+     C                     END
+     C/COPY WNCPYSRC,SD0010XC02
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     C/COPY WNCPYSRC,SD0010XC04
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Last Year Day Number
+     C                     Z-ADD*ZERO     WULYDN  50
+      * Define work field Long Key
+     C                     MOVEL*BLANK    WULKEY 50
+      * Define work field Deleted Data Record Pt1
+     C                     MOVEL*BLANK    WUDR01250
+      * Define work field Deleted Data Record Pt2
+     C                     MOVEL*BLANK    WUDR02250
+      * Define work field Deleted Data Record Pt3
+     C                     MOVEL*BLANK    WUDR03250
+      * Define work field Deleted Data Record Pt4
+     C                     MOVEL*BLANK    WUDR04250
+      * Define work field Deleted Data Record Pt5
+     C                     MOVEL*BLANK    WUDR05250
+      * Define work field Deleted Data Record Pt6
+     C                     MOVEL*BLANK    WUDR06250
+      * Define work field Deleted Data Record Pt7
+     C                     MOVEL*BLANK    WUDR07250
+      * Define work field Deleted Data Record Pt8
+     C                     MOVEL*BLANK    WUDR08250
+      * Define work field Deleted Data Record Pt9
+     C                     MOVEL*BLANK    WUDR09250
+      * Define work field Deleted Data Record Pt10
+     C                     MOVEL*BLANK    WUDR00250
+      * Define work field Deleted Data Record Pt11
+     C                     MOVEL*BLANK    WUDR11250
+      * Define work field Deleted Data Record Pt12
+     C                     MOVEL*BLANK    WUDR12250
+      * Define *Synon program work fields
+     C                     Z-ADD*ZEROS    YRSW00  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW01  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW02  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW03  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW04  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW05  50       *Synon (5,0) wo
+     C                     MOVEL*BLANKS   YRSW06  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW07  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW08  7        *Return code
+     C                     MOVEL*BLANKS   YRSW09  1        *String work fi
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0A           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0B           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0C           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0D           *Synon (9999) w
+     C                     MOVEL*BLANKS   YRSW0E  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW0F  1        *String work fi
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C/COPY WNCPYSRC,SD0010XC01
+      * Open files
+     C                     OPEN SDCUSTL8
+     C                     OPEN SDALTNL1
+     C                     OPEN SDALTNL0
+     C                     OPEN SDCUSTL0
+     C                     OPEN SDACUSL0                                                    BUG23518
+     C                     OPEN SDACTXL0                                                    BUG23518
+     C                     MOVEL'N'       W0PMT   1
+      *                                                                                       CGL032
+      ** Access SAR details file to see if CGL032 SAR is installed.                           CGL032
+      *                                                                                       CGL032
+     C                     CALL 'AOSARDR0'                                                    CGL032
+     C                     PARM *BLANKS   PRTCD   7                                           CGL032
+     C                     PARM '*VERIFY' POPTN   7                                           CGL032
+     C                     PARM 'CGL032'  PSARD   6                                           CGL032
+      *                                                                                       CGL032
+     C           PRTCD     IFNE *BLANK                                                        CGL032
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL032
+     C                     MOVEL'SCSARDPD'DBFILE 10                                           CGL032
+     C                     MOVEL'101'     DBASE   3                                           CGL032
+     C                     MOVEL'CGL032'  DBKEY   7                                           CGL032
+     C                     EXSR *PSSR                                                         CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL032
+     C           PRTCD     IFEQ *BLANK                                                        CGL032
+     C                     MOVE 'Y'       CGL032  1                                           CGL032
+     C                     ELSE                                                               CGL032
+     C                     MOVE 'N'       CGL032                                              CGL032
+     C                     ENDIF                                                              CGL032
+      *                                                                                       CGL032
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0010XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0010XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINS
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0010XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

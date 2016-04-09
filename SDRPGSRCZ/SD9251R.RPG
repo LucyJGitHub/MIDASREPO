@@ -1,0 +1,1886 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Microfiche ICD maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9251R - Midas SD Edit microfiche data                      *
+      *                                                               *
+      *  Function:  This program allows the user to maintain details  *
+      *             on microfiche data                                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01382            Date: 16JUL92               *
+     F*                 S01339            Date: 16JUL92               *
+     F*                 E24517            Date: 18SEP91               *
+     F*                 E19186            Date: 23NOV90               *
+     F*                 E20315            Date: 23NOV90               *
+     F*                 S01212            Date: 21MAR90               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+     F*  S01382 - Add three new fields to the file SDMCFCPD.          *
+     F*           Allow Auto-INZTAP, Hold on Job queue                *
+     F*           and allow auto-clear of OUTQs).                     *
+     F*  S01339 - Program run from MITEM - remove text for F12        *
+     F*           from screen.                                        *
+     F*  E24517 - UPDATE STANDING DATA FILE CONTROLS                  *
+     F*  E19186 - DEFAULTING FOR JOB QUEUE AND JOB DESC. (LN0996)     *
+     F*  E20315 - DEFAULTING FOR DENSITY (LN0996)                     *
+     F*  S01212 - /COPY INCORPORATION                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SD9251RFPG
+     FSD9251R#CF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Midas SD Edit Microfiche Data
+      *
+     FSDMCFCL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV : Microfiche Data           Retrieval index
+      *
+     FSDMMODL1IF  E           K        DISK
+      * RTV : MIDAS Modules             Retrieval index
+      *
+     FSDMCFCL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+      * UPD : Microfiche Data           Update index
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+      * UPD : Standing Data Controls    Update index
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     E/COPY WNCPYSRC,SD9251REPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,F9E1DTA                                          S01229
+     I/COPY QWINDSRC,SD9250GDTA                                           S01229
+     I*edit Microfiche data     Initialise Program I-spec
+     I/COPY WNCPYSRC,SD9251RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDMCFCL0
+      * Current/previous master file format fields for change control
+      *
+     I#1DBRC      DS                             84
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Microfiche Data           Retrieval index
+      * I : RST Microfiche (Key)
+     I                                        1  10 P1MCFC
+     IP2PARM      DS
+      * O :  *Return code
+     I                                        1   7 P2RTN
+     IP3PARM      DS
+      * B : MAP Work Return code
+     I                                        1   5 P3WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Tape Device is required.'
+      * Tape Device
+     I                                        1  10 ZA0001
+      * Message data for 'Tape Device not found.'
+      * Tape Device
+     I                                        1  10 ZA0002
+      * Message data for 'Tape Volume is required'
+      * Tape Volume
+     I                                        1   6 ZA0003
+      * Message data for 'Tape Owner is required'
+      * Tape Owner
+     I                                        1  14 ZA0004
+      * Message data for 'Tape Density numeric'
+      * Tape Density Func Field
+     I                                        1   5 ZA0005
+      * Message data for 'Invalid Tape Density'
+      * Tape Density Func Field
+     I                                        1   5 ZA0006
+      * Message data for 'Invalid Clear Tape'
+      * Clear Tape
+     I                                        1   4 ZA0007
+      * Message data for 'No. of copies numeric'
+      * Number of Copies Func Fld
+     I                                        1   1 ZA0008
+      * Message data for 'No. of copies is invalid.'
+      * Number of Copies Func Fld
+     I                                        1   1 ZA0009
+      * Message data for 'Record Length numeric'
+      * Record Length Func Field
+     I                                        1   3 ZA0010
+      * Message data for 'Record Length Range'
+      * Record Length Func Field
+     I                                        1   3 ZA0011
+      * Message data for 'Block Length numeric'
+      * Block length Func field
+     I                                        1   4 ZA0012
+      * Message data for 'Block Length range'
+      * Block length Func field
+     I                                        1   4 ZA0013
+      * Message data for 'Batch Job queue not found'
+      * Batch Job Queue
+     I                                        1  10 ZA0014
+      * Message data for 'Job Description not found'
+      * Job Description
+     I                                        1  10 ZA0015
+      * Message data for 'Invalid Allow auto-inztap'
+      * Allow auto-INZTAP
+     I                                        1   1 ZA0016
+      * Message data for 'Invalid Hold on job queue'
+      * Hold on job queue?
+     I                                        1   1 ZA0017
+      * Message data for 'Invalid allow auto-clear'
+      * Allow Auto-clear of OUTQs
+     I                                        1   1 ZA0018
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Microfiche
+     C           P2RTN     PARM P2RTN     WP0001  7        *Return code
+     C           P3WRTC    PARM P3WRTC    WP0002  5        Work Return cod
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialise key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'R'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1MCFC    IFEQ *BLANK                     Microfiche (Key
+      * One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           D1MCFC           Microfiche (Key
+      * Setup key
+     C                     MOVEL#1MCFC    D1MCFC           Microfiche (Key
+     C           KRTV      CHAIN@D1REHZ              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Microfiche Data        NF'
+     C                     MOVEL'USR0669' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RSFF - Microfiche Data  *
+     C*edit Microfiche data     Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9251RSFF
+     C                     END                             *FI
+      * USER: Initialise detail screen (existing record)
+      * Tape Density
+     C                     EXSR UASUBR                     Tape Density
+      * Number of Copies
+     C                     EXSR UBSUBR                     Number of Copie
+      * Record Length
+     C                     EXSR UCSUBR                     Record Length
+      * Block Length
+     C                     EXSR UDSUBR                     Block Length
+      * Start of Fix E19186
+      * Job Queue
+      * CASE: DB1.Batch Job Queue is Blank
+     C           D1BTJQ    IFEQ *BLANK                     *IF
+     C                     MOVEL*BLANK    #1BTJQ           Batch Job Queue
+     C                     MOVEL'MAJOBQ'  #1BTJQ           Batch Job Queue
+     C                     END                             *FI
+      * Job Description
+      * CASE: DB1.Job Description is Blank
+     C           D1JOBD    IFEQ *BLANK                     *IF
+     C                     MOVEL*BLANK    #1JOBD           Job Description
+     C                     MOVEL'MAJOBD'  #1JOBD           Job Description
+     C                     END                             *FI
+      * End of Fix E19186
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RISE - Microfiche Data  *
+     C*edit Microfiche data     Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD9251RISE
+     C                     END                             *FI
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RVKS - Microfiche Data  *
+     C*edit Microfiche data     Validate Key Screen
+     C/COPY WNCPYSRC,SD9251RVKS
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RPKR - Microfiche Data  *
+     C*edit Microfiche data     Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9251RPKR
+     C                     END                             *FI
+      * Bypass key screen if F12 is pressed on detail screen
+     C                     MOVEL*BLANK    P3WRTC           Work Return cod
+     C                     MOVEL'PREV'    P3WRTC           Work Return cod
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     MOVEL'R'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * Validate Tape Density Func Field
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#DTDNF    W0NSRQ  1        Tape Density Fu
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1143170   Y2LSNO  70
+     C           #DTDNF    PARM #DTDNF    W0EXVL 20        Tape Density Fu
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * Validate Clear Tape
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1CLTP    W0NSRQ  1        Clear Tape
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1143297   Y2LSNO  70
+     C           #1CLTP    PARM #1CLTP    W0EXVL 20        Clear Tape
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * Validate Allow auto-INZTAP
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1AINZ    W0NSRQ  1        Allow auto-INZT
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1166221   Y2LSNO  70
+     C           #1AINZ    PARM #1AINZ    W0EXVL 20        Allow auto-INZT
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * Validate Hold on job queue?
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1HJBQ    W0NSRQ  1        Hold on job que
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1166222   Y2LSNO  70
+     C           #1HJBQ    PARM #1HJBQ    W0EXVL 20        Hold on job que
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * Validate Allow Auto-clear of OUTQs
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1ACLR    W0NSRQ  1        Allow Auto-clea
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1166223   Y2LSNO  70
+     C           #1ACLR    PARM #1ACLR    W0EXVL 20        Allow Auto-clea
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * USER: Validate detail screen fields
+      * Tape Device
+      * CASE: DTL.Tape Device is Blank
+     C           #1TDEV    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1TDEV    ZA0001           Tape Device
+      * Send message 'Tape Device is required.'
+     C                     MOVEL'USR0939' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     MOVEL#1TDEV    WUWOBJ           Work Object
+     C                     MOVEL*BLANK    WUWOBT           Work Object Typ
+     C                     MOVEL'*DEVD'   WUWOBT           Work Object Typ
+      * Check Object Existance - Microfiche Data  *
+     C                     CALL 'SD9251C'              90  Check Object Ex
+     C                     PARM WUWOBJ    WQ0022 10        Work Object
+     C                     PARM WUWOBT    WQ0023 10        Work Object Typ
+     C           W0RTN     PARM W0RTN     WQ0024  7        *Return code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Object Type Error
+     C           W0RTN     IFEQ 'OBJERR'                   *IF
+      * Setup message data for message
+     C                     MOVEL#1TDEV    ZA0002           Tape Device
+      * Send message 'Tape Device not found.'
+     C                     MOVEL'USR0936' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Tape Volume
+      * CASE: DTL.Tape Volume is Blank
+     C           #1TVOL    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1TVOL    ZA0003           Tape Volume
+      * Send message 'Tape Volume is required'
+     C                     MOVEL'USR0943' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+      * Tape Owner
+      * CASE: DTL.Tape Owner is Blank
+     C           #1TOWN    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1TOWN    ZA0004           Tape Owner
+      * Send message 'Tape Owner is required'
+     C                     MOVEL'USR0946' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+      * Tape Density
+      * CASE: DTL.Tape Density Func Field is Blank
+     C           #DTDNF    IFEQ *BLANK                     *IF
+      * Start of Fix E20315
+      * If density is blank default to 6250 and redisplay the screen
+     C                     MOVEL' 6250'   #DTDNF           Tape Density Fu
+     C                     Z-ADD6250      #1TDEN           Tape Density
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+      * End of Fix E20315
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DTDNF    WUZASF           ZALIGN Screen F
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0025  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0026 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0027  10       ZALIGN No Of De
+     C                     PARM 5         WQ0028  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0029 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+      * Setup message data for message
+     C                     MOVEL#DTDNF    ZA0005           Tape Density Fu
+      * Send message 'Tape Density numeric'
+     C                     MOVEL'USR0930' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Zalign Tape Density - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DTDNF
+     C*
+     C*
+      * CASE: DTL.Tape Density Func Field is valid density
+     C           #DTDNF    IFEQ '01600'                    *IF
+     C           #DTDNF    OREQ '06250'
+     C           #DTDNF    OREQ '03200'
+     C           #DTDNF    OREQ '10000'
+     C                     MOVE #DTDNF    #1TDEN           Tape Density
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DTDNF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0030  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0031 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0032  10       ZALIGN No Of De
+     C                     PARM 5         WQ0033  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0034 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0035 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0036  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Tape Density - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DTDNF
+     C*
+     C*
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DTDNF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0037  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0038 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0039  10       ZALIGN No Of De
+     C                     PARM 5         WQ0040  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0041 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0042 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0043  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Tape Density - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DTDNF
+     C*
+     C*
+      * Setup message data for message
+     C                     MOVEL#DTDNF    ZA0006           Tape Density Fu
+      * Send message 'Invalid Tape Density'
+     C                     MOVEL'USR0932' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9934  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Clear Tape
+      * CASE: DTL.Clear Tape is Blank
+     C           #1CLTP    IFEQ *BLANK                     *IF
+     C                     MOVEL*BLANK    #1CLTP           Clear Tape
+     C                     MOVEL'*NO'     #1CLTP           Clear Tape
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Clear Tape is Valid value
+     C           #1CLTP    IFEQ *BLANK                     *IF
+     C           #1CLTP    OREQ '*NO'
+     C           #1CLTP    OREQ '*YES'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1CLTP    ZA0007           Clear Tape
+      * Send message 'Invalid Clear Tape'
+     C                     MOVEL'USR0934' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9935  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Number of Copies
+      * CASE: DTL.Number of Copies Func Fld is Entered
+     C           #DNCPF    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DNCPF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0044  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0045 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0046  10       ZALIGN No Of De
+     C                     PARM 1         WQ0047  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0048 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0049 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0050  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DNCPF    ZA0008           Number of Copie
+      * Send message 'No. of copies numeric'
+     C                     MOVEL'USR0922' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9937  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Zalign Number of copies - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DNCPF
+     C*
+     C*
+     C                     MOVE WUZAFF    #1NOCP           Number of Copie
+      * CASE: DTL.Number of Copies is Greater than Zero
+     C           #1NOCP    IFGT *ZERO                      *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DNCPF    ZA0009           Number of Copie
+      * Send message 'No. of copies is invalid.'
+     C                     MOVEL'USR0923' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9937  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'1'       #DNCPF           Number of Copie
+     C                     Z-ADD1         #1NOCP           Number of Copie
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * Record Length
+      * CASE: DTL.Record Length Func Field is Entered
+     C           #DRLNF    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DRLNF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0051  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0052 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0053  10       ZALIGN No Of De
+     C                     PARM 3         WQ0054  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0055 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0056 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0057  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DRLNF    ZA0010           Record Length F
+      * Send message 'Record Length numeric'
+     C                     MOVEL'USR0924' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Zalign Record Length - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DRLNF
+     C*
+     C*
+     C                     MOVE WUZAFF    #1RELN           Record Length
+      * CASE: DTL.Record Length is valid range
+     C           #1RELN    IFGE 1                          *IF
+     C           #1RELN    ANDLE999
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DRLNF    ZA0011           Record Length F
+      * Send message 'Record Length Range'
+     C                     MOVEL'USR0925' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9938  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'133'     #DRLNF           Record Length F
+     C                     Z-ADD133       #1RELN           Record Length
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * Block Length
+      * CASE: DTL.Block length Func field is Entered
+     C           #DBLNF    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DBLNF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0058  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0059 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0060  10       ZALIGN No Of De
+     C                     PARM 4         WQ0061  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0062 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0063 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0064  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DBLNF    ZA0012           Block length Fu
+      * Send message 'Block Length numeric'
+     C                     MOVEL'USR0928' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Zalign Block Length - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DBLNF
+     C*
+     C*
+     C                     MOVE WUZAFF    #1BLLN           Block Length
+      * CASE: DTL.Block Length is valid range
+     C           #1BLLN    IFGE 1                          *IF
+     C           #1BLLN    ANDLE9999
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DBLNF    ZA0013           Block length Fu
+      * Send message 'Block Length range'
+     C                     MOVEL'USR0929' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'7980'    #DBLNF           Block length Fu
+     C                     Z-ADD7980      #1BLLN           Block Length
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * Batch Job Queue
+      * CASE: DTL.Batch Job Queue is Blank
+     C           #1BTJQ    IFEQ *BLANK                     *IF
+      * Start of Fix E19186
+      * If the job queue is blank default to MAJOBQ and redisplay the screen
+     C                     MOVEL*BLANK    #1BTJQ           Batch Job Queue
+     C                     MOVEL'MAJOBQ'  #1BTJQ           Batch Job Queue
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+      * End of Fix E19186
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     MOVEL#1BTJQ    WUWOBJ           Work Object
+     C                     MOVEL*BLANK    WUWOBT           Work Object Typ
+     C                     MOVEL'*JOBQ'   WUWOBT           Work Object Typ
+      * Check Object Existance - Microfiche Data  *
+     C                     CALL 'SD9251C'              90  Check Object Ex
+     C                     PARM WUWOBJ    WQ0065 10        Work Object
+     C                     PARM WUWOBT    WQ0066 10        Work Object Typ
+     C           W0RTN     PARM W0RTN     WQ0067  7        *Return code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Object Type Error
+     C           W0RTN     IFEQ 'OBJERR'                   *IF
+      * Setup message data for message
+     C                     MOVEL#1BTJQ    ZA0014           Batch Job Queue
+      * Send message 'Batch Job queue not found'
+     C                     MOVEL'USR0937' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Job Description
+      * CASE: DTL.Job Description is Blank
+     C           #1JOBD    IFEQ *BLANK                     *IF
+      * Start of Fix E19186
+      * If the job description is blank then default to MAJOBD and
+      * redisplay the screen
+     C                     MOVEL*BLANK    #1JOBD           Job Description
+     C                     MOVEL'MAJOBD'  #1JOBD           Job Description
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+      * End of Fix E19186
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     MOVEL#1JOBD    WUWOBJ           Work Object
+     C                     MOVEL*BLANK    WUWOBT           Work Object Typ
+     C                     MOVEL'*JOBD'   WUWOBT           Work Object Typ
+      * Check Object Existance - Microfiche Data  *
+     C                     CALL 'SD9251C'              90  Check Object Ex
+     C                     PARM WUWOBJ    WQ0068 10        Work Object
+     C                     PARM WUWOBT    WQ0069 10        Work Object Typ
+     C           W0RTN     PARM W0RTN     WQ0070  7        *Return code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Object Type Error
+     C           W0RTN     IFEQ 'OBJERR'                   *IF
+      * Setup message data for message
+     C                     MOVEL#1JOBD    ZA0015           Job Description
+      * Send message 'Job Description not found'
+     C                     MOVEL'USR0938' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Start       S01382
+      * Allow auto-INZTAP ?
+      * CASE: DTL.Allow auto-INZTAP is Blank
+     C           #1AINZ    IFEQ *BLANK                     *IF
+     C                     MOVEL'N'       #1AINZ           Allow auto-INZT
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Allow auto-INZTAP is valid value
+     C           #1AINZ    IFEQ *BLANK                     *IF
+     C           #1AINZ    OREQ 'N'
+     C           #1AINZ    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1AINZ    ZA0016           Allow auto-INZT
+      * Send message 'Invalid Allow auto-inztap'
+     C                     MOVEL'USR1796' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9936  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Hold on Job Queue ?
+      * CASE: DTL.Hold on job queue? is Blank
+     C           #1HJBQ    IFEQ *BLANK                     *IF
+     C                     MOVEL'N'       #1HJBQ           Hold on job que
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Hold on job queue? is valid value
+     C           #1HJBQ    IFEQ *BLANK                     *IF
+     C           #1HJBQ    OREQ 'N'
+     C           #1HJBQ    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1HJBQ    ZA0017           Hold on job que
+      * Send message 'Invalid Hold on job queue'
+     C                     MOVEL'USR1797' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Allow auto-clear of OUTQs ?
+      * CASE: DTL.Allow Auto-clear of OUTQs is Blank
+     C           #1ACLR    IFEQ *BLANK                     *IF
+     C                     MOVEL'N'       #1ACLR           Allow Auto-clea
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Allow Auto-clear of OUTQs is Valid value
+     C           #1ACLR    IFEQ *BLANK                     *IF
+     C           #1ACLR    OREQ 'N'
+     C           #1ACLR    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1ACLR    ZA0018           Allow Auto-clea
+      * Send message 'Invalid allow auto-clear'
+     C                     MOVEL'USR1798' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * End         S01382
+      * Window Processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RVSF - Microfiche Data  *
+     C*edit Microfiche data     Validate Detail Screen
+     C/COPY WNCPYSRC,SD9251RVSF
+     C                     END                             *FI
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RSFF - Microfiche Data  *
+     C*edit Microfiche data     Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9251RSFF
+     C                     END                             *FI
+      * USER: Validate detail screen relations
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RVSR - Microfiche Data  *
+     C*edit Microfiche data     Validate Screen Relns
+     C/COPY WNCPYSRC,SD9251RVSR
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RPCK - Microfiche Data  *
+     C*edit Microfiche data     Process Command Keys
+     C/COPY WNCPYSRC,SD9251RPCK
+     C                     END                             *FI
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change Microfiche Data - Microfiche Data  *
+     C                     EXSR SACHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields
+      *================================================================
+     C                     MOVELP3WRTC    #PWRTC           Work Return cod
+     C                     Z-ADD*ZERO     #1TDEN           Tape Density
+     C                     Z-ADD*ZERO     #1NOCP           Number of Copie
+     C                     Z-ADD*ZERO     #1RELN           Record Length
+     C                     Z-ADD*ZERO     #1BLLN           Block Length
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1TDEV           Tape Device
+     C                     MOVEL*BLANK    #1TVOL           Tape Volume
+     C                     MOVEL*BLANK    #1TOWN           Tape Owner
+     C                     MOVEL*BLANK    #DTDNF           Tape Density Fu
+     C                     MOVEL*BLANK    #1CLTP           Clear Tape
+     C                     MOVEL*BLANK    #1AINZ           Allow auto-INZT
+     C                     MOVEL*BLANK    #DNCPF           Number of Copie
+     C                     MOVEL*BLANK    #DRLNF           Record Length F
+     C                     MOVEL*BLANK    #DBLNF           Block length Fu
+     C                     MOVEL*BLANK    #1HJBQ           Hold on job que
+     C                     MOVEL*BLANK    #1BTJQ           Batch Job Queue
+     C                     MOVEL*BLANK    #1JOBD           Job Description
+     C                     MOVEL*BLANK    #1ACLR           Allow Auto-clea
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @D1REHZ fields to screen
+      *================================================================
+     C                     MOVELD1MCFC    #1MCFC           Microfiche (Key
+     C                     Z-ADDD1TDEN    #1TDEN           Tape Density
+     C                     Z-ADDD1NOCP    #1NOCP           Number of Copie
+     C                     Z-ADDD1RELN    #1RELN           Record Length
+     C                     Z-ADDD1BLLN    #1BLLN           Block Length
+     C                     Z-ADDD1LCD     #1LCD            Last Change Dat
+     C                     MOVELD1TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELD1TDEV    #1TDEV           Tape Device
+     C                     MOVELD1TVOL    #1TVOL           Tape Volume
+     C                     MOVELD1TOWN    #1TOWN           Tape Owner
+     C                     MOVELD1CLTP    #1CLTP           Clear Tape
+     C                     MOVELD1AINZ    #1AINZ           Allow auto-INZT
+     C                     MOVELD1HJBQ    #1HJBQ           Hold on job que
+     C                     MOVELD1BTJQ    #1BTJQ           Batch Job Queue
+     C                     MOVELD1JOBD    #1JOBD           Job Description
+     C                     MOVELD1ACLR    #1ACLR           Allow Auto-clea
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialise key screen
+      *================================================================
+     C                     MOVELP3WRTC    #PWRTC           Work Return cod
+     C                     MOVELP1MCFC    #1MCFC           Microfiche (Key
+      * USER: Initialise key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RIKS - Microfiche Data  *
+     C*edit Microfiche data     Initialise Key Screen
+     C/COPY WNCPYSRC,SD9251RIKS
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACHRC    BEGSR
+      *================================================================
+      * Change Microfiche Data - Microfiche Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @D1REHY
+     C                     MOVEL#1MCFC    D1MCFC           Microfiche (Key
+      *
+     C           KLCHSA    KLIST
+     C                     KFLD           D1MCFC           Microfiche (Key
+     C           KLCHSA    CHAIN@D1REHY              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Use SETLL to release record lock
+     C           KLCHSA    SETLL@D1REHY              9091  *
+     C                     GOTO SAEXIT
+     C                     END                             FI #1DBRC
+      * USER: Processing after DBF read
+      * start E24517
+      * save last Change Date from record
+     C                     Z-ADDD1LCD     WULCD            Last Change Dat
+      * end E24517
+      * Move non-key fields to @D1REHY
+     C                     MOVEL#1TDEV    D1TDEV           Tape Device
+     C                     MOVEL#1TVOL    D1TVOL           Tape Volume
+     C                     MOVEL#1TOWN    D1TOWN           Tape Owner
+     C                     Z-ADD#1TDEN    D1TDEN           Tape Density
+     C                     MOVEL#1CLTP    D1CLTP           Clear Tape
+     C                     Z-ADD#1NOCP    D1NOCP           Number of Copie
+     C                     Z-ADD#1RELN    D1RELN           Record Length
+     C                     Z-ADD#1BLLN    D1BLLN           Block Length
+     C                     MOVEL#1BTJQ    D1BTJQ           Batch Job Queue
+     C                     MOVEL#1JOBD    D1JOBD           Job Description
+     C                     Z-ADDWURDNB    D1LCD            Last Change Dat
+     C                     MOVEL'A'       D1TYLC           Type of Last Ch
+     C                     MOVEL#1AINZ    D1AINZ           Allow auto-INZT
+     C                     MOVEL#1HJBQ    D1HJBQ           Hold on job que
+     C                     MOVEL#1ACLR    D1ACLR           Allow Auto-clea
+      *
+      * USER: Processing before DBF update
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD9251RBUW - Microfiche Data  *
+     C*edit Microfiche data     Before Update, Window on
+     C/COPY WNCPYSRC,SD9251RBUW
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RBDU - Microfiche Data  *
+     C*edit Microfiche data     Processing Before Update
+     C/COPY WNCPYSRC,SD9251RBDU
+     C                     END                             *FI
+     C                     UPDAT@D1REHY                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * USER: Processing after DBF update
+      * start E24517 - update Standing Data file controls
+      * CASE: WRK.Last Change Date NE WRK.Run day number
+     C           WULCD     IFNE WURDNB                     *IF
+      * only update file controls if record has not been updated already today
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOAM           No. of Amends
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SBCHRC
+     C                     END                             *FI
+      * end E24517
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251RADU - Microfiche Data  *
+     C*edit Microfiche data     Processing After Update
+     C/COPY WNCPYSRC,SD9251RADU
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDICDRPD'AHFLNM           Filename
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSB    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * USER: Processing after DBF read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * DBF record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Tape Density
+      *================================================================
+      * Start of Fix E20315
+      * CASE: DB1.Tape Density is Zero
+     C           D1TDEN    IFEQ *ZERO                      *IF
+     C                     MOVEL' 6250'   #DTDNF           Tape Density Fu
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELD1TDEN    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0001  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0002 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0003  10       ZALIGN No Of De
+     C                     PARM 5         WQ0004  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0005 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0006 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0007  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Tape Density - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DTDNF
+     C*
+     C*
+     C                     END                             *FI
+      * End of Fix E20315
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         UBSUBR    BEGSR
+      *================================================================
+      * Number of Copies
+      *================================================================
+     C                     MOVELD1NOCP    #DNCPF           Number of Copie
+      *================================================================
+     CSR         UBEXIT    ENDSR
+      /EJECT
+     CSR         UCSUBR    BEGSR
+      *================================================================
+      * Record Length
+      *================================================================
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELD1RELN    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0008  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0009 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0010  10       ZALIGN No Of De
+     C                     PARM 3         WQ0011  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0012 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0013 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0014  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Record Length - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DRLNF
+     C*
+     C*
+      *================================================================
+     CSR         UCEXIT    ENDSR
+      /EJECT
+     CSR         UDSUBR    BEGSR
+      *================================================================
+      * Block Length
+      *================================================================
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVELD1BLLN    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0015  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0016 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0017  10       ZALIGN No Of De
+     C                     PARM 4         WQ0018  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0019 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0020 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0021  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign Block Length - Microfiche Data  *
+     C*
+     C*
+     C                     MOVE WUZASF    #DBLNF
+     C*
+     C*
+      *================================================================
+     CSR         UDEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9251REPP - Microfiche Data  *
+     C*edit Microfiche data     Exit Program Processing
+     C/COPY WNCPYSRC,SD9251REPP
+     C                     END                             *FI
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'**CMD**' P2RTN            *Return code
+     C                     MOVEL'CMD01'   P3WRTC           Work Return cod
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Define work field Work Object
+     C                     MOVEL*BLANK    WUWOBJ 10
+      * Define work field Work Object Type
+     C                     MOVEL*BLANK    WUWOBT 10
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Last Change Date
+     C                     Z-ADD*ZERO     WULCD   50
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     OPEN SDMCFCL0
+     C                     OPEN SDFCTLL0
+      * Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Copyright Statement - Standard Functions  *
+      * Last Amend Box SD9251RLAB - Microfiche Data  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT           RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Data Structure Microfiche - Microfiche Data  *
+      * 00/Copy Member SD9251RIPG - Microfiche Data  *
+     C/COPY WNCPYSRC,SD9251RCPG
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     O/COPY WNCPYSRC,SD9251ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,852 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fixed Deposits Register')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0727 - Fixed Deposits Register                             *
+      *                                                               *
+      *  Function:  This program produces a report showing details    *
+      *             of fixed deposits                                 *
+      *                                                               *
+      *  Called By: DLC0727 - DL Fixed Deposits Register              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG4471            Date 06Oct04               *
+      *                 BUG4312            Date 16Sep04               *
+      *                 BUG03920           Date 05Aug04               *
+      *                 BUG3631            Date 12Jul04               *
+      *                 CDL024  *CREATE    Date 31Mar04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG4471  - Database error always printed in Audit Report     *
+      *  BUG4312  - The principal and interest paid fields does not   *
+      *             show decimal points.                              *
+      *  Bug03920 - Add functionality for 'ALL' branches.             *
+      *  BUG3631 - Print Header on DL0729P1.                          *
+      *  CDL024 - Fixed Deposits Register                             *
+      *                                                               *
+      *****************************************************************
+     FDLFDEPL0IF  E           K        DISK         KINFSR *PSSR
+      * Fixed Deposits Including History File
+      *
+     FDLFDEPL1IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDCF                          KRENAMEDEALSDC1
+     F            DLCHISD0                          KRENAMEDLCHISD1
+      * Fixed Deposits Including History File
+     FDLFDEPL2IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDCF                          KRENAMEDEALSDC2
+     F            DLCHISD0                          KRENAMEDLCHISD2
+      * Fixed Deposits Including History File
+     FDLFDEPL3IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDCF                          KRENAMEDEALSDC3
+     F            DLCHISD0                          KRENAMEDLCHISD3
+      * Fixed Deposits Including History File
+      *
+     F***DL0727P1O   E                    PRINTER                                           Bug03920
+     FDL0727P1O   E                    PRINTER                        UC                    Bug03920
+     F                                              KINFDS SPOOL1
+     FDL0727AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     I****PHASE*    E DSMPHAS                                                                 CCB020
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for RED435P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for RED435AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPPARM       DS                            100
+      ***  Parameters passed into program
+     I                                        1   60SDATE
+     I                                        7  120EDATE
+     I                                       13  14 TYPE
+     I                                       15  20 CUST
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          #QDFAC
+      ***  External data structures for Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  External data structures for Customer Details
+      *
+     ISDCURR    E DSSDCURRPD                                                                 BUG4312
+      ** Currency Details                                                                    BUG4312
+      *                                                                                      BUG4312
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  ZDAT   -
+      *  ZDAT   -
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PPARM 100
+      *
+      ***  Initialise LDA field.
+     C                     MOVEL'DL0727'  DBPGM
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CLPRM  9                                           CCB020
+     C                     MOVE '1'       @CLPRM                                              CCB020
+     C                     CALL @CLPRM                                                        CCB020
+     C                     PARM *BLANKS   @RTPHS  4                                           CCB020
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           @RTPHS    IFEQ '*NO'                                                         CCB020
+     C                     MOVE 'INP'     PMODE   3
+     C                     ELSE
+     C                     MOVE 'COB'     PMODE
+     C                     ENDIF
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+      *
+      ***  RCF Processing for File.
+     C**********           EXSR RCFP1                                                       Bug03920
+     C                     MOVE 'N'       P1OPEN  1                                         Bug03920
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+     C                     SETOF                     707172
+     C                     SETOF                     7374
+      *
+     C           KFDEPA    KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+      *
+     C           KFDEPB    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KVDAT   50
+     C                     KFLD           KDLNO   60
+      *
+     C           KFDEPC    KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KVDAT   50
+     C                     KFLD           KDLNO   60
+      *
+     C           KFDEPD    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KTYPE   2
+      *
+     C           KFDEPE    KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KTYPE   2
+     C                     KFLD           KVDAT   50
+     C                     KFLD           KDLNO   60
+      *
+     C           KFDEPF    KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KTYPE   2
+      *
+     C           KFDEPG    KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KTYPE   2
+     C                     KFLD           KVDAT   50
+     C                     KFLD           KDLNO   60
+      *
+      * If in COB default deal type to be 'TD'
+     C           PMODE     IFEQ 'COB'
+     C                     MOVE 'TD'      TYPE
+     C                     ENDIF
+      *
+     C           PLEV      IFEQ 'B'
+     C                     SETON                     70
+     C                     ELSE
+     C                     SETOF                     70
+     C                     ENDIF
+      *
+     C           CUST      IFNE *BLANKS
+     C                     MOVELCUST      KCNUM
+      *
+     C           TYPE      IFNE *BLANKS
+     C                     MOVELTYPE      KTYPE
+     C                     SETON                     71
+     C                     ELSE
+     C                     SETON                     72
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           TYPE      IFNE *BLANKS
+     C                     MOVELTYPE      KTYPE
+     C                     SETON                     73
+     C                     ELSE
+     C                     SETON                     74
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * If in COB default Start Date to be rundate
+     C           PMODE     IFEQ 'INP'
+     C                     MOVE SDATE     ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM           BJDFIN
+     C                     PARM           ZDAYNO  50
+     C                     Z-ADDZDAYNO    KVDAT
+     C                     ELSE
+     C                     Z-ADDBJRDNB    KVDAT
+     C                     ENDIF
+      *
+      * If in COB default End Date to be rundate
+     C           PMODE     IFEQ 'INP'
+     C                     MOVE EDATE     ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM           BJDFIN
+     C                     PARM           ZDAYNO  50
+     C                     Z-ADDZDAYNO    END     50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    END
+     C                     ENDIF
+      *
+     C                     Z-ADD0         KDLNO
+      *
+     C                     Z-ADD1         BRCHNO  10
+     C           NXTBRN    TAG
+     C           *IN70     IFEQ *ON
+     C           PENT      ANDNE'ALL'                                                       Bug03920
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           PENT
+     C           SDBRCH    PARM SDBRCH    DSFDY
+     C                     MOVE PENT      KBRCA
+      *                                                                                     Bug03920
+     C           @RTCD     IFEQ *BLANKS                                                     Bug03920
+     C                     EXSR RCFP1                                                       Bug03920
+     C                     WRITEHEAD                                                        Bug03920
+     C                     ELSE                                                             Bug03920
+     C                     EXSR AUDIT                                                       Bug03920
+     C                     ENDIF                                                            Bug03920
+      *
+     C                     ELSE
+     C           BRCHNO    IFEQ 1
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C                     PARM *BLANKS   BRCA
+     C           SDBRCH    PARM SDBRCH    DSFDY
+     C                     EXSR RCFP1                                                       Bug03920
+     C                     WRITEHEAD
+     C                     ADD  1         BRCHNO
+     C                     MOVE A8BRCD    KBRCA
+     C                     ELSE
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*NEXT'   @OPTN   7
+     C                     PARM           BRCA
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE A8BRCD    KBRCA
+     C                     EXSR RCFP1                                                       Bug03920
+     C                     WRITEHEAD
+     C                     ELSE
+     C**********           EXSR WP1END                                                      Bug03920
+     C                     SETON                     LR                                     Bug03920
+     C                     RETRN                                                            Bug03920
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  SETLL on value date using start date of entered
+     C   74      KFDEPB    SETLLDLFDEPL0
+     C   74      KBRCA     READEDLFDEPL0                 89
+     C   72      KFDEPC    SETLLDLFDEPL1
+     C   72      KFDEPA    READEDLFDEPL1                 89
+     C   73      KFDEPE    SETLLDLFDEPL2
+     C   73      KFDEPD    READEDLFDEPL2                 89
+     C   71      KFDEPG    SETLLDLFDEPL3
+     C   71      KFDEPF    READEDLFDEPL3                 89
+      *
+      * If no record or record read with value date greater than
+      * end date selected then print 'No details to display'
+     C           *IN89     IFEQ *ON
+     C           VDAT      ORGT END
+     C**********           WRITEHEAD                                                BUG3631 Bug03920
+     C                     WRITENODETL
+      *
+     C           *IN70     IFEQ *OFF
+     C           *IN70     OREQ *ON                                                         Bug03920
+     C           PENT      ANDEQ'ALL'                                                       Bug03920
+     C                     EXSR WP1EN2                                                      Bug03920
+     C                     GOTO NXTBRN
+     C                     ELSE
+     C                     EXSR WP1END
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Do Until End of File.
+     C           *IN89     DOUEQ*ON
+      *
+      ***  Process Report Lines.
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+     C   74      KBRCA     READEDLFDEPL0                 89
+     C   72      KFDEPA    READEDLFDEPL1                 89
+     C   73      KFDEPD    READEDLFDEPL2                 89
+     C   71      KFDEPF    READEDLFDEPL3                 89
+      *
+     C           *IN89     IFEQ *ON
+     C           *IN70     ANDEQ*OFF
+     C           *IN89     OREQ *OFF
+     C           *IN70     ANDEQ*OFF
+     C           VDAT      ANDGTEND
+      *                                                                                     Bug03920
+     C           *IN89     OREQ *ON                                                         Bug03920
+     C           *IN70     ANDEQ*ON                                                         Bug03920
+     C           PENT      ANDEQ'ALL'                                                       Bug03920
+     C           *IN89     OREQ *OFF                                                        Bug03920
+     C           *IN70     ANDEQ*ON                                                         Bug03920
+     C           PENT      ANDEQ'ALL'                                                       Bug03920
+     C           VDAT      ANDGTEND                                                         Bug03920
+     C                     EXSR WP1EN2                                                      Bug03920
+      *                                                                                     Bug03920
+     C                     GOTO NXTBRN
+     C                     ENDIF
+      *
+      * If value date becomes greater than end date entered then
+      * finish read.
+     C           VDAT      IFGT END
+     C                     SETON                     89
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      * Move Details to report fields
+     C                     MOVE DTYP      PTYPE
+     C                     MOVE DLNO      PDLNO
+     C                     MOVE CNUM      PCNUM
+      *
+      *  Get customer shortname
+     C                     MOVELCNUM      @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    PSNAM
+     C                     ELSE
+     C                     MOVE *BLANKS   PSNAM
+     C                     ENDIF
+      *
+     C                     MOVE RODN      PRODN
+     C                     MOVE RBDN      PRBDN
+     C                     MOVE FSSOFD    PSRFD
+     C                     MOVE CCY       PCCY
+      *
+      *  Get currency details                                                                BUG4312
+      *                                                                                      BUG4312
+     C                     MOVELCCY       @CCY                                               BUG4312
+     C                     EXSR SRCURR                                                       BUG4312
+      *                                                                                      BUG4312
+     C                     Z-ADDPCPL      ZFLD
+     C                     Z-ADDWNBDP     ZDECS                                              BUG4312
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C                     MOVE ZOUT21    PPCPL
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           VDAT
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVE ZDATE     PVDAT
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           MDAT
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVE ZDATE     PMDAT
+      *
+      * Edit interest rate
+      *
+     C                     MOVE INTR      ZFIELD
+     C                     Z-ADD7         ZDECS
+     C                     CALL 'ZEDIT'
+     C                     PARM           ZFIELD 16
+     C                     PARM           ZDECS   10
+     C                     MOVELZFIELD    PINTR
+      *
+     C                     MOVE ICBS      PICBS
+      *
+      * Edit interest paid to date
+     C                     Z-ADDIPRD      ZFLD15
+     C**********           Z-ADD0         ZDECS                                              BUG4312
+     C                     Z-ADDWNBDP     ZDECS                                              BUG4312
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C                     MOVELZOUT21    PIPRD
+      *
+     C                     MOVE FSBLKA    PBLKI
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEAD
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEAD
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILPY
+      *                                                                                     Bug03920
+     C           P1OPEN    IFEQ 'Y'                                                         Bug03920
+     C                     CLOSEDL0727P1                                                    Bug03920
+     C                     MOVE 'N'       P1OPEN                                            Bug03920
+     C                     ENDIF                                                            Bug03920
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/WP1EN2                                                                      Bug03920
+      *****************************************************************                     Bug03920
+      *                                                               *                     Bug03920
+      *  WP1EN2 - Subroutine to Write End of Report.                  *                     Bug03920
+      *                                                               *                     Bug03920
+      *  Called By: PROCES                                            *                     Bug03920
+      *  Calls    : None                                              *                     Bug03920
+      *                                                               *                     Bug03920
+      *****************************************************************                     Bug03920
+      *                                                                                     Bug03920
+     C           WP1EN2    BEGSR                           *** WP1END ***                   Bug03920
+      *                                                                                     Bug03920
+      ***  Check that sufficient lines remain for the Format. If not,                       Bug03920
+      ***  write out the Main Headings on a new page.                                       Bug03920
+      *                                                                                     Bug03920
+     C                     Z-ADD4         RQDLN1                                            Bug03920
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                            Bug03920
+     C           DIFLN1    IFLE RQDLN1                                                      Bug03920
+     C                     WRITEHEAD                                                        Bug03920
+     C                     ENDIF                                                            Bug03920
+      *                                                                                     Bug03920
+      ***  Write out Total Format.                                                          Bug03920
+      *                                                                                     Bug03920
+     C                     WRITETRAILPY                                                     Bug03920
+      *                                                                                     Bug03920
+      ** If Branch Level, close the spool file so that a new one can                        Bug03920
+      ** be opened for the next branch.                                                     Bug03920
+      *                                                                                     Bug03920
+     C           *IN70     IFEQ *ON                                                         Bug03920
+     C           P1OPEN    ANDEQ'Y'                                                         Bug03920
+     C                     CLOSEDL0727P1                                                    Bug03920
+     C                     MOVE 'N'       P1OPEN                                            Bug03920
+     C                     ENDIF                                                            Bug03920
+      *                                                                                     Bug03920
+     C                     ENDSR                                                            Bug03920
+      *****************************************************************                     Bug03920
+      /TITLE SR/SRCURR                                                                       BUG4312
+      *****************************************************************                      BUG4312
+     C           SRCURR    BEGSR                                                             BUG4312
+      *                                                                                      BUG4312
+      ** Access Currency details                                                             BUG4312
+      *                                                                                      BUG4312
+     C                     CALL 'AOCURRR0'                                                   BUG4312
+     C                     PARM *BLANKS   @RTCD                                              BUG4312
+     C                     PARM '*KEY   ' @OPTN                                              BUG4312
+     C                     PARM           @CCY    3                                          BUG4312
+     C           SDCURR    PARM SDCURR    DSSDY                                              BUG4312
+      *                                                                                      BUG4312
+      ** Currency record not found - Error                                                   BUG4312
+      *                                                                                      BUG4312
+     C           @RTCD     IFNE *BLANKS                                                      BUG4312
+     C           *LOCK     IN   LDA                                                          BUG4312
+     C                     Z-ADD2         DBASE                                              BUG4312
+     C                     MOVEL@CCY      DBKEY                                              BUG4312
+     C                     MOVEL'SDCURRPD'DBFILE                                             BUG4312
+     C                     OUT  LDA                                                          BUG4312
+     C                     EXSR *PSSR                                                        BUG4312
+     C                     ENDIF                                                             BUG4312
+      *                                                                                      BUG4312
+      ** Save No. of Decimal positions to work field                                         BUG4312
+      *                                                                                      BUG4312
+     C                     Z-ADDA6NBDP    WNBDP   10                                         BUG4312
+      *                                                                                      BUG4312
+     C                     ENDSR                                                             BUG4312
+      *****************************************************************                      BUG4312
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON                                                          BUG4471
+     C                     WRITEDBERROR
+     C                     ENDIF                                                             BUG4471
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      *  Ensure Report Spool File recorded by RCF.
+      *                                                                                     Bug03920
+     C           P1OPEN    IFNE 'Y'                                                         Bug03920
+     C                     OPEN DL0727P1                                                    Bug03920
+     C                     MOVE 'Y'       P1OPEN                                            Bug03920
+     C                     ENDIF                                                            Bug03920
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      *  If Error occurs during ZSFILE processing, then return to the
+      *  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      *  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      *  If Error occurs during ZSFILE processing, then return to the
+      *  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

@@ -1,0 +1,1833 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Maintain cross ccy positions kept file')
+      ****************************************************************
+      *                                                              *
+      *  Midas - TREASURY MANAGEMENT (FX AND MM)          *
+      *                                                              *
+      *     TM3300 - MAINTAIN LIST OF CROSS CURRENCIES               *
+      *                                                              *
+      *     Function: This program enables the setup and deletion of *
+      *     (I/C)     pairs of currencies that are defined as cross  *
+      *               currency positions to be maintained.           *
+      *                                                              *
+      *     Called by: MIDAS menu                                    *
+      *                                                              *
+      *     Calls    : ZA0250  - Clear program message queue.        *
+      *              : ZA0240  - Display program message queue.      *
+      *              : ZA0440  - Send message with data.             *
+      *                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 30Oct91               *
+      *                                                              *
+      *                                                              *
+      ****************************************************************
+      *                                                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *              NEW PROGRAM FOR S01277 - CROSS CCY MAINTAINED   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     S01319 - Remove redundant processing                      *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+      **  Indicator Function Summary
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      *
+      *       KC         Exit program.
+      *       KL         Return to blank screen or, if screen blank,
+      *                  exit program.
+      *       KP         Select processing required.
+      *       KJ         Confirm delete.
+      *
+      *       10         Controls SFLEND on Display File.
+      *
+      *       20         Error on field DDACTN.
+      *
+      *       21         Error on field DDPCCY.
+      *       22         Error on field DDSCCY.
+      *
+      *       29         Error has occurred in screen validation.
+      *
+      *       30         CF10 is enabled.
+      *
+      *       31         Position cursor under key.
+      *       32         Position cursor under first non-key field.
+      *
+      *       39         Select processing in progress.
+      *       41         Controls SFLCLR on select screen.
+      *       42         Allows write to msg control fmt without the
+      *                  screen being displayed.
+      *       50         ROLLUP key pressed.
+     C********51*********Error*on*accessing*file*FDINSTLL*****************S01319
+      *       58         No more selected records on subfile.
+      *
+      *       60         Failure on read of display file.
+      *                                                               *
+      *       61         File LF/FXDOLULL is locked.                  *
+      *                                                               *
+      *       62         External tranSaction has occurred on a record*
+      *                                                               *
+      *       70         End Of File on reading LF/FXDOLMLL.          *
+      *       71         Beginning Of File on reading LF/FXDOLMLL.    *
+      *       72         Fail on chain to LF/FXDOLMLL                 *
+      *
+      *       75         Fail on chain to file in SR #ZI.
+      *
+      *          U7    Set on with U8 if a database error occurs.
+      *          U8    File out of balance if on on its own.
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFXCRSULLUF  E           K        DISK         KINFSR INFSR A
+     F                                              KINFDS INFDS
+     F                                              KCOMIT
+     FFXCRSCLLIF  E           K        DISK         KINFSR *PSSR
+     F            FXCRSCP0                          KRENAMEFXCRSCL1
+     F*FDINSTLLIF**E*******************DISK*********KINFSR**PSSR**********S01319
+     FTM3300DDCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        @RRN  KSFILE TM3300S3
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *                                                               *
+     IINFDS       DS
+      *
+      **  Data structure for file status of FXDOLULL
+     I                                     *STATUS  STATUS
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+      **  Field containing workstaion  ID.
+     I                                      244 253 @JOB
+      **  Field containing user ID.
+     I                                      254 263 @USER
+      *
+     I           UDS
+      **  Local data area for data base errors.
+      **  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+      **  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+      **  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+      **  Field containing number of database error.
+     I                                      181 183 DBASE
+      *
+     IDNATN       DS                              5
+      * DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER
+     I                                        1   50FNATN
+     ICMTTXT      DS                             67
+      *
+      **  COMIT TEXT
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51  53 @PCCYX
+     I                                       54  56 @SCCYX
+     I@UPDT       DS                              7
+      *
+      ** Data structure to hold the time of update from MIDAS run date.
+     I                                        1   20CPDLUP
+     I                                        3   5 CPMLUP
+     I                                        6   70CPYLUP
+      *
+     I@DATA       DS                             45
+      *
+      ** Data structure to hold the data for screen messages.
+     I                                        1  25 @DATA1
+     I                                       26  45 @DATA2
+     I                                       26  28 @DTC1
+     I                                       29  29 @BLK1
+     I                                       30  32 @DTC2
+     I                                        1  45 @DATA3
+      *
+     I@KEY        DS                             12
+      *                                                               *
+      **  Data structure to set up the key for the Ccy Code file for  *
+      **  the first default Ccy.                                      *
+     I                                        1   2 @KEY1
+     I                                        9  11 @KEY2
+     I                                       12  12 @KEY3
+     I*
+     IRUNDAT      DS                             13
+     I** DATA STRUCTURE FOR RUNDATE.
+     I                                        1   7 @RDATE
+     I                                    P   8  100@RDNUM
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     ISDDEAL    E DSSDDEALPD                                              S01319
+     I** EXTERNAL DS FOR DEALING DETAILS                                  S01319
+      *                                                                   S01319
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialize                                *
+      *          #B       - main processing                           *
+      *          #C       - terminate                                 *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Initial processing.
+     C                     EXSR #A
+      *
+      **  Main processing
+     C                     EXSR #B
+      *
+      **  Termination processing
+     C                     EXSR #C
+      *
+     C           ENDPGM    TAG                             **ENDPGM**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - main processing                               *
+      *  02  #ZL      - displays reads and resets main screen         *
+      *  03  #ZA      - resets screen indicators and message q        *
+      *  06  #BA      - CF12 processing                               *
+      *  07  #ZE      - blanks out screen                             *
+      *  08  #ZD      - moves file fields to screen                   *
+      *  09  #ZF      - moves work fields to screen                   *
+      *  10  #BD      - enter processing                              *
+      *  11  #BDA     - action code I                                 *
+      *  13  #ZK      - gets and displays record                      *
+      *  14  #ZI      - validates input to screen fields              *
+      *  15  #ZJ      - moves valid fields to file                    *
+      *  16  #ZG      - updates file                                  *
+      *  17  #BDAA    - writes record to file                         *
+      *  20  #ZB      - action code D                                 *
+      *  21  #ZM      - CF10 processing                               *
+      *  22  #BF      - CF15 processing                               *
+      *  23  #BFA     - CF15 A                                        *
+      *  24  #BFB     - CF15 D                                        *
+      *  25  #A       - initialize                                    *
+      *  26  #C       - terminate                                     *
+      *  27  INFSR    - file error                                    *
+      *  28  *PSSR    - program error                                 *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      *  30  ZA0250   - clear message queue                           *
+      *  31  ZA0240   - send message                                  *
+      *  32  ZA0440   - send message with data                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - main processing                                    *
+      *                                                               *
+      * CALLS    #ZL      - displays reads and resets main screen     *
+      *          #BA      - CF12 processing                           *
+      *          #BF      - CF15 processing                           *
+      *          #ZM      - CF10 processing                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      **  Continue processing until program exit is required.
+     C           *INKC     DOWEQ'0'                        B1
+      *
+      **  Process screen.
+     C                     EXSR #ZL                        *1
+      *
+      **  Process screen input - depending upon input type.
+      *
+      **  If CA3 is input exit main processing immediately.
+     C           *INKC     CABEQ'1'       #B9              *1
+      *
+      **  CF12 input.
+     C           *INKL     CASEQ'1'       #BA              *1
+      *
+      **  CF15 input.
+     C           *INKP     CASEQ'1'       #BF              *1
+      *
+      **  CF10 input - only possible after valid 'ENTER' processing
+      **               in delete mode.
+     C           *INKJ     CASEQ'1'       #ZM              *1
+      *
+      **  'ENTER' input.
+     C                     CAS            #BD              *1
+      *
+     C                     END                             *1
+      *
+     C                     END                             E1
+      *
+     C           #B9       ENDSR                           **#B9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZL      - displays reads and resets main screen              *
+      *                                                               *
+      * CALLS    #ZA      - resets screen indicators and message q    *
+      *                                                               *
+      * CALLED BY  #B     - main processing                           *
+      *            #BF    - CF15 processing                           *
+      *            #BFA   - CF15 A                                    *
+      *            #BFB   - CF15 D                                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZL       BEGSR
+      *
+      **  Display screen.
+     C                     WRITETM3300D0
+     C                     EXFMTTM3300S0
+      *
+      **  Reset error indicators and clear screen message queue.
+     C                     EXSR #ZA
+      *
+     C           #ZL9      ENDSR                           **#ZL9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZA      - resets screen indicators and message q             *
+      *                                                               *
+      * CALLS    ZA0250   - clear message queue                       *
+      *                                                               *
+      * CALLED BY  #ZL    - displays reads and resets main screen     *
+      *            #ZG    - updates file                              *
+      *            #BDAA  - writes record to file                     *
+      *            #BF    - CF15 processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZA       BEGSR
+      *
+      **  Reset all field error indicators.
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+      *
+      **  Reset cursor positioning indicators.
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+      *
+      **  Reset validation error indicator.
+     C                     MOVE '0'       *IN29
+      *
+      **  Reset indicator enabling CF10.
+     C                     MOVE '0'       *IN30
+      *
+      **  Reset indicator showing external update.
+     C                     MOVE '0'       *IN62
+      *
+      **  Clear screen message queue.
+     C                     CALL 'ZA0250'
+      *
+     C           #ZA9      ENDSR                           **#ZA9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BA      - CF12 processing                                    *
+      *                                                               *
+      * CALLS    #ZE      - blanks out screen                         *
+      *                                                               *
+      * CALLED BY  #B     - main processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BA       BEGSR
+      *
+      **  Check whether all Screen fields blank.
+     C           DDACTN    IFEQ *BLANKS                    B1
+     C           DDPCCY    ANDEQ*BLANKS                    X1
+     C           DDSCCY    ANDEQ*BLANKS                    X1
+      *
+      **  If they are, cease main processing by setting *INKC on.
+     C                     MOVE '1'       *INKC            *1
+      *
+      **  Otherwise, blank out all input capable screen fields.
+     C                     ELSE                            X1
+      *
+     C                     EXSR #ZE                        *1
+      *
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR                           **#BA9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZE      - blanks out screen                                  *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #BA    - CF12 processing                           *
+      *            #ZK    - gets and displays record                  *
+      *            #ZG    - updates file                              *
+      *            #BDAA  - writes record to file                     *
+      *            #BF    - CF15 processing                           *
+      *                                                               *
+      * FLDS USED  @ACTN  - saved action code                         *
+      *            @PCCY  - saved primary currency code               *
+      *            @SCCY  - saved secondary currency code             *
+      *                                                               *
+      *****************************************************************
+     C           #ZE       BEGSR
+      *
+      **  Blank all screen input fields.
+     C                     MOVE *BLANKS   DDACTN
+     C                     MOVE *BLANKS   DDPCCY
+     C                     MOVE *BLANKS   DDSCCY
+     C                     MOVE *BLANKS   DDPTXT
+     C                     MOVE *BLANKS   DDSTXT
+      *
+      **  Blank all program work fields.
+     C                     MOVE *BLANKS   @ACTN
+     C                     MOVE *BLANKS   @PCCY
+     C                     MOVE *BLANKS   @SCCY
+      *
+     C           #ZE9      ENDSR                           **#ZE9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZD      - moves file fields to screen                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY
+      *            #ZK    - gets and displays record                  *
+      *            #ZG    - updates file                              *
+      *            INFSR  - file error                                *
+      *                                                               *
+      * FLDS USED  @CCY   - saved currency code                       *
+      *            @DLTC  - saved daylight limit                      *
+      *            @OLTC  - saved overnight limit                     *
+      *            @DLUP  - day of update                             *
+      *            @MLUP  - month of update                           *
+      *            @YLUP  - year of update                            *
+      *            @TLUP  - time of update                            *
+      *                                                               *
+      *****************************************************************
+     C           #ZD       BEGSR
+      *
+      **  Moves fields from file into program work fields and screen
+      **  fields.
+     C                     MOVE CPPCCY    @PCCY
+     C                     MOVE CPSCCY    @SCCY
+     C                     Z-ADDCPDLUP    @DLUP
+     C                     MOVE CPMLUP    @MLUP
+     C                     Z-ADDCPYLUP    @YLUP
+     C                     Z-ADDCPTLUP    @TLUP
+      *
+     C                     MOVE CPPCCY    DDPCCY
+     C                     MOVE CPSCCY    DDSCCY
+      *
+      ** get the primary currency name
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDPCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 001*
+     C                     MOVE '1'       *INKC            *             *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELDDPCCY    DBKEY            *1
+     C                     MOVE '001'     DBASE            *1
+     C                     EXSR *PSSR                      *1
+     C                     GOTO #ZD9                       *1
+     C                     END                             E1
+      *
+     C                     MOVE A6CYNM    DDPTXT
+      *
+      ** get the secondary currency name
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDSCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 012*
+     C                     MOVE '1'       *INKC            *             *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELDDSCCY    DBKEY            *1
+     C                     MOVE '012'     DBASE            *1
+     C                     EXSR *PSSR                      *1
+     C                     GOTO #ZD9                       *1
+     C                     END                             E1
+      *
+     C                     MOVE A6CYNM    DDSTXT
+      *
+     C           #ZD9      ENDSR                           **#ZD9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZF      - moves work fields to screen                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #ZB    - action code D                             *
+      *            #ZM    - CF10 processing                           *
+      *                                                               *
+      * FLDS USED  @PCCY  - saved primary currency                    *
+      *            @SCCY  - saved secondary currency                  *
+      *                                                               *
+      *****************************************************************
+     C           #ZF       BEGSR
+      *
+      **  Moves fields from program work fields into screen fields.
+     C                     MOVE @PCCY     DDPCCY
+     C                     MOVE @SCCY     DDSCCY
+      *
+     C           #ZF9      ENDSR                           **#ZF9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BD      - enter processing                                   *
+      *                                                               *
+      * CALLS    ZA0240   - send message                              *
+      *          #BDA     - action code I                             *
+      *          #ZB      - action code D                             *
+      *          #ZK      - gets and displays record                  *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @MSGID - message id                                *
+      *                                                               *
+      *****************************************************************
+     C           #BD       BEGSR
+      *
+      **  If action code is ' ', make it default to E.
+     C           DDACTN    IFEQ *BLANK                     B1
+      *
+     C                     MOVE 'E'       DDACTN           *1
+      *
+     C                     END                             E1
+      *
+      **  If action code is not I,D or E, it is invalid.
+     C           DDACTN    IFNE 'I'                        B1
+     C           DDACTN    ANDNE'D'                        X1
+     C           DDACTN    ANDNE'E'                        X1
+      *
+      **  Set up error output to screen.
+     C                     MOVE '1'       *IN20            *1
+     C                     MOVEL'FXM1001' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+      *
+      **  By-pass further ENTER processing.
+     C                     GOTO #BD9                       *1
+      *
+     C                     END                             E1
+      *
+      **  Further processing depends on the action code.
+      **  - If the action code is I, process SR #BDA.
+     C           DDACTN    CASEQ'I'       #BDA
+      *
+      **  - If the action code is D, process SR #ZB .
+     C           DDACTN    CASEQ'D'       #ZB
+      *
+      **  - If the action code is E, process SR #ZK .
+     C           DDACTN    CASEQ'E'       #ZK
+      *
+     C                     END
+      *
+     C           #BD9      ENDSR                           **#BD9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BDA     - action code I                                      *
+      *                                                               *
+      * CALLS    ZA0440   - send message with data                    *
+      *          #ZI      - validates input to screen fields          *
+      *          #BDAA    - writes record to file                     *
+      *          #ZG      - updates file                              *
+      *                                                               *
+      * CALLED BY  #BD    - enter processing                          *
+      *                                                               *
+      * FLDS USED  @DATA2 - data for message                          *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *            @DLUP  - day of update                             *
+      *            @MLUP  - month of update                           *
+      *            @YLUP  - year of update                            *
+      *            @TLUP  - time of update                            *
+      *                                                               *
+      *****************************************************************
+     C           #BDA      BEGSR
+      *
+      **  Chain to the file using the key, to see if it already exists.
+      **  - *IN72 set on if the record is not found.
+     C           CPKEY     CHAINFXCRSCLL             72
+      *
+      **  If *IN72 is not on a valid record exists on file
+     C           *IN72     IFEQ '0'                        B1
+      *
+      **  Set up error output for screen.
+     C                     MOVE '1'       *IN21            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1010' @MSGID           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+      *
+      **  By-pass further ENTER processing.
+     C                     GOTO #BDA9                      *1
+      *
+     C                     END                             E1
+      *
+      **  No valid record exists for that key, validate input.
+     C                     EXSR #ZI
+      *
+      **  If the input is invalid, cease ENTER processing.
+     C           *IN29     CABEQ'1'       #BDA9
+      *
+      **  If *IN72 is equal to '1', then no record, deleted
+      **  or valid, exists on the file.
+     C           *IN72     IFEQ '1'                        B1
+      *
+      **  Write a new record.
+     C                     EXSR #BDAA                      *1
+      *
+      **  If a database error has occurred end processing.
+     C           *INU7     CABEQ'1'       #BDA9
+      *
+      **  Otherwise, a deleted record exists which may be overwritten.
+     C                     ELSE                            X1
+      *
+      **  Move last update fields into pgm work fields.
+     C                     Z-ADDCPDLUP    @DLUP            *1
+     C                     MOVE CPMLUP    @MLUP            *1
+     C                     Z-ADDCPYLUP    @YLUP            *1
+     C                     Z-ADDCPTLUP    @TLUP            *1
+      *
+      **  Update file, over deleted record.
+     C                     EXSR #ZG                        *1
+      *
+      **  If a database error has occurred end file update processing.
+     C           *INU7     CABEQ'1'       #BDA9
+      *
+      **  If a the Action code is E, then the record has been inserted
+      **  by another workstation.  Therefore the intelligent insert is
+      **  not set up.
+     C           DDACTN    CABEQ'E'       #BDA9
+      *
+     C                     END                             E1
+      *
+      **  Set up I in the action code field.
+     C                     MOVE 'I'       DDACTN
+      *
+      **  Position cursor on key field
+     C                     MOVE '1'       *IN31
+      *
+     C           #BDA9     ENDSR                           **#BDA9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZK      - gets and displays record                           *
+      *                                                               *
+      * CALLS    ZA0440   - send message with data                    *
+      *          #ZE      - blanks out screen                         *
+      *          #ZD      - moves file fields to screen               *
+      *                                                               *
+      * CALLED BY  #BD    - enter processing                          *
+      *            #ZB    - action code D                             *
+      *                                                               *
+      * FLDS USED  @DATA2 - data for message                          *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *            @ACTN1 - action code                               *
+      *                                                               *
+      *****************************************************************
+     C           #ZK       BEGSR
+      *
+      **  Chain to the file using the key.
+      **  - *IN72 set on if the record is not found.
+     C           CPKEY     CHAINFXCRSCLL             72
+      *
+      **  If *IN72 is on no valid record exists on file
+     C           *IN72     IFEQ '1'                        B1
+      *
+      **  Set up error output for screen.
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1012' @MSGID           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+      *
+      **  Clear screen fields and set up action code
+     C                     MOVE DDACTN    @ACTN1           *1
+     C                     EXSR #ZE                        *1
+     C                     MOVE @ACTN1    DDACTN           *1
+      *
+      **  Position cursor on key field
+     C                     MOVE '1'       *IN31            *1
+      *
+      **  By-pass further record retrieval processing.
+     C                     GOTO #ZK9                       *1
+      *
+     C                     END                             E1
+      *
+      **  A valid record has been read, move fields into pgm fields.
+     C                     EXSR #ZD
+      *
+     C           #ZK9      ENDSR                           **#ZK9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZI      - validates input to screen fields                   *
+      *                                                               *
+      * CALLS    ZA0440   - send message with data                    *
+      *                                                               *
+      * CALLED BY  #BDA   - action code I                             *
+      *                                                               *
+      * FLDS USED                                                     *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *                                                               *
+      *****************************************************************
+     C           #ZI       BEGSR
+      *
+     C                     MOVE '0'       *IN29
+     C*
+     C** Primary currency must not be blank.
+     C*
+     C           DDPCCY    IFEQ *BLANKS                    B1
+     C*
+     C                     MOVEL'FXM0017' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3 45        *1
+     C                     MOVELDDPCCY    @DATA3           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN21            *1
+     C                     MOVE '1'       *IN29            *1
+     C*
+     C                     ELSE                            X1
+     C*
+     C** Currency must not be base currency for dealing
+     C*
+     C***********DDPCCY****IFEQ*IDCYDL*********************B2*************S01319
+     C           DDPCCY    IFEQ BNCYDL                     B2             S01319
+     C*
+     C                     MOVEL'FXM0018' @MSGID           *2
+     C                     MOVE *BLANKS   @DATA3           *2
+     C                     MOVELDDPCCY    @DATA3           *2
+     C                     CALL 'ZA0440'                   *2
+     C                     PARM           @MSGID           *2
+     C                     PARM           @DATA            *2
+     C                     MOVE '1'       *IN21            *2
+     C                     MOVE '1'       *IN29            *1
+     C*
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+      ** validate the primary currency as being valid
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDPCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'FXM0011' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3           *2
+     C                     MOVELDDPCCY    @DATA3           *2
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN21            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+     C*
+     C** If '?' was taken move selected currency to screen
+     C** field
+     C*
+     C                     MOVE @AJCD     DDPCCY
+     C*
+     C** Primary currency must be a dealing currency.
+     C*
+     C           A6DLCI    IFNE 'Y'                        B1
+     C                     MOVEL'FXM0008' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3           *2
+     C                     MOVELDDPCCY    @DATA3           *2
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN21            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+     C*
+     C** Secondary currency must not be blank.
+     C*
+     C           DDSCCY    IFEQ *BLANKS                    B1
+     C*
+     C                     MOVEL'FXM0017' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3           *1
+     C                     MOVELDDSCCY    @DATA3           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVE '1'       *IN29            *1
+     C*
+     C                     END                             E1
+      *
+      ** validate the secondary currency as being valid
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDSCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVEL'FXM0011' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3           *1
+     C                     MOVELDDSCCY    @DATA3           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+      *
+     C** If '?' was taken move selected currency to screen
+     C** field
+     C*
+     C                     MOVE @AJCD     DDSCCY
+     C*
+     C** Secondary currency must be a dealing currency.
+     C*
+     C           A6DLCI    IFNE 'Y'                        B1
+     C                     MOVEL'FXM0008' @MSGID           *1
+     C                     MOVE *BLANKS   @DATA3           *1
+     C                     MOVELDDSCCY    @DATA3           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+     C*
+     C** Currencies must not be the same.
+     C*
+     C           DDPCCY    IFEQ DDSCCY                     B1
+     C*
+     C                     MOVEL'FXM0019' @MSGID           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C                     MOVE '1'       *IN22            *1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+     C*
+     C*
+     C           #ZI9      ENDSR                           **#ZI9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZJ      - moves valid fields to file                         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #ZG    - updates file                              *
+      *            #BDAA  - writes record to file                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZJ       BEGSR
+      *
+      **  Moves fields from valid screen fields into file fields.
+     C                     MOVE DDPCCY    CPPCCY
+     C                     MOVE DDSCCY    CPSCCY
+      *
+     C           #ZJ9      ENDSR                           **#ZJ9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZG      - updates file                                       *
+      *                                                               *
+      * CALLS    #ZA      - resets screen indicators and message q    *
+      *          ZA0440   - send message with data                    *
+      *          #ZD      - moves file fields to screen               *
+      *          #ZE      - blanks out screen                         *
+      *          #ZJ      - moves valid fields to file                *
+      *                                                               *
+      * CALLED BY  #BDA   - action code I                             *
+      *            #ZM    - CF10 processing                           *
+      *                                                               *
+      * FLDS USED  @DATA2 - data for message                          *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *            @DLUP  - day of update                             *
+      *            @MLUP  - month of update                           *
+      *            @YLUP  - year of update                            *
+      *            @TLUP  - time of update                            *
+      *            @RLSFL - release file                              *
+      *            @UPDT  -                                           *
+      *            @USER  - user id                                   *
+      *                                                               *
+      *****************************************************************
+     C           #ZG       BEGSR
+      *
+      **  Chain to record to be updated to check for external update and
+      **  to lock the record to prevent external update.
+      **  - *IN72 set on if the record is not found.
+      **  - *IN61 set on if the record is locked.
+     C           CPKEY     CHAINFXCRSULL             7261
+      *
+      **  If no record for that key exists, *IN72 is set on.
+     C           *IN72     IFEQ '1'                        B1
+      *
+     C                     MOVELDDPCCY    DBKEY                        ***
+     C                     MOVE DDSCCY    DBKEY            ***************
+     C                     MOVEL'FXCRSULL'DBFILE           * DB ERROR 002*
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INKC            *1
+      *
+      **  By-pass further update processing.
+     C                     GOTO #ZG9                       *1
+      *
+     C                     END                             E1
+      *
+      **  If *IN61 is on then the record is locked.
+     C           *IN61     IFEQ '1'                        B1
+      *
+      **  Clear the screen error message queue.
+     C                     EXSR #ZA                        *1
+      *
+      **  Set up error output to screen.
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1011' @MSGID           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+      *
+      **  By-pass further update processing.
+     C                     GOTO #ZG9                       *1
+      *
+     C                     END                             E1
+      *
+      **  If any of the date and time fields have changed since
+      **  the file was initially read, then the record has been
+      **  updated by another workstation.
+     C           @DLUP     IFNE CPDLUP                     B1
+     C           @MLUP     ORNE CPMLUP                     *1
+     C           @YLUP     ORNE CPYLUP                     *1
+     C           @TLUP     ORNE CPTLUP                     *1
+      *
+      **  - If last change type is I update was an insertion.
+     C           CPCHTP    IFEQ 'I'                        B*2
+      *
+     C                     MOVEL'FXM1015' @MSGID           **2
+      *
+      **  Set on indicator to show that an external transaction has
+      **  taken place - used to prevent new field values from being
+      **  blanked at the end of select processing.
+     C                     MOVE '1'       *IN62            **2
+      *
+     C                     END                             E*2
+      *
+      **  Set up error output to screen.
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+      *
+      **  - If last change type is I, display new field values.
+     C           CPCHTP    IFEQ 'I'                        B*2
+      *
+      **  Set up screen and work fields with newly changed values (i.e.
+      **  from chain to update file).
+     C                     EXSR #ZD                        **2
+     C                     MOVE 'E'       DDACTN           **2
+      *
+     C                     END                             E*2
+      *
+      **  Release locked record.
+     C                     EXCPT@RLSFL                     *1
+      *
+      **  By-pass further update processing.
+     C                     GOTO #ZG9                       *1
+      *
+     C                     END                             E1
+      *
+      **  Update validation is now complete.
+      *
+      **  If a database error has occurred end file update processing.
+     C           *INU7     CABEQ'1'       #ZG9
+      *
+      **  Update validation is now complete - setup file fields.
+      *
+      **  Retrieve the MIDAS date and set up the file fields.
+     C                     MOVEL@RDATE    @UPDT
+      *
+      **  Move the Midas day number into the file field.
+     C                     Z-ADD@RDNUM    CPLCD
+      *
+      **  Set up the last change type field.
+     C           DDACTN    IFEQ 'I'                        X1
+     C                     MOVE DDACTN    CPCHTP           *1
+     C                     END                             E1
+      *
+      **  Set up the last user field.
+     C                     MOVEL@USER     CPLUID
+      *
+      **  Set up the last change date field.
+     C                     Z-ADD@RDNUM    CPLCD
+      *
+      **  Set up the last change time field.
+     C                     TIME           CPTLUP
+      *
+      **  Fill up the other fields.
+     C                     EXSR #ZJ                        *1
+      *
+     C**  If action is 'D' delete record from  file.
+     C*
+     C           DDACTN    IFEQ 'D'                        B1
+     C                     DELETFXCRSCP0
+     C                     ELSE                            X1
+     C*
+      **  Update the file.
+     C                     UPDATFXCRSCP0
+      *
+     C                     END                             E1
+     C*
+      **  Commit the file updates.
+     C           CMTTXT    COMIT
+      *
+      **  Set up successful file maintenance message.
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+      *
+      **  If action code is D, record has been deleted.
+     C           DDACTN    IFEQ 'D'                        B1
+      *
+     C                     MOVEL'FXM1017' @MSGID           *1
+      *
+     C                     END                             E1
+      *
+      **  If action code is I, record has been inserted.
+     C           DDACTN    IFEQ 'I'                        B1
+      *
+     C                     MOVEL'FXM1018' @MSGID           *1
+      *
+     C                     END                             E1
+      *
+      **  Blank screen fields.
+     C                     EXSR #ZE
+      *
+      **  Reset error processing.
+     C                     EXSR #ZA
+      *
+      **  Send successful file maintenance message.
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+      *
+     C           #ZG9      ENDSR                           **#ZG9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BDAA    - writes record to file                              *
+      *                                                               *
+      * CALLS    #ZJ      - moves valid fields to file                *
+      *          #ZE      - blanks out screen                         *
+      *          #ZA      - resets screen indicators and message q    *
+      *          ZA0440   - send message with data                    *
+      *                                                               *
+      * CALLED BY  #BDA   - action code I                             *
+      *                                                               *
+      * FLDS USED  @UPDT  -                                           *
+      *            @USER  - user id                                   *
+      *            @DATA2 - data for message                          *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *                                                               *
+      *****************************************************************
+     C           #BDAA     BEGSR
+      *
+      **  If a database error has occurred end file write processing.
+     C           *INU7     CABEQ'1'       #BDAA9
+      *
+      **  Set up the record id.
+     C                     MOVE 'CP'      CPRCID
+      *
+      *
+      **  Retrieve the MIDAS date and set up the file fields.
+     C                     MOVEL@RDATE    @UPDT
+      *
+      **  Move the Midas day number into the file field.
+     C                     Z-ADD@RDNUM    CPLCD
+      *
+      **  Set up the last change type field.
+     C                     MOVE 'I'       CPCHTP
+      *
+      **  Set up the last user field.
+     C                     MOVEL@USER     CPLUID
+      *
+      **  Fill up the other fields.
+     C                     EXSR #ZJ
+      *
+      **  Set up the last change time field.
+     C                     TIME           CPTLUP
+      *
+      **  Write the new record.
+     C                     WRITEFXCRSCP0
+      *
+      **  Commit the file updates.
+     C           CMTTXT    COMIT
+      *
+      **  Set up successful maintenance message for screen.
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1018' @MSGID
+      *
+      **  Blank screen fields.
+     C                     EXSR #ZE
+      *
+      **  Reset error processing.
+     C                     EXSR #ZA
+      *
+      **  Send successful maintenance message to screen.
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+      *
+     C           #BDAA9    ENDSR                           **#BDAA9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZB      - action code D                                      *
+      *                                                               *
+      * CALLS    #ZK      - gets and displays record                  *
+      *          ZA0240   - send message                              *
+      *          #ZF      - moves work fields to screen               *
+      *                                                               *
+      * CALLED BY  #BD    - enter processing                          *
+      *            #BFB   - CF15 D                                    *
+      *                                                               *
+      * FLDS USED  @CCY   - saved currency code                       *
+      *            @MSGID - message id                                *
+      *            @DLTC  - saved daylight limit                      *
+      *            @OLTC  - saved overnight limit                     *
+      *                                                               *
+      *****************************************************************
+     C           #ZB       BEGSR
+      *
+      **  If key work fields are not the same as screen fields, then
+      **  the record is not already being displayed.
+     C           @PCCY     IFNE DDPCCY                     B1
+     C           DDPCCY    OREQ *BLANKS                    X1
+     C           @SCCY     OREQ DDSCCY                     X1
+     C           DDSCCY    OREQ *BLANKS                    X1
+      *
+      **  Chain to file and display on screen.
+     C                     EXSR #ZK                        *1
+      *
+      **  If *IN72 is on no valid record exists on file
+     C           *IN72     CABEQ'1'       #ZB9             *1
+      *
+     C                     ELSE                            X1
+      *
+      **  If the action code is not D, it is invalid.
+     C           DDACTN    IFNE 'D'                        B*2
+      *
+      **  Set up error output for screen.
+     C                     MOVE '1'       *IN20            **2
+     C                     MOVEL'FXM1005' @MSGID           **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM           @MSGID           **2
+      *
+      **  Restore former field values.
+     C                     EXSR #ZF                        **2
+      *
+      **  By-pass further Delete processing.
+     C                     GOTO #ZB9                       **2
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      **  The entry must now be valid, enable the CF10 processing.
+     C                     MOVE '1'       *IN30
+      *
+     C           #ZB9      ENDSR                           **#ZB9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZM      - CF10 processing                                    *
+      *                                                               *
+      * CALLS    ZA0240   - send message                              *
+      *          #ZF      - moves work fields to screen               *
+      *          #ZG      - updates file                              *
+      *                                                               *
+      * CALLED BY  #B     - main processing                           *
+      *            #BFB   - CF15 D                                    *
+      *                                                               *
+      * FLDS USED  @MSGID - message id                                *
+      *            @CCY   - saved currency code                       *
+      *            @DLTC  - saved daylight limit                      *
+      *            @OLTC  - saved overnight limit                     *
+      *                                                               *
+      *****************************************************************
+     C           #ZM       BEGSR
+      *
+      **  If the action code is not D, it is invalid.
+     C           DDACTN    IFNE 'D'                        B1
+      *
+      **  Set up error output for screen.
+     C                     MOVE '1'       *IN20            *1
+     C                     MOVEL'FXM1005' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+      *
+      **  Restore former field values.
+     C                     EXSR #ZF                        *1
+      *
+      **  By-pass further CF10 processing.
+     C                     GOTO #ZM9                       *1
+      *
+     C                     END                             E1
+      *
+      **  If any other fields have changed since the record was
+      **  displayed, delete processing is invalid.
+     C           DDPCCY    IFNE @PCCY                      B1
+     C           DDSCCY    ORNE @SCCY                      X1
+      *
+      **  Set up error output for screen.
+     C                     MOVE '1'       *IN20            *1
+     C                     MOVEL'FXM1004' @MSGID           *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM           @MSGID           *1
+      *
+      **  Restore former field values.
+     C                     EXSR #ZF                        *1
+      *
+      **  Reset indicator allowing CF10 processing.
+     C                     MOVE '0'       *IN30            *1
+      *
+      **  By-pass further CF10 processing.
+     C                     GOTO #ZM9                       *1
+      *
+     C                     END                             E1
+     C*
+     C**  Check that record has not been deleted by
+     C**  another workstation.
+     C*
+     C           CPKEY     CHAINFXCRSCLL             72
+     C*
+     C**  If *IN72 is on record must have been deleted
+     C**  by another workstation.
+     C*
+     C           *IN72     IFEQ '1'                        B1
+      *
+      **  Clear the screen error message queue.
+     C                     EXSR #ZA                        *1
+      *
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1014' @MSGID           *1
+     C                     CALL 'ZA0440'                   *1
+     C                     PARM           @MSGID           *1
+     C                     PARM           @DATA            *1
+     C*
+     C**  By-pass further CF10 processing.
+     C                     GOTO #ZM9                       *1
+     C*
+     C                     END                             E1
+     C*
+     C**  CF10 processing must now be valid, update file.
+     C                     EXSR #ZG
+      *
+     C           #ZM9      ENDSR                           **#ZM9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BF      - CF15 processing                                    *
+      *                                                               *
+      * CALLS    #ZA      - resets screen indicators and message q    *
+      *          ZA0240   - send message                              *
+      *          #ZL      - displays reads and resets main screen     *
+      *          #BFA     - CF15 A                                    *
+      *          #BFB     - CF15 D                                    *
+      *          #ZE      - blanks out screen                         *
+      *                                                               *
+      * CALLED BY  #B     - main processing                           *
+      *                                                               *
+      * FLDS USED  @RRN   - relative record number                    *
+      *            @MSGID - message id                                *
+      *            @COUNT - counter for subfile                       *
+      *            @PCCY  - saved currency code                       *
+      *            @DLUP  - day of update                             *
+      *            @MLUP  - month of update                           *
+      *            @YLUP  - year of update                            *
+      *            @TLUP  - time of update                            *
+      *                                                               *
+      *****************************************************************
+     C           #BF       BEGSR
+      *
+      **  Initialisation for subfile processing.
+      *
+      **  Set on indicator to show that select processing is occurring.
+     C                     MOVE '1'       *IN39
+      *
+      **  Initialise indicator showing end of selected records.
+     C                     MOVE '0'       *IN58
+      *
+      **  Initialise program field for subfile relative record number.
+     C                     Z-ADD0         @RRN    50
+      *
+      **  Initialise screen and write main screen without displaying
+      **  to clear msgq.
+     C                     EXSR #ZA
+     C                     MOVE '1'       *IN42
+     C                     WRITETM3300S0
+     C                     MOVE '0'       *IN42
+      *
+      **  Clear subfile before refilling by writing control record
+      **  with SFLCLR active.
+     C                     MOVE '1'       *IN41
+     C                     WRITETM3300S2
+     C                     MOVE '0'       *IN41
+      *
+      **  Write the select screen footer to the screen.
+     C                     WRITETM3300D1
+      *
+      **  Set on ROLLUP indicator to cause initial loop operation.
+     C                     MOVE '1'       *IN50
+      *
+      **  Reset *IN70.
+     C                     MOVE '0'       *IN70
+      *
+      **  Set file pointer on key displayed on screen.
+     C           CPKEY     SETLLFXCRSCLL
+      *
+      **  Reset *IN70.
+     C                     MOVE '0'       *IN70
+      *
+      **  Read the file initially - if *IN70 is set on then the end of
+      **  the file has been reached.  Read until a valid record is
+      **  found or until no more records exist.
+      *
+      **  Read the file.
+     C                     READ FXCRSCLL                 70*1
+      *
+      **  If *IN70 is on no more records exist - set up an error message.
+     C           *IN70     IFEQ '1'                        B*1
+      *
+     C                     MOVEL'FXM1007' @MSGID           **1
+     C                     CALL 'ZA0240'                   **1
+     C                     PARM           @MSGID           **1
+      *
+      *
+      **  Set file pointer on key displayed on screen.
+     C           CPKEY     SETLLFXCRSCLL                   **1
+      *
+      **  Bypass further record handling for select processing.
+     C                     GOTO #BF8                       **1
+      *
+     C                     END                             E*1
+      *
+      **  Processing for the Select Screen itself.
+      *
+      **  Read records from the file into the subfile until a page has
+      **  been filled or there are no more records.
+      **   Repeat the process until either the end of file, ROLLUP
+      **  has not been entered or CA3 or CF12 is input.
+     C           *IN70     DOWNE'1'                        B1
+     C           *IN50     ANDEQ'1'                        X1
+      *
+      **  Initialise program field for counting records written to
+      **  subfile page.
+     C                     Z-ADD0         @COUNT  30       *1
+      *
+      **  For each record read, write a record to the screen subfile.
+      **  do this until - End of file. *IN70.
+      **                - The subfile page has been filled.
+     C           *IN70     DOWNE'1'                        B*2
+     C           @COUNT    ANDLT14                         X*2
+      *
+      **  Increment the relative record no. and records written fields.
+     C                     ADD  1         @RRN             **2
+     C                     ADD  1         @COUNT           **2
+      *
+      **  Set up the subfile fields.
+     C                     MOVE *BLANK    DDOPT            **2
+     C                     Z-ADD@RRN      DDSFRN           **2
+     C                     MOVE CPPCCY    DDPCCY           **2
+     C                     MOVE CPSCCY    DDSCCY           **2
+      *                                                               *
+     C                     Z-ADDCPDLUP    DDDLUP           **2
+     C                     MOVE CPMLUP    DDMLUP           **2
+     C                     Z-ADDCPYLUP    DDYLUP           **2
+     C                     Z-ADDCPTLUP    DDTLUP           **2
+      *
+      **  Write the record to the subfile.
+     C                     WRITETM3300S3                   **2
+      *
+      **  Read the file.
+     C                     READ FXCRSCLL                 70**2
+      *
+     C                     END                             E*2
+      *
+      **  Write the subfile control record to the screen to display
+      **  the subfile.
+     C                     WRITETM3300S2                   *1
+      *
+      **  Read the subfile control record to determine which records
+      **  have been selected and whether ROLLUP is required.
+     C                     READ TM3300S2                 60*1
+      *
+      **  If CA3 has been pressed, bypass further select processing.
+     C           *INKC     CABEQ'1'       #BF9             *1
+      *
+      **  If CF12 has been pressed,go to select processing termination.
+     C           *INKL     CABEQ'1'       #BF8             *1
+      *
+     C                     END                             E1
+      *
+      **  Processing for selected records.
+      *
+      **  Each selected record, is displayed and allowed to be amended
+      **  or deleted.
+     C           *IN58     DOWNE'1'                        B1
+      *
+      **  Read the subfile for changed records - these are those that
+      **  have been selected.
+      **  Only process those for which the option field is blank.
+     C           *IN58     DOUEQ'1'                        B*2
+     C           DDOPT     ORNE *BLANK                     **2
+      *
+     C                     READCTM3300S3                 58**2
+      *
+     C                     END                             E*2
+      *
+      **  If *IN58 is not on then changed records exist.
+     C           *IN58     IFEQ '0'                        B*2
+      *
+      **  Move Action code E into screen field.
+     C                     MOVE 'E'       DDACTN           **2
+      *
+      **  Move the subfile screen fields into program work fields.
+     C                     MOVE DDPCCY    @PCCY
+     C                     MOVE DDSCCY    @SCCY
+     C                     Z-ADDDDDLUP    @DLUP
+     C                     MOVE DDMLUP    @MLUP
+     C                     Z-ADDDDYLUP    @YLUP
+     C                     Z-ADDDDTLUP    @TLUP
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDPCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 003*
+     C                     MOVE '1'       *INKC            *             *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELDDPCCY    DBKEY            *1
+     C                     MOVE '003'     DBASE            *1
+     C                     GOTO #BF9                       *1
+     C                     END                             E1
+      *
+     C                     MOVE A6CYNM    DDPTXT
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDSCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+      ** if the record is not found then it is an error
+     C           @RTCD     IFNE *BLANKS                    B1
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 005*
+     C                     MOVE '1'       *INKC            *             *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELDDSCCY    DBKEY            *1
+     C                     MOVE '005'     DBASE            *1
+     C                     GOTO #BF9                       *1
+     C                     END                             E1
+      *
+     C                     MOVE A6CYNM    DDSTXT
+      *
+      **  Process this loop until a valid action code has been entered.
+     C           *IN20     DOUEQ'0'                        B**3
+      *
+      **  Process the screen.
+     C                     EXSR #ZL                        ***3
+      *
+      **  If CA3 is input exit main processing immediately.
+     C           *INKC     CABEQ'1'       #BF9             ***3
+      *
+      **  If CF12 is input go to select processing termination.
+     C           *INKL     CABEQ'1'       #BF8             ***3
+      *
+     C                     END                             E**3
+      *
+     C                     EXSR #BFA
+      *
+      **  If CA3 is input exit main processing immediately.
+     C           *INKC     CABEQ'1'       #BF9             **2
+      *
+      **  If CF12 is input go to select processing termination.
+     C           *INKL     CABEQ'1'       #BF8             **2
+      *
+      **  If a database error has occurred end processing.
+     C           *INU7     CABEQ'1'       #BF9             **2
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      **  Tag #BF8.
+     C           #BF8      TAG                             ***#BF8***
+      *
+      **  Termination of select processing.
+      *
+      **  Reset indicator showing whether select processing is in progress
+     C                     MOVE '0'       *IN39
+      *
+      **  If values should remain on the screen to indicate an external
+      **  transaction, do not blank screen fields.
+     C           *IN62     CABEQ'1'       #BF9
+      *
+      **  Blank out screen fields.
+     C                     EXSR #ZE
+      *
+     C           #BF9      ENDSR                           **#BF9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #BFA     - CF15 A                                             *
+      *                                                               *
+      * CALLS    #ZL      - displays reads and resets main screen     *
+      *          ZA0240   - send message                              *
+      *                                                               *
+      * CALLED BY  #BF    - CF15 processing                           *
+      *                                                               *
+      * FLDS USED  @MSGID - message id                                *
+      *                                                               *
+      *****************************************************************
+     C           #BFA      BEGSR
+      *
+      **  Carry out processing until a valid input has been received.
+     C           *IN29     DOUEQ'0'                        B1
+      *
+      **  If a database error has occurred end processing.
+     C           *INU7     CABEQ'1'       #BFA9            *1
+      *
+      **  If *IN29 is on then an amend error has occurred.
+     C           *IN29     IFEQ '1'                        B*2
+      *
+      **  Process the screen.
+     C                     EXSR #ZL                        **2
+      *
+      **  If CA3 is input exit main processing immediately.
+     C           *INKC     CABEQ'1'       #BFA9            **2
+      *
+      **  If CF12 is input go to select processing termination.
+     C           *INKL     CABEQ'1'       #BFA9            **2
+      *
+      **  If the action code is now E, cease amend processing
+      **  for this record.
+     C           DDACTN    CABEQ'E'       #BFA9            **2
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           #BFA9     ENDSR                           **#BFA9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - initialize                                         *
+      *                                                               *
+      * CALLS    QCAEXEC  - execute cl command                        *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED  @OVR   - over ride                                 *
+      *            @CMD   - command                                   *
+      *            @LEN   - length                                    *
+      *            @ACTN  - saved action code                         *
+      *            @CCY   - saved currency code                       *
+      *            @DLTC  - saved daylight limit                      *
+      *            @OLTC  - saved overnight limit                     *
+      *            @DLUP  - day of update                             *
+      *            @MLUP  - month of update                           *
+      *            @YLUP  - year of update                            *
+      *            @TLUP  - time of update                            *
+      *            @MSGID - message id                                *
+      *            @ACTN1 - action code                               *
+      *            @JOB   - job name                                  *
+      *            @TXT   - text for message                          *
+      *            @DATA1 - message data                              *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           CPKEY     KLIST
+     C                     KFLD           DDPCCY
+     C                     KFLD           DDSCCY
+      *
+     C** READ DATA AREA - RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** ACCESS BANK DATA
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL'900'     DBASE            * DBERROR 900*
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+      **  Define program work fields with reference to file fields.
+     C           *LIKE     DEFN DDACTN    @ACTN
+     C           *LIKE     DEFN CPPCCY    @PCCY
+     C           *LIKE     DEFN CPSCCY    @SCCY
+     C           *LIKE     DEFN CPDLUP    @DLUP
+     C           *LIKE     DEFN CPMLUP    @MLUP
+     C           *LIKE     DEFN CPYLUP    @YLUP
+     C           *LIKE     DEFN CPTLUP    @TLUP
+     C*
+     C***Access*instalation*control*for*base*currency*********************S01319
+     C***for*dealing.*****************************************************S01319
+     C********************************************************************S01319
+     C***********1*********SETLLFDINSTLL**********************************S01319
+     C************IN51*****DOUEQ'1'************************B1*************S01319
+     C***********IDDLTF****OREQ**BLANKS*********************1*************S01319
+     C*********************READ*FDINSTLL*****************51*1*************S01319
+     C*********************END*****************************E1*************S01319
+      ********************************************************************S01319
+      ***if*no*records*found*then*it*is*an*error**************************S01319
+     C************IN51*****IFEQ*'1'************************B1*************S01319
+     C*********************MOVE*'1'********INU7***************************S01319
+     C*********************MOVE*'1'********INU8***************************S01319
+     C*********************MOVEL'FDINSTLL'DBFILE*************DB*ERROR*004*S01319
+     C*********************MOVEL*BLANKS***DBKEY***************************S01319
+     C*********************MOVE*'004'*****DBASE***************************S01319
+     C*********************MOVE*'1'********INLR*************1*************S01319
+     C*********************MOVE*'1'********INKC*************1*************S01319
+      ********************************************************************S01319
+     C*********************GOTO*#A9*************************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C**********           CALL 'AODEALR0'                                             S01319 CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                        S01319 CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+     C*
+      **  Define program work fields.
+     C                     MOVE *BLANKS   @MSGID 10
+     C           *LIKE     DEFN DDACTN    @ACTN1
+      *
+     C**  Initialise screen msg queue.
+     C                     MOVEL'*'       DDPGMQ
+      *
+      **  Set on Message Subfile end indicator.
+     C                     MOVE '1'       *IN10
+      *
+      **  Move workstation ID to screen field.
+     C                     MOVEL@JOB      WSID
+      *
+      **  Move program name into *LDA field.
+     C                     MOVEL'DD###1'  DBPGM
+      *
+      *
+     C           #A9       ENDSR                           **#A9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - terminate                                          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+      ** Terminate Program
+     C                     MOVE '1'       *INLR
+      *
+     C           #C9       ENDSR                           **#C9**
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INFSR    - file error                                         *
+      *                                                               *
+      * CALLS    ZA0250   - clear message queue                       *
+      *          ZA0440   - send message with data                    *
+      *          #ZD      - moves file fields to screen               *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @DATA2 - data for message                          *
+      *            @MSGID - message id                                *
+      *            @DATA  - data for message                          *
+      *                                                               *
+      *****************************************************************
+     C           INFSR     BEGSR
+      *
+     C           STATUS    IFEQ 01021                      B1
+      *
+      **  Chain to the file using the key, to see if it already exists.
+      **  - *IN72 set on if the record is not found.
+     C           CPKEY     CHAINFXCRSCLL             72    *1
+      *
+      **  If *IN72 is not on a valid record exists on file
+     C           *IN72     IFEQ '0'                        B*2
+      *
+      **  Clear program message queue.
+     C                     CALL 'ZA0250'                   **2
+     C                     ROLBK                           **2
+      *
+      ** Send message - 'Record inserted by another workstation.'
+     C                     MOVELDDPCCY    @DTC1            *1
+     C                     MOVELDDSCCY    @DTC2            *1
+     C                     MOVEL'FXM1015' @MSGID           **2
+     C                     CALL 'ZA0440'                   **2
+     C                     PARM           @MSGID           **2
+     C                     PARM           @DATA            **2
+      *
+      **  Set up screen and work fields with newly changed values (i.e.
+      **  from chain to update file).
+     C                     EXSR #ZD                        *1
+     C                     MOVE 'E'       DDACTN           *1
+     C                     MOVE '*DETC '  EXTTAG           **2
+     C                     ELSE                            X*2
+     C                     MOVE '*CANCL'  EXTTAG  6        **2
+     C                     DUMP                            **2
+     C                     END                             E*2
+     C                     ELSE                            X1
+     C                     MOVE '*CANCL'  EXTTAG  6        *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+     C                     ENDSREXTTAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - program error                                      *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     DUMP
+     C                     END                             E1
+      *
+     C           #PSSR9    ENDSR                            ***PSSR9**
+      *****************************************************************
+      /EJECT
+     OFXCRSCP0E                @RLSFL
+**
+(c) Misys International Banking Systems Ltd. 2001

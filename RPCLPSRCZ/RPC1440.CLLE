@@ -1,0 +1,143 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas PB Standing data take on')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1440 - Standing Data Take On.                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK016             Date 04Jun03              */
+/*       Prev Amend No. CSC017             Date 14Feb03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK016 - Externalise STRCMTCTL code for ease of later       */
+/*                upgrade.                                           */
+/*       CSC017 - Change to 250 library list.                        */
+/*       CPB002 - Meridian DBA Middleware Replication Customization. */
+/*                Midas/TOF Interface.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Msgdta)   TYPE(*CHAR) LEN(128)
+             DCL        VAR(&Mem)      TYPE(*CHAR) LEN(50)
+/************DCL        VAR(&INLLIBL)  TYPE(*CHAR) LEN(275)                            */ /*CSC017*/
+/************DCL        VAR(&CMD)      TYPE(*CHAR) LEN(289)                            */ /*CSC017*/
+             DCL        VAR(&INLLIBL)  TYPE(*CHAR) LEN(2750)                              /*CSC017*/
+             DCL        VAR(&CMD)      TYPE(*CHAR) LEN(2764)                              /*CSC017*/
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)                                  /*CPK016*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/*-------------------------------------------------------------------*/
+/*  Global Monitor Message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Create LDA if not present.                                       */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  End commitment definition.                                       */
+/*-------------------------------------------------------------------*/
+ 
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+ 
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             RTVJOBD    JOBD(TIJOBD) INLLIBL(&INLLIBL)
+ 
+             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &INLLIBL *CAT ')')
+ 
+/************CALL       PGM(QCMDEXC) PARM(&CMD 289)                                    */ /*CSC017*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                      /*CSC017*/
+ 
+/*-------------------------------------------------------------------*/
+/*  Call Standing data Take On program.                              */
+/*-------------------------------------------------------------------*/
+ 
+             CALL       PGM(RP1440)
+ 
+/*-------------------------------------------------------------------*/
+/*  Database error processing                                        */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&Mem)
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&Mem) +
+                                TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/*-------------------------------------------------------------------*/
+/*  Establishes commitment definition again.                         */
+/*-------------------------------------------------------------------*/
+ 
+/* Start commitment control */                                                            /*CPK016*/
+/**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) + */                           /*CPK016*/
+/**********               CMTSCOPE(*JOB)                     */                           /*CPK016*/
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)                                   /*CPK016*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+ 
+             RTVJOBD    JOBD(MIDASIC) INLLIBL(&INLLIBL)
+ 
+             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &INLLIBL *CAT ')')
+ 
+/************CALL       PGM(QCMDEXC) PARM(&CMD 289)                                    */ /*CSC017*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                      /*CSC017*/
+ 
+             ENDPGM

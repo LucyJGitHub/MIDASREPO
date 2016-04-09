@@ -1,0 +1,568 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Daylight and Overnight Limits CCY Report')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - FX Dealer Module
+     F*                                                              *
+     F*     FX0210 - DAYLIGHT & OVERNIGHT CURRENCY LIMITS            *
+     F*                       AUDIT REPORT                           *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01319             Date 25SEP91               *
+     F*                 E23462             Date  1OCT90               *
+     F*                    E20774              DATE 16MAR90          *
+     F*                    E11112              DATE 07/03/88         *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01319 - Remove redundant processing                      *
+     F*                                                              *
+     F*     E23462 - REMOVE ALL REFERENCES TO DRS                    *
+     F*                                                              *
+     F*     E20774 - REPLACE QCAEXEC WITH QCMDEXC                    *    E20774
+     F*                                                              *
+     F*     E11112 - PLACE FXTTOTLL UNDER COMMITTMENT CONTROL        *
+     F*                                                              *
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       61         CHAIN AND DB ERROR INDICATOR
+     F*       62         OVERFLOW INDICATOR
+     F*       63         FILE UPDATED BY UNAUTHORIZED PROGRAM
+     F*       64         ACTION NOT REFLECTED IN DBASE DUE TO RECOVERY.
+     F*       65         FILES OUT OF BALANCE.
+     F*       66         AN EXCEPTION ITEM APPEARS ON DETAIL REPORT
+     F*       U7         DATA BASE ERROR
+     F*       U8         DATA BASE ERROR
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F*FXAUDARRO***E*******************PRINTER******KINFSR**PSSR**********S01319
+     FFX0210AUO   E                    PRINTER      KINFSR *PSSR          S01319
+     F                                              KINFDS SPOOLU         S01319
+     FFXTTOTLLUF  E                    DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT                E11112
+     FFXDOLLLLIF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS INFDS
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     FFXAUDALLIP  E           K        DISK         KINFSR *PSSR
+     F*FX0210RRO***E************62*****PRINTER******KINFSR**PSSR**********S01319
+     FFX0210P1O   E             62     PRINTER      KINFSR *PSSR      UC  S01319
+     F                                              KINFDS SPOOL          S01319
+     F*
+     E                    CPY@    1   1 80
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E********************@T******1***2*80********************************S01319
+     E                    @OVR    1   1 35
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I** DATA STRUCTURE TO HOLD INFORMATION ON DATABASE ERROR.
+     I*
+     IINFDS       DS
+     I                                    B 156 1590@RNORE
+     I** DATA STRUCTURE TO NUMBER OF RECORDS ON FXDOLLLL.
+     I*
+     ISPOOL       DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILE                 S01319
+     I                                    B 123 1240SFNUM                 S01319
+     I**                                                                  S01319
+     ISPOOLU      DS                                                      S01319
+     I**   FILE INFORMATION DATA STRUCTURE                                S01319
+     I                                       83  92 SFILEU                S01319
+     I                                    B 123 1240SFNUMU                S01319
+     C/EJECT
+     C*
+     C**  Initial processing.
+     C           @RECS     CASNE'YES'     #A
+     C                     END
+     C*
+     C**  Main processing
+     C           *INLR     CASEQ'0'       #B
+     C                     END
+     C*
+     C**  Termination processing
+     CLR         *INU7     CASEQ'0'       #C
+     CLR                   END
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - Main processing.                                *
+     C*   2. #BA    - Blank before fields in print file.              *
+     C*   3. #BB    - Move file fields to before fields in print file.*
+     C*   4. #BC    - Blank after fields in print file.               *
+     C*   5. #BD    - Move file fields to after fields in print file. *
+     C*   6. #C     - Termination processing.                         *
+     C*   7. #A     - Initial processing.                             *
+     C*   8. #Z     - Database Error Processing.                      *
+     C*   9. ZA0150 - Access Installation Data File TABTB10           *
+     C*  10. *PSSR  - Error processing.                               *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #B CARRIES OUT MAIN PROCESSING.                          *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      : #BA #BB #BC #BD                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  JOURNAL ENTRY TYPE 'UB' OR 'BR'
+     C           FLENTT    IFEQ 'UB'                       B1
+     C           FLENTT    OREQ 'BR'                       *1
+     C           FLDLTF    CASEQ'*'       #BA              *1
+     C                     CAS            #BB              *1
+     C                     END                             *1
+     C                     END                             E1
+     C*
+     C**  JOURNAL ENTRY TYPE 'UP' OR 'UR'
+     C           FLENTT    IFEQ 'UP'                       B1
+     C           FLENTT    OREQ 'UR'                       *1
+     C           FLDLTF    CASEQ'*'       #BC              *1
+     C                     CAS            #BD              *1
+     C                     END                             *1
+     C                     END                             E1
+     C*
+     C**  JOURNAL ENTRY TYPE 'PT'
+     C           FLENTT    IFEQ 'PT'                       B1
+     C                     EXSR #BA                        *1
+     C                     EXSR #BD                        *1
+     C                     END                             E1
+     C*
+     C**  JOURNAL ENTRY TYPE 'DR' OR 'DL'
+     C           FLENTT    IFEQ 'DR'                       B1
+     C           FLENTT    OREQ 'DL'                       *1
+     C                     EXSR #BB                        *1
+     C                     EXSR #BC                        *1
+     C                     END                             E1
+     C*
+     C**  CHECK FOR ACTION NOT REFLECTED IN DATABASE
+     C                     MOVE '0'       *IN64
+     C           FLSEQN    SETGTFDRCVRLL
+     C                     READPFDRCVRLL                 61
+     C*
+     C           *IN61     IFEQ '0'                        B1
+     C           FLSEQN    ANDGEFRPNT                      *1
+     C           FLSEQN    ANDLETOPNT                      *1
+     C                     MOVE '1'       *IN64            *1
+     C                     END                             E1
+     C*
+     C**  CHECK FOR UPDATE BY UNAUTHORIZED PROGRAM
+     C           FLPGM     IFEQ 'FX0210'                   B1
+     C                     MOVE '0'       *IN63            *1
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN63            *1
+     C                     MOVE '1'       *IN66            *1
+     C                     END                             E1
+     C*
+     C**  CHECK FOR PAGE OVERFLOW - IF FOUND PRINT HEADINGS
+     C           *IN62     IFEQ '1'                        B1
+     C                     WRITEFX0210R0                   *1
+     C                     WRITEFX0210R4                   *1
+     C                     MOVE '0'       *IN62            *1
+     C                     END                             E1
+     C*
+     C**  OUTPUT FIELDS TO PRINT FILE
+     C                     MOVELFLPGM     RRPGMA
+     C                     Z-ADDFLTIME    RRTIME
+     C                     MOVELFLUSER    RRUSER
+     C                     MOVELFLJOB     RRJOB
+     C*
+     C**  PRINT UNLESS ENTRY TYPE IS 'UB' OR 'BR'
+     C           FLENTT    IFNE 'UB'                       B1
+     C           FLENTT    ANDNE'BR'                       *1
+     C                     WRITEFX0210R1                   *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           ****#B9****
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #BA MOVE BLANKS TO BEFORE FIELDS.                        *
+     C*        CALLED BY  : #B                                       *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #BA       BEGSR
+     C*
+     C**  BLANK OUT PRINT FIELDS
+     C                     MOVEL*BLANK    RRCCY
+     C                     MOVEL*BLANK    RRDLTC
+     C                     MOVEL*BLANK    RROLTC
+     C*
+     C**  MOVE INSERT TO CHANGE TYPE
+     C                     MOVEL'INS'     RRTYP
+     C*
+     C           #BA9      ENDSR                           ****#BA9****
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #BB MOVE FILE FIELDS TO BEFORE FIELDS.                   *
+     C*        CALLED BY  : #B                                       *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #BB       BEGSR
+     C*
+     C**  MOVE FIELDS FROM FILE TO PRINT FIELDS
+     C                     MOVELFLCCY     RRCCY
+     C                     MOVELFLDLTC    RRDLTC
+     C                     MOVELFLOLTC    RROLTC
+     C*
+     C**  MOVE AMEND TO CHANGE TYPE
+     C                     MOVEL'AMD'     RRTYP
+     C*
+     C           #BB9      ENDSR                           ****#BB9****
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #BC MOVE BLANKS TO AFTER FIELDS.                         *
+     C*        CALLED BY  : #B                                       *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #BC       BEGSR
+     C*
+     C**  BLANK OUT PRINT FIELDS
+     C                     MOVEL*BLANK    RRCCA
+     C                     MOVEL*BLANK    RRDLTA
+     C                     MOVEL*BLANK    RROLTA
+     C*
+     C**  MOVE DELETE TO CHANGE TYPE
+     C                     MOVEL'DEL'     RRTYP
+     C*
+     C           #BC9      ENDSR                           ****#BC9****
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #BD MOVE FILE FIELDS TO AFTER FIELDS.                    *
+     C*        CALLED BY  : #B                                       *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #BD       BEGSR
+     C*
+     C**  MOVE FIELDS FROM FILE TO PRINT FIELDS IF DETAILS HAVE CHANGED
+     C           FLCCY     IFNE RRCCY                      B1
+     C                     MOVELFLCCY     RRCCA            *1
+     C                     ELSE                            X1
+     C                     MOVE *BLANK    RRCCA            *1
+     C                     END                             E1
+     C*
+     C           FLDLTC    IFNE RRDLTC                     B1
+     C                     MOVELFLDLTC    RRDLTA           *1
+     C                     ELSE                            X1
+     C                     MOVE *BLANK    RRDLTA           *1
+     C                     END                             E1
+     C*
+     C           FLOLTC    IFNE RROLTC                     B1
+     C                     MOVELFLOLTC    RROLTA           *1
+     C                     ELSE                            X1
+     C                     MOVE *BLANK    RROLTA           *1
+     C                     END                             E1
+     C*
+     C           #BD9      ENDSR                           ****#BD9****
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #C TERMINATION PROCESSING.                               *
+     C*        CALLED BY  : MAIN PROCESSING.                         *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @RECS    - RECORDS ON FILE               *
+     C*                   : @RNORE   - NO. OF RECORDS ON FILE        *
+     C*                                                              *
+     C****************************************************************
+     C           #C        BEGSR
+     C*
+     C** IF NO RECORDS ON FILE CALL S/R TO ACCESS ICD FILE
+     C           @RECS     IFNE 'YES'                      B1
+     C                     EXSR ZA0150                     *1
+     C*
+     C**  SET UP HEADINGS AND STATUS DATA STRUCTURE FIELD.
+     C                     MOVEL'FX0210'  DBPGM            *1
+     C                     MOVEL'FX0210'  RRPGM            *1
+     C                     MOVEL'FXAUDALL'RRFILE           *1
+     C*********************MOVEL@T,1******RRPRNM************1*************S01319
+     C*********************MOVEL@T,2******RRPRUL************1*************S01319
+     C                     MOVELRUNA      RRRUNA           *1
+     C                     MOVELTITL      RRTITL           *1
+     C*
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILEU                          S01319
+     C                     PARM           ZSNUMU                          S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*                                                                   S01319
+     C**  CHECK DATABASE ERROR
+     C           *IN80     IFEQ '1'                        B*2
+     C                     EXSR #Z                         **2
+     C                     GOTO #C9                        **2
+     C                     END                             E*2
+     C*
+     C****PRINT*HEADINGS*AND*NO*DETAILS*COMMENT***********************    S01319
+     C*********************WRITEFX0210R0********************1*********    S01319
+     C*********************WRITEFX0210R4********************1*********    S01319
+     C*********************WRITEFX0210R6********************1*********    S01319
+     C*
+     C                     END                             E1
+     C*
+     C**  PRINT CONTROL REPORT HEADINGS
+     C                     WRITEFXAUDAR0
+     C*
+     C**  OVERRIDE FXTTOTLL TO CORRECT LOGICAL FILE MEMBER
+     C                     MOVE @OVR,1    @CMD   35
+     C                     Z-ADD35        @LEN   155
+     C*********************CALL 'QCAEXEC'                                 E20774
+     C                     CALL 'QCMDEXC'                                 E20774
+     C                     PARM           @CMD
+     C                     PARM           @LEN
+     C*
+     C**  OPEN FILE UNDER USER CONTROL
+     C                     OPEN FXTTOTLL
+     C*
+     C**  CHECK THAT FILES ARE IN BALANCE
+     C           1         CHAINFXTTOTLL             61
+     C                     Z-ADDF2NORE    RRNREC
+     C                     ADD  F2NINS    F2NORE
+     C                     SUB  F2NDEL    F2NORE
+     C*
+     C**  SET UP CONTROL TOTALS
+     C                     Z-ADDF2NINS    RRNINS
+     C                     Z-ADDF2NDEL    RRNDEL
+     C                     Z-ADDF2NAMD    RRNAMD
+     C                     Z-ADDF2NORE    RRNCAL
+     C*
+     C**  ACCESS DAY & OVERNIGHT LIMITS LIVE FILE FOR NUMBER OF RECORDS
+     C                     READ FXDOLLLL                 61
+     C*
+     C                     Z-ADD@RNORE    RRNORE
+     C*
+     C**  CHECK IF FILES ARE IN BALANCE.
+     C           RRNORE    IFEQ F2NORE                     B1
+     C                     MOVE '0'       *IN65            *1
+     C                     Z-ADD*ZERO     F2NAMD           *1
+     C                     Z-ADD*ZERO     F2NINS           *1
+     C                     Z-ADD*ZERO     F2NDEL           *1
+     C                     UPDATFXTTOTP0                   *1
+     C*
+     C**  WRITE REPORT TRAILER
+     C           @RECS     IFEQ 'YES'                                     S01319
+     C                     WRITEFX0210R5                   *1
+     C                     END                                            S01319
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN65            *1
+     C                     MOVE '1'       *INU8            *1
+     C           @RECS     IFEQ 'YES'                                     S01319
+     C                     WRITEFX0210R0                   *1
+     C                     WRITEFX0210R2                   *1
+     C                     END                                            S01319
+     C                     END                             E1
+     C*
+     C                     WRITEFXAUDAR1
+     C*                                                                   S01319
+     C           @RECS     IFNE 'YES'                                     S01319
+     C                     WRITEFXAUDAR3                                  S01319
+     C                     END                                            S01319
+     C*
+     C           #C9       ENDSR                           ****#C9****
+     C*
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #A CARRIES OUT INITIALISATION PROCESSING.                *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @RECS    - RECORDS ON FILE FIELD         *
+     C*                                                              *
+     C****************************************************************
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** CALL S/R TO ACCESS ICD FILE
+     C                     EXSR ZA0150
+     C*
+     C**  SET UP HEADINGS AND STATUS DATA STRUCTURE FIELD.
+     C                     MOVEL'FX0210'  DBPGM
+     C                     MOVEL'FX0210'  RRPGM
+     C                     MOVEL'FXAUDALL'RRFILE
+     C*********************MOVEL@T,1******RRPRNM**************************S01319
+     C*********************MOVEL@T,2******RRPRUL**************************S01319
+     C                     MOVELRUNA      RRRUNA
+     C                     MOVELTITL      RRTITL
+     C*
+     C**  CHECK FOR DATABASE ERROR
+     C           *IN80     IFEQ '1'                        B1
+     C                     EXSR #Z                         *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C**                                                                  S01319
+     C                     OPEN FX0210P1                                  S01319
+     C**                                                                  S01319
+     C* REPORT SPOOL FILE GENERATION                                      S01319
+     C* transfer binary data into numeric field                           S01319
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01319
+     C                     CALL 'ZSFILE'                                  S01319
+     C                     PARM           SEQ     5                       S01319
+     C                     PARM *BLANKS   @PARM   3                       S01319
+     C                     PARM           SFILE                           S01319
+     C                     PARM           ZSNUM                           S01319
+     C                     PARM *BLANK    ZSERR   1                       S01319
+     C*                                                                   S01319
+     C** Error during ZSFILE processing, return to calling program        S01319
+     C           ZSERR     IFEQ 'Y'                                       S01319
+     C                     SETON                     U7U8LR               S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     RETRN                                          S01319
+     C                     END                                            S01319
+     C*
+     C**  PRINT HEADINGS
+     C                     WRITEFX0210R0
+     C                     WRITEFX0210R4
+     C*
+     C**  RECORDS ON FILE - SET WORK FIELD
+     C                     MOVE 'YES'     @RECS   3
+     C*
+     C           #A9       ENDSR                           ***#A9***
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF        *
+     C*  FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD 1    *
+     C*  (HELD ON PF/TABTB10)                                         *
+     C*  INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD IS   *
+     C*  FLAGGED FOR DELETION.                                        *
+     C*  IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED ACCESS    *
+     C*  ARE PLACED IN THE LDA.                                       *
+     C*                                                               *
+     C*  FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C** Set up key to obtain format TABTB10F '01        10'
+     C                     MOVEL'01'      SS0150 12
+     C                     MOVE '10'      SS0150
+     C*
+     C** CHAIN TO FILE FDICDRLL
+     C           SS0150    CHAINFDICDRLL             80
+     C           RECI      IFNE 'D'                        B1
+     C                     MOVE '1'       *IN80            *1
+     C                     END                             E1
+     C*
+     C** DEAL WITH DATA BASE ERROR
+     C           *IN80     IFEQ '1'                        ***************
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'900'     DBASE            * DBERROR 900 *
+     C                     MOVELSS0150    DBKEY            *             *
+     C                     END                             ***************
+     C*
+     C           ZA0159    ENDSR
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #Z CARRIES OUT DATABASE ERROR PROCESSING.                *
+     C*        CALLED BY  : #A #C                                    *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #Z        BEGSR
+     C*
+     C**  LOAD PRINT FILE WITH ERROR DATA
+     C                     MOVELDBASE     RRDBSE
+     C                     MOVELDBFILE    RRDBFL
+     C                     MOVELDBKEY     RRDKEY
+     C                     MOVELDBPGM     RRPGM
+     C*
+     C**  PRINT DATA BASE ERROR INFORMATION
+     C                     WRITEFX0210R0
+     C                     WRITEFX0210R4
+     C                     WRITEFXAUDAR0
+     C                     WRITEFX0210R3
+     C                     WRITEFXAUDAR2
+     C*
+     C**  SET ERROR INDICATORS, LAST RECORD AND TERMINATE
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C           #Z9       ENDSR                           ****#Z9****
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER            *
+     C*   A PROGRAM ERROR OCCURS                          *
+     C*                                                   *
+     C*   SUBROUTINE CALLS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR                           ****PSSR****
+     C***                                                                 E23462
+     C*EALING ROOM SYSTEM - FX DEALER DAYLIGHT/OVERNIGHT LIMITS AUDIT REPOE23462
+     C/EJECT
+      ********************************************************************S01319
+MIDAS *DEALING*-*FX*DEALER*DAYLIGHT/OVERNIGHT*LIMITS*AUDIT*REPORT*********S01319
+------*---------------------------------------------------------**********S01319
+**
+(c) Misys International Banking Systems Ltd. 2001
+**
+OVRDBF FILE(FXTTOTLL) MBR(FXDOLMPP)

@@ -1,0 +1,2521 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Rework DR/CR average balances')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module
+      *                                                               *
+      *  MC0240 - Rework DR/CR Average Balances                       *
+      *                                                               *
+      *  Function: Called from the Select Control Group for Update    *
+      *            function when DR/CR Average Balances are being     *
+      *            held for the group and rework is necessary.  This  *
+      *            program reworks the Average Balance details for    *
+      *            each relevant Management Account then updates the  *
+      *            corrected record.                                  *
+      *                                                               *
+      *  Called by: MCC0240 - Rework DR/CR Average Balances Control   *
+      *                                                               *
+      *  Calls: AOBANKR0 - Bank Details Definition file               *
+      *         AOHBCGR0 - Control Group Definition file              *
+      *         AOPERSR0 - Period Set Definition File                 *
+      *         AOCURRR0 - Access currency details                    *
+      *         AOMMODR0 - Access Midas Module Details                *   CED002
+      *         AODFTFR0 -                                            *   CED002
+      *         ED0410   - Write Change Details to PF/EDBULKPD        *   CED002
+      *         GL0765   - GL Currency Conversion                     *
+      *         ZSFILE   - Set Up Spool File Numbers file             *
+      *                                                               *
+      *  Parameters: 2A Control Group                                 *
+      *              1A Return Code                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CAP204             Date 03Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 125901             Date 10Nov97               *
+      *                 CED002             DATE 11JUN97               *
+      *                 CMC001             DATE 18MAR96               *
+      *                 072690             DATE 30SEP94               *
+      *                 S01427             DATE 29JUL93               *
+      *                 052433             DATE 18MAR93               *
+      *                 048237             DATE 08MAR93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Use long DS with SDCURRPD.                          *
+      *  125901 - Stop divide by zero error                           *
+      *  CED002 - Export Data Enhancement for GIB.                    *
+      *           Creation parameters changed to ignore decimal       *
+      *           data errors.                                        *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Calculate the initial values rather than access     *
+      *           the previous period, which could be closed; update  *
+      *           the List of Generated entry types as per GL0340.    *
+      *  072690 - Average balances calculated incorrectly when        *
+      *           Audit report not being printed. @DPER and @DBAL     *
+      *           were not being set.                                 *
+      *  S01427 - R10 Chips Incorporation. Add Chips to generated     *
+      *           entry types.                                        *
+      *  052433 - Averages for Retained earning account wrong         *
+      *  048237 - Speedup Management Accounts                         *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+     FGLHIBLL4UF  E           K        DISK         KINFSR INFSR
+      * Historic balances selecting last movement date - 99999
+     F*UPDBALPDIF**E                    DISK         KINFSR INFSR
+     FUPDBALPDIF  E           K        DISK         KINFSR INFSR          048237
+     F            GLMOVEPDF                         KRENAMEUPDBAL
+      * Extracted movements file
+     FGLAVBLL1IF  E           K        DISK         KINFSR INFSR
+      * Average Balances by Group Code
+     FGLAVBLL0UF  E           K        DISK         KINFSR INFSR
+      * Average Balances by Group Code
+     FMC0240P1O   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCRPT
+      * Rework Average Balances Report
+     FMC0240AUO   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCAUD
+      * Rework Average Balances Audit Report
+     F/COPY WNCPYSRC,MC0240F001
+      /EJECT
+     E                    CPYP    1   1 80
+     E********************GE1    17  17  1               Entry Type       S01427
+     E********************GE2     1  17 14               Entry Type       S01427
+     E********************GE1    18  18  1               Entry TypeS01427 CMC001
+     E********************GE2     1  18 14               Entry TypeS01427 CMC001
+     E**********          GE1    23  23  1               Entry Type       CMC001              CAP204
+     E                    GE1    24  24  1               Entry Type                           CAP204
+     E**********          GE2     1  23 14               Entry Type       CMC001              CAP204
+     E                    GE2     1  24 14               Entry Type                           CAP204
+     E                    XDP     1   7  7 3             Adjust dp's
+     E                    ZS1        19  1 0             Used by #FMAT
+     E                    ZS2        27  1               Used by #FMAT
+     E                    JRNENT   3971  1               Journal Entry    CED002
+      ** Copy in date formatting arrays
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     E/COPY WNCPYSRC,MC0240E001
+     I@HIBLE    E DSGLHIBLL4                                              CED002
+      **  DS for GLHIBLL4                                                 CED002
+     I@BPRED    E DSGLAVBLL0                                              CED002
+      **  DS for GLAVBLL0                                                 CED002
+     ISDMMOD    E DSSDMMODPD                                              CED002
+      **  Midas Module Details                                            CED002
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+     IEDDFTF    E DSEDDFTFPD                                              CED002
+      *  DS for EDDFTFPD                                                  CED002
+      *                                                                   CED002
+     IPSDS       SDS                                                      CED002
+      *  Program status data structure.                                   CED002
+     I                                     *PROGRAM ##PGM                 CED002
+      *                                                                   CED002
+     IGLHBCG    E DSGLHBCGPD
+      **  Historic Balance Control Groups
+     IGLPERS    E DSGLPERSPD
+      **  Period sets
+     IDSCURR    E DSSDCURRPD
+      **  Currency details
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      **  Switchable features details                                     CMC001
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+     IDSSDY     E DSDSSDY                                                       CSD006
+      **  Second DS for access programs, long Data Structure                    CSD006
+     ILDA       E DSLDA
+      **  Local data structure used for error handling
+     I/COPY WNCPYSRC,MC0240I001
+     IMCAUD       DS
+      **  File information DS for MC0240AU report
+     I                                       83  92 PFILE1
+     I                                    B 123 1240PFNUM1
+     IMCRPT       DS
+      **  File information DS for MC0240P1 report
+     I                                       83  92 PFILE2
+     I                                    B 123 1240PFNUM2
+     IDS1         DS
+      ** Used by SR/#D, links array and field to be formatted
+     I                                        1  190ZWRK19
+     I                                        1  190ZS1
+     IUPDKEY      DS
+      ** UPDBALPD KEY.
+     I                                        1   3 BRCA
+     I                                        4   6 CCY
+     I**********                              7  100ACOD                                      CGL029
+     I                                        7  100ACODQQ                                    CGL029
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  180ACSQ
+     I                                       19  22 PRFC
+     I                                       23  24 BOKC
+     I                                       25  34 OTTP
+     I                                       35  44 OTST
+     I**********                             45  500ASOC                                      CSD027
+     I                                       45  50 ASOC                                      CSD027
+     I                                       51  560CPNB
+     I                                       57  660ACOD                                      CGL029
+     IGLHKEY      DS
+      ** GLHIBLL4 KEY.
+     I****************************************1   3 HBBRCD                CED002
+     I****************************************4   6 HBCYCD                CED002
+     I                                        1   3 @BRCD                 CED002
+     I                                        4   6 @CYCD                 CED002
+     I**********                              7  100@ACCD                                     CGL029
+     I                                        7  100@ACDQQ                                    CGL029
+     I**********                             11  160@CUST                                     CSD027
+     I                                       11  16 @CUST                                     CSD027
+     I                                       17  180@ACSN
+     I***************************************19  22 HBPCCD                CED002
+     I***************************************23  24 HBBKCD                CED002
+     I***************************************25  34 HBOTTP                CED002
+     I***************************************35  44 HBTSTY                CED002
+     I                                       19  22 @PCCD                 CED002
+     I                                       23  24 @BKCD                 CED002
+     I                                       25  34 @OTTP                 CED002
+     I                                       35  44 @TSTY                 CED002
+     I**********                             45  500@ACNB                                     CSD027
+     I                                       45  50 @ACNB                                     CSD027
+     I                                       51  520@PDCT
+     I                                       53  540@PDYR
+     I                                       55  560@PDNY
+     I                                       57  66 @ACCD                                     CGL029
+      /EJECT
+      *****************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      * 31 - EOF for GLHIBLL4
+      * 32 - Chain fail on GLAVBLL1
+      * 33 - Chain fail on GLAVBLL0
+      * 34 - EOF on UPDBALPD
+      * 50 - LOKUP
+      * 60 - Continuation from previous page
+      * 61 - 'Analysis by a/c codes' flag is set
+      * 62 - 'Analysis by currency' flag is set
+      * 63 - 'Analysis by branch' flag is set
+      * 64 - 'Analysis by a/c seq' flag is set
+      * 65 - 'Analysis by profit centre' flag is set
+      * 66 - 'Analysis by book codes' flag is set
+      * 67 - 'Analysis by transaction type' flag is set
+      * 68 - 'Analysis by trans. subtype' flag is set
+      * 69 - 'Analysis by assoc. customer' flag is set
+      * 70 - 'Analysis by a/c codes' flag is set
+      * 71 - T1 processing is not used
+      * 72 - T2 processing is not used
+      * 73 - Print B/F details
+      * 74 - Print Movement Adjustment details
+      * 75 - Print C/F details
+      * 98 - Date format indicator
+      * U7 - Database error
+      * U8 - Database error
+      *
+      **************************************************************
+      *
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  MAIN   -    Main control routine.
+      *  #A     -    Initial processing routine.
+      *  #B     -    Main processing.
+      *  #BA    -    Movement processing routine.
+      *  #BAA   -    Write headings and brought forward totals routine.
+      *  #BAB   -    Initialize output work fields routine.
+      *  #BAC   -    Update output work fields routine.
+      *  #BAD   -    Write movement details routine.
+      *  #BAE   -    Update GLAVBLL0 routine.
+      *  #BAF   -    Write movement details and carried forward totals
+      *               routine.
+      *  #C     -    ZSFILE processing/DBerror routine.
+      *  #D     -    Format 19,0 amount
+      *  #E     -    Overflow routine
+      *  #F     -    Initialize printer fields.
+      *  INFSR  -    File error subroutine
+      *  *PSSR  -    Program error subroutine
+      *  ZDATE2 -    Convert day number to DDMMMYY
+      *
+      **************************************************************
+      *
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * AOBANKR0  - Obtain bank details
+      * AOPERSR0  - Obtain period set details
+      * AOHBCGR0  - Obtain control group details
+      * AOCURRR0  - Obtain currency details
+      * AOMMODR0  - Obtain Midas Modules details                          CED002
+      * AODFTFR0  -                                                       CED002
+      * ED0410    - Write change details to PF/EDBULKPD                   CED002
+      * GL0765    - Currency conversion
+      * ZSFILE    - Log spool file to RCF
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      **************************************************************
+      *
+      **  Initial processing.
+     C                     EXSR #A
+      *
+      **  Main processing.
+     C           *INU7     IFEQ '0'
+     C                     EXSR #B
+     C                     END
+      *
+      **  If audit requested and details reported, print end of report.
+     C           *INU7     IFEQ '0'
+     C           *IN75     ANDEQ'1'
+     C           HCUPAU    ANDEQ'Y'
+     C                     WRITEMC0240T1
+     C                     END
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on call ED0410          CED002
+      ** to close any open batch.                                         CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*CLOSE'  MODE    7                       CED002
+     C                     PARM 'GLHIBLPD'FNAME  10                       CED002
+     C                     PARM PCGRP     MNAME  10                       CED002
+     C                     PARM ##PGM     PNAME  10                       CED002
+     C                     PARM '  '      JRNA    2                       CED002
+     C                     PARM *BLANKS   JRNENT                          CED002
+     C                     PARM *BLANKS   RTCD    7                       CED002
+     C                     ENDIF                                          CED002
+      *
+      **  Terminate program.
+     C                     SETON                     LR
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#A - Initial Processing
+      *
+      * Called from:     MAIN Processing
+      *
+      * Calls      :     PGM/AOBANKR0
+      *                  PGM/AOHBCGR0
+      *                  PGM/AOPERSR0
+      *                  PGM/AOCURRR0
+      *                  PGM/AOMMODR0                                     CED002
+      *                  PGM/AODFTFR0                                     CED002
+      *                  SR/#C
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+      **  Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PCGRP   2
+     C                     PARM           PRTNC   1
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD0         DBASE
+      *
+      **  Initialize indicators and variables.
+     C                     SETOF                     313233
+     C                     SETOF                     347172
+     C                     Z-ADD0         @CRBAL 190
+     C                     Z-ADD59        @LCNT   20
+      *
+      **  Obtain bank details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD01        DBASE            * DBASE 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     MOVEL'MC0240'  DBPGM            *1
+     C                     OUT  LDA                        *1
+     C                     EXSR #C                         *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+      ** Set off *IN98 so that ZDATE2 compiles
+     C                     SETOF                     98
+      *
+      **  Obtain Group code details.
+     C                     CALL 'AOHBCGR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM PCGRP     PKEY1
+     C           GLHBCG    PARM GLHBCG    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVEL'GLHBCGPD'DBFILE           ************
+     C                     Z-ADD02        DBASE            * DBASE 02 *
+     C                     MOVELPCGRP     DBKEY            ************
+     C                     MOVEL'MC0240'  DBPGM            *1
+     C                     OUT  LDA                        *1
+     C                     EXSR #C                         *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      ** Obtain Period set code details
+     C                     CALL 'AOPERSR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM HCPSTC    PKEY1   2
+     C           GLPERS    PARM GLPERS    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA                        *1
+     C                     MOVEL'GLPERSPD'DBFILE           ************
+     C                     Z-ADD003       DBASE            * DBASE 03 *
+     C                     MOVELHCPSTC    DBKEY            ************
+     C                     MOVEL'MC0240'  DBPGM            *1
+     C                     OUT  LDA                        *1
+     C                     EXSR #C                         *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *
+      **  Obtain currency details for Currency of Balances.
+     C           HCCCYB    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM HCCCYB    @CURR   3
+     C********** DSCURR    PARM DSCURR    DSFDY                                 CSD006
+     C           DSCURR    PARM DSCURR    DSSDY                                 CSD006
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOCURRR0'DBFILE           ************
+     C                     Z-ADD04        DBASE            * DBASE 04 *
+     C                     MOVEL@CURR     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR #C
+     C                     GOTO #A9
+     C                     END
+      *
+     C                     MOVE HCCCYB    CCCY    3
+     C                     MOVE A6NBDP    @GPDP   10
+     C                     END
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement (CMC001 feature)       CMC001
+      **  is installed                                                    CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   PRTCD                           CMC001
+     C                     PARM '*VERIFY' POPTN                           CMC001
+     C                     PARM 'CMC001'  PSARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+     C           PRTCD     IFNE *BLANK                                    CMC001
+     C           PRTCD     IFNE '*NRF'                                    CMC001
+     C           *LOCK     IN   LDA                                       CMC001
+     C                     MOVEL'SCSARDPD'DBFILE                          CMC001
+     C                     MOVE *BLANKS   DBKEY            ***************CMC001
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *CMC001
+     C                     MOVELPSARN     DBKEY            ***************CMC001
+     C                     MOVEL'MC0240'  DBPGM                           CMC001
+     C                     OUT  LDA                                       CMC001
+     C                     EXSR #C                                        CMC001
+     C                     GOTO #A9                                       CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CED002
+      ** Call Midas Module Access program to check if Eureka (ED)         CED002
+      ** module flag is on.                                               CED002
+      *                                                                   CED002
+     C                     CALL 'AOMMODR0'                                CED002
+     C                     PARM '*MSG   ' PRTCD   7                       CED002
+     C                     PARM '*FIRST ' OPTN    7                       CED002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CED002
+      *                                                                   CED002
+     C           PRTCD     IFNE *BLANKS                                   CED002
+     C           *LOCK     IN   LDA                                       CED002
+     C                     MOVEL'SDMMODPD'DBFILE           ***************CED002
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *CED002
+     C                     MOVELOPTN      DBKEY            ***************CED002
+     C                     MOVEL'MC0240'  DBPGM                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     EXSR #C                                        CED002
+     C                     GOTO #A9                                       CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      ** ED module flag is on.                                            CED002
+      *                                                                   CED002
+     C           BGNZST    IFEQ 'Y'                                       CED002
+      *                                                                   CED002
+      ** Call Access program AODFTFR0.                                    CED002
+      *                                                                   CED002
+     C                     CALL 'AODFTFR0'                                CED002
+     C                     PARM 'GLHIBLPD'FILENM 10                       CED002
+     C                     PARM PCGRP     MBRNM  10                       CED002
+     C                     PARM 'MC0240  'PGMID  10                       CED002
+     C                     PARM *BLANKS   RTNCD   7                       CED002
+     C           EDDFTF    PARM EDDFTF    DSFDY                           CED002
+      *                                                                   CED002
+     C           RTNCD     IFEQ *BLANK                                    CED002
+     C                     MOVE 'Y'       CED002  1                       CED002
+     C                     ELSE                                           CED002
+     C                     MOVE 'N'       CED002                          CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      *
+      * Set 'analysis' indicators
+     C           HCABAC    COMP *BLANKS              6161
+     C           HCABCY    COMP *BLANKS              6262
+     C           HCABBR    COMP *BLANKS              6363
+     C           HCABCU    COMP *BLANKS              6464
+     C           HCABAS    COMP *BLANKS              6565
+     C           HCABPC    COMP *BLANKS              6666
+     C           HCABBK    COMP *BLANKS              6767
+     C           HCABTT    COMP *BLANKS              6868
+     C           HCABTS    COMP *BLANKS              6969
+     C           HCASCU    COMP *BLANKS              7070
+     C/COPY WNCPYSRC,MC0240C002
+      *
+     C           #A9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Main Processing
+      *
+      * Called from:     MAIN Processing
+      *
+      * Calls      :     #BA  -  Movements processing
+      *                  #C   -  ZSFILE processing/DB errors
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+      **  Read first record from GLHIBLL4.
+     C                     READ GLHIBLL4                 31
+      *
+      **  Open printer file if audit requested.
+     C           *IN31     IFEQ '0'
+     C           HCUPAU    ANDEQ'Y'
+     C                     OPEN MC0240P1
+      *
+      ** Run processing to log printer file to RCF
+     C                     Z-ADDPFNUM2    PSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PPARM
+     C                     PARM           PFILE2
+     C                     PARM           PSNUM2
+     C                     PARM           PSERR
+      *
+      ** Terminate program if DB error occurred in ZSFILE.
+     C           PSERR     IFEQ 'Y'
+     C                     IN   LDA
+     C                     Z-ADD010       DBASE
+     C                     MOVELPFILE2    DBFILE           ************
+     C                     MOVEL'See Dump'DBKEY            * DBASE 10 *
+     C                     MOVEL'ZSFILE ' DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR #C
+     C                     GOTO #B9
+     C                     END
+     C                     END
+      *
+      **  Do while there are still records in GLHIBLL4.
+     C           *IN31     DOWEQ'0'
+      *
+      **  If Management Accounts Enhancement is not installed,            CMC001
+      **  Calculate the Period/Year Number for the period prior to
+      **  that for the LF/GLHIBLL4 record.
+      **  Subtract one from Period Number.  If this gives 0, then
+      **  subtract one from Period Year and set Period Number to
+      **  Periods per Annum from GLPERSL1.
+     C                     MOVE HBPDNY    @PDNY   20
+     C                     MOVE HBPDYR    @PDYR   20
+     C                     MOVE HBPDCT    @PDCT   20
+      *                                                                   CMC001
+     C           CMC001    IFNE 'Y'                                       CMC001
+      *                                                                   CMC001
+     C           @PDNY     SUB  1         @PDNY
+      *
+     C           @PDNY     IFEQ 0
+     C                     MOVE STPPAN    @PDNY
+     C           @PDYR     IFEQ 0
+     C           @PDCT     SUB  1         @PDCT
+     C                     Z-ADD99        @PDYR
+     C                     ELSE
+     C           @PDYR     SUB  1         @PDYR
+     C                     END
+     C                     END
+      *                                                                   CMC001
+     C                     END                                            CMC001
+      *
+     C                     MOVE @PDNY     @TEM1   2
+     C                     MOVE @PDYR     @TEM2   2
+     C                     MOVE @PDCT     @TEM3   2
+      *
+      **  Chain to LF/GLAVBLL1.
+     C           GLAKEY    KLIST
+     C                     KFLD           HBCGCD
+     C                     KFLD           HBBRCD
+     C                     KFLD           HBCYCD
+     C                     KFLD           HBACCD
+     C                     KFLD           HBCUST
+     C                     KFLD           HBACSN
+     C                     KFLD           HBPCCD
+     C                     KFLD           HBBKCD
+     C                     KFLD           HBOTTP
+     C                     KFLD           HBTSTY
+     C                     KFLD           HBACNB
+     C                     KFLD           @TEM3
+     C                     KFLD           @TEM2
+     C                     KFLD           @TEM1
+      *
+      **  If Management Accounts Enhancement is installed, access         CMC001
+      **  LF/GLAVBLL0 using the same key rather than LF/GLAVBLL1          CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           GLAKEY    CHAINGLAVBLL0             32                   CMC001
+     C                     ELSE                                           CMC001
+     C           GLAKEY    CHAINGLAVBLL1             32
+     C                     ENDIF                                          CMC001
+      *
+      **  Chain fail, initialise work fields
+     C           *IN32     IFEQ '1'
+     C                     Z-ADD0         @T1DD
+     C                     Z-ADD0         @T1DM
+     C                     Z-ADD0         @W1DB
+     C                     Z-ADD0         @T1DC
+     C                     Z-ADD0         @T1CM
+     C                     Z-ADD0         @W1CB
+      *
+     C                     Z-ADD0         @T2DD
+     C                     Z-ADD0         @T2DM
+     C                     Z-ADD0         @W2DB
+     C                     Z-ADD0         @T2DC
+     C                     Z-ADD0         @T2CM
+     C                     Z-ADD0         @W2CB
+      *
+     C                     Z-ADD0         @YDDD
+     C                     Z-ADD0         @YDMT
+     C                     Z-ADD0         @WYDB
+     C                     Z-ADD0         @YDDC
+     C                     Z-ADD0         @YCMT
+     C                     Z-ADD0         @WYCB
+      *
+     C                     ELSE
+      *                                                                   CMC001
+      **  If Management Accounts Enhancement is installed, perform        CMC001
+      **  update of average balance fiels                                 CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C                     EXSR SRUPAV                                    CMC001
+     C                     ENDIF                                          CMC001
+      *
+      **  Else save data into work fields.
+      *
+     C                     Z-ADDABT1DD    @T1DD   30
+     C                     Z-ADDABT1DM    @T1DM  190
+     C                     Z-ADDABW1DB    @W1DB  190
+     C                     Z-ADDABT1DC    @T1DC   30
+     C                     Z-ADDABT1CM    @T1CM  190
+     C                     Z-ADDABW1CB    @W1CB  190
+      *
+     C                     Z-ADDABT2DD    @T2DD   30
+     C                     Z-ADDABT2DM    @T2DM  190
+     C                     Z-ADDABW2DB    @W2DB  190
+     C                     Z-ADDABT2DC    @T2DC   30
+     C                     Z-ADDABT2CM    @T2CM  190
+     C                     Z-ADDABW2CB    @W2CB  190
+      *
+     C                     Z-ADDABYDDD    @YDDD   30
+     C                     Z-ADDABYDMT    @YDMT  190
+     C                     Z-ADDABWYDB    @WYDB  190
+     C                     Z-ADDABYDDC    @YDDC   30
+     C                     Z-ADDABYCMT    @YCMT  190
+     C                     Z-ADDABWYCB    @WYCB  190
+     C                     END
+      *
+      **  Chain to LF/GLAVBLL0.
+     C                     MOVE HBPDNY    @TEM1
+     C                     MOVE HBPDYR    @TEM2
+     C                     MOVE HBPDCT    @TEM3
+     C           GLAKEY    CHAINGLAVBLL0             33
+      *
+      **  Chain fail, DB error.
+     C           *IN33     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLAVBLL0'DBFILE           ************
+     C                     Z-ADD005       DBASE            * DBASE 05 *
+     C                     MOVEL'See Dump'DBKEY            ************
+     C                     MOVEL'MC0240'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR #C
+     C                     GOTO #B9
+     C                     END
+      *
+      **  Movement processing
+     C                     EXSR #BA
+      *
+      **  Last movement date now updated in #BAE.                         CED002
+      ****Update*GLHIBLL4*with*event*date*from*last*LF/UPDBALPD record.   CED002
+     C*********************Z-ADD@EVDT     HBLMDT                          CED002
+      *                                                                   CED002
+     C                     UPDAT@HIBLEF
+      *
+      **  Read next record in GLHIBLL4 and reset line counter.
+     C                     READ GLHIBLL4                 31
+     C                     Z-ADD59        @LCNT
+     C                     SETOF                     60
+     C                     END
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BA - Movement Processing
+      *
+      * Called from:     #B
+      *
+      * Calls      :     #BAA - Write headings and brought forward
+      *                         totals to MC0240P1.
+      *                  #BAB - Initialize output work fields to 0.
+      *                  #BAC - Update output work fields.
+      *                  #BAD - Write movement details.
+      *                  #BAE - Update GLAVBLL0.
+      *                  #BAF - Write movement details/carried forward
+      *                         totals.
+      *                  PGM/GL0765 -  Conversion of amount.
+      *
+      **************************************************************
+     C           #BA       BEGSR
+      *
+      **  Calculate Days in Period (Period End Date - Period Start        072690
+      **  Date + 1)                                                       072690
+     C           HBEPDD    SUB  HBSPDD    @DPER   50                      072690
+     C                     ADD  1         @DPER                           072690
+      *                                                                   072690
+     C           HBPDOB    MULT @DPER     @DBAL  190                      072690
+      *
+      **  Write headings and brought forward totals to PRTF/MC0240P1
+      **  if Update Audit indicator = 'Y'.
+     C           HCUPAU    IFEQ 'Y'
+     C                     EXSR #BAA
+     C                     END
+      *
+      **  Set current balance work field to Period Opening Balance
+     C                     Z-ADDHBPDOB    @CRBAL 190
+      *
+      **  Initialize output work fields to 0.
+     C                     EXSR #BAB
+      *
+     C                     MOVE HBACCD    @ACCD
+     C                     MOVE HBCUST    @CUST
+     C                     MOVE HBACSN    @ACSN
+     C                     MOVE HBACNB    @ACNB
+     C                     MOVE HBPDCT    @PDCT
+     C                     MOVE HBPDYR    @PDYR
+     C                     MOVE HBPDNY    @PDNY
+     C                     MOVE HBBRCD    @BRCD                           CED002
+     C                     MOVE HBCYCD    @CYCD                           CED002
+     C                     MOVE HBPCCD    @PCCD                           CED002
+     C                     MOVE HBBKCD    @BKCD                           CED002
+     C                     MOVE HBOTTP    @OTTP                           CED002
+     C                     MOVE HBTSTY    @TSTY                           CED002
+      *
+      **  Read Next record from UPDBALPD.
+     C           *IN34     DOWEQ'0'
+     C           UPDKEY    ANDLTGLHKEY
+     C                     READ UPDBALPD                 34
+     C                     END
+      *
+      **  Do while records exist on LF/UPDBALPD with the same key.
+     C           *IN34     DOWEQ'0'
+     C           UPDKEY    ANDEQGLHKEY
+      *
+     C/COPY WNCPYSRC,MC0240C003
+     C           HCCCYB    IFNE *BLANKS
+     C           HCCCYB    ANDNECCY
+     C                     MOVELPDTM      @PDTM   50
+     C                     CALL 'GL0765'
+     C                     PARM           RTCD    7
+     C                     PARM           CCY
+     C                     PARM           HCCCYB
+     C                     PARM           @PDTM
+     C                     PARM PAMT      @CVAM  190
+     C                     ELSE
+     C                     Z-ADDPAMT      @CVAM
+     C                     END
+     C/COPY WNCPYSRC,MC0240C004
+      *
+     C                     MOVE EVDT      @EVDT   50
+      *
+      **  Update output work fields.
+     C                     EXSR #BAC
+      *
+      **  Write movement details to report if required.
+     C           HCUPAU    IFEQ 'Y'
+     C                     EXSR #BAD
+     C                     END
+      *
+      **  Read next record on LF/UPDBALPD.
+     C                     READ UPDBALPD                 34
+     C/COPY WNCPYSRC,MC0240C005
+     C                     END
+      *
+      **  Update LF/GLAVBLL0.
+     C                     EXSR #BAE
+      *
+      **  Write carried forward totals and movement adjustments to
+      **  report if required.
+     C           HCUPAU    IFEQ 'Y'
+     C                     EXSR #BAF
+     C                     END
+      *
+     C           #BA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAA - Write brought forward details.
+      *
+      * Called from:     #BA
+      *
+      * Calls      :     ZDATE2 - Convert day number to DDMMMYY
+      *                  #BAB
+      *                  #C
+      *                  #D
+      *                  #F
+      *                  AOCURRR0 - Obtain currency details
+      *
+      **************************************************************
+     C           #BAA      BEGSR
+      *
+      ** Obtain currency details for balance currency.
+     C           HBCYCD    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM HBCYCD    @CURR   3
+     C********** DSCURR    PARM DSCURR    DSFDY                                 CSD006
+     C           DSCURR    PARM DSCURR    DSSDY                                 CSD006
+      *
+      ** Database error if no record found.
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOCURRR0'DBFILE           ************
+     C                     Z-ADD009       DBASE            * DBASE 09 *
+     C                     MOVEL@CURR     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR #C
+     C                     GOTO #BAA9
+     C                     END
+     C                     END
+      *
+     C                     MOVE A6NBDP    @MVDP   10
+     C                     MOVE @MVDP     #FMDP   10
+     C           HCCCYB    IFEQ *BLANKS
+     C                     MOVE HBCYCD    CCCY
+     C                     MOVE @MVDP     @GPDP
+     C                     END
+      *
+      **  Set off indicators.
+     C                     SETOF                     7172
+      *
+      ****Calculate*Days*in*Period*(Period*End*Date*-*Period*Start******  072690
+      ****Date*+*1)*****************************************************  072690
+      * Code has been moved                                               072690
+     C********   HBEPDD    SUB  HBSPDD    @DPER   50                      072690
+     C********             ADD  1         @DPER                           072690
+      *
+     C********   HBPDOB    MULT @DPER     @DBAL  190                      072690
+      *                                                                   072690
+     C                     Z-ADD@DPER     P1DPER
+      *
+      **  Convert Start and End of Period Dates to DDMMMYY format.
+     C                     Z-ADDHBSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1SPDD
+      *
+     C                     Z-ADDHBEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P1EPDD
+      *
+      **  Last Movement Date is blank.
+     C                     MOVEL*BLANKS   P1LMDT
+     C                     MOVELHBPDCT    P1PDCT
+     C                     MOVELHBPDYR    P1PDYR
+     C                     MOVELHBPDNY    P1PDNY
+      *
+      **  Set on 71/72 if Term1/Term2 is not used.
+     C           HBST1D    IFNE 0
+     C                     SETON                     71
+     C                     END
+      *
+     C           HBST2D    IFNE 0
+     C                     SETON                     72
+     C                     END
+      *
+      **  Set all output work fields to 0.
+     C                     EXSR #BAB
+      *
+      **  Initialize printer fields.
+     C                     EXSR #F
+      *
+      **  Debit Movements.
+      *
+      **  Period DR movements.
+     C                     Z-ADD0         @WPDMT
+      *
+      **  Year to date DR movements.
+     C           HBSPDD    IFNE HBSOYD
+     C                     Z-ADD@YDMT     @WYDMT
+     C                     ELSE
+     C                     Z-ADD0         @WYDMT
+     C                     END
+      *
+      **  Term1 to date DR movements.
+     C           HBSPDD    IFNE HBST1D
+     C                     Z-ADD@T1DM     @WT1DM
+     C                     ELSE
+     C                     Z-ADD0         @WT1DM
+     C                     END
+      *
+      **  Term2 to date DR movements.
+     C           HBSPDD    IFNE HBST2D
+     C                     Z-ADD@T2DM     @WT2DM
+     C                     ELSE
+     C                     Z-ADD0         @WT2DM
+     C                     END
+      *
+      **  Period weighted DR balance.
+     C           HBPDOB    IFGT 0
+     C                     Z-ADD@DBAL     @WWPDB
+     C                     ELSE
+     C                     Z-ADD0         @WWPDB
+     C                     END
+      *
+      **  Year to date weighted DR balance.
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@DBAL     @WWYDB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @DBAL     ADD  @WYDB     @WWYDB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD@WYDB     @WWYDB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD0         @WWYDB
+     C                     END
+      *
+      **  Term1 to date weighted DR balance.
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@DBAL     @WW1DB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @DBAL     ADD  @W1DB     @WW1DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD@W1DB     @WW1DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD0         @WW1DB
+     C                     END
+      *
+      **  Term2 to date weighted DR balance.
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@DBAL     @WW2DB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @DBAL     ADD  @W2DB     @WW2DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C                     Z-ADD@W2DB     @WW2DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD0         @WW2DB
+     C                     END
+      *
+      **  Period days in debit.
+     C                     Z-ADD0         P1PDDD
+      *
+      **  Year to date days in debit.
+     C           HBSPDD    IFNE HBSOYD
+     C                     Z-ADD@YDDD     P1YDDD
+     C                     ELSE
+     C                     Z-ADD0         P1YDDD
+     C                     END
+      *
+      **  Term1 to date days in debit.
+     C           HBSPDD    IFNE HBST1D
+     C                     Z-ADD@T1DD     P1T1DD
+     C                     ELSE
+     C                     Z-ADD0         P1T1DD
+     C                     END
+      *
+      **  Term2 to date days in debit.
+     C           HBSPDD    IFNE HBST2D
+     C                     Z-ADD@T2DD     P1T2DD
+     C                     ELSE
+     C                     Z-ADD0         P1T2DD
+     C                     END
+      *
+      **  Credit movements.
+      *
+      **  Period CR movements.
+     C                     Z-ADD0         @WPCMT
+      *
+      **  Year to date CR movements.
+     C           HBSPDD    IFNE HBSOYD
+     C                     Z-ADD@YCMT     @WYCMT
+     C                     ELSE
+     C                     Z-ADD0         @WYCMT
+     C                     END
+      *
+      **  Term1 to date CR movements.
+     C           HBSPDD    IFNE HBST1D
+     C                     Z-ADD@T1CM     @WT1CM
+     C                     ELSE
+     C                     Z-ADD0         @WT1CM
+     C                     END
+      *
+      **  Term2 to date CR movements.
+     C           HBST2D    IFNE HBST2D
+     C                     Z-ADD@T2CM     @WT2CM
+     C                     ELSE
+     C                     Z-ADD0         @WT2CM
+     C                     END
+      *
+      **  Period weighted CR balance.
+     C           HBPDOB    IFLT 0
+     C                     Z-ADD@DBAL     @WWPCB
+     C                     ELSE
+     C                     Z-ADD0         @WWPCB
+     C                     END
+      *
+      **  Year to date weighted CR balance.
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@DBAL     @WWYCB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @DBAL     ADD  @WYCB     @WWYCB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD@WYCB     @WWYCB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD0         @WWYCB
+     C                     END
+      *
+      **  Term1 to date weighted CR balance.
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@DBAL     @WW1CB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @DBAL     ADD  @W1CB     @WW1CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD@W1CB     @WW1CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD0         @WW1CB
+     C                     END
+      *
+      **  Term2 to date weighted CR balance.
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@DBAL     @WW2CB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @DBAL     ADD  @W2CB     @WW2CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C                     Z-ADD@W2CB     @WW2CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD0         @WW2CB
+     C                     END
+      *
+      **  Period days in credit.
+     C                     Z-ADD0         P1PDDC
+      *
+      **  Year to date days in credit.
+     C           HBSPDD    IFNE HBSOYD
+     C                     Z-ADD@YDDC     P1YDDC
+     C                     ELSE
+     C                     Z-ADD0         P1YDDC
+     C                     END
+      *
+      **  Term1 to date days in credit.
+     C           HBSPDD    IFNE HBST1D
+     C                     Z-ADD@T1DC     P1T1DC
+     C                     ELSE
+     C                     Z-ADD0         P1T1DC
+     C                     END
+      *
+      **  Term2 to date days in credit.
+     C           HBSPDD    IFNE HBST2D
+     C                     Z-ADD@T2DC     P1T2DC
+     C                     ELSE
+     C                     Z-ADD0         P1T2DC
+     C                     END
+      *
+      **  Format output work fields.
+      *
+      **  Debit movements.
+     C                     Z-ADD@WPDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PDMT
+     C                     Z-ADD@WYDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YDMT
+     C                     Z-ADD@WT1DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1DM
+     C                     Z-ADD@WT2DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2DM
+      *
+      **  Debit weighted balances.
+     C                     Z-ADD@WWPDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPDB
+     C                     Z-ADD@WWYDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYDB
+     C                     Z-ADD@WW1DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1DB
+     C                     Z-ADD@WW2DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2DB
+      *
+      **  Credit movements.
+     C                     Z-ADD@WPCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PCMT
+     C                     Z-ADD@WYCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YCMT
+     C                     Z-ADD@WT1CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1CM
+     C                     Z-ADD@WT2CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2CM
+      *
+      **  Debit weighted balances.
+     C                     Z-ADD@WWPCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPCB
+     C                     Z-ADD@WWYCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYCB
+     C                     Z-ADD@WW1CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1CB
+     C                     Z-ADD@WW2CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2CB
+      *
+     C                     WRITEMC0240H1
+      *
+     C                     SETOF                     7475
+     C                     SETON                     73
+     C                     WRITEMC0240D1
+      *
+     C                     WRITEMC0240H2
+     C                     SUB  27        @LCNT
+      *
+     C           #BAA9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAB - Initialize output work fields to 0.
+      *
+      * Called from:     #BA
+      *                  #BAA
+      *
+      * Calls      :     NONE
+      *
+      **************************************************************
+     C           #BAB      BEGSR
+      *
+      **  Set all output work fields to 0.
+     C                     Z-ADD0         @WPDDD  30
+     C                     Z-ADD0         @WPDMT 190
+     C                     Z-ADD0         @WWPDB 190
+     C                     Z-ADD0         @WPDDC  30
+     C                     Z-ADD0         @WPCMT 190
+     C                     Z-ADD0         @WWPCB 190
+      *
+     C                     Z-ADD0         @WT1DD  30
+     C                     Z-ADD0         @WT1DM 190
+     C                     Z-ADD0         @WW1DB 190
+     C                     Z-ADD0         @WT1DC  30
+     C                     Z-ADD0         @WT1CM 190
+     C                     Z-ADD0         @WW1CB 190
+      *
+     C                     Z-ADD0         @WT2DD  30
+     C                     Z-ADD0         @WT2DM 190
+     C                     Z-ADD0         @WW2DB 190
+     C                     Z-ADD0         @WT2DC  30
+     C                     Z-ADD0         @WT2CM 190
+     C                     Z-ADD0         @WW2CB 190
+      *
+     C                     Z-ADD0         @WYDDD  30
+     C                     Z-ADD0         @WYDMT 190
+     C                     Z-ADD0         @WWYDB 190
+     C                     Z-ADD0         @WYDDC  30
+     C                     Z-ADD0         @WYCMT 190
+     C                     Z-ADD0         @WWYCB 190
+      *
+     C           #BAB9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAC - Update output work fields.
+      *
+      * Called from:     #BA
+      *
+      * Calls      :     NONE
+      *
+      **************************************************************
+     C           #BAC      BEGSR
+      *
+      ** Add Amount to Debit or Credit totals depending on the sign of
+      ** the amount and the value of the Void indicator.
+      ** Transfers are excluded from Movement totals.                     052433
+     C           GETP      IFNE 'X'                                       052433
+     C           GETP      ANDNE'Y'                                       052433
+      /SPACE                                                              052433
+     C           VOIN      IFEQ 1
+     C           PAMT      ANDGT0
+     C           VOIN      OREQ 0
+     C           PAMT      ANDLT0
+     C                     ADD  PAMT      @WPCMT
+     C                     ADD  PAMT      @WT1CM
+     C                     ADD  PAMT      @WT2CM
+     C                     ADD  PAMT      @WYCMT
+     C                     ELSE
+     C                     ADD  PAMT      @WPDMT
+     C                     ADD  PAMT      @WT1DM
+     C                     ADD  PAMT      @WT2DM
+     C                     ADD  PAMT      @WYDMT
+     C                     END
+      /SPACE                                                              052433
+     C                     END                                            052433
+      *
+      **  Calculate days left in period and weighted current balance.
+     C           HBEPDD    SUB  EVDT      @DAYS   50
+     C           @DAYS     ADD  1         @DAYS
+     C           @CRBAL    MULT @DAYS     @BALN  190
+      *
+      **  If Current Balance Work Field is positive.
+      **  Subtract weighted current balance from all relevant weighted
+      **  DR balance output work fields.
+     C           @CRBAL    IFGT 0
+     C                     SUB  @BALN     @WWPDB
+     C                     SUB  @BALN     @WW1DB
+     C                     SUB  @BALN     @WW2DB
+     C                     SUB  @BALN     @WWYDB
+      *
+      **  Subtract days left in period from all relevant days in
+      **  debit output work fields.
+     C                     SUB  @DAYS     @WPDDD
+     C                     SUB  @DAYS     @WT1DD
+     C                     SUB  @DAYS     @WT2DD
+     C                     SUB  @DAYS     @WYDDD
+     C                     END
+      *
+      **  If Current Balance Work Field is negative.
+      **  Subtract weighted current balance from all relevant weighted
+      **  CR balance output work fields.
+     C           @CRBAL    IFLT 0
+     C                     SUB  @BALN     @WWPCB
+     C                     SUB  @BALN     @WW1CB
+     C                     SUB  @BALN     @WW2CB
+     C                     SUB  @BALN     @WWYCB
+      *
+      **  Subtract days left in period from all relevant days in
+      **  credit output work fields.
+     C                     SUB  @DAYS     @WPDDC
+     C                     SUB  @DAYS     @WT1DC
+     C                     SUB  @DAYS     @WT2DC
+     C                     SUB  @DAYS     @WYDDC
+     C                     END
+      *
+      **  Add posting amount to current balance work field and
+      **  recalculate weighted current balance.
+     C                     ADD  PAMT      @CRBAL
+     C           @CRBAL    MULT @DAYS     @BALN
+      *
+      **  If Current balance work field is positive.
+      **  Add weighted current balance to relevant weighted DR
+      **  balance output work fields.
+     C           @CRBAL    IFGT 0
+     C                     ADD  @BALN     @WWPDB
+     C                     ADD  @BALN     @WW1DB
+     C                     ADD  @BALN     @WW2DB
+     C                     ADD  @BALN     @WWYDB
+      *
+      **  Add days left in period to all relevant days in
+      **  debit output work fields.
+     C                     ADD  @DAYS     @WPDDD
+     C                     ADD  @DAYS     @WT1DD
+     C                     ADD  @DAYS     @WT2DD
+     C                     ADD  @DAYS     @WYDDD
+     C                     END
+      *
+      **  If Current balance work field is negative.
+      **  Add weighted current balance to relevant weighted CR
+      **  balance output work fields.
+     C           @CRBAL    IFLT 0
+     C                     ADD  @BALN     @WWPCB
+     C                     ADD  @BALN     @WW1CB
+     C                     ADD  @BALN     @WW2CB
+     C                     ADD  @BALN     @WWYCB
+      *
+      **  Add days left in period to all relevant days in
+      **  credit output work fields.
+     C                     ADD  @DAYS     @WPDDC
+     C                     ADD  @DAYS     @WT1DC
+     C                     ADD  @DAYS     @WT2DC
+     C                     ADD  @DAYS     @WYDDC
+     C                     END
+      *
+     C           #BAC9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAD - Write movement details.
+      *
+      * Called from:     #BA
+      *
+      * Calls      :     #D
+      *                  #E
+      *
+      **************************************************************
+     C           #BAD      BEGSR
+      *
+      **  Convert Event Date to DDMMMYY format.
+     C                     Z-ADDEVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    P2EVDT  7
+      *
+      **  Expand generated entry type.
+     C                     Z-ADD1         @       30
+     C                     MOVEL*BLANKS   P2MTYP
+     C           GETP      LOKUPGE1,@                    50 LOKUP
+     C   50                MOVELGE2,@     P2MTYP
+     C/COPY WNCPYSRC,MC0240C001
+     C  N50                MOVELGETP      P2MTYP
+      *
+      **  Format amounts for report.
+     C                     MOVE @MVDP     #FMDP
+     C                     Z-ADDPAMT      ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P2PAMT
+      *
+     C                     MOVE @GPDP     #FMDP
+     C                     Z-ADD@CVAM     ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P2CVAM
+      *
+      **  Calculate rate for report.
+     C           @CVAM     IFEQ 0                                         125901
+     C                     Z-ADD*ZERO     P2RATE                          125901
+     C                     ELSE                                           125901
+     C           PAMT      DIV  @CVAM     P2RATE
+     C                     ENDIF                                          125901
+     C                     Z-ADD0         @
+     C           4         ADD  @GPDP     @
+     C                     SUB  @MVDP     @
+     C                     MULT XDP,@     P2RATE
+      *
+     C                     Z-ADD@DAYS     P2DAYS
+      *
+      **  Calculate and format weighted amount for report.
+     C           @DAYS     MULT @CVAM     @CWAM  190
+     C                     Z-ADD@CWAM     ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P2CWAM
+      *
+     C           VOIN      IFEQ 1
+     C                     MOVE 'Y'       P2VOIN  1
+     C                     ELSE
+     C                     MOVE *BLANK    P2VOIN
+     C                     END
+      *
+      **  Check for overflow.
+     C           @LCNT     IFEQ 1
+     C                     EXSR #E
+     C                     WRITEMC0240H2
+     C                     SUB  4         @LCNT
+     C                     END
+      *
+     C                     WRITEMC0240D2
+     C                     SUB  1         @LCNT
+      *
+     C           #BAD9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAE - Update GLAVBLL0 routine.
+      *
+      * Called from:     #BA
+      *
+      * Calls      :     NONE
+      *
+      **************************************************************
+     C           #BAE      BEGSR
+      *
+      **  Update period days in debit (ABPDDD).
+     C           HBPDOB    IFGT 0
+     C           @DPER     ADD  @WPDDD    ABPDDD
+     C                     ELSE
+     C                     Z-ADD@WPDDD    ABPDDD
+     C                     END
+      *
+      **  Update period debit movements (ABPDMT).
+     C                     Z-ADD@WPDMT    ABPDMT
+      *
+      **  Update period weighted DR balance (ABWPDB)
+     C           HBPDOB    IFGT 0
+     C           @DBAL     ADD  @WWPDB    ABWPDB
+     C                     ELSE
+     C                     Z-ADD@WWPDB    ABWPDB
+     C                     END
+      *
+      **  Update period days in credit (ABPDDC).
+     C           HBPDOB    IFLT 0
+     C           @DPER     ADD  @WPDDC    ABPDDC
+     C                     ELSE
+     C                     Z-ADD@WPDDC    ABPDDC
+     C                     END
+      *
+      **  Update period credit movements (ABPCMT).
+     C                     Z-ADD@WPCMT    ABPCMT
+      *
+      **  Update period weighted CR balance (ABWPCB)
+     C           HBPDOB    IFLT 0
+     C           @DBAL     ADD  @WWPCB    ABWPCB
+     C                     ELSE
+     C                     Z-ADD@WWPCB    ABWPCB
+     C                     END
+      *
+      **  Update Term 1 days in debit (ABT1DD).
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C           @DPER     ADD  @WT1DD    ABT1DD
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD0         @TEM5   50
+     C           @DPER     ADD  @WT1DD    @TEM5
+     C           @T1DD     ADD  @TEM5     ABT1DD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @WT1DD    ADD  @T1DD     ABT1DD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@WT1DD    ABT1DD
+     C                     END
+      *
+      **  Update Term 1 debit movements (ABT1DM).
+     C           HBSPDD    IFEQ HBST1D
+     C                     Z-ADD@WT1DM    ABT1DM
+     C                     ELSE
+     C           @T1DM     ADD  @WT1DM    ABT1DM
+     C                     END
+      *
+      **  Update Term 1 weighted DR balance (ABW1DB)
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C           @DBAL     ADD  @WW1DB    ABW1DB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD0         @TEM19 190
+     C           @DBAL     ADD  @WW1DB    @TEM19
+     C           @W1DB     ADD  @TEM19    ABW1DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @W1DB     ADD  @WW1DB    ABW1DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@WW1DB    ABW1DB
+     C                     END
+      *
+      **  Update Term 1 days in credit (ABT1DC).
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C           @DPER     ADD  @WT1DC    ABT1DC
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD0         @TEM5
+     C           @DPER     ADD  @WT1DC    @TEM5
+     C           @T1DC     ADD  @TEM5     ABT1DC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @T1DC     ADD  @WT1DC    ABT1DC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@WT1DC    ABT1DC
+     C                     END
+      *
+      **  Update Term 1 credit movements (ABT1CM).
+     C           HBSPDD    IFEQ HBST1D
+     C                     Z-ADD@WT1CM    ABT1CM
+     C                     ELSE
+     C           @T1CM     ADD  @WT1CM    ABT1CM
+     C                     END
+      *
+      **  Update Term 1 weighted CR balance (ABW1CB)
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST1D
+     C           @DBAL     ADD  @WW1CB    ABW1CB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST1D
+     C                     Z-ADD0         @TEM19
+     C           @DBAL     ADD  @WW1CB    @TEM19
+     C           @W1CB     ADD  @TEM19    ABW1CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST1D
+     C           @W1CB     ADD  @WW1CB    ABW1CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST1D
+     C                     Z-ADD@WW1CB    ABW1CB
+     C                     END
+      *
+      **  Update Term 2 days in debit (ABT2DD).
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C           @DPER     ADD  @WT2DD    ABT2DD
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @DPER     ADD  @WT2DD    @TEM5
+     C           @T2DD     ADD  @TEM5     ABT2DD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @WT2DD    ADD  @T2DD     ABT2DD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@WT2DD    ABT2DD
+     C                     END
+      *
+      **  Update Term 2 debit movements (ABT2DM).
+     C           HBSPDD    IFEQ HBST2D
+     C                     Z-ADD@WT2DM    ABT2DM
+     C                     ELSE
+     C           @T2DM     ADD  @WT2DM    ABT2DM
+     C                     END
+      *
+      **  Update Term 2 weighted DR balance (ABW2DB)
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C           @DBAL     ADD  @WW2DB    ABW2DB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C                     Z-ADD0         @TEM19
+     C           @DBAL     ADD  @WW2DB    @TEM19
+     C           @W2DB     ADD  @TEM19    ABW2DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @W2DB     ADD  @WW2DB    ABW2DB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@WW2DB    ABW2DB
+     C                     END
+      *
+      **  Update Term 2 days in credit (ABT2DC).
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C           @DPER     ADD  @WT2DC    ABT2DC
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C                     Z-ADD0         @TEM5
+     C           @DPER     ADD  @WT2DC    @TEM5
+     C           @T2DC     ADD  @TEM5     ABT2DC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @T2DC     ADD  @WT2DC    ABT2DC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@WT2DC    ABT2DC
+     C                     END
+      *
+      **  Update Term 2 credit movements (ABT2CM).
+     C           HBSPDD    IFEQ HBST2D
+     C                     Z-ADD@WT2CM    ABT2CM
+     C                     ELSE
+     C           @T2CM     ADD  @WT2CM    ABT2CM
+     C                     END
+      *
+      **  Update Term 2 weighted CR balance (ABW2CB)
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBST2D
+     C           @DBAL     ADD  @WW2CB    ABW2CB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBST2D
+     C                     Z-ADD0         @TEM19
+     C           @DBAL     ADD  @WW2CB    @TEM19
+     C           @W2CB     ADD  @TEM19    ABW2CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBST2D
+     C           @W2CB     ADD  @WW2CB    ABW2CB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBST2D
+     C                     Z-ADD@WW2CB    ABW2CB
+     C                     END
+      *
+      **  Update yearly days in debit (ABYDDD).
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C           @DPER     ADD  @WYDDD    ABYDDD
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD0         @TEM5
+     C           @DPER     ADD  @WYDDD    @TEM5
+     C           @YDDD     ADD  @TEM5     ABYDDD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @WYDDD    ADD  @YDDD     ABYDDD
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@WYDDD    ABYDDD
+     C                     END
+      *
+      **  Update yearly debit movements (ABYDMT).
+     C           HBSPDD    IFEQ HBSOYD
+     C                     Z-ADD@WYDMT    ABYDMT
+     C                     ELSE
+     C           @YDMT     ADD  @WYDMT    ABYDMT
+     C                     END
+      *
+      **  Update yearly weighted DR balance (ABWYDB)
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C           @DBAL     ADD  @WWYDB    ABWYDB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD0         @TEM19
+     C           @DBAL     ADD  @WWYDB    @TEM19
+     C           @WYDB     ADD  @TEM19    ABWYDB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @WYDB     ADD  @WWYDB    ABWYDB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@WWYDB    ABWYDB
+     C                     END
+      *
+      **  Update yearly days in credit (ABYDDC).
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C           @DPER     ADD  @WYDDC    ABYDDC
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD0         @TEM5
+     C           @DPER     ADD  @WYDDC    @TEM5
+     C           @YDDC     ADD  @TEM5     ABYDDC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @YDDC     ADD  @WYDDC    ABYDDC
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@WYDDC    ABYDDC
+     C                     END
+      *
+      **  Update yearly credit movements (ABYCMT).
+     C           HBSPDD    IFEQ HBSOYD
+     C                     Z-ADD@WYCMT    ABYCMT
+     C                     ELSE
+     C           @YCMT     ADD  @WYCMT    ABYCMT
+     C                     END
+      *
+      **  Update yearly weighted CR balance (ABWYCB)
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C           @DBAL     ADD  @WWYCB    ABWYCB
+     C                     END
+      *
+     C           HBPDOB    IFLT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C                     Z-ADD0         @TEM19
+     C           @DBAL     ADD  @WWYCB    @TEM19
+     C           @WYCB     ADD  @TEM19    ABWYCB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDNEHBSOYD
+     C           @WYCB     ADD  @WWYCB    ABWYCB
+     C                     END
+      *
+     C           HBPDOB    IFGT 0
+     C           HBSPDD    ANDEQHBSOYD
+     C                     Z-ADD@WWYCB    ABWYCB
+     C                     END
+      *
+      **  Update GLHIBLL4 with event date from last LF/UPDBALPD record.   CED002
+     C                     Z-ADD@EVDT     HBLMDT                          CED002
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELPCGRP     MNAME     P                     CED002
+     C                     MOVEA@HIBLE    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLHIBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0240  'PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANK    RTCD                            CED002
+      *                                                                   CED002
+      ** Program Error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANK                                    CED002
+     C           *LOCK     IN   LDA                                       CED002
+     C                     MOVEL'ED0410'  DBFILE           ***************CED002
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *CED002
+     C                     MOVEL'See Dump'DBKEY            ***************CED002
+     C                     MOVEL'MC0240'  DBPGM                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     EXSR #C                                        CED002
+     C                     GOTO #BAE9                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+      ** If Extract GLHIBLPD to ED module flag is on, call ED0410         CED002
+      ** to log changes.                                                  CED002
+      *                                                                   CED002
+     C           CED002    IFEQ 'Y'                                       CED002
+     C                     MOVELPCGRP     MNAME     P                     CED002
+     C                     MOVEA@BPRED    JRNENT    P                     CED002
+      *                                                                   CED002
+     C                     CALL 'ED0410'                                  CED002
+     C                     PARM '*UPDATE' MODE                            CED002
+     C                     PARM 'GLAVBLPD'FNAME                           CED002
+     C                     PARM           MNAME                           CED002
+     C                     PARM 'MC0240'  PNAME                           CED002
+     C                     PARM 'UP'      JRNA                            CED002
+     C                     PARM           JRNENT                          CED002
+     C                     PARM *BLANK    RTCD                            CED002
+      *                                                                   CED002
+      ** Program error                                                    CED002
+      *                                                                   CED002
+     C           RTCD      IFNE *BLANK                                    CED002
+     C           *LOCK     IN   LDA                                       CED002
+     C                     MOVEL'ED0410'  DBFILE           ***************CED002
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *CED002
+     C                     MOVEL'See Dump'DBKEY            ***************CED002
+     C                     MOVEL'MC0240'  DBPGM                           CED002
+     C                     OUT  LDA                                       CED002
+     C                     EXSR #C                                        CED002
+     C                     GOTO #BAE9                                     CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     ENDIF                                          CED002
+      *                                                                   CED002
+     C                     UPDAT@BPRED3
+      *
+     C           #BAE9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAF - Write movement details and C/F totals.
+      *
+      * Called from:     #BA
+      *
+      * Calls      :     #D
+      *                  #E
+      *                  #F
+      *
+      **************************************************************
+     C           #BAF      BEGSR
+      *
+      **  Initialize printer fields.
+     C                     EXSR #F
+     C                     MOVE @MVDP     #FMDP
+      *
+      **  MOVEMENT ADJUSTMENT
+      *
+      **  Debit movements.
+     C                     Z-ADD@WPDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PDMT
+     C                     Z-ADD@WYDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YDMT
+     C                     Z-ADD@WT1DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1DM
+     C                     Z-ADD@WT2DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2DM
+      *
+      **  Debit Weighted Balance.
+     C                     Z-ADD@WWPDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPDB
+     C                     Z-ADD@WWYDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYDB
+     C                     Z-ADD@WW1DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1DB
+     C                     Z-ADD@WW2DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2DB
+      *
+      **  Days in debit.
+     C                     Z-ADD@WPDDD    P1PDDD
+     C                     Z-ADD@WYDDD    P1YDDD
+     C                     Z-ADD@WT1DD    P1T1DD
+     C                     Z-ADD@WT2DD    P1T2DD
+      *
+      **  Credit movement.
+     C                     Z-ADD@WPCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PCMT
+     C                     Z-ADD@WYCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YCMT
+     C                     Z-ADD@WT1CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1CM
+     C                     Z-ADD@WT2CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2CM
+      *
+      **  Credit Weighted balance.
+     C                     Z-ADD@WWPCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPCB
+     C                     Z-ADD@WWYCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYCB
+     C                     Z-ADD@WW1CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1CB
+     C                     Z-ADD@WW2CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2CB
+      *
+      **  Days in Credit.
+     C                     Z-ADD@WPDDC    P1PDDC
+     C                     Z-ADD@WYDDC    P1YDDC
+     C                     Z-ADD@WT1DC    P1T1DC
+     C                     Z-ADD@WT2DC    P1T2DC
+      *
+      **  Check for overflow.
+     C           @LCNT     IFLT 8
+     C                     EXSR #E
+     C                     END
+      *
+     C                     SETOF                     73  75
+     C                     SETON                       74
+     C                     WRITEMC0240D1
+     C                     SUB  8         @LCNT
+      *
+      **  Pick up values from LF/GLHIBLL4.
+     C                     Z-ADDHBPDOB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PDOB
+     C                     Z-ADDHBPMTD    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PMTD
+     C                     Z-ADDHBYMTD    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YMTD
+     C                     Z-ADDHBT1MT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1MT
+     C                     Z-ADDHBT2MT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2MT
+     C                     Z-ADDHBPDCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PDCB
+      *
+     C                     Z-ADDHBWPBL    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPBL
+     C                     Z-ADDHBWYBL    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYBL
+     C                     Z-ADDHBWT1B    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WT1B
+     C                     Z-ADDHBWT2B    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WT2B
+      *
+      **  Initialize printer fields.
+     C                     EXSR #F
+      *
+      **  CARRIED FORWARD TOTALS
+      *
+      **  Debit movements.
+     C                     Z-ADDABPDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PDMT
+     C                     Z-ADDABYDMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YDMT
+     C                     Z-ADDABT1DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1DM
+     C                     Z-ADDABT2DM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2DM
+      *
+      **  Debit Weighted Balance.
+     C                     Z-ADDABWPDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPDB
+     C                     Z-ADDABWYDB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYDB
+     C                     Z-ADDABW1DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1DB
+     C                     Z-ADDABW2DB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2DB
+      *
+      **  Days in debit.
+     C                     Z-ADDABPDDD    P1PDDD
+     C                     Z-ADDABYDDD    P1YDDD
+     C                     Z-ADDABT1DD    P1T1DD
+     C                     Z-ADDABT2DD    P1T2DD
+      *
+      **  Credit movement.
+     C                     Z-ADDABPCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1PCMT
+     C                     Z-ADDABYCMT    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1YCMT
+     C                     Z-ADDABT1CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T1CM
+     C                     Z-ADDABT2CM    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1T2CM
+      *
+      **  Credit Weighted balance.
+     C                     Z-ADDABWPCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WPCB
+     C                     Z-ADDABWYCB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1WYCB
+     C                     Z-ADDABW1CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W1CB
+     C                     Z-ADDABW2CB    ZFLD19
+     C                     EXSR #D
+     C                     MOVE ZOUT27    P1W2CB
+      *
+      **  Days in Credit.
+     C                     Z-ADDABPDDC    P1PDDC
+     C                     Z-ADDABYDDC    P1YDDC
+     C                     Z-ADDABT1DC    P1T1DC
+     C                     Z-ADDABT2DC    P1T2DC
+      *
+      **  Check for overflow.
+     C           @LCNT     IFLT 13
+     C                     EXSR #E
+     C                     END
+      *
+     C                     SETOF                     7374
+     C                     SETON                         75
+     C                     WRITEMC0240D1
+      *
+     C           #BAF9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#C  - ZSFILE Processing/Output to Audit Report
+      *
+      * Called from:     SR/#B
+      *
+      * Calls      :     PGM/ZSFILE
+      *
+      **************************************************************
+     C           #C        BEGSR
+      *
+      ** Run processing to log printer file to RCF
+     C                     OPEN MC0240AU
+     C                     Z-ADDPFNUM1    PSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANKS   PPARM   3
+     C                     PARM           PFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+      *
+      ** Terminate program if DB error occurred in ZSFILE.
+     C           PSERR     IFEQ 'Y'                        B1
+     C                     Z-ADD006       DBASE            *1
+     C                     MOVELPFILE1    DBFILE           ************
+     C                     MOVEL'See Dump'DBKEY            * DBASE 06 *
+     C                     MOVEL'ZSFILE ' DBPGM            ************
+     C                     END                             E1
+      *
+     C                     MOVE 'Y'       PRTNC
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     WRITEMC0240A1
+      *
+     C           #C9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#D    - Format a 19,0 numeric field adding trailing +/-,
+      *           decimal point, commas every three digits and no
+      *           leading zero (unless amount is zero). Outputs a
+      *           27A field. Was based on ZFRPED.
+      *           (copied from SR/#FMAT in MC0235)
+      *
+      * Called from:     #BAA
+      *                  #BAD
+      *                  #BAF
+      *
+      * Calls      :     NONE
+      *
+      * Input fields:    ZFLD19 19,0 field to be formatted
+      *                  #FMDP   decimal places
+      *
+      * Output fields    ZOUT27 27A  formatted field
+      *
+      **************************************************************
+     C           #D        BEGSR
+      *
+      ** Define/Clear fields
+     C                     Z-ADDZFLD19    ZFLD19 190
+     C                     MOVE *BLANKS   ZOUT27 27
+      *
+      ** Set up work fields and arrays
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+      *
+      ** Z1 is the index for the number to be formatted array
+     C                     Z-ADD19        Z1      20
+      *
+      ** Z2 is the index for the output array
+     C                     Z-ADD26        Z2      20
+      *
+      ** Check if numeric field is negative and set up - sign
+     C           ZFLD19    IFLT *ZEROS                     B1
+     C                     MOVE '-'       ZS2,27           *1
+     C                     Z-SUBZFLD19    ZFLD19           *1
+     C                     ELSE                            X1
+     C                     MOVE ' '       ZS2,27           *1
+     C                     END                             E1
+      *
+     C                     Z-ADDZFLD19    ZWRK19 190
+      *
+      ** Check for zero decimal places
+     C           #FMDP     CABEQ0         #DA1             CAB
+      *
+      ** Set up decimals
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQ#FMDP                      B1
+      *
+      ** Move number into array until decimal places end, array ZS1
+      ** contains the number to be formatted, array ZS2 contains the
+      ** formatted number
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z2               *1
+     C                     ADD  1         ZCNT             *1
+     C                     SUB  1         Z1               *1
+     C                     END                             E1
+      *
+      ** Put in decimal place
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+      *
+     C           #DA1      TAG                             ** #DA1 TAG **
+      *
+      ** Set up integers
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS                     B1
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z1               *1
+     C                     SUB  1         Z2               *1
+      *
+      ** Insert a ',' before each group of three digits - not if
+      ** beginning of array reached.
+     C           Z2        IFGT *ZEROS                     B*2
+     C                     ADD  1         CNT3             **2
+     C           CNT3      IFEQ 3                          B**3
+     C                     MOVE ','       ZS2,Z2           ***3
+     C                     SUB  1         Z2               ***3
+     C                     Z-ADD*ZEROS    CNT3             ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** Put in leading blanks
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'                        B1
+     C           ZS2,Z2    OREQ ' '                        B1
+     C           ZS2,Z2    OREQ ','                        B1
+     C                     MOVE ' '       ZS2,Z2           *1
+     C                     ADD  1         Z2               *1
+     C           Z2        CABEQ27        #DA2             CAB
+     C                     END                             E1
+      *
+      ** If no integers put in leading zero
+     C           #DA2      TAG                             ** #DA2 TAG **
+      *
+     C           ZS2,Z2    IFEQ '.'                        B1
+     C           Z2        OREQ 27                         B1
+     C                     SUB  1         Z2               *1
+     C                     MOVE '0'       ZS2,Z2           *1
+     C                     END                             E1
+      *
+      ** Set up output field
+     C                     MOVEAZS2       ZOUT27
+      *
+     C           #D9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#E    - Overflow routine.
+      *
+      * Called from:     #BAD
+      *                  #BAF
+      *
+      * Calls      :     NONE
+      *
+      ***************************************************************
+      *
+     C           #E        BEGSR
+      *
+     C                     SETON                     60
+     C                     WRITEMC0240H1
+     C                     Z-ADD44        @LCNT
+     C                     SETOF                     60
+      *
+     C           #E9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#F    - Initialize fields for printing.
+      *
+      * Called from:     #BAA
+      *                  #BAF
+      *
+      * Calls      :     None
+      *
+      ***************************************************************
+      *
+     C           #F        BEGSR
+      *
+     C                     MOVE *BLANKS   P1PDMT
+     C                     MOVE *BLANKS   P1YDMT
+     C                     MOVE *BLANKS   P1T1DM
+     C                     MOVE *BLANKS   P1T2DM
+      *
+     C                     MOVE *BLANKS   P1WPDB
+     C                     MOVE *BLANKS   P1WYDB
+     C                     MOVE *BLANKS   P1W1DB
+     C                     MOVE *BLANKS   P1W2DB
+      *
+     C                     MOVE *BLANKS   P1PDDD
+     C                     MOVE *BLANKS   P1YDDD
+     C                     MOVE *BLANKS   P1T1DD
+     C                     MOVE *BLANKS   P1T2DD
+      *
+     C                     MOVE *BLANKS   P1PCMT
+     C                     MOVE *BLANKS   P1YCMT
+     C                     MOVE *BLANKS   P1T1CM
+     C                     MOVE *BLANKS   P1T2CM
+      *
+     C                     MOVE *BLANKS   P1WPCB
+     C                     MOVE *BLANKS   P1WYCB
+     C                     MOVE *BLANKS   P1W1CB
+     C                     MOVE *BLANKS   P1W2CB
+      *
+     C                     MOVE *BLANKS   P1PDDC
+     C                     MOVE *BLANKS   P1YDDC
+     C                     MOVE *BLANKS   P1T1DC
+     C                     MOVE *BLANKS   P1T2DC
+      *
+     C           #F9       ENDSR
+      ***************************************************************
+      /EJECT                                                              CMC001
+      *****************************************************************   CMC001
+      *                                                               *   CMC001
+      *  SRUPAV - Subroutine to Update Average Balance Fields         *   CMC001
+      *                                                               *   CMC001
+      *  Called By:  #B - Main Processing                             *   CMC001
+      *  Calls    :  none                                             *   CMC001
+      *                                                               *   CMC001
+      *****************************************************************   CMC001
+      *                                                                   CMC001
+     C           SRUPAV    BEGSR                           *** SRUPAV *** CMC001
+      *                                                                   CMC001
+      **  Subtract this period's Days in DR/CR from Term 1, Term 2,       CMC001
+      **  and Year-to-date days in DR/CR                                  CMC001
+      *                                                                   CMC001
+     C                     SUB  ABPDDD    ABT1DD                          CMC001
+     C                     SUB  ABPDDD    ABT2DD                          CMC001
+     C                     SUB  ABPDDD    ABYDDD                          CMC001
+      *                                                                   CMC001
+     C                     SUB  ABPDDC    ABT1DC                          CMC001
+     C                     SUB  ABPDDC    ABT2DC                          CMC001
+     C                     SUB  ABPDDC    ABYDDC                          CMC001
+      *                                                                   CMC001
+      **  Subtract this period's DR/CR Movements from Term 1, Term 2,     CMC001
+      **  and Year-to-date DR/CR Movements                                CMC001
+      *                                                                   CMC001
+     C                     SUB  ABPDMT    ABT1DM                          CMC001
+     C                     SUB  ABPDMT    ABT2DM                          CMC001
+     C                     SUB  ABPDMT    ABYDMT                          CMC001
+      *                                                                   CMC001
+     C                     SUB  ABPCMT    ABT1CM                          CMC001
+     C                     SUB  ABPCMT    ABT2CM                          CMC001
+     C                     SUB  ABPCMT    ABYCMT                          CMC001
+      *                                                                   CMC001
+      **  Subtract this period's DR/CR Weighted Balances from Term 1,     CMC001
+      **  Term 2 and Year-to-date DR/CR Weighted Balances                 CMC001
+      *                                                                   CMC001
+     C                     SUB  ABWPDB    ABW1DB                          CMC001
+     C                     SUB  ABWPDB    ABW2DB                          CMC001
+     C                     SUB  ABWPDB    ABWYDB                          CMC001
+      *                                                                   CMC001
+     C                     SUB  ABWPCB    ABW1CB                          CMC001
+     C                     SUB  ABWPCB    ABW2CB                          CMC001
+     C                     SUB  ABWPCB    ABWYCB                          CMC001
+      *                                                                   CMC001
+      **  Zeroise this period's Days in DR/CR, DR/CR Movements,           CMC001
+      **  and DR/CR Weighted Balances                                     CMC001
+      *                                                                   CMC001
+     C                     Z-ADD*ZEROS    ABPDDD                          CMC001
+     C                     Z-ADD*ZEROS    ABPDDC                          CMC001
+     C                     Z-ADD*ZEROS    ABPDMT                          CMC001
+     C                     Z-ADD*ZEROS    ABPCMT                          CMC001
+     C                     Z-ADD*ZEROS    ABWPDB                          CMC001
+     C                     Z-ADD*ZEROS    ABWPCB                          CMC001
+      *                                                                   CMC001
+      **  Calculate this Period's Weighted Balance as Days in Period      CMC001
+      **  (Period End Date - Period Start Date + 1) times the Period      CMC001
+      **  Opening Balance from LF/GLHIBLL4.                               CMC001
+      *                                                                   CMC001
+     C           HBEPDD    SUB  HBSPDD    WDYPPR  50                      CMC001
+     C                     ADD  1         WDYPPR                          CMC001
+      *                                                                   CMC001
+     C           HBPDOB    MULT WDYPPR    HBWPBL                          CMC001
+      *                                                                   CMC001
+      **  If historic balance's Period Opening Balance is POSITIVE:       CMC001
+      **    a) Set Period Days in DR to number of days in the period.     CMC001
+      **    b) Add Period Days in DR to Term 1, Term 2, and Year-to-      CMC001
+      **       date Days in DR.                                           CMC001
+      **    c) Add this period's Weighted Balance (calculated for         CMC001
+      **       Historic Balance) to Period, Term 1, Term 2, and Year-     CMC001
+      **       to-date DR Weighted Balance.                               CMC001
+      *                                                                   CMC001
+     C           HBPDOB    IFGT *ZERO                                     CMC001
+     C                     Z-ADDWDYPPR    ABPDDD                          CMC001
+      *                                                                   CMC001
+     C                     ADD  ABPDDD    ABT1DD                          CMC001
+     C                     ADD  ABPDDD    ABT2DD                          CMC001
+     C                     ADD  ABPDDD    ABYDDD                          CMC001
+      *                                                                   CMC001
+     C                     ADD  HBWPBL    ABWPDB                          CMC001
+     C                     ADD  HBWPBL    ABW1DB                          CMC001
+     C                     ADD  HBWPBL    ABW2DB                          CMC001
+     C                     ADD  HBWPBL    ABWYDB                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      **  IF NEGATIVE:                                                    CMC001
+      **    a) Set Period Days in CR to number of days in the period.     CMC001
+      **    b) Add Period Days in CR to Term 1, Term 2, and Year-to-      CMC001
+      **       date Days in CR.                                           CMC001
+      **    c) Add this period's Weighted Balance (calculated for         CMC001
+      **       Historic Balance) to Period, Term 1, Term 2, and Year-     CMC001
+      **       to-date CR Weighted Balance.                               CMC001
+      *                                                                   CMC001
+     C           HBPDOB    IFLT *ZERO                                     CMC001
+     C                     Z-ADDWDYPPR    ABPDDC                          CMC001
+      *                                                                   CMC001
+     C                     ADD  ABPDDC    ABT1DC                          CMC001
+     C                     ADD  ABPDDC    ABT2DC                          CMC001
+     C                     ADD  ABPDDC    ABYDDC                          CMC001
+      *                                                                   CMC001
+     C                     ADD  HBWPBL    ABWPCB                          CMC001
+     C                     ADD  HBWPBL    ABW1CB                          CMC001
+     C                     ADD  HBWPBL    ABW2CB                          CMC001
+     C                     ADD  HBWPBL    ABWYCB                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+     C                     ENDSR                                          CMC001
+      *                                                                   CMC001
+      *****************************************************************   CMC001
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors.
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     SETON                     U7U8  *1
+      *
+      ** Set up fields in LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'INFSR   'DBFILE           ************
+     C                     MOVEL'See Dump'DBKEY            * DBASE 07 *
+     C                     Z-ADD07        DBASE            ************
+     C                     MOVEL'MC0240'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #C                         *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     SETON                     U7U8  *1
+      *
+      ** Set up fields in LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*PSSR   'DBFILE           ************
+     C                     MOVEL'See Dump'DBKEY            * DBASE 08 *
+     C                     Z-ADD08        DBASE            ************
+     C                     MOVEL'MC0240'  DBPGM            *1
+     C                     OUT  LDA
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #C                         *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+** CPYP         OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  GE1 - Generated Entry Types                                    S01427 CMC001
+ OEICDFRXNUSMYGTHPQAJKBL                                                                      CAP204
+**  GE2 - Generated entry Type literals
+BATCH INPUT
+STANDING ORDER   O
+CUST EXCHANGE    E
+I/E POSTING      I
+CAPITALISATION   C
+DEAL             D
+FORWARD REVAL.   F
+SPOT REVAL.      R
+TRANS. F/C I/E   X
+TELLER TRANS.    N                                                        CMC001
+CUST. LENDING    U
+SEC. TRADING     S
+AMOUNT ACCRUAL   M
+TRANS. B/C I/E   Y
+FUNDS TRANSFER   G
+FUTURE/OPTION    T
+CHIPS/MIDAS      H                                                        S01427
+FIXED A/C CHG    P                                                        CMC001
+STMT CHARGES     Q                                                        CMC001
+NUMBERED A/C     A                                                        CMC001
+HOLD MAIL        J                                                        CMC001
+PROFIT CENTRE    K                                                        CMC001
+SAFE CUST FEES   B                                                        CMC001
+ACCT TRANSFER    L                                                                            CAP204
+**  XDP - Adjust rate to allow for difference in currency dp's
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,338 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer/Portfolio Deletion Checks')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1911 - Customer/Portfolio Deletion Checks                  *
+      *                                                               *
+      *  Function:  This program performs an additional deletion      *
+      *             checks against the customer fee accrual and out   *
+      *             standing settlement file.                         *
+      *                                                               *
+      *  Called By: SD0011X - Customer Deletion Pre-Checks            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLFEACL1IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Accrued File
+      *
+     FGLOTSTL2IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fee Outstanding Settlements file
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - Record found for GLFEACL1/GLOTSTL2                    *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *  SRCHKA - Check all fee for a customer                        *
+      *  SRCHKO - Check particular fee for a customer                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      ** Commitment Control Array                                                             CSC022
+     E                    WCMTAR     10 10                                                    CSC022
+      *                                                                                       CSC022
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      *                                                                                       CSC022
+     IDSPGM     ESDSY2PGDSP                                                                   CSC022
+      ** Program data structure                                                               CSC022
+      *                                                                                       CSC022
+      ** Commitment Control dataarea                                                          CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCMTJB                                    CSC022
+      *                                                                                       CSC022
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C           PFETP     CASEQ*BLANK    SRCHKA
+     C                     CAS            SRCHKO
+     C                     ENDCS
+      *
+      ** Terminate Program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PCUST   6
+     C                     PARM           PPTFR   4
+     C                     PARM           PFETP   2
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELWOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SD1911'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access SAR details file to determine if CSC022 is on.                                CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WSKIP   1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE *BLANKS                                                       CSC022
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD2         DBASE                                               CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCMTJB    WCMTAR                                              CSC022
+     C           ##JOB     LOKUPWCMTAR                   10                                   CSC022
+     C           *IN10     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WSKIP                                               CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+      ** Define Key lists.
+      *
+     C           KEYALL    KLIST
+     C                     KFLD           PCUST
+      *
+     C           KEYONE    KLIST
+     C                     KFLD           PCUST
+     C                     KFLD           PPTFR
+     C                     KFLD           PFETP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHKO
+      *****************************************************************
+      *                                                               *
+      *  SRCHKO - Check for a particular fee                          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHKO    BEGSR                           *** SRCHKA ***
+      *
+      ** Check fee if process for a customer.
+      *
+     C           KEYONE    SETLLGLFEACL1
+     C           KEYONE    READEGLFEACL1                 80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           F6ACDT    IFNE *ZERO
+     C           F6MACP    ORNE *ZERO
+     C           F6OTAJ    ORNE *ZERO
+     C                     MOVEL'*ACTIVE' PRTCD
+     C                     GOTO ENDONE
+     C                     ENDIF
+      *
+     C           KEYONE    READEGLFEACL1                 80
+     C                     ENDDO
+      *
+     C           KEYONE    SETLLGLOTSTL2
+     C           KEYONE    READEGLOTSTL2                 80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           F7ACDT    IFNE *ZERO
+     C           F7MACP    ORNE *ZERO
+     C           F7OTAJ    ORNE *ZERO
+     C                     MOVEL'*ACTIVE' PRTCD
+     C                     GOTO ENDONE
+     C                     ENDIF
+      *
+     C           KEYONE    READEGLOTSTL2                 80
+     C                     ENDDO
+      *
+     C           ENDONE    ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHKA
+      *****************************************************************
+      *                                                               *
+      *  SRCHKA - Check for all fees                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHKA    BEGSR                           *** SRCHKA ***
+      *
+      ** Check all fee if process for a customer.
+      *
+     C           KEYALL    SETLLGLFEACD0
+     C           KEYALL    READEGLFEACD0                 80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           F6ACDT    IFNE *ZERO
+     C           F6MACP    ORNE *ZERO
+     C           F6OTAJ    ORNE *ZERO
+     C                     MOVEL'*ACTIVE' PRTCD
+     C                     GOTO ENDALL
+     C                     ENDIF
+      *
+     C           KEYALL    READEGLFEACD0                 80
+     C                     ENDDO
+      *
+     C           KEYALL    SETLLGLOTSTD0
+     C           KEYALL    READEGLOTSTD0                 80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           F7ACDT    IFNE *ZERO
+     C           F7MACP    ORNE *ZERO
+     C           F7OTAJ    ORNE *ZERO
+     C                     MOVEL'*ACTIVE' PRTCD
+     C                     GOTO ENDALL
+     C                     ENDIF
+      *
+     C           KEYALL    READEGLOTSTD0                 80
+     C                     ENDDO
+      *
+     C           ENDALL    ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C                     ROLBK
+     C                     ENDIF                                                              CSC022
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,146 @@
+  STANDARD SUBROUTINE - ZINTDY
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+  Purpose:
+  ~~~~~~~~
+   To calculate the number of interest days between two dates in the
+   five-digit day number format (5,0)
+ 
+-----------------------------------------------------------------------
+¦      A m e n d e m e n t    D e t a i l s                           ¦
+-----------------------------------------------------------------------
+¦                                                                     ¦
+|       Bank Fusion Midas 1.4 Base -----------------------------------|
+|       Midas Plus 1.4 Base 04 ---------------------------------------|
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+* Midas Release 4 --------------- Base -------------------------*
+¦      Last Amend No. 040697               Date 13Jul93               ¦
+¦      PREV AMEND NO. 056095               DATE 07JUN93               ¦
+¦                                                                     ¦
+-----------------------------------------------------------------------
+¦                                                                     ¦
+¦      040697  -  Applied only a portion of this fix since some       ¦
+¦                 parts of 040697 are already included in 056095.     ¦
+¦      056095  -  Interest not calculated consistently in MM.         ¦
+¦                 Externalised SR. MM1009 as this SR. (ZINTDY).       ¦
+¦                 Then SR. ZA0710 was replaced by ZDATE9, another     ¦
+¦                 externally defined standard SR.  Seventeen MM       ¦
+¦                 programs were amended but only sixteen are          ¦
+¦                 using MM1009, the other one only uses ZA0710.       ¦
+¦                                                                     ¦
+-----------------------------------------------------------------------
+ 
+  Notes for when inclusing in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC ZINTDYZ1 should be included in the 'I' specifications
+   /COPY ZSRSRC ZINTDYZ2 should be included in the subroutine section
+ 
+   ZINTDY calls the following routine which also needs:
+   ----------------------------------------------------
+ 
+   ZDATE9 - Convert Midas Day Number to YYYYMMDD
+            input @@DAYN; output @@VDT
+            /COPY ZSRSRC ZDATE9Z1 included in the 'E' specifications
+            /COPY ZSRSRC ZDATE9Z2 included in the 'I' specifications
+            /COPY ZSRSRC ZDATE9Z3 included in the subroutine section
+            ZDATE9Z4 in the compile time array data section.
+ 
+   NOTE:    Sequence of array details & data needs to be consistent.
+ 
+ 
+  Calling Programs
+  ~~~~~~~~~~~~~~~~
+       ZINTDY is being called by the following MM Programs:
+ 
+       MM0026         MM0027         MM0073         MM0075
+       MM0078         MM0080         MM0081         MM0082
+       MM0087         MM0089         MM0094         MM0101
+       MM0102         MM0173         MM0175         MM0194
+ 
+ 
+  Input
+  ~~~~~
+     ZZBEG  (5 0) - contains the start date of period
+     ZZEND  (5 0) - contains the end date of period
+     ZZCALC (1  ) - contains the interest calculation method
+ 
+ 
+  Procedure
+  ~~~~~~~~~
+ 
+   1)  Determine the difference between ZZBEG and ZZEND (ZZWDAT)
+ 
+   2)  Convert midas day number to YYYYMMDD date format if ZZCALC
+       is either 3, 4, or 5 otherwise ZZWDAT becomes the number of
+       interest days (ZZINDY)
+ 
+   3)  Compute ZZINDY for ZZCALC = 3, using only 360 days in a year
+ 
+           Do this part only if start month (ZZMM1) is FEB (2),           040697
+           otherwise proceed to a.                                        040697
+              Determine whether start year (ZZYY1) is leap year.          040697
+              Save start date (ZZDD1) to temporary field ZZSTO1.          040697
+              Then if ZZDD1 is the last day of the month (FEB)            040697
+              Z-ADD 30 unto it.                                           040697
+                                                                          040697
+       a.  Deduct start days (ZZDD1) from 30 to get the nbr of
+           days for the first month, if less than 0 reset it to
+           zero
+ 
+           If start month is February move back the saved value           040697
+           in ZZSTO1 unto ZZDD1.                                          040697
+                                                                          040697
+       b.  The end days (ZZDD2) is used as the nbr of days for
+           last month if it is less than or equal to 30, otherwise
+           nbr of days for the last month is reset to 30
+ 
+           Do this part only if end month (ZZMM2) is FEB (2),             040697
+           otherwise proceed to c.                                        040697
+              Determine whether end year (ZZYY2) is leap year.            040697
+              Initialise ZZP2 with number of days from last month.        040697
+              Then if ZZDD2 is the last day of the month (FEB)            040697
+              Z-ADD 30 unto ZZP2 (nbr of days for the last month).        040697
+                                                                          040697
+      c1.  If start year (ZZYY1) is equal to end year (ZZYY2) then
+           obtain the nbr of months BETWEEN the start month (ZZMM1)
+           and end month (ZZMM2) and multiply that nbr by 30 to
+           obtain the nbr of days in the intervening COMPLETE months
+ 
+      c2.  If start year (ZZYY1) is NOT equal to end year (ZZYY2)
+           obtain the nbr of years BETWEEN ZZYY1 and ZZYY2 then
+           multiply that figure by 360 to obtain nbr of days in
+           the intervening COMPLETE years.  Deduct ZZMM1 from 12
+           then multiply it by 30 to get the nbr of days consumed
+           in the start year.  Deduct 1 from ZZMM2 then multiply
+           it by 30 to get the nbr of days consumed in the end
+           year.  Add up the three values to obtain the nbr of
+           days in the intervening months
+ 
+       d.  Accumulate all the values computed from a to c to
+           obtain ZZINDY
+ 
+   4)  Compute ZZINDY for ZZCALC = 4 or ZZCALC = 5, using 365 days
+       a year even if there is a leap year
+ 
+       a.  Determine whether start year is affected by leap year
+           if so add 1 to leap year counter (ZZLPNM)
+ 
+       b.  Increment ZZYY1 by 1
+ 
+      c1.  If ZZYY1 is equal to ZZYY2 check whether ZZYY2 is
+           affected by a leap year, if so add 1 to ZZLPNM
+ 
+      c2.  If ZZYY1 is NOT equal to ZZYY2 check whether ZZYY1
+           is a leap year, if so add 1 to ZZLPNM
+ 
+       d.  Repeat b and c while ZZYY1 is less than ZZYY2
+ 
+       e.  Deduct ZZLPNM from ZZWDAT to obtain ZZINDY
+ 
+ 
+  Output
+  ~~~~~~
+ 
+     ZZINDY (5 0) - contains the number of interest days
+ 

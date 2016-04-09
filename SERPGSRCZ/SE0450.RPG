@@ -1,0 +1,908 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Telex Instructions To Cedel')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0450 - TELEX INSTRUCTIONS FOR CEDEL                        *
+     F*                                                               *
+     F*  Function:  This program produces pre-formatted telex         *
+     F*  (COB & IC) instructions for Cedel.                           *
+     F*                                                               *
+     F*  Called By: SEC0603 - COB Pay/Receive Telexes                 *
+     F*             SEC3305 - I/C Pay/Receive Telexes                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+      *                 E38340             Date 24May92               *
+     F*                 E38663             DATE 24APR92               *
+     F*                 E30847             DATE 20NOV91               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 07MAY91               *
+     F*                 S01271             DATE 06JUN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E38340 - Cedel Cusip Number should be 9 digits, not 6, so    *
+     F*           has been changed on Extract Files. Program changed  *
+     F*           to print longer field.                              *
+     F*  E38663  -  'CHECKED' not being printed on last page          *
+     F*  E30847  -  AU report was putting 'No Details' on second page *
+     F*  E29170  -  RCF CHANGES                                       *
+     F*  S01117  -  Multibranching                                    *
+     F*  S01271  -  Pay/Receive in Input Cycle                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FCEDTX   IP  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F***SE0450P1O***F     132     OF     PRINTER                         E29170
+     FSE0450P1O   F     132     OF     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE0450AUO   F     132            PRINTER                            E29170
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01        READ CEDTX31                                      *
+     F*   02        READ CEDTX41                                      *
+     F*   03        READ CEDTX51                                      *
+     F*   04        READ CEDTX61                                      *
+     F*   05        READ CEDTX81                                      *
+     F*   06        READ CEDTXAC                                      *
+     F*                                                               *
+     F*   10        CEDTX DETAILS HAVE BEEN READ                      *
+     F*                                                               *
+     F*   11        READ CEDTX32                                      *
+     F*   12        READ CEDTX42                                      *
+     F*   13        READ CEDTX52                                      *
+     F*   14        READ CEDTX62                                      *
+     F*   15        READ CEDTX82                                      *
+     F*                                                               *
+     F*   16        CEDTXAC HAS BEEN READ                             *
+     F*                                                               *
+     F*   20        FIRST CYCLE INDICATOR                             *
+     F*   21        TRANSACTION IS FUNGIBLE                           *
+     F*   22        TRANSACTION IS FUNGIBLE FOR TYPE 32               *
+     F*                                                               *
+     F*   31        OUTPUT BALANCE                                    *
+     F*   33        OUTPUT MESSAGE CODES FOR TYPES 62 & 82            *
+     F*                                                               *
+     F*   36        DETAIL PRINTER FILE OPEN                          *   E29170
+     F*                                                               *   E29170
+     F*   40        FIRST RECORD OF INSTRUCTION READ                  *
+     F*   41        'SECOND' CYCLE INDICATOR                          *
+     F*   42        TRADE REFERENCE AND INSTRUCTION TYPE SAME AS      *
+     F*             PREVIOUS RECORD                                   *
+     F*   43        RECORD IS A CANCELLATION                          *
+     F*                                                               *
+      *   51        When = 0, Input Cycle run; when = 1, COB run      *   S01271
+      *                                                               *   S01271
+     F*   89        CEDTX FILES CONTROLS OUT OF BALANCE               *
+     F*                                                               *
+     F*   U7 & U8   DATABASE ERROR                                    *
+     F*   U8        FILE CONTROLS OUT OF BALANCE                      *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     I/EJECT
+      *
+     ICEDTX31F    01
+      *   INSTRUCTIONS TO CEDEL - TYPE 31
+      *
+     I                                              BRCA  L1              E29170
+      *                                                                   E29170
+     ICEDTX32F    11
+      *   INSTRUCTIONS TO CEDEL - TYPE 32
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ICEDTX41F    02
+      *   INSTRUCTIONS TO CEDEL - TYPE 41
+      *
+     I                                              BRCA  L1              E29170
+      *                                                                   E29170
+     ICEDTX42F    12
+      *   INSTRUCTIONS TO CEDEL - TYPE 42
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ICEDTX51F    03
+      *   INSTRUCTIONS TO CEDEL - TYPE 51
+      *
+     I                                              BRCA  L1              E29170
+      *                                                                   E29170
+     ICEDTX52F    13
+      *   INSTRUCTIONS TO CEDEL - TYPE 52
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ICEDTX61F    04
+      *   INSTRUCTIONS TO CEDEL - TYPE 61
+      *
+     I                                              BRCA  L1              E29170
+      *                                                                   E29170
+     ICEDTX62F    14
+      *   INSTRUCTIONS TO CEDEL - TYPE 62
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ICEDTX81F    05
+      *   INSTRUCTIONS TO CEDEL - TYPE 81
+      *
+     I                                              BRCA  L1              E29170
+      *                                                                   E29170
+     ICEDTX82F    15
+      *   INSTRUCTIONS TO CEDEL - TYPE 82
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ICEDTXACF    06
+      *   INSTRUCTIONS TO CEDEL - TRAILER
+      *
+     I                                              BRCA  L1              E29170
+      *
+     ITABTB10F
+      *   INSTALLATION CONTROL DATA RECORD 1
+      *
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR SPOOL FILE NAME                                          E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*                                                                   E29170
+     ISDBRCH    E DSSDBRCHPD                                              E29170
+     I*                                                                   E29170
+     I** BRANCH DETAILS                                                   E29170
+     I*                                                                   E29170
+     IDSFDY     E DSDSFDY                                                 E29170
+     I*                                                                   E29170
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               E29170
+     I*                                                                   E29170
+     IRUNDT       DS                                                      E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+      *
+     I*LDA********UDS                            256                      S01117
+      *
+      *   LOCAL DATA AREA
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*   TIME DATA STRUCTURE                                             S01271
+     I*                                                                   S01271
+     I            DS                                                      S01271
+     I                                        1   60CTIME                 S01271
+     I                                        1   2 CHOUR                 S01271
+     I                                        3   4 CMINT                 S01271
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*    F I R S T   C Y C L E   P R O C E S S I N G
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN20
+     C                     Z-ADD0         CYCLE2  10
+      *
+      **  ACCESS INSTALLATION CONTROL DATA RECORD 1
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0450  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR ZSYSTM                     *** ZSYSTM  ***
+      *
+      **  *IN99 ON - ICDR1 NOT FOUND
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'TABLE'   DBFILE           *  DB ERROR   *
+     C                     MOVELZTABKY    DBKEY            *     01      *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO END
+     C                     END
+     C*                                                                   S01271
+     C*    INPUT CYCLE / CLOSE OF BUSINESS PARAMETER                      S01271
+     C*                                                                   S01271
+     C           *ENTRY    PLIST                                          S01271
+     C                     PARM           PRPHAS  1                       S01271
+     C                     PARM           SEQ     5                       S01117
+     C           PRPHAS    IFEQ 'I'                                       S01271
+     C                     SETOF                     51                   S01271
+     C                     TIME           CTIME                           S01271
+     C                     MOVE ':  '     ATIME   5                       S01271
+     C                     MOVE CMINT     ATIME                           S01271
+     C                     MOVELCHOUR     ATIME                           S01271
+     C                     ELSE                                           S01271
+     C                     SETON                     51                   S01271
+     C                     END                                            S01271
+     C                     END
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     44                   E29170
+     C                     END                                            E29170
+      *
+      ********************************************************************
+      *
+      *   D E T A I L   T I M E   P R O C E S S I N G
+      *
+      ********************************************************************
+      *
+     C                     MOVEA'00'      *IN,21
+     C                     MOVEA'000'     *IN,31
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN42
+      *
+      **  KEEP TOTAL OF CEDTX RECORDS READ
+      *
+     C                     ADD  1         NORR    50
+      *
+      **  PROCESS DETAIL RECORDS ONLY
+      **  SETON 16 IF TRAILER HAS BEEN READ
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVE '1'       *IN16
+      *
+     C                     ELSE
+      *
+     C           *IN41     IFEQ '0'
+     C           CYCLE2    ADD  1         CYCLE2
+     C           CYCLE2    COMP 2                        41
+     C                     END
+      /EJECT
+      *
+      **  DETERMINE FUNGIBILTY OF TRANSACTION
+      **  21 ON TRANSACTION IS FUNGIBLE
+      *
+     C           FUCD      COMP 0                        21
+      *
+      ***  CEDL changed to be 9 long. Following line removed altogether   E38340
+      ***  though, as it is pointless.                                    E38340
+      *                                                                   E38340
+     C***********          Z-ADDCEDL      CEDL6   60                      E38340
+      *
+      **  DETERMINE CEDEL INSTRUCTION TYPE FOR PROCESSING
+      *
+     C           *IN01     IFEQ '1'
+     C           *IN02     OREQ '1'
+     C           *IN03     OREQ '1'
+     C           *IN04     OREQ '1'
+     C           *IN05     OREQ '1'
+      *
+     C                     MOVE '1'       *IN40
+      *
+      **  CHECK IF CEDEL TRANSACTION NUMBER AND INSTRUCTION TYPE
+      **  ARE SAME AS PREVIOUS RECORD
+      *
+     C         01          Z-ADD31        INST    20
+     C         02          Z-ADD41        INST
+     C         03          Z-ADD51        INST
+     C         04          Z-ADD61        INST
+     C         05          Z-ADD81        INST
+      *
+      **  IF PREVIOUS RECORD WAS NOT A CANCELLATION SETOF 42
+      *
+     C           INST      IFEQ INSTP
+     C           CTNO      ANDEQCTNOP                      NO CHANGE
+     C           *IN43     ANDEQ'1'
+     C                     MOVE '1'       *IN42
+     C                     END
+      *
+     C                     Z-ADDINST      INSTP   20
+     C                     Z-ADDCTNO      CTNOP   70
+      *
+      **  CHECK IF THIS RECORD IS A CANCELLATION
+      *
+     C                     MOVE '0'       *IN43
+      *
+     C           ACTC      IFEQ 'C'
+     C                     MOVE '1'       *IN43
+     C                     END
+      *
+     C                     END
+      /EJECT
+      *
+      **  OUTPUT BALANCE FOR INSTRUCTION TYPES 41,51 & 61
+      *
+     C           *IN02     IFEQ '1'
+     C           *IN03     OREQ '1'
+     C           *IN04     OREQ '1'
+     C                     MOVE '1'       *IN31
+     C                     END
+      *
+      **  - PROCESS INSTRUCTION TYPE 31
+      *
+     C           *IN01     IFEQ '1'
+      *
+      **  DETERMINE FUNGIBILTY OF TRANSACTION FOR ISSUER & BENEFICIARY
+      **  21 ON ISSUER IS FUNGIBLE, 22 ON BENEFICIARY IS FUNGIBLE
+      *
+     C           FUCD      IFEQ 0
+     C           FUCD      OREQ 3
+     C                     MOVE '1'       *IN21
+     C                     END
+      *
+     C           FUCD      IFEQ 0
+     C           FUCD      OREQ 2
+     C                     MOVE '1'       *IN22
+     C                     END
+     C                     END
+      *
+      **  - INSTRUCTION TYPES 62 & 82
+      **    CHECK FOR NON-BLANK WORDING - ONLY WRITE LINE 17 IF 33 ON
+      *
+     C           *IN14     IFEQ '1'
+     C           *IN15     OREQ '1'
+     C           CWRD      IFNE ' '
+     C                     MOVE '1'       *IN33
+     C                     END
+     C                     END
+      *
+      **  - INSTRUCTION TYPE 81
+      **    OUTPUT  OTHER CEDEL #,  AMT/CCY, IF NON ZERO (LINE 12/14)
+      *
+     C           *IN05     IFEQ '1'
+     C           CDAM      ANDNE0
+     C                     MOVE '1'       *IN31
+     C                     END
+      *
+      **  SETON 10 IF DETAIL RECORDS HAVE BEEN READ
+      *
+     C                     MOVE '1'       *IN10
+     C*                                                                   E29170
+     C** If there are details to report and a new branch then open        E29170
+     C** detail printer file for it and do RCF processing                 E29170
+     C*                                                                   E29170
+     C           *INL1     IFEQ '1'                                       E29170
+     C                     SETON                     36                   E29170
+     C                     CLOSESE0450P1                                  E29170
+     C                     OPEN SE0450P1                                  E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     Z-ADD0         PAGE                            E29170
+     C*                                                                   E29170
+     C** FIND OUT BRANCH NAME IF MULTIBRANCHING ON                        E29170
+     C*                                                                   E29170
+     C           *IN44     IFEQ '1'                                       E29170
+     C**********           CALL 'AOBRCHR0'                                E29170              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       E29170
+     C                     PARM '*KEY   ' @OPTN   7                       E29170
+     C                     PARM BRCA      BRKEY   3                       E29170
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           E29170              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   E29170
+     C           @RTCD     IFNE *BLANKS                                   E29170
+     C           *LOCK     IN   LDA                                       E29170
+     C                     Z-ADD4         DBASE                           E29170
+     C                     MOVEL'SDBRCHPD'DBFILE                          E29170
+     C                     MOVELBRCA      DBKEY                           E29170
+     C                     OUT  LDA                                       E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C                     END
+      /EJECT
+      *
+     C           END       TAG                             **  END TAG  **
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      *
+      **  DO LR TOTAL TIME PROCESSING IF NO DATABASE ERRORS
+      *
+     C*
+     CLRNU7NU8             EXSR LRTIME                     *** LRTIME  ***
+      *
+      ********************************************************************
+      /SPACE 3
+      ********************************************************************
+      *
+      *   LRTIME  - SR. LR TOTAL TIME PROCESSING
+      *
+      *   CALLED BY: MAIN PROCESSING
+      *   CALLS:     ICDRSR
+      *
+      ********************************************************************
+      *
+     C           LRTIME    BEGSR                           *** LRTIME  ***
+      *
+      **  IF FIRST CYCLE PROCESSING HAS NOT TAKEN PLACE - DB ERROR
+      *
+     C           *IN20     IFEQ '0'
+      *
+      **  ACCESS ICDR FROM ICDRSR
+      *
+     C                     EXSR ZSYSTM                     *** ZSYSTM  ***
+      *
+      **  *IN99 ON - ICDR1 NOT FOUND
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C                     MOVE 'TABLE'   DBFILE           *  DB ERROR   *
+     C                     MOVELZTABKY    DBKEY            *      02     *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     ELSE
+      *
+      **  CHECK THAT CEDTX TRAILER HAS BEEN READ (16 ON)
+      *
+     C           *IN16     IFEQ '0'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CEDTX'   DBFILE
+     C                     MOVEL'MISSING' ERR15  15        ***************
+     C                     MOVE 'TRAILER' ERR15            *  DB ERROR   *
+     C                     MOVELERR15     DBKEY            *     03      *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C                     END
+      *
+      **  CHECK CEDTX FILE CONTROLS - U8 ON = FILES OUT OF BALANCE
+      *
+     C           *INU7     IFEQ '0'
+     C           NORE      ANDNENORR
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+      *****************************************************************
+      *
+      *    DETAIL REPORT - SE0450
+      *
+     O***SE0450P1D**1     40 41                                           E29170
+     OSE0450P1D  1     40 41NL1                                           E29170
+     O                                  107 'CHECKED-'
+     O********D**1     40 41                                              E29170
+     O        D  1     40 41NL1                                           E29170
+     O                                  110 'AUTHORISED-'
+     O********D**1     40 41                                              E29170
+     O        D  1     40 41NL1                                           E29170
+     O                                  111 'TEST NUMBER-'
+      *
+     O        D  203   40N42NU8
+     O                                   15 'REFERENCE'
+     O*************************          23 'SE0450A'                     E29170
+     O                                   24 'SE0450P1'                    E29170
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+      *
+     O        D  1     40N42NU8
+     O       AND       44
+     O                                   89 'BRANCH'                      E29170
+     O                         BRCA      93                               E29170
+     O                         A8BRNM   125                               E29170
+     O        D  1     40N42NU8
+     O*********                          60 'TELEX INSTRUCTIONS'          S01271
+     O*********                          69 'TO CEDEL'                    S01271
+     O                                   40 'TELEX INSTRUCTIONS'          S01271
+     O                                   49 'TO CEDEL'                    S01271
+     O                N51                70 '- INPUT CYCLE - TIME'        S01271
+     O                N51      ATIME     77                               S01271
+     O                 51                69 '- CLOSE OF BUSINESS'         S01271
+     O        D  2     40N42NU8
+     O***********                        60 '------------------'          S01271
+     O***********                        69 '---------'                   S01271
+     O                                   40 '------------------'          S01271
+     O                                   49 '---------'                   S01271
+     O                N51                70 '---------------------'       S01271
+     O                N51                77 '--------'                    S01271
+     O                 51                69 '--------------------'        S01271
+     O        D  2     40NU8
+     O                    43             48 'CANCEL'
+     O                    42             54 'REPLACE WITH'
+      *
+      *    TRANSACTION CODE
+     O        D  2     40NU8
+     O                                   41 'A.'
+     O                         CTCD      44
+      *
+      *    TRANSACTION NUMBER
+     O        D  2     40NU8
+     O                                   41 'B.'
+     O                         CTNO      49
+      *
+      *    FUNGIBILITY (OF ISSUER FOR TYPE 31 INSTRUCTIONS)
+     O        D  2     40NU8
+     O                                   41 'C.'
+     O                 21                50 'FUNGIBLE'
+     O                N21                54 'NON-FUNGIBLE'
+      *
+      *    FUNGIBILITY OF BENEFICIARY FOR TYPE 31 INSTRUCTIONS
+     O        D  2     01NU8
+     O                                   41 'D.'
+     O                 22                50 'FUNGIBLE'
+     O                N22                54 'NON-FUNGIBLE'
+      *
+      *    CEDEL NO. AND REPORT NAME
+      *
+      *
+      *    - FOR SELLER: TYPES 31,51,81
+     O        D  2     01NU8
+     O       OR        03NU8
+     O       OR        05NU8
+     O                                   41 'E.'
+     O                         CANS      47
+     O                         CRNS      68
+      *
+      *    - FOR BUYER: TYPES 41,61
+     O        D  2     02NU8
+     O       OR        04NU8
+     O                                   41 'E.'
+     O                         CANB      47
+     O                         CRNB      68
+      *
+      *   OTHER CEDEL NO. AND REPORT NAME
+      *
+      *    - FOR BUYER: TYPES 31,51
+     O        D  2     01NU8
+     O       OR        03NU8
+     O                                   41 'F.'
+     O                         CANB      47
+     O                         CRNB      68
+      *
+      *    - FOR SELLER: TYPES 41,61
+     O        D  2     02NU8
+     O       OR        04NU8
+     O                                   41 'F.'
+     O                         CANS      47
+     O                         CRNS      68
+      *
+      *   SETTLEMENT DATE
+     O        D  2     40NU8
+     O                                   41 'G.'
+     O                         CSDT      50 '  /  /  '
+      *
+      *   AMOUNT, CURRENCY CODE, CURRENCY NO. & CURRENCY.
+      *    NOT OUTPUT FOR TYPE 31
+     O        D  2     40 31NU8
+     O                                   41 'H.'
+     O                         CDAM      59 '  ,   ,   , 0 .  '
+     O                         CUCD      63
+     O                         CURN      67
+     O                         CCCD      72
+      *
+      *   SECURITY CODE AND SECURITY REPORT NAME
+     O        D  2     40NU8
+     O                                   41 'I.'
+     O***********              CEDL6     48                               E38340
+     O***********              CSRN      92                               E38340
+     O                         CEDL      51                               E38340
+     O                         CSRN      95                               E38340
+      *
+      *    QUANTITY
+     O        D  2     40NU8
+     O                                   41 'J.'
+     O                         NOMI  1   56
+      *
+      *    WORDING FOR TYPES 32,42 & 52
+     O        D  2     11NU8
+     O       OR        12NU8
+     O       OR        13NU8
+     O                                   41 'O.'
+     O                         CWRD      81
+      *
+      *    OR MESSAGE CODE AND WORDING FOR TYPES 62 & 82
+      *    - OUTPUT FOR NON-BLANK WORDING
+     O        D  2     33NU8
+     O                         CMSG      40
+     O                                   41 '.'
+     O                         CWRD      81
+      *
+     O********T**1     LR 10                                              E29170
+     O********T**1     L1 10N16                                     E29170E38663
+     O        T  1     L1 10                                              E38663
+     O                                  107 'CHECKED-'
+     O********T**1     LR 10                                              E29170
+     O********T**1     L1 10N16                                     E29170E38663
+     O        T  1     L1 10                                              E38663
+     O                                  110 'AUTHORISED-'
+     O********T**1     LR 10                                              E29170
+     O********T**1     L1 10N16                                     E29170E38663
+     O        T  1     L1 10                                              E38663
+     O                                  111 'TEST NUMBER-'
+     O********T***53   LR 10N42                                           E29170
+     O*************************          68 '** END OF REPORT **'         E29170
+     O        T   60   L1 10N42                                           E29170
+     O*******AND**    N16                                           E29170E38663
+     O                N44                68 '** END OF REPORT **'         E29170
+     O                 44                69 '** END OF REPORT FOR'        E29170
+     O                 44                79 'BRANCH **'                   E29170
+     O********T***60   LR 10 42                                           E29170
+     O*************************          68 '** END OF REPORT **'         E29170
+     O        T   60   L1 10 42                                           E29170
+     O*******AND**    N16                                           E29170E38663
+     O                N44                68 '** END OF REPORT **'         E29170
+     O                 44                69 '** END OF REPORT FOR'        E29170
+     O                 44                79 'BRANCH **'                   E29170
+      *************************                                           E29170
+      *****OUTPUT*IF*NO*DETAILS*TO*REPORT*********************************E29170
+      *************************                                           E29170
+     O********T**203   LRN10NU7                                           E29170
+     O*************************          15 'REFERENCE'                   E29170
+     O*************************          23 'SE0450A'                     E29170
+     O*************************TITL      89                               E29170
+     O*************************         104 'DATE'                        E29170
+     O*************************RUNA     112                               E29170
+     O*************************         122 'PAGE'                        E29170
+     O*************************PAGE     127                               E29170
+      *************************                                           E29170
+     O********T***05   LRN10NU7                                           E29170
+     O**************                     57 'TELEX INSTRUCTIONS'          S01271
+     O**************                     66 'TO CEDEL'                    S01271
+     O*************************          40 'TELEX INSTRUCTIONS'    S01271E29170
+     O*************************          49 'TO CEDEL'              S01271E29170
+     O****************N51                70 '- INPUT CYCLE - TIME'  S01271E29170
+     O****************N51      ATIME     77                         S01271E29170
+     O**************** 51                69 '- CLOSE OF BUSINESS'   S01271E29170
+     O********T***06   LRN10NU7                                           E29170
+     O**************                     57 '------------------'          S01271
+     O**************                     66 '---------'                   S01271
+     O*************************          40 '------------------'    S01271E29170
+     O*************************          49 '---------'             S01271E29170
+     O****************N51                70 '---------------------' S01271E29170
+     O****************N51                77 '--------'              S01271E29170
+     O**************** 51                69 '--------------------'  S01271E29170
+      *************************                                           E29170
+     O********T***15   LRN10NU7                                           E29170
+     O*************************          69 '** NO DETAILS TO REPORT'     E29170
+     O*************************          73 '**'                          E29170
+      *************************                                           E29170
+     O********T***53   LRN10NU7                                           E29170
+     O*************************          68 '** END OF REPORT **'         E29170
+      *************************                                           E29170
+      *
+      *    FILE CONTROLS REPORT
+      *
+     O********T**203   LR                                                 E29170
+     OSE0450AUT  203   LR                                                 E29170
+     O                                   15 'REFERENCE'
+     O*************************          23 'SE0450B'                     E29170
+     O                                   24 'SE0450AU'                    E29170
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1    127
+      *
+     O        T  1     LR
+     O***********                        57 'TELEX INSTRUCTIONS'          S01271
+     O***********                        66 'TO CEDEL'                    S01271
+     O***********                        88 '- FILE CONTROL REPORT'       S01271
+     O                                   35 'TELEX INSTRUCTIONS'          S01271
+     O                                   44 'TO CEDEL'                    S01271
+     O                                   66 '- FILE CONTROL REPORT'       S01271
+     O                N51                87 '- INPUT CYCLE - TIME'        S01271
+     O                N51      ATIME     94                               S01271
+     O                 51                86 '- CLOSE OF BUSINESS'         S01271
+     O        T  1     LR
+     O***********                        57 '------------------'          S01271
+     O***********                        66 '---------'                   S01271
+     O***********                        88 '----------------------'      S01271
+     O                                   35 '------------------'          S01271
+     O                                   44 '---------'                   S01271
+     O                                   66 '----------------------'      S01271
+     O                N51                87 '---------------------'       S01271
+     O                N51                94 '--------'                    S01271
+     O                 51                86 '--------------------'        S01271
+      *
+     O        T  213   LR
+     O                                   45 '-------- RECORDS'
+     O                                   54 '--------'
+     O        T  2     LR
+     O                                   41 'FILE CONTROL'
+     O                                   53 'CALCULATED'
+      *
+     O        T  2     LR
+     O                                   14 'S/CEDTX'
+     O                         NORE  3   41
+     O                         NORR  3   53
+     O                 U8                60 '***'
+      *
+     O********T** 15   LRN10NU7                                     E29170E30847
+     O        T 2      LRN10NU7                                           E30847
+     O                                   69 '** NO DETAILS TO REPORT'     E29170
+     O                                   73 '**'                          E29170
+      *                                                                   E29170
+     O        T   43   LR U7 U8
+     O                                   56 'DATA BASE ERROR AT'
+     O***********              DBASE     59                               S01117
+     O***********                        64 ', KEY'                       S01117
+     O***********              DBKEY     94                               S01117
+     O                         DBASE     60                               S01117
+     O                                   65 ', KEY'                       S01117
+     O                         DBKEY     95                               S01117
+     O        T   45   LR U7 U8
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+      *
+     O        T   47   LRNU7 U8
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 'BALANCE ***'
+     O********T***53   LR                                                 E29170
+     O*************************          68 '** END OF REPORT **'         E29170
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

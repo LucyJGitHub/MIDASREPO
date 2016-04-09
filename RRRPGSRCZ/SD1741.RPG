@@ -1,0 +1,337 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Setup Recovery Areas for FF market')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Restart Recovery Module
+     F*                                                                  *
+     F*     SD1741 - SET-UP RECOVERY AREAS FOR AN FF MARKET              *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMENDMENT NO. S01194        DATE 21FEB90                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CHANGE DESCRIPTIONS                                          *
+     F*                                                                  *
+     F*     S01194  -  NEW STANDING DATA                                 *S01194
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*     OVRDBF   None                                                *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FJRNEXS  IF  E           K        DISK
+     FRCVRY   O   E                    DISK
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*      10        END OF FILE ON LF/JRNEXS
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     I*
+     ILDA         DS                            256
+     I*
+     I**************                        134 138 DBFILE                S01194
+     I**************                        139 167 DBKEY                 S01194
+     I**************                        168 175 DBPGM                 S01194
+     I**************                        176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     I**   DATA STRUCTURE FOR FIELD DEFINITION FOR ENTRY TYPE 'EE'
+     I*
+     I            DS
+     I                                        1  50 INFO
+     I                                        1  100SQNRTP
+     I                                       11  12 JMARKT
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C**
+     C**   NOTE: FOR THE MARKET CENTRE RECEIVED, A SERIES OF 'FROM' AND
+     C**   'TO' POINTS ARE SET UP AS RECORDS ON PF/RCVRY AS AREAS
+     C**   BETWEEN WHICH JOURNALLED CHANGES SHOULD BE APPLIED FOR THAT
+     C**   MARKET.  ( BETWEEN THE 'GLOBAL FROM POINT' - I.E. DATABASE
+     C**   SAVE - AND 'GLOBAL TO POINT' - I.E. RECEIVER SAVE OR CURRENT
+     C**   STATUS.
+     C**
+     C**   THE JOURNAL IS READ THROUGH IN REVERSE ORDER, BUT THE 'FROM'
+     C**   POINTS ARE CONSIDERED TO BE THE POINT FROM WHICH CHANGES
+     C**   WILL BE APPLIED WHEN READING FORWARDS (TO THE 'TO' POINT)
+     C**
+     C/SPACE 5
+     C*
+     C**   RECEIVE PARAMETERS FROM CALLING PROGRAM
+     C**                  - MARKET CENTRE
+     C**                  - 'GLOBAL FROM POINT'
+     C**                  - 'GLOBAL TO POINT'
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+     C                     PARM           GLOFR
+     C                     PARM           GLOTO
+     C**
+     C           *LIKE     DEFN JOSEQN    GLOFR
+     C           *LIKE     DEFN JOSEQN    GLOTO
+     C           *LIKE     DEFN JMARKT    PMRKT
+     C/SPACE 5
+     C*
+     C**   DEFINE THE MARKET MEMBER RECEIVED AS A PARAMETER  ( 2A )
+     C**   - AS A 10A FIELD ( MARKET CODE FOLLOWED BY 8 BLANKS )
+     C**   FOR COMPARISON TO THE 'SR'/'RC' JOURNAL ENTRY MEMBER
+     C*
+     C           *LIKE     DEFN JOMBR     PMBR
+     C                     MOVELPMRKT     PMBR
+     C/SPACE 5
+     C*
+     C**   RESET LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'SD1741'  DBPGM
+     C                     OUT  LDA
+     C*
+     C/SPACE 5
+     C*
+     C**   SET THE FIRST 'TO POINT' EQUAL TO THE 'GLOBAL TO POINT'
+     C**   RECEIVED AS A PARAMETER MINUS 1
+     C*
+     C           GLOTO     SUB  1         TOPNT
+     C*
+     C**   STARTING FROM THE FIRST 'TO POINT', READ THROUGH THE
+     C**   JOURNAL IN DESCENDING SEQUENCE & CHECK EACH ENTRY TYPE
+     C**   UNTIL THE 'GLOBAL FROM POINT' IS REACHED
+     C*
+     C           TOPNT     SETLLJRNEXS
+     C                     READ JRNEXS                   10
+     C*
+     C**   DATABASE ERROR IF END OF FILE IS REACHED BEFORE THE
+     C**   GLOBAL FROM POINT
+     C*
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            ** DBERR  01 **
+     C                     MOVEL'JRNEX'   DBFILE
+     C                     MOVELTOPNT     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           JOSEQN    DOWGTGLOFR
+     C*
+     C           JOENTT    CASEQ'EE'      REC1
+     C           JOENTT    CASEQ'ER'      REC2
+     C           JOENTT    CASEQ'EJ'      REC3
+     C           JOENTT    CASEQ'MR'      REC3
+     C           JOENTT    CASEQ'SA'      REC3
+     C           JOENTT    CASEQ'AY'      REC3
+     C           JOENTT    CASEQ'SR'      REC4
+     C           JOENTT    CASEQ'RC'      REC4
+     C                     END
+     C*
+     C                     READ JRNEXS                   10
+     C*
+     C**   DATABASE ERROR IF END OF FILE IS REACHED BEFORE THE
+     C**   GLOBAL FROM POINT
+     C*
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            ** DBERR  02 **
+     C                     MOVEL'JRNEX'   DBFILE
+     C                     MOVELJOSEQN    DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C**
+     C                     END
+     C**
+     C*
+     C**   'RECOVER FROM' POINT REACHED. OUTPUT RECORD TO RCVRY
+     C*
+     C           GLOFR     ADD  1         FRPNT
+     C*
+     C           FRPNT     IFLE TOPNT
+     C                     EXCPT
+     C                     END
+     C**
+     C                     SETON                     LR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   REC1 SUB-ROUTINE : FOR ENTRY TYPE 'EE'
+     C**
+     C********************************************************************
+     C**
+     C           REC1      BEGSR
+     C*
+     C**   THIS ENTRY CAN BE IGNORED IF IT DOES NOT RELATE TO THE
+     C**   MARKET CURRENTLY BEING PROCESSED
+     C*
+     C           PMRKT     IFEQ JMARKT
+     C*
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING 'EE' ENTRY BEING
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA
+     C*
+     C           JOSEQN    ADD  1         FRPNT
+     C*
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED
+     C*
+     C           FRPNT     IFLE TOPNT
+     C                     EXCPT
+     C                     END
+     C*
+     C**   OBTAIN SEQUENCE NO. OF CORRESPONDING ENTRY FOR 'TO POINT'
+     C**   OF NEXT RECOVERY AREA AND RESUME SEARCH OF JOURNAL FROM
+     C**   THIS POINT. THIS WILL BE THE 'FS' OR 'NS' POINT THAT
+     C**   JOURNALLED CHANGES WERE PREVIOUSLY REMOVED TO.
+     C*
+     C           SQNRTP    SUB  1         TOPNT
+     C           TOPNT     SETLLJRNEXS
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   REC2 SUB-ROUTINE : FOR ENTRY TYPE 'ER'
+     C**
+     C********************************************************************
+     C**
+     C           REC2      BEGSR
+     C*
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING 'ER' ENTRY BEING
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA
+     C*
+     C           JOSEQN    ADD  1         FRPNT
+     C*
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED
+     C*
+     C           FRPNT     IFLE TOPNT
+     C                     EXCPT
+     C                     END
+     C*
+     C**   OBTAIN SEQUENCE NO. OF CORRESPONDING ENTRY FOR 'TO POINT'
+     C**   OF NEXT RECOVERY AREA AND RESUME SEARCH OF JOURNAL FROM
+     C**   THIS POINT.  THIS WILL BE THE 'IR' POINT OR 'JS'/'SV' POINT
+     C**   PREVIOSLY FORWARD RECOVERED TO.
+     C*
+     C           SQNRTP    SUB  1         TOPNT
+     C           TOPNT     SETLLJRNEXS
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   REC3 SUB-ROUTINE : FOR ENTRY TYPES 'AY' 'EJ' 'MR' 'SA'
+     C**
+     C********************************************************************
+     C**
+     C           REC3      BEGSR
+     C*
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING ENTRY BEING
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA
+     C*
+     C           JOSEQN    ADD  1         FRPNT
+     C*
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED
+     C*
+     C           FRPNT     IFLE TOPNT
+     C                     EXCPT
+     C                     END
+     C*
+     C**   RESET PARAMETERS & RESUME SEARCH OF JOURNAL
+     C*
+     C           JOSEQN    SUB  1         TOPNT
+     C           TOPNT     SETLLJRNEXS
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   REC4 SUB-ROUTINE : FOR ENTRY TYPES 'SR' 'RC'
+     C**
+     C********************************************************************
+     C**
+     C           REC4      BEGSR
+     C*
+     C**   THIS ENTRY CAN BE IGNORED IF IT DOES NOT RELATE TO THE
+     C**   MARKET CURRENTLY BEING PROCESSED
+     C*
+     C           PMBR      IFEQ JOMBR
+     C*
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING ENTRY BEING
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA
+     C*
+     C           JOSEQN    ADD  1         FRPNT
+     C*
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED
+     C*
+     C           FRPNT     IFLE TOPNT
+     C                     EXCPT
+     C                     END
+     C*
+     C**   RESET PARAMETERS & RESUME SEARCH OF JOURNAL
+     C*
+     C           JOSEQN    SUB  1         TOPNT
+     C           TOPNT     SETLLJRNEXS
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   DBERR SR. - DATABASE ERROR HANDLING : TERMINATE PROGRAM       *
+     C**                                                                 *
+     C**      CALLED FROM MAIN                                           *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR                           ** DBERR SR **
+     C**
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     ORCVRYF  E
+     O                         *ALL
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

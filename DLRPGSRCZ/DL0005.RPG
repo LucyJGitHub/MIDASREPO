@@ -1,0 +1,726 @@
+0001 H        1                                                           S01319
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Crt Hdrs & Trailers on Dealing Mast File')
+0002 F*****************************************************************
+0004 F*                                                               *
+     F*  Midas - Dealing Module
+0004 F*                                                               *
+0005 F*  DL0005 - SETUP MASTER FILE TRAILERS & HEADERS                *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                               *
+      *  Last Amend No. 245720             Date 24Nov15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 077187             Date 29Sep94               *
+     F*                 069354             DATE 11MAY94               *
+     F*                 E46139             DATE 02FEB93               *
+     F*                 E46391             DATE 01FEB93               *
+0009 F*                 S01319             DATE 09OCT91               *
+0009 F*                 S01194             DATE 03/03/89              *
+0009 F*                 S01117             DATE 03/03/89              *
+0010 F*                                                               *
+0011 F*****************************************************************
+     F*                                                               *
+      *  245720 - Set initial value of CNUM in DEALSDA to blank       *
+      *           following CSD027.                                   *
+      *           Applied for MD028092                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CDL038 - Extended Deal Sub Type                              *
+     F*  077187 - Set defaults for complete deal amendable fields     *
+     F*           and complete deal mandatory fields so that the      *
+     F*           fields are mandatory and non-amendable unless this  *
+     F*           is amended by the client - currently these are set  *
+     F*           up as non-mandatory AND non-amendable which means   *
+     F*           that user may not be able to authorise a deal if    *
+     F*           he has not filled in the fields on input.           *
+     F*  069354 - Remove fix E46139. Pgm SD0800 in SCBEGIN will set   *
+     F*           up the FRA/IRS records regardless of whether TM     *
+     F*           is switched on or not.                              *
+     F*  E46139 - Output table file header records for FRA's,         *
+     F*           IRS's and PF/FDINTRPP - the records for FRA's       *
+     F*           and IRS's are currently set up in TM setup but      *
+     F*           are required even if TM not switched on.            *
+     F*  E46391 - Revaluations Control Data files MMREVCPP            *
+     F*           and FXREVCPP initialised.                           *
+     F*           Output DB error if SDDEALPD empty.                  *
+     F*           Update LDA if database error occurs                 *
+     F*           Added list of indicators used in program            *
+     F*  S01319 - Remove redundant processing                         *
+     F*  S01117 - Description of change - file LIMITLA renamed        *
+     F*           LIMITAU. Two new files - COUNTRY LIMITS (DCLIMAU)   *
+     F*           and REGION LIMITS (DRLIMAU) included                *
+     F*  S01194 - New standing data - add access programs             *
+     F*                                                               *
+     F*****************************************************************
+     F*****TABTB40 IP  E               DISK                               S01194
+     FSDDEALL1IP  E                    DISK                               S01194
+0012 FDEALSDA O   F     400            DISK                               DL0020
+0012 FDEALSDF O   F     400            DISK                               DL0020
+0012 FDEAMSDH O   F     200            DISK                               DL0020
+0012 FDEAMSDJ O   F     200            DISK                               DL0020
+0012 F*****LIMITLA O   F 96            DISK                         DL0020S01117
+     F*****LIMITAU O   F      96            DISK                    S01117S01194
+     F*****DCLIMAU O   F      96            DISK                    S01117S01194
+     F*****DRLIMAU O   F      96            DISK                    S01117S01194
+0012 FBROKRBN O   F     180            DISK                               DL0020
+0012 FFWDRTFD O   F     256            DISK                               DL0020
+     FMINTRMH O   F      64            DISK
+     FMINTRMT O   F      64            DISK
+     FFDDLNMPPO   E                    DISK                               S01319
+     FFDDAYSPPO   E                    DISK                               S01319
+     FFDMNTHPPO   E                    DISK                               S01319
+     FCANDLNPPUF  E                    DISK                      A        S01319
+     FFXCDAFPPO   E                    DISK                               S01319
+     FFXMCOMPPO   E                    DISK                               S01319
+     FMMCDAFLLUF  E                    DISK                      A        S01319
+     FMMMCOMLLUF  E                    DISK                      A        S01319
+     FMMREVCLLUF  E                    DISK                      A        E46391
+     FFXREVCLLUF  E                    DISK                      A        E46391
+     F******TABLETXLIF  F      27  2AI     1 DISK                   E46139069354
+     F******TABLETX O   F      96            DISK                   E46139069354
+     F*                                                                   E46391
+     F*                  FUNCTION OF INDICATORS                           E46391
+     F*                 ************************                          E46391
+     F* ID F  C  H  L                                                     E46391
+     F*      01        SDDEALPD record read                               E46391
+     F*******11********End of LF/TABLETXL reached.                  E46139069354
+     F*******21********Record-ids of 'FR' or 'IR' already exist     E46139069354
+     F*****************on LF/TABLETXL                               E46139069354
+     F*      60        Error when writing record to FDDLNMPP              E46391
+     F*      60        End of file - CANDLNPP                             E46391
+     F*      60        Error when writing record to FXCDAFPP              E46391
+     F*      60        Error when writing record to FXMCOMPP              E46391
+     F*      61        End of file - MMCDAFPP                             E46391
+     F*      61        End of file - MMMCOMPP                             E46391
+     F*      62        End of file - MMREVCLL                             E46391
+     F*      LR        Last record indicator                              E46391
+     F*      U1        Hongkong tax rate not 0  - write MINTR* records    E46391
+     F*      U7/U8     Database error                                     E46391
+     F*                                                                   E46391
+     E                    CPY@    1   1 80
+     E                    @D      1   7 20                                S01319
+     E                    @M     12  12  3                                S01319
+     I******TABLETXLAA                                              E46139069354
+     I****************************************1   2 RECTX           E46139069354
+     I****************************************1  27 LOT             E46139069354
+     I*****TABTB40F    01                                                 S01194
+     I@BNREEI     01                                                      S01194
+      *                                                                   S01319
+     I*                                                                   S01319
+     I***DBERR*******DS                            256             S01319 E46391
+     ILDA        UDS                            256                       E46391
+     I** DATA AREA FOR DATABASE ERROR INFORMATION                         S01319
+     I                                      134 141 DBFILE                S01319
+     I                                      142 170 DBKEY                 S01319
+     I                                      171 180 DBPGM                 S01319
+     I**********                            181 183 DBASE                 S01319
+     I                                      181 1830DBASE                 S01319
+     I*                                                                   S01319
+     ISDBANK    E DSSDBANKPD                                              S01319
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM                         S01319
+     I*                                                                   S01319
+     IDSFDY     E DSDSFDY                                                 S01319
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01319
+     I*                                                                   S01319
+     I** DATA AREA TO HOLD THE DATE OF LAST UPDATE. USES MIDAS DATE       S01319
+     I                                        1   20MDDY                  S01319
+     I                                        3   5 MDMO                  S01319
+     I                                        6   70MDYR                  S01319
+     I                                        1   7 RUNA                  S01319
+      *                                                                   S01319
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVEL'DL0005  'DBPGM                           E46391
+     C*                                                                   E46391
+     C*   Call AOBANKR0 to access MIDAS run date.                         S01319
+     C                     CALL 'AOBANKR0'                                S01319
+     C                     PARM '*MSG   ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C           SDBANK    PARM SDBANK    DSFDY                           S01319
+     C           @RTCD     IFNE *BLANKS                                   S01319
+     C                     MOVEL'SDBANKPD'DBFILE                          S01319
+     C                     MOVEL@OPTN     DBKEY                           S01319
+     C                     MOVEL@OPTN     DBOPTN  7                       S01319
+     C                     MOVE '001'     DBASE                           S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                                            S01319
+     C*                                                                   S01319
+     C**  GET RUN DATE                                                    S01319
+     C                     MOVE BJRDNB    NOLCD                           S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS USED BY PROCEDURE ZA0140                          S01319
+     C                     MOVE 'D'       @FMT    1                       S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           NOLCD                           S01319
+     C                     PARM           @FMT                            S01319
+     C                     PARM           @DATN   60                      S01319
+     C                     PARM           @DATA   7                       S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           @DATY   80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '006'     DBASE            * DBERROR 006  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS FOR OUTPUT TO PF/FDDLNMPP                         S01319
+     C                     MOVEL@DATA     @FLD1   5                       S01319
+     C                     MOVEL@DATN     NODLUP                          S01319
+     C                     MOVE @FLD1     NOMLUP                          S01319
+     C                     MOVE @DATA     NOYLUP                          S01319
+     C*                                                                   S01319
+     C                     MOVE 'NO'      NORCID                          S01319
+     C                     MOVE '  '      NODLTF                          S01319
+     C                     TIME           NOTLUP                          S01319
+     C                     MOVE 'A'       NOCHTP                          S01319
+     C                     MOVE 'INS'     NOUID                           S01319
+     C                     Z-ADD000001    NONDLN                          S01319
+     C                     Z-ADD200000    NORDLN                          S01319
+     C                     Z-ADD175000    NOWDLN                          S01319
+     C                     WRITEFDDLNMP0               60                 S01319
+      *                                                                   S01319
+      ** Initialise FDDAYSPP & FDMNTHPP                                   S01319
+      *                                                                   S01319
+     C                     MOVE 'DN'      DNRCID                          S01319
+     C                     MOVE @D,1      DND1NM                          S01319
+     C                     MOVE '01'      DND1SN                          S01319
+     C                     MOVE @D,2      DND2NM                          S01319
+     C                     MOVE '02'      DND2SN                          S01319
+     C                     MOVE @D,3      DND3NM                          S01319
+     C                     MOVE '03'      DND3SN                          S01319
+     C                     MOVE @D,4      DND4NM                          S01319
+     C                     MOVE '04'      DND4SN                          S01319
+     C                     MOVE @D,5      DND5NM                          S01319
+     C                     MOVE '05'      DND5SN                          S01319
+     C                     MOVE @D,6      DND6NM                          S01319
+     C                     MOVE '06'      DND6SN                          S01319
+     C                     MOVE @D,7      DND7NM                          S01319
+     C                     MOVE '07'      DND7SN                          S01319
+     C                     WRITEFDDAYSP0                                  S01319
+     C                     MOVE 'MN'      MNRCID                          S01319
+     C                     MOVE @M,1      MNNM1                           S01319
+     C                     MOVE @M,2      MNNM2                           S01319
+     C                     MOVE @M,3      MNNM3                           S01319
+     C                     MOVE @M,4      MNNM4                           S01319
+     C                     MOVE @M,5      MNNM5                           S01319
+     C                     MOVE @M,6      MNNM6                           S01319
+     C                     MOVE @M,7      MNNM7                           S01319
+     C                     MOVE @M,8      MNNM8                           S01319
+     C                     MOVE @M,9      MNNM9                           S01319
+     C                     MOVE @M,10     MNNM10                          S01319
+     C                     MOVE @M,11     MNNM11                          S01319
+     C                     MOVE @M,12     MNNM12                          S01319
+     C                     WRITEFDMNTHP0                                  S01319
+     C*                                                                   S01319
+     C**  GET RUN DATE                                                    S01319
+     C                     MOVE BJRDNB    FTLCD                           S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS USED BY PROCEDURE ZA0140                          S01319
+     C                     MOVE 'D'       @FMT    1                       S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           FTLCD                           S01319
+     C                     PARM           @FMT                            S01319
+     C                     PARM           @DATN   60                      S01319
+     C                     PARM           @DATA   7                       S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           @DATY   80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '007'     DBASE            * DBERROR 007  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C**  ONLY WRITE RECORD IF PF/CANDLNPP IS EMPTY                       S01319
+     C                     READ CANDLNPP                 60               S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS FOR OUTPUT TO PF/CANDLNPP                         S01319
+     C           *IN60     IFEQ '1'                        B1             S01319
+     C                     MOVEL@DATA     @FLD1   5        *1             S01319
+     C                     MOVEL@DATN     FTDLUP           *1             S01319
+     C                     MOVE @FLD1     FTMLUP           *1             S01319
+     C                     MOVE @DATA     FTYLUP           *1             S01319
+     C                     MOVE 'FT'      FTRCID           *1             S01319
+     C                     MOVE 'I'       FTCHTP           *1             S01319
+     C                     MOVE 'INS'     FTLUID           *1             S01319
+     C                     Z-ADD1         FTNDLS           *1             S01319
+     C                     TIME           FTTLUP           *1             S01319
+     C                     WRITECANDLNP0                   *1             S01319
+     C                     END                             E1             S01319
+     C*                                                                   S01319
+     C**  GET RUN DATE                                                    S01319
+     C                     MOVE BJRDNB    FDLCD            *1             S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS USED BY PROCEDURE ZA0140                          S01319
+     C                     MOVE 'D'       @FMT    1                       S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           FDLCD                           S01319
+     C                     PARM           @FMT                            S01319
+     C                     PARM           @DATN   60                      S01319
+     C                     PARM           @DATA   7                       S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           @DATY   80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '008'     DBASE            * DBERROR 008  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS FOR OUTPUT TO PF/FXCDAFPP                         S01319
+     C                     MOVEL@DATA     @FLD1   5                       S01319
+     C                     MOVEL@DATN     FDDLUP                          S01319
+     C                     MOVE @FLD1     FDMLUP                          S01319
+     C                     MOVE @DATA     FDYLUP                          S01319
+     C                     MOVE 'FD'      FDRCID                          S01319
+     C                     MOVE 'I'       FDCHTP                          S01319
+     C                     MOVE 'INS'     FDLUID                          S01319
+     C                     MOVE 'N'       FDBRCA                          S01319
+     C                     MOVE 'N'       FDCNMA                          S01319
+     C                     MOVE 'N'       FDBKRA                          S01319
+     C                     MOVE 'N'       FDBKGA                          S01319
+     C                     MOVE 'N'       FDDLSA                          S01319
+     C                     TIME           FDTLUP                          S01319
+     C                     WRITEFXCDAFP0               60                 S01319
+     C*                                                                   S01319
+     C**  GET RUN DATE                                                    S01319
+     C                     MOVE BJRDNB    FSLCD            *1             S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS USED BY PROCEDURE ZA0140                          S01319
+     C                     MOVE 'D'       @FMT    1                       S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           FSLCD                           S01319
+     C                     PARM           @FMT                            S01319
+     C                     PARM           @DATN   60                      S01319
+     C                     PARM           @DATA   7                       S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           @DATY   80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '009'     DBASE            * DBERROR 009  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C**  SET UP FIELDS FOR OUTPUT TO PF/FXMCOMPP                         S01319
+     C                     MOVEL@DATA     @FLD1   5                       S01319
+     C                     MOVEL@DATN     FSDLUP                          S01319
+     C                     MOVE @FLD1     FSMLUP                          S01319
+     C                     MOVE @DATA     FSYLUP                          S01319
+     C                     MOVE 'FS'      FSRCID                          S01319
+     C                     MOVE 'I'       FSCHTP                          S01319
+     C                     MOVE 'INS'     FSLUID                          S01319
+     C                     MOVE 'Y'       FSCNMM                          077187
+     C                     MOVE 'Y'       FSBKCM                          077187
+     C                     MOVE 'Y'       FSDSTM                          077187
+     C*********************MOVE 'N'       FSCNMM                    S01319077187
+     C*********************MOVE 'N'       FSBKCM                    S01319077187
+     C*********************MOVE 'N'       FSDSTM                    S01319077187
+     C                     TIME           FSTLUP                          S01319
+     C                     WRITEFXMCOMP0               60                 S01319
+     C*                                                                   S01319
+     C**  CHECK FOR RECORD ON MMCDAFLL                                    S01319
+     C           1         CHAINMMCDAFLL             61                   S01319
+     C*                                                                   S01319
+     C**  IF A RECORD IS PRESENT, THIS IS AN ERROR                        S01319
+     C           *IN61     IFEQ '0'                        ***************S01319
+     C                     MOVEL'MMCDAFLL'DBFILE           *             *S01319
+     C                     MOVEL'002'     DBASE            * DBERROR 002 *S01319
+     C                     EXSR *PSSR                      *             *S01319
+     C                     END                             ***************S01319
+     C                     MOVE BJMRDT    RUNA                            S01319
+     C*                                                                   S01319
+     C**  CALL ZA0140 TO GET THE CORRECT DATE FORMAT                      S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           BJRDNB                          S01319
+     C                     PARM 'D'       SSDFMT  1                       S01319
+     C                     PARM           SSDATE  60                      S01319
+     C                     PARM           BJMRDT                          S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           SSDAT8  80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '003'     DBASE            * DBERROR 003  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C                     MOVE 'HP'      HHRCID           *1             S01319
+     C                     MOVE *BLANK    HHDLTF           *1             S01319
+     C                     MOVE MDDY      HHDLUP           *1             S01319
+     C                     MOVE MDMO      HHMLUP           *1             S01319
+     C                     MOVE MDYR      HHYLUP           *1             S01319
+     C                     TIME           HHTLUP           *1             S01319
+     C                     MOVE 'I'       HHCHTP           *1             S01319
+     C                     Z-ADDBJRDNB    HHLCD            *1             S01319
+     C                     MOVE 'INS'     HHLUID           *1             S01319
+     C                     MOVE 'N'       HHBRCA           *1             S01319
+     C                     MOVE 'N'       HHCNMA           *1             S01319
+     C                     MOVE 'N'       HHBKRA           *1             S01319
+     C                     MOVE 'N'       HHBKGA           *1             S01319
+     C                     MOVE 'N'       HHDLSA           *1             S01319
+     C                     MOVE 'N'       HHINTA           *1             S01319
+     C                     WRITEMMCDAFP0                   *1             S01319
+     C*                                                                   S01319
+     C**  CHECK FOR RECORD ON MMMCOMLL                                    S01319
+     C           1         CHAINMMMCOMLL             61                   S01319
+     C*                                                                   S01319
+     C**  IF A RECORD IS PRESENT, THIS IS AN ERROR                        S01319
+     C           *IN61     IFEQ '0'                        ***************S01319
+     C                     MOVEL'MMMCOMLL'DBFILE           *             *S01319
+     C                     MOVEL'004'     DBASE            * DBERROR 004 *S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C**  CALL ZA0140 TO GET THE CORRECT DATE FORMAT                      S01319
+     C                     CALL 'ZA0140'                                  S01319
+     C                     PARM           BJRDNB                          S01319
+     C                     PARM 'D'       SSDFMT  1                       S01319
+     C                     PARM           SSDATE  60                      S01319
+     C                     PARM           BJMRDT                          S01319
+     C                     PARM           @RTN    1                       S01319
+     C                     PARM           SSDAT8  80                      S01319
+     C*                                                                   S01319
+     C**  IF THE RETURN CODE IS '1', END                                  S01319
+     C           @RTN      IFEQ '1'                        ***************S01319
+     C                     MOVE 'ZA0140'  DBPGM            *              S01319
+     C                     MOVE '005'     DBASE            * DBERROR 005  S01319
+     C                     EXSR *PSSR                                     S01319
+     C                     END                             ***************S01319
+     C*                                                                   S01319
+     C*                                                                   S01319
+     C**  INITIALISE THE FIELDS ON MMMCOMLL                               S01319
+     C                     MOVE 'HQ'      ICRCID           *1             S01319
+     C                     MOVE *BLANK    ICDLTF           *1             S01319
+     C                     MOVE MDDY      ICDLUP           *1             S01319
+     C                     MOVE MDMO      ICMLUP           *1             S01319
+     C                     MOVE MDYR      ICYLUP           *1             S01319
+     C                     TIME           ICTLUP           *1             S01319
+     C                     MOVE 'I'       ICCHTP           *1             S01319
+     C                     Z-ADDBJRDNB    ICLCD            *1             S01319
+     C                     MOVE 'INS'     ICLUID           *1             S01319
+     C                     MOVE 'Y'       ICCNMM           *1             077187
+     C                     MOVE 'Y'       ICBKCM           *1             077187
+     C                     MOVE 'Y'       ICDSTM           *1             077187
+     C*********************MOVE 'N'       ICCNMM           *1       S01319077187
+     C*********************MOVE 'N'       ICBKCM           *1       S01319077187
+     C*********************MOVE 'N'       ICDSTM           *1       S01319077187
+     C                     WRITEMMMCOMP0                   *1             S01319
+     C*                                                                   E46391
+     C**  Check for record on MMREVCPP                                    E46391
+     C*                                                                   E46391
+     C           1         CHAINMMREVCLL             62                   E46391
+     C*                                                                   E46391
+     C**  If a record is present, this is an error                        E46391
+     C*                                                                   E46391
+     C           *IN62     IFEQ '0'                                       E46391
+     C                     MOVEL'MMREVCLL'DBFILE           ***************E46391
+     C                     Z-ADD10        DBASE            * DBERROR 010 *E46391
+     C                     EXSR *PSSR                      ***************E46391
+     C                     END                                            E46391
+     C*                                                                   E46391
+     C**  Initialise the fields on MMREVCP0                               E46391
+     C**  (Correct date format has already been found for MMMCOMP0)       E46391
+     C*                                                                   E46391
+     C                     MOVE 'ID'      IDRCID           *1             E46391
+     C                     MOVE *BLANK    IDDLTF           *1             E46391
+     C                     MOVE MDDY      IDDLUP           *1             E46391
+     C                     MOVE MDMO      IDMLUP           *1             E46391
+     C                     MOVE MDYR      IDYLUP           *1             E46391
+     C                     TIME           IDTLUP           *1             E46391
+     C                     MOVE 'I'       IDCHTP           *1             E46391
+     C                     Z-ADDBJRDNB    IDLCD            *1             E46391
+     C                     MOVE 'INS'     IDLUID           *1             E46391
+     C                     MOVE 'N'       IDRIPI           *1             E46391
+     C                     MOVE *ZEROS    IDTLRV           *1             E46391
+     C                     WRITEMMREVCP0                   *1             E46391
+     C*                                                                   E46391
+     C**  Check for record on FXREVCPP                                    E46391
+     C*                                                                   E46391
+     C           1         CHAINFXREVCLL             62                   E46391
+     C*                                                                   E46391
+     C**  If a record is present, this is an error                        E46391
+     C*                                                                   E46391
+     C           *IN62     IFEQ '0'                                       E46391
+     C                     MOVEL'FXREVCLL'DBFILE           ***************E46391
+     C                     Z-ADD11        DBASE            * DBERROR 011 *E46391
+     C                     EXSR *PSSR                      ***************E46391
+     C                     END                                            E46391
+     C*                                                                   E46391
+     C**  Initialise the fields on FXREVCP0                               E46391
+     C**  (Correct date format has already been found for MMMCOMP0)       E46391
+     C*                                                                   E46391
+     C                     MOVE 'FU'      FURCID           *1             E46391
+     C                     MOVE *BLANK    FUDLTF           *1             E46391
+     C                     MOVE MDDY      FUDLUP           *1             E46391
+     C                     MOVE MDMO      FUMLUP           *1             E46391
+     C                     MOVE MDYR      FUYLUP           *1             E46391
+     C                     TIME           FUTLUP           *1             E46391
+     C                     MOVE 'I'       FUCHTP           *1             E46391
+     C                     Z-ADDBJRDNB    FULCD            *1             E46391
+     C                     MOVE 'INS'     FULUID           *1             E46391
+     C                     MOVE 'N'       FURIPI           *1             E46391
+     C                     MOVE *ZEROS    FUTLRV           *1             E46391
+     C                     WRITEFXREVCP0                   *1             E46391
+     C***********                                                   E46139069354
+     C****Read*TABLETXL*to*check*if*records*exist*in*case*of*re-run.E46139069354
+     C****If*these*records*exist,*output*DB*error.                  E46139069354
+     C***********                                                   E46139069354
+     C***********RECTX     SETLLTABLETXL                            E46139069354
+     C*********************READ TABLETXL                 11         E46139069354
+     C***********                                                   E46139069354
+     C************IN11     DOWEQ'0'                                 E46139069354
+     C************IN21     ANDEQ'0'                                 E46139069354
+     C***********                                                   E46139069354
+     C***********RECTX     IFEQ 'FR'                                E46139069354
+     C***********RECTX     OREQ 'IR'                                E46139069354
+     C***********RECTX     OREQ 'HW'                                E46139069354
+     C*********************SETON                     21             E46139069354
+     C*********************END                                      E46139069354
+     C***********                                                   E46139069354
+     C*********************READ TABLETXL                 11         E46139069354
+     C*********************END                                      E46139069354
+     C***********                                                   E46139069354
+     C****If*records*found*then*output*error*details,**otherwise wriE46139069354
+     C****records*to*PF/TABLETX*for*FRS's,*IRS's*and for file FDINTRE46139069354
+     C***********                                                   E46139069354
+     C************IN21     IFEQ '1'                                 E46139069354
+     C*********************MOVEL'TABLETX 'DBFILE           *********E46391069354
+     C*********************Z-ADD12        DBASE            * DBERRORE46391069354
+     C*********************EXSR *PSSR                      *********E46391069354
+     C*********************ELSE                                     E46391069354
+     C***********                                                   E46139069354
+     C****Initialise*common*fields*for*PF/TABLETX.                  E46139069354
+     C***********                                                   E46139069354
+     C*********************MOVE 'H'       RECI    1                 E46139069354
+     C*********************MOVE *BLANKS   FLR1   10                 E46139069354
+     C*********************MOVE *ZEROS    FLR2   180                E46139069354
+     C*********************MOVE *BLANKS   FLR3   58                 E46139069354
+     C*********************MOVE *ZEROS    TLCD    50                E46139069354
+     C*********************MOVE *BLANKS   TCHTP   1                 E46139069354
+     C*********************MOVE *ZEROS    TTNLU   50                E46139069354
+     C***********                                                   E46139069354
+     C*********************SETON                     22             E46139069354
+     C***********                                                   E46139069354
+     C****Output*Table*file*header*for*FDINTRPP                     E46139069354
+     C***********                                                   E46139069354
+     C*********************MOVE 'HW'      RECTX                     E46139069354
+     C*********************EXCPT                                    E46139069354
+     C***********                                                   E46139069354
+     C****Output*Table*file*header*for*FRA's                        E46139069354
+     C***********                                                   E46139069354
+     C*********************MOVE 'FR'      RECTX                     E46139069354
+     C*********************EXCPT                                    E46139069354
+     C***********                                                   E46139069354
+     C****Output*Table*file*header*for*IRS's                        E46139069354
+     C***********                                                   E46139069354
+     C*********************MOVE 'IR'      RECTX                     E46139069354
+     C*********************EXCPT                                    E46139069354
+     C*********************SETOF                     22             E46139069354
+     C*********************END                                      E46139069354
+     C***********                                                   E46139069354
+     C*
+     C* SET ON LR AND SET UP CONSTANTS
+     C   01                SETON                     LR
+     C***01******TAXR******COMP 0                    U1U1                 S01194
+     C   01      BNHKTR    COMP 0                    U1U1                 S01194
+     C*                                                                   E46391
+     C** If LR on, but SDDEALPD fields blank, SDDEALPD is empty  -        E46391
+     C** output database error                                            E46391
+     C*                                                                   E46391
+     CLR         BNDLDA    IFNE 'DEAL    '                                E46391
+     CLR                   MOVEL'SDDEALPD'DBFILE                          E46391
+     CLR                   MOVEL'*FIRST'  DBKEY                           E46391
+     CLR                   Z-ADD11        DBASE                           E46391
+     CLR                   MOVEL'DL0005  'DBPGM                           E46391
+     CLR                   EXSR *PSSR                                     E46391
+     CLR                   END                                            E46391
+     C*                                                                   E46391
+     CLR                   Z-ADD0         ZERO3   30
+     CLR                   Z-ADD0         ZERO5   50
+     CLR                   Z-ADD0         ZERO15 150
+     CLR                   Z-ADD1         ONE     50
+     CLR                   Z-ADD2         TWO     50
+     C*
+     C* FILE SIZES
+     CLR                   Z-ADD99999     NDEALS  50
+     CLR                   Z-ADD10000     NDEAMS  50
+     CLR                   Z-ADD10000     NLIMIT  50
+     CLR                   Z-ADD10000     NBROKR  50
+     CLR                   Z-ADD10000     NFWDRT  50
+     CLR                   Z-ADD99999     MINTR   70
+      *                                                                   S01319
+     C********************************************************************E46391
+     C*                                                                ***E46391
+     **  *PSSR SR.     To exit program upon database error            *   S01194
+     C*                                                                ***E46391
+     C********************************************************************E46391
+     CSR         *PSSR     BEGSR                                          S01319
+      *                                                                   S01319
+     C           @DUMP     IFEQ *BLANKS                                   S01319
+     C                     MOVE 'Y'       @DUMP   1                       S01319
+     C                     DUMP                            Dump program   S01319
+     C                     END                                            S01319
+     C                     SETON                     LRU7U8Set switches   S01319
+     C                     RETRN                           Exit program   S01319
+      *                                                                   S01319
+     CSR                   ENDSR                                          S01319
+      *
+     C******************************************************************* E46391
+     O*********TABLETX E        22                                  E46139069354
+     O*************************RECI       1                         E46139069354
+     O*************************RECTX      3                         E46139069354
+     O*************************FLR1      13                         E46139069354
+     O*************************FLR2      31                         E46139069354
+     O*************************FLR3      89                         E46139069354
+     O*************************TLCD      92P                        E46139069354
+     O*************************TCHTP     93                         E46139069354
+     O*************************TTNLU     96P                        E46139069354
+     ODEALSDA T        LR
+     O                                   10 'H000000A00'
+     O**********                         16 '000000'                                          245720
+     O                                   16 '      '                                          245720
+     O                         ZERO5    396P
+     O                         ZERO5    400P
+     ODEALSDF T        LR
+     O                                   10 'T999999Z99'
+     O                                   16 '999999'
+     O                         TWO       19P
+     O                         NDEALS    22P
+     O                         ZERO5     25P
+     O                         ZERO5     28P
+     O                         ZERO5     31P
+     O                         ZERO5     34P
+     O                         ZERO15    42P
+     O                         ZERO3     44P
+     O                         ZERO15    52P
+     O                         ZERO3     54P
+     O                         ZERO15    62P
+     O                         ZERO3     64P
+     O                         ZERO15    72P
+     O                         ZERO3     74P
+     O                         ZERO5     77P
+     O                         ZERO5     80P
+     O                         ZERO5    396P
+     O                         ZERO5    400P
+     ODEAMSDH T        LR
+     O                                   15 'A00000000000000'
+     O                         ZERO5     18P
+     O                         ZERO5    196P
+     O                         ZERO5    200P
+     ODEAMSDJ T        LR
+     O                                   15 'T99999999999999'
+     O                         TWO       18P
+     O                         NDEAMS    21P
+     O                         ZERO5     24P
+     O                         ZERO5     27P
+     O                         ZERO5     30P
+     O                         ZERO5     33P
+     O                         ZERO5     36P
+     O                         ZERO5     39P
+     O                         ZERO15    47P
+     O                         ZERO3     49P
+     O                         ZERO15    57P
+     O                         ZERO3     59P
+     O                         ZERO15    67P
+     O                         ZERO3     69P
+     O                         ZERO15    77P
+     O                         ZERO3     79P
+     O                         ZERO15    87P
+     O                         ZERO3     89P
+     O                         ZERO15    97P
+     O                         ZERO3     99P
+     O                         ZERO5    196P
+     O                         ZERO5    200P
+     O***LIMITLA T     LR                                                 S01117
+     O**********LIMITAU T        LR                                       S01117
+     O************************************7 'H000000'                     S01194
+     O*************************ONE       10P                              S01194
+     O*************************NLIMIT    13P                              S01194
+     O*************************ZERO5     16P                              S01194
+     O*************************ZERO5     19P                              S01194
+     O*************************ZERO5     22P                              S01194
+     O*************************ZERO5     25P                              S01194
+     O*************************ZERO5     28P                              S01194
+     O*****                    ZERO5     60P                              S01117
+     O*****                    ZERO5     64P                              S01117
+     O*************************ZERO5     92P                        S01117S01194
+     O*************************ZERO5     96P                        S01117S01194
+     O**********DCLIMAU T        LR                                 S01117S01194
+     O************************************3 'H00'                   S01117S01194
+     O*************************ONE        6P                        S01117S01194
+     O*************************ZERO5      9P                        S01117S01194
+     O*************************ZERO5     12P                        S01117S01194
+     O*************************ZERO5     15P                        S01117S01194
+     O*************************ZERO5     18P                        S01117S01194
+     O*************************ZERO5     21P                        S01117S01194
+     O*************************ZERO5     92P                        S01117S01194
+     O*************************ZERO5     96P                        S01117S01194
+     O**********DRLIMAU T        LR                                 S01117S01194
+     O************************************3 'H00'                   S01117S01194
+     O*************************ONE        6P                        S01117S01194
+     O*************************ZERO5      9P                        S01117S01194
+     O*************************ZERO5     12P                        S01117S01194
+     O*************************ZERO5     15P                        S01117S01194
+     O*************************ZERO5     18P                        S01117S01194
+     O*************************ZERO5     21P                        S01117S01194
+     O*************************ZERO5     92P                        S01117S01194
+     O*************************ZERO5     96P                        S01117S01194
+     OBROKRBN T        LR
+     O                                    1 'H'
+     O                         ONE       11P
+     O                         NBROKR    14P
+     O                         ZERO5     17P
+     O                         ZERO5     20P
+     O                         ZERO5     23P
+     O                         ZERO5     26P
+     O                         ZERO5     29P
+     O                         ZERO5    176P
+     O                         ZERO5    180P
+     OFWDRTFD T        LR
+     O                                    1 'H'
+     O                         ONE        7P
+     O                         NFWDRT    10P
+     O                         ZERO5     13P
+     O                         ZERO5     16P
+     O                         ZERO5     19P
+     O                         ZERO5     22P
+     O                         ZERO5     25P
+     O                         ZERO5    252P
+     O                         ZERO5    256P
+     OMINTRMH T        LR U1
+     O                                    1 'H'
+     O                                   19 '64'
+     O                         MINTR     23P
+     OMINTRMT T        LR U1
+     O                                    1 'T'
+     O                         TWO       19P
+     O                         ZERO5     22P
+     O                         ZERO15    30P
+     O                         ZERO3     32P
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**
+MONDAY
+TUESDAY
+WEDNESDAY
+THURSDAY
+FRIDAY
+SATURDAY
+SUNDAY
+**
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

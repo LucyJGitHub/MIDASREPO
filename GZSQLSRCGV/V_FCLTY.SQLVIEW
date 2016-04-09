@@ -1,0 +1,155 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       V_FACILITY - Global Facilies View                                     */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. A1084804           Date 21Mar12                        */
+/*       Prev Amend No. CLE134             Date 01Aug12                        */
+/*                      AR938253           Date 21Mar12                        */
+/*                      CLE147             Date 30Sep11                        */
+/*                      AR818908           Date 24Aug11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CAP187             Date 21Aug09                        */
+/*                      CGP015             Date 06Mar09                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      257576             Date 11Nov08                        */
+/*                      BG18886            Date 05Jun08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/*                      245340             Date 29Jan07                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CLE041             Date 18Feb05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG5326            Date 04Jan05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      BUG2611            Date 13Sep04                        */
+/*                      BUG3723            Date 19Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CAP084             Date 04Feb04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       A1084804 - Remove non-standard characters.                            */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       AR938253 - Facilities Main Listview showed duplicate records          */
+/*       CLE147 - Aggregate Facility (Recompile)                               */
+/*       AR818908 - Facilities Main Listview not loading                       */
+/*       CER049 - Stamp Tax (Recompile)                                        */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*              - LT039: include new fields introduced by CER020 in            */
+/*                GZFCLTYFM(V_#FCLTY), PEXD and PNXD. (Recompile)              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CAP187 - Document Linkage                                             */
+/*       CGP015 - Task Split of Bulk update of Facilities listview             */
+/*                Recompile                                                    */
+/*       257576 - Perfomance: Facilities for Listview                          */
+/*       BG18886 - Replace non-standard codes. (Recompile)                     */
+/*       245340 - Recompiled due to change in V_#FCLTY                         */
+/*       CAP185 - MQ Series Interface                                          */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager (Recompiled)                            */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CLE041 - Collateralised Lending Phase 2 B (Recompile)                 */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG5326- Performance enhancement                                      */
+/*       CLE040 - Collaterised Lending Phase 2 (Recompile)                     */
+/*       BUG2611- New reference for credit agreement/tranche                   */
+/*       BUG3723- Missing Rule of 78s (CLE028) change in the Lending           */
+/*                APIs as description in the amendment history.                */
+/*       CLE025 - Credit Lines                                                 */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CAP084 - V_GPGLCUSL recompiled                                        */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+**SELECT************************************************************************:      257576 CAP187
+  SELECT GZFCLTLVPD.*,                                                          :             CAP187
+***SELECT V_#FCLTY.*,***********************************************************:             257576
+****CASE************************************************************************:             257576
+*******WHEN FDTEX < FRUN01 THEN 0***********************************************:             257576
+*******WHEN FDTAP > FRUN01 THEN 0***********************************************:             257576
+*******WHEN (SELECT COUNT(*) FROM GZSCSARDPD WHERE ZONE=CGZONE AND**************:CLE025,BUG5326
+*************SARN='CLE024') > 0 AND FCXLVR > 0 THEN*****************************:CLE025,BUG5326
+************(CASE WHEN FCXALV * 0.01 * SFCXCV2 < SFAMT THEN*********************:CLE025,BUG5326
+******************FCXALV * 0.01 * SFCXCV2 - SCAMD + SFCXCOF*********************:CLE025,BUG5326
+*************ELSE***************************************************************:CLE025,BUG5326
+******************SFAMT - SCAMD + SFCXCOF***************************************:CLE025,BUG5326
+*************END)***************************************************************:CLE025,BUG5326
+*******WHEN (SELECT COUNT(*) FROM GZSCSARDPD WHERE ZONE=CGZONE AND**************:CLE025,BUG5326
+*************SARN='CLE025') > 0 THEN SFAMT - SCAMD + SFCXCOF********************:CLE025,BUG5326
+*******ELSE SFAMT-SOAM02********************************************************:             257576
+****END AS SAVAILAMT,***********************************************************:BUG5326
+****END AS SAVAILAMT************************************************************:BUG5326      257576
+****CASE************************************************************************:BUG5326
+*******WHEN FDTEX < FRUN01 THEN 0***********************************************:BUG5326
+*******WHEN FDTAP > FRUN01 THEN 0***********************************************:BUG5326
+*******WHEN (SELECT COUNT(*) FROM GZSCSARDPD WHERE ZONE=CGZONE AND**************:CLE025,BUG5326
+*************SARN='CLE024') > 0 AND FCXLVR > 0 THEN*****************************:CLE025,BUG5326
+************(CASE WHEN  FCXALV * 0.01  * BSFCXCV2 < BSFAMT THEN*****************:CLE025,BUG5326
+*******************FCXALV * 0.01 * BSFCXCV2 - BSCAMD + BSFCXCOF*****************:CLE025,BUG5326
+*************ELSE***************************************************************:CLE025,BUG5326
+******************BSFAMT - BSCAMD + BSFCXCOF************************************:CLE025,BUG5326
+*************END)***************************************************************:CLE025,BUG5326
+*******WHEN (SELECT COUNT(*) FROM GZSCSARDPD WHERE ZONE=CGZONE AND**************:CLE025,BUG5326
+*************SARN='CLE025') > 0 THEN BSFAMT - BSCAMD + BSFCXCOF*****************:CLE025,BUG5326
+*******ELSE BSFAMT-BSOAM02******************************************************:BUG5326
+****END AS BSAVAILAMT***********************************************************:BUG5326
+***FROM V_#FCLTY ;**************************************************************:             257576
+      (SELECT COUNT(*) FROM LEFCLTYX0 EX                                        :             CAP187
+      WHERE EX.CUSTZONE=GZFCLTLVPD.CUSTZONE                                     :             CAP187
+      AND EX.PADCNUM=GZFCLTLVPD.PADCNUM                                         :             CAP187
+      AND EX.PADFACT=GZFCLTLVPD.PADFACT                                         :             CAP187
+      AND EX.PADFCNO=GZFCLTLVPD.PADFCNO)                                        :             CAP187
+********AS*PCLIP****************************************************************:    CAP187 AR818908
+/*******AS*PCLIP,*QD.FCTAX,*QD.FCPRIN,*QD.FCPDTE,*QD.FCDBRC*||*****************/:  AR818908 A1084804
+/*******QD.FCDCST*||*QD.FCDCCY*||*DIGITS(QD.FCDACD)*||*DIGITS(QD.FCDASC)*AS****/:  AR818908 A1084804
+        as                                                                      :           A1084804
+             PCLIP                                                              :           A1084804
+           , qd.FCTAX                                                           :           A1084804
+           , qd.FCPRIN                                                          :           A1084804
+           , qd.FCPDTE                                                          :           A1084804
+           , qd.FCDBRC                                                          :           A1084804
+           concat qd.FCDCST                                                     :           A1084804
+           concat qd.FCDCCY                                                     :           A1084804
+           concat digits(qd.FCDACD)                                             :           A1084804
+           concat digits(qd.FCDASC)                                             :           A1084804
+        as                                                                      :           A1084804
+        FCDACCN, QD.FCSTAF, QD.FCCDTE                                           :           AR818908
+**FROM*GZFCLTLVPD***************************************************************:    257576 AR818908
+  FROM GZFCLTLVPD LEFT JOIN GZLEFCLTQD QD ON                                    :           AR818908
+  GZFCLTLVPD.PADCNUM=QD.FCXFCU AND GZFCLTLVPD.PADFACT=QD.FCXFTP                 :           AR818908
+  AND GZFCLTLVPD.PADFCNO=QD.FCXFNO                                              :           AR818908
+  AND GZFCLTLVPD.BRCA=QD.FCXBRC                                                 :           AR938253
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Global facilities view - V_#FCLTY        ';                     :
+                                                                                :

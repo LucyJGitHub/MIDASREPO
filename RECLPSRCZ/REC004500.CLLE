@@ -1,0 +1,134 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas RE Cashier TCP/IP listener module')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Cashier Interface Module                            */
+/*                                                                   */
+/*       REC004500 - Midas Cashier TCP/IP Listener Module            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Last Amend No. CRT007             Date 14Jan02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*       Prev Amend No. CPK014             Date 14Nov01              */
+/*                      194002             Date 06Ju101              */
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/*                      CRT004  *CREATE    Date 10May00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRT007 - After closing old jobs, start Heartbeat job.       */
+/*                N.B. Job names are used by REC4590.                */
+/*       CPK014 - Submit jobs with user *JOBD                        */
+/*       194002 - Identify Branch/User in job names.                 */
+/*       CRT004 - Cashier Midas TCP/IP interface.                    */
+/*                Submit worker jobs based on received message type  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JOBINT &BRC &USR &UNIT &MSGTYP)
+ 
+/*/COPY WNCPYSRC,REC004500INT                                        */
+ 
+             DCL        VAR(&BRC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&JOBINT) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MSGTYP) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRVPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TELLER) TYPE(*CHAR) LEN(3)               /*194002*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC,REC004500MPS                                        */
+ 
+/* Submit Worker job with assoicated varaible */
+ 
+             IF         COND(&MSGTYP *EQ 'BOG') THEN(DO)
+/* Start of 194002 */
+/* Call REC4590 to end all Branch jobs and reset TTRNTM2 TWID   */    /*194002*/
+             CALL       PGM(REC4590) PARM(&BRC)                       /*194002*/
+/* Start of CRT007 */
+/* Submit job to ping the server and monitor for failure        */
+             CHGVAR     VAR(&JOBNAME) VALUE('HEARTB_' *CAT &BRC)      /*CRT007*/
+             SBMJOB     CMD(CALL PGM(REC4595) PARM(&BRC)) +
+                          JOB(&JOBNAME) +
+                          JOBD(CIJOBD) JOBQ(CIJOBQ) OUTQ(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)                /*CRT007*/
+/* End of CRT007 */
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('BRANCH_MON')         **/ /*194002*/
+             CHGVAR     VAR(&JOBNAME) VALUE('BRANCH_' *CAT &BRC)      /*194002*/
+/* End of 194002 */
+             CHGVAR     VAR(&SRVPGM) VALUE('REC4502')
+             ENDDO
+ 
+             IF         COND(&MSGTYP *EQ 'COG') THEN(DO)
+/* Start of 194002 */
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('CASHIER')           ***/ /*194002*/
+             CHGVAR     VAR(&TELLER) VALUE(%SUBSTRING(&USR 1 3))      /*194002*/
+             CHGVAR     VAR(&JOBNAME) VALUE('CSH' *CAT &TELLER +
+                        *CAT '_' *CAT &BRC)                           /*194002*/
+/* End of 194002 */
+             CHGVAR     VAR(&SRVPGM) VALUE('REC4501')
+             ENDDO
+ 
+             IF         COND(&MSGTYP *EQ 'FOG') THEN(DO)
+/* Start of 194002 */
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('FORWARDING')       ***/  /*194002*/
+             CHGVAR     VAR(&JOBNAME) VALUE('FORWRD_' *CAT &BRC)      /*194002*/
+/* End of 194002 */
+             CHGVAR     VAR(&SRVPGM) VALUE('REC4503')
+             ENDDO
+ 
+             IF         COND(&MSGTYP *EQ 'MOG') THEN(DO)
+/* Start of 194002 */
+/**********  CHGVAR     VAR(&JOBNAME) VALUE('BM_STATUS')        ***/  /*194002*/
+             CHGVAR     VAR(&JOBNAME) VALUE('BMSTAT_' *CAT &BRC)      /*194002*/
+/* End of 194002 */
+             CHGVAR     VAR(&SRVPGM) VALUE('REC4505')
+             ENDDO
+ 
+/************SBMJOB     CMD(CALL PGM(REC4520) PARM(&JOBINT &BRC &USR +                    /*CPK014*/
+/************             &UNIT &SRVPGM)) JOB(&JOBNAME) +                                 /*CPK014*/
+/************             JOBD(CIJOBD) JOBQ(CIJOBQ) OUTQ(*JOBD) +                         /*CPK014*/
+/************             RTGDTA(*JOBD) INLLIBL(*JOBD)                                    /*CPK014*/
+             SBMJOB     CMD(CALL PGM(REC4520) PARM(&JOBINT &BRC &USR +
+                          &UNIT &SRVPGM)) JOB(&JOBNAME) +
+                          JOBD(CIJOBD) JOBQ(CIJOBQ) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD)                        /*CPK014*/
+             MONMSG     MSGID(CPF1338) EXEC(GOTO CMDLBL(END))         /*194002*/
+ 
+/*/COPY WNCPYSRC,REC004500MPE                                        */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,REC004500ERR                                        */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            REC004500 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+/*/COPY WNCPYSRC,REC004500END                                        */
+ 
+             ENDPGM

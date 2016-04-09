@@ -1,0 +1,182 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Account Review Housekeeping')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC009697 - Account Review Housekeeping                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD027295           Date 24May14              */
+/*       Prev Amend No. CSD092  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027295 - SDC009697 COB component run too long             */
+/*       CSD092 - Account Review                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&EMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')                 /*MD027295*/
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(7) VALUE('  DILIB')                 /*MD027295*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('SDC009697 - Midas SD Account Review') +
+                          TOMSGQ(MRUNQ)
+ 
+/** Initialise job switches and create data area */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)                       /*MD027295*/
+             CHGVAR     VAR(%SUBSTRING(&DILIB 1 2)) VALUE(&SYSID)                       /*MD027295*/
+ 
+/** Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &CSTS)
+ 
+/** If it is NOT a restart. */
+ 
+/**********  IF         COND(&CSTS *NE 'Y') THEN(DO)                                    /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     DLTF       FILE(XSDACRVPD)                                              /*MD027295*/
+/**********     MONMSG     MSGID(CPF2105)                                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(SDACRVPD) +                                         /*MD027295*/
+/**********                TOFILE(&DPLIB/XSDACRVPD) +                                   /*MD027295*/
+/**********                MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     DLTF       FILE(XSDARCHPD)                                              /*MD027295*/
+/**********     MONMSG     MSGID(CPF2105)                                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(SDARCHPD) +                                         /*MD027295*/
+/**********                TOFILE(&DPLIB/XSDARCHPD) +                                   /*MD027295*/
+/**********                MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     DLTF       FILE(XSDHCINPD)                                              /*MD027295*/
+/**********     MONMSG     MSGID(CPF2105)                                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(SDHCINPD) +                                         /*MD027295*/
+/**********                TOFILE(&DPLIB/XSDHCINPD) +                                   /*MD027295*/
+/**********                MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     DLTF       FILE(XSDHCIDPD)                                              /*MD027295*/
+/**********     MONMSG     MSGID(CPF2105)                                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(SDHCIDPD) +                                         /*MD027295*/
+/**********                TOFILE(&DPLIB/XSDHCIDPD) +                                   /*MD027295*/
+/**********                MBROPT(*REPLACE) CRTFILE(*YES)                               /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********  ENDDO                                                                      /*MD027295*/
+ 
+/** If it is a restart. */
+ 
+             IF         COND(&CSTS *EQ 'Y') THEN(DO)
+ 
+             RSTOBJ     OBJ(SDACRVPD SDARCHPD SDHCINPD SDHCIDPD +
+                          SDHCILPD) SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/DBIC)                                             /*MD027295*/
+             ENDDO                                                                      /*MD027295*/
+/**********     CPYF       FROMFILE(XSDACRVPD) TOFILE(SDACRVPD) +                       /*MD027295*/
+/**********                MBROPT(*REPLACE)                                             /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(XSDARCHPD) TOFILE(SDARCHPD) +                       /*MD027295*/
+/**********                MBROPT(*REPLACE)                                             /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(XSDHCINPD) TOFILE(SDHCINPD) +                       /*MD027295*/
+/**********                MBROPT(*REPLACE)                                             /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********     CPYF       FROMFILE(XSDHCIDPD) TOFILE(SDHCIDPD) +                       /*MD027295*/
+/**********                MBROPT(*REPLACE)                                             /*MD027295*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                               /*MD027295*/
+/**********  ENDDO                                                                      /*MD027295*/
+ 
+/** Call CB0150 to update restart indicator */
+ 
+             CHGVAR     VAR(&CSTS) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+ 
+/** Call SD Account Review program */
+ 
+             CALL       PGM(SD009697) PARM(&CNAM &CSEQ)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&EMSG)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&EMSG) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********  DLTF       FILE(XSDACRVPD)                                                 /*MD027295*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  CALL       PGM(SCC000060) PARM('SDACRVPD' '*FIRST')                        /*MD027295*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +                             /*MD027295*/
+/**********               CMDLBL(ABNOR))                                                /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  DLTF       FILE(XSDARCHPD)                                                 /*MD027295*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  CALL       PGM(SCC000060) PARM('SDARCHPD' '*FIRST')                        /*MD027295*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +                             /*MD027295*/
+/**********               CMDLBL(ABNOR))                                                /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  DLTF       FILE(XSDHCINPD)                                                 /*MD027295*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  CALL       PGM(SCC000060) PARM('SDHCINPD' '*FIRST')                        /*MD027295*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +                             /*MD027295*/
+/**********               CMDLBL(ABNOR))                                                /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  DLTF       FILE(XSDHCIDPD)                                                 /*MD027295*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD027295*/
+/**********                                                                             /*MD027295*/
+/**********  CALL       PGM(SCC000060) PARM('SDHCIDPD' '*FIRST')                        /*MD027295*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +                             /*MD027295*/
+/**********               CMDLBL(ABNOR))                                                /*MD027295*/
+ 
+             CHGVAR     VAR(&CSTS) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC009697 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

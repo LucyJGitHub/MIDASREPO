@@ -1,0 +1,246 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Reset tolerance exceeded flags')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1459 - Reset tolerance exceeded flags (MDF)                *
+      *                                                               *
+      *  Function:  Reset tolerance flag in all MDF request files     *
+      *                                                               *
+      *  Called By: SD1450 - Data Feed Request List                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CSD006  *CREATE    Date 09Oct00               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSDMDFRL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      *
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Request Id
+     C                     PARM           P@REQI
+      ** Tolerance flag
+     C                     PARM           P@TOLX
+      *
+     C           *LIKE     DEFN MRREQI    P@REQI
+     C           *LIKE     DEFN MRTOLX    P@TOLX
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     COMIT
+     C                     ELSE
+      *
+      ** Unlock all the files opened in update
+     C                     UNLCKSDMDFRL0               90
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      *
+      ** Open file with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFRL0'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFRL0
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDMDFRL0
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           P@REQI    CHAINSDMDFRL0             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0046' P@RTN
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C           MRTOLX    IFNE 'Y'
+     C                     MOVEL'SDM0068' P@RTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     MOVELP@TOLX    MRTOLX
+     C                     UPDATSDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0063' P@RTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     MOVELP@TOLX    P2TOLX
+     C                     EXSR UPDITM
+     C           P2RTN     IFNE *BLANK
+     C                     MOVELP2RTN     P@RTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * UPDITM - Update Items                                         *
+      *****************************************************************
+     C           UPDITM    BEGSR
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P@REQI    P2REQI
+     C           *LIKE     DEFN MRTOLX    P2TOLX
+      *
+     C                     MOVEL*BLANK    P2RTN
+      *
+      ** Default parameters when not filled before EXSR UPDITM
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELP@REQI    P2REQI
+     C                     ENDIF
+     C           P2CMT     IFEQ *BLANK
+     C                     MOVEL'N'       P2CMT
+     C                     ENDIF
+      *
+     C                     CALL 'SD1457'
+     C                     PARM           P2RTN
+     C                     PARM           P2REQI
+     C                     PARM           P2TOLX
+     C                     PARM           P2CMT
+      *
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2TOLX
+     C                     MOVEL*BLANK    P2CMT   1
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+     C           ERTSYD    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

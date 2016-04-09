@@ -1,0 +1,357 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Format 24,9 amount with EDTCDE')
+     T* Utility Calls: Format Long Amount with IBM EDTCDE
+      *
+     H*  SYSTEM  : UTILITY OBJECTS
+     H* ANALYST     : J L Blenkinsop
+     H* DATE        : July 1988
+     H* DESCRIPTION : Formats long (24,9) amount using IBM Edit code
+      *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*     GL0138U  -                                                   *S01251
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMEND NO.  S01408            DATE 22AUG94               *
+     F*     PREV AMEND NO.  S01199            DATE 02MAY90               *
+     F*                     S01251            DATE 09FEB90               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*     S01408 - Hook GL0138UEPG added.                              *
+     F*              Hook GL0138UIPG added.                              *
+     F*              Hook GL0138UCPG added.                              *
+     F*     S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP                *
+     F*     S01251 - PROGRAM AND FIELD NAME CHANGES                      *
+     F*                                                                  *
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F********************************************************************
+     M* MAINTENANCE : *NONE
+      *
+      ***************************************************************
+      /EJECT
+     H*================================================================
+     H* OPERATION
+     H* ~~~~~~~~~
+     H*
+     H* 1. Edit numeric field (Example field is called VALUE and is 13,2) :
+     H*
+     H*                    Z-ADDVALUE     P@INT            Integer part
+     H*                    Z-ADDVALUE     P@DEC            Decimal part
+     H*
+     H*                    CALL 'UTREDIT'
+     H*                    PARM           P@INT  150       I:Integer portion
+     H*                    PARM           P@DEC   99       I:Decimal portion
+     H*                    PARM 2         P@DECP  10       I:Decimal places
+     H*                    PARM '3'       P@EDCD  1        I:Edit code
+     H*                    PARM *BLANK    P@CHEQ  1        I:Cheque protect
+     H*                    PARM           P@EDRS 30        O:Edited result
+     H*
+     H*================================================================
+      /EJECT
+     H*================================================================
+     H*
+     H* 2. Edited format
+     H*    ~~~~~~~~~~~~~
+     H*
+     H*    This program will deal with all of the current (Release 8)
+     H*    IBM edit codes, excluding User Defined codes (5 to 9), and
+     H*    the X,Y,Z codes.~~~~~~~~~
+     H*
+     H*    NOTE that the result is RIGHT JUSTIFIED, with a trailing
+     H*         blank or blanks if a positive number was edited with
+     H*         an edit code of A through M.
+     H*
+     H*    NOTE that the result will be ASTERISK FILLED to the left
+     H*         if 'Y' is specified on parameter P@CHEQ.
+     H*
+     H*    NOTE that non-blank-on-zero edit codes 1 3 A C J L will
+     H*         return a leading integer zero for a zero integer,
+     H*         as if J had been entered in the RPG Control spec.,
+     H*         and blank-on-zero edit codes 2 4 B D K M will return
+     H*         all blanks before the decimal point for a zero integer,
+     H*         as if D or blank had been entered in the Control spec.
+     H*
+     H*    NOTE that an unrecognised edit code will NOT cause an error;
+     H*         instead, it will return:
+     H*
+     H*              - Suppress leading zeros
+     H*              - No commas
+     H*              - No sign
+     H*              - Non-blank-on-zero
+     H*              - No leading integer zero for zero integer
+     H*              - No security asterisks
+     H*
+     H*    Examples of the editing to expect for each code are given below:
+     H*
+     H*       Value to edit:         1234567.89-
+     H*                                                      Zero   Zero
+     H*       Edit code   Edited result                      value  integer
+     H*       ~~~~~~~~~   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~   ~~~~~  ~~~~~~~
+     H*                   ....:....1....:....2....:....3..
+     H*          1                            1,234,567.89    0.00     0.89
+     H*          2                            1,234,567.89              .89
+     H*          3                              1234567.89    0.00     0.89
+     H*          4                              1234567.89              .89
+     H*
+     H*          A                          1,234,567.89CR  0.00     0.89CR
+     H*          A (Positive value)         1,234,567.89    0.00     0.89
+     H*          B                          1,234,567.89CR            .89CR
+     H*          B (Positive value)         1,234,567.89              .89
+     H*          C                            1234567.89CR  0.00     0.89CR
+     H*          D                            1234567.89CR            .89CR
+     H*          D (Positive value)           1234567.89              .89
+     H*
+     H*          J                           1,234,567.89-   0.00     0.89-
+     H*          K                           1,234,567.89-             .89-
+     H*          K (Positive value)          1,234,567.89              .89
+     H*          L                             1234567.89-   0.00     0.89-
+     H*          M                             1234567.89-             .89-
+     H*
+     H*          X                        Not supported
+     H*          Y                        Not supported
+     H*          Z                        Not supported
+     H*
+     H*    Security editing (example is 1,234,567.50) :
+     H*    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     H*                   ....:....1....:....2....:....3.. <- Output scale
+     H*               J =  ******************1,234,567.50
+     H*               L =  ********************1234567.50
+     H*      (neg)    J =  ********************1234567.50-
+     H*      (zero)   A =  *************************0.00
+     H*
+     H*
+     H*    Unrecognised edit code :
+     H*    ~~~~~~~~~~~~~~~~~~~~~~
+     H*                   ....:....1....:....2....:....3.. <- Output scale
+     H*               ? =                       1234567.89
+     H*      (neg)    ? =                       1234567.89
+     H*      (zero)   ? =                              .00
+     H*      (int=0)  ? =                              .89
+     H*
+     H*================================================================
+      /EJECT
+     E*ESTART
+      ***************************************************
+     E                    @CO     1   1 19               Comma constant
+     E                    @SD     1  10 10 9             Significant Dec.
+     E                    @OP        32  1               Outgoing Value
+     E                    @ED        31  1               Incoming Value
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E*                                                                   S01408
+     E** Core hook for externalisation.                                   S01408
+     E/COPY WNCPYSRC,GL0138UEPG                                           S01408
+     E*                                                                   S01408
+      ***************************************************
+      /EJECT
+     I*ISTART
+      ********************************************************************
+     I*                                                                   S01408
+     I** Core hook for externalisation.                                   S01408
+     I/COPY WNCPYSRC,GL0138UIPG                                           S01408
+     I*                                                                   S01408
+     IP@RSLT      DS
+      * Output array/field Data structure
+     I                                        1  32 @OP
+      *
+     IA@ED        DS
+      * Editing array/field Data structure
+     I                                        1  31 @ED
+     I                                        5  190W@INT
+     I                                       20  20 POINT
+     I                                       21  299W@DEC
+     I                                        5   7 I1
+     I                                        8  10 I2
+     I                                       11  13 I3
+     I                                       14  16 I4
+     I                                       17  19 I5
+     I                                       21  29 DEC
+     I                                       30  31 MINUS
+     I                                       30  31 CR
+      *
+     IA@CO        DS
+      * Comma editing constant
+     I                                        1  19 @CO
+     I                                        1   3 C1
+     I                                        5   7 C2
+     I                                        9  11 C3
+     I                                       13  15 C4
+     I                                       17  19 C5
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ********************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C           W@INT     PARM           P@INT  150       I:Integer
+     C           W@DEC     PARM           P@DEC   99       I:Decimal
+     C                     PARM           P@DECP  10       I:Decimal places
+     C                     PARM           P@EDTC  1        I:Edit code
+     C                     PARM           P@CHEQ  1        I:Cheque protect
+     C                     PARM           P@RSLT 32        O:Result
+      *****************************************************
+      * Initialise :
+      *
+     C                     MOVE '.'       POINT            Decimal point
+     C                     MOVE *BLANK    P@RSLT           Result field
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,GL0138UCPG                                           S01408
+     C*                                                                   S01408
+      *
+      * Check for cheque protection required :
+      *
+     C           P@CHEQ    IFEQ 'Y'                        IF 1 SECURITY
+     C                     MOVE *ALL'*'   P@RSLT             To output
+     C                     END                             FI 1
+      *
+      * Check for blanks required if whole number is zero :
+      *
+     C           P@DECP    ADD  1         P1               Set pointer
+      *
+     C           W@INT     IFEQ *ZERO                      IF 1 ZERO INTEGER
+     C           W@DEC     ANDLT@SD,P1                      AND ZERO DECIMAL
+     C           P@EDTC    IFEQ '2'                        IF 2 ZERO
+     C           P@EDTC    OREQ '4'                         OR  NOT
+     C           P@EDTC    OREQ 'B'                         OR  REQUIRED
+     C           P@EDTC    OREQ 'D'                         OR
+     C           P@EDTC    OREQ 'K'                         OR
+     C           P@EDTC    OREQ 'M'                         OR
+     C                     RETRN                             Return blanks
+     C                     END                             FI 2
+     C                     END                             FI 1
+      *
+      * Check for negative number :
+      *
+     C           W@INT     IFLT *ZERO                      IF 3 INT/DEC
+     C           W@DEC     ORLT *ZERO                       OR  NEGATIVE
+     C                     SETON                       01    Flag negative
+     C                     MLLZO'0'       W@INT              Make positive
+     C                     MLLZO'0'       W@DEC              Make positive
+     C                     ELSE                            EL 3 POSITIVE
+     C                     SETOF                       01    Flag positive
+     C                     END                             FI 3
+      *
+      * Check for commas required :
+      *
+     C           P@EDTC    IFEQ '1'                        IF 4 COMMA
+     C           P@EDTC    OREQ '2'                         OR  REQUIRED
+     C           P@EDTC    OREQ 'A'                         OR
+     C           P@EDTC    OREQ 'B'                         OR
+     C           P@EDTC    OREQ 'J'                         OR
+     C           P@EDTC    OREQ 'K'                         OR
+     C                     MOVE I1        C1                 Slice 1
+     C                     MOVE I2        C2                 Slice 2
+     C                     MOVE I3        C3                 Slice 3
+     C                     MOVE I4        C4                 Slice 4
+     C                     MOVE I5        C5                 Slice 5
+     C                     MOVELA@CO      A@ED               Commas->Edit
+     C                     END                             FI 4
+      *
+      * Strip zeros & commas up to decimal point :
+      *
+     C                     Z-ADD1         P1      30       Set Pointer
+      *
+     C           @ED,P1    DOWLE'0'                        DO 1 STRIP
+     C/COPY WNCPYSRC,GL0138UC01
+     C           @ED,P1    ANDNE'.'                         AND TO POINT
+     C/COPY WNCPYSRC,GL0138UC02
+     C                     MOVE '?'       @ED,P1             Scrap element
+     C                     ADD  1         P1                 Next
+     C                     END                             OD 1
+      *
+      * Check for zero required if integer is zero :
+      *
+     C           P1        IFEQ 20                         IF 6 ZERO INTEGER
+     C           P@EDTC    IFEQ '1'                        IF 7 ZERO
+     C           P@EDTC    OREQ '3'                         OR  REQUIRED
+     C           P@EDTC    OREQ 'A'                         OR
+     C           P@EDTC    OREQ 'C'                         OR
+     C           P@EDTC    OREQ 'J'                         OR
+     C           P@EDTC    OREQ 'L'                         OR
+     C                     MOVE '0'       @ED,19             Zero
+     C                     END                             FI 7
+     C                     END                             FI 6
+      *
+      * Delimit decimals :
+      *
+     C           P@DECP    ADD  20        P2      30       Last dec.pos.
+     C           P2        ADD  1         P1               Minus position
+      *
+      * Insert minus, if required :
+      *
+     C           P@EDTC    IFEQ 'A'                        IF 8 CR EDIT
+     C           P@EDTC    OREQ 'B'                         OR
+     C           P@EDTC    OREQ 'C'                         OR
+     C           P@EDTC    OREQ 'D'                         OR
+     C           P1        ADD  1         P2                 Set pointer
+     C           *IN01     IFEQ '1'                        IF 9 NEGATIVE
+     C                     MOVEA'CR'      @ED,P1             Credit
+     C                     ELSE                            EL 9 POSITIVE
+     C                     MOVEA'  '      @ED,P1             Blanks
+     C                     END                             FI 9
+     C                     END                             FI 8
+      *
+     C           P@EDTC    IFEQ 'J'                        IF 10 - EDIT
+     C           P@EDTC    OREQ 'K'                         OR
+     C           P@EDTC    OREQ 'L'                         OR
+     C           P@EDTC    OREQ 'M'                         OR
+     C                     Z-ADDP1        P2                 Set pointer
+     C           *IN01     IFEQ '1'                        IF 11 NEGATIVE
+     C                     MOVE '-'       @ED,P1             Credit
+     C                     ELSE                            EL 11 POSITIVE
+     C                     MOVE ' '       @ED,P1             Blanks
+     C                     END                             FI 11
+     C                     END                             FI 10
+      *
+      * Move edited result to output :
+      *
+     C                     Z-ADD32        P1               Set Pointer
+      *
+     C           P2        DOWGT*ZERO                      DO 2 MOVE
+     C           @ED,P2    ANDNE'?'                         AND WHILE DATA
+     C                     MOVE @ED,P2    @OP,P1             Move element
+     C                     SUB  1         P1                 Decr.pointer
+     C                     SUB  1         P2                 Decr.pointer
+     C                     END                             OD 2
+      *
+      * Return to caller, leaving program active in pool :
+      *
+     C                     RETRN                           Return
+      *
+      *****************************************************
+      /SPACE 3
+** @CO - Comma constant field
+   ,   ,   ,   ,
+** @SD - Significant decimal figures
+1000000000
+0100000000
+0010000000
+0001000000
+0000100000
+0000010000
+0000001000
+0000000100
+0000000010
+0000000001
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

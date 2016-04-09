@@ -1,0 +1,824 @@
+     H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Held items reorganisation & list')            *
+0001 H***********                                                         S01117
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0920 - HELD ITEMS REORGANISATION AND EXPIRED ITEMS LIST    *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0009 F*      1990, 1993                                               *
+0009 F*                                                               *
+      *  Last Amend No. MD030959           Date 17Jun15               *
+      *  Prev Amend No. 250798             Date 12May14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 BUG27549B          Date 09Jun10               *
+      *                 BUG27667           Date 14May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27549A          Date 13May10               *
+      *                 BUG27549           Date 29Apr10               *
+      *                 BUG27532           Date 26Apr10               *
+      *                 BUG27390           Date 06Apr10               *
+      *                 CAP205             Date 14Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG8710            Date 07Oct05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3584            Date 28Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2304            Date 30Apr04               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 08Mar95               *
+      *                 S01413             Date 13Apr93               *
+     F*                 S01117                  23JAN90               *
+0010 F*                 E14806                  01DEC88               *
+0011 F*                                                               *
+0011 F*****************************************************************
+0011 F*                                                               *
+      *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
+      *  250798 - Expiring held items on next working day is being    *
+      *           expired a day earlier. Since this runs in I/C       *
+      *           initiation, make sure checking is < rundate.        *
+      *         - Applied for MD026824.                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG27549B - SCC0411 00001 FOOB Error                         *
+      *  BUG27667 - Incorrect computation of held amount.             *
+      *             Add error recovery processing for ACCNTAB.        *
+      *  BUG27549A - SCC0411 00001 FOOB Error                         *
+      *  BUG27549 - SCC0411 00001 errors                              *
+      *  BUG27532 - Several fields are blank in the confirmation page *
+      *             (Recompile)                                       *
+      *  BUG27390 - RE0320P1 has blank Hard Held Item Flag            *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG8710 - OCBC 84526 - Expired Held Item amount remain       *
+      *            uncleared and displayed in report RE0790P1         *
+      *            (Retail Account Excess Report)                     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3584 - Increase the size of the file control fields.      *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2304 - Various file layout changes. Recompile.            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01408 - Addition of core hook RE0920CCPG                    *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*         - Recompiled due to changes to files HELDIL1, HELDOHA,*
+     F*           HELDOHB, HELDOHC, ACCNT.                            *
+     F*  S01117 - Multibranching                                      *
+0011 F*  E14806 - Report titles not being printed                     *
+0011 F*                                                               *
+0012 F*****************************************************************
+0011 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*ELDI***IP* F      80 18AI     2 DISK                               S01117
+     F***HELDIL1 IP  F      80 18AI     2 DISK                                         S01117 CGL029
+     F***HELDIL1 IP  F      90 18AI     2 DISK                                        CGL029 BUG3584
+     FHELDIL1 IP  F     102 18AI     2 DISK                                                  BUG3584
+0014 FTABLE   IF  F      96 12AI     2 DISK                               RE0920
+0015 F***HELDOHA O   F      80 18AI     2 DISK                                         RE0920 CGL029
+     FHELDOHA O   F      90 18AI     2 DISK                                                   CGL029
+0015 F***HELDOHB O   F      80 18AI     2 DISK                                         RE0920 CGL029
+     F***HELDOHB O   F      90 18AI     2 DISK                                       CGL029 BUG27549
+     FHELDOHB O   F      91 18AI     2 DISK                                                 BUG27549
+0015 F***HELDOHC O   F      80 18AI     2 DISK                                         RE0920 CGL029
+     F***HELDOHC O   F      90 18AI     2 DISK                                        CGL029 BUG3584
+     FHELDOHC O   F     102 18AI     2 DISK                                                  BUG3584
+0016 F*CCNT   UF  F     400 15AI     2 DISK                               S01117
+     F***ACCNT** UF  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   UF  F     400 24AI     2 DISK                                                   CGL029
+     F                                              KCOMIT                                  BUG27667
+     FRE0920AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
+     F*E0920P1O** F     132     OF     PRINTER                      S01124S01117
+     FRE0920P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+0018 F* 01            HELD ITEMS FILE HEADER                              RE0920
+0019 F* 02            HELD ITEMS DETAIL RECORD                            RE0920
+0020 F* 03            HELD ITEMS TRAILER RECORD                           RE0920
+0021 F* 04            HELD ITEMS CATCHALL                                 RE0920
+0022 F* 05            TABLES FILE ICR 1                                   RE0920
+0023 F* 06            ACCOUNTS MASTER FILE                                RE0920
+0024 F*   N21         RETAIL ACCOUNT NUMBER EXISTS                        RE0920
+0025 F*      N40      FIRST CYCLE CALCS                                   RE0920
+0025 F*       11      FIRST SELECTED RECORD IN A BRANCH                   S01117
+0025 F*       12      RECORD IS SELECTED IN A BRANCH                      S01117
+0025 F*       30      SOME DETAILS                                        S01117
+0026 F*       50      EXPIRED ITEM                                        RE0920
+0027 F*       51      CURRENT ITEM                                        RE0920
+0028 F*       60      HASH TOTAL OUT OF BALANCE                           RE0920
+0029 F*       61      NO OF ITEMS OUT OF BALANCE                          RE0920
+0025 F*       88      MULTIBRANCH INDICATOR MBIN = Y                      S01117
+0030 F*       U8      EITHER OF ABOVE OUT OF BALANCE                      RE0920
+0031 E                    INT         2 15 0                              RE0920
+0032 E                    DEC         2  3 0                              RE0920
+     E                    CPY@    1   1 80
+     E/EJECT
+0033 I*                                                                   RE0920
+0034 I*    HELD ITEMS FILE - CURRENT AND EXPIRED ITEMS                    RE0920
+0035 I*                                                                   RE0920
+0036 I*ELDI***NS* 01   1 CH                                               S01117
+     IHELDIL1 NS  01   1 CH                                               S01117
+0037 I**********                              1  80 LOT                                RE0920 CGL029
+     I                                        1  90 LOT                                       CGL029
+0038 I        NS  02   1 CD                                               RE0920
+0039 I**********                              2   70CNUM                  RE0920              CSD027
+0039 I                                        2   7 CNUM                                      CSD027
+0040 I                                        8  10 CCY                   RE0920
+0041 I**********                             11  140ACOD                               RE0920 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0042 I                                       15  160ACSQ                  RE0920
+0043 I                                       17  190HIRF                  RE0920
+0044 I                                       20  290ACNO            21    RE0920
+0045 I                                    P  33  350HEXP                  RE0920
+0046 I                                    P  36  423HLDA                  RE0920
+0047 I***********                            63  650BRCD                  S01117
+     I                                       63  65 BRCA  L1              S01117
+     I                                       81  900ACOD                                      CGL029
+     I                                       91  91 HHIT                                      CAP205
+0048 I**********                              1  80 LOT                                RE0920 CGL029
+     I                                        1  90 LOT                                       CGL029
+0049 I        NS  03   1 CT                                               RE0920
+0050 I                                        2  19 KEY                   RE0920
+0051 I**********                          P  22  230FLSZ                              RE0920 BUG3584
+0052 I**********                          P  60  610NHAU                              RE0920 BUG3584
+0053 I**********                          P  62  690VHAW                              RE0920 BUG3584
+0054 I**********                          P  70  710VHAD                              RE0920 BUG3584
+0055 I**********                          P  72  740LCD                               RE0920 BUG3584
+0056 I**********                          P  75  770TNLU                              RE0920 BUG3584
+     I**********                             81  900ACODT                             CGL029 BUG3584
+     I                                    P  24  270FLSZ                                     BUG3584
+     I                                    P  70  730NHAU                                     BUG3584
+     I                                    P  74  810VHAW                                     BUG3584
+     I                                    P  82  830VHAD                                     BUG3584
+     I                                    P  84  860LCD                                      BUG3584
+     I                                    P  87  890TNLU                                     BUG3584
+     I                                       93 1020ACODT                                    BUG3584
+0057 I*                                                                   RE0920
+0058 I*    CATCHALL                                                       RE0920
+0059 I*                                                                   RE0920
+0060 I        NS  04                                                      RE0920
+0061 I*                                                                   RE0920
+0062 I*    TABLES FILE  ICR 1                                             RE0920
+0063 I*                                                                   RE0920
+0064 ITABLE   NS  05   1 CD   2 C0   3 C1                                 RE0920
+0065 I       AND      12 C1  13 C0                                        RE0920
+0066 I                                        1   1 RECI                  RE0920
+0067 I                                       14  66 TITL                  RE0920
+0068 I                                       67  67 DATF                  RE0920
+0069 I***********                         P  77  790RUND                  S01117
+0070 I***********                            80  86 RUNA                  S01117
+0071 IACCNT   NS  06   1 CD                                               RE0920
+0072 I                                    P 220 2273HELD                  RE0920
+0073 I*    CATCHALL                                                       RE0920
+0074 I*                                                                   RE0920
+0075 I        NS  07                                                      RE0920
+     I**                                                                  S01117
+0115 I**      LOCAL DATA AREA FOR DATABASE ERROR REFERENCE                S01117
+0116 I*                                                                   S01117
+0117 ILDA        UDS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**   FILE INFORMATION DATA STRUCTURE - P1                           S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE - AU                           S01117
+     I**                                                                  S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**                                                                  S01117
+     I              A8BRNM                          BRNM                  S01117
+     I*                                                                   S01117
+0122 I*                                                                   S01117
+     I**                                                                  S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+     C                     MOVEACPY@      BIS@   80
+     C/EJECT                                                              S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+0076 C*                                                                   RE0920
+0077 C*    FIRST CYCLE PROCESSING                                         RE0920
+0078 C*                                                                   RE0920
+     C           *NAMVAR   DEFN           LDA                             S01117
+0079 C   40                GOTO DETAIL                                    RE0920
+     C**                                                                  S01117
+     C**         IN THE DATAAREA RUNDAT                                   S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C                     Z-ADD0         NOCU                            S01117
+     C**                                                                  S01117
+     C**         SETON MULTIBRANCH INDICATOR IF MBIN = Y                  S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     88                   S01117
+     C                     END                                            S01117
+      *                                                                                       CAP205
+      ** Check feature CAP205                                                                 CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM '       ' @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD   6                                           CAP205
+     C*                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE *ON       *IN39                                               CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE *OFF      *IN39                                               CAP205
+     C                     ENDIF                                                              CAP205
+0080 C                     SETON                     40                   RE0920
+0129 C*                                                                   S01117
+0130 C**         FOR DATA BASE ERROR REFERENCE                            S01117
+0131 C*                                                                   S01117
+0132 C                     MOVE *BLANKS   DBPGM                           S01117
+0132 C                     MOVEL'RE0920  'DBPGM                           S01117
+0133 C                     MOVE ' '       BLANKS 29                       S01117
+0134 C                     MOVE BLANKS    DBKEY                           S01117
+0134 C                     MOVE BLANKS    DBFILE                          S01117
+     C**                                                                  S01117
+0081 C                     EXSR ZSYSTM                                    RE0920
+     C                     Z-ADD*ZERO     ZER7    70                                         BUG3584
+0082 C                     Z-ADD0         ZER3    30                      RE0920
+0083 C                     Z-ADD0         ZER15  150                      RE0920
+0139 C   99                SETON                     U7U8LR               S01117
+0140 C   99                MOVE '01'      DBASE                           S01117
+0141 C   99                MOVE 'TABLE'   DBFILE                          S01117
+0142 C   99                MOVELZTABKY    DBKEY                           S01117
+0143 C   99                GOTO TOTAL                                     S01117
+0084 C                     SETOF                     5051                 RE0920
+     C**                                                                  S01117
+0085 C           DETAIL    TAG                                            RE0920
+     C*                                                                   S01117
+     C                     SETOF                     11                   S01117
+     C           HHIT      IFEQ *BLANKS                                                     BUG27390
+     C                     MOVEL'N'       HHIT                                              BUG27390
+     C                     ENDIF                                                            BUG27390
+0086 C   01                                                               RE0920
+0087 COR 04                                                               RE0920
+0088 COR 03                GOTO TOTAL                                     RE0920
+     C*                                                                   S01117
+     C           *INL1     IFEQ '1'                                       S01117
+     C                     CLOSERE0920P1                                  S01117
+     C                     SETOF                     12                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+0089 C*    SET INDICATORS TO SHOW WHETHER ITEM IS CURRENT OR EXPIRED      RE0920
+0090 C********** HEXP      COMP RUND                 515050                            RE0920 250798
+     C           HEXP      COMP RUND                 515051                                   250798
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE0920CCPG                                           S01408
+     C*                                                                   S01408
+0091 C*                                                                   RE0920
+0092 C*    ACC. NO OF EXPIRED ITEMS   IN NOEX                             RE0920
+0093 C*    ACC. NO OF CURRENT ITEMS   IN NOCU                             RE0920
+0094 C*                                                                   RE0920
+0095 C***50***** NOEX      ADD  1         NOEX    30                                  RE0920 BUG3584
+0095 C***50***** NOEXB     ADD  1         NOEXB   30                                  S01117 BUG3584
+     C   50      NOEX      ADD  1         NOEX    70                                         BUG3584
+     C   50      NOEXB     ADD  1         NOEXB   70                                         BUG3584
+0095 C   50                SETON                     30                   S01117
+0096 C***51***** NOCU      ADD  1         NOCU    30                                  RE0920 BUG3584
+     C   51      NOCU      ADD  1         NOCU    70                                         BUG3584
+0097 C* IF EXPIRED, SUBTRACT HELD AMOUNT FROM S/ACCNT                     RE0920
+0098 C   51                GOTO ACCUM                                     RE0920
+     C*                                                                   S01117
+     C  N12                SETON                     1112                 S01117
+     C*                                                                   S01117
+     C**  MULTIBRANCH TEST FOR OUTPUT                                     S01117
+     C*                                                                   S01117
+     C           *IN11     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C                     OPEN RE0920P1                                  S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C                     Z-ADD1         NOEXB                           S01117
+     C**                                                                  S01117
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     OUT  LDA                                       S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**                                                                  S01117
+      **                                                                  S01117
+      ** GET BRANCH NAME, ONLY WHEN MBIN = 'Y'                            S01117
+      **                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+      *                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                             S01117 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        S01117 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVEL@DSNB     DBKEY                           S01117
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************S01117
+     C                     Z-ADD12        DBASE            * DBERROR 012 *S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO TOTAL                                     S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+0345 C*                                                                   S01117
+0099 C                     SETOF                     06                   RE0920
+0100 C                     MOVELCNUM      KEY1    9                       RE0920
+0101 C                     MOVE CCY       KEY1                            RE0920
+0102 C**********           MOVELACOD      KEY2    6                                    RE0920 CGL029
+     C**********           MOVELACOD      KEY2   10                                   CGL029 BUG8710
+     C                     MOVELACOD      KEY2   12                                          BUG8710
+0103 C                     MOVE ACSQ      KEY2                            RE0920
+0104 C*****                MOVELKEY1      KEYA   15                       S01117
+0105 C*****                MOVE KEY2      KEYA                            S01117
+     C**********           MOVELKEY1      KEY3   15                                    S01117 CGL029
+     C                     MOVELKEY1      KEY3   21                                           CGL029
+     C                     MOVE KEY2      KEY3                            S01117
+     C**********           MOVELKEY3      KEYA   18                                    S01117 CGL029
+     C                     MOVELKEY3      KEYA   24                                           CGL029
+     C                     MOVE BRCA      KEYA                            S01117
+0106 C           KEYA      CHAINACCNT                10                   RE0920
+0107 C           HELD      SUB  HLDA      HLDO   153                      RE0920
+0108 C           ACCUM     TAG                                            RE0920
+0109 C*                                                                   RE0920
+0110 C*    ACC. VALUE OF EXPIRED ITEMS IN INT,1 , DEC,1                   RE0920
+0111 C*    ACC. VALUE OF CURRENT ITEMS IN INT,2 , DEC,2                   RE0920
+0112 C*                                                                   RE0920
+0113 C   50                Z-ADD1         X       10                      RE0920
+0114 C   51                Z-ADD2         X                               RE0920
+0115 C                     EXSR HASH                                      RE0920
+0116 C           TOTAL     TAG                             ** TOTAL TAG **RE0920
+0117 C***LR*****    NOEX      ADD  NOCU      NOTOT   30                               RE0920 BUG3584
+     CLR         NOEX      ADD  NOCU      NOTOT   70                                         BUG3584
+0118 CLR                   Z-ADDINT,1     ZZAMTI                          RE0920
+0119 CLR                   Z-ADDDEC,1     ZZAMTD                          RE0920
+0120 CLR                   Z-ADDINT,2     ZZTOTI                          RE0920
+0121 CLR                   Z-ADDDEC,2     ZZTOTD                          RE0920
+0122 CLR                   EXSR GLZSUM                                    RE0920
+0123 CLR         ZZTOTI    COMP VHAW                 6060                 RE0920
+0124 CLRN60      ZZTOTD    COMP VHAD                 6060                 RE0920
+0125 CLR         NOTOT     COMP NHAU                 6161                 RE0920
+0126 CLR 60                                                               RE0920
+0127 COR 61                SETON                     U8                   RE0920
+      *                                                                                    BUG27549A
+     C***LR*60**              Z-ADDVHAW      INT,2                               BUG27549A BUG27549B
+     C***LR*60**              Z-ADDVHAD      DEC,2                               BUG27549A BUG27549B
+     C***LR*61**              Z-ADDNHAU      NOCU                                BUG27549A BUG27549B
+     CLR 60                                                                                BUG27549B
+     COR 61                Z-ADDVHAW      INT,2                                            BUG27549B
+     CLR 60                                                                                BUG27549B
+     COR 61                Z-ADDVHAD      DEC,2                                            BUG27549B
+     CLR 61                                                                                BUG27549B
+     COR 60                Z-ADDNHAU      NOCU                                             BUG27549B
+     C**                                                                  S01117
+     C**                                                                  S01117
+     C*       ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     CLR                   OUT  LDA                                       S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ     5                       S01117
+     CLR                   PARM *BLANKS   SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C**                                                                  S01117
+0206 C*                                                                   S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+     C***********          SETON                     OF             E14806S01117
+0212 C********************************************************************S01117
+0213 C**                                                                  S01117
+0128 C           HASH      BEGSR                           ** SUBR HASH **RE0920
+0129 C                     Z-ADDHLDA      ZZAMT                           RE0920
+0130 C                     Z-ADDINT,X     ZZTOTI                          RE0920
+0131 C                     Z-ADDDEC,X     ZZTOTD                          RE0920
+0132 C                     EXSR GLZADD                                    RE0920
+0133 C                     Z-ADDZZTOTI    INT,X                           RE0920
+0134 C                     Z-ADDZZTOTD    DEC,X                           RE0920
+0135 C                     ENDSR                                          RE0920
+0136 C********************************************************************RE0920
+0137 C**                                                                  RE0920
+0138 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0920
+0139 C**                                                                  RE0920
+0140 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0920
+0141 C**                                                                  RE0920
+0142 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0920
+0143 C                     MOVEL'01      'ZTABKY 12                       RE0920
+0144 C                     MOVE '  10'    ZTABKY                          RE0920
+0145 C**                                                                  RE0920
+0146 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0920
+0147 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0920
+0148 C**                                                                  RE0920
+0149 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0920
+0150 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0920
+0151 C**                                                                  RE0920
+0152 C                     ENDSR                                          RE0920
+0153 C**                                                                  RE0920
+0154 C**                                                                  RE0920
+0155 C********************************************************************RE0920
+0156 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  RE0920
+0157 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            RE0920
+0158 C*                                                                   RE0920
+0159 CSR         GLZADD    BEGSR                           *** GLZADD ****RE0920
+0160 C*                                                                   RE0920
+0161 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  RE0920
+0162 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS RE0920
+0163 C*                                                                   RE0920
+0164 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       RE0920
+0165 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  RE0920
+0166 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  RE0920
+0167 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  RE0920
+0168 C*                                                                   RE0920
+0169 CSR                   EXSR GLZSUM                                    RE0920
+0170 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *RE0920
+0171 C*                                                                   RE0920
+0172 C********************************************************************RE0920
+0173 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            RE0920
+0174 C*                        GLZADD, GLZSUB, GLZCMP.                    RE0920
+0175 C*          PARAMETERS PASSED -                                      RE0920
+0176 C*                     I/P ZZAMTI ZZAMTD                             RE0920
+0177 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       RE0920
+0178 C*                                                                   RE0920
+0179 CSR         GLZSUM    BEGSR                           *** GLZSUM ****RE0920
+0180 C*                                                                   RE0920
+0181 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  RE0920
+0182 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  RE0920
+0183 CSR                   SETOF                     919293               RE0920
+0184 CSR                   SETOF                     949599               RE0920
+0185 C*                                                                   RE0920
+0186 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      RE0920
+0187 CSR         ZZAMTI    COMP 0                      9293               RE0920
+0188 CSR 93      ZZAMTD    COMP 0                      9293               RE0920
+0189 CSR 93                GOTO ZZSEND                     ZERO BYPASS    RE0920
+0190 C*                                                                   RE0920
+0191 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       RE0920
+0192 CSR         ZZTOTI    COMP 0                      9193               RE0920
+0193 CSR 93      ZZTOTD    COMP 0                      9193               RE0920
+0194 C*                                                                   RE0920
+0195 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           RE0920
+0196 CSR 93                Z-ADDZZAMTI    ZZTOTI                          RE0920
+0197 CSR 93                Z-ADDZZAMTD    ZZTOTD                          RE0920
+0198 CSR 93                GOTO ZZSEND                     ZERO BYPASS    RE0920
+0199 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        RE0920
+0200 CSR 91N92                                                            RE0920
+0201 CORN91 92             GOTO ZZOFPS                                    RE0920
+0202 C*                                                                   RE0920
+0203 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      RE0920
+0204 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   RE0920
+0205 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.RE0920
+0206 C*                                                                   RE0920
+0207 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VERE0920
+0208 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VERE0920
+0209 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           RE0920
+0210 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           RE0920
+0211 C*                                                                   RE0920
+0212 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    RE0920
+0213 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. RE0920
+0214 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      RE0920
+0215 CSRN99                Z-ADDZZWK2     ZZTOTD                          RE0920
+0216 CSRN99                Z-ADDZZWK3     ZZTOTI                          RE0920
+0217 C*                                                                   RE0920
+0218 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. RE0920
+0219 CSR 99                Z-ADD0         ZZAMT  153                      RE0920
+0220 CSR                   GOTO ZZSEND                                    RE0920
+0221 C*                                                                   RE0920
+0222 C* THE 'SIGNS' ARE DIFFERENT                                         RE0920
+0223 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**RE0920
+0224 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            RE0920
+0225 C*                                                                   RE0920
+0226 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      RE0920
+0227 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      RE0920
+0228 C*                                                                   RE0920
+0229 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           RE0920
+0230 C*                                                                   RE0920
+0231 CSR 91                Z-SUBZZTOTI    ZZTOTI                          RE0920
+0232 CSR 91                Z-SUBZZTOTD    ZZTOTD                          RE0920
+0233 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            RE0920
+0234 C*                                                                   RE0920
+0235 CSR         ZZTOTI    COMP ZZAMTI               93  95               RE0920
+0236 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               RE0920
+0237 C*                                                                   RE0920
+0238 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   RE0920
+0239 CSR 95                Z-ADD0         ZZTOTI                          RE0920
+0240 CSR 95                Z-ADD0         ZZTOTD                          RE0920
+0241 CSR 95                GOTO ZZSEND                                    RE0920
+0242 C*                                                                   RE0920
+0243 C* IF ZZTOT GT. ZZAMT.                                               RE0920
+0244 CSR 93      ZZAMTD    COMP ZZTOTD               94                   RE0920
+0245 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          RE0920
+0246 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           RE0920
+0247 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          RE0920
+0248 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          RE0920
+0249 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          RE0920
+0250 C*                                                                   RE0920
+0251 C*                                                                   RE0920
+0252 C* IF ZZAMT GT. ZZTOT.                                               RE0920
+0253 CSRN93      ZZTOTD    COMP ZZAMTD               94                   RE0920
+0254 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      RE0920
+0255 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           RE0920
+0256 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          RE0920
+0257 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          RE0920
+0258 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          RE0920
+0259 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          RE0920
+0260 C*                                                                   RE0920
+0261 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          RE0920
+0262 CSR                   SETOF                     94                   RE0920
+0263 CSR 93 91                                                            RE0920
+0264 CORN93 92             SETON                     94                   RE0920
+0265 CSR 94                Z-SUBZZTOTI    ZZTOTI                          RE0920
+0266 CSR 94                Z-SUBZZTOTD    ZZTOTD                          RE0920
+0267 C**                                                                  RE0920
+0268 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            RE0920
+0269 CSR 92                Z-SUBZZAMTI    ZZAMTI                          RE0920
+0270 CSR 92                Z-SUBZZAMTD    ZZAMTD                          RE0920
+0271 CSR         ZZSEND    TAG                             ** ZZSEND TAG *RE0920
+0272 C**                                                                  RE0920
+0273 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           RE0920
+0274 CSR                   SETOF                     96                   RE0920
+0275 CSR         ZZTOTD    COMP 0                        91               RE0920
+0276 CSR 91      ZZTOTI    COMP 0                      96                 RE0920
+0277 CSR 96                MOVE '.000-'   ZZNEGD  5                       RE0920
+0278 CSR                   ENDSR                             ** ENDSR **  RE0920
+0279 C********************************************************************RE0920
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+0532 C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+0280 OHELDOHA D        01                                                 RE0920
+0281 O**********               LOT       80                                            RE0920 CGL029
+     O                         LOT       90                                                   CGL029
+0282 OHELDOHB D        02 51                                              RE0920
+0283 O**********               LOT       80                                            RE0920 CGL029
+     O                         LOT       90                                                   CGL029
+     O                         HHIT      91                                                 BUG27549
+0284 OHELDOHC T        LR                                                 RE0920
+0285 O                                    1 'T'                           RE0920
+0286 O                         KEY       19                               RE0920
+0287 O**********               NOCU      21P                                          RE0920 BUG3584
+0288 O**********               FLSZ      23P                                          RE0920 BUG3584
+0289 O**********               NOCU      25P                                          RE0920 BUG3584
+0290 O**********               INT,2     33P                                          RE0920 BUG3584
+0291 O**********               DEC,2     35P                                          RE0920 BUG3584
+0292 O**********               ZER3      37P                                          RE0920 BUG3584
+0293 O**********               ZER3      39P                                          RE0920 BUG3584
+0294 O**********               ZER15     47P                                          RE0920 BUG3584
+0295 O**********               ZER3      49P                                          RE0920 BUG3584
+0296 O**********               ZER15     57P                                          RE0920 BUG3584
+0297 O**********               ZER3      59P                                          RE0920 BUG3584
+0298 O**********               NOCU      61P                                          RE0920 BUG3584
+0299 O**********               INT,2     69P                                          RE0920 BUG3584
+0300 O**********               DEC,2     71P                                          RE0920 BUG3584
+0301 O**********               LCD       74P                                          RE0920 BUG3584
+0302 O**********               RUND      77P                                          RE0920 BUG3584
+     O**********                         80 '999'                                     S01117 BUG3584
+     O**********               ACODT     90                                           CGL029 BUG3584
+     O                         NOCU      23P                                                 BUG3584
+     O                         FLSZ      27P                                                 BUG3584
+     O                         NOCU      31P                                                 BUG3584
+     O                         INT,2     39P                                                 BUG3584
+     O                         DEC,2     41P                                                 BUG3584
+     O                         ZER7      45P                                                 BUG3584
+     O                         ZER7      49P                                                 BUG3584
+     O                         ZER15     57P                                                 BUG3584
+     O                         ZER3      59P                                                 BUG3584
+     O                         ZER15     67P                                                 BUG3584
+     O                         ZER3      69P                                                 BUG3584
+     O                         NOCU      73P                                                 BUG3584
+     O                         INT,2     81P                                                 BUG3584
+     O                         DEC,2     83P                                                 BUG3584
+     O                         LCD       86P                                                 BUG3584
+     O                         RUND      89P                                                 BUG3584
+     O                                   92 '999'                                            BUG3584
+     O                         ACODT    102                                                  BUG3584
+0303 OACCNT   D        06 50                                              RE0920
+0304 O                         HLDO     227P                              RE0920
+     O*E0920P1H**203   05                                           S01124S01117
+0306 O*******OR**      OF                                                 S01117
+     ORE0920P1H  203   11                                                 S01117
+     O       OR        OF 12                                              S01117
+0307 O***********                        20 'REFERENCE RE0920'            S01117
+     O                                   24 'REFERENCE RE0920P1'          S01117
+0308 O                         TITL      92                               RE0920
+0309 O                                  104 'DATE'                        RE0920
+0310 O                         RUNA     113                               RE0920
+0311 O                                  122 'PAGE'                        RE0920
+0312 O                         PAGE  Z  127                               RE0920
+0313 O********H**1     05                                                 S01117
+0314 O*******OR**      OF                                                 S01117
+     O        H  1     11                                                 S01117
+     O       OR        OF 12                                              S01117
+0315 O                                   75 'EXPIRED HELD ITEMS REPOR'    RE0920
+0316 O                                   76 'T'                           RE0920
+     O                 88                86 'BRANCH'                      S01117
+     O                 88      BRCA      90                               S01117
+     O                 88                91 '-'                           S01117
+     O                 88      BRNM     121                               S01117
+0317 O********H**2     05                                                 S01117
+0318 O*******OR**      OF                                                 S01117
+     O        H  2     11                                                 S01117
+     O       OR        OF 12                                              S01117
+0319 O                                   75 '------------------------'    RE0920
+0320 O                                   76 '-'                           RE0920
+0321 O********H**1     05                                                 S01117
+0322 O*******OR**      OF                                                 E14806
+0322 O*******OR**      OFNLR                                        E14806S01117
+     O        H  1     11                                                 S01117
+     O       OR        OF 12                                              S01117
+0323 O                                   29 'ACCOUNT NO'                  RE0920
+0324 O*****                              60 'RETAIL ACCOUNT NO'           S01117
+     O                                   73 'RETAIL ACCOUNT NO'           S01117
+0325 O*****                              83 'HELD ITEM '                  S01117
+     O                                  103 'HELD ITEM '                  S01117
+     O                 39               112 'HARD'                                            CAP205
+0326 O*****                             104 'BRANCH'                      S01117
+0327 O********H**2     05                                                 S01117
+0328 O*******OR**      OF                                                 E14806
+0328 O*******OR**      OFNLR                                        E14806S01117
+     O        H  2     11                                                 S01117
+     O       OR        OF 12                                              S01117
+0329 O*****                              81 'REF NO'                      S01117
+     O                                  101 'REF NO'                      S01117
+     O                 39               112 'HELD'                                            CAP205
+     O        D  1     02 50                                              RE0920
+0331 O**********                         33 '-   -    -'                               RE0920 CGL029
+     O**********       88      BRCA      16                                            S01117 CGL029
+     O**********       88                17 '-'                                        S01117 CGL029
+0332 O**********               CNUM      23                                            RE0920 CGL029
+0333 O**********               CCY       27                                            RE0920 CGL029
+0334 O**********               ACOD      32                                            RE0920 CGL029
+     O                                   33 '-   -          -'                                CGL029
+     O                 88      BRCA      10                                                   CGL029
+     O                 88                11 '-'                                               CGL029
+     O                         CNUM      17                                                   CGL029
+     O                         CCY       21                                                   CGL029
+     O                         ACOD      26                                                   CGL029
+0335 O                         ACSQ      35                               RE0920
+0336 O*****                 N21ACNO      55                               S01117
+     O                      N21ACNO      68                               S01117
+0337 O*****                    HIRF      80                               S01117
+     O                         HIRF     100                               S01117
+     O                 39      HHIT     110                                                   CAP205
+0338 O*****                    BRCD     102                               S01117
+0339 O********T**338   LR                                                 E14806
+0339 O********TF*338   LR                                           E14806S01117
+     O        TF3      L1 12                                              S01117
+0340 O                                   62 'NO. EXPIRED'                 RE0920
+0341 O***********              NOEX  3   69                               S01117
+     O**********               NOEXB 3   69                                           S01117 BUG3584
+     O                         NOEXB 3   73                                                  BUG3584
+     O        TF3      LR U7 U8                                           S01117
+     O       AND       12                                                 S01117
+     O                                   73 '*** DATABASE ERROR ***'      S01117
+     O*                                                                   S01117
+     O        TF3      L1 12                                              S01117
+     O                 88                65 '*** END OF REPORT FOR'       S01117
+     O                 88                73 ' BRANCH '                    S01117
+     O                 88      BRCA      76                               S01117
+     O                 88                80 ' ***'                        S01117
+     O                N88                72 '*** END OF REPORT ***'       S01117
+     ORE0920AUT  203   LR                                                 S01117
+     O                                   24 'REFERENCE RE0920AU'          S01117
+     O                         TITL      92                               S01117
+     O                                  104 'DATE'                        S01117
+     O                         RUNA     113                               S01117
+     O                                  122 'PAGE'                        S01117
+     O                         PAGE1 Z  127                               S01117
+     O        T  1     LR                                                 S01117
+0315 O                                   75 'EXPIRED HELD ITEMS REPOR'    S01117
+0316 O                                   76 'T'                           S01117
+     O                                   91 '   RUN CONTROLS'             S01117
+     O        T  2     LR                                                 S01117
+0319 O                                   75 '------------------------'    S01117
+0320 O                                   76 '-'                           S01117
+0342 O********T**2     LR                                                 S01117
+     O        T  220   LR                                                 S01117
+0343 O                                   39 'END OF REPORT TOTALS'        RE0920
+0344 O        T  3     LR                                                 RE0920
+0345 O                                   39 'NUMBER OF HELD ITEMS'        RE0920
+0346 O                                   52 'AFTER UPDATE'                RE0920
+0347 O**********               NOCU  3   59                                           RE0920 BUG3584
+     O                         NOCU  3   63                                                  BUG3584
+0348 O**********                         80 'VALUE OF HELD ITEMS'                    RE0920 BUG27549
+0349 O**********                         93 'AFTER UPDATE'                           RE0920 BUG27549
+0350 O**********               INT,2 Z  115                                          RE0920 BUG27549
+0351 O**********               DEC,2    118                                          RE0920 BUG27549
+     O                                   83 'VALUE OF HELD ITEMS'                           BUG27549
+     O                                   96 'AFTER UPDATE'                                  BUG27549
+     O                         INT,2 Z  118                                                 BUG27549
+     O                         DEC,2    121                                                 BUG27549
+0352 O********T**2     LR 60                                              S01117
+0353 O*******OR**      LR 61                                              S01117
+0352 O        T  2     LR 60NU7                                           S01117
+0353 O       OR        LR 61NU7                                           S01117
+0354 O                                   28 'CALCULATED - NUMBER OF'      RE0920
+0355 O                                   52 'HELD ITEMS AFTER UPDATE'     RE0920
+0356 O**********               NOTOT 3   59                                           RE0920 BUG3584
+     O                         NOTOT 3   63                                                  BUG3584
+0357 O**********                         80 'VALUE OF HELD ITEMS'                    RE0920 BUG27549
+0358 O**********                         93 'AFTER UPDATE'                           RE0920 BUG27549
+0359 O**********               ZZTOTIZ  115                                          RE0920 BUG27549
+0360 O**********               ZZTOTD   118                                          RE0920 BUG27549
+     O                                   83 'VALUE OF HELD ITEMS'                           BUG27549
+     O                                   96 'AFTER UPDATE'                                  BUG27549
+     O                         ZZTOTIZ  118                                                 BUG27549
+     O                         ZZTOTD   121                                                 BUG27549
+0361 O********T**2     LR                                                 S01117
+0361 O        T  2     LRNU7                                              S01117
+0362 O                    61             59 '***  DIFFERENCE  ***'        RE0920
+0363 O                    60            114 '***  DIFFERENCE  ***'        RE0920
+     O**                                                                  S01117
+0361 O        T 3      LRN30NU7                                           S01117
+0362 O                                   62 '***  NO DETAILS TO '         S01117
+0362 O                                   73 'REPORT  ***'                 S01117
+     O*                                                                   S01117
+     O*  DATABASE ERROR OUTPUT                                            S01117
+     O*                                                                   S01117
+     O        T 3      LR U7                                              S01117
+     O                                   54 'DATABASE ERROR'              S01117
+     O                         DBASE     58                               S01117
+     O                                   72 'IN PROGRAM'                  S01117
+     O                         DBPGM     83                               S01117
+     O        T 2      LR U7                                              S01117
+     O                                   44 'FILE'                        S01117
+     O                         DBFILE    53                               S01117
+     O                                   58 'KEY'                         S01117
+     O                         DBKEY     88                               S01117
+0364 O********T**      LR                                                 S01117
+0365 O***********                        72 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

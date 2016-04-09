@@ -1,0 +1,260 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PL Initialise new field on PF/CLOANCL')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas Plato Interface Enhancement.                           *
+      *                                                               *
+      *  PL0001  -  Initialise New Field on PF/CLOANCL.               *
+      *                                                               *
+      *  Function:  This program should only be run as part of the    *
+      *             installation procedure for the Midas-Plato        *
+      *             Interface - Phase 3.                              *
+      *                                                               *
+      *  Input   :  Action Code (7)                                   *
+      *                                                               *
+      *  Output  :  Return Code (7)                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002  *CREATE    Date 08Mar99               *
+      *                                                               *
+      * ------------------------------------------------------------  *
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CPL002 - Midas-Plato Interface                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  -------------------------------------------                  *
+      *                                                               *
+      *   01  - Record processed from PF/CLOANCL.                     *
+      *   02  - Record processed from PF/MCLONCL.                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  -------------------------------                              *
+      *                                                               *
+      *   #P01   - Initialisation Subroutine                          *
+      *   #P02   - Update PF/CLOANCL and PF/MCLONCL.                  *
+      *   #P03   - Termination Subroutine                             *
+      *                                                               *
+      *                                                               *
+      *   *PSSR  - Database Error Processing Subroutine.              *
+      *                                                               *
+      *****************************************************************
+      *
+     FCLOANCL UP  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      * UPD : Midas LE Customer Loans
+      *
+     FMCLONCL US  E           K        DISK
+     F            CLOANCLF                          KRENAMEMCLONCLF
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      * UPD : Midas LE Matured Loans
+      *
+      *****************************************************************
+      *
+     E                    STK        99  8               Subr stack
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+     ICLOANCLF    01
+     IMCLONCLF    02
+     IDBERR       DS                            256
+      **  Local data area for database error details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      **  M A I N   P R O C E S S I N G
+      *****************************************************************
+      *
+      **  Perform Initialisation Processing.
+      *
+      *
+     C                     Z-ADD1         @Q      30       increment stack
+     C                     MOVEL'MAINLINE'STK,@Q           load subr name
+      *
+     C           @WKF01    IFNE 'Y'
+     C                     EXSR #P01
+     C                     MOVEL'Y'       @WKF01  1
+     C                     ENDIF
+      *
+      **  Update Processing.
+      *
+     C           P@ACTN    IFEQ '*UPDATE'
+     C                     EXSR #P02
+     C                     ENDIF
+      *
+      **  Perform Termination Processing.
+      *
+     C                     MOVE *BLANKS   STK,@Q           remove subr name
+     C                     SUB  1         @Q               decrement stack
+      *
+      *
+     CLR                   EXSR #P03
+     C/EJECT
+      *
+      *****************************************************************
+      *
+      **  #P01 - Initialisation Subroutine.
+      *
+      *****************************************************************
+      *
+     C           #P01      BEGSR                           ** #P01 SR   **
+      *
+     C                     ADD  1         @Q               increment stack
+     C                     MOVEL'#P01    'STK,@Q           load subr name
+      *
+      **  Entry List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@ACTN  7        I: Action Code
+      *
+     C                     PARM           P@RTCD  7        O: Return Code
+      *
+      **  Initialise Database Error Details.
+      *
+     C                     MOVEL'PL0001'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+      *
+      **  Set up Copyright parameter. Initialise output fields.
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+     C                     MOVE *BLANKS   STK,@Q           remove subr name
+     C                     SUB  1         @Q               decrement stack
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *   #P02   - Update Processing subroutine
+      *
+      *****************************************************************
+      *
+     C           #P02      BEGSR                           ** #P02 SR   **
+      *
+     C                     ADD  1         @Q               increment stack
+     C                     MOVEL'#P02    'STK,@Q           load subr name
+      *
+      ** Check Original Interest Rate for a value.
+      *
+     C           OINR      IFEQ 0
+     C           INTR      ANDNE0
+      *
+     C                     Z-ADDINTR      OINR
+      *
+      ** Update record on either PF/CLOANCL or PF/MCLONCL.
+      *
+     C           *IN01     IFEQ '1'
+     C                     UPDATCLOANCLF
+     C                     ENDIF
+      *
+     C           *IN02     IFEQ '1'
+     C                     UPDATMCLONCLF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   STK,@Q           remove subr name
+     C                     SUB  1         @Q               decrement stack
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      **  #P03 - Termination Subroutine.
+      *
+      *****************************************************************
+      *
+     C           #P03      BEGSR                           ** #P03 SR   **
+      *
+     C                     ADD  1         @Q               increment stack
+     C                     MOVEL'#P03    'STK,@Q           load subr name
+      *
+     C                     COMIT
+     C                     MOVEL*BLANKS   P@RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     MOVE *BLANKS   STK,@Q           remove subr name
+     C                     SUB  1         @Q               decrement stack
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      **  *PSSR - Database Error Subroutine.
+      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR  **
+      *
+      **  If an error has occurred within this program, update LDA, set
+      **  error switches, dump program and return to calling program.
+      *
+     C           WWDUMP    IFEQ *BLANK
+     C                     DUMP
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     MOVE 'Y'       WWDUMP  1
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C                     ENDIF
+      *
+     C                     MOVEL'*ERROR'  P@RTCD
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

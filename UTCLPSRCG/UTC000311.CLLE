@@ -1,0 +1,143 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Build outfiles for SRCOBJXCHK')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000311 - Build outfiles for SRCOBJXCHK                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. BUG27989           Date 08Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUT011  *CREATE    Date 12Dec07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27989 - HATS should run with/without LDAP                */
+/*       CUT011 - Rewrite of command.  Make it more flexible and     */
+/*                easier to maintain.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB)
+ 
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SOBJTYPE) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&SOBJLIB) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+ 
+             DCLF       FILE(UTSRCXPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Set up outfiles. */
+             DLTF       FILE(QTEMP/UTC00311FA)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC00311FB)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MEMBERS)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/OBJECTS)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPFDMBTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC00311FA)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(UTC00311FB)
+ 
+READFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(COPY)
+             ENDDO
+ 
+/* Display list of source file members. */
+             DSPFD      FILE(&SRCLIB/&SXSRCF) TYPE(*MBR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/MEMBERS) +
+                          OUTMBR(*FIRST *ADD)
+ 
+/* Display list of objects but only if combination of object type and library */
+/*  is not the same.                                                          */
+             IF         COND(&SXOBJT *NE &SOBJTYPE *OR &SXLIB *NE +
+                          &SOBJLIB) THEN(DO)
+/* If the object types are *OPMMOD or *PGM then there is the risk that these */
+/*  objects get duplicated so they will need special processing.             */
+                IF         COND(&SXOBJT *EQ '*OPMMOD') THEN(DO)
+                   DSPOBJD    OBJ(&SXLIB/*ALL) OBJTYPE(*PGM) +
+                                OUTPUT(*OUTFILE) OUTFILE(QTEMP/OPMMOD) +
+                                OUTMBR(*FIRST *REPLACE)
+                   MONMSG     MSGID(CPF2105 CPF2123) EXEC(DO)
+                      GOTO       CMDLBL(MODULE)
+                   ENDDO
+/* Run SQL to remove all programs compiled from *PGMSRC*. */
+                   CHGVAR     VAR(&SQLSTM) VALUE('delete from QTEMP/OPMMOD +
+                                where SUBSTR(ODSRCF,3,3) =' *BCAT &QUOTE +
+                                *TCAT 'PGM' *TCAT &QUOTE *TCAT ';')
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+MODULE:
+                   DSPOBJD    OBJ(&SXLIB/*ALL) OBJTYPE(*MODULE) +
+                                OUTPUT(*OUTFILE) OUTFILE(QTEMP/OPMMOD) +
+                                OUTMBR(*FIRST *ADD)
+                   MONMSG     MSGID(CPF2105 CPF2123)
+                   CPYF       FROMFILE(QTEMP/OPMMOD) TOFILE(QTEMP/OBJECTS) +
+                                MBROPT(*ADD) CRTFILE(*YES) FMTOPT(*MAP *DROP)
+                   GOTO       CMDLBL(CHGVAR)
+                ENDDO
+ 
+                IF         COND(&SXOBJT *EQ '*PGM') THEN(DO)
+                   DSPOBJD    OBJ(&SXLIB/*ALL) OBJTYPE(*PGM) +
+                                OUTPUT(*OUTFILE) OUTFILE(QTEMP/OPMMOD) +
+                                OUTMBR(*FIRST *REPLACE)
+                   MONMSG     MSGID(CPF2105 CPF2123) EXEC(DO)
+                      GOTO       CMDLBL(CHGVAR)
+                   ENDDO
+/* Run SQL to remove all programs not compiled from *PGMSRC*. */
+                   CHGVAR     VAR(&SQLSTM) VALUE('delete from QTEMP/OPMMOD +
+                                where SUBSTR(ODSRCF,3,3) <>' *BCAT &QUOTE +
+                                *TCAT 'PGM' *TCAT &QUOTE *TCAT ';')
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   CPYF       FROMFILE(QTEMP/OPMMOD) TOFILE(QTEMP/OBJECTS) +
+                                MBROPT(*ADD) CRTFILE(*YES) FMTOPT(*MAP *DROP)
+                   GOTO       CMDLBL(CHGVAR)
+                ENDDO
+/* For all other object types. */
+                DSPOBJD    OBJ(&SXLIB/*ALL) OBJTYPE(&SXOBJT) +
+                             OUTPUT(*OUTFILE) OUTFILE(QTEMP/OBJECTS) +
+                             OUTMBR(*FIRST *ADD)
+                MONMSG     MSGID(CPF2105 CPF2123)
+ 
+CHGVAR:
+                CHGVAR     VAR(&SOBJTYPE) VALUE(&SXOBJT)
+                CHGVAR     VAR(&SOBJLIB) VALUE(&SXLIB)
+             ENDDO
+ 
+             GOTO       CMDLBL(READFILE)
+COPY:
+             CPYF       FROMFILE(QTEMP/MEMBERS) +
+                          TOFILE(QTEMP/UTC00311FA) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802)                                  /*BUG27989*/
+             CPYF       FROMFILE(QTEMP/OBJECTS) +
+                          TOFILE(QTEMP/UTC00311FB) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802)                                  /*BUG27989*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+ 
+             ENDPGM

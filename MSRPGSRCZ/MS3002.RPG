@@ -1,0 +1,332 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SWIFT TCP/IP FTP Cmd Files -RECEIVE -')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Midas S.W.I.F.T. DIRECT LINK                 *
+     F*                                                               *
+     F*  MS3002  -  Setup FTP Input Command File                      *
+     F*                                                               *
+     F*  Function : This program updates the FTP Command file with    *
+     F*             the user and password.                            *
+     F*             It also updates files with the source and         *
+     F*             target names of the file to be received.          *
+     F*                                                               *
+     F*  Called By: MSC3002 - SWIFT File Transfer Protocol Functions  *
+     F*                                                               *
+     F*  Calls:     -                                                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. CSW001             DATE 20MAR95 *CREATE*      *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *   CSW001   SWIFT Alliance Batch Interface                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*
+     FMSRCVFPDUF  E                    DISK         KINFSR *PSSR
+     F** TCP/IP FTP Input Command File -
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                     INDICATOR USAGE                           *
+     F*                     ---------------                           *
+     F*                                                               *
+     F*   01      End of file for MSRCVFPD                            *
+     F*   11      Record identifying indicator for PF/MSRCVFPD        *
+     F*   50      Work indicator                                      *
+     F*   U7&U8   Error occured                                       *
+     F*   LR      End of program                                      *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Statement
+     E*
+     E                    ARA        80  1
+     E** Array to hold FTP Command
+     E/COPY WNCPYSRC,MS3002E001
+     E*
+     I/EJECT
+     ICPYR@#      DS
+     I** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I            DS
+     I** Input File Record
+     I                                        1  80 FTIN
+     I                                        1   3 WCMD
+     I*
+     I            DS
+     I** Remote File Name Data Structure
+     I                                        1  80 TARGET
+     I                                        1   2 TSBSID
+     I*
+     IFSCAN       DS                             80
+     I*
+     IMSSTAT      DS                            256
+     I                                      255 256 MSLID
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local data area
+     I*
+     C/EJECT
+     C*
+     C** Entry Parameter List.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   4
+     C                     PARM           PRCVF  20
+     C*
+     C** Execute INIT Subroutine
+     C*
+     C                     EXSR INIT
+     C*
+     C** Read First record of the FTP Input Command file (this will
+     C** contain the profile and password used on the remote system)
+     C*
+     C                     READ MSRCVFPD                 01
+     C*
+     C** If the file is empty treat as a database error
+     C*
+     C           *IN01     IFEQ '1'                        B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+     C** Determine User Id and Password from MSRCVFPD
+     C** This processing has no effect -> will be reviewed for Security Audit.
+     C*
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVEAFTIN      ARA
+     C                     MOVEAARA,1     WUSER  10
+     C                     MOVEAARA,12    WPASS  10
+     C*
+     C** Processing to update correct remote file name
+     C*
+     C** Check for valid file name received and name length
+     C*
+     C                     Z-ADD0         T       20
+     C                     MOVE *BLANKS   ARG1    1
+     C                     MOVELPRCVF     FSCAN
+     C           ARG1      SCAN FSCAN     T              50
+     C*
+     C           T         IFEQ 1                          B1
+     C           T         ORGT 21
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL'        'DBKEY            ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+     C** Read succeeding records of FTP Command file until end of
+     C** file reached or a command line using 'GET' is found.
+     C*
+     C                     READ MSRCVFPD                 01
+     C*
+     C** Do while not end of file & FTP command is not 'GET'
+     C*
+     C           *IN01     DOWEQ'0'                        B1
+     C           WCMD      ANDNE'GET'
+     C*
+     C** Read next record from file
+     C*
+     C                     READ MSRCVFPD                 01
+     C*
+     C                     ENDDO                           E1
+     C*
+     C** If End of file reached without finding a 'GET' command
+     C** record then treat as an abnormal error
+     C*
+     C           *IN01     IFEQ '1'                        B1
+     C                     EXSR *PSSR
+     C                     ELSE                            X1
+     C*
+     C** Save destination part of the record for later use
+     C*
+     C                     MOVEAFTIN      ARA
+     C                     MOVE *BLANKS   FSCAN
+     C                     MOVELFTIN      FSCAN
+     C                     Z-ADD0         Z       20
+     C                     MOVE ' '       ARG1    1
+     C           ARG1      SCAN FSCAN:5   Z            50
+     C           *IN50     IFEQ '1'                        *B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL'        'DBKEY            ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+     C*
+     C** Save destination part of the record for later use
+     C*
+     C                     ADD  1         Z
+     C                     MOVEAARA,Z     TARGET 80
+     C           TSBSID    IFNE MSLID
+     C           *LOCK     IN   LDA                        *B2
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL'        'DBKEY            ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+     C*
+     C** Add remote file name to the "GET" record.
+     C*
+     C           ARA,Z     DOWNE'/'                        *B2
+     C           Z         ANDGT0
+     C                     SUB  1         Z
+     C                     END                             *E2
+     C*
+     C           Z         IFEQ 0                          *B2
+     C           ARA,Z     ORNE '/'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+     C*
+     C           ARA,Z     IFEQ '/'                        *B2
+     C                     ADD  1         Z
+     C                     MOVEA*BLANK    ARA,Z
+     C                     MOVEAPRCVF     ARA,Z
+     C                     ADD  T         Z
+     C                     MOVEATARGET    ARA,Z
+     C                     END                             *E2
+     C*
+     C** Check MSRCVFPD to be correctly updated (e.g. not enough space)
+     C*
+     C                     MOVELTARGET    FSCAN
+     C                     MOVE '(REPLACE'ARG8    8
+     C                     Z-ADD0         @Z      30
+     C           ARG8      SCAN FSCAN     @Z           50
+     C           *IN50     IFEQ '1'                        *B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL'      '  DBKEY            ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+     C*
+     C                     ADD  8         @Z
+     C           @Z        ADD  Z         @Z
+     C           @Z        IFGT 80                         *B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MSRCVFPD'DBFILE
+     C                     MOVEL'LENGTH'  DBKEY            ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     MOVEL'MS3002'  DBPGM            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+      *
+     C*
+     C** Line formatted with the correct remote file name ->
+     C** Update record and exit loop
+     C*
+     C                     MOVEAARA       FTIN
+     C                     UPDATMSRCVFF
+     C*
+     C                     END                             E1
+     C/COPY WNCPYSRC,MS3002C001
+     C*
+     C** End program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : INIT   - Initialisation Subroutine              *
+     C*                                                               *
+     C*  CALLED BY  : This routine is called at the beginning of the  *
+     C*               program to initilaise fields                    *
+     C*                                                               *
+     C*  FIELDS USED: WPSSR  - Flag to dump program only once         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                            ** INIT  **
+     C*
+     C** Copyright Statement.
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define Dataarea.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           MSSTAT
+     C                     IN   MSSTAT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : *PSSR  - Error Handling Subroutine              *
+     C*                                                               *
+     C*  CALLED BY  : This routine is called if there are any program *
+     C*               or file errors.                                 *
+     C*                                                               *
+     C*  FIELDS USED: WPSSR  - Flag to dump program only once         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Ensure dump is executed only once.
+     C*
+     C           WPSSR     IFEQ *BLANK
+     C                     MOVEL'Y'       WPSSR   1
+     C                     DUMP
+     C                     END
+     C*
+     C**  Exit program.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C           #PSSR9    ENDSR                           ** #PSSR9 **
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

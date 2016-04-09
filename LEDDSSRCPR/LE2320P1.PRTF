@@ -1,0 +1,1029 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas LE Unauthorized transactions print')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  PRTF/LE2320P1 - Unauthorised Transactions Print              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. 201123             Date 07Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 202364             Date 28Jan02               *
+      *                 201797             Date 15Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 127658             Date 22Nov97               *
+      *                 124047             Date 14Oct97               *
+      *                 CLE002 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00284                                 *
+      *             WNCPYSRC,LEH00285                                 *
+      *             WNCPYSRC,LEH00286                                 *
+      *             WNCPYSRC,LEH00287                                 *
+      *             WNCPYSRC,LEH00288                                 *
+      *             WNCPYSRC,LEH00289                                 *
+      *             WNCPYSRC,LEH00290                                 *
+      *             WNCPYSRC,LEH00291                                 *
+      *             WNCPYSRC,LEH00292                                 *
+      *             WNCPYSRC,LEH00293                                 *
+      *             WNCPYSRC,LEH00294                                 *
+      *             WNCPYSRC,LEH00295                                 *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  202364 - Fee settlement is not included in the unauthorised  *
+      *           transaction report. Fix was to add LF/LEFEEAL3 to   *
+      *           to be able to generate entries for Fee              *
+      *           settlement transactions.                            *
+      *  201797 - Several changes to report LE2320P1.                 *
+      *  127658 - Unauthorised facility amendment and manual          *
+      *           facility utilisation not included in the report     *
+      *  124047 - Unauthorised facilities not reported                *
+      *  CLE002 - Customer Lending Enhancements - Authorisation       *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+      *--------------------------------*
+      ***  Report Header Record Format *
+      *--------------------------------*
+      *
+     A          R HEADP1                    TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                      SKIPB(3)
+     A                                     6'REFERENCE  LE2320P1'
+     A            BJURPT    R             37REFFLD(URPT)
+     A                                   101'DATE'
+     A            BJMRDT    R            107REFFLD(MRDT)
+     A                                   119'PAGE'
+     A                                   125PAGNBR
+     A                                      EDTCDE(Z)
+     A                                      SPACEA(1)
+      *
+     A                                   101'TIME'
+     A                                   107TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                      SPACEA(1)
+      *
+     A                                    40'Unauthorised Transaction+
+     A                                      s Report'
+      *
+     A  37                                89'BRANCH -'
+     A  37        A8BRCD    R             98REFFLD(BRCA)
+     A  37        A8BRNM    R            102REFFLD(BRNM)
+      *
+     A                                   132' '
+     A                                      SPACEA(1)
+     A                                    40'------------------------+
+     A                                      --------'
+     A                                      SPACEA(1)
+      *
+     A          R SUB1
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED LOANS / PAR+
+     A                                      TICIPATION SOLD / PARTICI+
+     A                                      PATION PURCHASED'
+     A                                      SPACEA(1)
+     A                                     1'------------------------+
+     A                                      -------------------------+
+     A                                      ----------------'
+     A                                      SPACEA(1)
+     A                                     1'Loan'
+     A**Start of change 201123
+     A**********                           9'Customer'                                        201123
+     A                                     8'Customer'
+     A**End of change 201123
+     A**Start of change 201797
+     A**********                          19'Branch'                                          201797
+     A**********                          77'Value'                                           201797
+     A**********                          85'Maturity'                                        201797
+     A**********                         100'Insert User'                                     201797
+     A**********                         120'Amend User'                                      201797
+     A**Start of change 201123
+     A**********                          19'Customer'                                        201123
+     A**********                          31'Branch'                                          201123
+     A**********                          91'Value'                                           201123
+     A**********                          99'Maturity'                                        201123
+     A**********                         109'Insert User'                                     201123
+     A                                    17'Customer'
+     A                                    30'Orig'
+     A                                    37'Branch'
+     A                                    94'Value'
+     A                                   101'Maturity'
+     A                                   110'Insert User'
+     A**End of change 201123
+     A                                   122'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201123
+     A**********                           9'Number'                                          201123
+     A                                     8'Number'
+     A**End of change 201123
+     A**Start of change 201797
+     A**********                          19'Code'                                           201797
+     A**********                          27'Description'                                    201797
+     A**********                          52'Amount'                                         201797
+     A**********                          72'Ccy'                                            201797
+     A**********                          77'Date'                                           201797
+     A**********                          85'Date'                                           201797
+     A**********                         100'Profile'                                        201797
+     A**********                         120'Profile'                                        201797
+     A**Start of change 201123
+     A**********                          19'Short Name'                                      201123
+     A**********                          31'Code'                                            201123
+     A**********                          43'Description'                                     201123
+     A**********                          69'Amount'                                          201123
+     A**********                          85'Ccy'                                             201123
+     A**********                          91'Date'                                            201123
+     A**********                          99'Date'                                            201123
+     A**********                         109'Profile'                                         201123
+     A                                    17'Short Name'
+     A                                    28'Borrower'
+     A                                    37'Code'
+     A                                    48'Description'
+     A                                    73'Amount'
+     A                                    89'Ccy'
+     A                                    94'Date'
+     A                                   101'Date'
+     A                                   110'Profile'
+     A**End of change 201123
+     A                                   122'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *
+     A          R SUB2
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED LOAN AMENDM+
+     A                                      ENTS'
+     A                                      SPACEA(1)
+     A                                     1'------------------------+
+     A                                      ----'
+     A                                      SPACEA(1)
+     A                                     1'Loan'
+     A**Start of change 201123
+     A**********                           9'Customer'                                        201123
+     A                                     8'Customer'
+     A**End of change 201123
+     A**Start of change 201797
+     A**********                          19'Branch'                                          201797
+     A**********                          31'Value'                                           201797
+     A**********                          89'Stop'                                            201797
+     A**********                         100'Insert User'                                     201797
+     A**********                         120'Amend User'                                      201797
+     A**Start of change 201123
+     A**********                          19'Customer'                                        201123
+     A**********                          31'Branch'                                          201123
+     A**********                          46'Value'                                           201123
+     A                                    17'Customer'
+     A                                    30'Orig'
+     A                                    37'Branch'
+     A                                    49'Value'
+     A**End of change 201123
+     A                                   109'Insert User'
+     A                                   122'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797
+     A**********                           9'Number'                                         201797
+     A**********                          19'Code'                                           201797
+     A**********                          26'Seq'                                            201797
+     A**********                          31'Date'                                           201797
+     A**********                          42'Amendment type'                                 201797
+     A**********                          67'Amount/Rate'                                    201797
+     A**********                          85'Ccy'                                            201797
+     A**********                          89'Accrual'                                        201797
+     A**********                         100'Profile'                                        201797
+     A**********                         120'Profile'                                        201797
+     A**Start of change 201123
+     A**********                          10'Number'                                          201123
+     A**********                          19'Short Name'                                      201123
+     A**********                          32'Code'                                            201123
+     A**********                          39'Seq'                                             201123
+     A**********                          46'Date'                                            201123
+     A**********                          57'Amendment type'                                  201123
+     A                                     8'Number'
+     A                                    17'Short Name'
+     A                                    28'Borrower'
+     A                                    37'Code'
+     A                                    44'Seq'
+     A                                    49'Date'
+     A                                    58'Amendment type'
+     A**End of change 201123
+     A                                    80'Amendment Detail'
+     A                                   103'Ccy'
+     A                                   109'Profile'
+     A                                   122'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *
+     A          R SUB3
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED ROLLOVERS'
+     A                                      SPACEA(1)
+     A                                     1'----------------------'
+     A                                      SPACEA(1)
+     A                                     1'Loan'
+     A**Start of change 201797                                                                201797
+     A**********                           9'Customer'                                        201797
+     A**********                          19'Branch'                                          201797
+     A**********                          26'Rollover'                                        201797
+     A**********                          39'N E W'                                           201797
+     A**********                          55'N E W'                                           201797
+     A**********                          64'Next Rollover'                                   201797
+     A**********                         101'New'                                             201797
+     A**********                         110'Insert User'                                     201797
+     A**********                         122'Amend User'                                      201797
+     A**Start of change 201123
+     A**********                           8'Customer'                                        201123
+     A**********                          18'Customer'                                        201123
+     A**********                          28'Branch'                                          201123
+     A**********                          35'Rollover'                                        201123
+     A**********                          48'N E W'                                           201123
+     A**********                          65'N E W'                                           201123
+     A**********                          74'Next Roll'                                       201123
+     A                                     8'Cust'
+     A                                    16'Customer'
+     A                                    28'Orig'
+     A                                    35'Brch'
+     A                                    40'Rollovr'
+     A                                    52'N E W'
+     A                                    68'N E W'
+     A                                    76'Nxt Roll'
+     A**End of change 201123
+     A                                   108'New'
+     A                                   113'New'
+     A                                   123'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797                                                                201797
+     A**********                           9'Number'                                          201797
+     A**********                          19'Code'                                            201797
+     A**********                          28'Date'                                            201797
+     A**********                          35'Code'                                            201797
+     A**********                          40'Spread/Rate'                                     201797
+     A**********                          53'Ind'                                             201797
+     A**********                          58'Basis'                                           201797
+     A**********                          67'Date'                                            201797
+     A**********                          84'Principal'                                       201797
+     A**********                         101'Maturity'                                        201797
+     A**********                         110'Profile'                                         201797
+     A**********                         122'Profile'                                         201797
+     A**Start of change 201123
+     A**********                           9'Number'                                          201123
+     A**********                          17'Short Name'                                      201123
+     A**********                          29'Code'                                            201123
+     A**********                          35'Date'                                            201123
+     A**********                          44'Code'                                            201123
+     A**********                          50'Spread/Rate'                                     201123
+     A**********                          63'Ind'                                             201123
+     A**********                          67'Basis'                                           201123
+     A                                     8'Number'
+     A                                    15'Short Name'
+     A                                    26'Borrower'
+     A                                    35'Code'
+     A                                    40'Date'
+     A                                    48'Code'
+     A                                    54'Spread/Rate'
+     A                                    66'Ind'
+     A                                    70'Basis'
+     A**End of change 201123
+     A                                    76'Date'
+     A                                    90'Principal'
+     A                                   108'Ccy'
+     A                                   113'Maturity'
+     A                                   123'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *
+     A          R SUB4
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED GUARANTEES'
+     A                                      SPACEA(1)
+     A                                     1'-----------------------'
+     A                                      SPACEA(1)
+     A                                     1'Customer'
+     A**Start of change 201797
+     A**********                          12'Loan/'                                           201797
+     A**********                          19'Branch'                                          201797
+     A**********                          41'G''teed'                                         201797
+     A**********                          57'Interest'                                        201797
+     A**********                          74'Interest'                                        201797
+     A**********                          93'Maturity'                                        201797
+     A**********                         106'Insert User'                                     201797
+     A**********                         122'Amend User'                                      201797
+     A**Start of change 201123
+     A**********                          11'Customer'                                        201123
+     A**********                          24'Loan/'                                           201123
+     A**********                          38'Branch'                                          201123
+     A**********                          57'Guaranteed'                                      201123
+     A**********                          76'Guarantor'                                       201123
+     A                                    10'Customer'
+     A                                    23'Orig'
+     A                                    30'Loan/'
+     A                                    42'Branch'
+     A                                    59'Guaranteed'
+     A                                    78'Guarantor'
+     A**End of change 201123
+     A                                    89'Review'
+     A                                    99'Expiry'
+     A                                   109'Insert User'
+     A                                   122'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797
+     A**********                          12'Fclty'                                           201797
+     A**********                          19'Code'                                            201797
+     A**********                          27'Ccy'                                             201797
+     A**********                          41'Amount'                                          201797
+     A**********                          59'Rate'                                            201797
+     A**********                          75'Accrued'                                         201797
+     A**********                          95'Date'                                            201797
+     A**********                         106'Profile'                                         201797
+     A**********                         122'Profile'                                         201797
+     A**Start of change 201123
+     A**********                          11'Short Name'                                      201123
+     A**********                          24'Fclty'                                           201123
+     A**********                          33'Seq'                                             201123
+     A**********                          39'Code'                                            201123
+     A**********                          46'Ccy'                                             201123
+     A**********                          57'Amount'                                          201123
+     A**********                          76'Short Name'                                      201123
+     A                                    10'Short Name'
+     A                                    21'Borrower'
+     A                                    30'Fclty'
+     A                                    38'Seq'
+     A                                    43'Code'
+     A                                    49'Ccy'
+     A                                    59'Amount'
+     A                                    78'Short Name'
+     A**End of change 201123
+     A                                    89'Date'
+     A                                    99'Date'
+     A                                   109'Profile'
+     A                                   122'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *
+     A          R SUB5
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED FEES'
+     A                                      SPACEA(1)
+     A                                     1'-----------------'
+     A                                      SPACEA(1)
+     A                                     1'Customer'
+     A**Start of change 201797
+     A**********                          12'Branch'                                          201797
+     A**********                          19'Facility'                                        201797
+     A**********                          29'Loan'                                            201797
+     A**********                          77'Fee period'                                      201797
+     A**********                          90'Pay'                                             201797
+     A**********                          95'Adv/'                                            201797
+     A**********                         103'Insert User'                                     201797
+     A**********                         116'Amend User'                                      201797
+     A**Start of change 201123
+     A**********                          11'Customer'                                        201123
+     A**********                          24'Branch'                                          201123
+     A**********                          32'Loan/'                                           201123
+     A**********                          83'Fee period'                                      201123
+     A                                    10'Customer'
+     A                                    23'Orig'
+     A                                    30'Branch'
+     A                                    37'Loan/'
+     A                                    84'Fee period'
+     A**End of change 201123
+     A                                    98'Pay'
+     A                                   103'Adv/'
+     A                                   109'Insert User'
+     A                                   122'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797
+     A**********                          12'Code'                                            201797
+     A**********                          29'Number'                                          201797
+     A**********                          36'Seq'                                             201797
+     A**********                          41'Code'                                            201797
+     A**********                          53'Amount'                                          201797
+     A**End of change 201797
+      *                                              Start /127658/
+     A***********                         80'Ccy'
+     A**Start of change 201797
+     A**********                          70'Ccy'                                             201797
+     A**End of change 201797
+      *                                               End  /127658/
+     A**Start of change 201797
+     A**********                          76'Start'                                           201797
+     A**********                          85'End'                                             201797
+     A**********                          91'On'                                              201797
+     A**********                          95'Conf'                                            201797
+     A**********                         103'Profile'                                         201797
+     A**********                         116'Profile'                                         201797
+     A**Start of change 201123
+     A**********                          11'Short Name'                                      201123
+     A**********                          24'Code'                                            201123
+     A**********                          32'Fclty'                                           201123
+     A**********                          40'Seq'                                             201123
+     A**********                          45'Code'                                            201123
+     A**********                          59'Amount'                                          201123
+     A**********                          76'Ccy'                                             201123
+     A**********                          82'Start'                                           201123
+     A**********                          91'End'                                             201123
+     A                                    10'Short Name'
+     A                                    21'Borrower'
+     A                                    30'Code'
+     A                                    37'Fclty'
+     A*/COPY WNCPYSRC,LEH00440
+     A                                    45'Seq'
+     A                                    49'Code'
+     A*/COPY WNCPYSRC,LEH00441
+     A                                    62'Amount'
+     A                                    78'Ccy'
+     A                                    83'Start'
+     A                                    90'End'
+     A**End of change 201123
+     A                                    98'On'
+     A                                   103'Conf'
+     A                                   109'Profile'
+     A                                   122'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *                                              Begin  /124047/
+     A          R SUB6
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED FACILITIES'
+     A                                      SPACEA(1)
+     A                                     1'-----------------------'
+     A                                      SPACEA(1)
+     A                                     1'Customer'
+     A*/COPY WNCPYSRC,LEH00284
+     A                                    11'Customer'
+     A*/COPY WNCPYSRC,LEH00285
+     A                                    33'Branch'
+     A**Start of change 201797
+     A**********                          41'Syndicate'                                       201797
+     A  33                                41'Syndicate'
+     A**End of change 201797
+      *                                              Start /127658/
+     A***********                         74'Start'
+     A***********                         83'Expiry'
+     A***********                         92'Insert User'
+     A***********                        105'Amend User'
+     A**Start of change 201797
+     A**********                          79'Start'                                           201797
+     A**********                          88'Expiry'                                          201797
+     A**********                          97'Insert User'                                     201797
+     A**********                         112'Amend User'                                      201797
+     A                                    84'Start'
+     A                                    93'Expiry'
+     A                                   103'Insert User'
+     A                                   116'Amend User'
+     A**End of change 201797
+      *                                               End  /127658/
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A*/COPY WNCPYSRC,LEH00286
+     A                                    11'Short Name'
+     A                                    23'Facility'
+     A*/COPY WNCPYSRC,LEH00287
+     A                                    33'Code'
+     A**Start of change 201797
+     A**********                          41'Type'                                            201797
+     A  33                                41'Type'
+     A**********                          52'Amount'                                          201797
+     A                                    60'Amount'
+     A**End of change 201797
+      *                                              Start /127658/
+     A***********                         69'Ccy'
+     A***********                         74'Date'
+     A***********                         83'Date'
+     A***********                         92'Profile'
+     A***********                        105'Profile'
+     A**Start of change 201797
+     A**********                          74'Ccy'                                             201797
+     A**********                          79'Date'                                            201797
+     A**********                          88'Date'                                            201797
+     A**********                          97'Profile'                                         201797
+     A**********                         112'Profile'                                         201797
+     A                                    77'Ccy'
+     A                                    84'Date'
+     A                                    93'Date'
+     A                                   103'Profile'
+     A                                   116'Profile'
+     A**End of change 201797
+      *                                               End  /127658/
+     A                                      SPACEA(1)
+      *                                              End    /124047/
+      *                                              Start /127658/
+     A          R SUB7
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED FACILITY +
+     A                                      AMENDMENTS'
+     A                                      SPACEA(1)
+     A                                     1'----------------------+
+     A                                      ----------'
+     A                                      SPACEA(1)
+     A**Start of change 201797
+     A**********                           1'Cust.'                                           201797
+     A**********                           9'Fclty'                                           201797
+     A**********                          19'Branch'                                          201797
+     A**********                          33'Value'                                           201797
+     A**********                          95'Rev.'                                            201797
+     A**********                         101'New Exp.'                                        201797
+     A**********                         110'Insert User'                                     201797
+     A**********                         123'Amend User'                                      201797
+     A                                     1'Customer'
+     A                                    10'Customer'
+     A*/COPY WNCPYSRC,LEH00288
+     A                                    21'Fclty'
+     A                                    28'Branch'
+     A                                    41'Value'
+     A                                    98'Rev'
+     A                                   102'New Exp'
+     A*/COPY WNCPYSRC,LEH00289
+     A                                   111'Insert User'
+     A                                   123'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797
+     A**********                           9'Number'                                          201797
+     A**********                          19'Code'                                            201797
+     A**********                          26'Seq'                                             201797
+     A**********                          33'Date'                                            201797
+     A**********                          45'Amendment type'                                  201797
+     A**********                          66'Amount'                                          201797
+     A**********                          89'Ccy'                                             201797
+     A**********                          95'Cr.'                                             201797
+     A**********                         101'Date'                                            201797
+     A**********                         110'Profile'                                         201797
+     A**********                         123'Profile'                                         201797
+     A*/COPY WNCPYSRC,LEH00442
+     A                                     9'Short Name'
+     A*/COPY WNCPYSRC,LEH00290
+     A                                    21'Number'
+     A                                    29'Code'
+     A                                    35'Seq'
+     A                                    41'Date'
+     A                                    51'Amendment type'
+     A                                    77'Amount'
+     A                                    93'Ccy'
+     A                                    98'Cr'
+     A                                   102'Date'
+     A*/COPY WNCPYSRC,LEH00291
+     A                                   111'Profile'
+     A                                   123'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *
+     A          R SUB8
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED MANUAL FACI+
+     A                                      LITY UTILISATION'
+     A                                      SPACEA(1)
+     A                                     1'------------------------+
+     A                                      ----------------'
+     A                                      SPACEA(1)
+     A**Start of change 201797
+     A**********                           1'Cust.'                                           201797
+     A**********                           9'Fclty'                                           201797
+     A**********                          19'Branch'                                          201797
+     A**********                          27'Util'                                            201797
+     A**********                          35'Util'                                            201797
+     A**********                          41'Util'                                            201797
+     A**********                          63'Start'                                           201797
+     A**********                          73'Expiry'                                          201797
+     A**********                          83'Util'                                            201797
+     A**********                          98'Util'                                            201797
+     A**********                         106'Insert User'                                     201797
+     A**********                         122'Amend User'                                      201797
+     A                                     1'Customer'
+     A                                    10'Customer'
+     A                                    22'Fclty'
+     A                                    29'Branch'
+     A                                    70'Start'
+     A                                    78'Expiry'
+     A                                    89'Util'
+     A                                   102'Util'
+     A                                   109'Insert User'
+     A                                   122'Amend User'
+     A**End of change 201797
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A**Start of change 201797
+     A**********                           9'Number'                                          201797
+     A**********                          19'Code'                                            201797
+     A**********                          27'Seq No'                                          201797
+     A**********                          35'Ccy'                                             201797
+     A**********                          41'Amount'                                          201797
+     A**********                          63'Date'                                            201797
+     A**********                          73'Date'                                            201797
+     A**********                          83'Ex Rate'                                         201797
+     A**********                          98'Ex Ind'                                          201797
+     A**********                         107'Profile'                                         201797
+     A**********                         122'Profile'                                         201797
+     A                                    10'Short Name'
+     A                                    22'Number'
+     A                                    30'Code'
+     A                                    36'Seq'
+     A                                    41'Ccy'
+     A                                    53'Amount'
+     A                                    70'Date'
+     A                                    78'Date'
+     A                                    89'Ex Rate'
+     A                                   101'Ex Ind'
+     A                                   109'Profile'
+     A                                   122'Profile'
+     A**End of change 201797
+     A                                      SPACEA(1)
+      *                                               End  /127658/
+     A**Start of change 202364
+     A          R SUB9
+      *
+     A                                      SPACEB(1)
+     A                                     1'UNAUTHORISED FEES SETTLEMENT'
+     A                                      SPACEA(1)
+     A                                     1'----------------------------'
+     A                                      SPACEA(1)
+     A                                     1'Customer'
+     A                                    12'Customer'
+     A                                    25'Branch'
+     A                                    45'Fee'
+     A                                    92'Value'
+     A                                   101'Insert User'
+     A                                   115'Amend User'
+     A                                      SPACEA(1)
+     A                                     1'Number'
+     A                                    12'Short Name'
+     A                                    26'Code'
+     A                                    34'Facility'
+     A                                    45'Seq'
+     A                                    54'Settlement Amount'
+     A                                    77'Ccy'
+     A                                    83'W/F/P'
+     A                                    92'Date'
+     A                                   101'Profile'
+     A                                   115'Profile'
+     A                                      SPACEA(1)
+     A**End of change 202364
+     A*/COPY WNCPYSRC,LE2320P101
+      *
+     A          R DTL1
+      *
+     A                                      SPACEA(1)
+     A            PLNRF          6         1
+     A**Start of change 201123
+     A**********  PCNUM          6         9                                                  201123
+     A            PCNUM          6         8                                                  201123
+     A**End of change 201123
+     A**Start of change 201797
+     A**********  PBRCA          3        20                                                  201797
+     A**********  PDESC         20        26                                                  201797
+     A**********  PCPAM         23        48                                                  201797
+     A**********  PCCY           3        72                                                  201797
+     A**********  PVDAT          7        77                                                  201797
+     A**********  PMDAT          7        85                                                  201797
+     A**********  PIUSR         10       100                                                  201797
+     A**********  PAUSR         10       120                                                  201797
+     A**Start of change 201123
+     A**********  PCSSN         10        19                                                  201123
+     A**********  PBRCA          3        32                                                  201123
+     A**********  PDESC         20        39                                                  201123
+     A**********  PCPAM         23        61                                                  201123
+     A**********  PCCY           3        85                                                  201123
+     A**********  PVDAT          7        90                                                  201123
+     A**********  PMDAT          7        99                                                  201123
+     A**********  PIUSR         10       109                                                  201123
+     A            PCSSN         10        17
+     A            OLNOZ          6        29
+     A            PBRCA          3        38
+     A            PDESC         20        44
+     A            PCPAM         23        65
+     A            PCCY           3        89
+     A            PVDAT          7        93
+     A            PMDAT          7       101
+     A            PIUSR         10       110
+     A**End of change 201123
+     A            PAUSR         10       122
+     A**End of change 201797
+      *
+     A          R DTL2
+      *
+     A                                      SPACEA(1)
+     A            PLNRF          6         1
+     A**Start of change 201797
+     A**********  PCNUM          6         9                                                  201797
+     A**********  PBRCA          3        20                                                  201797
+     A**********  PLASN          3        26                                                  201797
+     A**********  PVDAT          7        30                                                  201797
+     A**********  PAMTP         20        39                                                  201797
+     A**********  PPRAM         23        61                                                  201797
+     A**********  PCCY           3        85                                                  201797
+     A**********  PSTAI          3        90                                                  201797
+     A**********  PIUSR         10       100                                                  201797
+     A**********  PAUSR         10       120                                                  201797
+     A**Start of change 201123
+     A**********  PCNUM          6        10                                                  201123
+     A**********  PCSSN         10        19                                                  201123
+     A**********  PBRCA          3        32                                                  201123
+     A**********  PLASN          3        39                                                  201123
+     A**********  PVDAT          7        45                                                  201123
+     A**********  PAMTP         20        55                                                  201123
+     A            PCNUM          6         8
+     A            PCSSN         10        17
+     A            OLNOZ          6        29
+     A            PBRCA          3        38
+     A            PLASN          3        44
+     A            PVDAT          7        48
+     A            PAMTP         20        56
+     A**End of change 201123
+     A            PPRAM         23        77
+     A            PCCY           3       103
+     A            PIUSR         10       109
+     A            PAUSR         10       122
+     A**End of change 201797
+      *
+     A          R DTL3
+      *
+     A                                      SPACEA(1)
+     A            PLNRF          6         1
+     A**Start of change 201797
+     A**********  PCNUM          6         9                                                  201797
+     A**********  PBRCA          3        20                                                  201797
+     A**********  PRLDT          7        26                                                  201797
+     A**********  PNBRA          2        36                                                  201797
+     A**********  PNRTS         12        40                                                  201797
+     A**********  PNSIN          1        54                                                  201797
+     A**********  PNCAS          1        60                                                  201797
+     A**********  PNROD          7        66                                                  201797
+     A**********  PNPRAM        23        76                                                  201797
+     A**********  PNMDT          7       101                                                  201797
+     A**********  PIUSR         10       110                                                  201797
+     A**********  PAUSR         10       122                                                  201797
+     A**Start of change 201123
+     A**********  PCNUM          6        09                                                  201123
+     A**********  PCSSN         10        17                                                  201123
+     A**********  PBRCA          3        29                                                  201123
+     A**********  PRLDT          7        35                                                  201123
+     A**********  PNBRA          2        45                                                  201123
+     A**********  PNRTS         12        49                                                  201123
+     A**********  PNSIN          1        64                                                  201123
+     A**********  PNCAS          1        69                                                  201123
+     A**********  PNROD          7        75                                                  201123
+     A            PCNUM          6        08
+     A            PCSSN         10        15
+     A            OLNOZ          6        27
+     A            PBRCA          3        35
+     A            PRLDT          7        40
+     A            PNBRA          2        49
+     A            PNRTS         12        53
+     A            PNSIN          1        67
+     A            PNCAS          1        72
+     A            PNROD          7        76
+     A**End of change 201123
+     A            PNPRAM        23        84
+     A            PNCCY          3       108
+     A            PNMDT          7       113
+     A            PAUSR         10       123
+     A**End of change 201797
+      *
+     A          R DTL4
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A**Start of change 201797
+     A**********  PFCLN          6        12                                                  201797
+     A**********  PBRCA          3        20                                                  201797
+     A**********  PCCY           3        27                                                  201797
+     A**********  PTAMT         23        32                                                  201797
+     A**********  PINTR          9        57                                                  201797
+     A**********  PAIPD         23        68                                                  201797
+     A**********  PEDDT          7        94                                                  201797
+     A**********  PIUSR         10       106                                                  201797
+     A**********  PAUSR         10       122                                                  201797
+     A**Start of change 201123
+     A**********  PCSSN         10        11                                                  201123
+     A**********  PFCLN          6        24                                                  201123
+     A**********  PGUSN          3        33                                                  201123
+     A**********  PBRCA          3        39                                                  201123
+     A**********  PCCY           3        46                                                  201123
+     A**********  PTAMT         23        51                                                  201123
+     A**********  PGBCN         10        76                                                  201123
+     A            PCSSN         10        10
+     A            OLNOZ          6        22
+     A            PFCLN          6        30
+     A            PGUSN          3        38
+     A            PBRCA          3        43
+     A            PCCY           3        49
+     A            PTAMT         23        53
+     A            PGBCN         10        78
+     A**End of change 201123
+     A            PRVDT          7        89
+     A            PEDDT          7        99
+     A            PIUSR         10       109
+     A            PAUSR         10       122
+     A**End of change 201797
+      *
+     A          R DTL5
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A**Start of change 201797
+     A**********  PBRCA          3        12                                                  201797
+     A**********  PFACL          6        19                                                  201797
+     A**********  PLOAN          6        29                                                  201797
+     A**********  PFSEQ          2        37                                                  201797
+     A**********  PFCOD          2        42                                                  201797
+     A**********  PFAMT         23        46                                                  201797
+     A**********  PFCCY          3        70                                                  201797
+     A**********  PPSTD          7        75                                                  201797
+     A**********  PPEND          7        83                                                  201797
+     A**********  PPYON          1        92                                                  201797
+     A**********  PAUTO          1        97                                                  201797
+     A**********  PIUSR         10       103                                                  201797
+     A**********  PAUSR         10       116                                                  201797
+     A**Start of change 201123
+     A**********  PCSSN         10        11                                                  201123
+     A**********  PBRCA          3        25                                                  201123
+     A**19******  PFACL          6        32                                                  201123
+     A*N19******  PLOAN          6        32                                                  201123
+     A**********  PFSEQ          2        40                                                  201123
+     A**********  PFCOD          2        46                                                  201123
+     A**********  PFAMT         23        51                                                  201123
+     A**********  PFCCY          3        76                                                  201123
+     A**********  PPSTD          7        81                                                  201123
+     A**********  PPEND          7        89                                                  201123
+     A            PCSSN         10        10
+     A            OLNOZ          6        22
+     A            PBRCA          3        31
+     A*/COPY WNCPYSRC,LEH00443
+     A  19        PFACL          6        37
+     A N19        PLOAN          6        37
+     A            PFSEQ          2        45
+     A            PFCOD          2        50
+     A*/COPY WNCPYSRC,LEH00444
+     A            PFAMT         23        54
+     A            PFCCY          3        78
+     A            PPSTD          7        82
+     A            PPEND          7        90
+     A**End of change 201123
+     A            PPYON          1        99
+     A            PAUTO          1       104
+     A            PIUSR         10       109
+     A            PAUSR         10       122
+     A**End of change 201797
+      *                                              Begin  /124047/
+     A          R DTL6
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A*/COPY WNCPYSRC,LEH00292
+     A            PCSSN         10        11
+     A            PFACL          6        23
+     A*/COPY WNCPYSRC,LEH00293
+     A            PBRCA          3        33
+     A**Start of change 201797
+     A**********  PSYTP          9        41                                                  201797
+     A  33        PSYTP          9        41
+     A**End of change 201797
+      *                                              Start /127658/
+     A*********** PFCMT         15        52
+     A*********** PFCCY          3        69
+     A*********** PDTAP          7        74
+     A*********** PDTEX          7        83
+     A*********** PIUSR         10        92
+     A*********** PAUSR         10       105
+     A**Start of change 201797
+     A**********  PFCMT         20        52                                                  201797
+     A**********  PFCCY          3        74                                                  201797
+     A**********  PDTAP          7        79                                                  201797
+     A**********  PDTEX          7        88                                                  201797
+     A**********  PIUSR         10        97                                                  201797
+     A**********  PAUSR         10       110                                                  201797
+     A            PFCMT         23        52
+     A            PFCCY          3        77
+     A            PDTAP          7        83
+     A            PDTEX          7        93
+     A            PIUSR         10       103
+     A            PAUSR         10       116
+     A**End of change 201797
+      *                                              End   /127658/
+      *                                              End    /124047/
+      *                                              Start /127658/
+     A          R DTL7
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A**Start of change 201797
+     A**********  PFACL          6         9                                                  201797
+     A**********  PBRCA          3        19                                                  201797
+     A**********  PLASN          3        26                                                  201797
+     A**********  PVDAT          7        33                                                  201797
+     A**********  PAMTP         20        45                                                  201797
+     A**********  PAAMT         23        66                                                  201797
+     A**********  PCCY           3        89                                                  201797
+     A**********  PRVLC          1        96                                                  201797
+     A**********  PNEXP          7       101                                                  201797
+     A**********  PIUSR         10       110                                                  201797
+     A**********  PAUSR         10       123                                                  201797
+     A*/COPY WNCPYSRC,LEH00445
+     A            PCSSN         10         9
+     A*/COPY WNCPYSRC,LEH00294
+     A            PFACL          6        21
+     A            PBRCA          3        29
+     A            PLASN          3        35
+     A            PVDAT          7        40
+     A            PAMTP         20        49
+     A            PAAMT         23        69
+     A            PCCY           3        93
+     A            PRVLC          1        99
+     A            PNEXP          7       102
+     A*/COPY WNCPYSRC,LEH00295
+     A            PIUSR         10       111
+     A            PAUSR         10       123
+     A**End of change 201797
+      *
+     A          R DTL8
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A**Start of change 201797
+     A**********  PFACL          6         9                                                  201797
+     A**********  PBRCA          3        19                                                  201797
+     A**********  PLASN          3        27                                                  201797
+     A**********  PCCY           3        35                                                  201797
+     A**********  PUAMT         20        41                                                  201797
+     A**********  PSTDT          7        63                                                  201797
+     A**********  PEXDT          7        73                                                  201797
+     A**********  PUXRT         12        83                                                  201797
+     A**********  PUXIN          1        98                                                  201797
+     A**********  PIUSR         10       106                                                  201797
+     A**********  PAUSR         10       122                                                  201797
+     A            PCSSN         10        10
+     A            PFACL          6        22
+     A            PBRCA          3        30
+     A            PLASN          3        36
+     A            PCCY           3        41
+     A            PUAMT         23        45
+     A            PSTDT          7        69
+     A            PEXDT          7        78
+     A            PUXRT         12        87
+     A            PUXIN          1       103
+     A            PIUSR         10       109
+     A            PAUSR         10       122
+     A**End of change 201797
+      *                                              End   /127658/
+     A**Start of change 202364
+     A          R DTL9
+      *
+     A                                      SPACEA(1)
+     A            PCNUM          6         1
+     A            PCSSN         10        12
+     A            PBRCA          3        26
+     A            PFACL          6        35
+     A            PFSEQ          2        45
+     A            PFAMT         23        51
+     A            PCCY           3        77
+     A            PTYPE          1        85
+     A            PFFVD          7        91
+     A            PIUSR         10       101
+     A            PAUSR         10       115
+     A**End of change 202364
+     A*/COPY WNCPYSRC,LE2320P102
+      *
+      *-------------------*
+      ***  Report Trailer *
+      *-------------------*
+      *
+     A          R TRAILP1
+     A  37                                46'***  END OF REPORT FOR +
+     A                                      BRANCH  ***'
+     A                                      SPACEB(3)
+     A N37                                51'***  END OF REPORT  ***'
+     A                                      SPACEB(3)

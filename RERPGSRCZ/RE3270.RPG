@@ -1,0 +1,2794 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Linked account maintenance')                  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas    Retail Module
+     F*                                                               *
+     F*  RE3270  - RETAIL LINKED ACCOUNT MAINTENANCE                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6810            Date 05May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193384             Date 26Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 165024             Date 11Jan00               *
+      *                 160583             Date 24Nov99               *
+      *                 159534             Date 24Nov99               *
+      *                 154241             Date 24Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02MAR99               *
+      *                 CTI002             DATE 09Sep98               *
+     F*                 110785             DATE 10APR97               *
+     F*                 088029             DATE 08JUN95               *
+     F*                 062527             DATE 15NOV93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6810 - No flag to determine error message                 *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  193384 - Display the first page of subfile instead of last   *
+      *           page and allow page down instead of page up.        *
+     F*  165024 - Should output error message on screen instead of    *
+     F*           database error, if invalid account input.           *
+     F*  160583 - Error messages incorrectly displayed and fields not *
+     F*           cleared.                                            *
+     F*  159534 - The link date entered when accounts are linked must *
+     F*           not be a date other than date account opened or the *
+     F*           last cap'n date of the primary account; this also   *
+     F*           applies to the unlink date.                         *
+     F*  154241 - Must zeroise LTAS on Prime account when accounts    *
+     F*           are unlinked.                                       *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  110785 - Additional validation added for all fields          *
+     F*           to prevent decimal-data error from happening.       *
+     F*                                                               *
+     F*  088029 - Field 'RESULT' Not Correctly Formatted When         *
+     F*           American Date Format is Used.                       *
+     F*  062527 - Display primary branch and reverse image cust no    *
+     F*           error .Link and unlink dates should display DDMMYY. *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FRE3270DFCF  E                    WORKSTN
+     F                                        RN    KSFILE RE3270PB
+     FACCNT   UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFDS ACCDS
+     F                                              KINFSR ACCSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FRELINKL1UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFDS LNKDS
+     F                                              KINFSR LNKSR
+     F            FUSIONF1                          KRENAMERELINKF1
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMABF
+     FREHISBL UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFDS REHDS
+     F                                              KINFSR REHSR
+     FRELINKJ2IF  E           K        DISK
+     FRELINKL UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFDS RELDS
+     F                                              KINFSR RELSR
+     FFUSIONPDO   E                    DISK                      A
+     F                                              KCOMIT
+     F                                              KINFDS R1LDS
+     F                                              KINFSR R1LSR
+     FRE3270AUO   E                    PRINTER
+     F/COPY WNCPYSRC,RE3270F001
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N  C T I O N    O F    I N D I C A T O R S
+     F*
+     F*  01         NON DISPLAY OF THE UNLINKED DATE
+     F*  02         NON DISPLAY OF THE PRIME ACCOUNT
+     F*  03         PROTECT THE SECONDARY ACCOUNT
+     F*  04         PROTECT THE PRIME ACCOUNT
+     F*  05         PROTECT THE LINKED DATE
+     F*  06         ERROR ON THE CUSTOMER NUMBER OF THE SECONDARY
+     F*  07         ERROR ON THE CURRENCY OF THE SECONDARY
+     F*  08         ERROR ON THE ACCOUNT CODE OF THE SECONDARY
+     F*  09         ERROR ON THE ACCOUNT SEQUENCE OF THESECONDARY
+     F*  10         ERROR ON THE BRANCH CODE OF THE SECONDARY
+     F*  11         ERROR ON RETAIL NUMBER OF THE SECONDARY
+     F*  12         ERROR ON ACCOUNT CODE OF THE PRIME
+     F*  13         ERROR ON ACCOUNT SEQUENCE OF THE PRIME
+     F*  14         ERROR ON RETAIL NUMBER OF THE PRIME
+     F*  15         ERROR ON THE LINKED DATE
+     F*  16         ERROR ON THE UNLINKED DATE
+     F*  17         PROTECT THE UNLINKED DATE
+     F*  21         ALLOW THE UNLINKING
+     F*  22         SECONDARY ACCOUNT CLOSED
+     F*  51         ACCESS ON ACCNT
+     F*  52         ACCESS ON ACNUM
+     F*  53         ACCESS ON REACR
+     F*  54         ACCESS ON REHSIBL
+     F*  55         ACCESS ON RELINKL
+     F*  88         INDICATOR OF DATA BASE ERROR FILE STATUS
+     F*  89         INDICATOR OF DATA BASE ERROR
+     F*  93         COMMAND KEY 3
+     F*  94         COMMAND KEY 12
+     F*  99         LOKUP SUCCESSFUL
+     F*
+     F*  LR         END OF PROGRAM
+     F*
+     F*  U7         DATABASE ERROR
+     F*  U8         DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E     I N D E X
+     F*
+     F*  ACCNUM - A/C details have been entered
+     F*  ACCRET - Process when linking a new account
+     F*  CHKINP - Check the entered fields are correct
+     F*  CHKLNK - Process to check a valid date to unlinked
+     F*  CHKPRI - Check the account if it is a not linked
+     F*  CMDINC - Process when command key is not valid
+     F*  CMD3   - Process to stop the program
+     F*  CMD4   - Process to delete a linked account
+     F*  CMD12  - Process when reset to the first screen
+     F*  CRTLNK - Create an unlinked record on relinkp
+     F*  DBSR   - Database error handling processing
+     F*  FIRST  - First cycle processing
+     F*  LINKSR - Process when the entered account is a linked
+     F*  MAIN   - Main processing
+     F*  PRIME  - Process when the entered account is a prime
+     F*  PROCIN - Process following link or not
+     F*  RELSR  - Subroutine for RELINKL file exception/error handling
+     F*  RETNUM - Retail number only has been entered
+     F*  UNLINK - Process when the entered account is not linked
+     F*  VALLIN - Process when valid linked account
+     F*
+     F*****************************************************************
+     E/EJECT
+     E                    NUM    10  10  1                                110785
+     E                    ACN1       10  1                                110785
+     E                    CPY@    1   1 80
+     E*********           ZMNA   12  12  3                                062527
+     E                    ZMNN   12  12  2 0
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY WNCPYSRC,RE3270E001
+     I/EJECT
+     I/COPY WNCPYSRC,RE3270I003
+     I*
+     I** DATA STRUCTURE FOR RPG ERROR HANDLING ON FILES
+     I*
+     ILNKDS       DS
+     I                                     *STATUS  STSLNK
+     IR1LDS       DS
+     I                                     *STATUS  STSR1L
+     IRELDS       DS
+     I                                     *STATUS  STSREL
+     IACCDS       DS
+     I                                     *STATUS  STSACC
+     IREHDS       DS
+     I                                     *STATUS  STSREH
+     I/COPY WNCPYSRC,RE3270I001
+     I*
+     I** DATA STRUCTURE FOR DATE FORMAT DD/MM/YY
+     I*
+     I            DS
+     I                                        1   60RESULT
+     I                                        1   20DAY
+     I                                        3   40MNTH
+     I                                        5   60YEAR
+     I*
+     I** DATA STRUCTURE FOR DATE FORMAT DD/MM/YY FOR LINKED DATE
+     I*
+     I            DS
+     I**************                          1   7 PVALL                 062527
+     I**************                          1   20ZDAYP                 062527
+     I**************                          3   5 ZMTHP                 062527
+     I**************                          6   70ZYEARP                062527
+     I***********                             1   6 PVALL           062527110785
+     I***********                             1   20ZDAYP           062527110785
+     I***********                             3   40ZMTHP           062527110785
+     I***********                             5   60ZYEARP          062527110785
+     I                                        1   6 PVALL                 110785
+     I                                        1   1 ZDAYQ1                110785
+     I                                        2   2 ZDAYQ2                110785
+     I                                        3   3 ZMTHQ1                110785
+     I                                        4   4 ZMTHQ2                110785
+     I                                        5   5 ZYRQ1                 110785
+     I                                        6   6 ZYRQ2                 110785
+     I                                        1   2 ZDAYQ                 110785
+     I                                        3   4 ZMTHQ                 110785
+     I                                        5   6 ZYEARQ                110785
+     I*                                                                   110785
+     I** ACN1  Data Structure                                             110785
+     I*                                                                   110785
+     I            DS                                                      110785
+     I                                        1  10 ACN1                  110785
+     I                                        1  10 ACN2                  110785
+     I*
+     I** DATA STRUCTURE FOR DATE FORMAT DD/MM/YY  FOR UNLINKED DATE
+     I*
+     I            DS
+     I**************                          1   7 PVALU                 062527
+     I**************                          1   20DDAY                  062527
+     I**************                          3   5 DMTH                  062527
+     I**************                          6   70DYEAR                 062527
+     I***********                             1   6 PVALU           062527110785
+     I***********                             1   20DDAY            062527110785
+     I***********                             3   40DMTH            062527110785
+     I***********                             5   60DYEAR           062527110785
+     I                                        1   6 PVALU                 110785
+     I                                        1   1 DDAYQ1                110785
+     I                                        2   2 DDAYQ2                110785
+     I                                        3   3 DMTHQ1                110785
+     I                                        4   4 DMTHQ2                110785
+     I                                        5   5 DYRQ1                 110785
+     I                                        6   6 DYRQ2                 110785
+     I                                        1   2 DDAYQ                 110785
+     I                                        3   4 DMTHQ                 110785
+     I                                        5   6 DYEARQ                110785
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR DATE FORMAT MM/DD/YY                          088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   60RESULX                088029
+     I                                        1   20MNTHX                 088029
+     I                                        3   40DAYX                  088029
+     I                                        5   60YEARX                 088029
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR DATE FORMAT MM/DD/YY FOR LINKED DATE          088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   6 PVALLX                088029
+     I                                        1   20ZMTHPX                088029
+     I                                        3   40ZDAYPX                088029
+     I                                        5   60ZYEARX                088029
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR DATE FORMAT MM/DD/YY  FOR UNLINKED DATE       088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   6 PVALUX                088029
+     I                                        1   20DMTHX                 088029
+     I                                        3   40DDAYX                 088029
+     I                                        5   60DYEARX                088029
+     I*
+     I** SACNO DATA STRUCTURE
+     I*
+     I            DS
+     I                                        1  10 SACNO
+     I                                        1  100RETNO
+     I*
+     I** PACNO DATA STRUCTURE
+     I*
+     I            DS
+     I                                        1  10 PACNO
+     I                                        1  100WACNO
+     I*
+     I** KEY DATA STRUCTURE : RKEY TO FILL LKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 DKEY                                      CGL029
+     I**********                              1  18 HKEY                                      CGL029
+     I                                        1  29 DKEY                                      CGL029
+     I                                        1  24 HKEY                                      CGL029
+     I                                        1   3 SBRCA
+     I                                        1   3 BRCDK
+     I**********                              4  18 RKEY                                      CGL029
+     I                                        4  24 RKEY                                      CGL029
+     I                                        4   9 SCNUM
+     I**********                              4   90CNUMK                                     CSD027
+     I                                        4   9 CNUMK                                     CSD027
+     I                                       10  12 SCCY
+     I                                       10  12 CCYK
+     I**********                             13  16 SACOD                                     CGL029
+     I**********                             13  160ACODK                                     CGL029
+     I**********                             17  18 SACSQ                                     CGL029
+     I**********                             17  180ACSQK                                     CGL029
+     I**********                             19  230WDATE                                     CGL029
+     I                                       13  22 SACOD                                     CGL029
+     I                                       13  220ACODK                                     CGL029
+     I                                       23  24 SACSQ                                     CGL029
+     I                                       23  240ACSQK                                     CGL029
+     I                                       25  290WDATE                                     CGL029
+     I            DS
+     I**********                              1  18 BKEY                                      CGL029
+     I**********                              1  23 BKEY2                                     CGL029
+     I                                        1  24 BKEY                                      CGL029
+     I                                        1  29 BKEY2                                     CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I**********                             19  230ADATE                                     CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I                                       25  290ADATE                                     CGL029
+     I*
+     I** KEY DATA STRUCTURE : RKEY TO FILL LKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 PKEY                                      CGL029
+     I**********                              1  18 LDKEY                                     CGL029
+     I                                        1  29 PKEY                                      CGL029
+     I                                        1  24 LDKEY                                     CGL029
+     I                                        1   3 PBRCD
+     I                                        1   3 KBRCD
+     I**********                              4  18 AKEY                                      CGL029
+     I                                        4  24 AKEY                                      CGL029
+     I                                        4   9 PCNUM
+     I**********                              4   90KCNUM                                     CSD027
+     I                                        4   9 KCNUM                                     CSD027
+     I                                       10  12 PCCY
+     I                                       10  12 KCCY
+     I**********                             13  16 PACOD                                     CGL029
+     I**********                             13  160KACOD                                     CGL029
+     I**********                             17  18 PACSQ                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I**********                             19  230DATEW                                     CGL029
+     I                                       13  22 PACOD                                     CGL029
+     I                                       13  220KACOD                                     CGL029
+     I                                       23  24 PACSQ                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+     I                                       25  290DATEW                                     CGL029
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 AGMBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     I*
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** Retail Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency Type
+     I*
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACC1                                    CGL029
+     I*
+     I** Account Code
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I*
+     I**  Branch Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     IZMUSER      DS                             17
+     I** DATA AREA OF MENU USER
+     I                                       11  13 DFBM
+     I/COPY WNCPYSRC,RE3270I002
+     I/EJECT
+     C*===================================================================
+     C*
+     C** COPYRIGHT STATEMENT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** KEY LISTS
+     C*
+     C*
+     C** KEY FIELD TO ACCESS TO ACCNT FILE WITH SECONDARY ACCOUNT
+     C*
+     C           RETKEY    KLIST
+     C                     KFLD           CNUMK
+     C                     KFLD           CCYK
+     C                     KFLD           ACODK
+     C                     KFLD           ACSQK
+     C                     KFLD           BRCDK
+     C*
+     C** KEY FIELD TO ACCESS TO REHISBL AND RELINKL FILES  WITH
+     C**   SECONDARY ACCOUNT
+     C*
+     C           HISBK     KLIST
+     C                     KFLD           BRCDK
+     C                     KFLD           CNUMK
+     C                     KFLD           CCYK
+     C                     KFLD           ACODK
+     C                     KFLD           ACSQK
+     C*
+     C** KEY FIELD TO ACCESS TO ACCNT FILE WITH PRIME ACCOUNT
+     C*
+     C           ACCKEY    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCD
+     C*
+     C** KEY FIELD TO ACCESS TO REHISBL AND RELINKL FILES WITH
+     C**   PRIME ACCOUNT
+     C*
+     C           LINKK     KLIST
+     C                     KFLD           KBRCD
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C*
+     C** KEY FIELD TO ACCESS TO ACCR3
+     C*
+     C           AC3KEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C**  Parameter list for AOCURRR0
+     C*
+     C           PLISTC    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**  Parameter list for AOACODR0
+     C*
+     C           PLISTA    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM           @ACCD   4                                           CGL029
+     C                     PARM           @ACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+     C*
+     C**  Parameter list for AOCUSTR0
+     C*
+     C           PLISTS    PLIST
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C                     MOVE *BLANKS   KEY    12
+     C           *LIKE     DEFN KEY       FLD10 - 2
+     C           *LIKE     DEFN KEY       FLD6  - 6
+     C           *LIKE     DEFN KEY       FLD4  - 8
+     C           *LIKE     DEFN KEY       FLD2  -10
+     C           *LIKE     DEFN KEY       HBPGM - 4
+     C           *LIKE     DEFN ACNO      FLD11 + 1
+     C********** *LIKE     DEFN CNUM      FLD70 + 1                                           CSD027
+     C                     Z-ADD*ZEROS    FLD70   70                                          CSD027
+     C           *LIKE     DEFN ACOD      FLD50 + 1
+     C           *LIKE     DEFN ACOD      LTACK
+     C           *LIKE     DEFN ACOD      WACOD
+     C           *LIKE     DEFN CNUM      WCNUM
+     C           *LIKE     DEFN BRCA      WBRCD
+     C           *LIKE     DEFN SACSQ     FLD30 + 1
+     C           *LIKE     DEFN ACSQ      LTASK
+     C           *LIKE     DEFN ACSQ      WACSQ
+     C           *LIKE     DEFN CCY       MSGID + 7
+     C           *LIKE     DEFN RUND      WVALL
+     C           *LIKE     DEFN RUND      CTLDAT
+     C           *LIKE     DEFN DRIC      ZERROR
+     C*
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING UNTIL CK3 OR ERROR
+     C*
+     C           *INKC     DOWEQ'0'                        - B1
+     C*
+     C                     EXSR MAIN
+     C*
+     C                     END                             - E1
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCNUM a/c details have been entered
+     C**
+     C**     Called by       CHKINP
+     C**     Calls           PROCIN
+     C**
+     C           ACCNUM    BEGSR                           **ACCNUM BEGSR**
+     C*
+     C** CHECK FOR NUMERIC CUSTOMER NUMBER
+     C*
+     C                     MOVELSCNUM     @KEY1
+     C                     CALL 'AOCUSTR0'PLISTS
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0018' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN06
+     C                     ELSE
+     C                     MOVEL@KEY1     SCNUM
+     C                     END                             - E1
+     C*
+     C** CHECK IF CURRENCY IS VALID
+     C*
+     C                     CALL 'AOCURRR0'PLISTC
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                         13
+     C           *LOCK     IN   LDA
+     C                     MOVEL'REL0021' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN07
+     C                     ELSE
+     C                     MOVE A6CYCD    SCCY
+     C/COPY WNCPYSRC,RE3270C044
+     C                     END                             - E2
+     C*
+     C** CHECK FOR NUMERIC ACCOUNT CODE
+     C*
+     C                     MOVELSACOD     @ACCD
+     C                     CALL 'AOACODR0'PLISTA
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN08
+     C                     ELSE
+     C                     MOVELA5ACCD    SACOD
+     C                     END                             - E1
+     C*
+     C** CHECK FOR NUMERIC SEQUENCE NUMBER
+     C*
+     C                     MOVE '0'       FLD30
+     C                     MOVELSACSQ     FLD30
+     C                     TESTN          FLD30      50
+     C*
+     C           *IN50     IFEQ *OFF                       - B1
+     C                     MOVEL'REL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN09
+     C                     END
+     C/COPY WNCPYSRC,RE3270C030
+     C*
+     C** RECORD FOUND - PROCESS RECORD INPUT
+     C*
+     C           *IN06     IFNE '1'
+     C           *IN07     ANDNE'1'
+     C           *IN08     ANDNE'1'
+     C           *IN09     ANDNE'1'
+     C           *IN10     ANDNE'1'
+     C*
+     C                     EXSR PROCIN
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ACCNUM ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCRET process when linking a new account
+     C**
+     C**     Called by       CHKPRI
+     C**     Calls           DBSR, VALLIN
+     C**
+     C           ACCRET    BEGSR                           **ACCRET BEGSR**
+     C*
+     C** Check that account exists on file                                165024
+     C           ACCKEY    CHAINACCNT                51
+     C*
+     C           *IN51     IFEQ '1'                        - B1           165024
+     C                     MOVEL'RE71906' ZAMSID                          165024
+     C                     EXSR ZASNMS                                    165024
+     C                     MOVEA'11111'   *IN,06                          165024
+     C                     WRITERE3270F0                                  165024
+     C                     END                             - E1           165024
+     C*          *IN51     IFEQ '1'                        - B1
+     C*          *LOCK     IN   LDA
+     C*                    Z-ADD1         DBASE
+     C*                    MOVE 'ACCNT'   DBFILE           ***************
+     C*                    MOVELAKEY      DBKEY            **DB ERROR 01**
+     C*                    OUT  LDA                        ***************
+     C*                    MOVE '1'       *IN89
+     C*                    EXSR DBSR
+     C*                    END                             - E1
+     C*
+     C** CHECK THAT THE ACCOUNT IS A LIVE RETAIL ACCOUNT IN SAME CUURENCY
+     C*
+     C           *IN51     IFEQ '1'                        - B1
+     C           RECI      ORNE 'D'                        - B1
+     C           ACST      OREQ 'C'
+     C           ATYP      ORNE 'R'
+     C/COPY WNCPYSRC,RE3270C045
+     C           CCY       ORNE SCCY
+     C/COPY WNCPYSRC,RE3270C046
+     C                     MOVEL'REL0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,12
+     C                     MOVEA'1'       *IN,19                          062527
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X1
+     C/COPY WNCPYSRC,RE3270C031
+     C*
+     C** FIND THE RETAIL NUMBER ON THE ACCNT FILE
+     C*
+     C******               MOVE ACNO      PACNO                                               160583
+     C*                    MOVE BRCA      PBRCD
+     C*
+     C** CHECK THAT IT IS NOT A LINKED ACCOUNT
+     C*
+     C           LTAS      IFNE 99                         - B2
+     C           LTAS      ANDNE*ZEROS
+     C*
+     C                     MOVEL'REL0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,12
+     C                     WRITERE3270F0
+     C                     ELSE                            - X2
+     C/COPY WNCPYSRC,RE3270C035
+     C*                                                                   110785
+     C** Valid primary account found, so protect it                       110785
+     C*                                                                   110785
+     C                     MOVE *ON       *IN04                           110785
+     C*
+     C** CHECK THE LINKED DATE IF THERE IS ONE
+     C*
+     C           PVALL     IFNE *BLANKS                    - B3
+     C                     MOVE PVALL     PVALLX                          088029
+     C*
+     C** Ensure that chars input to date field are valid                  110785
+     C*                                                                   110785
+     C                     MOVE *BLANK    DATINV  1                       110785
+     C                     Z-ADD1         X       20                      110785
+     C           ZDAYQ1    IFEQ *BLANK                                    110785
+     C                     MOVE '0'       ZDAYQ1                          110785
+     C                     ENDIF                                          110785
+     C           ZDAYQ1    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           ZDAYQ2    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           ZMTHQ1    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           ZMTHQ2    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           ZYRQ1     LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           ZYRQ2     LOKUPNUM,X                    61               110785
+     C*                                                                   110785
+     C** If there is an invalid char, then send an error message          110785
+     C*                                                                   110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C           DATINV    IFEQ 'Y'                                       110785
+     C                     MOVEL'REL0011' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     MOVE '1'       *IN15                           110785
+     C                     WRITERE3270F0                                  110785
+     C                     ELSE                                           110785
+      *                                                                   110785
+     C                     MOVE ZDAYQ     ZDAYP   20                      110785
+     C                     MOVE ZMTHQ     ZMTHP   20                      110785
+     C                     MOVE ZYEARQ    ZYEARP  20                      110785
+     C                     Z-ADD1         I       30
+     C***********ZMTHP     LOKUPZMNA,I                   99               062527
+     C           *IN98     IFEQ '0'                        - B4           088029
+     C           ZMTHP     LOKUPZMNN,I                   99               062527
+     C                     ELSE                            - X4           088029
+     C           ZMTHPX    LOKUPZMNN,I                   99               088029
+     C                     END                             - E4           088029
+     C           *IN99     IFEQ '0'                        - B4
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN15
+     C                     WRITERE3270F0
+     C                     ELSE                            - X4
+     C***********          MOVE ZMNN,I    MNTH                            062527
+     C           *IN98     IFEQ '0'                        - B5           088029
+     C                     Z-ADDZMNN,I    MNTH                            062527
+     C                     Z-ADDZDAYP     DAY
+     C                     Z-ADDZYEARP    YEAR
+     C                     Z-ADDRESULT    ZDATE
+     C                     ELSE                            - X5           088029
+     C                     Z-ADDZMNN,I    MNTHX                           088029
+     C                     Z-ADDZDAYPX    DAYX                            088029
+     C                     Z-ADDZYEARX    YEARX                           088029
+     C                     Z-ADDRESULX    ZDATE                           088029
+     C                     END                             - E5           088029
+     C                     EXSR ZDATE1
+     C           *IN99     IFNE '0'                        - B5
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN15
+     C                     WRITERE3270F0
+     C                     ELSE                            - X5
+     C*
+     C** ACCESS THE B RECORD OF THE PRIME
+     C*
+     C           LINKK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B6
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'HISBL'   DBFILE           **DB ERROR 02**
+     C                     MOVELLDKEY     DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E6
+     C*
+     C           HISD      IFGT CTLDAT                     - B6
+     C                     Z-ADDHISD      CTLDAT
+     C                     Z-ADD1         CTLDAT
+     C                     END                             - E6
+     C*
+     C** CHECK THE LINKED DATE ENTERED IS A VALID DATE
+     C*
+     C           ZDAYNO    IFLT CTLDAT                     - B6
+     C           ZDAYNO    ORGT RUND
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN15
+     C                     WRITERE3270F0
+     C                     ELSE                            - X6
+     C*
+     C/COPY WNCPYSRC,RE3270C067
+     C           LDID      IFNE ZDAYNO                                                        159534
+     C           LCID      ORNE ZDAYNO                                                        159534
+     C           LDID      OREQ *ZERO                                                         159534
+     C           LCID      ANDEQ*ZERO                                                         159534
+     C           DACO      ANDNEZDAYNO                                                        159534
+     C                     MOVEL'REL0011' ZAMSID                                              159534
+     C                     EXSR ZASNMS                                                        159534
+     C                     MOVE '1'       *IN15                                               159534
+     C                     WRITERE3270F0                                                      159534
+     C                     ELSE                                                               159534
+     C/COPY WNCPYSRC,RE3270C068
+     C                     Z-ADDZDAYNO    CTLDAT
+     C/COPY WNCPYSRC,RE3270C025
+     C*
+     C                     EXSR VALLIN
+     C/COPY WNCPYSRC,RE3270C026
+     C*
+     C                     END                                                                159534
+     C/COPY WNCPYSRC,RE3270C069
+     C                     END                             - E6
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                                            110785
+     C*                                                                   110785
+     C                     ELSE                            - X3
+     C*
+     C           LINKK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'HISBL'   DBFILE           **DB ERROR 03**
+     C                     MOVELLDKEY     DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E4
+     C*
+     C           HISD      IFGT CTLDAT                     - B4
+     C                     Z-ADDHISD      CTLDAT
+     C                     END                             - E4
+     C/COPY WNCPYSRC,RE3270C027
+     C*
+     C                     EXSR VALLIN
+     C/COPY WNCPYSRC,RE3270C028
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C/COPY WNCPYSRC,RE3270C032
+     C*
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3270C041
+     C*
+     C                     ENDSR                           **ACCRET ENDSR**
+     C/COPY WNCPYSRC,RE3270C042
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CHKINP check the entered fields are correct
+     C**
+     C**     Called by       MAIN
+     C**     Calls           RETNUM, ACCNUM
+     C**
+     C           CHKINP    BEGSR                           **CHKINP BEGSR**
+     C*
+     C** VALIDATE INPUT FIELDS
+     C*
+     C           SCNUM     IFEQ *BLANKS                    - B1
+     C           SCCY      ANDEQ*BLANKS
+     C           SACOD     ANDEQ*BLANKS
+     C           SACSQ     ANDEQ*BLANKS
+     C           SBRCA     ANDEQ*BLANKS
+     C*
+     C** ALL ENTRIES ARE BLANK
+     C*
+     C           SACNO     IFEQ *BLANKS                    - B2
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     ELSE                            - X2
+     C*
+     C** RETAIL NUMBER ONLY HAS BEEN ENTERED
+     C*
+     C                     EXSR RETNUM
+     C*
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** RETAIL NUMBER NOT THE ONLY ENTRY
+     C*
+     C           SACNO     IFNE *BLANKS                    - B2
+     C**********           WRITERE3270F0                                                     BUG6810
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0                                                     BUG6810
+     C                     MOVEA'111111'  *IN,06
+     C*
+     C** MIDAS KEY ONLY IS USED
+     C*
+     C                     ELSE                            - X2
+     C*
+     C** INITIALIZE ACCOUNT SEQUENCE IF IT HAS NOT BEEN ENTERED
+     C*
+     C           SACSQ     IFEQ *BLANKS                    - B3
+     C                     MOVE '01'      SACSQ
+     C                     END                             - E3
+     C*
+     C** BRANCH CODE NOT ENTERED, MOVE DEFAULT VALUE.
+     C*
+     C           SBRCA     IFEQ *BLANKS
+     C                     MOVE DFBM      SBRCA
+     C                     END
+     C*
+     C** CHECK ALL FIELDS HAVE BEEN ENTERED FOR MIDAS KEY
+     C*
+     C           SCNUM     IFEQ *BLANKS                    - B3
+     C                     MOVEL'REL0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN06
+     C*
+     C           SCCY      IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN07
+     C                     END                             - E4
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN08
+     C                     END                             - E4
+     C* ELSE SCNUM NOT BLANK
+     C                     ELSE                            - X3
+     C*
+     C           SCCY      IFEQ *BLANKS                    - B4
+     C                     MOVEL'REL0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN07
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B5
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN08
+     C                     END                             - E5
+     C* ELSE CCY AND SCNUM NOT BLANK
+     C                     ELSE                            - X4
+     C*
+     C           SACOD     IFEQ *BLANKS                    - B5
+     C                     MOVEL'REL0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN08
+     C*  ELSE ALL MANDATORY FIELD NON BLANK
+     C                     ELSE                            - X5
+     C*
+     C                     MOVE 'S'       SPFLAG  1
+     C                     EXSR VBRCA
+     C*
+     C** VALIDATE A/C DETAILS ENTERED
+     C*
+     C                     EXSR ACCNUM
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **CHKINP ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CHKLNK process to check a valid date to unlinked
+     C**
+     C**     Called by       LINKSR
+     C**     Calls           -
+     C**
+     C           CHKLNK    BEGSR                           **CHKLNK BEGSR**
+     C*
+     C** CHECK IF UNLINKED DATE IS A VALID DATE
+     C*
+     C*                                                                   110785
+     C                     MOVE *BLANK    DATINV  1                       110785
+     C                     Z-ADD1         X       20                      110785
+     C           DDAYQ1    IFEQ *BLANK                                    110785
+     C                     MOVE '0'       DDAYQ1                          110785
+     C                     ENDIF                                          110785
+     C           DDAYQ1    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           DDAYQ2    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           DMTHQ1    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           DMTHQ2    LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           DYRQ1     LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+     C                     Z-ADD1         X                               110785
+     C           DYRQ2     LOKUPNUM,X                    61               110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       DATINV                          110785
+     C                     ENDIF                                          110785
+      *                                                                   110785
+     C           DATINV    IFEQ 'Y'                                       110785
+     C                     MOVEL'REL0011' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     MOVE '1'       *IN16                           110785
+     C                     WRITERE3270F0                                  110785
+     C                     ELSE                                           110785
+      *                                                                   110785
+     C                     MOVE DDAYQ     DDAY    20                      110785
+     C                     MOVE DMTHQ     DMTH    20                      110785
+     C                     MOVE DYEARQ    DYEAR   20                      110785
+     C*                                                                   110785
+     C                     MOVE PVALU     PVALUX                          088029
+     C                     Z-ADD1         I
+     C*********  DMTH      LOKUPZMNA,I                   99               062527
+     C           *IN98     IFEQ '0'                        - B1           088029
+     C           DMTH      LOKUPZMNN,I                   99               062527
+     C                     ELSE                            - X1           088029
+     C           DMTHX     LOKUPZMNN,I                   99               088029
+     C                     END                             - E1           088029
+     C           *IN99     IFEQ '0'                        - B1
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN16
+     C                     WRITERE3270F0
+     C                     ELSE                            - X1
+     C           *IN98     IFEQ '0'                        - B2           088029
+     C                     MOVE ZMNN,I    MNTH
+     C                     Z-ADDDDAY      DAY
+     C                     Z-ADDDYEAR     YEAR
+     C                     Z-ADDRESULT    ZDATE
+     C                     ELSE                            - X2           088029
+     C                     MOVE ZMNN,I    MNTHX                           088029
+     C                     Z-ADDDDAYX     DAYX                            088029
+     C                     Z-ADDDYEARX    YEARX                           088029
+     C                     Z-ADDRESULX    ZDATE                           088029
+     C                     END                             - E2           088029
+     C                     EXSR ZDATE1
+     C           *IN99     IFNE '0'                        - B2
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN16
+     C                     WRITERE3270F0
+     C                     ELSE                            - X2
+     C*
+     C** CHECK IF THE UNLINKED DATE IS BETWEEN THE LOWER AND THE
+     C**   GREATER VALID DATE
+     C*
+     C           ZDAYNO    IFLT CTLDAT                     - B3
+     C           ZDAYNO    ORGT RUND
+     C                     MOVEL'REL0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN16
+     C                     WRITERE3270F0
+     C                     ELSE                            - X3
+     C*
+     C** CHECK IF THE LINKED ACCOUNT IS LINKED TODAY
+     C*
+     C/COPY WNCPYSRC,RE3270C070
+     C           LDID      IFNE ZDAYNO                                                        159534
+     C           LCID      ORNE ZDAYNO                                                        159534
+     C           LDID      OREQ *ZERO                                                         159534
+     C           LCID      ANDEQ*ZERO                                                         159534
+     C           DACO      ANDNEZDAYNO                                                        159534
+     C                     MOVEL'REL0011' ZAMSID                                              159534
+     C                     EXSR ZASNMS                                                        159534
+     C                     MOVE '1'       *IN16                                               159534
+     C                     WRITERE3270F0                                                      159534
+     C                     ELSE                                                               159534
+     C/COPY WNCPYSRC,RE3270C071
+     C           HISBK     CHAINRELINKL              55
+     C           *IN55     IFEQ '0'                        - B4
+     C                     MOVEL'REL0012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     END                             - E4
+     C*
+     C** SET INDICATORS TO UNLINKED ACCOUNT
+     C*
+     C                     MOVE '1'       *IN17
+     C                     MOVE '0'       *IN21
+     C*
+     C/COPY WNCPYSRC,RE3270C072
+     C                     END                                                                159534
+     C/COPY WNCPYSRC,RE3270C073
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     END                             - E1           110785
+     C/COPY WNCPYSRC,RE3270C036
+     C*                                                                   110785
+     C                     ENDSR                           **CHKLNK ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CHKPRI check the account if it is a not linked
+     C**
+     C**     Called by       UNLINK
+     C**     Calls           ACCRET
+     C**
+     C           CHKPRI    BEGSR                           **CHKPRI BEGSR**
+     C/COPY WNCPYSRC,RE3270C001
+     C*                                                                   110785
+     C** If primary account is okay, do not validate again. Go straight   110785
+     C** to the next subroutine as though the validation passed okay.     110785
+     C** Note: user cannot change primary account as it is protected by   110785
+     C** *IN04 being set on                                               110785
+     C*                                                                   110785
+     C           *IN04     IFEQ *ON                                       110785
+     C*                                                                   110785
+     C                     EXSR ACCRET                                    110785
+     C                     GOTO ENDSR                                     110785
+     C                     ENDIF                                          110785
+     C*                                                                   110785
+     C** Reset error indicators before performing validation              110785
+     C*                                                                   110785
+     C                     MOVEA'000'     *IN,12                          110785
+     C                     MOVEA'00'      *IN,18                          110785
+     C                     MOVEA'0'       *IN,23                          110785
+     C*
+     C** CHECK IF THE USER HAS ENTERED A KEY  OR A RETAIL NUMBER
+     C*
+     C           PACOD     IFEQ *BLANKS                    - B1
+     C           PACSQ     ANDEQ*BLANKS
+     C           PCNUM     ANDEQ*BLANKS
+     C           PBRCD     ANDEQ*BLANKS
+     C/COPY WNCPYSRC,RE3270C047
+     C*
+     C           PACNO     IFEQ *BLANKS                    - B2
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     ELSE                            - X2
+     C*
+     C** CHECK THAT THE RETAIL NUMBER IS NUMERIC
+     C*
+     C                     MOVE *BLANKS   ACCINV  1                       110785
+     C                     Z-ADD1         Y       20                      110785
+     C                     MOVELPACNO     ACN2                            110785
+      *                                                                   110785
+     C           Y         DOWLE10                                        110785
+     C                     Z-ADD1         X                               110785
+     C           ACN1,Y    LOKUPNUM,X                    61               110785
+      *                                                                   110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       ACCINV                          110785
+     C                     END                                            110785
+      *                                                                   110785
+     C                     ADD  1         Y                               110785
+     C                     END                                            110785
+      *                                                                   110785
+     C           ACCINV    IFEQ 'Y'                                       110785
+     C                     MOVEL'REL0008' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     WRITERE3270F0                                  110785
+     C                     MOVE '1'       *IN14                           110785
+     C                     ELSE                                           110785
+      *                                                                   110785
+     C                     MOVELPACNO     FLD11
+     C                     MOVELFLD11     FLD10
+     C*
+     C           PACNO     IFNE FLD10                      - B3
+     C           PACNO     OREQ SACNO
+     C                     MOVEL'REL0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN14
+     C                     WRITERE3270F0
+     C                     ELSE                            - X3
+     C*
+     C** CHECK THE RETAIL NUMBER EXISTS  AND IS IN SAME CURRENCY
+     C*
+     C           WACNO     CHAINACNUM                52
+     C           *IN52     IFEQ '1'                        - B4
+     C/COPY WNCPYSRC,RE3270C048
+     C           CCY       ORNE SCCY                       - B4
+     C/COPY WNCPYSRC,RE3270C049
+     C*
+     C                     MOVEL'REL0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN14
+     C                     WRITERE3270F0
+     C                     ELSE                            - X4
+     C*
+     C                     MOVE CNUM      PCNUM
+     C                     MOVE CCY       PCCY
+     C                     MOVE ACOD      PACOD
+     C                     MOVE ACSQ      PACSQ
+     C                     MOVE BRCA      PBRCD
+     C*
+     C/COPY WNCPYSRC,RE3270C065
+     C                     EXSR ACCRET
+     C/COPY WNCPYSRC,RE3270C066
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                                            110785
+     C*                                                                   110785
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** DEFAULT ENTRY FOR CUSTOMER NUMBER AND ACCOUNT SEQUENCE AND CODE
+     C*
+     C           PCNUM     IFEQ *BLANKS                    - B2
+     C                     MOVE SCNUM     PCNUM
+     C                     END                             - E2
+     C           PACSQ     IFEQ *BLANKS                    - B2
+     C                     MOVE SACSQ     PACSQ
+     C                     END                             - E2
+     C           PACOD     IFEQ *BLANKS                    - B2
+     C                     MOVE SACOD     PACOD
+     C                     END                             - E2
+     C           PBRCD     IFEQ *BLANKS                    - B2
+     C                     MOVE SBRCA     PBRCD
+     C                     END                             - E2
+     C/COPY WNCPYSRC,RE3270C050
+     C*
+     C** PRIME CAN NOT BE THE SAME AS SECONDARY.
+     C*
+     C           PACNO     IFNE *BLANKS                    - B2
+     C                     MOVEL'REL0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'1'       *IN,19                          062527
+     C*                                                                   110785
+     C** Set on all error indicators in this situation                    110785
+     C*                                                                   110785
+     C                     MOVEA'1'       *IN,18                          110785
+     C                     MOVEA'1'       *IN,23                          110785
+     C                     MOVEA'111'     *IN,12
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X2
+     C*
+     C*
+     C           PACOD     IFEQ SACOD                      - B3
+     C           PACSQ     ANDEQSACSQ
+     C           PCNUM     ANDEQSCNUM
+     C           PBRCD     ANDEQSBRCA
+     C/COPY WNCPYSRC,RE3270C051
+     C*                                                                   110785
+     C** Send correct message, primary can't be the same as linked        110785
+     C*                                                                   110785
+     C                     MOVEL'REL0008' ZAMSID
+     C                     MOVEL'REL0010' ZAMSID                          110785
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C*                                                                   110785
+     C** Set on all error indicators in this situation                    110785
+     C*                                                                   110785
+     C                     MOVEA'11'      *IN,13                          110785
+     C                     MOVEA'11'      *IN,18                          110785
+     C                     MOVE '1'       *IN23                           110785
+      *                                                                   110785
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X3
+     C*
+     C/COPY WNCPYSRC,RE3270C052
+     C                     MOVE SCCY      PCCY
+     C/COPY WNCPYSRC,RE3270C053
+     C*
+     C                     MOVE 'P'       SPFLAG
+     C                     EXSR VBRCA
+     C*                                                                   110785
+     C** New section of code to validate the primary account details      110785
+     C*                                                                   110785
+     C*                                                                   110785
+     C** Check for numeric customer number                                110785
+     C*                                                                   110785
+     C                     MOVEA'0'       *IN,19                          110785
+     C                     MOVELPCNUM     @KEY1                           110785
+     C                     CALL 'AOCUSTR0'PLISTS                          110785
+     C           @RTCD     IFNE *BLANKS                                   110785
+     C                     MOVEL'REL0018' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     WRITERE3270F0                                  110785
+     C                     MOVE '1'       *IN19                           110785
+     C                     ELSE                                           110785
+     C                     MOVEL@KEY1     PCNUM                           110785
+     C                     END                             - E1           110785
+     C*                                                                   110785
+     C** Check for numeric account code                                   110785
+     C*                                                                   110785
+     C                     MOVEA'0'       *IN,23                          110785
+     C                     MOVELPACOD     @ACCD                           110785
+     C                     CALL 'AOACODR0'PLISTA                          110785
+     C           @RTCD     IFNE *BLANKS                                   110785
+     C                     MOVEL'REL0019' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     WRITERE3270F0                                  110785
+     C                     MOVE '1'       *IN23                           110785
+     C                     ELSE                                           110785
+     C                     MOVELA5ACCD    PACOD                           110785
+     C                     END                             - E1           110785
+     C*                                                                   110785
+     C** Check for numeric sequence number                                110785
+     C*                                                                   110785
+     C                     MOVEA'0'       *IN,13                          110785
+     C                     MOVE '0'       FLD30                           110785
+     C                     MOVELPACSQ     FLD30                           110785
+     C                     TESTN          FLD30      50                   110785
+     C*                                                                   110785
+     C           *IN50     IFEQ *OFF                       - B1           110785
+     C                     MOVEL'REL0020' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     WRITERE3270F0                                  110785
+     C                     MOVE '1'       *IN13                           110785
+     C                     END                                            110785
+     C/COPY WNCPYSRC,RE3270C054
+     C*                                                                   110785
+     C** Record found - process record input                              110785
+     C*                                                                   110785
+     C           *IN19     IFNE '1'                                       110785
+     C           *IN18     ANDNE'1'                                       110785
+     C           *IN23     ANDNE'1'                                       110785
+     C           *IN13     ANDNE'1'                                       110785
+     C           *IN14     ANDNE'1'                                       110785
+     C           *IN12     ANDNE'1'                                       110785
+     C/COPY WNCPYSRC,RE3270C055
+     C*                                                                   110785
+     C** End of primary account validation                                110785
+     C*
+     C                     EXSR ACCRET
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                                            110785
+     C*                                                                   110785
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C***********          ENDSR                           **CHKPRI ENDSR*110785
+     C           ENDSR     ENDSR                                          110785
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMDINC process when command key is not valid
+     C**
+     C**     Called by       MAIN, UNLINK
+     C**     Calls           -
+     C**
+     C           CMDINC    BEGSR                           **CMDINC BEGSR**
+     C*
+     C                     MOVEL'REL0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C*
+     C                     ENDSR                           **CMDINC ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMD3 process to stop the program
+     C**
+     C**     Called by       MAIN, LINKSR, UNLINK
+     C**     Calls           -
+     C**
+     C           CMD3      BEGSR                           **CMD3 BEGSR**
+     C*
+     C                     MOVE '1'       *IN93
+     C*
+     C                     ENDSR                           **CMD3 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMD4 process to delete a linked account
+     C**
+     C**     Called by       LINKSR
+     C**     Calls           DBSR, CRTLNK, CMD12
+     C**
+     C           CMD4      BEGSR                           **CMD4 BEGSR**
+     C*
+     C** CHECK IF SECONDARY ACCOUNT IS CLOSED
+     C                     MOVE SACNO     WWACNO 100
+     C           WWACNO    CHAINACNUM                52
+     C           *IN52     IFEQ '0'
+     C           RECI      IFEQ 'C'
+     C                     MOVE '1'       *IN22
+     C                     END
+     C                     END
+     C*
+     C** CHECK IF COMMAND 4 IS VALID AT THIS TIME
+     C*
+     C           *IN21     IFEQ '0'                        - B1
+     C*
+     C           HISBK     SETGTRELINKL
+     C                     READPRELINKL                  55
+     C*
+     C** CHECK IF IT IS A LINKED TODAY
+     C*
+     C           *IN55     IFEQ '0'                        - B2
+     C*
+     C           BRCA      IFEQ BRCDK                      - B3
+     C           CNUM      ANDEQCNUMK
+     C           CCY       ANDEQCCYK
+     C           ACOD      ANDEQACODK
+     C           ACSQ      ANDEQACSQK
+     C*
+     C           RECI      IFNE 'F'                        - B4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVE 'LINKL'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 04**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E4
+     C                     DELETRELINKL
+     C/COPY WNCPYSRC,RE3270C002
+     C*
+     C                     ELSE                            - X3
+     C*
+     C           *IN22     IFEQ '0'
+     C                     EXSR CRTLNK
+     C                     END
+     C*
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C           *IN22     IFEQ '0'
+     C                     EXSR CRTLNK
+     C                     END
+     C*
+     C                     END                             - E2
+     C*
+     C** UPDATE ACCNT
+     C*
+     C**********           Z-ADD05        DBASE                           165024
+     C           RETKEY    CHAINACCNT                51
+     C           *IN51     IFEQ '1'                        - B2
+     C                     MOVEL'RE71906' ZAMSID                          165024
+     C                     EXSR ZASNMS                                    165024
+     C                     MOVEA'11111'   *IN,06                          165024
+     C                     WRITERE3270F0                                  165024
+     C************LOCK     IN   LDA                                       165024
+     C***********          Z-ADD6         DBASE                           165024
+     C***********          MOVE 'ACCNT'   DBFILE           ***************165024
+     C***********          MOVELRKEY      DBKEY            **DB ERROR 06**165024
+     C***********          OUT  LDA                        ***************165024
+     C***********          MOVE '1'       *IN89                           165024
+     C***********          EXSR DBSR                                      165024
+     C                     END                             - E2
+     C                     Z-ADD*ZEROS    LTAS
+     C                     Z-ADD*ZEROS    LTAC
+     C                     MOVE *BLANKS   LTAB
+     C/COPY WNCPYSRC,RE3270C056
+     C                     Z-ADD7         DBASE
+     C                     UPDATACCNTABF
+     C*
+     C** UPDATE THE B RECORD
+     C*
+     C                     Z-ADD8         DBASE
+     C           HISBK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 09**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     Z-ADDZDAYNO    VALL
+     C                     MOVE 'D'       LINK
+     C                     Z-ADD10        DBASE
+     C                     UPDATREHISPPF
+     C*
+     C** DELETE FUSIONPD
+     C*
+     C                     Z-ADD40        DBASE
+     C           HISBK     CHAINRELINKL1             54
+     C           *IN54     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD41        DBASE
+     C                     MOVE 'LINK1'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 41**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     Z-ADD42        DBASE
+     C                     DELETRELINKF1
+     C/COPY WNCPYSRC,RE3270C029
+     C*                                                                   154241
+     C** Update ACCNT record for Prime Account                            154241
+     C*                                                                   154241
+     C                     Z-ADD50        DBASE                           154241
+     C           ACCKEY    CHAINACCNT                51                   154241
+     C           *IN51     IFEQ '1'                        - B2           154241
+     C           *LOCK     IN   LDA                                       154241
+     C                     Z-ADD51        DBASE                           154241
+     C                     MOVE 'ACCNT'   DBFILE           ***************154241
+     C                     MOVELAKEY      DBKEY            **DB ERROR 51**154241
+     C                     OUT  LDA                        ***************154241
+     C                     MOVE '1'       *IN89                           154241
+     C                     EXSR DBSR                                      154241
+     C                     END                             - E2           154241
+     C                     Z-ADD*ZEROS    LTAS                            154241
+     C                     Z-ADD*ZEROS    LTAC                            154241
+     C                     MOVE *BLANKS   LTAB                            154241
+     C                     Z-ADD52        DBASE                           154241
+     C                     UPDATACCNTABF                                  154241
+     C*
+     C                     COMIT
+     C*
+     C                     EXSR CMD12
+     C*
+     C                     ELSE                            - X1
+     C*
+     C                     MOVEL'REL0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **CMD4 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CMD12  process when reset to the first screen
+     C**
+     C**     Called by       MAIN, LINKSR, CMD4, UNLINK
+     C**     Calls           -
+     C**
+     C           CMD12     BEGSR                           **CMD12 BEGSR**
+     C*
+     C           *IN96     IFEQ '0'                        - B1
+     C*
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SACNO
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PCCY
+     C                     MOVE *BLANKS   PBRCD
+     C                     MOVE *BLANKS   PACOD
+     C                     MOVE *BLANKS   PACSQ
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE *BLANKS   PVALL
+     C                     MOVE *BLANKS   PVALU
+     C                     MOVE '1'       *IN21
+     C                     MOVEA'110'     *IN,01
+     C                     MOVEA'00000000'*IN,06
+     C                     MOVEA'000'     *IN,14
+     C                     MOVE '1'       *IN94
+     C/COPY WNCPYSRC,RE3270C003
+     C                     CALL 'ZA0250'
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X1
+     C/COPY WNCPYSRC,RE3270C037
+     C*
+     C                     MOVEA'11'      *IN,94
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **CMD12 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CRTLNK create an unlinked record on relinkp
+     C**
+     C**     Called by       CMD4
+     C**     Calls           DBSR
+     C**
+     C           CRTLNK    BEGSR                           **CRTLNK BEGSR**
+     C*
+     C                     MOVE 'U'       RECI
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE SCNUM     CNUM
+     C                     MOVE SCCY      CCY
+     C                     MOVE SACOD     ACOD
+     C                     MOVE SACSQ     ACSQ
+     C*
+     C** TRANSFER THE UNLINKED DATE JJMMMMYY INTO A MIDAS DATE
+     C*
+     C                     MOVE PVALU     PVALUX                          088029
+     C                     Z-ADD1         I
+     C*********  DMTH      LOKUPZMNA,I                   99               062527
+     C           *IN98     IFEQ '0'                        - B1           088029
+     C           DMTH      LOKUPZMNN,I                   99               062527
+     C                     ELSE                            - X1           088029
+     C           DMTHX     LOKUPZMNN,I                   99               088029
+     C                     END                             - E1           088029
+     C           *IN99     IFEQ '0'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE
+     C                     MOVE 'LINKL'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 11**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C           *IN98     IFEQ '0'                        - B1           088029
+     C                     MOVE ZMNN,I    MNTH
+     C                     Z-ADDDDAY      DAY
+     C                     Z-ADDDYEAR     YEAR
+     C                     Z-ADDRESULT    ZDATE
+     C                     ELSE                            - X1           088029
+     C                     MOVE ZMNN,I    MNTHX                           088029
+     C                     Z-ADDDDAYX     DAYX                            088029
+     C                     Z-ADDDYEARX    YEARX                           088029
+     C                     Z-ADDRESULX    ZDATE                           088029
+     C                     END                             - E1           088029
+     C                     EXSR ZDATE1
+     C           *IN99     IFNE '0'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVE 'LINKL'   DBFILE           **DB ERROR 12**
+     C                     MOVELHKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C                     Z-ADDZDAYNO    VALL
+     C                     MOVE PACSQ     LTAS
+     C                     MOVE PACOD     LTAC
+     C                     MOVE PBRCD     LTAB
+     C                     MOVE PCNUM     LTCUST
+     C/COPY WNCPYSRC,RE3270C057
+     C                     Z-ADD13        DBASE
+     C                     WRITERELINKF
+     C*
+     C                     ENDSR                           **CRTLNK ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST, LINKSR, CMD4, UNLINK, ACCRET,
+     C**                     VALLIN, PROCIN, RELSR, CRTLNK
+     C**     Calls           -
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C           *IN89     IFEQ '1'                        - B1
+     C                     WRITEHEADAU
+     C                     END                             - E1
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** FIRST subroutine to execute first cycle.
+     C**
+     C**     Called by       START
+     C**     Calls           DBSR
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** DATAAREA LDA, RUNDAT AND ZMUSER
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C** SET UP FORMAT INDICATOR
+     C*
+     C                     MOVE '1'       *IN21
+     C*
+     C** PREPARE WORK VARIABLES
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3270'  DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD1         PAGE
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C**   Fill in fields for subroutine ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'REUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** Access Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     MOVE RUNA      SRUNA
+     C                     Z-ADD*ZEROS    RN
+     C*
+     C** Check Date Format
+     C*
+     C           DATF      IFEQ 'M'                        B2
+     C                     MOVE '1'       *IN98
+     C                     END                             E2
+     C*
+     C** Access Retail Details for retail number used
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANKS                    B1
+     C*
+     C** IF FOUND
+     C*
+     C           BMRANR    IFEQ 'N'                        B2        ADTEST
+     C                     MOVE '1'       *IN20
+     C                     END                             E2        ADTEST
+     C*
+     C** OTHERWISE DB ERROR
+     C*
+     C                     ELSE                            X1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD40        DBASE
+     C                     MOVE 'RETLL'   DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            **DB ERROR 40**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             E1
+     C/COPY WNCPYSRC,RE3270C004
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** LINKSR process when the entered account is a linked
+     C**
+     C**     Called by       PROCIN, RESSR
+     C**     Calls           DBSR, CMD3, CMD4, CMD12, CHKLNK
+     C**
+     C           LINKSR    BEGSR                           **LINKSR BEGSR**
+     C*
+     C** INITIALIZE SCREEN FIELDS OF PRIME ACCOUNT
+     C*
+     C           HISBK     CHAINRELINKL1             99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE
+     C                     MOVE 'LINK1'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 15**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C**********           Z-ADDLTCUST    KCNUM                                               CSD027
+     C                     MOVE LTCUST    KCNUM                                               CSD027
+     C                     MOVELLTAB      KBRCD
+     C                     Z-ADDLTAS      KACSQ
+     C                     Z-ADDLTAC      KACOD
+     C/COPY WNCPYSRC,RE3270C058
+     C*
+     C** ACCESS B RECORD TO GET THE LINKED DATE
+     C*
+     C           HISBK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 16**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C** CONVERT LINKED DATE MIDAS TO JJMMMYY
+     C*
+     C                     Z-ADDVALL      ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFNE '0'                        - B1
+     C                     Z-ADDVALL      WDATE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ***************
+     C                     MOVE 'VALL '   DBFILE           **DB ERROR 17**
+     C                     MOVELDKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*********            MOVE ZADATE    PVALL                           062527
+     C                     MOVE ZDATE     PVALL                           062527
+     C                     Z-ADDVALL      WVALL
+     C                     MOVEA'00111'   *IN,01
+     C                     MOVEA'00'      *IN,16
+     C                     MOVE '1'       *IN21
+     C*
+     C           VALL      IFNE *ZEROS                     - B1
+     C           VALL      ANDGTCTLDAT
+     C                     Z-ADDVALL      CTLDAT
+     C                     END                             - E1
+     C           HISD      IFGT CTLDAT                     - B1
+     C                     Z-ADDHISD      CTLDAT
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3270C059
+     C                     MOVE SCCY      PCCY
+     C/COPY WNCPYSRC,RE3270C060
+     C*
+     C** ACCESS ACCNT WITH THE PRIME ACCOUNT
+     C*
+     C           ACCKEY    CHAINACCNT                51
+     C           *IN51     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD18        DBASE
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELAKEY      DBKEY            **DB ERROR 18**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C                     MOVE ACNO      PACNO
+     C/COPY WNCPYSRC,RE3270C005
+     C*
+     C** ACCESS B RECORD WITH THE PRIME ACCOUNT
+     C*
+     C           LINKK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD19        DBASE
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELLDKEY     DKEY             **DB ERROR 19**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C           HISD      IFGT CTLDAT
+     C                     Z-ADDHISD      CTLDAT
+     C                     END
+     C*
+     C                     Z-ADDCTLDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFNE '0'                        - B1
+     C                     Z-ADDCTLDAT    DATEW
+     C           *LOCK     IN   LDA
+     C                     Z-ADD20        DBASE            ***************
+     C                     MOVE 'HISD '   DBFILE           **DB ERROR 20**
+     C                     MOVELPKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*********            MOVE ZADATE    PVALU                           062527
+     C                     MOVE ZDATE     PVALU                           062527
+     C*
+     C           *IN93     DOWEQ'0'                        - B1
+     C           *IN94     ANDEQ'0'
+     C/COPY WNCPYSRC,RE3270C006
+     C                     EXFMTRE3270F1
+     C                     CALL 'ZA0250'
+     C                     WRITERE3270F0                                                      160583
+     C                     MOVEA'00111'   *IN,01
+     C                     MOVEA'00'      *IN,16
+     C*
+     C           *INKC     CASEQ'1'       CMD3
+     C           *INKL     CASEQ'1'       CMD12
+     C           *INKD     CASEQ'1'       CMD4
+     C/COPY WNCPYSRC,RE3270C007
+     C                     CAS            CHKLNK
+     C                     END
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **LINKSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       START
+     C**     Calls           CMDINC, CMD3, CMD12, CHKINP
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C*
+     C** SET UP FORMAT INDICATORS
+     C*
+     C                     MOVEA'110'     *IN,01
+     C                     MOVE '1'       *IN21
+     C                     MOVE '0'       *IN94
+     C/COPY WNCPYSRC,RE3270C008
+     C*
+     C** DISPLAY FILE PROCESSING
+     C*
+     C                     EXFMTRE3270F1
+     C*
+     C** RESET ALL ERROR MESSAGES
+     C*
+     C                     CALL 'ZA0250'
+     C                     WRITERE3270F0
+     C*
+     C                     MOVEA'00000000'*IN,06
+     C                     MOVEA'000'     *IN,14
+     C                     MOVEA'000'     *IN,51
+     C                     MOVEA'00'      *IN,93
+     C                     MOVEL'0'       *IN22
+     C/COPY WNCPYSRC,RE3270C009
+     C*
+     C** CHECK COMMAND KEY
+     C*
+     C           *INKD     CASEQ'1'       CMDINC
+     C           *INKC     CASEQ'1'       CMD3
+     C           *INKL     CASEQ'1'       CMD12
+     C                     CAS            CHKINP
+     C                     END
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** PRIME  process when the entered account is a prime
+     C**
+     C**     Called by       PROCIN
+     C**     Calls           -
+     C**
+     C           PRIME     BEGSR                           **PRIME BEGSR**
+     C*
+     C*
+     C           *IN93     DOWEQ'0'                        - B1
+     C           *IN94     ANDEQ'0'
+     C*
+     C/COPY WNCPYSRC,RE3270C010
+     C           HISBK     SETLLRELINKJ2                 60
+     C/COPY WNCPYSRC,RE3270C011
+     C*
+     C           *IN60     IFEQ '0'                        - B2
+     C*
+     C           RETKEY    CHAINACCNT                51
+     C*
+     C           *IN51     IFEQ '1'                        - B3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD21        DBASE
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **DB ERROR 21**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E3
+     C*
+     C                     Z-ADD*ZEROS    LTAS
+     C*
+     C                     Z-ADD22        DBASE
+     C                     UPDATACCNTABF
+     C*
+     C                     COMIT
+     C*
+     C/COPY WNCPYSRC,RE3270C012
+     C                     EXSR UNLINK
+     C/COPY WNCPYSRC,RE3270C013
+     C*
+     C                     ELSE                            - X2
+     C*
+     C                     EXSR SUBFIL
+     C/COPY WNCPYSRC,RE3270C038
+     C*
+     C                     MOVEA'000'     *IN,93
+     C*
+     C                     WRITERE3270HE
+     C*
+     C                     Z-ADD1         RN                                                  193384
+     C                     MOVE '1'       *IN82                                               193384
+     C                     EXFMTRE3270PC
+     C*
+     C           *INKC     CASEQ'1'       CMD3
+     C           *INKD     CASEQ'1'       CMDINC
+     C           *INKL     CASEQ'1'       CMD12
+     C                     CAS            RESSR
+     C                     END
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3270C039
+     C*
+     C                     ENDSR                           **PRIME ENDSR**
+     C/COPY WNCPYSRC,RE3270C040
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** PROCIN process following link or not
+     C**
+     C**     Called by       ACCNUM, RETNUM
+     C**     Calls           DBSR, PRIME, UNLINK, LINKSR
+     C**
+     C           PROCIN    BEGSR                           **PROCIN BEGSR**
+     C*
+     C/COPY WNCPYSRC,RE3270C014
+     C** Check that account exists on file                                165024
+     C           RETKEY    CHAINACCNT                51
+     C*
+     C*          *IN51     IFEQ '1'                        - B1
+     C*          *LOCK     IN   LDA
+     C*                    Z-ADD23        DBASE
+     C*                    MOVE 'ACCNT'   DBFILE           ***************
+     C*                    MOVELRKEY      DBKEY            **DB ERROR 23**
+     C*                    OUT  LDA                        ***************
+     C*                    MOVE '1'       *IN89
+     C*                    EXSR DBSR
+     C*                    END                             - E1
+     C           *IN51     IFEQ '1'                        - B1
+     C                     MOVEL'RE71906' ZAMSID                          165024
+     C                     EXSR ZASNMS                                    165024
+     C                     MOVEA'11111'   *IN,06                          165024
+     C                     WRITERE3270F0                                  165024
+     C************LOCK     IN   LDA                                       165024
+     C***********          Z-ADD23        DBASE                           165024
+     C***********          MOVE 'ACCNT'   DBFILE           ***************165024
+     C***********          MOVELRKEY      DBKEY            **DB ERROR 23**165024
+     C***********          OUT  LDA                        ***************165024
+     C***********          MOVE '1'       *IN89                           165024
+     C***********          EXSR DBSR                                      165024
+     C                     END                             - E1
+     C*
+     C** CHECK THAT THE ACCOUNT IS A LIVE RETAIL ACCOUNT IN SAME CUURENCY
+     C*
+     C           RECI      IFNE 'D'                        - B1
+     C           LTAS      ANDEQ0
+     C** PRIMARY ACCOUNT CLOSED
+     C           RECI      ORNE 'D'                        - B1
+     C           LTAS      ANDEQ99
+     C** SECONDARY ACCOUNT NOT LIVE AND NOT CLOSED
+     C           RECI      ORNE 'C'                        - B1
+     C           RECI      ANDNE'D'
+     C           LTAS      ANDNE0
+     C           LTAS      ANDNE99
+     C*
+     C           ACST      OREQ 'C'
+     C           ATYP      ORNE 'R'
+     C           CCY       ORNE SCCY
+     C                     MOVEL'REL0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,12
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X1
+     C*
+     C                     MOVE ACNO      SACNO
+     C*                    MOVE BRCA      SBRCA
+     C*
+     C           DACO      IFEQ *ZEROS                     - B2
+     C                     Z-ADDDACO      WDATE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD24        DBASE
+     C                     MOVE 'DACO '   DBFILE           ***************
+     C                     MOVELDKEY      DBKEY            **DB ERROR 24**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     Z-ADDDACO      CTLDAT
+     C           LDID      IFNE *ZEROS                     - B2
+     C           LDID      ANDGTCTLDAT
+     C                     Z-ADDLDID      CTLDAT
+     C                     END                             - E2
+     C           LCID      IFNE *ZEROS                     - B2
+     C           LCID      ANDGTCTLDAT
+     C                     Z-ADDLCID      CTLDAT
+     C                     END                             - E2
+     C*
+     C           LTAS      IFEQ 99                         - B2
+     C                     EXSR PRIME
+     C                     ELSE                            - X2
+     C           LTAS      IFEQ *ZEROS                     - B3
+     C                     EXSR UNLINK
+     C                     ELSE                            - X3
+     C*
+     C** IF SECONDARY ACCOUNT CLOSED, SEND MESSAGE "ACCOUNT CLOSED"
+     C           RECI      IFEQ 'C'                        - B1
+     C           LTAS      ANDNE0
+     C           LTAS      ANDNE99
+     C                     MOVE '1'       *IN22
+     C                     MOVEL'REL0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     END
+     C*
+     C                     EXSR LINKSR
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **PROCIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** R1LSR subroutine for RELINKL1 file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           R1LSR     BEGSR                           **RELSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'LINK1'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **STATUS ERR **
+     C                     MOVELSTSR1L    LSTAT            ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **RELSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** LNKSR subroutine for RELINKL1 file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           LNKSR     BEGSR                           **RELSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'LNKSR'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **STATUS ERR **
+     C                     MOVELSTSLNK    LSTAT            ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **RELSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RELSR subroutine for RELINKL file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           RELSR     BEGSR                           **RELSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'RELSR'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **STATUS ERR **
+     C                     MOVELSTSREL    LSTAT            ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **RELSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** REHSR subroutine for REHISBL file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           REHSR     BEGSR                           **REHSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELDKEY      DBKEY            **STATUS ERR **
+     C                     MOVELSTSREH    LSTAT            ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REHSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ACCSR subroutine for ACCNT file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           ACCSR     BEGSR                           **ACCSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **STATUS ERR **
+     C                     MOVELSTSACC    LSTAT            ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **ACCSR ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RESSR return to the link process
+     C**
+     C**     Called by       PRIME
+     C**     Calls           -
+     C**
+     C           RESSR     BEGSR                           **RESSR BEGSR**
+     C*
+     C                     MOVE '1'       *IN96
+     C*
+     C                     MOVE SACOD     WACOD
+     C                     MOVE SACSQ     WACSQ
+     C                     MOVE SBRCA     WBRCD
+     C                     MOVE SCNUM     WCNUM
+     C/COPY WNCPYSRC,RE3270C061
+     C*
+     C                     READCRE3270PB                 62
+     C*
+     C           *IN62     DOWEQ'0'                        - B1
+     C           *IN93     ANDEQ'0'
+     C           *IN95     ANDEQ'0'
+     C*
+     C                     MOVE WACOD     LTAC
+     C                     MOVE WACSQ     LTAS
+     C                     MOVE WCNUM     LTCUST
+     C                     MOVE WBRCD     LTAB
+     C                     MOVE DACOD     SACOD
+     C                     MOVE DACSQ     SACSQ
+     C                     MOVE DCNUM     SCNUM
+     C                     MOVE DBRCD     SBRCA
+     C                     MOVE DACNO     SACNO
+     C/COPY WNCPYSRC,RE3270C015
+     C*
+     C                     EXSR LINKSR
+     C                     MOVE '0'       *IN94
+     C                     MOVE PACOD     SACOD
+     C                     MOVE PACSQ     SACSQ
+     C                     MOVE PCNUM     SCNUM
+     C                     MOVE PBRCD     SBRCA
+     C                     MOVE PACNO     SACNO
+     C/COPY WNCPYSRC,RE3270C062
+     C*
+     C                     MOVE *BLANKS   PACOD
+     C                     MOVE *BLANKS   PACSQ
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCD
+     C                     MOVE *BLANKS   PACNO
+     C                     MOVE *BLANKS   PVALL
+     C                     MOVE *BLANKS   PVALU
+     C                     CALL 'ZA0250'
+     C                     WRITERE3270F0
+     C*
+     C                     MOVE *BLANKS   SELECT
+     C                     UPDATRE3270PB
+     C*
+     C                     READCRE3270PB                 62
+     C*
+     C                     END                             - E1
+     C*
+     C                     MOVE '0'       *IN96
+     C*
+     C                     ENDSR                           **RESSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RETNUM retail number only has been entered
+     C**
+     C**     Called by       CHKINP
+     C**     Calls           PROCIN
+     C**
+     C           RETNUM    BEGSR                           **RETNUM BEGSR**
+     C*
+     C** CHECK FOR NUMERIC RETAIL NUMBER
+     C*
+     C                     MOVE *BLANKS   ACCINV  1                       110785
+     C                     Z-ADD1         Y       20                      110785
+     C                     MOVELSACNO     ACN2                            110785
+      *                                                                   110785
+     C           Y         DOWLE10                                        110785
+     C                     Z-ADD1         X                               110785
+     C           ACN1,Y    LOKUPNUM,X                    61               110785
+      *                                                                   110785
+     C           *IN61     IFEQ *OFF                                      110785
+     C                     MOVE 'Y'       ACCINV                          110785
+     C                     END                                            110785
+      *                                                                   110785
+     C                     ADD  1         Y                               110785
+     C                     END                                            110785
+      *                                                                   110785
+     C           ACCINV    IFEQ 'Y'                                       110785
+     C                     MOVEL'REL0008' ZAMSID                          110785
+     C                     EXSR ZASNMS                                    110785
+     C                     WRITERE3270F0                                  110785
+     C                     MOVE '1'       *IN11                           110785
+     C                     ELSE                                           110785
+      *                                                                   110785
+     C                     MOVELSACNO     FLD11
+     C                     MOVELFLD11     FLD10
+     C*
+     C           SACNO     IFEQ FLD10                      - B1
+     C           RETNO     CHAINACNUM                52
+     C                     END                             - E1
+     C*
+     C           SACNO     IFNE FLD10                      - B1
+     C           *IN52     OREQ '1'
+     C                     MOVEL'REL0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C                     MOVE '1'       *IN11
+     C                     ELSE                            - X1
+     C/COPY WNCPYSRC,RE3270C033
+     C*
+     C** RECORD FOUND - USE FIELDS TO CHAIN ACCNT
+     C*
+     C                     MOVE CNUM      SCNUM
+     C                     MOVE CCY       SCCY
+     C                     MOVE ACOD      SACOD
+     C                     MOVE ACSQ      SACSQ
+     C                     MOVE BRCA      SBRCA
+     C/COPY WNCPYSRC,RE3270C043
+     C*
+     C                     EXSR PROCIN
+     C/COPY WNCPYSRC,RE3270C034
+     C*
+     C                     END                             - E1
+     C*
+     C                     END                                            110785
+     C*                                                                   110785
+     C                     ENDSR                           **RETNUM ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** SUBFIL process to fill the subfile with data
+     C**
+     C**     Called by       PRIME
+     C**     Calls           -
+     C**
+     C           SUBFIL    BEGSR                           **SUBFIL BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    RN
+     C                     MOVE '1'       *IN50
+     C                     WRITERE3270PC
+     C                     MOVE '0'       *IN50
+     C*
+     C/COPY WNCPYSRC,RE3270C016
+     C           HISBK     READERELINKJ2                 60
+     C/COPY WNCPYSRC,RE3270C017
+     C*
+     C           *IN60     DOWEQ'0'                           - B1
+     C*
+     C                     MOVE ACNO      DACNO
+     C                     MOVE ACOD      DACOD
+     C                     MOVE ACSQ      DACSQ
+     C                     MOVE CNUM      DCNUM
+     C                     MOVE CCY       DCCY
+     C                     MOVE BRCA      DBRCD
+     C/COPY WNCPYSRC,RE3270C018
+     C*
+     C*
+     C           AC3KEY    CHAINREHISBL              54
+     C*
+     C           *IN54     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD25        DBASE
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELBKEY      DBKEY            **DB ERROR 25**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C           LINK      IFNE 'D'                        - B2
+     C*
+     C** CONVERT LINKED DATE MIDAS TO JJMMMYY
+     C*
+     C                     Z-ADDVALL      ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFNE '0'                        - B3
+     C                     Z-ADDVALL      ADATE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD26        DBASE            ***************
+     C                     MOVE 'VALL '   DBFILE           **DB ERROR 26**
+     C                     MOVELBKEY2     DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E3
+     C                     MOVE ZADATE    DVALL
+     C                     MOVE *BLANKS   SELECT
+     C*
+     C                     ADD  1         RN
+     C                     WRITERE3270PB
+     C                     END                             - E2
+     C*
+     C/COPY WNCPYSRC,RE3270C019
+     C           HISBK     READERELINKJ2                 60
+     C/COPY WNCPYSRC,RE3270C020
+     C*
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3270C024
+     C*
+     C                     ENDSR                           **SUBFIL ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** UNLINK process when the entered account is a not linked
+     C**
+     C**     Called by       PROCIN
+     C**     Calls           DBSR, CMD3, CMD12, CMDINC, CHKPRI
+     C**
+     C           UNLINK    BEGSR                           **UNLINK BEGSR**
+     C*
+     C** ACCESS B RECORD OF THE SECONDARY
+     C*
+     C           HISBK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD27        DBASE
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELHKEY      DBKEY            **DB ERROR 27**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C*  SECONDARY CAN NOT BE AN ALTERNATE ACCOUNT
+     C*
+     C           ALTI      IFEQ 'Y'
+     C                     MOVEL'REL9201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,12
+     C                     WRITERE3270F0
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** CHECK IF IT IS A UNLINKED ACCOUNT
+     C*
+     C           VALL      IFNE *ZEROS                     - B1
+     C           VALL      ANDGTCTLDAT
+     C                     Z-ADDVALL      CTLDAT
+     C                     END                             - E1
+     C           HISD      IFGT CTLDAT                     - B1
+     C                     Z-ADDHISD      CTLDAT
+     C                     END                             - E1
+     C*
+     C                     Z-ADDCTLDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFNE '0'                        - B1
+     C                     Z-ADDCTLDAT    WDATE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD28        DBASE            ***************
+     C                     MOVE 'HISD '   DBFILE           **DB ERROR 28**
+     C                     MOVELDKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C                     MOVE '1'       *IN21
+     C                     MOVEA'00000000'*IN,06
+     C                     MOVEA'000'     *IN,14
+     C                     MOVEA'00'      *IN,04
+     C/COPY WNCPYSRC,RE3270C021
+     C*
+     C           *IN93     DOWEQ'0'                        - B1
+     C           *IN94     ANDEQ'0'
+     C*
+     C                     MOVEA'101'     *IN,01
+     C                     EXFMTRE3270F1
+     C                     CALL 'ZA0250'
+     C                     WRITERE3270F0
+     C                     MOVEA'00000'   *IN,12
+     C                     MOVEA'00'      *IN,18                          062527
+     C                     MOVE '0'       *IN,04                          062527
+     C*
+     C           *INKC     CASEQ'1'       CMD3
+     C           *INKL     CASEQ'1'       CMD12
+     C           *INKD     CASEQ'1'       CMDINC
+     C                     CAS            CHKPRI
+     C                     END
+     C*
+     C                     END                             - E1
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **UNLINK ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** VALLIN process when valid linke account
+     C**
+     C**     Called by       ACCRET
+     C**     Calls           DBSR
+     C**
+     C           VALLIN    BEGSR                           **VALLIN BEGSR**
+     C*
+     C           LINKK     CHAINRELINKL              55
+     C*
+     C           *IN55     IFEQ '1'                        - B1
+     C                     MOVE 'F'       RECI
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE SCNUM     CNUM
+     C                     MOVE SCCY      CCY
+     C                     MOVE SACOD     ACOD
+     C                     MOVE SACSQ     ACSQ
+     C                     Z-ADDCTLDAT    VALL
+     C                     MOVE PACSQ     LTAS
+     C                     MOVE PACOD     LTAC
+     C                     MOVE PBRCD     LTAB
+     C                     MOVE PCNUM     LTCUST
+     C/COPY WNCPYSRC,RE3270C063
+     C                     Z-ADD29        DBASE
+     C                     WRITERELINKF
+     C                     Z-ADD30        DBASE
+     C                     WRITEFUSIONF1
+     C/COPY WNCPYSRC,RE3270C022
+     C           HISBK     CHAINRELINKL1             99
+     C           *IN99     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD31        DBASE
+     C                     MOVE 'LINK1'   DBFILE           ***************
+     C                     MOVELAKEY      DBKEY            **DB ERROR 31**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END
+     C*
+     C           ACCKEY    CHAINACCNT                51
+     C           *IN51     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD32        DBASE
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELAKEY      DBKEY            **DB ERROR 32**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     Z-ADD99        LTAS
+     C                     Z-ADD*ZEROS    LTAC
+     C                     MOVEL*BLANKS   LTAB
+     C                     Z-ADD33        DBASE
+     C                     UPDATACCNTABF
+     C*
+     C                     Z-ADD34        DBASE
+     C           RETKEY    CHAINACCNT                51
+     C           *IN51     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD35        DBASE
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELRKEY      DBKEY            **DB ERROR 35**
+     C                     OUT  LDA                        ***************
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     MOVE PACSQ     LTAS
+     C                     MOVE PACOD     LTAC
+     C                     MOVE PBRCD     LTAB
+     C/COPY WNCPYSRC,RE3270C064
+     C                     Z-ADD36        DBASE
+     C                     UPDATACCNTABF
+     C                     Z-ADD37        DBASE
+     C           HISBK     CHAINREHISBL              54
+     C           *IN54     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD38        DBASE            ***************
+     C                     MOVE 'HISBL'   DBFILE           **DB ERROR 38**
+     C                     MOVELHKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     MOVE '1'       *IN89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C                     Z-ADDCTLDAT    VALL
+     C                     MOVE 'F'       LINK
+     C                     Z-ADD39        DBASE
+     C                     UPDATREHISPPF
+     C                     COMIT
+     C                     EXSR CMD12
+     C                     ELSE                            - X1
+     C                     MOVEL'REL0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,12
+     C                     WRITERE3270F0
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **VALLIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS    - Send message to program message queue             *
+     C*                                                               *
+     C* CALLS     - Y2SNMGC                                           *
+     C*                                                               *
+     C* CALLED BY - CHKINP, ACCNUM, PROCIN, ACCRET, CHKLNK            *
+     C*           - RETNUM, CHKPRI, CMDINC, LINKSR, VALLIN            *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*****************************************************************
+     C**
+     C** VBRCA subroutine to validate  user authority to BRANCH.
+     C**
+     C**       Called by PROCIN
+     C**       Calls     *none
+     C**
+     C           VBRCA     BEGSR                           **VBRCA BEGSR**
+     C*
+     C           SPFLAG    IFEQ 'S'
+     C                     MOVE SBRCA     #BRCA   3
+     C                     END
+     C           SPFLAG    IFEQ 'P'
+     C                     MOVE PBRCD     #BRCA
+     C                     END
+     C*
+     C** BASIC VALIDATION OF INPUT BRANCH CODE
+     C*
+     C           AGMBIN    IFEQ 'Y'                        IF MULTIBRANCH
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM #BRCA     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'REL0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C           SPFLAG    IFEQ 'S'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C           SPFLAG    IFEQ 'P'
+     C                     MOVE '1'       *IN18
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE A8BRCD    #BRCA
+     C                     END
+     C*
+     C**  VALIDATE BRANCH AGAINST USER
+     C*
+     C           *IN10     IFNE '1'
+     C           *IN18     ORNE '1'
+     C                     CALL 'ZVBBU'
+     C                     PARM #BRCA     @ZBR    3
+     C                     PARM           @ERR    10
+     C*
+     C**  IF NOT VALID FOR USER
+     C*
+     C           @ERR      IFEQ 1
+     C                     MOVEL'REL0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C           SPFLAG    IFEQ 'S'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C           SPFLAG    IFEQ 'P'
+     C                     MOVE '1'       *IN18
+     C                     END
+     C                     END
+     C           @ERR      IFEQ 2
+     C                     MOVEL'REL0016' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITERE3270F0
+     C           SPFLAG    IFEQ 'S'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C           SPFLAG    IFEQ 'P'
+     C                     MOVE '1'       *IN18
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE ' '       SPFLAG
+     C                     END
+     C*
+     C                     ENDSR                           **VBRCA ENDSR**
+     C/COPY WNCPYSRC,RE3270C023
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/EJECT
+**  NUM                                                                   110785
+0123456789                                                                110785
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  MNMN
+010203040506070809101112
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

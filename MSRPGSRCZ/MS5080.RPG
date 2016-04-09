@@ -1,0 +1,279 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Reset SPD flag on single inc. msg')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                               *
+      *                                                               *
+      *   MS5080 - Reset SPD flags on single incoming message         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *   LAST AMEND NO. CSW095            DATE 10APR95               *
+      *   PREV AMEND NO. S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMSMSI2L9UF  E           K        DISK
+     F                                              KINFDS INFDS
+      *
+      * ID C  F  H  L    Function of indicators
+      *    20            EOF MSMSI2L9
+      *    21
+      *    30            MSMSI2L9 Open
+      *    U7,U8 LR      DB Error
+      *
+     E***********         IMSG     3072  1                                CSW095
+     E***********         OMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E                    OMSG     9999  1                                CSW095
+     E                    CPY@    1   1 80                                S01310
+      *
+     IINFDS       DS
+     I                                        9   9 OPEN
+     I                                    B 156 1590REC
+      **  INFDS data structure
+      *
+     IMSSTAT      DS                            256
+     I                                      119 1270RRNLIM
+     I                                      128 155 LSTMIR
+      **  MSSTAT data structure
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   SCAN1 - Scans for '{SPD:}'                                  *
+      *   SCAN2 - Scans for '{S:{SPD:}}                               *
+      *   *PSSR - Program status subroutine                           *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT                                                *
+      *   Calls - SCAN1                                               *
+      *         - SCAN2                                               *
+      *         - *PSSR                                               *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      **  Check for records to be processed after last use
+     C           REC       IFEQ 0
+     C           REC       ORLE RECNO
+     C                     SETON                     20
+     C                     ELSE
+     C           KEY       SETLLMSMSI2L9
+     C                     READ MSMSI2L9                 20
+     C                     END
+      *
+      **  If no records to process terminate program
+     C           *IN20     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+     C           *IN20     DOWNE'1'
+      *
+      **  Set up variables
+     C                     MOVE MIR       MIRWRK 28
+     C                     MOVE MOR       MORWRK 28
+     C                     MOVE 'N'       DUP     1
+     C                     Z-ADD1         X       40
+      *
+      **  Set up imsg with one message (same MOR)
+     C           *IN20     DOWEQ'0'
+     C           MOR       ANDEQMORWRK
+     C                     MOVEAMDTA      IMSG,X
+     C                     READ MSMSI2L9                 20
+     C                     ADD  256       X
+     C                     END
+      *
+      **  Scan for '{SPD:}'
+     C                     EXSR SCAN1
+      *
+      **  If '{SPD:} is present, check for possible duplicate
+     C           Y         IFGT 0
+      *
+     C           LSTMIR    IFEQ MIRWRK
+     C                     MOVE 'Y'       DUP
+     C                     END
+      *
+     C           DUP       IFEQ 'N'
+      *
+      **  Scan for '{S:{SPD:}}'
+     C                     EXSR SCAN2
+      *
+     C***********          Z-ADD1         A       40                      CSW095
+     C***********          Z-ADD1         B       40                      CSW095
+     C                     Z-ADD1         A       50                      CSW095
+     C                     Z-ADD1         B       50                      CSW095
+      *
+      **  If '{S:{SPD:}}' present, remove the tag & set up OMSG
+     C           Z         IFGT 0
+      *
+     C           TXT1      DOUEQ*BLANKS
+     C           A         ANDLT10000                                     CSW095
+     C***********A         ANDLT3073                                      CSW095
+      *
+     C           A         IFEQ Z
+     C                     ADD  10        A
+     C                     END
+     C                     MOVE IMSG,A    OMSG,B
+     C                     MOVEAIMSG,A    TXT1  256
+     C                     ADD  1         A
+     C                     ADD  1         B
+     C                     END
+      *
+      **  If '{SPD:}' present, remove the tag & set up OMSG
+     C                     ELSE
+      *
+     C           TXT1      DOUEQ*BLANKS
+     C           A         ANDLT10000                                     CSW095
+     C***********A         ANDLT3073                                      CSW095
+      *
+     C           A         IFEQ Y
+     C                     ADD  6         A
+     C                     END
+     C                     MOVE IMSG,A    OMSG,B
+     C                     MOVEAIMSG,A    TXT1
+     C                     ADD  1         A
+     C                     ADD  1         B
+     C                     END
+     C                     END
+      *
+      **  If NOT a duplicate update the record
+     C                     Z-ADD1         B
+     C           MIRWRK    SETLLMSMSI2L9
+     C           MIRWRK    READEMSMSI2L9                 21
+     C                     MOVEAOMSG,B    TXT1
+      *
+     C           *IN21     DOWEQ'0'
+     C           MOR       ANDEQMORWRK
+     C           TXT1      ANDNE*BLANKS
+     C                     MOVEAOMSG,B    MDTA
+     C                     MOVEAOMSG,B    TXT1
+     C                     UPDATMSMSI2D0
+     C                     ADD  256       B
+     C                     READ MSMSI2L9                 21
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  Set up IMSG & OMSG
+     C                     MOVEA*BLANKS   IMSG
+     C                     MOVEA*BLANKS   OMSG
+      *
+      **  Set up variable
+     C                     MOVE MIRWRK    LSTMIR
+     C                     END
+      *
+     C           *LOCK     IN   MSSTAT
+     C                     MOVE MIR       LSTMIR
+     C                     Z-ADDRECNO     RRNLIM
+     C                     OUT  MSSTAT
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Initial process                                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Retrieve MSSTAT
+     C           *NAMVAR   DEFN           MSSTAT
+     C           *LOCK     IN   MSSTAT
+     C                     MOVE LSTMIR    KEY    28
+     C                     Z-ADDRRNLIM    RECNO   90
+     C                     OUT  MSSTAT
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SCAN1 - Scans for '{SPD:}'                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           SCAN1     BEGSR
+      *
+     C                     Z-ADD1         X
+     C                     Z-ADD0         Y       40
+     C                     MOVEAIMSG,X    @WK6    6
+      *
+     C           @WK6      DOWNE'{SPD:}'
+     C           X         ANDLT9999                                      CSW095
+     C***********X         ANDLT3072                                      CSW095
+     C                     ADD  1         X
+     C                     MOVEAIMSG,X    @WK6
+     C                     END
+      *
+      **  If scan found set Y up with position
+     C***********X         IFLT 3072                                      CSW095
+     C           X         IFLT 9999                                      CSW095
+     C                     Z-ADDX         Y
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SCAN2 - Scans for '{S:{SPD:}}                               *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           SCAN2     BEGSR
+      *
+     C                     MOVEL'{S:{SPD:'@SRCH  10
+     C                     MOVE '}}'      @SRCH
+     C                     Z-ADD1         X
+     C                     Z-ADD0         Z       40
+     C                     MOVEAIMSG,X    @WK10  10
+      *
+     C           @WK10     DOWNE@SRCH
+     C           X         ANDLT9999                                      CSW095
+     C***********X         ANDLT3072                                      CSW095
+     C                     ADD  1         X
+     C                     MOVEAIMSG,X    @WK10
+     C                     END
+      *
+      **  If scan found set Z up with position
+     C***********X         IFLT 3072                                      CSW095
+     C           X         IFLT 9999                                      CSW095
+     C                     Z-ADDX         Z
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *    *PSSR - Program status subroutine                          *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

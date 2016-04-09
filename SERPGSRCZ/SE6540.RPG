@@ -1,0 +1,2779 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER blocked positions maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE6540 - SE Blocked Positions Maintenance                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG7907            Date 19Jul05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2563            Date 17May04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 156180             Date 27Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 16Aug99               *
+      *                 CGL011             Date 20Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CEU017             Date 03Mar98               *
+     F*                 CSE007             Date 18Dec97               *
+     F*                 100236             DATE 26APR96               *
+     F*                 080053             DATE 08DEC94               *
+     F*                 S01496             DATE 12OCT94               *
+     F*                 62812              DATE 04NOV93               *
+     F*                 S10978             DATE 04APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7907 - Selected customer is not displayed on screen       *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  BUG2563 - "From Date" field cleared after validation         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  156180 - Avoid message CPF5013 in case of subfile empty.     *
+     F*  CPB001 - 'Private Banking' Module                            *
+      *  CGL011 - Collateral Processing for Midas DBA                 *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  100236 - Nominal for Unit Trust is invalid                   *
+     F*  080053 - Brch, Cust, Port, Sec entered and nominal blank     *
+     F*           should not be a general block                       *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  62812  - IT'S NOT POSSIBLE TO INSERT AN END DATE FOR         *
+     F*           SECURITIES WITHOUT A MATURITY DATE                  *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*           SE BLOCKED POSITIONS MAINTENANCE                    *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     FSE6540DFCF  E                    WORKSTN
+     F                                        RRN1  KSFILE SE6540S1
+     F                                        RRN2  KSFILE SE6540S2
+     F                                              KINFSR *PSSR
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F***SDMMODL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F***SDPORTL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     FSEBKALL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            SEERALD0                          KRENAMESEERALF0
+     F            SEBLKPD0                          KRENAMESEBLKPF0
+     F            SECOALD0                          KRENAMESECOALF0       CSE007
+     F            SECOBKD0                          KRENAMESECOBKF0       CSE007
+     FSEBKALL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            SEERALD0                          KRENAMESEERALF1
+     F            SEBLKPD0                          KRENAMESEBLKPF1
+     F            SECOALD0                          KRENAMESECOALF1       CSE007
+     F            SECOBKD0                          KRENAMESECOBKF1       CSE007
+     F***SDSTRDL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F***SDBRCHL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMPORTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***SDSECSL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F***SDPLCSLLIF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F** Output files
+     F*
+     FSEBLKPL0UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,SE6540F001
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         SEBKAL0 - SEERALD0
+     F*       02         SEBKAL0 - SEBLKPD0
+     F*       03         SEBKAL1 - SEERALD1
+     F*       04         SEBKAL1 - SEBLKPD1
+     F*       05         SEBKAL0 - SECOALF0                               CSE007
+     F*       06         SEBKAL0 - SECOBKF0                               CSE007
+     F*       07         SEBKAL1 - SECOALF1                               CSE007
+     F*       08         SEBKAL1 - SECOBKD1                               CSE007
+     F*
+     F*       09         SCREEN MODE I - REVIEW FIELDS PROTECT         ED
+     F*       10         SCREEN MODE D                                 ED
+     F*       11         ALL SUBFILE FIELDS REVERSE IMMAGE
+     F*       13         ALL SUBFILE FIELDS PROTECTED
+     F*       14         PORTFOLIO NOT INSTALLED, SSPTFR IN SFL PROTECTED
+     F*
+     F*       20         SFLEND  SE6540C0 (MESSAGE SUBFILE)
+     F*      N22         ROLLUP(35) - SE6540C1
+     F*       22         SFLEND     - SE6540C1
+     F*      N23         ROLLUP(35) - SE6540C2
+     F*       23         SFLEND     - SE6540C2
+     F*       24         SFLDLT     - SE6540C1, C2
+     F*      N25         SFLDSP     - SE6540C1, C2
+     F*      N30         SFLDSPCTL  - SE6540C1, C2
+     F*
+     F*       35         ROLLUP IN SUBFILE
+     F*
+     F*       39         ERROR ON FIELD DDBRCD
+     F*       40         ERROR ON FIELD DDCNUM
+     F*       41         ERROR ON FIELD DDPTFR
+     F*       42         ERROR ON FIELD DDSESN
+     F*       43         ERROR ON FIELD DDBEDT
+     F*                                                                   S01496
+     F*       45         MULTIBRANCHING INDICATOR                         S01496
+     F*
+     F*       49         HIGHLIGHT      SSD
+     F*                  (ALL SUBFILE RECORD IN ERROR)
+     F*       50         ERROR ON FIELD SSBRCD
+     F*       51         ERROR ON FIELD SSCNUM
+     F*       52         ERROR ON FIELD SSPTFR
+     F*       53         ERROR ON FIELD SSBLTY
+     F*       54         ERROR ON FIELD SSSESN
+     F*       55         ERROR ON FIELD SSNOMB
+     F*       56         ERROR ON FIELD SSBEDT
+     F*       57         ERROR ON FIELD SSBNAR
+     F*       58         ERROR ON FIELD SSBSTT                            CSE007
+     F*       59         ERROR ON FIELD SSBEWI                            CSE007
+     F*
+     F*       60         Feature CSE007 ON                                CSE007
+     F*
+     F*       71         WORK INDICATOR
+     F*
+     F*       KC         CMD03 ON SCREEN
+     F*       KE         CMD05 ON SCREEN
+     F*       KI         CMD09 ON SCREEN  (INSERT MODE)
+     F*       KJ         CMD10 ON SCREEN  (DELETE MODE)
+     F*       KL         CMD12 ON SCREEN
+     E*****************************************************************
+     E*
+     E** Copyright
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZALIGNZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E*****************************************************************
+     I*
+     ISEERALF0    01
+     I              VCRECI                          VDRECI
+     I              VCCNUM                          VDCNUM
+     I              VCPTFR                          VDPTFR
+     I              VCERTP                          VDBLTY
+     I              VCSESN                          VDSESN
+     I              VCNOMA                          VDNOMB
+     I              VCBEDT                          VDBEDT
+     I              VCBRCD                          VDBRCD
+     ISEBLKPF0    02
+     ISECOALF0    05                                                      CSE007
+     I              MCRECI                          VDRECI                CSE007
+     I              MCCNUM                          VDCNUM                CSE007
+     I              MCPTFR                          VDPTFR                CSE007
+     I              MCBLTY                          VDBLTY                CSE007
+     I              MCBSEC                          VDSESN                CSE007
+     I              MCBEDT                          VDBEDT                CSE007
+     I              MCBRCD                          VDBRCD                CSE007
+     I              MCBSTT                          VDBSTT                CSE007
+     I              MCBEWI                          VDEWIN                CSE007
+     ISECOBKF0    06                                                      CSE007
+     I              MURECI                          VDRECI                CSE007
+     I              MUCNUM                          VDCNUM                CSE007
+     I              MUPTFR                          VDPTFR                CSE007
+     I              MUBLTY                          VDBLTY                CSE007
+     I              MUSESN                          VDSESN                CSE007
+     I              MUNOMB                          VDNOMB                CSE007
+     I              MUBEDT                          VDBEDT                CSE007
+     I              MUBRCD                          VDBRCD                CSE007
+     I              MUBSTT                          VDBSTT                CSE007
+     I              MUBEWI                          VDEWIN                CSE007
+     I              MUBNAR                          VDBNAR                CSE007
+     ISEERALF1    03
+     I              VCRECI                          VDRECI
+     I              VCCNUM                          VDCNUM
+     I              VCPTFR                          VDPTFR
+     I              VCERTP                          VDBLTY
+     I              VCSESN                          VDSESN
+     I              VCNOMA                          VDNOMB
+     I              VCBEDT                          VDBEDT
+     I              VCBRCD                          VDBRCD
+     ISEBLKPF1    04
+     ISECOALF1    07                                                      CSE007
+     I              MCRECI                          VDRECI                CSE007
+     I              MCCNUM                          VDCNUM                CSE007
+     I              MCPTFR                          VDPTFR                CSE007
+     I              MCBLTY                          VDBLTY                CSE007
+     I              MCBSEC                          VDSESN                CSE007
+     I              MCBEDT                          VDBEDT                CSE007
+     I              MCBRCD                          VDBRCD                CSE007
+     I              MCBSTT                          VDBSTT                CSE007
+     I              MCBEWI                          VDEWIN                CSE007
+     ISECOBKF1    08                                                      CSE007
+     I              MURECI                          VDRECI                CSE007
+     I              MUCNUM                          VDCNUM                CSE007
+     I              MUPTFR                          VDPTFR                CSE007
+     I              MUBLTY                          VDBLTY                CSE007
+     I              MUSESN                          VDSESN                CSE007
+     I              MUNOMB                          VDNOMB                CSE007
+     I              MUBEDT                          VDBEDT                CSE007
+     I              MUBRCD                          VDBRCD                CSE007
+     I              MUBSTT                          VDBSTT                CSE007
+     I              MUBEWI                          VDEWIN                CSE007
+     I              MUBNAR                          VDBNAR                CSE007
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USIDXX
+     I*
+     IDSE207      DS
+     I                                        1  13 WAVAIL
+     I                                       14  26 WCPOS
+     I                                       27  39 WBLOCK
+     I*                                                                   S01496
+     IZMUSER      DS                             17                       S01496
+     I** Data area ZMUSER                                                 S01496
+     I                                       11  13 BVBRCD                S01496
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     ISDMMOD    E DSSDMMODPD                                              S01496
+     I**  Data structure for module details                               S01496
+     I*                                                                   S01496
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I**  Data structure for securities trading details                   S01496
+     I*                                                                   S01496
+     ISDPORT    E DSSDPORTPD                                              S01496
+     I**  Data structure for portfolio management details                 S01496
+     I*                                                                   S01496
+     ISDBRCH    E DSSDBRCHPD                                              S01496
+     I**  Data structure for branch details                               S01496
+     I*                                                                   S01496
+     ISDPLCS    E DSSDPLCSPD                                              S01496
+     I**  Data structure for portfolio customer details                   S01496
+     I*                                                                   S01496
+     ISDSECS    E DSSDSECSPD                                              S01496
+     I**  Data structure for securities customer details                  S01496
+     I*                                                                   S01496
+     ISDCUST    E DSSDCUSTPD                                              CPB001
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I**  Client Details                                                  CPB001
+     I*                                                                   CPB001
+     IDSSDY     E DSDSSDY                                                 S01496
+     I**  Long data structure for access objects                          S01496
+     I*                                                                   S01496
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I**  Very Long data structure for access objects                     CPB001
+     I*                                                                   CPB001
+      /COPY ZSRSRC,ZSEDITZ2
+      *****************************************************************
+      ** ENTRY PLIST
+      *****************************************************************
+      **
+      **   PPMODE : MODE FROM SEC6540
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PPMODE  1
+      *
+      *****************************************************************
+      ** KEY DEFINITION
+      *****************************************************************
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+      *
+      ** Key list for keys of 10 charakters
+     C           KEY1      KLIST
+     C                     KFLD           KEYA10 10
+      *
+      ** Key list for SEBKALL0 (Key fields from REVIEW fields)
+     C           KEYL0     KLIST
+     C***********          KFLD           KRBRCD  30                      S01496
+     C                     KFLD           KRBRCD  3                       S01496
+     C**********           KFLD           KRCNUM  60                                          CSD027
+     C                     KFLD           KRCNUM  6                                           CSD027
+     C                     KFLD           KRPTFR  4
+     C                     KFLD           KRBLTY  1
+     C                     KFLD           KRSESN 10
+     C                     KFLD           KRBEDT  50
+      *
+      ** Key list for SEBKALL1 (Key fields from REVIEW fields)
+     C           KEYL1     KLIST
+     C                     KFLD           KRSESN
+     C                     KFLD           KRBEDT
+     C                     KFLD           KRBLTY
+     C                     KFLD           KRBRCD
+     C                     KFLD           KRCNUM
+     C                     KFLD           KRPTFR
+      *
+      ** Key list for SEBLKPL0
+     C           KEYP0     KLIST
+     C                     KFLD           HHBRC2
+     C                     KFLD           HHCNU2
+     C                     KFLD           HHPTF2                       97-NOPO||
+     C                     KFLD           SSBLTY
+     C                     KFLD           SSSESN
+     C                     KFLD           HHBED2
+     C                     KFLD           WWSEQN  50
+      *
+      **  DEFINE KEY LIST FOR PMPORTLL
+     C           KEYPM     KLIST
+     C                     KFLD           HHCNU2
+     C                     KFLD           HHPTF2
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C** Perform initial processing
+     C                     EXSR P001
+     C*
+     C** Do while not F3
+     C           *INKC     DOWEQ'0'                        B*1
+     C*
+     C** Read SE6540DF
+     C                     READ SE6540C1                 71
+     C*
+     C                     SELEC
+     C*
+     C** F5 - Initial screen
+     C           *INKE     WHEQ '1'                        B*2
+     C*
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Init Review fields
+     C                     MOVE *BLANKS   DDBRCD
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDSESN
+     C                     MOVE BJRDNB    WWBED1
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDBEDT
+     C*
+     C** Clear both subfiles
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C1
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         RRN2
+     C           *LOVAL    SETLLSEBKALL0
+     C                     MOVE '0'       WWSEQ   1
+     C                     EXSR P003
+     C*
+     C** F9 - Insert Mode
+     C           *INKI     WHEQ '1'
+     C                     MOVE 'I'       WWMODE
+     C                     EXSR P002
+     C*
+     C** Amendment processing (ENTER taken and screen mode *NE I)
+     C           *INKC     WHEQ '0'
+     C           *IN35     ANDEQ'0'
+     C           WWMODE    ANDNE'I'
+     C                     EXSR P005
+     C*
+     C** Rollup taken
+     C           *IN35     WHEQ '1'
+     C           WWMODE    ANDNE'I'
+     C                     Z-ADDRRNMA1    RRN1
+     C                     EXSR P003
+     C*
+     C                     ENDSL                           E*2
+     C*
+     C** Reset screen mode to A
+     C                     MOVE 'A'       WWMODE
+     C*
+     C                     ENDDO                           E*1
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C*  P R O G R A M     E N D
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** INDEX OF SUBROUTINES
+     C**
+     C** P001   INITIAL PROCESSING
+     C** P002   INSERT MODE PROCESSING
+     C** P003   WRITE NEXT PAGE ON SUBFILE
+     C** P004   DELETION PROCESSING
+     C** P005   PROCESS <ENTER> KEY
+     C** P006   OUTPUT BLANK SCREEN
+     C**
+     C** V001   VALIDATE REVIEW FROM DETAILS
+     C** V002   VALIDATE INPUT DETAILS
+     C** V003   VALIDATE COMMAND KEY ENTERED ON DELETION SCREEN
+     C**
+     C** U001   WRITE/UPDATE BLOCKED POSITION
+     C**
+     C** W001   WRITE NEW RECORD TO PF/SEBLKPPD
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** P001 - INITIAL PROCESSING
+     C** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+     C*****************************************************************
+     C*
+     C           P001      BEGSR                           ** P001  BSR **
+     C*                                                                   S01496
+     C**  Read in ZMUSER                                                  S01496
+     C*                                                                   S01496
+     C           *NAMVAR   DEFN           ZMUSER                          S01496
+     C                     IN   ZMUSER                                    S01496
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6540'  DBPGM  10
+     C                     MOVE *HIVAL    WWHIGH 130
+     C*
+     C** If input parameter 'E', PF09 (insert) not allowed
+     C           PPMODE    IFEQ 'E'                        B*1
+     C                     MOVE '1'       *IN12
+     C                     ENDIF                           E*1
+     C*
+     C** Select the program MSGQ for error msg.
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C**  Fill in fields for subroutine ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** Zeroise number of records read
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         RRN2
+     C*
+     C** SFLEND (message subfile)
+     C                     MOVE '1'       *IN20
+     C*
+     C***Get*installation*control*data*record**************************   S01496
+     C***********          MOVE *BLANKS   KEYA10                          S01496
+     C***********          MOVEL'BANK'    KEYA10                          S01496
+     C***********KEY1      CHAINSDBANKL1             71                   S01496
+     C************IN71     IFEQ '1'                        ***************S01496
+     C*                                                                   S01496
+     C**  Get bank details using access object                            S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                    ***************S01496
+     C                     Z-ADD1         DBASE   30       **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ***************S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        ***************S01496
+     C                     MOVEL'BANK'    DBKEY  29
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVELBJMRDT    DDRUNA
+     C*
+     C** Test date format
+     C           BJDFIN    IFEQ 'M'                        B*1
+     C                     MOVE '1'       *IN98
+     C                     END                             E*1
+     C*
+     C**Access*SDMMODL1*for*module*details*****************************   S01496
+     C***********          MOVE *BLANKS   KEYA10                          S01496
+     C***********          MOVEL'MMOD'    KEYA10                          S01496
+     C***********KEY1      CHAINSDMMODL1             71                   S01496
+     C************IN71     IFEQ '1'                        ***************S01496
+     C*                                                                   S01496
+     C**  Get module details using access object                          S01496
+     C*                                                                   S01496
+     C                     CALL 'AOMMODR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDMMOD    PARM SDMMOD    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                    ***************S01496
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDMMODL1'DBFILE           ***************S01496
+     C                     MOVE 'SDMMODPD'DBFILE           ***************S01496
+     C                     MOVEL'NONE'    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   S01496
+     C**  Setup multibranching indicator                                  S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFEQ 'Y'                                       S01496
+     C                     MOVE '1'       *IN45                           S01496
+     C                     END                                            S01496
+     C*
+     C** IF PM installed, access SDPORTL1 for PM ICD
+     C           BGPFMG    IFEQ 'Y'                        B*1
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01496
+     C**  Setup the portfolio management indicator                        S01496
+     C*                                                                   S01496
+     C                     MOVE '1'       *IN44                           S01496
+     C*
+     C***********          MOVE *BLANKS   KEYA10                          S01496
+     C***********          MOVEL'PORT'    KEYA10                          S01496
+     C***********KEY1      CHAINSDPORTL1             71                   S01496
+     C************IN71     IFEQ '1'                        ***************S01496
+     C*                                                                   S01496
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C                     CALL 'AOPORTR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDPORT    PARM SDPORT    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                    ***************S01496
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C***********          MOVEL'SDPORTL1'DBFILE           ***************S01496
+     C                     MOVE 'SDPORTPD'DBFILE           ***************S01496
+     C                     MOVEL'PORT'    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C                     END                                            CPB001
+     C*
+     C                     ELSE                            X*1
+     C** Protect portfolio in subfile
+     C                     MOVE '1'       *IN14
+     C                     ENDIF                           E*1
+     C/COPY WNCPYSRC,SE6540C001
+     C*
+     C**Access*SDSTRDL1*for*SE*ICD*************************************   S01496
+     C***********          MOVE *BLANKS   KEYA10                          S01496
+     C***********          MOVEL'STRD'    KEYA10                          S01496
+     C***********KEY1      CHAINSDSTRDL1             71                   S01496
+     C************IN71     IFEQ '1'                        ***************S01496
+     C*                                                                   S01496
+     C**  Get securities trading details using access object              S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                    ***************S01496
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C***********          MOVEL'SDSTRDL1'DBFILE           ***************S01496
+     C                     MOVE 'SDSTRDPD'DBFILE           ***************S01496
+     C                     MOVEL'NONE'    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CSE007
+      ***  Call access program to access Switchable Features Details.     CSE007
+      *                                                                   CSE007
+     C                     MOVE 'N'       CSE007  1                       CSE007
+     C                     MOVE '0'       *IN60                           CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM '       ' @RTCD   7                       CSE007
+     C                     PARM '*VERIFY' @OPTN   7                       CSE007
+     C                     PARM 'CSE007'  @SARD   6                       CSE007
+      *                                                                   CSE007
+      ***  If feature CSE007 is switched ON.                              CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANKS                                   CSE007
+     C                     MOVE 'Y'       CSE007                          CSE007
+     C                     MOVE '1'       *IN60                           CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CEU017
+      ***  Call access program to access Switchable Features Details.     CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' @RTCD   7                       CEU017
+     C                     PARM '*VERIFY' @OPTN   7                       CEU017
+     C                     PARM 'CEU017'  @SARD   6                       CEU017
+      *                                                                   CEU017
+      ***  If feature CEU017 is switched ON.                              CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANKS                                   CEU017
+     C                     MOVE 'Y'       CEU017                          CEU017
+     C                     MOVE '1'       *IN60                           CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CGL011
+      ** Access Switchable Features file to check if CGL011               CGL011
+      ** is installed.                                                    CGL011
+      *                                                                   CGL011
+     C                     MOVE 'N'       CGL011  1                       CGL011
+      *                                                                   CGL011
+     C                     CALL 'AOSARDR0'                                CGL011
+     C                     PARM *BLANKS   @RTCD                           CGL011
+     C                     PARM '*VERIFY' @OPTN                           CGL011
+     C                     PARM 'CGL011'  @SARD                           CGL011
+      *                                                                   CGL011
+     C           @RTCD     IFNE *BLANKS                                   CGL011
+     C           @RTCD     ANDNE'*NRF   '                                 CGL011
+     C                     Z-ADD7         DBASE                           CGL011
+     C                     MOVEL'SCSARDPD'DBFILE                          CGL011
+     C                     MOVEL'CGL011'  DBKEY                           CGL011
+     C                     EXSR *PSSR                                     CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C           @RTCD     IFEQ *BLANKS                                   CGL011
+     C                     MOVE 'Y'       CGL011                          CGL011
+     C                     ENDIF                                          CGL011
+     C*
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Init Review fields
+     C                     MOVE *BLANKS   DDBRCD
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDSESN
+     C                     MOVE BJRDNB    WWBED1
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDBEDT
+     C*
+     C** Set flag to read records from SEBKALL0, Perform P003
+     C           *LOVAL    SETLLSEBKALL0
+     C                     MOVE '0'       WWSEQ   1
+     C                     EXSR P003
+     C*
+     C** Set screen mode to 'A'
+     C                     MOVE 'A'       WWMODE  1
+     C*
+     C           EP001     ENDSR                           ** END P001  **
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** P002   INSERT MODE PROCESSING
+     C** CALLED FROM MAIN PROCESSING
+     C**
+     C********************************************************************
+     C*
+     C           P002      BEGSR                           ** P002 BSR **
+     C*                                                                   S01496
+     C**  Check if user is authorised to action 'Insert'                  S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFNE 'Y'                                       S01496
+     C*                                                                   S01496
+     C**  If single branch environment                                    S01496
+     C*                                                                   S01496
+     C                     CALL 'ZVACTU'                                  S01496
+     C                     PARM 'I'       WLACTN  1                       S01496
+     C                     PARM *ZERO     WLERR   10                      S01496
+     C*                                                                   S01496
+     C           WLERR     IFNE *ZERO                                     S01496
+     C                     MOVEL'ER66006' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     WRITESE6540C0                                  S01496
+     C                     WRITESE6540C1                                  S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C*                                                                   S01496
+     C**  If multibranching environment                                   S01496
+     C*                                                                   S01496
+     C                     CALL 'ZVACTBU'                                 S01496
+     C                     PARM 'I'       WLACTN  1                       S01496
+     C                     PARM BVBRCD    WLBRCH  3                       S01496
+     C                     PARM *ZERO     WLERR   10                      S01496
+     C*                                                                   S01496
+     C           WLERR     IFEQ 1                                         S01496
+     C                     MOVEL'ER66007' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     WRITESE6540C0                                  S01496
+     C                     WRITESE6540C1                                  S01496
+     C                     ELSE                                           S01496
+     C           WLERR     IFEQ 2                                         S01496
+     C                     MOVEL'ER66008' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     WRITESE6540C0                                  S01496
+     C                     WRITESE6540C1                                  S01496
+     C                     ENDIF                                          S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C           WLERR     IFEQ *ZERO                                     S01496
+     C*
+     C** Protect Rewiev fields
+     C                     MOVE '1'       *IN09
+     C** Set Details valid flag to 'N'
+     C                     MOVE 'N'       WWDETV
+     C*
+     C** Clear subfile of inserted/deleted records
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN2
+     C** Relativ record number of first inserted record (if some)
+     C                     Z-ADD0         RRNINS  50
+     C*
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Perform P006 to write blank subfile
+     C                     EXSR P006
+     C*
+     C           *INKC     DOUEQ'1'                        B*1
+     C           *INKI     OREQ '1'
+     C           WWDETV    OREQ 'Y'
+     C*
+     C                     READ SE6540C2                 71
+     C*
+     C** F5 - Refresh screen
+     C           *INKE     IFEQ '1'                        B*2
+     C** Set Details valid flag to 'N'
+     C                     MOVE 'N'       WWDETV
+     C*
+     C** Clear subfile of inserted/deleted records
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN2
+     C** Relativ record number of first inserted record (if some)
+     C                     Z-ADD0         RRNINS  50
+     C*
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Perform P006 to write blank subfile
+     C                     EXSR P006
+     C                     END                             E*2
+     C*
+     C** If Rollup taken write next page of subfile
+     C           *IN35     IFEQ '1'                        B*2
+     C                     Z-ADDRRNMA2    RRN2
+     C                     EXSR P006
+     C                     ENDIF                           E*2
+     C** If ENTER taken
+     C           *INKC     IFEQ '0'                        B*2   PF3
+     C           *INKE     ANDEQ'0'                              PF05
+     C           *INKI     ANDEQ'0'                              PF10
+     C           *IN35     ANDEQ'0'                              ROLL
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Set Details valid flag to 'Y'
+     C                     MOVE 'Y'       WWDETV
+     C** RRNERR for saving Relativ record number of Record in error
+     C                     Z-ADD0         RRNERR  50
+     C*
+     C                     READCSE6540S2                 71
+     C           *IN71     DOWEQ'0'                        B*3
+     C*
+     C           SSBRCD    IFEQ *BLANKS
+     C                     MOVE BVBRCD    SSBRCD
+     C                     ENDIF
+     C*
+     C           SSBRCD    IFEQ BVBRCD                     B*4
+     C           SSCNUM    ANDEQ*BLANKS
+     C           SSPTFR    ANDEQ*BLANKS
+     C           SSBLTY    ANDEQ*BLANKS
+     C           SSSESN    ANDEQ*BLANKS
+     C           SSBEDT    ANDEQ*BLANKS
+     C           SSNOMB    ANDEQ*BLANKS
+     C           SSBNAR    ANDEQ*BLANKS
+     C           SSBSTT    ANDEQ*BLANKS                                   CSE007
+     C           SSBEWI    ANDEQ*BLANKS                                   CSE007
+     C                     MOVE '0'       *IN49
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00'      *IN,58                          CSE007
+     C                     MOVE '0'       *IN70
+     C                     ELSE                            X*4
+     C                     MOVE 'Y'       WWRECV
+     C                     EXSR V002
+     C                     MOVE '1'       *IN70
+     C                     ENDIF                           E*4
+     C                     UPDATSE6540S2
+     C                     READCSE6540S2                 71
+     C*
+     C                     ENDDO                           E*3
+     C*
+     C** If Error, redisplay screen from 1. record in error
+     C*
+     C           WWDETV    IFEQ 'N'                        B*3
+     C                     Z-ADDRRNERR    RRN2
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C2
+     C*
+     C                     ELSE                            X*3
+     C*
+     C** Read first changed record
+     C                     Z-ADD0         RRN2
+     C                     READCSE6540S2                 71
+     C           *IN71     DOWEQ'0'                        B*4
+     C                     MOVE 'Y'       WWUPDC  1
+     C                     EXSR U001
+     C           WWUPDC    IFEQ 'Y'                        B*5
+     C                     MOVE '0'       *IN70
+     C           RRNINS    IFEQ *ZEROS                     B*6
+     C                     Z-ADDRRN2      RRNINS
+     C                     ENDIF                           E*6
+     C                     ELSE                            X*5
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE '1'       *IN70
+     C                     ENDIF                           E*5
+     C                     UPDATSE6540S2
+     C                     READCSE6540S2                 71
+     C                     ENDDO                           E*4
+     C*
+     C** If details not valid, redisplay screen at first error
+     C           WWDETV    IFEQ 'Y'                        B*4
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     Z-ADDRRNERR    RRN2
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C2
+     C                     Z-ADD0         RRNINS
+     C                     ENDIF                           E*4
+     C*
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDDO                           E*1
+     C*
+     C           *INKC     IFNE '1'                        B*1
+     C*
+     C**  Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Default rewiev fields
+     C                     MOVE *BLANKS   DDBRCD
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDSESN
+     C                     MOVE BJRDNB    WWBED1
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDBEDT
+     C*
+     C** Set file pointer to first record inserted on SEBKALL0 (If some)
+     C           RRNINS    IFEQ *ZEROS                     B*2
+     C           *INKE     OREQ '1'
+     C           *LOVAL    SETLLSEBKALL0
+     C                     ELSE                            X*2
+     C           RRNINS    CHAINSE6540S2             71
+     C                     MOVE HHBRCD    KRBRCD
+     C                     MOVE HHCNUM    KRCNUM
+     C                     MOVE HHPTFR    KRPTFR
+     C                     MOVE HHBLTY    KRBLTY
+     C                     MOVE HHSESN    KRSESN
+     C                     MOVE HHBEDT    KRBEDT
+     C                     MOVE HHSEQN    KRSEQN  50
+     C           KEYL0     SETLLSEBKALL0
+     C                     ENDIF                           E*2
+     C*
+     C** Clear both subfiles
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C1
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         RRN2
+     C*
+     C** Unprotect Rewiev fields
+     C                     MOVE '0'       *IN09
+     C*
+     C** set WWSEQ to read SEBKALL0, perform P003
+     C                     MOVE '0'       WWSEQ
+     C                     EXSR P003
+     C*
+     C                     ENDIF                           E*1
+     C*                                                                   S01496
+     C                     ENDIF                                          S01496
+     C*
+     C           EP002     ENDSR                           ** END P002 **
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** P003   WRITE NEXT PAGE ON SUBFILE
+     C** CALLED FROM
+     C**
+     C*****************************************************************
+     C*
+     C           P003      BEGSR                           ** P003 BSR **
+     C*
+     C** Zeroise number of records read
+     C                     MOVE '0'       *IN49
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00'      *IN,58                          CSE007
+     C                     Z-ADD0         WWRRN   50
+     C*
+     C           RRN1      IFEQ *ZEROS                     B*1
+     C** Read SEBKALL0 or SEBKALL1 depending on WWSEQ
+     C           WWSEQ     IFEQ '0'                        B*2
+     C******               MOVEA'0000'    *IN,01                          CSE007
+     C                     MOVEA'00000000'*IN,01                          CSE007
+     C                     READ SEBKALL0                 22
+     C                     ENDIF                           E*2
+     C           WWSEQ     IFEQ '1'                        B*2
+     C******               MOVEA'0000'    *IN,01                          CSE007
+     C                     MOVEA'00000000'*IN,01                          CSE007
+     C                     READ SEBKALL1                 22
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E*1
+     C*
+     C           *IN22     DOWEQ'0'                        B*1
+     C*********  WWRRN     ANDLT15                                        CSE007
+     C           WWRRN     ANDLT7                                         CSE007
+     C*                                                                   S01496
+     C** If multibranching is ON, check if user is authorised to branch   S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFEQ 'Y'                                       S01496
+     C                     CALL 'ZVBBU'                                   S01496
+     C                     PARM VDBRCD    WLBRCH  3                       S01496
+     C                     PARM *ZERO     WLERR   10                      S01496
+     C                     ELSE                                           S01496
+     C                     MOVE *ZERO     WLERR                           S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C           WLERR     IFEQ *ZERO                                     S01496
+     C*
+     C           VDBEDT    IFGE WWBED1                     B*2
+     C           PPMODE    IFEQ 'E'                        B*3
+     C           VDRECI    OREQ 'D'
+     C*
+     C***IF*ENQUIRY*MODE*OR*FROM*SEERALPD*READ*OR*BLOCK*MATURED********** CSE007
+     C***PROTECT*RECORD*IN*SUBFILE*************************************** CSE007
+      *                                                                   CSE007
+      ***  If enquiry mode or from SEERALPD, SECOALPD or SECOBKPD or      CSE007
+      ***  Block Matured, protect record in subfile.                      CSE007
+      *                                                                   CSE007
+     C           PPMODE    IFEQ 'E'                        B*4
+     C           *IN01     OREQ '1'
+     C           *IN03     OREQ '1'
+     C           *IN05     OREQ '1'                                       CSE007
+     C           *IN06     OREQ '1'                                       CSE007
+     C           *IN07     OREQ '1'                                       CSE007
+     C           *IN08     OREQ '1'                                       CSE007
+     C           VDBEDT    ORLT BJRDNB
+     C                     MOVE '1'       *IN13
+     C                     ENDIF                            E*4
+     C*
+     C** IF AMEND POSSIBLE, SAVE FILE FIELDS AS SUBFILE HIDDEN FIELDS
+     C           *IN13     IFEQ '0'                         B*4
+     C                     MOVE VDRECI    HHRECI
+     C                     MOVE VDLCD     HHLCD
+     C                     MOVE VDCHTP    HHCHTP
+     C                     MOVE VDLUID    HHLUID
+     C                     MOVE VDBRCD    HHBRCD
+     C                     MOVE VDCNUM    HHCNUM
+     C                     MOVE VDPTFR    HHPTFR
+     C                     MOVE VDBLTY    HHBLTY
+     C                     MOVE VDSESN    HHSESN
+     C                     MOVE VDBEDT    HHBEDT
+     C                     MOVE VDNOMB    HHNOMB
+     C                     MOVE VDBNAR    HHBNAR
+     C                     MOVE VDSEQN    HHSEQN
+     C                     MOVE VDBSTT    HHBSTT                          CSE007
+     C                     MOVE VDEWIN    HHBEWI                          CSE007
+     C                     MOVE VDCOLF    HHCOLF                          CGL011
+     C                     MOVE VDCOLA    HHCOLA                          CGL011
+     C                     ENDIF                            E*4
+     C*
+     C** FORMAT DETAILS FOR OUTPUT
+     C           VDRECI    IFEQ 'D'                         B*4
+     C                     MOVE *BLANKS   SSD
+     C                     ELSE                             X*4
+     C                     MOVE VDRECI    SSD
+     C                     ENDIF                            E*4
+     C*
+     C                     MOVE VDBRCD    SSBRCD
+     C*
+     C********** VDCNUM    IFEQ *ZEROS                      B*4                               CSD027
+     C           VDCNUM    IFEQ *BLANKS                     B*4                               CSD027
+     C                     MOVE *BLANKS   SSCNUM
+     C                     ELSE                             X*4
+     C                     MOVE VDCNUM    SSCNUM
+     C                     ENDIF                            E*4
+     C*
+     C           VDPTFR    IFEQ '9997'                      B*4
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C***********          MOVE P9R997    SSPTFR                          S01496
+     C                     MOVE FCR997    SSPTFR                          S01496
+     C                     ELSE                             X*4
+     C                     MOVE VDPTFR    SSPTFR
+     C                     ENDIF                            E*4
+     C*
+     C                     MOVE VDBLTY    SSBLTY
+     C                     MOVE VDSESN    SSSESN
+      *                                                                   CSE007
+      ***  If record is read from SECOALPD.                               CSE007
+      *                                                                   CSE007
+     C           *IN05     IFEQ '1'                                       CSE007
+     C           *IN07     OREQ '1'                                       CSE007
+      *                                                                   CSE007
+     C           MCEXPO    IFEQ *ZEROS                                    CSE007
+     C           MCEXPO    OREQ *HIVAL                                    CSE007
+     C                     MOVE *BLANKS   SSNOMB                          CSE007
+     C                     ELSE                                           CSE007
+     C           VDSESN    CHAINSECTY                7171                 CSE007
+     C           *IN71     IFEQ '1'                        ***************CSE007
+     C                     Z-ADD6         DBASE            **DB ERROR 06**CSE007
+     C                     MOVE 'SECTY'   DBFILE           ***************CSE007
+     C                     MOVELVDSESN    DBKEY                           CSE007
+     C                     EXSR *PSSR                                     CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE MCEXPO    ZFLD15                          CSE007
+     C                     Z-ADDNMDP      ZDECS                           CSE007
+     C                     MOVE ' '       ZECODE                          CSE007
+     C                     EXSR ZSEDIT                                    CSE007
+     C                     MOVE ZOUT21    SSNOMB                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+     C*
+     C           VDNOMB    IFEQ *ZEROS                      B*4
+     C           VDNOMB    OREQ *HIVAL
+     C                     MOVE *BLANKS   SSNOMB
+     C                     ELSE                             X*4
+     C           VDSESN    CHAINSECTY                7171
+     C           *IN71     IFEQ '1'                        ***************
+     C                     Z-ADD5         DBASE            **DB ERROR 05**
+     C***********          MOVEL'SECTY'   DBFILE           ***************S01496
+     C                     MOVE 'SECTY'   DBFILE           ***************S01496
+     C                     MOVELVDSESN    DBKEY
+     C                     EXSR *PSSR
+     C                     ELSE                             X*5
+     C                     MOVE VDNOMB    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SSNOMB
+     C                     ENDIF                            E*5
+     C                     ENDIF                            E*4
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C           VDBEDT    IFEQ 99999                       B*4
+     C                     MOVE *BLANKS   SSBEDT
+     C                     ELSE                             X*4
+     C                     MOVE VDBEDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SSBEDT
+     C                     ENDIF                            E*4
+      *                                                                   CSE007
+      ***  If feature CSE007 is switched ON.                              CSE007
+      ***  or if feature CEU017 is switched ON.                           CEU017
+      *                                                                   CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+      *                                                                   CSE007
+      ***  Format Block from Date.                                        CSE007
+      *                                                                   CSE007
+     C           VDBSTT    IFEQ *ZEROS                                    CSE007
+     C                     MOVE *BLANKS   SSBSTT                          CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE VDBSTT    ZDAYNO                          CSE007
+     C                     EXSR ZDATE2                                    CSE007
+     C                     MOVE ZDATE     SSBSTT                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      ***  Format Block Error/Warning Indicator.                          CSE007
+      *                                                                   CSE007
+     C                     MOVE VDEWIN    SSBEWI                          CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C           *IN01     IFEQ '1'                         B*4
+     C           *IN03     OREQ '1'
+     C                     MOVE *BLANKS   SSBNAR
+     C                     MOVE *BLANKS   WWA9    9
+     C                     MOVEL'ER'      WWA9
+     C                     MOVE VCERRF    WWA9
+     C                     MOVE *BLANKS   WWA11  11
+     C                     MOVEL' DEP'    WWA11
+     C                     MOVE VCDDPT    WWA11
+     C                     MOVELWWA9      SSBNAR
+     C                     MOVE WWA11     SSBNAR
+     C                     ELSE                             X*4
+      *                                                                   CSE007
+      ***  If record is read from SECOALPD.                               CSE007
+      *                                                                   CSE007
+     C           *IN05     IFEQ '1'                                       CSE007
+     C           *IN07     OREQ '1'                                       CSE007
+     C                     MOVE *BLANKS   SSBNAR                          CSE007
+     C                     MOVE *BLANKS   WWA9    9                       CSE007
+     C                     MOVELMCCOAT    WWA9                            CSE007
+     C                     MOVE MCCORF    WWA9                            CSE007
+     C                     MOVE *BLANKS   WWA11  11                       CSE007
+     C                     MOVEL' DEP'    WWA11                           CSE007
+     C                     MOVE MCDDPT    WWA11                           CSE007
+     C                     MOVELWWA9      SSBNAR                          CSE007
+     C                     MOVE WWA11     SSBNAR                          CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVELVDBNAR    SSBNAR
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                            E*4
+     C*
+     C** Write formatted details to subfile
+     C                     ADD  1         RRN1
+     C                     ADD  1         WWRRN
+     C                     Z-ADDRRN1      RRNMA1  50
+     C                     MOVE '0'       *IN70
+     C                     WRITESE6540S1
+     C                     MOVE '0'       *IN13
+     C*
+     C                     ENDIF                            E*3
+     C                     ENDIF                            E*2
+     C*                                                                   S01496
+     C                     ENDIF                                          S01496
+     C*
+     C** Read live record from SEBKALL0 or SEBKALL1 depending on WWSEQ
+     C           WWSEQ     IFEQ '0'                         B*2
+     C******               MOVEA'0000'    *IN,01                          CSE007
+     C                     MOVEA'00000000'*IN,01                          CSE007
+     C                     READ SEBKALL0                 22
+     C           *IN22     DOWEQ'0'                         B*3
+     C           PPMODE    ANDNE'E'
+     C           VDRECI    ANDNE'D'
+     C                     READ SEBKALL0                 22
+     C                     ENDDO                            E*3
+     C                     ENDIF                            E*2
+     C*
+     C           WWSEQ     IFEQ '1'                         B*2
+     C******               MOVEA'0000'    *IN,01                          CSE007
+     C                     MOVEA'00000000'*IN,01                          CSE007
+     C                     READ SEBKALL1                 22
+     C           *IN22     DOWEQ'0'                         B*3
+     C           PPMODE    ANDNE'E'
+     C           VDRECI    ANDNE'D'
+     C                     READ SEBKALL1                 22
+     C                     ENDDO                            E*3
+     C                     ENDIF                            E*2
+     C*
+     C                     ENDDO                            E*1
+     C*
+     C** If no record read, clear subfile
+     C           RRN1      IFEQ 0                           B*1
+     C*
+     C** Send Message 'NO DATA TO DISPLAY'
+     C                     MOVEL'ER65903' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     ENDIF                            E*1
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C1
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C*
+     C           EP003     ENDSR                           ** END P003 **
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** P004   DELETION PROCESSING
+     C** CALLED FROM
+     C**
+     C********************************************************************
+     C           P004      BEGSR                           ** P004 BSR **
+     C*
+     C                     MOVE 'D'       WWMODE
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN23
+     C                     Z-ADD1         RRN2
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C2
+     C*
+     C           *INKC     DOUEQ'1'                        B*1
+     C           WWDELC    OREQ 'Y'
+     C*
+     C                     MOVE 'Y'       WWDELC  1
+     C*
+     C                     READ SE6540C2                 71
+     C*
+     C                     MOVE 'N'       WWERV3  1
+     C                     EXSR V003
+     C           WWERV3    IFEQ 'Y'                        B*2
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C2
+     C                     MOVE 'N'       WWDELC
+     C                     ELSE                            X*2
+     C*
+     C           *INKJ     IFEQ '1'                        B*3
+     C                     READCSE6540S2                 71
+     C           *IN71     DOWEQ'0'                        B*4
+     C                     MOVE 'Y'       WWUPDC
+     C                     EXSR U001
+     C           WWUPDC    IFEQ 'Y'                        B*5
+     C                     COMIT
+     C                     MOVE '0'       *IN70
+     C                     ELSE                            X*5
+     C                     MOVE 'N'       WWDELC
+     C                     MOVE '1'       *IN70
+     C                     ENDIF                           E*5
+     C                     UPDATSE6540S2
+     C                     READCSE6540S2                 71
+     C                     ENDDO                           E*4
+     C                     ENDIF                           E*3
+     C*
+     C** If deletion not completed, redisplay in deletion mode showing 1.record
+     C           WWDELC    IFEQ 'N'                        B*3
+     C                     Z-ADD1         RRN2
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C2
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDDO                           E*1
+     C*
+     C** Setof DELETE indicator
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN23
+     C*
+     C           *INKC     IFNE '1'                        B*1
+     C*
+     C** Init Review fields
+     C                     MOVE *BLANKS   DDBRCD
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDSESN
+     C                     MOVE BJRDNB    WWBED1
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDBEDT
+     C*
+     C** Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Clear both subfiles
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C1
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         RRN2
+     C*
+     C** Set flag to read records from SEBKALL0, perform P003
+     C           *LOVAL    SETLLSEBKALL0
+     C                     MOVE '0'       WWSEQ
+     C                     EXSR P003
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C           EP004     ENDSR                           ** END P004 **
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** P005   PROCESS <ENTER> KEY
+     C** CALLED FROM
+     C**
+     C********************************************************************
+     C*
+     C           P005      BEGSR                           ** P005 BSR **
+     C*
+     C** Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Clear subfile of inserted/deleted records
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN2
+     C*
+     C** Set flags
+     C                     MOVE 'Y'       WWDETV  1
+     C                     MOVE 'N'       WWDETC  1
+     C                     MOVE 'N'       WWDETD  1
+     C*
+     C** Read first changed record from subfile
+     C***********          READCSE6540S1               7171               156180
+     C                     READCSE6540S1               7271               156180
+     C           *IN72     IFEQ '1'                                       156180
+     C*                                                                   156180
+     C** Clear program message queue.                                     156180
+     C*                                                                   156180
+     C                     MOVEL*BLANK    ZAMSID                          156180
+     C                     CALL 'Y2CLMSC'                                 156180
+     C                     PARM           TOPQ   10                       156180
+     C                     PARM           TOPRQ   5                       156180
+     C                     ENDIF                                          156180
+     C           *IN72     IFEQ '0'                                       156180
+     C*
+     C           *IN71     DOWEQ'0'                        B*1
+     C*
+     C                     MOVE 'Y'       WWRECV  1
+     C                     MOVE 'N'       WWRECC  1
+     C                     MOVE 'N'       WWRECD  1
+     C                     EXSR V002
+     C           WWRECV    IFEQ 'N'                        B*2
+     C                     MOVE '1'       *IN70
+     C                     UPDATSE6540S1
+     C                     ELSE                            X*2
+     C           WWRECD    IFEQ 'Y'                        B*3
+     C                     MOVE '0'       *IN70
+     C                     UPDATSE6540S1
+     C** Write record to insert/delete subfile, all fields protected
+     C                     ADD  1         RRN2
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN70
+     C                     WRITESE6540S2
+     C                     MOVE '0'       *IN13
+     C                     MOVE 'Y'       WWDETD
+     C                     ELSE                            X*3
+     C** Set 'Update completed to 'Y'
+     C                     MOVE 'Y'       WWUPDC  1
+     C** Update PF/SEBLKPP
+     C                     EXSR U001
+     C           WWUPDC    IFEQ 'Y'                        B*4
+     C                     COMIT
+     C                     MOVE '0'       *IN70
+     C                     ELSE                            X*4
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE '1'       *IN70                        cators
+     C                     END                             E*4
+     C                     UPDATSE6540S1                               cators
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C*
+     C                     READCSE6540S1               7171
+     C*
+     C                     ENDDO                           E*1
+     C                     ENDIF                                          156180
+     C*
+     C*****************************************************
+     C                     SELEC                           B*1
+     C*
+     C           WWDETV    WHEQ 'N'
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C1
+     C*
+     C           WWDETD    WHEQ 'Y'
+     C                     EXSR P004
+     C*
+     C                     OTHER                           X*1
+     C*
+     C                     MOVE 'Y'       WWREWV
+     C                     EXSR V001
+     C           WWREWV    IFEQ 'Y'                        B*2
+     C*
+     C** Clear subfile of inserted/deleted records
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     WRITESE6540C1
+     C                     WRITESE6540C2
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD0         RRN2
+     C*
+     C                     EXSR P003
+     C*
+     C                     ELSE                            X*2
+     C           RRN1      IFEQ *ZEROS                     B*3
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN25
+     C                     ENDIF                           E*3
+     C                     WRITESE6540F0
+     C                     WRITESE6540C0
+     C                     WRITESE6540C1
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVEA'00000'   *IN,39
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDSL                           E*1
+     C*
+     C           EP005     ENDSR                           ** END P005 **
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** P006   OUTPUT BLANK SCREEN
+     C** CALLED FROM
+     C**
+     C*****************************************************************
+     C*
+     C           P006      BEGSR                           ** P006 BSR **
+     C*
+     C                     Z-ADD0         WWRRN
+     C                     MOVE '0'       *IN49
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00'      *IN,58                          CSE007
+     C                     MOVE '0'       *IN,70
+     C*
+     C********** WWRRN     DOWLT15                         B*1            CSE007
+     C           WWRRN     DOWLT7                          B*1            CSE007
+     C** INITIALIZE DISPLAY FILE FIELDS
+     C                     MOVEL*BLANKS   SSD
+     C                     MOVE BVBRCD    SSBRCD
+     C                     MOVEL*BLANKS   SSCNUM
+     C                     MOVEL*BLANKS   SSPTFR
+     C                     MOVEL*BLANKS   SSBLTY
+     C                     MOVEL*BLANKS   SSSESN
+     C                     MOVEL*BLANKS   SSNOMB
+     C                     MOVEL*BLANKS   SSBEDT
+     C                     MOVEL*BLANKS   SSBNAR
+     C                     MOVEL*BLANKS   SSBSTT                          CSE007
+     C                     MOVEL*BLANKS   SSBEWI                          CSE007
+     C                     MOVEL*BLANKS   HHCOLF                          CGL011
+     C                     Z-ADD0         HHCOLA                          CGL011
+     C                     Z-ADD0         HHBSTT                          CGL011
+     C                     ADD  1         RRN2
+     C                     ADD  1         WWRRN
+     C                     Z-ADDRRN2      RRNMA2  50
+     C                     WRITESE6540S2
+     C                     ENDDO                           E*1
+     C*
+     C                     WRITESE6540F0                   => 24 - PF keys
+     C                     WRITESE6540C0                   => 23 - ERROR MSG
+     C                     WRITESE6540C2                   => SFL
+     C*
+     C           EP006     ENDSR                           ** END P006 **
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C* P011   : SETUP PARAMETERS FOR ERROR MESSAGE                   *
+     C*****************************************************************
+     C*
+     C           P011      BEGSR
+     C*
+     C                     MOVE NMDP      ZDECS
+     C                     MOVE 'L'       ZECODE
+     C*
+     C           WWDIFF    IFLT *ZEROS
+     C                     Z-ADD*ZEROS    WWDIFF
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWDIFF    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WAVAIL
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWNOPO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCPOS
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWNOBL    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WBLOCK
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C* P012   : SETUP PARAMETERS FOR ERROR MESSAGE                   *
+     C*****************************************************************
+     C*
+     C           P012      BEGSR
+     C*
+     C                     MOVE NMDP      ZDECS
+     C                     MOVE 'L'       ZECODE
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WWNOPO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    W1NOPO 13
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** U001   UPDATE BLOCKED POSITION
+     C** CALLED FROM
+     C*****************************************************************
+     C*
+     C           U001      BEGSR                           ** U001  BSR **
+     C*
+     C** Amend or delete mode
+     C           WWMODE    IFEQ 'A'                        B*1
+     C           WWMODE    OREQ 'D'
+     C*
+     C                     Z-ADDHHSEQN    WWSEQN
+     C                     Z-ADDHHBEDT    HHBED2
+     C*
+     C           KEYP0     CHAINSEBLKPL0             7171
+     C*
+     C           *IN71     IFEQ '1'                        B*2
+     C           VDRECI    ORNE HHRECI
+     C           VDLCD     ORNE HHLCD
+     C           VDCHTP    ORNE HHCHTP
+     C           VDLUID    ORNE HHLUID
+     C           VDBRCD    ORNE HHBRCD
+     C           VDCNUM    ORNE HHCNUM
+     C           VDPTFR    ORNE HHPTFR
+     C           VDBLTY    ORNE HHBLTY
+     C           VDSESN    ORNE HHSESN
+     C           VDBEDT    ORNE HHBEDT
+     C           VDNOMB    ORNE HHNOMB
+     C           VDBSTT    ORNE HHBSTT                                    CSE007
+     C           VDEWIN    ORNE HHBEWI                                    CSE007
+     C           VDBNAR    ORNE HHBNAR
+     C           VDSEQN    ORNE HHSEQN
+     C*
+     C                     MOVEL'ER65902' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ 0                          B*3
+     C                     Z-ADDRRN1      RRNERR
+     C                     ENDIF                           E*3
+     C** Reposition the file
+     C           *LOVAL    SETLLSEBLKPL0
+     C*
+     C                     ELSE                            X*2
+     C** Delete mode
+     C           WWMODE    IFEQ 'D'                        B*3
+     C                     MOVE '*'       VDRECI
+     C                     MOVE BJRDNB    VDLCD
+     C                     MOVE 'D'       VDCHTP
+     C                     MOVELUSIDXX    VDLUID
+     C                     UPDATSEBLKPD0
+     C                     END                             E*3
+     C** Amend mode
+     C           WWMODE    IFEQ 'A'                        B*3
+     C                     MOVE BJRDNB    VDLCD
+     C                     MOVE BJRDNB    HHLCD
+     C                     MOVE 'A'       VDCHTP
+     C                     MOVE 'A'       HHCHTP
+     C                     MOVELUSIDXX    VDLUID
+     C                     MOVELUSIDXX    HHLUID
+     C*********************Z-ADDHHBED2    VDBEDT
+     C*********************Z-ADDHHBED2    HHBEDT
+     C           SSBEDT    IFEQ *BLANKS                    B*4
+     C                     Z-ADD99999     HHBED2
+     C                     ELSE                            X*2
+     C                     MOVE SSBEDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    HHBED2
+     C                     END
+     C                     Z-ADDHHBED2    VDBEDT
+     C                     Z-ADDHHBED2    HHBEDT
+     C                     Z-ADDHHNOM2    VDNOMB
+     C                     Z-ADDHHNOM2    HHNOMB
+     C           SSBSTT    IFEQ *BLANKS                                   CSE007
+     C                     Z-ADD0         HHBSTT                          CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE SSBSTT    ZDATE                           CSE007
+     C                     EXSR ZDATE1                                    CSE007
+     C                     MOVE ZDAYNO    HHBSTT                          CSE007
+     C                     END                                            CSE007
+     C                     Z-ADDHHBSTT    VDBSTT                          CSE007
+     C                     MOVE SSBEWI    VDEWIN                          CSE007
+     C                     MOVE SSBEWI    HHBEWI                          CSE007
+     C                     MOVE SSBNAR    VDBNAR
+     C                     MOVE SSBNAR    HHBNAR
+     C                     UPDATSEBLKPD0
+     C                     END                             E*3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E*1
+     C*
+     C** Insert mode
+     C           WWMODE    IFEQ 'I'                        B*1
+     C*
+     C                     MOVE '0'       *IN49
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00'      *IN,58                          CSE007
+     C*
+     C** for unique blocks check, if block already exist
+     C           HHUNIQ    IFEQ 'Y'                        B*2
+     C*
+     C                     MOVE *LOVAL    WWSEQN
+     C           KEYP0     SETLLSEBLKPL0
+     C                     READ SEBLKPL0                 71
+     C*
+     C           *IN71     DOWEQ'0'                        B*3
+     C           VDBRCD    ANDEQHHBRC2
+     C           VDCNUM    ANDEQHHCNU2
+     C           VDPTFR    ANDEQHHPTF2
+     C           VDBLTY    ANDEQSSBLTY
+     C           VDSESN    ANDEQSSSESN
+     C           WWDETV    ANDEQ'Y'
+     C*
+     C           VDRECI    IFEQ 'D'                        B*4
+     C                     MOVEL'ER65414' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS                     B*5
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C*
+     C                     READ SEBLKPL0                 71
+     C                     ENDDO                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C** for non unique blocks check nominal position and nominal
+     C** already blocked
+     C           HHUNIQ    IFEQ 'N'                        B*2
+     C*
+     C                     MOVE BJRDNB    PPRUND
+     C                     MOVE 'Y'       PPOBPO
+     C                     MOVE *BLANKS   PPNOPO
+     C                     MOVE *BLANKS   PPNOBL
+     C                     CALL 'SE6710'
+     C                     PARM           PPRUND  5
+     C                     PARM           PPOBPO  1
+     C                     PARM           SSBRCD
+     C                     PARM           SSSESN
+     C                     PARM           SSCNUM
+     C                     PARM           HHPTF2
+     C                     PARM           SSBLTY
+     C                     PARM           PPNOBL 13
+     C                     PARM           PPNOPO 13
+     C                     PARM           CGL011                          CGL011
+     C                     PARM *BLANKS   COLAMT 15                       CGL011
+     C*
+     C                     MOVE PPNOBL    WWNOBL 130
+     C                     MOVE PPNOPO    WWNOPO 130
+     C                     MOVE COLAMT    WWCOLL 150                      CGL011
+     C*
+     C           SSBLTY    IFEQ 'P'                        B*3
+     C*
+     C           WWNOPO    SUB  WWNOBL    WWDIFF 130
+     C*
+     C**  Specific block on all the positions exist
+     C           WWNOBL    IFEQ WWHIGH
+     C                     MOVEL'ER65425' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C**  Specific block exist
+     C           SSNOMB    IFEQ *BLANKS
+     C           WWNOBL    ANDNE*ZEROS
+     C                     MOVEL'ER65426' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C**  Blocked Nominal entered greater than Nominal Available
+     C           SSNOMB    IFNE *BLANKS
+     C           HHNOM2    ANDGTWWDIFF
+     C**  Security Nominal Decimal places needed for P011/ZSEDIT
+     C           SSSESN    CHAINSECTY                71
+     C                     EXSR P011
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELDSE207    ZAMSDA
+     C                     MOVEL'ER65420' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS                     B*5
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                           E*3
+     C*
+     C           SSBLTY    IFEQ 'S'                        B*3
+     C*
+     C           WWNOBL    IFNE *ZEROS                     B*4
+     C                     MOVEL'ER65427' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS                     B*5
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*5
+     C                     ELSE
+     C           HHNOM2    IFLT WWNOPO
+     C                     EXSR P012
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELW1NOPO    ZAMSDA
+     C                     MOVEL'ER65421' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS                     B*5
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C*
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C** If no error still, write record to SEBLKPPD
+     C           WWUPDC    IFEQ 'Y'                        B*2
+     C*
+     C                     EXSR W001
+     C                     WRITESEBLKPD0               71
+     C*
+     C** If record allready written, output ERROR
+     C           *IN71     IFEQ '1'                        B*3
+     C                     MOVEL'ER65902' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWUPDC
+     C           RRNERR    IFEQ *ZEROS                     B*4
+     C                     Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C                     ENDSR
+     C*******************************************************************
+      /EJECT
+     C*****************************************************************
+     C** V001   S/R TO VALIDATE REVIEW FROM DETAILS
+     C** CALLED FROM S/R P1002
+     C*****************************************************************
+     C*
+     C           V001      BEGSR                           ** V001  BSR **
+     C*
+     C** Setoff error indicators
+     C                     MOVEA'00000'   *IN,39
+     C*
+     C** Branch code
+     C           DDBRCD    IFNE *BLANKS                    B*1
+     C                     MOVE '0'       WWA4    4
+     C                     MOVELDDBRCD    WWA4
+     C***********          TESTN          WWA4       71                   S01496
+     C************IN71     IFEQ '0'                        B*2            S01496
+     C***********          MOVEL'ER65418' ZAMSID                          S01496
+     C***********          MOVE '1'       *IN39                           S01496
+     C***********          EXSR ZASNMS                                    S01496
+     C***********          MOVE 'N'       WWREWV  1                       S01496
+     C***********          ENDIF                           E*2            S01496
+     C                     ENDIF                           E*1
+     C*
+     C** Customer Mumber - Error if entered and not 6N
+     C           DDCNUM    IFNE *BLANKS                    B*1
+     C                     MOVE '0'       WWA7    7
+     C                     MOVELDDCNUM    WWA7
+     C**********           TESTN          WWA7       71                                       CSD027
+     C********** *IN71     IFEQ '0'                        B*2                                CSD027
+     C**********           MOVEL'ER65401' ZAMSID                                              CSD027
+     C**********           MOVE '1'       *IN40                                               CSD027
+     C**********           EXSR ZASNMS                                                        CSD027
+     C**********           MOVE 'N'       WWREWV  1                                           CSD027
+     C**********           ENDIF                           E*2                                CSD027
+     C                     MOVE *BLANKS   WWREWV  1
+     C                     ENDIF                           E*1
+     C*
+     C** End date - error if entered and not valid date
+     C           DDBEDT    IFNE *BLANKS                    B*1
+     C                     MOVE DDBEDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    WWBED1  50
+     C           *IN99     IFEQ '1'                        B*2
+     C                     MOVEL'ER65402' ZAMSID
+     C                     MOVE '1'       *IN43
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWREWV
+     C                     ENDIF                           E*2
+     C                     ELSE                            X*1
+     C                     MOVE BJRDNB    WWBED1
+     C                     ENDIF                           E*1
+     C*
+     C** If no error still, check combination of fields
+     C           WWREWV    IFEQ 'Y'                        B*1
+     C*
+     C                     SELEC                           B*2
+     C*
+     C           DDBRCD    WHEQ *BLANKS
+     C           DDCNUM    ANDEQ*BLANKS
+     C           DDPTFR    ANDEQ*BLANKS
+     C           DDSESN    ANDEQ*BLANKS
+     C                     MOVE '0'       WWSEQ
+     C*
+     C           DDBRCD    WHNE *BLANKS
+     C           DDCNUM    ANDEQ*BLANKS
+     C           DDPTFR    ANDEQ*BLANKS
+     C           DDSESN    ANDEQ*BLANKS
+     C                     MOVE '0'       WWSEQ
+     C*
+     C           DDBRCD    WHNE *BLANKS
+     C           DDCNUM    ANDNE*BLANKS
+     C           DDPTFR    ANDEQ*BLANKS
+     C           DDSESN    ANDEQ*BLANKS
+     C                     MOVE '0'       WWSEQ
+     C*
+     C           DDBRCD    WHNE *BLANKS
+     C           DDCNUM    ANDNE*BLANKS
+     C           DDPTFR    ANDNE*BLANKS
+     C           DDSESN    ANDEQ*BLANKS
+     C                     MOVE '0'       WWSEQ
+     C*
+     C           DDBRCD    WHEQ *BLANKS
+     C           DDCNUM    ANDEQ*BLANKS
+     C           DDPTFR    ANDEQ*BLANKS
+     C           DDSESN    ANDNE*BLANKS
+     C                     MOVE '1'       WWSEQ
+     C*
+     C                     OTHER                           X*2
+     C                     MOVE 'E'       WWSEQ   1
+     C                     MOVEL'ER65403' ZAMSID
+     C                     MOVEA'11111'   *IN,39
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWREWV
+     C                     ENDSL                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** If no errors still, check details exist after Rewiev
+     C           WWREWV    IFEQ 'Y'                        B*1
+     C*
+     C                     MOVE DDBRCD    KRBRCD
+     C                     MOVE DDCNUM    KRCNUM
+     C                     MOVE DDPTFR    KRPTFR
+     C                     MOVE DDSESN    KRSESN
+     C                     MOVE WWBED1    KRBEDT
+     C                     MOVE *BLANKS   KRBLTY
+     C*
+     C           WWSEQ     IFEQ '0'                        B*2
+     C*
+     C           KEYL0     SETLLSEBKALL0
+     C                     READ SEBKALL0               7171
+     C           *IN71     DOWEQ'0'                        B*3
+     C           VDRECI    ANDEQ'*'
+     C                     READ SEBKALL0               7171
+     C                     ENDDO                           E*3
+     C*
+     C                     ELSE                            E*2
+     C*
+     C           KEYL1     SETLLSEBKALL1
+     C                     READ SEBKALL1               7171
+     C           *IN71     DOWEQ'0'                        B*3
+     C           VDRECI    ANDEQ'*'
+     C                     READ SEBKALL1               7171
+     C                     ENDDO                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C           *IN71     IFEQ '1'                        B*2
+     C*
+     C                     MOVEL'ER65404' ZAMSID
+     C                     MOVEA'11111'   *IN,39
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWREWV
+     C*
+     C                     ELSE                            X*3
+     C*
+     C           WWSEQ     IFEQ '0'                        B*3
+     C           KEYL0     SETLLSEBKALL0
+     C                     ELSE                            X*3
+     C           KEYL1     SETLLSEBKALL1
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C                     ENDSR                           ** V001 ESR **
+      /EJECT
+     C*****************************************************************
+     C** V002   SR TO VALIDATE DETAILS FIELD ENTERED
+     C** CALLED FROM
+     C*****************************************************************
+     C*
+     C           V002      BEGSR                           ** V002  BSR **
+     C*
+     C** Setof error indicators
+     C                     MOVE '0'       *IN49
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00'      *IN,58                          CSE007
+     C*
+     C                     MOVE *BLANKS   WWGENE  1
+     C                     MOVE *BLANKS   HHUNIQ  1
+     C*
+     C** Check Branch not blank and valid combination of details
+     C                     SELEC                           B*1
+     C*
+     C           SSBRCD    WHEQ *BLANKS
+     C                     MOVEL'ER65423' ZAMSID
+     C                     MOVE '1'       *IN,50
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C*
+     C           SSBRCD    WHNE *BLANKS
+     C           SSCNUM    ANDNE*BLANKS
+     C           SSSESN    ANDEQ*BLANKS
+     C           SSNOMB    ANDEQ*BLANKS
+     C                     MOVE 'Y'       WWGENE
+     C                     MOVE 'Y'       HHUNIQ
+     C*
+     C           SSBRCD    WHNE *BLANKS
+     C           SSCNUM    ANDNE*BLANKS
+     C           SSSESN    ANDNE*BLANKS
+     C           SSNOMB    ANDEQ*BLANKS
+     C***********          MOVE 'Y'       WWGENE                          080053
+     C                     MOVE 'N'       WWGENE                          080053
+     C                     MOVE 'N'       HHUNIQ
+     C*
+     C           SSBRCD    WHNE *BLANKS
+     C           SSCNUM    ANDNE*BLANKS
+     C           SSSESN    ANDNE*BLANKS
+     C           SSNOMB    ANDNE*BLANKS
+     C                     MOVE 'N'       WWGENE
+     C                     MOVE 'N'       HHUNIQ
+     C*
+     C           SSBRCD    WHNE *BLANKS
+     C           SSCNUM    ANDEQ*BLANKS
+     C           SSPTFR    ANDEQ*BLANKS
+     C           SSSESN    ANDNE*BLANKS
+     C           SSNOMB    ANDEQ*BLANKS
+     C                     MOVE 'Y'       WWGENE
+     C                     MOVE 'Y'       HHUNIQ
+     C*
+     C                     OTHER                           X*1
+     C                     MOVEL'ER65405' ZAMSID
+     C                     MOVE '1'       *IN,49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C*
+     C                     ENDSL                           E*1
+     C*
+     C** If no error still, do following validations
+     C           WWRECV    IFEQ 'Y'                        B*1
+     C*
+     C** Branch (General block and not default branch entered)         1
+     C           WWGENE    IFEQ 'Y'                        B*2
+     C           SSBRCD    ANDNEBVBRCD
+     C                     MOVEL'ER65419' ZAMSID
+     C                     MOVE '1'       *IN50
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*2
+     C*
+     C** Branch not defined                                            1
+     C***********SSBRCD    CHAINSDBRCHL1             7171                 S01496
+     C************IN71     IFEQ '1'                        B*2            S01496
+     C*                                                                   S01496
+     C**********           CALL 'AOBRCHR0'                                S01496              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM SSBRCD    WLBRCH  3                       S01496
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'ER65422' ZAMSID
+     C                     MOVE '1'       *IN50
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*2
+     C*
+     C           *IN50     IFEQ '0'                        B*2
+     C                     MOVE SSBRCD    HHBRC2
+     C                     ENDIF                           E*2
+     C*
+     C** Customer Mumber - Error if entered and not S,D in SDSECSL1
+     C           SSCNUM    IFNE *BLANKS                    B*2
+     C***********SSCNUM    CHAINSDSECSL1             7171                 S01496
+     C************IN71     IFEQ '1'                        B*3            S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSECSR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM SSCNUM    WLCUSN  6                       S01496
+     C           SDSECS    PARM SDSECS    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'ER65406' ZAMSID
+     C                     MOVE '1'       *IN51
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*3
+     C           BFCLAS    IFNE 'S'                        B*4
+     C           BFCLAS    ANDNE'D'
+     C                     MOVEL'ER65406' ZAMSID
+     C                     MOVE '1'       *IN51
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     MOVELBFCUST    SSCNUM                                             BUG7907
+     C                     ENDIF                           E*2
+     C*
+     C           *IN51     IFEQ '0'                        B*2
+     C                     MOVE SSCNUM    HHCNU2
+     C                     ENDIF                           E*2
+     C*
+     C** Portfolio reference
+     C***********SSCNUM    CHAINSDPLCSLL             7171                 S01496
+     C************IN71     IFEQ '1'                        B*2            S01496
+     C*                                                                   S01496
+     C                     MOVE 'N'       WWEXC   1                       CPB001
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOPLCSR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM SSCNUM    WLCUST 10                       S01496
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01496
+     C           WLRTCD    IFEQ *BLANKS                                   CPB001
+     C                     MOVE 'Y'       WWEXC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*KEY   ' @OPTN   7                       CPB001
+     C                     PARM SSCNUM    @KEY1  10                       CPB001
+     C                     PARM *BLANKS   @KYST   7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           @RTCD     IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     MOVE 'Y'       WWEXC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   S01496
+     C********** WLRTCD    IFNE *BLANK                             S01496 CPB001
+     C           WWEXC     IFNE 'Y'                                       CPB001
+     C*
+     C** ..non portfolio customer, portfolio must be blank
+     C           SSPTFR    IFNE *BLANKS                    B*3
+     C                     MOVEL'ER65407' ZAMSID
+     C                     MOVE '1'       *IN52
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*3
+     C                     MOVE *BLANKS   HHPTF2
+     C                     ENDIF                           E*3
+     C*
+     C                     ELSE                            X*2
+     C*
+     C** ..portfolio customer, portfolio must be reference for 9997
+     C** ..portfolio or defined portfolio
+     C***********SSPTFR    IFEQ P9R997                     B*3            S01496
+     C           SSPTFR    IFEQ FCR997                     B*3            S01496
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    HHPTF2
+     C                     ELSE                            X*3
+     C                     MOVE SSPTFR    HHPTF2
+     C           KEYPM     CHAINPMPORTLL             7171
+     C           *IN71     IFEQ '1'                        B*4
+     C                     MOVEL'ER65408' ZAMSID
+     C                     MOVE '1'       *IN52
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C/COPY WNCPYSRC,SE6540C002
+     C*
+     C** Block type
+     C           SSBLTY    IFNE 'P'                        B*2
+     C           SSBLTY    ANDNE'S'
+     C                     MOVEL'ER65409' ZAMSID
+     C                     MOVE '1'       *IN53
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*2
+     C*
+     C** Security                                                      1
+     C           SSSESN    IFNE *BLANKS                    B*2         1
+     C           SSSESN    CHAINSECTY                7171
+     C           *IN71     IFEQ '1'                        B*3
+     C                     MOVEL'ER65410' ZAMSID
+     C                     MOVE '1'       *IN54
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C*
+     C** Nominal (Check only if security correct - dec. places neeeded)
+     C           SSNOMB    IFEQ *BLANKS                    B*2
+     C           HHUNIQ    IFEQ 'N'                        B*3
+     C                     MOVE *HIVAL    HHNOM2
+     C                     ELSE                            X*3
+     C                     MOVE *ZEROS    HHNOM2
+     C                     ENDIF                           E*3
+     C                     ELSE                            X*2
+     C           *IN54     IFEQ '0'                        B*3
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SSNOMB    ZFIELD
+     C                     Z-ADDNMDP      ZADEC
+     C***********          Z-ADD12        ZADIG                           100236
+     C           12        SUB  NMDP      ZADIG                           100236
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        B*4
+     C                     MOVEL'ER65411' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*4
+     C                     MOVE ZFIELD    HHNOM2
+     C                     MOVE ZFIELD    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SSNOMB
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C*
+     C** Nominal - Extra validation
+     C** (Only if Block type, security and nominal correct)
+     C           *IN53     IFEQ '0'                        B*2
+     C           *IN54     ANDEQ'0'
+     C           *IN55     ANDEQ'0'
+     C           SSD       ANDNE'D'
+     C           HHUNIQ    ANDEQ'N'
+     C*
+     C                     MOVE BJRDNB    PPRUND
+     C                     MOVE 'Y'       PPOBPO
+     C                     MOVE *BLANKS   PPNOPO
+     C                     MOVE *BLANKS   PPNOBL
+     C                     CALL 'SE6710'
+     C                     PARM           PPRUND  5
+     C                     PARM           PPOBPO  1
+     C                     PARM           SSBRCD
+     C                     PARM           SSSESN
+     C                     PARM           SSCNUM
+     C                     PARM           HHPTF2
+     C                     PARM           SSBLTY
+     C                     PARM           PPNOBL 13
+     C                     PARM           PPNOPO 13
+     C                     PARM           CGL011                          CGL011
+     C                     PARM *BLANKS   COLAMT                          CGL011
+     C*
+     C                     MOVE PPNOBL    WWNOBL 130
+     C                     MOVE PPNOPO    WWNOPO 130
+     C                     MOVE COLAMT    WWCOLL                          CGL011
+     C*
+     C           SSBLTY    IFEQ 'P'                        B*3
+     C*
+     C           WWNOPO    SUB  WWNOBL    WWDIFF 130
+     C*
+     C           WWMODE    IFNE 'I'                        B*4
+     C           WWDIFF    ADD  HHNOMB    WWDIFF
+     C           WWNOBL    SUB  HHNOMB    WWNOBL
+     C                     ENDIF                           E*4
+     C*
+     C*
+     C**  Specific block on all the positions exist
+     C           WWNOBL    IFEQ WWHIGH
+     C           WWMODE    ANDEQ'I'
+     C****** ADS PPNOBL    OREQ *HIVAL
+     C           WWNOBL    OREQ *HIVAL
+     C           WWMODE    ANDEQ'A'
+     C           SSNOMB    ANDNE*BLANKS
+     C                     MOVEL'ER65425' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE
+     C*
+     C**  Specific block exist
+     C           SSNOMB    IFEQ *BLANKS
+     C           WWNOBL    ANDNE*ZEROS
+     C                     MOVEL'ER65426' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE
+     C*
+     C**  Blocked Nominal entered greater than Nominal Available
+     C           SSNOMB    IFNE *BLANKS
+     C           HHNOM2    ANDGTWWDIFF
+     C                     EXSR P011
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELDSE207    ZAMSDA
+     C                     MOVEL'ER65420' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*4
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                           E*3
+     C*
+     C           SSBLTY    IFEQ 'S'                        B*3
+     C*
+     C           WWMODE    IFEQ 'I'                        B*4
+     C           WWNOBL    ANDNE*ZEROS
+     C                     MOVEL'ER65427' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE
+     C           HHNOM2    IFLT WWNOPO
+     C                     EXSR P012
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVELW1NOPO    ZAMSDA
+     C                     MOVEL'ER65421' ZAMSID
+     C                     MOVE '1'       *IN55
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*4
+     C*
+     C                     ENDIF
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+      *                                                                   CGL011
+     C           CGL011    IFEQ 'Y'                                       CGL011
+     C           SSD       ANDEQ'D'                                       CGL011
+     C           HHCOLF    ANDEQ'Y'                                       CGL011
+     C                     MOVE *ON       *IN49                           CGL011
+     C                     MOVEL'ER65429' ZAMSID                          CGL011
+     C                     EXSR ZASNMS                                    CGL011
+     C                     MOVE 'N'       WWDETV                          CGL011
+     C                     MOVE 'N'       WWRECV                          CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C           CGL011    IFEQ 'Y'                                       CGL011
+     C           *IN55     ANDEQ*OFF                                      CGL011
+     C           SSNOMB    ANDNE*BLANKS                                   CGL011
+     C           SSNOMB    ANDNE*ZEROS                                    CGL011
+     C           HHCOLF    ANDEQ'Y'                                       CGL011
+     C                     MOVE SSNOMB    ZFLD15                          CGL011
+     C                     Z-ADDNMDP      ZDECS                           CGL011
+     C                     MOVE ' '       ZECODE                          CGL011
+     C                     EXSR ZSEDIT                                    CGL011
+     C                     MOVE ZOUT21    WNOMB  150                      CGL011
+      *                                                                   CGL011
+     C           WNOMB     IFLT HHCOLA                                    CGL011
+     C                     MOVE *ON       *IN55                           CGL011
+     C                     MOVEL'ER65428' ZAMSID                          CGL011
+     C                     EXSR ZASNMS                                    CGL011
+     C                     MOVE 'N'       WWDETV                          CGL011
+     C                     MOVE 'N'       WWRECV                          CGL011
+     C                     ENDIF                                          CGL011
+      *                                                                   CGL011
+     C                     ENDIF                                          CGL011
+     C*
+     C** End date - error if entered and not valid date
+     C           SSBEDT    IFEQ *BLANKS                    B*2
+     C                     Z-ADD99999     HHBED2
+     C                     ELSE                            X*2
+     C                     MOVE SSBEDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    HHBED2
+     C           *IN99     IFEQ '1'                        B*3
+     C                     MOVEL'ER65412' ZAMSID
+     C                     MOVE '1'       *IN56
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*3
+     C           ZDAYNO    IFLT BJRDNB                     B*4
+     C************IN54     OREQ '0'                                        62812
+     C***********ZDAYNO    ANDGTMATY                                       62812
+     C                     MOVEL'ER65412' ZAMSID
+     C                     MOVE '1'       *IN56
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*4             62812
+     C*                                                                    62812
+     C** If Security correctly entered, the Maturity date not equal to 0   62812
+     C** and End Date not before Security Maturity date                    62812
+     C           *IN54     IFEQ '0'                        B*5             62812
+     C           MATY      ANDNE*ZEROS                                     62812
+     C           ZDAYNO    ANDGTMATY                                       62812
+     C                     MOVEL'ER65412' ZAMSID                           62812
+     C                     MOVE '1'       *IN56                            62812
+     C                     EXSR ZASNMS                                     62812
+     C                     MOVE 'N'       WWDETV                           62812
+     C                     MOVE 'N'       WWRECV                           62812
+     C                     ENDIF                           E*5             62812
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *                                                                   CSE007
+      ***  If feature CSE007 is switched ON.                              CSE007
+      ***  or if feature CEU017 is switched ON.                           CEU017
+      *                                                                   CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+      *                                                                   CSE007
+      ***  If Block from Date entered, check validity.                    CSE007
+      *                                                                   CSE007
+     C           SSBSTT    IFNE *BLANKS                                   CSE007
+     C                     MOVE SSBSTT    ZDATE                           CSE007
+     C                     EXSR ZDATE1                                    CSE007
+     C                     MOVE ZDAYNO    HHBSTT                                             BUG2563
+     C           *IN99     IFEQ '1'                                       CSE007
+     C                     MOVEL'CO65401' ZAMSID                          CSE007
+     C                     MOVE '1'       *IN58                           CSE007
+     C                     EXSR ZASNMS                                    CSE007
+     C                     MOVE 'N'       WWDETV                          CSE007
+     C                     MOVE 'N'       WWRECV                          CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+      ***  If Block from Date valid, if Block End Date valid, must not    CSE007
+      ***  be greater than Block End Date.                                CSE007
+      *                                                                   CSE007
+     C           *IN56     IFEQ '0'                                       CSE007
+     C           ZDAYNO    IFGT HHBED2                                    CSE007
+     C                     MOVEL'CO65401' ZAMSID                          CSE007
+     C                     MOVE '1'       *IN58                           CSE007
+     C                     EXSR ZASNMS                                    CSE007
+     C                     MOVE 'N'       WWDETV                          CSE007
+     C                     MOVE 'N'       WWRECV                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      ***  If Block from Date valid, must be greater than run Date.       CSE007
+      *                                                                   CSE007
+     C           ZDAYNO    IFLE BJRDNB                                    CSE007
+     C                     MOVEL'CO65401' ZAMSID                          CSE007
+     C                     MOVE '1'       *IN58                           CSE007
+     C                     EXSR ZASNMS                                    CSE007
+     C                     MOVE 'N'       WWDETV                          CSE007
+     C                     MOVE 'N'       WWRECV                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      ***  If Block Error Indicator entered, must be 'E' for Error or     CSE007
+      ***  'W' for Warning.                                               CSE007
+      *                                                                   CSE007
+     C           SSBEWI    IFNE ' '                                       CSE007
+     C           SSBEWI    IFNE 'E'                                       CSE007
+     C           SSBEWI    ANDNE'W'                                       CSE007
+     C                     MOVEL'CO65402' ZAMSID                          CSE007
+     C                     MOVE '1'       *IN59                           CSE007
+     C                     EXSR ZASNMS                                    CSE007
+     C                     MOVE 'N'       WWDETV                          CSE007
+     C                     MOVE 'N'       WWRECV                          CSE007
+     C                     ELSE                                                              BUG2563
+     C                     MOVE SSBEWI    HHBEWI                                             BUG2563
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C*
+     C** Narrative mandatory
+     C           SSBNAR    IFEQ *BLANKS                    B*2
+     C                     MOVEL'ER65413' ZAMSID
+     C                     MOVE '1'       *IN57
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** If no error still, general validation
+     C           WWRECV    IFEQ 'Y'                        B*1
+     C*
+     C** for unique blocks check, if block already exist
+     C           HHUNIQ    IFEQ 'Y'                        B*2
+     C           WWMODE    ANDEQ'I'
+     C*
+     C                     MOVE *LOVAL    WWSEQN
+     C           KEYP0     SETLLSEBLKPL0
+     C                     READ SEBLKPL0                 71
+     C*
+     C           *IN71     DOWEQ'0'                        B*3
+     C           VDBRCD    ANDEQHHBRC2
+     C           VDCNUM    ANDEQHHCNU2
+     C           VDPTFR    ANDEQHHPTF2
+     C           VDBLTY    ANDEQSSBLTY
+     C           VDSESN    ANDEQSSSESN
+     C           WWDETV    ANDEQ'Y'
+     C*
+     C           VDRECI    IFEQ 'D'                        B*4
+     C                     MOVEL'ER65414' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*4
+     C*
+     C                     READ SEBLKPL0                 71
+     C                     ENDDO                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C** Mark, if record changed and/or delete required
+     C           WWMODE    IFEQ 'A'                        B*2
+     C*
+     C           SSD       IFNE 'D'                        B*3
+     C           SSD       ANDNE' '
+     C                     MOVEL'ER65424' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ELSE                            X*3
+     C           SSD       IFEQ 'D'                        B*4
+     C*                                                                   S01496
+     C**  Check if the user is authorised to the action code              S01496
+     C*                                                                   S01496
+     C           BGMBIN    IFNE 'Y'                                       S01496
+     C*                                                                   S01496
+     C**  Single branch environment                                       S01496
+     C*                                                                   S01496
+     C                     CALL 'ZVACTU'                                  S01496
+     C                     PARM SSD       WLACTN  1                       S01496
+     C                     PARM *ZERO     WLERR   10                      S01496
+     C*                                                                   S01496
+     C           WLERR     IFNE *ZERO                                     S01496
+     C                     MOVE '1'       *IN49                           S01496
+     C                     MOVE 'N'       WWDETV                          S01496
+     C                     MOVE 'N'       WWRECV                          S01496
+     C                     MOVEL'ER66006' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C*                                                                   S01496
+     C**  If multibranching environment                                   S01496
+     C*                                                                   S01496
+     C                     CALL 'ZVACTBU'                                 S01496
+     C                     PARM SSD       WLACTN  1                       S01496
+     C                     PARM HHBRC2    WLBRCH  3                       S01496
+     C                     PARM *ZERO     WLERR   10                      S01496
+     C*                                                                   S01496
+     C           WLERR     IFEQ 1                                         S01496
+     C                     MOVE '1'       *IN49                           S01496
+     C                     MOVE 'N'       WWDETV                          S01496
+     C                     MOVE 'N'       WWRECV                          S01496
+     C                     MOVEL'ER66007' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     ELSE                                           S01496
+     C           WLERR     IFEQ 2                                         S01496
+     C                     MOVE '1'       *IN49                           S01496
+     C                     MOVE 'N'       WWDETV                          S01496
+     C                     MOVE 'N'       WWRECV                          S01496
+     C                     MOVEL'ER66008' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     ENDIF                                          S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C           WLERR     IFEQ *ZERO                                     S01496
+     C                     MOVE 'Y'       WWDETD
+     C                     MOVE 'Y'       WWRECD
+     C                     ENDIF                                          S01496
+     C*                                                                   S01496
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+     C*
+     C           HHNOMB    IFNE HHNOM2                     B*3
+     C           HHBEDT    ORNE HHBED2
+     C           HHBNAR    ORNE SSBNAR
+     C                     MOVE 'Y'       WWDETC
+     C                     MOVE 'Y'       WWRECC
+     C                     ENDIF                           E*3
+     C*
+     C           WWMODE    IFEQ 'A'                        B*3
+     C           WWRECC    ANDEQ'Y'
+     C           WWRECD    ANDEQ'Y'
+     C                     MOVEL'ER65415' ZAMSID
+     C                     MOVE '1'       *IN49
+     C                     MOVEA'11111111'*IN,50
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVEA'11'      *IN,58                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWDETV
+     C                     MOVE 'N'       WWRECV
+     C                     ENDIF                           E*3
+     C*
+     C                     ENDIF                           E*2
+     C*
+     C                     ENDIF                           E*1
+     C*
+     C** Save relativ record number of first record in error
+     C           WWRECV    IFEQ 'N'                        B*1
+     C           RRNERR    ANDEQ0
+     C  N09                Z-ADDRRN1      RRNERR
+     C   09                Z-ADDRRN2      RRNERR
+     C                     ENDIF                           E*1
+     C*
+     C           EV002     ENDSR                           ** END  V002 **
+     C*******************************************************************
+      /EJECT
+     C*****************************************************************
+     C** V003   VALIDATE COMMAND KEY ON DELETION SCREEN
+     C** CALLED FROM
+     C*****************************************************************
+     C*
+     C           V003      BEGSR                           ** V003  BSR **
+     C*
+     C** Clear program message queue.
+     C                     MOVEL*BLANK    ZAMSID
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** Error, if ENTER taken on deletion prompt screen
+     C           *INKC     IFNE '1'                        B*1
+     C           *INKL     ANDNE'1'
+     C           *INKJ     ANDNE'1'
+     C                     MOVEL'ER65417' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WWERV3
+     C                     ENDIF                           E*1
+     C*
+     C           EV003     ENDSR                           ** END V003 **
+     C*******************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** W001   FORMAT DETAILS FOR OUTPUT
+     C** CALLED FROM U001 ONLY IF WWMODE = 'I'
+     C**
+     C********************************************************************
+     C           W001      BEGSR                           ** W001 BSR **
+     C*
+     C** Get sequence number
+     C                     MOVE *HIVAL    WWSEQN
+     C           KEYP0     SETGTSEBLKPL0
+     C                     READPSEBLKPL0            N    71
+     C           *IN71     IFEQ '0'                        B*1
+     C           VDCNUM    ANDEQHHCNU2
+     C           VDPTFR    ANDEQHHPTF2
+     C           VDBLTY    ANDEQSSBLTY
+     C           VDSESN    ANDEQSSSESN
+     C           VDBEDT    ANDEQHHBED2
+     C           1         ADD  VDSEQN    WWSEQN
+     C                     ELSE                            X*1
+     C                     Z-ADD1         WWSEQN
+     C                     ENDIF                           E*1
+     C*
+     C** Set up fields for output:
+     C                     MOVE 'D'       VDRECI
+     C                     MOVE BJRDNB    VDLCD
+     C                     MOVE 'I'       VDCHTP
+     C                     MOVE USIDXX    VDLUID
+     C                     MOVE HHBRC2    VDBRCD
+     C                     MOVE HHCNU2    VDCNUM
+     C                     MOVE HHPTF2    VDPTFR
+     C                     MOVE SSBLTY    VDBLTY
+     C                     MOVE SSSESN    VDSESN
+     C                     MOVE HHBED2    VDBEDT
+     C                     MOVE HHNOM2    VDNOMB
+     C                     MOVE HHBSTT    VDBSTT                          CSE007
+     C                     MOVE HHBEWI    VDEWIN                          CSE007
+     C                     MOVE SSBNAR    VDBNAR
+     C                     MOVE WWSEQN    VDSEQN
+     C                     MOVE *BLANKS   VDCOLF                          CGL011
+     C                     Z-ADD0         VDCOLA                          CGL011
+     C*
+     C** Fill hidden fields
+     C                     MOVE VDBRCD    HHBRCD
+     C                     MOVE VDCNUM    HHCNUM
+     C                     MOVE VDPTFR    HHPTFR
+     C                     MOVE VDSESN    HHSESN
+     C                     MOVE VDBEDT    HHBEDT
+     C                     MOVE VDBLTY    HHBLTY
+     C                     MOVE VDSEQN    HHSEQN
+     C*
+     C           EW001     ENDSR                           ** END W001 **
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS   - Send message to program message queue              *
+     C*                                                               *
+     C* CALLS    Y2SNMSGC                                             *
+     C*                                                               *
+     C* CALLED BY                                                     *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** *PSSR  S/R
+     C** CALLED FROM
+     C** CALLS NO OTHER S/R'S
+     C**
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** Update LDA with Error Information
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C** Rollback Changes, Print Dump and Cancel Program
+     C                     ROLBK
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /COPY ZSRSRC,ZALIGNZ2
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZSEDITZ3
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

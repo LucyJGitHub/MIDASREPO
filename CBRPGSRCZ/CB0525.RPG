@@ -1,0 +1,301 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Send message to data queues')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0525 - Send Message to other users                         *
+      *                                                               *
+      *  Function:  This program is in charge to send messages        *
+      *             to active users.                                  *
+      *                                                               *
+      *  Called By: CB0015A - CoB menu                                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CCB012             DATE 26Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPK008             DATE 01JUL97               *
+      *                 S01420             Date 12APR95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB012 - Use 70 job streams. Recompile over changed CBRECV.  *
+      *  CPK008 - DBA R2 Packaging                                    *
+      *         - Recompile over DS/CBRECV                            *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBUSERL1IF  E           K        DISK
+     FCBUSERL0UF  E           K        DISK
+     F            CBUSERD0                          KRENAMECBUSERDX
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     I            DS
+     I                                        1  10 WWDTQ1
+     I                                        1   4 WWDTQ2
+     I            DS
+     I                                        1 256 WWCHCK
+     I                                       38  39 WWSVRY
+     IWWLMSG      DS
+     I                                        1  40 WWMGDA
+     I                                       41  420WWSEVR
+      ** DATA QUEUE DATA STRUCTURE
+     IWWDTQA    E DSCBDTAQ
+      ** DATA AREA  DATA STRUCTURE
+     IWWDATA    E DSCBRECV
+      *
+      *****************************************************************
+      *
+     C                     EXSR #INIT
+     C                     EXSR #MAIN
+     C                     EXSR #END
+      *
+      ********************************************************************
+      *
+      ** MAIN SUBROUTINE
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  #ALL   SUBROUTINE TO PROCESS ALL WORKSTATIONS
+      **        #ALLOM SUBROUTINE TO PROCESS ALL WORKSTATIONS EXCEPT ONE
+      **              (THE REQUESTER HIMSELF)
+      **        #ONE   SUBROUTINE TO PROCESS ONE WORKSTATION
+      *
+      ********************************************************************
+      *
+     C           #MAIN     BEGSR
+      *
+     C           DQPROC    IFEQ 'LOCK   '
+     C                     MOVEL'LOCK'    LOCK    4
+     C                     MOVEL'MASTER ' WWMAST 10
+     C                     MOVEL##USR     WWINFO 10
+     C                     END
+      *
+     C           DQPROC    IFEQ 'UNLOCK '
+     C                     MOVEL*BLANKS   LOCK
+     C                     MOVEL*BLANKS   WWMAST
+     C                     MOVEL*BLANKS   WWINFO
+     C                     END
+      *
+     C           WWDTQ2    IFEQ '*ALL'
+     C           DQSELT    IFEQ 'OMIT'
+     C                     EXSR #ALLOM
+     C                     ELSE
+     C                     EXSR #ALL
+     C                     END
+     C                     ELSE
+     C                     EXSR #ONE
+     C                     END
+      *
+      ** IF PROCESS IS LOCK : UPDATE FILE
+      *
+     C           DQPROC    IFEQ 'LOCK   '
+     C           DQPROC    OREQ 'UNLOCK '
+     C           WWDTQ2    IFEQ '*ALL'
+     C           *LOVAL    SETLLCBUSERDX
+     C                     READ CBUSERDX                 80
+     C           *IN80     DOWEQ'0'
+     C           USDTAQ    IFNE WWDTQF
+     C                     MOVELWWINFO    USMAST
+     C                     MOVELLOCK      USLOCK
+     C                     ELSE
+     C                     MOVELWWMAST    USMAST
+     C                     END
+     C                     UPDATCBUSERDX               99
+     C                     READ CBUSERDX                 80
+     C                     END
+     C                     ELSE
+      *
+     C           WWDTAQ    CHAINCBUSERL1             81
+     C           *IN81     IFEQ '0'
+     C                     MOVELUSUSER    WWUSER
+     C                     MOVELUSJOB     WWJOB
+     C                     MOVELUSNBR     WWNBR
+     C           WWKEY     CHAINCBUSERDX             82
+     C           *IN82     IFEQ '0'
+     C                     MOVELLOCK      USLOCK
+     C                     MOVELWWINFO    USMAST
+     C                     UPDATCBUSERDX               99
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #ALL SUBROUTINE TO PROCESS ALL WORKSTATIONS
+      *
+      ** CALLED FROM #MAIN
+      *
+      ** CALLS  #CALL SUBROUTINE TO SEND DATA TO DATA QUEUES
+      *
+      ********************************************************************
+      *
+     C           #ALL      BEGSR
+      *
+     C           *LOVAL    SETLLCBUSERL1
+      *
+     C                     READ CBUSERL1                 80
+      *
+     C           *IN80     DOWEQ'0'
+     C                     EXSR #CALL
+     C                     READ CBUSERL1                 80
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #ALLOM SUBROUTINE TO PROCESS ALL WORKSTATIONS EXCEPT ONE
+      *
+      ** CALLED FROM #MAIN
+      *
+      ** CALLS  #CALL SUBROUTINE TO SEND DATA TO DATA QUEUES
+      *
+      ********************************************************************
+      *
+     C           #ALLOM    BEGSR
+      *
+     C           *LOVAL    SETLLCBUSERL1
+      *
+     C                     READ CBUSERL1                 80
+      *
+     C           *IN80     DOWEQ'0'
+      *
+     C           USJOB     IFNE DQJOB
+     C           USUSER    ORNE DQUSER
+     C           USNBR     ORNE DQNBR
+      *
+     C                     EXSR #CALL
+      *
+     C                     ELSE
+     C                     MOVELUSDTAQ    WWQUEU 10
+      *
+     C                     END
+     C                     READ CBUSERL1                 80
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #ONE   SUBROUTINE TO PROCESS ONE WORKSTATIONS
+      *
+      ** CALLED FROM #MAIN
+      *
+      ** CALLS  #CALL SUBROUTINE TO SEND DATA TO DATA QUEUES
+      *
+      ********************************************************************
+      *
+     C           #ONE      BEGSR
+      *
+     C           WWDTAQ    CHAINCBUSERL1             80
+      *
+     C           *IN80     IFEQ '0'
+     C                     EXSR #CALL
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #CALL  SUBROUTINE TO SEND DATA TO DATA QUEUES
+      *
+      ** CALLED FROM #ALL, #ALLOM, #ONE
+      *
+      ** CALLS  QSNDDTAQ
+      *
+      ********************************************************************
+      *
+     C           #CALL     BEGSR
+      *
+     C                     CALL 'QSNDDTAQ'             99
+     C                     PARM           USDTAQ
+     C                     PARM           WWLIBR
+     C                     PARM           WWLENG
+     C                     PARM           WWPARM
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #INIT  SUBROUTINE TO INITIALIZE FIELDS & VARIABLES
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWDTAQ 10
+     C                     PARM           WWPARM256
+      *
+     C                     MOVEACPY@      ACT@   80
+     C                     MOVELWWPARM    WWDTQA
+     C                     MOVELWWPARM    WWCHCK
+     C                     MOVEL*BLANKS   ANSWER  7
+     C                     MOVEL*BLANKS   QUEUE  10
+     C                     MOVEL'DTQ'     WWDTQ9  9
+     C                     MOVE ##JNO     WWDTQ9
+     C                     MOVELWWDTQ9    WWDTQF 10
+     C           WWKEY     KLIST
+     C                     KFLD           WWJOB  10
+     C                     KFLD           WWUSER 10
+     C                     KFLD           WWNBR   6
+      *
+     C           *NAMVAR   DEFN CBLMSG    WWLMSG
+     C           *IN99     DOUEQ'0'
+     C           *LOCK     IN   WWLMSG                 99
+     C                     END
+      *
+     C           WWSVRY    IFEQ *BLANKS
+     C                     Z-ADD1         DQSEVR
+     C                     END
+      *
+      ** IF SEVERITY IS 00 RESET DATA AREA
+     C           DQSEVR    IFEQ 0
+     C                     MOVEL*BLANKS   WWMGDA
+     C                     Z-ADD1         WWSEVR
+     C                     ELSE
+     C           DQSEVR    IFGE WWSEVR
+     C                     Z-ADDDQSEVR    WWSEVR
+     C                     MOVELDQMESG    WWMGDA
+     C                     END
+     C                     END
+     C                     OUT  WWLMSG
+     C                     Z-ADD256       WWLENG  50
+     C                     MOVEL'*LIBL'   WWLIBR 10
+     C                     MOVELWWDTAQ    WWDTQ1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #END   SUBROUTINE TO END PROGRAM
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           #END      BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

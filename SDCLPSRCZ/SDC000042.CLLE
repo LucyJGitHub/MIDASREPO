@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('CAP183 Initialisation Program')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Futures and Options Module                          */
+/*                                                                   */
+/*       SDC000042 - CAP183 Initialisation Program                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. 263057  *CREATE    Date 03Sep12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       263057 - Unable to insert market price.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+ 
+             DCLF       FILE(MKCTLD)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* MODE 1 - First Call or MODE 2 - Second Call */
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)
+READ:        RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO END)
+             ADDLFM     FILE(PRICS2) MBR(&MRKT) DTAMBRS((PRICSD +
+                         (&MRKT))) SHARE(*YES)
+             MONMSG     MSGID(CPF7306)
+             ADDLFM     FILE(PRICS3) MBR(&MRKT) DTAMBRS((PRICSD +
+                         (&MRKT))) SHARE(*YES)
+             MONMSG     MSGID(CPF7306)
+             GOTO READ
+             ENDDO
+ 
+/* Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+/* Send the error message */
+ 
+             SNDPGMMSG  MSG('Program SDC000042 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

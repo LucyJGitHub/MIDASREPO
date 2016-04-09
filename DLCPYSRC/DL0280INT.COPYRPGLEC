@@ -1,0 +1,98 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280INT                                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK025  *CREATE    Date 25Jul06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK025 - Externalise INTACC.                                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INTACC - If Interest paid separatly, retreive interest       *
+      *           settlement account.                                 *
+      *                                                               *
+      *****************************************************************
+     C     INTACC        BEGSR                                                                237562
+      *                                                                                       237562
+      **  Determine Settlement method to get the appropriate                                  237562
+      **  settlement branch.                                                                  237562
+      *                                                                                       237562
+     C     IMET          IFEQ      '01'                                                       237562
+     C     IMET          OREQ      '02'                                                       237562
+     C     IMET          OREQ      '07'                                                       237562
+     C     IMET          OREQ      '08'                                                       237562
+     C     IMET          OREQ      '12'                                                       237562
+     C                   MOVE      KYCCY         @KEYB                                        237562
+      *                                                                                       237562
+      ** Read Nostro Details via access program.                                              237562
+      *                                                                                       237562
+     C                   CALL      'AONOSTR0'                                                 237562
+     C                   PARM      '*MSG   '     @RTCD                                        237562
+     C                   PARM      '*KEY    '    @OPTN                                        237562
+     C                   PARM      *BLANK        @KEYA             6                          237562
+     C                   PARM                    @KEYB             3                          237562
+     C                   PARM      *BLANK        @KEYC                                        237562
+     C                   PARM      *BLANK        @KEYD             2                          237562
+     C                   PARM      INSA          @KEYE             2                          237562
+     C                   PARM                    @BRCD             3                          237562
+     C                   PARM                    @CSSN            10                          237562
+     C                   PARM                    @PNOI             1                          237562
+     C     SDNOST        PARM      SDNOST        DSFDY                                        237562
+     C     @RTCD         IFNE      *BLANK                                                     237562
+     C                   SETON                                        U7U8LR                  237562
+     C                   EXSR      *PSSR                                                      237562
+     C                   GOTO      EOJ                                                        237562
+     C                   ELSE                                                                 237562
+     C                   MOVE      A7BRCD        KYSTBR                                       237562
+     C                   ENDIF                                                                237562
+     C                   ENDIF                                                                237562
+      *                                                                                       237562
+      ** For settlement types 00, 04, & 06, these are settled                                 237562
+      ** through the booking branch.  This is being done in                                   237562
+      ** DL0295.  For 05, this is already taken cared of and                                  237562
+      ** determined in the previous processing where POBR and                                 237562
+      ** ROBR are used but it depends if the deal is a loan                                   237562
+      ** or a deposit.  For 03, since POBR & ROBR are blanked                                 237562
+      ** out when deal is input, DL0295 uses the booking branch                               237562
+      ** too.  So, no processing needed for these methods.                                    237562
+      *                                                                                       237562
+     C     IMET          IFEQ      '14'                                                       237562
+      *                                                                                       237562
+      ** Access the Account Details using the Retail account key.                             237562
+      *                                                                                       237562
+     C                   CALL      'AOACCTR0'                                                 237562
+     C                   PARM      *BLANKS       @RTCD                                        237562
+     C                   PARM      '*KEY   '     @OPTN                                        237562
+     C                   PARM      INSA          @RETL            10                          237562
+     C                   PARM      *BLANKS       @CNUM             6                          237562
+     C                   PARM      *BLANKS       @CUCD             3                          237562
+     C                   PARM      *BLANKS       @ACCD                                        237562
+     C                   PARM      *BLANKS       @ACSQ             2                          237562
+     C                   PARM      *BLANKS       @BRCA             3                          237562
+     C     SDACCT        PARM      SDACCT        DSSDY                                        237562
+      *                                                                                       237562
+     C     @RTCD         IFNE      *BLANKS                                                    237562
+     C                   SETON                                        U7U8LR                  237562
+     C                   EXSR      *PSSR                                                      237562
+     C                   GOTO      EOJ                                                        237562
+     C                   ELSE                                                                 237562
+     C                   MOVE      @BRCA         KYSTBR                                       237562
+     C                   ENDIF                                                                237562
+     C                   ENDIF                                                                237562
+      *                                                                                       237562
+     C                   ENDSR                                                                237562
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280INT                                        *
+      *****************************************************************

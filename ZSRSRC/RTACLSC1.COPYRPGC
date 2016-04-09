@@ -1,0 +1,145 @@
+     C*****************************************************************
+     C*                                                               *
+      *  Last Amend No. 252150             Date 03Sep12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 CRT001  *CREATE    Date 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  252150 - COB component MEC103/GLC48 fails due to FOOB.       *
+      *           Amend the program to match MOD/GLAMADUPD process    *
+      *           when closing an account that is inserted the same   *
+      *           day. Applied for AR980794 (Child: AR980795)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTACLS - Account closure updates                   *
+     C*                                                               *
+     C* FLDS USED  @ACCN  - Account number                            *
+     C*            @ACCT  - Account number (backup)                   *
+     C*            @RVIN  - Reversal indicator                        *
+     C*            *IN86  - Last changed date of LF/ACCNT equals to   *
+     C*                     Run day number and change type is 'I'     *
+     C*            *IN87  - Last changed date of LF/ACCNT equals to   *
+     C*                     Run day number and change type is 'A'     *
+     C*                                                               *
+     C*****************************************************************
+     C           RTACLS    BEGSR                           ** RTACLS **
+     C*
+     C** Define parameters
+     C**********           MOVEL@ACCN     @ACCN  18                                           CGL029
+     C**********           MOVEL@ACCN     @ACCT  18                                           CGL029
+     C                     MOVEL@ACCN     @ACCN  24                                           CGL029
+     C                     MOVEL@ACCN     @ACCT  24                                           CGL029
+     C                     MOVEL@RVIN     @RVIN   1
+     C                     SETOF                     8687
+     C*
+     C** Access account detail
+     C                     OPEN ACCNT
+     C           KLACNT    CHAINACCNT                80
+     C*
+     C** If record found
+     C           *IN80     IFEQ '0'
+     C*
+     C           LCD       IFEQ BJRDNB
+     C           CHTP      IFEQ 'I'
+     C                     SETON                     86
+     C                     END
+     C           CHTP      IFEQ 'A'
+     C                     SETON                     87
+     C                     END
+     C                     END
+     C*
+     C** If account closure transaction and account status is closed,
+     C** release rcd. as account already flagged for closing
+     C*
+     C           @RVIN     IFEQ ' '
+     C           ACST      ANDEQ'C'
+     C*
+     C                     EXCPT@RLACC
+     C*
+     C                     ELSE
+     C*
+     C           @RVIN     IFEQ ' '
+     C                     MOVEL'C'       ACST
+     C                     MOVEL'C'       CHTP
+     C                     ELSE
+     C                     MOVEL' '       ACST
+     C                     MOVEL'A'       CHTP
+     C                     END
+     C*
+     C** Update account details
+     C*
+     C                     Z-ADDBJRDNB    DACC
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDFNATN     TNLU
+     C                     UPDATACCNTABF               69
+     C*
+     C** Access account trailer
+     C*
+     C                     MOVEL*BLANKS   @ACCN
+     C                     MOVEL'9999999' @ACCN
+     C                     Z-ADD0         @ACOD
+     C                     Z-ADD0         @ACSQ
+     C           KLACNT    CHAINACCNT                80
+     C*
+     C** If record found
+     C*
+     C           *IN80     IFEQ '0'
+     C                     MOVEL@ACCT     @ACCN
+     C*
+     C** If account closure reversal
+     C*
+     C           @RVIN     IFEQ 'Y'
+     C                     SUB  1         NOCL
+     C                     ADD  1         NOAU
+     C                     ADD  1         NOAM
+     C*
+     C** Else account closure
+     C*
+     C                     ELSE
+     C*
+     C** Last changed date of LF/ACCNT equals to run day number and
+     C** change type is 'I'
+     C*
+     C********** *IN86     IFEQ '1'                                                           252150
+     C**********           SUB  1         NINU                                                252150
+     C**********           ADD  1         NORE                                                252150
+     C**********           END                                                                252150
+     C*
+     C** Last changed date of LF/ACCNT equals to run day number and
+     C** change type is 'A'
+     C*
+     C           *IN87     IFEQ '1'
+     C                     SUB  1         NOAM
+     C                     END
+     C*
+     C                     ADD  1         NOCL
+     C                     SUB  1         NOAU
+     C                     END
+     C*
+     C** Update account trailer
+     C*
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDFNATN     TNLU
+     C*
+     C                     EXCPT@UPACC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     CLOSEACCNT                  69
+     C*
+     C                     ENDSR
+     C*****************************************************************

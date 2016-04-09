@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMC100057F) TOFILE(UPDBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Delete save files (after CHGCCSIDS)')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation                                      */
+/*                                                                   */
+/*       SMC000061 - Delete save files (after CHGCCSIDS)             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 256038  *CREATE    Date 18Aug08              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       256038 - Handle logical file problems.                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PLIB)
+ 
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(SMC100057F)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if file for logical files still exists.  If it doesn't then call */
+/*  program to build list of save files in the PLIB.                      */
+             CHKOBJ     OBJ(QTEMP/SMC100057F) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(SMC000062)
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             DLTF       FILE(&PLIB/&WHREFI)
+             MONMSG     MSGID(CPF2105)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+SMC000062:
+             CALL       PGM(SMC000062) PARM(&PLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Bulk Sync of GZSDACUSPD - Start TS')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GOC0115T1 - Midas GO Bulk Sync of GZSDACUSPD - Start TS     */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2012                         */
+/*                                                                   */
+/*       Last Amend No. MD020205 *CREATE   Date 24Apr13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD020205 - Continuous CoB run time improvement              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/* Declare file and variables */
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TSK#) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) VALUE('GOC011501')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&WKDHSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&DELRECNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&CURRECNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&TOTREC) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NOREC) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NOREC@) TYPE(*CHAR) LEN(10)
+ 
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GOC0115T1 -  Midas GO Bulk Sync of +
+                          GZSDACUSPD - Start Task Split') TOMSGQ(MRUNQ)
+ 
+/* Determine full JLIB and DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Create main data queue */
+ 
+             CHKOBJ     OBJ(&DTAQLIB/GOACUSSRV) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAQ +
+                          DTAQ(&DTAQLIB/GOACUSSRV) MAXLEN(50))
+             CALL       PGM(QCLRDTAQ) PARM(GOACUSSRV '*LIBL')
+             MONMSG     MSGID(CPF9801)
+ 
+/* Retrieve number of sub-tasks */
+ 
+ CHAIN:      RCVF
+             CHGVAR     VAR(&WKDHSEQ) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&WKDHSEQ *NE +
+                          &CSEQ)) THEN(DO)
+             GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+             RTVMBRD    FILE(SDACUSPD) NBRCURRCD(&CURRECNO) +
+                        NBRDLTRCD(&DELRECNO)
+             CHGVAR     VAR(&TOTREC) VALUE(&CURRECNO + &DELRECNO)
+             CHGVAR     VAR(&NOREC) VALUE((&TOTREC / &DHTSNO) + 1)
+             CHGVAR     VAR(&NOREC@) VALUE(&NOREC)
+             RTVMBRD    FILE(ACUSIXPD) NBRCURRCD(&CURRECNO)
+             IF         COND(&CURRECNO *EQ 0) THEN(DO)
+               SCRUNSQL   SQL('INSERT INTO ACUSIXPD (NORE) VALUES(' +
+                            *CAT &NOREC@ *CAT ')')
+             ENDDO
+             ELSE       DO
+               SCRUNSQL   SQL('UPDATE ACUSIXPD SET NORE = ' *CAT +
+                            &NOREC@)
+             ENDDO
+ 
+             GOTO       END
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GOC0115T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

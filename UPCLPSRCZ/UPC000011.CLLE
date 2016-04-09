@@ -1,0 +1,129 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Reconciliation of a/cs against postings')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade module                                      */
+/*                                                                   */
+/*       UPC000011 - Reconciliation program for EODPOPD              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27788  *CREATE  Date 20May10              */
+/*       Prev Amend No. xxxxxx             Date 13Apr10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27788 - Postings reconciliation utility                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FMLIB &TOLIB &ACODCVT &RUNDATE)
+ 
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACODCVT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RUNDATE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             IF         COND(&ACODCVT *EQ '*YES') THEN(DO)
+                DLTF       FILE(QTEMP/RUNSQLSTM)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/RUNSQL)
+                MONMSG     MSGID(CPF0000)
+                CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                             MBR(RUNSQLSTM) TEXT('Temporary source +
+                             file for UPC000011')
+                RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                             NEWOBJ(RUNSQL)
+             ENDDO
+ 
+             CLRPFM     FILE(UPPOSTPD)
+ 
+/* Copy old file *NOCHK to allow for customer number attribute changes; if  */
+/*  the 4-long account codes were being used then ACODQQ will get populated */
+/*  at this point too.                                                      */
+             CPYF       FROMFILE(&FMLIB/EODPOPD) TOFILE(UPPOSTPD) +
+                          TOMBR(OLD) MBROPT(*REPLACE) CRTFILE(*NO) +
+                          FMTOPT(*NOCHK)
+/* Copy new file as is; the formats should be identical and only the 10-long */
+/*  account field is poulated.                                               */
+             CPYF       FROMFILE(&TOLIB/EODPOPD) TOFILE(UPPOSTPD) +
+                          TOMBR(NEW) MBROPT(*REPLACE)
+ 
+/* If the account code has been changed between versions then call program */
+/*  to update the 'NEW' ACODQQ based on the account code conversion.       */
+             IF         COND(&ACODCVT *EQ '*YES') THEN(DO)
+                OVRDBF     FILE(UPPOSTPD) MBR(OLD) OVRSCOPE(*JOB)
+                CALL       PGM(UPC000012) PARM('UPPOSTPD  ' 'ACODQQ    +
+                             ' 'ACOD      ')
+                DLTOVR     FILE(UPPOSTPD) LVL(*JOB)
+             ENDDO
+ 
+/* Call program to summarise posting records for old EODPOPD ... */
+             OVRDBF     FILE(UPPOSTPD) MBR(OLD) OVRSCOPE(*JOB)
+             OVRDBF     FILE(UPPOSTL0) MBR(OLD) OVRSCOPE(*JOB)
+             CALL       PGM(UP000006)
+             DLTOVR     FILE(UPPOSTPD UPPOSTL0) LVL(*JOB)
+/* ... and new EODPOPD. */
+             OVRDBF     FILE(UPPOSTPD) MBR(NEW) OVRSCOPE(*JOB)
+             OVRDBF     FILE(UPPOSTL0) MBR(NEW) OVRSCOPE(*JOB)
+             CALL       PGM(UP000006)
+             DLTOVR     FILE(UPPOSTPD UPPOSTL0) LVL(*JOB)
+ 
+/* Call program to compare data between old and new; check for postings with */
+/*  matching accounts but mismatched totals and postings for accounts that   */
+/*  don't exist on the 'new' file.                                           */
+             OVRDBF     FILE(POST1) TOFILE(UPPOSTPD) MBR(OLD) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(POST2) TOFILE(UPPOSTPD) MBR(NEW) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(UPPOSTL0) MBR(NEW) OVRSCOPE(*JOB)
+             CALL       PGM(UP000007) PARM('O')
+             DLTOVR     FILE(POST1 POST2) LVL(*JOB)
+/* Call program again but only to check for postings for accounts that don't */
+/*  exist on the 'old' file'.                                                */
+             OVRDBF     FILE(POST2) TOFILE(UPPOSTPD) MBR(OLD) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(POST1) TOFILE(UPPOSTPD) MBR(NEW) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(UPPOSTL0) MBR(NEW) OVRSCOPE(*JOB)
+             CALL       PGM(UP000007) PARM('N')
+             DLTOVR     FILE(POST1 POST2) LVL(*JOB)
+ 
+/* Call program to run report.  */
+             CALL       PGM(UP000008) PARM(&RUNDATE &FMLIB &TOLIB)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

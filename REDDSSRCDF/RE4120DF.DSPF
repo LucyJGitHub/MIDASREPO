@@ -1,0 +1,607 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE Foreign Exchange Transactions')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Retail Module                                        *
+     A*                                                               *
+     A*  DSPF/RE4120DF - Foreign Exchange Transactions                *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 253895 (BUG17972)  Date 28Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CRT026             Date 22May06               *
+      *                 BUG7819            Date 31Aug05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT002             Date 01Dec95               *
+      *                 S01408             Date 12Feb96               *
+     A*                 093692             DATE 18SEP95               *
+     A*                 090199             DATE 07JUL95               *
+     A*                 CRT001  *CREATE    DATE 28FEB95               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  253895 - Removed CLRL keyword                                *
+      *  CRT026 - Retail Teller PAssword Change                       *
+      *  BUG7819 - If a retail account has insufficient funds,        *
+      *            the system simply drop a Cash Withdrawal           *
+      *            (non-account currency) transaction                 *
+     A*  CRT002 - Retail Branch Access.                               *
+     A*  S01408 - Addition of core hook RE4120DF01
+     A*           Addition of core hook RE4120DF02
+     A*           Addition of core hook RE4120DF03
+     A*           Addition of core hook RE4120DF04
+     A*  093692 - Foreign exchange transaction should allow the user  *
+     A*           to enter the rate both ways (not relative to which- *
+     A*           ever is the buy or sell CCYs).                      *
+     A*  090199 - RE-COMPILATION TO CORRECT MULTI-LANGUAGE            *
+     A*           REFERENCES.                                         *
+     A*                                                               *
+     A*  CRT001 - Retail Teller System                                *
+     A*                                                               *
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      REF(MFRFL)
+     A                                      MSGLOC(24)
+      *
+      *---------------------------------------------------------------------
+      *
+      ** Foreign Exchange Transaction
+     A          R RE4120F1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      OVERLAY
+     A** Start of Change 253895
+     A**********                            CLRL(*NO)                                         253895
+     A** End of Change 253895
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4120'
+     A                                  1 26'FOREIGN EXCHANGE TRANSACTIONS'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SMRDT     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWID      R           2  2REFFLD(JOJOB)
+     A*********              Start of Change               /CRT002/
+     A  35                              2 28'BUYING TRAVELLERS CHEQUES'
+     A  35                                  DSPATR(HI)
+     A  36                              2 28'SELLING TRAVELLERS CHEQUES'
+     A  36                                  DSPATR(HI)
+     A*                      End of Change                 /CRT002/
+     A                                  2 67'TIME'
+     A                                  2 73TIME
+     A                                      EDTWRD('0 :  :  ')
+      *
+      *
+     A                                 13  6'Buy trans. type'
+     A            SBTRTY         5A  B 13 24TEXT('BUY TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N11                                  DSPATR(UL)
+     A  11                                  DSPATR(PC RI)
+      *
+     A                                 14  6'Buy currency'
+     A            SBCCY          3A  B 14 24TEXT('BUY CURRENCY')
+     A                                      DSPATR(HI)
+     A N12                                  DSPATR(UL)
+     A  12                                  DSPATR(PC RI)
+      *
+     A                                 15  6'Buy amount'
+     A            SBAMT         14A  B 15 24TEXT('BUY AMOUNT')
+     A                                      DSPATR(HI)
+     A N13                                  DSPATR(UL)
+     A  13                                  DSPATR(PC RI)
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5A  B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18                                  DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+     A                                 14 41'Charges Ccy Ind. (B/S)'
+     A            SCHIND         1A  B 14 64TEXT('CHARGES CCY INDICATOR')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Percentage'
+     A            SCPER          5A  B 15 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19                                  DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 16 41'Charge Amount'
+     A            SCAMT         14A  B 16 64TEXT('CHARGE AMOUNT')
+     A                                      DSPATR(HI)
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(PC RI)
+      *
+     A                                 16  6'Exchange rate'
+     A            SEXRT         14A  B 16 24TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A N14                                  DSPATR(UL)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 17  6'Sell trans. type'
+     A            SSTRTY         5A  B 17 24TEXT('SELL TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N15                                  DSPATR(UL)
+     A  15                                  DSPATR(PC RI)
+     A*
+     A*/COPY WNCPYSRC,RE4120DF01
+     A*
+      *
+     A                                 18  6'Sell currency'
+     A            SSCCY          3A  B 18 24TEXT('SELL CURRENCY')
+     A                                      DSPATR(HI)
+     A N16                                  DSPATR(UL)
+     A  16                                  DSPATR(PC RI)
+      *
+     A                                 19  6'Sell amount'
+     A            SSAMT         14A  B 19 24TEXT('SELL AMOUNT')
+     A                                      DSPATR(HI)
+     A N33                                  DSPATR(UL)
+     A  33                                  DSPATR(PC RI)
+      *
+     A                                 20  6'Dept code'
+     A            SDEPC          3A  B 20 24TEXT('DEPT CODE')
+     A                                      DSPATR(HI)
+     A N17                                  DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A                                 21  6'Advice Narrative'
+     A            SNARR         30A  B 21 24TEXT('NARRATIVE')
+     A                                      DSPATR(HI UL)
+     A  25                             20 41'Profit Centre'
+     A            SPRFC          4   B 20 64TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A       N26                            DSPATR(UL)
+     A        26                            DSPATR(PC RI)
+     A N25                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 23  2'F3=Exit  F5=Refresh'
+      *
+     A*/COPY WNCPYSRC,RE4120DF05
+      *---------------------------------------------------------------------
+     A          R RE4120F2                  TEXT('FOREIGN EXCHANGE TRANSACTION')
+     A                                      OVERLAY
+     A** Start of Change 253895
+     A**********                            CLRL(*NO)                                         253895
+     A** End of Change 253895
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4120'
+     A                                  1 26'FOREIGN EXCHANGE TRANSACTIONS'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SMRDT     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWID      R           2  2REFFLD(JOJOB)
+     A*********              Start of Change               /CRT002/
+     A  35                              2 28'BUYING TRAVELLERS CHEQUES'
+     A  35                                  DSPATR(HI)
+     A  36                              2 28'SELLING TRAVELLERS CHEQUES'
+     A  36                                  DSPATR(HI)
+     A*                      End of Change                 /CRT002/
+     A                                  2 67'TIME'
+     A                                  2 73TIME
+     A                                      EDTWRD('0 :  :  ')
+      *
+      *
+     A            SMSG1         72   O 08 06TEXT('MESSAGE ARRAY 1')
+     A**********                            DSPATR(HI RI)                                    BUG7819
+      *
+     A            SMSG2         72   O 09 06TEXT('MESSAGE ARRAY 2')
+     A**********                            DSPATR(HI RI)                                    BUG7819
+      *
+     A                                 10 06'TRANSACTION TERMINATED'
+     A**********                            DSPATR(HI)                                       BUG7819
+      *
+     A                                 12  6'Enter next -'
+      *
+     A                                 13  6'Buy trans. type'
+     A            SBTRTY         5A  B 13 24TEXT('BUY TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N11                                  DSPATR(UL)
+     A  11                                  DSPATR(PC RI)
+      *
+     A                                 14  6'Buy currency'
+     A            SBCCY          3A  B 14 24TEXT('BUY CURRENCY')
+     A                                      DSPATR(HI)
+     A N12                                  DSPATR(UL)
+     A  12                                  DSPATR(PC RI)
+      *
+     A                                 15  6'Buy amount'
+     A            SBAMT         14A  B 15 24TEXT('BUY AMOUNT')
+     A                                      DSPATR(HI)
+     A N13                                  DSPATR(UL)
+     A  13                                  DSPATR(PC RI)
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5A  B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18                                  DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charges Ccy Ind. (B/S)'
+     A            SCHIND         1A  B 14 64TEXT('CHARGES CCY INDICATOR')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Percentage'
+     A            SCPER          5A  B 15 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19                                  DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 16 41'Charge Amount'
+     A            SCAMT         14A  B 16 64TEXT('CHARGE AMOUNT')
+     A                                      DSPATR(HI)
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(PC RI)
+      *
+     A                                 16  6'Exchange rate'
+     A            SEXRT         14A  B 16 24TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A N14                                  DSPATR(UL)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 17  6'Sell trans. type'
+     A            SSTRTY         5A  B 17 24TEXT('SELL TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N15                                  DSPATR(UL)
+     A  15                                  DSPATR(PC RI)
+     A*
+     A*/COPY WNCPYSRC,RE4120DF02
+     A*
+      *
+     A                                 18  6'Sell currency'
+     A            SSCCY          3A  B 18 24TEXT('SELL CURRENCY')
+     A                                      DSPATR(HI)
+     A N16                                  DSPATR(UL)
+     A  16                                  DSPATR(PC RI)
+      *
+     A                                 19  6'Sell amount'
+     A            SSAMT         14A  B 19 24TEXT('SELL AMOUNT')
+     A                                      DSPATR(HI)
+     A N33                                  DSPATR(UL)
+     A  33                                  DSPATR(PC RI)
+      *
+     A                                 20  6'Dept code'
+     A            SDEPC          3A  B 20 24TEXT('DEPT CODE')
+     A                                      DSPATR(HI)
+     A N17                                  DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A                                 21  6'Advice Narrative'
+     A            SNARR         30A  B 21 24TEXT('NARRATIVE')
+     A                                      DSPATR(HI UL)
+     A  25                             20 41'Profit Centre'
+     A            SPRFC          4   B 20 64TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A       N26                            DSPATR(UL)
+     A        26                            DSPATR(PC RI)
+     A N25                                  DSPATR(ND PR)
+     A*/COPY WNCPYSRC,RE4120DF06
+     A                                      OVRDTA
+     A                                 23  2'F3=Exit  F5=Refresh'
+      *
+      *---------------------------------------------------------------------
+     A          R RE4120F3                  TEXT('FOREIGN EXCHANGE TRANSACTION')
+     A                                      OVERLAY
+     A** Start of Change 253895
+     A**********                            CLRL(*NO)                                         253895
+     A** End of Change 253895
+     A                                      PUTOVR
+     A                                      CF03
+     A                                      CF05
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4120'
+     A                                  1 26'FOREIGN EXCHANGE TRANSACTIONS'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SMRDT     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWID      R           2  2REFFLD(JOJOB)
+     A*********              Start of Change               /CRT002/
+     A  35                              2 28'BUYING TRAVELLERS CHEQUES'
+     A  35                                  DSPATR(HI)
+     A  36                              2 28'SELLING TRAVELLERS CHEQUES'
+     A  36                                  DSPATR(HI)
+     A*                      End of Change                 /CRT002/
+     A                                  2 67'TIME'
+     A                                  2 73TIME
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A  24                             10 06'TRANS NO. COMPLETED -'
+     A                                      DSPATR(HI)
+     A  24        @TTRNO         5S 0O 10 28TEXT('TELLER TRANS NO')
+     A                                      DSPATR(HI)
+      *
+     A                                 12  6'Enter next -'
+      *
+     A                                 13  6'Buy trans. type'
+     A            SBTRTY         5A  B 13 24TEXT('BUY TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N11                                  DSPATR(UL)
+     A  11                                  DSPATR(PC RI)
+      *
+     A                                 14  6'Buy currency'
+     A            SBCCY          3A  B 14 24TEXT('BUY CURRENCY')
+     A                                      DSPATR(HI)
+     A N12                                  DSPATR(UL)
+     A  12                                  DSPATR(PC RI)
+      *
+     A                                 15  6'Buy amount'
+     A            SBAMT         14A  B 15 24TEXT('BUY AMOUNT')
+     A                                      DSPATR(HI)
+     A N13                                  DSPATR(UL)
+     A  13                                  DSPATR(PC RI)
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5A  B 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N18                                  DSPATR(UL)
+     A  18                                  DSPATR(PC RI)
+      *
+     A                                 14 41'Charges Ccy Ind. (B/S)'
+     A            SCHIND         1A  B 14 64TEXT('CHARGES CCY INDICATOR')
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(UL)
+     A  30                                  DSPATR(PC RI)
+      *
+     A                                 15 41'Charge Percentage'
+     A            SCPER          5A  B 15 64TEXT('CHARGES %')
+     A                                      DSPATR(HI)
+     A N19                                  DSPATR(UL)
+     A  19                                  DSPATR(PC RI)
+      *
+     A                                 16 41'Charge Amount'
+     A            SCAMT         14A  B 16 64TEXT('CHARGE AMOUNT')
+     A                                      DSPATR(HI)
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(PC RI)
+      *
+     A                                 16  6'Exchange rate'
+     A            SEXRT         14A  B 16 24TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+     A N14                                  DSPATR(UL)
+     A  14                                  DSPATR(PC RI)
+      *
+     A                                 17  6'Sell trans. type'
+     A            SSTRTY         5A  B 17 24TEXT('SELL TRANS. TYPE')
+     A                                      DSPATR(HI)
+     A N15                                  DSPATR(UL)
+     A  15                                  DSPATR(PC RI)
+      *
+     A*
+     A*/COPY WNCPYSRC,RE4120DF03
+     A*
+     A                                 18  6'Sell currency'
+     A            SSCCY          3A  B 18 24TEXT('SELL CURRENCY')
+     A                                      DSPATR(HI)
+     A N16                                  DSPATR(UL)
+     A  16                                  DSPATR(PC RI)
+      *
+     A                                 19  6'Sell amount'
+     A            SSAMT         14A  B 19 24TEXT('SELL AMOUNT')
+     A                                      DSPATR(HI)
+     A N33                                  DSPATR(UL)
+     A  33                                  DSPATR(PC RI)
+      *
+     A                                 20  6'Dept code'
+     A            SDEPC          3A  B 20 24TEXT('DEPT CODE')
+     A                                      DSPATR(HI)
+     A N17                                  DSPATR(UL)
+     A  17                                  DSPATR(PC RI)
+      *
+     A                                 21  6'Advice Narrative'
+     A            SNARR         30A  B 21 24TEXT('NARRATIVE')
+     A                                      DSPATR(HI UL)
+     A  25                             20 41'Profit Centre'
+     A            SPRFC          4   B 20 64TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A       N26                            DSPATR(UL)
+     A        26                            DSPATR(PC RI)
+     A N25                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A                                 23  2'F3=Exit  F5=Refresh'
+     A*/COPY WNCPYSRC,RE4120DF07
+      *
+      *---------------------------------------------------------------------
+     A          R RE4120F4                  TEXT('FOREIGN EXCHANGE TRANSACTION')
+     A                                      OVERLAY
+     A** Start of Change 253895
+     A**********                            CLRL(*NO)                                         253895
+     A** End of Change 253895
+     A                                      PUTOVR
+     A                                      CF01
+     A                                      CF03
+     A                                      CF12
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'RE4120'
+     A                                  1 26'FOREIGN EXCHANGE TRANSACTIONS'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            SMRDT     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWID      R           2  2REFFLD(JOJOB)
+     A*********              Start of Change               /CRT002/
+     A  35                              2 28'BUYING TRAVELLERS CHEQUES'
+     A  35                                  DSPATR(HI)
+     A  36                              2 28'SELLING TRAVELLERS CHEQUES'
+     A  36                                  DSPATR(HI)
+     A*                      End of Change                 /CRT002/
+     A                                  2 67'TIME'
+     A                                  2 73TIME
+     A                                      EDTWRD('0 :  :  ')
+      *
+     A                                 04 06'Sell ccy equivalent'
+     A            @SCYEQ        14A  O 04 30TEXT('SELL CCY EQUIVALENT')
+     A                                      DSPATR(HI)
+      * display sell ccy here as well to keep client happy
+     A            @SSCCY         3A  O 04 45TEXT('SELL CURRENCY')
+     A                                      DSPATR(HI)
+      *
+     A  23        SMSG1         72   O 08 06TEXT('MESSAGE ARRAY 1')
+     A                                      DSPATR(HI RI)
+      *
+     A  23        SMSG2         72   O 09 06TEXT('MESSAGE ARRAY 2')
+     A                                      DSPATR(HI RI)
+      *
+      **Start of change CRT026
+     A  54
+     AO 21                             10 06'OVERRIDE REQUIRED'
+     A**21******                       10 06'OVERRIDE REQUIRED'
+      **End of change CRT026
+     A                                      DSPATR(HI)
+      **Start of change CRT026
+     A*N21******                       10 06'VALIDATION COMPLETE'
+     A N21N54                          10 06'VALIDATION COMPLETE'
+      **End of change CRT026
+     A                                      DSPATR(HI)
+      *
+      *
+     A                                 13  6'Buy trans. type'
+     A            SBTRTY         5A  O 13 24TEXT('BUY TRANS. TYPE')
+     A                                      DSPATR(HI)
+      *
+     A                                 14  6'Buy currency'
+     A            SBCCY          3A  O 14 24TEXT('BUY CURRENCY')
+     A                                      DSPATR(HI)
+      *
+     A                                 15  6'Buy amount'
+     A            SBAMT         14A  O 15 24TEXT('BUY AMOUNT')
+     A                                      DSPATR(HI)
+     A                                 13 41'Charge trans. type'
+     A            SCTRTY         5A  O 13 64TEXT('CHARGE TRANS. TYPE')
+     A                                      DSPATR(HI)
+      *
+     A                                 14 41'Charges Ccy Ind. (B/S)'
+     A            SCHIND         1A  O 14 64TEXT('CHARGES CCY INDICATOR')
+     A                                      DSPATR(HI)
+      *
+     A                                 15 41'Charge Percentage'
+      *                                     Start of change /093692/
+     A            SCPER          5A  O 15 64TEXT('CHARGES %')
+      *                                       End of change /093692/
+     A                                      DSPATR(HI)
+      *
+     A                                 16 41'Charge Amount'
+     A            SCAMT         14A  O 16 64TEXT('CHARGE AMOUNT')
+     A                                      DSPATR(HI)
+      *
+     A                                 16  6'Exchange rate'
+     A            SEXRT         14A  O 16 24TEXT('EXCHANGE RATE')
+     A                                      DSPATR(HI)
+      *
+     A                                 17  6'Sell trans. type'
+     A            SSTRTY         5A  O 17 24TEXT('SELL TRANS. TYPE')
+     A                                      DSPATR(HI)
+      *
+     A*
+     A*/COPY WNCPYSRC,RE4120DF04
+     A*
+     A                                 18  6'Sell currency'
+     A            SSCCY          3A  O 18 24TEXT('SELL CURRENCY')
+     A                                      DSPATR(HI)
+      *
+     A                                 19  6'Sell amount'
+     A            SSAMT         14A  O 19 24TEXT('SELL AMOUNT')
+     A                                      DSPATR(HI)
+      *
+     A                                 20  6'Dept code'
+     A            SDEPC          3A  O 20 24TEXT('DEPT CODE')
+     A                                      DSPATR(HI)
+      *
+     A                                 21  6'Advice Narrative'
+     A            SNARR         30A  O 21 24TEXT('NARRATIVE')
+     A                                      DSPATR(HI)
+     A  25                             20 41'Profit Centre'
+     A            SPRFC          4   O 20 64TEXT('PROFIT CENTRE')
+     A                                      DSPATR(HI)
+     A N25                                  DSPATR(ND)
+      *
+      **Start of change CRT026
+     A**********                       22  6'Override teller id?'
+     A N54                             22  6'Override teller id?'
+      **End of change CRT026
+     A N21                                  DSPATR(ND)
+      **Start of change CRT026
+     A**********  SOTLI          3A  B 22 26TEXT('OVERRIDE TELLER ID')
+     A N54        SOTLI          3A  B 22 26TEXT('OVERRIDE TELLER ID')
+      **End of change CRT026
+     A N21                                  DSPATR(ND PR)
+     A  21                                  DSPATR(HI)
+     A N11                                  DSPATR(UL)
+     A  11                                  DSPATR(PC RI)
+      *
+      **Start of change CRT026
+     A**********                       22 31'Passcode?'
+     A N54                             22 31'Passcode?'
+      **End of change CRT026
+     A N21                                  DSPATR(ND)
+      **Start of change CRT026
+     A**********  SOTPC          6A  B 22 41TEXT('OVERRIDE TELLER PASS CODE')
+     A N54        SOTPC          6A  B 22 41TEXT('OVERRIDE TELLER PASS CODE')
+      **End of change CRT026
+     A                                      DSPATR(ND)
+     A N21                                  DSPATR(PR)
+     A N12                                  DSPATR(UL)
+     A  12                                  DSPATR(PC RI)
+      *
+      **Start of change CRT026
+     A  54                             22  6'Override user id?'
+     A  54        SOVUR         10A  B 22 24TEXT('OVERRIDE USER ID')
+     A  54                                  DSPATR(HI)
+     A N11                                  DSPATR(UL)
+     A  11                                  DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+     A  54                             22 36'Password?'
+     A  54        SOVPW         10A  B 22 46TEXT('OVERRIDE TELLER PASSWORD')
+     A                                      DSPATR(ND)
+     A N12                                  DSPATR(UL)
+     A  12                                  DSPATR(PC RI)
+     A                                      OVRDTA
+      *
+      **End of change CRT026
+     A*/COPY WNCPYSRC,RE4120DF09
+     A                                 23  2'F1=Accept  F3=Exit'
+     A                                 23 22'F12=Previous'
+     A*/COPY WNCPYSRC,RE4120DF08
+      *
+      *---------------------------------------------------------------------
+     A          R RE4120S0
+      *
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            SMGKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+      *
+      *---------------------------------------------------------------------
+     A          R RE4120C0                  TEXT('CONTROL RECORD')
+      *
+     A                                      SFLCTL(RE4120S0)
+     A                                      SFLSIZ(10)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  10                                  SFLEND
+     A            SPGMQ                     SFLPGMQ
+      *
+      ****************************************************************

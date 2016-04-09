@@ -1,0 +1,130 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Run SCRAMBLE tool')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000017 - Run SCRAMBLE tool                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27787 *CREATE   Date 12Jul10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27787 - New version of SCRAMBLE utility                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(5)
+ 
+             DCL        VAR(&SAVEFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDDTA) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FILENOTF) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             DCLF       FILE(UTSCRML0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UT0000017')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&LAYER *NE '*ALL' *AND &LAYER *NE +
+                          &SBLAYR) THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+/* If this is a new file then check if the file exists and display list of */
+/*  fields. */
+             IF         COND(&SBFILE *NE &SAVEFILE) THEN(DO)
+                CHGVAR     VAR(&FILENOTF) VALUE('N')
+                CHGVAR     VAR(&SAVEFILE) VALUE(&SBFILE)
+                CHKOBJ     OBJ(&SBFILE) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&FILENOTF) VALUE('Y')
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+                CALL       PGM(UTC000004) PARM(&SBFILE '*LIBL' +
+                             'UTC000017F' '*FIRST' '*REPLACE')
+                OVRDBF     FILE(UPFFDSTPD) TOFILE(UTC000017F)
+                CALL       PGM(UTAOFFDS) PARM(&SBFILE ' ' ' ' '*FIRST' +
+                             &RTNCODE &FLDDTA)
+                DLTOVR     FILE(UPFFDSTPD)
+                CHGVAR     VAR(&FMT) VALUE(%SST(&FLDDTA 47 10))
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&FILENOTF *EQ 'Y') THEN(DO)
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+             ENDDO
+ 
+/* Check that field the field exists.  */
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(UTC000017F)
+             CALL       PGM(UTAOFFDS) PARM(&SBFILE &FMT &SBFLD +
+                          '*RTV' &RTNCODE &FLDDTA)
+             DLTOVR     FILE(UPFFDSTPD)
+             IF         COND(&RTNCODE *EQ '*NRF') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+/* Call program to build SQL statement. */
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(UTC000017F)
+             CALL       PGM(UT000024) PARM(&SBFILE &SBFLD &FMT)
+             DLTOVR     FILE(UPFFDSTPD)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

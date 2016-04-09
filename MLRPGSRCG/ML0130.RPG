@@ -1,0 +1,1064 @@
+     H        1     J
+      *****************************************************************
+/*OVR *: OVRDBF MULTB ZZGBLANG                                      : *
+/*OVR *: OVRDBF MULXB ZZGBXXLANG                                    : *   CUT004
+/*OVR *: OVRDBF MULTLANG ZZGBLANG                                   : *
+/*OVR *: OVRDBF MULTLANX ZZGBXXLANG                                 : *   CUT004
+/*OVR *: OVRDBF MULTA ZZGBLANGL                                     : *
+/*OVR *: OVRDBF MULXA ZZGBXLANGL                                    : *   CUT004
+/*OVR *: OVRDBF MULTO ZZGBLANGO                                     : *
+/*OVR *: OVRDBF MULXO ZZGBXLANGO                                    : *   CUT004
+/*OVR *: OVRDBF MULTN ZZGBLANGN                                     : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ML Assign MSGIDs to text in DSPF')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS  MULTI LANGUAGE MODULE                                 *
+      *                                                               *
+      *  ML0130 - ASSIGN MESSAGE ID'S TO TEXT IN DSPF                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 243900             Date 13Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK018             DATE 30Jan04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 173348             DATE 10JAN00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUT004             DATE 24SEP98               *
+      *                 087363             DATE 10MAY95               *
+      *                 S01516             DATE 18JUL94               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  243900 - Skip *DS3 or *DS4 on indicator area.                *
+      *  CPK018 - MidasPlus packaging.                                *
+      *           - SDLANGL0 in in the zone but this program is in    *
+      *             the global layer. MLLANGL0 created to hold the    *
+      *             global data.                                      *
+      *           - Increase in the size of the arrays used in program*
+      *             to allow for the multi-language of display files  *
+      *             with 132 columns and 27 lines (*DS4)              *
+      *  173348 - CRTOBJ adds multlang reference to core multilang    *
+      *           ref file when not in Non-Core mode                  *
+      *           Non-core messages being written to core non-english *
+      *           message files                                       *
+      *  CUT004 - Allow Core and Non-Core mode of compilation for     *
+      *           Multilanguage                                       *
+      *  087363 - Remove code which prevents MQ display files being   *
+      *           created with message file text (multilanguaged)     *
+      *  S01516 - Incorporation into core                             *
+      *                                                               *
+      *****************************************************************
+     FRPGTEMP IP  F      80            DISK
+     FRPGOUTP O   F      80            DISK                      A
+     FMULTLANGO   E           K        DISK                      A
+     FMULTLANXO   E           K        DISK                      A        CUT004
+     F            MLTLANGR                          KRENAMEMULTXR         CUT004
+     FMULTA   IF  E           K        DISK
+     F            MLTLANGR                          KRENAMEMULTAR
+     FMULXA   IF  E           K        DISK                               CUT004
+     F            MLTLANGR                          KRENAMEMULXAR         CUT004
+     FMULTB   IF  E           K        DISK
+     F            MLTLANGR                          KRENAMEMULTBR
+     FMULXB   IF  E           K        DISK                               CUT004
+     F            MLTLANGR                          KRENAMEMULXBR         CUT004
+     FMULTN   IF  E           K        DISK
+     F            MLTLANGR                          KRENAMEMULTNR
+     FMULTO   IF  E           K        DISK
+     F            MLTLANGR                          KRENAMEMULTOR
+     FMULXO   IF  E           K        DISK                               CUT004
+     F            MLTLANGR                          KRENAMEMULXOR         CUT004
+     F*SDLANGL0IF*E*******    K        DISK                                                   CPK018
+     FMLLANGL0IF  E           K        DISK                                                   CPK018
+     FSFLMSGPFO   E                    DISK
+      * Field/Msg.Id for SFL texts
+      *
+     FQSYSPRT O   F     132     OF     PRINTER
+     E**********          AR1        80  1               Input Src.Data                       CPK018
+     E**********          AR2        80  1               MSG Text... line                     CPK018
+     E**********          AR3        80  1               DDS Output Line                      CPK018
+     E**********          AR4        80  1               Work Array                           CPK018
+     E**********          AR5        80  1               DDS Output Coment                    CPK018
+     E                    AR1       132  1               Input Src.Data                       CPK018
+     E                    AR2       132  1               MSG Text... line                     CPK018
+     E                    AR3       132  1               DDS Output Line                      CPK018
+     E                    AR4       132  1               Work Array                           CPK018
+     E                    AR5       132  1               DDS Output Coment                    CPK018
+     E                    ARA      1024  1               Input Text......
+     E                    ARB      1024  1               Text work array
+      *
+     E                    TEST    1   1  1
+     E                    MESS    1   3 80
+     E                    @ID    14  14  1
+     IRPGTEMP NS
+     I                                        1  80 DATA
+     I                                        7   7 @CMT
+     I                                        7  16 @IND
+     I                                        9  12 @DS34                                     243900
+     I                                       17  17 @FMT  L1
+     I                                       19  28 @FLDN
+     I                                       33  34 @LNGTH
+     I                                       40  41 @LINE
+     I                                       42  44 @POS
+     I                                       42  42 @P1
+     I                                       43  43 @P2
+     I                                       45  49 @45#49
+     I                                       45  48 @45#48
+     IMULTAR
+     I              DSPFNM                          DSPFA
+     I              MSGFNM                          MSGFA
+     I              MULNBR                          MNBRA
+     I              RCDFMT                          FMTNA
+     I              LEN                             LENRA
+     IMULXAR                                                              CUT004
+     I              DSPFNM                          DSPFXA                CUT004
+     I              MSGFNM                          MSGFXA                CUT004
+     I              MULNBR                          MNBRXA                CUT004
+     I              RCDFMT                          FMTNXA                CUT004
+     I              LEN                             LENRXA                CUT004
+     IMULTBR
+     I              DSPFNM                          DSPFB
+     I              MSGFNM                          MSGFB
+     I              MULNBR                          MNBRB
+     I              RCDFMT                          FMTNB
+     I              LEN                             LENRB
+     IMULXBR                                                              CUT004
+     I              DSPFNM                          DSPFXB                CUT004
+     I              MSGFNM                          MSGFXB                CUT004
+     I              MULNBR                          MNBRXB                CUT004
+     I              RCDFMT                          FMTNXB                CUT004
+     I              LEN                             LENRXB                CUT004
+     IMULTNR
+     I              MSGDNM                          DNMN
+     I              MSGDNB                          DNBN
+     I              MSGFNM                          FNMN
+     I              DSPFNM                          DFNN
+     I              RCDFMT                          FMTN
+     I              COL                             COLN
+     I              ROL                             ROLN
+     I              LEN                             LENN
+     I              MODU                            MODUN
+     I              MULNBR                          MNBRN
+     IMULTOR
+     I              MSGDNM                          DNMNO
+     I              MSGDNB                          DNBNO
+     I              MSGFNM                          FNMNO
+     I              DSPFNM                          DFNNO
+     I              RCDFMT                          FMTNO
+     I              COL                             COLNO
+     I              ROL                             ROLNO
+     I              LEN                             LENNO
+     I              MODU                            MODUO
+     I              MULNBR                          MNBRO
+      *
+     IMULXOR                                                              CUT004
+     I              MSGDNM                          DNMNXO                CUT004
+     I              MSGDNB                          DNBNXO                CUT004
+     I              MSGFNM                          FNMNXO                CUT004
+     I              DSPFNM                          DFNNXO                CUT004
+     I              RCDFMT                          FMTNXO                CUT004
+     I              COL                             COLNXO                CUT004
+     I              ROL                             ROLNXO                CUT004
+     I              LEN                             LENNXO                CUT004
+     I              MODU                            MODUXO                CUT004
+     I              MULNBR                          MNBRXO                CUT004
+      *
+     I            DS
+     I                                        1   7 MSGDNB
+     I                                        4   7 NUMB
+     I                                        3   3 #ID
+     I            DS
+     I                                        1  10 WMSGF
+     I                                        1   2 WFNM
+     I            DS
+     I                                        1  10 OMSGF
+     I                                        1   2 OFNM
+     I                                        3   4 OLAN
+     I****************************************5   8 OMSF                  173348
+     I                                        5  10 OMSF                  173348
+     I            DS
+     I                                        1  10 MNBRN
+     I                                        4   6 MNBRN2
+     I            DS
+     I                                        1   3 POSDS
+     I                                        1   1 P1
+     I                                        2   2 P2
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           MSGFNM
+     C                     PARM           DSPFNM
+     C                     PARM           LIBRAR 10
+     C                     PARM           MULTLA 10
+     C                     PARM           MODUL   2
+     C                     PARM           CORE    1                       CUT004
+     C                     PARM           MSGFNX 10                       CUT004
+      *
+      *-Initialise all work fileds---------------FIRST CYCLE-----------
+      *
+     C           *IN11     IFEQ '0'
+     C                     EXSR INZ
+     C                     EXSR INZ2
+     C                     MOVE '1'       *IN11
+     C                     END
+      *
+      *-Do NOT process MIDAS/Q source----------------------------------
+      *
+     C***********MODUL     CABEQ'MQ'      END              >>> END >>>    087363
+      *
+      *-Save Format level information----------------------------------
+      *
+     C           *INL1     IFEQ '1'
+     C           @FMT      ANDEQ'R'
+     C           @CMT      ANDEQ*BLANKS
+     C                     MOVEL@FLDN     RCDFMT
+     C                     MOVE '1'       *IN30
+     C                     MOVE '0'       *IN77
+     C                     END
+      *
+      *-Move Core DDS to Input Src Array ------------------------------
+      *
+     C                     MOVEADATA      AR1
+      *
+      *-Process lines not needing any change --------------------------
+      *
+     C                     EXSR NOCHG
+      *
+      *-Check pos 45-80 for 'Text.....' -------------------------------
+      *
+     C                     EXSR FIND
+      *
+      *-Process Completed TEXT..... -----------------------------------
+      *
+     C           SIGN      CASEQ'C'       TEXT
+     C                     END
+      *
+      *----------------------------------------------------------------
+      *
+     C           END       TAG                             <<<<< END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Total Time Processing                                        *
+      *                                                               *
+      *****************************************************************
+     CLR         *INLR     IFEQ '1'
+      *
+      *-Process Completed TEXT.....
+      *
+     CLR         SIGN      CASEQ'C'       TEXT
+     CLR                   END
+      *
+     CLR                   END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * NOCHG  ----                                                   *
+      *         Copy without change - Comments, Fields, Dsiplay Atr., *
+      *         Keywords (TIME,DATE) and Hidden Fields to the new DDS *
+      *****************************************************************
+     C           NOCHG     BEGSR
+      *
+      * Comment Line ------------------------------
+     C           @CMT      IFEQ '*'
+     C                     MOVEAAR1       DATA2  80
+     C                     EXCPTUPD1
+     C                     GOTO END                        >>> END >>>
+     C                     END
+      *                                                                                       243900
+      ** *DS3 or *DS4 line ------------------------                                           243900
+      *                                                                                       243900
+     C           @DS34     IFEQ '*DS3'                                                        243900
+     C           @DS34     OREQ '*DS4'                                                        243900
+     C                     MOVEAAR1       DATA2                                               243900
+     C                     EXCPTUPD1                                                          243900
+     C                     GOTO END                                                           243900
+     C                     END                                                                243900
+      *
+      * Save latest Line and Position values ------
+      *  First FMT has been read
+     C           *IN30     IFEQ '1'
+      * Save Line/Pos
+     C           @LINE     IFNE *BLANKS
+     C                     MOVE @LINE     #LINE
+     C                     MOVE @POS      #POS
+     C                     ELSE
+      * Calculate Position
+      * (#POS + @POS   + #LNGTH)
+     C           @P1       IFEQ '+'
+     C           @P2       OREQ '+'
+     C                     MOVE @POS      POSDS
+     C           P1        IFEQ '+'
+     C                     MOVE '0'       P1
+     C                     END
+     C           P2        IFEQ '+'
+     C                     MOVE '0'       P2
+     C                     END
+     C                     MOVE POSDS     WRK3N   30
+     C                     ADD  WRK3N     #POS
+     C                     ADD  #LNGTH    #POS
+     C                     END
+     C                     END
+      * Save Field Length
+      *  (If Field Length is equal to zero,
+      *   it will be calculated in FIND sr)
+     C           @POS      IFNE *BLANKS
+     C                     MOVE @LNGTH    #LNGTH
+     C                     END
+     C                     END
+      /EJECT
+      * Check for SFL -----------------------------
+     C           *IN77     IFEQ '0'
+     C           *IN30     ANDEQ'1'
+     C           @45#48    COMP 'SFL '                   77 SFL format
+     C     N77   @45#49    COMP ' SFL '                  77 SFL format
+     C                     END
+      * Next field --------------------------------
+     C           @FLDN     IFNE *BLANKS
+     C           SIGN      ANDEQ*BLANKS
+     C                     MOVEAAR1       DATA2
+     C                     EXCPTUPD1
+     C                     GOTO END                        >>> END >>>
+     C                     END
+      *
+      * Display Atributes, Keywords ---------------
+     C           @POS      IFEQ *BLANKS
+     C           SIGN      ANDEQ*BLANKS
+     C                     MOVEAAR1       DATA2
+     C                     EXCPTUPD1
+     C                     GOTO END                        >>> END >>>
+     C                     END
+      *
+      * TIME, DATE --------------------------------
+     C           @POS      IFNE *BLANKS
+     C           @45#49    IFEQ 'TIME '
+     C           @45#49    OREQ 'DATE '
+     C           @45#49    OREQ ' TIME'
+     C           @45#49    OREQ ' DATE'
+     C                     MOVEAAR1       DATA2
+     C                     EXCPTUPD1
+     C                     GOTO END                        >>> END >>>
+     C                     END
+     C                     END
+      *
+      * Hidden & Message fields -------------------
+     C           @LNGTH    IFNE *BLANKS
+     C           SIGN      ANDEQ*BLANKS
+     C                     MOVEAAR1       DATA2
+     C                     EXCPTUPD1
+     C                     GOTO END                        >>> END >>>
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * FIND   ----                                                   *
+      *         Copy without change - Comments, Fields, Dsiplay Atr., *
+      *         Keywords (TIME,DATE) and Hidden Fields to the new DDS *
+      *                                                               *
+      *****************************************************************
+     C           FIND      BEGSR
+      *
+      * Ignore Non-Text lines -----------------------------
+      *
+     C           SIGN      IFEQ ' '
+     C           AR1,45    ANDNE' '
+     C           AR1,45    ANDNEWTEST
+     C                     GOTO END1                       >>> END1 >>>
+     C                     END
+      *
+      *----------------------------------------------------
+      * Source Element being processed
+      *
+     C                     Z-ADD44        E       20
+      *
+      * Next Src. Element to be processed
+      *
+     C                     Z-ADD45        Z       20
+      *
+      * Process positions 45-80 ---------------------------
+      *
+     C           E         DOWLT80
+      *         =====================
+     C                     ADD  1         E
+     C                     ADD  1         Z
+      *
+      * Ignore First ' on text line ----------
+      *  and Save Text's Line/Pos/Inds
+      *                                          SIGN = ' '
+     C           SIGN      IFEQ ' '
+     C           *IN21     ANDEQ'0'
+     C           WTEST     LOKUPAR1,E                    53
+     C           E         ADD  1         Z
+     C                     MOVE @LINE     SLINE
+     C                     MOVE @POS      SPOS
+     C                     MOVE @IND      SIND
+     C                     MOVE @POS      POSDS
+     C                     MOVE '1'       *IN21
+     C                     GOTO BYP                        >>> BYP >>>
+     C                     END
+      /EJECT
+      *
+      * Ignore begining blanks after the---------
+      *  '+' continuation line
+      *                                          SIGN = '+'
+     C           SIGN      IFEQ '+'
+     C           *IN23     ANDEQ'0'
+      *
+     C           AR1,E     DOWEQ' '
+     C           E         ANDLT80
+     C                     ADD  1         E
+     C                     ADD  1         Z
+     C                     END
+      *
+     C                     MOVE '1'       *IN23
+      * Ignore blank line
+     C           AR1,E     CABEQ' '       BYP              >>> BYP >>>
+     C                     END
+      *
+      * Check for End Of Text and ------------
+      *  duplicate quotes
+      *                                          ARE,E =  '
+     C           AR1,E     IFEQ WTEST
+      * Ignore ''
+     C           Z         IFLT 81
+     C           AR1,Z     ANDEQWTEST
+     C                     ADD  1         E
+     C                     ADD  1         Z
+     C                     GOTO BLKX                       >>> BLKX >>>
+     C                     END
+      *
+      * Save Display Atributes, If any found at end of TEXT...
+      *
+     C                     MOVE *BLANKS   #ATR   36
+     C           Z         IFLE 80
+     C                     MOVEAAR1,Z     #ATR
+     C                     END
+      *
+      * Set TEXT completed sign
+     C                     Z-ADDF         #LNGTH
+     C                     Z-ADDF         F2
+     C                     MOVEL'C'       SIGN
+     C                     GOTO END1                       >>> END1 >>>
+     C                     END
+      *---------------------------------------
+     C           BLKX      TAG                             <<<<< BLKX
+      *---------------------------------------
+      /EJECT
+      *
+      * Check for TEXT... Continuation -------
+      *                                          ARE,E =  + , -
+     C           AR1,E     IFEQ '-'
+     C           AR1,E     OREQ '+'
+      *
+      * Check for imbeded +,- in the TEXT
+     C                     MOVE *BLANKS   #AR1   40
+     C           Z         IFLE 80
+     C                     MOVEAAR1,Z     #AR1
+     C                     END
+      *
+     C           #AR1      IFEQ *BLANKS
+     C                     MOVE AR1,E     SIGN
+     C                     GOTO END1                       >>> END1 >>>
+     C                     END
+     C                     END
+      *
+      * Save TEXT.... element for outpot -----
+      *
+     C                     ADD  1         F
+     C                     MOVE AR1,E     ARA,F
+      *
+      *---------------------------------------
+     C           BYP       TAG                             <<<<< BYP
+      *---------------------------------------
+      * E DOWLT 80 - end
+     C                     END
+      *
+      *---------------------------------------
+     C           END1      TAG                             <<<<< END1
+      *---------------------------------------
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN23
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * TEXT   ----                                                   *
+      *         Process Completed TEXT.....  for output to new DDS    *
+      *         If TEXT.... *GT 80 char., splitup into seperate lines *
+      *                                                               *
+      *****************************************************************
+     C           TEXT      BEGSR
+      *
+     C           NXTLIN    TAG                             <<<< NXTLIN
+      *
+     C                     MOVE *BLANKS   AR2
+     C                     MOVE *BLANKS   AR4
+      *
+      *         position   +  length
+     C           #POS      ADD  F2        WRK4N   40
+      *
+      *====================================================
+      * Split-up TEXT... into 80 char per line of text
+      *
+     C********** WRK4N     IFGT 80                                                            CPK018
+     C           WRK4N     IFGT 132                                                           CPK018
+      *         ===================
+      *
+      *
+      * 1 |TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT|  ARA
+      * 2 |TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT|
+      * 3 |TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT|  TEXT.. array
+      * 4 |TTTTTTTTTTTTTTTTTTTT                           |
+      * nn|                                               |
+     C                     Z-ADD#POS      A       30
+     C                     MOVEAARA       AR4,A
+      *
+      *   |          TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT|  AR4
+      *
+     C                     MOVEAAR4,A     AR2
+      *
+      *   |TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT          |  AR2
+      *                                                     output array
+      *
+      * Calculate Text line's length
+     C********** 81        SUB  #POS      #F2                                                 CPK018
+     C           133       SUB  #POS      #F2                                                 CPK018
+      * Setup Line Nbr
+     C                     MOVE SLINE     OLINE
+      * Setup Start Position
+     C                     MOVE SPOS      OPOS
+      /EJECT
+      * Allow for atribute byte
+      * ~~~~~~~~~~~~~~~~~~~~~~~~
+      *  setup atribute byte in either last, or 1st position
+      *   of an 80 character line
+      *
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN20
+     C           #F2       ADD  1         A
+      *
+      * X = Start Pos of the next Text field
+      *    2nd pos next line
+     C           ARA,A     IFEQ ' '
+     C                     Z-ADD2         X       20
+      *    1st pos next line
+     C                     ELSE
+     C                     Z-ADD1         X
+     C                     END
+     C                     END
+      *
+      * Blank out Atribute byte in the Text array
+      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           X         IFEQ 1
+     C                     MOVE ' '       AR2,80
+     C                     SUB  1         #F2
+     C                     END
+      *----------------------------------------------------
+      * TEXT... field less than 80 char
+      *
+     C                     ELSE
+      *            ===================
+      *
+     C                     MOVEAARA       AR2
+      *   |TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT          |  AR2
+      *                                                     output array
+      * Setup Text's length
+     C                     Z-ADDF2        #F2
+     C                     Z-ADDF2        #LNGTH
+      * Setup Line Nbr
+     C                     MOVE SLINE     OLINE
+      * Setup Start Position
+     C                     MOVE SPOS      OPOS
+      *
+     C                     END
+      *            ===================
+      /EJECT
+      *====================================================
+      *
+      * Output TEXT... line
+      * ~~~~~~~~~~~~~~~~~~~~
+     C                     EXSR MSGSR
+      *
+      *====================================================
+      *
+      * Setup processing for the remaining TEXT.... line(s)
+      *
+     C********** WRK4N     IFGT 80                                                            CPK018
+     C           WRK4N     IFGT 132                                                           CPK018
+      *         ===================
+      *
+      * Outstanding TEXT... Length
+     C                     SUB  #F2       F2               length
+     C                     SUB  1         F2               atr.byte
+      *
+     C           F2        IFGT 0                                      >>
+      *
+      * Next Line Nbr
+     C                     ADD  1         #LINE
+     C                     MOVE #LINE     SLINE
+      * Next Position
+     C                     MOVE *BLANKS   SPOS
+     C                     MOVE X         SPOS
+     C                     Z-ADDX         #POS
+      *
+      * Reset TEXT... array for next line's output
+      *         length        atr+1     next pos
+     C           #F2       ADD  2         A
+     C                     MOVE *BLANKS   ARB
+     C                     MOVEAARA,A     ARB
+     C                     MOVE *BLANKS   ARA
+     C                     MOVEAARB       ARA
+      * F2 > 0
+     C                     END
+      *
+     C           F2        CABGT0         NXTLIN           >>> NXTLIN >>>
+     C                     END
+      *====================================================
+      * Initialise Work fields
+      *
+     C                     EXSR INZ2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MSGSR  ----                                                   *
+      *         Process TEXT.... field for output to the new DDS      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGSR     BEGSR
+      *
+      *-TEXT Field DDS ------------------------------------
+      *
+     C                     MOVE *BLANKS   AR3
+     C                     MOVEAMESS,2    AR3
+      * Condition Inds
+     C                     MOVEASIND      AR3,7
+      * Field Name
+     C                     MOVEAWFNM      AR3,19
+     C                     MOVEA'M'       AR3,21
+      *  &  Seq Nbr
+     C                     ADD  1         SEQ1
+     C                     MOVELSEQ1      SEQ3
+     C                     MOVEASEQ3      AR3,22
+      * Field Length
+     C                     MOVE #F2       F2A     2
+     C                     MOVEAF2A       AR3,33
+      * Line Nbr (2A)
+     C                     MOVEAOLINE     AR3,40
+      * Pos. Nbr (3A)
+     C                     MOVEAOPOS      AR3,42
+      * MSGID/MSGF
+     C                     MOVEAWFNM      AR3,51
+     C                     MOVEA'M'       AR3,53
+      *
+     C*********************MOVEAWMSGF     AR3,59                          CUT004
+      * Assign MSG ID Nbr
+     C                     EXSR EXCP1
+     C                     MOVEAWMSGF     AR3,59                          CUT004
+      *
+      * Check for SFL Text fields
+     C           *IN77     IFEQ '1'
+     C                     MOVEAAR3,19    FLDNAM  6
+     C                     MOVEAAR3,51    MSGID   7
+     C                     MOVEA*BLANKS   AR3,45
+     C                     WRITESFLMSGFM               53
+     C                     END
+      * Output DDS
+     C                     MOVEAAR3       DATA2
+     C                     EXCPTUPD1
+      /EJECT
+      *
+      *-MSG comment line-----------------------------------
+      *
+     C                     MOVEA*BLANKS   AR5
+     C                     MOVEL*BLANKS   WAR51
+     C                     MOVEL*BLANKS   WAR52
+     C                     MOVEL*BLANKS   WDNB1
+     C                     MOVEL*BLANKS   WDNB2
+      *
+     C                     MOVELMSGDNM    WAR51  73
+     C                     MOVE MSGDNM    WAR52   7
+      *
+     C                     MOVE MSGDNB    WDNB1   4
+     C                     MOVELMSGDNB    WDNB2   2
+      *
+     C                     MOVE WDNB1     WDNB    6
+     C                     MOVELWDNB2     WDNB
+      *
+     C                     MOVEAMESS,3    AR5
+     C                     MOVEAWAR51     AR5,8
+     C                     MOVEAWDNB      AR5,1
+     C                     MOVEAAR5       DATA2
+     C                     EXCPTUPD1
+      *
+     C           WAR52     IFNE *BLANKS
+     C                     MOVEA*BLANKS   AR5
+     C                     MOVEAMESS,3    AR5
+     C                     MOVEAWAR52     AR5,8
+     C                     MOVEAWDNB      AR5,1
+     C                     MOVEAAR5       DATA2
+     C                     EXCPTUPD1
+     C                     END
+      *
+      *-MSG Field Display Atributes -------------------------
+      *
+     C           #ATR      IFNE *BLANKS
+     C                     MOVE *BLANKS   AR4
+     C                     MOVEA#ATR      AR4,45
+     C                     MOVEAAR4       DATA2
+     C                     EXCPTUPD1
+     C                     END
+      *----------------------------------------------------
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXCP1  ----                                                   *
+      *         Assign Message ID to the TEXT.... line                *
+      *                                                               *
+      *****************************************************************
+     C           EXCP1     BEGSR
+      *
+     C                     MOVEAAR2       KEY2   80
+     C                     MOVE '0'       *IN50
+      *
+     C                     MOVE CMSGFN    MSGFNM                          CUT004
+     C                     MOVE CMSGFN    WMSGF                           CUT004
+     C                     MOVE *BLANKS   MSGTXT  1                       CUT004
+      *
+      * Find TEXT... in a MSGF
+     C           KEY3      KLIST
+     C                     KFLD           KEY2
+     C                     KFLD           WMSGF
+      *
+     C           KEY3      SETLLMULTB
+      *
+     C                     DO   *HIVAL
+      *
+     C           KEY3      READEMULTB                    50 EOF
+      *
+      * If in Non-Core mode and MSG not in Core MSGF, try non-core MSGF   CUT004
+     C           *IN50     IFEQ *ON                                       CUT004
+     C           CORE      ANDEQ'N'                                       CUT004
+     C                     MOVE MSGFNX    WMSGF                           CUT004
+     C                     MOVE *OFF      *IN50                           CUT004
+     C           KEY3      SETLLMULXB                                     CUT004
+     C           KEY3      READEMULXB                    50               CUT004
+      *                                                                   CUT004
+     C           *IN50     IFEQ *OFF                                      CUT004
+      *                    Text found in Non-Core msg-ref file            CUT004
+     C                     MOVE 'N'       MSGTXT                          CUT004
+     C                     ENDIF                                          CUT004
+      *                                                                   CUT004
+     C                     ENDIF                                          CUT004
+      *                                                                   CUT004
+      * Text not found in either msg-ref file                             CUT004
+     C           *IN50     CABEQ'1'       BYP2             >>> BYP2 >>>
+     C***********LENRB*****CABEQ#F2       RTR4             >>> RTR4 >>>   CUT004
+      *
+      * Text found in Core msg-ref file ?                                 CUT004
+     C           LENRB     IFEQ #F2                                       CUT004
+     C           MSGTXT    ANDEQ*BLANKS                                   CUT004
+     C                     MOVE 'C'       MSGTXT  1                       CUT004
+     C                     GOTO RTR4                       >>> RTR4 >>>   CUT004
+     C                     ENDIF                                          CUT004
+      *
+      * Text found in Non-Core msg-ref file ?                             CUT004
+     C           MSGTXT    IFEQ 'N'                                       CUT004
+     C                     GOTO RTR4                       >>> RTR4 >>>   CUT004
+     C                     ENDIF                                          CUT004
+      *
+      * DO *hival end
+     C                     END
+      *
+      * -----------------------------
+     C           RTR4      TAG                              <<<< RTR4
+      * -----------------------------
+      *
+     C                     MOVEA#ID       AR3,53
+     C                     MOVEANUMB      AR3,54
+      *
+      * Find TEXT...& DSPF  in a MSGF
+     C           KEY7      KLIST
+     C                     KFLD           KEY2
+     C                     KFLD           WMSGF
+     C                     KFLD           DSPFNM
+      *
+     C           MSGTXT    IFEQ 'C'                                       CUT004
+     C           KEY7      CHAINMULTO                53
+     C                     ELSE                                           CUT004
+     C           KEY7      CHAINMULXO                53                   CUT004
+     C                     ENDIF                                          CUT004
+      *
+     C           *IN53     IFEQ '1'
+      * No entry for text AND dspf in the msgf (Old text, NeW DSPF)       CUT004
+     C                     MOVE 'Y'       NWDSPF  1                       CUT004
+     C                     Z-ADD#F2       LEN
+     C                     GOTO BYP3
+     C                     END
+      * TEXT.. & DSPF found
+     C                     GOTO BYP9                       >>> BYP9 >>>
+      * ---------------------------------------------------
+      /EJECT
+      * -----------------------------
+     C           BYP2      TAG                             <<<< BYP2
+      * -----------------------------
+      * Setup DSPF/MSGID for the TEXT...
+      *
+     C                     MOVEL*HIVAL    KEY1    7
+      *
+     C           KEY       KLIST
+     C                     KFLD           KEY1
+     C                     KFLD           WMSGF
+      *
+     C           CORE      IFEQ 'Y'                                       CUT004
+     C           KEY       SETGTMULTAR
+     C                     READPMULTAR                   70 NOT EQUAL
+     C                     ELSE                                           CUT004
+     C           KEY       SETGTMULXAR                                    CUT004
+     C                     READPMULXAR                   70 NOT EQUAL     CUT004
+     C                     ENDIF                                          CUT004
+      *
+      * 1st Msg ID
+     C           *IN70     IFEQ '1'
+      *
+     C           CORE      IFEQ 'Y'                                       CUT004
+     C                     MOVEL'M'       #ID
+     C                     ELSE                                           CUT004
+     C                     MOVEL'A'       #ID                             CUT004
+     C                     ENDIF                                          CUT004
+      *
+     C                     MOVEA'0001'    AR3,54
+     C                     MOVEL'0001'    NUMB
+      * Next Msg ID
+     C                     ELSE
+      *
+     C                     MOVELNUMB      WNUMB   40
+      *
+      *   If the message found is the last one for this letter
+      *   i.e. it is ZZx9999 then use the next leter in sequence
+     C           WNUMB     IFEQ 9999
+     C                     Z-ADD0         WNUMB
+     C                     Z-ADD1         @@      20
+     C           #ID       LOKUP@ID,@@                   60
+     C                     ADD  1         @@
+     C                     MOVEL@ID,@@    #ID
+     C                     END
+      *
+     C                     ADD  1         WNUMB
+     C                     MOVELWNUMB     NUMB
+     C                     MOVEANUMB      AR3,54
+     C                     END
+      *
+      * Create Message for this TEXT...
+      *
+     C                     MOVEAAR2       MSGDNM
+     C                     MOVEA#ID       AR3,53
+     C                     MOVE #ID       WFNMA   3
+     C******************   MOVE 'M'       WFNMA   3
+     C                     MOVELWFNM      WFNMA
+     C                     MOVELWFNMA     MSGDNB
+     C                     MOVE OLINE     COL
+     C                     MOVE OPOS      ROL
+     C                     Z-ADD#F2       LEN
+      *
+     C           CORE      IFEQ 'N'                                       CUT004
+     C                     MOVE MSGFNX    WMSGF                           CUT004
+     C                     ENDIF                                          CUT004
+      *
+     C                     CALL 'MLC0140'                                     +
+     C                     PARM           WMSGF
+     C                     PARM           MSGDNM
+     C                     PARM           MSGDNB
+     C                     PARM           LIBRAR
+     C                     PARM           MULTLA
+      *
+     C                     EXCPTUPD3
+      /EJECT
+      *
+     C                     MOVEL*LOVAL    OKEY    2
+     C********** OKEY      SETLLSDLANGDF                                                      CPK018
+     C           OKEY      SETLL@LANGL0                                                       CPK018
+      *
+     C                     DO   *HIVAL
+      *
+     C**********           READ SDLANGDF                 80 EOF                               CPK018
+     C                     READ @LANGL0                  80 EOF                               CPK018
+      *
+     C           *IN80     CABEQ'1'       BYP3             >>> BYP3 >>>
+      *
+     C           RECI      IFEQ 'X'
+     C                     MOVELSCUNT     OLAN
+      *                                                                   173348
+     C           CORE      IFEQ 'N'                                       173348
+     C                     MOVE 'XXMSGF'  OMSF                            173348
+     C                     ENDIF                                          173348
+      *                                                                   173348
+     C                     CALL 'MLC0140'
+     C                     PARM           OMSGF
+     C                     PARM           MSGDNM
+     C                     PARM           MSGDNB
+     C                     PARM           LIBRAR
+     C                     PARM           MULTLA
+     C                     END
+      * DO *hival end
+     C                     END
+      *
+      * -----------------------------
+     C           BYP3      TAG                             <<<< BYP3
+      * -----------------------------
+      *
+     C                     MOVEL*BLANKS   MNBR8
+     C                     MOVEL*BLANKS   MNBR7
+      *
+     C                     MOVELWFNM      MNBR8
+     C                     MOVE 'M'       MNBR8   3
+     C                     MOVE SEQ3      MNBR7   6
+     C                     MOVELMNBR8     MNBR7
+     C                     MOVELMNBR7     MULNBR
+     C                     MOVELMODUL     MODU
+      *                                                                   CUT004
+      **If*Core*Mode*or*(Non-Core*mode*but*text*found*in************CUT004173348
+      **Core*msg*ref*file)******************************************CUT004173348
+      * If Core Mode                                                      173348
+     C           CORE      IFEQ 'Y'                        *CORE*         CUT004
+     C***********MSGTXT    OREQ 'C'                                 CUT004173348
+     C                     WRITEMLTLANGR
+     C                     ELSE                                           CUT004
+     C                     MOVE MSGFNX    MSGFNM                          CUT004
+     C                     WRITEMULTXR                                    CUT004
+     C                     ENDIF                                          CUT004
+      *
+      * -----------------------------
+     C           BYP9      ENDSR                           <<<< BYP9
+      * -----------------------------
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INZ    ----                                                   *
+      *         First Cycle processing only                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INZ       BEGSR
+      *
+     C           *LIKE     DEFN @LINE     OLINE
+     C           *LIKE     DEFN @LINE     SLINE
+     C           *LIKE     DEFN @POS      OPOS
+     C           *LIKE     DEFN @POS      SPOS
+     C           *LIKE     DEFN @IND      SIND
+      *
+     C                     Z-ADD0         #LINE   20
+     C                     Z-ADD0         #POS    30
+     C                     Z-ADD0         #LNGTH  20
+      *
+      * TEST NEW FIELD
+     C                     MOVEL*HIVAL    KEY8   10
+      * Store Core Message File name in storage field                     CUT004
+     C                     MOVELMSGFNM    CMSGFN 10                       CUT004
+      *
+     C           KEY9      KLIST
+     C                     KFLD           KEY8
+     C                     KFLD           DSPFNM
+      *
+     C           KEY9      SETGTMULTNR
+      *
+     C                     READPMULTNR                   53 NOT EQUAL
+      *
+     C           DSPFNM    IFNE DFNN
+     C                     Z-ADD1         SEQ1    30
+     C                     ELSE
+     C                     MOVELMNBRN2    MNBRN3  30
+     C                     Z-ADDMNBRN3    SEQ1
+     C                     END
+      *
+      * Blank out work fields
+      *
+     C                     MOVE TEST,1    WTEST   1
+     C                     MOVE MSGFNM    WMSGF
+     C*********************MOVE 'MSGF'    OMSF                            173348
+     C                     MOVEL'MSGF'    OMSF      P                     173348
+     C                     MOVE WFNM      OFNM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INZ2   ----                                                   *
+      *         First Cycle and Detail Time processing                *
+      *          work fields initialisation                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INZ2      BEGSR
+      *
+     C                     Z-ADD0         E       20
+     C                     Z-ADD0         F       40
+     C                     Z-ADD0         F2      40
+     C                     Z-ADD0         #F2     20
+      *
+     C                     Z-ADD0         CPT     30
+     C                     Z-ADD0         CPT1    30
+     C                     Z-ADD0         CPT3    30
+      *
+     C                     MOVE *BLANKS   SEQ3    3
+     C                     MOVE *BLANKS   SIGN    1
+      *
+     C                     MOVEA*BLANKS   AR2
+     C                     MOVEA*BLANKS   AR3
+      *
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVEA*BLANKS   ARB
+      *
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN23
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ORPGOUTP EADD             UPD1
+     O                         DATA2     80
+      *
+     OQSYSPRT H  201   1P
+     O       OR        OF
+     O                                   60 'NEW MESSAGES ADDED'
+     O                                   76 'TO MESSAGE FILE'
+     O        D  1     1P
+     O       OR        OF
+     O                                   18 'DISPLAY FILE NAME:'
+     O                         DSPFNM    30
+     O        D 11     1P
+     O       OR        OF
+     O                                   12 'MESSAGE ID'
+     O                                   23 'MESS FILE'
+     O                                   46 'LIB SOURCE'
+     O                                   61 'MESSAGE TEXT'
+     O        EF 1             UPD3
+     O                         MSGDNB    13
+     O                         WMSGF     25
+     O*************************LIBRAR    47                               CUT004
+     O                         MULTLA    47                               CUT004
+     O                         MSGDNM   130
+      * === end of source ===
+**   TEST
+'
+**   MESSAGE FILE NAME
+     A            MSGNM         10A  H      TEXT('MESSAGE FILE NAME')
+     A            MUL             A         MSGID(                  )
+      *
+**
+MNOPQRSTUVWXYZ

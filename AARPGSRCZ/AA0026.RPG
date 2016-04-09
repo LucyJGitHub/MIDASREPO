@@ -1,0 +1,274 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Initialise profit centres for securities')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA0026 - Initialise Profit Centres for Securities            *
+      *                                                               *
+      *  Function:  This program initialises the blank profit centres *
+      *             on existing transactions to the value held in data*
+      *             area AADTA.                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. 184967 *CREATE     Date 12Sep00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  184967 - Add a new condition switch to indicate Pgm had run  *
+      *           Repalcement for AA0007                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FTRADSX  IF  E           K        DISK
+     F            TRADSDF                           KRENAMETRADSXF
+     FTRADSY  IF  E           K        DISK
+     F            TRADSDF                           KRENAMETRADSYF
+      *
+     FBKPHD   IF  E           K        DISK
+     FCPOSN   IF  E           K        DISK
+      *
+     FSEPCBD  UF  E           K        DISK                      A
+     FSEPCCD  UF  E           K        DISK                      A
+      /SPACE 3
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     IAADTA     E DS
+      **  AA Data Area
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank ICD
+      *
+     IDSFDY     E DSDSFDY
+      **  Short Data Structure for Access Porgrams
+      *
+      /COPY ZSRSRC,ZTNLU1Z1
+      *
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Retrieve system run date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           AADTA
+     C           *LOCK     IN   AADTA
+      *
+      *
+      **  Process SEPCBD Profit Centres
+      *
+     C                     EXSR SRPCBD
+      *
+      **  Process SEPCCD Profit Centres
+      *
+     C                     EXSR SRPCCD
+      *
+      **  Set on last record indicator and return to calling pgm
+      *
+      * This program has run suucessfully and therefor it should be
+      * flagged as having run.  This allows AA0027 to run.
+     C                     MOVE 'Y'       AAPCBC
+     C                     OUT  AADTA
+      *
+      *
+      **  Set on last record indicator and return to calling pgm
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPCBD - SEPCBD File Processing                              *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *  Calls:      ZTNLU1 - Determine next available trans no.      *
+      *                                                               *
+      *****************************************************************
+     C           SRPCBD    BEGSR
+      *
+      **  Key field
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           BHBK
+     C                     KFLD           BHBA
+     C                     KFLD           BHSC
+     C                     KFLD           BHMK
+      *
+      **  Initialise work fields
+      *
+     C                     MOVE *BLANKS   WBHBK   2
+     C                     MOVE *BLANKS   WBHBA   3
+     C                     MOVE *BLANKS   WBHSC  10
+     C                     MOVE *BLANKS   WBHMK   1
+      *
+      **  Read through BKPHD
+      *
+     C                     READ BKPHD                    20
+      *
+      **  Do while not end of file
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      **  On change of Book/Branch/Security/Market;
+      *
+     C           BHBK      IFNE WBHBK
+     C           BHBA      ORNE WBHBA
+     C           BHSC      ORNE WBHSC
+     C           BHMK      ORNE WBHMK
+      *
+      **  Get the Book Profit Centre from position's first trade
+      *
+     C           WKEY1     CHAINTRADSX               21
+      *
+      **  Update blank profit centre in SEPCBD
+      *
+     C           WKEY1     CHAINSEPCBD               22
+      *
+      **  If record not found, write record
+      *
+     C           *IN22     IFEQ *ON
+     C                     MOVE 'D'       RECI
+     C                     MOVE BHBK      BOKC
+     C                     MOVE BHBA      BRCA
+     C                     MOVE BHSC      SESN
+     C                     MOVE BHMK      MKTI
+     C                     MOVE BPRC      PCBK
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+     C                     WRITESEPCBDF
+      *
+      **  Otherwise, update record if blank profit centre
+      *
+     C                     ELSE
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE BPRC      PCBK
+     C                     UPDATSEPCBDF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Assign book/branch/security/market fields to work fields
+      *
+     C                     MOVE BHBK      WBHBK
+     C                     MOVE BHBA      WBHBA
+     C                     MOVE BHSC      WBHSC
+     C                     MOVE BHMK      WBHMK
+     C                     ENDIF
+      *
+      **  Read next BKPHD record
+      *
+     C                     READ BKPHD                    20
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPCCD - SEPCCD File Processing                              *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *  Calls:      ZTNLU1 - Determine next available trans no.      *
+      *                                                               *
+      *****************************************************************
+     C           SRPCCD    BEGSR
+      *
+      **  Key field
+      *
+     C           WKEY2     KLIST
+     C                     KFLD           CSCN
+     C                     KFLD           CSBA
+     C                     KFLD           CSSC
+      *
+      **  Initialise work fields
+      *
+     C**********           MOVE *BLANKS   WCSCN   60                                          CSD027
+     C                     MOVE *BLANKS   WCSCN   6                                           CSD027
+     C                     MOVE *BLANKS   WCSBA   3
+     C                     MOVE *BLANKS   WCSSC  10
+      *
+      **  Read through CPOSN
+      *
+     C                     READ CPOSN                    20
+      *
+      **  Do while not end of file
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      **  On change of Customer/Branch/Security;
+      *
+     C           CSCN      IFNE WCSCN
+     C           CSBA      ORNE WCSBA
+     C           CSSC      ORNE WCSSC
+      *
+      **  Get the Transaction Profit Centre from position's first trade
+      *
+     C           WKEY2     CHAINTRADSY               21
+      *
+      **  Update blank profit centre in SEPCCD
+      *
+     C           WKEY2     CHAINSEPCCD               22
+      *
+      **  If record not found, write record
+      *
+     C           *IN22     IFEQ *ON
+     C                     MOVE 'D'       RECI
+     C                     MOVE CSCN      CNUM
+     C                     MOVE CSBA      BRCA
+     C                     MOVE CSSC      SESN
+     C                     MOVE TPRC      PCCU
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+     C                     WRITESEPCCDF
+      *
+      **  Otherwise, update record if blank profit centre
+      *
+     C                     ELSE
+     C           PCCU      IFEQ *BLANKS
+     C                     MOVE TPRC      PCCU
+     C                     UPDATSEPCCDF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Assign book/branch/security/market fields to work fields
+      *
+     C**********           Z-ADDCSCN      WCSCN                                               CSD027
+     C                     MOVE CSCN      WCSCN                                               CSD027
+     C                     MOVE CSBA      WCSBA
+     C                     MOVE CSSC      WCSSC
+     C                     ENDIF
+      *
+      **  Read next CPOSN record
+      *
+     C                     READ CPOSN                    20
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1351 @@
+     H        1                           F                               S01310
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Query/answer message input')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                               *
+      *                                                               *
+      *   MS5020 - QUERY/ANSWER MESSAGE INPUT                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  141572            DATE 21SEP98               *
+      *                  113352            DATE 13FEB97               *
+      *                  130041            DATE 25FEB98               *
+      *                  105391            DATE 08MAY97               *
+      *                  106066            DATE 11APR97               *
+      *                  102497            DATE 06MAY96               *
+      *                  086529            DATE  5OCT95               *
+      *                  CSW095            DATE 10APR95               *
+      *                  S01412            DATE 27MAY93               *
+      *                  038188            DATE 07APR92               *
+      *                  S01117            DATE 25MAR92               *
+      *                  E29588            DATE 07OCT91               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   CSD015 - Midas Compliance Watch - Watch List Checking       *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *  141572 - Recompile over MGOREFPD                             *
+      *  113352 - Set-up CIND (Century flag)  to correct year2000     *
+      *           display problem.                                    *
+      *  130041 - Swift Messages MT195 and MT196 are generated with   *
+      *           branch code of incoming message instead of user     *
+      *           assigned.                                           *
+      *           Fix 106066 removed.                                 *
+      *  105391 - Delivery/Non-delivery flag to be set to '1' if      *
+      *           query/answer being sent as urgent.                  *
+      *  106066 - Allow user to work on messages for any branch they  *
+      *           are authorised to.  Check users authority thru      *
+      *           ZVBBU, Valid Booking Branch                         *
+      *  102497 - Answer message NAK'd with error code H99. 9th posn  *
+      *           of destination address (logical terminal) is wrong  *
+      *           because MS5020 incorrectly extracts the destination *
+      *           from the incoming message.  Pgm should not extract  *
+      *           destination address differently if logical terminal *
+      *           is 'X' or not.                                      *
+      *  086529 - System rejected the entered TRN eventhough it       *
+      *           matches the TRN of incoming message in the file.    *
+      *           Remove DSPF/MS5020DF in the list of files to be     *
+      *           translated.  Amend TXT,7 and TXT,8 and add TXT,9.   *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            The subfile should only have 6 input lines.        *
+      *            Ensure that MT n95/n96 messages do not exceed      *
+      *            2,000 characters.                                  *
+      *   S01412 - FIELD ':11:' CHANGED TO ':11R:'                    *
+      *   038188 - FILE SDMSDLPD IS BEING ACCESSED INSTEAD OF         *
+      *            SDMGMEPD. (SDMSDLPD IS REDUNDANT).                 *
+      *   S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                 *
+      *   E29588 - POST-COLLECTION SWIFT RATIONALISATION FIXES        *
+      *   S01310 - RE WRITTEN FOR SWIFT RATIONALISATION               *
+      *                                                               *
+      *****************************************************************
+      *  Before compiling OVRDBF FILE(MGOREFLX) TOFILE(MGOREFL0)      *
+     FMS5020DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MS5020F3
+     FMSMSI2L9IF  E           K        DISK
+     FMGOREFLXIF  F     398 16AI     9 DISK
+     FMUSER   IF  E           K        DISK
+     FSDBRCHL0IF  E           K        DISK
+     FSDBANKPDIF  E                    DISK
+     F*SDMSDLPDIF**E**********          DISK                              038188
+     FSDMGMEPDIF  E                    DISK                               038188
+     FSDCUSTL0IF  E           K        DISK
+     FSDCUSTL7IF  E           K        DISK
+     F            @CUSTGE                           KRENAMESDCUSTSW
+     FMGOREFL0O   E           K        DISK
+     F                                              KCOMIT
+     FMGOMSGPDO   E           K        DISK
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,MS5020F001
+      *
+     FSDCWHTL1IF  E           K        DISK                                                   CSD015
+      ** Compliance Watch Hit List by Function Type                                           CSD015
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+      * ID C  F  H  L    Function of indicators
+      *    01            Query input                                      E29588
+      *    02            Answer input                                     E29588
+      *    10            EOF MGOREFPD
+      *    12            EOF MS5020F3
+      *    13            EOF MSMSI2L9
+      *    20            SFLDSP
+      *    21            SFLDSPCTL
+      *    22            SFLEND
+      *    23            SFLINZ
+      *    24            SFLNXTCHG
+      *    30            Error
+      *    31            Branch error
+      *    32            MIR error
+      *    33            TRN error
+      *    34            Query/answer text error
+      *    35            Description error
+      *    41            Multibranching on
+      *    70            '-' or ':' found in text or description
+      *    89            EOF SDBANKPD
+      *    88            EOF MUSER
+      *    87            EOF SDBRCHPD
+      *    86            EOF SDCUSTPD
+      *****84************EOF SDMSDLPD                                     038188
+      *    84            EOF SDMGMEPD                                     038188
+      *    KC            F3
+      *    KL            F12
+      *    U7U8LR        DB error
+      *
+     E********************TXT     1   8 78               text             086529
+     E                    TXT     1   9 78               text             086529
+     E                    INVC   22  22  1               invalid character086529
+     E                    CPY@    1   1 80
+     E***********         MSG      3072  1               incoming msg,I   CSW095
+     E                    MSG      9999  1               incoming msg,I   CSW095
+     E                    LIN        35  1               validate line,X
+     E                    DES        50  1               validate desc,Y
+     E                    FLD        50  1               outgoing field,O
+     E                    TRNA       16  1               transaction ref. 086529
+      *
+     IMGOREFLXNS
+     I                                        1 398 ALL
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     ISMIR        DS
+     I                                        7  18 DSID
+     I                                        7  14 ADDR
+     I                                       15  15 TERM
+     I                                       16  18 BRAN
+     I                                       19  22 SESN
+      **  MIR data structure
+      *
+     I            DS
+     I                                        1  16 @TRN
+     I                                        1   2 MODI
+     I                                        3   80MGDE
+     I                                        9  140@TIM
+     I                                       15  160@SEQ
+      **  TRN data structure
+      *
+     IDESC        DS
+     I                                        1  50 SDS1
+     I                                       51 100 SDS2
+     I                                      101 150 SDS3
+     I                                      151 200 SDS4
+     I                                      201 250 SDS5
+     I                                      251 300 SDS6
+     I                                      301 350 SDS7
+      **  Data structure to validate description
+      *
+     ISDCUST    E DSSDCUSTPD                                                                  CSD015
+      **  External Data structure for customer details.                                       CSD015
+      *                                                                                       CSD015
+     ISCSARD    E DSSCSARDPD                                                                  CSD015
+      ** Switchable Features File                                                             CSD015
+      *                                                                                       CSD015
+     IDSFDY     E DSDSFDY                                                                     CSD015
+      **  Short data structure for access programs                                            CSD015
+      *                                                                                       CSD015
+     IDSSDY     E DSDSSDY                                                                     CSD015
+      **  Long data structure for access programs                                             CSD015
+      *                                                                                       CSD015
+     ISDSTAT    E DSSDSTAT                                                                    CSD015
+      ** SD data area                                                                         CSD015
+      *                                                                                       CSD015
+     I              MODE                            WMODE                                     CSD015
+      *                                                                                       CSD015
+     IWLFDS     E DSSDWLTOPD                                                                  CSD015
+      ** Data Structure for Watch List Details Transactions File                              CSD015
+      *                                                                                       CSD015
+     IPSTRNG      DS                           9999                                           CSD015
+      ** Parameter for calling Access Object                                                  CSD015
+      *                                                                                       CSD015
+     ISDWLCC    E DSSDWLCCPD                                                                  CSD015
+      **  Midas Functions for Watch List Checking Details File                                CSD015
+      *                                                                                       CSD015
+     ISDCWCD    E DSSDCWCDPD                                                                  CSD015
+      ** DS For Watch List Configuration Data File                                            CSD015
+      *                                                                                       CSD015
+     C/EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+     C           *ENTRY    PLIST
+     C                     PARM           QAPARM  1
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT   - initial process                                    *
+      *   VSEL   - validate selection                                 *
+      *   VMSG   - validate input message                             *
+      *   OMSG   - output message                                     *
+      *   OCPY   - output block 4 of incoming message                 *
+      *   ODSC   - output description                                 *
+      *   *PSSR  - error handling                                     *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           VSEL validate selection                             *
+      *           VMSG validate input message                         *
+      *           OMSG output message                                 *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'                                   1
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'                                   2
+     C                     MOVE *BLANKS   SMIR
+     C                     MOVE *BLANKS   STRN
+     C                     MOVE *BLANKS   SDS1
+     C                     MOVE *BLANKS   SDS2
+     C                     MOVE *BLANKS   SDS3
+     C                     MOVE *BLANKS   SDS4
+     C                     MOVE *BLANKS   SDS5
+     C                     MOVE *BLANKS   SDS6
+     C                     MOVE *BLANKS   SDS7
+     C                     END                                       E2
+      *
+     C                     SETOF                     20
+     C                     WRITEMS5020F1
+     C                     EXFMTMS5020F2
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303132
+     C                     SETOF                     33
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'                                   2
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'                                   3
+      *
+      **  Display input screen until F3 or F12 pressed or no errors
+     C           *INKC     DOUEQ'1'                                   4
+     C           *INKL     OREQ '1'
+     C           *IN30     OREQ '0'
+      *
+     C                     SETON                     2021
+     C                     WRITEMS5020F1
+     C                     EXFMTMS5020F4
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303135
+      *
+      **  If F3 and F12 not pressed validate input message
+     C           *INKC     IFEQ '0'                                   5
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VMSG
+      *
+      **  If input message valid output message
+     C           *IN30     IFEQ '0'                                   6
+     C                     EXSR OMSG
+     C                     END                                       E6
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  Terminate program
+     C/COPY WNCPYSRC,MS5020C001
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MS5020'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT for multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      **  Access SDBANKPD for run date & single branch
+     C           1         CHAINSDBANKPD             89
+      *
+     C           *IN89     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E2
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                88
+      *
+     C           *IN88     IFEQ '1'                                   1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVELUSRID     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'MUSER'   DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  If multibranching use default branch
+     C           MBIN      IFEQ 'Y'                                   1
+     C                     MOVE DBRN      SBCH
+     C                     SETON                     41
+      *
+      **  If System is single branch use single branch
+     C                     ELSE                                      X1
+     C                     MOVE BJSBRC    SBCH
+     C                     END                                       E1
+      *
+      **  Access SDBRCHL0 for branch internal customer
+     C           SBCH      CHAINSDBRCHL0             87
+      *
+     C           *IN87     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVELSBCH      DBKEY            * DB ERROR 03 *
+     C                     MOVEL'SDBRCHL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+     C/COPY WNCPYSRC,MS5020C002
+      *
+      **  Access SDCUSTPD using branch internal customer
+     C           A8BICN    CHAINSDCUSTL0             86
+      *
+     C           *IN86     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVELA8BICN    DBKEY            * DB ERROR 04 *
+     C                     MOVEL'SDCUSTL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+     C                     MOVELA8BICN    SECN
+     C                     MOVELA8BTID    NWSN
+      *
+      **  Initialise constant fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+     C                     MOVE CRLF      CTRC
+     C                     MOVE 'N'       MPRY
+     C                     MOVE '1'       MGSG
+     C                     MOVE 'CRTD'    MGST
+     C                     MOVE 'SWIFT '  NWRK
+     C                     MOVE BJMRDT    LADT
+      *
+      **  Convert run date to YYMMDD
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZMDATE  6
+     C                     MOVE ZMDATE    MGDE
+      *                                                                   113352
+      ** Set-up Message Generation  Century flag                          113352
+      *                                                                   113352
+     C                     MOVELMGDE      YY      20                      113352
+     C           YY        IFLT 72                                        113352
+     C                     MOVE '2'       CIND                            113352
+     C                     ELSE                                           113352
+     C                     MOVE '1'       CIND                            113352
+     C                     ENDIF                                          113352
+      ***********                                                         038188
+      ****Access*SDMSDLPD for history retention period                    038188
+     C***********1         CHAINSDMSDLPD             84                   038188
+      *                                                                   038188
+      **  Access SDMGMEPD for history retention period                    038188
+     C           1         CHAINSDMGMEPD             84                   038188
+      *
+     C           *IN84     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 05 *
+     C************         MOVEL'SDMSDLPD'DBFILE                          038188
+     C                     MOVEL'SDMGMEPD'DBFILE                          038188
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Convert history retention date to YYMMDD
+     C***********BJRDNB    ADD  BSDSMN    ZMDAY                           038188
+     C           BJRDNB    ADD  ENDSMN    ZMDAY                           038188
+     C                     CALL 'ZM0060'
+     C                     PARM           ZMDAY
+     C                     PARM           ZMDATE
+     C                     MOVE ZMDATE    HRDT
+      *
+      **  Seton SFLEND
+     C                     SETON                     22
+      *
+      **  Display 'QUERY' or 'ANSWER' title
+     C           QAPARM    IFEQ 'Q'
+     C                     SETON                     01
+     C                     ELSE                                           E29588
+     C                     SETON                     02                   E29588
+     C                     END
+      *
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD015
+     C                     IN   SDSTAT                                                        CSD015
+      *                                                                                       CSD015
+      ** Access SAR Details file to determine if CSD015 is installed                          CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSD015  1                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*VERIFY' POPTN                                               CSD015
+     C                     PARM 'CSD015'  PSARD   7                                           CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANK                                                        CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD7         DBASE                                               CSD015
+     C                     MOVELPSARD     DBKEY                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANK                                                        CSD015
+     C                     MOVE 'Y'       CSD015                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** If CSD015 is on, check that function code is being monitored by                      CSD015
+      ** Compliance Watch by calling AOWLCCR0                                                 CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C                     CALL 'AOWLCCR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*KEY   ' POPTN                                               CSD015
+     C                     PARM 'MESSGENT'PFUNC   8                                           CSD015
+     C           SDWLCC    PARM SDWLCC    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANK                                                        CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD8         DBASE                                               CSD015
+     C                     MOVELPFUNC     DBKEY                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Call access program AOCWCDR0 for Private Customer                                    CSD015
+      ** Industry Code                                                                        CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOCWCDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*FIRST ' POPTN                                               CSD015
+     C           SDCWCD    PARM SDCWCD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** If no record is found on SDCWCDPD                                                    CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'*FIRST'  DBKEY                                               CSD015
+     C                     MOVEL'SDCWCDPD'DBFILE                                              CSD015
+     C                     Z-ADD9         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Access SAR file to determine if CCF001 is installed.                                 CSD015
+      *                                                                                       CSD015
+     C                     MOVEL'N'       CCF001                                              CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*VERIFY' POPTN                                               CSD015
+     C                     PARM 'CCF001'  PSARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** An NRF (No Record Found) return code is valid.                                       CSD015
+      ** Issue database error only for error return codes.                                    CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'CCF001'  DBKEY                                               CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD10        DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANK                                                        CSD015
+     C                     MOVEL'Y'       CCF001  1                                           CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Key List for SDCWHTPD                                                                CSD015
+      *                                                                                       CSD015
+     C           KLCWHT    KLIST                                                              CSD015
+     C                     KFLD           WFUNC   8                                           CSD015
+     C                     KFLD           WIDEN  40                                           CSD015
+     C                     KFLD           WBRCH   3                                           CSD015
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL - validate selection                                   *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Message input reference must be entered
+     C           SMIR      IFEQ *BLANK                                1
+     C                     MOVELTXT,1     SFMG
+     C                     SETON                     3032
+     C                     END                                       E1
+      *
+      **  Message input reference must not be that of an STTX
+     C           SESN      IFEQ '0000'                                1
+     C                     MOVELTXT,2     SFMG
+     C                     SETON                     3032
+     C                     END                                       E1
+      *
+      **  Transaction reference number must be entered
+     C           STRN      IFEQ *BLANK                                1
+     C                     MOVELTXT,3     SFMG
+     C                     SETON                     3033
+      *                                                                   086529
+     C                     ELSE                                           086529
+      *                                                                   086529
+      **  Check for invalid characters in STRN                            086529
+     C                     MOVE *BLANKS   TRNA                            086529
+     C                     MOVEASTRN      TRNA,1                          086529
+     C                     Z-ADD1         @X      20                      086529
+     C                     MOVE '0'       *IN15                           086529
+     C           @X        DOWLE16                                        086529
+     C           *IN30     ANDEQ'0'                                       086529
+      *                                                                   086529
+     C           TRNA,@X   LOKUPINVC                     15               086529
+     C           *IN15     IFEQ '1'                                       086529
+     C                     MOVELTXT,9     SFMG                            086529
+     C                     SETON                     3033                 086529
+     C                     GOTO ERRDIS                                    086529
+     C                     END                                            086529
+     C                     ADD  1         @X                              086529
+      *                                                                   086529
+     C                     END                                            086529
+      *                                                                   086529
+     C                     END                                       E1
+      *
+      **  Determine if message exists on file
+     C                     MOVEA*BLANKS   MSG
+     C                     Z-ADD1         I       40
+     C           SMIR      CHAINMSMSI2L9             13
+      *
+     C           *IN13     IFEQ '1'                                   1
+     C                     MOVELTXT,4     SFMG
+     C                     SETON                     3032
+      *
+      **  Move all records for Message Into Array.
+     C                     ELSE                                      X1
+     C                     MOVELMTPY      MTPYX   3                       S01310
+     C           *IN13     DOWEQ'0'                                   2
+     C                     MOVEAMDTA      MSG,I
+     C           SMIR      READEMSMSI2L9                 13
+     C                     ADD  256       I
+     C                     END                                       E2
+      *
+      **  Transaction reference no must equal that on incoming message
+     C           TRNO      IFNE STRN                                  2
+     C                     MOVELTXT,5     SFMG
+     C                     SETON                     3033
+     C                     END                                       E2
+      ***********                                                   106066130041
+      ****Move*branch of MIR to screen field                        106066130041
+      ***********                                                   106066130041
+     C***********          MOVE BRCA      SBCH                      106066130041
+      ***********                                                   106066130041
+      ****Only*do branch checking for multi-branching               106066130041
+      ***********                                                   106066130041
+     C***********MBIN      IFEQ 'Y'                                 106066130041
+      *
+      **  'Message branch prevents amendment' error
+     C           ROUF      IFNE 'Y'                                   2
+     C           BANK      ANDNE'Y'
+      ***********                                                   106066130041
+      ****Is*user authorised to branch of MIR?                      106066130041
+      ***********                                                   106066130041
+     C***********          MOVE BRCA      ZBR     3                 106066130041
+     C***********          Z-ADD0         ZERR    10                106066130041
+     C***********          CALL 'ZVBBU'                             106066130041
+     C***********          PARM           ZBR                       106066130041
+     C***********          PARM           ZERR                      106066130041
+      ***********                                                   106066130041
+     C***********ZERR      IFNE 0                                   106066130041
+     C***********BRCA      IFNE SBCH                                106066130041
+     C           BRCA      IFNE SBCH                                  3   130041
+     C                     MOVELTXT,6     SFMG
+     C                     SETON                     3031
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+     C***********          END                                     106066130041
+      *                                                                   086529
+     C           ERRDIS    TAG                                            086529
+      *
+      **  Initialise subfile
+     C                     SETOF                     2021
+     C                     SETON                     23
+     C                     WRITEMS5020F4
+     C                     SETOF                     23
+     C                     Z-ADD1         RRN     50
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VMSG - validate input message                               *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VMSG      BEGSR
+      *
+      **  'Message lines must not start with '-' or ':' error
+     C                     Z-ADD1         RRN
+     C           RRN       CHAINMS5020F3             12
+     C           *IN12     DOWEQ'0'                                   1
+      *
+     C           RCD       IFNE *BLANKS                               2
+     C                     MOVEARCD       LIN
+      *
+      **  Advance index until first non-blank character found
+     C                     Z-ADD1         X       20
+     C           LIN,X     DOWEQ' '                                   3
+     C           X         ANDLT35
+     C                     ADD  1         X
+     C                     END                                       E3
+      *
+      **  If character not valid, set on error indicators
+     C           LIN,X     IFEQ '-'                                   3
+     C           LIN,X     OREQ ':'
+     C           LIN,X     OREQ 'ò'                                       086529
+     C           LIN,X     OREQ '~'                                       086529
+     C           LIN,X     OREQ '_'                                       086529
+     C                     SETON                     243034
+     C                     MOVELTXT,7     SFMG
+     C                     END                                       E3
+     C                     END                                       E2
+      *
+     C                     UPDATMS5020F3
+     C                     SETOF                     2434
+     C                     ADD  1         RRN
+     C           RRN       CHAINMS5020F3             12
+     C                     END                                       E1
+      *
+      **  Description lines must not start with '-' or ':'
+     C                     SETOF                     70
+     C           SDS1      IFNE *BLANKS
+     C                     MOVEASDS1      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS2      IFNE *BLANKS
+     C                     MOVEASDS2      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS3      IFNE *BLANKS
+     C                     MOVEASDS3      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS4      IFNE *BLANKS
+     C                     MOVEASDS4      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS5      IFNE *BLANKS
+     C                     MOVEASDS5      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS6      IFNE *BLANKS
+     C                     MOVEASDS6      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           SDS7      IFNE *BLANKS
+     C                     MOVEASDS7      DES
+     C                     EXSR VDSC
+     C                     END
+      *
+     C           *IN70     IFEQ '1'
+     C                     MOVELTXT,8     SFMG
+     C                     SETON                       3035
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   OMSG - output message                                       *
+      *   Called by - main process                                    *
+      *   Calls - OCPY output block 4 of incoming message             *
+      *           ODSC output description                             *
+      *****************************************************************
+      *
+     C           OMSG      BEGSR
+      *
+      **  Set up reference record
+     C                     MOVE 'QA'      MODI
+     C                     TIME           @TIM
+     C                     Z-ADD1         @SEQ
+      *
+     C           @TRN      CHAINMGOREFLX             10
+     C           *IN10     DOWEQ'0'                                   1
+     C                     ADD  1         @SEQ
+     C           @TRN      CHAINMGOREFLX             10
+     C                     END                                       E1
+      *
+     C                     MOVE TRNO      ITRN   16
+     C                     MOVE @TRN      TRNO
+      *
+      **  Format TID for chain to Customer file
+     C                     MOVE *BLANKS   @WK12  12
+     C***********TERM      IFEQ 'X'                                      102497
+     C           BRAN      IFEQ 'XXX'
+     C                     MOVELADDR      @WK12
+     C                     ELSE
+     C                     MOVE BRAN      @WK11  11
+     C                     MOVELADDR      @WK11
+     C                     MOVEL@WK11     @WK12
+     C                     END
+     C***********          ELSE                                           102497
+     C***********BRAN      IFEQ 'XXX'                                     102497
+     C***********          MOVE TERM      @WK9    9                       102497
+     C***********          MOVELADDR      @WK9                            102497
+     C***********          MOVEL@WK9      @WK12                           102497
+     C***********          ELSE                                           102497
+     C***********          MOVE DSID      @WK12                           102497
+     C***********          END                                            102497
+     C***********          END                                            102497
+      *
+     C           @WK12     CHAINSDCUSTSW             86
+     C           *IN86     IFEQ '0'
+     C                     MOVELA8BICN    DECN
+     C                     END
+      *
+     C                     MOVEL@WK12     NWDS
+     C                     Z-ADD@TIM      MGTM
+     C                     Z-ADD@TIM      LATM
+     C                     MOVE SBCH      BRCA
+      *
+      **  Message type - first char. of incoming message type + 95/96
+     C           *IN01     IFEQ '1'
+     C                     MOVE '95'      MTPY
+     C                     ELSE
+     C                     MOVE '96'      MTPY
+     C                     END
+      *                                                                   105391
+      **  If message priority to be urgent, set delivery notification     105391
+      **  flag to '1'                                                     105391
+      *                                                                   105391
+     C           MPRY      IFEQ 'U'                                       105391
+     C                     MOVE '1'       DELC                            105391
+     C                     END                                            105391
+     C/COPY WNCPYSRC,MS5020C003
+      *                                                                                       CSD015
+      ** If Watch List Checking is Applied                                                    CSD015
+      *                                                                                       CSD015
+     C           W1EWLC    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+      ** Check if message type exists in the watch list                                       CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLMTR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD   7                                           CSD015
+     C                     PARM '*MTYP  ' POPTN   7                                           CSD015
+     C                     PARM MTPY      PMTYP   3                                           CSD015
+     C                     PARM *BLANKS   PMTAG  50                                           CSD015
+      *                                                                                       CSD015
+      ** If Message Type exists, Execute SRWTCH subroutine                                    CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+     C                     EXSR SRWTCH                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *
+      **  Write reference record
+     C                     WRITEMGOREFD0
+      *
+      **  Write TRN
+     C                     MOVE ':20: '   MTAG
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVELTRNO      MFLD
+     C                     WRITEMGOMSGD0
+      *
+     C                     MOVE ':21: '   MTAG
+     C                     MOVELITRN      MFLD
+     C                     WRITEMGOMSGD0
+      *
+      **  Write query or answer text
+     C           *IN01     IFEQ '1'
+     C                     MOVE ':75: '   MTAG
+     C                     ELSE
+     C                     MOVE ':76: '   MTAG
+     C                     END
+      *
+     C                     Z-ADD1         RRN
+     C           RRN       CHAINMS5020F3             12
+     C           *IN12     DOWEQ'0'                                   1
+      *
+     C           RCD       IFNE *BLANKS                               2
+     C                     MOVELRCD       MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END                                       E2
+      *
+     C                     ADD  1         RRN
+     C           RRN       CHAINMS5020F3             12
+     C                     END                                       E1
+      *
+      *   Write message type & date
+     C*********************MOVE ':11: '   MTAG
+     C                     MOVE ':11R:'   MTAG                            S01412
+     C                     MOVE *BLANKS   MFLD
+     C*********************MOVELMTPY      MFLD                            S01310
+     C                     MOVELMTPYX     MFLD                            S01310
+     C                     WRITEMGOMSGD0
+      *
+     C                     MOVE *BLANKS   MTAG
+     C                     MOVELMODE      MFLD
+     C                     WRITEMGOMSGD0
+      *
+      **  Write block 4 of incoming message or description
+     C           DESC      IFEQ *BLANKS
+     C                     EXSR OCPY
+     C                     ELSE
+     C                     EXSR ODSC
+     C                     END
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VDSC - validate description                                 *
+      *   Called by - VMSG validate message                           *
+      *****************************************************************
+      *
+     C           VDSC      BEGSR
+      *
+      **  Advance index until first non-blank character found
+     C                     Z-ADD1         Y       20
+     C           DES,Y     DOWEQ' '
+     C           Y         ANDLT50
+     C                     ADD  1         Y
+     C                     END
+      *
+      **  If character not valid, set on error indicators
+     C           DES,Y     IFEQ '-'
+     C           DES,Y     OREQ ':'
+     C           DES,Y     OREQ 'ò'                                       086529
+     C           DES,Y     OREQ '~'                                       086529
+     C           DES,X     OREQ '_'                                       086529
+     C                     SETON                     70
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   OCPY - output block 4 of incoming message                   *
+      *   Called by - OMSG output message                             *
+      *****************************************************************
+      *
+     C           OCPY      BEGSR
+      *
+     C                     Z-ADD1         I
+     C                     MOVEAMSG,I     @WK3    3
+      *
+      **  Postition after start of block 4
+     C           @WK3      DOWNE'{4:'                                 1
+     C                     ADD  1         I
+     C                     MOVEAMSG,I     @WK3
+     C                     END                                       E1
+     C                     ADD  5         I
+      *
+      **  Do until end of incoming message
+     C                     MOVEAMSG,I     @WK2    2
+     C                     Z-ADD0         COUNT   20                      CSW095
+     C           @WK2      DOWNE'-}'                                  1
+     C           COUNT     ANDLT30                                        CSW095
+     C                     MOVE *BLANKS   MTAG
+     C                     MOVE *BLANKS   MFLD
+     C                     MOVE *BLANKS   CTRC
+      *
+      **  Write field tags
+     C           I         ADD  3         S       40
+     C           MSG,I     IFEQ ':'                                   2
+     C           MSG,S     ANDEQ':'
+     C                     MOVEAMSG,I     @WK4    4
+     C                     MOVEL@WK4      MTAG
+     C                     ADD  4         I
+     C                     END                                       E2
+      *
+     C           I         ADD  4         T       40
+     C           MSG,I     IFEQ ':'                                   2
+     C           MSG,T     ANDEQ':'
+     C                     MOVEAMSG,I     MTAG
+     C                     ADD  5         I
+     C                     END                                       E2
+      *
+      **  Write fields
+     C                     Z-ADD1         O       20
+     C                     MOVE *BLANKS   FLD
+     C           O         DOWLE50                                    2
+     C           @WK2      ANDNECRLF
+     C                     MOVE MSG,I     FLD,O
+     C                     ADD  1         I
+     C                     ADD  1         O
+     C                     MOVEAMSG,I     @WK2
+     C                     END                                       E2
+      *
+      **  Write CRLF unless part way through long field
+     C           @WK2      IFEQ CRLF                                  2
+     C                     MOVE CRLF      CTRC
+     C                     MOVEAFLD       MFLD
+     C                     WRITEMGOMSGD0
+     C                     ADD  2         I
+     C                     ELSE                                      X2
+     C                     MOVEAFLD       MFLD
+     C                     WRITEMGOMSGD0
+     C                     END                                       E2
+      *
+     C                     MOVEAMSG,I     @WK2
+     C                     ADD  1         COUNT                           CSW095
+     C                     END                                       E1
+      *
+     C                     MOVE CRLF      CTRC
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ODSC - output description                                   *
+      *   Called by - OMSG output message                             *
+      *****************************************************************
+      *
+     C           ODSC      BEGSR
+      *
+     C                     MOVE ':79: '   MTAG
+      *
+     C           SDS1      IFNE *BLANKS
+     C                     MOVELSDS1      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS2      IFNE *BLANKS
+     C                     MOVELSDS2      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS3      IFNE *BLANKS
+     C                     MOVELSDS3      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS4      IFNE *BLANKS
+     C                     MOVELSDS4      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS5      IFNE *BLANKS
+     C                     MOVELSDS5      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS6      IFNE *BLANKS
+     C                     MOVELSDS6      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C           SDS7      IFNE *BLANKS
+     C                     MOVELSDS7      MFLD
+     C                     WRITEMGOMSGD0
+     C                     MOVE *BLANKS   MTAG
+     C                     END
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MS5020C004
+     C/EJECT
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+     C/EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      * SRWTCH - Set-up parameters for search string.                 *                       CSD015
+      *          sends transaction details by calling SDCWLCHK.       *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+      *                                                                                       CSD015
+     C           SRWTCH    BEGSR                                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   PSTRNG                                              CSD015
+      *                                                                                       CSD015
+      ** Setup parameters for search string                                                   CSD015
+      *                                                                                       CSD015
+     C                     MOVE ':20: '   MTAG                                                CSD015
+     C                     MOVE *BLANKS   MFLD                                                CSD015
+     C                     MOVELTRNO      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+      *                                                                                       CSD015
+     C                     MOVE ':21: '   MTAG                                                CSD015
+     C                     MOVE *BLANKS   MFLD                                                CSD015
+     C                     MOVELITRN      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+      *                                                                                       CSD015
+     C           *IN01     IFEQ '*ON'                                                         CSD015
+     C                     MOVE ':75: '   MTAG                                                CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVE ':76: '   MTAG                                                CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   MFLD                                                CSD015
+     C                     Z-ADD1         RRN                                                 CSD015
+     C           RRN       CHAINMS5020F3             12                                       CSD015
+      *                                                                                       CSD015
+     C           *IN12     DOWEQ'0'                                                           CSD015
+     C           RCD       IFNE *BLANKS                                                       CSD015
+     C*                    MOVELRCD       MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     MOVE *BLANKS   MTAG                                                CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ADD  1         RRN                                                 CSD015
+     C           RRN       CHAINMS5020F3             12                                       CSD015
+     C                     ENDDO                                                              CSD015
+      *                                                                                       CSD015
+      *                                                                                       CSD015
+     C                     MOVE ':11R: '  MTAG                                                CSD015
+     C                     MOVE *BLANKS   MFLD                                                CSD015
+     C                     MOVELMTPYX     MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+      *                                                                                       CSD015
+     C                     MOVE ':79: '   MTAG                                                CSD015
+     C                     MOVE *BLANKS   MFLD                                                CSD015
+      *                                                                                       CSD015
+     C           SDS1      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS1      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     MOVE *BLANKS   MTAG                                                CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS2      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS2      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS3      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS3      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS4      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS4      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS5      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS5      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS6      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS6      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           SDS7      IFNE *BLANKS                                                       CSD015
+     C                     MOVELSDS7      MFLD                                                CSD015
+     C                     EXSR SRCONC                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PSTRNG    IFEQ *BLANKS                                                       CSD015
+     C                     GOTO EWATCH                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Call subroutine that determines counterparty type                                    CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   W4CUST                                              CSD015
+     C                     MOVE *BLANKS   W4CTYP                                              CSD015
+      *                                                                                       CSD015
+     C                     EXSR SRCPTP                                                        CSD015
+      *                                                                                       CSD015
+      ** Setup parameters for Compliance engine program                                       CSD015
+      ** Set-up 1st parameter for SDCWLCHK                                                    CSD015
+      *                                                                                       CSD015
+     C                     MOVELTRNO      W4IDEN                                              CSD015
+     C                     MOVELMTPY      W4ITEM                                              CSD015
+     C                     MOVELBRCA      W4BRCH                                              CSD015
+     C                     MOVELLIBR      W4SYSM                                              CSD015
+     C                     MOVEL'MGOREF'  W4FUNT                                              CSD015
+     C                     MOVELDECN      W4CNUM                                              CSD015
+     C                     Z-ADDBJRDNB    W4DDAT                                              CSD015
+     C                     Z-ADD0         W4VDAT                                              CSD015
+     C                     Z-ADD0         W4MDAT                                              CSD015
+     C                     MOVEL*BLANKS   W4DEN1                                              CSD015
+     C                     MOVEL*BLANKS   W4DEN2                                              CSD015
+     C                     MOVEL*BLANKS   W4AMT1                                              CSD015
+     C                     MOVEL*BLANKS   W4AMT2                                              CSD015
+      *                                                                                       CSD015
+      ** Send transaction to compliance engine program                                        CSD015
+      *                                                                                       CSD015
+     C                     CALL 'SDWLCLOP'                                                    CSD015
+     C                     PARM           WLFDS                                               CSD015
+     C                     PARM           PSTRNG                                              CSD015
+      *                                                                                       CSD015
+      ** Determine if Message is in the Hit List                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       WHIT    1                                           CSD015
+     C                     MOVEL'MGOREF  'WFUNC                                               CSD015
+     C                     MOVELTRNO      WIDEN                                               CSD015
+     C                     MOVELBRCA      WBRCH                                               CSD015
+      *                                                                                       CSD015
+     C           KLCWHT    CHAINSDCWHTL1             25                                       CSD015
+      *                                                                                       CSD015
+     C           *IN25     IFEQ *OFF                                                          CSD015
+     C           W3TREL    ANDNE'Y'                                                           CSD015
+     C                     MOVE 'Y'       WHIT                                                CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Re-determine Message Status                                                          CSD015
+      *                                                                                       CSD015
+     C           WHIT      IFEQ 'Y'                                                           CSD015
+     C           MGST      ANDEQ'RSND'                                                        CSD015
+     C           NWRK      IFEQ 'SWIFT '                                                      CSD015
+     C           NWRK      OREQ 'TELEX '                                                      CSD015
+     C           NWRK      OREQ 'STTX  '                                                      CSD015
+     C                     MOVE 'CRTD'    MGST                                                CSD015
+     C                     MOVE '1'       MGSG                                                CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           EWATCH    ENDSR                                                              CSD015
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      * SRCONC - Checks if tag exists in watch list and performs      *                       CSD015
+      *          concatenation of strings.                            *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+      *                                                                                       CSD015
+     C           SRCONC    BEGSR                                                              CSD015
+      *                                                                                       CSD015
+     C           MFLD      IFNE *BLANKS                                                       CSD015
+     C           MTAG      IFNE *BLANKS                                                       CSD015
+      *                                                                                       CSD015
+      ** Check if tag exists in the watch list by calling AOWLMTR0                            CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLMTR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*MTAG'   POPTN                                               CSD015
+     C                     PARM MTPY      PMTYP                                               CSD015
+     C                     PARM MTAG      PMTAG                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVEL'Y'       PTAGCK  1                                           CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVEL'N'       PTAGCK                                              CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PTAGCK    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+      ** Perform concatenation of the string by calling AOWLMCR0                              CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLMCR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM *BLANKS   POPTN                                               CSD015
+     C                     PARM MTAG      PMTAG                                               CSD015
+     C                     PARM MFLD      PMFLD  50                                           CSD015
+     C                     PARM           PSTRNG                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDSR                                                              CSD015
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+     C/EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      *  SRCPTP - Determine Counterparty Type                         *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+      *                                                                                       CSD015
+     C           SRCPTP    BEGSR                                                              CSD015
+      *                                                                                       CSD015
+      ** Determine Counter party type                                                         CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   PKEY1  10                                           CSD015
+     C                     MOVELDECN      PKEY1                                               CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOCUSTR0'                                                    CSD015
+     C                     PARM *BLANK    PRTCD                                               CSD015
+     C                     PARM '*KEY   ' POPTN                                               CSD015
+     C                     PARM           PKEY1                                               CSD015
+     C                     PARM *BLANKS   PKYST   7                                           CSD015
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSD015
+      *                                                                                       CSD015
+      ** Customer record not found - Error                                                    CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF  '                                                      CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVELPKEY1     DBKEY                                               CSD015
+     C                     MOVEL'SDCUSTPD'DBFILE                                              CSD015
+     C                     MOVEL'035'     DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+     C           BBCRNM    CAT  BBCRTN    W4CUST                                              CSD015
+      *                                                                                       CSD015
+     C           CCF001    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+     C           BBCRPC    IFEQ 'Y'                                                           CSD015
+     C                     MOVE 'C'       W4CTYP                                              CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVE 'I'       W4CTYP                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ELSE                                                               CSD015
+      *                                                                                       CSD015
+     C           BBLICD    IFNE *BLANKS                                                       CSD015
+     C           BBLICD    ANDNEW1IND1                                                        CSD015
+     C           BBLICD    ANDNEW1IND2                                                        CSD015
+     C           BBLICD    ANDNEW1IND3                                                        CSD015
+     C           BBLICD    ANDNEW1IND4                                                        CSD015
+     C           BBLICD    ANDNEW1IND5                                                        CSD015
+     C                     MOVE 'C'       W4CTYP                                              CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVE 'I'       W4CTYP                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDSR                                                              CSD015
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****6th message from array TXT changed - old message follows:       106066 130041
+      ****Message branch prevents amendment                               106066 130041
+** File translation table to prevent invalid characters being Tx/ed
+*EQUATE MGOMSGPD
+*EQUATE 4E504B5E7D7F4DC05DD060CD6F5A6F5B6F4A6F6C6F5C6F4C6F7E6F6E6F7C61E06F7B
+*EQUATE 6F4F6F5F7D7960A1606D
+**  Text
+Message input reference must be entered
+Message input reference must not be that of an STTX
+Transaction reference of message must be entered
+No message with message input reference entered
+Transaction reference must equal that on incoming message
+User not authorised to branch of incoming message
+Query/answer lines must not start with '-', ':', 'ò', '~' or '_'
+Description lines must not start with '-', ':', 'ò', '~' or '_'
+Transaction reference should not contain invalid characters
+** INVC - list of invalid characters                                      086529
+&;"{}ò!$¢%*<=>@\#|¬`~_
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

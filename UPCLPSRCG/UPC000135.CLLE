@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*OVR    OVRDBF FILE(UPALLSPD) TOFILE(QADSPOBJ)                      */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP X-check module and program src in library')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000135 - X-Check Module and Program Sources in a library */
+/*                                                                   */
+/*       Called by: command MODPGMXCHK                               */
+/*                                                                   */
+/*       Calls    : UPC000136                                        */
+/*                  UPC000138                                        */
+/*                  UPC000139                                        */
+/*                  UP000140                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP029 *CREATE     Date 21Sep04              */
+/*       Prev Amend No.                    Date                      */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP029 - Cross check module and program sources in a library*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB &LAYER &FULLDELV)
+ 
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FULLDELV) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&PROCLAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Obtain list of all files in source library */
+             DLTF       FILE(QTEMP/UPALLSPD)
+             MONMSG     MSGID(CPF2105)
+ 
+             DSPOBJD    OBJ(&SRCLIB/*ALL) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPALLSPD)
+ 
+/* Monitor for no file in the source library. */
+             MONMSG     MSGID(CPF2123) EXEC(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('No +
+                          files exist in the library' *BCAT +
+                          &SRCLIB *BCAT 'for this cross check') +
+                          MSGTYPE(*ESCAPE)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND(&LAYER = '*BOTH') THEN(DO)
+                        CHGVAR     VAR(&PROCLAYER) VALUE('*GLOBAL')
+             ENDDO
+             ELSE       CMD(DO)
+                        CHGVAR     VAR(&PROCLAYER) VALUE(&LAYER)
+             ENDDO
+ 
+NEXTLAYER:
+ 
+/* Load module, program and service program source file (UPSRCFPD) */
+             CLRPFM     FILE(UPSRCFPD)
+             CALL       PGM(UP000135) PARM(&PROCLAYER)
+/* If error, error message */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+/* Extract sources with module creation parmeters and load */
+/*   module source file UPMODSPD. */
+             CALL       PGM(UPC000136) PARM(&SRCLIB)
+/* If error, exit program  */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
+ 
+/* Load program source file UPPGMSSPD  */
+             CALL       PGM(UPC000138) PARM(&SRCLIB 'UPPMLSTPD' 'UPPGMSPD')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
+ 
+/* Load service program source and related modules file UPSVPSMPD. */
+             CALL       PGM(UPC000139) PARM(&SRCLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(END))
+ 
+/* Generate report. */
+             CALL       PGM(UP000140) PARM(&SRCLIB &PROCLAYER &FULLDELV)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             CHGSPLFA   FILE(UP000140P1) SPLNBR(*LAST) +
+                          USRDTA(&PROCLAYER)
+ 
+/* If layer requested is *Both and has just processed for global layer, go back */
+/*    and process for zone layer. */
+             IF         COND((&LAYER = '*BOTH') *AND (&PROCLAYER = +
+                          '*GLOBAL')) THEN(DO)
+                        CHGVAR     VAR(&PROCLAYER) VALUE('*ZONE')
+                        GOTO       CMDLBL(NEXTLAYER)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000135') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog and dump for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000135' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

@@ -1,0 +1,522 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. 103131             DATE 17SEP97               *
+     C*  PREV AMEND NO. CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  103131 - Z-ADD does not init work fields due to dec error    *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTTOTS - Teller total updates                      *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @TAMT  - Transaction amount                        *
+     C*            @COUNT - counter work field                        *
+     C*            @I     - array index                               *
+     C*            @CCY   - transaction currency                      *
+     C*            @RVIN  - Reversal indicator                        *
+     C*            @DCIN  - Debit/credit indicator                    *
+     C*            @CSIN  - transaction type cash indicator           *
+     C*            @CLIN  - transaction type clearing indicator       *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @CY    - Teller of currencies array                *
+     C*            @NCDS  - No. of credits data structure             *
+     C*            @NDDS  - No. of debits data structure              *
+     C*            @VCDS  - Value of credits data structure           *
+     C*            @VDDS  - Value of debits data structure            *
+     C*            @VSDS  - Value of cash data structure              *
+     C*            @VQDS  - Value of checks data structure            *
+     C*                                                               *
+     C*****************************************************************
+     C           RTTOTS    BEGSR                           ** RTTOTS **
+     C*
+     C** Define parameters
+     C*
+     C                     Z-ADD@TAMT     @TAMT  150
+     C                     Z-ADD@COUNT    @COUNT  10
+     C                     Z-ADD1         @Y      20
+     C                     MOVEL@CCY      @CCY    3
+     C                     MOVEL@RVIN     @RVIN   1
+     C                     MOVEL@DCIN     @DCIN   1
+     C                     MOVEL@CSIN     @CSIN   1
+     C                     MOVEL@CLIN     @CLIN   1
+     C*
+     C                     Z-ADD*ZEROS    @NC                             103131
+     C                     Z-ADD*ZEROS    @ND                             103131
+     C                     Z-ADD*ZEROS    @VC                             103131
+     C                     Z-ADD*ZEROS    @VD                             103131
+     C                     Z-ADD*ZEROS    @VS                             103131
+     C                     Z-ADD*ZEROS    @VQ                             103131
+     C*                                                                   103131
+     C** If reversal indicator is 'Y'?  Negate transaction amt. & count
+     C*
+     C           @RVIN     IFEQ 'Y'
+     C                     Z-SUB@TAMT     @TAMT
+     C                     Z-SUB@COUNT    @COUNT
+     C                     END
+     C*
+     C** Locate control currency & corresponding array element
+     C*
+     C           @CCY      LOKUP@CY,@Y                   82
+     C*
+     C           *IN82     IFEQ '1'
+     C*
+     C** Update work fields from data structures
+     C*
+     C           @Y        IFEQ 1
+     C                     Z-ADD@NC1      @NC     50
+     C                     Z-ADD@ND1      @ND     50
+     C                     Z-ADD@VC1      @VC    150
+     C                     Z-ADD@VD1      @VD    150
+     C                     Z-ADD@VS1      @VS    150
+     C                     Z-ADD@VQ1      @VQ    150
+     C                     END
+     C*
+     C           @Y        IFEQ 2
+     C                     Z-ADD@NC2      @NC
+     C                     Z-ADD@ND2      @ND
+     C                     Z-ADD@VC2      @VC
+     C                     Z-ADD@VD2      @VD
+     C                     Z-ADD@VS2      @VS
+     C                     Z-ADD@VQ2      @VQ
+     C                     END
+     C*
+     C** If third element found?
+     C*
+     C           @Y        IFEQ 3
+     C                     Z-ADD@NC3      @NC
+     C                     Z-ADD@ND3      @ND
+     C                     Z-ADD@VC3      @VC
+     C                     Z-ADD@VD3      @VD
+     C                     Z-ADD@VS3      @VS
+     C                     Z-ADD@VQ3      @VQ
+     C                     END
+     C*
+     C           @Y        IFEQ 4
+     C                     Z-ADD@NC4      @NC
+     C                     Z-ADD@ND4      @ND
+     C                     Z-ADD@VC4      @VC
+     C                     Z-ADD@VD4      @VD
+     C                     Z-ADD@VS4      @VS
+     C                     Z-ADD@VQ4      @VQ
+     C                     END
+     C*
+     C           @Y        IFEQ 5
+     C                     Z-ADD@NC5      @NC
+     C                     Z-ADD@ND5      @ND
+     C                     Z-ADD@VC5      @VC
+     C                     Z-ADD@VD5      @VD
+     C                     Z-ADD@VS5      @VS
+     C                     Z-ADD@VQ5      @VQ
+     C                     END
+     C*
+     C           @Y        IFEQ 6
+     C                     Z-ADD@NC6      @NC
+     C                     Z-ADD@ND6      @ND
+     C                     Z-ADD@VC6      @VC
+     C                     Z-ADD@VD6      @VD
+     C                     Z-ADD@VS6      @VS
+     C                     Z-ADD@VQ6      @VQ
+     C                     END
+     C*
+     C           @Y        IFEQ 7
+     C                     Z-ADD@NC7      @NC
+     C                     Z-ADD@ND7      @ND
+     C                     Z-ADD@VC7      @VC
+     C                     Z-ADD@VD7      @VD
+     C                     Z-ADD@VS7      @VS
+     C                     Z-ADD@VQ7      @VQ
+     C                     END
+     C*
+     C           @Y        IFEQ 8
+     C                     Z-ADD@NC8      @NC
+     C                     Z-ADD@ND8      @ND
+     C                     Z-ADD@VC8      @VC
+     C                     Z-ADD@VD8      @VD
+     C                     Z-ADD@VS8      @VS
+     C                     Z-ADD@VQ8      @VQ
+     C                     END
+     C*
+     C           @Y        IFGT 8
+     C*
+     C           @Y        IFEQ 9
+     C                     Z-ADD@NC9      @NC
+     C                     Z-ADD@ND9      @ND
+     C                     Z-ADD@VC9      @VC
+     C                     Z-ADD@VD9      @VD
+     C                     Z-ADD@VS9      @VS
+     C                     Z-ADD@VQ9      @VQ
+     C                     END
+     C           @Y        IFEQ 10
+     C                     Z-ADD@NC10     @NC
+     C                     Z-ADD@ND10     @ND
+     C                     Z-ADD@VC10     @VC
+     C                     Z-ADD@VD10     @VD
+     C                     Z-ADD@VS10     @VS
+     C                     Z-ADD@VQ10     @VQ
+     C                     END
+     C           @Y        IFEQ 11
+     C                     Z-ADD@NC11     @NC
+     C                     Z-ADD@ND11     @ND
+     C                     Z-ADD@VC11     @VC
+     C                     Z-ADD@VD11     @VD
+     C                     Z-ADD@VS11     @VS
+     C                     Z-ADD@VQ11     @VQ
+     C                     END
+     C           @Y        IFEQ 12
+     C                     Z-ADD@NC12     @NC
+     C                     Z-ADD@ND12     @ND
+     C                     Z-ADD@VC12     @VC
+     C                     Z-ADD@VD12     @VD
+     C                     Z-ADD@VS12     @VS
+     C                     Z-ADD@VQ12     @VQ
+     C                     END
+     C           @Y        IFEQ 13
+     C                     Z-ADD@NC13     @NC
+     C                     Z-ADD@ND13     @ND
+     C                     Z-ADD@VC13     @VC
+     C                     Z-ADD@VD13     @VD
+     C                     Z-ADD@VS13     @VS
+     C                     Z-ADD@VQ13     @VQ
+     C                     END
+     C           @Y        IFEQ 14
+     C                     Z-ADD@NC14     @NC
+     C                     Z-ADD@ND14     @ND
+     C                     Z-ADD@VC14     @VC
+     C                     Z-ADD@VD14     @VD
+     C                     Z-ADD@VS14     @VS
+     C                     Z-ADD@VQ14     @VQ
+     C                     END
+     C           @Y        IFEQ 15
+     C                     Z-ADD@NC15     @NC
+     C                     Z-ADD@ND15     @ND
+     C                     Z-ADD@VC15     @VC
+     C                     Z-ADD@VD15     @VD
+     C                     Z-ADD@VS15     @VS
+     C                     Z-ADD@VQ15     @VQ
+     C                     END
+     C           @Y        IFEQ 16
+     C                     Z-ADD@NC16     @NC
+     C                     Z-ADD@ND16     @ND
+     C                     Z-ADD@VC16     @VC
+     C                     Z-ADD@VD16     @VD
+     C                     Z-ADD@VS16     @VS
+     C                     Z-ADD@VQ16     @VQ
+     C                     END
+     C           @Y        IFEQ 17
+     C                     Z-ADD@NC17     @NC
+     C                     Z-ADD@ND17     @ND
+     C                     Z-ADD@VC17     @VC
+     C                     Z-ADD@VD17     @VD
+     C                     Z-ADD@VS17     @VS
+     C                     Z-ADD@VQ17     @VQ
+     C                     END
+     C           @Y        IFEQ 18
+     C                     Z-ADD@NC18     @NC
+     C                     Z-ADD@ND18     @ND
+     C                     Z-ADD@VC18     @VC
+     C                     Z-ADD@VD18     @VD
+     C                     Z-ADD@VS18     @VS
+     C                     Z-ADD@VQ18     @VQ
+     C                     END
+     C           @Y        IFEQ 19
+     C                     Z-ADD@NC19     @NC
+     C                     Z-ADD@ND19     @ND
+     C                     Z-ADD@VC19     @VC
+     C                     Z-ADD@VD19     @VD
+     C                     Z-ADD@VS19     @VS
+     C                     Z-ADD@VQ19     @VQ
+     C                     END
+     C           @Y        IFEQ 20
+     C                     Z-ADD@NC20     @NC
+     C                     Z-ADD@ND20     @ND
+     C                     Z-ADD@VC20     @VC
+     C                     Z-ADD@VD20     @VD
+     C                     Z-ADD@VS20     @VS
+     C                     Z-ADD@VQ20     @VQ
+     C                     END
+     C           @Y        IFEQ 21
+     C                     Z-ADD@NC21     @NC
+     C                     Z-ADD@ND21     @ND
+     C                     Z-ADD@VC21     @VC
+     C                     Z-ADD@VD21     @VD
+     C                     Z-ADD@VS21     @VS
+     C                     Z-ADD@VQ21     @VQ
+     C                     END
+     C           @Y        IFEQ 22
+     C                     Z-ADD@NC22     @NC
+     C                     Z-ADD@ND22     @ND
+     C                     Z-ADD@VC22     @VC
+     C                     Z-ADD@VD22     @VD
+     C                     Z-ADD@VS22     @VS
+     C                     Z-ADD@VQ22     @VQ
+     C                     END
+     C           @Y        IFEQ 23
+     C                     Z-ADD@NC23     @NC
+     C                     Z-ADD@ND23     @ND
+     C                     Z-ADD@VC23     @VC
+     C                     Z-ADD@VD23     @VD
+     C                     Z-ADD@VS23     @VS
+     C                     Z-ADD@VQ23     @VQ
+     C                     END
+     C           @Y        IFEQ 24
+     C                     Z-ADD@NC24     @NC
+     C                     Z-ADD@ND24     @ND
+     C                     Z-ADD@VC24     @VC
+     C                     Z-ADD@VD24     @VD
+     C                     Z-ADD@VS24     @VS
+     C                     Z-ADD@VQ24     @VQ
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If debit transaction?
+     C*
+     C           @DCIN     IFEQ 'D'
+     C*
+     C                     ADD  @COUNT    @NC
+     C                     ADD  @TAMT     @VC
+     C*
+     C           @CSIN     IFEQ 'Y'
+     C                     SUB  @TAMT     @VS
+     C                     END
+     C           @CLIN     IFEQ 'Y'
+     C                     SUB  @TAMT     @VQ
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** If credit transaction?
+     C*
+     C                     ADD  @COUNT    @ND
+     C                     ADD  @TAMT     @VD
+     C*
+     C           @CSIN     IFEQ 'Y'
+     C                     ADD  @TAMT     @VS
+     C                     END
+     C           @CLIN     IFEQ 'Y'
+     C                     ADD  @TAMT     @VQ
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Update data structure from work field
+     C*
+     C           @Y        IFEQ 1
+     C                     Z-ADD@NC       @NC1
+     C                     Z-ADD@ND       @ND1
+     C                     Z-ADD@VC       @VC1
+     C                     Z-ADD@VD       @VD1
+     C                     Z-ADD@VS       @VS1
+     C                     Z-ADD@VQ       @VQ1
+     C                     END
+     C*
+     C           @Y        IFEQ 2
+     C                     Z-ADD@NC       @NC2
+     C                     Z-ADD@ND       @ND2
+     C                     Z-ADD@VC       @VC2
+     C                     Z-ADD@VD       @VD2
+     C                     Z-ADD@VS       @VS2
+     C                     Z-ADD@VQ       @VQ2
+     C                     END
+     C*
+     C           @Y        IFEQ 3
+     C                     Z-ADD@NC       @NC3
+     C                     Z-ADD@ND       @ND3
+     C                     Z-ADD@VC       @VC3
+     C                     Z-ADD@VD       @VD3
+     C                     Z-ADD@VS       @VS3
+     C                     Z-ADD@VQ       @VQ3
+     C                     END
+     C*
+     C           @Y        IFEQ 4
+     C                     Z-ADD@NC       @NC4
+     C                     Z-ADD@ND       @ND4
+     C                     Z-ADD@VC       @VC4
+     C                     Z-ADD@VD       @VD4
+     C                     Z-ADD@VS       @VS4
+     C                     Z-ADD@VQ       @VQ4
+     C                     END
+     C*
+     C           @Y        IFEQ 5
+     C                     Z-ADD@NC       @NC5
+     C                     Z-ADD@ND       @ND5
+     C                     Z-ADD@VC       @VC5
+     C                     Z-ADD@VD       @VD5
+     C                     Z-ADD@VS       @VS5
+     C                     Z-ADD@VQ       @VQ5
+     C                     END
+     C*
+     C           @Y        IFEQ 6
+     C                     Z-ADD@NC       @NC6
+     C                     Z-ADD@ND       @ND6
+     C                     Z-ADD@VC       @VC6
+     C                     Z-ADD@VD       @VD6
+     C                     Z-ADD@VS       @VS6
+     C                     Z-ADD@VQ       @VQ6
+     C                     END
+     C*
+     C           @Y        IFEQ 7
+     C                     Z-ADD@NC       @NC7
+     C                     Z-ADD@ND       @ND7
+     C                     Z-ADD@VC       @VC7
+     C                     Z-ADD@VD       @VD7
+     C                     Z-ADD@VS       @VS7
+     C                     Z-ADD@VQ       @VQ7
+     C                     END
+     C*
+     C           @Y        IFEQ 8
+     C                     Z-ADD@NC       @NC8
+     C                     Z-ADD@ND       @ND8
+     C                     Z-ADD@VC       @VC8
+     C                     Z-ADD@VD       @VD8
+     C                     Z-ADD@VS       @VS8
+     C                     Z-ADD@VQ       @VQ8
+     C                     END
+     C*
+     C           @Y        IFGT 8
+     C*
+     C           @Y        IFEQ 9
+     C                     Z-ADD@NC       @NC9
+     C                     Z-ADD@ND       @ND9
+     C                     Z-ADD@VC       @VC9
+     C                     Z-ADD@VD       @VD9
+     C                     Z-ADD@VS       @VS9
+     C                     Z-ADD@VQ       @VQ9
+     C                     END
+     C           @Y        IFEQ 10
+     C                     Z-ADD@NC       @NC10
+     C                     Z-ADD@ND       @ND10
+     C                     Z-ADD@VC       @VC10
+     C                     Z-ADD@VD       @VD10
+     C                     Z-ADD@VS       @VS10
+     C                     Z-ADD@VQ       @VQ10
+     C                     END
+     C           @Y        IFEQ 11
+     C                     Z-ADD@NC       @NC11
+     C                     Z-ADD@ND       @ND11
+     C                     Z-ADD@VC       @VC11
+     C                     Z-ADD@VD       @VD11
+     C                     Z-ADD@VS       @VS11
+     C                     Z-ADD@VQ       @VQ11
+     C                     END
+     C           @Y        IFEQ 12
+     C                     Z-ADD@NC       @NC12
+     C                     Z-ADD@ND       @ND12
+     C                     Z-ADD@VC       @VC12
+     C                     Z-ADD@VD       @VD12
+     C                     Z-ADD@VS       @VS12
+     C                     Z-ADD@VQ       @VQ12
+     C                     END
+     C           @Y        IFEQ 13
+     C                     Z-ADD@NC       @NC13
+     C                     Z-ADD@ND       @ND13
+     C                     Z-ADD@VC       @VC13
+     C                     Z-ADD@VD       @VD13
+     C                     Z-ADD@VS       @VS13
+     C                     Z-ADD@VQ       @VQ13
+     C                     END
+     C           @Y        IFEQ 14
+     C                     Z-ADD@NC       @NC14
+     C                     Z-ADD@ND       @ND14
+     C                     Z-ADD@VC       @VC14
+     C                     Z-ADD@VD       @VD14
+     C                     Z-ADD@VS       @VS14
+     C                     Z-ADD@VQ       @VQ14
+     C                     END
+     C           @Y        IFEQ 15
+     C                     Z-ADD@NC       @NC15
+     C                     Z-ADD@ND       @ND15
+     C                     Z-ADD@VC       @VC15
+     C                     Z-ADD@VD       @VD15
+     C                     Z-ADD@VS       @VS15
+     C                     Z-ADD@VQ       @VQ15
+     C                     END
+     C           @Y        IFEQ 16
+     C                     Z-ADD@NC       @NC16
+     C                     Z-ADD@ND       @ND16
+     C                     Z-ADD@VC       @VC16
+     C                     Z-ADD@VD       @VD16
+     C                     Z-ADD@VS       @VS16
+     C                     Z-ADD@VQ       @VQ16
+     C                     END
+     C           @Y        IFEQ 17
+     C                     Z-ADD@NC       @NC17
+     C                     Z-ADD@ND       @ND17
+     C                     Z-ADD@VC       @VC17
+     C                     Z-ADD@VD       @VD17
+     C                     Z-ADD@VS       @VS17
+     C                     Z-ADD@VQ       @VQ17
+     C                     END
+     C           @Y        IFEQ 18
+     C                     Z-ADD@NC       @NC18
+     C                     Z-ADD@ND       @ND18
+     C                     Z-ADD@VC       @VC18
+     C                     Z-ADD@VD       @VD18
+     C                     Z-ADD@VS       @VS18
+     C                     Z-ADD@VQ       @VQ18
+     C                     END
+     C           @Y        IFEQ 19
+     C                     Z-ADD@NC       @NC19
+     C                     Z-ADD@ND       @ND19
+     C                     Z-ADD@VC       @VC19
+     C                     Z-ADD@VD       @VD19
+     C                     Z-ADD@VS       @VS19
+     C                     Z-ADD@VQ       @VQ19
+     C                     END
+     C           @Y        IFEQ 20
+     C                     Z-ADD@NC       @NC20
+     C                     Z-ADD@ND       @ND20
+     C                     Z-ADD@VC       @VC20
+     C                     Z-ADD@VD       @VD20
+     C                     Z-ADD@VS       @VS20
+     C                     Z-ADD@VQ       @VQ20
+     C                     END
+     C           @Y        IFEQ 21
+     C                     Z-ADD@NC       @NC21
+     C                     Z-ADD@ND       @ND21
+     C                     Z-ADD@VC       @VC21
+     C                     Z-ADD@VD       @VD21
+     C                     Z-ADD@VS       @VS21
+     C                     Z-ADD@VQ       @VQ21
+     C                     END
+     C           @Y        IFEQ 22
+     C                     Z-ADD@NC       @NC22
+     C                     Z-ADD@ND       @ND22
+     C                     Z-ADD@VC       @VC22
+     C                     Z-ADD@VD       @VD22
+     C                     Z-ADD@VS       @VS22
+     C                     Z-ADD@VQ       @VQ22
+     C                     END
+     C           @Y        IFEQ 23
+     C                     Z-ADD@NC       @NC23
+     C                     Z-ADD@ND       @ND23
+     C                     Z-ADD@VC       @VC23
+     C                     Z-ADD@VD       @VD23
+     C                     Z-ADD@VS       @VS23
+     C                     Z-ADD@VQ       @VQ23
+     C                     END
+     C           @Y        IFEQ 24
+     C                     Z-ADD@NC       @NC24
+     C                     Z-ADD@ND       @ND24
+     C                     Z-ADD@VC       @VC24
+     C                     Z-ADD@VD       @VD24
+     C                     Z-ADD@VS       @VS24
+     C                     Z-ADD@VQ       @VQ24
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************

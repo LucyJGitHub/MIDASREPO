@@ -1,0 +1,433 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop Off Position Profit Centres')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE2590 - DROP OFF POSITION PROFIT CENTRES                    *
+     F*                                                               *
+     F*  Function: To drop off the default profit centre records for  *
+     F*   (COB)    both book and customer positions, where no live    *
+     F*            records exist.                                     *
+     F*                                                               *
+     F*  Called by: SEC1006 - Drop off Position Profit Centres        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+     F*  Last Amend No. 095907             DATE 30Jan07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 070852             DATE 12OCT94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 048927             DATE 10JAN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 S01117             DATE 05AUG91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  095907 - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+     F*  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  070852 - Check CLIAB file to see if any details before       *
+     F*           dropping records from SEPCCD.                       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  048927 - SE0930AU DOES NOT PRINT A TITLE                     *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01117  -  Multibranching (new program)                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSEPPC   UP  E           K        DISK
+     FBKPHD   IF  E           K        DISK
+     FCPOSN   IF  E           K        DISK
+     FSEPCA   UF  E           K        DISK
+     FCLIAB   IF  E           K        DISK                               070852
+     FSE2590AUO   E                    PRINTER
+     F/COPY WNCPYSRC,SE2590F001
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   60 - Number of records on audit file different from         *
+     F*        number of records read                                 *
+     F*                                                               *
+     F*   70 - Indicator (set off) for fist time processing           *
+     F*   71 - SEPPC format read is SEPCBD (Book)                     *
+     F*   72 - SEPPC format read is SEPCCD (Customer)                 *
+     F*                                                               *
+     F*   80 - (set on) for chain fail on positions files             *
+     F*   81 - (set on) for chain fail on audit file                  *
+     F*                                                               *
+     F*90-99 - Used in standard subroutines                           *
+     F*                                                               *
+     F*   U7 - Database error                                         *
+     F*   U8 - Database / Control error                               *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  *PSSR  - DUMP program on error                               *
+     F*  AUDIT  - Update Audit file                                   *
+     F*  BOOKRC - Drop off book position profit centre                *
+     F*  CUSTRC - Drop off customer position profit centre            *
+     F*  FIRST  - Initialisation processing                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+      *
+     E                    CPY@    1   1 80
+     I/EJECT
+      *
+      ** Identify individual SEPPC formats
+      *
+      ** Book Position:
+      *
+     ISEPCBDF     71
+      *
+      ** Customer Position:
+      *
+     ISEPCCDF     72
+      *
+      *                                                                   070852
+      *  Rename fields on CLIABD                                          070852
+     ICLIABDF                                                             070852
+     I              RECI                            XRECI                 070852
+     I              TDSS                            XTDSS                 070852
+     I              TDBA                            XTDBA                 070852
+     I              TCNR                            XTCNR                 070852
+     I              TDRF                            XTDRF                 070852
+     I              NOML                            XNOML                 070852
+      *                                                                   070852
+     ILDA         DS                            256
+      *
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IRUNDT       DS
+      *
+      ** RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITLE                 048927
+      *
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short data structure for access programs (200 long)
+     I/COPY WNCPYSRC,SE2590I001
+      *
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  *
+     C*================================================================
+     C*
+      *
+      ** Execute Initialisation subroutine the first time around
+      *
+     C           *IN70     IFEQ '0'
+     C                     EXSR FIRST
+     C                     MOVE '1'       *IN70
+     C                     END
+      *
+      ** Maintain count of records read
+      *
+     C                     ADD  1         RECCNT
+      *
+      ** Execute appropriate subroutine dependant on record read
+      *
+     C           *IN71     CASEQ'1'       BOOKRC
+     C           *IN72     CASEQ'1'       CUSTRC
+     C                     END
+      *
+      ** Last Record - Audit process
+      *
+      ** If no records read, perform 1st time calcs for audit report
+      *
+     CLR         RECCNT    IFEQ *ZEROS
+     CLR                   EXSR FIRST
+     CLR                   END
+     C/COPY WNCPYSRC,SE2590C001
+      *
+     CLR                   EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT - Update Audit file                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** Read Position Profit Centre Audit file
+      *
+     C                     READ SEPCA                    81
+      *
+     C           *IN81     IFEQ '1'
+      *
+      ** Database error if record not found
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SEPCA'   DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+      *
+      ** Compare control total to number of records read
+      *
+     C           NORE      IFNE RECCNT
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+      ** Print audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDETLAU
+      *
+      ** If totals same, update audit record with new number of live
+      ** records on file
+      *
+     C           *INU8     IFEQ '0'
+     C                     MOVE RECNDT    SLRB
+     C                     MOVE *ZERO     SINS
+     C                     MOVE *ZERO     SAMD
+     C                     MOVE *ZERO     SDEL
+     C                     MOVE RECNDT    NORE
+     C                     UPDATSEPCAF
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BOOKRC - Drop off book position profit centre                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BOOKRC    BEGSR
+      *
+      ** Access BKPHD book position
+      *
+     C                     MOVELSESN      @BPSC
+     C                     MOVELBRCA      @BPBA
+     C                     MOVELBOKC      @BPBK
+     C                     MOVELMKTI      @BPMK
+     C           BKEY      CHAINBKPHDDF              80
+      *
+     C           *IN80     IFEQ '1'
+      *
+      ** If no live record exists then flag SEPPC record as deleted
+      *
+     C***                  MOVE '*'       RECI                                                095907
+     C/COPY WNCPYSRC,SE2590C002
+     C                     DELETSEPCBDF                                                       095907
+     C                     ADD  1         RECDLT
+     C***                  EXCPTBOOK                                                          095907
+     C                     ELSE
+      *
+      ** Else add one to the number of records on file
+      *
+     C                     ADD  1         RECNDT
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CUSTRC - Drop off customer position profit centre            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUSTRC    BEGSR
+      *
+      ** Access CPOSN client position
+      *
+     C                     MOVELBRCA      @CSBA
+     C                     MOVELSESN      @CSSC
+     C                     MOVELCNUM      @CSCN
+     C           CKEY      CHAINCPOSNDF              80
+      *                                                                   070852
+      *  Check if any existing records on CLIABD                          070852
+      *                                                                   070852
+     C           *IN80     IFEQ '1'                                       070852
+     C           CKEY1     CHAINCLIABDF              80                   070852
+     C                     END                                            070852
+      *
+     C           *IN80     IFEQ '1'
+      *
+      ** If no live record exists then flag SEPPC record as deleted
+      *
+     C***                  MOVE '*'       RECI                                                095907
+     C/COPY WNCPYSRC,SE2590C003
+     C                     DELETSEPCCDF                                                       095907
+     C                     ADD  1         RECDLT
+     C***                  EXCPTCUST                                                          095907
+     C                     ELSE
+      *
+      ** Else add one to the number of records on file
+      *
+     C                     ADD  1         RECNDT
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST - Initialisation processing                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR
+      *
+      ** Define key list for file CPOSN
+      *
+     C           CKEY      KLIST
+     C                     KFLD           @CSBA
+     C                     KFLD           @CSSC
+     C                     KFLD           @CSCN
+      *                                                                   070852
+      ** Define key list for file CLIAB                                   070852
+      *                                                                   070852
+     C           CKEY1     KLIST                                          070852
+     C                     KFLD           @CSSC                           070852
+     C                     KFLD           @CSBA                           070852
+     C                     KFLD           @CSCN                           070852
+      *
+      ** Define key list for BKPHD file
+      *
+     C           BKEY      KLIST
+     C                     KFLD           @BPSC
+     C                     KFLD           @BPBA
+     C                     KFLD           @BPBK
+     C                     KFLD           @BPMK
+      *
+      ** Define fields
+      *
+      ** Positions files key fields
+      *
+     C           *LIKE     DEFN BHSC      @BPSC
+     C           *LIKE     DEFN BHBA      @BPBA
+     C           *LIKE     DEFN BHBK      @BPBK
+     C           *LIKE     DEFN BHMK      @BPMK
+     C           *LIKE     DEFN CSBA      @CSBA
+     C           *LIKE     DEFN CSSC      @CSSC
+     C           *LIKE     DEFN CSCN      @CSCN
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE2590'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read in RUNDAT data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C/COPY WNCPYSRC,SE2590C004
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Database error subroutine.                           *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Database error processing                          *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C**
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C**
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/COPY WNCPYSRC,SE2590C005
+     O/EJECT
+     O***SEPCBDF E             BOOK                                                           095907
+     O***                      RECI                                                           095907
+     O***SEPCCDF E             CUST                                                           095907
+     O***                      RECI                                                           095907
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

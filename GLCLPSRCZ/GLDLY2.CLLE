@@ -1,0 +1,56 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GL DLYJOB for use in RPG program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLDLY2 - DLYJOB for general use in RPG etc...               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 241672A  *CREATE   Date 09Jan07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       241672A - Create program to call DLYJOB with chosen time    */
+/*                 from an RPG program.  Patterned from GLDLYJOB.    */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*    @DELAY can be from 1 second to 999999 seconds. (11.5 days).    */
+/*    Enter one second as '1     ', ten minutes as '600   ' etc..    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&DELAY)
+ 
+             DCL        VAR(&DELAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global Error Trap */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLDLY2 - DLYJOB command') TOMSGQ(MRUNQ)
+ 
+/* Delay for time sent in calling parameter. Range of 1 - 999999 seconds allowed */
+ 
+             DLYJOB     DLY(&DELAY)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           GLDLY2 ended abnormally - see job +
+                           log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ ENDPGM:
+             ENDPGM

@@ -1,0 +1,205 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - SM Module                                            *
+      *                                                               *
+      *  SMULEACCN - Update PCNs for ICD changes Utility w/ Parm      *
+      *                                                               *
+      *  Function:  This program reads SDLOANPD, SDFACTPD and SDFEEPD.*
+      *             It checks necessary updates on all associated     *
+      *             records on LEACCNPD.                              *
+      *             Parameters:                                       *
+      *              SDLOANPD - Updates records related to SDLOANPD   *
+      *              SDFACTPD - Updates records related to SDFACTPD   *
+      *              SDFEEPD  - Updates records related to SDFEEPD    *
+      *              *ALL     - Updates records related to all files  *
+      *                         mentioned above                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 18Aug14               *
+      *  Prev Amend No. MD020953*CREATE    Date 18Jun13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  MD020953 - Field LEACCNPD.RPFACT and field LEACCNPD.RPFFNO   *
+      *             contains zero values for original loans           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    U7+U8      Database Errors                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      *                                                               *
+      *****************************************************************
+ 
+     FSDLOANPD  IF   E             DISK    INFSR(*PSSR)
+     FSDFACTPD  IF   E             DISK    INFSR(*PSSR)
+     FSDFEEPD   IF   E             DISK    INFSR(*PSSR)
+     FLEACCNLC  UF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNDC)
+     FLEACCNLD  UF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNDD)
+     FLEACCNLE  UF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNDE)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** Additional Field Definitions
+     D WKFCTY          S              3  0
+     D WKFECD          S              2  0
+ 
+      *****************************************************************
+      * Main Procedure                                                *
+      *****************************************************************
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE             10
+ 
+     C     KLTYP         KLIST
+     C                   KFLD                    AYLNTY
+     C                   KFLD                    AYLNST
+ 
+     C     KFTYP         KLIST
+     C                   KFLD                    WKFCTY
+ 
+     C     KFEE          KLIST
+     C                   KFLD                    WKFECD
+ 
+      ** If MODE = '*ALL' or 'SDLOANPD', read SDLOANPD
+ 
+     C                   IF        MODE = '*ALL' or
+     C                             MODE = 'SDLOANPD'
+     C                   READ      SDLOANPD                               80
+     C     *IN80         DOWEQ     '0'
+     C     KLTYP         SETLL     LEACCNLC
+     C     KLTYP         READE     LEACCNLC                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan PDCL, update RPPCK1
+ 
+     C     RPFCOD        IFEQ      0
+     C     AYPCKO        IFNE      0
+     C                   Z-ADD     AYPCKO        RPPCK1
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK1
+     C                   ENDIF
+     C     RPPCK1        IFLT      RPPCK2
+     C     RPPCK1        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK1        RPPCKO
+     C                   ENDIF
+ 
+      ** For a Loan Fee PDCL, update RPPCK2
+ 
+     C                   ELSE
+     C     AYPCKO        IFNE      0
+     C                   Z-ADD     AYPCKO        RPPCK2
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK2
+     C                   ENDIF
+     C     RPPCK2        IFLT      RPPCK1
+     C     RPPCK2        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK2        RPPCKO
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDC
+     C     KLTYP         READE     LEACCNLC                               81
+     C                   ENDDO
+     C                   READ      SDLOANPD                               80
+     C                   ENDDO
+     C                   ENDIF
+ 
+      ** If MODE = '*ALL' or 'SDFACTPD', read SDFACTPD
+ 
+     C                   IF        MODE = '*ALL' or
+     C                             MODE = 'SDFACTPD'
+     C                   READ      SDFACTPD                               80
+     C     *IN80         DOWEQ     '0'
+     C                   MOVEL     AMFCTY        WKFCTY
+     C     KFTYP         SETLL     LEACCNLD
+     C     KFTYP         READE     LEACCNLD                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan PDCL or a Facility Fee PDCL, update RPPCK2
+ 
+     C     AMPCKO        IFNE      0
+     C                   Z-ADD     AMPCKO        RPPCK2
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK2
+     C                   ENDIF
+     C     RPPCK2        IFLT      RPPCK1
+     C     RPPCK2        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK2        RPPCKO
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDD
+     C     KFTYP         READE     LEACCNLD                               81
+     C                   ENDDO
+     C                   READ      SDFACTPD                               80
+     C                   ENDDO
+     C                   ENDIF
+ 
+      ** If MODE = '*ALL' or 'SDFEEPD', read SDFEEPD
+ 
+     C                   IF        MODE = '*ALL' or
+     C                             MODE = 'SDFEEPD'
+     C                   READ      SDFEEPD                                80
+     C     *IN80         DOWEQ     '0'
+     C                   MOVEL     AUFECD        WKFECD
+     C     KFEE          SETLL     LEACCNLE
+     C     KFEE          READE     LEACCNLE                               81
+     C     *IN81         DOWEQ     '0'
+ 
+      ** For a Loan Fee PDCL or a Facility Fee PDCL, update RPPCK1
+ 
+     C     AUPCKO        IFNE      0
+     C                   Z-ADD     AUPCKO        RPPCK1
+     C                   ELSE
+     C                   Z-ADD     99999         RPPCK1
+     C                   ENDIF
+     C     RPPCK1        IFLT      RPPCK2
+     C     RPPCK1        ANDLT     RPPCK3
+     C                   Z-ADD     RPPCK1        RPPCKO
+     C                   ENDIF
+ 
+     C                   UPDATE    LEACCNDE
+     C     KFEE          READE     LEACCNLE                               81
+     C                   ENDDO
+     C                   READ      SDFEEPD                                80
+     C                   ENDDO
+     C                   ENDIF
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   DUMP
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************

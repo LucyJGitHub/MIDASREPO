@@ -1,0 +1,548 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Extract of SE trading book position (COB)')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0550 - Extract of SE Trading Book Positions COB            *
+      *                                                               *
+      *  Function: This program is called during the close of         *
+      *            business. It reads through the SE Book positions   *
+      *            file and writes any changes to PF/EDSEBPPD and     *
+      *            PF/EDSEBHPD. It also stores all book position      *
+      *            header details in PF/EDCSBHPD.                     *
+      *                                                               *
+      *  Called By: EDC0550 -                                         *
+      *                                                               *
+      *  Calls:     AO/AOBANKR0                                       *
+      *             AO/AOSTRDR0                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 123707             Date 17Oct97               *
+      *                 CED006 *CREATE     Date 06Aug97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  123707 - Unrealised P/L figure incorrect in Book Posn Extract*
+      *  CED006 - Export Data Enhancements                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FBKPHD   IF  E           K        DISK         KINFSR *PSSR
+      * SE Book Positions Headers
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      * SE Investment Types
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      * SE Security Details
+      *
+     FBKPOS   IF  E           K        DISK         KINFSR *PSSR
+      * SE Book position History
+      *
+     FSECEO   IF  E           K        DISK         KINFSR *PSSR
+      * SE Events file
+      *
+     FEDPSBHL1IF  E           K        DISK         KINFSR *PSSR
+     F            BKPHDDF                           KRENAMEEDPSBL1
+      * ED Previous days book positions
+      *
+     FEDSEBPPDO   E                    DISK         KINFSR *PSSR
+      * Extract of SE Book Positions
+      *
+     FEDSEBHPDO   E                    DISK         KINFSR *PSSR
+      * Extract of SE Book Position Headers
+      *
+     FEDCSBHPDO   E                    DISK         KINFSR *PSSR
+     F            BKPHDDF                           KRENAMEEDCSBH1
+      * Current days SE Book Position Headers
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  40 - End of file BKPHD                                       *
+      *  41 - Chain of file SECTY                                     *
+      *  42 - Chain of file INVTP                                     *
+      *  43 - Chain of file SECEO                                     *
+      *  44 - Chain of file EDPSBHL1                                  *
+      *  45 - End of file BKPOS                                       *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  SCHG   - Process change of security name                     *
+      *  DETL   - Process book position records                       *
+      *  WSEBH  - Write header record to PF/EDSEBHPD                  *
+      *  WSEBP  - Write record to PF/EDSEBPPD                         *
+      *  ZDATE1 - Convert date to day no.                             *
+      *  ZDATE2 - Convert day no. to date                             *
+      *  ZNCD   - Determine next coupon date.                         *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E/COPY ZSRSRC,ZNCDZ1
+      *
+     I/TITLE I-SPECIFICATIONS
+      *-------------------------------------------------------------------------
+     IBKPHDDF
+      ** Rename fields in Book Positions header
+     I              RECI                            BRECI
+      *-------------------------------------------------------------------------
+     IBKPOSDF
+      ** Rename fields in Book Positions history
+     I              RECI                            SRECI
+      *-------------------------------------------------------------------------
+     IEDPSBL1
+      ** Rename fields in Previous days book positions
+     I              RECI                            LRECI
+     I              BHSC                            LBHSC
+     I              BHBA                            LBHBA
+     I              BHBK                            LBHBK
+     I              BHMK                            LBHMK
+     I              BHTV                            LBHTV
+     I              FPSD                            LFPSD
+     I              LPSD                            LLPSD
+     I              LPCD                            LLPCD
+     I              LAVP                            LLAVP
+     I              LATD                            LLATD
+     I              ARPC                            LARPC
+     I              ICLD                            LICLD
+     I              IACR                            LIACR
+     I              IACP                            LIACP
+     I              INDO                            LINDO
+     I              UPPT                            LUPPT
+     I              DPAP                            LDPAP
+     I              BUDU                            LBUDU
+     I              INVT                            LINVT
+     I              NCRY                            LNCRY
+     I              BHTR                            LBHTR
+     I              BHRN                            LBHRN
+     I              LPRC                            LLPRC
+     I              BHDP                            LBHDP
+     I              BHCP                            LBHCP
+     I              BHPP                            LBHPP
+     I              TNLU                            LTNLU
+     I              DPFP                            LDPFP
+     I              LFXP                            LLFXP
+      *-------------------------------------------------------------------------
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *-------------------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      ** Midas Access Object Short Data Structure
+      *-------------------------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      ** Midas Access Object Long Data Structure
+      *-------------------------------------------------------------------------
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *-------------------------------------------------------------------------
+     ISDSTRD    E DSSDSTRDPD
+      ** SE Trading Details
+      *-------------------------------------------------------------------------
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      *****************************************************************
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Perform Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT  - Initial processing                                   *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: AOBANKR0 - Access SD Bank Details                     *
+      *         AOSTRDR0 - Access SE Trading Details                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Copyright Statement.
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Definitions
+     C           *LIKE     DEFN SNDT      KSNDT
+     C           *LIKE     DEFN BPPD      KBPPD
+      *
+      ** Key list for LF/INVTP
+     C           KINVTP    KLIST
+     C                     KFLD           KCCY1   3
+     C                     KFLD           KINVT   3
+      *
+      ** Key list for LF/SECEO
+     C           KSECEO    KLIST
+     C                     KFLD           KSNSN  10
+     C                     KFLD           KSNET   2
+     C                     KFLD           KSNDT
+      *
+      ** Key list for LF/EDPSBHL1
+     C           KEDPSB    KLIST
+     C                     KFLD           KBHSC  10
+     C                     KFLD           KBHBA   3
+     C                     KFLD           KBHBK   2
+     C                     KFLD           KBHMK   1
+     C                     KFLD           KBHTV   1
+      *
+      ** Key list for LF/BKPOS
+     C           KBKPOS    KLIST
+     C                     KFLD           KBPSC  10
+     C                     KFLD           KBPBA   3
+     C                     KFLD           KBPBK   2
+     C                     KFLD           KBPMK   1
+     C                     KFLD           KBPTV   1
+     C                     KFLD           KBPPD
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database error.
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL'ED0550'  DBPGM            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Date format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Access Securities Trading details.
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+      ** Database error.
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SDSTRDPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DB ERROR 02 *
+     C                     MOVEL'ED0550'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read first record
+     C                     READ BKPHD                    40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+      ** Change of Security name then access security and investment
+      ** types.
+      *
+     C           BHSC      IFNE @BHSC
+     C                     EXSR SCHG
+     C                     MOVE BHSC      @BHSC  10
+     C                     ENDIF
+      *
+      ** Security not yet matured, process book position record.
+      *
+     C           MATY      IFGT BJRDNB
+     C           MATY      OREQ 0
+     C                     EXSR DETL
+     C                     ENDIF
+      *
+      ** Read next record
+     C                     READ BKPHD                    40
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SCHG
+      *****************************************************************
+      *                                                               *
+      *  SCHG - Access Security details, investment type and price    *
+      *         change events.                                        *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCHG      BEGSR
+      *
+      ** Access security details
+      *
+     C           BHSC      CHAINSECTY                41
+      *
+      ** Database error, if record not found
+     C           *IN41     IFEQ '1'
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SECTY   'DBFILE           ***************
+     C                     MOVELBHSC      DBKEY            * DB ERROR 03 *
+     C                     MOVEL'ED0550'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Investment type details
+      *
+     C                     MOVE NMCY      KCCY1
+     C                     MOVE SITP      KINVT
+     C           KINVTP    CHAININVTP                42
+      *
+      ** Database error, if record not found.
+     C           *IN42     IFEQ '1'
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'INVTP   'DBFILE           ***************
+     C                     MOVELKCCY1     DBKEY            * DB ERROR 04 *
+     C                     MOVE KINVT     DBKEY            ***************
+     C                     MOVEL'ED0550'  DBPGM
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check for price change event
+      *
+     C                     MOVE BHSC      KSNSN
+     C                     Z-ADDBJRDNB    KSNDT
+     C                     MOVEL'PR'      KSNET
+     C           KSECEO    CHAINSNDEVDF              43
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DETL
+      *****************************************************************
+      *                                                               *
+      *  DETL - Process Book position details.                        *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      ** Find previous days book position.
+      *
+     C                     MOVE BHSC      KBHSC
+     C                     MOVE BHBA      KBHBA
+     C                     MOVE BHBK      KBHBK
+     C                     MOVE BHMK      KBHMK
+     C                     MOVE BHTV      KBHTV
+     C           KEDPSB    CHAINEDPSBHL1             44
+      *
+      ** If price change event found, or no previous days book position
+      ** found, or previous days book position found and lastest
+      ** aver price or lastest nom position date on LF/BKPHD not equal
+      ** corresponding fields on LF/EDPSBHL1 then records written to
+      ** PF/EDSEBHPD and PF/EDSEBPPD.
+      *
+     C           *IN43     IFEQ '0'                        B01
+     C           *IN44     OREQ '1'
+     C           *IN44     OREQ '0'
+     C           LAVP      ANDNELLAVP
+     C           *IN44     OREQ '0'
+     C           LPSD      ANDNELLPSD
+      *
+     C                     MOVE BHSC      KBPSC
+     C                     MOVE BHBA      KBPBA
+     C                     MOVE BHBK      KBPBK
+     C                     MOVE BHMK      KBPMK
+     C                     MOVE BHTV      KBPTV
+     C           BJRDNB    SUB  BVBVP     KBPPD
+      *
+     C           KBKPOS    SETLLBKPOS
+     C                     READ BKPOS                    45
+      *
+     C                     EXSR WSEBH
+      *
+      ** Write all BKPOS records for this position between today
+      ** and back value period to PF/EDSEBPPD.
+      *
+     C           BPSC      DOWEQBHSC                       B02
+     C           BPBA      ANDEQBHBA
+     C           BPBK      ANDEQBHBK
+     C           BPMK      ANDEQBHMK
+     C           BPTV      ANDEQBHTV
+     C           *IN45     ANDEQ'0'
+     C                     EXSR WSEBP
+     C                     READ BKPOS                    45
+     C                     ENDDO                           E02
+      *
+     C                     ENDIF                           E01
+      *
+      ** Write record to PF/EDCSBHPD
+      *
+     C                     WRITEEDCSBH1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WSEBH
+      *****************************************************************
+      *                                                               *
+      *  WSEBH - Write position header record to PF/EDSEBHPD          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WSEBH     BEGSR
+      *
+      ** Find next coupon day.
+     C           BJRDNB    SUB  1         ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       NXTD
+      *
+     C                     MOVE BRECI     RECI
+     C           NPSN      MULT LAVP      BOKV
+     C                     DIV  100       BOKV                            123707
+     C           NPSN      MULT MKPR      MKTV
+     C                     DIV  100       MKTV                            123707
+     C           MKTV      SUB  BOKV      UPPT                            123707
+     C                     Z-ADDECNP      ECPN
+     C                     Z-ADDBJRDNB    RUND
+      *
+      ** Write record
+     C                     WRITEEDSEBHD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WSEBP
+      *****************************************************************
+      *                                                               *
+      *  WSEBP - Write position record to PF/EDSEBPPD                 *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WSEBP     BEGSR
+      *
+     C           NPSN      MULT MKPR      MKTV
+     C                     DIV  100       MKTV                            123707
+     C                     MOVE SRECI     RECI
+     C                     Z-ADDBJRDNB    RUND
+      *
+     C                     WRITEEDSEBPD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZNCD
+     C/COPY ZSRSRC,ZNCDZ3
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0550'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     ENDIF                           E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - Years in Days Cumulative. Four Year Span
+0366073110961461
+**  ZMDY - Months in Days Cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

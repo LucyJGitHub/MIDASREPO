@@ -1,0 +1,400 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Validity checker for CMPSRC')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000001V - Validity checker for CMPSRC                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. BUG27884           Date 08Jul10              */
+/*       Prev Amend No. CUT010  *CREATE    Date 10May07              */
+/*                      xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27884 - Applied CUT010.                                  */
+/*       CUT010 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&REF &CMP &MOVE &BLANK &LINES)
+ 
+             DCL        VAR(&REF) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&CMP) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&MOVE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&BLANK) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LINES) TYPE(*DEC) LEN(4 0)
+ 
+             DCL        VAR(&REFFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REFFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REFMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMPMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULTIFR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MULTIFC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(3 0) VALUE(10)
+             DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+CHECK1:
+/* Check that the file/library combination for REF and CMP are not */
+/*  identical.                                                     */
+             IF         COND(&REF *EQ &CMP) THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Reference and Comparison file/library / +
+                             member combination are identical.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Break down the parameters for the libraries. */
+             CHGVAR     VAR(&REFFILE) VALUE(%SST(&REF 3 10))
+             CHGVAR     VAR(&REFFILEL) VALUE(%SST(&REF 13 10))
+             CHGVAR     VAR(&REFMBR) VALUE(%SST(&REF 23 10))
+             CHGVAR     VAR(&CMPFILE) VALUE(%SST(&CMP 3 10))
+             CHGVAR     VAR(&CMPFILEL) VALUE(%SST(&CMP 13 10))
+             CHGVAR     VAR(&CMPMBR) VALUE(%SST(&CMP 23 10))
+ 
+/* If the Comparison file or member is *REF then change the values to */
+/*  those of the Reference file and member.                           */
+             IF         COND(&CMPFILE *EQ '*REF') THEN(DO)
+                CHGVAR     VAR(&CMPFILE) VALUE(&REFFILE)
+             ENDDO
+             IF         COND(&CMPMBR *EQ '*REF') THEN(DO)
+                CHGVAR     VAR(&CMPMBR) VALUE(&REFMBR)
+             ENDDO
+ 
+/* Work out whether files are generic or not. */
+             IF         COND(&REFFILE *NE '*ALL') THEN(DO)
+                CALL       PGM(QCLSCAN) PARM(&REFFILE &LENGTH &STARTPOS +
+                             '*' &PATLEN '0' '0' '' &RESULT)
+                IF         COND(&RESULT *GT 0) THEN(DO)
+                   CHGVAR     VAR(&MULTIFR) VALUE(*YES)
+                ENDDO
+             ENDDO
+             IF         COND(&CMPFILE *NE '*ALL') THEN(DO)
+                CHGVAR     VAR(&STARTPOS) VALUE(1)
+                CALL       PGM(QCLSCAN) PARM(&CMPFILE &LENGTH &STARTPOS +
+                             '*' &PATLEN '0' '0' '' &RESULT)
+                IF         COND(&RESULT *GT 0) THEN(DO)
+                   CHGVAR     VAR(&MULTIFC) VALUE(*YES)
+                ENDDO
+             ENDDO
+ 
+CHECK2:
+/* Check that the combination of files and libraries is not *ALL or generic */
+/*  and *LIBL.                                                              */
+             IF         COND(&REFFILE *EQ '*ALL' *OR &MULTIFR *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&REFFILEL *EQ '*LIBL') THEN(DO)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+             ENDDO
+             IF         COND(&CMPFILE *EQ '*ALL' *OR &MULTIFC *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&CMPFILEL *EQ '*LIBL') THEN(DO)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+             ENDDO
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000File / library combination +
+                             must not be *ALL or generic / *LIBL.') +
+                             MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+CHECK3:
+/* If *LIBL is legitimate then find out what the library is; if not */
+/*  found then send error message. */
+             IF         COND(&REFFILEL *EQ '*LIBL') THEN(DO)
+                RTVOBJD    OBJ(&REFFILE) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+                MONMSG     MSGID(CPF9801 CPF9812) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000File' *BCAT &REFFILE *BCAT +
+                                'not found in library list.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&REFFILEL) VALUE(&RTNLIB)
+             ENDDO
+             IF         COND(&CMPFILEL *EQ '*LIBL') THEN(DO)
+                RTVOBJD    OBJ(&CMPFILE) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+                MONMSG     MSGID(CPF9801 CPF9812) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000File' *BCAT &CMPFILE *BCAT +
+                                'not found in library list.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&CMPFILEL) VALUE(&RTNLIB)
+             ENDDO
+ 
+CHECK4:
+/* Check that the Comparison file/library/member combination is not now equal */
+/*  to the Reference file/library/member combination.                         */
+             IF         COND(&CMPFILE *EQ &REFFILE *AND &CMPFILEL +
+                          *EQ &REFFILEL *AND &CMPMBR *EQ &REFMBR) +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                             Reference and Comparison file / library / +
+                             member combination are identical.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+CHECK5:
+/* If the files are generic or *ALL then members must be *ALL. */
+             IF         COND(&REFFILE *EQ '*ALL' *OR &MULTIFR *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&REFMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Reference members must be +
+                                *ALL if the Reference files are *ALL or +
+                                generic.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&CMPFILE *EQ '*ALL' *OR &MULTIFC *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&CMPMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Comparison members must be +
+                                *ALL if the Comparison files are *ALL or +
+                                generic.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK6:
+/* If the Reference file is *ALL the Comparison file must be too and vice versa. */
+             IF         COND(&REFFILE *EQ '*ALL' *AND &CMPFILE *NE +
+                          '*ALL' *OR &CMPFILE *EQ '*ALL' *AND +
+                          &REFFILE *NE '*ALL') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                             either file is *ALL then the other must +
+                             be too.') TOPGMQ(*PRV (* *NONE *NONE)) +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+CHECK7:
+/* If the Reference file is *ALL or generic then the Comparison member must be */
+/*  *ALL and vice versa.                                                       */
+             IF         COND(&REFFILE *EQ '*ALL' *OR &MULTIFR *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&CMPMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                the reference file is *ALL or generic +
+                                then the comparison members must be +
+                                *ALL') TOPGMQ(*PRV (* *NONE *NONE)) +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&CMPFILE *EQ '*ALL' *OR &MULTIFC *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&REFMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                the comparison file is *ALL or generic +
+                                then the reference members must be +
+                                *ALL') TOPGMQ(*PRV (* *NONE *NONE)) +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK8:
+/* If the Reference and Comparison files are generic then they must match. */
+             IF         COND(&MULTIFR *EQ '*YES' *AND &MULTIFC *EQ +
+                          '*YES') THEN(DO)
+                IF         COND(&REFFILE *NE &CMPFILE) THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Generic files must match.') +
+                                TOPGMQ(*PRV (* *NONE *NONE)) MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK9:
+/* If one file is generic then the other should be generic too. */
+             IF         COND(&MULTIFR *EQ '*YES' *AND &MULTIFC *NE +
+                          '*YES' *OR &MULTIFC *EQ '*YES' *AND +
+                          &MULTIFR *NE '*YES') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                             one file is generic then the other must +
+                             be too.') TOPGMQ(*PRV (* *NONE *NONE)) +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+CHECK10:
+/* If the Reference file is not *ALL or *generic then check that the file / library */
+/*  combination exists.                                                             */
+             IF         COND(&REFFILE *NE '*ALL' *AND &MULTIFR *NE +
+                          '*YES') THEN(DO)
+                CHKOBJ     OBJ(&REFFILEL/&REFFILE) OBJTYPE(*FILE) +
+                          AUT(*USE)
+                MONMSG     MSGID(CPF9801) CMPDTA(*NONE) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000File' *BCAT &REFFILE *BCAT +
+                                'not found in' *BCAT &REFFILEL *TCAT '.') +
+                                TOPGMQ(*PRV (* *NONE *NONE)) MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF9810) CMPDTA(*NONE) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &REFFILEL +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Correct authority to' *BCAT +
+                                &REFFILEL *BCAT 'does not exist.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK11:
+/* If the Comparison file is not *ALL or *generic then check that the file / library */
+/*  combination exists.                                                              */
+             IF         COND(&CMPFILE *NE '*ALL' *AND &MULTIFC *NE +
+                          '*YES') THEN(DO)
+                CHKOBJ     OBJ(&CMPFILEL/&CMPFILE) OBJTYPE(*FILE) +
+                          AUT(*USE)
+                MONMSG     MSGID(CPF9801) CMPDTA(*NONE) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000File' *BCAT &CMPFILE *BCAT +
+                                'not found in' *BCAT &CMPFILEL *TCAT '.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF9810) CMPDTA(*NONE) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &CMPFILEL +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Correct authority to' *BCAT +
+                                &REFFILEL *BCAT 'does not exist.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                ENDDO
+                IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK12:
+/* Check that the libraries exist. */
+             IF         COND(&REFFILEL *NE '*LIBL') THEN(DO)
+                CHKOBJ     OBJ(&REFFILEL) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &REFFILEL +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&CMPFILEL *NE '*LIBL') THEN(DO)
+                CHKOBJ     OBJ(&CMPFILEL) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &CMPFILEL +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK13:
+/* If the Reference member is not  *ALL then the Reference file / library */
+/*  / member combination must exist ...                                   */
+             IF         COND(&REFMBR *NE '*ALL') THEN(DO)
+                CHKOBJ     OBJ(&REFFILEL/&REFFILE) OBJTYPE(*FILE) +
+                             MBR(&REFMBR)
+                MONMSG     MSGID(CPF9815) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Member' *BCAT &REFMBR *BCAT +
+                                'not found in' *BCAT &REFFILEL *TCAT '/' +
+                                *TCAT &REFFILE *TCAT '.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+/* ... else if Reference member = *ALL then Comparsion member must = *ALL too. */
+             ELSE       CMD(DO)
+                IF         COND(&CMPMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                Reference member is *ALL then Comparison +
+                                member must be *ALL too.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+CHECK14:
+/* If the Comparison member is not  *ALL then the Comparison file / library */
+/*  / member combination must exist ...                                     */
+             IF         COND(&CMPMBR *NE '*ALL') THEN(DO)
+                CHKOBJ     OBJ(&CMPFILEL/&CMPFILE) OBJTYPE(*FILE) +
+                             MBR(&CMPMBR)
+                MONMSG     MSGID(CPF9815) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Member' *BCAT &CMPMBR *BCAT +
+                                'not found in' *BCAT &CMPFILEL *TCAT '/' +
+                                *TCAT &CMPFILE *TCAT '.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+/* ... else if Comparison member = *ALL then Reference member must = *ALL too. */
+             ELSE       CMD(DO)
+                IF         COND(&REFMBR *NE '*ALL') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                Comparison member is *ALL then Reference +
+                                member must be *ALL too.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

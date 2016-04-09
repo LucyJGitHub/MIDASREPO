@@ -1,0 +1,381 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Set up shortnames')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9212X - Midas SD Securities trading ICD retrieval          *
+      *                                                               *
+      *  Function:  This program processes Securities Trading ICD     *
+      *             retrieval                                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01449            Date: 15OCT93               *
+      *                 LN1104            Date: 20FEB91               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  S01449 - Recompiled due to change to SDCUSTPD                *
+      *  LN1104 - Recompiled due to change to SDCUSTPD                *
+      *                                                               *
+      *****************************************************************
+     FSDCUSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer details retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                            209
+      * RCD: Midas SD Securities trading ICD retrieval
+      * I : MAP Depot 1 (EUROCLEAR)
+     I                                       32  37 P1DR1
+      * I : MAP Depot Ref 3, Kassenverein
+     I                                       38  43 P1DR3
+      * I : MAP Depot Reference 2 - Cedel
+     I                                       50  55 P1DR2
+      * I : MAP Depot Reference 4 Custome
+     I                                       56  61 P1DR4
+      * I : MAP Depot Reference 5 Custome
+     I                                       62  67 P1DR5
+     IP2PARM      DS
+      * O : MAP Depot 1
+     I                                        1  10 P2DP01
+     IP3PARM      DS
+      * O : MAP Depot 2
+     I                                        1  10 P3DP02
+     IP4PARM      DS
+      * O : MAP Depot 3
+     I                                        1  10 P4DP03
+     IP5PARM      DS
+      * O : MAP Depot 4
+     I                                        1  10 P5DP04
+     IP6PARM      DS
+      * O : MAP Depot 5
+     I                                        1  10 P6DP05
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: Securities
+     C           P2DP01    PARM P2DP01    WP0001 10        Depot 1
+     C           P3DP02    PARM P3DP02    WP0002 10        Depot 2
+     C           P4DP03    PARM P4DP03    WP0003 10        Depot 3
+     C           P5DP04    PARM P5DP04    WP0004 10        Depot 4
+     C           P6DP05    PARM P6DP05    WP0005 10        Depot 5
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Set up shortnames
+      * SD9212X PRECOMPILER - Securities Trading Data  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SARVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SBRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SCRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SDRVGN
+      * Retrieve shortname - Client Details  *
+     C                     EXSR SERVGN
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1DR1     BBCUST           Customer Number
+     C           KRSSA     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    P2DP01           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1DR2     BBCUST           Customer Number
+     C           KRSSB     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    P3DP02           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1DR3     BBCUST           Customer Number
+     C           KRSSC     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    P4DP03           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1DR4     BBCUST           Customer Number
+     C           KRSSD     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    P5DP04           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SERVGN    BEGSR
+      *================================================================
+      * Retrieve shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSE     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1DR5     BBCUST           Customer Number
+     C           KRSSE     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    P6DP05           Customer Shortn
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SDCUSTL1
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9212XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9212XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRBCH
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9212XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,177 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Amend EOC Flags During EOC I/C')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0472  -  AMEND EOC FLAGS DURING EOC IN INPUT CYCLE           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*   LAST AMEND NO. S01456             DATE 08NOV93                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*     S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMKCTL   UF  E           K        DISK
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80
+     I/EJECT
+     I*****************************************************************
+     I*
+     ILDA        UDS                            256
+     I*
+     I**   Local Data Area for Database Error Details
+     I*
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I*
+     I*****************************************************************
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACCDE   1
+     C                     PARM           MRKT    2
+     C*
+     C**   ACCESS LF/MKCTL
+     C*
+     C           MRKT      CHAINMKCTLDF              01
+     C*
+     C           *IN01     IFEQ '1'
+     C           RECI      ORNE 'D'                        ***DBERR 01***
+     C*
+     C**      SET UP DATABASE ERROR
+     C*
+     C                     MOVEL'FF0472'  DBPGM
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMRKT      DBKEY
+     C                     MOVE '01'      DBASE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C** IF AN END OF CENTRE IS QUEUED WHEN MACHINE FAILS,A NEW JOB
+     C** SHOULD NOT BE SUBMITTED .THE CURRENT JOB SHOULD BE ALLOWED
+     C** TO COMPLETE.
+     C*
+     C           ACCDE     IFEQ 'A'
+     C           ECAI      ANDEQ'Q'
+     C           ECFI      ANDEQ'F'
+     C                     MOVE ' '       ECFI
+     C                     MOVE 'A'       ECAI
+     C                     UPDATMKCTLDF
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C**   END
+     C*
+     C                     END
+     C*
+     C           ACCDE     IFEQ 'F'
+     C           ACCDE     OREQ 'E'
+     C*
+     C**   IF - ACTION CODE'E'
+     C*
+     C           ACCDE     IFEQ 'E'
+     C*
+     C                     MOVE *BLANKS   ECAI
+     C                     MOVE 'C'       MKCI
+     C*
+     C**   ELSE - ACTION CODE 'F'
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'F'       ECFI
+     C*
+     C**   IF - EOC ACTIVE INDICATOR 'Q'
+     C*
+     C           ECAI      IFEQ 'Q'
+     C*
+     C                     MOVE 'H'       ECAI
+     C*
+     C**   END IF - EOC ACTIVE INDICATOR 'Q'
+     C*
+     C                     END
+     C*
+     C**   END IF/ELSE - ACTION CODE 'E'
+     C*
+     C                     END
+     C*
+     C**   ELSE - ACTION CODE NOT 'F' OR 'E'
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE ACCDE     ECAI
+     C*
+     C**   IF - ACTION CODE 'C' , 'O' OR 'Q' , BLANK FAILED INDICATOR.
+     C*
+     C           ACCDE     IFEQ 'C'
+     C           ACCDE     OREQ 'O'
+     C           ACCDE     OREQ 'Q'
+     C*
+     C                     MOVE *BLANKS   ECFI
+     C*
+     C**   ELSE - ACTION CODE NOT 'C' , 'O' OR 'Q'
+     C*
+     C                     ELSE
+     C*
+     C**   IF - ACTION CODE BLANK
+     C*
+     C           ACCDE     IFEQ *BLANKS
+     C*
+     C                     MOVE 'I'       MKCI
+     C*
+     C**   END IF - ACTION CODE BLANK
+     C*
+     C                     END
+     C*
+     C**   END IF/ELSE - ACTION CODE 'C' OR 'O'
+     C*
+     C                     END
+     C*
+     C**   END IF/ELSE - ACTION CODE 'F' OR 'E'
+     C*
+     C                     END
+     C*
+     C**   UPDATE LF/MKCTL
+     C*
+     C                     UPDATMKCTLDF
+     C*
+     C**   END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

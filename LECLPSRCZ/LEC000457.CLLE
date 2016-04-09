@@ -1,0 +1,257 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE PDCL Repayments - Generate MR Loan Amend')   */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas     - Customer Lending Module                       */
+/*                                                                 */
+/*       LEC000457 - PDCL Repayment Generate MR Loan Amendment     */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2013         */
+/*                                                                 */
+/*       Last Amend No. MD021423 *REWRITE  Date 21Aug13            */
+/*       Prev Amend No. MD020966           Date 20Jun13            */
+/*                      AR815697           Date 06Jun13            */
+/*                      AR786878           Date 05Jun13            */
+/*                      263074             Date 01Aug12            */
+/*                      CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD021423 - Abnormally long run of PDCL/MAPY processing    */
+/*                  components                                     */
+/*       MD020966 - Payments for Past due loans are posted twice   */
+/*       AR815697 - New processing for maturity events of PDCL's.  */
+/*                  (Child: AR815698)                              */
+/*       AR786878 - New processing for manual repayment and        */
+/*                  repayment schedule for PDCL's.                 */
+/*                  (Child:AR786879)                               */
+/*       263074 - Wrong Postings when interest and principal are   */
+/*                paid on the same day (Recompile)                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+ 
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)    TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&FLAG)    TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&PRE)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TOLIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2013')
+ 
+/** Initialisation */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('PDCL Repayments - Generate MR Loan +
+                           Amendments') TOMSGQ(MRUNQ)
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Restart Process */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(GOTO SAVDTA)
+ 
+             CPYF       FROMFILE(XLEACCTPD) TOFILE(LEACCTPD) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(LEACCTPD))
+ 
+             CPYF       FROMFILE(XLELOMKPD) TOFILE(LELOMKPD) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(LELOMKPD))
+ 
+             CPYF       FROMFILE(XLELOMZPD) TOFILE(LELOMZPD) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(LELOMZPD))
+ 
+             CPYF       FROMFILE(XLOAMSDK) TOFILE(LOAMSDK) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(LOAMSDK))
+ 
+             CPYF       FROMFILE(XLOAMSZ1) TOFILE(LOAMSZ1) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(LOAMSZ1))
+ 
+             CPYF       FROMFILE(XFCLTYFN) TOFILE(FCLTYFN) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM    FILE(FCLTYFN))
+ 
+             CPYF       FROMFILE(XLTRIX) TOFILE(LTRIX) +
+                           MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                           CLRPFM     FILE(LTRIX))
+ 
+             CPYF       FROMFILE(XLEREMRPD) TOFILE(LEREMRPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                          CLRPFM FILE(LEREMRPD))
+ 
+             CPYF       FROMFILE(WCLOANCL) TOFILE(CLOANCL) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                          CLRPFM FILE(CLOANCL))
+ 
+             GOTO       CMDLBL(QRY010)
+ 
+/** Save a Copy of Data Files that are Updated in this Process */
+ 
+SAVDTA:
+             DLTF       FILE(XLEACCTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LEACCTPD) TOFILE(&TOLIB/XLEACCTPD) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLELOMKPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LELOMKPD) TOFILE(&TOLIB/XLELOMKPD) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLELOMZPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LELOMZPD) TOFILE(&TOLIB/XLELOMZPD) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLOAMSDK)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LOAMSDK) TOFILE(&TOLIB/XLOAMSDK) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLOAMSZ1)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LOAMSZ1) TOFILE(&TOLIB/XLOAMSZ1) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XFCLTYFN)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(FCLTYFN) TOFILE(&TOLIB/XFCLTYFN) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLTRIX)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LTRIX) TOFILE(&TOLIB/XLTRIX) +
+                           CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(XLEREMRPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(LEREMRPD) TOFILE(&TOLIB/XLEREMRPD) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             DLTF       FILE(WCLOANCL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(CLOANCL) TOFILE(&TOLIB/WCLOANCL) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/** Update Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Execute Primary Function */
+ 
+QRY010:
+             CALL       PGM(LE000457)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+             CALL       PGM(LE007056)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Reset Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Commit Database Changes */
+ 
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_OOB:
+             SNDPGMMSG  MSG('Job terminated, file out of balance.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             SNDPGMMSG  MSG('Job terminated, component doesn''t +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process. */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd 2013')
+             ENDPGM
+ 

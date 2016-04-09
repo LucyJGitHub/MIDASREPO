@@ -1,0 +1,640 @@
+     H        1   Y
+     H****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - DL Transaction')              *
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU64 - IML REPORTING - TRANSACTION DETAILS PROCESSING     *
+     H*                           FOR DEALING                        *
+     H*                                                              *
+     H*  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                              *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 UPG403             Date 04Oct04               *
+      *                 181643             Date 30Mar01               *
+     H*                 187689             Date 19Dec00               *
+     H*                    ULX008             Date   19Jul00         *
+     H*                    ULX008             Date   23Mar00         *
+     H*                    ULX008             Date   23Mar00         *
+     H*                    ULX012             Date   15Dec98         *
+     H*                    ULX004             Date   13May98         *
+     H*                    ERL432 PT          Date   30Aug94         *
+     H*                    ERL420 PT          Date   16Aug94         *
+     H*                    67483  PT          DATE   10MAR94         *
+     H*                    ERL371 TLI         DATE   11NOV93         *
+     H*                    ER0336 TLI         DATE   15APR93         *
+     H*                    ERL336 TLI         DATE   06APR93         *
+     H*                    ERL331 AF          DATE   26MAR93         *
+     H*                    ERL328 AF          DATE   25MAR93         *
+     H*                    ERL313 TLI         DATE   08FEB93         *
+     H*                    50371  TLI         DATE   02FEB93         *
+     H*                    ERL300 AF          DATE   19JAN93         *
+     H*                    ERL012 VT          DATE   05JAN93         *
+     H*                    ERL004 VT          DATE   23DEC92         *
+     H*                    ER0121 TLI         DATE   11DEC92         *
+     H*                    ER0119 TLI         DATE   10DEC92         *
+     H*                                                              *
+     H****************************************************************
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     H* 181643 - Repo not extracted from money market deposits       *
+     H* 187689 - "GRD" currency in EMU                                *
+     H* ULX008 - "Commissariat aux Bourses" - Change control C        *
+     H*          Recompiled due to changes in PF/ERLUICPD             *
+     H* ULX008 - "Commissariat aux Bourses" - Change control A        *
+     H*          Recompiled due to changes in PF/ERLUICPD             *
+     H* ULX008 - CSSF Statutory Reporting - Commissariat aux Bourses  *
+     H*          Recompiled due to changes in PF/ERLUICPD             *
+     H* ULX012 - Guarantees and Collateral Management enhancements   *
+     H*          Recompile over changed file ERLUICPD                *
+     H* ULX004 - IML Circular 97/138                                 *
+     H* ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY             *
+     H* ERL420 - TO MANAGE THE CORRECTION AMOUNT FOR NAP             *
+     H* 67483  - TO SET UP CONSUMER CREDIT CODE (EXGUAC = 5)         *
+     H* ERL371 - IML 1.4 DEVELOPMENT                                 *
+     H* ER0336 - IML 2.3 DEVELOPMENT                                 *
+     H* ERL336 - Restore old definition for 'SECT' and create 'TOVM' *
+     H* ERL331 - Wrongh lenght of parm CORAM form 15,0 to 16,0       *
+     H* ERL328 - IML 2.4 DEVELOPMENT                                 *
+     H* ERL313 - Processing to Setup 'Correction Amount              *
+     H* 50371  - File ERBANKPD already at end-of-file                *
+     H* ERL300 - Add new field 'Guarantor Report Name'               *
+     H* ERL012 - CONVERT CREDIT CODE SIZE AMOUNTS IN LOCAL CCY CODE  *
+     H*          IN AMOUNTS IN PRIMERY CURRENCY CODE                 *
+     H* ERL004 - 1. NEW FIELDS ADDED IN EXTENSION FILE MMDELDX6      *
+     H*        - 2. ERROR DEFINITION OF FIELD EXTO10                 *
+     H* ER0121 - Store Maturity date in Review date if 'Floating Rate*
+     H*          Note Indicator' (from SDDLSTX6) is 'Y'.             *
+     H* ER0119 - SETUP PREVIOUS MONTH FIELD                          *
+     H****************************************************************
+     F***ERLUICL0IF**E           K        DISK                                                CER001
+     FERLICXL0IF  E           K        DISK                                                   CER001
+     F* VP - ER I.C.D. FOR LU
+      *
+     F***ERICDRL1IF**E           K        DISK                                         ERL012 CER001
+     FERICDXL1IF  E           K        DISK                                                   CER001
+     F* VD - ER I.C.D.                                                    ERL012
+      *                                                                   ERL012
+     F***ERCURRL1IF  E           K        DISK                            187689
+     F*** VR - Currency Codes table                                       187689
+     FSDCURRL1IF  E           K        DISK                               187689
+     F* A6 - Currency Codes table                                         187689
+      *                                                                   ERL012
+     F***ERBANKPDIF**E                    DISK                                         ERL012 CER001
+     FERBNKXPDIF  E                    DISK                                                   CER001
+     F* BJ - ER Bank Details                                              ERL012
+      *                                                                   ERL012
+     F***MMDELDY6IF**E           K        DISK                                                CER001
+     FMMDLX2L0IF  E           K        DISK                                                   CER001
+     F* VL - Loan/Deposits Extension File
+      *
+     F***MMDENBY6IF**E           K        DISK                                                CER001
+     FMMDBX4L0IF  E           K        DISK                                                   CER001
+     F* VM - Negotiable assets purchased
+      *
+     F*******SDCUSTY6IF  E           K        DISK                        ER0336
+     F* VF - ER Customer Extended file
+      *
+     F***MMDENBY4IF**E           K        DISK                                                CER001
+     FMMDBX3L0IF  E           K        DISK                                                   CER001
+     F* VA - Negotiable assets purchased Extension file
+      *
+     F*******ERCTRYL1IF  E           K        DISK                        ER0336
+     F* VQ - ER Country Code Details
+      *
+     F***SDBOOKX6IF**E           K        DISK                                         181643 CER001
+     FSDBKX4PDIF  E           K        DISK                                                   CER001
+     F* WG - Book Codes Extended file                                     181643
+      *                                                                   181643
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+     C                     EXSR #INIT
+      *--------------------------------------------------------------- *****
+      * WARNING : NO SPECIFIC FUNCTION FOR FOREX DEALS |||             *****
+     C           EXLOTD    CASEQ'MMD'     #MMD
+      *                                                                *****
+     C           EXLOTD    CASEQ'NAP'     #NAP
+      *                                                                *****
+     C                     END
+      *--------------------------------------------------------------- *****
+     C                     RETRN
+      /EJECT                                                              ERL012
+      **================================================================= ERL012
+      **                                                                  ERL012
+      **================================================================= ERL012
+      **                                                                  ERL012
+      **  *INZSR      Program initialisation sub-routine                  ERL012
+      **                                                                  ERL012
+      *-----------------------------------------------------------        ERL012
+     C           *INZSR    BEGSR                                          ERL012
+      *-----------------------------------------------------------        ERL012
+      *                                                                   ERL012
+      **  ACCESS ER BANK DETAILS TO RETRIEVE :                            ERL012
+      **   Local Currency (BJCYCD) :                                      ERL012
+     C********** 1         SETLLERBANKPD                                                50371 CER001
+     C           1         SETLLERBNKXPD                                                      CER001
+     C**********           READ ERBANKPD                 80                            ERL012 CER001
+     C                     READ ERBNKXPD                 80                                   CER001
+      **   If record not found:                                           ERL012
+     C           *IN80     IFEQ '1'                        - B1           ERL012
+     C           *LOCK     IN   LDA                                       ERL012
+     C                     MOVEL'645'     DBASE            ***************ERL012
+     C**********           MOVEL'ERBANKPD'DBFILE                                       ERL012 CER001
+     C                     MOVEL'ERBNKXPD'DBFILE                                              CER001
+     C                     MOVEL'*NONE '  DBKEY                           ERL012
+     C                     EXSR #DBERR                                    ERL012
+     C                     ELSE                            - X1           ERL012
+     C***********BJCYCD    CHAINERCURRL1             80             ERL012187689
+     C           BJCYCD    CHAINSDCURRL1             80                   187689
+     C           *IN80     IFEQ '1'                        - B2           ERL012
+     C           *LOCK     IN   LDA                                       ERL012
+     C                     MOVEL'646'     DBASE            ***************ERL012
+     C***********          MOVEL'ERCURRL1'DBFILE                    ERL012187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELBJCYCD    DBKEY                           ERL012
+     C                     EXSR #DBERR                                    ERL012
+     C                     ELSE                            - X2           ERL012
+     C***********          MOVELVRSWCY    EXCRCY  3        Not used ERL012187689
+     C***********          Z-ADDVRSPRT    @@RAT1 138                ERL012187689
+     C***********          MOVE VRMDIN    @@MDI1  1                 ERL012187689
+     C                     MOVELA6SWCY    EXCRCY  3        Not used |||   187689
+     C                     Z-ADDA6SPRT    @@RAT1 138                      187689
+     C                     MOVE A6MDIN    @@MDI1  1                       187689
+     C                     END                             - E2           ERL012
+     C                     END                             - E1           ERL012
+      *                                                                   ERL012
+      **  ACCESS ER ICD TO RETRIEVE PRIMERY CCY & XRATE v/s Base ccy :    ERL012
+     C********** 'LU'      CHAINERICDRL1             80                                ERL012 CER001
+     C           'LU'      CHAINERICDXL1             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B1           ERL012
+     C           *LOCK     IN   LDA                                       ERL012
+     C                     MOVEL'647'     DBASE            ***************ERL012
+     C**********           MOVEL'ERICDRL1'DBFILE                                       ERL012 CER001
+     C                     MOVEL'ERICDXL1'DBFILE                                       ERL012 CER001
+     C                     MOVEL'LU'      DBKEY                           ERL012
+     C                     EXSR #DBERR                                    ERL012
+     C                     ELSE                            - X1           ERL012
+     C***********VDCCYC    CHAINERCURRL1             80             ERL012187689
+     C           VDCCYC    CHAINSDCURRL1             80                   187689
+     C           *IN80     IFEQ '1'                        - B2           ERL012
+     C           *LOCK     IN   LDA                                       ERL012
+     C                     MOVEL'648'     DBASE            ***************ERL012
+     C***********          MOVEL'ERCURRL1'DBFILE                    ERL012187689
+     C                     MOVEL'SDCURRL1'DBFILE                          187689
+     C                     MOVELVDCCYC    DBKEY                           ERL012
+     C                     EXSR #DBERR                                    ERL012
+     C                     ELSE                            - X2           ERL012
+     C***********          Z-ADDVRSPRT    @@RAT2 138                ERL012187689
+     C***********          MOVE VRMDIN    @@MDI2  1                 ERL012187689
+     C                     Z-ADDA6SPRT    @@RAT2 138                      187689
+     C                     MOVE A6MDIN    @@MDI2  1                       187689
+      *                                                                   ERL012
+      ** CALCULATE XRATE FOR LIMIT CURRENCY                               ERL012
+     C                     EXSR ZA0900                     Cross X-rate   ERL012
+     C                     Z-ADD@@CSRT    WWCSRT 138                      ERL012
+     C                     END                             - E2           ERL012
+     C                     END                             - E1           ERL012
+     C*                                                                   ERL012
+     C                     ENDSR                                          ERL012
+     C**=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine                STANDING
+      **
+      *--------------------------------------------------------------- *****
+     C           #INIT     BEGSR
+      *--------------------------------------------------------------- *****
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      **                                                               *****
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXLOTD  3
+     C**********           PARM           EXTREF 15                                           CER001
+     C                     PARM           EXTREF 21                                           CER001
+     C                     PARM           VHFRNI  1                       ER0121
+     C                     PARM           EXENDD  80                      ER0121
+     C                     PARM           EXLAMT 160
+      *  Output Parameters
+     C*********************PARM           EXGUAC  10                      ERL371
+     C                     PARM           EXGUAC  10                      67483
+     C                     PARM           EXBKCD  2                       181643
+     C*********************PARM           EXGUCL  3                       ER0336
+     C                     PARM           EXREVD  80                      ER0121
+     C*********************PARM           EXGUCN  6                       ER0336
+     C*********************PARM           EXGURN 20                       ER0336
+     C                     PARM           EXPPSC  60
+     C*********************PARM           EXTO10  60                      ERL004
+     C*********************PARM           EXTO10  20               ERL004 ER0336
+     C*********************PARM           EXGUEC  40                      ER0336
+     C                     PARM           EXCCSZ  10
+     C*********************PARM           CORAM  150               ERL313 ERL331
+     C                     PARM           CORAM  160                      ERL331
+     C                     PARM           EXCORT  10                      ERL328
+     C                     PARM           EXVOTR  52                      ERL328
+     C                     PARM           EXTRIN  1                       ERL328
+     C                     PARM           EXEVMT  10                      ERL328
+     C                     PARM           EXSWLK  10                      ERL328
+     C*********************PARM           EXSECT  30               ERL328 ERL336
+     C                     PARM           EXTOVM  30                      ERL336
+     C                     PARM           EXIM93  10                      ERL371
+     C                     PARM           EXCLAT  10                      ERL371
+     C                     PARM           EXSUBR  1                       ERL371
+     C                     PARM           EXLSAM 160                      ERL371
+     C                     PARM           ERROR   1                       ERL432
+      *
+     C                     MOVELEXTREF    KTR     60
+      **                                                               *****
+     C                     MOVE '0'       *INU7
+      *                                                                   ERL328
+     C********** 'LU'      CHAINERLUICL0             88                                ERL328 CER001
+     C           'LU'      CHAINERLICXL0             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1           ERL328
+     C           *LOCK     IN   LDA                                       ERL328
+     C                     MOVEL'671'     DBASE                           ERL328
+     C**********           MOVEL'ERLUICL0'DBFILE                                       ERL328 CER001
+     C                     MOVEL'ERLICXL0'DBFILE                                              CER001
+     C                     MOVEL'LU'      DBKEY                           ERL328
+     C                     EXSR #DBERR                                    ERL328
+     C                     END                             - E1           ERL328
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #MMD      Money Market deals
+      **
+      *--------------------------------------------------------------- *****
+     C           #MMD      BEGSR
+      *--------------------------------------------------------------- *****
+     C********** KTR       CHAINMMDELDY6             80                                       CER001
+     C           KTR       CHAINMMDLX2L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'641'     DBASE            *****************
+     C**********           MOVEL'MMDELDY6'DBFILE                                              CER001
+     C                     MOVEL'MMDLX2L0'DBFILE                                              CER001
+     C                     MOVELKTR       DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X1
+      *                                                                   ERL371
+      ** SETUP FIELDS FOR IML 1.4                                         ERL371
+     C                     Z-ADDVLIM93    EXIM93                          ERL371
+     C                     Z-ADDVLCLAT    EXCLAT                          ERL371
+     C                     MOVE VLSUBR    EXSUBR                          ERL371
+     C           EXLAMT    MULT VLLURA    EXLSAM                          ERL371
+     C           EXLSAM    DIV  10000     EXLSAM                          ERL371
+      *
+      ** Setup 'Correction Amount'                                        ERL313
+     C                     Z-ADDVLCOAM    CORAM                           ERL313
+      *
+      ** Setup Property Sector Code
+     C                     Z-ADDVLPPSC    EXPPSC
+      *
+      ** Setup Top 10 Code
+     C*********************Z-ADDVLTO10    EXTO10                          ER0336
+      *                                                                   ERL004
+      ** Setup Guarantee Code                                             ERL004
+     C*********************MOVELVLGUAC    EXGUAC                   ERL004 ERL371
+      ** Setup Consumer credit code                                       67483
+     C           VL1UAC    IFEQ 5                                         67483
+     C                     MOVELVL1UAC    EXGUAC                          67483
+     C                     END                                            67483
+      *                                                                   181643
+     C********** EXBKCD    CHAINSDBOOKX6             88                                181643 CER001
+     C           EXBKCD    CHAINSDBKX4PD             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1           181643
+     C           *LOCK     IN   LDA                                       181643
+     C                     MOVEL'673'     DBASE                           181643
+     C**********           MOVEL'SDBOOKX6'DBFILE                                       181643 CER001
+     C                     MOVEL'SDBKX4PD'DBFILE                                              CER001
+     C                     MOVELEXBKCD    DBKEY                           181643
+     C                     EXSR #DBERR                                    181643
+     C                     END                             - E1           181643
+     C                     Z-ADDWGOPTP    EXTOVM                          181643
+      *                                                                   ERL004
+      ** Setup Guarantor Country Local Code                               ERL004
+     C***********VMGUCC    IFNE *BLANKS                    - B2    ERL004 ERL300
+     C*********************MOVELVMGUCC    KYCUCO  2                ERL004 ERL300
+     C***********VLGUCC    IFNE *BLANKS                    - B2    ERL300 ER0336
+     C*********************MOVELVLGUCC    KYCUCO  2                ERL300 ER0336
+     C*********************EXSR #CTRY                              ERL004 ER0336
+     C*********************MOVELVQISOC    EXGUCL                   ERL004 ER0336
+     C*********************END                             - E2    ERL004 ER0336
+      *                                                                   ERL004
+      ** Setup Guarantor Customer Number                                  ERL004
+     C*********************MOVELVMGUCN    EXGUCN                   ERL004 ERL300
+     C*********************MOVELVLGUCN    EXGUCN                   ERL300 ER0336
+      *                                                                   ERL004
+      ** Setup Guarantor Report Name                                      ERL004
+     C***********VMGUCN    IFNE *BLANKS                    - B2    ERL004 ERL300
+     C*********************MOVELVMGURN    EXGURN                   ERL004 ERL300
+     C***********VMGUCN    CHAINSDCUSTY6             88            ERL004 ERL300
+     C***********VLGUCN    IFNE *BLANKS                    - B2    ERL300 ER0336
+     C*********************MOVELVLGURN    EXGURN                   ERL300 ER0336
+     C***********VLGUCN    CHAINSDCUSTY6             88            ERL300 ER0336
+     C************IN88     IFEQ '0'                        - B3    ERL004 ER0336
+     C*********************Z-ADDVFECOS    EXGUEC                   ERL004 ER0336
+     C*********************END                             - E3    ERL004 ER0336
+     C*********************END                             - E2    ERL004 ER0336
+      *
+      ** Setup Credit Code Size
+     C********** *LOVAL    SETLLERLUICL0                                  ERL328
+     C*********************READ ERLUICL0                 88               ERL328
+      *
+     C******               MULT 1000000   VPCSL1                          ULX004
+     C******               MULT 1000000   VPCSL2                          ULX004
+     C******               MULT 1000000   VPCSL3                          ULX004
+     C******               MULT 1000000   VPCSL4                          ULX004
+      ******                                                       ERL012 ULX004
+      ***Convert amounts into Primery Currency amount              ERL012 ULX004
+     C******     VPCSL1    MULT @@CSRT    VPCSL1    H              ERL012 ULX004
+     C******     VPCSL2    MULT @@CSRT    VPCSL2    H              ERL012 ULX004
+     C******     VPCSL3    MULT @@CSRT    VPCSL3    H              ERL012 ULX004
+     C******     VPCSL4    MULT @@CSRT    VPCSL4    H              ERL012 ULX004
+      ******                                                       ERL012 ULX004
+      **>=*LIMIT 1                                                        ULX004
+     C******     EXLAMT    IFGE VPCSL1                     - B2           ULX004
+     C******               Z-ADD1         EXCCSZ                          ULX004
+     C******               ELSE                            - X2           ULX004
+      **>=*LIMIT 2 AND < LIMIT 1                                          ULX004
+     C******     EXLAMT    IFGE VPCSL2                     - B3           ULX004
+     C******     EXLAMT    ANDLTVPCSL1                                    ULX004
+     C******               Z-ADD2         EXCCSZ                          ULX004
+     C******               ELSE                            - X3           ULX004
+      **>=*LIMIT 3 AND < LIMIT 2                                          ULX004
+     C******     EXLAMT    IFGE VPCSL3                     - B4           ULX004
+     C******     EXLAMT    ANDLTVPCSL2                                    ULX004
+     C******               Z-ADD3         EXCCSZ                          ULX004
+     C******               ELSE                            - X4           ULX004
+      **>=*LIMIT 4 AND < LIMIT 3                                          ULX004
+     C******     EXLAMT    IFGE VPCSL4                     - B5           ULX004
+     C******     EXLAMT    ANDLTVPCSL3                                    ULX004
+     C******               Z-ADD4         EXCCSZ                          ULX004
+     C******               ELSE                            - X5           ULX004
+      **<*LIMIT 4                                                         ULX004
+     C******     EXLAMT    IFLT VPCSL4                     - B6           ULX004
+     C******               Z-ADD5         EXCCSZ                          ULX004
+     C******               END                             - E6           ULX004
+      ******                                                              ULX004
+     C******               END                             - E5           ULX004
+     C******               END                             - E4           ULX004
+     C******               END                             - E3           ULX004
+     C******               END                             - E2           ULX004
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #NAP      Negotiable Assets Purchased
+      **
+      *--------------------------------------------------------------- *****
+     C           #NAP      BEGSR
+      *--------------------------------------------------------------- *****
+      *                                                                *****
+     C********** KTR       CHAINMMDENBY6             80                                       CER001
+     C           KTR       CHAINMMDBX4L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'642'     DBASE            *****************
+     C**********           MOVEL'MMDENBY6'DBFILE                                              CER001
+     C                     MOVEL'MMDBX4L0'DBFILE                                              CER001
+     C                     MOVELKTR       DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X1
+     C*********************MOVELVMGUAC    EXGUAC                          ERL371
+      ** Setup Consumer credit code                                       67483
+     C           VM1UAC    IFEQ 5                                         67483
+     C                     MOVELVM1UAC    EXGUAC                          67483
+     C                     END                                            67483
+      *                                                                   ERL371
+      ** SETUP FIELDS FOR IML 1.4                                         ERL371
+     C                     Z-ADDVMIM93    EXIM93                          ERL371
+     C                     Z-ADDVMCLAT    EXCLAT                          ERL371
+     C                     MOVE VMSUBR    EXSUBR                          ERL371
+     C           EXLAMT    MULT VMLURA    EXLSAM                          ERL371
+     C           EXLSAM    DIV  10000     EXLSAM                          ERL371
+      *                                                                   ERL420
+      ** Setup 'Correction Amount'                                        ERL420
+     C                     Z-ADDVMCOAM    CORAM                           ERL420
+      *
+     C***********VMGUCC    IFNE *BLANKS                    - B2           ER0336
+     C*********************MOVELVMGUCC    KYCUCO  2                       ER0336
+     C*********************EXSR #CTRY                                     ER0336
+     C*********************MOVELVQISOC    EXGUCL                          ER0336
+     C*********************END                             - E2           ER0336
+      *
+      ** Setup Guarantor Customer Number
+     C*********************MOVELVMGUCN    EXGUCN                          ER0336
+      *
+      ** Setup Guarantor Report Name
+     C***********VMGUCN    IFNE *BLANKS                    - B2           ER0336
+     C*********************MOVELVMGURN    EXGURN                          ER0336
+     C***********VMGUCN    CHAINSDCUSTY6             88                   ER0336
+     C************IN88     IFEQ '0'                        - B3           ER0336
+     C*********************Z-ADDVFECOS    EXGUEC                          ER0336
+     C*********************END                             - E3           ER0336
+     C*********************END                             - E2           ER0336
+      *
+     C                     END                             - E1
+      *
+     C********** KTR       CHAINMMDENBY4             80                                       CER001
+     C           KTR       CHAINMMDBX3L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'643'     DBASE            *****************
+     C**********           MOVEL'MMDENBY4'DBFILE                                              CER001
+     C                     MOVEL'MMDBX3L0'DBFILE                                              CER001
+     C                     MOVELKTR       DBKEY
+     C                     EXSR #DBERR
+     C                     END                             - E1
+      *                                                                   ER0121
+     C           VHFRNI    IFEQ 'Y'                        - B1           ER0121
+     C                     Z-ADDEXENDD    EXREVD                          ER0121
+     C                     END                             - E1           ER0121
+      *
+      ** IML 2.4 DEVELOPMENT                                              ERL328
+      *                                                                   ERL328
+     C                     Z-ADD1         EXCORT                          ERL328
+     C                     Z-ADD0         EXVOTR                          ERL328
+      *                                                                   ERL328
+     C           VATRIN    IFEQ 'T'                        - B1           ERL328
+     C                     MOVE '2'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+     C           VATRIN    IFEQ 'I'                        - B1           ERL328
+     C                     MOVE '3'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+     C           VATRIN    IFEQ 'F'                        - B1           ERL328
+     C                     MOVE '1'       EXTRIN                          ERL328
+     C                     END                             - E1           ERL328
+      *                                                                   ERL328
+     C*********************Z-ADD2         EXEVMT                   ERL328 ER0336
+      *                                                                   ERL328
+     C*********************Z-ADDVMSWLK    EXSWLK                   ERL328 ER0336
+      *
+     C           VMEVMT    IFEQ 5                                         ER0336
+     C                     Z-ADD1         EXSWLK                          ER0336
+     C                     Z-ADD1         EXEVMT                          ER0336
+     C                     ELSE                                           ER0336
+     C                     Z-ADD0         EXSWLK                          ER0336
+     C                     Z-ADDVMEVMT    EXEVMT                          ER0336
+     C                     END                                            ER0336
+      *
+     C*********************Z-ADDVMOPTP    EXSECT                   ERL328 ERL336
+     C                     Z-ADDVMOPTP    EXTOVM                          ERL336
+      *                                                                   ERL328
+     C                     ENDSR
+     C**=================================================================
+      **
+      **  #CTRY       Convert User ctry code into ISO ctry code
+      **
+      *--------------------------------------------------------------- *****
+     C***********#CTRY     BEGSR                                          ER0336
+      *--------------------------------------------------------------- *****
+      **  ACCESS COUNTRY EXTENSION FILE  :
+      **   Retrieve ISO country code:                                  *****
+     C***********KYCUCO    CHAINERCTRYL1             80                   ER0336
+     C************IN80     IFEQ '1'                        - B1           ER0336
+     C************LOCK     IN   LDA                                       ER0336
+     C*********************MOVEL'644'     DBASE            ***************ER0336
+     C*********************MOVEL'ERCTRYL1'DBFILE                          ER0336
+     C*********************MOVELKYCUCO    DBKEY            ***************ER0336
+     C*********************EXSR #DBERR                                    ER0336
+     C*********************END                             - E1           ER0336
+      *
+     C*********************ENDSR                                          ER0336
+      /EJECT                                                              ERL012
+      **================================================================= ERL012
+     C*  ZA0900 - THIS SUBROUTINE CALCULATES THE CROSS EXCHANGE RATE  *   ERL012
+     C*                                                               *   ERL012
+     C* CALLED BY :  MAIN                                             *   ERL012
+     C*                                                               *   ERL012
+     C* CALLS :                                                       *   ERL012
+     C*                                                               *   ERL012
+     C* INPUT  : @@MDI1  FIRST MULTIPLY/DIVIDE INDICATOR              *   ERL012
+     C*          @@MDI2  SECOND MULTIPLY/DIVIDE INDICATOR             *   ERL012
+     C*          @@RAT1  FIRST RATE (SIZE : 13,8)                     *   ERL012
+     C*          @@RAT2  SECOND RATE (SIZE : 13,8)                    *   ERL012
+     C*                                                               *   ERL012
+     C* OUTPUT : @@CSRT  CROSS RATE  (SIZE : 13,8)                    *   ERL012
+     C*          @@FCMD  FIRST CCY MULTIPLY/DIVIDE INDICATOR          *   ERL012
+     C*                                                               *   ERL012
+     C* USES :                                                        *   ERL012
+     C*                                                               *   ERL012
+     C*                                                               *   ERL012
+     C*****************************************************************   ERL012
+     C*                                                                   ERL012
+     C           ZA0900    BEGSR                                          ERL012
+     C*                                                                   ERL012
+     C           @@RAT1    IFEQ *ZERO                      B1             ERL012
+     C                     Z-ADD1         @@RAT1                          ERL012
+     C                     END                             E1             ERL012
+     C*                                                                   ERL012
+     C           @@RAT2    IFEQ *ZERO                      B1             ERL012
+     C                     Z-ADD1         @@RAT2           *1             ERL012
+     C                     END                             E1             ERL012
+     C*                                                                   ERL012
+     C**  IF THE FIRST RATE M/D INDICATOR IS 'M' MULTIPLY,                ERL012
+     C**             ELSE DIVIDE                                          ERL012
+     C*                                                                   ERL012
+     C           @@MDI1    IFEQ 'M'                        B1             ERL012
+     C                     Z-ADD@@RAT1    @@CSRT 138       *1             ERL012
+     C                     ELSE                            X1             ERL012
+     C           1         DIV  @@RAT1    @@CSRT    H      *1             ERL012
+     C                     END                             E1             ERL012
+     C*                                                                   ERL012
+     C**  IF THE SECOND RATE M/D INDICATOR IS 'D' MULTIPLY,               ERL012
+     C**             ELSE DIVIDE                                          ERL012
+     C*                                                                   ERL012
+     C           @@MDI2    IFEQ 'D'                        B1             ERL012
+     C           @@CSRT    MULT @@RAT2    @@CSRT           *1             ERL012
+     C                     ELSE                            X1             ERL012
+     C           @@CSRT    DIV  @@RAT2    @@CSRT    H      *1             ERL012
+     C                     END                             E1             ERL012
+     C*                                                                   ERL012
+     C*                                                                   ERL012
+     C**  SET FIRST CCY MULTIPLY/DIVIDE *IN TO MULTIPLY                   ERL012
+     C                     MOVE 'M'       @@FCMD  1                       ERL012
+     C*                                                                   ERL012
+     C           ZA0909    ENDSR                           **ZA0909 TAG** ERL012
+      **=================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error
+      **              sub-routine.
+      **
+      *--------------------------------------------------------------- *****
+     C           #DBERR    BEGSR
+      *--------------------------------------------------------------- *****
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C           *IN81     IFEQ '0'
+     C  N81                DUMP
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

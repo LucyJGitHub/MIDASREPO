@@ -1,0 +1,1107 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Depot movements maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7547 - Depot Movements Enquiry                             *
+      *                                                               *
+      *  Function:  This program allows to see details of             *
+      *             Depot Movements.                                  *
+      *  (Input Cycle)                                                *
+      *                                                               *
+      *  Called By: SE7545 - Historical Diary Events                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      *                 CPB001             Date 07Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 23Nov98               *
+      *                 CSE007   *CREATE   Date 22Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSD015 - Midas Compliance Watch - Watch List Checking        *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  CSE028 - Standing Settlement Instructions Enhancement        *
+      *           (Recompile)                                         *
+      *  CSE015 - Forward Valued Depot Movement                       *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CAC005 - Profit Centre Accounting - SE Enhancements          *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     FDPTMV   IF  E           K        DISK         KINFSR *PSSR
+      ***  Depot Movement Details
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Security Details
+      *
+     FSE7547DFCF  E                    WORKSTN      KINFSR *PSSR
+      ***  Midas SE Depot Movements Display File.
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80
+      ***  Copyright Array
+     E/COPY WNCPYSRC,SE7547E001
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ISECTYDF
+     I              ORED                            OREDX
+      *
+     IWKDPTM      DS
+     I                                        1  10 KDPSS
+     I                                       11  16 KDPRN
+      *
+     IDETS        DS
+     I                                        1  10 SDPID
+     I                                       11  16 SDPMD
+     I                                       17  26 SDPOD
+     I                                       27  32 SDPDO
+     I                                       33  35 SDPBA
+     I                                       36  37 SDPBK
+     I                                       38  47 SDPBN
+     I                                       48  59 SDPNA
+     I                                       60  94 SDPNR
+     I                                       95 110 SDPMP
+     I                                      111 116 SDPAD
+     I                                      117 119 SORBR
+     I                                      120 123 SDPPC
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     I*
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I/COPY ZSRSRC,ZYLDZ1
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     IRUNDT       DS
+      ***  DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      ***  DATA AREA OF MENU USER
+     I                                       11  13 USRBCH
+      *
+     IPDATA     E DSSE70DT
+      ** Data structure to pass parameters to SE1807 for MT5xxs
+     I              PDPSS                           PPDPSS
+     I              PDPRN                           PPDPRN
+      *
+     ISDPORT    E DSSDPORTPD
+      ***  Portfolio Definition Via Access Program
+      *
+     ISDPLCS    E DSSDPLCSPD
+      ***  Portfolio Customer Details Via Access Program
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Client Details
+      *
+     ISDSECS    E DSSDSECSPD
+      ***  Client Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ***  Branch Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ***  Securities Trading Data
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACD1                                    CGL029
+      ***  External DS for general Ledger Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External DS for bank details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ***  External DS for Book Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      ***  External DS for profit centres details
+      *
+     ISECGT     E DSSECGTD
+      ***  External DS for charge type details
+      *** Rename fields which exist already on deal record
+     I              RECI                            RECI1
+     I              LCD                             LCD1
+     I              CHTP                            CHTP1
+     I              TNLU                            TNLU1
+      *
+     ISDRETL    E DSSDRETLPD
+     I              QQACCD                          QQACD2                                    CGL029
+      ***  External DS for default retail account details
+      *
+     ISDMOD     E DSSDMMODPD
+      ***  External DS for which modules installed
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS for access programs, long data structure
+      *
+     IDSLDY     E DSDSLDY                                                 CPB001
+      ***  Third DS for access programs, very long data structure         CPB001
+      *                                                                   CPB001
+     IPMCWL       DS                           9999                                           CSD015
+      ** Additional entry parameter for Midas Compliance Watch                                CSD015
+      *                                                                                       CSD015
+     ICPYR@#      DS
+      ***  Data structure for compilation - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+     C           *IN40     DOWEQ*OFF
+      *
+      ***  Clear screen message file
+      *
+     C                     EXSR CLEAR
+      *
+      ***  If key F5 pressed, end program.
+      *
+     C           *INKE     IFEQ *ON
+     C           WFIRST    OREQ 'Y'
+     C                     MOVE 'N'       WFIRST
+     C                     EXSR UPDATE
+     C                     ENDIF
+      *
+      ***  Display first display record
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTSE7547F1
+      *
+     C                     SELEC
+      *
+      ***  F5 Key is pressed
+      *
+     C           *INKE     WHEQ *ON
+     C                     EXSR CLEAR
+      *
+      ***  If key F3 pressed, end program.
+      *
+     C           *INKC     WHEQ *ON
+     C                     MOVE *ON       *IN40
+     C                     MOVE 'Y2U9999' WKRTCD
+      *
+      ***  If key F12 pressed, cancel program.
+      *
+     C           *INKL     WHEQ *ON
+     C                     MOVE *ON       *IN40
+     C                     MOVE 'USR0790' WKRTCD
+      *
+     C                     OTHER
+      *
+      ** If the MT5xx feature is available, process for MT5xxs;
+      *
+     C           S01401    IFEQ 'Y'
+     C                     EXSR MT500
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7547C001
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      **  End Program and Return.
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  UPDATE - Subroutine to process Detail Screen                 *
+      *  ------                                                       *
+      *  Called By: Main Processing.                                  *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           UPDATE    BEGSR
+      *
+      ***  Set screen indicators - protect key, set OFF error inds,
+      ***  Position cursor
+      *
+     C                     MOVEA'1'       *IN,5
+     C                     MOVEA'0'       *IN,12
+     C                     MOVEA'1'       *IN,30
+     C                     MOVEA'00000000'*IN,41
+     C                     MOVEA'00'      *IN,49
+     C                     MOVEA'00000'   *IN,51
+     C                     MOVEA'000000'  *IN,70
+     C                     MOVE '0'       *IN56
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN58
+     C                     MOVEA'00'      *IN,16
+      *
+     C                     MOVELWKDPSS    KDPSS     P
+     C                     MOVE WKDPRN    KDPRN
+      *
+      ***  Access file record for old TNLU to check at update time
+      ***  If no record presently on file, zeroise stored TNLU
+      *
+     C           DPTMVK    CHAINDPTMV                80
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVELWKDPTM    DBKEY     P      * DB ERROR 01 *
+     C                     MOVEL'DPTMV'   DBFILE    P      ***************
+     C                     MOVEL##PGM     DBPGM     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   SDPID
+     C                     MOVE *BLANKS   SDPMD
+     C                     MOVE *BLANKS   SDPOD
+     C                     MOVE *BLANKS   SDPDO
+     C                     MOVE *BLANKS   SDPBA
+     C                     MOVE *BLANKS   SDPBK
+     C                     MOVE *BLANKS   SDPBN
+     C                     MOVE *BLANKS   SDPNA
+     C                     MOVE *BLANKS   SDPNR
+     C                     MOVE *BLANKS   SDPMP
+     C                     MOVE *BLANKS   SDPAD
+     C                     MOVE *BLANKS   SORBR
+     C                     MOVE *BLANKS   SRPIN
+     C                     MOVE *BLANKS   SSWRF
+     C                     MOVE *BLANKS   SSIOI
+     C                     MOVE *BLANKS   SDPPC
+     C                     MOVE *BLANKS   SCHC
+     C                     MOVE *BLANKS   SCCE
+     C                     MOVE *BLANKS   SCHA
+     C                     MOVE *BLANKS   SCSE
+     C                     MOVE *BLANKS   SCAB
+     C                     MOVE *BLANKS   SCAT
+     C                     MOVE *BLANKS   SPTFR
+     C                     MOVE *BLANKS   SCYLD
+     C                     MOVE *BLANKS   SSPXR
+     C                     MOVE *BLANKS   SSPMD
+     C                     MOVE 'Y'       SCWDI
+     C                     MOVE *BLANKS   SDMTD                           CSE015
+      *
+     C           RECI      IFEQ '*'
+     C           RECI      OREQ 'R'
+     C                     MOVEL'DELETED' DELT    7
+     C                     ELSE
+     C                     MOVEL*BLANK    DELT
+     C                     END
+      *
+      ***  Translate record details from file layout to screen layout
+      *
+     C                     EXSR TRSFS
+      *
+     C                     MOVEA'1'       *IN,6
+     C                     MOVEA'1'       *IN,7
+     C                     MOVEA'0'       *IN,30
+     C                     MOVE '1'       *IN14            *PROTECT
+     C                     MOVE 'Y'       FIRST   1
+      *
+      ***  RESET PROTECT/NON-DISPLAY INDS
+      *
+     C                     MOVEA'00'      *IN,5
+      *
+     C           *INU2     IFEQ '1'
+     C                     MOVE '0'       *IN07
+     C                     ENDIF
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE *OFF      *IN14
+     C                     MOVE *OFF      *IN13
+     C                     ELSE
+     C                     MOVE *ON       *IN13
+     C                     MOVE *ON       *IN14
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  MT500  Produce SWIFT Messages, MT5xxs                        *
+      *  -----                                                        *
+      *  OUTPUT : PERR - Error code: 'N' = No error                   *
+      *                              'U' = extension file not Updated *
+      *           PCMD - Retrn code :'03'= Exit to Menu               *
+      *                              '05'= Refresh Screen (Enq. only) *
+      *                              '12'= Previous Screen (no update)*
+      *****************************************************************
+      *
+     C           MT500     BEGSR
+      *
+     C                     MOVE 'E'       PACTN
+     C                     MOVE DPSS      PPDPSS
+     C                     MOVE DPRN      PPDPRN
+     C                     MOVE DPBA      PDPBA
+     C                     MOVE DPBN      PDPBN
+     C                     MOVE DPMV      PDPMV
+     C                     MOVE DPDO      PTNTP
+     C                     MOVE SDPDO     PDPDO
+     C                     MOVE SDPMD     PDPMD
+     C**********           Z-ADDDPID      PDPID                                               CSD027
+     C                     MOVE DPID      PDPID                                               CSD027
+     C                     MOVE BVDR1     PDC01
+     C                     MOVE BVDR2     PDC02
+     C**********           Z-ADDDPOD      PDPOD                                               CSD027
+     C                     MOVE DPOD      PDPOD                                               CSD027
+     C                     Z-ADDRUND      PLCD
+     C                     MOVE NMCY      PNMCY
+     C                     MOVE MKTI      PDPMK
+     C                     MOVE DPNA      PDPNA
+     C                     Z-ADDORED      PORED
+     C                     Z-ADDMKTP      PMKTP
+      *
+     C                     CALL 'SE1807'
+     C                     PARM '00'      PCMD    2
+     C                     PARM 'N'       PERR    1
+     C                     PARM           PDATA
+     C                     PARM           MODE    1                                           CSD015
+     C                     PARM           MSGTPS 10                                           CSD015
+      *                                                                                       CSD015
+      ** Added parameter for Midas Compliamce Watch                                           CSD015
+      *                                                                                       CSD015
+     C                     PARM           PMCWL                                               CSD015
+      *
+      ** If F3 (for Exit) from SE1807 return to menu
+      *
+     C           PCMD      IFEQ '03'
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  TRSFS  - Subroutine to Format record fields for Screen.      *
+      *  -----                                                        *
+      *  Called By: UPDATE                                            *
+      *  Calls:     None.                                             *
+      *****************************************************************
+      *
+     C           TRSFS     BEGSR
+      *
+      ***  TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+      *
+      ***  In depot
+      *
+     C                     MOVE *BLANKS   SDPID
+     C********** DPID      IFNE *ZEROS                                                        CSD027
+     C           DPID      IFNE *BLANKS                                                       CSD027
+     C                     MOVELDPID      SDPID
+     C                     ENDIF
+      *
+      *** In date
+      *
+     C                     MOVE *BLANKS   SDPMD
+     C           DPMD      IFNE *ZEROS
+     C           DPMD      IFNE 99999
+     C                     Z-ADDDPMD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDPMD
+     C                     ELSE
+     C                     MOVE '999999'  SDPMD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Out depot
+      *
+     C                     MOVE *BLANKS   SDPOD
+     C********** DPOD      IFNE *ZEROS                                                        CSD027
+     C           DPOD      IFNE *BLANKS                                                       CSD027
+     C                     MOVELDPOD      SDPOD
+     C                     ENDIF
+      *
+      ***  Out date
+      *
+     C                     MOVE *BLANKS   SDPDO
+     C           DPDO      IFNE *ZEROS
+     C           DPDO      IFNE 99999
+     C                     Z-ADDDPDO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDPDO
+     C                     ELSE
+     C                     MOVE '999999'  SDPDO
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CSE015
+      ** Trade Date                                                       CSE015
+      *                                                                   CSE015
+     C                     MOVE *BLANKS   SDMTD                           CSE015
+     C           CSE015    IFEQ 'Y'                                       CSE015
+     C           DMTD      IFNE *ZEROS                                    CSE015
+     C           DMTD      IFNE 99999                                     CSE015
+     C                     Z-ADDDMTD      ZDAYNO                          CSE015
+     C                     EXSR ZDATE2                                    CSE015
+     C                     MOVE ZDATE     SDMTD                           CSE015
+     C                     ELSE                                           CSE015
+     C                     MOVE '999999'  SDMTD                           CSE015
+     C                     ENDIF                                          CSE015
+     C                     ENDIF                                          CSE015
+     C                     ENDIF                                          CSE015
+      *
+      ***  Branch code
+      *
+     C           DPBA      IFNE *BLANKS
+     C                     MOVE DPBA      SDPBA
+     C                     ELSE
+     C                     MOVE *BLANKS   SDPBA
+     C                     ENDIF
+      *
+      ***  Originating Branch code
+      *
+     C           ORBR      IFNE *BLANKS
+     C                     MOVELORBR      SORBR
+     C                     ELSE
+     C                     MOVE *BLANKS   SORBR
+     C                     ENDIF
+      *
+      ***  Book code
+      *
+     C                     MOVE DPBK      SDPBK
+      *                                                                   CAC005
+      ** If CAC005 is installed, retrieve the user book. DPBK in the      CAC005
+      ** Depot Movement file is being held as a pseudo book               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C                     PARM           PBKCD   2                       CAC005
+     C                     PARM           PPRFC   4                       CAC005
+     C                     PARM DPBK      PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPBKCD     SDPBK                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+      ***  Beneficial customer
+      *
+     C                     MOVE *BLANKS   SDPBN
+     C********** DPBN      IFNE *ZEROS                                                        CSD027
+     C           DPBN      IFNE *BLANKS                                                       CSD027
+     C                     MOVELDPBN      SDPBN
+     C                     ENDIF
+      *
+      ***  Nominal amount
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE DPNA      ZFIELD
+      *
+     C           DPSS      CHAINSECTYDF              33
+      *
+     C           *IN33     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELDPSS      DBKEY     P      * DB ERROR 02 *
+     C                     MOVEL'SECTY'   DBFILE    P      ***************
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDNMDP      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDPNA
+      *
+      ***  Narrative
+      *
+     C                     MOVE DPNR      SDPNR
+      *
+      ***  Market price
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE MKTP      ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDPMP
+      *
+      ***  If switch U2 is off (i.e. Deals module is not present)
+      ***  protect & non-display the following fields.
+      *
+     C           *INU2     IFEQ '0'
+     C                     MOVE '1'       *IN07
+     C                     MOVE '1'       *IN08
+     C                     ELSE
+      *
+     C                     MOVE '0'       *IN07
+     C                     MOVE '0'       *IN08
+      *
+      ***  Associated deal number
+      *
+     C           DPAD      IFNE *ZEROS
+     C                     MOVE DPAD      SDPAD
+     C                     ELSE
+     C                     MOVE *BLANKS   SDPAD
+     C                     ENDIF
+      *
+      ***  Switch Reference
+      *
+     C                     MOVE SWRF      SSWRF
+      *
+      ***  Repo/Pledge Indicator
+      *
+     C                     MOVE *BLANK    SRPIN
+      *
+     C           DPMV      IFEQ 'RR'
+     C           DPMV      OREQ 'RP'
+     C                     MOVE 'R'       SRPIN
+     C                     ENDIF
+      *
+     C           DPMV      IFEQ 'PD'
+     C           DPMV      OREQ 'PL'
+     C                     MOVE 'P'       SRPIN
+     C                     ENDIF
+      *
+      ***  Switch In/Out Indicator
+      *
+     C                     MOVE SIOI      SSIOI
+     C                     ENDIF
+      *
+      ***  IS BENEFICIARY CUSTOMER A PORTFOLIO CUSTOMER ?
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C********** DPBN      ANDNE0                                                             CSD027
+     C           DPBN      ANDNE*BLANKS                                                       CSD027
+     C                     MOVEL*BLANKS   WWCLIN 10
+     C                     MOVELDPBN      WWCLIN
+     C                     CALL 'AOPLCSR0'
+     C                     PARM '*MSG   ' WWRTCD  7
+     C                     PARM '*VERIFY' WWOPTN  7
+     C                     PARM           WWCLIN
+     C           SDPLCS    PARM SDPLCS    DSFDY
+     C           WWRTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       WWPLCS  1
+     C                     ELSE
+     C                     MOVE 'N'       WWPLCS
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CPB001
+      ***  Is Beneficiary cystomer a Private Banking Customer ?           CPB001
+      *                                                                   CPB001
+     C                     MOVE 'N'       WWPBCS  1                       CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C********** DPBN      ANDNE0                                                      CPB001 CSD027
+     C           DPBN      ANDNE*BLANKS                                                       CSD027
+     C                     MOVEL*BLANKS   WWCLIN 10                       CPB001
+     C                     MOVELDPBN      WWCLIN                          CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM '*MSG   ' WWRTCD  7                       CPB001
+     C                     PARM '*KEY   ' WWOPTN  7                       CPB001
+     C                     PARM           WWCLIN                          CPB001
+     C                     PARM           WWK7    7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           WWRTCD    IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     MOVE 'Y'       WWPBCS                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     MOVE CWDI      SCWDI
+      *
+      ***  PORTFOLIO MODULE IS ON
+      ***  AND BENEFICIARY CUSTOMER IS PORTFOLIO CUSTOMER
+      ***  OR PRIVATE BANKING MODULE IS ON                                CPB001
+      ***  AND PRIVATE BANKING CUSTOMER                                   CPB001
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C           WWPLCS    ANDEQ'Y'
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C           WWPBCS    ANDEQ'Y'                                       CPB001
+     C                     MOVE *OFF      *IN13
+      *
+      ***  PORTFOLIO REFERENCE
+      *
+     C           PTFR      IFEQ '9997'
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    SPTFR
+     C                     ELSE
+     C                     MOVE PTFR      SPTFR
+     C                     ENDIF
+      *
+      ***  FX RATE
+      *
+     C           SPXR      IFEQ 0
+     C                     MOVE *BLANK    SSPXR
+     C                     ELSE
+     C                     MOVE *BLANK    ZFLD15
+     C                     MOVE SPXR      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SSPXR
+     C                     ENDIF
+      *
+      ***  MULTIPLY/DIVIDE INDICATOR
+      *
+     C                     MOVE SPMD      SSPMD
+      *
+      **   AVERAGE YIELD RATE
+      *
+     C           CYLD      IFEQ 0
+     C                     MOVE *BLANK    SCYLD
+     C                     ELSE
+     C                     MOVE *BLANK    ZFLD15
+     C                     MOVE CYLD      ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWFL13 13
+     C                     MOVELWWFL13    SCYLD
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE '1'       *IN13
+     C                     MOVE 'N'       WWPLCS
+     C                     MOVE 'N'       WWPBCS                          CPB001
+     C                     ENDIF
+      *
+      ***  PROFIT CENTRE
+      *
+     C                     MOVELDPPC      SDPPC
+      *
+      *** Output new charge fields only if autocharge and S01445 are ON
+      *
+     C           *IN09     IFEQ '0'
+     C                     MOVE DCHC      SCHC
+     C                     MOVE DCCE      SCCE
+      *
+     C           DCCE      IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  WWRTCD
+     C                     PARM '*KEY'    WWOPTN
+     C                     PARM DCCE      WWCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE DCHA      ZFIELD           Charge Amt
+     C                     Z-ADDA6NBDP    ZADEC            From SDCURR
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SCHA
+     C                     ELSE
+     C                     MOVE *BLANKS   SCHA
+     C                     ENDIF
+      *
+      *** If Settlement type = zero, and depot movement is a walk-in/
+      *** out, then output '00' rather than spaces
+      *
+     C           DCSE      IFEQ *ZERO
+     C           DPMV      IFEQ 'WI'
+     C           DCHA      ANDNE*ZERO
+     C           DPMV      OREQ 'WO'
+     C           DCHA      ANDNE*ZERO
+     C                     MOVE '00'      SCSE             Stl Type
+     C                     ELSE
+     C                     MOVE *BLANKS   SCSE
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE DCSE      SCSE
+     C                     ENDIF
+      *
+     C           DCSE      IFEQ 4
+     C           DCSE      OREQ 14
+     C                     MOVE *BLANKS   SCAB
+     C                     ELSE
+     C                     MOVE DCAB      SCAB             Stl Branch
+     C                     ENDIF
+      *
+     C                     MOVE DCAT      SCAT             Stl Acct
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CLEAR
+      *****************************************************************
+      *  CLEAR  - Clear program message queue.                        *
+      *  -----                                                        *
+      *  Called by:                                                   *
+      *  Calls: None                                                  *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR                           *** CLEAR ***
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ***  Local Data Area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE7547'  DBPGM
+     C                     OUT  LDA
+      *
+     C           *ENTRY    PLIST                           Entry List
+     C                     PARM           WKRTCD  7
+     C                     PARM           WKDPSS
+     C                     PARM           WKDPRN
+      *
+      ** IN THE DATAAREA RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      **  Check Multi-Branching Indicator
+      *
+     C           MBIN      COMP 'Y'                      88
+      *
+      ** IN THE DATAAREA ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Get Bank Details by access object
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ***  Get Securities Trading Data by access object
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      ***  Access general ledger details for origination branch ind.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ***  Check if origniating branch used
+      *
+     C           BKOBRU    COMP 'Y'                      89
+      *
+      ***  Check if profit centres used
+      *
+     C           BKPRCU    COMP 'Y'                      87
+      *
+      ***  Access Retail details if retail module is ON
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' WWRTCD
+     C                     PARM '*FIRST ' WWOPTN
+     C           SDMOD     PARM SDMOD     DSFDY
+      *
+     C           BGRTBN    IFEQ 'Y'
+     C                     CALL 'AORETLR0'
+     C                     PARM '*DBERR ' WWRTCD
+     C                     PARM '*FIRST ' WWOPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7547C002
+      *                                                                   CAC005
+      ** Access Switchable feature files for CAC005                       CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   6                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+      **  Access Switchable features file for MT5xx processing - S01401
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WWRTCD
+     C                     PARM '*VERIFY' WWOPTN
+     C                     PARM 'S01401'  WWSARD  6
+      *
+     C           WWRTCD    IFEQ *BLANK
+     C                     MOVE 'Y'       S01401  1
+     C                     ELSE
+     C                     MOVE 'N'       S01401  1
+     C                     ENDIF
+      *
+      ***  Protect Charge fields
+      *
+     C                     MOVE '1'       *IN09            Non Dsply flds
+      *
+      *** Check S01445 has been installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WWRTCD
+     C                     PARM '*VERIFY' WWOPTN
+     C                     PARM 'S01445'  WWSARD
+      *
+     C           WWRTCD    IFEQ *BLANK
+     C                     MOVE 'Y'       S01445  1
+      *
+      *** Unprotect Charge fields if both autocharge and S01445 flags
+      *** are ON
+      *
+     C           BVACOP    IFEQ 'Y'
+     C                     MOVE '0'       *IN09            Non Dsply flds
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'N'       S01445
+     C                     ENDIF
+      *
+      ***  Access Switchable features file for Corporate Actions.
+      *
+     C                     MOVE 'N'       CSE007  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WWRTCD
+     C                     PARM '*VERIFY' WWOPTN
+     C                     PARM 'CSE007'  WWSARD
+      *
+     C           WWRTCD    IFEQ *BLANKS
+      *
+      ***  If Corporate Actions feature is installed.
+      *
+     C                     MOVE 'Y'       CSE007
+     C                     ELSE
+      *
+      ***  Setup work field to call SE6710, SE6712 and SE6714.
+      *
+     C                     MOVE 'Y'       SE6710  1
+     C                     MOVE 'Y'       SE6712  1
+     C                     MOVE 'Y'       SE6714  1
+     C                     ENDIF
+      *
+      ***  Access Switchable features file for Securities Redenomination
+      *
+     C                     MOVE 'N'       CEU017  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WWRTCD
+     C                     PARM '*VERIFY' WWOPTN
+     C                     PARM 'CEU017'  WWSARD
+      *
+     C           WWRTCD    IFEQ *BLANKS
+      *
+      ***  If Securities Redenomination feature is installed.
+      *
+     C                     MOVE 'Y'       CEU017
+     C                     ELSE
+      *
+      ***  Setup work field to call SE6710, SE6712 and SE6714.
+      *
+     C                     MOVE 'Y'       SE6710  1
+     C                     MOVE 'Y'       SE6712  1
+     C                     MOVE 'Y'       SE6714  1
+     C                     ENDIF
+      *
+      ***  Check if module protfolio is ON or OFF
+      ***  And if module private banking is ON or OFF                     CPB001
+      *
+     C           BGPFMG    IFNE 'Y'
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE *ON       *IN13
+     C                     MOVE *ON       *IN14
+     C                     ENDIF
+      *
+      ***  Access PM I.C.D.
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C                     CALL 'AOPORTR0'
+     C                     PARM '*DBERR ' WWRTCD
+     C                     PARM '*FIRST ' WWOPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C                     ENDIF
+      *
+      ***  Proceed to start screen unless DATABASE ERROR
+      *
+     C           *INU7     IFNE '1'
+     C                     MOVEA'1'       *IN,10
+     C                     ENDIF
+      *                                                                   CSE015
+      ** Access Switchable feature files for CSE015                       CSE015
+      *                                                                   CSE015
+     C                     CALL 'AOSARDR0'                                CSE015
+     C                     PARM *BLANKS   PRTCD   7                       CSE015
+     C                     PARM '*VERIFY' POPTN   7                       CSE015
+     C                     PARM 'CSE015'  PSARD   6                       CSE015
+      *                                                                   CSE015
+     C           PRTCD     IFEQ *BLANK                                    CSE015
+     C                     MOVE 'Y'       CSE015  1                       CSE015
+     C                     MOVE *ON       *IN60                           CSE015
+     C                     ELSE                                           CSE015
+     C                     MOVE 'N'       CSE015                          CSE015
+     C                     MOVE *OFF      *IN60                           CSE015
+      *                                                                   CSE015
+      ** Database Error (return code other than *NRF)                     CSE015
+      *                                                                   CSE015
+     C           PRTCD     IFNE '*NRF   '                                 CSE015
+     C           *LOCK     IN   LDA                                       CSE015
+     C                     MOVEL'SCSARDPD'DBFILE                          CSE015
+     C                     MOVEL'CSE015'  DBKEY                           CSE015
+     C                     Z-ADD3         DBASE                           CSE015
+     C                     OUT  LDA                                       CSE015
+     C                     EXSR *PSSR                                     CSE015
+     C                     ENDIF                                          CSE015
+     C                     ENDIF                                          CSE015
+      *
+      ***  Define key list for chaining to DPTMV File
+      *
+     C           DPTMVK    KLIST
+     C                     KFLD           KDPSS
+     C                     KFLD           KDPRN
+      *
+     C                     MOVE 'Y'       WFIRST  1
+      *
+      **  Define work fields
+      *
+     C           *LIKE     DEFN MKTP      HMKTP
+     C           *LIKE     DEFN MKPR      MKPRP
+     C           *LIKE     DEFN MKPR      MKPRL
+     C           *LIKE     DEFN DPMD      HDPMD
+     C           *LIKE     DEFN DPDO      HDPDO
+     C           *LIKE     DEFN DPAD      HDPAD
+     C           *LIKE     DEFN DPMD      LDPMD
+     C           *LIKE     DEFN DPDO      LDPDO
+     C           *LIKE     DEFN DPAD      LDPAD
+     C           *LIKE     DEFN DPNA      LDPNA
+     C           *LIKE     DEFN DPSS      WKDPSS
+     C           *LIKE     DEFN DPRN      WKDPRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE 'Y2U0004' WKRTCD
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C********************************************************************S01496
+     C/EJECT                                                              S01496
+     C/COPY WNCPYSRC,SE7547C003
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ31                                              S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY WNCPYSRC,SE7547X001

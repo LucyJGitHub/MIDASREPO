@@ -1,0 +1,748 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Option Narrative Codes Audit/Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7532  - Option Narrative Codes Report                      *
+      *                                                               *
+      * FUNCTION:  This Program produces a report, for audit          *
+      * (COB)      purposes, of all Option Narrative Code defined     *
+      * (I/C)      to the system. The report runs on request in I/C   *
+      *            and COB and shows a full list, or automatically    *
+      *            in COB and audits changes made today.              *
+      *                                                               *
+      *  Called By: SEC7532 - Option Narratives Codes Report          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CSE007  *CREATE    Date  1Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     FSECONAPDIF  E           K        DISK
+      **  Option Narrative Code - File
+      *
+     FSECONAPAIF  E                    DISK         KINFSR *PSSR
+      **  Option Narrative Code - Trailer
+      *
+     FSE7532AUO   E             21     PRINTER      KINFDS ERF1DS
+      **  Option Narrative Code - Audit
+     F                                              KINFSR *PSSR
+      *
+     FSE7532P1O   E             22     PRINTER      KINFDS ERF2DS     UC
+      **  Option Narrative Code - Report
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      * ------------------------                                      *
+      *                                                               *
+      *  10 - PRINT *** DIFFERENCE ***                                *
+      *  21 - OVERFLOW INDICATOR ON SE7532AU                          *
+      *  22 - OVERFLOW INDICATOR ON SE7532P1                          *
+      *  70 - FILE ERROR                                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  INDEX TO SUBROUTINES                                         *
+      * ----------------------                                        *
+      *                                                               *
+      *  #A     - INITIAL PROCESSING                                  *
+      *  #B     - MAIN PROCESSING                                     *
+      *  #BA    - PROCESS FULL GROUPS LIST                            *
+      *  #BB    - PROCESS FULL LIST RUN CONTROLS                      *
+      *  #BC    - PROCESS AUDIT LIST                                  *
+      *  #BD    - PROCESS AUDIT LIST RUN CONTROLS                     *
+      *  #ZA    - DATABASE ERRORS                                     *
+      *  #ZB    - SETUP OUTPUT FIELDS FOR REPORT                      *
+      *  *PSSR  - PROGRAM ERROR HANDLING SUBROUINE                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **  ARRAY FOR COPYRIGHT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ICPYR@$      DS
+      **  Data structure for compilation - COPYRIGHT INSERTION
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+     IPSDS       SDS
+      **  Program status data structure
+      *
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     IERF1DS      DS
+      **  File information data structure
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      **  For overflow - Run control
+      *
+     I                                    B 367 3680LINE
+      *
+     IERF2DS      DS
+      **  File information data structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      **  For overflow - Print
+      *
+     I                                    B 367 3680LINE1
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IUPDATE      DS
+      **  Data fromatting data structure
+      *
+     I                                        1   2 CADAY
+     I                                        3   5 CAMON
+     I                                        6   7 CAYER
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data strucutre
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      #A     - Initial Processing.                       *
+      *            #B     - Main Processing.                          *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Input parameter list
+      *
+     C           *ENTRY    PLIST
+      *
+      **  For selection of full list or audit list
+      *
+     C                     PARM           MODE    1
+     C                     PARM           @RSEQ   5
+      *
+      **  Initial processing
+      *
+     C                     EXSR #A
+      *
+      **  Main processing
+      *
+     C                     EXSR #B
+      *
+     C           WWOPEN    IFEQ 'Y'
+      *
+      **  Call ZSFILE for P1 file
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     CLOSESE7532P1
+      *
+     C                     END
+      *
+      **  Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      **  END PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #A     - INITIAL PROCESSING                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     SETOF                     10
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+      *
+      **  Initialise DB error fields annd store program name for DB
+      **  error field
+      **  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE7532'  DBPGM
+     C                     OUT  LDA
+      *
+      **  Initialise work fields
+      *
+     C                     MOVE '1'       WWFTT   1
+      *
+      **  Initialise run controls work fields
+      *
+     C                     Z-ADD*ZEROS    RRPROG
+     C                     Z-ADD*ZEROS    RRFILE
+     C                     MOVE *BLANK    RRACTN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #B     - Main Processing.                          *
+      *                                                               *
+      * CALLS      #BA    - Process Full Groups List.                 *
+      *            #BB    - Process Full List Run Controls.           *
+      *            #BC    - Process Audit List.                       *
+      *            #BD    - Process Audit List Run Controls.          *
+      *            #ZA    - Process Database Errors.                  *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      **  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         RRFILE
+      *
+      **  Check input parameter
+      *
+     C           MODE      IFEQ '2'
+      *
+      **  Full list
+      *
+     C                     EXSR #BA
+      *
+      **  Full list run controls processing
+      *
+     C                     EXSR #BB
+      *
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+      *
+      **  Audit list
+      *
+     C                     EXSR #BC
+      *
+      ***  Audit list run controls processing
+      *
+     C                     EXSR #BD
+      *
+     C                     ELSE
+      *
+      ***  Standard database error handling
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'MODE'    DBFILE           ***************
+     C                     MOVELMODE      DBKEY            * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #ZA    - Process Database Errors                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #A     - Initial Processing.                       *
+      *            #B     - Main Processing.                          *
+      *            #BB    - Process Full List Run Controls.           *
+      *            #BD    - Process Audit List Run Controls.          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZA       BEGSR
+      *
+     C                     WRITEHEADER
+      *
+      ***  Write title for full list or audit list
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEAD3
+     C                     ELSE
+     C                     WRITEHEAD2
+     C                     END
+      *
+     C                     WRITEDBERROR
+      *
+      ***  Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BA    - PROCESS FULL SAFE CUSTODY FEE GROUPS LIST *
+      *                                                               *
+      *                                                               *
+      * CALLS      #ZB    - Setup Output Fields for Report.           *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BA       BEGSR
+      *
+     C           *LOVAL    SETLLSECONAPD
+     C                     READ SECONAPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ***  Seton flag to indicate null report
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      ***  Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+      *
+     C                     ELSE
+      *
+     C                     OPEN SE7532P1
+     C                     MOVE 'Y'       WWOPEN  1
+      *
+      ***  While records on file
+      *
+     C           *IN70     DOWEQ'0'
+      *
+     C           MNRECI    IFEQ 'D'
+      *
+      ***  Add 1 to number of records read
+      *
+     C                     ADD  1         RRPROG
+      *
+      ***  Output details to report
+      *
+     C                     EXSR #ZB
+      *
+     C                     END
+      *
+     C                     READ SECONAPD                 70
+      *
+     C                     END
+      *
+      ***  No live records found on SECONAPD
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      ***  Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+      *
+     C                     END
+      *
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     END
+      *
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #ZB    - SETUP OUTPUT FIELDS FOR TABLE LIST        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #BA    - Process Full Groups List.                 *
+      *            #BC    - Process Audit List.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #ZB       BEGSR
+      *
+     C           MNCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  RRACTN
+     C                     END
+      *
+     C           MNCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RRACTN
+     C                     END
+     C*
+     C           MNCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RRACTN
+     C                     END
+      *
+      ***  Set up Option Code
+      *
+     C                     MOVELMNCODE    RRCODE
+      *
+      ***  Set up Narrative
+      *
+     C                     MOVELMNNARR    RRNARR
+      *
+      ** Set up last activity date for output
+      *
+     C                     MOVE MNDLUP    CADAY
+     C                     MOVE MNMLUP    CAMON
+     C                     MOVE MNYLUP    CAYER
+     C                     MOVE UPDATE    RRDATE
+      *
+      ***  Set up last activity time for output
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+      *
+     C           MODE      IFEQ '2'
+     C                     WRITEHEADER2
+     C                     ELSE
+      *
+     C           MODE      IFEQ '1'
+     C                     WRITEHEADER3
+     C                     END
+      *
+     C                     END
+      *
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BC    - PROCESS AUDIT SAFE CUSTODY FEE GROUPS LIST*
+      *                                                               *
+      * CALLS      #ZB    - Setup Output Fields for Report.           *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BC       BEGSR
+      *
+     C           *LOVAL    SETLLSECONAPD
+     C                     READ SECONAPD                 70
+      *
+     C           *IN70     IFEQ '1'
+      *
+      **  SETON flag to indicate NULL REPORT
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      **  Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+      *
+     C                     ELSE
+      *
+     C                     OPEN SE7532P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      **  Add 1 to number of records read
+      *
+     C                     ADD  1         RRPROG
+      *
+      **  Add 1 to number of inserts
+      *
+     C           MNCHTP    IFEQ 'I'
+     C                     ADD  1         RRINSR
+     C                     END
+      *
+      **  Add 1 to number of amends
+      *
+     C           MNCHTP    IFEQ 'A'
+     C                     ADD  1         RRAMND
+     C                     END
+      *
+      **  Add 1 to number of deletes
+      *
+     C           MNCHTP    IFEQ 'D'
+     C                     ADD  1         RRDLET
+     C                     END
+      *
+      **  Output details to report
+      *
+     C                     EXSR #ZB
+     C                     READ SECONAPD                 70
+      *
+     C                     END
+      *
+      **  No live records found on file SECONAPD
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      **  Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+      *
+     C                     END
+      *
+     C           LINE1     IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     WRITEHEADER4
+     C                     END
+      *
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BB    - PROCESS FULL LIST RUN CONTROLS            *
+      *                                                               *
+      * CALLS      #ZA    - Process Database Errors.                  *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BB       BEGSR
+      *
+     C           1         SETLLSECONAPA
+     C                     READ SECONAPA                 70
+      *
+     C           *IN70     IFEQ '1'
+     C           MNRECI    ORNE 'Z'
+      *
+      ***  Trailer record not found - DATABASE ERROR
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SECONAPA'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 003 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+      *
+     C                     ELSE
+      *
+     C           RRPROG    IFNE MNNORE
+      *
+      ***  Records read <> Records on file
+      *
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     MOVE MNNORE    RRFILE
+      *
+      ***  Output Run controls report
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETAILA
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #BD    - PROCESS AUDIT LIST RUN CONTROLS           *
+      *                                                               *
+      * CALLS      #ZA    - Process Database Errors.                  *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #BD       BEGSR
+      *
+     C                     READ SECONAPA                 70
+      *
+     C           *IN70     IFEQ '1'
+     C           MNRECI    ORNE 'Z'
+      *
+      ***  Trailer record not found - DATABASE ERROR
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'SECONAPA'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 004 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+      *
+     C                     ELSE
+      *
+      ***  OUTPUT RUN CONTROLS REPORT
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITEDETAILB
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error handling routine            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     ROLBK
+     C                     SETON                       U7U8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,760 @@
+0001 H                                                                    SD1740
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CBF002
+0002 F********************************************************************
+     F*  Midas - System Control Module
+0004 F**                                                                **
+0005 F**   SD1740 - SAVE PARAMETERS MAINTENANCE                         **
+0006 F**                                                                **
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F**                                                                **
+      *    Last Amend No. CBF002 *REDUNDANT Date 04Jul11              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+     F*    Prev Amend No. CSC033      Date 22May07                       *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+     F*                   205317      Date 30Apr02                       *
+      * Midas Release 4.01 -------------------------------------------*
+     F*                   CPK015      DATE 04Feb02                       *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                   109346      DATE 23Apr98                       *
+     F*                   S01408      DATE 14MAY96                       *
+     F*                   S01421      DATE 06AUG93                       *
+     F*                   S01352      DATE 17OCT91                       *
+     F*                   E29436      DATE 11OCT91                       *
+     F*                   LN0890      DATE 23OCT90                       *
+     F*                   S01199      DATE 06MAR90                       *
+     F*                   S01117      DATE 20FEB90                       *
+     F*                   S01194      DATE 21DEC89                       *
+0009 F**                  E20437      DATE 29/11/89                     **
+0009 F**                  S01173      DATE 29/06/88                     **
+0009 F**                  E10335      DATE 30/03/87                     **
+0010 F**                                                                **
+0007 F**----------------------------------------------------------------**
+     F**                                                                **
+      *    CBF002 - BF Infrastructure: Backup and Recovery              *
+      *             This program will be replaced by the                *
+      *             Configuration Maintenance (artf815172)              *
+0008 F**   CSC033 - Include global libraries in backups.                **
+0008 F**   205317 - Dual receivers are no longer supported by the       **
+0008 F**            operating system since V4R5M0.                      **
+     F**   CPK015 - MUI COB Screen enhancement to allow differentiation **
+     F**            of when called in I/C and from within the COB       **
+0008 F**   109346 - Applied part of fix 065500:                         **
+0008 F**            VOL ID can be *MOUNTED or 6 characters only         **
+     F**   S01408 - Core hook SD1740IIP1 added
+     F**            Core hook SD1740CCP3 added
+     F**            Core hook SD1740CCP2 added
+     F**            Core hook SD1740CCP1 added
+     F**   S01421 - NEW FLAG INCLUDED TO INDICATE WHETHER
+     F**            THE RESTORE FOR THE REOPEN OF INPUT CYCLE
+     F**            SHOULD BE DONE FROM DISK.
+0008 F**   S01352 - REMOVE OPTION TO SAVE TO DISKETTE.                  **
+0008 F**   E29436 - MOVE TO SCRPGSRC FROM RR.                           **
+0008 F**   LN0890 - INCREASE ECOD ARRAY TO CATER FOR TOTAL NUMBER OF    **E20437
+0008 F**            ERROR CODES                                         **E20437
+     F**   S01199 - NEW HELP PROCESSING                                  *
+     F**   S01117 - MULTIBRANCHING - ADDITIONAL FIELDS FOR DTALIB        *
+     F**            BACKUPS                                             **
+     F**   S01194 - NEW STANDING DATA                                    *
+0008 F**   E20437 - INCREASE ECOD ARRAY TO CATER FOR TOTAL NUMBER OF    **E20437
+0008 F**            ERROR CODES                                         **E20437
+0008 F**   S01173 - ALLOW ASP TO BE STECIFIED FOR JOURNAL/RECEIVERS     **S01173
+0009 F**   E10335 - WHEN THE HELP KEY IS PRESSED ALL OF THE ERROR TEXT  **E10335
+0008 F**            FOR THE PROGRAM IS DISPLAYED AS ERROR CODE 999.     **E10335
+0010 F**                                                                **
+0011 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+*****F*: OVRDBF TABLE TABICD                                        : *   S01194
+     F*                                                               *
+     F*****************************************************************
+0015 FSD1740FMCF  E                    WORKSTN
+0017 F*ABLE   IF  E           K        DISK                               S01194
+     F**********  TABLETAF                          KIGNORE               S01194
+     F**********  TABLETHF                          KIGNORE               S01194
+     F**********  TABLETXF                          KIGNORE               S01194
+     F**********  TABLETRF                          KIGNORE               S01194
+     F**********  TABTB11F                          KIGNORE               S01194
+     F**********  TABTB20F                          KIGNORE               S01194
+     F**********  TABTB30F                          KIGNORE               S01194
+     F**********  TABTB40F                          KIGNORE               S01194
+     F**********  TABTB50F                          KIGNORE               S01194
+     F**********  TABTB55F                          KIGNORE               S01194
+     F**********  TABTE10F                          KIGNORE               S01194
+     F**********  TABTE20F                          KIGNORE               S01194
+     F**********  TABTG10F                          KIGNORE               S01194
+     F**********  TABTG20F                          KIGNORE               S01194
+0021 F**
+0022 F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01               INITIAL SET UP IND.BLANK
+     F**40***************HELP KEY                                         S01199
+     F* 50               BACKUP SYSTEM SETUP INDICATOR
+     F* 61               B.O.B.SAVE DEVICE IS TAPE
+     F* 62               I/C SAVE DEVICE IS TAPE
+     F* 63               JRN RCVR SAVE DEVICE IS TAPE
+     F**64***************I/C*SAVE*DEVICE*IS*DKTE********                  S01352
+     F* 65               I/C SAVE DEVICE IS DISK
+     F* 70               ERROR ON SCREEN
+     F* 71               ERROR ON B.O.B. SAVE DEVICE
+     F* 72               ERROR ON B.O.B. SAVE DEVICE NAME
+     F* 73               ERROR ON  I/C   SAVE DEVICE
+     F* 74               ERROR ON  I/C   SAVE DEVICE NAME
+     F* 75               ERROR ON JRN RCVR SAVE DEVICE
+     F* 76               ERROR ON JRN RCVR SAVE DEVICE NAME
+     F**77******         ERROR ON DUAL RECEIVER FIELD                                         205317
+     F* 78               ERROR ON AUTOSAVE TIME
+     F* 79               ERROR ON PRIMARY/BACKUP FIELD
+     F* 80               ERROR ON DUAL SYSTEMS INDICATOR
+     F* 83               ERROR ON DEVICE TO SAVE DTALIB FILES             S01117
+     F* 84               ERROR ON VOL ID OF DEVICE TO SAVE DTALIB FILES   S01117
+     F* 85               ERROR ON RESTORE FROM SAVE FILE INDICATOR        S10421
+     F* 86               SET ON IF MPHAS IS 'A' (INPUT CYCLE)                                 CPK015
+     F* 90-99            STANDARD SUBROUTINE
+     F* U6               PASSED IN IF CALLED FROM SDC1755
+     F* U7&U8            DATABASE ERROR
+     F/COPY WNCPYSRC,SD1740F001
+     E*******             ECOD        9  4               ERROR CODES      E20437
+     E**********          ECOD       12  4               ERROR CODESE20437LN0890
+     E**********          ECOD       14  4               ERROR CODESLN0890S01421
+     E********************ECOD       16  4               ERROR CODESS01421109346
+     E                    ECOD       17  4               ERROR CODES      109346
+     E/COPY WNCPYSRC,SD1740E001
+B167 E                    ZA1        16  1               ZALIGN SR. ARRAY
+0168 E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    CPY@    1   1 80
+     IJNSTAT     UDS
+     I******                                  1   8 ARCV                                      CSC033
+     I                                        1  10 ARCV                                      CSC033
+     I******                                 11  18 NRCV                                      CSC033
+     I                                       11  20 NRCV                                      CSC033
+     I                                       21  24 DFRS
+     I                                       25  34 NDRS
+     I                                       35  38 DFBB
+     I                                       39  48 NDBB
+     I                                       49  52 DFIC
+     I                                       53  62 NDIC
+     I                                       63  67 VNIC
+     I                                       68  68 DRBB
+     I                                       69  69 RCVP
+     I                                       70  70 DUAL
+     I                                       74  74 SUCC
+     I                                       75  79 VLIC
+     I                                       80  80 DSIN
+     I                                       81  81 RDBV
+     I                                       82  82 BKPS
+     I******                                 83  90 RCVR                                      CSC033
+     I                                       83  92 RCVR                                      CSC033
+     I******                                 93 100 RCVA                                      CSC033
+     I                                       93 102 RCVA                                      CSC033
+     I                                    P 103 1050PRUN
+     I                                      106 1100AUTR
+     I                                      149 150 JNAP                  S01173
+     I                                      151 152 RVAP                  S01173
+     I******                                111 200 SPARE
+     I******                                153 200 SPARE                 S01117
+     I                                      153 162 DTDEV                 S01117
+     I                                      163 170 DTVOL                 S01117
+     I                                      171 171 RSTFSV                S01421
+     I                                      172 172 SAVGLO                                    CSC033
+     I                                      173 173 TAPOP1                                    CSC033
+     I**************                        171 200 SPARE           S01117S01421
+     I/COPY WNCPYSRC,SD1740I001
+     I*********                             172 200 SPARE                 S01421              CSC033
+     I                                      174 200 SPARE                                     CSC033
+     ITAPOPT     UDS                                                                          CSC033
+     I                                        1   5 TAPEOP                                    CSC033
+     I/COPY WNCPYSRC,SD1740I002
+     I* LOCAL DATA AREA FOR DATABASE ERROR
+     ILDA        UDS                            256
+     I**************                        134 138 DBFILE                S01194
+     I**************                        139 167 DBKEY                 S01194
+     I**************                        168 175 DBPGM                 S01194
+     I**************                        176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+      *                                                                   109346
+      ** Data structure to check validity of volume id.                   109346
+      *                                                                   109346
+     I            DS                                                      109346
+     I                                        1   8 VDTB                  109346
+     I                                        7   8 VDTBE2                109346
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I              BJDFIN                          DATF                  S01194
+     I              BJMRDT                          SRUNA                                     CPK015
+     I*                                                                                       CPK015
+     I** DATASTRUCTURE FOR MIDAS PHASE DATA AREA                                              CPK015
+     IMPHAS       DS                                                                          CPK015
+     I                                        1   1 MPHASE                                    CPK015
+     I*                                                                                       CPK015
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I**                                                                  S01194
+     IPSDS       SDS
+     I**********                            244 246 WSID                                      CPK015
+     I                                      244 253 WSID                                      CPK015
+     I                                      254 263 USER                                      CPK015
+     I                                     *PROGRAM PGM                                       CPK015
+     ISCSARD    E DSSCSARDPD                                                                  CSC033
+      ** Switchable features description                                                      CSC033
+      *                                                                                       CSC033
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,SD1740IIP1                                           S01408
+     I*                                                                   S01408
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*DBERR ' RTCD    7                       S01195
+     C                     PARM '*FIRST ' OPTN    7                       S01195
+     C           SDBANK    PARM SDBANK    DSFDY                           S01195
+     C*
+     C** MAIN PROCESSING
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ISET    1
+0350 C**   GET INSTALLATION CONTROL DATA RECORD
+0351 C                     EXSR ZSYSTM
+0352 C   99                SETON                     U7U8  NOT FOUND,
+     C   99                MOVE 'SD1740  'DBPGM
+     C***99*****           MOVE 'TABLE'   DBFILE                          S01194
+     C   99                MOVE 'SDBANKPD'DBFILE                          S01194
+     C   99                MOVE 01        DBASE
+     C***99*****           MOVE *BLANKS   DBKEY                           S01194
+     C***99*****           MOVELZTABKY    DBKEY                           S01194
+0353 C   99                GOTO ENDD                       DATABASE ERROR.
+      *                                                                                       CSC033
+      *  Determine whether feature CSC002 is present.                                         CSC033
+      *                                                                                       CSC033
+     C                     CALL 'AOSARDR0'                                                    CSC033
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC033
+     C                     PARM '*VERIFY' P@OPTN  7                                           CSC033
+     C                     PARM 'CSC002'  PSAR    6                                           CSC033
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC033
+      *                                                                                       CSC033
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC033
+     C                     MOVE 'Y'       CSC002  1                                           CSC033
+     C                     ENDIF                                                              CSC033
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD1740CCP3                                           S01408
+     C*                                                                   S01408
+     C*                                                                                       CPK015
+     C** GET MIDAS PHASE FROM MPHAS DATA AREA                                                 CPK015
+     C           *NAMVAR   DEFN           MPHAS                                               CPK015
+     C                     IN   MPHAS                                                         CPK015
+     C           MPHASE    IFEQ 'A'                                                           CPK015
+     C                     SETON                     86                                       CPK015
+     C                     ENDIF                                                              CPK015
+     C*
+     C* CHECK INITIAL SET UP INDICATOR
+     C* MOVE VALUES FROM JNSTAT TO SCREEN IF ISET BLANK
+     C*
+     C           ISET      COMP ' '                      01
+     C   01                EXSR DFLT
+     C*
+     C* IF U6 IS ON (I.E. SETTING UP BACKUP MACHINE), SETON IND. 50
+     C* SO AS NOT TO ALLOW CMD/3 FROM SCREEN
+     C*
+     C   U6                SETON                     50
+     C*
+     C* OUTPUT & READ SCREEN UNTIL VALID
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD1740CCP1                                           S01408
+     C*                                                                   S01408
+     C           *IN70     DOUEQ'0'
+     C                     TIME           FTIME   60
+     C           SCRN      TAG                             ** SCRN **
+     C                     EXFMTSD1740F1
+     C**ALLOW*HELP**********                                              S01199
+     C*****      *IN40     IFEQ '1'                                       S01199
+     C******************** MOVE *BLANKS   HERCD  80                       E10335
+     C*****                MOVE 'RR1740'  HBPGM   6                       S01199
+     C*****                CALL 'MHELP'                                   S01199
+     C*****                PARM           HBPGM                           S01199
+     C*****                PARM           HERCD                           S01199
+     C*****                GOTO SCRN                                      S01199
+     C*****                END                                            S01199
+     C*
+     C   KC                GOTO ENDD
+     C                     EXSR VALID
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD1740CCP2                                           S01408
+     C*                                                                   S01408
+     C* UPDATE JNSTAT WITH VALUES FROM THE SCREEN
+     C*
+     C                     EXSR UPDAT
+     C  N01                EXSR INIT
+     C           ENDD      TAG
+     C                     SETON                         LR
+     C*****************************************************************
+     C*
+     C** DEFAULT VALUE SUBROUTINE
+     C*  MOVES FIELDS FROM JNSTAT TO THE SCREEN
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C           DFLT      BEGSR
+     C                     MOVE DFBB      BOBD
+     C                     MOVE NDBB      BOBN
+     C                     MOVE DFIC      INCD
+     C                     MOVE NDIC      INCN
+     C                     MOVE DFRS      JRCD
+     C                     MOVE NDRS      JRCN
+      *                                                                                       205317
+      *  No need to worry about dual receivers in this day and age.                           205317
+      *                                                                                       205317
+     C********             MOVE DUAL      DREC                                                205317
+     C           AUTR      DIV  60        AMIND   30
+     C                     MOVE AMIND     AMIN
+     C                     MOVE BKPS      PBKP
+     C                     MOVE DSIN      DSYS
+     C                     MOVE JNAP      JASP                            S01173
+     C                     MOVE RVAP      RASP                            S01173
+     C*****                MOVE DTDEV     DDDB                            S01117              CSC033
+     C*****                MOVE DTVOL     VDTB                            S01117              CSC033
+     C           RSTFSV    IFEQ *BLANKS                                   S01421
+     C                     MOVE 'N'       RSTFLG                          S01421
+     C                     ELSE                                           S01421
+     C                     MOVE RSTFSV    RSTFLG                          S01421
+     C                     END                                            S01421
+     C                     MOVE SAVGLO    INCGLO                                              CSC033
+     C                     MOVE TAPOP1    USSYSI                                              CSC033
+     C/COPY WNCPYSRC,SD1740C003
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C** INITIALISATION SUBROUTINE
+     C*  MOVE INITIAL VALUES TO JNSTAT WHEN INITIAL SET UP IND. ON
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C           INIT      BEGSR
+     C*****                MOVE 'ICRCV000'ARCV                                                CSC033
+     C                     MOVEL'IR000000'ARCV                                                CSC033
+     C                     MOVE '00'      ARCV                                                CSC033
+     C*****                MOVE 'ICRCV000'NRCV                                                CSC033
+     C                     MOVEL'IR000000'NRCV                                                CSC033
+     C                     MOVE '00'      NRCV                                                CSC033
+     C/COPY WNCPYSRC,SD1740C001
+     C                     MOVE 'DB001'   VNIC
+     C                     MOVE 'N'       RCVP
+     C                     MOVE 'N'       SUCC
+     C                     MOVE 'DB001'   VLIC
+     C/COPY WNCPYSRC,SD1740C002
+     C                     MOVE 'N'       RDBV
+     C******               MOVE 'ICRCV000'RCVR                                                CSC033
+     C                     MOVEL'IR000000'RCVR                                                CSC033
+     C                     MOVE '00'      RCVR                                                CSC033
+     C******               MOVE 'ICRCV000'RCVA                                                CSC033
+     C                     MOVEL'IR000000'RCVA                                                CSC033
+     C                     MOVE '00'      RCVA                                                CSC033
+     C                     MOVE 0         PRUN
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C** SCREEN VALIDATION SUBROUTINE
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C           VALID     BEGSR
+     C********             Z-ADD0         X       10                      E20437
+     C                     Z-ADD0         X       20                      E20437
+     C                     SETOF                     707172
+     C                     SETOF                     737475
+     C                     SETOF                     767778
+     C                     SETOF                     798061
+     C                     SETOF                     626364
+     C********             SETOF                     65                   S01421
+     C                     SETOF                     6585                 S01421
+     C                     SETOF                     8788                                     CSC033
+     C/COPY WNCPYSRC,SD1740C004
+     C                     MOVE *BLANKS   ECOD
+     C*VALIDATE B.O.B. DEVICE
+     C***********BOBD******COMP 'DKTE'               7171                 S01352
+     C***71******BOBD******COMP 'TAPE'               717161               S01352
+     C           BOBD      COMP 'TAPE'               717161               S01352
+     C   71                ADD  1         X
+     C   71                MOVE ' 005'    ECOD,X
+     C   71                SETON                     70
+     C*
+     C*VALIDATE B.O.B. DEVICE NAME
+     C           BOBN      COMP *BLANKS                  72
+     C   72                ADD  1         X
+     C   72                MOVE ' 006'    ECOD,X
+     C   72                SETON                     70
+     C*
+     C*VALIDATE I/C DEVICE
+     C***********INCD******COMP 'DKTE'               737364               S01352
+     C***73******INCD******COMP 'TAPE'               737362               S01352
+     C           INCD      COMP 'TAPE'               737362               S01352
+     C   73      INCD      COMP 'DISK'               737365
+     C   65      CSC002    COMP 'Y'                  656573                                   CSC033
+     C   73                ADD  1         X
+     C   73                MOVE ' 007'    ECOD,X
+     C   73                SETON                     70
+     C*
+     C*VALIDATE I/C DEVICE NAME
+     C  N65      INCN      COMP *BLANKS                  74
+     C   74                ADD  1         X
+     C   74                MOVE ' 008'    ECOD,X
+     C   74                SETON                     70
+     C*
+     C*VALIDATE JOURNAL RECEIVER DEVICE
+     C***********JRCD******COMP 'DKTE'               7575                 S01352
+     C***75******JRCD******COMP 'TAPE'               757563               S01352
+     C           JRCD      COMP 'TAPE'               757563               S01352
+     C   75                ADD  1         X
+     C   75                MOVE ' 009'    ECOD,X
+     C   75                SETON                     70
+     C*
+     C*VALIDATE JOURNAL RECEIVER DEVICE NAME
+     C           JRCN      COMP *BLANKS                  76
+     C   76                ADD  1         X
+     C   76                MOVE ' 010'    ECOD,X
+     C   76                SETON                     70
+     C*
+      * Dual receivers are history.                                                           205317
+     C*VALIDATE*DUAL*RECEIVERS***                                                             205317
+     C********** DREC      COMP 'N'                  7777                                     205317
+     C***77***** DREC      COMP 'Y'                  7777                                     205317
+     C***77*****           ADD  1         X                                                   205317
+     C***77*****           MOVE ' 011'    ECOD,X                                              205317
+     C***77*****           SETON                     70                                       205317
+     C*
+     C*VALIDATE AUTOSAVE
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD3         ZADIG
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELAMIN      ZFIELD
+     C                     EXSR ZALIGN
+     C  N99                MOVE ZFIELD    AMIN
+     C   99                SETON                     78
+     C  N78                MOVE AMIN      AMINN   40
+     C   78                ADD  1         X
+     C   78                MOVE ' 012'    ECOD,X
+     C   78                SETON                     70
+      *                                                                                       CSC033
+      *  Validate global libraries backup indicator.                                          CSC033
+      *                                                                                       CSC033
+     C           INCGLO    COMP 'Y'                  8787                                     CSC033
+     C   87      INCGLO    COMP 'N'                  8787                                     CSC033
+     C   87                ADD  1         X                                                   CSC033
+     C   87                MOVE ' 021'    ECOD,X                                              CSC033
+     C   87                SETON                     70                                       CSC033
+      *                                                                                       CSC033
+      *  Validate virtual tape indicator.                                                     CSC033
+      *                                                                                       CSC033
+     C           USSYSI    COMP 'Y'                  8888                                     CSC033
+     C   88      USSYSI    COMP 'N'                  8888                                     CSC033
+     C   88                ADD  1         X                                                   CSC033
+     C   88                MOVE ' 022'    ECOD,X                                              CSC033
+     C   88                SETON                     70                                       CSC033
+     C*
+     C*VALIDATE PRIMARY/BACKUP
+     C           PBKP      COMP 'P'                  7979
+     C   79      PBKP      COMP 'B'                  7979
+     C   79                ADD  1         X
+     C   79                MOVE ' 013'    ECOD,X
+     C   79                SETON                     70
+     C*
+     C*VALIDATE DUAL SYSTEMS INDICATOR
+     C           DSYS      COMP 'Y'                  8080
+     C   80      DSYS      COMP 'N'                  8080
+     C   80                ADD  1         X
+     C   80                MOVE ' 014'    ECOD,X
+     C   80                SETON                     70
+     C*                                                                   S01173
+     C*VALIDATE ASP FOR JOURNAL                                           S01173
+     C                     Z-ADD0         RTNCD   10                      S01173
+     C                     CALL 'SDC1850'                                 S01173
+     C                     PARM           JASP                            S01173
+     C                     PARM           RTNCD                           S01173
+     C           RTNCD     IFEQ 9                                         S01173
+     C                     ADD  1         X                               S01173
+     C                     MOVE ' 015'    ECOD,X                          S01173
+     C                     SETON                     7081                 S01173
+     C                     END                                            S01173
+     C*                                                                   S01173
+     C*VALIDATE ASP FOR RECEIVER                                          S01173
+     C                     Z-ADD0         RTNCD   10                      S01173
+     C                     CALL 'SDC1850'                                 S01173
+     C                     PARM           RASP                            S01173
+     C                     PARM           RTNCD                           S01173
+     C           RTNCD     IFEQ 9                                         S01173
+     C                     ADD  1         X                               S01173
+     C                     MOVE ' 016'    ECOD,X                          S01173
+     C                     SETON                     7082                 S01173
+     C                     END                                            S01173
+     C*                                                                   S01117
+     C*VALIDATE*DTALIB*SAVE*DEVICE*NAME********                           S01117              CSC033
+     C******     DDDB      COMP *BLANKS                  83               S01117              CSC033
+     C***83*               ADD  1         X                               S01117              CSC033
+     C***83*               MOVE ' 017'    ECOD,X                          S01117              CSC033
+     C***83*               SETON                     70                   S01117              CSC033
+     C******                                                              S01117              CSC033
+     C*VALIDATE*DTALIB*SAVE*VOLUME*ID*NAME*****                           S01117              CSC033
+     C******     VDTB      COMP *BLANKS                  84               S01117              CSC033
+     C***84*               ADD  1         X                               S01117              CSC033
+     C***84*               MOVE ' 018'    ECOD,X                          S01117              CSC033
+     C***84*               SETON                     70                   S01117              CSC033
+      *                                                                   109346
+      ** Vol ID can either be *MOUNTED or 6 characters only.              109346
+      *                                                                   109346
+     C           *IN84     IFEQ '0'                                       109346
+     C           VDTB      ANDNE'*MOUNTED'                                109346
+     C           VDTBE2    ANDNE*BLANKS                                   109346
+     C                     ADD  1         X                               109346
+     C                     MOVE ' 020'    ECOD,X                          109346
+     C                     SETON                     7084                 109346
+     C                     END                                            109346
+      *                                                                   S01421
+      *** Validate the Restore and save file field                        S01421
+      *                                                                   S01421
+     C           RSTFLG    IFNE 'Y'                                       S01421
+     C           RSTFLG    ANDNE'N'                                       S01421
+     C                     ADD  1         X                               S01421
+     C                     MOVE ' 019'    ECOD,X                          S01421
+     C                     MOVE '1'       *IN85                           S01421
+     C                     MOVE '1'       *IN70                           S01421
+     C                     END                                            S01421
+     C/COPY WNCPYSRC,SD1740C005
+     C*
+     C*HELP*KEY***                                                  E10335S01199
+     C*****      *IN40     IFEQ '1'                                 E10335S01199
+     C*****                MOVE ' 999'    HERCD                     E10335S01199
+     C*****                END                                      E10335S01199
+     C***70***             MOVEAECOD      ERCDE  36                       E20437
+     C***70****************MOVEAECOD      ERCDE  48                       E20437
+     C***70******          MOVEAECOD      ERCDE  56                LN0890 109346
+     C   70                MOVEAECOD      ERCDE  60                       109346
+     C   70                MOVELERCDE     ERCD   80
+     C*****                MOVELERCDE     HERCD  80                 E10335S01199
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C**  UPDATE SUBROUTINE
+     C*   MOVES SCREEN FIELDS TO JNSTAT
+     C*   CALLED FROM MAIN PROCESSING
+     C*
+     C           UPDAT     BEGSR
+     C*
+     C                     MOVE INCGLO    SAVGLO                                              CSC033
+     C                     MOVE USSYSI    TAPOP1                                              CSC033
+     C                     MOVE BOBD      DFBB
+     C                     MOVE BOBN      NDBB
+     C                     MOVE INCD      DFIC
+     C***62****************                                               S01352
+     C*R*64****************MOVE INCN      NDIC                            S01352
+     C   62                MOVE INCN      NDIC                            S01352
+     C   65                MOVEL'DISK '   NDIC
+     C   65                MOVE '     '   NDIC
+     C                     MOVE JRCD      DFRS
+     C                     MOVE JRCN      NDRS
+      *                                                                                       205317
+      * Dual receivers are not allowed since V4R5M0.  Set value to 'N'.                       205317
+      *                                                                                       205317
+     C********             MOVE DREC      DUAL                                                205317
+     C                     MOVE 'N'       DUAL                                                205317
+     C           AMINN     MULT 60        AUTR
+     C                     MOVE PBKP      BKPS
+     C                     MOVE DSYS      DSIN
+     C                     MOVE JASP      JNAP                            S01173
+     C                     MOVE RASP      RVAP                            S01173
+     C******               MOVE DDDB      DTDEV                           S01117              CSC033
+     C******               MOVE VDTB      DTVOL                           S01117              CSC033
+     C                     MOVE RSTFLG    RSTFSV                          S01421
+      *                                                                                       CSC033
+      ** Update data area TAPOPT based on 'Use System Prefix in Tape Volume' setting.         CSC033
+     C           USSYSI    IFEQ 'Y'                                                           CSC033
+     C                     MOVE 'SYSID'   TAPEOP                                              CSC033
+     C                     ELSE                                                               CSC033
+     C                     MOVE *BLANKS   TAPEOP                                              CSC033
+     C                     ENDIF                                                              CSC033
+      *                                                                                       CSC033
+     C/COPY WNCPYSRC,SD1740C006
+     C                     ENDSR
+     C*****************************************************************
+0815 C**
+0816 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0817 C**
+0818 C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+0819 C**
+0820 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0821 C**********           MOVEL'01      'ZTABKY 12                       S01194
+0822 C**********           MOVE '  10'    ZTABKY                          S01194
+0823 C**********                                                          S01194
+0824 C********** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0825 C**N99***** RECI      COMP 'D'                  9999  ON, IS DELETED
+0826 C**
+     C**   ACCESS BANK DETAILS                                            S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           RTCD      COMP *BLANKS              9999                 S01194
+     C*                                                                   S01194
+0827 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0828 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0829 C**
+0830 C                     ENDSR
+0831 C**
+0832 C**
+     C********************************************************************
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

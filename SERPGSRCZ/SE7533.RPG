@@ -1,0 +1,2973 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate action details audit list')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7533 -  Report Program for Corporate Action Details Audit  *
+      *            List                                               *
+      *                                                               *
+      *  Function:  Report Program for Corporate Action Details Audit *
+      *  (I/C)      List                                              *
+      *                                                               *
+      *  Called by: SEC7533 -  Corporate Action Details Audit         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR854651           Date 26Oct11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2652            Date 17May04               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190204             Date 31May01               *
+      *                 CSE016             Date 10Jan01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      *                 161732             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  155622            Date 22Feb99               *
+      *                  145872            Date 23Oct98               *
+      *                  136933            Date 25Jun98               *
+      *                  CEU017            Date 05Mar98               *
+      *                  CSE007 *CREATE    Date 01Dec97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  AR854651 - Printer overflow line detected for file SE7533P1  *
+      *             (Recompile)                                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2652 - Amend program to ensure Cash Repaid amount is 7    *
+      *            decimal places.                                    *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  190204 - Dividend per Unit format changed from 9N0 to 13N8.  *
+      *  CSE016 - Extended Security Descriptions                      *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *  161732 - Corporate Actions Exercise and Conversion -         *
+      *           Part Stock/Keep Rest Calculation                    *
+      *  155622 - Corporate Actions: Cash Payment has now 7 decimal   *
+      *           places.                                             *
+      *  145872 - Corporate Actions: '% to Exchange' added for        *
+      *           Exchange Offer ('OF').                              *
+      *           Add new field ROFPEX in FORMAT DET4P2.              *
+      *  136933 - Block OLD Security from the allocation effective    *
+      *           Date when generating the 'CC' events.               *
+      *  CEU017- Securities Redenomination Euro Changes               *
+      *  CSE007- Corporate Actions                                    *
+      *                                                               *
+      *****************************************************************
+     FSECORFL1IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action References
+      *
+     FSECODVL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Dividend Events
+      *
+     FSECOFRL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Free Allocations
+      *
+     FSECOCEL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Capital Change
+      *
+     FSECORGL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Right Issues
+      *
+     FSECOCRL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Reorganisation
+      *
+     FSECOOFL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Offers
+      *
+     FSECOEXL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Exercises
+      *
+     FSECONFL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Non-Financial Events
+      *
+     FSECONCL0IF  E           K        DISK         KINFSR *PSSR
+      ** Corporate Action Name Changes
+      *                                                                   CEU017
+     FSECOCCL0IF  E           K        DISK         KINFSR *PSSR          CEU017
+      ** Corporate Action Currency Changes                                CEU017
+      *
+     F/COPY WNCPYSRC,SE7533F001
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ** Securities
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      ** Investment Types
+      *
+     FSE7533AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Audit Report
+      *
+     FSE7533P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      ** Printer Report for RF, DV, FR, RG, CE
+      *
+     FSE7533P2O   E                    PRINTER      KINFDS SPOOL2     UC
+      ***Printer*Report*for CR, OF, EX, NF, NC
+      ** Printer Report for CR, OF, EX, NF, NC, CC                        CEU017
+     F/COPY WNCPYSRC,SE7533F002
+      *
+      *****************************************************************
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  16    Rights Tradable indicator                              *
+      *  20    Option number indicator                                *
+      *  21    Print other details of Reference                       *
+      *  22    Print Decimal Places field                             *   CEU017
+      *  23    Print Parent Action Reference                          *   CSE020
+      *  80    Chain indicator                                        *
+      *  81    Read indicator                                         *
+      *  82    Switchable Feature is present - CGL031                 *                       CGL031
+      *                                                               *
+      *  LR    Last record indicator                                  *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - Program Initialisation                             *
+      *  SRGEN  - SR to print Corporate Action Reference             *
+      *  SRDVEV - SR to print Corporate Action Dividend Events       *
+      *  SRFAR  - SR to print Free Allocations                       *
+      *  SRCAP  - SR to print Capital Changes                        *
+      *  SRRIS  - SR to print Right Issues                           *
+      *  SRCARE - SR to print Corporate Reorganisation               *
+      *  SROFF  - SR to print Corporate Offers                       *
+      *  SREXE  - SR to print Corporate Action Exercises             *
+      *  SRNFE  - SR to print Corporate Non-Financial Events         *
+      *  SRCANC - SR to print Corporate Name Changes                 *
+      *  SRCUCH - SR to print Corporate Currency Changes             *    CEU017
+      *  SRALL  - SR to print All Corporate Actions                  *
+      *  SRREF  - SR to print Single Reference                       *
+      *  SRSEC  - SR to chain Security                               *
+      *  SRCUS  - SR to CALL AOCUSTR0                                *
+      *  SRAUDT - Audit Processing                                   *
+      *  SRSFIL - SR to register printer files via RCF               *
+      *  *PSSR  - Error routine                                      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1                                                190204
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+     E                    AR1        20 10
+     E                    AR2        20 16
+     E                    AR3        20 16
+     E                    AR4        20  6
+     E                    AR5        20  1
+     E                    AR6        20  1
+     E                    AR7        20 16
+     E                    AR8        20 16
+     E/COPY ZSRSRC,ZSDESCZ1                                               CSE016
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for SE7533P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I/COPY WNCPYSRC,SE7533I001
+     ISDSTRD    E DSSDSTRDPD                                              CSE016
+      ** Security Trading Details                                         CSE016
+      *
+     I/COPY ZSRSRC,ZSDESCZ2
+      *
+      *
+     ISPOOL2      DS
+      **  File Information Data Structure for SE7533P2.
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for SE7533AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IWPAR        DS
+      *
+     I                                        1   6 WREFR
+     I                                        7   7 WCAST
+     I                                        8   8 WALCA
+     I                                        9   9 WDVEV
+     I                                       10  10 WFRAL
+     I                                       11  11 WRGIS
+     I                                       12  12 WCACH
+     I                                       13  13 WCORG
+     I                                       14  14 WOFFR
+     I                                       15  15 WEXRC
+     I                                       16  16 WNFEV
+     I                                       17  17 WNMCH
+     I                                       18  18 WCUCH                 CEU017
+     I/COPY WNCPYSRC,SE7533I002
+      *
+     IRUNDAT    E DSRUNDAT
+      **  Installation Control Details
+      *
+     ISCSARD    E DSSCSARDPD
+      **  Switchable Features
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     I            DS
+     I                                        1   7 PIRCDT
+     I                                        1   2 PDD
+     I                                        3   5 PMMM
+     I                                        6   7 PYY2
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer Details
+      *
+     IDSSDY     E DSDSSDY
+      **  First DS for access programs, Long  data structure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRINIT - Program Initialisation                    *
+      *            SRGEN  - Initialize indicators                     *
+      *            SRREF  - Print Corporate Singel Reference          *
+      *            SRALL  - Print All Corporate Actions               *
+      *            SRDVEV - Print Corporate Dividends                 *
+      *            SRFAR  - Print Free Allocations                    *
+      *            SRRIS  - Print Right Issues                        *
+      *            SRCAP  - Print Capital Changes                     *
+      *            SRCARE - Print Corporate Reorganisation            *
+      *            SROFF  - Print Corporate Offers                    *
+      *            SREXE  - Print Cporate Action Exercises            *
+      *            SRNFE  - Print Corporate Non-Financial Events      *
+      *            SRCANC - Print Corporate Name Changes              *
+      *            SRCUCH - Print Currency Changes                    *   CEU017
+      *            SRAUDT - Audit Processing                          *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+     C           WREFR     IFNE *BLANKS
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+     C                     EXSR SRGEN
+      *
+     C           WREFR     CASNE*BLANKS   SRREF
+     C           WALCA     CASEQ'Y'       SRALL
+     C           WDVEV     CASEQ'Y'       SRDVEV
+     C           WFRAL     CASEQ'Y'       SRFAR
+     C           WRGIS     CASEQ'Y'       SRRIS
+     C           WCACH     CASEQ'Y'       SRCAP
+     C           WCORG     CASEQ'Y'       SRCARE
+     C           WOFFR     CASEQ'Y'       SROFF
+     C           WEXRC     CASEQ'Y'       SREXE
+     C           WNFEV     CASEQ'Y'       SRNFE
+     C           WNMCH     CASEQ'Y'       SRCANC
+     C           WCUCH     CASEQ'Y'       SRCUCH                          CEU017
+     C/COPY WNCPYSRC,SE7533C001
+     C                     ENDCS
+      *
+     C                     EXSR SRAUDT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             SRINIT -  Program Initialization                  *
+      *                                                               *
+      * CALLS              -                                          *
+      *                                                               *
+      * CALLED BY   MAIN   - Main Routine.                            *
+      *                                                               *
+      * FLDS USED          -                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WRSEQ   5
+     C                     PARM           WRLEV   1
+     C                     PARM           WRENT   3
+     C                     PARM           WMODE   1
+     C                     PARM           WPARM 100
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'SE7533'  DBPGM
+     C                     MOVELWPARM     WPAR
+      *
+      **  Call Access Program for Bank Details - Title, Run Date and
+      **  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     Z-ADD01        DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CSE016
+      ** Access security trading details                                  CSE016
+      ** for redemption in security full for subroutine ZSDESC            CSE016
+      *                                                                   CSE016
+     C                     CALL 'AOSTRDR0'                                CSE016
+     C                     PARM '*DBERR ' WRTCD                           CSE016
+     C                     PARM '*FIRST ' WOPTN                           CSE016
+     C           SDSTRD    PARM SDSTRD    DSSDY                           CSE016
+      *                                                                   CSE016
+     C           WRTCD     IFEQ *BLANKS                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     END                                            CSE016
+     C/COPY WNCPYSRC,SE7533C002
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      **  RCF Processing for Audit File.
+      *
+     C                     MOVELSFILEU    ZSILEU
+     C                     Z-ADDSFNUMU    ZSNUMU
+     C                     EXSR SRSFIL
+      *
+      **  Set *ON a w-first-time-pass-flag.
+      *
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE 'N'       WOPEN2
+     C/COPY WNCPYSRC,SE7533C003
+      *                                                                                       CGL031
+      **  Access SAR details file to see if CGL031 is installed.                              CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM '       ' PRTCD   7                                           CGL031
+     C                     PARM '*VERIFY' POPTN   7                                           CGL031
+     C                     PARM 'CGL031'  PSARD   6                                           CGL031
+      *                                                                                       CGL031
+     C                     MOVE 'N'       CGL031  1                                           CGL031
+     C           PRTCD     IFEQ *BLANK                                                        CGL031
+     C                     MOVE 'Y'       CGL031                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+      ** Database Error                                                                       CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFNE *BLANKS                                                       CGL031
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL031
+     C           *LOCK     IN   LDA                                                           CGL031
+     C                     MOVEL'CGL031 ' DBKEY                                               CGL031
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL031
+     C                     Z-ADD15        DBASE                                               CGL031
+     C                     OUT  LDA                                                           CGL031
+     C                     EXSR *PSSR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           WNMCY
+     C                     KFLD           WSITP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRGEN  - Print Corporate Action Reference          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRGEN     BEGSR                           ** SRGEN **
+      *
+     C                     READ SECORFD0                 81
+      *
+     C           *IN81     IFEQ '1'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     OPEN SE7533P1
+     C                     MOVE 'Y'       WOPEN1  1
+     C                     Z-ADD1         WTREC   50
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVE 'SECORFD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN1    ORGE 40
+     C                     WRITEHED1P1
+     C                     WRITEHED2P1
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC   10
+     C                     EXSR SRSEC
+     C                     MOVE '0'       *IN20
+     C                     MOVE MACORF    RCORF1
+     C                     MOVE MASESN    RSCTY1
+     C                     MOVE MACOAT    RTYPE1
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT1
+     C           MAPREF    IFEQ *BLANKS                                   CSE020
+     C                     MOVE *OFF      *IN23                           CSE020
+     C                     ELSE                                           CSE020
+     C                     MOVE *ON       *IN23                           CSE020
+     C                     MOVE MAPREF    RPREF1                          CSE020
+     C                     ENDIF                                          CSE020
+      *                                                                   CSE020
+     C                     MOVE MATDVD    RRFTDV
+     C                     Z-ADDMACOPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFCOP
+     C                     Z-ADDMATDDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFTRD
+     C                     Z-ADDMAEVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFEVT
+      *
+      ** Check if Coupon Number is zero then move blanks to report field
+      *
+     C           MACPNB    IFEQ 0
+     C                     MOVE *BLANKS   RRFCPN
+     C                     ELSE
+     C                     MOVE MACPNB    RRFCPN
+     C                     ENDIF
+      *
+     C                     Z-ADDMASHMD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFSHM
+     C                     MOVE MALTBS    RRFLTB
+      *
+      ** Check if Old Capital Value is zero move blanks to report field
+      *
+     C           MAOCPV    IFEQ 0
+     C                     MOVE *BLANKS   RRFOCP
+     C                     ELSE
+     C                     MOVE MAOCPV    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RRFOCP
+     C                     ENDIF
+      *
+      ** Check if New Capital Value is zero move blanks to report field
+      *
+     C           MANCPV    IFEQ 0
+     C                     MOVE *BLANKS   RRFNCP
+     C                     ELSE
+     C                     MOVE MANCPV    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RRFNCP
+     C                     ENDIF
+      *
+      **Check if Old Nominal Value is zero move blanks to report field
+      *
+     C           MAONML    IFEQ 0
+     C                     MOVE *BLANKS   RRFONM
+     C                     ELSE
+     C                     MOVE MAONML    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RRFONM
+     C                     ENDIF
+      *
+      ** Check if New Nominal Value is zero move blanks to report field
+      *
+     C           MANNML    IFEQ 0
+     C                     MOVE *BLANKS   RRFNNL
+     C                     ELSE
+     C                     MOVE MANNML    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RRFNNL
+     C                     ENDIF
+      *
+     C                     MOVE MACUPC    RRFCUP
+     C                     MOVE MAEXPC    RRFEXP
+     C                     Z-ADDMACLRD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFCLD
+     C                     MOVE MACLRT    RRFCLT
+     C                     Z-ADDMADLRD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFDLD
+     C                     MOVE MADLRT    RRFDLT
+     C                     MOVE MABLOS    RRFBOS
+     C                     MOVE MABLOP    RRFBOP
+     C                     Z-ADDMABFRD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFBFD
+     C           MABEND    IFNE *HIVAL                                    136933
+     C                     Z-ADDMABEND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRFBED
+     C                     ELSE                                           136933
+     C                     MOVE '  +++  ' RRFBED                          136933
+     C                     ENDIF                                          136933
+      *
+      ** If number of option is greater than one move other details to
+      ** report fields else do not print details
+      *
+     C                     MOVE '0'       *IN21
+     C           MANBOP    IFGT 1
+     C                     MOVE '1'       *IN21
+     C                     MOVE MAREFO    RRFREO
+     C                     MOVE MACONR    RRFCON
+     C                     MOVE MADFNR    RRFDNR
+     C                     MOVE MADFCP    RRFDCP
+     C                     MOVE MADFSP    RRFDSP
+     C                     ENDIF
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME1                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME1                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+     C           WMODE     IFEQ '1'
+     C                     ADD  1         WNORE   50
+     C                     ENDIF
+      *
+      ** Print Details
+      *
+     C                     WRITEHED12P1
+     C                     WRITEHED13P1                                   CSE016
+     C                     WRITEDET1P1
+      *
+     C                     READ SECORFD0                 81
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVE '1'       *IN81
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEFOT4P1
+     C                     ELSE
+     C                     ADD  1         WTREC
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRDVEV - Print Corporate Action Dividend Events    *
+      *                                                               *
+      * CALLS      *PSSR  - Error Routine                             *
+      *            SRSEC  - Chain security                            *
+      *            ZDATE2 - Date format                               *
+      *            ZFRPED - Amount format                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDVEV    BEGSR                           ** SRDVEV **
+      *
+     C                     READ SECODVD0                 81
+      *
+     C           WOPEN1    IFEQ 'N'
+     C                     OPEN SE7533P1
+     C                     MOVE 'Y'       WOPEN1  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P1
+     C                     WRITEHED5P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+     C                     GOTO ENDDV
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECODVD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVE 'SECODVD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MDCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READDV
+     C                     ENDIF
+      *
+     C                     WRITEHED1P1
+     C                     WRITEHED4P1
+      *
+     C           *IN50     IFEQ '1'
+     C           MDCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO DVAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF1
+     C                     MOVE MASESN    RSCTY1
+     C                     MOVE MACOAT    RTYPE1
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT1
+      *
+     C                     MOVE MDOPTN    ROPTN1
+     C                     MOVE MDNSEC    RDVNWS
+     C                     MOVE MDSDIT    RDVSDT
+      *
+      ** Check if Dividend Per Unit is zero move blanks to report field
+      *
+     C********** MDDIVU    IFEQ 0                                         190204
+     C           MDDIV1    IFEQ 0                                         190204
+     C                     MOVE *BLANKS   RDVDPU
+     C                     ELSE
+     C**********           MOVE MDDIVU    ZFLD15                          190204
+     C**********           EXSR ZFRPED                                    190204
+     C**********           MOVE ZOUT22    RDVDPU                          190204
+      ***  MMDIV1 13N8                                                    190204
+     C                     Z-ADD8         ZADEC                           190204
+     C                     MOVE MDDIV1    ZFIELD    P                     190204
+     C                     EXSR ZEDIT                                     190204
+     C                     MOVE ZFIELD    RDVDPU                          190204
+     C                     ENDIF
+      *
+     C                     MOVE MDSBPR    RDVSUP
+     C                     MOVE MDDSRT    RDVDSR
+     C                     MOVE MDNSHA    RDVNNS
+     C                     MOVE MDOSHA    RDVNOS
+      *
+      ** Check if Denomination Mult.is zero move blanks to report field
+      *
+     C           MDDMLT    IFEQ 0
+     C                     MOVE *BLANKS   RDVDEM
+     C                     ELSE
+     C                     MOVE MDDMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RDVDEM
+     C                     ENDIF
+      *
+     C                     Z-ADDMDDIVR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVDIR
+     C                     MOVE MDRNDN    RDVRND
+     C                     MOVE MDRNDS    RDVICH
+     C                     MOVE MDCOMP    RDVCMP
+     C                     MOVE MDOPT1    RDVCPS
+     C                     MOVE MDNAR1    RDVNR1
+     C                     MOVE MDOPT2    RDVTSB
+     C                     MOVE MDNAR2    RDVNR2
+     C                     MOVE MDOPT3    RDVTSS
+     C                     MOVE MDNAR3    RDVNR3
+     C                     MOVE MDOPT4    RDVTSK
+     C                     MOVE MDNAR4    RDVNR4
+     C                     MOVE MDOPT5    RDVTPC
+     C                     MOVE MDNAR5    RDVNR5
+     C                     MOVE MDDFNR    RDVDNR
+     C                     MOVE MDOPSH    RDVOP1
+     C                     MOVE MDTXT1    RDVNA1
+     C                     MOVE MDTXT2    RDVNA2
+     C                     MOVE MDTXT3    RDVNA3
+     C                     MOVE MDTXT4    RDVNA4
+     C                     Z-ADDMDSUBF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVSBF
+     C                     Z-ADDMDSUBT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVSBT
+     C                     MOVE MDSBRT    RDVSUT
+      *
+      ** Check if Rights Tradable indicator is on
+      *
+     C           MDSBRT    IFEQ 'Y'
+     C                     MOVE MDSBRS    RDVRSS
+     C                     MOVE MDREPR    RDVREP
+     C                     Z-ADDMDREXD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVRED
+     C                     Z-ADDMDREXA    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVRAD
+     C                     MOVE MDREAT    RDVRAT
+     C                     MOVE MDRNNS    RDVRNS
+     C                     MOVE MDRNRI    RDVRNR
+      *
+      ** Check if Denomination Mult.is zero move blanks to report field
+      *
+     C           MDRMLT    IFEQ 0
+     C                     MOVE *BLANKS   RDVDNM
+     C                     ELSE
+     C                     MOVE MDSBRS    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE MDRMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RDVDNM
+     C                     ENDIF
+      *
+     C                     Z-ADDMDRDIV    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVRDV
+      *
+     C                     Z-ADDMDRTRF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVTRF
+      *
+     C                     Z-ADDMDRTRT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RDVTRT
+     C                     ENDIF
+      *
+     C                     ADD  1         WCNT
+      *
+      ** Print Details
+      *
+     C                     MOVE '0'       *IN16
+      *
+     C           MDSBRT    IFEQ 'Y'
+     C                     MOVE '1'       *IN16
+     C                     ENDIF
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME1                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME1                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+     C                     WRITEHED12P1
+     C                     WRITEHED13P1                                   CSE016
+     C                     WRITEDET2P1
+      *
+     C           READDV    TAG
+     C                     READ SECODVD0                 81
+      *
+     C           MDCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READDV
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           DVAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P1
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P1
+     C                     WRITEHED5P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDDV     TAG
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             SRFAR  - Print Free Allocations                   *
+      *                                                               *
+      * CALLS       *PSSR  - Error Control Routine                    *
+      *            SRSEC  - SR to chain security                      *
+      *            ZDATE2 - SR for date format                        *
+      *            ZFRPED - SR for amount format                      *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRFAR     BEGSR                           ** SRFAR **
+      *
+     C                     READ SECOFRD0                 81
+      *
+     C           WOPEN1    IFEQ 'N'
+     C                     OPEN SE7533P1
+     C                     MOVE 'Y'       WOPEN1  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P1
+     C                     WRITEHED7P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+     C                     GOTO ENDFR
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECOFRD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOFRD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD03        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MECORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READFR
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN1    ORGE 50
+     C                     WRITEHED1P1
+     C                     WRITEHED6P1
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MECORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO FRAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF1
+     C                     MOVE MASESN    RSCTY1
+     C                     MOVE MACOAT    RTYPE1
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT1
+     C                     MOVE MEOPTN    ROPTN1
+      *
+     C                     MOVE MENSEC    RFRNWS
+     C                     MOVE MENSHA    RFRNSH
+     C                     MOVE MEOSHA    RFROSH
+     C                     MOVE MEADRE    RFRADR
+      *
+      ** Check if Denomination Mult.is zero move blanks to report field
+      *
+     C           MEDMLT    IFEQ 0
+     C                     MOVE *BLANKS   RFRDML
+     C                     ELSE
+     C                     MOVE MEDMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RFRDML
+     C                     ENDIF
+      *
+     C                     Z-ADDMEDIVR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RFRDIV
+     C                     MOVE MERNDN    RFRRND
+     C                     MOVE MERNDS    RFRRNC
+     C                     MOVE MECOMP    RFRCMP
+     C                     MOVE MEOPSH    RFROPS
+     C                     MOVE METXT1    RFRTX1
+     C                     MOVE METXT2    RFRTX2
+     C                     MOVE METXT3    RFRTX3
+     C                     MOVE METXT4    RFRTX4
+     C                     ADD  1         WCNT
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME1                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME1                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED12P1
+     C                     WRITEHED13P1                                   CSE016
+     C                     WRITEDET3P1
+      *
+     C           READFR    TAG
+     C                     READ SECOFRD0                 81
+      *
+     C           MECORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READFR
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           FRAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P1
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P1
+     C                     WRITEHED7P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDFR     TAG
+      *
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCAP  - Print Capital Changes                     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCAP     BEGSR                           ** SRCAP **
+      *
+     C                     READ SECOCED0                 81
+      *
+     C           WOPEN1    IFEQ 'N'
+     C                     OPEN SE7533P1
+     C                     MOVE 'Y'       WOPEN1  1
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P1
+     C                     WRITEHED9P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+     C                     GOTO ENDCE
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECOCED0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOCED0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD04        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MGCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READCE
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN1    ORGE 50
+     C                     WRITEHED1P1
+     C                     WRITEHED8P1
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MGCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO CEAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF1
+     C                     MOVE MASESN    RSCTY1
+     C                     MOVE MACOAT    RTYPE1
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT1
+     C                     MOVE MGOPTN    ROPTN1
+      *
+      ** Check if Cash Repaid is zero then move blanks to report field
+      *
+     C           MGCARE    IFEQ 0
+     C                     MOVE *BLANKS   RCECAR
+     C                     ELSE
+     C                     MOVE MGCARE    ZFLD15
+     C                     Z-ADDZDECS     YUDECS  10                                         BUG2652
+     C                     Z-ADD7         ZDECS                                              BUG2652
+     C                     EXSR ZFRPED
+     C                     Z-ADDYUDECS    ZDECS                                              BUG2652
+     C                     MOVE ZOUT22    RCECAR
+     C                     ENDIF
+      *
+     C                     MOVE MGOPSH    RCEOPS
+     C                     MOVE MGTXT1    RCETX1
+     C                     MOVE MGTXT2    RCETX2
+     C                     MOVE MGTXT3    RCETX3
+     C                     MOVE MGTXT4    RCETX4
+     C                     ADD  1         WCNT
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME1                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME1                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED12P1
+     C                     WRITEHED13P1                                   CSE016
+     C                     WRITEDET4P1
+      *
+     C           READCE    TAG
+     C                     READ SECOCED0                 81
+     C           MGCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READCE
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           CEAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P1
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P1
+     C                     WRITEHED9P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDCE     TAG
+      *
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRRIS  - Print Rights Issues.                      *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRRIS     BEGSR                           ** SRRIS **
+      *
+     C                     READ SECORGD0                 81
+      *
+     C           WOPEN1    IFEQ 'N'
+     C                     OPEN SE7533P1
+     C                     MOVE 'Y'       WOPEN1  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P1
+     C                     WRITEHED11P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+     C                     GOTO ENDRG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECORGD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECORGD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD05        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MFCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READRG
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN1    ORGE 40
+     C                     WRITEHED1P1
+     C                     WRITEHED10P1
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MFCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO RGAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF1
+     C                     MOVE MASESN    RSCTY1
+     C                     MOVE MACOAT    RTYPE1
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT1
+     C                     MOVE MFOPTN    ROPTN1
+     C                     MOVE MFNSEC    RRGNWS
+     C                     MOVE MFRIMP    RRGRMP
+     C                     MOVE MFADRE    RRGADR
+     C                     MOVE MFRNRI    RRGNNS
+     C                     MOVE MFOSHA    RRGNOS
+      *
+      ** Check if Denomination Mult.is zero move blanks to report field
+      *
+     C           MFDMLT    IFEQ 0
+     C                     MOVE *BLANKS   RRGDML
+     C                     ELSE
+     C                     MOVE MFDMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RRGDML
+     C                     ENDIF
+      *
+     C                     Z-ADDMFDIVR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGDVR
+     C                     MOVE MFDFNR    RRGDNR
+     C                     MOVE MFRNDN    RRGRND
+     C                     MOVE MFRNDS    RRGRNC
+     C                     MOVE MFCOMP    RRGCMP
+     C                     MOVE MFOPT1    RRGOP1
+     C                     MOVE MFNAR1    RRGNA1
+     C                     MOVE MFOPT2    RRGOP2
+     C                     MOVE MFNAR2    RRGNA2
+     C                     MOVE MFOPT3    RRGOP3
+     C                     MOVE MFNAR3    RRGNA3
+     C                     MOVE MFOPT4    RRGOP4
+     C                     MOVE MFNAR4    RRGNA4
+     C                     MOVE MFOPT5    RRGOP5
+     C                     MOVE MFNAR5    RRGNA5
+     C                     MOVE MFOPT6    RRGOP6
+     C                     MOVE MFNAR6    RRGNA6
+     C                     MOVE MFOPT7    RRGOP7
+     C                     MOVE MFNAR7    RRGNA7
+     C                     MOVE MFOPSH    RRGOSH
+     C                     MOVE MFTXT1    RRGTX1
+     C                     MOVE MFTXT2    RRGTX2
+     C                     MOVE MFTXT3    RRGTX3
+     C                     MOVE MFTXT4    RRGTX4
+     C                     Z-ADDMFSUBF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGSUF
+     C                     Z-ADDMFSUBT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGSUT
+     C                     MOVE MFAVOP    RRGAPO
+     C                     MOVE MFSBRS    RRGSBS
+     C                     MOVE MFSBRP    RRGREP
+     C                     Z-ADDMFREXD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGRED
+     C                     Z-ADDMFREXA    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGRAD
+     C                     MOVE MFREAT    RRGRAT
+     C                     MOVE MFRNNS    RRGNNS
+     C                     MOVE MFRNRI    RRGRGR
+      *
+     C                     Z-ADDMFRTRF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGTRF
+      *
+     C                     Z-ADDMFRTRT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGTRT
+      *
+      ** Check if Denomination Mult.is zero move blanks to report field
+      *
+     C           MFRMLT    IFEQ 0
+     C                     MOVE *BLANKS   RRGRML
+     C                     ELSE
+     C                     MOVE MFSBRS    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE MFRMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RRGRML
+     C                     ENDIF
+      *
+     C                     Z-ADDMFRDIV    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRGRDV
+     C                     ADD  1         WCNT
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME1                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME1                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED12P1
+     C                     WRITEHED13P1                                   CSE016
+     C                     WRITEDET5P1
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN1    ORGE 40
+     C                     WRITEHED1P1
+     C                     WRITEHED10P1
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C                     WRITEDET6P1
+      *
+     C           READRG    TAG
+     C                     READ SECORGD0                 81
+     C           MFCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READRG
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           RGAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P1
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P1
+     C                     WRITEHED11P1
+     C                     WRITEFOT1P1
+     C                     WRITEFOT4P1
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDRG     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCARE - Print Corporate Reorganisation            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCARE    BEGSR                           ** SRCARE **
+      *
+     C                     READ SECOCRD0                 81
+      *
+     C           WOPEN2    IFEQ 'N'
+     C                     OPEN SE7533P2
+     C                     MOVE 'Y'       WOPEN2  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P2
+     C                     WRITEHED2P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     GOTO ENDCR
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECOCRD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOCRD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD06        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MHCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READCR
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN2    ORGE 40
+     C                     WRITEHED1P2
+     C                     WRITEHED3P2
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MHCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO CRAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF2
+     C                     MOVE MASESN    RSCTY2
+     C                     MOVE MACOAT    RTYPE2
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT2
+     C                     MOVE MHOPTN    ROPTN2
+     C                     MOVE MHOSHA    RCROSH
+     C                     MOVE MHADRE    RCRADR
+      *
+      ** Check if Cash Payment is zero then move blanks to report field
+      *
+     C           MHCAPA    IFEQ 0
+     C                     MOVE *BLANKS   RCRCAP
+     C                     ELSE
+     C                     MOVE MHCAPA    ZFLD15
+     C                     Z-ADDZDECS     WUDECS  10                      155622
+     C                     Z-ADD7         ZDECS                           155622
+     C                     EXSR ZFRPED
+     C                     Z-ADDWUDECS    ZDECS                           155622
+     C                     MOVE ZOUT22    RCRCAP
+     C                     ENDIF
+      *
+     C                     MOVE MHTXT1    RCRTX1
+     C                     MOVE MHTXT2    RCRTX2
+     C                     MOVE MHTXT3    RCRTX3
+     C                     MOVE MHTXT4    RCRTX4
+     C                     MOVE MHOPSH    RCRNAM
+     C                     MOVEAMHSECA    AR1
+     C                     MOVEAMHNSHA    AR2
+     C                     MOVEAMHDMLA    AR3
+     C                     MOVEAMHDVRA    AR4
+     C                     MOVEAMHRNDN    AR5
+     C                     MOVEAMHRNDS    AR6
+     C                     MOVEAMHCOPA    AR7
+     C                     MOVEAMHMKTP    AR8
+     C                     ADD  1         WCNT
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED14P2
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET1P2
+     C                     WRITEDET2P2
+     C                     Z-ADD1         X       20
+      *
+     C           X         DOWLT21
+      *
+     C           AR1,X     IFNE *BLANKS
+     C                     MOVE AR1,X     RCRSEC
+     C                     MOVE AR2,X     WRNNS  150
+     C                     MOVE WRNNS     RCRNNS
+     C                     MOVE AR3,X     WRDML  150
+     C                     MOVE WRDML     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RCRDML
+     C                     MOVE AR4,X     WRDVR   50
+     C                     Z-ADDWRDVR     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RCRDVR
+     C                     MOVE AR5,X     RCRRDN
+     C                     MOVE AR6,X     RCRRDS
+     C                     MOVE AR7,X     WRCOP  150
+     C                     MOVE WRCOP     RCRCOP
+     C                     MOVE AR8,X     WMKTP  150
+     C                     MOVE WMKTP     RCRMKP
+     C                     WRITEDET3P2
+     C                     ENDIF
+      *
+     C                     ADD  1         X
+      *
+     C                     ENDDO
+      *
+     C           READCR    TAG
+     C                     READ SECOCRD0                 81
+     C           MHCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READCR
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           CRAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P2
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P2
+     C                     WRITEHED2P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDCR     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SROFF  - Print Offers                              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SROFF     BEGSR                           ** SROFF **
+      *
+     C                     READ SECOOFD0                 81
+      *
+     C           WOPEN2    IFEQ 'N'
+     C                     OPEN SE7533P2
+     C                     MOVE 'Y'       WOPEN2  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P2
+     C                     WRITEHED4P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     GOTO ENDOF
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECOOFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOOFD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD07        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MICORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READOF
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN2    ORGE 55
+     C                     WRITEHED1P2
+     C                     WRITEHED5P2
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MICORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO OFAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF2
+     C                     MOVE MASESN    RSCTY2
+     C                     MOVE MACOAT    RTYPE2
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT2
+     C                     MOVE MIOPTN    ROPTN2
+     C                     MOVE MINSEC    ROFSEC
+     C                     MOVE MIADRE    ROFADR
+     C                     MOVE MIOFTY    ROFTYP
+     C                     MOVE MINSHA    ROFNNS
+     C                     MOVE MIOSHA    ROFNOS
+      *
+      ** Check if Denom. Mult is 0 then move blanks to report field
+      *
+     C           MIDMLT    IFEQ 0
+     C                     MOVE *BLANKS   ROFDML
+     C                     ELSE
+     C                     MOVE MIDMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ROFDML
+     C                     ENDIF
+      *                                                                   145872
+      ***  If not Exchange Offer, move blanks to 'Percentage to Exchange' 145872
+      ***  report field.                                                  145872
+      *                                                                   145872
+     C           MIOFTY    IFNE 'E'                                       145872
+     C                     MOVE *BLANKS   ROFPEX                          145872
+     C                     ELSE                                           145872
+     C                     MOVE MIPREX    ZFLD15                          145872
+     C                     Z-ADDZDECS     WUDECS  10                      145872
+     C                     Z-ADD4         ZDECS                           145872
+     C                     EXSR ZFRPED                                    145872
+     C                     Z-ADDWUDECS    ZDECS                           145872
+     C                     MOVE ZOUT22    FLD09   9                       145872
+     C                     MOVELFLD09     ROFPEX                          145872
+     C                     ENDIF                                          145872
+      *
+     C                     Z-ADDMIDIVR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ROFDIV
+     C                     MOVE MIDFNR    ROFDNR
+     C                     MOVE MISUPR    ROFSUB
+     C                     MOVE MIREPR    ROFREC
+     C                     MOVE MIMKTP    ROFMKP
+     C                     Z-ADDMISUBF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ROFSUF
+     C                     Z-ADDMISUBT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ROFSUT
+     C                     MOVE MIRNDN    ROFRDN
+     C                     MOVE MIRNDS    ROFRDS
+     C                     MOVE MICOMP    ROFCOP
+     C                     MOVE MIOPT1    ROFOP1
+     C                     MOVE MINAR1    ROFNA1
+     C                     MOVE MIOPT2    ROFOP2
+     C                     MOVE MINAR2    ROFNA2
+     C                     MOVE MIOPT3    ROFOP3
+     C                     MOVE MINAR3    ROFNA3
+     C                     MOVE MIOPSH    ROFNAM
+     C                     MOVE MITXT1    ROFTX1
+     C                     MOVE MITXT2    ROFTX2
+     C                     MOVE MITXT3    ROFTX3
+     C                     MOVE MITXT4    ROFTX4
+     C                     ADD  1         WCNT
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED14P2
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET4P2
+      *
+     C           READOF    TAG
+     C                     READ SECOOFD0                 81
+     C           MICORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READOF
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           OFAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P2
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P2
+     C                     WRITEHED4P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDOF     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SREXE  - Print Corporate ACTION EXERCISES          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SREXE     BEGSR                           ** SREXE **
+      *
+     C                     READ SECOEXD0                 81
+      *
+     C           WOPEN2    IFEQ 'N'
+     C                     OPEN SE7533P2
+     C                     MOVE 'Y'       WOPEN2  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P2
+     C                     WRITEHED6P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     GOTO ENDEX
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECOEXD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECOEXD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD08        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MJCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READEX
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN2    ORGE 40
+     C                     WRITEHED1P2
+     C                     WRITEHED7P2
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MJCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO EXAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '1'       *IN20
+     C                     MOVE MACORF    RCORF2
+     C                     MOVE MASESN    RSCTY2
+     C                     MOVE MACOAT    RTYPE2
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT2
+     C                     MOVE MJOPTN    ROPTN2
+     C                     MOVE MJNSEC    REXSEC
+     C                     MOVE MJNSHA    REXNNS
+     C                     MOVE MJOSHA    REXOSB
+     C                     MOVE MJCPRC    REXCPO
+     C                     MOVE MJCEXR    REXCER
+     C                     MOVE MJSUPR    REXSUB
+      *
+      ** Check if Denom. Mult. is zero the move blanks to report field
+      *
+     C           MJDMLT    IFEQ 0
+     C                     MOVE *BLANKS   REXDML
+     C                     ELSE
+     C                     MOVE MJDMLT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    REXDML
+     C                     ENDIF
+      *
+     C                     Z-ADDMJDIVR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDIV
+     C                     Z-ADDMJSUBF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXSUF
+     C                     Z-ADDMJSUBT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXSUT
+     C                     MOVE MJRCPR    REXRCP                          161732
+     C                     MOVE MJRNDN    REXRDN
+     C                     MOVE MJRNDS    REXRDS
+     C                     MOVE MJCOMP    REXCOP
+     C                     MOVE MJDFNR    REXDNR
+     C                     MOVE MJOPT1    REXOP1
+     C                     MOVE MJNAR1    REXNA1
+     C                     MOVE MJOPT2    REXOP2
+     C                     MOVE MJNAR2    REXNA2
+     C                     MOVE MJOPT3    REXOP3
+     C                     MOVE MJNAR3    REXNA3
+     C                     MOVE MJOPT4    REXOP4
+     C                     MOVE MJNAR4    REXNA4
+     C                     MOVE MJOPT5    REXOP5
+     C                     MOVE MJNAR5    REXNA5
+     C                     MOVE MJOPT6    REXOP6
+     C                     MOVE MJNAR6    REXNA6
+     C                     MOVE MJOPT7    REXOP7
+     C                     MOVE MJNAR7    REXNA7
+     C                     MOVE MJOPSH    REXNAM
+     C                     MOVE MJTXT1    REXTX1
+     C                     MOVE MJTXT2    REXTX2
+     C                     MOVE MJTXT3    REXTX3
+     C                     MOVE MJTXT4    REXTX4
+      *
+     C                     Z-ADDMJTRAF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXTRF
+      *
+     C                     Z-ADDMJTRAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXTRT
+     C                     ADD  1         WCNT
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED14P2
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET5P2
+      *
+     C           READEX    TAG
+     C                     READ SECOEXD0                 81
+     C           MJCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READEX
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           EXAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P2
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P2
+     C                     WRITEHED6P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDEX     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRNFE  - Print NON FINANCIAL EVENTS                *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRNFE     BEGSR                           ** SRNFE **
+      *
+     C                     READ SECONFD0                 81
+      *
+     C           WOPEN2    IFEQ 'N'
+     C                     OPEN SE7533P2
+     C                     MOVE 'Y'       WOPEN2  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P2
+     C                     WRITEHED8P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     GOTO ENDNF
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECONFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECONFD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD09        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+     C                     MOVE *BLANKS   WPCORF  6
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MKCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READNF
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN2    ORGE 50
+     C                     WRITEHED1P2
+     C                     WRITEHED9P2
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           MKCORF    IFNE WPCORF
+     C                     ADD  1         WCNT
+      *
+     C           *IN50     IFEQ '1'
+     C           MKCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO NFAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '0'       *IN20
+     C                     MOVE MKCORF    WPCORF
+     C                     MOVE MACORF    RCORF2
+     C                     MOVE MASESN    RSCTY2
+     C                     MOVE MACOAT    RTYPE2
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT2
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CSE016
+     C                     WRITEHED14P2
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET9P2
+     C                     ENDIF
+      *
+     C                     MOVE MKSEQN    RNFSEQ
+     C                     MOVE MKNARR    RNFNAR
+      *
+      ** Print Details
+      *
+     C                     WRITEDET6P2
+     C           READNF    TAG
+     C                     READ SECONFD0                 81
+     C           MKCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READNF
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           NFAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P2
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P2
+     C                     WRITEHED8P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDNF     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCANC - Print Corporate NAME CHANGES              *
+      *                                                               *
+      * CALLS      *PSSR  -                                           *
+      *            SRSEC  - Chain security                            *
+      *            ZDATE2 - Date format                               *
+      *            ZFRPED - Amount format                             *
+      *            SRCUS  - CALL AOCUSTR0                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCANC    BEGSR                           ** SRCANC **
+      *
+     C                     READ SECONCD0                 81
+      *
+     C           WOPEN2    IFEQ 'N'
+     C                     OPEN SE7533P2
+     C                     MOVE 'Y'       WOPEN2  1
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITEHED1P2
+     C                     WRITEHED10P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+     C                     GOTO ENDNC
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           WREFR     CHAINSECONCD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECONCD0'DBFILE
+     C                     MOVE WREFR     DBKEY
+     C                     Z-ADD10        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCNT    50
+      *
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           MLCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     GOTO READNC
+     C                     ENDIF
+      *
+     C           WFTFLG    IFEQ 1
+     C           PRTLN2    ORGE 40
+     C                     WRITEHED1P2
+     C                     WRITEHED11P2
+     C                     MOVE 0         WFTFLG
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ '1'
+     C           MLCORF    ANDNEWREFR
+     C                     MOVE '1'       *IN81
+     C                     GOTO NCAUD
+     C                     ENDIF
+      *
+     C                     MOVE MASESN    WSEC
+     C                     EXSR SRSEC
+     C                     MOVE '0'       *IN20
+     C                     MOVE MACORF    RCORF2
+     C                     MOVE MASESN    RSCTY2
+     C                     MOVE MACOAT    RTYPE2
+     C                     Z-ADDMACOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXDT2
+     C                     MOVE MLSRPN    RNCREP
+     C                     MOVE MLSFN1    RNCSF1
+     C                     MOVE MLSFN2    RNCSF2
+     C                     MOVE MLSESN    RNCSEC
+     C                     MOVE MLT2RF    RNCTVN
+     C                     MOVE MLISNO    RNCISC
+     C                     MOVE MLCSPN    RNCCUC
+     C                     MOVE MLSREF    RNCEXC
+     C                     MOVE MLSRE1    RNCSR1
+     C                     MOVE MLSRE2    RNCSR2
+     C                     MOVE MLSRE3    RNCSR3
+      *
+     C                     MOVE NMCY      WNMCY   3
+     C                     MOVE SITP      WSITP   3
+      *
+     C           WKEY1     CHAININVTPDF              80
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INVTP   'DBFILE
+     C                     MOVE NMCY      DBKEY
+     C                     Z-ADD11        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C********** SDC1      IFNE 0                                                             CSD027
+     C           SDC1      IFNE *BLANKS                                                       CSD027
+     C                     MOVELSDC1      WKEYC
+     C                     EXSR SRCUS
+     C                     MOVE BBCSSN    RNCSD1
+     C                     ENDIF
+      *
+     C********** SDC2      IFNE 0                                                             CSD027
+     C           SDC2      IFNE *BLANKS                                                       CSD027
+     C                     MOVELSDC2      WKEYC
+     C                     EXSR SRCUS
+     C                     MOVE BBCSSN    RNCSD2
+     C                     ENDIF
+      *
+     C********** SDC3      IFNE 0                                                             CSD027
+     C           SDC3      IFNE *BLANKS                                                       CSD027
+     C                     MOVELSDC3      WKEYC
+     C                     EXSR SRCUS
+     C                     MOVE BBCSSN    RNCSD3
+     C                     ENDIF
+      *
+     C                     ADD  1         WCNT
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *
+      ** Print Details
+      *
+     C                     WRITEHED14P2
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET7P2
+      *
+     C           READNC    TAG
+     C                     READ SECONCD0                 81
+     C           MLCORF    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *IN81     ANDEQ'0'
+     C                     GOTO READNC
+     C                     ENDIF
+      *
+      **  Print Audit List
+      *
+     C           NCAUD     TAG
+      *
+     C                     SELEC
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDNE0
+     C                     WRITEFOT4P2
+      *
+     C           *IN81     WHEQ '1'
+     C           WCNT      ANDEQ0
+     C                     WRITEHED1P2
+     C                     WRITEHED10P2
+     C                     WRITEFOT1P2
+     C                     WRITEFOT4P2
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           ENDNC     TAG
+     C                     MOVE 1         WFTFLG  10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                              CEU017
+      *****************************************************************   CEU017
+      *                                                               *   CEU017
+      *            SRCUCH - Print Corporate CURRENCY CHANGES          *   CEU017
+      *                                                               *   CEU017
+      * CALLS      *PSSR  - E                                         *   CEU017
+      *            SRSEC  - SR to chain security                      *   CEU017
+      *            ZDATE2 - SR for date format                        *   CEU017
+      *            ZFRPED - SR for amount format                      *   CEU017
+      *                                                               *   CEU017
+      * CALLED BY  MAIN   - Main Routine                              *   CEU017
+      *                                                               *   CEU017
+      * FLDS USED         -                                           *   CEU017
+      *                                                               *   CEU017
+      *****************************************************************   CEU017
+     C           SRCUCH    BEGSR                           ** SRCUCH **   CEU017
+      *                                                                   CEU017
+     C                     READ SECOCCD0                 81               CEU017
+      *                                                                   CEU017
+     C           WOPEN2    IFEQ 'N'                                       CEU017
+     C                     OPEN SE7533P2                                  CEU017
+     C                     MOVE 'Y'       WOPEN2  1                       CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C           *IN81     IFEQ '1'                                       CEU017
+     C                     WRITEHED1P2                                    CEU017
+     C                     WRITEHED12P2                                   CEU017
+     C                     WRITEFOT1P2                                    CEU017
+     C                     WRITEFOT4P2                                    CEU017
+     C                     GOTO ENDCC                                     CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C           *IN50     IFEQ '1'                                       CEU017
+     C           WREFR     CHAINSECOCCD0             80                   CEU017
+      *                                                                   CEU017
+     C           *IN80     IFEQ '1'                                       CEU017
+     C           *LOCK     IN   LDA                                       CEU017
+     C                     MOVE 'SECOCCD0'DBFILE                          CEU017
+     C                     MOVE WREFR     DBKEY                           CEU017
+     C                     Z-ADD12        DBASE                           CEU017
+     C                     OUT  LDA                                       CEU017
+     C                     EXSR *PSSR                                     CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     Z-ADD0         WCNT    50                      CEU017
+      *                                                                   CEU017
+     C           *IN81     DOWEQ'0'                                       CEU017
+      *                                                                   CEU017
+     C           NACORF    CHAINSECORFD0             80                   CEU017
+      *                                                                   CEU017
+     C           *IN80     IFEQ '1'                                       CEU017
+     C                     GOTO READCC                                    CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C           WFTFLG    IFEQ 1                                         CEU017
+     C           PRTLN2    ORGE 40                                        CEU017
+     C                     WRITEHED1P2                                    CEU017
+     C                     WRITEHED13P2                                   CEU017
+     C                     MOVE 0         WFTFLG                          CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C           *IN50     IFEQ '1'                                       CEU017
+     C           NACORF    ANDNEWREFR                                     CEU017
+     C                     MOVE '1'       *IN81                           CEU017
+     C                     GOTO CCAUD                                     CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     MOVE '0'       *IN20                           CEU017
+     C                     MOVE MACORF    RCORF2                          CEU017
+     C                     MOVE MASESN    RSCTY2                          CEU017
+     C                     MOVE MACOAT    RTYPE2                          CEU017
+     C                     Z-ADDMACOEX    ZDAYNO                          CEU017
+     C                     EXSR ZDATE2                                    CEU017
+     C                     MOVE ZADATE    REXDT2                          CEU017
+     C                     MOVE NANCCY    RCCNCC                          CEU017
+     C           CEU018    IFEQ 'Y'                                       CEU017
+     C                     MOVE NANMDP    RCCDEC                          CEU017
+     C                     ENDIF                                          CEU017
+     C                     MOVE NAVCCY    RCCNVC                          CEU017
+     C                     MOVE NANSEC    RCCNSC                          CEU017
+     C                     MOVE NANSEC    WSEC                            CEU017
+     C                     EXSR SRSEC                                     CEU017
+      *                                                                   CEU017
+      ** Check Denom. Mult. if zero then move blanks to report field      CEU017
+      *                                                                   CEU017
+     C           NADMLT    IFEQ 0                                         CEU017
+     C                     MOVE *BLANKS   RCCDML                          CEU017
+     C                     ELSE                                           CEU017
+     C                     MOVE NADMLT    ZFLD15                          CEU017
+     C                     EXSR ZFRPED                                    CEU017
+     C                     MOVE ZOUT22    RCCDML                          CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     MOVE NAONSZ    RCCONS                          CEU017
+     C                     MOVE NANNSZ    RCCNNS                          CEU017
+     C                     MOVE NARNDN    RCCRND                          CEU017
+     C                     MOVE NARNDS    RCCCSH                          CEU017
+     C                     MOVE NACOMP    RCCCMP                          CEU017
+     C                     MOVE NATXT1    RCCNA1                          CEU017
+     C                     MOVE NATXT2    RCCNA2                          CEU017
+     C                     MOVE NATXT3    RCCNA3                          CEU017
+     C                     MOVE NATXT4    RCCNA4                          CEU017
+     C                     ADD  1         WCNT                            CEU017
+      *                                                                                       CGL031
+      ** Display 'Subject to Euro Tax' if record is a dividend                                CGL031
+      ** and MASETX = 'Y'.                                                                    CGL031
+      *                                                                                       CGL031
+     C                     MOVE *OFF      *IN82                                               CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     MOVE *ON       *IN82                                               CGL031
+     C           MASETX    IFEQ 'Y'                                                           CGL031
+     C                     MOVE 'YES'     RSETX                                               CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'NO '     RSETX                                               CGL031
+     C                     ENDIF                                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                   CSE016
+      **  Display Security Shortname Description                          CSE016
+      *                                                                   CSE016
+     C                     MOVE *BLANKS   RRNME2                          CSE016
+      *                                                                   CSE016
+     C           MASESN    CHAINSECTYDF              99                   CSE016
+      *                                                                   CSE016
+     C           *IN99     IFEQ *OFF                                      CSE016
+      *                                                                   CSE016
+      ** Format security report description                               CSE016
+      *                                                                   CSE016
+     C                     MOVE BVRIDF    ZRSFD                           CSE016
+     C                     MOVELSRPN      ZSRPN                           CSE016
+     C                     EXSR ZSDESC                                    CSE016
+     C                     MOVELZRNME     RRNME2                          CSE016
+      *                                                                   CSE016
+     C                     ENDIF                                          CSE016
+      *                                                                   CEU017
+      ** Print Details                                                    CEU017
+      *                                                                   CEU017
+     C                     WRITEHED14P2                                   CEU017
+     C                     WRITEHED15P2                                   CSE016
+     C                     WRITEDET8P2                                    CEU017
+     C           READCC    TAG                                            CEU017
+     C                     READ SECOCCD0                 81               CEU017
+     C           NACORF    CHAINSECORFD0             80                   CEU017
+      *                                                                   CEU017
+     C           *IN80     IFEQ '1'                                       CEU017
+     C           *IN81     ANDEQ'0'                                       CEU017
+     C                     GOTO READCC                                    CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+      **  Print Audit List                                                CEU017
+      *                                                                   CEU017
+     C           CCAUD     TAG                                            CEU017
+      *                                                                   CEU017
+     C                     SELEC                                          CEU017
+      *                                                                   CEU017
+     C           *IN81     WHEQ '1'                                       CEU017
+     C           WCNT      ANDNE0                                         CEU017
+     C                     WRITEFOT4P2                                    CEU017
+      *                                                                   CEU017
+     C           *IN81     WHEQ '1'                                       CEU017
+     C           WCNT      ANDEQ0                                         CEU017
+     C                     WRITEHED1P2                                    CEU017
+     C                     WRITEHED12P2                                   CEU017
+     C                     WRITEFOT1P2                                    CEU017
+     C                     WRITEFOT4P2                                    CEU017
+      *                                                                   CEU017
+     C                     ENDSL                                          CEU017
+      *                                                                   CEU017
+     C                     ENDDO                                          CEU017
+      *                                                                   CEU017
+     C           ENDCC     TAG                                            CEU017
+     C                     MOVE 1         WFTFLG  10                      CEU017
+      *                                                                   CEU017
+     C                     ENDSR                                          CEU017
+      *****************************************************************   CEU017
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRALL  - Print ALL CORPORATE ACTIONS               *
+      *                                                               *
+      * CALLS      SRDVEV - Print Corporate Dividends                 *
+      *            SRFAR  - SR to print Free Allocations              *
+      *            SRRIS  - SR to print Right Issues                  *
+      *            SRCAP  - SR to print Capital Changes               *
+      *            SRCARE - SR to print Corporate Reorganisation      *
+      *            SROFF  - SR to print Corporate Offers              *
+      *            SREXE  - SR to print Corporate Action Exercises    *
+      *            SRNFE  - SR to print Corporate Non-Financial Events*
+      *            SRCANC - SR to print Corporate Name Changes        *
+      *            SRCUCH - SR to print Currency Changes              *   CEU017
+      *          AOSARDR0 - Access program for Switchable Features    *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRALL     BEGSR
+      *
+     C                     EXSR SRDVEV
+     C                     EXSR SRFAR
+     C                     EXSR SRRIS
+     C                     EXSR SRCAP
+     C                     EXSR SRCARE
+     C                     EXSR SROFF
+     C                     EXSR SREXE
+     C                     EXSR SRNFE
+     C                     EXSR SRCANC
+     C/COPY WNCPYSRC,SE7533C004
+      *                                                                   CEU017
+     C                     MOVE 'Y'       CEU017  1                       CEU017
+      *                                                                   CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' WRTCD                           CEU017
+     C                     PARM '*VERIFY' WOPTN                           CEU017
+     C                     PARM 'CEU017'  WSARD  10                       CEU017
+     C           SCSARD    PARM SCSARD    DSSDY                           CEU017
+      *                                                                   CEU017
+     C           WRTCD     IFNE *BLANK                                    CEU017
+     C                     MOVE 'N'       CEU017                          CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C           CEU017    IFEQ 'Y'                                       CEU017
+     C                     EXSR SRCUCH                                    CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' WRTCD                           CEU017
+     C                     PARM '*VERIFY' WOPTN                           CEU017
+     C                     PARM 'CEU018'  WSARD  10                       CEU017
+     C           SCSARD    PARM SCSARD    DSSDY                           CEU017
+      *                                                                   CEU017
+     C           WRTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE '1'       *IN22                           CEU017
+     C                     MOVE 'Y'       CEU018  1                       CEU017
+     C                     ELSE                                           CEU017
+     C                     MOVE '0'       *IN22                           CEU017
+     C                     MOVE 'N'       CEU018                          CEU017
+     C                     ENDIF                                          CEU017
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY WNCPYSRC,SE7533C005
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRREF  - Print SINGLE REFERENCE                    *
+      *                                                               *
+      * CALLS      SRDVEV - Print Corporate Dividends                 *
+      *            SRFAR  - SR to print Free Allocations              *
+      *            SRRIS  - SR to print Right Issues                  *
+      *            SRCAP  - SR to print Capital Changes               *
+      *            SRCARE - SR to print Corporate Reorganisation      *
+      *            SROFF  - SR to print Corporate Offers              *
+      *            SREXE  - SR to print Corporate Action Exercises    *
+      *            SRNFE  - SR to print Corporate Non-Financial Events*
+      *            SRCANC - SR to print Corporate Name Changes        *
+      *            SRCUCH - SR to print Currency Changes              *   CEU017
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRREF     BEGSR
+      *
+     C                     MOVE '1'       *IN50
+      *
+     C           WREFR     CHAINSECORFD0             80
+      *
+     C           MACOAT    CASEQ'DV'      SRDVEV
+     C           MACOAT    CASEQ'FR'      SRFAR
+     C           MACOAT    CASEQ'RG'      SRRIS
+     C           MACOAT    CASEQ'CE'      SRCAP
+     C           MACOAT    CASEQ'CR'      SRCARE
+     C           MACOAT    CASEQ'OF'      SROFF
+     C           MACOAT    CASEQ'EX'      SREXE
+     C           MACOAT    CASEQ'NF'      SRNFE
+     C           MACOAT    CASEQ'NC'      SRCANC
+     C           MACOAT    CASEQ'CC'      SRCUCH                          CEU017
+     C/COPY WNCPYSRC,SE7533C006
+     C                     ENDCS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSEC  - CHAIN SECURITY                            *
+      *                                                               *
+      * CALLS      *PSSR  - Error Control Routine                     *
+      *                                                               *
+      * CALLED BY  SRDVEV - Print Corporate Dividends                 *
+      *            SRFAR  - SR to print Free Allocations              *
+      *            SRRIS  - SR to print Right Issues                  *
+      *            SRCAP  - SR to print Capital Changes               *
+      *            SRCARE - SR to print Corporate Reorganisation      *
+      *            SROFF  - SR to print Corporate Offers              *
+      *            SREXE  - SR to print Corporate Action Exercises    *
+      *            SRNFE  - SR to print Corporate Non-Financial Events*
+      *            SRCANC - SR to print Corporate Name Changes        *
+      *            SRCUCH - SR to print Currency Changes              *   CEU017
+      *            SRGEN  - SR to print Corporate Action Reference    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSEC     BEGSR                           ** SRSEC **
+      *
+     C           WSEC      IFNE *BLANKS
+      *
+     C           WSEC      CHAINSECTYDF              80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECTY   'DBFILE
+     C                     MOVE WSEC      DBKEY            ************
+     C                     Z-ADD13        DBASE            * DBERR 22 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE NMDP      ZDECS
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCUS  - CALL AOCUSTR0                             *
+      *                                                               *
+      * CALLS      *PSSR  - Error Control Routine.                    *
+      *                                                               *
+      * CALLED BY  SRCANC - Print Corporate Name Changes              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCUS     BEGSR                           ** SRCUS **
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY  '  WOPTN
+     C                     PARM           WKEYC  10
+     C                     PARM *BLANK    WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE
+     C                     MOVE 'SDCUSTPD'DBFILE
+     C                     MOVE WKEYC     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Error control subroutine                  *
+      *                                                               *
+      * CALLS      SRAUDT - Print Audit Report                        *
+      *                                                               *
+      * CALLED BY  SRCANC - SR to print Corporate Name Changes        *
+      *            SRCAP  - SR to print Capital Changes               *
+      *            SRCARE - SR to print Corporate Reorganisation      *
+      *            SRCUCH - SR to print Currency Changes              *   CEU017
+      *            SRCUS  - SR to CALL AOCUSTR0                       *
+      *            SRDVEV - Print Corporate Dividends                 *
+      *            SREXE  - SR to print Corporate Action Exercises    *
+      *            SRFAR  - Free Allocations                          *
+      *            SRINIT - Subroutine to do Program Initialisation   *
+      *            SRNFE  - SR to print Corporate Non-Financial Events*
+      *            SROFF  - SR to print Corporate Offers              *
+      *            SRRIS  - SR to print Right Issues                  *
+      *            SRSEC  - SR to chain security shortname from SECTY *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C           WPSS9     ENDSR                           ** WPSS9 **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRAUDT - Audit Processing                          *
+      *                                                               *
+      * CALLS      SRSFIL - Register Printer Files via RCF            *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *            SRGEN  - Print Corporate Reference                 *
+      *            *PSSR  - Error routine                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRAUDT    BEGSR                           ** SRAUDT ****
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ '1'
+      *
+     C           WOPEN1    IFEQ 'Y'
+     C                     WRITEFOT3P1
+     C                     ENDIF
+      *
+     C           WOPEN2    IFEQ 'Y'
+     C                     WRITEFOT3P2
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7533C007
+      *
+     C                     WRITESE7533A1
+     C                     WRITESE7533A2
+     C                     WRITESE7533A7
+     C                     WRITESE7533A8
+      *
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C                     SELEC
+      *
+     C           WTREC     WHEQ 0
+      *
+     C                     WRITESE7533A1
+     C                     WRITESE7533A2
+     C                     WRITESE7533A6
+      *
+     C           WTREC     WHGT 0
+     C           WMODE     ANDEQ'1'
+      *
+     C                     MOVE WNORE     RRNORE
+      *
+     C                     WRITESE7533A1
+     C                     WRITESE7533A2
+     C                     WRITESE7533A5
+     C                     WRITESE7533A8
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C           WOPEN1    IFEQ 'Y'
+     C                     MOVELSFILE1    ZSILEU
+     C                     Z-ADDSFNUM1    ZSNUMU
+     C                     EXSR SRSFIL
+     C                     ENDIF
+      *
+     C           WOPEN2    IFEQ 'Y'
+     C                     MOVELSFILE2    ZSILEU
+     C                     Z-ADDSFNUM2    ZSNUMU
+     C                     EXSR SRSFIL
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7533C008
+      *
+      **  End Program and Return.
+      *
+     C                     CLOSE*ALL
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSFIL - Register the Printer Files via RCF.       *
+      *                                                               *
+      * CALLS      ZSFILE - Register Printer Files                    *
+      *                                                               *
+      * CALLED BY  SRAUDT - Audit Processing                          *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSFIL    BEGSR                           ** SRSFIL **
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM WRSEQ     SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           ZSILEU 10
+     C                     PARM           ZSNUMU  60
+     C                     PARM *BLANK    ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFNE *BLANKS
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSDESCZ3                                               CSE016
+     C/COPY ZSRSRC,ZEDITZ2                                                190204
+      *
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

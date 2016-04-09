@@ -1,0 +1,640 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N rate changes report')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RE4016P- Midas Retail Term & Notice Rate Changes Report      *
+      *                                                               *
+      *  Function:  This program generates T&N rate changes report    *
+      *  (IC/COB)                                                     *
+      *                                                               *
+      *  Called By: REC4016 - Midas RE T&N Rate Changes at rollover   *
+      *             REC4016I- Midas RE T&N Rate Changes at rollover   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      *  Prev Amend No. AR851810           Date 17Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  AR851810 - Account and Value date fields had invalid values  *
+      *             after the 2nd COB                                 *
+      *  CRE073 - Interest Rate Change                                *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDIF  E           K        DISK
+     FREPPA2PDIF  E                    DISK
+     FRERCH1PDIF  E           K        DISK
+     F            RERCH1D0                          KRENAMERERCH1
+     FREDPOSL IF  E           K        DISK
+     F            REEODPFF                          KIGNORE
+     F            MADJPFF                           KIGNORE
+     F            ICHGR1F                           KRENAMERCHGR1
+     F            ICHGR2F                           KIGNORE
+     F            ICHGR3F                           KIGNORE
+     FRE4016P1O   E             89     PRINTER      KINFDS SPOOL1
+      *
+      *****************************************************************
+      *
+      ** Rename fields in RERCH1PD for record format RERCH1
+      *
+     IRERCH1
+     I              ZZ006                           ZZ006A
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CRE073
+     I** MIDAS Switchable Features Accessed Via Access Program                                CRE073
+     I*                                                                                       CRE073
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      244 246 WSID
+     I                                      254 263 SUSER
+      *
+      ** File information data structure - P1
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ** Parameters
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Currency details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+     I              'User Input Today'    C         CONIC
+     I              'Credit '             C         CONCR
+     I              'Debit  '             C         CONDR
+      *
+     I              ': Fixed Rate '       C         CONFIX
+     I              'Base Rate '          C         CONBAS
+     I              'Tiered Rate '        C         CONTIE
+     I              'Spread Rate '        C         CONSPR
+     I              'Initial Balance '    C         CONBAL
+     I              ': Cont.Spread/Sign ' C         CONCSS                                    CRE073
+     I              ': Rounding Method '  C         CONRD1                                    CRE073
+     I              'Frc/Dec '            C         CONRD2                                    CRE073
+      *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C                     EXSR MAIN
+      *
+     C                     EXSR END
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main Processing                                     *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C                     MOVEL*ON       *IN89
+      *
+     C           MODE      IFEQ 'USER'
+     C           1         SETLLREPPA2PD
+     C                     READ REPPA2PD                 90
+     C                     ELSE
+     C                     EXSR READ
+     C                     ENDIF
+     C           *IN90     DOWEQ'0'
+      *
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, execute *PSSR
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   W0REAS256
+      *
+      ** Account Number
+      *
+     C                     MOVELE2KEY1    WACNO  10
+     C                     CAT  WACNO:1   W0REAS
+      *
+      ** Value Date
+      *
+     C                     Z-ADDE2VDAT    ZDAYNO
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM 'D'       ZDATFM  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+      *
+     C                     CAT  ' ':1     W0REAS
+     C                     CAT  ZADATE:1  W0REAS
+     C                     CAT  '   ':1   W0REAS
+      *
+      ** Maturity Date
+      *
+     C           E2MDAT    IFGE 24838
+     C                     MOVE '-------' ZADATE
+     C                     ELSE
+     C                     Z-ADDE2MDAT    ZDAYNO
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM 'D'       ZDATFM  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+      *
+     C                     ENDIF
+      *
+     C                     CAT  ZADATE:1  W0REAS
+     C                     CAT  '      ':1W0REAS
+      *
+      ** If Input Cucle rate change then write in report that the user input today
+      *
+     C********** MPHAS     IFNE 'A'                                                           CCB020
+     C           COBST     IFEQ '*YES'                                                        CCB020
+     C                     MOVE *BLANKS   R1INCY
+     C           TIME      IFNE 235959
+     C                     CAT  CONIC:1   R1INCY
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Debit Processing
+      *
+     C           ODRCR     IFEQ 0
+     C                     CAT  CONDR:1   W0REAS
+     C                     CAT  ' ':1     W0REAS
+      *
+      ** Tiered threshold
+      *
+     C           E2DICT    IFNE 0
+     C                     CAT  CONTIE:1  W0REAS
+     C                     MOVE E2DICT    WXNICT  2
+     C                     MOVE E2DCST    WXNCST  5
+     C                     CAT  WXNICT:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     CAT  WXNCST:1  W0REAS
+     C                     ENDIF
+      *
+      ** Base rate
+      *
+     C           E2DRIB    IFNE 0
+     C                     CAT  CONBAS:1  W0REAS
+     C                     MOVE E2DRIB    WXNRIB  2
+     C                     CAT  WXNRIB:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     ENDIF
+      *
+      ** Spread rate
+      *
+     C                     MOVE 'N'       DSPRED  1
+     C           E2DRIB    IFEQ 0
+     C           E2DICT    ANDEQ0
+     C                     CAT  CONSPR:1  W0REAS
+     C                     MOVE E2DRIS    ZFLD
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM 7         ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C                     MOVE ZOUT21    WXNRIS  9
+     C                     CAT  WXNRIS:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     MOVE 'Y'       DSPRED
+     C                     ENDIF
+      *                                                                                       CRE073
+      ** Contractual Spread/Sign & Rounding Method Frac/Dec                                   CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C           DSPRED    ANDEQ'Y'                                                           CRE073
+      *                                                                                       CRE073
+     C                     CAT  CONCSS:1  W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Contractual Spread Rate                                                              CRE073
+      *                                                                                       CRE073
+     C                     MOVE E2DCSP    ZFLD                                                CRE073
+      *                                                                                       CRE073
+     C                     CALL 'ZSEDIT'                                                      CRE073
+     C                     PARM           ZFLD   150                                          CRE073
+     C                     PARM 7         ZDECS   10                                          CRE073
+     C                     PARM '3'       ZECODE  1                                           CRE073
+     C                     PARM           ZOUT21 21                                           CRE073
+      *                                                                                       CRE073
+     C                     MOVE ZOUT21    WXDCSP 13                                           CRE073
+     C                     CAT  WXDCSP:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Contractual Spread Sign                                                              CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2DCSG:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Rounding Method                                                                      CRE073
+      *                                                                                       CRE073
+     C                     CAT  CONRD1:1  W0REAS                                              CRE073
+     C                     CAT  CONRD2:1  W0REAS                                              CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2DRMT:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Rounding Fraction/Decimal                                                            CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2DRFD:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+     C                     ENDIF                                                              CRE073
+      *
+      ** Initial balance
+      *
+     C                     MOVE ' '       WXINBA  1
+     C           E2DNIR    IFEQ 'P'
+     C           E2DCST    ANDNE0
+     C                     MOVE 'Y'       WXINBA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Credit Processing
+      *
+     C           ODRCR     IFEQ 1
+     C                     CAT  CONCR:1   W0REAS
+      *
+      ** Tiered threshold
+      *
+     C           E2CICT    IFNE 0
+     C                     CAT  CONTIE:1  W0REAS
+     C                     MOVE E2CICT    WXNICT  2
+     C                     MOVE E2CCST    WXNCST  5
+     C                     CAT  WXNICT:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     CAT  WXNCST:1  W0REAS
+     C                     ENDIF
+      *
+      ** Base rate
+      *
+     C           E2CRIB    IFNE 0
+     C                     CAT  CONBAS:1  W0REAS
+     C                     MOVE E2CRIB    WXNRIB  2
+     C                     CAT  WXNRIB:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     ENDIF
+      *
+      ** Spread rate
+      *
+     C                     MOVE 'N'       CSPRED  1
+      *
+     C           E2CRIB    IFEQ 0
+     C           E2CICT    ANDEQ0
+     C                     CAT  CONSPR:1  W0REAS
+     C                     MOVE E2CRIS    ZFLD
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM 7         ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C                     MOVE ZOUT21    WXNRIS  9
+     C                     CAT  WXNRIS:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     MOVE 'Y'       CSPRED
+     C                     ENDIF
+      *                                                                                       CRE073
+      ** Contractual Spread/Sign & Rounding Method Frac/Dec                                   CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C           CSPRED    ANDEQ'Y'                                                           CRE073
+      *                                                                                       CRE073
+     C                     CAT  CONCSS:1  W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Contractual Spread Rate                                                              CRE073
+      *                                                                                       CRE073
+     C                     MOVE E2CCSP    ZFLD                                                CRE073
+      *                                                                                       CRE073
+     C                     CALL 'ZSEDIT'                                                      CRE073
+     C                     PARM           ZFLD   150                                          CRE073
+     C                     PARM 7         ZDECS   10                                          CRE073
+     C                     PARM '3'       ZECODE  1                                           CRE073
+     C                     PARM           ZOUT21 21                                           CRE073
+      *                                                                                       CRE073
+     C                     MOVE ZOUT21    WXCCSP 13                                           CRE073
+     C                     CAT  WXCCSP:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Contractual Spread Sign                                                              CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2CCSG:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Rounding Method                                                                      CRE073
+      *                                                                                       CRE073
+     C                     CAT  CONRD1:1  W0REAS                                              CRE073
+     C                     CAT  CONRD2:1  W0REAS                                              CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2CRMT:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+      ** Rounding Fraction/Decimal                                                            CRE073
+      *                                                                                       CRE073
+     C                     CAT  E2CRFD:1  W0REAS                                              CRE073
+     C                     CAT  ' ':1     W0REAS                                              CRE073
+      *                                                                                       CRE073
+     C                     ENDIF                                                              CRE073
+      *
+      ** Initial balance
+      *
+     C                     MOVE ' '       WXINBA
+      *
+     C           E2CNIR    IFEQ 'P'
+     C           E2CCST    ANDNE0
+     C                     MOVE 'Y'       WXINBA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Numerical Amounts
+      ** Fixed or Simple
+      *
+     C           E2DNIR    IFEQ 'P'
+     C           DSPRED    ANDEQ'N'
+     C           ODRCR     ANDEQ0
+     C           E2CNIR    OREQ 'P'
+     C           CSPRED    ANDEQ'N'
+     C           ODRCR     ANDEQ1
+      *
+     C                     CAT  CONFIX:1  W0REAS
+      *
+      ** Rate
+      *
+     C                     MOVE X1NRIS    ZFLD
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM 7         ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C                     MOVE ZOUT21    WXNRIS  9
+     C                     CAT  WXNRIS:1  W0REAS
+     C                     CAT  ' ':1     W0REAS
+     C                     ENDIF
+      *
+      ** Initial balance
+      *
+     C           WXINBA    IFEQ 'Y'
+     C                     Z-ADDE2BALN    ZFLD
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM E2CCY     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL@CYCD     DBKEY
+     C                     Z-ADD001       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM A6NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C           16        SUBSTZOUT21:5  WXBALN 16
+     C                     CAT  CONBAL:1  W0REAS
+     C                     CAT  WXBALN:1  W0REAS
+     C           E2BALN    IFLT 0
+     C                     CAT  '-':1     W0REAS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  1         W0NBRU  80
+      *
+      ** Write to spool file
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVEL*OFF      *IN89
+     C                     ADD  1         PAGNBR  50
+     C                     WRITEAUHEAD
+     C                     ENDIF
+      *
+     C           CRE073    IFEQ 'Y'                                                         AR851810
+     C                     SUBSTW0REAS:1  W1REAS112                                         AR851810
+     C                     SUBSTW0REAS:113W2REAS112                                         AR851810
+     C                     MOVELW1REAS    R1NARR                                            AR851810
+     C                     WRITEAUDETS                                                      AR851810
+      *                                                                                     AR851810
+     C           W2REAS    IFNE *BLANKS                                                     AR851810
+     C                     MOVELW2REAS    R1NARR                                            AR851810
+     C                     WRITEAUDETS                                                      AR851810
+     C                     ENDIF                                                            AR851810
+      *                                                                                     AR851810
+     C                     ELSE                                                             AR851810
+     C                     MOVELW0REAS    R1NARR
+     C                     WRITEAUDETS
+      *                                                                                     AR851810
+     C                     ENDIF                                                            AR851810
+      *
+     C           MODE      IFEQ 'USER'
+     C                     READ REPPA2PD                 90
+     C                     ELSE
+      *
+     C                     EXSR READ
+      *
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  READ   - Read through rate changes today until a Term &      *
+      *            Notice account is found                            *
+      *                                                               *
+      *****************************************************************
+     C           READ      BEGSR
+      *
+      ** Read through rate changes today until a Term & Notice account is found
+      *
+     C                     SETON                     90
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     READ RERCH1PD                 91
+     C                     ELSE
+     C                     READ REDPOSL                  91
+     C                     ENDIF
+      *
+     C           *IN91     DOWEQ'0'
+     C           *IN90     ANDNE'0'
+     C                     MOVE BRCA      REBRCA  3
+     C                     MOVE CNUM      RECNUM  6
+     C                     MOVE CCY       RECCY   3
+     C                     Z-ADDACOD      REACOD 100
+     C                     Z-ADDACSQ      REACSQ  20
+     C           KREPR1    CHAINREPRPNPD             90
+      *
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDDRCR      ODRCR
+     C                     Z-ADDINTP      X1NICT
+     C                     Z-ADDINST      X1NCST
+     C                     Z-ADDBRT       X1NRIB
+     C                     Z-ADDRTSP      X1NRIS
+     C                     ELSE
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C                     READ RERCH1PD                 91
+     C                     ELSE
+     C                     READ REDPOSL                  91
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  END    - Program Termination Processing                      *
+      *                                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVEL*OFF      *IN89
+     C                     ADD  1         PAGNBR  50
+     C                     WRITEAUHEAD
+     C                     END
+     C           W0NBRU    IFEQ 0
+     C                     WRITENODETL
+     C                     ELSE
+     C                     WRITEAUEOR
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialization Processing                   *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    4
+      *
+     C           KREPR1    KLIST
+     C                     KFLD           REBRCA  3
+     C                     KFLD           RECNUM  6
+     C                     KFLD           RECCY   3
+     C                     KFLD           REACOD 100
+     C                     KFLD           REACSQ  20
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   DSSDY
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C********** *NAMVAR   DEFN           MPHAS   1                                           CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *
+     C                     Z-ADD0         W0NBRU  80
+     C                     Z-ADD0         PAGNBR  50
+      *                                                                                       CRE073
+      ** Check if Switchable Feature CRE073 is installed                                      CRE073
+      *                                                                                       CRE073
+     C                     CALL 'AOSARDR0'                                                    CRE073
+     C                     PARM *BLANKS   PRTCD   7                                           CRE073
+     C                     PARM '*VERIFY' POPTN   7                                           CRE073
+     C                     PARM 'CRE073'  PSARD   6                                           CRE073
+     C           SCSARD    PARM SCSARD    DSSDY                                               CRE073
+      *                                                                                       CRE073
+     C           PRTCD     IFEQ *BLANKS                                                       CRE073
+     C                     MOVE 'Y'       CRE073  1                                           CRE073
+     C                     ELSE                                                               CRE073
+     C                     MOVE 'N'       CRE073                                              CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C           PRTCD     IFNE *BLANK                                                        CRE073
+     C           PRTCD     ANDNE'*NRF   '                                                     CRE073
+     C                     SETON                     U7U8LR                                   CRE073
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRE073
+     C                     MOVELPRTCD     DBKEY                                               CRE073
+     C                     MOVE 002       DBASE                                               CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     END                                                                CRE073
+      *                                                                                       CRE073
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR

@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DMLIB MS files Reorganisation')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - S.W.I.F.T. DIRECT LINK Module                       */
+/*                                                                   */
+/*       MSC000800 - MS DMLIB Files Reorganisation                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD030179 *CREATE   Date 15Jun15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD030179 - MGHISTPD has never been reorganized. Introduce   */
+/*                  new component to organize MS file in COB.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('MSC000800 - MS DMLIB Files Reorganisation') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Reorganise files */
+ 
+             CALL       PGM(SCC000060) PARM('MGHISTPD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('MSC000800 - MS DMLIB Files Reor+
+                          ganisation FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

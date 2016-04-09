@@ -1,0 +1,292 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SDCSY - Input Cycle Initiation for Mode 0                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 15Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG9619            Date 01Feb06              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      059503             DATE 22JUN94              */
+/*                      059503             DATE 22JUN94              */
+/*                      059268             DATE 07DEC93              */
+/*                      E29436             DATE 11OCT91              */
+/*                      S01343             DATE 15AUG91              */
+/*                      RT0159             DATE 25JUN91              */
+/*                      E22248             DATE 29MAY90              */
+/*                      S01117             DATE 29MAR90              */
+/*                      E20434             DATE 06DEC89              */
+/*                      E18194             DATE 24/09/89             */
+/*                      E19387             DATE 30/08/89             */
+/*                      E18675             DATE 15/06/89             */
+/*                      E17386             DATE 19/03/89             */
+/*                      E17261             DATE 03/03/89             */
+/*                      E16900             DATE 09/02/89             */
+/*                      E16376             DATE 02/01/89             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP004  - Replacement for SCBEGIN.                          */
+/*       BUG9619 - Close of business components run long if journal  */
+/*                 cache is enabled                                  */
+/*       059503 - Workstation ID truncated when updated to file      */
+/*                MNTYF.  Include the 10char field WSTI to file      */
+/*                MNTYF.  Update all programs using CMTTXT (COMMIT   */
+/*                TEXT) accordingly.                                 */
+/*       059268 - Initialise the dataarea MNATN to 1.                */
+/*       E29436 - MOVED TO SOURCE FILE SCCLSRC FROM SDCLSRC.         */
+/*       S01343 - SC/RR/SD MODULE RENAME PROJECT.                    */
+/*                - MRUNQP RENAMED TO SCRUNQP                        */
+/*                - L1BGIN RENAMED TO SCBEGIN                        */
+/*                - EODRQH RENAMED TO SCEODRQH                       */
+/*                - SDC1710 RENAMED TO SCC1710                       */
+/*                - SDC01 RENAMED TO SCC01                           */
+/*       RT0159 - Messages should be sent via new Midas Info Screen. */
+/*       E22248 - TFRCTL FROM SCBEGIN CHANGED TO CALL THEREFORE      */
+/*                MAKING TFRCTL BACK TO SCBEGIN REDUNDANT            */
+/*       S01117 - RELEASE 10 ENHANCEMENTS REMOVAL OF CALL TO         */
+/*                SDC0101                                            */
+/*       E20434 - DB ID SHORTNAME SENT TO DATA AREA LDA INSTEAD OF   */
+/*                JNSTAT SO THAT FIRST B.O.B. SAVE PICKS IT UP.      */
+/*                THIS MAKES THE USE OF JNSTAT REDUNDANT.            */
+/*       E18194 - RTVDTAARA(JNSTAT) MOVED TO AFTER THE CALL TO       */
+/*                SDC1740 BECAUSE SDC1740 CALLS SD1740 WHICH         */
+/*                UPDATES JNSTAT.                                    */
+/*       E19387 - RESET JOB SWITCHES TO ZEROS                        */
+/*       E18675 - CHGDTAARA ALTERED TO ONLY CHANGE SUBSTRING         */
+/*                CONTAINING DAY SHORTNAME.                          */
+/*       E17386 - DAY SHORTNAME REQUESTED FOR DB ID.                 */
+/*       E17261 - 'SETUP' PLACED IN POSITION 1 OF DATA AREA SDSTAT   */
+/*       E16900 - CALL GL2551 TO SET UP ECAC AND ELAC FIELDS         */
+/*                IF RETAIL MODULE PRESENT IN SYSTEM.                */
+/*       E16376 - ON NORMAL COMPLETION SDCSY WILL NOW:               */
+/*                1. CHANGE DTAARA MPHAS TO 'A'                      */
+/*                2. END COMMITMENT CONTROL                          */
+/*                3. START MIDAS SUBSYSTEM.                          */
+/*                4. TRANSFER CONTROL TO THE SUBSYSTEM.              */
+/*                                                                   */
+/*********************************************************************/
+PGM
+             DCL        &MSG          TYPE(*CHAR)  LEN(75)
+/************DCL        &TOTRCDS      TYPE(*CHAR)  LEN(5)          */ /*E17261*/
+             DCL        &JOB   *CHAR 10
+/************DCL        &CMTTXT *CHAR 115                         */ /*059503*/
+             DCL        &CMTTXT *CHAR 460                            /*059503*/
+             DCL        &WSID *CHAR 3
+             DCL        &WSTI *CHAR 10                               /*059503*/
+             DCL        &USRID *CHAR 10
+             DCL        &TIME *CHAR 6
+             DCL        VAR(&BLNK339) TYPE(*CHAR) LEN(339) +
+                        VALUE(' ')                                   /*059503*/
+             DCL        &LIBGRP *CHAR 2                               /*E16376*/
+             DCL        &SBS *CHAR 6                                  /*E16376*/
+             DCL        &DAY *CHAR 3                                  /*E17386*/
+/**/
+/************DCL        VAR(&JNSTAT) TYPE(*CHAR) LEN(200)          */ /*E18675*/
+/************DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)          */ /*E17261*/
+/************DCL********VAR(&JNSTAT) TYPE(*CHAR) LEN(200)          */ /*E20434*/
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/*/COPY WNCPYSRC,SDCSY001                                            */
+             DCLF       FILE(SCEODRQH) RCDFMT(MIDASWAIT1 MIDASWAIT2)
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO ABNOR)
+/**/
+                                                                      /*E12192*/
+/**/                                                                  /*E19389*/
+/*  RESET JOB SWITCHES TO ZEROS */                                    /*E19389*/
+/**/                                                                  /*E19389*/
+             CHGJOB     SWS(00000000)                                 /*E19389*/
+/* */
+/** Initialise dtaara MNATN-Next Available Transaction No. to 1   */ /*059268*/
+/* */
+             CHGDTAARA  DTAARA(MNATN (1 5)) VALUE('00001')            /*059268*/
+ 
+/* RESET POSITION 60 OF DTAARA DLSTAT */
+ 
+             CHGDTAARA  DTAARA(DLSTAT (60 1)) VALUE('N') /* Reset +
+                          flag used to check if cm0240 has been +
+                          previously run during this eod */
+ 
+                                                                      /*E12192*/
+ 
+/************RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)*/              /*E18194*/
+/**/
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+             CHGVAR     &MSG VALUE('Input cycle initiation executing')
+             SNDPGMMSG  TOMSGQ(MOPERQ) MSG(&MSG)
+/**/
+/* DISPLAY MIDAS SCREEN                                           */
+             CHGVAR     VAR(&MSG1) VALUE(&MSG)
+             SNDF       RCDFMT(MIDASWAIT1)
+             SNDF       RCDFMT(MIDASWAIT2)
+/**/
+/*           CALL       PGM(SDC0101) */                               /*S01117*/
+/*           IF         COND(%SWITCH(1XXXXXXX)) THEN(DO)   */         /*S01117*/
+/*              GOTO       ENDCLPGM  */                               /*S01117*/
+/*           ENDDO   */                                               /*S01117*/
+/**/
+             IF         COND(%SWITCH(0XXXXXXX)) THEN(DO)
+/**/
+                OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+                CALL       SD1020
+                DLTOVR     (*ALL)
+/**/
+                IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+/**/
+                   CHGVAR     &MSG VALUE(' NO VALID DATE INPUT')
+/***********       SNDPGMMSG  TOPGMQ(*EXT) MSG(&MSG)                  /*RT0159*/
+                   CALL       PGM(SDC0700) PARM('SDCSY' +
+                                'NOVLDDATEI' ' ')                     /*RT0159*/
+                   GOTO       ENDCLPGM
+/**/
+                ENDDO
+/**/
+                IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO DBETAG)
+/**/
+                CLRPFM     FILE(RETAGD) MBR(*FIRST)
+/***************RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)          */ /*E17261*/
+/***************CHGVAR     VAR(&TOTRCDS) VALUE(%SUBSTRING(&SDSTAT 1 5)) E17261*/
+                OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+                CALL       SD1030
+/**/
+                DLTOVR     (*ALL)
+/**/
+                IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO DBETAG)
+/**/
+                                                                      /*E16900*/
+             IF         COND(%SST(&MMOD 16 1) *EQ 'Y') THEN(CALL +
+                          PGM(GL2551))                                /*E16900*/
+ 
+                IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO DBETAG)  /*E16900*/
+/**/
+                RCLRSC
+             ENDDO
+/**/
+/*        CHECK FOR ANY MIDAS ACTIVITY TO REPORT                   */
+                CHGMSGQ    MSGQ(MRUNQ) RESET(*YES)
+                RCVMSG     MSGQ(MRUNQ) MSGTYPE(*NEXT) MSGKEY(*TOP) +
+                           MSG(&MSG) RMV(*NO)
+/**/
+/*********** IF         COND(&MSG = ' ') THEN(SNDPGMMSG MSG('No +     /*RT0159*/
+/***********              Midas Activity To Report From +             /*RT0159*/
+/***********              MQ/MRUNQ') TOPGMQ(*EXT) TOMSGQ(MOPERQ))     /*RT0159*/
+             IF         COND(&MSG = ' ') THEN(DO)                     /*RT0159*/
+                SNDPGMMSG  MSG('No Midas Activity To Report From +
+                             MSGQ/MRUNQ') TOMSGQ(MOPERQ)              /*RT0159*/
+                CALL       PGM(SDC0700) PARM('SDCSY' +
+                             'NOMIDASACT' ' ')                        /*RT0159*/
+             ENDDO                                                    /*RT0159*/
+                ELSE       CMD(CALL PGM(SCRUNQP) PARM(R))
+/* DISPLAY MIDAS SCREEN                                            */
+/**/
+             SNDF       RCDFMT(MIDASWAIT1)
+             SNDF       RCDFMT(MIDASWAIT2)
+/**/
+             RTVJOBA    JOB(&JOB) USER(&USRID)
+             CALL       PGM(SDC1740)
+/************RTVDTAARA**DTAARA(JNSTAT) RTNVAR(&JNSTAT)  */ /*E18194*/ /*E20434*/
+/* SCREEN REQUEST FOR VALID DAY SHORTNAME                          */ /*E17386*/
+             SNDUSRMSG  MSGID(SET0001) MSGF(MIDAS) MSGRPY(&DAY)       /*E17386*/
+/************CHGVAR     VAR(%SST(&JNSTAT 63 5)) VALUE('DB' *cat +
+                          &DAY)                         */ /*E17386*/ /*E18675*/
+/************CHGDTAARA  DTAARA(JNSTAT) VALUE(&JNSTAT) */  /*E17386*/  /*E18675*/
+/***CHGDTAARA**DTAARA(JNSTAT*(63 5)) VALUE('DB' *CAT &DAY)/*E18675*/  /*E20434*/
+             CHGDTAARA  DTAARA(LDA (213 3)) VALUE(&DAY)               /*E20434*/
+/******      CALL       PGM(SDC1710)                                  /*S01343*/
+             CALL       PGM(SCC1710)                                  /*S01343*/
+/* NEW PROCESSING FOR JOURNALLING                                   */
+/***************STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))             /*CPK009*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)                                  /*CPK009*/
+/**/                                                       /*S01125*/
+                MONMSG MSGID(CPF8351)
+/**/                                                       /*S01125*/
+/**********     SNDJRNE    JRN(ICJRN) TYPE('BJ') */                                      /*BUG9619*/
+                SNDJRNE    JRN(ICJRN) TYPE('BJ') FORCE(*YES)                             /*BUG9619*/
+/**/
+             CHGVAR     VAR(&WSID) VALUE(&JOB)
+             CHGVAR     VAR(&WSTI) VALUE(&JOB)                       /*059503*/
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&TIME)
+/************CHGVAR     VAR(&CMTTXT) VALUE('       SDC01   ' *CAT +
+/************             &WSID *CAT &TIME *CAT ' ' *CAT &USRID +
+/************             *CAT '               MIDAS I/C Initiation +
+/************             - No committed transactions for this +
+/************             job')                                       /*S01343*/
+/************CHGVAR     VAR(&CMTTXT) VALUE('       SCC01   ' +   */ /*059503*/
+/************           *CAT &WSID *CAT &TIME *CAT ' ' *CAT +    */ /*059503*/
+/************           &USRID *CAT '               MIDAS I/C +  */ /*059503*/
+/************           Initiation - No committed transactions + */ /*059503*/
+/************           for this job')                           */ /*059503*/
+             CHGVAR     VAR(&CMTTXT) VALUE('       SCC01   ' +
+                        *CAT &WSID *CAT &TIME *CAT ' ' *CAT +
+                        &USRID *CAT '               MIDAS I/C +
+                        Initiation - No committed transactions +
+                        for this job' *CAT &BLNK339 *CAT &WSTI)     /*059503*/
+             OPNDBF     FILE(TABTB10) OPTION(*INP) COMMIT(*YES)
+             COMMIT     CMTID(&CMTTXT)
+             CLOF       OPNID(TABTB10)
+/**/                                                                  /*E16376*/
+             CHGDTAARA  DTAARA(SDSTAT (1 5)) VALUE('SETUP') /*E17261*/
+             CHGDTAARA  DTAARA(MPHAS) VALUE('A')                      /*E16376*/
+/*/COPY WNCPYSRC,SDCSY002                                            */
+             ENDCMTCTL                                                /*E16376*/
+             MONMSG CPF8350                                           /*E16376*/
+/**/                                                                  /*E16376*/
+/* NORMAL COMPLETION - START MIDAS SUBSYSTEM AND TRANSFER JOB */      /*E16376*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBGRP)          /*E16376*/
+             CHGVAR     VAR(&SBS) VALUE('M' *CAT &LIBGRP *CAT 'SBS')  /*E16376*/
+             STRSBS     SBSD(*LIBL/&SBS)                              /*E16376*/
+             MONMSG CPF0000                                           /*E16376*/
+                                                                      /*E16376*/
+             CHGJOB     OUTQ(MPRINT)                                  /*E16376*/
+             MONMSG CPF0000                                           /*E16376*/
+             TFRJOB     JOBQ(MJOBQ) RTGDTA('MIDASIC')                 /*E16376*/
+             MONMSG     MSGID(CPF0000) EXEC(DO)                       /*E16376*/
+                DLYJOB     DLY(60)                                    /*E16376*/
+                TFRJOB     JOBQ(MJOBQ) RTGDTA('MIDASIC')              /*E16376*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                    /*E16376*/
+/*********** SNDPGMMSG  MSG('JOB COMLETED NORMALLY BUT NOT +          /*RT0159*/
+/***********              TRANSFERRED TO MIDAS SUBSYSTEM AS SUBSYSTEM+/*RT0159*/
+/***********              NOT ACTIVE') TOPGMQ(*EXT)             /*E16376RT0159*/
+                   CALL       PGM(SDC0700) PARM('SDCSY' +
+                                'CNMSBSNACT' ' ')                     /*RT0159*/
+                   GOTO THEEND                                        /*E16376*/
+                ENDDO                                                 /*E16376*/
+             ENDDO                                                    /*E16376*/
+                                                                      /*E16376*/
+/**/                                                                  /*E16376*/
+DBETAG:
+/***********    SNDPGMMSG  TOPGMQ(*EXT) MSG('DATABASE IN ERROR - +    /*RT0159*/
+/***********                                 CURRENT JOB TERMINATED') /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDCSY' 'DBERRJOBTM' ' ')   /*RT0159*/
+ABNOR:
+/*********** SNDPGMMSG  TOPGMQ(*EXT) MSG('I-C INITIATION +            /*RT0159*/
+/***********                              TERMINATED ABNORMALLY')     /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDCSY' 'ICTERMABN' ' ')    /*RT0159*/
+             MONMSG     MSGID(CPF0000 MCH0000) /* Monitor at every +
+                          line for possible error and avoid going to +
+                          the tag - 'ABNOR' */
+             MONMSG     MSGID(CPF0000 MCH0000) /* Monitor at every +
+                          line for possible error and avoid going to +
+                          the tag - 'ABNOR' */
+/**/
+                GOTO       THEEND
+/**/
+/**CLPGM:    CHGDTAARA  DTAARA(TSTATUS) VALUE('NORMAL  ') ***/        /*E16376*/
+ENDCLPGM:    CHGDTAARA  DTAARA(TSTATUS) VALUE('        ')             /*E16376*/
+/***********TFRCTL*L1BGIN*****/                            /*E16376*/ /*E22248*/
+THEEND:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM     /* END CL PGM */

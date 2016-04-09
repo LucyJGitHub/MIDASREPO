@@ -1,0 +1,56 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update UTMENUPD prior to normal PRCA')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUCnnnnn - Update UTEMNUPD prior to normal PRCA            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       Last Amend No. CUP040   *CREATE   Date 15Mar13              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP040 - New deliverable data methodology.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Retrieve System Value for Bridge delivered data library. */
+             CALL       PGM(GPAOSVALR0) PARM(' ' +
+                          'BrgDeliveredDtaLib  ' &SVAL1 ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ')
+             CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL1 1 10))
+ 
+/* Copy records for UTMENUPD (amend only) to UPAFDVPD. */
+             CPYF       FROMFILE(&BRGDTALIB/UPAFCPPD) +
+                          TOFILE(UPAFDVPD) MBROPT(*REPLACE) +
+                          INCREL((*IF ATFILE *EQ 'UTMENUPD') (*AND +
+                          ATACT *EQ 'A ') (*OR ATFILE *EQ +
+                          'UTMENUPD') (*AND ATACT *EQ 'AB'))
+ 
+/* Process amends. */
+             ACTIONFILE MODE(*PRC) FILE(UTMENUPD)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

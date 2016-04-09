@@ -1,0 +1,569 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Daily file setup')
+      ****************************************************************
+      *                                                              *
+      *  Midas - FX Dealer Module                                     *
+      *                                                              *
+      *     FX8010    - DAILY FILE SETUP                             *
+      *                                                              *
+      *     Function:   This program rolls forward the FX Treasury   *
+      *     (I/C INIT)  Management enquiry files during input cycle  *
+      *                 initiation.                                  *
+      *                                                              *
+      *     Called by: DLC6030 - Start of day reorganisation.        *
+      *                                                              *
+      *     Calls    : FX0670  - Update FX forward book files.       *
+      *                FX0680  - Setup daily equivalent, position    *
+      *                          and profits                         *
+      *                FX0590  - Revalue daily positions.            *
+      *                TM0311  - Update currency spot date.          *
+      *                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *     LAST AMEND NO. S01408             DATE 20JAN95           *
+      *     PREV AMEND NO. S01319             DATE  9DEC91           *
+      *                    S01319             DATE  4SEP91           *
+      *                    DT0166             DATE 06JUN91           *
+      *                    E20774             DATE 16MAR90           *
+      *                    E21015             DATE 18FEB90           *
+      *          AMEND NO. S01194             DATE  9JAN90           *
+      *          AMEND NO. E19136             DATE  2AUG89           *
+      *          AMEND NO. E14042             DATE 20/07/88          *
+      *          AMEND NO. E14321             DATE 15/07/88          *
+      *          AMEND NO. E12925             DATE 21/04/88          *
+      *          AMEND NO. S01136             DATE 08/12/87          *
+      *                                                              *
+      ****************************************************************
+      *                                                              *
+      * S01408 - Addition of core hook FX8010CCPG                    *
+      *          Addition of core hook FX8010CCP1                    *
+      * S01319 - Add call to new program TM0311 - Update currency    *
+      *(HY0021)  spot date. (This program replaces redundant program *
+      *          FD0311).                                            *
+      *                                                              *
+      * S01319 - Remove calls to redundant objects: FX0660, CM0020,  *
+      *          FXCUEXPP, FXCUPAPP, CAAHFDLL.                       *
+      *          Remove access of RUNDAT.                            *
+      *                                                              *
+      * DT0166 - Dealing Release 10 System Test Fix:                 *
+      *          FX1040 is now redundant; call to it removed.        *
+      *                                                              *
+      * E20774 - REPLACE QCAEXEC WITH QCMDEXC                        *
+      *                                                              *
+      * E21015 - FX REVALUATION TO BE SUBMITTED. (LN0304)            *
+      *                                                              *
+      * S01194 - NEW STANDING DATA FILES                             *
+      *                                                              *
+      * E19136 - Dump program if error occurs.                       *
+      *                                                              *
+      * E14042 - MULTISTREAMING START OF DAY PERFORMANCE MOD         *
+      *                                                              *
+      * E14321 - Program should clear FXCUPAPP before running        *
+      *          exposure file setup, so that new limits are used.   *
+      *                                                              *
+      * E12925 - Should not transmit data to the PC because it is    *
+      *          not attached                                        *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       60         CHAIN FAIL
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F***CAAHFDLLUF  E                 DISK         KINFSR #INFAH     UC  S01319
+     F********FDICDRLLIF  E   K        DISK         KINFSR #INFIC     UC  S01194
+     F************TABTB11F                          KIGNORE               S01136
+     F************TABTB20F                          KIGNORE               S01136
+      *
+     E****Array*to*hold*command*for*QCAEXEC*program.                      E20774
+     E**  Array to hold command for QCMDEXC program.                      E20774
+     E********            @CMD    1   1 21                                E14321
+     E******************* @CMD    1   2 21                         E14321 E14042
+     E******              @CMD    1   3 80                         E14042 S01319
+     E                    @CMD    1   1 80                                S01319
+     E                    CPY@    1   1 80                                S01194
+      *                                                                   S01194
+     I*RUNDAT     DS                             13                S01194 S01319
+      **RUN*DATE DATA AREA                                         S01194 S01319
+     I*****                                   1   20@DAY1          S01194 S01319
+     I*****                                   3   5 @MNTH1         S01194 S01319
+     I*****                                   1   3 @MNTH2         S01194 S01319
+     I*****                                   4   50@DAY2          S01194 S01319
+     I*****                                   6   70@YEAR          S01194 S01319
+     I*****                               P   8  100RUND           S01194 S01319
+     I*****                                  12  12 DATF           S01194 S01319
+     I*****RUNA        DS                                                 S01194
+      *****                                                               S01194
+      ***data structure to set up date of update                          S01194
+     I********                                1   20@DAY1                 S01194
+     I********                                3   5 @MNTH1                S01194
+     I********                                1   3 @MNTH2                S01194
+     I********                                4   50@DAY2                 S01194
+     I********                                6   70@YEAR                 S01194
+     I           UDS
+      *
+      **  Local data area for data base errors.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *                                                                   E14042
+      **  DATA STRUCTURE FOR STATUS                                       E14042
+     I@STATS      DS                            256                       E14042
+     I                                      100 100 @SUBMN                E14042
+     I                                      101 101 @STRM1                E14042
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - Control process                                    *
+      *                                                               *
+      * CALLS    #A       - initialization                            *
+      *          #B       - main processing                           *
+      *          #C       - termination                               *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR #A
+      *
+     C           @TERM     IFNE 'T'                        B1
+     C           @TERM     ANDNE'E'                        *1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+      *
+     C                     EXSR #C
+      *
+     C           ENDPGM    TAG
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #A       - initialization                                *
+      *  02  #B       - main processing                               *
+      *  03  #C       - termination                                   *
+      *  04  #INFAH   - fxahfdll error subroutine                     *
+      *  05  #INFIC   - fdicdrll error subroutine                     *
+      *  06  *PSSR    - program error subroutine                      *
+      ***07**#ZA      - calls cm0020                                  *   S01319
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      ***08**FX0660   - setup new customer exposures                  *   S01319
+      *  09  FX0670   - forward book file reorganization              *
+      *  10  FX0680   - equivalents, positions and profit file        *
+      ***11**CM0020   - format and transmit data to pc                *   S01319
+      *******QCAEXEC**-*to*clear*FXCUEXPP*before*FX0660*is*run        *   E20774
+      *******QCMDEXC  - to clear FXCUEXPP before FX0660 is run     E20774 S01319
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - initialization                                     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *            @KEY   - key to fdicdrll                           *
+      *            @DAY1  - day in month                              *
+      *            @MNTH1 - month in year                             *
+      *            @DAY2  - day in month                              *
+      *            @MNTH2 - month in year                             *
+      *            @USER  - user id                                   *
+      *            @YEAR  - year                                      *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01194
+     C           @TERM     CABEQ'T'       #A9
+      *
+     C                     MOVEL'FX8010'  DBPGM
+      *
+     C           *NAMVAR   DEFN SDSTAT    @STATS
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+      *
+      ** open the data files
+     C******               OPEN CAAHFDLL                                  S01319
+     C***********          OPEN FDICDRLL                                  S01194
+      ***********                                                         S01194
+      ***get*data from ICD 1                                              S01194
+     C********             MOVE *BLANKS   @KEY   12                       S01194
+     C********             MOVEL'01'      @KEY                            S01194
+     C********             MOVE '10'      @KEY                            S01194
+     C********   @KEY      CHAINFDICDRLL             60                   S01194
+      ********                                                            S01194
+      *                                                                   S01194
+      ****GET RUNDAT TO RETIEVE THE RUN DATE                       S01194 S01319
+     C*****      *NAMVAR   DEFN           RUNDAT                   S01194 S01319
+     C*****                IN   RUNDAT                             S01194 S01319
+      *                                                                   S01194
+      ***if*the record is not found, then it is a                         S01194
+      ***data*base error                                                  S01194
+     C********   *IN60     IFEQ '1'                        B1             S01194
+     C********   RECI      ORNE 'D'                        *1             S01194
+     C********             MOVEL'FDICDRLL'DBFILE           ***************S01194
+     C********             MOVEL@KEY      DBKEY            *             *S01194
+     C********             MOVE '001'     DBASE            * DB ERROR 001*S01194
+     C********             MOVE '1'       *INU7            *             *S01194
+     C********             MOVE '1'       *INU8            ***************S01194
+     C********             MOVE '1'       *INLR            *1             S01194
+     C********             MOVE 'E'       @TERM            *1             S01194
+     C********             GOTO #A9                        *1             S01194
+     C********             END                             E1             S01194
+      *
+      ***get the flag update record                                       S01319
+     C*****      1         CHAINCAAHFDLL             60                   S01319
+      *****                                                               S01319
+      ***if the record is not found or it is deleted, then it is a        S01319
+      ***data base error                                                  S01319
+     C*****      *IN60     IFEQ '1'                        B1             S01319
+     C*****      FBDLTF    ORNE ' '                        *1             S01319
+     C*****                MOVEL'CAAHFDLL'DBFILE           ***************S01319
+     C***************      MOVEL@KEY      DBKEY            *              S01319
+     C*****                MOVEL'*FIRST'  DBKEY            *        S01194 01319
+     C*****                MOVE '002'     DBASE            * DB ERROR 002*S01319
+     C*****                MOVE '1'       *INU7            *             *S01319
+     C*****                MOVE '1'       *INU8            ***************S01319
+     C*****                MOVE '1'       *INLR            *1             S01319
+     C*****                MOVE 'E'       @TERM            *1             S01319
+     C*****                GOTO #A9                        *1             S01319
+     C*****                END                             E1             S01319
+      *****                                                               S01319
+      ***set up data for update of flag                                   S01319
+     C*****      DATF      IFEQ 'D'                        B1             S01319
+     C*****                Z-ADD@DAY1     FBDLUP           *1             S01319
+     C*****                MOVE @MNTH1    FBMLUP           *1             S01319
+     C*****                ELSE                            X1             S01319
+     C*****                Z-ADD@DAY2     FBDLUP           *1             S01319
+     C*****                MOVE @MNTH2    FBMLUP           *1             S01319
+     C*****                END                             E1             S01319
+      *****                                                               S01319
+     C*****                MOVEL@USER     FBLUID                          S01319
+     C*****                MOVE 'A'       FBCHTP                          S01319
+     C*****                Z-ADDRUND      FBLCD                           S01319
+     C*****                Z-ADD@YEAR     FBYLUP                          S01319
+     C*****                MOVE 'N'       FBAHFG                          S01319
+     C*****                TIME           FBTLUP                          S01319
+      *****                                                               S01319
+     C*****                UPDATCAAHFDP0
+      *
+      ** close the files
+     C*********            CLOSEFDICDRLL
+     C*****                CLOSECAAHFDLL                                  S01319
+      *
+     C           #A9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - main processing                                    *
+      *                                                               *
+      **CALLS****FX0660   - setup new customer exposures              *   S01319
+      * CALLS    FX0670   - forward book file reorganization          *
+      *          FX0680   - equivalents, positions and profit file    *
+      ***********QCAEXEC**-*to*clear*FXCUEXPP*before*FX0660*is*run    *   E20774
+      ***********QCMDEXC  - to clear FXCUEXPP before FX0660 is run E20774 S01319
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ****Execute*the*command*by*calling*QCAEXEC,*with*parameters*of      E20774
+      **  Execute the command by calling QCMDEXC, with parameters of      E20774
+      **   the data structure @OVRD and @LEN .To CLRPFM FXCUEXPP
+     C*********************CALL 'QCAEXEC'                                 E20774
+     C*****                CALL 'QCMDEXC'                          E20774 S01319
+     C********             PARM           @CMD                            E14321
+     C*****                PARM           @CMD,1                   E14321 S01319
+     C*****                PARM 21        @LEN   155                      S01319
+     C*                                                                   E14321
+     C** CLEAR FXCUPAPP TO ALLOW GENERATION OF NEW CUSTOMER LIMIT DATA    E14321
+     C*********************CALL 'QCAEXEC'                           E14321E20774
+     C*****                CALL 'QCMDEXC'                          E20774 S01319
+     C*****                PARM           @CMD,2                   E14321 S01319
+     C*****                PARM 21        @LEN   155               E14321 S01319
+      *
+      ***CUSTOMER EXPOSURE PROCESSING                                     S01319
+     C******               CALL 'FX0660'                                  S01319
+      *
+     C** Update spot dates on currency file.                              S01319
+     C*                                                                   S01319
+     C                     CALL 'TM0311'                                  S01319
+     C*                                                                   S01319
+      ** REBUILD FX FORWARD BOOK                                          S01319
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX8010CCPG                                           S01408
+     C*                                                                   S01408
+     C                     CALL 'FX0670'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FX8010CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      ** DAILY EQUIVALENTS, POSITIONS AND PROFITS PROCESSING
+     C                     CALL 'FX0680'
+      *
+     C*  FX REVALUATION TO BE RUN BEFORE INPUT CYCLE               E21015
+     C                     CALL 'FX0590'                           E21015
+     C*                                                            E21015
+      *
+     C*********************CALL 'FX1040'                                  DT0166
+     C***********@TERM*****PARM           @TERM                           DT0166
+      *
+     C           #B9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - termination                                        *
+      *                                                               *
+      **CALLS****#ZA      - calls cm0020                              *   S01319
+      * CALLS      QCMDEXC                                            *   S01319
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+     C***********@TERM     IFEQ 'E'                        B1             E12925
+     C***********          EXSR #ZA                        *1             E12925
+     C***********          ELSE                            X1             E12925
+     C***********          MOVE '1'       *INLR            *1             E12925
+     C***********          END                             E1             E12925
+     C           *LOCK     IN   @STATS                              E14042
+     C                     MOVE @SUBMN    @SUBM1  10                E14042
+     C                     SUB  1         @SUBM1                    E14042
+     C                     MOVE @SUBM1    @SUBMN                    E14042
+     C           @TERM     IFEQ 'E'                        B1       E14042
+     C                     MOVE 'X'       @STRM1           *1       E14042
+     C*********************CALL 'QCAEXEC'                           E14042E20774
+     C                     CALL 'QCMDEXC'                                 E20774
+     C*****                PARM           @CMD,3                    E14042S01319
+     C                     PARM           @CMD,1                          S01319
+     C                     PARM 80        @LEN   155                E14042
+     C                     DUMP                            *1             E19136
+     C                     END                             E1       E14042
+     C                     OUT  @STATS                              E14042
+     C                     MOVE '1'       *INLR                           E12925
+      *
+     C                     RETRN
+      *
+     C           #C9       ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INFAH   - fxahfdll error subroutine                          *
+      *                                                               *
+      * CALLS    #ZB      - Control process                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @ERR2  - error flag                                *
+      *                                                               *
+      *****************************************************************
+     C           #INFAH    BEGSR
+      *
+      ** set @err2 to Y to prevent looping
+     C           @ERR2     IFNE 'Y'                        B1
+      *
+     C                     MOVE 'Y'       @ERR2   1        *1
+      *
+      ***call cm0020 to tell pc that an error occurred
+     C***********          EXSR #ZA                        *1             E12925
+      *
+      ** set up fields in *lda
+     C                     MOVEL'CAAHFDLL'DBFILE           *1
+     C                     MOVE '003'     DBASE            *1
+     C                     MOVEL'FX8010'  DBPGM            *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      *   Reduce No of Active jobs, send message                    E14042
+     C           *LOCK     IN   @STATS                              E14042
+     C                     MOVE @SUBMN    @SUBM1                    E14042
+     C                     SUB  1         @SUBM1                    E14042
+     C                     MOVE @SUBM1    @SUBMN                    E14042
+     C                     MOVE 'X'       @STRM1                    E14042
+     C                     OUT  @STATS                              E14042
+     C*********************CALL 'QCAEXEC'                           E14042E20774
+     C                     CALL 'QCMDEXC'                                 E20774
+     C*****                PARM           @CMD,3                    E14042S01319
+     C                     PARM           @CMD,1                          S01319
+     C                     PARM 80        @LEN   155                E14042
+      *                                                             E14042
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C           #INFA9    ENDSR
+      *****************************************************************
+      ******/EJECT
+      *****************************************************************
+      ******                                                          *   S01194
+      **#INFIC   - fdicdrll error subroutine                          *   S01194
+      ******                                                          *   S01194
+      **CALLS    #ZB      - Control process                           *   S01194
+      ******                                                          *   S01194
+      **CALLED BY         -                                           *   S01194
+      ******                                                          *   S01194
+      **FLDS USED  @ERR2  - error flag                                *   S01194
+      *********                                                       *   S01194
+      *****************************************************************   S01194
+     C*********  #INFIC    BEGSR                                          S01194
+      ********                                                            S01194
+      ***set*@err2 to Y to prevent looping                                S01194
+     C********   @ERR2     IFNE 'Y'                        B1             S01194
+      ********                                                            S01194
+     C********             MOVE 'Y'       @ERR2   1        *1             S01194
+      ********                                                            S01194
+      ***call*cm0020 to tell pc that an error occurred                    S01194
+     C**********           EXSR #ZA                        *1      E12925 S01194
+      **********                                                          S01194
+      ***set*up*fields in *lda                                            S01194
+     C********             MOVEL'FXICDRLL'DBFILE           *1             S01194
+     C********             MOVE '004'     DBASE            *1             S01194
+     C********             MOVEL'FX8010'  DBPGM            *1             S01194
+     C********             DUMP                            *1             S01194
+     C********             END                             E1             S01194
+      ********                                                            S01194
+      ****Reduce No of Active jobs, send message                    E14042S01194
+     C********   *LOCK     IN   @STATS                              E14042S01194
+     C********             MOVE @SUBMN    @SUBM1                    E14042S01194
+     C********             SUB  1         @SUBM1                    E14042S01194
+     C********             MOVE @SUBM1    @SUBMN                    E14042S01194
+     C********             MOVE 'X'       @STRM1                    E14042S01194
+     C********             OUT  @STATS                              E14042S01194
+     C********             CALL 'QCAEXEC'                           E14042S01194
+     C********             PARM           @CMD,3                    E14042S01194
+     C********             PARM 80        @LEN   155                E14042S01194
+      ********                                                      E14042S01194
+     C********             MOVE '1'       *INU7                           S01194
+     C********             MOVE '1'       *INU8                           S01194
+     C********             MOVE '1'       *INLR                           S01194
+      ********                                                            S01194
+     C********             RETRN                                          S01194
+      ********                                                            S01194
+     C********   #INFI9    ENDSR                                          S01194
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - program error subroutine                           *
+      *                                                               *
+      * CALLS    #ZB      - Control process                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @ERR2  - error flag                                *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** set @err2 to Y to prevent looping
+     C           @ERR2     IFNE 'Y'                        B1
+      *
+     C                     MOVE 'Y'       @ERR2   1        *1
+      *
+      ***call cm0020 to tell pc that an error occurred
+     C************         EXSR #ZA                        *1             E12925
+      *
+      ** set up fields in *lda
+     C                     MOVE '005'     DBASE            *1
+     C                     MOVEL'FX8010'  DBPGM            *1
+     C                     DUMP                            *1
+      *   Reduce No of Active jobs, send message                    E14042
+     C           *LOCK     IN   @STATS                     *1       E14042
+     C                     MOVE @SUBMN    @SUBM1           *1       E14042
+     C                     SUB  1         @SUBM1           *1       E14042
+     C                     MOVE @SUBM1    @SUBMN           *1       E14042
+     C                     MOVE 'X'       @STRM1           *1       E14042
+     C                     OUT  @STATS                     *1       E14042
+     C*********************CALL 'QCAEXEC'                  *1       E14042E20774
+     C                     CALL 'QCMDEXC'                  *1             E20774
+     C*****                PARM           @CMD,3           *1       E14042S01319
+     C                     PARM           @CMD,1           *1             S01319
+     C                     PARM 80        @LEN   155       *1       E14042
+      *                                                             E14042
+     C                     END                             E1
+      *
+     C                     MOVE '1'       *INU6
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ZA      - calls cm0020                                       *
+      *                                                               *
+      * CALLS    CM0020   - format and transmit data to pc            *
+      *                                                               *
+      * CALLED BY  #C     - termination                               *
+      *                                                               *
+      * FLDS USED  @TERM  - termination parameter                     *
+      *            @EMID  - parameter for cm0020                      *
+      *            @SWER  - parameter for cm0020                      *
+      *            @PARM2 - parameter for cm0020                      *
+      *            @PARM3 - parameter for cm0020                      *
+      *            @PARM4 - parameter for cm0020                      *
+      *                                                               *
+      *****************************************************************
+     C***********#ZA       BEGSR                                          E12925
+      *                                                                   E12925
+      ** call cm0020                                                      E12925
+     C***********          CALL 'CM0020'                                  E12925
+     C***********          PARM ' '       @TERM   1                       E12925
+     C***********          PARM 'SE'      @EMID   2                       E12925
+     C***********          PARM 'Y'       @SWER   1                       E12925
+     C***********          PARM *BLANKS   @PARM2  1                       E12925
+     C***********          PARM *BLANKS   @PARM3  3                       E12925
+     C***********          PARM *BLANKS   @PARM4  1                       E12925
+      *                                                                   E12925
+     C***********#ZA9      ENDSR                                          E12925
+      ******CLRPFM FILE(FXCUEXPP)   (REMOVED FROM ARRAY @CMD)             S01319
+      ******CLRPFM FILE(FXCUPAPP)   (REMOVED FROM ARRAY @CMD)             S01319
+      *****************************************************************
+      /EJECT
+** Array data for @CMD; holds CL command.
+SNDMSG  ('FX8010 has ended abnormally in batch.') TOMSGQ(MOPERQ)
+**
+(c) Misys International Banking Systems Ltd. 2001

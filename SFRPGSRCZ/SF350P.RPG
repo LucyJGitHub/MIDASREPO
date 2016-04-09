@@ -1,0 +1,256 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Users Access Rights report')
+     F********************************************************************
+     F*                                                                 **
+     F*  Midas  SECURITY PROFILE FACILITY                               **
+     F*                                                                 **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+     F*  SF350P - Prompt for Access Rights of Midas Plus Users Report   **
+     F*                                                                 **
+      *  (c) Misys International Banking Systems Ltd. 2007               *
+     F*                                                                  *
+     F*     Last Amend No. 246097  *CREATE    DATE 13Apr07               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  246097 - Make report selectable by User Profile                 *
+     F*                                                                 **
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSF350PDFCF  E                    WORKSTN
+     FMUSER   IF  E           K        DISK
+     F*
+     F*                 ************************
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F*
+     F*  01 - F3 PRESSED
+     F*  02 - F12 PRESSED
+     F*  03 - F10 ALLOWED
+     F*  04 - F10 PRESSED                                                 E30666
+     F*  05 - PROTECT WRITE FIELDS (FIRST SCREEN FORMAT)
+     F*  06 - PROTECT WRITE FIELDS (SECOND AND THIRD SCREEN FORMAT)
+     F*  07 - EXIT NO ERROR
+     F*  10 - ERROR CONDITION FOR 1ST SCREEN
+     F*  11 - ERROR CONDITION FOR 1ST SCREEN
+     F*  12 - ERROR CONDITION FOR 1ST SCREEN
+     F*  20 - OPTION MUST BE '1' OR '2'
+     F*  21 - USER PROFILE MUST EXIST
+     F*  22 - BRANCH MUST EXIST
+     F*  23 - DEPARTMENT MUST EXIST
+     F*  50 - SINGLE BRANCH ENVIRONMENT
+     F*  99 - CHAIN FAIL ON MUSER
+     F*
+     E                    ERR     1   3 60
+     E                    CPY@    1   1 80
+     IPSDS       SDS
+     I**
+     I**     Program status data structure.
+     I**
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     ITEMP        DS                            100
+     I*
+     I*     DATA STRUCTURE TO STORE PARAMETERS
+     I*
+     I                                        1   10SOPTN
+     I                                        2  11 SUSRP
+     I                                       12  14 SDEPT
+     I                                       15  17 SDBRN
+     I*     LOCAL DATA AREA
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJMRDT                          SRUNA
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     ISDDEPT    E DSSDDEPTPD
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*  SET UP INDEX FOR PASSED PARAMETER
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           RPARM 100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+     C*
+     C* CHECK TO SEE IF AMEND, ENQUIRY OR DELETE OPTIONS ARE TAKEN        E30666
+     C*                                                                   E30666
+     C*
+     C           RACT      IFEQ 'A'                                       E30666
+     C           RACT      OREQ 'E'                                       E30666
+     C           RACT      OREQ 'D'                                       E30666
+     C                     MOVE RPARM     TEMP                            E38952
+     C                     END                                            E30666
+     C*                                                                   E30666
+     C* ENABLE F10 IF DELETE IS CHOSEN                                    E30666
+     C*                                                                   E30666
+     C           RACT      IFEQ 'D'                                       E30666
+     C                     SETON                     030506               E38952
+     C                     END                                            E30666
+     C*                                                                   E30666
+     C           RACT      IFEQ 'E'                                       E38952
+     C                     SETON                     0506                 E38952
+     C                     END                                            E38952
+     C*                                                                   E38952
+     C* OBTAIN RUN DATE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* OBTAIN MBIN FROM SDMMODPD
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR  '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           MBIN      COMP 'N'                      50
+     C*
+     C*   DISPLAY FIRST SCREEN WHILE F3 IS NOT PRESSED
+     C*
+     C           *IN01     DOWEQ'0'
+     C           *IN02     ANDEQ'0'
+     C           *IN04     ANDEQ'0'                                       E30666
+     C           *IN07     ANDEQ'0'
+     C*
+     C*   BLANK OUT OPTION FIELD
+     C*
+     C                     EXFMTSF350PF1
+     C*
+     C           *IN01     IFEQ '0'                                       E38654
+     C           *IN02     ANDEQ'0'                                       E38654
+     C*                                                                   E38654
+     C                     SETOF                     101112
+     C                     SETOF                     202122
+     C                     SETOF                     23
+     C*
+     C*  CAN ONLY CHOOSE 1 OR 2
+     C*
+     C           SOPTN     IFNE 1
+     C           SOPTN     ANDNE2
+     C                     SETON                     1020
+     C                     MOVE ERR,1     EMSG
+     C                     ELSE
+     C*
+     C*  IF OPTION ONE RETURN TO CALLING PROGRAMME
+     C*
+     C           SOPTN     IFEQ 1
+     C                     SETON                     07
+     C                     END
+     C*
+     C*
+     C*  IF OPTION TWO DISPLAY SECOND SCREEN
+     C*
+     C           SOPTN     IFEQ 2
+     C*
+     C           *IN01     DOWEQ'0'
+     C           *IN02     ANDEQ'0'
+     C           *IN04     ANDEQ'0'                                       E30666
+     C           *IN07     ANDEQ'0'
+     C*
+     C*   BLANK OUT USER PROFILE FIELD
+     C*
+     C           *IN11     IFEQ '0'
+     C           RACT      ANDNE'E'                                       E30666
+     C           RACT      ANDNE'D'                                       E30666
+     C           RACT      ANDNE'A'                                       E30666
+     C                     MOVE *BLANKS   SUSRP
+     C                     END
+     C*
+     C                     EXFMTSF350PF2
+     C*
+     C                     SETOF                     1121
+     C*
+     C*   CHECK VALIDITY OF USER PROFILE ENTERED
+     C*
+     C           SUSRP     CHAINMUSER                99
+     C*
+     C           *IN99     IFEQ '1'
+     C                     SETON                     1121
+     C                     MOVE ERR,2     EMSG
+     C                     ELSE
+     C*
+     C           *IN01     IFEQ '0'                                       E30666
+     C           *IN02     ANDEQ'0'                                       E30666
+     C                     SETON                     07
+     C                     END                                            E30666
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETOF                     02
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   E38654
+     C                     END                                            E38654
+     C*
+     C                     END
+     C*
+     C           ENDTAG    TAG
+     C*
+     C*  STORE SELECTION ON PARAMETERS IF NO ERROR
+     C*
+     C           SOPTN     IFEQ 1                                         E30666
+     C                     MOVE *BLANKS   SUSRP                           E30666
+     C                     MOVE *BLANKS   SDBRN                           E30666
+     C                     MOVE *BLANKS   SDEPT                           E30666
+     C                     END                                            E30666
+     C           SOPTN     IFEQ 2                                         E30666
+     C                     MOVE *BLANKS   SDBRN                           E30666
+     C                     MOVE *BLANKS   SDEPT                           E30666
+     C                     END                                            E30666
+     C*
+     C                     MOVE TEMP      RPARM
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE 'E'       RCMD
+     C                     END
+     C*
+     C           *IN02     IFEQ '1'
+     C                     MOVE 'F'       RCMD
+     C                     END
+     C*                                                                   E30666
+     C           *IN04     IFEQ '1'                                       E30666
+     C                     MOVE 'D'       RCMD                            E30666
+     C                     END                                            E30666
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+** ERR
+001 OPTION NOT VALID. YOU CAN ONLY ENTER 1 OR 2
+002 ENTRY NOT A VALID ENTRY ON FILE
+003 MUST ENTER AT LEAST ONE FIELD
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2007

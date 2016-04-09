@@ -1,0 +1,524 @@
+     H        1   Y
+      *****************************************************************
+/*XBI *  OVRDBF FILE(ZATRNLOG) TOFILE(ZATRNLOGL4) SHARE(*NO)          *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas API Transactions Repaired/Completed Today')
+/*E*I ***OPTION(*LSTDBG)***********************************************                       CPK026
+      *****************************************************************
+      *                                                               *
+      *  Midas - API                                                  *
+      *                                                               *
+      *  AP0003 - List of Today's Transactions                        *
+      *                                                               *
+      *  Function:  This program produces a list of all transactions  *
+      *             received through the APIs today.                  *
+      *                                                               *
+      *  Called By: APCxxxx - List of Todays Transactions Component   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG27041           Date 01Mar10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK026             Date 02Jan07               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP033             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP002  *CREATE    Date 05Jan98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG27041 - Incorrect mapping for MQ STCQ                     *
+      *  CPK026 - MidasPlus 1.3 packaging.  Handle long field name.   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP033 - Conversion of PM inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *  CAP002 - Conversion of Midas inputs to modular API structure *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FZATRNLOGIF  E           K        DISK
+     F            ZATRNLOGD0                        KRENAMEZATRNLD0
+      ** API logging file - selecting failed transactions
+     FAPINVLL3IF  E           K        DISK
+      ** Invalid transaction file - by Midas module/trans no/time
+      *
+     FAP0003P1O   E             87     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FAP0003P2O   E             88     PRINTER                        UC
+     F                                              KINFDS SPOOL2
+     FAP0003P3O   E             89     PRINTER                        UC
+     F                                              KINFDS SPOOL3
+      ** Transactions sent via APIs Today
+     FAP0003AUO   E                    PRINTER                        UC
+      ** Transactions sent via APIs Today Audit
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     50 - No records processed indicator                       *
+      *                                                               *
+      *     80 - READ indicator for ZATRNLOGL4                        *
+      *     81 - CHAIN indicator for APINVLL3                         *
+      *     87 - Overflow indicator                                   *
+      *     88 - Overflow indicator                                   *
+      *     89 - Overflow indicator                                   *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IZATRNLD0
+     I              AAFOTRNID                       AAFOTR
+     I              AAASOCID                        AAASOC                                    CGL029
+     I              AATMESTMP                       AATMES
+     I              AAMIDASMOD                      AAMIDA
+     I**********    AAMIDTRNID                      AAMIDT                                  BUG27041
+     I              AAMIDTRNID                      AAMIDX                                  BUG27041
+     I              AAMIDTRID2                      AAMIDT                                  BUG27041
+     I              AAACTNCODE                      AAACTN
+     I              AARESPMODE                      AARESP
+     I              AARPRLOC                        AARPRL
+     I              AACNFVALFO                      AACNFV
+     I              AASTATUS                        AASTAT
+     I              AAMSGLOGID                      AAMLGI                                    CPK026
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** DS for bank details
+     I              BJURPT                          TITL
+     I              BJMRDT                          ORUNA
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure for access objects, short data structure
+      *
+     ISPOOL1      DS
+      ***  DS for ZSFILE data
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+      ***  DS for ZSFILE data
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOL3      DS
+      ***  DS for ZSFILE data
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     IRPARM       DS                            100
+      ***  DS for parameter data
+     I                                        1   1 UTYPE
+     I                                        2   2 UINSE
+     I                                        3   3 UAMDS
+     I                                        4   4 UDELS
+     I                                        5   5 UAUTH
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** Initial processing
+     C                     EXSR INIT
+      *
+      ** Main processing
+     C                     EXSR MAIN
+      *
+      ** End processing
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN - Main Processing                                        *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Do first read before main loop
+     C                     READ ZATRNLOG                 80
+      *
+      ** Set on 'No records processed'
+     C                     MOVE '1'       *IN50
+      *
+      ** Write Report header and sub-header details, depending
+      ** on the sequence of report requested
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     WRITEAP003AH1
+     C                     WRITEAP003AH2
+     C                     ENDIF
+     C           UTYPE     IFEQ '2'
+     C                     WRITEAP003BH1
+     C                     WRITEAP003BH2
+     C                     ENDIF
+     C           UTYPE     IFEQ '3'
+     C                     WRITEAP003CH1
+     C                     WRITEAP003CH2
+     C                     ENDIF
+      *
+      ** Loop while records read
+     C           *IN80     DOWEQ'0'
+      ** Only process selected action types
+     C           USEL      IFEQ 'ALL'
+     C           AAACTN    OREQ UINSE
+     C           AAACTN    OREQ UAMDS
+     C           AAACTN    OREQ UDELS
+     C           AAACTN    OREQ UAUTH
+      *
+      ** Set key fields for CHAIN
+     C                     MOVE AAMIDA    #MOD
+     C***********          MOVE AAMIDT    #TRAN                           CAP033
+     C                     MOVELAAMIDT    #TRAN                           CAP033
+     C                     MOVE AATMES    #TIME
+      *
+      ** If the transaction is still on the Invalid Transaction
+      ** file, then it has not been repaired - read next record
+     C           KTRAN     CHAINAPINVLL3             81
+     C           *IN81     IFEQ '1'
+      *
+      ** Set off 'no records processed' indicator
+     C                     MOVE '0'       *IN50
+      *
+      ** Format details
+     C                     EXSR FORMAT
+      *
+      ** Write details
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     WRITEAP003AD1
+     C                     ENDIF
+     C           UTYPE     IFEQ '2'
+     C                     WRITEAP003BD1
+     C                     ENDIF
+     C           UTYPE     IFEQ '3'
+     C                     WRITEAP003CD1
+     C                     ENDIF
+      *
+      ** Check overflow
+     C                     EXSR OVRFLW
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Read next record and loop back
+     C                     READ ZATRNLOG                 80
+      *
+     C                     ENDDO
+      *
+      ** End report
+     C                     EXSR ENDRPT
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * FORMAT - Format details                                       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           FORMAT    BEGSR
+      *
+      * Set Report fields
+      *
+     C                     MOVELAATMES    RTMES
+     C                     MOVELAAFOTR    RFOTR
+      *                                                                                       CGL029
+      ** If module is 'GL', Front Office Id must be equal to Front Office                     CGL029
+      ** Id + Associated Front Office Id                                                      CGL029
+      *                                                                                       CGL029
+     C           AAMIDA    IFEQ 'GL'                                                          CGL029
+     C                     MOVE AAASOC    RFOTR                                               CGL029
+     C                     ENDIF                                                              CGL029
+      *                                                                                       CGL029
+     C                     MOVELAAMIDA    RMIDA
+     C                     MOVELAAMIDT    RMIDT
+     C                     MOVE *BLANK    RACTN
+     C           AAACTN    IFEQ 'I'
+     C                     MOVEL'INSERT'  RACTN
+     C                     ENDIF
+     C           AAACTN    IFEQ 'A'
+     C                     MOVEL'AMEND'   RACTN
+     C                     ENDIF
+     C           AAACTN    IFEQ 'D'
+     C                     MOVEL'DELETE'  RACTN
+     C                     ENDIF
+     C           AAACTN    IFEQ 'X'
+     C                     MOVEL'AUTH'    RACTN
+     C                     ENDIF
+     C                     MOVE *BLANK    RRPRL
+     C           AARPRL    IFEQ 'B'
+     C                     MOVEL'BACK'    RRPRL
+     C                     ENDIF
+     C           AARPRL    IFEQ 'S'
+     C                     MOVEL'SENDER'  RRPRL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * OVRFLW - Check overflow                                       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           OVRFLW    BEGSR
+      *
+      ** Print new header if required
+     C           *IN87     IFEQ '1'
+     C           *IN88     OREQ '1'
+     C           *IN89     OREQ '1'
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     WRITEAP003AH1
+     C                     WRITEAP003AH2
+     C                     ENDIF
+     C           UTYPE     IFEQ '2'
+     C                     WRITEAP003BH1
+     C                     WRITEAP003BH2
+     C                     ENDIF
+     C           UTYPE     IFEQ '3'
+     C                     WRITEAP003CH1
+     C                     WRITEAP003CH2
+     C                     ENDIF
+     C                     MOVEA'000'     *IN,87
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * ENDRPT - End report                                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           ENDRPT    BEGSR
+      *
+      ** If no records processed
+     C           *IN50     IFEQ '1'
+      *
+      ** Write 'No details to report' and 'End of Report'
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     WRITEAP003AST
+     C                     WRITEAP003AT
+     C                     ENDIF
+     C           UTYPE     IFEQ '2'
+     C                     WRITEAP003BST
+     C                     WRITEAP003BT
+     C                     ENDIF
+     C           UTYPE     IFEQ '3'
+     C                     WRITEAP003CST
+     C                     WRITEAP003CT
+     C                     ENDIF
+     C                     ELSE
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     WRITEAP003AT
+     C                     ENDIF
+     C           UTYPE     IFEQ '2'
+     C                     WRITEAP003BT
+     C                     ENDIF
+     C           UTYPE     IFEQ '3'
+     C                     WRITEAP003CT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT - Initialisation routine                                 *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZSEQ
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           RPARM 100
+      *
+     C           KTRAN     KLIST
+     C                     KFLD           #MOD    2
+     C***********          KFLD           #TRAN   6                       CAP033
+     C**********           KFLD           #TRAN  20                       CAP033              CGL029
+     C                     KFLD           #TRAN  26                                           CGL029
+     C                     KFLD           #TIME  26
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank ICD File for bank report heading, rundate and
+      ** date format indicator
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check date format and move rundate to print field
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Open relevant printer file
+     C           UTYPE     IFEQ '1'
+     C           UTYPE     OREQ ' '
+     C                     OPEN AP0003P1
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFILE1    ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANKS   ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'AP0003P1'DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           UTYPE     IFEQ '2'
+     C                     OPEN AP0003P2
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     MOVELSFILE2    ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANKS   ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'AP0003P2'DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           UTYPE     IFEQ '3'
+     C                     OPEN AP0003P3
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM3    ZSNUM
+     C                     MOVELSFILE3    ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANKS   ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'AP0003P3'DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set field for selection of all action codes
+     C                     MOVE *BLANK    USEL    3
+     C           UINSE     IFEQ *BLANK
+     C           UAMDS     ANDEQ*BLANK
+     C           UDELS     ANDEQ*BLANK
+     C           UAUTH     ANDEQ*BLANK
+     C                     MOVE 'ALL'     USEL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * END - End Routine                                             *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR - Program exception error routine                       *
+      *                                                               *
+      * Called by: INIT, MAIN                                         *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ 'N'
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'AP0003'  DBPGM     P
+     C                     OUT  LDA
+     C                     DUMP
+      ** Open audit printer file
+     C                     OPEN AP0003AU
+     C                     WRITEAP0003A1
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2001

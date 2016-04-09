@@ -1,0 +1,460 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60J                                                    *
+/*EXI *  TEXT('Midas SE Position settlements audit list')
+/*ADD *  CHGPRTF FILE(SE0335P1) OVRFLW(63)                            *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module
+     A*                                                               *
+     A*  PRTF/SE0335P1 - SE0335 POSITION SETTLEMENTS AUDIT LIST       *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 30Nov05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 166145             Date 08Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 123673             Date 23Feb98               *
+     A*                 CAC002             Date 15Sep96               *
+     A*                 S01408             Date 23Feb96               *
+     A*                 087178             Date 15Jun95               *
+     A*                 S01486             DATE 10NOV94               *
+     A*                 S01496             DATE 15JUL94               *
+     A*                 078011             DATE 27OCT94               *
+     A*                 S01512             DATE 10AUG94               *
+     A*                 S01447             DATE 18OCT93               *
+     A*                 S01401             DATE 16JUN93               *
+     A*                 E29170             DATE 08NOV91               *
+     A*                 E28705             DATE 24SEP91               *
+     A*                 S01117             DATE 24MAY90               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE023 - Treaty Withholding Tax                              *
+     A*  166145 - Avoid overwriting of 'PLUS' with 'LESS'             *
+     A*  123673 - Avoid overwriting of field 'S.W.I.F..' by 'CONVER..'*
+     A*  CAC002 - Profit Centre Accounting Development - Phase 2      *
+     A*           If Analytical Accounting is available, the profit   *
+     A*           centre for each Charge/Commission Code would be     *
+     A*           reported.  If the settlement currency is not the    *
+     A*           same as the nominal currency, the FX Margin Points  *
+     A*           and Amount will also be reported.                   *
+     A*  S01408 - Addition of core hook SE0335P101                    *
+     A*           Addition of core hook SE0335P102                    *
+     A*  087178 - Withholding tax can be added or subtracted          *
+     A*  S01486 - PRINT PORTFOLIO REFERENCE DETAILS                   *
+     A*  S01496 - Incorp. of Private Banking SE Enhancements (S10985) *
+     A*  078011 - Wrong branch code is printed on the last page for a *
+     A*           branch containing only the total positions          *
+     A*  S01512 - Add value date to Position Settlements              *
+     A*  S01447 - POSITION SETTLEMENTS AUDIT LIST                     *
+     A*           Amended to print the Withholding Tax Details about a*
+     A*           settlement position if it has them and the feature  *
+     A*           is switched on.                                     *
+     A*  S01401 - This has been amended to add SWIFT Further          *
+     A*           Identification field (for MT554).                   *
+     A*  E29170 - Report Control Facility changes                     *
+     A*  E28705 - Space missing between literal 'DATE' and the date.  *
+     A*  S01117 - MULITBRANCHING                                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A**
+     A**   *******************
+     A**   PAGE HEADINGS
+     A**   *******************
+     A**
+     A          R HEADP1                    SKIPB(3)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                     6'REFERENCE SE0335P1'
+     A            TITL      R             39
+      *                                              Begin /E28705/
+     A***********                        101'DATE'
+     A                                   100'DATE'
+      *                                              End   /E28705/
+     A            RUNA      R            105
+     A                                   119'PAGE'
+     A            PAGE         004S 0    125EDTCDE(Z) SPACEA(2)
+     A                                    10'SECURITIES TRADING'
+     A                                    29'POSITION SETTLEMENTS AUDIT LIST -'
+     A  40                                63'AUDIT - EXCEPTION'
+     A  40                                81TIME
+     A  41                                63'AUDIT'
+     A  42                                63'FULL LIST'
+     A***                                            Begin /S01117/
+     A***********                         90'BRANCH'
+     A*N80******* PBCH      R             97
+     A**80******* ZPBCH     R             97REFFLD(TDBR)
+     A***********                        100'-'
+     A*********** ZBRNM     R            101REFFLD(BRNM)
+     A***********                           SPACEA(1)
+     A***********                         10'-------------------'
+     A  35N36                             93'BRANCH '
+     A*                                              Begin /078011/
+     A**35N36*****PBCA      R            100
+     A  35N36     ZPBCA          3A      100
+     A*                                              End   /078011/
+     A  35N36                            103'-'
+     A  35N36     ZBRNM     R            104REFFLD(BRNM)
+     A                                    10'-------------------' SPACEB(1)
+     A***                                            End   /S01117/
+     A                                    29'-------------------------------'
+     A                                      SPACEA(3)
+     A**
+     A**   *******************
+     A**   DETAIL PART OF REPORT
+     A**   *******************
+     A**
+     A          R DETAIL
+      *                                              Begin /CAC002/
+     A***********                           SPACEB(1)
+      *                                              End   /CAC002/
+     A                                     1'SECURITY'
+     A            PSSH      R             14
+     A*/COPY WNCPYSRC,SE0335P109
+     A            RNME          41        26
+     A*/COPY WNCPYSRC,SE0335P110
+     A                                    94'LAST ACTIVITY'
+     A                                      SPACEA(1)
+     A*
+     A*/COPY WNCPYSRC,SE0335P111
+     A                                     1'CUSTOMER'
+      * Begin /CSD027/
+     A**********  PCPY      R             14                                                  CSD027
+     A            PCPY           6A       14TEXT('Counterparty')
+      * End /CSD027/
+     A            CSNMC     R             26REFFLD(CSNM)
+     A            CRNMC     R             37REFFLD(CRNM)
+     A            CTWNC     R             58REFFLD(CTWN)
+     A                                    94'DATE'
+     A                                   103'TYPE'
+     A                                      SPACEA(1)
+     A                                     1'DUE DATE'
+     A            ZAPDUD    R             14REFFLD(RUNA)
+      *                                              Begin /S01512/
+     A  38                                26'VALUE DATE'
+     A  38        ZAPSVL    R             38REFFLD(RUNA)
+      *                                              End   /S01512/
+     A            ZALCD     R             94REFFLD(RUNA)
+     A  51                               103'AMEND'
+     A                                      SPACEA(1)
+     A  52                               103'INSERT'
+     A                                      SPACEA(1)
+     A  53                               103'DELETE'
+     A                                      SPACEA(1)
+     A  54                               103'AUTHORISE'
+     A                                      SPACEA(1)
+     A***********                                    Begin /S01496/
+     A  69 70                            103'REVERSE'
+     A     70                               SPACEA(1)
+     A***********                                    End   /S01496/
+     A***********                                    Begin /S01486/
+     A  56                                 1'PORTFOLIO'
+     A  56        RRPREF         4        14
+     A  56        RRPNAR        20        26
+      *                                              Begin /CAC002/
+     A  20                               119'PRFT'
+     A***********                           SPACEA(1)
+      *                                              End   /CAC002/
+     A***********                                    End   /S01486/
+     A                                     1'EVENT TYPE'
+      *                                              Begin /CAC002/
+     A                                      SPACEB(1)
+      *                                              End   /CAC002/
+     A            PEVT      R             14
+     A            LPEVT         14        26
+      *                                              Begin /CAC002/
+     A  20                               119'CNTR'
+     A***********                           SPACEA(1)
+      *                                              End   /CAC002/
+     A                                     1'POSITION'
+      *                                              Begin /CAC002/
+     A                                      SPACEB(1)
+      *                                              End   /CAC002/
+     A            PNCY      R             14
+     A            ZEPNMP        16        19
+     A                                    57'AMOUNT DUE'
+     A                                    70'PAY/REC'
+     A  64                                78'PAY'
+     A  65                                78'RECEIVE'
+     A            ZPNCYA    R             94REFFLD(PNCY)
+     A            ZEPAMD        18        99
+     A                                      SPACEA(1)
+     A                                     1'SETTLEMENT'
+     A            PSMT      R             14
+     A            LPSMT         14        26
+     A                                    57'CHARGES'
+     A            PCHC      R             70
+     A            ZCHNRA    R             73REFFLD(CHNR)
+     A  66                                94'PLUS'
+     A  67                                94'LESS'
+     A            ZEPCHA        18        99
+      *                                              Begin /CAC002/
+     A  20        PCPRFC         4       119
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SE0335P101                                          S01408
+     A*                                                                   S01408
+     A***********                           SPACEA(1)
+      *                                              End   /CAC002/
+     A                                     1'ACCOUNT'
+      *                                              Begin /CAC002/
+     A                                      SPACEB(1)
+      *                                              End   /CAC002/
+     A**Start of change CGL029
+     A**********  ZPSE14        14        14                                                  CGL029
+     A**********                          34'BR'                                              CGL029
+     A**********  PSEB      R             37                                                  CGL029
+     A            ZPSE14        20        14                                                  CGL029
+     A                                    36'BR'                                              CGL029
+     A            PSEB      R             39                                                  CGL029
+     A**End of change CGL029
+     A                                    57'COMMISSION'
+     A            PCCD      R             70
+     A            ZCHNRB    R             73REFFLD(CHNR)
+     A  66                                94'PLUS'
+     A  67                                94'LESS'
+     A            ZEPCAM        18        99
+      *                                              Begin /CAC002/
+     A  20        PPRFC          4       119
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SE0335P102                                          S01408
+     A*                                                                   S01408
+     A***********                           SPACEA(1)
+      *                                              End   /CAC002/
+     A                                     1'COUNTERPARTY'
+      *                                              Begin /CAC002/
+     A                                      SPACEB(1)
+      *                                              End   /CAC002/
+     A            PCPN      R             14
+      *                                              Start /S01447/
+     A N34                                  SPACEA(1)
+     A  34 33                             57'TAX AMOUNT DEDUCTED AT +
+     A                                      SOURCE'
+      *                                              Begin /087178/
+     A**34*33***                          94'LESS'         /166145/
+     A  34 33 66                          94'PLUS'
+     A  34 33 67                          94'LESS'
+      *                                              End   /087178/
+     A  34 33     STASO         18        99
+      *                                              End   /S01447/
+     A                                      SPACEA(1)
+     A                                     1'FOR A/C OF'
+      *                                              Start /S01447/
+     A  34N33                               SPACEB(1)
+      *                                              End   /S01447/
+     A            PFAC      R             14
+      *                                              Start /S01447/
+     A**********                          87'TOTAL'
+     A**********  ZPNCYB    R             94REFFLD(PNCY)
+     A**********  ZETOT         18        99
+     A**********                            SPACEA(1)
+     A**********                           1'SPECIAL INSTRUCTIONS'
+     A**********  PSPI      R             22
+     A**********                          62'CONVERTED AT'
+     A**********  PSXR      R             75EDTCDE(3)
+     A**********                          90'TO'
+     A**********  PSCU      R             94
+     A**********  ZEPSAT        18        99
+     A*/COPY WNCPYSRC,SE0335P113
+     A*/COPY WNCPYSRC,SE0335P103
+     A N34                                  SPACEA(1)
+     A*/COPY WNCPYSRC,SE0335P114
+     A*/COPY WNCPYSRC,SE0335P104
+     A  34 33                             57'TAX AMOUNT DEDUCTED +
+     A                                      BY USER'
+      *                                              Begin /087178/
+     A**34*33***                          94'LESS'         /166145/
+     A  34 33 66                          94'PLUS'
+     A  34 33 67                          94'LESS'
+      *                                              End   /087178/
+     A  34 33     STAUS         18        99SPACEA(1)
+     A*/COPY WNCPYSRC,SE0335P115
+     A*/COPY WNCPYSRC,SE0335P105
+     A                                     1'SPECIAL INSTRUCTIONS'
+     A*/COPY WNCPYSRC,SE0335P116
+     A*/COPY WNCPYSRC,SE0335P106
+     A  34N33                               SPACEB(1)
+     A*/COPY WNCPYSRC,SE0335P117
+     A*/COPY WNCPYSRC,SE0335P107
+      *                                              End   /S01447/
+     A            PSPI      R             22
+     A*
+      *                                              Start /S01447/
+     A  34                                  SPACEA(1)
+     A  34 33                              1'TAX DEDUCTED AT +
+     A                                      SOURCE - REFUNDABLE'
+     A  34 33     STASR         18        36
+     A*
+     A                                    87'TOTAL'
+     A            ZPNCYB    R             94REFFLD(PNCY)
+     A            ZETOT         18        99
+     A                                      SPACEA(1)
+     A                                    62'CONVERTED AT'
+     A            PSXR      R             75EDTCDE(3)
+     A                                    90'TO'
+     A            PSCU      R             94
+     A            ZEPSAT        18        99
+      *                                              End   /S01447/
+     A**                                             Begin /S01117/
+     A**
+      *                                              Begin /S01401/
+     A***********                           SPACEA(1)
+     A  37                                  SPACEA(1)
+      *                                              End   /S01401/
+     A  37                                 1'PROFIT CENTRE'
+     A  37        PPFC      R             18
+      *                                              Begin /CAC002/
+     A  19 20                             62'FX MARGIN OF'
+     A  19 20     PFXMP          9        75
+     A  19 20                             90'IS'
+     A  19 20     PSCU1          3        94
+     A  19 20     PMAMT         18        99
+     A                                      SPACEA(1)
+      *                                              End   /CAC002/
+     A***                                            End   /S01117/
+      *                                              Begin /S01401/
+     A***********                           SPACEA(3)
+      *                                              Begin /S01447/
+     A*N37*******                          1' '
+     A*N37*******                           SPACEA(1)
+     A**83*******                         26'S.W.I.F.T. FURTHER +
+     A***********                           IDENTIFICATION (MT554 ONLY)'
+     A**83******* POFID3    R             74REFFLD(FID3)
+      *                                              Begin /123673/
+     A N37 83                              1' '
+     A N37 83                               SPACEA(1)
+      *                                              End   /123673/
+     A  83                                57'S.W.I.F.T. FURTHER +
+     A                                      IDENTIFICATION (MT554 ONLY)'
+     A  83        POFID3    R            105REFFLD(FID3)
+      *                                              End   /S01447/
+     A*/COPY WNCPYSRC,SE0335P108
+      *
+     A                                   132' '
+     A**Start of change CSE023
+     A  85                                  SPACEA(1)
+     A  85                                 1'TAX BASKET'
+     A  85        TXBS           2A       15
+     A  85        TXBN          15A       18
+     A  85                                57'EXEMPTION CODE'
+     A  85        EXCD           2A       73
+     A  85                                85'COUNTRY OF TAX'
+     A  85        CRTX           2A      100
+     A  85                                  SPACEA(1)
+     A  85                                 1'RECEPIENT CODE'
+     A  85        RPCD           2A       20
+     A  85                                57'INCOME TYPE'
+     A  85        ICTP           2A       70
+     A  85                                76'BENEFICIAL OWNER NUMBER'
+     A  85        BNFO          26A      100
+     A  85                                  SPACEA(1)
+     A  85                                 1'MT565 MESSAGE REQUIRED'
+     A  85        MT5R           1A       30
+     A  85                                57'MT565 GENERATED'
+     A  85        MT5G           1A       75
+     A  85                                86'CUSTOMER TYPE'
+     A  85        CTYP           1A      103
+     A  85                                  SPACEA(1)
+     A  85                                 1'POSITION SETTLEMENT +
+     A                                      REFERENCE NUMBER'
+     A  85        PREF           6A       40
+     A  85                                57'SWIFT SEQUENCE NUMBER'
+     A  85        RPSEQ          3A       80
+     A  85                                  SPACEA(1)
+     A  85                                 1'CUSTOMER TAX +
+     A                                      ID NUMBER'
+     A  85        CTIN          20A       30
+     A  85                                57'TOTAL DISCOUNTED +
+     A                                      AMOUNT'
+     A  85        RDAMT         21A       90
+     A                                   132' '
+     A**End of change CSE023
+     A                                      SPACEA(3)
+      *                                              End   /S01401/
+     A
+     A**
+     A**   *******************
+     A**   TOTAL LINE
+     A**   *******************
+     A**
+     A          R TOTAL
+     A**                                             Begin /S01117/
+     A**********                            SPACEB(3)
+     A                                      SPACEB(1)
+     A**                                             End   /S01117/
+     A                                    14'TOTAL NUMBER OF POSITION'
+     A                                    39'SETTLEMENTS'
+     A                                    51'LISTED-'
+     A  40        ZCHGP1    R             59REFFLD(NORE)
+     A                                      SPACEA(3)
+     A  41        ZCOUNT    R             59REFFLD(NORE)
+     A                                      SPACEA(3)
+     A  42        ZLIVP1    R             59REFFLD(NORE)
+     A                                      SPACEA(3)
+     A**
+     A**   *******************
+     A**   REPORT TRAILER
+     A**   *******************
+     A**
+     A***                                            Begin /S01117/
+     A**********R TRAILP1
+     A***********                         56'*** END OF REPORT ***'
+     A***********                           SPACEB(3)
+     A***********
+     A***********
+     A          R TRAILP1                   SPACEB(1)
+     A  35N36                             46'***  END OF REPORT FOR BRANCH '
+     A  35N36     ZPBCA          3A       76TEXT('BRANCH CODE')
+     A  35N36                             81'***'
+     A  35 36                             56'*** END OF REPORT ***'
+     A N35                                56'*** END OF REPORT ***'
+     A**
+     A**
+     A**   *******************
+     A**   REPORT DATABASE ERROR
+     A**   *******************
+     A**
+     A          R ERRORP1
+     A                                    25'**** DATABASE ERROR ****'
+     A***********                                    BEGIN /E29170/
+     A***********                           SPACEB(2)
+     A***********                         11'************************'
+     A***********                           SPACEB(2)
+     A***********                         35'************************'
+     A***********                         59'******'
+     A***********                         11'*'
+     A***********                           SPACEB(1)
+     A***********                         64'*'
+     A***********                         11'*    PROGRAM NAME '''
+     A***********                           SPACEB(1)
+     A*********** DBPGM         10A       30
+     A***********                         40''''
+     A***********                         64'*'
+     A***********                         11'*    AT           '''
+     A***********                           SPACEB(1)
+     A*********** DBASE          3  0     30
+     A***********                         33''''
+     A***********                         64'*'
+     A***********                         11'*'
+     A***********                           SPACEB(1)
+     A***********                         64'*'
+     A***********                         11'************************'
+     A***********                           SPACEB(1)
+     A***********                         35'************************'
+     A***********                         59'******'
+     A***********
+     A***                                            End   /S01117/
+     A***********                                    END   /E29170/

@@ -1,0 +1,428 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Source (RPG)                                   *
+      *                                                               *
+      *  CGACBR - Midas CG Additional Branch Information              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. AR750273B          Date 09Jun11               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23984           Date 11May09               *
+      *                 BUG23572           Date 27Mar09               *
+      *                 BUG23216           Date 04Mar09               *
+      *                 CER038  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR750273B - Components failed due to closed customer         *
+      *              (Child: AR750274)                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23984 - Account Statement Correspondence has wrong Branch *
+      *             Internal Customer details                         *
+      *  BUG23572 - CHIPSABA Not Accept '0' on screen, so that populat*
+      *             with blanks when '0' values in database           *
+      *  BUG23216 - Populate Actual Customer Detail in Customer       *
+      *             information instead of Branch internal Customer   *
+      *  CER038 - Additional fields added to Correspondence           *
+      *                                                               *
+      *****************************************************************
+     C           CGACBR    BEGSR
+     C                     MOVE BRCA      WBRNCH  3
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'CGACBR'  @STK,Q
+      *
+      ** Retrieve subroutine specific data.
+      *
+     C           19        OCUR ##SRDT
+      *
+      ** Set up Path.
+      *
+     C                     MOVEL'\CGACBR' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+     C                     MOVELS#PATH    ##SPAT
+      *
+      ** Set up Binds from passed in values.
+      *
+     C                     Z-ADDS#PBIN    ##PBIN
+     C                     Z-ADDS#TBIN    ##TBIN
+      *
+      ** Access branch file to retrieve Branch internal customer
+      ** of Branch of account
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG    '##RTCD
+     C                     PARM '*KEY    '##OPTN
+     C                     PARM WBRNCH    ##BRCD
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ** Database error
+      *
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDBRCHPD'W0FILE
+     C                     MOVELWBRNCH    W0KEY
+     C                     Z-ADD28        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *                                                                                     BUG23216
+      ** Save Custome Number                                                                BUG23216
+      *                                                                                     BUG23216
+     C                     MOVELSDCNUM    WCUST   6                                         BUG23216
+      *
+      ** Get Customer Details for Branch Internal Customer
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY   ' ##OPTN
+     C                     PARM A8BICN    ##KEY1 10
+     C                     PARM *BLANKS   ##KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Database error
+      *
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*CUSCLS'                                                  AR750273B
+     C           ##RTCD    ANDNE'*CUSDEL'                                                  AR750273B
+     C                     MOVEL'SDCUSTPD'W0FILE
+     C                     MOVELA8BICN    W0KEY
+     C                     Z-ADD29        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Get Correspondent Details for Branch Internal Customer
+      *
+     C           A8BICN    CHAINCGCORRL4             99
+      *
+      ** If Correspondent not found
+      *
+     C           *IN99     IFEQ '1'
+      *
+      ** Database error
+      *
+     C                     MOVEL'CGCORRPD'W0FILE
+     C                     MOVELA8BICN    W0KEY
+     C                     Z-ADD30        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Reset arrays
+      *
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+     C                     EXSR PSHGRS
+      *
+      ** Branch related information
+      *
+      ** Branch Name
+      *
+     C                     MOVELA8BRNM    ##D,1
+     C                     RESET##RDEF
+     C                     MOVEL' BRANCH '##RDE
+     C                     MOVE 'NAM '    ##RDE
+     C                     MOVEL##RDEF    ##R,1
+      *
+      ** Branch Address 1
+      *
+     C                     MOVELBBCNA1    ##D,2
+     C                     RESET##RDEF
+     C                     MOVEL' BR_ADR1'##RDE
+     C                     MOVEL##RDEF    ##R,2
+      *
+      ** Branch Address 2
+      *
+     C                     MOVELBBCNA2    ##D,3
+     C                     RESET##RDEF
+     C                     MOVEL' BR_ADR2'##RDE
+     C                     MOVEL##RDEF    ##R,3
+      *
+      ** Branch Address 3
+      *
+     C                     MOVELBBCNA3    ##D,4
+     C                     RESET##RDEF
+     C                     MOVEL' BR_ADR3'##RDE
+     C                     MOVEL##RDEF    ##R,4
+      *
+      ** Branch Address 4
+      *
+     C                     MOVELBBCNA4    ##D,5
+     C                     RESET##RDEF
+     C                     MOVEL' BR_ADR4'##RDE
+     C                     MOVEL##RDEF    ##R,5
+      *
+      ** Town
+      *
+     C                     MOVELBBCRTN    ##D,6
+     C                     RESET##RDEF
+     C                     MOVEL' BR_TOWN'##RDE
+     C                     MOVEL##RDEF    ##R,6
+      *
+      ** Telephone Number
+      *
+     C                     MOVELBBCTNB    ##D,7
+     C                     RESET##RDEF
+     C                     MOVEL' ZZCTNB' ##RDE
+     C                     MOVEL##RDEF    ##R,7
+      *
+      ** Fax Number
+      *
+     C                     MOVELCDFAX     ##D,8
+     C                     RESET##RDEF
+     C                     MOVEL' ZZFAX'  ##RDE
+     C                     MOVEL##RDEF    ##R,8
+      *
+      ** SWIFT code
+      *
+     C                     MOVELBBCSID    ##D,9
+     C                     RESET##RDEF
+     C                     MOVEL' ZZCSID' ##RDE
+     C                     MOVEL##RDEF    ##R,9
+      *
+      ** German Bankleitzahl
+      *
+     C                     MOVELBBBLCD    ##D,10
+     C                     RESET##RDEF
+     C                     MOVEL' ZZBLCD' ##RDE
+     C                     MOVEL##RDEF    ##R,10
+      *
+      ** Chips-Id. (Branch-Internal Customer)
+      *
+     C                     MOVELBBCHID    ##D,11
+     C                     RESET##RDEF
+     C                     MOVEL' BCHIPS_'##RDE
+     C                     MOVE 'ID  '    ##RDE
+     C                     MOVEL##RDEF    ##R,11
+      *
+      ** Chips ABA (Branch-Internal Customer)
+      *
+     C           BBCABA    IFNE 0                                                           BUG23572
+     C                     MOVELBBCABA    ##D,12
+     C                     ELSE                                                             BUG23572
+     C                     MOVE *BLANKS   ##D,12                                            BUG23572
+     C                     ENDIF                                                            BUG23572
+     C                     RESET##RDEF
+     C                     MOVEL' BCHIPS_'##RDE
+     C                     MOVE 'ABA '    ##RDE
+     C                     MOVEL##RDEF    ##R,12
+      *
+      ** Chaps sort code (Branch-Internal Customer)
+      *
+     C                     MOVELBBCHSC    ##D,13
+     C                     RESET##RDEF
+     C                     MOVEL' BCHAPS_'##RDE
+     C                     MOVE 'SRT '    ##RDE
+     C                     MOVEL##RDEF    ##R,13
+      *
+      ** BOJ (Branch-Internal Customer)
+      *
+     C                     MOVELBBBFIC    ##D,14
+     C                     RESET##RDEF
+     C                     MOVEL' BBOJ'   ##RDE
+     C                     MOVEL##RDEF    ##R,14
+      *
+      ** Fedwire (Branch-Internal Customer)
+      *
+     C                     MOVELBBFWCD    ##D,15
+     C                     RESET##RDEF
+     C                     MOVEL' BFEDWIR'##RDE
+     C                     MOVE 'E   '    ##RDE
+     C                     MOVEL##RDEF    ##R,15
+      *
+      ** Customer related information
+      *
+     C                     CALL 'AOCUSTR0'                                                  BUG23216
+     C                     PARM *BLANKS   ##RTCD                                            BUG23216
+     C                     PARM '*KEY   ' ##OPTN                                            BUG23216
+     C                     PARM WCUST     ##KEY1                                            BUG23216
+     C                     PARM *BLANKS   ##KYST                                            BUG23216
+     C           SDCUST    PARM SDCUST    DSSDY                                             BUG23216
+      *                                                                                     BUG23216
+      ** Database error                                                                     BUG23216
+      *                                                                                     BUG23216
+     C           ##RTCD    IFNE *BLANK                                                      BUG23216
+     C           ##RTCD    ANDNE'*CUSCLS'                                                  AR750273B
+     C           ##RTCD    ANDNE'*CUSDEL'                                                  AR750273B
+     C                     MOVEL'SDCUSTPD'W0FILE                                            BUG23216
+     C                     MOVELWCUST     W0KEY                                             BUG23216
+     C                     Z-ADD31        W0ERNB                                            BUG23216
+     C                     MOVEL'MEM5004' W0MSGD                                            BUG23216
+     C                     MOVEL'MIDAS  ' W0MSGF                                            BUG23216
+     C                     EXSR SRERR                                                       BUG23216
+     C                     END                                                              BUG23216
+      *                                                                                     BUG23216
+      ** Customer name
+      *
+     C                     MOVELBBCSSN    ##D,16
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_NA'##RDE
+     C                     MOVE 'ME  '    ##RDE
+     C                     MOVEL##RDEF    ##R,16
+      *
+      ** Customer Address Line 1
+      *
+     C                     MOVELBBCNA1    ##D,17
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_AD'##RDE
+     C                     MOVE 'R1  '    ##RDE
+     C                     MOVEL##RDEF    ##R,17
+      *
+      ** Customer Address Line 2
+      *
+     C                     MOVELBBCNA2    ##D,18
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_AD'##RDE
+     C                     MOVE 'R2  '    ##RDE
+     C                     MOVEL##RDEF    ##R,18
+      *
+      ** Customer Address Line 3
+      *
+     C                     MOVELBBCNA3    ##D,19
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_AD'##RDE
+     C                     MOVE 'R3  '    ##RDE
+     C                     MOVEL##RDEF    ##R,19
+      *
+      ** Customer Address Line 4
+      *
+     C                     MOVELBBCNA4    ##D,20
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_AD'##RDE
+     C                     MOVE 'R4  '    ##RDE
+     C                     MOVEL##RDEF    ##R,20
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                     EXSR SRADTA
+      *
+      ** Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD21        ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Customer town
+      *
+     C                     MOVELBBCRTN    ##D,1
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_TO'##RDE
+     C                     MOVE 'WN  '    ##RDE
+     C                     MOVEL##RDEF    ##R,1
+      *
+      ** Telephone Number
+      *
+     C                     MOVELBBCTNB    ##D,2
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_TE'##RDE
+     C                     MOVE 'L   '    ##RDE
+     C                     MOVEL##RDEF    ##R,2
+      *
+      ** Fax Number
+      *
+     C           WCUST     CHAINCGCORRL4             99                                     BUG23984
+      *                                                                                     BUG23984
+      ** If Correspondent not found                                                         BUG23984
+      *                                                                                     BUG23984
+     C           *IN99     IFEQ '1'                                                         BUG23984
+      *                                                                                     BUG23984
+      ** Database error                                                                     BUG23984
+      *                                                                                     BUG23984
+     C                     MOVEL'CGCORRPD'W0FILE                                            BUG23984
+     C                     MOVELWCUST     W0KEY                                             BUG23984
+     C                     Z-ADD31        W0ERNB                                            BUG23984
+     C                     MOVEL'MEM5004' W0MSGD                                            BUG23984
+     C                     MOVEL'MIDAS  ' W0MSGF                                            BUG23984
+     C                     EXSR SRERR                                                       BUG23984
+     C                     END                                                              BUG23984
+      *                                                                                     BUG23984
+     C                     MOVELCDFAX     ##D,3
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_FA'##RDE
+     C                     MOVE 'X   '    ##RDE
+     C                     MOVEL##RDEF    ##R,3
+      *
+      ** SWIFT code
+      *
+     C                     MOVELBBCSID    ##D,4
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_SW'##RDE
+     C                     MOVE 'IFT '    ##RDE
+     C                     MOVEL##RDEF    ##R,4
+      *
+      ** German Bankleitzahl
+      *
+     C                     MOVELBBBLCD    ##D,5
+     C                     RESET##RDEF
+     C                     MOVEL' CUST_BL'##RDE
+     C                     MOVE 'Z   '    ##RDE
+     C                     MOVEL##RDEF    ##R,5
+      *
+      ** Chips-Id (Customer)
+      *
+     C                     MOVELBBCHID    ##D,6
+     C                     RESET##RDEF
+     C                     MOVEL' CCHIPS_'##RDE
+     C                     MOVE 'ID  '    ##RDE
+     C                     MOVEL##RDEF    ##R,6
+      *
+      ** Chips ABA (Customer)
+      *
+     C           BBCABA    IFNE 0                                                           BUG23572
+     C                     MOVELBBCABA    ##D,7
+     C                     ELSE                                                             BUG23572
+     C                     MOVE *BLANKS   ##D,7                                             BUG23572
+     C                     ENDIF                                                            BUG23572
+     C                     RESET##RDEF
+     C                     MOVEL' CCHIPS_'##RDE
+     C                     MOVE 'ABA '    ##RDE
+     C                     MOVEL##RDEF    ##R,7
+      *
+      ** Chaps sort code (Branch-Internal Customer)
+      *
+     C                     MOVELBBCHSC    ##D,8
+     C                     RESET##RDEF
+     C                     MOVEL' CCHAPS_'##RDE
+     C                     MOVE 'SRT '    ##RDE
+     C                     MOVEL##RDEF    ##R,8
+      *
+      ** BOJ (Customer)
+      *
+     C                     MOVELBBBFIC    ##D,9
+     C                     RESET##RDEF
+     C                     MOVEL' CBOJ'   ##RDE
+     C                     MOVEL##RDEF    ##R,9
+      *
+      ** Fedwire (Customer)
+      *
+     C                     MOVELBBFWCD    ##D,10
+     C                     RESET##RDEF
+     C                     MOVEL' CFEDWIR'##RDE
+     C                     MOVE 'E   '    ##RDE
+     C                     MOVEL##RDEF    ##R,10
+      *
+      ** Accumulate RDE's and associated data and output to
+      ** PF/CGUDTAPD.
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+     C                     EXSR POPGRS
+      *
+     C           EXACBR    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR

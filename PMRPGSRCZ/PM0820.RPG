@@ -1,0 +1,2126 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Request extra valuation statement')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                     *
+     F*                                                               *
+     F*  RPG/PM0820 - Request Extra Valuation Statements              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 09Jul99               *
+     F*                 160682             Date 17MAY99                  *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 109223             Date 30Oct96               *
+     F*                 CPM005             Date 03Jul96                  *
+     F*                 092953             Date 18Sep95               *
+     F*                 082266             Date 28Mar95               *
+     F*                 073957             DATE 24NOV94               *
+     F*                 064941             DATE 24NOV94               *
+     F*                 S01486             DATE 21JUN94               *
+     F*                 062282             DATE 19OCT93               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 056986     CH      DATE 05JUL93               *
+     F*                 053091     MF      DATE 06APR93               *
+     F*                 S01313             DATE 03JUN92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  CPB001 -  'Private Banking' Module                           *
+     F*  160682  - If default Portfolio is closed, setup default      *
+     F*            value with an active one (089463).                 *
+     F*  109223  -  VALIDITY OF CUSTOMER SELECTED WAS ONLY CHECKED IF *
+     F*             CUSTOMER SHORTNAME INPUT, ALSO CHECK IF CUSTOMER  *
+     F*             NUMBER INPUT OTHERWISE INVALID RECORD CAN BE      *
+     F*             CREATED IN PMRQXSPD AND DB ERROR OCCURS WHEN      *
+     F*             VALIDITY IS CHECKED IN PM1170                     *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  092953  -  Set up defaults in Portfolio Enquiry              *
+     F*  082266  -  Parameters do not match those required            *
+     F*  073957  -  Changes for PM Instruction Manual                 *
+     F*  064941  -  Default Portfolio do not appear                   *
+     F*  S01486  -  Portfolio Management Upgrade to Release 10.       *
+     F*  062282  -  EXTR STATEMENT TYPE MUST BE "A" OR "C"            *
+     F*  049421  -  HEADER BOX STANDARDISATION                        *
+     F*  056986  -  IF NO PORTFOLIO DEFINED, CUSTOMER NUMBER IS NOT   *
+     F*             SELECTED IF YOU ASK PORTFOLIO VALUATION FOR *ALL  *
+     F*             PORTFOLIOS                                        *
+     F*  053091  -  A REQUEST OF VALUATION FOR TWO DIFFERENT CUSTOMERS*
+     F*             PRODUCE THE VALUATION FOR THE FIRST ONE ONLY      *
+     F*             WHEN CUSTOMER AND PORTFOLIO ENTERED               *
+     F*  S01313  -  REWRITTEN FOR PORTFOLIO PERFORMANCE               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F** PREFIX : BJ
+     F**SDBANKL1IF  E           K        DISK         KINFSR *PSSR        S01486
+     F***********                                   KINFSR *PSSR
+     F** PREFIX : P9
+     F**SDPORTL1IF  E                    DISK                             S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F** PREFIX : BB
+     F**SDPLCSL2IF  E           K        DISK         KINFSR *PSSR        S01486
+     F** PREFIX : PN                                                      CPM005
+     FPMCNSDLLIF  E           K        DISK                               CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F***********                                   KINFSR *PSSR          S01486
+     F** PREFIX : BB
+     F**SDCUSTL2IF  E           K        DISK         KINFSR *PSSR        S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F** PREFIX : NONE
+     F**MUSER   IF  E           K        DISK                             S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F** PREFIX : AZ
+     F*SDACOFL1IF  E           K        DISK                              S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F** PREFIX : PN
+     FPMPORTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** PREFIX : QO
+     F**PMRQXSPPIF  E           K        DISK         KCOMIT              S01486
+     FPMRQXSPDIF  E           K        DISK         KCOMIT                S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX : QO
+     FPMRQXSL0UF  E           K        DISK         KCOMIT       A
+     F            PMRQXSP0                          KRENAMEPMRQXSPX
+     F                                              KINFSR *PSSR
+     F** PREFIX : DD
+     F**PM0820DDCF  E                    WORKSTN               289        S01486
+     FPM0820DFCF  E                    WORKSTN                            S01486
+     F                                        RRN2  KSFILE PM0820S0
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       57         CHAIN FAILED ON PMCNSDLL                         CPM005
+     F*       58         ERROR ON FIELD DDS0VR                            CPM005
+     F*       59         ERROR ON FIELD DDS9VR                            CPM005
+     F*       60         WORK INDICATORS
+     F*       61         VALID COMMAND KEY TAKEN
+     F*       62         PROTECT HEADER DETAILS
+     F*       63         SUBFILE CHANGED INDICATOR
+     F*
+     F*       64         ERROR ON FIELD DDCNUM
+     F*       65         ERROR ON FIELD DDPTFR
+     F*       66         ERROR ON FIELD DDVLOR
+     F*       67         ERROR ON FIELD DDWHEN
+     F*       68         ERROR ON FIELD DDVLNT
+     F*       69         ERROR ON FIELD DDS1VR
+     F*       70         ERROR ON FIELD DDS2VR
+     F*       71         ERROR ON FIELD DDS3VR
+     F*       72         ERROR ON FIELD DDS4VR
+     F*       73         ERROR ON FIELD DDS5VR
+     F*       74         ERROR ON FIELD DDS6VR
+     F*       75         ERROR ON FIELD DDS7VR
+     F*       76         ERROR ON FIELD DDS8VR
+     F*
+     F*       77         CONTROL SCREEN HEADER DISPLAYED
+     F*       78         SUBFILE CLEAR OR DISPLAY
+     F*       79         CONDITION '+' FOR MESSAGE SUBFILE
+     F*       80         ROLLUP TAKEN
+     F*       81         CONDITIONS READING OF CHANGED RECORDS IN SUBFILE
+     F*       82         ENABLE COMMAND KEY F9
+     F*       83         ERROR ON DDCRNM
+     F*       84         CONDITION '+' FOR DETAIL SUBFILE
+     F*
+     F*       98         DATE FORMAT = MMDDYY
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  ..  ..  ..  ..                      CPM005
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  87  88  89  90
+     F*       91  92  93  94  95  96  97  ..  99
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     E*=========================================================================
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZDATE2Z1
+     I*
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I* Portfolio Definition Via Access Program                           S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I* Portfolio Customer Details Accessed Via Access Program            S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I* Bank Details Accesses Via Access Program                          S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I* Customer Details Accessed Via Access Program                      S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I* Module Details Accesses Via Access Program                        CPB001
+     I*                                                                   CPB001
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* First DS For Access Programs, Short Data Structure                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*                                                                   S01486
+     IRPARM       DS                            100                       S01486
+     I                                        1   5 WWTNLA                082266
+     I**
+     I** EXTERNAL FORMAT FOR GROUP DATA AREA
+     I**
+     I**WWGDA     E DSPMGRDAPP                                            S01486
+     I**
+     I**WWLDA     E DSPMLDAPP                                             S01486
+     IWWLDA     E DSPMLDAPD                                               092953
+     I**
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I***********                           244 253 WSID                  S01486
+     I***********                           254 263 USID                  S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I**LDA1        DS                            256                     S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I***********                           132 141 DBFILE                S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /COPY ZSRSRC,ZTNLU1Z1
+     C*
+     C                     EXSR #INIT
+     C*
+     C** REDISPLAY INITIAL SCREEN UNTIL <ENTER> AND VALID DETAILS
+     C** OR UNTIL F9
+     C           WWERR     DOUEQ'N'                        B1
+     C           *IN61     ANDEQ'0'
+     C           *INKI     OREQ '1'
+     C*
+     C** WRITE AND READ INITIAL SCREEN
+     C                     WRITEPM0820D2
+     C                     WRITEPM0820D0
+     C*
+     C                     READ PM0820D0                 60
+     C*
+     C** IF F3 OR F12 RETURN TO CALLING PROGRAM WITH LR SET ON AND
+     C** RETURN CODE OF '1'
+     C           *INKC     IFEQ '1'                        B2
+     C***********WWTYPE    ANDEQ'M'                                       S01486
+     C           *INKL     OREQ '1'
+     C***********          MOVE '1'       WWRTRN                          S01486
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E2
+     C*
+     C** IF F3 TAKEN FROM GROUP JOB RETURN TO MAIN MENU
+     C           *INKC     IFEQ '1'                        B2
+     C***********WWTYPE    ANDEQ'G'                                       S01486
+     C*
+     C***SET*ENQUIRIES TEMINATING INDICATOR ON DTAARA/*GDA TO 'Y'         S01486
+     C***********          MOVEL'Y'       QMENQT                          S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C*
+     C***TERMINATE*GROUP JOB                                              S01486
+     C***********          CALL 'PMC1020'                                 S01486
+     C                     END                             E2
+     C*
+     C** IF <ENTER TAKEN VALIDATE FIRST SCREEN DETAILS
+     C           *IN61     IFEQ '0'                        B2
+     C           *INKI     OREQ '1'
+     C                     MOVE 'N'       WWERR
+     C                     EXSR #SCR1
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C*
+     C** IF F9 WRITE BLANK DETAILS TO SUBFILE
+     C                     MOVE 'N'       WWINS   1
+     C           *INKI     IFEQ '1'                        B1
+     C                     MOVELDDRCNM    WWRCNM  6
+     C                     MOVE DDRPTF    WWRPTF  4
+     C                     MOVE *BLANKS   DDRCNM
+     C                     MOVE *BLANKS   DDRPTF
+     C                     EXSR #BLNK
+     C                     MOVE 'Y'       WWINS
+     C                     END                             E1
+     C*
+     C** IF ENTER PERFORM ROUTINE TO WRITE DETAILS OF EXTRA STATEMENTS
+     C** REQUESTED TO SCREEN
+     C           *IN61     IFEQ '0'                        B1
+     C                     EXSR #DETLS
+     C                     END                             E1
+     C*
+     C** LOOP ROUND UNTIL ROUTINE EXITED BY RETURN TO CALLING PROGRAM
+     C                     MOVE 'N'       WWLOOP  1
+     C                     MOVE '1'       *IN62
+     C                     MOVEA'00'      *IN,82
+     C                     MOVE WWINF2    DDINFO
+     C*
+     C           *INKI     IFEQ '0'
+     C                     MOVE '1'       *IN77
+     C                     END
+     C*
+     C           WWLOOP    DOUEQ'Y'                        B1
+     C*
+     C** WRITE AND READ SCREEN
+     C                     MOVE '1'       *IN62
+     C                     WRITEPM0820D2
+     C                     WRITEPM0820D0
+     C*
+     C                     EXFMTPM0820C0
+     C*
+     C** IF ROLLUP AND INSERT MODE WRITE BLANK DETAILS TO SUBFILE
+     C           *IN80     IFEQ '1'                        B2
+     C           WWINS     ANDEQ'Y'
+     C                     EXSR #BLNK
+     C                     END                             E2
+     C*
+     C** IF ROLLUP AND AMEND MODE PERFORM DETAIL ROUTINE TO OUTPUT
+     C** FURTHER DETAILS TO SUBFILE
+     C           *IN80     IFEQ '1'                        B2
+     C           WWINS     ANDEQ'N'
+     C                     EXSR #DETLS
+     C                     END                             E2
+     C*
+     C** IF F3 RETURN WITH LR SET ON
+     C           *INKC     IFEQ '1'                        B2
+     C***********WWTYPE    ANDEQ'M'                                       S01486
+     C***********          MOVE '1'       WWRTRN                          S01486
+     C                     MOVE 'E'       RCMD                            S01486
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E2
+     C*
+     C***IF*F3*TAKEN FROM GROUP JOB RETURN TO MAIN MENU                   S01486
+     C************INKC     IFEQ '1'                        B2             S01486
+     C***********WWTYPE    ANDEQ'G'                                       S01486
+     C*
+     C***SET*ENQUIRIES TEMINATING INDICATOR ON DTAARA/*GDA TO 'Y'         S01486
+     C***********          MOVEL'Y'       QMENQT                          S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C*
+     C***TERMINATE*GROUP JOB                                              S01486
+     C***********          CALL 'PMC1020'                                 S01486
+     C***********          END                             E2             S01486
+     C*
+     C** IF F12 RETURN WITH LR SET OFF
+     C           *INKL     IFEQ '1'                        B2
+     C***********          MOVE '2'       WWRTRN                          S01486
+     C                     MOVE 'F'       RCMD                            S01486
+     C                     RETRN
+     C                     END                             E2
+     C*
+     C** IF ENTER TAKEN VALIDATE DETAILS INPUT
+     C           *IN61     IFEQ '0'                        B2
+     C                     MOVE '1'       *IN63
+     C                     MOVE 'N'       WWERR   1
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** READ THROUGH ALL RECORDS CHANGED ON SUBFILE
+     C                     READCPM0820S0                 81
+     C*
+     C           *IN81     DOWEQ'0'                        B3
+     C                     MOVE WWERR     WSERR   1
+     C                     EXSR #VALD
+     C*
+     C** IF THIS IS FIRST ERROR ON SCREEN SET SUBFILE RECORD NUMBER SO
+     C** THAT FIRST ERROR DISPLAYED
+     C           WWERR     IFEQ 'Y'                        B4
+     C           WSERR     ANDEQ'N'
+     C                     Z-ADDRRN2      SFLRRN
+     C                     END                             E4
+     C                     MOVE '1'       *IN63                           053091
+     C*
+     C                     MOVE DDCNUM    WSCNUM 10
+     C           RRN2      CHAINPM0820S0             60
+     C                     MOVE WSCNUM    DDCNUM
+     C                     UPDATPM0820S0
+     C                     READCPM0820S0                 81
+     C                     END                             E3
+     C*
+     C** IF ALL DETAILS VALID PERFORM ROUTINE TO UPDATE FILES
+     C           WWERR     IFEQ 'N'                        B3
+     C                     EXSR #UPDAT
+     C***********          MOVE '0'       WWRTRN                          S01486
+     C                     RETRN
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C           #INIT     BEGSR
+     C*
+     C** RECEIVE PARAMETERS FROM CALLING PROGRAM
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5                       S01486
+     C                     PARM           RLEV    1                       S01486
+     C                     PARM           BRANCH  3                       S01486
+     C                     PARM           RPARM 100                       S01486
+     C                     PARM           RACT    1                       S01486
+     C                     PARM           RCMD    1                       S01486
+     C***********          PARM           WWTYPE  1                       S01486
+     C***********          PARM           WWRTRN  1                       S01486
+     C***********          PARM           WWSTMR  1                       S01486
+     C***********          PARM           WWTNLA  5                       S01486
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE SCREEN TEXT FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C***********          MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*
+     C***PARAMETER*LIST*FOR ACCESS TO PMRQXSPP                            S01486
+     C** PARAMETER LIST FOR ACCESS TO PMRQXSPD                            S01486
+     C           RQXSKY    KLIST
+     C***********          KFLD           DDUSID                          S01486
+     C                     KFLD           USER                            S01486
+     C**********           KFLD           WKCNUM  60                                          CSD027
+     C                     KFLD           WKCNUM  6                                           CSD027
+     C                     KFLD           WKPTFR  4
+     C                     KFLD           WWWHEN  1
+     C                     KFLD           WWVLOR  50
+     C                     KFLD           WWVLNT  1
+     C*
+     C           RQXSK1    KLIST
+     C***********          KFLD           DDUSID                          S01486
+     C                     KFLD           USER                            S01486
+     C*
+     C** PARAMETER LIST FOR ACCESS TO PMPORTLL
+     C           PORTKY    KLIST
+     C**********           KFLD           WWCNUM  60                                          CSD027
+     C                     KFLD           WWCNUM  6                                           CSD027
+     C                     KFLD           WWPTFR  4
+     C*
+     C           PORTK1    KLIST
+     C                     KFLD           WWCNUM
+     C*
+     C** PERFORM PROCESSING REQUIRED FIRST TIME PROGRAM CALLED
+     C           WWFRST    IFNE 'Y'                        B1
+     C                     MOVE 'Y'       WWFRST  1
+     C*
+     C** SETUP MESSAGE QUEUE DETAILS
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C*
+     C** SET UP FIELDS USED IN SR/ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** PREPARE LDA
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT                           S01486
+     C                     MOVEL'PM0820'  DBPGM                           S01486
+     C                     OUT  LDA                                       S01486
+     C*
+     C** RETRIEVE INFOMESSAGES
+     C                     MOVEL'PM90073' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    WWINF1 78
+     C*
+     C                     MOVEL'PM90074' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    WWINF2 78
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1 IF CALLED FROM MENU
+     C***********WWTYPE    IFEQ 'M'                        B2             S01486
+     C***********          READ SDBANKL1                 60               S01486
+      *                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C*
+     C************IN60     IFEQ '1'                        - B1           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'01'      DBASE   30       ***************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY  29        ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C*
+     C** IF FOUND CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    IFEQ 'M'                        B3
+     C                     MOVE '1'       *IN98
+     C                     END                             E3
+     C*
+     C***********          MOVE BJMRDT    DDRUNA                          S01486
+     C                     Z-ADDBJRDNB    WWRDNB  50
+     C***********          END                             E2             S01486
+     C*                                                                   CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM '*DBERR ' @RTCD                           CPB001
+     C                     PARM '*FIRST ' @OPTN                           CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+     C*                                                                   CPB001
+     C           @RTCD     IFNE *BLANKS                                   CPB001
+     C           *LOCK     IN   LDA                                       CPB001
+     C                     MOVEL'03'      DBASE            ***************CPB001
+     C                     MOVEL'SDMMODPD'DBFILE           * DB ERROR 03 *CPB001
+     C                     MOVE *BLANKS   DBKEY            ***************CPB001
+     C                     OUT  LDA                                       CPB001
+     C                     EXSR *PSSR                                     CPB001
+     C                     ENDIF                                          CPB001
+     C*
+     C** GET PM INSTALLATION CONTROL DATA
+     C***********1         SETLLSDPORTL1                                  S01486
+     C***********          READ SDPORTL1                 60               S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'02'      DBASE            ***************S01486
+     C                     MOVEL'SDPORTPD'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E1           S01486
+     C***********          MOVELBJMRDT    DDRUNA                          S01486
+     C*
+     C************IN60     IFEQ '1'                        B2             S01486
+     C***********          Z-ADD2         WWBASE  30       ***************S01486
+     C***********          MOVEL'SDPORTL1'WWFILE 10        **DB ERROR 02**S01486
+     C***********          MOVE *BLANKS   WWKEY  29        ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             E2             S01486
+     C                     END                             E1
+     C*
+     C** PERFORM PROCESSING DONE FOR EACH CALL OF PROGRAM
+     C*
+     C                     MOVE '0'       *IN77
+     C                     MOVE '0'       *IN84
+     C                     MOVE '1'       *IN82
+     C                     MOVE WWINF1    DDINFO
+     C                     MOVE *BLANKS   DDRCNM
+     C                     MOVE *BLANKS   DDRPTF
+     C*
+     C***IF*CALLED FROM GROUP JOB RETRIEVE DETAILS FROM DTAARA/*LDA       S01486
+     C***********WWTYPE    IFEQ 'G'                        B1             S01486
+     C***********          CALL 'PMC1003'                                 S01486
+     C***********          PARM           WWLDA                           S01486
+     C*
+     C                     CALL 'PMC1003'                                 092953
+     C                     PARM           WWLDA                           092953
+     C********** QMCNUM    IFNE 0                                                      092953 CSD027
+     C           QMCNUM    IFNE *BLANKS                                                       CSD027
+     C                     MOVELQMCNUM    DDRCNM                          092953
+     C                     MOVE QMPTF2    DDRPTF                          092953
+     C           QMCNUM    SETLLPMPORTLL                                  160682
+     C                     READ PMPORTLL                 55               160682
+     C           *IN55     IFEQ '0'                                       160682
+     C           QMCNUM    ANDEQPNCNUM                                    160682
+     C                     MOVE PNPTFR    DDRPTF                          160682
+     C                     ELSE                                           160682
+     C                     MOVE FCR997    DDRPTF                          160682
+     C                     END                                            160682
+     C                     END                                            092953
+     C*                                                                   092953
+     C***********          MOVE QMRUNA    DDRUNA                          S01486
+     C***********          MOVELQMCNUM    DDRCNM                          S01486
+     C***********          MOVE QMPTF2    DDRPTF                          S01486
+     C***********          Z-ADDQMRDNB    WWRDNB                          S01486
+     C***********          END                             E1             S01486
+     C*
+     C** FORMAT TODAYS DATE USED AS DEFAULT
+     C                     Z-ADDWWRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     WWRDNA  6
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** CLEAR SUBFILE
+     C                     MOVE '1'       *IN78
+     C                     WRITEPM0820C0
+     C                     MOVE '0'       *IN78
+     C*
+     C** PERFORM ROUTINE TO RESET ALL INDICATORS AND SCREEN FIELDS
+     C                     EXSR #RESET
+     C                     MOVE 'Y'       WWNPTR  1
+     C*
+     C                     Z-ADD0         RRN2    40
+     C                     Z-ADD0         RRN1    50
+     C*
+     C                     ENDSR
+     C           #RESET    BEGSR
+     C*
+     C                     MOVEA'00000000'*IN,62
+     C                     MOVEA'0000000' *IN,70
+     C                     MOVE '0'       *IN,87
+     C                     MOVE '0'       *IN58                           CPM005
+     C                     MOVE '0'       *IN59                           CPM005
+     C*
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDVLOR
+     C                     MOVE *BLANKS   DDWHEN
+     C                     MOVE *BLANKS   DDVLNT
+     C                     MOVE *BLANKS   DDFRMT
+     C                     MOVE *BLANKS   DDS1VR
+     C                     MOVE *BLANKS   DDS2VR
+     C                     MOVE *BLANKS   DDS3VR
+     C                     MOVE *BLANKS   DDS4VR
+     C                     MOVE *BLANKS   DDS5VR
+     C                     MOVE *BLANKS   DDS6VR
+     C                     MOVE *BLANKS   DDS7VR
+     C                     MOVE *BLANKS   DDS8VR
+     C                     MOVE *BLANKS   DDS9VR                          CPM005
+     C                     MOVE *BLANKS   DDS0VR                          CPM005
+     C*
+     C                     ENDSR
+     C           #DEFLT    BEGSR
+     C*
+     C                     MOVE '1'       *IN63
+     C*
+     C** IF DEFAULTS REQUIRED FOR 9997, 9998 OR 9999 PORTFOLIO OBTAIN
+     C***DETAILS*FROM*SDPLCSPD                                            S01486
+     C** DETAILS FROM CUSTOMER  FILE                                      S01486
+     C********** WWRPTF    IFEQ P9R997                     B1             S01486
+     C********** WWRPTF    OREQ P9R998                                    S01486
+     C********** WWRPTF    OREQ P9R999                                    S01486
+     C           WWRPTF    IFEQ FCR997                     B1             S01486
+     C           WWRPTF    OREQ FCR998                                    S01486
+     C           WWRPTF    OREQ FCR999                                    S01486
+     C           WWRPTF    OREQ '    '
+     C*
+     C** ALLOCATE RECORD FOR UPDATE
+     C           WWRITE    IFEQ 'N'                        B2
+     C           RRN2      CHAINPM0820S0             60
+     C           DDPTFR    IFEQ *BLANKS                                   053091
+     C           DDCNUM    ANDNE*BLANKS                                   053091
+     C**********           MOVELDDCNUM    CNUMDN  60                                   053091 CSD027
+     C                     MOVELDDCNUM    CNUMDN  6                                           CSD027
+     C           CNUMDN    SETLLPMPORTLL                                  053091
+     C           CNUMDN    READEPMPORTLL                 54               053091
+     C           *IN54     IFEQ '0'                                       64941
+     C                     MOVE PNPTFR    WWRPTF                          053091
+     C                     ELSE                                           64941
+     C**********           MOVE P9R997    WWRPTF                     64941S01486
+     C                     MOVE FCR997    WWRPTF                          S01486
+     C                     END                                            64941
+     C                     END                                            053091
+     C                     END                             E2
+     C*
+     C** FORMAT DETAILS FOR OUTPUT
+     C                     MOVE WWRDNA    DDVLOR
+     C                     MOVE 'I'       DDWHEN
+     C****                 MOVE 'L'       DDVLNT                          062282
+     C                     MOVE 'A'       DDVLNT                          062282
+     C                     MOVE 'B'       DDFRMT
+     C*                                                                   CPM005
+     C** PORTFOLIO IS NOT BLANKS ACCESS FILE                              CPM005
+     C           WWRPTF    IFNE *BLANKS                    *B9            CPM005
+     C           WWRPTF    IFEQ FCR997                                    CPM005
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVEL'9997'    WWPTFR                          CPM005
+     C                     END                                            CPM005
+     C           WWRPTF    IFEQ FCR998                                    CPM005
+     C                     MOVEL'9998'    WWPTFR                          CPM005
+     C                     END                                            CPM005
+     C           WWRPTF    IFEQ FCR999                                    CPM005
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVEL'9999'    WWPTFR                          CPM005
+     C                     END                                            CPM005
+     C                     MOVE WWRCNM    WWCNUM                          CPM005
+     C*                                                                   CPM005
+     C           PORTKY    CHAINPMCNSDLL             57                   CPM005
+     C*                                                                   CPM005
+     C** RECORD FOUND SETUP SCREEN FIELDS WITH FILE PMCNSDLL              CPM005
+     C           *IN57     IFEQ '0'                        *B10           CPM005
+     C                     MOVEL*BLANKS   DDCNUM                          CPM005
+     C                     MOVELWWRCNM    DDCNUM                          CPM005
+     C                     MOVELWWRPTF    DDPTFR                          CPM005
+     C                     MOVE PNS1VR    DDS1VR                          CPM005
+     C                     MOVE PNS2VR    DDS2VR                          CPM005
+     C                     MOVE PNS3VR    DDS3VR                          CPM005
+     C                     MOVE PNS4VR    DDS4VR                          CPM005
+     C                     MOVE PNS5VR    DDS5VR                          CPM005
+     C                     MOVE PNS6VR    DDS6VR                          CPM005
+     C                     MOVE PNS7VR    DDS7VR                          CPM005
+     C                     MOVE PNS8VR    DDS8VR                          CPM005
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C*                                                                   CPM005
+     C           WWRITE    IFEQ 'Y'                        B3             CPM005
+     C                     ADD  1         IK                              CPM005
+     C                     ADD  1         RRN2                            CPM005
+     C                     WRITEPM0820S0                                  CPM005
+     C                     ELSE                            X3             CPM005
+     C                     UPDATPM0820S0                                  CPM005
+     C                     END                             E3             CPM005
+     C*                                                                   CPM005
+     C** RECORD NOT FOUND                                                 CPM005
+     C                     ELSE                            *B10           CPM005
+     C*
+     C***********WWRCNM    CHAINSDPLCSL2             86                   S01486
+     C** Access Customer Details.                                         S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM WWRCNM    PLCUS  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C*                                                                   S01486
+     C*
+     C************IN86     IFEQ '0'                        B2             S01486
+     C           PRTCD     IFEQ *BLANKS                    B2             S01486
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVELWWRCNM    DDCNUM
+     C                     MOVE WWRPTF    DDPTFR
+     C                     MOVE QBS1VR    DDS1VR
+     C                     MOVE QBS2VR    DDS2VR
+     C                     MOVE QBS3VR    DDS3VR
+     C                     MOVE QBS4VR    DDS4VR
+     C                     MOVE QBS5VR    DDS5VR
+     C                     MOVE QBS6VR    DDS6VR
+     C                     MOVE QBS7VR    DDS7VR
+     C                     MOVE QBS8VR    DDS8VR
+     C                     MOVE QBINSU    DDS9VR                          CPM005
+     C                     MOVE QBCYSU    DDS0VR                          CPM005
+     C*
+     C           WWRITE    IFEQ 'Y'                        B3
+     C                     ADD  1         IK
+     C                     ADD  1         RRN2
+     C                     WRITEPM0820S0
+     C                     ELSE                            X3
+     C                     UPDATPM0820S0
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C                     END                             *E10           CPM005
+     C*                                                                   CPM005
+     C** PORTFOLIO IS BLANKS                                              CPM005
+     C                     ELSE                            *X9            CPM005
+     C***********WWRCNM    CHAINSDPLCSL2             86                   CPM005
+     C*                                                                   CPM005
+     C** Access Customer Details.                                         CPM005
+     C*                                                                   CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   PRTCD   7                       CPM005
+     C                     PARM '*KEY'    POPTN   7                       CPM005
+     C                     PARM WWRCNM    PLCUS  10                       CPM005
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM005
+     C*                                                                   CPM005
+     C************IN86     IFEQ '0'                        B2             CPM005
+     C           PRTCD     IFEQ *BLANKS                    B2             CPM005
+     C                     MOVE *BLANKS   DDCNUM                          CPM005
+     C                     MOVELWWRCNM    DDCNUM                          CPM005
+     C                     MOVE WWRPTF    DDPTFR                          CPM005
+     C                     MOVE QBS1VR    DDS1VR                          CPM005
+     C                     MOVE QBS2VR    DDS2VR                          CPM005
+     C                     MOVE QBS3VR    DDS3VR                          CPM005
+     C                     MOVE QBS4VR    DDS4VR                          CPM005
+     C                     MOVE QBS5VR    DDS5VR                          CPM005
+     C                     MOVE QBS6VR    DDS6VR                          CPM005
+     C                     MOVE QBS7VR    DDS7VR                          CPM005
+     C                     MOVE QBS8VR    DDS8VR                          CPM005
+     C                     MOVE QBINSU    DDS9VR                          CPM005
+     C                     MOVE QBCYSU    DDS0VR                          CPM005
+     C*                                                                   CPM005
+     C           WWRITE    IFEQ 'Y'                        B3             CPM005
+     C                     ADD  1         IK                              CPM005
+     C                     ADD  1         RRN2                            CPM005
+     C                     WRITEPM0820S0                                  CPM005
+     C                     ELSE                            X3             CPM005
+     C                     UPDATPM0820S0                                  CPM005
+     C                     END                             E3             CPM005
+     C*                                                                   CPM005
+     C                     END                             E2             CPM005
+     C                     END                             *E9            CPM005
+     C                     END                             E1
+     C*
+     C** IF DEFAULTS REQUIRED FOR DEFINED PORTFOLIO OBTAIN DETAILS FROM
+     C** LF/PMPORTLL
+     C********** WWRPTF    IFNE P9R997                     B1             S01486
+     C********** WWRPTF    ANDNEP9R998                                    S01486
+     C********** WWRPTF    ANDNEP9R999                                    S01486
+     C           WWRPTF    IFNE FCR997                     B1             S01486
+     C           WWRPTF    ANDNEFCR998                                    S01486
+     C           WWRPTF    ANDNEFCR999                                    S01486
+     C           WWRPTF    ANDNE'    '
+     C*
+     C** ALLOCATE RECORD FOR UPDATE
+     C           WWRITE    IFEQ 'N'                        B2
+     C           RRN2      CHAINPM0820S0             60
+     C                     END                             E2
+     C*
+     C** FORMAT DETAILS FOR OUTPUT
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVELWWRCNM    WWCNUM
+     C                     MOVE WWRPTF    WWPTFR
+     C*
+     C                     MOVE WWRDNA    DDVLOR
+     C                     MOVE 'I'       DDWHEN
+     C****                 MOVE 'L'       DDVLNT                          062282
+     C                     MOVE 'A'       DDVLNT                          062282
+     C                     MOVE 'B'       DDFRMT
+     C*
+     C           PORTKY    CHAINPMPORTLL             86
+     C*
+     C           *IN86     IFEQ '0'                        B2
+     C                     MOVELWWRCNM    DDCNUM
+     C                     MOVE WWRPTF    DDPTFR
+     C                     MOVE PNS1VR    DDS1VR
+     C                     MOVE PNS2VR    DDS2VR
+     C                     MOVE PNS3VR    DDS3VR
+     C                     MOVE PNS4VR    DDS4VR
+     C                     MOVE PNS5VR    DDS5VR
+     C                     MOVE PNS6VR    DDS6VR
+     C                     MOVE PNS7VR    DDS7VR
+     C                     MOVE PNS8VR    DDS8VR
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C*
+     C           WWRITE    IFEQ 'Y'                        B3
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C                     ELSE                            X3
+     C                     UPDATPM0820S0
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF PORTFOLIO REFERENCE OF BLANK ENTER SET UP DEFAULTS FOR *ALL
+     C** DEFINED PORTFOLIOS ON LF/PMPORTLL PLUS FOR 9997, 9998, 9999
+     C** PORTFOLIOS AND FOR CUSTOMER STATEMENT
+     C           WWRPTF    IFEQ '*ALL'                     B1
+     C*
+     C** FORMAT DETAILS FOR OUTPUT
+     C                     MOVELWWRCNM    WWCNUM
+     C                     MOVE *LOVAL    WWPTFR
+     C*
+     C                     MOVE WWRDNA    DDVLOR
+     C                     MOVE 'I'       DDWHEN
+     C****                 MOVE 'L'       DDVLNT                          062282
+     C                     MOVE 'A'       DDVLNT                          062282
+     C                     MOVE 'B'       DDFRMT
+     C*
+     C           PORTKY    SETLLPMPORTLL
+     C           PORTK1    READEPMPORTLL                 86
+     C*
+     C* IF NO PORTFOLIOS ARE DEFINED FOR CUSTOMER IN PMPORTLL, MOVE       056986
+     C* CUSTOMER NUMBER ON DISPLAY                                        056986
+     C*                                                                   056986
+     C           *IN86     IFEQ '1'                                       056986
+     C                     MOVELWWRCNM    DDCNUM                          056986
+     C                     END                                            056986
+     C*                                                                   056986
+     C           *IN86     DOWEQ'0'                        B2
+     C                     MOVELWWRCNM    DDCNUM
+     C                     MOVE PNPTFR    DDPTFR
+     C                     MOVE PNS1VR    DDS1VR
+     C                     MOVE PNS2VR    DDS2VR
+     C                     MOVE PNS3VR    DDS3VR
+     C                     MOVE PNS4VR    DDS4VR
+     C                     MOVE PNS5VR    DDS5VR
+     C                     MOVE PNS6VR    DDS6VR
+     C                     MOVE PNS7VR    DDS7VR
+     C                     MOVE PNS8VR    DDS8VR
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C           PORTK1    READEPMPORTLL                 86
+     C                     END                             E2
+     C*
+     C** OBTAIN CUSTOMER DETAILS FROM SDPLCSL2
+     C***********WWRCNM    CHAINSDPLCSL2             86
+     C** Access Customer Details.                                         S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM WWRCNM    PLCUS  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C*                                                                   S01486
+     C*
+     C************IN86     IFEQ '0'                        B2             S01486
+     C                     MOVE QBS1VR    DDS1VR
+     C                     MOVE QBS2VR    DDS2VR
+     C                     MOVE QBS3VR    DDS3VR
+     C                     MOVE QBS4VR    DDS4VR
+     C                     MOVE QBS5VR    DDS5VR
+     C                     MOVE QBS6VR    DDS6VR
+     C                     MOVE QBS7VR    DDS7VR
+     C                     MOVE QBS8VR    DDS8VR
+     C                     MOVE QBINSU    DDS9VR                          CPM005
+     C                     MOVE QBCYSU    DDS0VR                          CPM005
+     C*
+     C***IF*DETAILS*FOR*'9997'*PORTFOLIOS*DISPLAYED*OUTPUT*PROMPT******** CPB001
+     C** IF DETAILS FOR '9997' PORTFOLIOS DISPLAYED AND PRIVATE BANKING   CPB001
+     C** MODULE NOT SWITCH ON, OUTPUT PROMPT                              CPB001
+     C********** P9DP97    IFEQ 'Y'                        B3             S01486
+     C           FCDP97    IFEQ 'Y'                        B3             S01486
+     C           BGN4ST    ANDEQ'N'                                       CPB001
+     C                     MOVEL'9997'    WWPTFR                          CPM005
+     C           PORTKY    CHAINPMCNSDLL             57                   CPM005
+     C*                                                                   CPM005
+     C** RECORD FOUND SETUP SCREEN FIELDS WITH FILE PMCNSDLL              CPM005
+     C           *IN57     IFEQ '0'                        *B10           CPM005
+     C                     MOVEL*BLANKS   DDCNUM                          CPM005
+     C                     MOVELWWRCNM    DDCNUM                          CPM005
+     C                     MOVE PNS1VR    DDS1VR                          CPM005
+     C                     MOVE PNS2VR    DDS2VR                          CPM005
+     C                     MOVE PNS3VR    DDS3VR                          CPM005
+     C                     MOVE PNS4VR    DDS4VR                          CPM005
+     C                     MOVE PNS5VR    DDS5VR                          CPM005
+     C                     MOVE PNS6VR    DDS6VR                          CPM005
+     C                     MOVE PNS7VR    DDS7VR                          CPM005
+     C                     MOVE PNS8VR    DDS8VR                          CPM005
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C                     END                             *E10           CPM005
+     C**********           MOVE P9R997    DDPTFR                          S01486
+     C                     MOVE FCR997    DDPTFR                          S01486
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C                     END                             E3
+     C*
+     C** IF DETAILS FOR '9998' PORTFOLIOS DISPLAYED OUTPUT PROMPT
+     C********** P9DP98    IFEQ 'Y'                        B3             S01486
+     C**********           MOVE P9R998    DDPTFR                          S01486
+     C           FCDP98    IFEQ 'Y'                        B3             S01486
+     C                     MOVEL'9998'    WWPTFR                          CPM005
+     C           PORTKY    CHAINPMCNSDLL             57                   CPM005
+     C*                                                                   CPM005
+     C** RECORD FOUND SETUP SCREEN FIELDS WITH FILE PMCNSDLL              CPM005
+     C           *IN57     IFEQ '0'                        *B10           CPM005
+     C                     MOVEL*BLANKS   DDCNUM                          CPM005
+     C                     MOVELWWRCNM    DDCNUM                          CPM005
+     C                     MOVE PNS1VR    DDS1VR                          CPM005
+     C                     MOVE PNS2VR    DDS2VR                          CPM005
+     C                     MOVE PNS3VR    DDS3VR                          CPM005
+     C                     MOVE PNS4VR    DDS4VR                          CPM005
+     C                     MOVE PNS5VR    DDS5VR                          CPM005
+     C                     MOVE PNS6VR    DDS6VR                          CPM005
+     C                     MOVE PNS7VR    DDS7VR                          CPM005
+     C                     MOVE PNS8VR    DDS8VR                          CPM005
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C                     ELSE                            *X10           CPM005
+     C                     MOVE QBS1VR    DDS1VR                          CPM005
+     C                     MOVE QBS2VR    DDS2VR                          CPM005
+     C                     MOVE QBS3VR    DDS3VR                          CPM005
+     C                     MOVE QBS4VR    DDS4VR                          CPM005
+     C                     MOVE QBS5VR    DDS5VR                          CPM005
+     C                     MOVE QBS6VR    DDS6VR                          CPM005
+     C                     MOVE QBS7VR    DDS7VR                          CPM005
+     C                     MOVE QBS8VR    DDS8VR                          CPM005
+     C                     MOVE QBINSU    DDS9VR                          CPM005
+     C                     MOVE QBCYSU    DDS0VR                          CPM005
+     C                     END                             *E10           CPM005
+     C                     MOVE FCR998    DDPTFR                          S01486
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C                     END                             E3
+     C*
+     C** IF PRIVATE BANKING MODULE SWITCH OFF                             CPB001
+     C** OUTPUT DETAILS FOR '9999' PORTFOLIO
+     C           BGN4ST    IFEQ 'N'                        B*3            CPB001
+     C                     MOVEL'9999'    WWPTFR                          CPM005
+     C           PORTKY    CHAINPMCNSDLL             57                   CPM005
+     C*                                                                   CPM005
+     C** RECORD FOUND SETUP SCREEN FIELDS WITH FILE PMCNSDLL              CPM005
+     C           *IN57     IFEQ '0'                        *B10           CPM005
+     C                     MOVEL*BLANKS   DDCNUM                          CPM005
+     C                     MOVELWWRCNM    DDCNUM                          CPM005
+     C                     MOVE PNS1VR    DDS1VR                          CPM005
+     C                     MOVE PNS2VR    DDS2VR                          CPM005
+     C                     MOVE PNS3VR    DDS3VR                          CPM005
+     C                     MOVE PNS4VR    DDS4VR                          CPM005
+     C                     MOVE PNS5VR    DDS5VR                          CPM005
+     C                     MOVE PNS6VR    DDS6VR                          CPM005
+     C                     MOVE PNS7VR    DDS7VR                          CPM005
+     C                     MOVE PNS8VR    DDS8VR                          CPM005
+     C                     MOVE PNS9VR    DDS9VR                          CPM005
+     C                     MOVE PNS0VR    DDS0VR                          CPM005
+     C                     ELSE                            *X10           CPM005
+     C                     MOVE QBS1VR    DDS1VR                          CPM005
+     C                     MOVE QBS2VR    DDS2VR                          CPM005
+     C                     MOVE QBS3VR    DDS3VR                          CPM005
+     C                     MOVE QBS4VR    DDS4VR                          CPM005
+     C                     MOVE QBS5VR    DDS5VR                          CPM005
+     C                     MOVE QBS6VR    DDS6VR                          CPM005
+     C                     MOVE QBS7VR    DDS7VR                          CPM005
+     C                     MOVE QBS8VR    DDS8VR                          CPM005
+     C                     MOVE QBINSU    DDS9VR                          CPM005
+     C                     MOVE QBCYSU    DDS0VR                          CPM005
+     C                     END                             *E10           CPM005
+     C**********           MOVE P9R999    DDPTFR                          S01486
+     C                     MOVE FCR999    DDPTFR                          S01486
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C                     ENDIF                           E*3            CPB001
+     C*
+     C** OUTPUT PROMPT LINE FOR CUSTOMER VALUATION STATEMENT
+     C                     MOVE *BLANKS   DDPTFR
+     C                     ADD  1         RRN2
+     C                     ADD  1         IK
+     C                     WRITEPM0820S0
+     C***********          END                             E2             S01486
+     C                     END                             E1
+     C*
+     C                     MOVE '0'       *IN63
+     C*
+     C                     ENDSR
+     C           #BLNK     BEGSR
+     C*
+     C** CLEAR ALL SCREEN FIELDS AND INDICATORS
+     C                     EXSR #RESET
+     C*
+     C                     Z-ADDRRN1      RRN2
+     C                     MOVE '1'       *IN85
+     C                     Z-ADD1         IK      30
+     C*
+     C** SET UP ALL DEFAULT DETAILS FOR OUTPUT
+     C           *INKI     IFEQ '1'
+     C                     MOVE 'Y'       WWRITE  1
+     C                     EXSR #DEFLT
+     C                     END
+     C*
+     C** CLEAR ALL SCREEN FIELDS AND INDICATORS
+     C                     EXSR #RESET
+     C*
+     C** WRITE SCREEN FULL OF BLANK RECORDS
+     C           IK        DO   13                         B1
+     C                     ADD  1         RRN2
+     C                     WRITEPM0820S0
+     C                     END                             E1
+     C*
+     C                     Z-ADDRRN2      RRN1
+     C                     Z-ADDRRN2      SFLRRN
+     C*
+     C                     ENDSR
+     C           #DETLS    BEGSR
+     C*
+     C** CLEAR ALL SCREEN FIELDS AND INDICATORS
+     C                     EXSR #RESET
+     C*
+     C                     Z-ADDRRN1      RRN2
+     C*
+     C** IF NEW SCREEN REQUESTED SET FILE POINTER BEFORE FIRST RECORD
+     C           WWNPTR    IFEQ 'Y'
+     C                     MOVE 'N'       WWNPTR
+     C*
+     C** CLEAR SUBFILE
+     C                     MOVE '1'       *IN78
+     C                     WRITEPM0820C0
+     C                     MOVE '0'       *IN78
+     C*
+     C                     MOVELDDRCNM    WKCNUM
+     C*
+     C** MOVE PORTFOLIO REFERENCE ON FILE INTO KEY FIELD
+     C                     SELEC                           B1
+     C*
+     C           DDRPTF    WHEQ *BLANKS
+     C           DDRPTF    OREQ FCR997                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           DDRPTF    OREQ FCR999                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C                     MOVE *LOVAL    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R997                                    S01486
+     C           DDRPTF    WHEQ FCR997                                    S01486
+     C           BGN4ST    ANDEQ'N'                                       CPB001
+     C                     MOVE '9997'    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R998                                    S01486
+     C           DDRPTF    WHEQ FCR998                                    S01486
+     C                     MOVE '9998'    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R999                                    S01486
+     C           DDRPTF    WHEQ FCR999                                    S01486
+     C           BGN4ST    ANDEQ'N'                                       CPB001
+     C                     MOVE '9999'    WKPTFR
+     C*
+     C                     OTHER
+     C                     MOVE DDRPTF    WKPTFR
+     C                     ENDSL                           E1
+     C*
+     C                     MOVE *LOVAL    WWWHEN
+     C                     MOVE *LOVAL    WWVLOR
+     C                     MOVE *LOVAL    WWVLNT
+     C*
+     C***********RQXSKY    SETLLPMRQXSPP                                  S01486
+     C           RQXSKY    SETLLPMRQXSPD                                  S01486
+     C                     END                             E1
+     C*
+     C** DO WHILE RECORDS READ FOR SAME USER
+     C***********RQXSK1    READEPMRQXSPP                 60               S01486
+     C           RQXSK1    READEPMRQXSPD                 60               S01486
+     C                     Z-ADD1         I       30
+     C*
+     C           *IN60     DOWEQ'0'                        B1
+     C           I         ANDLE13
+     C*
+     C** FORMAT DETAILS FOR OUTPUT
+     C                     MOVELQOCNUM    DDCNUM
+     C*
+     C           QOPTFR    IFNE '9997'
+     C           QOPTFR    ANDNE'9998'
+     C           QOPTFR    ANDNE'9999'
+     C                     MOVE QOPTFR    DDPTFR
+     C                     ELSE
+     C*
+     C           QOPTFR    IFEQ '9997'
+     C**********           MOVE P9R997    DDPTFR                          S01486
+     C                     MOVE FCR997    DDPTFR                          S01486
+     C                     END
+     C*
+     C           QOPTFR    IFEQ '9998'
+     C**********           MOVE P9R998    DDPTFR                          S01486
+     C                     MOVE FCR998    DDPTFR                          S01486
+     C                     END
+     C*
+     C           QOPTFR    IFEQ '9999'
+     C**********           MOVE P9R999    DDPTFR                          S01486
+     C                     MOVE FCR999    DDPTFR                          S01486
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     Z-ADDQOVLOR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDVLOR
+     C*
+     C                     MOVE QOWHEN    DDWHEN
+     C                     MOVE QOVLNT    DDVLNT
+     C                     MOVE QOFRMT    DDFRMT
+     C                     MOVE QOS1VR    DDS1VR
+     C                     MOVE QOS2VR    DDS2VR
+     C                     MOVE QOS3VR    DDS3VR
+     C                     MOVE QOS4VR    DDS4VR
+     C                     MOVE QOS5VR    DDS5VR
+     C                     MOVE QOS6VR    DDS6VR
+     C                     MOVE QOS7VR    DDS7VR
+     C                     MOVE QOS8VR    DDS8VR
+     C                     MOVE QOS9VR    DDS9VR                          CPM005
+     C                     MOVE QOS0VR    DDS0VR                          CPM005
+     C                     Z-ADDQOTNLU    DDTNLU
+     C                     ADD  1         RRN2
+     C                     ADD  1         I
+     C                     WRITEPM0820S0
+     C***********RQXSK1    READEPMRQXSPP                 60               S01486
+     C           RQXSK1    READEPMRQXSPD                 60               S01486
+     C                     END                             E1
+     C*
+     C** SET END OF SUBFILE INDICATOR
+     C           *IN60     IFEQ '0'                        B1
+     C***********          READPPMRQXSPP                 60               S01486
+     C                     READPPMRQXSPD                 60               S01486
+     C                     MOVE '0'       *IN84
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN84
+     C                     END                             E1
+     C*
+     C                     Z-ADDRRN2      RRN1
+     C                     Z-ADDRRN2      SFLRRN
+     C*
+     C                     ENDSR
+     C           #SCR1     BEGSR
+     C*
+     C** SET ALL ERROR INDICATORS OFF
+     C                     MOVE '0'       *IN,83
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C** CUSTOMER NUMBER: MUST BE BLANK OR NUMERIC OR VALID CUSTOMER
+     C** SHORTNAME
+     C           DDRCNM    IFNE *BLANKS                    B1
+     C                     MOVELDDRCNM    WWRCNM  6
+     C                     MOVE DDRCNM    WWORK4  4
+     C*
+     C                     TESTN          WWRCNM     60
+     C*
+     C***IF*CUSTOMER*NUMBER*ENTERED*CHECK*FOR*VALID*SHORTNAME*ENTERED*****109223
+     C************IN60     IFEQ '0'                        B2             109223
+     C***********WWORK4    ORNE *BLANKS                                   109223
+     C*
+     C***********DDRCNM    SETLLSDCUSTL2                                  S01486
+     C***********DDRCNM    READESDCUSTL2                 60               S01486
+     C*                                                                   S01486
+     C** Access Customer Details.                                         S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM DDRCNM    PCUST  10                       S01486
+     C                     PARM           PKYST   7                       S01486
+     C***********SDCUST    PARM SDCUST    DSFDY                     S01486176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C*                                                                   S01486
+     C*
+     C************IN60     IFEQ '1'                        B3             S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C                     MOVEL'PM82116' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN83
+     C                     MOVE 'Y'       WWERR
+     C*
+     C** OTHERWISE IF VALID CUSTOMER SHORTNAME ENTERED CONVERT TO
+     C** CUSTOMER NUMBER FOR OUTPUT
+     C                     ELSE                            X3
+     C                     MOVE *BLANKS   DDRCNM
+     C                     MOVELBBCUST    DDRCNM
+     C                     END                             E3
+     C*********************END                             E2             109223
+     C                     END                             E1
+     C*
+     C** CHECK THAT EXTRA STATEMENTS HAVE ALREADY BEEN REQUESTED BY USER
+     C                     MOVE *LOVAL    WKCNUM
+     C                     MOVE *LOVAL    WKPTFR
+     C                     MOVE *LOVAL    WWWHEN
+     C                     MOVE *LOVAL    WWVLOR
+     C                     MOVE *LOVAL    WWVLNT
+     C*
+     C***********RQXSKY    SETLLPMRQXSPP                                  S01486
+     C***********RQXSK1    READEPMRQXSPP                 60               S01486
+     C           RQXSKY    SETLLPMRQXSPD                                  S01486
+     C           RQXSK1    READEPMRQXSPD                 60               S01486
+     C*
+     C           *IN60     IFEQ '1'                        B1
+     C                     MOVEL'PM82117' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E1
+     C*
+     C** CHECK THAT REQUEST NOT AFTER END OF FILE
+     C           WWERR     IFEQ 'N'                        B1
+     C                     MOVELDDRCNM    WKCNUM
+     C*
+     C** MOVE PORTFOLIO REFERENCE ON FILE INTO KEY FIELD
+     C                     SELEC                           B2
+     C*
+     C           DDRPTF    WHEQ *BLANKS
+     C           DDRPTF    OREQ FCR997                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C           DDRPTF    OREQ FCR999                                    CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C                     MOVE *LOVAL    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R997                                    S01486
+     C           DDRPTF    WHEQ FCR997                                    S01486
+     C           BGN4ST    ANDEQ'N'                                       CPB001
+     C                     MOVE '9997'    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R998                                    S01486
+     C           DDRPTF    WHEQ FCR998                                    S01486
+     C                     MOVE '9998'    WKPTFR
+     C*
+     C********** DDRPTF    WHEQ P9R999                                    S01486
+     C           DDRPTF    WHEQ FCR999                                    S01486
+     C           BGN4ST    ANDEQ'N'                                       CPB001
+     C                     MOVE '9999'    WKPTFR
+     C*
+     C                     OTHER
+     C                     MOVE DDRPTF    WKPTFR
+     C                     ENDSL                           E2
+     C*
+     C                     MOVE *LOVAL    WWWHEN
+     C                     MOVE *LOVAL    WWVLOR
+     C                     MOVE *LOVAL    WWVLNT
+     C*
+     C***********RQXSKY    SETLLPMRQXSPP                                  S01486
+     C           RQXSKY    SETLLPMRQXSPD                                  S01486
+     C*
+     C** DO WHILE RECORDS READ FOR SAME USER
+     C***********RQXSK1    READEPMRQXSPP                 60               S01486
+     C           RQXSK1    READEPMRQXSPD                 60               S01486
+     C*
+     C           *IN60     IFEQ '1'                        B2
+     C                     MOVEL'PM82118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C           #VALD     BEGSR
+     C*
+     C** SET ALL ERROR INDICATORS OFF
+     C                     MOVEA'00000000'*IN,64
+     C                     MOVEA'00000'   *IN,72
+     C                     MOVE '0'       *IN,87
+     C                     MOVE '0'       *IN,58                          CPM005
+     C                     MOVE '0'       *IN,59                          CPM005
+     C*
+     C** CUSTOMER NUMBER: MUST BE DEFINED CUSTOMER OR BLANK (DELETION)
+     C           DDCNUM    IFNE *BLANKS                    B1
+     C*
+     C** IF CUSTOMER SHORTNAME ENTERED VALIDATE SHORTNAME AND SAVE
+     C** CUSTOMER NUMBER IN FIELD 'DDCNUM'
+     C                     MOVELDDCNUM    WWORK6  6
+     C                     MOVE DDCNUM    WWORK4  4
+     C*
+     C                     TESTN          WWORK6     60
+     C*
+     C***IF*SHORTNAME*ENTERED*CHECK*REFERS*TO*CUSTOMER*DEFINITION*********109223
+     C************IN60     IFEQ '0'                        B2             109223
+     C***********WWORK4    ORNE *BLANKS                                   109223
+     C*
+     C***********DDCNUM    SETLLSDCUSTL2                                  S01486
+     C***********DDCNUM    READESDCUSTL2                 60               S01486
+     C*                                                                   S01486
+     C** Access Customer Details.                                         S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM DDCNUM    PCUST  10                       S01486
+     C                     PARM           PKYST   7                       S01486
+     C***********SDCUST    PARM SDCUST    DSFDY                     S01486176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C*                                                                   S01486
+     C*
+     C** IF RECORD NOT FOUND OUTPUT ERROR MESSAGE
+     C************IN60     IFEQ '1'                        B3             S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C                     MOVEL'PM82101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN64
+     C                     MOVE 'Y'       WWERR
+     C                     ELSE                            X3
+     C*
+     C** OTHERWISE MOVE CUSTOMER NUMBER INTO OUTPUT FIELD DDCNUM
+     C                     MOVE *BLANKS   DDCNUM
+     C                     MOVELBBCUST    DDCNUM
+     C                     END                             E3
+     C*********************END                             E2             109223
+     C*
+     C** IF CUSTOMER NUMBER OR VALID SHORTNAME ENTERED CHECK THAT
+     C** PORTFOLIO CUSTOMER ON SDPLCSPD
+     C           *IN64     IFEQ '0'                        B2
+     C*
+     C***********          MOVELDDCNUM    WWORK6                          S01486
+     C***********WWORK6    CHAINSDPLCSL2             60                   S01486
+     C*
+     C************IN60     IFEQ '1'                        B3             S01486
+     C***********          MOVEL'PM82101' ZAMSID                          S01486
+     C***********          EXSR ZASNMS                                    S01486
+     C***********          MOVE '1'       *IN64                           S01486
+     C***********          MOVE 'Y'       WWERR                           S01486
+     C***********          END                             E3             S01486
+     C                     END                             E2
+     C*
+     C****IF*HIGH LEVEL SECURITY REQUIRED, PERFORM ADDITIONAL VALIDATION  S01486
+     C****TO*CHECK THAT A/C OFFICER IS AUTHORISED TO PRODUCE REPORTS      S01486
+     C****ON*CUSTOMER                                                     S01486
+     C***********P9HLVS    IFEQ 'Y'                        B2             S01486
+     C************IN64     ANDEQ'0'                                       S01486
+     C*
+     C***********DDUSID    IFNE WSUSID                     B3             S01486
+     C***********DDUSID    CHAINMUSER                60                   S01486
+     C*                                                                   S01486
+     C************IN60     IFEQ '1'                        B4             S01486
+     C***********          Z-ADD3         WWBASE           ***************S01486
+     C***********          MOVEL'MUSER   'WWFILE           **DB ERROR 03**S01486
+     C***********          MOVELDDUSID    WWKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             E4             S01486
+     C*
+     C***********          MOVE DDUSID    WSUSID 10                       S01486
+     C***********          END                             E3             S01486
+     C*
+     C****IF*A/C OFFICER CODE ON MIDAS USER FILE NEITHER BLANK NOR *A NOR S01486
+     C****EQUAL TO CUSTOMER ACCOUNT OFFICER CODE ERROR                    S01486
+     C***********ACOC      IFNE *BLANK                     B3             S01486
+     C*
+     C***********ACOC      IFNE '*A'                       B4             S01486
+     C***********ACOC      ANDNEBBACOC                                    S01486
+     C***********          MOVEL'PM82102' ZAMSID                          S01486
+     C***********          EXSR ZASNMS                                    S01486
+     C***********          MOVE '1'       *IN64                           S01486
+     C***********          MOVE 'Y'       WWERR                           S01486
+     C***********          END                             E4             S01486
+     C*
+     C***OTHERWISE IF DEPARTMENT CODE DEFINED ON MUSER PERFORM            S01486
+     C***DEPARTMENT VALIDATION                                            S01486
+     C***********          ELSE                            X3             S01486
+     C*
+     C***ERROR*IF DEPARTMENT OF CUSTOMER'S ACCOUNT OFFICER *NE            S01486
+     C***DEPARTMENT ON MUSER                                              S01486
+     C***********BBACOC    CHAINSDACOFL1             60                   S01486
+     C*
+     C************IN60     IFEQ '1'                        B4             S01486
+     C***********          Z-ADD4         WWBASE           ***************S01486
+     C***********          MOVEL'SDACOFL1'WWFILE           **DB ERROR 04**S01486
+     C***********          MOVELBBACOC    WWKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                             E4             S01486
+     C*
+     C***********AZDPCD    IFNE DEPC                       B4             S01486
+     C***********          MOVEL'PM82108' ZAMSID                          S01486
+     C***********          EXSR ZASNMS                                    S01486
+     C***********          MOVE '1'       *IN64                           S01486
+     C***********          MOVE 'Y'       WWERR                           S01486
+     C***********          END                             E4             S01486
+     C***********          END                             E3             S01486
+     C***********          END                             E2             S01486
+     C*
+     C** OTHERWISE BECAUSE CUSTOMER BLANK SET FLAG FOR DELETE MODE.
+     C** - ALL OTHER FIELDS ON THIS LINE MUST ALSO BE BLANK
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK PORTFOLIO REFERENCE MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDPTFR    IFNE *BLANKS                    B2
+     C                     MOVEL'PM82100' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN65
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** IF CUSTOMER ENTERED PORTFOLIO REFERENCE MUST BE DEFINED
+     C** PORTFOLIO OR REFERENCE ATTACHED TO ONE OF STANDARD VIEWS
+     C                     ELSE                            X1
+     C*
+     C           DDPTFR    IFNE *BLANK                     B2
+     C********** DDPTFR    ANDNEP9R997                                    S01486
+     C********** DDPTFR    ANDNEP9R998                                    S01486
+     C********** DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    ANDNEFCR997                                    S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C           DDPTFR    ANDEQFCR997                                    CPB001
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C           DDPTFR    ANDEQFCR999                                    CPB001
+     C*
+     C                     MOVELDDCNUM    WWCNUM
+     C                     MOVE DDPTFR    WWPTFR
+     C           PORTKY    CHAINPMPORTLL             60
+     C*
+     C           *IN60     IFEQ '1'                        B3
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVEL'PBUSRMSG'ZAMSGF                          CPB001
+     C                     MOVEL'PB00111' ZAMSID                          CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVEL'PM82103' ZAMSID
+     C                     ENDIF                                          CPB001
+     C                     EXSR ZASNMS
+     C                     MOVEL'PMUSRMSG'ZAMSGF                          CPB001
+     C                     MOVE '1'       *IN65
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF VALID CUSTOMER AND PORTFOLIO ENTERED AND ALL OTHER FIELDS
+     C** BLANK SET UP DEFAULT VALUES
+     C           *IN64     IFEQ '0'                        B1
+     C           DDCNUM    ANDNE*BLANKS
+     C           *IN65     ANDEQ'0'
+     C           DDVLOR    ANDEQ*BLANKS
+     C           DDWHEN    ANDEQ*BLANKS
+     C           DDVLNT    ANDEQ*BLANKS
+     C           DDFRMT    ANDEQ*BLANKS
+     C           DDS1VR    ANDEQ*BLANKS
+     C           DDS2VR    ANDEQ*BLANKS
+     C           DDS3VR    ANDEQ*BLANKS
+     C           DDS4VR    ANDEQ*BLANKS
+     C           DDS5VR    ANDEQ*BLANKS
+     C           DDS6VR    ANDEQ*BLANKS
+     C           DDS7VR    ANDEQ*BLANKS
+     C           DDS8VR    ANDEQ*BLANKS
+     C           DDS9VR    ANDEQ*BLANKS                                   CPM005
+     C           DDS0VR    ANDEQ*BLANKS                                   CPM005
+     C                     MOVELDDCNUM    WWRCNM
+     C                     MOVELDDPTFR    WWRPTF
+     C                     MOVE 'N'       WWRITE
+     C                     EXSR #DEFLT
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK DATE OF EXTRA STATEMENT MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDVLOR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82130' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE A VALID DATE *GE TO TODAY
+     C                     ELSE                            X1
+     C*
+     C** TEST THAT NUMERIC DATE ENTERED
+     C                     TESTN          DDVLOR     60
+     C*
+     C** IF NUMERIC DATE ENTERED CHECK THAT REFERS TO VALID DATE AND
+     C** CONVERT INTO MIDAS DAY NUMBER FOR
+     C           *IN60     IFEQ '1'                        B2
+     C                     MOVE DDVLOR    ZDATE
+     C                     EXSR ZDATE1
+     C                     END                             E2
+     C*
+     C           *IN99     IFEQ '1'                        B2
+     C           *IN60     OREQ '0'
+     C           ZDAYNO    ORLT WWRDNB
+     C                     MOVEL'PM82104' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN66
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK WHEN STATEMENT PRODUCED MUST ALSO BE BLANK
+     C*
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDWHEN    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82131' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN67
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE IF STATEMENT DATE *EQ TODAY MUST BE 'I' OR 'C'
+     C** IF STATEMENT DATE *NE TODAY MUST BE 'C'
+     C                     ELSE                            X1
+     C*
+     C           *IN66     IFEQ '1'                        B2
+     C           DDWHEN    IFNE 'I'                        B3
+     C           DDWHEN    ANDNE'C'
+     C                     MOVEL'PM82107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN67
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E3
+     C*
+     C                     ELSE                            X2
+     C           ZDAYNO    IFEQ WWRDNB                     B3
+     C           DDWHEN    ANDNE'I'
+     C           DDWHEN    ANDNE'C'
+     C           ZDAYNO    ORNE WWRDNB
+     C           DDWHEN    ANDNE'C'
+     C                     MOVEL'PM82107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN67
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK EXTRA STATEMENT TYPE MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDVLNT    IFNE *BLANKS                    B2
+     C                     MOVEL'PM82100' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN68
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE ONE OF 'A' 'C' OR 'L'
+     C                     ELSE                            X1
+     C*
+     C           DDVLNT    IFNE 'A'                        B2
+     C           DDVLNT    ANDNE'C'
+     C****       DDVLNT    ANDNE'L'                                       062282
+     C                     MOVEL'PM82106' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN68
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK FORMAT MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDFRMT    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82133' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN87
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE ONE OF 'S' OR 'B'
+     C                     ELSE                            X1
+     C*
+     C           DDFRMT    IFNE 'S'                        B2
+     C           DDFRMT    ANDNE'B'
+     C                     MOVEL'PM82119' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN87
+     C                     MOVE 'Y'       WWERR
+     C*
+     C** FOR EXTRA CUSTOMER STATEMENT MUST BE 'B'
+     C                     ELSE                            X2
+     C*
+     C           DDVLNT    IFEQ 'C'                        B3
+     C           DDFRMT    ANDNE'B'
+     C                     MOVEL'PM82120' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN87
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK POSITION DETAILS REQUIRED MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS1VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82134' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN69
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'
+     C                     ELSE                            X1
+     C*
+     C           DDS1VR    IFNE 'Y'                        B2
+     C           DDS1VR    ANDNE'N'
+     C****                 MOVEL'PM82108' ZAMSID                          73957
+     C                     MOVEL'PM82135' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN69
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK SECTOR TOTALS REQUIRED MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS2VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82136' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN70
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'
+     C                     ELSE                            X1
+     C*
+     C           DDS2VR    IFNE 'Y'                        B2
+     C           DDS2VR    ANDNE'N'
+     C                     MOVEL'PM82109' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN70
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK PERFORMANCE FIGURES FOR PAST 12 MONTHS MUST
+     C** ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS3VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82137' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN71
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'. MAY ONLY BE SET TO 'Y' FOR
+     C** DEFINED PORTFOLIO WITH PERFORMANCE START DATE *LT TODAY
+     C                     ELSE                            X1
+     C*
+     C           DDS3VR    IFNE 'Y'                        B2
+     C           DDS3VR    ANDNE'N'
+     C                     MOVEL'PM82110' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN71
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C           *IN65     IFEQ '0'                        B2
+     C           *IN71     ANDEQ'0'
+     C           DDPTFR    ANDNE*BLANKS
+     C*
+     C           DDS3VR    IFEQ 'Y'                        B3
+     C*
+     C           DDPTFR    IFEQ *BLANKS                    B4
+     C********** DDPTFR    OREQ P9R997                                    S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** DDPTFR    OREQ P9R999                                    S01486
+     C********** DDPTFR    OREQ FCR997                              S01486CPM005
+     C********** DDPTFR    OREQ FCR998                              S01486CPM005
+     C********** DDPTFR    OREQ FCR999                              S01486CPM005
+     C           PNPSDT    ORGE WWRDNB
+     C           PNPSDT    OREQ *ZEROS                                    CPM005
+     C                     MOVEL'PM82110' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN71
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK PERFORMANCE FIGURES FOR TAX YEAR TO DATE MUST
+     C** ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS4VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82138' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'. MAY ONLY BE SET TO 'Y' FOR
+     C** DEFINED PORTFOLIO WITH PERFORMANCE START DATE *LT TODAY
+     C** AND WITH TAX YEAR START MONTH DEFINED
+     C                     ELSE                            X1
+     C*
+     C           DDS4VR    IFNE 'Y'                        B2
+     C           DDS4VR    ANDNE'N'
+     C                     MOVEL'PM82111' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C           *IN65     IFEQ '0'                        B2
+     C           *IN72     ANDEQ'0'
+     C           DDPTFR    ANDNE*BLANKS
+     C*
+     C           DDS4VR    IFEQ 'Y'                        B3
+     C*
+     C           DDPTFR    IFEQ *BLANKS                    B4
+     C********** DDPTFR    OREQ P9R997                                    S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** DDPTFR    OREQ P9R999                                    S01486
+     C********** DDPTFR    OREQ FCR997                              S01486CPM005
+     C********** DDPTFR    OREQ FCR998                              S01486CPM005
+     C********** DDPTFR    OREQ FCR999                              S01486CPM005
+     C           PNPSDT    ORGE WWRDNB
+     C           PNPSDT    OREQ *ZEROS                                    CPM005
+     C           PNTYSM    OREQ 0
+     C                     MOVEL'PM82111' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK PERFORMANCE FIGURES FOR SHORT PERIOD MUST
+     C** ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS5VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82139' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN73
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'. MAY ONLY BE SET TO 'Y' FOR
+     C** DEFINED PORTFOLIO WITH PERFORMANCE START DATE *LT TODAY
+     C** AND WITH SHORT PERIOD DEFINED
+     C                     ELSE                            X1
+     C*
+     C           DDS5VR    IFNE 'Y'                        B2
+     C           DDS5VR    ANDNE'N'
+     C                     MOVEL'PM82112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN73
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C           *IN65     IFEQ '0'                        B2
+     C           *IN73     ANDEQ'0'
+     C           DDPTFR    ANDNE*BLANKS
+     C*
+     C           DDS5VR    IFEQ 'Y'                        B3
+     C*
+     C           DDPTFR    IFEQ *BLANKS                    B4
+     C********** DDPTFR    OREQ P9R997                                    S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** DDPTFR    OREQ P9R999                                    S01486
+     C********** DDPTFR    OREQ FCR997                              S01486CPM005
+     C********** DDPTFR    OREQ FCR998                              S01486CPM005
+     C********** DDPTFR    OREQ FCR999                              S01486CPM005
+     C           PNPSDT    ORGE WWRDNB
+     C           PNPSDT    OREQ *ZEROS                                    CPM005
+     C           PNADPP    OREQ *BLANKS
+     C                     MOVEL'PM82112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN73
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK DAILY CASHFLOWS MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS6VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82100' ZAMSID                          73957
+     C                     MOVEL'PM82140' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN74
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'
+     C                     ELSE                            X1
+     C*
+     C           DDS6VR    IFNE 'Y'                        B2
+     C           DDS6VR    ANDNE'N'
+     C                     MOVEL'PM82113' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN74
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK MONTHLY CASHFLOWS MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS7VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82114' ZAMSID                          73957
+     C                     MOVEL'PM82141' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN75
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'
+     C                     ELSE                            X1
+     C*
+     C           DDS7VR    IFNE 'Y'                        B2
+     C           DDS7VR    ANDNE'N'
+     C                     MOVEL'PM82114' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN75
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** IF CUSTOMER BLANK YEARLY CASHFLOWS MUST ALSO BE BLANK
+     C           DDCNUM    IFEQ *BLANKS                    B1
+     C           DDS8VR    IFNE *BLANKS                    B2
+     C****                 MOVEL'PM82115' ZAMSID                          73957
+     C                     MOVEL'PM82142' ZAMSID                          73957
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN76
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C*
+     C** OTHERWISE MUST BE 'Y' OR 'N'
+     C                     ELSE                            X1
+     C*
+     C           DDS8VR    IFNE 'Y'                        B2
+     C           DDS8VR    ANDNE'N'
+     C                     MOVEL'PM82115' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN76
+     C                     MOVE 'Y'       WWERR
+     C                     END                             E2
+     C                     END                             E1
+     C*                                                                   CPM005
+     C** IF CUSTOMER BLANK CURRENCY SUMMARY MUST ALSO BE BLANK            CPM005
+     C           DDCNUM    IFEQ *BLANKS                    B1             CPM005
+     C           DDS0VR    IFNE *BLANKS                    B2             CPM005
+     C                     MOVEL'PM82100' ZAMSID                          CPM005
+     C                     EXSR ZASNMS                                    CPM005
+     C                     MOVE '1'       *IN58                           CPM005
+     C                     MOVE 'Y'       WWERR                           CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C** OTHERWISE MUST BE 'Y' OR 'N'                                     CPM005
+     C                     ELSE                            X1             CPM005
+     C*                                                                   CPM005
+     C           DDS0VR    IFNE 'Y'                        B2             CPM005
+     C           DDS0VR    ANDNE'N'                                       CPM005
+     C                     MOVEL'PM82121' ZAMSID                          CPM005
+     C                     EXSR ZASNMS                                    CPM005
+     C                     MOVE '1'       *IN58                           CPM005
+     C                     MOVE 'Y'       WWERR                           CPM005
+     C                     END                             E2             CPM005
+     C                     END                             E1             CPM005
+     C*                                                                   CPM005
+     C** IF CUSTOMER BLANK INSTRUMENT SUMMARY MUST ALSO BE BLANK          CPM005
+     C           DDCNUM    IFEQ *BLANKS                    B1             CPM005
+     C           DDS9VR    IFNE *BLANKS                    B2             CPM005
+     C                     MOVEL'PM82100' ZAMSID                          CPM005
+     C                     EXSR ZASNMS                                    CPM005
+     C                     MOVE '1'       *IN59                           CPM005
+     C                     MOVE 'Y'       WWERR                           CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C** OTHERWISE MUST BE 'Y' OR 'N'                                     CPM005
+     C                     ELSE                            X1             CPM005
+     C*                                                                   CPM005
+     C           DDS9VR    IFNE 'Y'                        B2             CPM005
+     C           DDS9VR    ANDNE'N'                                       CPM005
+     C                     MOVEL'PM82122' ZAMSID                          CPM005
+     C                     EXSR ZASNMS                                    CPM005
+     C                     MOVE '1'       *IN59                           CPM005
+     C                     MOVE 'Y'       WWERR                           CPM005
+     C                     END                             E2             CPM005
+     C                     END                             E1             CPM005
+     C*
+     C                     ENDSR
+     C           #UPDAT    BEGSR
+     C*
+     C***********          MOVE 'N'       WWSTMR                          S01486
+     C*
+     C** OBTAIN TRANSACTION NUMBER USED TO IDENTIFY ALL REQUESTS TO BE
+     C** PRODUCED IMMEDIATELY
+     C                     EXSR ZTNLU1
+     C                     MOVE NATN      QOTNLA  5
+     C***********          MOVE NATN      WWTNLA                          S01486
+     C                     MOVE NATN      WWTNLA                          082266
+     C*
+     C** READ THROUGH ALL CHANGED RECORDS AND UPDATE FILE PMRQXSL0
+     C                     READCPM0820S0                 81
+     C           *IN81     DOWEQ'0'                        B1
+     C*
+     C** IF AMEND MODE OBTAIN RECORD ON PMRQXSL0
+     C           WWINS     IFNE 'Y'                        B2
+     C*
+     C           DDTNLU    CHAINPMRQXSL0             60
+     C*
+     C           *IN60     IFEQ '1'                        B3
+     C***********          Z-ADD5         WWBASE  30       ***************
+     C***********          MOVEL'PMRQXSL0'WWFILE 10        **DB ERROR 05**
+     C***********          MOVE *BLANKS   WWKEY  29        ***************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'05'      DBASE            ***************S01486
+     C                     MOVEL'PMRQXSL0'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVE DDTNLU    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C** MOVE DETAILS INTO OUTPUT FIELDS
+     C                     MOVELDDCNUM    QOCNUM
+     C*
+     C** IF BLANK OR DEFINED REFERENCE MOVE SCREEN REFERENCE TO FILE
+     C           DDPTFR    IFEQ *BLANKS                    B2
+     C********** DDPTFR    ORNE P9R997                                    S01486
+     C********** DDPTFR    ANDNEP9R998                                    S01486
+     C********** DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    ORNE FCR997                                    S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C                     MOVE DDPTFR    QOPTFR
+     C*
+     C** OTHERWISE OUTPUT '9997' '9998' OR '9999' AS APPROPRIATE
+     C                     ELSE                            X2
+     C********** DDPTFR    IFEQ P9R997                     B3             S01486
+     C           DDPTFR    IFEQ FCR997                     B3             S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9997'    QOPTFR
+     C                     END                             E3
+     C********** DDPTFR    IFEQ P9R998                     B3             S01486
+     C           DDPTFR    IFEQ FCR998                     B3             S01486
+     C                     MOVE '9998'    QOPTFR
+     C                     END                             E3
+     C********** DDPTFR    IFEQ P9R999                     B3             S01486
+     C           DDPTFR    IFEQ FCR999                     B3             S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE '9999'    QOPTFR
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     MOVE DDVLOR    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    QOVLOR
+     C*
+     C                     MOVE DDWHEN    QOWHEN
+     C*
+     C***********DDWHEN    IFEQ 'I'                                       S01486
+     C***********          MOVE 'Y'       WWSTMR                          S01486
+     C***********          END                                            S01486
+     C*
+     C                     MOVE DDVLNT    QOVLNT
+     C                     MOVE DDFRMT    QOFRMT
+     C                     MOVE DDS1VR    QOS1VR
+     C                     MOVE DDS2VR    QOS2VR
+     C                     MOVE DDS3VR    QOS3VR
+     C                     MOVE DDS4VR    QOS4VR
+     C                     MOVE DDS5VR    QOS5VR
+     C                     MOVE DDS6VR    QOS6VR
+     C                     MOVE DDS7VR    QOS7VR
+     C                     MOVE DDS8VR    QOS8VR
+     C                     MOVE DDS9VR    QOS9VR                          CPM005
+     C                     MOVE DDS0VR    QOS0VR                          CPM005
+     C***********          MOVE DDUSID    QOUSER                          S01486
+     C                     MOVE USER      QOUSER                          S01486
+     C***********          MOVE WWTNLA    QOTNLA                          S01486
+     C*
+     C** IF AMEND MODE UPDATE RECORD ON PMRQXSL0
+     C           WWINS     IFNE 'Y'                        B2
+     C*
+     C           DDCNUM    IFNE *BLANKS                    B3
+     C                     UPDATPMRQXSPX
+     C                     ELSE                            X3
+     C                     DELETPMRQXSPX
+     C                     END                             E3
+     C*
+     C** OTHERWISE IN INSERT MODE WRITE NEW RECORD TO PMRQXSPP
+     C                     ELSE                            X2
+     C*
+     C           DDCNUM    IFNE *BLANKS                    B3
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      QOTNLU
+     C                     WRITEPMRQXSPX
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     READCPM0820S0                 81
+     C                     END                             E1
+     C*
+     C** COMMIT CHANGES
+     C                     COMIT
+     C*
+     C                     ENDSR
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR
+     C*****************************************************************   S01486
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C*
+     C***IF*RUNNING IN GROUP JOB PERFORM PROCESSING TO TERMINATE GROUP    S01486
+     C***JOB                                                              S01486
+     C***********WWTYPE    IFEQ 'G'                        B1             S01486
+     C***********          MOVEL'Y'       QMDBER                          S01486
+     C***********          MOVEL'Y'       QMENQT                          S01486
+     C***********          MOVELWWPGM     QMPGM                           S01486
+     C***********          MOVELWWBASE    QMERRN                          S01486
+     C***********          MOVELWWKEY     QMKEY                           S01486
+     C***********          MOVELWWFILE    QMFILE                          S01486
+     C***********                                                         S01486
+     C***UPDATE**GDA                                                      S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C***********                                                         S01486
+     C***CALL*PROGRAM TO TERMINATE ACTIVE GROUP JOBS                      S01486
+     C***********          CALL 'PMC1020'                                 S01486
+     C*
+     C** OTHERWISE RETURN TO MENU
+     C***********          ELSE                            X1             S01486
+     C************NAMVAR   DEFN LDA       LDA1                            S01486
+     C************LOCK     IN   LDA1                                      S01486
+     C***********          MOVELWWPGM     DBPGM                           S01486
+     C***********          MOVELWWBASE    DBASE                           S01486
+     C***********          MOVELWWKEY     DBKEY                           S01486
+     C***********          MOVELWWFILE    DBFILE                          S01486
+     C***********          OUT  LDA1                                      S01486
+     C                     SETON                     LR
+     C                     RETRN
+     C***********          END                             E1             S01486
+     C**
+     C                     ENDSR
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZTNLU1Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

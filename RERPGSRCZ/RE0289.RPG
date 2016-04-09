@@ -1,0 +1,1001 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Manual Adjusts to Accrued Int-Log/F')            *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0289 - MANUAL ADJUSTMENTS TO ACCRUED INTEREST -            *
+ 007 F*           S/REACR FILE UPDATE                                 *
+0008 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990, 1993                                               *
+0010 F*                                                               *
+      *  Last Amend No. MD026105           Date 19Aug14               *
+      *  Prev Amend No. MD024658           Date 09May14               *
+      *                 MD009310           Date 28Apr14               *
+      *                 AR1031541          Date 13Dec12               *
+      *                 AR990463           Date 03Dec12               *
+      *                 AR900144           Date 03Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 21Apr04               *
+      *                 BUG1869            Date 12Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002             Date 31Aug00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+0011 F*                 LN0229                  29MAY90               *
+0011 F*                 S01117                  11NOV89               *
+     F*                                                               *
+0002 F*****************************************************************
+     F*                                                               *
+      *  MD026105 - Do not update the LCD(last change date) of REACR. *
+      *             Patterned from 219664.                            *
+      *  MD024658 - RECI overwriten due to fix MD009310, causing      *
+      *             MADJPF to have no records to copy.                *
+      *  MD009310 - Wrong interest rate after COB. Transaction number *
+      *             number (NAVT2) is wrongly initialised to zero     *
+      *             which breaks the correct sequence of processing   *
+      *             the rate changes in COB. Reopen of AR107326.      *
+      *           - Applied for MD023799                              *
+      *  AR1031541- Serious Midas problem while open/amend retail a/c *
+      *             DBU_AMAD in MSGW due to incorrect fields in STRAN.*
+      *             Amend program to adjust NAVT2 field definition    *
+      *             from 194-196P to 195-197P. (Child: AR1031542)     *
+      *             Applied for AR1005423. (Child: AR1005425)         *
+      *  AR990463 - RE - wrongly initialised data for STRAN.          *
+      *             Amended the program to ensure that field NAVT2 is *
+      *             properly initialised to prevent GLAMADUPD from    *
+      *             failing due to decimal data error in position     *
+      *             194-196 ZZ199. (Child:AR990464)                   *
+      *             Applied for AR1005423. (Child: AR1005425)         *
+      *  AR900144 - STRAN Limitation.                                 *
+      *             Need to modify programs updating STRAN header and *
+      *             detail records, from update to write record to    *
+      *             STRAN.                                            *
+      *             Remove Update of header record in STRAN and       *
+      *             change Update of detail to Write of detail record *
+      *             in STRAN. (CHILD: AR900145)                       *
+      *             Applied for AR1005423. (Child: AR1005425)         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Reverse image is showing in Webface without error.  *
+      *           Recompile due to changes in RE0280FM.               *
+      *  BUG1869 - Error in CGL029 Coding                             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CPB002  -  Meridian DBA Middleware Replication Customization.*
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*  LN0229  -  Remove retail number field when RACN = N          *
+     F*  S01117  -  Multibranching.                                   *
+0012 F*                                                               *
+0013 F*****************************************************************
+0017 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0016 F*E0280FMCF  F     269            WORKSTN                            S01117
+     F***RE0280FMCF  F     272            WORKSTN                                      S01117 CGL029
+     FRE0280FMCF  F     290            WORKSTN                                                CGL029
+0024 F*CCNT   IF  F     400 15AI     2 DISK                               S01117
+     F***ACCNT** IF  F     400 18AI     2 DISK                                         S01117 CGL029
+     FACCNT   IF  F     573 24AI     2 DISK                                                   CGL029
+     F                                              KCOMIT
+0019 F*EACR   UF  F     128 15AI     2 DISK                               S01117
+     F*REACR***UF**F     128 18AI     2 DISK                              CPB002
+     F***REACR** UF  F     181 18AI     2 DISK                                         CPB002 CGL029
+     FREACR   UF  F     191 24AI     2 DISK                                                   CGL029
+     F                                              KCOMIT
+0023 F******STRAN   UF  F     200            DISK                                            BUG1869
+     F***STRAN** UF  F     210            DISK                                      BUG1869 AR900144
+     F***STRAN** O   E                    DISK                                     AR900144 MD009310
+     FSTRAN   UF  E                    DISK                      A                          MD009310
+     F                                              KCOMIT
+0025 F*
+0026 F*       FUNCTION OF INDICATORS
+0014 F*  01   USED TO SUPPRESS READ OF SCREEN FORMAT                    *
+0015 F*  03   SET ON IF ERROR DURING "READ" FROM THE WORK STATION       *
+0027 F*       STANDARD INPUT PROGRAM INDICATORS
+0029 F*       U7      DATABASE ERROR
+0033 F*       89      BLINK ACTION CODE LABEL
+0034 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0035 F*       87      NON-DISPLAY CHANGE DETAILS
+0036 F*       86      NON-DISPLAY USEFUL DATA
+0037 F*       83      OUTPUT AMEND - SA - SCREEN
+     F*       81      SCREEN OUTPUT                                       S01117
+0038 F*       80      BLINK DELETE CHECK FIELD LABEL
+0039 F*       79      SYSTEM SET-UP FLAG ON
+0040 F*       77      SA SCREEN READ IN
+0041 F*       RECORD ID INDICATORS
+0042 F*       75      REACR FILE - HEADER
+0043 F*       74      REACR FILE - DETAIL RECORD
+0044 F*       73      REACR FILE - TRAILER
+0045 F*       72      REACR FILE - NO RECORD FOUND
+0046 F*       71      SPARE
+0050 F*       66      WTRN - SA RECORD
+0051 F*       64      RECORD UPDATED BY ANOTHER WORKSTATION
+ 057 F*       51      UPDATE REACR DETAIL RECORD
+0059 F*       SUNDRY INDS
+0060 F*       49      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE
+0062 F*       45      RELEASE STRAN
+0063 F*****   44      UPDATE STRAN HEADER                                 S01117
+0065 F*       42      ADJ. TO ACCRUED INT. RECORD
+0066 F*****   41      STRAN UPDATE                                        S01117
+     F*       40      UPDATE STRAN HEADER                                 S01117
+0067 F********37      GENERAL WORK INDICATOR                              S01117
+0067 F*       38      GENERAL WORK INDICATOR                              S01117
+     F*       37      MULT-BRANCH IND ON - MBIN=Y                         S01117
+0068 F*       36      STRAN HEADER RECORD
+     F*       27      OUTPUT RECORD TO STRAN                              S01117
+     F*       26      OUTPUT RECORD TO STRAN                              S01117
+0068 F*       25      ADJUSTMENT AMOUNT NEGATIVE
+     F*       18      INACTIVE RECORD ON STRAN                            S01117
+0062 F*       48      RELEASE REACR
+0069 E*
+     E                    CPY@    1   1 80
+0071 E                    ERCM    1   3 79               ERROR MESSAGES
+0075 I*
+0076 IRE0280FMNS
+0077 I*
+0078 I*    REACR - HEADER RECORD
+0079 I*
+0080 IREACR   NS  75   1 CA
+0081 I*
+0082 I*    REACR - TRAILER
+0083 I*
+0084 IREACR   NS  73   1 CZ
+0085 I                                        1   1 RECI
+0086 I                                    P  31  330TNLU
+0087 I                                       34  34 IRRI
+0088 I                                    P  35  370NREC
+0089 I                                        1 128 OLD3
+0090 I*
+0091 I*    REACR - DETAIL RECORD
+0092 I*
+0093 I        NS  74
+0094 I*
+0095 I*    STANDARD REACR TNLU AND OLD HASH AMOUNT
+     I/COPY WNCPYSRC,RE0289I001
+0096 I                                        2   7 WCUST                 CPB002
+0096 I**********                              2  19 WACCN                              CPB002 CGL029
+0096 I                                    P  31  330MTNLU
+0097 I                                    P  41  470OLDH
+0096 I                                      181 181 WREPI                 CPB002
+0127 I*
+0128 I**
+0129 I*    ACCOUNT DETAIL RECORD
+0130 I**
+0131 IACCNT   NS       1 CD
+0132 I                                        1   1 RECI
+0133 I**********                              2  16 ACMDKY                                    CGL029
+0134 I**********                              2   70CNUM                                      CSD027
+0134 I                                        2   7 CNUM                                      CSD027
+0135 I                                        8  10 CCY
+0136 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0137 I                                       15  160ACSQ
+0138 I***********                            23  250BRCD                  S01117
+0138 I                                       23  25 BRCA                  S01117
+0139 I                                      190 1990ACNO
+0136 I                                      554 5630ACOD                                      CGL029
+0140 I**
+0141 I**CATCH ALL
+0142 I        NS
+0143 I*
+0144 I**   STRAN HEADER
+0145 I***STRAN** NS  36   1 CH                                                              AR900144
+0146 I**********                              1   1 RECI                                    AR900144
+0147 I**********                              2   60TRNO                                    AR900144
+0148 I**********                              7  110MNT                                     AR900144
+0149 I**********                          P  12  140NORC                                    AR900144
+0150 I**********                          P  15  170NOMA                                    AR900144
+0151 I**********                          P  18  250HMAW                                    AR900144
+0152 I**********                          P  26  270HMAD                                    AR900144
+0154 I**
+0155 I**   INACTIVE RECORD
+0156 I********NS  18   1 C                                                                  AR900144
+0157 I**
+0158 I**   CATCH ALL
+0159 I********NS                                                                            AR900144
+0160 I**
+0162 I*
+0163 I*    WORKSTATION TRANSACTION FILE
+0164 I*
+0185 I*    STANDARD LOCAL DATA AREA FIELDS
+0186 I*
+0187 ILDA        UDS                            256
+0188 I                                        1   8 LPROC
+     I                                    P 102 1040LVLDDB                S01413
+     I                                    P 105 1070LVLDCR                S01413
+0189 I***********                           134 138 LFILE                 S01117
+0190 I***********                           139 167 LKEY                  S01117
+0191 I***********                           168 175 LPROG                 S01117
+0192 I***********                           176 1770LDBNO                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+0193 I***********                           181 1850LRUND                 S01117
+0194 I***********                           186 192 LRUNA                 S01117
+0195 I***********                           193 193 LDATF                 S01117
+0196 I***********                           194 1940LSFLG                 S01117
+0197 I***********                           195 1960LKEYL                 S01117
+0198 I***********                           197 202 LISP                  S01117
+0199 I***********                           203 203 LTWOL                 S01117
+0200 I***********                           204 2040LLDLP                 S01117
+0201 I***********                           205 2090LTNLU                 S01117
+0202 I***********                           210 210 LDELM                 S01117
+0203 I***********                           211 211 LDUD                  S01117
+     I                                      187 1910LRUND                 S01117
+     I                                      192 198 LRUNA                 S01117
+     I                                      199 199 LDATF                 S01117
+     I**********                            200 2000LSFLG           S01117S01194
+     I                                      200 200 LSFLG                 S01194
+     I                                      201 2020LKEYL                 S01117
+     I                                      203 208 LISP                  S01117
+     I                                      209 209 LTWOL                 S01117
+     I                                      210 2100LLDLP                 S01117
+     I                                      211 2150LTNLU                 S01117
+     I                                      216 216 LDELM                 S01117
+     I                                      217 217 LDUD                  S01117
+0204 I* NON STANDARD LOCAL DATA AREA FIELDS
+0205 I                                      108 1200LMADI
+0206 I                                      121 1330LMACI
+0162 I*
+0163 I*    WORKSTATION TRANSACTION FILE
+0164 I*
+0165 IWTRAN      UDS                            860
+0166 I*    REACR FILE KEY
+0167 I**********                              2  16 REACKY                                    CGL029
+     I                                        2   7 DSCUST                                    CGL029
+     I                                        8  10 DSCCY                                     CGL029
+     I                                       15  16 DSACSQ                                    CGL029
+     I                                      717 726 DSACCD                                    CGL029
+     I                                       17  19 WBRCD                 S01117
+0170 I*    NEW REACR CHARACTER STRINGS
+     I                                    P  37  390WRUND
+     I                                    P  37  390WLCD                                    MD026105
+0173 I                                        1 128 NEW1
+0176 I                                      401 401 W401
+     I                                      449 4540WTIME
+     I                                      468 469 SID
+0177 I*    STANDARD SCREEN FIELDS
+0178 I                                      461 520 SCN60
+0179 I                                      461 716 SCN256
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I**
+     I**
+     I**   DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I**
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**
+     I**
+     I**   DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     I**
+     ICMTTXT      DS                            306
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 INSERT
+     I                                       26  35 USRIDX
+     I                                       51 306 SCN25X
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISTRDET      DS                                                                        AR900144
+     I                                        2   4 MBRCD                                   AR900144
+     I                                        5  10 CUSTZ                                   AR900144
+     I                                       11  13 CCYZ                                    AR900144
+     I                                       14  17 ZEROZ                                   AR900144
+     I                                       18  19 ACSQZ                                   AR900144
+     I                                       20  290RTNOZ                                   AR900144
+     I                                    P  36  380RUNDZ                                   AR900144
+     I                                    P  39  450LMADIZ                                  AR900144
+     I                                    P  60  660LMACIZ                                  AR900144
+     I                                       81  81 DRCR                                    AR900144
+     I                                       82  87 WTIMEZ                                  AR900144
+     I                                    P 195 1970NAVT2                                  AR1031541
+     I                                    P 198 2000NATNZ                                   AR900144
+     I                                      201 210 ACCDZ                                   AR900144
+     ISTRNUM      DS                            210                                         MD009310
+     I                                    P 195 1970TRNUM                                   MD009310
+ 084 I*
+     ISDRETL    E DSSDRETLPD                                              LN0229
+     I              BMRANR                          RACN                  LN0229
+     ISDMMOD    E DSSDMMODPD                                              CPB002
+     I** Module Details                                                   CPB002
+     ISDCUST    E DSSDCUSTPD                                              CPB002
+     I** Customer Details                                                 CPB002
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 LN0229
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                LN0229
+     I*                                                                   LN0229
+     IDSLDY     E DSDSLDY                                                 CPB002
+     I* Third DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE            CPB002
+     I*                                                                   CPB002
+     C                     MOVEACPY@      BIS@   80
+     C                     CALL 'AORETLR0'                                LN0229
+     C                     PARM '*DBERR ' @RTCD   7                       LN0229
+     C                     PARM '*FIRST ' @OPTN   7                       LN0229
+     C           SDRETL    PARM SDRETL    DSFDY                           LN0229
+     C           RACN      COMP 'Y'                  3030                 LN0229
+     C/COPY WNCPYSRC,RE0289C002
+      *                                                                   CPB002
+     C                     CALL 'AOMMODR0'                                CPB002
+     C                     PARM '*DBERR ' @RTCD   7                       CPB002
+     C                     PARM '*FIRST ' @OPTN   7                       CPB002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB002
+     C*                                                                   S01194
+0208 C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRAN
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WTRAN
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**   IF MBIN = Y SETON MULTIBRANCH IND.                             S01117
+     C           MBIN      COMP 'Y'                      37               S01117
+     C**
+     C**
+     C*    READ WORKSTATION FILE
+     C**
+     C   01                READ RE0280FM                 03
+0207 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0212 C                     MOVELLISP      WPROG   8
+0213 C                     MOVE '9  '     WPROG
+0214 C                     MOVELWPROG     SPID    6
+0215 C*  SET-UP STANDARD LDA FIELDS
+0216 C                     MOVE WPROG     LPROG
+0217 C                     Z-ADD9         LLDLP
+0218 C*  SET-UP STANDARD BLANK FIELDS
+0220 C                     MOVE ' '       BLK25  25
+     C**********           MOVE *BLANKS   BLK28  28                                    S01117 CGL029
+     C                     MOVE *BLANKS   BLK28  34                                           CGL029
+0220 C                     MOVE ' '       BLK15  15
+0221 C*  INITIALISE STANDARD INDICATORS
+0222 C                     SETON                     88    * NON-DISPLAY
+0223 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0224 C*
+0225 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0226 C*
+0227 C                     MOVE *BLANKS   ERMSG  79
+0229 C                     Z-ADD0         S       20
+0234 C*
+0235 C                     Z-ADD0         ZERO05  50
+0236 C                     Z-ADD0         ZERO13 130
+0237 C                     Z-ADD1         ONE     50
+0238 C*
+0239 C* MOVE REACKY INTO OUTPUT FIELD
+0240 C*
+0241 C*
+0242 C*  SET-UP KEY FOR REACR TRAILER
+0243 C*
+0244 C                     MOVELBLK15     TRLRKY 15
+0245 C                     MOVEL'9999999' TRLRKY
+0246 C*
+0247 C*  TEST WORKSTATION DATA STRUCTURE IDENTIFIERS ARE CORRECT
+0248 C*
+0249 C                     MOVELW401      WTID    3
+0250 C                     MOVE SID       WTID
+0251 C           WTID      COMP 'DSA'                    66
+0252 C                     MOVE *BLANKS   LKEY
+0257 C*
+     C           *IN66     IFEQ '0'
+     C                     MOVE 'WTRAN'   LFILE
+     C                     MOVE *BLANKS   LKEY
+0253 C                     MOVEL'1'       LKEY
+0254 C                     MOVE SID       LKEY
+0255 C                     MOVE '01'      LDBNO            * DB ERROR 01 *
+     C                     SETON                     U7LR
+0256 C                     GOTO END
+0256 C                     END
+0257 C*
+ 258 C*  EXECUTE UPDATE PROCEDURE
+0259 C*
+0260 C*
+0261 C* CHAIN ACCNT FOR BRANCH CODE AND RETAIL
+0262 C* NUMBER
+0263 C*
+     C**********           MOVELREACKY    ACCKEY 18                    1 *             S01117 CGL029
+     C                     MOVELDSCUST    WDS1    9                                           CGL029
+     C                     MOVE DSCCY     WDS1                                                CGL029
+     C                     MOVELDSACCD    WDS2   12                                           CGL029
+     C                     MOVE DSACSQ    WDS2                                                CGL029
+     C                     MOVELWDS1      REACKY 21                                           CGL029
+     C                     MOVE WDS2      REACKY                                              CGL029
+     C                     MOVELREACKY    ACCKEY 24                                           CGL029
+     C                     MOVE WBRCD     ACCKEY                       1 *S01117
+0264 C*****      REACKY    CHAINACCNT                99                   S01117
+     C           ACCKEY    CHAINACCNT                99                   S01117
+0265 C   99                SETON                     U7LR
+0266 C   99                MOVE 'ACCNT'   LFILE
+0267 C   99                MOVE *BLANKS   LKEY
+0268 C***99                MOVELREACKY    LKEY                            S01117
+0268 C   99                MOVELACCKEY    LKEY                            S01117
+0269 C   99                MOVE '02'      LDBNO            * DB ERROR 02 *
+0270 C   99                GOTO END
+0271 C                     MOVE ACNO      RTNO   100
+0271 C                     MOVE ACNO      RTNOZ                                             AR900144
+0272 C***********          MOVE BRCD      MBRCD   30                      S01117
+0272 C                     MOVE BRCA      MBRCD   3                       S01117
+0273 C**********           MOVE REACKY    STKEY  15                                           CGL029
+     C                     MOVE REACKY    STKEY  21                                           CGL029
+0274 C*
+0275 C                     EXSR UDFIL                      UPDATE FILES
+0276 C*
+0415 C*  IF NO ERRORS, OUTPUT NEW INITIAL SCREEN
+0416 C  NLR                EXSR SUBSF
+0417 C  NLR                EXSR EXEPT
+     C      U7             EXSR *PSSR                                     S01117
+0418 C*
+0277 C           END       TAG                             ** END TAG
+0278 C*
+     C                     OUT  LDA
+     C                     OUT  WTRAN
+     C**
+     C*
+0822 C**
+     C**   END OF COMMITMENT CYCLE
+     C  NU7N64   CMTTXT    COMIT
+1373 C**
+     C                     RETRN
+0278 C*
+0279 C********************************************************************
+0280 C**
+0281 C**   SUBR TO SET UP INITIAL SCREEN OUTPUT
+0282 C**
+0283 C           SUBSF     BEGSR                           ***  SUBSF  ***
+0284 C                     SETON                     81
+0285 C                     MOVE '1  '     LPROC
+0286 C                     MOVE 'SF'      SID     2
+0287 C                     ENDSR
+0288 C********************************************************************
+0289 C**
+0290 C**   SUBR TO CHAIN TO REACR
+0291 C**
+0292 C           REACCH    BEGSR                           *** REACCH  ***
+0293 C                     SETOF                     727374
+0294 C                     SETOF                     75
+     C**********           MOVELREACKY    ACCKEY 18                    1 *             S01117 CGL029
+     C                     MOVELREACKY    ACCKEY 24                    1 *                    CGL029
+     C                     MOVE WBRCD     ACCKEY                       1 *S01117
+0295 C*****      REACKY    CHAINREACR                72                   S01117
+     C           ACCKEY    CHAINREACR                72                   S01117
+0296 C                     ENDSR
+0306 C********************************************************************
+0307 C*
+0308 C*    SUBROUTINE TO CHAIN TO STRAN
+0309 C*
+0310 C           STRCHN    BEGSR                           *** STRCHN ***
+0311 C*
+0312 C                     SETOF                     183699
+0313 C********** STRNO     CHAINSTRAN                99                                     AR900144
+0314 C*
+0315 C                     ENDSR
+0316 C*
+0317 C********************************************************************
+0318 C**
+0319 C**   SUBR TO PERFORM EXCEPTION OUTPUT
+0320 C**
+0321 C           EXEPT     BEGSR                           ***  EXEPT  ***
+0322 C                     EXCPT
+0325 C                     SETOF                     8151
+0326 C                     ENDSR
+0340 C*
+ 327 C********************************************************************
+ 328 C*
+ 329 C*    SUBR TO PERFORM UPDATING
+ 330 C*
+0331 C           UDFIL     BEGSR                           ***  UDFIL  ***
+ 332 C*
+0341 C                     TIME           WTIME
+0345 C*
+0346 C*  UPDATE CHAIN TO REACR DETAIL RECORD
+0347 C                     EXSR REACCH
+0348 C*
+0349 C*  CHECK IF STATUS CHANGED
+0350 C           MTNLU     COMP LTNLU                6464
+0351 C*
+0352 C*  OUTPUT INITIAL SCREEN WITH MSG IF STATUS CHANGED
+0353 C  N64                GOTO UDFIL1
+0320 C**   IF UPDATED BY ANOTHER WORKSTATION THEN RELEASE REACR
+0321 C   64                SETON                     48
+0321 C                     EXCPT
+0321 C                     SETOF                     48
+0354 C                     EXSR SUBSF
+0355 C           S         ADD  1         S
+0357 C                     MOVE ERCM,1    ERMSG
+0358 C                     SETOF                     88
+0359 C                     EXSR EXEPT
+0360 C                     GOTO UDEND
+0361 C*
+0362 C           UDFIL1    TAG                             ** UDFIL1 TAG
+0398 C*
+0389 C**   TEST STRAN FILE USAGE
+0390 C**********           Z-ADD1         STRNO                                             AR900144
+0391 C**********           EXSR STRCHN                                                      AR900144
+0392 C**N36N18**           SETON                     U7LR                                   AR900144
+0393 C***U7*****           MOVE 'STRAN'   LFILE                                             AR900144
+0394 C***U7*****           MOVE *BLANKS   LKEY                                              AR900144
+0395 C***U7*****           MOVELSTRNO     LKEY                                              AR900144
+0396 C***U7*****           MOVE '05'      LDBNO            * DB ERROR 05 *                  AR900144
+0397 C***U7*****           GOTO UDEND                                                       AR900144
+ 398 C*
+0399 C*    ALLOCATE WORK FIELDS FOR ACCUMULATING HEADER VALUES
+0400 C**********           Z-ADDNORC      STNORC  50                                        AR900144
+     C                     Z-ADD0         STNORC  50                                        AR900144
+0401 C**********           Z-ADDNOMA      STNOMA  50                                        AR900144
+0402 C**********           Z-ADDHMAW      ZZTOTI                                            AR900144
+0403 C**********           Z-ADDHMAD      ZZTOTD                                            AR900144
+0404 C**********           Z-ADDTRNO      STRNO   50                                        AR900144
+0405 C********** MNT       SUB  TRNO      WRK9    50                                        AR900144
+0406 C***********WRK9      COMP 4                      37                 S01117
+0406 C********** WRK9      COMP 4                      38                            S01117 AR900144
+0407 C***37******          EXSR SUBSF                                     S01117
+0408 C***37******S         ADD  1         S                               S01117
+0410 C***37******          MOVE ERCM,2    ERMSG                           S01117
+0411 C***37******          SETOF                     88                   S01117
+0412 C***37******          EXSR EXEPT                                     S01117
+0413 C***37******          GOTO UDEND                                     S01117
+0407 C***38*****           EXSR SUBSF                                                S01117 AR900144
+0408 C***38***** S         ADD  1         S                                          S01117 AR900144
+0410 C***38*****           MOVE ERCM,2    ERMSG                                      S01117 AR900144
+0411 C***38*****           SETOF                     88                              S01117 AR900144
+0412 C***38*****           EXSR EXEPT                                                S01117 AR900144
+0413 C***38*****           GOTO UDEND                                                S01117 AR900144
+0414 C*
+     C*
+     C*    OBTAIN LAST TRANSACTION NUMBER AND PREPARE STANDARD
+     C*    INFORMATION FOR CMTTXT DATA STRUCTURE
+     C                     EXSR ZTNLU1
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL'RE0289'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME   60
+     C                     MOVE 'I'       INSERT
+     C                     MOVE USRID     USRIDX
+     C                     MOVE SCN256    SCN25X
+     C*
+0422 C*****RELEASE*STRAN*HEADER                                           S01413
+      *                                                                   S01413
+      *   Update the header to lock it under commitment control           S01413
+0423 C**********           SETON                     45                                     AR900144
+0424 C**********           EXCPT                                                            AR900144
+0425 C                     SETOF                     45
+     C*  UPDATE REACR DETAIL RECORD
+0441 C                     SETON                     51
+      *                                                                   CPB002
+      *** Update Repi flag to 'M' if private banking customer             CPB002
+      *                                                                   CPB002
+     C           BGN4ST    IFEQ 'Y'                                       CPB002
+     C                     MOVE WCUST     @KEY10    P                     CPB002
+     C                     CALL 'AOCUSTR1'                                CPB002
+     C                     PARM *BLANKS   @@RTCD  7                       CPB002
+     C                     PARM '*KEY   ' @@OPTN  7                       CPB002
+     C                     PARM           @KEY10 10                       CPB002
+     C                     PARM           @KEY7   7                       CPB002
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB002
+      **  If customer - ERROR                                             CPB002
+      *                                                                   CPB002
+     C           @@RTCD    IFEQ *BLANKS                                   CPB002
+     C           BBPRBA    ANDEQ'Y'                                       CPB002
+     C                     MOVE 'M'       WREPI                           CPB002
+     C                     ENDIF                                          CPB002
+     C                     ENDIF                                          CPB002
+      *                                                                   CPB002
+0442 C                     EXSR EXEPT
+     C/COPY WNCPYSRC,RE0289C001
+0443 C*
+     C*  UPDATE LAST UPDATE DATE
+0441 C**********           MOVE WRUND     RUND    50                                        MD026105
+     C                     MOVE WRUND     RUNDZ                                             AR900144
+ 443 C*
+0444 C*    CREATE ADJ. TO DR. ACCR. INT. RECORD
+0445 C*
+0446 C***********          SETOF                     37                   S01117
+0446 C                     SETOF                     38                   S01117
+0447 C**
+0448 C           LMADI     COMP 0                    2626
+0449 C  N26                GOTO CRADJ
+0452 C                     EXSR STRCHN
+0453 C********** STNOMA    ADD  1         STNOMA                                            AR900144
+     C           STNOMA    ADD  1         STNOMA  50                                        AR900144
+     C                     MOVE LVLDDB    RUND    50                      S01413
+     C                     MOVE RUND      RUNDZ                                             AR900144
+     C*
+     C* MAKE ALL VALUES POSITIVE FOR HASH TOTALLING
+     C           LMADI     COMP 0                      25
+     C   25                Z-SUBLMADI     NAD
+0454 C  N25                Z-ADDLMADI     NAD    130
+0455 C                     MOVE NAD       ZZAMT
+0456 C                     EXSR GLZADD
+0457 C**
+0459 C**N18*****           SETON                     U7LR                                   AR900144
+0460 C***U7*****           MOVE 'STRAN'   LFILE                                             AR900144
+0461 C***U7*****           MOVE *BLANKS   LKEY                                              AR900144
+0462 C***U7*****           MOVELSTRNO     LKEY                                              AR900144
+0463 C***U7*****           MOVE '07'      LDBNO            * DB ERROR 07 *                  AR900144
+0464 C***U7*****           GOTO UDEND                                                       AR900144
+0465 C**
+0466 C**********           SETON                     42                                     AR900144
+     C           *IN26     IFEQ *ON                                                         AR900144
+     C                     MOVE LMADI     LMADIZ                                            AR900144
+     C                     MOVE *ZERO     LMACIZ                                            AR900144
+     C                     MOVE '0'       DRCR                                              AR900144
+     C                     ENDIF                                                            AR900144
+     C           *IN27     IFEQ *ON                                                         AR900144
+     C                     MOVE LMACI     LMACIZ                                            AR900144
+     C                     MOVE *ZERO     LMADIZ                                            AR900144
+     C                     MOVE '1'       DRCR                                              AR900144
+     C                     ENDIF                                                            AR900144
+     C                     MOVE 'D'       RECI                                              AR900144
+     C                     MOVE '0000'    ZEROZ                                             AR900144
+     C                     MOVE DSCUST    CUSTZ                                             AR900144
+     C                     MOVE DSCCY     CCYZ                                              AR900144
+     C                     MOVE DSACSQ    ACSQZ                                             AR900144
+     C                     MOVE DSACCD    ACCDZ                                             AR900144
+     C                     MOVE WTIME     WTIMEZ                                            AR900144
+     C                     MOVE NATN      NATNZ                                             AR900144
+     C**********           Z-ADD*ZERO     NAVT2                                    AR990463 MD009310
+     C           *HIVAL    SETGTSTRANF                                                      MD009310
+     C                     READPSTRANF                   31                                 MD009310
+     C                     MOVE ZZ199     STRNUM                                            MD009310
+     C                     ADD  1         TRNUM                                             MD009310
+     C                     MOVE TRNUM     NAVT2                                             MD009310
+     C                     MOVE STRDET    ZZ199                                             AR900144
+     C                     MOVE 'D'       RECI                                              MD024658
+     C                     WRITESTRANF                                                      AR900144
+0467 C**********           EXCPT                                                            AR900144
+0468 C**********           SETOF                     42                                     AR900144
+0469 C********** 1         ADD  STRNO     STRNO                                             AR900144
+0470 C                     SETOF                     26
+0471 C*
+0472 C*    CREATE ADJ. TO CR. ACCR. INT. RECORD
+0473 C           CRADJ     TAG                             **    CRADJ  **
+0474 C**
+0475 C           LMACI     COMP 0                    2727
+0476 C  N27                GOTO STRHED
+0479 C                     EXSR STRCHN
+0480 C           STNOMA    ADD  1         STNOMA
+     C                     MOVE LVLDCR    RUND                            S01413
+     C                     MOVE RUND      RUNDZ                                             AR900144
+     C*
+     C* MAKE ALL VALUES POSITIVE FOR HASH TOTALLING
+     C           LMACI     COMP 0                      25
+     C   25                Z-SUBLMACI     NAC
+0481 C  N25                Z-ADDLMACI     NAC    130
+0482 C                     MOVE NAC       ZZAMT
+0483 C                     EXSR GLZADD
+0484 C**
+0459 C**N18*****           SETON                     U7LR                                   AR900144
+0460 C***U7*****           MOVE 'STRAN'   LFILE                                             AR900144
+0488 C***U7*****           MOVE *BLANKS   LKEY                                              AR900144
+0462 C***U7*****           MOVELSTRNO     LKEY                                              AR900144
+0490 C***U7*****           MOVE '08'      LDBNO            * DB ERROR 08 *                  AR900144
+0491 C***U7*****           GOTO UDEND                                                       AR900144
+0492 C**
+0493 C**********           SETON                     42                                     AR900144
+     C           *IN26     IFEQ *ON                                                         AR900144
+     C                     MOVE LMADI     LMADIZ                                            AR900144
+     C                     MOVE *ZERO     LMACIZ                                            AR900144
+     C                     MOVE '0'       DRCR                                              AR900144
+     C                     ENDIF                                                            AR900144
+     C           *IN27     IFEQ *ON                                                         AR900144
+     C                     MOVE LMACI     LMACIZ                                            AR900144
+     C                     MOVE *ZERO     LMADIZ                                            AR900144
+     C                     MOVE '1'       DRCR                                              AR900144
+     C                     ENDIF                                                            AR900144
+     C                     MOVE 'D'       RECI                                              AR900144
+     C                     MOVE '0000'    ZEROZ                                             AR900144
+     C                     MOVE DSCUST    CUSTZ                                             AR900144
+     C                     MOVE DSCCY     CCYZ                                              AR900144
+     C                     MOVE DSACSQ    ACSQZ                                             AR900144
+     C                     MOVE DSACCD    ACCDZ                                             AR900144
+     C                     MOVE WTIME     WTIMEZ                                            AR900144
+     C                     MOVE NATN      NATNZ                                             AR900144
+     C**********           Z-ADD*ZERO     NAVT2                                   AR1005423 MD009310
+     C           *HIVAL    SETGTSTRANF                                                      MD009310
+     C                     READPSTRANF                   31                                 MD009310
+     C                     MOVE ZZ199     STRNUM                                            MD009310
+     C                     ADD  1         TRNUM                                             MD009310
+     C                     MOVE TRNUM     NAVT2                                             MD009310
+     C                     MOVE STRDET    ZZ199                                             AR900144
+     C                     MOVE 'D'       RECI                                              MD024658
+     C                     WRITESTRANF                                                      AR900144
+0494 C**********           EXCPT                                                            AR900144
+0495 C**********           SETOF                     42                                     AR900144
+0496 C                     SETOF                     27
+0497 C********** STRNO     ADD  1         STRNO                                             AR900144
+0498 C*
+ 499 C*    UPDATE STRAN HEADER
+0500 C           STRHED    TAG                             ** STRHED **
+0501 C********** STRNO     COMP TRNO                 36                                     AR900144
+0502 C**N36*****           GOTO CHKSTR                                                      AR900144
+0503 C**********           Z-ADDZZTOTI    HMAWO  150                                        AR900144
+0504 C**********           Z-ADDZZTOTD    HMADO   30                                        AR900144
+0507 C**********           SETOF                     36                                     AR900144
+0508 C********** 1         CHAINSTRAN                U7                                     AR900144
+0509 C**N36*****           SETON                     U7LR                                   AR900144
+0510 C***U7*****           MOVE 'STRAN'   LFILE                                             AR900144
+0511 C***U7*****           MOVE *BLANKS   LKEY                                              AR900144
+0512 C***U7*****           MOVELSTRNO     LKEY                                              AR900144
+0513 C***U7*****           MOVE '09'      LDBNO            * DB ERROR 09 *                  AR900144
+0514 C***U7*****           GOTO UDEND                                                       AR900144
+0515 C*
+0516 C**********           SETON                     40                                     AR900144
+0517 C**********           EXCPT                                                            AR900144
+0518 C                     SETOF                     40
+0542 C*
+0543 C*  CHECK SIZE OF STRAN AND OUTPUT WARNING
+0544 C*
+0362 C********** CHKSTR    TAG                             ** CHKSTR TAG                    AR900144
+0545 C********** WRK9      COMP 20                     3636                                 AR900144
+0546 C***36*****           MOVE ERCM,3    ERMSG                                             AR900144
+0547 C***36*****           SETOF                     88                                     AR900144
+0548 C           UDEND     ENDSR                           ** UDEND TAG
+0549 C*
+0550 C********************************************************************
+0551 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0552 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0553 C*
+0554 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0555 C*
+0556 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0557 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0558 C*
+0559 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0560 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0561 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0562 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0563 C*
+0564 CSR                   EXSR GLZSUM
+0565 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0566 C*
+0567 C********************************************************************
+0568 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0569 C*                        GLZADD, GLZSUB, GLZCMP.
+0570 C*          PARAMETERS PASSED -
+0571 C*                     I/P ZZAMTI ZZAMTD
+0572 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0573 C*
+0574 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0575 C*
+0576 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0577 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0578 CSR                   SETOF                     919293
+0579 CSR                   SETOF                     949599
+0580 C*
+0581 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0582 CSR         ZZAMTI    COMP 0                      9293
+0583 CSR 93      ZZAMTD    COMP 0                      9293
+0584 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0585 C*
+0586 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0587 CSR         ZZTOTI    COMP 0                      9193
+0588 CSR 93      ZZTOTD    COMP 0                      9193
+0589 C*
+0590 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0591 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0592 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0593 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0594 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0595 CSR 91N92
+0596 CORN91 92             GOTO ZZOFPS
+0597 C*
+0598 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0599 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0600 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0601 C*
+0602 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0603 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0604 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0605 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0606 C*
+0607 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0608 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0609 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0610 CSRN99                Z-ADDZZWK2     ZZTOTD
+0611 CSRN99                Z-ADDZZWK3     ZZTOTI
+0612 C*
+0613 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0614 CSR 99                Z-ADD0         ZZAMT  153
+0615 CSR                   GOTO ZZSEND
+0616 C*
+0617 C* THE 'SIGNS' ARE DIFFERENT
+0618 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0619 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0620 C*
+0621 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0622 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0623 C*
+0624 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0625 C*
+0626 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0627 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0628 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0629 C*
+0630 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0631 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0632 C*
+0633 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0634 CSR 95                Z-ADD0         ZZTOTI
+0635 CSR 95                Z-ADD0         ZZTOTD
+0636 CSR 95                GOTO ZZSEND
+0637 C*
+0638 C* IF ZZTOT GT. ZZAMT.
+0639 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0640 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0641 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0642 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0643 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0644 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0645 C*
+0646 C*
+0647 C* IF ZZAMT GT. ZZTOT.
+0648 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0649 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0650 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0651 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0652 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0653 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0654 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0655 C*
+0656 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0657 CSR                   SETOF                     94
+0658 CSR 93 91
+0659 CORN93 92             SETON                     94
+0660 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0661 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0662 C**
+0663 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0664 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0665 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0666 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0667 C**
+0668 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0669 CSR                   SETOF                     96
+0670 CSR         ZZTOTD    COMP 0                        91
+0671 CSR 91      ZZTOTI    COMP 0                      96
+0672 CSR 96                MOVE '.000-'   ZZNEGD  5
+0673 CSR                   ENDSR                             ** ENDSR **
+ 419 C********************************************************************
+     C**
+     C**   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C**                THEN UPDATE AND RELEASE THE DATA AREA.
+     C**
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C**
+0674 C********************************************************************
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+0675 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+0676 O*
+0677 ORE0280FME        81
+0678 O                                   K8 'RE0280F1'
+0679 O                         SCN60     60
+0680 O                         SID        9
+0681 O                         SPID      15
+0682 O                         WTIME     23 '  .  .  '
+0681 O*****            88NLR   BLK25     51                               S01117
+     O**********       88NLR   BLK28     54                                            S01117 CGL029
+     O                 88NLR   BLK28     60                                                   CGL029
+0683 O*  ERROR FIELDS
+0684 O*****                    ERMSG    130                               S01117
+     O**********               ERMSG    133                                            S01117 CGL029
+     O                         ERMSG    139                                                   CGL029
+0709 O*
+0710 O*  REACR - DETAIL RECORD UPDATE
+0711 O*
+0712 OREACR   E        51
+0713 O                         NEW1     128
+0714 O                         NATN      33P
+     O                         WREPI    181                               CPB002
+     O                         ACOD     191                                                   CGL029
+0712 O        E        48
+0773 O*
+0774 O*    CREATE AN ADJ. TO ACCR. INT. RECORD
+0775 O***STRAN** E        42                                                                AR900144
+0776 O**********                          1 'D'                                             AR900144
+0777 O**********               MBRCD      4                                                 AR900144
+0778 O**********               STKEY     19                                                   CGL029
+     O**********               STKEY     25                                            CGL029BUG1869
+     O**********               DSCUST    10                                         BUG1869 AR900144
+     O**********               DSCCY     13                                         BUG1869 AR900144
+     O**********                         17 '0000'                                  BUG1869 AR900144
+     O**********               DSACSQ    19                                         BUG1869 AR900144
+0779 O**********               RTNO      29                                                   CGL029
+     O**********               RTNO      25                                            CGL029BUG1869
+     O**********               RTNO      29                                         BUG1869 AR900144
+0780 O**********               RUND      38P                                                AR900144
+0781 O**********             26LMADI     45P                                                AR900144
+0782 O**********             26ZERO13    66P                                                AR900144
+0783 O**********             27ZERO13    45P                                                AR900144
+0784 O**********             27LMACI     66P                                                AR900144
+0785 O**********             26          81 '0'                                             AR900144
+0786 O**********             27          81 '1'                                             AR900144
+0787 O**********               WTIME     87                                                 AR900144
+0788 O**********               STRNO    197P                                                AR900144
+0789 O**********               NATN     200P                                                AR900144
+     O**********               DSACCD   210                                         BUG1869 AR900144
+0790 O*
+0791 O*    UPDATE STRAN HEADER
+0792 O********E*       40                                                                   AR900144
+0793 O**********                          1 'H'                                             AR900144
+0794 O**********               STRNO      6                                                 AR900144
+0795 O**********               STNORC    14P                                                AR900144
+0796 O**********               STNOMA    17P                                                AR900144
+0797 O**********               HMAWO     25P                                                AR900144
+0798 O**********               HMADO     27P                                                AR900144
+     O**********                        194 ' '                           S01413            AR900144
+0799 O**********               ONE      197P                                                AR900144
+0800 O**********               NATN     200P                                                AR900144
+0801 O********E*       45                                                                   AR900144
+     O**********                        194 'Y'                           S01413            AR900144
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ERROR MESSAGES
+THIS RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION
+***STRAN*FILE FULL                                                                          AR900144
+***STRAN*FILE NEARLY FULL                                                                   AR900144

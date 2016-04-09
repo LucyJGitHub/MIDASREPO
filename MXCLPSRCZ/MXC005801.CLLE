@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX Copy of MXMEGLPD values to MXSPSSPD')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC005801 - Midas MX Copy of MXMEGLPD values to MXSPSSPD    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD022103 *CREATE   Date 28Aug13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD022103 - MXC0580 Performance Improvement                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message                                          */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB SWS(00000000)
+ 
+             CLRPFM     FILE(MXCPSSPD)
+             SCRUNSQL   SQL('INSERT INTO MXCPSSPD SELECT A.CNUM, +
+                          A.TRATA, SUM(A.BCEQ) AS TBCEQ, +
+                          SUM(A.CNTPST) AS TCNTPS FROM MXMEGLPD A +
+                          LEFT JOIN SDACODPD B ON A.ACOD = B.A5ACCD +
+                          WHERE (B.A5ACTY = ''R'' AND A.DECATC = +
+                          ''11'') OR (B.A5ACTY = ''R'' AND A.DECATC +
+                          = ''12'') GROUP BY A.CNUM, A.TRATA ORDER +
+                          BY A.CNUM, A.TRATA')
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination                                            */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MXC005801 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

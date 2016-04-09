@@ -1,0 +1,201 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     C*  Last Amend No. BUG8514            DATE 30Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. 104270             DATE 17SEP97               *
+     C*                 106661             DATE 17SEP97               *
+     C*                 CCB002             DATE 13SEP96               *
+     C*                 CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG8514- Issue regarding teller overrides.                   *
+     C*  104270 - Initialise override (@O) array element(s).          *
+     C*  106661 - Add Interest amount for Closing Account, prior to   *
+     C*           N.S.F.                                              *
+     C*           Also, Charges can apply to Deposits.                *
+     F*  CCB002 - COB Performance Enhancements                        *
+     F*           Access now via access object                        *
+     F*           MEMOS is now accessed via GL/RE key rather than old *
+     F*           relative record number.                             *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTABAL - Account available balance check           *
+     C*                                                               *
+     C* CALLS      RTBALC - Calculate available balances              *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @IF    - Insufficient fund array position          *
+     C*            @OD    - Exceed OD limit array position            *
+     C*            @MB    - Minimum balance  array position           *
+     C*            @V     - Validation indicators array               *
+     C*            @TNAM  - Amount to debit in A/C currency           *
+     C*            @CYDP  - Currency decimal place                    *
+     C*************@RRNM  - Relative record number of PF/MEMOS        *   CCB002
+     C*            @ODLN  - Overdraft limit                           *
+     C*            @ODED  - Overdraft expiry date                     *
+     C*            @MINB  - Minimum balance                           *
+      *            @STYP  - Account sub-type                          *
+     C*            @TCHG  - Charge amount to debit in A/C currency    *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @WI    - Warning  error index                      *
+     C*            @TI    - Terminal error index                      *
+     C*            @O     - Override indicators array                 *
+     C*            @T     - Terminal message codes array              *
+     C*            @W     - Warning  message codes array              *
+     C*                                                               *
+     C*****************************************************************
+     C           RTABAL    BEGSR                           ** RTABAL **
+      *
+      ** Define parameters
+     C                     Z-ADD@TNAM     @TNAM  130
+     C                     Z-ADD@MINB     @MINB  110
+     C                     Z-ADD@TCHG     @TCHG  150
+     C                     MOVEL@STYP     @STYP   1
+     C                     MOVELCLREQ     CLREQ   1                       106661
+     C                     Z-ADD@INTRS    @INTRS 150                      106661
+      *                                                                   104270
+      ** Initialise override array elements                               104270
+      *                                                                   104270
+     C           PFNCD     IFNE '***'                                                        BUG8514
+     C                     MOVE ' '       @O,@IF                          104270
+     C                     MOVE ' '       @O,@OD                          104270
+     C                     MOVE ' '       @O,@MB                          104270
+     C                     ENDIF                                                             BUG8514
+      *
+     C                     EXSR RTBALC
+      *
+     C                     Z-ADDCLBLN     @CLBL
+      *
+     C                     ADD  @TNAM     @AVBL
+      *
+      ***Include*charge*in*check*if*transaction*is*withdrawal*********    106661
+      ** Include charge in check.                                         106661
+     C********** PFNCD     IFEQ '00L'                                     106661
+     C********** PFNCD     OREQ '0JL'                                     106661
+     C********** PFNCD     OREQ '0JO'                                     106661
+     C********** PFNCD     OREQ '00O'                                     106661
+     C                     ADD  @TCHG     @AVBL
+     C**********           END                                            106661
+      *                                                                   106661
+      ** For Closing Account, Shadow Posting will be written for          106661
+      ** interest amount.  Allow for this in N.S.F. check.                106661
+     C           CLREQ     IFEQ 'Y'                                       106661
+     C                     ADD  @INTRS    @AVBL                           106661
+     C                     END                                            106661
+      *
+      ** If resulting available balance is positive? (overdrawn)
+     C           @AVBL     IFGT 0
+      *
+      ** If OD-limit is zero  OR  if OD expired  (Insufficient fund)
+     C           @ODLN     IFEQ 0
+     C           @ODED     ORLT @RUND
+      *
+      ** If override allowed
+     C           @V,@IF    IFEQ 'Y'
+     C           FNCD      IFNE '00K'
+     C           @STYP     ORNE 'S'
+     C                     ADD  1         @WI
+     C                     MOVEL'N.S.F.'  @W,@WI
+     C                     MOVE 'Y'       @O,@IF
+     C                     END
+     C                     END
+      *
+      ** If override not allowed
+     C           @V,@IF    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'N.S.F.'  @T,@TI
+     C                     END
+      *
+     C                     END
+      *
+      ** If resulting available balance is positive?
+      ** AND  OD-limit is not zero?
+      ** AND  OD not expired?
+     C           @AVBL     IFGT 0
+     C           @ODLN     ANDNE0
+     C           @ODED     ANDGE@RUND
+      *
+      ** If override allowed?
+     C           @V,@OD    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'EX.O/D'  @W,@WI
+     C                     MOVE 'Y'       @O,@OD
+     C                     END
+      *
+      ** If override not allowed?
+     C           @V,@OD    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'EX.O/D'  @T,@TI
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If minimum balance is zero?
+     C           @MINB     IFNE 0
+      *
+      ** If currency decimal place is 1?
+     C           @CYDP     IFEQ 1
+     C           @MINB     MULT 10        @MINB
+     C                     END
+      *
+      ** If currency decimal place is 2?
+     C           @CYDP     IFEQ 2
+     C           @MINB     MULT 100       @MINB
+     C                     END
+      *
+      ** If currency decimal place is 3?
+     C           @CYDP     IFEQ 3
+     C           @MINB     MULT 1000      @MINB
+     C                     END
+      *
+     C                     ADD  @TNAM     @CLBL
+      *
+     C                     ADD  @MINB     @CLBL
+      *
+      ***Include*charge*in*check*if*transaction*is*withdrawal*********    106661
+      ** Include charge in check.                                         106661
+     C********** PFNCD     IFEQ '00L'                                     106661
+     C********** PFNCD     OREQ '0JL'                                     106661
+     C********** PFNCD     OREQ '0JO'                                     106661
+     C********** PFNCD     OREQ '00O'                                     106661
+     C                     ADD  @TCHG     @CLBL
+     C**********           END                                            106661
+      *
+      ** If result is positive (DEBIT)?
+     C           @CLBL     IFGT 0
+      *
+      ** If override allowed?
+     C           @V,@MB    IFEQ 'Y'
+     C           FNCD      IFNE '00K'
+     C           @STYP     ORNE 'S'
+     C                     ADD  1         @WI
+     C                     MOVEL'BLW.MIN' @W,@WI
+     C                     MOVE 'Y'       @O,@MB
+     C                     END
+     C                     END
+      *
+      ** If override not allowed?
+     C           @V,@MB    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'BLW.MIN' @T,@TI
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

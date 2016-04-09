@@ -1,0 +1,227 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Set-up DTAARA/ZMUSER')
+      *****************************************************************
+      *                                                               *
+      *  Midas  SECURITY PROFILE FACILITY                             *
+      *                                                               *
+      *   ZMUSER - PGM TO SET UP DATA AREA ZMUSER IN QTEMP            *
+      *                                                               *
+      *  Function: This program sets up the Data Area ZMUSER in QTEMP *
+      *            and fills it with correct values for the user.     *
+      *            A parameter is passed back to the calling program  *
+      *            to indicate validity of codes:                     *
+      *            0 - all valid                                      *
+      *            1 - Branch code or Department code on MUSER file   *
+      *                is not a valid code.                           *
+      *                                                               *
+      *  Where Used: Input Cycle                                      *
+      *                                                               *
+      *  Called By: MIPGM                                             *
+      *             SFC0400                                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 239202             Date 26Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP084             Date 27Feb03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 08Mar95               *
+      *                  S01117          DATE  25MAR92                *
+      *                  E26748          DATE  01AUG91                *
+      *                  RT0148          DATE  06JUN91                *
+      *                  S01269          DATE  24JUN91                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE026 - Consumer Banking                                    *
+      *  239202 - If user-id is valid, add it to ZMUSER.              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *    CAP084 - Java browser project - user from PSDS is not the  *
+      *             same as the browser user                          *
+      *    CAAA01 - GUI/400 development                               *
+      *           - recompiled over changed MUSERDD                   *
+      *    S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                *
+      *    E26748 - SOURCE MEMBER INCORRECTLY PLACED IN ZARPGSRC      *
+      *             SO MOVE TO SFRPGSRC.                              *
+      *    RT0148 - CORRECT CALL TO ACCESS OBJECTS                    *
+      *    S01269 - RECOMPILE OVER CHANGED LF/MUSER                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L     FUNCTION OF INDICATOR                       *
+      *                                                               *
+      *       99       NO RECORD FOUND ON FILE                        *
+      *                                                               *
+      *****************************************************************
+      *       INPUT TO THIS PROGRAMME                                 *
+      *                                                               *
+      *       USRID From PSDS                                         *
+      *                                                               *
+      *****************************************************************
+      *       OUTPUT FROM THIS PROGRAMME                              *
+      *                                                               *
+      *       DTAARA/ZMUSER                                           *
+      *       ERRCOD  = 0 NO ERROR                                    *
+      *                 1 BRANCH OR DEPARTMENT NOT VALID              *
+      *                                                               *
+      *****************************************************************
+     FMUSER   IF  E           K        DISK
+     E                    CTA1    1   1 50
+     E                    CTA2    1   1 45
+     E                    ARR        12  1
+     IPSDS       SDS
+     I                                      254 263 USRID
+     IDUMMY       DS
+     I                                        1  57 ALLF
+     I                                       32  35 LENG
+     I                                       46  57 VAL
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     ISDDEPT    E DSSDDEPTPD
+     I*
+     IDSFDY     E DSDSFDY                                                 RT0148
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                RT0148
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** Second DS for access programs, long data structure                                   CGL029
+     I*                                                                   RT0148
+     C           *ENTRY    PLIST
+     C                     PARM           ERRCOD  10
+     C                     PARM           INUSER 10                                           CAP084
+      *                                                                                       CAP084
+      ** If a user name has been passed in, use it                                            CAP084
+     C           INUSER    IFNE *BLANKS                                                       CAP084
+     C                     MOVELINUSER    USRID                                               CAP084
+     C                     ENDIF                                                              CAP084
+     C*
+     C                     Z-ADD0         ERRCOD
+     C*
+     C*  Create the data area ZMUSER
+     C*
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CTA1
+     C                     PARM 50        LEN    155
+     C*
+     C                     MOVEACTA2      ALLF
+     C*
+     C*   Obtain Branch, Department and Bank level authority indicator
+     C*   and place in data area
+     C*
+     C           USRID     CHAINMUSER                99
+     C           *IN99     IFEQ '0'                                                           239202
+     C                     MOVE '1 10'    LENG                                                239202
+     C                     MOVEAUSRID     ARR,1                                               239202
+     C                     MOVEA''')'     ARR,11                                              239202
+     C                     MOVEAARR       VAL                                                 239202
+     C                     EXSR SR1                                                           239202
+     C                     ENDIF                                                              239202
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           DBRN
+     C**********           PARM           SDBRCH                          RT0148
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        RT0148 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     99
+     C                     END
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FREE   '@OPTN   7
+     C                     PARM           DBRN
+     C**********           PARM           SDBRCH                          RT0148
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        RT0148 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           DPPT      IFNE *BLANKS
+     C*
+     C                     CALL 'AODEPTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           DPPT
+     C**********           PARM           SDDEPT                          RT0148
+     C           SDDEPT    PARM SDDEPT    DSFDY                           RT0148
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     99
+     C                     END
+     C*
+     C                     CALL 'AODEPTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FREE   '@OPTN   7
+     C                     PARM           DPPT
+     C**********           PARM           SDDEPT                          RT0148
+     C           SDDEPT    PARM SDDEPT    DSFDY                           RT0148
+     C*
+     C                     END
+     C*
+     C           *IN99     IFEQ '0'
+     C*
+     C                     MOVE '1 10'    LENG
+     C                     MOVEAUSRID     ARR,1
+     C                     MOVEA''')'     ARR,11
+     C                     MOVEAARR       VAL
+     C                     EXSR SR1
+     C*
+     C                     MOVE '11 3'    LENG
+     C                     MOVEA*BLANKS   ARR,1
+     C                     MOVEADBRN      ARR,1
+     C                     MOVEA''')'     ARR,4
+     C                     MOVEAARR       VAL
+     C                     EXSR SR1
+     C*
+     C                     MOVE '14 3'    LENG
+     C                     MOVEA*BLANKS   ARR,1
+     C                     MOVEADPPT      ARR,1
+     C                     MOVEA''')'     ARR,4
+     C                     MOVEAARR       VAL
+     C                     EXSR SR1
+     C*
+     C                     MOVE '17 1'    LENG
+     C                     MOVEA*BLANKS   ARR,1
+     C                     MOVE BANK      ARR,1
+     C                     MOVEA''')'     ARR,2
+     C                     MOVEAARR       VAL
+     C                     EXSR SR1
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD1         ERRCOD
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C*
+     C*  Sub-routine to fill the data area ZMUSER
+     C*
+     C           SR1       BEGSR
+     C                     CALL 'QCMDEXC'
+     C                     PARM           DUMMY
+     C                     PARM 57        LEN    155
+     C                     ENDSR
+     C*****************************************************************
+**  CTA1
+CRTDTAARA DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17)
+**  CTA2
+CHGDTAARA DTAARA(QTEMP/ZMUSER (    )) VALUE('

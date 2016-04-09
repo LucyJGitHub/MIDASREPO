@@ -1,0 +1,115 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Generate Acc. LERPKEY - PDCL CLE134')        */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000471B - Generate Accounting Entries - LERPKEL0 - PDCL*/
+/*                                                                 */
+/*       Function: This function is based on LEC0608A              */
+/*                 It calls: LE0470                                */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. 263074             Date 01Aug12            */
+/*       Prev Amend No. CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       263074 - Wrong Postings when interest and principal are   */
+/*                paid on the same day (Recompile)                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+ 
+             PGM        PARM(&NAM &SEQ &POST)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+             DCL        VAR(&MMOD)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LESTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&NAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ)    TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&POST)   TYPE(*CHAR)  LEN(1)
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)
+ 
+/** Check if component needs to run today */
+             RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)
+                 IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
+                               THEN(GOTO CMDLBL(ENDPGM))
+ 
+/** CLEAR PF/GELEFExx */
+                CLRPFM     FILE(GELEFEHH)
+                CLRPFM     FILE(GELEFEPD)
+                CLRPFM     FILE(GELEFEZZ)
+ 
+/** OVERRIDE PF/GELExx */
+                OVRDBF     FILE(GELEHH) TOFILE(GELEFEHH)
+                OVRDBF     FILE(GELEPD) TOFILE(GELEFEPD)
+                OVRDBF     FILE(GELEZZ) TOFILE(GELEFEZZ)
+ 
+/** OVERRIDE LF/LERKEY */
+                OVRDBF     FILE(LERKEY) TOFILE(LERPKEL0)
+ 
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+ 
+             IF         COND(%SUBSTRING(&MMOD 3 1) *EQ 'Y') THEN(DO)
+               CHGJOB     SWS(X1XXXXXX)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('CUSTOMER LENDING GENERATED PDCL +
+                           ACCOUNT POSTINGS') TOMSGQ(MRUNQ)
+ 
+             CALL       PGM(LE0470) PARM(&NAM)
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+ 
+/** CLEAR PF/GELEFExx */
+               CLRPFM     FILE(GELEFEHH)
+               CLRPFM     FILE(GELEFEPD)
+               CLRPFM     FILE(GELEFEZZ)
+ 
+             ENDDO
+ 
+             ELSE          CMD(DO)
+ 
+/** IF NO A/C KEYS MISSING THEN CLEAR PF/LKEY2xx */
+/** PF/LKEY1xx IS USED IN LEC0708 REPORTING */
+               IF         COND(%SWITCH(XXX0XXXX)) THEN(DO)
+ 
+               ENDDO
+/** IF A/C KEYS MISSING THEN CHECK D/LESTAT WHETHER TO CONTINUE */
+/** OR NOT */
+               ELSE       CMD(DO)
+ 
+                 RTVDTAARA  DTAARA(LESTAT) RTNVAR(&LESTAT)
+ 
+                 IF         COND(%SUBSTRING(&LESTAT 8 1) *EQ 'Y') +
+                               THEN(DO)
+ 
+                              SNDPGMMSG MSG('CUSTOMER LENDING +
+                                 A/C KEYS MISSING - PROCESSING +
+                                 CONTINUED') TOMSGQ(MRUNQ)
+                 ENDDO
+ 
+                 ELSE       CMD(DO)
+ 
+/** CALL CB0175 TO SET HALT AFTER COMPONENT FLAG ON */
+/** WILL HALT AT THE END OF THIS COMPONENT. */
+ 
+                   SNDPGMMSG  MSG('CUSTOMER LENDING A/C KEYS +
+                                 MISSING - PROCESSING HALTED') +
+                                 TOMSGQ(MOPERQ MRUNQ)
+ 
+                   CALL       PGM(CB0175) PARM(&NAM &SEQ)
+ 
+                 ENDDO
+ 
+               ENDDO
+ 
+             ENDDO
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+ENDPGM:      ENDPGM

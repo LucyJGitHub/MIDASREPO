@@ -1,0 +1,351 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Transfer Account Keys to live files')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Account Key Generator                                *
+     F*                                                               *
+     F*  AK0100 - Account Keys Generation Transfer.                   *
+     F*           Transfer of generated keys from work file ZACKEYAL  *
+     F*           to live file ACKEYAL, update file controls ACKEYAK  *
+     F*            - used for Dealing, Lending, Internal Contracts,   *
+     F*              FRA/IRS, and Funds Transfer Generators).         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 237299             Date 04Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 144503             Date 28Oct98               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 131108             Date 06Oct98               *
+     F*                 092374             Date 07Jan97               *
+     F*                 088986             Date 30Jun95               *
+     F*                 047369             DATE 17DEC92               *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  237299 - Not all keys in the work file were transferred in   *
+      *           the Live file.                                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  144503 - Allow the reinsertion of deleted account keys.      *
+     F*   131108 - Should allow re-insertion of deleted records       *
+     F*            held on PF/ACKEYAL                                 *
+     F*   092374 - Forsees problem of Duplicate Keys                  *
+     F*   088986 - Program amended to cater for situation where the   *
+     F*            account key being transferred already exists on    *
+     F*            file as a deleted record - as well as transferring *
+     F*            A/C Codes etc, pgm should also update RECI.        *
+     F*   047369 - NARRATIVE CODES SHOULD BE ALPHA AND NOT NUMERIC.   *
+     F*                                                               *
+     F*****************************************************************
+     FZACKEYALUF  E                    DISK                               092374
+     FACKEY   UF  E           K        DISK                      A
+     F*ZACKEYALIF  E                    DISK                              092374
+     F/COPY WNCPYSRC,AK0100F001
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *   10      ZACKEYAL end-of-file.
+      *   20      No header record on ACKEY.
+      *   98      Record exists already on PF ACKEYAL.
+      *   U8      Database error.
+      *
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E*
+     I*
+     I*  LDA for database error
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     C*****************************************************************
+     C*
+     C* Prepare LDA.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'AK0100  'DBPGM
+     C*
+     C** Use access program AOBANKR0 to retrieve SDBANKPD Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* Initialise count of records.
+     C*
+     C                     Z-ADD0         INS     40
+     C                     Z-ADD0         AMS     40
+     C*
+     C** Ensure no records written to ACKEYAL file if header (ACKEYAK)
+     C** does not exist.
+     C*
+     C                     MOVE *BLANKS   AKEY
+     C           AKEY      CHAINACKEYAKF             20
+     C           *IN20     IFEQ '1'
+     C*
+     C** If header not present - database error.
+     C*
+     C                     Z-ADD001       DBASE             ************
+     C                     MOVEL'ACKEY  ' DBFILE            * DATABASE *
+     C                     MOVEL'AUDIT'   DBKEY             * ERROR 001*
+     C                     EXSR DBERR                       ************
+     C                     ELSE
+     C*
+     C** Read through generated Account keys in work file.
+     C** Update live details file ACKEYAL.
+     C*
+     C                     READ ZACKEYAF                 10
+     C           *IN10     DOWEQ'0'
+     C                     EXSR LIVE
+     C                     READ ZACKEYAF                 10
+     C                     END
+     C*
+     C** Update header: number of insertions, amendments and total.
+     C*
+     C                     MOVE *BLANKS   AKEY
+     C           AKEY      CHAINACKEYAKF             20
+     C                     ADD  INS       NINS
+     C                     ADD  AMS       NAMD
+     C                     ADD  INS       NREC
+     C                     UPDATACKEYAKF
+     C                     SETON                     LR
+     C                     END
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C* LIVE - Update/Write new Account Keys to live files
+     C*
+     C* Calls     : None
+     C*
+     C* Called by : Main processing
+     C*
+     C********************************************************************
+     C           LIVE      BEGSR
+     C*
+     C** Store values in work file.
+     C*
+     C*********************MOVE RECI      ZRECI   1                088986 092374
+     C*********************MOVE ACD1      ZACD1   40                      092374
+     C*********************MOVE ACD2      ZACD2   40                      092374
+     C*********************MOVE ACD3      ZACD3   40                      092374
+     C*********************MOVE ACD4      ZACD4   40                      092374
+     C*********************MOVE ACD5      ZACD5   40                      092374
+     C*********************MOVE ACD6      ZACD6   40                      092374
+     C***********          MOVE NCD1      ZNCD1   20                      047369
+     C***********          MOVE NCD2      ZNCD2   20                      047369
+     C***********          MOVE NCD3      ZNCD3   20                      047369
+     C***********          MOVE NCD4      ZNCD4   20                      047369
+     C***********          MOVE NCD5      ZNCD5   20                      047369
+     C***********          MOVE NCD6      ZNCD6   20                      047369
+     C*********************MOVE NCD1      ZNCD1   2                047369 092374
+     C*********************MOVE NCD2      ZNCD2   2                047369 092374
+     C*********************MOVE NCD3      ZNCD3   2                047369 092374
+     C*********************MOVE NCD4      ZNCD4   2                047369 092374
+     C*********************MOVE NCD5      ZNCD5   2                047369 092374
+     C*********************MOVE NCD6      ZNCD6   2                047369 092374
+     C*********************MOVE PRF1      ZPRF1   10                      092374
+     C*********************MOVE PRF2      ZPRF2   10                      092374
+     C*********************MOVE PRF3      ZPRF3   10                      092374
+     C*********************MOVE PRF4      ZPRF4   10                      092374
+     C*********************MOVE PRF5      ZPRF5   10                      092374
+     C*********************MOVE PRF6      ZPRF6   10                      092374
+      *                                                                   131108
+      ** Allow re-insertion of a deleted account key                      131108
+      ** Save values of ZACKEYAL to be written to ACKEYAL                 131108
+      *                                                                   131108
+     C                     MOVE AKEY      ZAKEY  14                                           CDL038
+     C*********************MOVE AKEY      ZAKEY  10                                    131108 CDL038
+     C**********           MOVE ACD1      ZACD1   40                                   131108 CGL029
+     C**********           MOVE ACD2      ZACD2   40                                   131108 CGL029
+     C**********           MOVE ACD3      ZACD3   40                                   131108 CGL029
+     C**********           MOVE ACD4      ZACD4   40                                   131108 CGL029
+     C**********           MOVE ACD5      ZACD5   40                                   131108 CGL029
+     C**********           MOVE ACD6      ZACD6   40                                   131108 CGL029
+     C                     MOVE ACD1      ZACD1  100                                          CGL029
+     C                     MOVE ACD2      ZACD2  100                                          CGL029
+     C                     MOVE ACD3      ZACD3  100                                          CGL029
+     C                     MOVE ACD4      ZACD4  100                                          CGL029
+     C                     MOVE ACD5      ZACD5  100                                          CGL029
+     C                     MOVE ACD6      ZACD6  100                                          CGL029
+     C                     MOVE NCD1      ZNCD1   2                       131108
+     C                     MOVE NCD2      ZNCD2   2                       131108
+     C                     MOVE NCD3      ZNCD3   2                       131108
+     C                     MOVE NCD4      ZNCD4   2                       131108
+     C                     MOVE NCD5      ZNCD5   2                       131108
+     C                     MOVE NCD6      ZNCD6   2                       131108
+     C                     MOVE PRF1      ZPRF1   10                      131108
+     C                     MOVE PRF2      ZPRF2   10                      131108
+     C                     MOVE PRF3      ZPRF3   10                      131108
+     C                     MOVE PRF4      ZPRF4   10                      131108
+     C                     MOVE PRF5      ZPRF5   10                      131108
+     C                     MOVE PRF6      ZPRF6   10                      131108
+      *                                                                   131108
+     C                     SETOF                     98
+     C*
+     C*  Chain to live file (ACKEY detail) to avoid duplication, when
+     C*  adding records.
+     C*
+     C           AKEY      CHAINACKEYALF             98
+     C*
+     C***If*record*not*found,*write*record*to*ACKEYAL*(live file)         131108
+     C** If record not found or if deleted record found                   131108
+     C** Remove deleted record and write new record to ACKEYAL (live)     131108
+     C** and increment count of insertions.
+     C*
+     C           *IN98     IFEQ '1'
+     C                     MOVE 'I'       CHTP
+     C                     MOVE BJRDNB    LCD
+     C                     WRITEACKEYALF
+     C           INS       ADD  1         INS
+     C*
+     C                     DELETZACKEYAF                                  092374
+     C                     END                                            131108
+     C*
+     C           *IN98     IFEQ '0'                                       131108
+     C           RECI      IFEQ '*'                                       131108
+     C                     DELETACKEYALF                                  131108
+     C                     MOVE ZAKEY     AKEY                            131108
+     C                     MOVE ZACD1     ACD1                            131108
+     C                     MOVE ZACD2     ACD2                            131108
+     C                     MOVE ZACD3     ACD3                            131108
+     C                     MOVE ZACD4     ACD4                            131108
+     C                     MOVE ZACD5     ACD5                            131108
+     C                     MOVE ZACD6     ACD6                            131108
+     C                     MOVE ZNCD1     NCD1                            131108
+     C                     MOVE ZNCD2     NCD2                            131108
+     C                     MOVE ZNCD3     NCD3                            131108
+     C                     MOVE ZNCD4     NCD4                            131108
+     C                     MOVE ZNCD5     NCD5                            131108
+     C                     MOVE ZNCD6     NCD6                            131108
+     C                     MOVE ZPRF1     PRF1                            131108
+     C                     MOVE ZPRF2     PRF2                            131108
+     C                     MOVE ZPRF3     PRF3                            131108
+     C                     MOVE ZPRF4     PRF4                            131108
+     C                     MOVE ZPRF5     PRF5                            131108
+     C                     MOVE ZPRF6     PRF6                            131108
+     C                     MOVE 'D'       RECI                            131108
+     C                     MOVE 'I'       CHTP                            131108
+     C                     MOVE BJRDNB    LCD                             131108
+     C                     WRITEACKEYALF                                  131108
+     C           INS       ADD  1         INS                             131108
+     C                     DELETZACKEYAF                                  144503
+     C*                                                                   131108
+     C                     ELSE
+      *                                                                                       237299
+     C                     MOVE ZAKEY     AKEY                                                237299
+     C                     MOVE ZACD1     ACD1                                                237299
+     C                     MOVE ZACD2     ACD2                                                237299
+     C                     MOVE ZACD3     ACD3                                                237299
+     C                     MOVE ZACD4     ACD4                                                237299
+     C                     MOVE ZACD5     ACD5                                                237299
+     C                     MOVE ZACD6     ACD6                                                237299
+     C                     MOVE ZNCD1     NCD1                                                237299
+     C                     MOVE ZNCD2     NCD2                                                237299
+     C                     MOVE ZNCD3     NCD3                                                237299
+     C                     MOVE ZNCD4     NCD4                                                237299
+     C                     MOVE ZNCD5     NCD5                                                237299
+     C                     MOVE ZNCD6     NCD6                                                237299
+     C                     MOVE ZPRF1     PRF1                                                237299
+     C                     MOVE ZPRF2     PRF2                                                237299
+     C                     MOVE ZPRF3     PRF3                                                237299
+     C                     MOVE ZPRF4     PRF4                                                237299
+     C                     MOVE ZPRF5     PRF5                                                237299
+     C                     MOVE ZPRF6     PRF6                                                237299
+     C                     MOVE 'D'       RECI                                                237299
+     C                     MOVE 'A'       CHTP                                                237299
+     C                     MOVE BJRDNB    LCD                                                 237299
+     C                     UPDATACKEYALF                                                      237299
+     C           AMS       ADD  1         AMS                                                 237299
+      *                                                                                       237299
+     C                     DELETZACKEYAF                                                      237299
+     C*                                                                   092374
+     C*Switch U5 will be used to indicate that some records are in double 092374
+     C*and let the user managed the double keys him self.                 092374
+     C                     MOVE *ON       *INU5                           092374
+     C*
+     C***Else*record*found*on*live*file*-*amendment*required.          es 092374
+     C***Retrieve*values*stored.*                                      es 092374
+     C*********************MOVE ZRECI     RECI                      088986092374
+     C*********************MOVE ZACD1     ACD1                            092374
+     C*********************MOVE ZACD2     ACD2                            092374
+     C*********************MOVE ZACD3     ACD3                            092374
+     C*********************MOVE ZACD4     ACD4                            092374
+     C*********************MOVE ZACD5     ACD5                            092374
+     C*********************MOVE ZACD6     ACD6                            092374
+     C*********************MOVE ZNCD1     NCD1                            092374
+     C*********************MOVE ZNCD2     NCD2                            092374
+     C*********************MOVE ZNCD3     NCD3                            092374
+     C*********************MOVE ZNCD4     NCD4                            092374
+     C*********************MOVE ZNCD5     NCD5                            092374
+     C*********************MOVE ZNCD6     NCD6                            092374
+     C*********************MOVE ZPRF1     PRF1                            092374
+     C*********************MOVE ZPRF2     PRF2                            092374
+     C*********************MOVE ZPRF3     PRF3                            092374
+     C*********************MOVE ZPRF4     PRF4                            092374
+     C*********************MOVE ZPRF5     PRF5                            092374
+     C*********************MOVE ZPRF6     PRF6                            092374
+     C*********************MOVE 'A'       CHTP                            092374
+     C*********************MOVE BJRDNB    LCD                             092374
+     C*********************UPDATACKEYALF                                  092374
+     C*********************ADD  1         AMS                             092374
+     C*
+     C                     END
+     C                     END                                            131108
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C* DBERR - Database error processing
+     C*
+     C* Calls     : None
+     C*
+     C* Called by : Main processing
+     C*
+     C********************************************************************
+     C           DBERR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

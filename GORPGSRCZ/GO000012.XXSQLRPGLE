@@ -1,0 +1,200 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGSQLMOD*****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Global Processing Module                            *
+      *                                                               *
+      *  GO000012- Clear 30 day old records from Country Exposure     *
+      *            Audit table                                        *
+      *                                                               *
+      *  Function: This Program clears 30 day old records from        *
+      *            Management limits country exposure audit table     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CCB023 *REDUNDANT Date 06Aug12                *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    U7+U8 -  Database Error                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR      -  Program exception error routine                *
+      *  *INZSR     -  Initialisation Subroutine                      *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+ 
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      * 200 byte DS for incoming data from Access Program
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      * DS for Bank data
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+      * Dynamic SQL statement work field
+     D WSTRSQL         S            100A   INZ(*BLANKS)
+      * Date field contain 30 days old MIDAS date
+     D NEWDATE         S               D   DATFMT(*DMY)
+      * Field passed as parm to ZDATE2
+     D W_CONST         S              1A
+ 
+     D PDATE           S              6  0
+     D PADATE          S              7A
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+ 
+     C                   EVAL      W_CONST = 'D'
+      *
+      * Call ZDATE2 to get Midas Run date in DDMMYY format
+     C                   CALLB     'ZDATE2'
+     C                   PARM                    BJRDNB
+     C                   PARM                    W_CONST
+     C                   PARM      *ZERO         PDATE
+     C                   PARM      *BLANKS       PADATE
+ 
+      * Get 30 days old Midas date
+ 
+     C                   Eval      NEWDATE = %DATE(PDATE:*DMY) - %DAYS(30)
+ 
+      * Build SQL statement to delete 30 days old records of audit file
+ 
+     C                   Eval      WSTRSQL = 'Delete From T_MLEQCEAU where ' +
+     C                                        'CNAUDATE' +  ' < ' +   ''''
+     C                                        + %Char(NEWDATE) +  ''''
+ 
+      * Prepare SQL statement
+ 
+     C/EXEC SQL
+     C+ PREPARE S1 FROM :WSTRSQL
+     C/END-EXEC
+ 
+      * Execute SQL statement
+ 
+     C/EXEC SQL
+     C+ EXECUTE S1
+     C/END-EXEC
+ 
+      * Check for error in SQL execution
+ 
+     C                   IF        SQLCOD <> 0  And SQLCOD <> 100
+     C                   MOVEL     'GO000012'    DBPGM
+     C                   MOVEL     'T_MLEQCEAU'  DBFILE
+     C                   MOVEL     '003'         DBASE
+     C                   MOVEL     WSTRSQL       DBKEY
+      *
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *  *INZSR - Initial Subroutine                                 *
+      *                                                              *
+      *  Called by: Implicitly on program activation                 *
+      *                                                              *
+      *  Calls: *PSSR                                                *
+      *                                                              *
+      ****************************************************************
+     C     *INZSR        BEGSR
+ 
+      **Access bank info for Midas Run Date
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANK        @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+      ** ERROR
+      *
+     C     @RTCD         IFNE      *BLANKS
+     C                   MOVEL     'GO000012'    DBPGM
+     C                   MOVEL     'SDBANKPD'    DBFILE
+     C                   MOVEL     '004'         DBASE
+     C                   MOVEL     @OPTN         DBKEY
+      *
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   DUMP
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+ 
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

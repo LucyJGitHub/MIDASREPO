@@ -1,0 +1,1229 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Availability Below Zero Report')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0415 - Availability Below Zero Report                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01498             Date 11Aug94               *
+      *                 B8233              Date 13Sep81               *
+     F*                 001313   JGA       DATE 08AUG91               *
+     F*                 R5672              DATE 13MAR91               *
+     F*                 R5531              DATE 22FEB91               *
+     F*                 R0043              DATE 28JAN91               *
+     F*                 R0719              DATE 14NOV90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  B8233  - LINK BETWEEN PARENT AND CHILDREN NOT IN ALL CASES   *
+     F*           CORRECT                                             *
+     F*  001313 - MATURED COMMITMENT LINE NOT TO BE USED              *
+     F*  R5672  - PARENT REPORTING INCORRECT                          *
+     F*  R5531  - COMMITMENT LINE NOT CONVERTED TO PORTFOLIO CURRENCY *
+     F*  R0043  - NO HEADINGS FOR PAGE 1.                             *
+     F*  R0719  - USE BORROWING POWER INSTEAD OF LENDING POWER        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *                Used indicators
+      *                ---------------
+      *
+      *      20      Overflow indicator on PRTF/LB0415P1
+      *      30      Parent or non-Parent
+      *      31      Parent/Children
+      *      40      Customer Availability below zero
+      *      41      Parent Availability below zero
+      *      55      No details to Report
+      *      60      Access Customers file PF/SDCUSTPD
+      *      61      Access Commitment Lines file LF/LBCOMAL2
+      *      62      Access Extract Summary file LF/LBEXTSL2
+      *******63******Access*Child*details*LF/SDCUSTL0******************   S01498
+      *      70      Access Extract Summary file LF/LBEXTSL1
+      *******71******Access*Branch*file*LF/SDBRCHL1********************   S01498
+      *******72******Access*A/c*Officer*file*LF/SDACOFL1***************   S01498
+      *      98      Date in format MMDDYY
+      *      99      Work
+      *
+      *                Unused indicators
+      *                -----------------
+      *
+      *       01  02  03  04  05  06  07  08  09  10
+      *       11  12  13  14  15  16  17  18  19  ..
+      *       21  22  23  24  25  26  27  28  29  ..
+      *       ..  32  33  34  35  36  37  38  39  ..
+      *       ..  42  43  44  45  46  47  48  49  50
+      *       51  52  53  54  ..  56  57  58  59  ..
+      *       ..  ..  ..  64  65  66  67  68  69  ..
+      *       ..  ..  73  74  75  76  77  78  79  80
+      *       81  82  83  84  85  86  87  88  89  90
+      *       91  92  93  94  95  96  97  ..  ..
+      *
+      *
+      *       U7         Database Error
+      *       U8         Program  Error
+      *
+      /EJECT
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+      ****Prefix*:*BJ**************************************************   S01498
+     F***LB0415AUO***E                    PRINTER                         S01498
+     FLB0415AUO   E             22     PRINTER      KINFDS SPOOLU         S01498
+      **  Prefix : RR
+     FLBEXTSL1IF  E           K        DISK
+      **  Prefix : ES
+     FLBEXTSL2IF  E           K        DISK
+     F            LBEXTSD0                          KRENAMELBEXTSDL
+      **  Prefix : ES
+     F***SDCURRL1IF**E           K        DISK                            S01498
+      ****Prefix*:*A6**************************************************   S01498
+     FLBCOMAL2IF  E           K        DISK
+      **  Prefix : CA
+     F***LB0415P1O***E             20     PRINTER                         S01498
+     FLB0415P1O   E             20     PRINTER      KINFDS SPOOL      UC  S01498
+      **  Prefix : RR
+     FSDCUSTPDIF  E           K        DISK
+      **  Prefix : BB
+     F***SDCUSTL0IF**E           K        DISK                            S01498
+     F************@BBREBG                           KRENAMESDCUSTDL       S01498
+      ****Prefix*:*BB**************************************************   S01498
+     F***SDACOFL1IF**E           K        DISK                            S01498
+      ****Prefix*:*AZ**************************************************   S01498
+     F***SDBRCHL1IF**E           K        DISK                            S01498
+      ****Prefix*:*A8**************************************************   S01498
+     F***SDLOMBPDIF**E********************DISK*********KINFSR**PSSR****   S01498
+      ****Prefix*:*LB**************************************************   S01498
+      /EJECT
+      *
+      **   Array for Copyright
+     E                    CPY@    1   1 80
+      *
+      **   Array set up for standard subroutine ZSEDIT
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      **   Array set up for standard subroutine ZDATE2
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     E*                                                                   R5531
+     E** SCONV S/R ARRAY FOR POWERS OF 10                                 R5531
+     E                    POWER   1   7  7 3                              R5531
+      *
+      **   Data structure for compilation - Copyright insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      **   Data Structure for Parents occurrences
+     IPAREN       DS                         99
+     I**********                              1   60ZZCNUM                                    CSD027
+     I                                        1   6 ZZCNUM                                    CSD027
+     I*****                                   7  210ZZLPWR                R0719
+     I                                        7  210ZZBORR                R0719
+     I                                       22  360ZZOWEX
+     I                                       37  510ZZTPIU
+     I                                       52  660ZZCMTL                R0719
+      *
+      **   Program Status Data Structure
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *                                                                   S01498
+      **   File Information Data Structure                                S01498
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+      *                                                                   S01498
+      **   For Overflow                                                   S01498
+     I                                    B 367 3680LINE                  S01498
+     I*                                                                   S01498
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I*                                                                   S01498
+     I**   For Overflow                                                   S01498
+     I                                    B 367 3680LINE1                 S01498
+      *
+      **   Local Data Area
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   001313
+      **   Phase of Day                                                   001313
+     I***MPHAS       DS                                                                001313 CCB020
+     I**********                              1   1 PHASE                              001313 CCB020
+      *
+      **   Data Structure for ZSEDIT set up
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*                                                                   S01498
+     IRUNDAT    E DS                                                      S01498
+     I**  Standard Data Area Layout for System flags and Run Date         S01498
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     ISDBRCH    E DSSDBRCHPD                                              S01498
+     I**  Data structure for branch details                               S01498
+     I              QQDFAC                          DFACQQ                                    CGL029
+     I*                                                                   S01498
+     ISDCUST    E DSSDCUSTPD                                              S01498
+     I**  Data structure for customer details                             S01498
+     I*                                                                   S01498
+     ISDLMB     E DSSDLOMBPD                                              S01498
+     I**  Data structure for Portfolio Lending ICD                        S01498
+     I*                                                                   S01498
+     ISDCURR    E DSSDCURRPD                                              S01498
+     I**  Data structure for currency details                             S01498
+     I*                                                                   S01498
+     ISDACOF    E DSSDACOFPD                                              S01498
+     I**  Data structure for account officer details                      S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I**  Long data structure for access programs                         S01498
+     I*                                                                   S01498
+      /EJECT
+      ********************************************************************
+     C*                                                                   S01498
+     C** Entry Parameters                                                 S01498
+     C*                                                                   S01498
+     C           *ENTRY    PLIST                                          S01498
+     C                     PARM           @RSEQ   5                       S01498
+     C                     PARM           @RENT   3                       S01498
+      *
+      **   Initialisation
+     C                     EXSR #INIT
+      *
+      **   Process Branch, A/c officer, Parent, Portfolio Customers
+     C                     EXSR #PR01
+      *
+      **   Termination Processing
+     C                     EXSR #TERM
+     C*                                                                   S01498
+     C** Ensure Audit Spool File recorded by RCF                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUMU    SFNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ   5                       S01498
+     C                     PARM *BLANK    SENTY   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           SFNUM2                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *INU7                           S01498
+     C                     MOVE '1'       *INU8                           S01498
+     C                     MOVE '1'       *INLR                           S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+      *
+      **   End program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *   INDEX OF SUBROUTINES                                           *
+      *                                                                  *
+      *   AVCUS   -  Availability below zero calculation - Customers     *
+      *   AVPAR   -  Availability below zero calculation - Parents       *
+      *   CHILD   -  Format Children fields                              *
+      *   COMA    -  Retrieve Commitment Line                            *
+      *   INIT    -  Initial Processing                                  *
+      *   MAIN    -  Main Processing                                     *
+      *   PR01    -  Process Branch/ A/c officer, Parent, LB Customers   *
+      *   TERM    -  Termination Processing                              *
+      *   W01     -  Print Customers Details                             *
+      *   W02     -  Print Parents Details                               *
+      *   W03     -  Print Details Line                                  *
+      *   *PSSR   -  Data base Error Processing                          *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #PR01     - Process Branch, A/c officer, Parent, LB Customers   *
+      *                                                                  *
+      *  Calls     - #AVCUS, #AVPAR, #W01, #W02                          *
+      *                                                                  *
+      *  Called by - #MAIN                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #PR01     BEGSR
+      *
+      **   Access SDCUSTPD file
+     C                     READ SDCUSTPD                 60
+      *
+      **   So long as end of file not reached
+     C           *IN60     DOWEQ'0'
+      *
+      **   Increment number of records read
+     C                     ADD  1         RRNORE
+      *
+      **   Customers Availability calculations
+     C           BBPAIN    IFEQ ' '
+     C                     EXSR #AVCUS
+     C                     ELSE
+      *
+      **   Parents Availability calculations
+     C                     EXSR #AVPAR
+      *
+     C                     END
+      *
+      **   Print details if Customers Availability below zero
+     C           *IN40     IFEQ '1'
+     C                     EXSR #W01
+     C                     SETOF                     35                   B8233
+     C                     ELSE
+      *
+      **   Print details if Parents Availability below zero
+     C           *IN41     IFEQ '1'
+     C                     SETOF                     35                   B8233
+     C                     EXSR #W02
+     C                     SETON                     35                   B8233
+     C                     END
+     C                     END
+      *
+      **   Access SDCUSTPD file
+     C                     READ SDCUSTPD                 60
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #AVCUS    - Customers Availability calculations                 *
+      *                                                                  *
+      *  Calls     -                                                     *
+      *                                                                  *
+      *  Called by - #PR01                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #AVCUS    BEGSR
+      *
+      **   Reset indicators
+     C                     MOVEA'00'      *IN,40
+      *
+      **   Override Alpha Customer Number to Numeric value
+     C                     MOVE BBCUST    WWCNUM
+      *
+      **   Access portfolio lending Extract Summary
+     C           WWCNUM    CHAINLBEXTSL1             70
+     C           *IN70     IFEQ '0'
+     C                     Z-ADDESLPWR    WWLPWR 150
+     C**                   Z-ADDESTPRD    WWTPRD 150                 R0719R5672
+     C                     Z-ADDESTPRV    WWTPRD 150                      R5672
+     C                     Z-ADDESOWEX    WWOWEX 150
+     C                     Z-ADDESTPIU    WWTPIU 150
+     C                     ELSE
+      *
+     C                     Z-ADD0         WWLPWR 150
+     C                     Z-ADD0         WWTPRD                          R0719
+     C                     Z-ADD0         WWOWEX 150
+     C                     Z-ADD0         WWTPIU 150
+     C                     END
+      *
+      **   Calculate Total Exposure
+     C           WWOWEX    ADD  WWTPIU    WWEXPO 150
+      *                                                                   R0719
+      *****Calculate Lending Power - Total Exposure                       R0719
+     C*****      WWLPWR    SUB  WWEXPO    WWAVAI 150                      R0719
+      *                                                                   R0719
+      **   Calculate Borrowing Power                                      R0719
+     C           WWLPWR    ADD  WWTPRD    WWBORR 150                      R0719
+      *                                                                   R0719
+      **   Access Commitment Line                                         R0719
+     C                     EXSR #COMA                                     R0719
+      *                                                                   R0719
+      **   Calculate Availability                                         R0719
+     C           WWBORR    IFLT WWCOMA                                    R0719
+     C                     Z-ADDWWBORR    WWBOCO 150                      R0719
+     C                     ELSE                                           R0719
+     C                     Z-ADDWWCOMA    WWBOCO                          R0719
+     C                     END                                            R0719
+      *                                                                   R0719
+     C           WWBOCO    SUB  WWEXPO    WWAVAI 150                      R0719
+      *
+      **   Check Availability below zero
+     C           WWAVAI    IFLT 0
+     C                     MOVE '1'       *IN40
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #AVPAR    - Parents Availability calculations                   *
+      *                                                                  *
+      *  Calls     - #COMA (note this subroutine is only called to       *R0719
+      *   retrieve review date/frequency/day no. for non-parents)        *R0719
+      *                                                                  *
+      *  Called by - #PR01                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #AVPAR    BEGSR
+      *
+      **   Reset indicators
+     C                     MOVEA'00'      *IN,40
+      *
+      **   Reset fields
+     C                     Z-ADD0         Z       20
+     C*****                Z-ADD0         WWTLEN 150                      R0719
+     C                     Z-ADD0         WWTBOR 150                      R0719
+     C                     Z-ADD0         WWTEXP 150
+     C                     Z-ADD0         WWTPLG 150
+     C                     Z-ADD0         WWTCOM 150
+      *
+      **   Override Alpha Customer Number to Numeric value
+     C                     MOVE BBCUST    WWCUST
+      *
+      **   Access portfolio lending Extract Summary
+     C                     Z-ADD0         Z                               B8233
+     C           WWCUST    SETLLLBEXTSL2             6262
+     C           *IN62     IFEQ '0'
+     C           WWCUST    READELBEXTSL2                 62
+      *
+     C           *IN62     DOWEQ'0'
+     C                     ADD  1         Z
+     C*****                ADD  ESLPWR    WWTLEN                          R0719
+     C                     ADD  ESLPWR    WWTBOR                          R0719
+     C**                   ADD  ESTPRD    WWTBOR                     R0719R5672
+     C                     ADD  ESTPRV    WWTBOR                          R5672
+     C                     ADD  ESOWEX    WWTEXP
+     C                     ADD  ESTPIU    WWTPLG
+     C                     ADD  ESCMTL    WWTCOM
+      *
+     C           Z         OCUR PAREN
+     C**********           Z-ADDESCNUM    ZZCNUM                                              CSD027
+     C                     MOVE ESCNUM    ZZCNUM                                              CSD027
+     C*****                Z-ADDESLPWR    ZZLPWR                          R0719
+     C**         ESLPWR    ADD  ESTPRD    ZZBORR                     R0719R5672
+     C           ESLPWR    ADD  ESTPRV    ZZBORR                          R5672
+     C                     Z-ADDESOWEX    ZZOWEX
+     C                     Z-ADDESTPIU    ZZTPIU
+     C                     Z-ADDESCMTL    ZZCMTL                          R0719
+      *
+     C           WWCUST    READELBEXTSL2                 62
+     C                     END
+      *
+     C                     END
+      *
+      **   Calculate Total Exposure
+     C           WWTEXP    ADD  WWTPLG    WWTXPO 150
+      *                                                                   R0719
+      *****Calculate Lending Power - Total Exposure                       R0719
+     C*****      WWTLEN    SUB  WWTXPO    WWAVAI 150                      R0719
+      *                                                                   R0719
+      **   Calculate Availability                                         R0719
+     C           WWTBOR    IFLT WWTCOM                                    R0719
+     C                     Z-ADDWWTBOR    WWBOCO                          R0719
+     C                     ELSE                                           R0719
+     C                     Z-ADDWWTCOM    WWBOCO                          R0719
+     C                     END                                            R0719
+      *                                                                   R0719
+     C           WWBOCO    SUB  WWTXPO    WWAVAI                          R0719
+      *
+      **   Check Availability below zero
+     C           WWAVAI    IFLT 0
+     C                     MOVE '1'       *IN41
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #COMA     - Retrieve Commitment Line                            *
+      *                                                                  *
+      *  Calls     -                                                     *
+      *                                                                  *
+      *  Called by - #W01, #W02                                          *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #COMA     BEGSR
+      *                                                                  *
+     C                     Z-ADD0         CACMTL
+     C                     MOVE 'N'       WWCMFN  1
+     C           KCOMA     SETLLLBCOMAL2             61
+     C           *IN61     IFEQ '0'
+     C           WWCNUM    READELBCOMAL2                 61
+      *
+     C           *IN61     DOWEQ'0'
+     C           WWCMFN    ANDEQ'N'
+      *
+     C           CASTTD    IFLE BJRDNB
+     C           CAEXPD    ANDGEBJRDNB
+     C********** PHASE     ANDEQ'A'                                                    001313 CCB020
+     C           COBST     ANDEQ'*NO'                                                         CCB020
+     C           CASTTD    ORLE BJDNWD                                    001313
+     C           CAEXPD    ANDGEBJDNWD                                    001313
+     C********** PHASE     ANDNE'A'                                                    001313 CCB020
+     C           COBST     ANDEQ'*YES'                                                        CCB020
+     C                     MOVE 'Y'       WWCMFN
+     C                     ELSE
+     C           WWCNUM    READELBCOMAL2                 61
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **   If an active Commitment Line is found
+     C           WWCMFN    IFEQ 'Y'
+     C                     Z-ADDCACMTL    WWCOMA
+     C                     Z-ADDCAREVD    WWREVD
+     C                     MOVE CAREVF    WWREVF
+     C                     Z-ADDCAREVN    WWREVN
+      *                                                                   R5531
+      **   Get Decimal Places & Spot rate & Mult/Div Ind.                 R5531
+     C***********CACCY     CHAINSDCURRL1             99             R5531 S01498
+     C************IN99     IFEQ '1'                                 R5531 S01498
+     C***********A6TYLC    OREQ 'D'                                 R5531 S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM CACCY     P@CCY   3                       S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD3         DBASE            ************   R5331
+     C***********          MOVEL'SDCURRL1'DBFILE           *********R5531 S01498
+     C                     MOVE 'SDCURRPD'DBFILE           * DBER 003 *   S01498
+     C                     MOVELCACCY     DBKEY            ************   R5531
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR                                     R5531
+     C                     ELSE                                           R5531
+      *                                                                   R5531
+     C                     Z-ADDA6NBDP    WWDPI                           R5331
+     C                     Z-ADDA6SPRT    WWSRI                           R5531
+     C                     MOVE A6MDIN    WWMDI                           R5531
+      *                                                                   R5531
+     C                     Z-ADDWWCOMA    WWAMTI                          R5531
+     C                     EXSR SCONV                                     R5531
+     C                     Z-ADDWWAMTO    WWCOMA                          R5531
+      *                                                                   R5531
+     C                     END                                            R5531
+     C                     ELSE
+      *
+     C                     Z-ADD0         WWCOMA
+     C                     Z-ADD0         WWREVD
+     C                     MOVE *BLANKS   WWREVF
+     C                     Z-ADD0         WWREVN
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #CHILD    - Format Children fields                              *
+      *                                                                  *
+      *  Calls     -                                                     *R0719
+      *                                                                  *
+      *  Called by - #W02                                                *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #CHILD    BEGSR
+      *
+     C                     MOVE ZZCNUM    RRCUST
+      *
+      **   Access Child details
+     C***********RRCUST    CHAINSDCUSTL0             63                   S01498
+     C************IN63     IFEQ '1'                                       S01498
+     C***********BBTYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCUSTR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*KEY   ' P@OPTN  7                       S01498
+     C                     PARM RRCUST    P@KEY1 10                       S01498
+     C                     PARM *BLANKS   P@KYST  7                       S01498
+     C           SDCUST    PARM SDCUST    DSSDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVE *BLANKS   DBFILE           * DBER 004 *
+     C                     MOVE 'SDCUSTPD'DBFILE           ************
+     C                     MOVELZZCNUM    DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   RRCRNM
+     C                     MOVELBBCRNM    RRCRNM
+     C*****                Z-ADDZZLPWR    WWLPWR                          R0719
+     C                     Z-ADDZZBORR    WWBORR                          R0719
+     C                     Z-ADDZZCMTL    WWCOMA                          R5672
+     C           ZZOWEX    ADD  ZZTPIU    WWEXPO                          R5672
+      **   Calculate Availability                                         R5672
+     C           WWBORR    IFLT WWCOMA                                    R5672
+     C                     Z-ADDWWBORR    WWBOCO 150                      R5672
+     C                     ELSE                                           R5672
+     C                     Z-ADDWWCOMA    WWBOCO                          R5672
+     C                     END                                            R5672
+      *                                                                   R5672
+     C           WWBOCO    SUB  WWEXPO    WWAVAI 150                      R5672
+     C**         WWLPWR    SUB  WWEXPO    WWAVAI                          R5672
+      *
+      *****Access Child Commitment line                                   R0719
+     C*****                EXSR #COMA                                     R0719
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #W01      - Print Customer details                              *
+      *                                                                  *
+      *  Calls     - #W03                                                *
+      *                                                                  *
+      *  Called by - #PR01                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR
+      *
+      **   Customer indicator
+     C                     MOVE '1'       *IN30
+      *
+      *****Retrieve Commitment Line                                       R0719
+     C*****                EXSR #COMA                                     R0719
+      *
+      **   Format details
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVEL*BLANKS   RRCRNM
+     C                     MOVELBBCRNM    RRCRNM
+      *
+      **   Print details line
+     C                     EXSR #W03
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #W02      - Print Parents details                               *
+      *                                                                  *
+      *  Calls     - #W03                                                *
+      *                                                                  *
+      *  Called by - #PR01                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR
+      *
+      **   Parent indicator
+     C                     MOVEA'01'      *IN,30
+      *
+      **   Format Parent details
+     C                     MOVELBBCUST    RRPCNB
+     C                     MOVEL*BLANKS   RRCRNM
+     C                     MOVELBBCRNM    RRCRNM
+     C*****                Z-ADDWWTLEN    WWLPWR                          R0719
+     C                     Z-ADDWWTBOR    WWBORR                          R0719
+     C           WWTEXP    ADD  WWTPLG    WWEXPO
+     C                     Z-ADDWWTCOM    WWCOMA
+      *
+      **   Print Parent details line
+     C                     EXSR #W03
+      *
+      **   Set on Customer indicator
+     C                     MOVE '1'       *IN30
+      *
+      **   Format and Print Children details
+     C                     Z-ADD0         X       20
+     C                     DO   Z
+      *
+     C                     ADD  1         X
+     C           X         OCUR PAREN
+      *
+     C                     EXSR #CHILD
+      *
+     C                     EXSR #W03
+      *
+     C                     END
+      *
+      **   Reset Parent/Children indicator
+     C                     MOVE '0'       *IN31
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #W03      - Print details                                       *
+      *                                                                  *
+      *  Calls     - #ZSEDIT, ZDATE2                                     *
+      *                                                                  *
+      *  Called by - #W01, #W02                                          *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR
+      *
+      *****Format Lending Power                                           R0719
+      **   Format Borrowing Power                                         R0719
+     C                     Z-ADDWWDECS    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C*****                Z-ADDWWLPWR    ZFLD15                          R0719
+     C                     Z-ADDWWBORR    ZFLD15                          R0719
+     C                     EXSR ZSEDIT
+     C*****                MOVE ZOUT21    RRLPWR                          R0719
+     C                     MOVE ZOUT21    RRBORR                          R0719
+      *
+      **   Format Total Exposure
+     C                     Z-ADDWWDECS    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDWWEXPO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RREXPO
+      *
+      **   Format Commitment Line
+     C                     Z-ADDWWDECS    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDWWCOMA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRCOMA
+      *
+      **   Format Review Date
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   RRDATE
+     C                     MOVEL*BLANKS   RRREVF
+     C                     MOVEL*BLANKS   RRREVN
+     C                     ELSE
+      *
+     C                     Z-ADDWWREVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRDATE
+      *
+      **   Format Review Frequency and Day number
+     C           WWCMFN    IFEQ 'Y'
+     C                     MOVE WWREVF    RRREVF
+     C                     MOVE WWREVN    RRREVN
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRREVF
+     C                     MOVEL*BLANKS   RRREVN
+     C                     END
+      *
+     C                     END
+      *
+      **   Format Availability
+     C                     Z-ADDWWDECS    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDWWAVAI    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRAVAI
+      *
+      **   Print Branch details (no test for Parents/Children)
+     C           BBBRCD    IFNE RRBRCD
+     C**         *IN31     ANDEQ'0'                                       R0043
+     C           *IN31     ANDEQ'0'                                  R0043R5672
+     C           RRBRCD    OREQ *BLANKS                                   R5672
+      *                                                                   S01498
+     C                     EXSR #BRPR                                     S01498
+     C***********          MOVE BBBRCD    RRBRCD                          S01498
+      ***********                                                         S01498
+     C***********RRBRCD    CHAINSDBRCHL1             71                   S01498
+     C************IN71     IFEQ '0'                                       S01498
+     C***********          MOVELA8BRNM    RRBRNM                          S01498
+     C***********          ELSE                                           S01498
+     C***********          MOVEL*BLANKS   RRBRNM                          S01498
+     C***********          MOVEL*ALL'*'   RRBRNM                          S01498
+     C***********          END                                            S01498
+      ***********                                                         S01498
+     C***********          MOVE '1'       *IN20                           S01498
+      *
+     C                     END
+      *
+      **   Print A/c Officer details (no test for Parents/Children)
+     C           BBACOC    IFNE RRACOC
+     C**         *IN31     ANDEQ'0'                                       R0043
+     C           *IN31     ANDEQ'0'                                       R5672
+     C                     MOVE BBACOC    RRACOC
+      *
+     C***********RRACOC    CHAINSDACOFL1             72                   S01498
+     C************IN72     IFEQ '0'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOACOFR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM RRACOC    P@ACOC  2                       S01498
+     C           SDACOF    PARM SDACOF    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFEQ *BLANK                                    S01498
+     C                     MOVELAZACON    RRACON
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRACON
+     C                     MOVEL*ALL'*'   RRACON
+     C                     END
+      *
+     C                     MOVE '1'       *IN20
+      *
+     C                     END
+      *                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+      *
+      **   Overflow detected
+      **  (? new page for when a/c officer changes - ? 1 or 2 formats)
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEALIN
+     C                     WRITEACOLIN
+     C                     MOVE '0'       *IN20
+     C                     END
+      *
+      **   Print Availability details
+     C                     WRITEDETLIN
+      *
+      **   Increment number of records printed
+     C                     ADD  1         RRNORI
+     C                     END                                            S01498
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**                                                                 *
+     C**  |||| INSERTED FOR FIX R5531                                    *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C                     Z-ADD0         WWAMTO 150
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Y       10
+     C           Y         ADD  4         Y
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Y   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Y   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #INIT     - Initial Processing                                  *
+      *                                                                  *
+      *  Calls     -                                                     *
+      *                                                                  *
+      *  Called by - #MAIN                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+     C           KCOMA     KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           BJRDNB
+      *
+     C***********          MOVEACPY@      BIS@   80                       S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN39                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *
+      **   Prepare LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'LB0415'  DBPGM
+     C                     OUT  LDA                                       S01498
+      *
+      **   Initialise report header fields
+     C                     MOVE *BLANKS   RRBRCD
+     C                     MOVE *BLANKS   RRACOC
+      *
+      **   Define work fields
+     C           *LIKE     DEFN A6NBDP    @@CDP
+     C           *LIKE     DEFN BBCUST    WWCUST
+     C           *LIKE     DEFN ESCNUM    WWCNUM
+     C           *LIKE     DEFN CACMTL    WWCOMA
+     C           *LIKE     DEFN BBPCNB    WWPCNB
+     C           *LIKE     DEFN CASTTD    WWKFLD
+     C           *LIKE     DEFN CAREVD    WWREVD
+     C           *LIKE     DEFN CAREVF    WWREVF
+     C           *LIKE     DEFN CAREVN    WWREVN
+     C           *LIKE     DEFN BBBRCD    WWSPTA
+      *
+      *****Access*ICD*Record*1*****************************************   S01498
+     C***********1         CHAINSDBANKPD             99                   S01498
+     C************IN99     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C**  Get title and date using access object                          S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANK                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVE *BLANKS   DBFILE           * DBER 001 *
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     MOVEL1         DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR
+     C                     ELSE                            X001
+      *
+      **   Check the format of the Date
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     END
+     C                     END
+     C                     MOVE BJMRDT    RRMRDT
+     C                     MOVE BJURPT    RRURPT
+     C                     END
+      *
+      **   Access portfolio lending ICD record
+     C***********1         CHAINSDLOMBPD             99                   S01498
+     C************IN99     IFEQ '1'                                       S01498
+     C***********LBRECI    ORNE 'D'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOLOMBR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*FIRST'  P@OPTN                          S01498
+     C           SDLMB     PARM SDLMB     DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVE *BLANKS   DBFILE           * DBER 002 *
+     C                     MOVE 'SDLOMBPD'DBFILE           ************
+     C                     MOVEL2         DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   Get Decimal Places & Spot rate & Mult/Div Ind. for LB Ccy
+     C***********LBCCY     CHAINSDCURRL1             99                   S01498
+     C************IN99     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM LBCYCD    P@CCY   3                       S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD3         DBASE            ************
+     C***********          MOVEL'SDCURRL1'DBFILE           * DBER 003 *   S01498
+     C                     MOVE 'SDCURRPD'DBFILE                          S01498
+     C***********          MOVELBJLCCY    DBKEY            ************   S01498
+     C                     MOVELLBCYCD    DBKEY                           S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C                     Z-ADDA6NBDP    WWDECS  10
+     C                     Z-ADDA6SPRT    WWSPOT 138
+     C                     MOVE A6MDIN    WWMDIN  1
+      *                                                                   R5531
+     C                     Z-ADDA6NBDP    WWDPO                           R5531
+     C                     Z-ADDA6SPRT    WWSRO                           R5531
+     C                     MOVE A6MDIN    WWMDO                           R5531
+      *
+     C                     END
+      *
+      **   Initialise indicators, etc
+     C                     Z-ADD0         WWNORE  50
+      *
+      ** Check if the system is in COB Phase                                                  CCB020
+      *                                                                                       CCB020
+     C                     MOVEL'CBC00100'@RTPRM  9                                           CCB020
+     C                     MOVE '1'       @RTPRM                                              CCB020
+     C                     CALL @RTPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *                                                                                       CCB020
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *  #TERM     - Termination Processing                              *
+      *                                                                  *
+      *  Calls     -                                                     *
+      *                                                                  *
+      *  Called by - #MAIN                                               *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #TERM     BEGSR
+      *
+      *****Print*"*No*details*of*report*"*if*no*detail*lines*was*printed  S01498
+     C***********RRNORI    IFEQ 0                                         S01498
+     C***********          WRITEHEALIN                                    S01498
+     C***********          MOVE '1'       *IN55                           S01498
+     C***********          END                                            S01498
+      *
+      **   Print " End of Report "
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C                     WRITEENDLIN
+     C                     CLOSELB0415P1                                  S01498
+     C                     END                                            S01498
+      *
+      **   Print Audit report
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+     C***********          WRITEENDAU                                     S01498
+     C*                                                                   S01498
+     C**  Output "No details to report"                                   S01498
+     C*                                                                   S01498
+     C           RRNORI    IFEQ 0                                         S01498
+     C                     WRITENODTLS                                    S01498
+     C                     END                                            S01498
+      *
+     C                     ENDSR
+     C/EJECT                                                              S01498
+     C*****************************************************************   S01498
+     C**                                                              *   S01498
+     C** #BRPR     - Subroutine to process a change in branch         *   S01498
+     C**                                                              *   S01498
+     C** CALLS     - None                                             *   S01498
+     C**                                                              *   S01498
+     C** CALLED BY - #W03                                             *   S01498
+     C**                                                              *   S01498
+     C*****************************************************************   S01498
+     C           #BRPR     BEGSR                           **  #BRPR    **S01498
+     C*                                                                   S01498
+     C**  If printer file is open, print report footer                    S01498
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C*                                                                   S01498
+     C**  Output "End of Report"                                          S01498
+     C*                                                                   S01498
+     C                     WRITEENDLIN                                    S01498
+     C*                                                                   S01498
+     C**  Close printer file                                              S01498
+     C*                                                                   S01498
+     C                     CLOSELB0415P1                                  S01498
+     C                     MOVE *BLANK    WLOPN   1                       S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**  Open printer file LB0415P1 if entity is 'ALL' or equal to       S01498
+     C**  BBBRCD or MBIN is 'N'                                           S01498
+     C*                                                                   S01498
+     C           @RENT     IFEQ 'ALL'                                     S01498
+     C           @RENT     OREQ BBBRCD                                    S01498
+     C           AGMBIN    OREQ 'N'                                       S01498
+     C                     OPEN LB0415P1                                  S01498
+     C                     MOVE 'Y'       WLOPN                           S01498
+      *                                                                   S01498
+      ** Ensure correct Entity passed to ZSFILE.                          S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE BBBRCD    SENTY                           S01498
+     C                     ELSE                                           S01498
+     C                     MOVE *BLANK    SENTY                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C** Ensure Report Spool File recorded by RCF                         S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ                           S01498
+     C                     PARM           SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM1                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *INU7                           S01498
+     C                     MOVE '1'       *INU8                           S01498
+     C                     MOVE '1'       *INLR                           S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**********           CALL 'AOBRCHR0'                                S01498              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM BBBRCD    P@BRCA  3                       S01498
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01498              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           P@RTCD    IFEQ *BLANKS                                   S01498
+     C                     MOVELA8BRNM    RRBRNM                          S01498
+     C                     ELSE                                           S01498
+     C                     MOVEL*BLANKS   RRBRNM                          S01498
+     C                     MOVEL*ALL'*'   RRBRNM                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**  Reset page and line numbers and initialise fields               S01498
+     C*                                                                   S01498
+     C                     Z-ADD*ZEROS    PAGE                            S01498
+     C                     Z-ADD*ZEROS    LINE                            S01498
+     C                     MOVE BBBRCD    RRBRCD                          S01498
+      *                                                                   S01498
+     C                     MOVE '1'       *IN20                           S01498
+      *                                                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           #BRPRO    ENDSR                                          S01498
+      ********************************************************************
+      /EJECT
+      *
+      **   Array set up for standard subroutine ZSEDIT
+     C/COPY ZSRSRC,ZSEDITZ3
+      *
+      **   Array set up for standard subroutine ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - Data base Error Processing                            *
+      *                                                                  *
+      *  Calls     -                                                     *
+      *                                                                  *
+      *  Called by - #INIT, #CHILD                                       *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     LRU7U8
+     C*                                                                   S01498
+     C**  If printer file P1 is open, report database error               S01498
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     S01498
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** Array of powers of 10 for currency conversion S/R SCONV
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

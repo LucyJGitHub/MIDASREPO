@@ -1,0 +1,80 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE PDCL process Grace Days')                    */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000044 - Midas LE PDCL Process  Grace Days:            */
+/*                   Generate Loans Today                          */
+/*                   RE/MR repayments for Loans                    */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE134  *CREATE    Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             DCL        VAR(&LDA)     TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+ 
+ 
+/** Global MONMSG to trap errors  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('LEC000044 - Generate Loans Today +
+                           RE/MR Repayment for Loans') TOMSGQ(MRUNQ)
+ 
+/** Start commitment control for batch jobs with file updates */
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+ 
+             MONMSG     MSGID(CPF8351)
+ 
+/** Call program to generate Loans Today RE/MR +
+    repayments for Loans                       */
+             CALL       PGM(LE000044)
+ 
+/** For Database Errors Recover Data from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+               CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ)
+               ROLLBACK
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** In case of successful processing - Commit */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+               COMMIT
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:       CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF4520)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                           MSGDTA('Program LEC000044 ended +
+                           abnormally - see job log') +
+                           TOMSGQ(MOPERQ)
+             DMPCLPGM
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

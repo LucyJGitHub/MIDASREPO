@@ -1,0 +1,776 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas AP Transaction validate and update')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APCTRANVU - Transaction Validate and Update                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CAP212             Date 15Sep14              */
+/*       Prev Amend No. AR988155           Date 19Aug14              */
+/*                      MD023834           Date 27Nov13              */
+/*                      MD021554A          Date 16Aug13              */
+/*                      MD019466           Date 02Apr13              */
+/*                      AR1094967          Date 14Mar13              */
+/*                      AR1079502          Date 03Feb13              */
+/*                      AR868657           Date 19Dec12              */
+/*                      AR1021983          Date 01Aug12              */
+/*                      263942             Date 01Aug12              */
+/*                      CLE134             Date 01Aug12              */
+/*                      AR971184           Date 28May12              */
+/*                      CSW210             Date 04May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG27488           Date 15Apr10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BUG22550           Date 29Jan09              */
+/*                      BUG22219           Date 21Jan09              */
+/*                      BUG14457           Date 26Jul07              */
+/*                      BUG14288           Date 10Jul07              */
+/*                      BUG14195           Date 23Jun07              */
+/*                      248218             Date 01Jun07              */
+/*                      247277             Date 24May07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      244095             Date 01Dec06              */
+/*                      CSD079             Date 05Feb07              */
+/*                      BUG12213           Date 16Jan07              */
+/*                      CRE026             Date 24May06              */
+/*                      BUG13172           Date 30Jan07              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG12411           Date 02Nov06              */
+/*                      238091             Date 01Feb06              */
+/*                      BUG8483            Date 29Sep05              */
+/*                      241196             Date 17Jul06              */
+/*                      239969             Date 23May06              */
+/*                      240412             Date 03Jul06              */
+/*                      BUG8069            Date 25May06              */
+/*                      BUG8953            Date 07Nov05              */
+/*                      BUG10837           Date 13Mar06              */
+/*                      BUG10792           Date 07Mar06              */
+/*                      BUG9946            Date 17Jan06              */
+/*                      BUG8867            Date 23Nov05              */
+/*                      BUG9345            Date 23Nov05              */
+/*                      CAP087             Date 19Aug05              */
+/*                      CGL035             Date 01Mar05              */
+/*                      CRE023             Date 29Jul05              */
+/*                      BG7008             Date 24Jun05              */
+/*                      CGP010             Date 17Jan05              */
+/*                      BG6507             Date 05Apr05              */
+/*                      BUG4646            Date 04Nov04              */
+/*                      BUG4821            Date 18Nov04              */
+/*                      CFT118             Date 20Aug04              */
+/*                      BG3913             Date 04Sep04              */
+/*                      CFT115             Date 01Jul04              */
+/*                      CMM105             Date 22Jun04              */
+/*                      BUG2480            Date 26May04              */
+/*                      BUG2687            Date 25May04              */
+/*                      BG1105             Date 15Dec03              */
+/*                      BG1953             Date 16Feb04              */
+/*                      NAD009             Date 31Mar04              */
+/*                      CGP004             Date 16Feb04              */
+/*                      TCA046             Date 26Mar04              */
+/*                      CSC022             Date 24Feb04              */
+/*                      CAP084  *CREATE    Date 23Mar03              */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP212 - FT Nostro Transfer API                             */
+/*       AR988155 - Cannot insert MM deal due to commitment control  */
+/*                  issue on file DLDEALL5. (Child: AR988156)        */
+/*       MD023834 - Delete over ride on ACCNTL1 after every call of  */
+/*                  APTRANVU                                         */
+/*       MD021554A - LEC06A 01001 failed due to FCOOB                */
+/*       MD019466 - Error message encountered upon Insert/Enquire    */
+/*                  Update while system is in Secondary COB          */
+/*       AR1094967 - Add override to LEPDUELB to resolve commitement */
+/*                   error.                                          */
+/*       AR1079502 - Be able to reverse a PDCL created on line       */
+/*       AR868657 - Error in SDCUSDVU while adding new customer.     */
+/*                  Fix is issue an OVRDBF on PMPORTL1 with          */
+/*                  SHARE(*NO) (Child: AR868658)                     */
+/*       AR1021983 - [PDP] Option C - Technical Enhancements Stated  */
+/*                   in POC                                          */
+/*       263942 - Add override for LEFEEDL0 to resolve commitment    */
+/*                issue                                              */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front*/
+/*                  Office Id is no more updated in master database  */
+/*                  files which provokes some big problems in third  */
+/*                  party product such as TOF.(Child:AR971185)       */
+/*       CSW210 - SWIFT 2010 Changes                                 */
+/*       BUG27488 - Commitment definition error on ACCNT             */
+/*       BUG22550 - Problem when authorizing ALNA.                   */
+/*       BUG22219 - To prevent commitment control error on LECLIP.   */
+/*       BUG14457 - To prevent commitment control error on SDNOST    */
+/*       BUG14288 - To prevent commitment control error on DEAM API  */
+/*       BUG14195 - Database Error on AMAD module                    */
+/*       248218 - Applied fix 238091.                                */
+/*       247277 - Cater for native JDBC driver as well as toolbox    */
+/*       244095 - Problem with opening ACNUMA file.                  */
+/*       CSD079 - Enhanced Customer Maintenance API                  */
+/*       BUG12213 - Depot details missing on wholesale customer      */
+/*                  input                                            */
+/*       CRE026 - Consumer Banking                                   */
+/*       BUG13172 - A serious midas error occurred (Recompile)       */
+/*       BUG12411 -  Prevent commitment control error on SECS API.   */
+/*                   Problem with opening of SEDEV file.             */
+/*       238091 - Reclaim activation group to ensure that file is    */
+/*                closed after use.                                  */
+/*       BUG8483 - Unauthorised transactions (reverse fix BUG4821)   */
+/*       241196 - Problem with opening PSOLD file                    */
+/*       239969 - Database error in LEFEEMUPD.                       */
+/*       240412 - Keep original files in QTEMP for CIRS.             */
+/*                Also for CACF and SIRS. Apply 236794.              */
+/*       BUG8069 - DLC0601B 00001 file out of balance in DL0215AU    */
+/*                 Prevent commitment control error on DEAMS         */
+/*       BUG8953 - Problem with opening SECEO.                       */
+/*       BUG10837- BNI002 should be changed to CRE023                */
+/*       BUG10792- File sharing problems                             */
+/*       BUG9946 - Correct Depot Movement Type Set up                */
+/*       BUG8867 - File sharing problems                             */
+/*       BUG9345 - Notify if invalid depot movement type entered     */
+/*       CAP087 - Depot Movement - Java Wrapper in Midasplus.        */
+/*                Retain TransType='DPMV' for Repo / Depot Transfer. */
+/*                Also adjust substring position to retrieve DPMV    */
+/*                type from Buffer (this is due to new fields added  */
+/*                into DPMV API XML file).                           */
+/*       CGL035 - EUSD Upgrade to Midasplus                          */
+/*       CRE023 - 2 O'clock Flag Upgrade to MidasPlus                */
+/*       BG7008 - Reverse fix BUG4821                                */
+/*       CGP010 - Global BSPL                                        */
+/*       BG6507 - Jobs are hanging at confirmation screen            */
+/*       BUG4646- Completion of SIRS api                             */
+/*       BUG4821- Prevent display of error message "A serious Midas  */
+/*                error has occured" in JAVA application.            */
+/*       CFT118 - Core changes for GBO018                            */
+/*                Demand Drafts printing - Upgrade to Midasplus.     */
+/*                Core hooks amended:APCTRANU01                      */
+/*       BG3913 - RCLRSC to reset programs that retreive volatile    */
+/*                data in the INZSR (Esp ZMUSER)                     */
+/*       CFT115 - Core changes for GBO015                            */
+/*              - Incoming Payments Beneficiary Validation           */
+/*              - Upgrade to Midasplus                               */
+/*                Core hooks amended:APCTRANU01                      */
+/*       CMM105 - Core changes for GBO005                            */
+/*              - Fixed Deposits Held Under Lien                     */
+/*                       - Upgrade to Midasplus                      */
+/*                Core hooks added: APCTRANU01                       */
+/*       BUG2480 - Send the reservation id to the back end           */
+/*       BUG2687 - Prevent commitment control error on SEDE API.     */
+/*       BG1105 - Increase the message array length                  */
+/*       BG1953 - Switchable commitment control not implemented      */
+/*                correctly - also restore CSC022 changes lost in    */
+/*                merge                                              */
+/*       NAD009 - Midasplus error reporting                          */
+/*       CGP004 - Audit Reporting                                    */
+/*       TCA046 - Database error occurs during insert of WI/WO due   */
+/*                to wrong substring start position. Fix is to adjust*/
+/*                according to changes made in SEDMWIPD/SEDMWOPD.    */
+/*       CSC022 - Commitment Control Changes for MidasPlus.          */
+/*       CAP084 - Synchronous calling of APIs                        */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&SYS &USER &LANG &TRANSTYPE &UPDATEYN + */                  /*BUG2480*/
+/**********               &BUFFER &MSGARR &APIRETC)                  */                  /*BUG2480*/
+/**********  PGM        PARM(&SYS &USER &LANG &TRANSTYPE &UPDATEYN +
+                          &BUFFER &BUFFER2 &BUFFER3 &BUFFER4 +
+                          &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
+                          &BUFFER9 &MSGARR &APIRETC &RESERVID)       */         /*BUG4646 AR971184*/
+/**********               &BUFFER &MSGARR &APIRETC &RESERVID)        */          /*BUG2480 BUG4646*/
+             PGM        PARM(&SYS &USER &LANG &TRANSTYPE &UPDATEYN +
+                          &BUFFER &BUFFER2 &BUFFER3 &BUFFER4 +
+                          &BUFFER5 &BUFFER6 &BUFFER7 &BUFFER8 +
+                          &BUFFER9 &MSGARR &APIRETC &RESERVID &APHEAD)                  /*AR971184*/
+ 
+             DCL        VAR(&SYS)       TYPE(*CHAR) LEN(2)
+             DCL        VAR(&USER)      TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LANG)      TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TRANSTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&UPDATEYN)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BUFFER) TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&BUFFER2)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER3)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER4)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER5)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER6)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER7)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER8)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER9)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+/******      DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(2000)                      /*BG1105*/
+             DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(9999)                      /*BG1105*/
+             DCL        VAR(&APIRETC)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESERVID) TYPE(*CHAR) LEN(15)                               /*BUG2480*/
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SWS)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&TYPE ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMVTYPE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SCCMTJOB) TYPE(*CHAR) LEN(256)                               /*CSC022*/
+             DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)                                    /*CSC022*/
+             DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(7)                                    /*CSC022*/
+             DCL        VAR(&OPTN1) TYPE(*CHAR) LEN(7)                                    /*CSC022*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CSC022*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CSC022*/
+             DCL        VAR(&CSC022) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&CMTNUM) TYPE(*DEC) LEN(3 0)                                  /*CSC022*/
+             DCL        VAR(&CMTJOB1) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB2) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB3) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB4) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB5) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB6) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB7) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB8) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB9) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
+             DCL        VAR(&CMTSKP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(300)                             /*CGP004*/
+/**********  DCL        VAR(&BNI002)   TYPE(*CHAR) LEN(1)            */          /*CRE023 BUG10837*/
+             DCL        VAR(&CRE023)   TYPE(*CHAR) LEN(1)                               /*BUG10837*/
+             DCL        VAR(&CRE015)   TYPE(*CHAR) LEN(1)                               /*BUG27488*/
+             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)                               /*AR971184*/
+             DCL        VAR(&COBFL)  TYPE(*CHAR) LEN(08)                               /*AR1021983*/
+ 
+/* Parameters for call to MLC0030                                    */
+             DCL        VAR(&PARM)  TYPE(*CHAR) LEN(1000)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(00000000)
+             CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1021983*/
+ 
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+/**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                 */               /*AR1021983*/
+/**********  IF         COND((&MPHAS *NE 'A') *AND (&COBFL *NE +
+                          'MIDASCOB')) THEN(DO)                       */      /*AR1021983 MD019466*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                          *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                        /*MD019466*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
+                             cycle.  Entry prohibited:')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Reclaim resource                                                   */                  /*BG3913*/
+             RCLRSC                                                                       /*BG3913*/
+ 
+ /* MPLUS_ERR is created by DBERRCTL */                                                   /*NAD009*/
+             DLTDTAARA  DTAARA(QTEMP/MPLUS_ERR)                                           /*NAD009*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*NAD009*/
+                                                                                          /*NAD009*/
+             CHGVAR     VAR(&CRE015) VALUE('N')                                         /*BUG27488*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' 'CRE015' &SCSARD)           /*BUG27488*/
+             IF         COND(&RTNCD *EQ ' ') THEN(CHGVAR +
+                          VAR(&CRE015) VALUE('Y'))                                      /*BUG27488*/
+/**********  CHGVAR     VAR(&BNI002) VALUE('N')                                  /*CRE023 BUG10837*/
+             CHGVAR     VAR(&CRE023) VALUE('N')                                         /*BUG10837*/
+/**********  CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' 'BNI002' &SCSARD)*/  /*CRE023 BUG10837*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' 'CRE023' &SCSARD)           /*BUG10837*/
+             IF         COND(&RTNCD *EQ '       ') THEN(DO)                               /*CRE023*/
+/**********     CHGVAR     VAR(&BNI002) VALUE('Y')                    */         /*CRE023 BUG10837*/
+                CHGVAR     VAR(&CRE023) VALUE('Y')                                      /*BUG10837*/
+             ENDDO                                                                        /*CRE023*/
+             IF         COND((&RTNCD *NE '       ') *AND (&RTNCD *NE +
+                          '*NRF   ')) THEN(DO)                                            /*CRE023*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+                                                                                          /*CRE023*/
+             CHGVAR     VAR(&CSC022) VALUE(' ')                                           /*CSC022*/
+             CHGVAR     VAR(&RTNCD) VALUE('       ')                                      /*CSC022*/
+             CHGVAR     VAR(&OPTN1) VALUE('*VERIFY')                                      /*CSC022*/
+             CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
+                                                                                          /*CSC022*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD &OPTN1 &SAR &SCSARD)                    /*CSC022*/
+                                                                                          /*CSC022*/
+             IF         COND(&RTNCD *EQ '       ') THEN(DO)                               /*CSC022*/
+             CHGVAR     VAR(&CSC022) VALUE('Y')                                           /*CSC022*/
+             RTVDTAARA  DTAARA(SCCMTJOB (1 256)) RTNVAR(&SCCMTJOB)                        /*CSC022*/
+             CHGVAR     VAR(&CMTNUM) VALUE(%SST(&SCCMTJOB 1 3))                           /*CSC022*/
+             CHGVAR     VAR(&CMTJOB1) VALUE(%SST(&SCCMTJOB 4 10))                         /*CSC022*/
+             CHGVAR     VAR(&CMTJOB2) VALUE(%SST(&SCCMTJOB 14 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB3) VALUE(%SST(&SCCMTJOB 24 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB4) VALUE(%SST(&SCCMTJOB 34 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB5) VALUE(%SST(&SCCMTJOB 44 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB6) VALUE(%SST(&SCCMTJOB 54 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB7) VALUE(%SST(&SCCMTJOB 64 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB8) VALUE(%SST(&SCCMTJOB 74 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB9) VALUE(%SST(&SCCMTJOB 84 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB10) VALUE(%SST(&SCCMTJOB 94 10))                       /*CSC022*/
+                                                                                          /*CSC022*/
+             RTVJOBA    JOB(&JBNM)                                                        /*BG1953*/
+             IF         COND((&CMTNUM *GT 0) *AND (&CMTJOB1 *EQ +
+                          &JBNM)) THEN(DO)                                                /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 1) *AND (&CMTJOB2 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 2) *AND (&CMTJOB3 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 3) *AND (&CMTJOB4 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 4) *AND (&CMTJOB5 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 5) *AND (&CMTJOB6 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 6) *AND (&CMTJOB7 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 7) *AND (&CMTJOB8 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 8) *AND (&CMTJOB9 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 9) *AND (&CMTJOB10 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+/* SQL appears to set up commitment control *DFTACTGRP.  This needs  */
+/* to be *JOB - so end it here, and start it again.                  */
+             IF         COND((&CSC022 *NE 'Y') *OR (&CSC022 *EQ 'Y' +
+                          *AND &CMTSKP *NE 'Y')) THEN(DO)                                 /*CSC022*/
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+ 
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+             ENDDO                                                                        /*CSC022*/
+ 
+/* Check if the reservation ID dataarea exists, if not create it.  This will hold the */ /*BUG2480*/
+/* reservation ID parameter                                                           */ /*BUG2480*/
+             CHKOBJ     OBJ(QTEMP/GPRESERVID) OBJTYPE(*DTAARA)                           /*BUG2480*/
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/GPRESERVID) TYPE(*CHAR) LEN(15))                  /*BUG2480*/
+             CHGDTAARA  DTAARA(QTEMP/GPRESERVID) VALUE(&RESERVID)                        /*BUG2480*/
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+ 
+             OVRDBF     FILE(GPBSRIL0) OVRSCOPE(*JOB) SHARE(*NO)                          /*CGP010*/
+             OVRDBF     FILE(GPBSRQL0) OVRSCOPE(*JOB) SHARE(*NO)                          /*CGP010*/
+             OVRDBF     FILE(CADLFALL) OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(OTPAYOVR) TOFILE(OTPAY) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(OTXL0) TOFILE(OTPAYXL0) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(SDCUSTL0) TOFILE(SDCUSTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDPBDSLR) TOFILE(SDPBDSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDCUSTLR) TOFILE(SDCUSTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDCBRTLR) TOFILE(SDCBRTL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(PTYHSTPR) TOFILE(PTYHSTPD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDSECSLR) TOFILE(SDSECSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(PMPORTPD) TOFILE(PMPORTPD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLBTNOL0) TOFILE(GLBTNOL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLJENHL0) TOFILE(GLJENHL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLJENHL3) TOFILE(GLJENHL3) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLJENPL4) TOFILE(GLJENPL4) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLCOLLX1) TOFILE(GLCOLLL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(CLOANLXX) TOFILE(CLOAN) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(FOCLTLXX) TOFILE(FOCLT) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(FCLTYLXX) TOFILE(FCLTY) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(FCLTYXFN) TOFILE(FCLTY) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(LEFCLTL9) TOFILE(LEFCLTL9) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(LEFCLTL2) TOFILE(LEFCLTL2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(FCLTY) TOFILE(FCLTY) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(LELOAML3) TOFILE(LELOAML3) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(CLOAN) TOFILE(CLOAN) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(CLOANC) TOFILE(CLOANC) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                   /*MD021554A*/
+             OVRDBF     FILE(LOAMD) TOFILE(LOAMS) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(LOAMS) TOFILE(LOAMS) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(LEREF) TOFILE(LEREF) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(LEFEEDL0) TOFILE(LEFEEDL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*263942*/
+             OVRDBF     FILE(LEFEEDL1) TOFILE(LEFEEDL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDLENOL1) TOFILE(SDLENOL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDLENOL0) TOFILE(SDLENOL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(FT101HL3) TOFILE(FT101HL3) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(FT101HL4) TOFILE(FT101HL4) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(FT101DL0) TOFILE(FT101DL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(TRADSDZ3) TOFILE(TRADSDY2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SEPCCD) TOFILE(SEPCCD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SEPCBD) TOFILE(SEPCBD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(TRADSDY1) TOFILE(TRADSDY1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(TRADSDY2) TOFILE(TRADSDY2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(TRADS) TOFILE(TRADS) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(TRADSDZ2) TOFILE(TRADSDY2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(BKPHD) TOFILE(BKPHD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(BKPOS) TOFILE(BKPOS) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECTYZ1) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECTYZ2) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECTYZ3) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECTY) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECTYD) TOFILE(SECTYD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SECEO) TOFILE(SECEO) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*BUG8953*/
+             OVRDBF     FILE(FOPCC) TOFILE(FOPCC) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+ 
+             OVRDBF     FILE(FOPCK) TOFILE(FOPCK) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(DEALS) TOFILE(DEALS) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*BG6507*/
+             OVRDBF     FILE(ZATNRGL1) OVRSCOPE(*JOB) SHARE(*NO)                         /*BUG8867*/
+             OVRDBF     FILE(PSOLD) TOFILE(PSOLD) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                      /*241196*/
+ 
+             IF         COND(&TRANSTYPE = 'INTC') THEN(DO)
+                OVRDBF     FILE(ABCOMPLL) TOFILE(ABCOMPLL) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             ENDDO
+ 
+             IF         COND(&TRANSTYPE = 'IPAY') THEN(DO)
+                OVRDBF     FILE(INPAY) SHARE(*NO)
+                OVRDBF     FILE(INPAYXL0) SHARE(*NO)
+             ENDDO
+             OVRDBF     FILE(SDAULGL0) TOFILE(SDAULGL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+ 
+             IF         COND(&TRANSTYPE = 'DPMV') THEN(DO)
+/**********     CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 1956 2)) */             /*TCA046*/
+/* Position of Transaction Type has shifted due to change in buffer length             */ /*CAP087*/
+/**********     CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 1962 2)) */  /*TCA046*/ /*TCA046*/
+/**********     CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 1998 2))  */ /*CGL035*/ /*CAP087*/
+/**********     CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 1989 2)) */ /*CAP087*/ /*BUG9946*/
+/**********     CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 2025 2)) */ /*BUG9946*/ /*CSW210*/
+                CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&BUFFER 2230 2))                /*CSW210*/
+                IF   COND(&DMVTYPE *NE 'RR' *AND &DMVTYPE *NE 'RP'  +
+                        *AND &DMVTYPE *NE 'BL' *AND &DMVTYPE *NE 'BB'  +
+                        *AND &DMVTYPE *NE 'WI' *AND &DMVTYPE *NE 'WO'  +
+                        *AND &DMVTYPE *NE 'PL' *AND &DMVTYPE *NE 'PD'  +
+                        *AND &DMVTYPE *NE 'DT') THEN(DO)                                 /*BUG9345*/
+                   CHGVAR     VAR(&MSGARR) VALUE('DDDPMV::E:Invalid depot +
+                          movement type.:')                                              /*BUG9345*/
+                   GOTO       CMDLBL(END)                                                /*BUG9345*/
+                ENDDO                                                                    /*BUG9345*/
+             IF         COND((&DMVTYPE = 'RR') *OR (&DMVTYPE = 'RP') *OR +
+                             (&DMVTYPE = 'PL') *OR (&DMVTYPE = 'PD') *OR +
+                             (&DMVTYPE = 'BB') *OR (&DMVTYPE = 'BL') *OR +
+                             (&DMVTYPE = 'DT')) THEN(CHGVAR VAR(&DMVTYPE) +
+                             VALUE('MV'))                                                 /*CAP087*/
+                CHGVAR     VAR(&TRANSTYPE) VALUE('DP' *CAT &DMVTYPE)
+                OVRDBF     FILE(SECTYZ1) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(SECTYZ2) TOFILE(SECTY) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(DPTMVDL1) SHARE(*NO)                                      /*CAP087*/
+                OVRDBF     FILE(SEDMRPXX) TOFILE(DPTMVD) SHARE(*NO)                       /*CAP087*/
+                OVRDBF     FILE(SEDMRPX1) TOFILE(DPTMVDY1) SHARE(*NO)                     /*CAP087*/
+                OVRDBF     FILE(SEDMRPX2) TOFILE(DPTMVDY2) SHARE(*NO)                     /*CAP087*/
+                OVRDBF     FILE(DPTMV)    OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(SEPCCD)   OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(DPTMVDY1) OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(DPTMVDY2) OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(DPTMVDZ1) TOFILE(DPTMVDY1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(DPTMVDZ2) TOFILE(DPTMVDY2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF FILE(DPTMVDZ3) TOFILE(DPTMVDY2) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             ENDDO
+ 
+ /********** IF         COND(&TRANSTYPE = 'AMAD') THEN(DO) */                             /*CRE026*/
+             IF         COND(&TRANSTYPE = 'AMAD' *OR &TRANSTYPE = +
+                          'ACMC' *OR &TRANSTYPE = 'ACMI'          +
+                           *OR &TRANSTYPE = 'ACMN') THEN(DO)                              /*CRE026*/
+                OVRDBF     FILE(ACCNTLXX) TOFILE(ACCBR) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(ACCNTL1) TOFILE(ACCNTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(REIACXX) TOFILE(REIAC) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(RECOMXX) TOFILE(RECOM) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+                OVRDBF     FILE(ACNUMA) TOFILE(ACNUMA) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*244095*/
+                IF         COND(&CRE015 *EQ 'Y') THEN(DO)                               /*BUG27488*/
+                OVRDBF     FILE(ACCNT) TOFILE(ACCNT) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG27488*/
+                ENDDO                                                                   /*BUG27488*/
+             ENDDO
+                                                                                          /*244095*/
+             IF         COND(&TRANSTYPE = 'OPAY') THEN(DO)                                /*244095*/
+                OVRDBF     FILE(ACNUMA) TOFILE(ACNUMA) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*244095*/
+             ENDDO                                                                        /*244095*/
+ 
+/* Add override to file FWDRT. */
+             OVRDBF     FILE(FWDRT) TOFILE(FWDRT) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+/* Add override to file SEDEV. */                                                        /*BUG2687*/
+/*           IF         COND(&TRANSTYPE = 'SEDE') THEN(DO)      */              /*BUG2687 BUG12411*/
+/*           OVRDBF     FILE(SEDEV) SHARE(*NO)                  */              /*BUG2687 BUG12411*/
+             IF         COND((&TRANSTYPE = 'SEDE') *OR +
+                             (&TRANSTYPE = 'SECS')) THEN(DO)                            /*BUG12411*/
+             OVRDBF     FILE(SEDEV) OVRSCOPE(*JOB) SHARE(*NO)                           /*BUG12411*/
+             ENDDO                                                                       /*BUG2687*/
+                                                                                          /*240412*/
+/* Create copy of original file */                                                        /*240412*/
+             IF         COND((&TRANSTYPE = 'CIRS') *OR +
+                             (&TRANSTYPE = 'SIRS') *OR +
+                             (&TRANSTYPE = 'FRA')  *OR +
+                             (&TRANSTYPE = 'CACF')) THEN(DO)                              /*240412*/
+             DLTF       FILE(QTEMP/DLPCSCRX)                                              /*240412*/
+             MONMSG     MSGID(CPF0000 RPG0000)                                            /*240412*/
+             CPYF       FROMFILE(DLPCSCPD) TOFILE(QTEMP/DLPCSCRX)   +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*240412*/
+             ENDDO                                                                        /*240412*/
+                                                                                          /*240412*/
+/* Add override to file DEAMSDJ */                                                       /*BUG8069*/
+             IF         COND(&TRANSTYPE = 'DEAM') THEN(DO)                               /*BUG8069*/
+             OVRDBF     FILE(DEAMSDJ) TOFILE(DEAMSDJ) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*BUG8069*/
+             ENDDO                                                                       /*BUG8069*/
+/* Add override to file DLDEALL5 */                                                     /*AR988155*/
+             IF         COND(&TRANSTYPE = 'LDNI') THEN(DO)                              /*AR988155*/
+             OVRDBF     FILE(DEALSALL) TOFILE(DEALSALL) OVRSCOPE(*JOB) +
+                 SHARE(*NO)                                                             /*AR988155*/
+             OVRDBF     FILE(MMDEALLL) TOFILE(MMDEALLL) OVRSCOPE(*JOB) +
+                 SHARE(*NO)                                                             /*AR988155*/
+             OVRDBF     FILE(DLDEALL5) TOFILE(DLDEALL5) OVRSCOPE(*JOB) +
+                 SHARE(*NO)                                                             /*AR988155*/
+             ENDDO                                                                      /*AR988155*/
+/* Add override to file CPOSN. */                                                         /*CGL035*/
+             IF         COND(&TRANSTYPE = 'PRCS') THEN(DO)                                /*CGL035*/
+             OVRDBF     FILE(CPOSN) SHARE(*NO)                                            /*CGL035*/
+             ENDDO                                                                        /*CGL035*/
+                                                                                         /*CRE023*/
+/**********  IF         COND(&BNI002 = 'Y') THEN(DO)                 */         /*CRE023 BUG10792*/
+             IF         COND(&CRE023 = 'Y') THEN(DO)                                   /*BUG10837*/
+/** Override the sharing of files that have been added for update.   */                  /*CRE023*/
+/** This should prevent commitment problem.                          */                  /*CRE023*/
+                IF         COND(&TRANSTYPE = 'BITP') THEN(DO)                            /*CRE023*/
+                   OVRDBF     FILE(REMEMLL0) SHARE(*NO)                                  /*CRE023*/
+                   OVRDBF     FILE(MEMOSL2) SHARE(*NO)                                   /*CRE023*/
+                ENDDO                                                                    /*CRE023*/
+/**********  ENDDO                                                   */         /*CRE023 BUG10792*/
+             ENDDO                                                                     /*BUG10837*/
+             OVRDBF     FILE(LEEIRDL5) SHARE(*NO)                                         /*239969*/
+                                                                                          /*CAP212*/
+             IF         COND(&TRANSTYPE = 'FTNT') THEN(DO)                                /*CAP212*/
+                OVRDBF     FILE(NTRAN) OVRSCOPE(*JOB) SHARE(*NO)                          /*CAP212*/
+             ENDDO                                                                        /*CAP212*/
+                                                                                         /*CRE023*/
+/*/COPY WNCPYSRC,APCTRANU01                                          */
+ 
+             OVRDBF     FILE(MUSER) TOFILE(MUSER) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*CRE026*/
+             OVRDBF     FILE(MBRBS) TOFILE(MBRBS) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*CRE026*/
+             OVRDBF     FILE(MBROS) TOFILE(MBROS) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*CRE026*/
+             OVRDBF     FILE(MCMPS) TOFILE(MCMPS) OVRSCOPE(*JOB) +
+                          SHARE(*NO)                                                     /*CRE026*/
+             OVRDBF     FILE(SDTICSLR) TOFILE(SDTICSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCMRKLR) TOFILE(SDCMRKL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDACUSLR) TOFILE(SDACUSL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCFCDLR) TOFILE(SDCFCDL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCHEQLR) TOFILE(SDCHEQL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCRWALR) TOFILE(SDCRWAL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDFOCSLR) TOFILE(SDFOCSL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDPLCSLR) TOFILE(SDPLCSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCMRKL0) TOFILE(SDCMRKL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDACUSL0) TOFILE(SDACUSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCFCDL0) TOFILE(SDCFCDL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCHEQL0) TOFILE(SDCHEQL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDSAFEL0) TOFILE(SDSAFEL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDPLCSL0) TOFILE(SDPLCSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDFOX1LR) TOFILE(SDFOX1L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDCUX2LR) TOFILE(SDCUX2L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CSD079*/
+             OVRDBF     FILE(SDCUX1LR) TOFILE(SDCUX1L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CSD079*/
+             OVRDBF     FILE(SDSECSL1) TOFILE(SDSECSL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+             OVRDBF     FILE(SDYLDRBD) TOFILE(SDYLDRL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*CRE026*/
+                                                                                         /*CRE026*/
+             OVRDBF     FILE(SDALTNL0) TOFILE(SDALTNL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG22550*/
+                                                                                        /*BUG22550*/
+             OVRDBF     FILE(SDCSDRL0) TOFILE(SDCSDRL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG12213*/
+             OVRDBF     FILE(SDCBRTL1) TOFILE(SDCBRTL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG14195*/
+                                                                                        /*BUG14288*/
+             OVRDBF     FILE(MMEIRDL0) TOFILE(MMEIRDL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG14288*/
+                                                                                        /*BUG14288*/
+             OVRDBF     FILE(SDNOSTL0) TOFILE(SDNOSTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG14457*/
+                                                                                        /*BUG22219*/
+             OVRDBF     FILE(LEFEEDLH) TOFILE(LEFEEDLH) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                     /*BUG22219*/
+                                                                                        /*AR868657*/
+             OVRDBF     FILE(PMPORTL1) OVRSCOPE(*JOB) SHARE(*NO)                        /*AR868657*/
+                                                                                        /*AR868657*/
+             OVRDBF     FILE(LEPDUELC) TOFILE(LEPDUELC) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                    /*AR1079502*/
+             OVRDBF     FILE(LEPDUELB) TOFILE(LEPDUELB) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                    /*AR1094967*/
+/* Log call to APCTRANVU */                                                              /*CGP004*/
+                                                                                         /*CGP004*/
+             CALL       PGM(GPAUUIUPD) PARM('V' &SYS &USER &LANG +
+                          &TRANSTYPE &UPDATEYN &TRANSID &BUFFER)                         /*CGP004*/
+                                                                                         /*CGP004*/
+/* Call the multilanguage initiation program to put in ML overrides */
+/* before calling APTRANVU                                          */
+/**********  CHGVAR     VAR(&PARM) VALUE(&UPDATEYN)                  */                  /*BUG2480*/
+             CHGVAR     VAR(&PARM) VALUE(&UPDATEYN *CAT &RESERVID)                       /*BUG2480*/
+/**********  CALL       PGM(MLC0030) PARM('APTRANVU' &LANG &SYS +
+                          &TRANSTYPE &PARM &USER &BUFFER &BUFFER2 +
+                          &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
+                          &BUFFER7 &BUFFER8 &BUFFER9 +
+                          &MSGARR &APIRETC)                          */         /*BUG4646 AR971184*/
+/**********               &TRANSTYPE &PARM &USER &BUFFER &MSGARR +   */                  /*BUG4646*/
+/**********               &APIRETC)                                  */                  /*BUG4646*/
+             CALL       PGM(MLC0030) PARM('APTRANVU' &LANG &SYS +
+                          &TRANSTYPE &PARM &USER &BUFFER &BUFFER2 +
+                          &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
+                          &BUFFER7 &BUFFER8 &BUFFER9 +
+                          &MSGARR &APIRETC &APHEAD)                                     /*AR971184*/
+ 
+             IF         COND(&TRANSTYPE = 'AMAD' *OR &TRANSTYPE = +
+                          'ACMC' *OR &TRANSTYPE = 'ACMI'          +
+                           *OR &TRANSTYPE = 'ACMN') THEN(DO)                            /*MD023834*/
+                        DLTOVR     FILE(ACCNTL1) LVL(*JOB)                              /*MD023834*/
+                        MONMSG     MSGID(CPF0000)                                       /*MD023834*/
+             ENDDO                                                                      /*MD023834*/
+                                                                                        /*MD023834*/
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             CHGVAR     VAR(&MSGARR) VALUE(':::Database error has +
+                          occurred in Midas. Please inform a Midas +
+                          System operator:')
+/********    RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                            *247277*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)                                                     /*247277*/
+             IF         COND(&TYPE = '0') THEN(DO)
+/******         SNDMSG     MSG('APCTRANVU failed: ' *CAT &SYS *BCAT +                       247277*/
+/******                   &USER *BCAT &TRANSTYPE *TCAT '.  Please +                         247277*/
+/******                   check the job log for ' *CAT &JOBNO *TCAT +                       247277*/
+/******                   '/QUSER/QZDASOINIT') TOMSGQ(MOPERQ)                               247277*/
+             SNDMSG     MSG('APCTRANVU failed: ' *CAT &SYS *BCAT +
+                          &USER *BCAT &TRANSTYPE *TCAT '.  Please +
+                          check the job log for ' *CAT &JOBNO *TCAT +
+                          '/' *CAT &JOBUSER *TCAT '/' *CAT +
+                          &JOBNAME) TOMSGQ(MOPERQ)                                        /*247277*/
+             MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&APIRETC = ' ') THEN(DO)
+                CHGVAR     VAR(&APIRETC) VALUE('0')
+             ENDDO
+ END:
+ /* Check whether DBERRCTL has been called */                                             /*NAD009*/
+             CHKOBJ     OBJ(QTEMP/MPLUS_ERR) OBJTYPE(*DTAARA)                             /*NAD009*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(MP_OK))                           /*NAD009*/
+/**********  CHGVAR     VAR(&APIRETC) VALUE('0')                               */ /*NAD009 BUG4821*/
+/**********  CHGVAR     VAR(&APIRETC) VALUE('1')                               */ /*BUG4821 BG7008*/
+             CHGVAR     VAR(&APIRETC) VALUE('0')                                          /*BG7008*/
+MP_OK:                                                                                    /*NAD009*/
+ /* Check for any unhandled errors   */
+             IF         COND(&APIRETC = '0' *AND &MSGARR = *BLANK) +
+                          THEN(DO)
+                CHGVAR     VAR(&MSGARR) VALUE(':::Database error has +
+                          occurred in Midas. Please inform a Midas +
+                          System operator:')
+/********       RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                         *247277*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)                                                     /*247277*/
+/******         SNDMSG     MSG('APCTRANVU failed:' *CAT &SYS *BCAT +                       *247277*/
+/******                   &USER *BCAT &TRANSTYPE *TCAT '.  Please +                        *247277*/
+/******                   check the job log for ' *CAT &JOBNO *TCAT +                      *247277*/
+/******                   '/QUSER/QZDASOINIT') TOMSGQ(MOPERQ)                              *247277*/
+             SNDMSG     MSG('APCTRANVU failed:' *CAT &SYS *BCAT +
+                          &USER *BCAT &TRANSTYPE *TCAT '.  Please +
+                          check the job log for ' *CAT &JOBNO *TCAT +
+                          '/' *CAT &JOBUSER *TCAT '/' *CAT +
+                          &JOBNAME) TOMSGQ(MOPERQ)                                        /*247277*/
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             RCLACTGRP  ACTGRP(*ELIGIBLE)                                                 /*238091*/
+             ENDPGM

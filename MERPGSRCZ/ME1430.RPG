@@ -1,0 +1,389 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME BIC plus search index creation')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module                            *
+     F*                                                               *
+     F*  ME1430  - BIC Plus search index creation                     *
+     F*                                                               *
+     F*  Function - This program reads all the records on the BIC     *
+     F*             Plus file MEBICPPD, concatenates the fields: BIC, *
+     F*             institution, location, CHIPS, and clearing code;  *
+     F*             and write the result into a single field on the   *
+     F*             BIC search index file MEBICIPD.                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CFT050             Date 03Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*  Prev Amend No. CFT007  *CREATE    Date 08Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CFT050 - SWIFTRef Directories upload                         *
+     F*  CFT007 - BIC Database Plus Integration                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMEBICPPDIF  E           K        DISK
+     F* BIC Plus file
+     FMEBIB3PDIF  E           K        DISK                                                   CFT050
+      ** SWIFTRef BANK DIRECTORY Plus                                                         CFT050
+     FMEZIPPL0IF  E           K        DISK
+     F* ZIP placement and clearing code
+     F*
+     FMEBICIPDO   E           K        DISK
+     F* BIC search index
+     F*
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   30      LOKUP operation
+      *   70      READ  operation
+      *
+      *   90 - 99
+      *
+      *   U7      Data base error
+      *   U8      Data base error
+      *
+      /EJECT
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   INIT    Initialisation
+      *   INIPRC  Store the clearing prefixes and the country name
+      *   DETPRC  Detail  processing
+      *
+      /EJECT
+      *
+      * Copyright
+     E                    CPY@    1   1 80
+      * Arrays containing Country names and clearing codes
+     E                    CPFX       50  4
+     E                    CNTY       50 70
+      * Array to build output field BSINDX
+     E                    IDX       239  1
+      *
+      /EJECT
+      * Data structure for compilation - Copyright insertion
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *  Index field
+     IINDEX       DS                            239
+     I                                        1 239 IDX
+     I                                        1 239 BSINDX
+      /EJECT
+     ILDA         DS                            256                                           CFT050
+     I                                      134 141 DBFILE                                    CFT050
+     I                                      142 170 DBKEY                                     CFT050
+     I                                      171 180 DBPGM                                     CFT050
+     I                                      181 1830DBASE                                     CFT050
+      /EJECT                                                                                  CFT050
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      * Initialise program
+     C                     EXSR INIT
+      *
+      * Initial processing
+     C                     EXSR INIPRC
+      *
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C                     READ MEBIB3PD                 70                                   CFT050
+     C                     ELSE                                                               CFT050
+     C                     READ MEBICPPD                 70
+     C                     ENDIF                                                              CFT050
+     C           *IN70     DOWEQ*OFF
+      * Detail  processing
+     C                     EXSR DETPRC
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C                     READ MEBIB3PD                 70                                   CFT050
+     C                     ELSE                                                               CFT050
+     C                     READ MEBICPPD                 70
+     C                     ENDIF                                                              CFT050
+     C                     ENDDO
+      *
+      * Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DETPRC   : Detail processing                                 *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           DETPRC    BEGSR
+      *
+     C                     MOVE *BLANKS   WKCLCD 19
+     C                     MOVE *BLANKS   WKCHIP 10
+     C                     MOVE *BLANKS   BSINDX
+     C                     Z-ADD1         P       20
+      * Create the clearing code
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           B3NATI    IFNE *BLANKS                                                       CFT050
+     C                     MOVELB3CNT1    WCNT   70                                           CFT050
+     C                     MOVE B3CNT2    WCNT                                                CFT050
+     C           WCNT      LOKUPCNTY,P                   30                                   CFT050
+     C           *IN30     IFEQ *ON                                                           CFT050
+     C           CPFX,P    CAT  B3NATI    WKCLCD                                              CFT050
+     C                     ELSE                                                               CFT050
+     C                     MOVELB3NATI    WKCLCD                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ELSE                                                               CFT050
+     C           BINATI    IFNE *BLANKS
+     C           BICNTY    LOKUPCNTY,P                   30
+     C           *IN30     IFEQ *ON
+     C           CPFX,P    CAT  BINATI    WKCLCD
+     C                     ELSE
+     C                     MOVELBINATI    WKCLCD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                                              CFT050
+      *
+      * Add a prefix('//CH') to the CHIPS code
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           B3CHIP    IFNE *BLANKS                                                       CFT050
+     C           '//CH'    CAT  B3CHIP    WKCHIP                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ELSE                                                               CFT050
+     C           BICHIP    IFNE *BLANKS
+     C           '//CH'    CAT  BICHIP    WKCHIP
+     C                     ENDIF
+     C                     ENDIF                                                              CFT050
+      *
+      * Create the index field (removing all leading and trailing      s
+      * blanks in each field)
+      *
+     C                     Z-ADD1         IX      30
+      * BIC Code
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           ' '       CHECKB3BICC    STA     30                                          CFT050
+     C           ' '       CHEKRB3BICC    END     30                                          CFT050
+     C           STA       IFNE 0                                                             CFT050
+     C           STA       DOWLEEND                                                           CFT050
+     C           1         SUBSTB3BICC:STAIDX,IX                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ADD  1         STA                                                 CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ELSE                                                               CFT050
+     C           ' '       CHECKBIBIC     STA     30
+     C           ' '       CHEKRBIBIC     END     30
+     C           STA       IFNE 0
+     C           STA       DOWLEEND
+     C           1         SUBSTBIBIC:STA IDX,IX
+     C                     ADD  1         IX
+     C                     ADD  1         STA
+     C                     ENDDO
+     C                     ADD  1         IX
+     C                     ENDIF
+     C                     ENDIF                                                              CFT050
+      * Institution
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           ' '       CHECKB3INS1    STA                                                 CFT050
+     C           ' '       CHEKRB3INS1    END                                                 CFT050
+     C           STA       IFNE 0                                                             CFT050
+     C           STA       DOWLEEND                                                           CFT050
+     C           1         SUBSTB3INS1:STAIDX,IX                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ADD  1         STA                                                 CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ELSE                                                               CFT050
+     C           ' '       CHECKBIINST    STA
+     C           ' '       CHEKRBIINST    END
+     C           STA       IFNE 0
+     C           STA       DOWLEEND
+     C           1         SUBSTBIINST:STAIDX,IX
+     C                     ADD  1         IX
+     C                     ADD  1         STA
+     C                     ENDDO
+     C                     ADD  1         IX
+     C                     ENDIF
+     C                     ENDIF                                                              CFT050
+      * Location
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           ' '       CHECKB3CITY    STA                                                 CFT050
+     C           ' '       CHEKRB3CITY    END                                                 CFT050
+     C           STA       IFNE 0                                                             CFT050
+     C           STA       DOWLEEND                                                           CFT050
+     C           1         SUBSTB3CITY:STAIDX,IX                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ADD  1         STA                                                 CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ELSE                                                               CFT050
+     C           ' '       CHECKBILOCN    STA
+     C           ' '       CHEKRBILOCN    END
+     C           STA       IFNE 0
+     C           STA       DOWLEEND
+     C           1         SUBSTBILOCN:STAIDX,IX
+     C                     ADD  1         IX
+     C                     ADD  1         STA
+     C                     ENDDO
+     C                     ADD  1         IX
+     C                     ENDIF
+     C                     ENDIF                                                              CFT050
+      ** LEI Code                                                                             CFT050
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C           ' '       CHECKB3LEIC    STA     30                                          CFT050
+     C           ' '       CHEKRB3LEIC    END     30                                          CFT050
+     C           STA       IFNE 0                                                             CFT050
+     C           STA       DOWLEEND                                                           CFT050
+     C           1         SUBSTB3LEIC:STAIDX,IX                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ADD  1         STA                                                 CFT050
+     C                     ENDDO                                                              CFT050
+     C                     ADD  1         IX                                                  CFT050
+     C                     ENDIF                                                              CFT050
+     C                     ENDIF                                                              CFT050
+      * CHIPS Code
+     C           ' '       CHECKWKCHIP    STA
+     C           ' '       CHEKRWKCHIP    END
+     C           STA       IFNE 0
+     C           STA       DOWLEEND
+     C           1         SUBSTWKCHIP:STAIDX,IX
+     C                     ADD  1         IX
+     C                     ADD  1         STA
+     C                     ENDDO
+     C                     ADD  1         IX
+     C                     ENDIF
+      * Clearing Code
+     C           ' '       CHECKWKCLCD    STA
+     C           ' '       CHEKRWKCLCD    END
+     C           STA       IFNE 0
+     C           STA       DOWLEEND
+     C           1         SUBSTWKCLCD:STAIDX,IX
+     C                     ADD  1         IX
+     C                     ADD  1         STA
+     C                     ENDDO
+     C                     ADD  1         IX
+     C                     ENDIF
+      * Write a record on the index file
+     C           CFT050    IFEQ 'Y'                                                           CFT050
+     C                     MOVELB3FIL2    BSKEY                                               CFT050
+     C                     MOVELB3KEY     BSB3KY                                              CFT050
+     C                     ELSE                                                               CFT050
+     C                     MOVE BIKEY     BSKEY
+     C                     ENDIF                                                              CFT050
+     C                     WRITE@BICIPD
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIPRC   : Store the clearing prefixes and the country names *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           INIPRC    BEGSR
+      *
+     C                     Z-ADD1         P       20
+      * Read the first 50
+     C                     READ MEZIPPL0                 70
+     C           *IN70     DOWEQ*OFF
+     C           P         ANDLE50
+      *
+     C           ZICPFX    IFNE *BLANKS
+     C                     MOVE ZICPFX    CPFX,P
+     C                     MOVE ZICNTY    CNTY,P
+     C                     ENDIF
+     C                     READ MEZIPPL0                 70
+     C                     ADD  1         P
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *******************************************************************
+      *  INIT  Program initialisation                                   *
+      *******************************************************************
+     CSR         INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *                                                                                       CFT050
+     C           *NAMVAR   DEFN           LDA                                                 CFT050
+     C           *LOCK     IN   LDA                                                           CFT050
+     C                     MOVE *BLANKS   DBFILE                                              CFT050
+     C                     MOVE *BLANKS   DBKEY                                               CFT050
+     C                     MOVEL'ME1430'  DBPGM                                               CFT050
+     C                     MOVE *BLANKS   DBASE                                               CFT050
+     C                     OUT  LDA                                                           CFT050
+      *                                                                                       CFT050
+      *** Check if CFT050 is switched on                                                      CFT050
+      *                                                                                       CFT050
+     C                     CALL 'AOSARDR0'                                                    CFT050
+     C                     PARM '       ' @RTCD                                               CFT050
+     C                     PARM '*VERIFY' @OPTN   7                                           CFT050
+     C                     PARM 'CFT050'  @SARD   6                                           CFT050
+      *                                                                                       CFT050
+     C           @RTCD     IFNE *BLANK                                                        CFT050
+     C           @RTCD     ANDNE'*NRF'                                                        CFT050
+     C           *LOCK     IN   LDA                                                           CFT050
+     C                     Z-ADD1         DBASE                                               CFT050
+     C                     MOVEL'*VERIFY' DBKEY                                               CFT050
+     C                     MOVEL'SCSARPD' DBFILE                                              CFT050
+     C                     OUT  LDA                                                           CFT050
+     C                     EXSR *PSSR                                                         CFT050
+     C                     ENDIF                                                              CFT050
+      *                                                                                       CFT050
+     C           @RTCD     IFEQ *BLANK                                                        CFT050
+     C                     MOVE 'Y'       CFT050  1                                           CFT050
+     C                     ELSE                                                               CFT050
+     C                     MOVE 'N'       CFT050                                              CFT050
+     C                     ENDIF                                                              CFT050
+     C*
+     C** Entry Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           @RTCD   7
+      *
+      *
+     CSR                   ENDSR                           INIT  ends
+      *******************************************************************
+      *
+      /EJECT
+      *****************************************************************                       CFT050
+      *   *PSSR - error handling                                      *                       CFT050
+      *   Called by - INIT initial process                            *                       CFT050
+      *****************************************************************                       CFT050
+      *                                                                                       CFT050
+     C           *PSSR     BEGSR                                                              CFT050
+      *                                                                                       CFT050
+     C                     SETON                     U7U8LR                                   CFT050
+     C                     DUMP                                                               CFT050
+     C                     RETRN                                                              CFT050
+      *                                                                                       CFT050
+     C                     ENDSR                                                              CFT050
+      *****************************************************************                       CFT050
+      /EJECT                                                                                  CFT050
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

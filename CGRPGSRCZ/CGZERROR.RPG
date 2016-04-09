@@ -1,0 +1,608 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Standard error report program.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CGZERROR      - Standard error report                        *
+     F*                                                               *
+     F*  Function:  This program provides a standard error report.    *
+     F*             It is passed parameters which include the         *
+     F*              failing program's status data structure.         *
+     F*                                                               *
+     F*  Called By: Many programs, as required.                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 25Nov94               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  61 -- Printer overflow.                                      *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*                                                               *
+     F*  SRINIT -- Provides initialisation and definitions.           *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,ERRORCFPG
+     F*-------------------------------------------------------------------
+     FCGZERRP1O   E             61     PRINTER      KINFSR SRFILE
+     F                                              KINFDS PRTINF
+     F* Printer file
+     F*-------------------------------------------------------------------
+     FSDBANKPDIF  E                    DISK         KINFSR SRFILE
+     F* Bank details
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    EDT        80  1               Edit string.
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,ERRORCEPG
+     E*-------------------------------------------------------------------
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** Switchable Features File                                                             CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** First DS for Access Programs, short data structure                                   CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I* Define run-data data area:
+     I*
+     IRUNDTA    E DSRUNDAT
+     I*...................................................................
+     I* Error processing data structures:
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*...................................................................
+     IPRTINF      DS
+     I* Printer file information data structure:
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*...................................................................
+     I* Input parameter data structures -- printer file field names:
+     I*
+     IF3PSDS      DS
+     I*
+     I* Program status data structure:
+     I                                        1  10 P3PGM
+     I                                       11  150P3STCD
+     I                                       16  200P3STCP
+     I                                       21  28 P3SQNO
+     I                                       29  36 P3RTVN
+     I                                       37  390P3PMCT
+     I                                       40  46 P3MSID
+     I                                       47  50 P3MINB
+     I                                       51  80 P3MSWK
+     I                                       81  90 P3PGLB
+     I                                       91 170 P3MSDA
+     I                                      171 174 P3EXID
+     I                                      201 208 P3ERFL
+     I                                      209 243 P3ERST
+     I                                      244 253 P3JOB
+     I                                      254 263 P3USR
+     I                                      264 2690P3JNO
+     I                                      270 2750P3EDT
+     I                                      276 2810P3SDT
+     I                                      282 2870P3STM
+     I                                      288 293 P3CPDT
+     I                                      294 299 P3CPTM
+     I                                      300 303 P3CPLV
+     I                                      304 313 P3SRFL
+     I                                      314 323 P3SRLB
+     I                                      324 333 P3SRMB
+     IF4SEND      DS
+     I*
+     I* Send message data structure
+     I                                        1  10 P4PGM
+     I                                       11  20 P4FILE
+     I                                       21  50 P4KEY
+     I                                       51  550P4ERNB
+     I                                       56 135 P4NARR
+     I                                      136 145 P4STK
+     I                                      146 175 P4PREF
+     I*...................................................................
+     I* Data structure for compilation - Copyright insertion:
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                 M A I N L I N E
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           F3PSDS
+     C                     PARM           F4SEND
+     C                     PARM           F4STK 100
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C* Initialise program:
+     C*
+     C                     EXSR SRINIT
+     C*
+     C* Split the subroutine stack value:
+     C*
+     C                     MOVELF4STK     P4STK1
+     C                     MOVE F4STK     P4STK2
+     C*
+     C* Produce the report:
+     C*
+     C                     WRITEF1HED1
+     C                     WRITEF2HED2
+     C                     WRITEF3DETL
+     C                     WRITEF4DETL
+     C                     WRITEF5END
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Return to calling program:
+     C*
+     C                     SETON                     LR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation and definition.     **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Move copyright statement:
+     C*
+     C                     MOVE CPYR@#    ACT@   80
+     C*
+     C* Get Run-date:
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Extract bank details:
+     C*
+     C           1         CHAINSDBANKPD             9090
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'SDBANKPD'W0FILE
+     C                     MOVEL'*FIRST  'W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           ** Error 1.  **
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                                       CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   7                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      *                                                                                       CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      *                                                                                       CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      *                                                                                       CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+      *                                                                                       CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+      ** Verify if job running exists in array                                                CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+      *                                                                                       CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C           *LOCK     IN   LDA                                                           CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     MOVEL'CGZERROR'DBPGM                                               CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD2         DBASE                                               CSC022
+     C                     OUT  LDA                                                           CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set multi-branch indicator:
+     C*
+     C                     SETOF                     70
+     C           WUMBIN    IFNE 'Y'
+     C                     SETON                     70
+     C                     ENDIF
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors within THIS program.
+     C********************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C                     DUMP
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ENDIF                                                              CSC022
+     C*
+     C* If second time through, halt:
+     C*
+     C           @@PSSR    IFNE *BLANK
+     C                     SETON                     H1  LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     MOVE 'Y'       @@PSSR  1
+     C*
+     C* Set LDA values and format message for MOPERQ:
+     C*
+     C                     MOVE ##PGM     ERPGM
+     C                     MOVE ##RTVN    ERFILE
+     C           ##MSID    CAT  ##SQNO    ERKEY     P
+     C                     Z-ADD998       ERERNB
+     C                     MOVEL##MSWK    ERNARR
+     C*
+     C* Move data to the LDA data area:
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C* End the program:
+     C                     SETON                     U7U8LR
+     C                     MOVE '*ERROR*' W0RTN   7
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,ERRORCCPG
+     C*
+     C* /Copy point for error-handling subroutine:
+     C*
+     C*COPY CGCPYSRC,SRERRC
+     C*
+     C* Note: this routine is copied in, and modified,
+     C*       to avoid recursively calling this program
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  SRFILE   : *PSSR routine for all files                       *
+     C*                                                               *
+     C*  CALLED BY: IBM controlled - invalid access to file           *
+     C*                                                               *
+     C*  CALLS    : CGZERROR                                          *
+     C*                                                               *
+     C* In the INIT sub-routine, the fields W0MSGD and W0MSGF should  *
+     C* be set to the default message I.D and message file that are   *
+     C* used for the module. If not, the defaults of MEM5002 and MIDAS*
+     C* will be used.                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           SRFILE    BEGSR
+     C*
+     C* Dump program
+     C*
+     C                     DUMP
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ENDIF                                                              CSC022
+     C*
+     C* If called again, seton LR and return
+     C*
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVEL'Y'       @@FILE  1
+     C*
+     C* Send message to MOPERQ
+     C*
+     C                     MOVEL*BLANKS   ERDTA
+     C                     MOVEL##PGM     ERPGM
+     C*
+     C           Q         IFGT 1
+     C           Q         ANDLT101
+     C                     MOVEL@STK,Q    ERSTK
+     C                     ELSE
+     C                     MOVEL'*Nostkin'ERSTK
+     C                     END
+     C*
+     C                     MOVEL##ERST    ERKEY
+     C                     Z-ADD999       ERERNB
+     C                     MOVEL##ERFL    ERFILE
+     C                     MOVELW0PREF    ERPREF
+     C*
+     C* Get message for sending and place in msg field
+     C*
+     C                     CALL 'SDRTVTXT'             9090
+     C                     PARM 'MEM5002' #MSGID
+     C                     PARM 'MIDAS   '#MSGF
+     C                     PARM *BLANKS   #MSGTX
+     C*
+     C                     MOVEL#MSGTX    ERNARR
+     C*
+     C* Send message
+     C*
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM ERDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+     C*
+     C* Fill LDA with error data
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C*
+     C* Close down program
+     C*
+     C                     SETON                     U7U8LR
+     C                     MOVEL'*ERROR*' W0RTN   7
+     C*
+     C* Provide a fuller report:
+     C*
+     C* * *                MOVEA@STK      #@STK 100
+     C*
+     C* * *                CALL 'CGZERROR'             9090
+     C* * *                PARM           ##ERTN  7
+     C* * *                PARM           DSPGM
+     C* * *                PARM           ERDTA
+     C* * *                PARM           #@STK
+     C*
+     C                     RETRN
+     C*
+     C           EXFILE    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRERR    : Report error and close down program               *
+     C*                                                               *
+     C*  CALLED BY: All subroutines                                   *
+     C*                                                               *
+     C*  CALLS    : CGZERROR                                          *
+     C*                                                               *
+     C* In the INIT sub-routine, the fields W0MSGD and W0MSGF should  *
+     C* be set to the default message I.D and message file that are   *
+     C* used for the module. If not, the defaults of MEM5001 and MIDAS*
+     C* will be used.                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           SRERR     BEGSR
+     C*
+     C* Define work variables
+     C*
+     C           *LIKE     DEFN ERKEY     W0KEY
+     C           *LIKE     DEFN ERERNB    W0ERNB
+     C           *LIKE     DEFN ERFILE    W0FILE
+     C           *LIKE     DEFN ERPREF    W0PREF           Primary Ref.
+     C*
+     C           *LIKE     DEFN #MSGID    W0MSGD           Msg I.D.
+     C           *LIKE     DEFN #MSGF     W0MSGF           Msg File
+     C*
+     C                     Z-ADDQ         Q       50
+     C*
+     C* Dump program
+     C*
+     C                     DUMP
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ENDIF                                                              CSC022
+     C*
+     C* Set up the details of the message to be sent to MOPERQ
+     C*
+     C                     MOVEL*BLANKS   ERDTA
+     C                     MOVEL##PGM     ERPGM
+     C*
+     C           Q         IFGT 1
+     C           Q         ANDLT101
+     C                     MOVEL@STK,Q    ERSTK
+     C                     ELSE
+     C                     MOVEL'*Nostkin'ERSTK
+     C                     END
+     C*
+     C                     MOVELW0KEY     ERKEY
+     C                     Z-ADDW0ERNB    ERERNB
+     C                     MOVELW0FILE    ERFILE
+     C                     MOVELW0PREF    ERPREF
+     C*
+     C* Get message for message code. If the msg code or the msg file
+     C*  have not been set up then use the defaults.
+     C*
+     C           W0MSGD    IFEQ *BLANKS
+     C                     MOVEL'MEM5001' C#FMSG  7
+     C                     ELSE
+     C                     MOVELW0MSGD    C#FMSG
+     C                     END
+     C*
+     C           W0MSGF    IFEQ *BLANKS
+     C                     MOVEL'MIDAS   'C#FMSF 10
+     C                     ELSE
+     C                     MOVELW0MSGF    C#FMSF
+     C                     END
+     C*
+     C                     CALL 'SDRTVTXT'             9090
+     C                     PARM C#FMSG    #MSGID
+     C                     PARM C#FMSF    #MSGF
+     C                     PARM *BLANKS   #MSGTX
+     C*
+     C                     MOVEL#MSGTX    ERNARR
+     C*
+     C* Send message
+     C*
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM ERDTA     #MSGDT256
+     C                     PARM '*PRV '   #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+     C*
+     C* Fill LDA with error data
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C*
+     C* Close down program
+     C*
+     C                     SETON                     U7U8LR
+     C                     MOVEL'*ERROR*' W0RTN   7
+     C*
+     C* Provide a fuller report:
+     C*
+     C* * *                MOVEA@STK      #@STK 100
+     C*
+     C* * *                CALL 'CGZERROR'             9090
+     C* * *                PARM           ##ERTN  7
+     C* * *                PARM           DSPGM
+     C* * *                PARM           ERDTA
+     C* * *                PARM           #@STK
+     C* End the program:
+     C                     RETRN
+     C*
+     C           EXERR     ENDSR
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O* /Copy point for output specifications:
+     O*
+     O/COPY WNCPYSRC,ERRORCOPG
+     O*
+     O********************************************************************
+** CPY@ -- Copyright statement
+(c) Misys International Banking Systems Ltd. 2001

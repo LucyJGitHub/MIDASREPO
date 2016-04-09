@@ -1,0 +1,408 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas RE T&N Accounts - Notify Future Mvts')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  DSPF/RE4004DF- Notify Future Movements                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG27460           Date 18Dec09               *
+      *  Prev Amend No. CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  BUG27640 - Applied client fix EEE015 AS0001                  *
+      *  EEE015 - Retention of Notifications                          *
+      *  AS0001 - Account nbr should be protected on detail screens   *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+      *================================================================
+     A          R RE4004HH
+     A            SUSER         10A  O  1  2
+     A            SPGM          10A  O  1 13
+     A            SRUNA          7A  O  1 72
+     A            SJOB          10A  O  2  2
+     A                                  2 31'Notify Future Movements'
+     A                                      DSPATR(HI)
+     A                                  2 71TIME
+      *================================================================
+     A          R RE4004S1
+     A                                      SFL
+     A  84                                  SFLNXTCHG
+     A            S1ACTN         1A  B  7  2
+     A N31                                  DSPATR(HI UL)
+     A  31                                  DSPATR(RI PC)
+     A            S1KEY1        24A  O    +2
+     A                                      DSPATR(HI)
+     A            S1TRR1         8A  O    +2
+     A                                      DSPATR(HI)
+     A            S1RECD         6A  O    +2
+     A                                      DSPATR(HI)
+     A            S1DEFF         6A  O    +2
+     A                                      DSPATR(HI)
+     A            S1CAVL        14A  O    +2
+     A                                      DSPATR(HI)
+     A            S1DC02         1A  O    +2
+     A                                      DSPATR(HI)
+     A            S1REAM        14A  H
+     A            S1DC01         1A  H
+     A            S1HISB        14A  H
+     A            S1DC03         1A  H
+     A            S1NBDP         1S 0H
+     A            S1BRCA         3A  H
+     A            S1CNUM         6A  H
+     A            S1CCY          3A  H
+     A            S1ACOD        10A  H
+     A            S1ACSQ         2A  H
+     A            S1TEXT        30A  H
+     A            S1EARL         6A  H
+     A            S1DISP        18A  H
+     A            S1HELD        18A  H
+     A            S1OVER        18A  H
+     A            S1PRJC        18A  H
+     A            S1ACCR        18A  H
+     A            S1WTAX        18A  H
+     A            S1CHRG        18A  H
+     A            S1CLOB        18A  H
+      ** Start of change EEE015
+     A            S1RTDE         2A  H
+     A            S1TRMV         5S 0H
+      ** End of change EEE015
+      *================================================================
+     A          R RE4004C1
+     A                                      CA03(03) CA05(05) CF09(09)
+     A N82                                  ROLLUP(28)
+     A                                      SFLCTL(RE4004S1)
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0015)
+     A                                      OVERLAY
+     A  80 83                               SFLINZ
+     A  80N83                               SFLCLR
+     A N80                                  SFLDSPCTL
+     A N25N80 81                            SFLDSP
+     A N80 81 82                            SFLEND
+     A            S1POSR         4  0H      SFLRCDNBR
+     A                                  4  2' '
+     A                                    +2'Account                 '
+     A                                    +2'Ref.    '
+     A                                    +2'Notif.'
+     A                                    +2'Avail.'
+     A                                    +2'     Amount   '
+     A                                    +1'D/C'
+     A            S1POSN        24A  B  5  5
+     A                                      DSPATR(HI UL)
+      *================================================================
+     A          R RE4004II
+     A                                      TEXT('USER')
+     A                                      CA03(03) CA12(12)
+     A                                      OVERLAY
+     A                                  4  2'Enter Account'
+     A            S2KEY1        10A  B  4 21
+     A N32                                  DSPATR(HI)
+     A  32                                  DSPATR(RI PC)
+     A                                      DSPATR(UL)
+      *================================================================
+     A          R RE4004DD
+     A                                      TEXT('USER')
+     A                                      CA03(03) CA12(12) CA10(10)
+     A                                      OVERLAY
+     A                                  4  2'Reference'
+     A            S2TRR1         8A  O    +2
+     A                                      DSPATR(HI)
+     A                                  6  2'Account'
+     A            S2KEY1        10A  O  6 21
+     A                                      DSPATR(HI)
+     A            S2TEXT        30A  O  7  2
+     A                                      DSPATR(HI)
+     A                                  6 42'Cleared bal (proj)'
+     A            S2PRJC        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  7 42'Held items        '
+     A            S2HELD        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  8 42'Overdraft         '
+     A            S2OVER        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  9 42'                  '
+     A                                   + 1'------------------'
+     A                                 10 42'Dispo balance     '
+     A            S2DISP        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 12 42'For closure:'
+     A                                 13 42'Accrued interest  '
+     A            S2ACCR        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 14 42'Accrued w/tax     '
+     A            S2WTAX        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 15 42'Other charges     '
+     A            S2CHRG        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 16 42'                  '
+     A                                   + 1'------------------'
+     A                                 17 42'Closure balance   '
+     A            S2CLOB        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  9  2'Notified date'
+     A            S2RECD         6A  B  9 21
+     A N35                                  DSPATR(HI)
+     A  35                                  DSPATR(RI PC)
+     A N35N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A                                 11  2'Available date'
+     A            S2DEFF         6A  B 11 21
+     A N36                                  DSPATR(HI)
+     A  36                                  DSPATR(RI PC)
+     A N36N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A                                 13  2'Notified amount'
+     A            S2REAM        14A  B 13 21
+     A N33                                  DSPATR(HI)
+     A  33                                  DSPATR(RI PC)
+     A N33N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A            S2DC01         1A  B    +1
+     A N33                                  DSPATR(HI)
+     A  33                                  DSPATR(RI PC)
+     A N33N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A                                 15  2'Available amount'
+     A            S2CAVL        14A  B 15 21
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(RI PC)
+     A N34N52N51                            DSPATR(UL)
+     A        51
+     AO    52                               DSPATR(PR)
+     A            S2DC02         1A  B    +1
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(RI PC)
+     A N34N52N51                            DSPATR(UL)
+     A        51
+     AO    52                               DSPATR(PR)
+      ** Start of change EEE015
+     A                                 17  2'Retention       '
+     A            S2RTDE         2A  B 17 21
+     A N37                                  DSPATR(HI)
+     A  37                                  DSPATR(RI PC)
+     A N37N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+      ** End of change EEE015
+     A            S2RECN         5S 0H
+     A            S2DEFN         5S 0H
+     A            S2REAN        15S 0H
+     A            S2CAVN        15S 0H
+     A            S2HISB        14A  H
+     A            S2DC03         1A  H
+     A            S2HISN        15S 0H
+     A            S2NBDP         1S 0H
+     A            S2EARL         6A  H
+     A            S2BRCA         3A  H
+     A            S2CNUM         6A  H
+     A            S2CCY          3A  H
+     A            S2ACOD        10A  H
+     A            S2ACSQ         2A  H
+      ** Start of change EEE015
+     A            S2TRMV         5S 0H
+      ** End of change EEE015
+      *================================================================
+     A          R RE4004D2
+     A                                      TEXT('TERMINATION')
+     A                                      CA03(03) CA12(12) CA10(10)
+     A                                      OVERLAY
+     A                                  4  2'Reference'
+     A            S2TRR1         8A  O    +2
+     A                                      DSPATR(HI)
+     A                                  6  2'Account'
+      ** Start of change AS0001
+     A            S2KEY1        10A  O  6 21
+      ** End of change AS0001
+     A                                      DSPATR(HI)
+     A            S2TEXT        30A  O  7  2
+     A                                      DSPATR(HI)
+     A                                  6 42'Cleared bal (proj)'
+     A            S2PRJC        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  7 42'Held items        '
+     A            S2HELD        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  8 42'Overdraft         '
+     A            S2OVER        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  9 42'                  '
+     A                                   + 1'------------------'
+     A                                 10 42'Dispo balance     '
+     A            S2DISP        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 12 42'For closure:'
+     A                                 13 42'Accrued interest  '
+     A            S2ACCR        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 14 42'Accrued w/tax     '
+     A            S2WTAX        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 15 42'Other charges     '
+     A            S2CHRG        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 16 42'                  '
+     A                                   + 1'------------------'
+     A                                 17 42'Closure balance   '
+     A            S2CLOB        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 11  2'Available date'
+     A            S2DEFF         6A  B 11 21
+     A N36                                  DSPATR(HI)
+     A  36                                  DSPATR(RI PC)
+     A N36N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A                                 12  2'Earliest avail.'
+     A            S2EARL         6A  O 12 21
+     A            S2RECD         6A  H
+     A            S2REAM        14A  H
+     A            S2DC01         1A  H
+     A            S2CAVL        14A  H
+     A            S2DC02         1A  H
+     A            S2RECN         5S 0H
+     A            S2DEFN         5S 0H
+     A            S2REAN        15S 0H
+     A            S2CAVN        15S 0H
+     A            S2HISB        14A  H
+     A            S2DC03         1A  H
+     A            S2HISN        15S 0H
+     A            S2NBDP         1S 0H
+     A            S2BRCA         3A  H
+     A            S2CNUM         6A  H
+     A            S2CCY          3A  H
+     A            S2ACOD        10A  H
+     A            S2ACSQ         2A  H
+      ** Start of change EEE015
+     A            S2RTDE         2A  H
+     A            S2TRMV         5S 0H
+      ** End of change EEE015
+      *=========================================================================
+     A          R RE4004D3
+     A                                      TEXT('INTEREST')
+     A                                      CA03(03) CA12(12) CA10(10)
+     A                                      OVERLAY
+     A                                  4  2'Reference'
+     A            S2TRR1         8A  O    +2
+     A                                      DSPATR(HI)
+     A                                  6  2'Account'
+      ** Start of change AS0001
+     A            S2KEY1        10A  O  6 21
+      ** End of change AS0001
+     A                                      DSPATR(HI)
+     A            S2TEXT        30A  O  7  2
+     A                                      DSPATR(HI)
+     A                                  6 42'Cleared bal (proj)'
+     A            S2PRJC        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  7 42'Held items        '
+     A            S2HELD        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  8 42'Overdraft         '
+     A            S2OVER        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                  9 42'                  '
+     A                                   + 1'------------------'
+     A                                 10 42'Dispo balance     '
+     A            S2DISP        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 12 42'For closure:'
+     A                                 13 42'Accrued interest  '
+     A            S2ACCR        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 14 42'Accrued w/tax     '
+     A            S2WTAX        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 15 42'Charges (closure) '
+     A            S2CHRG        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 16 42'                  '
+     A                                   + 1'------------------'
+     A                                 17 42'Closure balance   '
+     A            S2CLOB        18A  O   + 1
+     A                                      DSPATR(HI)
+     A                                 13  2'Notified amount'
+     A            S2REAM        14A  B 13 21
+     A N33                                  DSPATR(HI)
+     A  33                                  DSPATR(RI PC)
+     A N33N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A            S2DC01         1A  B    +1
+     A N33                                  DSPATR(HI)
+     A  33                                  DSPATR(RI PC)
+     A N33N52                               DSPATR(UL)
+     A  52                                  DSPATR(PR)
+     A                                 15  2'Available amount'
+     A            S2CAVL        14A  B 15 21
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(RI PC)
+     A N34N52N51                            DSPATR(UL)
+     A        51
+     AO    52                               DSPATR(PR)
+     A            S2DC02         1A  B    +1
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(RI PC)
+     A N34N52N51                            DSPATR(UL)
+     A        51
+     AO    52                               DSPATR(PR)
+      ** Start of change EEE015
+     A                                 17  2'Retention       '
+     A            S2RTDE         2A  B 17 21
+     A N37                                  DSPATR(HI)
+     A  37                                  DSPATR(RI PC)
+     A N37N52N51                            DSPATR(UL)
+     A        51
+     AO    52                               DSPATR(PR)
+      ** End of change EEE015
+     A            S2RECD         6A  H
+     A            S2DEFF         6A  H
+     A            S2RECN         5S 0H
+     A            S2DEFN         5S 0H
+     A            S2REAN        15S 0H
+     A            S2CAVN        15S 0H
+     A            S2HISB        14A  H
+     A            S2DC03         1A  H
+     A            S2HISN        15S 0H
+     A            S2NBDP         1S 0H
+     A            S2EARL         6A  H
+     A            S2BRCA         3A  H
+     A            S2CNUM         6A  H
+     A            S2CCY          3A  H
+     A            S2ACOD        10A  H
+     A            S2ACSQ         2A  H
+      ** Start of change EEE015
+     A            S2TRMV         5S 0H
+      ** End of change EEE015
+      *================================================================
+     A          R RE4004F1
+     A                                      OVERLAY
+     A                                 23  2'A=Amend E=Enquire D=Delete'
+     A                                    +3'F3=Exit  F5=Refresh  F9=Insert'
+      *================================================================
+     A          R RE4004F2
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                    +2'F12=Previous'
+     A                                    +2'F10=DELETE'
+      *================================================================
+     A          R PMSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            SPGM                      SFLPGMQ
+      *================================================================
+     A          R PMSGCTL                   TEXT('Program messages')
+     A                                      OVERLAY
+     A                                      SFLCTL(PMSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  98
+     AON98                                  SFLEND
+     A            SPGM                      SFLPGMQ
+      *================================================================

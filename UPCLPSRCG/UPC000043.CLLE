@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UPC0030MB) TOFILE(UPFDMBTPD)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Add logical file members back in')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000046 - Add logical file members back in                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *CREATE   Date 04Aug14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BRGBRGLIB &PGMLIB &RTNFLAG)
+ 
+             DCL        VAR(&BRGBRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&ADDLFM) TYPE(*CHAR) LEN(1000)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(1000)
+ 
+             DCLF       FILE(UPC0030MB)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/** Check if member already exists and if it does then ignore record. */
+             CHKOBJ     OBJ(&MBFILE) OBJTYPE(*FILE) MBR(&MBNAME)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                GOTO       CMDLBL(ADDMBR)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+ADDMBR:
+/* Use processing from generic CoB component to add member. */
+             OVRDBF     FILE(SCFMBRTD) TOFILE(&BRGBRGLIB/UPFMBRTD)
+             CALL       PGM(&PGMLIB/CB022001) PARM('*BLD' &MBFILE +
+                          &MBNAME 0 &ADDLFM)
+             DLTOVR     FILE(SCFMBRTD)
+/** If a command string is not returned this means that no relevant */
+/** records were found so further processing is ended.              */
+             IF         COND(&ADDLFM *EQ ' ') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             CALL       PGM(QCMDEXC) PARM(&ADDLFM &CMDLEN)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

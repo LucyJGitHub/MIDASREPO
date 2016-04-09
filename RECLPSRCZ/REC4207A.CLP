@@ -1,0 +1,79 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas RE Create master files')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC4207A - Create Master File Controls                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       LAST AMEND NO. 091689  *CREATE    DATE 10AUG95              */
+/*       PREV AMEND NO. Xnnnnn             DATE ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       091689 - Created for error fix to allow RTS files to be     */
+/*                initialised from the switchable features           */
+/*                maintenance.  This program is a shell round        */
+/*                REC4207.                                           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CMTCTL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+/* Global Monitor Message */
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/**/
+/* Mode 1 - First call */
+/**/
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+                CALL       PGM(REC4207)
+             ENDDO
+ 
+/**/
+/* Mode 2 - Second call */
+/**/
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**/
+/* Mode 3 - Deletion */
+/**/
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal Processing */
+ 
+ ABNOR:      SNDPGMMSG  TOMSGQ(MOPERQ) MSG('Program REC4207A +
+                          ended abnormally')
+ 
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

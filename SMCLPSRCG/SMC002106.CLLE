@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(BFGOBJLST) TOFILE(UPOBJDTPD)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Journal files w/in global BF Libs')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC002106 - Midas SM Delete Journal receivers & SYS* views  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR886414*CREATE    Date 05Jan12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR886414 - Creation of CBS, CBA and BF libraries in SMSETUPD*/
+/*                  not catered                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&GJLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+             DCLF       FILE(BFGOBJLST)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB     SWS(XXXXXX00)
+             RTVDTAARA  DTAARA(QTEMP/SYSID) RTNVAR(&SBSID)
+ 
+/* Read through objects list */
+ 
+             CHGVAR     VAR(&GJLIB) VALUE(&SBSID *CAT 'GJLIB')
+ 
+/* Read through objects list */
+ 
+READNEXT:
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             IF         COND((&ODOBTP = '*FILE') *AND (&ODOBAT = +
+                          'PF')) THEN(DO)
+ 
+/* Journal Physical Files */
+ 
+             STRJRNPF   FILE(&ODLBNM/&ODOBNM) JRN(&GJLIB/GPJRN) +
+                          IMAGES(*BOTH)
+             MONMSG     MSGID(CPF700A)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            SMC002101 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+             SNDUSRMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMC002101 ended abnormally - see job +
+                          log')
+ 
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

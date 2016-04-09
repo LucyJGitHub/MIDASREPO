@@ -1,0 +1,1148 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Daily Changes Tape Reforma')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3112 - EXTEL - Daily Changes (TAPE REFORMAT)               *
+     F*                                                               *
+     F*  Function: To reformat the information received from the      *
+     F*            Extel Tape transmission                            *
+     F*            - Split up the Header records containing Index     *
+     F*              values                                           *
+     F*            - Split up the customised detail records containing*
+     F*              the market prices                                *
+     F*                                                               *
+     F*  Called by: SEC3112 - Extel Daily Changes Tape Take-On        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 11JAN94               *
+     F*                 E29170             Date 14NOV91               *
+     F*                 S01117             DATE 11JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FEXTAPD  IP  E                    DISK
+     FTABTB10 IF  E                    DISK
+     FEXTELA  O   E                    DISK
+     FEXTF4A  O   E                    DISK
+     FEXTF4B  O   E                    DISK
+     FEXTF4C  O   E                    DISK
+     FEXTF4D  O   E                    DISK
+     FEXTF4E  O   E                    DISK
+     FEXTF4F  O   E                    DISK
+     FEXTF4G  O   E                    DISK
+     FEXTF4H  O   E                    DISK
+     FEXTF4I  O   E                    DISK
+     FEXTF4J  O   E                    DISK
+     FEXTF4K  O   E                    DISK
+     FEXTF4L  O   E                    DISK
+     FEXTELF1 O   E                    DISK
+     FEXTELZ  O   E                    DISK
+     FSE3112AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   11 -  ERROR - F4A Header Record missing                     *
+     F*   12 -  ERROR - F4B Header Record missing                     *
+     F*   13 -  ERROR - F4C Header Record missing                     *
+     F*   14 -  ERROR - F4D Header Record missing                     *
+     F*   15 -  ERROR - F4E Header Record missing                     *
+     F*   16 -  ERROR - F4F Header Record missing                     *
+     F*   17 -  ERROR - F4G Header Record missing                     *
+     F*   18 -  ERROR - F4H Header Record missing                     *
+     F*   19 -  ERROR - F4I Header Record missing                     *
+     F*   20 -  ERROR - F4J Header Record missing                     *
+     F*   21 -  ERROR - F4K Header Record missing                     *
+     F*   22 -  ERROR - F4L Header Record missing                     *
+     F*   55 -  ERROR - No Live Record on PF/TABTB10                  *
+     F*   60 -  ERROR - F4 Header Record Type not A-L                 *
+     F*   98 -  To Determine Date format on PF/TABTB10                *
+     F*   U6 -  Set ERROR Code for Update of DTAARA/EXSTAT            *
+     F*   U8 -  File out of Balance Indicator                         *
+     F*U7-U8 -  Database Error Indicators                             *
+     F*   LR -  Program Termination                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   MAIN  - Main Processing                                     *
+     F*   INIT  - Initial Processing                                  *
+     F*   BTHDR - Batch Header Processing                             *
+     F*   F4HDR - F4 Header Processing                                *
+     F*   F4ERR - F4 Header Error Processing                          *
+     F*   F1DET - Prices Detail Processing                            *
+     F*   DBERR - To Display ERROR Messages                           *
+     F*   LASTR - Last Record Processing                              *
+     F*   *PSSR - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    R        1300  1
+     E*  Array to Store each TAPE Record as 1300 Elements
+     E                    F1R        33  1
+     E*  Array to Store Valid Detail Record
+     E                    DET         5  1
+     E*  Array to Store Excess Detail Information
+     E                    ARD    12  12  1
+     E*  Array to Store Valid F4 Header Indicators (A - L)
+     I/EJECT
+     I*
+     IEXSTTD    E DSEXSTAT
+     I*
+     I*  Externally described Data Structure in the format of
+     I*  Physical file EXSTAT
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*  Defining Local Data Area to display Error Messages
+     I*
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     I            DS
+     I*
+     I*  Data Structures to Reformat Date
+     I*
+     I                                        1   60XDATE
+     I                                        1   20YRS
+     I                                        3   40MTH
+     I                                        5   60DYS
+     I*
+     I            DS
+     I                                        1   60XDATE1
+     I                                        1   20DAT1
+     I                                        3   40DAT2
+     I                                        5   60DAT3
+     I*
+     I            DS
+     I*
+     I*  Data Structure to Access parts of EXTAP Record
+     I*
+     I                                        1 130 TAPR1
+     I                                        1   6 TJBCD
+     I                                    P   1   40TA1P
+     I                                        5   5 TPRIN
+     I                                    P   6   90TFDAT
+     I                                    P  10  110TFSN
+     I                                    P  12  130T2YDT
+     I                                        5   5 EXRI1
+     I                                        6   6 EXRI2
+     I                                        1  12 EOFNAR
+     I                                       13  180BLOCKS
+     I*
+     I            DS
+     I*
+     I*  Data Structure to Set Up EXTELA Fields for Output
+     I*
+     I                                        1 130 BTREC
+     I                                        1   6 AJBCD
+     I                                        7  120ADREC
+     I                                       13  150ASQNR
+     I*
+     I            DS
+     I*
+     I*  Data Structure to Set Up EXTELF1 Fields for Output
+     I*
+     I                                        1  33 F1REC
+     I                                    P   1   40F1SCP
+     I                                        5   6 F1RCIP
+     I                                    P   7  120F1P
+     I                                       13  13 F2P
+     I                                       14  14 F11P
+     I                                       15  15 F3P
+     I                                    P  16  210F4P
+     I                                    P  22  270F5P
+     I                                       28  28 F6P
+     I                                       29  29 F7P
+     I                                       30  30 F8P
+     I                                       31  31 F9P
+     I                                    P  32  330F10P
+     I*
+     IDSF4AD    E DSEXTF4A
+     I*
+     I*  Externally described Data Structure for PF/EXTF4A
+     I*
+     I              F1SCP                           AA1P
+     I              XRTYP                           ARTYP
+     I              XFDAT                           AFDAT
+     I              XFSN                            AFSN
+     I              X2YDT                           A2YDT
+     I*
+     IDSF4BD    E DSEXTF4B
+     I*
+     I*  Externally described Data Structure for PF/EXTF4B
+     I*
+     I              F1SCP                           BA1P
+     I              XRTYP                           BRTYP
+     I              XFDAT                           BFDAT
+     I              XFSN                            BFSN
+     I              X2YDT                           B2YDT
+     I*
+     IDSF4CD    E DSEXTF4C
+     I*
+     I*  Externally described Data Structure for PF/EXTF4C
+     I*
+     I              F1SCP                           CA1P
+     I              XRTYP                           CRTYP
+     I              XFDAT                           CFDAT
+     I              XFSN                            CFSN
+     I              X2YDT                           C2YDT
+     I*
+     IDSF4DD    E DSEXTF4D
+     I*
+     I*  Externally described Data Structure for PF/EXTF4D
+     I*
+     I              F1SCP                           DA1P
+     I              XRTYP                           DRTYP
+     I              XFDAT                           DFDAT
+     I              XFSN                            DFSN
+     I              X2YDT                           D2YDT
+     I*
+     IDSF4ED    E DSEXTF4E
+     I*
+     I*  Externally described Data Structure for PF/EXTF4E
+     I*
+     I              F1SCP                           EA1P
+     I              XRTYP                           ERTYP
+     I              XFDAT                           EFDAT
+     I              XFSN                            EFSN
+     I              X2YDT                           E2YDT
+     I*
+     IDSF4FD    E DSEXTF4F
+     I*
+     I*  Externally described Data Structure for PF/EXTF4F
+     I*
+     I              F1SCP                           FA1P
+     I              XRTYP                           FRTYP
+     I              XFDAT                           FFDAT
+     I              XFSN                            FFSN
+     I              X2YDT                           F2YDT
+     I*
+     IDSF4GD    E DSEXTF4G
+     I*
+     I*  Externally described Data Structure for PF/EXTF4G
+     I*
+     I              F1SCP                           GA1P
+     I              XRTYP                           GRTYP
+     I              XFDAT                           GFDAT
+     I              XFSN                            GFSN
+     I              X2YDT                           G2YDT
+     I*
+     IDSF4HD    E DSEXTF4H
+     I*
+     I*  Externally described Data Structure for PF/EXTF4H
+     I*
+     I              F1SCP                           HA1P
+     I              XRTYP                           HRTYP
+     I              XFDAT                           HFDAT
+     I              XFSN                            HFSN
+     I              X2YDT                           H2YDT
+     I*
+     IDSF4ID    E DSEXTF4I
+     I*
+     I*  Externally described Data Structure for PF/EXTF4I
+     I*
+     I              F1SCP                           IA1P
+     I              XRTYP                           IRTYP
+     I              XFDAT                           IFDAT
+     I              XFSN                            IFSN
+     I              X2YDT                           I2YDT
+     I*
+     IDSF4JD    E DSEXTF4J
+     I*
+     I*  Externally described Data Structure for PF/EXTF4J
+     I*
+     I              F1SCP                           JA1P
+     I              XRTYP                           JRTYP
+     I              XFDAT                           JFDAT
+     I              XFSN                            JFSN
+     I              X2YDT                           J2YDT
+     I*
+     IDSF4KD    E DSEXTF4K
+     I*
+     I*  Externally described Data Structure for PF/EXTF4K
+     I*
+     I              F1SCP                           KA1P
+     I              XRTYP                           KRTYP
+     I              XFDAT                           KFDAT
+     I              XFSN                            KFSN
+     I              X2YDT                           K2YDT
+     I*
+     IDSF4LD    E DSEXTF4L
+     I*
+     I*  Externally described Data Structure for PF/EXTF4L
+     I*
+     I              F1SCP                           LA1P
+     I              XRTYP                           LRTYP
+     I              XFDAT                           LFDAT
+     I              XFSN                            LFSN
+     I              X2YDT                           L2YDT
+     I*
+     I            DS
+     I*
+     I*  Data Structure to Set Up EXTELZ Fields for Output
+     I*
+     I                                        1   1 ZRECI
+     I                                        2   70NOBK
+     I                                    P   8  110NOF1
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*******************************************************************
+     C*                                                                 *
+     C*   MAIN       :  Main Processing                                 *
+     C*                                                                 *
+     C*   Functions  :  To Access and Reformat Records from PF/EXTAPD   *
+     C*                                                                 *
+     C*   Fields IN  :  TAPR(1 - 10)                                    *
+     C*                                                                 *
+     C*   Fields OUT :  RECCNT - No. of Detail Records                  *
+     C*              :  F4CNT  - No. of F4 Headers                      *
+     C*                                                                 *
+     C*   Calls      :   INIT                                           *
+     C*              :   F4HDR                                          *
+     C*              :   F1DET                                          *
+     C*                                                                 *
+     C*******************************************************************
+     C*
+     C*  To Perform Initial Processing
+     C*
+     C           FIRST     IFNE 'N'                        **** B001
+     C                     EXSR INIT
+     C                     END                             **** E001
+     C*
+     C*  Load TAPE Record from PF/EXTAPD into Array
+     C*
+     C                     MOVEATAPR1     R,1
+     C                     MOVEATAPR2     R,131
+     C                     MOVEATAPR3     R,261
+     C                     MOVEATAPR4     R,391
+     C                     MOVEATAPR5     R,521
+     C                     MOVEATAPR6     R,651
+     C                     MOVEATAPR7     R,781
+     C                     MOVEATAPR8     R,911
+     C                     MOVEATAPR9     R,1041
+     C                     MOVEATAPR10    R,1171
+     C*
+     C*  To Check Detail contents of PF/EXTAPD if not Batch Header or
+     C*  Batch Trailer
+     C*
+     C           EOFNAR    IFNE EON                        **** B001
+     C           TJBCD     ANDNEJBCD
+     C*
+     C*  To Check for F4 Headers - SEDOL No. = 0
+     C*
+     C           TA1P      IFEQ 0                          **** B002
+     C           RECCNT    ANDLT13
+     C                     ADD  1         RECCNT
+     C                     ADD  1         F4CNT   70
+     C                     EXSR F4HDR
+     C*
+     C                     ELSE                            **** X002
+     C*
+     C*  To Check for Details - SEDOL No. > 0
+     C*  Determine the Detail Type and process the relevant subroutine
+     C*  to write the Detail to the required file
+     C*
+     C                     ADD  1         RECCNT
+     C*
+     C                     Z-ADD1         X       40
+     C                     Z-ADD2         Y       40
+     C*
+     C*  If previous Detail Record incomplete - Return to relevant
+     C*  subroutine when next Record is read in
+     C*
+     C           REMAIN    IFNE 0                          **** B003
+     C           TYPE      CASEQ'F1'      F1DET
+     C                     END
+     C                     END                             **** E003
+     C*
+     C           X         DOWLE1300                       **** B003
+     C*
+     C*  Determine the Detail type then execute the relevant subroutine
+     C*
+     C           R,X       IFEQ 'F'                        **** B004
+     C           R,Y       ANDEQ'1'
+     C           DET,5     OREQ 'F'                                       JK
+     C           R,X       ANDEQ'1'
+     C*
+     C           X         IFGT 1295                       **** B005
+     C                     MOVE *BLANKS   DET                             JK
+     C                     END                             **** E005      JK
+     C*
+     C                     EXSR F1DET
+     C                     END                             **** E004
+     C*
+     C                     ADD  1         X
+     C           X         IFNE 1300                       **** B004
+     C                     ADD  1         Y
+     C                     END                             **** E004
+     C*
+     C*  If No. of characters remaining on Record is less than 6 -
+     C*  store for access when next Record is read in
+     C*
+     C           X         IFGT 1295                       **** B004
+     C           X         ANDLT1301
+     C                     MOVE R,X       DET,A
+     C                     ADD  1         A
+     C                     END                             **** E004
+     C*
+     C                     END                             **** E003
+     C                     END                             **** E002
+     C                     END                             **** E001
+     C*
+     C*  Last Record Processing
+     C*
+     CLR                   EXSR LASTR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine INIT - Initial Process                           *
+     C*                                                               *
+     C*   Functions  : Checks for live Record on PF/TABTB10           *
+     C*                Checks for Batch Header Record on PF/EXTAPD    *
+     C*                Calls ERROR subroutine if Records not found    *
+     C*                Accesses Data Area EXSTTD                      *
+     C*                                                               *
+     C*   Fields IN  : TJBCD  - EXTEL Bank code                       *
+     C*                                                               *
+     C*   Fields OUT : DBFILE - Database file in error.               *
+     C*              : DBKEY  - Database file key.                    *
+     C*              : DBASE  - Database error number.                *
+     C*              : AJBCD  - Bank code for output to PF/EXTELA     *
+     C*                                                               *
+     C*   Called by  : Main Process                                   *
+     C*                                                               *
+     C*   Calls      : DBERR                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+      **
+      **      Set Up LDA
+      **
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE3112'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     MOVE 'N'       FIRST   1
+     C*
+     C*  To Access PF/TABTB10
+     C*
+     C           1         CHAINTABTB10              55
+     C*
+     C*  ERROR - No Live Records on PF/TABTB10
+     C*
+     C           *IN55     IFEQ '1'                        **** B001
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'10'      TABKEY 12
+     C                     MOVE '01'      TABKEY           ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVE 'TABTB'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C*  To Determine Date Format on PF/TABTB10
+     C*
+     C           DATF      IFEQ 'M'                        **** B001
+     C                     SETON                     98
+     C                     END                             **** E001
+     C*
+     C*  To read records from the Data Structure EXSTTD
+     C*
+     C           *NAMVAR   DEFN EXSTAT    EXSTTD
+     C                     IN   EXSTTD
+     C*
+     C*  ERROR - No Batch Header Record
+     C*
+     C           TJBCD     IFNE JBCD                       **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTAP'   DBFILE           ***************
+     C                     MOVELJBCD      DBKEY            * DB ERROR 03 *
+     C***********          MOVE '03'      DBASE            ***************S01117
+     C                     Z-ADD3         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C                     MOVE TJBCD     AJBCD
+     C*
+     C*  To set up End of File Narrative
+     C*
+     C                     MOVEL'END OF ' EON    12
+     C                     MOVE 'FILE '   EON
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine BTHDR - Batch Header Processing                  *
+     C*                                                               *
+     C*   Functions  :  To write Batch Header Record to PF/EXTELA     *
+     C*                                                               *
+     C*   Fields IN  :  AFDAT - Julius Baer Date                      *
+     C*              :  ASQNR - Sequence No.                          *
+     C*              :  AJBCD - EXTEL Bank code                       *
+     C*                                                               *
+     C*   Fields OUT :  None                                          *
+     C*                                                               *
+     C*   Called by  :  F4HDR                                         *
+     C*                                                               *
+     C*   Calls      :  DBERR                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           BTHDR     BEGSR
+     C*
+     C*  Reformat Date and compare to Record on DTAARA/EXSTAT
+     C*
+     C                     MOVE AFDAT     XDATE
+     C*
+     C                     MOVE YRS       DAT3
+     C*
+     C           *IN98     IFEQ '0'                        **** B001
+     C                     MOVE DYS       DAT1
+     C                     MOVE MTH       DAT2
+     C                     ELSE                            **** X001
+     C                     MOVE MTH       DAT1
+     C                     MOVE DYS       DAT2
+     C                     END                             **** E001
+     C*
+     C           XDATE1    IFNE DREC                       **** B001
+     C           AFSN      ORNE SQNR
+     C           AJBCD     ORNE JBCD
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'DTARA'   DBFILE            ***************
+     C                     MOVEL'EXSTAT'  DBKEY             * DB ERROR 19 *
+     C***********          MOVE '19'      DBASE             **************S01117
+     C                     Z-ADD19        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C*
+     C                     ELSE                            **** X001
+     C*
+     C*  Write Record to PF/EXTELA
+     C*
+     C                     Z-ADDXDATE1    ADREC
+     C                     Z-ADDAFSN      ASQNR
+     C                     WRITEEXTELAF
+     C*
+     C                     END                             **** E001
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine F4HDR - F4 Header Processing                     *
+     C*                                                               *
+     C*   Functions  : To check validity of F4 Headers and to write   *
+     C*                to appropriate PF/EXTF4(A - L)                 *
+     C*                                                               *
+     C*   Fields IN  : TA1P  - SEDOL No.                              *
+     C*              : TPRIN - F4 Record Identifier                   *
+     C*                                                               *
+     C*   Fields OUT : AFDAT - Julius Baer Date                       *
+     C*              : ASQNR - Sequence No.                           *
+     C*              : NOF4S - No. of valid F4 Headers written to file*
+     C*              : DBFILE- File in Error                          *
+     C*              : DBKEY - Database File Key                      *
+     C*              : DBASE - Database Error Number                  *
+     C*                                                               *
+     C*   Called by  : Main Process                                   *
+     C*                                                               *
+     C*   Calls      : BTHDR                                          *
+     C*              : DBERR                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           F4HDR     BEGSR
+     C*
+     C*  To Check Validity of F4 Header Indicators
+     C*
+     C           TPRIN     LOKUPARD                      60
+     C*
+     C           *IN60     IFEQ '1'                        **** B001
+     C*
+     C*  The first 5 fields are common to all F4 Headers
+     C*
+     C                     Z-ADDTA1P      F1SCP
+     C                     MOVE TPRIN     XRTYP
+     C                     Z-ADDTFDAT     XFDAT
+     C                     Z-ADDTFSN      XFSN
+     C                     Z-ADDT2YDT     X2YDT
+     C*
+     C           XRTYP     IFEQ 'A'                         **** B002
+     C                     MOVEAR         DSF4AD
+     C                     WRITEEXTF4AF
+     C                     ADD  1         NOF4S
+     C                     SETON                     11
+     C                     EXSR BTHDR
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'B'                         **** B002
+     C                     MOVEAR         DSF4BD
+     C                     WRITEEXTF4BF
+     C                     ADD  1         NOF4S
+     C                     SETON                     12
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'C'                         **** B002
+     C                     MOVEAR         DSF4CD
+     C                     WRITEEXTF4CF
+     C                     ADD  1         NOF4S
+     C                     SETON                     13
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'D'                         **** B002
+     C                     MOVEAR         DSF4DD
+     C                     WRITEEXTF4DF
+     C                     ADD  1         NOF4S
+     C                     SETON                     14
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'E'                         **** B002
+     C                     MOVEAR         DSF4ED
+     C                     WRITEEXTF4EF
+     C                     ADD  1         NOF4S
+     C                     SETON                     15
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'F'                         **** B002
+     C                     MOVEAR         DSF4FD
+     C                     WRITEEXTF4FF
+     C                     ADD  1         NOF4S
+     C                     SETON                     16
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'G'                         **** B002
+     C                     MOVEAR         DSF4GD
+     C                     WRITEEXTF4GF
+     C                     ADD  1         NOF4S
+     C                     SETON                     17
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'H'                         **** B002
+     C                     MOVEAR         DSF4HD
+     C                     WRITEEXTF4HF
+     C                     ADD  1         NOF4S
+     C                     SETON                     18
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'I'                         **** B002
+     C                     MOVEAR         DSF4ID
+     C                     WRITEEXTF4IF
+     C                     ADD  1         NOF4S
+     C                     SETON                     19
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'J'                         **** B002
+     C                     MOVEAR         DSF4JD
+     C                     WRITEEXTF4JF
+     C                     ADD  1         NOF4S
+     C                     SETON                     20
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'K'                         **** B002
+     C                     MOVEAR         DSF4KD
+     C                     WRITEEXTF4KF
+     C                     ADD  1         NOF4S
+     C                     SETON                     21
+     C                     END                              **** E002
+     C*
+     C           XRTYP     IFEQ 'L'                         **** B002
+     C                     MOVEAR         DSF4LD
+     C                     WRITEEXTF4LF
+     C                     ADD  1         NOF4S
+     C                     SETON                     22
+     C                     END                              **** E002
+     C*
+     C                     ELSE                             **** X001
+     C*
+     C*  ERROR - If F4 Header Type not A - L
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVELTPRIN     DBKEY             * DB ERROR 16 *
+     C***********          MOVE '16'      DBASE             **************S01117
+     C                     Z-ADD16        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C*
+     C                     END                              **** E001
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine F4ERR - F4 Header Error Processing               *
+     C*                                                               *
+     C*   Functions  :  To check for any missing F4 Headers           *
+     C*                                                               *
+     C*   Fields IN  :  INxx  - Indicators 11 - 22                    *
+     C*                                                               *
+     C*   Fields OUT :  DBFILE- File in Error                         *
+     C*              :  DBKEY - Database File Key                     *
+     C*              :  DBASE - Database Error Number                 *
+     C*                                                               *
+     C*   Called by  :  Main Process                                  *
+     C*                                                               *
+     C*   Calls      :  DBERR                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           F4ERR     BEGSR
+     C*
+     C*  ERROR - If F4 Header Type A Missing
+     C*
+     C           *IN11     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'A'       DBKEY             * DB ERROR 04 *
+     C***********          MOVE '04'      DBASE             **************S01117
+     C                     Z-ADD4         DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*
+     C*  ERROR - If F4 Header Type B Missing
+     C*
+     C           *IN12     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'B'       DBKEY             * DB ERROR 05 *
+     C***********          MOVE '05'      DBASE             **************S01117
+     C                     Z-ADD5         DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type C Missing
+     C*
+     C           *IN13     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'C'       DBKEY             * DB ERROR 06 *
+     C***********          MOVE '06'      DBASE             **************S01117
+     C                     Z-ADD6         DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type D Missing
+     C*
+     C           *IN14     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'D'       DBKEY             * DB ERROR 07 *
+     C***********          MOVE '07'      DBASE             **************S01117
+     C                     Z-ADD7         DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type E Missing
+     C*
+     C           *IN15     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'E'       DBKEY             * DB ERROR 08 *
+     C***********          MOVE '08'      DBASE             **************S01117
+     C                     Z-ADD8         DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type F Missing
+     C*
+     C           *IN16     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'F'       DBKEY             * DB ERROR 09 *
+     C***********          MOVE '09'      DBASE             **************S01117
+     C                     Z-ADD9         DBASE             **************S01117
+     C                     EXSR DBERR
+     C                     OUT  LDA                                       S01117
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type G Missing
+     C*
+     C           *IN17     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'G'       DBKEY             * DB ERROR 10 *
+     C***********          MOVE '10'      DBASE             **************S01117
+     C                     Z-ADD10        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type H Missing
+     C*
+     C           *IN18     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'H'       DBKEY             * DB ERROR 11 *
+     C***********          MOVE '11'      DBASE             **************S01117
+     C                     Z-ADD11        DBASE             **************S01117
+     C                     EXSR DBERR
+     C                     OUT  LDA                                       S01117
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type I Missing
+     C*
+     C           *IN19     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'I'       DBKEY             * DB ERROR 12 *
+     C***********          MOVE '12'      DBASE             **************S01117
+     C                     Z-ADD12        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type J Missing
+     C*
+     C           *IN20     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'J'       DBKEY             * DB ERROR 13 *
+     C***********          MOVE '13'      DBASE             **************S01117
+     C                     Z-ADD13        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type K Missing
+     C*
+     C           *IN21     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'K'       DBKEY             * DB ERROR 14 *
+     C***********          MOVE '14'      DBASE             **************S01117
+     C                     Z-ADD14        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - If F4 Header Type L Missing
+     C*
+     C           *IN22     IFEQ '0'                         **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'L'       DBKEY             * DB ERROR 15 *
+     C***********          MOVE '15'      DBASE             **************S01117
+     C                     Z-ADD15        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C*  ERROR - Duplication has occurred
+     C*
+     C           NOF4S     IFGT 12                          **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTF4'   DBFILE            ***************
+     C                     MOVEL'EXTRA'   DBKEY             * DB ERROR 18 *
+     C***********          MOVE '18'      DBASE             **************S01117
+     C                     Z-ADD18        DBASE             **************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                              **** E001
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine F1DET - Prices Detail Processing                 *
+     C*                                                               *
+     C*   Functions  :  To write F1 Prices Details to PF/EXTELF1      *
+     C*                                                               *
+     C*   Fields IN  :  EXRI(1&2) - F1 Indicator                      *
+     C*                                                               *
+     C*   Fields OUT :  None                                          *
+     C*                                                               *
+     C*   Called by :   Main Process                                  *
+     C*                                                               *
+     C*   Calls     :   DBERR                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C*  Subroutine to write each completed F1 Price Detail (length
+     C*  33 Bytes) To file PF/EXTELF1
+     C*
+     C           F1DET     BEGSR
+     C*
+     C                     Z-ADDX         Z       40
+     C*
+     C*  To check for excess Data from previous Record and store
+     C*
+     C           DET,1     IFNE *BLANKS                     **** B001
+     C           34        SUB  A         REMAIN
+     C                     MOVEADET       F1R
+     C                     MOVEA'     '   DET
+     C                     ADD  REMAIN    X
+     C                     ADD  REMAIN    Y
+     C                     END                              **** E001
+     C*
+     C           REMAIN    IFNE 0                           **** B001
+     C           34        SUB  REMAIN    B       20
+     C                     MOVEAR         F1R,B
+     C                     MOVEAF1R       F1REC
+     C                     MOVE *BLANKS   F1R                             SKPFIX
+     C                     Z-ADD0         REMAIN
+     C                     MOVE '  '      TYPE
+     C*
+     C                     ELSE                             **** X001
+     C*
+     C*  Load Price Record into Detail Block(length 33) for output
+     C*
+     C                     SUB  4         Z
+     C                     ADD  28        X
+     C                     ADD  28        Y
+     C*
+     C           X         IFLE 1300                        **** B002
+     C                     MOVEAR,Z       F1REC
+     C                     ELSE                             **** X002
+     C*
+     C*  If End of TAPREC reached before complete Detail Record loaded
+     C*  save the remainder
+     C*
+     C                     MOVEAR,Z       F1R
+     C           X         SUB  1300      REMAIN  20
+     C                     Z-ADD1300      X
+     C                     MOVE 'F1'      TYPE    2
+     C                     END                              **** E002
+     C*
+     C                     END                              **** E001
+     C*
+     C           REMAIN    IFEQ 0                           **** B001
+     C*
+     C*  Write Complete Price Detail Record to PF/EXTELF1
+     C*
+     C                     WRITEEXTELF1F
+     C*
+     C*  Accumulate No. of Price Detail Records written
+     C*
+     C                     ADD  1         NODTLS
+     C*
+     C                     END                              **** E001
+     C*
+     C                     Z-ADD1         A       10
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine DBERR - To Display ERROR Messages                *
+     C*                                                               *
+     C*   Functions  :  To Produce Report with DB Error Messages      *
+     C*              :  To Produce Dump                               *
+     C*              :  To check F4 Headers out of Balance            *
+     C*              :  To Terminate Program                          *
+     C*                                                               *
+     C*   Fields IN  :  DBFILE - File in Error                        *
+     C*              :  DBKEY  - Database File Key                    *
+     C*              :  DBASE  - Database Error Number                *
+     C*              :  F4CNT  - No. of F4 Headers on PF/EXTAPD       *
+     C*                                                               *
+     C*   Fields OUT :  DBFILE - File in Error                        *
+     C*              :  DBKEY  - Database File Key                    *
+     C*              :  DBASE  - Database Error Number                *
+     C*              :  DBPGM  - Program Name                         *
+     C*              :  DIFF2  - F4 Headers out of Balance            *
+     C*                                                               *
+     C*   Called by  :  Initial Process                               *
+     C*              :  Main Process                                  *
+     C*              :  BTHDR                                         *
+     C*              :  F4HDR                                         *
+     C*              :  F1DET                                         *
+     C*                                                               *
+     C*   Calls      :  None                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR                           **** B001
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C***********          MOVEL'SE3112'  DBPGM                           S01117
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C                     WRITEERROR
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **** E001
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine LASTR - Last Record Processing                   *
+     C*                                                               *
+     C*   Functions  :  To check for live Records on PF/EXTAPD        *
+     C*              :  To check for Batch Trailer Record             *
+     C*              :  To check No. of F4 Headers                    *
+     C*                                                               *
+     C*   Fields IN  :  RECCNT - No. of Details on PF/EXTAPD          *
+     C*                                                               *
+     C*   Fields OUT :  DBFILE - File in Error                        *
+     C*              :  DBKEY  - Database File Key                    *
+     C*              :  DBASE  - Database Error Number                *
+     C*              :  RECS   - No. of Detail Blocks sent            *
+     C*                                                               *
+     C*   Called by  :  Main Process                                  *
+     C*                                                               *
+     C*   Calls      :  DBERR                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LASTR     BEGSR
+     C*
+     C*  ERROR - No Live Records on PF/EXTAPD
+     C*
+     C           TJBCD     IFEQ *BLANKS                    **** B001
+     C                     SETON                     U6
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTAP'   DBFILE           ***************
+     C                     MOVEL'NO'      DETKEY 10        * DB ERROR 02 *
+     C                     MOVE 'DETAILS' DETKEY           ***************
+     C                     MOVELDETKEY    DBKEY
+     C***********          MOVE '02'      DBASE                           S01117
+     C                     Z-ADD2         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C*  ERROR - F4 Header Missing or duplication has occurred
+     C*
+     C           NOF4S     IFNE 12                         **** B003
+     C                     EXSR F4ERR
+     C                     END                             **** E003
+     C*
+     C*  Check that Last Record is Batch Trailer Record
+     C*
+     C           EOFNAR    IFEQ EON                        **** B001
+     C                     Z-ADDBLOCKS    RECS
+     C*
+     C*  If No. of Records sent not equal to No. of Records counted
+     C*  - File out of Balance
+     C*
+     C           RECS      IFNE RECCNT                     **** B002
+     C                     SETON                     U6U8
+     C                     MOVE '***'     DIFF1                        ***
+     C*
+     C                     ELSE                            **** X002
+     C*
+     C                     MOVE 'Z'       RECI
+     C                     Z-ADDRECS      NOBK
+     C                     Z-ADDNODTLS    NOF1
+     C                     WRITEEXTELZF
+     C*
+     C                     END                             **** E002
+     C*
+     C*  To Produce Run Control Report
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C                     ELSE                            **** X001
+     C*
+     C*  ERROR - Batch Trailer not Last Record
+     C*
+     C                     MOVEL'TRAILER' TRLKEY 15
+     C                     MOVE 'MISSING' TRLKEY
+     C*
+     C                     SETON                     U6
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EXTAP'   DBFILE           ***************
+     C                     MOVELTRLKEY    DBKEY            * DB ERROR 17 *
+     C***********          MOVE '17'      DBASE            ***************S01117
+     C                     Z-ADD17        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C                     ENDSR
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/SPACE 2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**    ARD - Valid F4 Header Indicators
+ABCDEFGHIJKL

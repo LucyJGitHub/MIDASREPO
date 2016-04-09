@@ -1,0 +1,458 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Securities Position Settle Confs -Driver')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4450 - Securities Position Settle Confs - Driver           *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 235274             Date 13Sep05               *
+      *                 234140             Date 17May05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 089211             Date 31May95               *
+     F*                 082060             DATE 24JAN95               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha (recompile)  *
+     F*  235274 - Allow UDC_confis for authorized maturity events     *
+     F*           (recompiled over modified logical POSCONF)          *
+     F*           make sure that extract is not called for closed/    *
+     F*           deleted customers, else DB-Error 22 in CG4460.      *
+      *  234140 - EU witholding tax (recompile)                       *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CSE023 - Treaty Withholding Tax.                             *
+     F*  089211 - Process all with value date less than next          *
+     F*           working day                                         *
+     F*  082060 - Redefine Binary fields as Decimal (9,0 Packed)      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*****************************************************************
+     FPOSCONF UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     IDSPARM    E DSPOSETD
+     I**  External DS for parameter passed to CG4460
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     ISDSECS    E DSSDSECSPD
+      **  External DS for securities trading customer details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     ISDBANK    E DSSDBANKPD                                              089211
+      *                                                                   089211
+      **  External DS for bank details                                    089211
+      *                                                                   089211
+     ISDCUST    E DSSDCUSTPD                                                                  235274
+      *   Customer details                                                                    235274
+      *                                                                                       235274
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+     C                     EXSR SRINZ
+      *
+      *  Main processing
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4460 - Securities Position Settle Confs      *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Read the Position Settlements file
+      *
+     C                     READ POSCONF                  99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      **  Increment the count of POSETD records read.
+     C                     ADD  1         ##PREC  50
+      *
+      ** If confirmation not already produced
+      *
+     C           PSCF      IFNE 'Y'
+     C           PSVL      ANDLTBJDNWD                                    089211
+     C/COPY WNCPYSRC,CG4450C001
+      *
+      ** If event type to be processed
+      *
+     C           PEVT      IFEQ 'PP'
+     C           PEVT      OREQ 'CP'
+     C           PEVT      OREQ 'DV'
+     C           PEVT      OREQ 'MP'
+     C           PEVT      OREQ 'MT'
+      *
+      ** Get Securities trading customer details
+      *
+     C                     MOVELPCPY      ##CUST
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY    '##OPTN  7
+     C                     PARM           ##CUST  6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'SDSECSPD'W0FILE           ***************
+     C                     MOVEL##CUST    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** make sure customer is not deleted/closed                                             235274
+      ** Get Customer Details for Branch Internal Customer                                    235274
+      *                                                                                       235274
+     C                     MOVELPCPY      ##KEY1                                              235274
+     C                     CALL 'AOCUSTR0'                                                    235274
+     C                     PARM *BLANKS   ##RTCD                                              235274
+     C                     PARM '*KEY   ' ##OPTN                                              235274
+     C                     PARM           ##KEY1 10        counterpty                         235274
+     C                     PARM *BLANKS   ##KYST  7                                           235274
+     C           SDCUST    PARM SDCUST    DSSDY                                               235274
+      *                                                                                       235274
+     C           ##RTCD    IFEQ *BLANK                     ACTIVE CUSTOMER                    235274
+      *                                                                                       235274
+      ** If portfolio customer
+      *
+     C           BFCLAS    IFEQ 'S'
+     C           BFCLAS    OREQ 'D'
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4460'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM *BLANK    ##AUTO  1
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4460  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Confirmation Produced?
+      *
+     C           ##COPD    IFEQ 'Y'
+      *
+      ** Update Confirmation Produced Indicator on POSETD
+      *
+     C                     MOVEL'Y'       PSCF
+     C                     EXCPTUPOSET
+      *
+     C                     END                             * ##COPD IFEQ 'Y'
+      *
+     C                     END                             * ##RTCD                           235274
+      *                                                                                       235274
+     C                     END                             * BFCLAS = 'S'
+     C                     END                             * PEVT = 'PP'
+     C                     END                             * PSCF NOT = Y
+      *
+      ** Commit
+     C                     COMIT
+      *
+      ** Read next record from POSCONF
+      *
+     C                     READ POSCONF                  99*
+     C                     END                             * *IN99 DOWEQ '0'
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4450AU'I#SPLN
+     C                     MOVEL'CG4450  'I#REF
+     C                     MOVE 'CGD1581' I#TITL
+     C                     MOVE 'CGD1582' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##PREC
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *                                                                   089211
+      **  Call access program for Bank details                            089211
+      *                                                                   089211
+     C                     CALL 'AOBANKR0'                                089211
+     C                     PARM *BLANKS   ##RTCD                          089211
+     C                     PARM '*FIRST  '##OPTN                          089211
+     C           SDBANK    PARM SDBANK    DSSDY                           089211
+      *                                                                   089211
+      **  Database error                                                  089211
+     C           ##RTCD    IFNE *BLANK                                    089211
+      *                                                                   089211
+     C                     MOVEL'AOBANKR0'W0FILE                          089211
+     C                     MOVEL'*CALL'   W0KEY            ***************089211
+     C                     Z-ADD03        W0ERNB           * DB ERROR 03 *089211
+     C                     MOVEL'MEM5003' W0MSGD           ***************089211
+     C                     MOVEL'MIDAS  ' W0MSGF                          089211
+     C                     EXSR SRERR                                     089211
+     C                     ENDIF                                          089211
+     C/COPY WNCPYSRC,CG4450C002
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4450  'I#REF
+     C                     MOVE 'CGD1581' I#TITL
+     C                     MOVE 'CGD1582' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'POSETD  'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##PREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1581' W0TITL  7
+     C                     PARM 'CGD1582' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4450  'I#REF
+     C                     MOVE 'CGD1581' I#TITL
+     C                     MOVE 'CGD1582' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+     OPOSETDF E                UPOSET
+     O                         PSCF
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

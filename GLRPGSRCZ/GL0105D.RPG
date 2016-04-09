@@ -1,0 +1,1413 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Display Journal Hist Hdrs')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0105D - Midas GL Display Journal Hist Hdrs                 *
+      *                                                               *
+      *  Function:                                                    *
+      *    - Displays the records from DBF as a subfile               *
+      *    - Loads the SFL from the DBF a page at a time              *
+      *    - The DBF record at which the SFL display starts may be    *
+      *      controlled by positioning fields on the SFL header       *
+      *    - Any key fields on the SFL header will be used as         *
+      *      positioning values                                       *
+      *    - Any non-key fields on the SFL header will be used as     *
+      *      selection values: a maximum of W0SLM records will be     *
+      *      read from the DBF before giving up                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR659451           Date 29Nov12               *
+      *  Prev Amend No. 261299             Date 14Aug09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 255415             Date 31Jul08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 181454             Date 09Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 090887             Date 24Jun96               *
+      *                 E38270             Date 16Jun92               *
+      *                 E27263             Date 25SEP91               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  AR659451 - Search mechanism with scan limit is misleading to *
+      *             users. Remove the scanning limitation and scan    *
+      *             the database once from the first to last record   *
+      *             before displaying the search result. Applied      *
+      *             fix 258820. (Child: AR659452)                     *
+      *  261299 - User cannot print historical batches when there is  *
+      *           a live batch with the same batch number. Use new    *
+      *           program GL0142H to correctly validate historical    *
+      *           batch details.                                      *
+      *  255415 - Recompiled due to changes in DSPF/GL0105D#.         *
+      *  181454 - Display 'Maximum sub-file size reached, use date    *
+      *           position field to continue', if subfile record      *
+      *           reaches the 9999th record.                          *
+      *  090887 - Position function on historic batches not working.  *
+      *           If date format flag is 'M', date needs to be changed*
+      *           from DDMMYY to MMDDYY before conversion to Midas day*
+      *           number to ensure that the day number calculated is  *
+      *           correct.                                            *
+      *  E38270 - DO NOT DISPLAY BRANCH IF MBIN IS 'N'                *
+      *  E27263 - MULTIBRANCHING INDICATOR PARM NOT SET CORRECTLY     *
+      *           FOR CALL TO FC0040X.                                *
+      *                                                               *
+      *****************************************************************
+     FGL0105D#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Midas GL Display Journal Hist Hdrs
+      *
+     FGLJEHHL2IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RSQ : Midas GL Journal History Header    LF
+      *
+     FGLJEHHL1IF  E           K        DISK
+      * RTV : Midas GL Journal History Header    LF
+      *
+     E                    CPY@    1   1 80               Copyright     array
+     E* Define Footer For Display File
+      *
+     E                    LNE     1   2 78
+      *
+     I*   Define MIDAS Rundate from data-area RUNDAT
+     I*
+     I* Define Data area MUSER                                         ***
+     I*                                                                ***
+      * Renamed input format fields
+     I@BEREDB
+      *  Midas - GL Journal History Header    LF                      *
+     I              HHBEDT                          WABEDT
+     I              HHBTNB                          WABTNB
+     I              HHBCDA                          WABCDA
+     I              HHDPCD                          WADPCD
+     I              HHWSID                          WAWSID
+     I              HHHIIN                          WAHIIN
+     I              HHHDIN                          WAHDIN
+     I              HHHINI                          WAHINI
+     I              HHSHPI                          WASHPI
+     I              HHRAPI                          WARAPI
+     I              HHMBRB                          WAMBRB
+     I              HHRVVD                          WARVVD
+     I              HHBDES                          WABDES
+      *
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I            DS
+     I                                        1   60UUDNUM
+      * Outward parameters
+     IPARC        DS                             68
+      * RCD : Midas GL Journal History Header    LF
+      * I : RST Batch Entry Date
+     I                                    P   1   30PABEDT
+      * I : RST Batch number
+     I                                        4   6 PABTNB
+      * I : MAP Branch Code - Alpha
+     I                                        7   9 PABCDA
+      * I : MAP Dept Code
+     I                                       10  12 PADPCD
+      * I : MAP Workstation id.
+     I                                       13  22 PAWSID
+      * I : MAP Hash integer input
+     I                                    P  23  300PAHIIN
+      * I : MAP Hash decimal input
+     I                                    P  31  320PAHDIN
+      * I : MAP Hash item no.input
+     I                                    P  33  340PAHINI
+      * I : MAP Shadow post indicator
+     I                                       35  35 PASHPI
+      * I : MAP Retail advice print ind.
+     I                                       36  36 PARAPI
+      * I : MAP Multiple Branch Batch
+     I                                       37  37 PAMBRB
+      * I : MAP Reversal / Void Indicator
+     I                                       38  38 PARVVD
+      * I : MAP Batch Description
+     I                                       39  68 PABDES
+      *
+      * Outward parameters
+     IPBRC        DS                             68
+      * RCD : Midas GL Journal History Header    LF
+      * I : RST Batch Entry Date
+     I                                    P   1   30PBBEDT
+      * I : RST Batch number
+     I                                        4   6 PBBTNB
+      * I : MAP Branch Code - Alpha
+     I                                        7   9 PBBCDA
+      * I : MAP Dept Code
+     I                                       10  12 PBDPCD
+      * I : MAP Workstation id.
+     I                                       13  22 PBWSID
+      * I : MAP Hash integer input
+     I                                    P  23  300PBHIIN
+      * I : MAP Hash decimal input
+     I                                    P  31  320PBHDIN
+      * I : MAP Hash item no.input
+     I                                    P  33  340PBHINI
+      * I : MAP Shadow post indicator
+     I                                       35  35 PBSHPI
+      * I : MAP Retail advice print ind.
+     I                                       36  36 PBRAPI
+      * I : MAP Multiple Branch Batch
+     I                                       37  37 PBMBRB
+      * I : MAP Reversal / Void Indicator
+     I                                       38  38 PBRVVD
+      * I : MAP Batch Description
+     I                                       39  68 PBBDES
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNO
+     I                                       11  11 SUCP
+     I                                       12  12 DTFF
+     I                                       13  13 MBIN
+     I*
+     IZMUSER      DS
+     I                                        1  10 USID
+     I                                       11  13 UDBC
+     I                                       14  16 UDDP
+     I                                       17  17 UBLA
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Date not valid'
+      * Batch Date Screen
+     I                                        1   7 ZA0001
+      * Message data for 'Date not valid'
+      * Batch Date Screen
+     I                                        1   7 ZA0002
+      * Message data for 'Date not valid'
+      * Batch Date Screen
+     I                                        1   7 ZA0003
+      * Message data for 'Date not valid'
+      * Batch Date Screen
+     I                                        1   7 ZA0004
+      * Message data for 'Branch Enquiry Not Valid'
+      * *SFLSEL
+     I                                        1   1 ZA0005
+      * Message data for 'Invalid SFLSEL Entered'
+      * *SFLSEL
+     I                                        1   1 ZA0006
+      * Message data for 'Batch Displayed'
+      * Batch number
+     I                                        1   3 ZA0007
+      * Message data for 'Batch Displayed'
+      * Batch number
+     I                                        1   3 ZA0008
+      * Message data for 'Setup Bch,Date - Hist Rpt'
+      * Batch Entry Date Alpha
+     I                                        1   5 ZA0009
+      * Batch number
+     I                                        6   8 ZA0010
+      * Message data for 'Batch Printed'
+      * Batch number
+     I                                        1   3 ZA0011
+      * Message data for 'SPF Atn Cde ERR 1 ZVACTBU'
+      * Input Branch Code - Alpha
+     I                                        1   3 ZA0012
+      * Message data for 'SPF Atn Cde ERR 4 ZVACTBU'
+      * SPF Action Code
+     I                                        1   1 ZA0013
+      * Branch Code - Alpha
+     I                                        2   4 ZA0014
+      * *SFLSEL
+     I                                        5   5 ZA0015
+      * Message data for 'SPF Atn Cde ERR 3 ZVACTBU'
+      * SPF Action Code
+     I                                        1   1 ZA0016
+      * Batch number
+     I                                        2   4 ZA0017
+      * *SFLSEL
+     I                                        5   5 ZA0018
+      * Message data for 'SPF Atn Cde ERR 2 ZVACTBU'
+      * SPF Action Code
+     I                                        1   1 ZA0019
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * Position according to Date entered.
+      * CASE: CTL.Batch Date Screen is Blank
+     C           #CBDTS    IFEQ *BLANK                     *IF
+     C                     Z-ADDWUEBDT    #2BEDT           Batch Entry Dat
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL'N'       WUFPBU           File positioned
+     C                     MOVEL#CBDTS    WUSBDS           Store Batch Dat
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * User enters DDMMMYY (7A) so month must be converted to numeric value.
+     C                     MOVEL'Y'       WUFPBU           File positioned
+     C                     MOVEL#CBDTS    WUSBDS           Store Batch Dat
+      * Convert date (MMM to MM) - Standard functions  *
+     C                     CALL 'GL0105U'              90  Convert date (M
+     C                     PARM #CBDTS    WQ0001  7        Batch Date Scre
+     C           WUBDTN    PARM *BLANK    WQ0002  6        Batch Date (6 n
+     C           WUERCD    PARM *BLANK    WQ0003  1        Error Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: WRK.Error Code is Error Found
+     C           WUERCD    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#CBDTS    ZA0001           Batch Date Scre
+      * Send message 'Date not valid'
+     C                     MOVEL'GLX0279' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check date entered is valid.
+      * Check Numeric - Standard functions  *
+     C                     MOVE *IN20     UUIN20  1
+     C                     MOVE *IN21     UUIN21  1
+     C           *LIKE     DEFN WUBDTN    UUVLDT+ 1
+     C                     MOVELWUBDTN    UUVLDT
+     C                     MOVE '0'       UUVLDT
+     C                     TESTN          UUVLDT       21
+     C           *IN21     IFEQ '1'
+     C                     MOVEL'0'       UUVLDT
+     C                     END
+     C                     TESTN          UUVLDT     20
+     C           *IN20     IFEQ '0'
+     C                     MOVE '*NUMERR' W0RTN
+     C                     ELSE
+     C                     MOVE *BLANKS   W0RTN
+     C                     END
+     C                     MOVE UUIN20    *IN20
+     C                     MOVE UUIN21    *IN21
+      * CASE: PGM.*Return code is *Numeric Error
+     C           W0RTN     IFEQ '*NUMERR'                  *IF
+      * Setup message data for message
+     C                     MOVEL#CBDTS    ZA0002           Batch Date Scre
+      * Send message 'Date not valid'
+     C                     MOVEL'GLX0279' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Copy VDate Display To Num - Standard functions  *
+     C*
+     C           WUDTFF    IFEQ 'M'                                       090887
+     C                     MOVELWUBDTN    @DD     20                      090887
+     C                     MOVELWUBDTN    @DDMM   40                      090887
+     C                     MOVE @DDMM     @MM     20                      090887
+     C                     MOVEL@MM       @DDMM                           090887
+     C                     MOVE @DD       @DDMM                           090887
+     C                     MOVEL@DDMM     WUBDTN                          090887
+     C                     END                                            090887
+     C                     MOVE *BLANK    UUDNUM                          LN0402
+     C                     MOVE WUBDTN    UUDNUM
+     C                     Z-ADDUUDNUM    WUDTNF
+      * Midas Conv. Date to Day - Standard functions  *
+     C                     CALL 'ZDATE1'               90  Midas Conv. Dat
+     C           W0RTN     PARM W0RTN     WQ0004  7        *Return code
+     C                     PARM WUDTNF    WQ0005  60       Date (numeric f
+     C           WUDTFF    PARM WUDTFF    WQ0006  1        Date Format fla
+     C           WUVLDT    PARM *ZERO     WQ0007  50       Value date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     Z-ADDWUVLDT    #2BEDT           Batch Entry Dat
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           HHBEDT           Batch Entry Dat
+     C                     KFLD           HHBTNB           Batch number
+      * Setup key
+     C           #2BEDT    IFEQ *ZERO
+     C                     Z-ADD*HIVAL    HHBEDT
+     C                     ELSE
+     C                     Z-ADD#2BEDT    HHBEDT           Batch Entry Dat
+     C                     END
+     C                     MOVEL#2BTNB    HHBTNB           Batch number
+     C           KPOS      SETLL@JEHHDI
+     C                     READ @JEHHDI                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2BEDT    WZBEDT
+     C                     MOVEL#2BEDT    WZBEDT           Batch Entry Dat
+     C           *LIKE     DEFN #2WSID    WZWSID
+     C                     MOVEL#2WSID    WZWSID           Workstation id.
+     C           *LIKE     DEFN #2HIIN    WZHIIN
+     C                     MOVEL#2HIIN    WZHIIN           Hash integer in
+     C           *LIKE     DEFN #2HDIN    WZHDIN
+     C                     MOVEL#2HDIN    WZHDIN           Hash decimal in
+     C           *LIKE     DEFN #2HINI    WZHINI
+     C                     MOVEL#2HINI    WZHINI           Hash item no.in
+     C           *LIKE     DEFN #2SHPI    WZSHPI
+     C                     MOVEL#2SHPI    WZSHPI           Shadow post ind
+     C           *LIKE     DEFN #2RAPI    WZRAPI
+     C                     MOVEL#2RAPI    WZRAPI           Retail advice p
+     C           *LIKE     DEFN #2RVVD    WZRVVD
+     C                     MOVEL#2RVVD    WZRVVD           Reversal / Void
+     C           *LIKE     DEFN #2BTNB    WZBTNB
+     C                     MOVEL#2BTNB    WZBTNB           Batch number
+     C           *LIKE     DEFN #2BCDA    WZBCDA
+     C                     MOVEL#2BCDA    WZBCDA           Branch Code - A
+     C           *LIKE     DEFN #2MBRB    WZMBRB
+     C                     MOVEL#2MBRB    WZMBRB           Multiple Branch
+     C           *LIKE     DEFN #2DPCD    WZDPCD
+     C                     MOVEL#2DPCD    WZDPCD           Dept Code
+     C           *LIKE     DEFN #2BDES    WZBDES
+     C                     MOVEL#2BDES    WZBDES           Batch Descripti
+      * Translate search mask for text field
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2BDES    WQBDES           Batch Descripti
+     C                     CALL 'QDCXLATE'
+      * Length
+     C                     PARM 30        WQA5N   50
+     C                     PARM #2BDES    WQBDES           Batch Descripti
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@JEHHDI                  90*
+     C  N82                READ @JEHHDI                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,37
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      **Reset*count*of*DBF*records*read********************************                     AR659451
+     C**********           Z-ADD0         ##RRRD  50                                        AR659451
+      *................................................................
+      **Load*next*SFL*page*until*SFL*page*full,*or*********************                     AR659451
+      **Scan*limit*reached*********************************************                     AR659451
+      ** Load next SFL page until SFL page full                                             AR659451
+      *                                                                                     AR659451
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C********** ##RRRD    ANDLTW0SLM                                                       AR659451
+      * Check selection fields - if fail, read next record
+     C           #2WSID    IFNE *BLANK                     Workstation id.
+     C           HHWSID    CABNE#2WSID    BB020            Workstation id.
+     C                     END
+     C           #2HIIN    IFNE *ZERO                      Hash integer in
+     C           HHHIIN    CABNE#2HIIN    BB020            Hash integer in
+     C                     END
+     C           #2HDIN    IFNE *ZERO                      Hash decimal in
+     C           HHHDIN    CABNE#2HDIN    BB020            Hash decimal in
+     C                     END
+     C           #2HINI    IFNE *ZERO                      Hash item no.in
+     C           HHHINI    CABNE#2HINI    BB020            Hash item no.in
+     C                     END
+     C           #2SHPI    IFNE *BLANK                     Shadow post ind
+     C           HHSHPI    CABNE#2SHPI    BB020            Shadow post ind
+     C                     END
+     C           #2RAPI    IFNE *BLANK                     Retail advice p
+     C           HHRAPI    CABNE#2RAPI    BB020            Retail advice p
+     C                     END
+     C           #2RVVD    IFNE *BLANK                     Reversal / Void
+     C           HHRVVD    CABNE#2RVVD    BB020            Reversal / Void
+     C                     END
+     C           #2BEDT    IFEQ *ZERO                      Batch Entry Dat
+     C           #2BTNB    IFNE *BLANK                     Batch number
+     C           HHBTNB    CABNE#2BTNB    BB020            Batch number
+     C                     END
+     C                     END
+     C           #2BCDA    IFNE *BLANK                     Branch Code - A
+     C           HHBCDA    CABNE#2BCDA    BB020            Branch Code - A
+     C                     END
+     C           #2MBRB    IFNE *BLANK                     Multiple Branch
+     C           HHMBRB    CABNE#2MBRB    BB020            Multiple Branch
+     C                     END
+     C           #2DPCD    IFNE *BLANK                     Dept Code
+     C           HHDPCD    CABNE#2DPCD    BB020            Dept Code
+     C                     END
+     C           #2BDES    IFNE *BLANK                     Batch Descripti
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           HHBDES           Batch Descripti
+      * Length
+     C                     PARM 30        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           WQBDES
+      * Length
+     C                     PARM 30        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * CASE: WRK.Multibranching Indicator is Yes
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Val. Booking Branch/User - Standard functions  *
+     C                     CALL 'ZVBBU'                90  Val. Booking Br
+     C                     PARM #1BCDA    WQ0008  3        Branch code
+     C           WUSPEC    PARM *ZERO     WQ0009  10       SPF Error Condi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: WRK.SPF Error Condition is In Error
+     C           WUSPEC    IFGE 1                          *IF
+     C           WUSPEC    ANDLE3
+     C                     MOVEL'N'       W0RSL            *Record selecte
+     C                     END                             *FI
+     C                     END                             *FI
+      * Midas Conv. Day to Date - Standard functions  *
+     C                     CALL 'ZDATE2'               90  Midas Conv. Day
+     C                     PARM #1BEDT    WQ0010  50       Runday Number
+     C                     PARM WUDTFF    WQ0011  1        Date Format fla
+     C           WUDTNF    PARM *ZERO     WQ0012  60       Date (numeric f
+     C           #RBDTS    PARM *BLANK    WQ0013  7        Midas Run Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      **Increment*scan*check*count*************************************                     AR659451
+     C**********           ADD  1         ##RRRD                                            AR659451
+     C                     READ @JEHHDI                  82*82=EOF
+      *                                                                                       181454
+      ** If maximum subfile size reached, stop writing records to subfile                     181454
+      *                                                                                       181454
+     C           ##RR      IFEQ 9999                                                          181454
+     C                     MOVE '1'       *IN82                                               181454
+     C                     END                                                                181454
+      *                                                                                       181454
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      **If*scan*limit*reached,*display*error*message*******************                     AR659451
+     C********** ##RRRD    IFGE W0SLM                                                       AR659451
+      **Send*message*'*Scan*limit*reached'*****************************                     AR659451
+     C**********           MOVEL'Y2U0017' ZAMSID                                            AR659451
+     C**********           MOVEL'Y2USRMSG'ZAMSGF                                            AR659451
+     C**********           EXSR ZASNMS                                                      AR659451
+     C**********           ELSE                                                             AR659451
+     C                     Z-ADD0         ##RROK
+     C**********           END                                                              AR659451
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSA2
+     C           W0HLP     DOUEQ'N'
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+      *                                                                                       181454
+      ** Display message 'Maximum subfile size reached, use date                              181454
+      ** position field to continue' if 9999th record reached.                                181454
+      *                                                                                       181454
+     C           ##RR      IFEQ 9999                                                          181454
+     C                     MOVEL'Y2U0063' ZAMSID                                              181454
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              181454
+     C                     EXSR ZASNMS                                                        181454
+     C                     END                                                                181454
+      *                                                                                       181454
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8388*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Change of position specified
+     C           WZBTNB    CASNE#2BTNB    FBRQRL
+     C           WZBCDA    CASNE#2BCDA    FBRQRL
+     C           WZMBRB    CASNE#2MBRB    FBRQRL
+     C           WZDPCD    CASNE#2DPCD    FBRQRL
+     C           WZBDES    CASNE#2BDES    FBRQRL
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * Perform position processing if user has changed Date positioner field.
+      * CASE: CTL.Batch Date Screen NE WRK.Store Batch Date Screen
+     C           #CBDTS    IFNE WUSBDS                     *IF
+      * Only reposition file to beginning if user has blanked out date field.
+      * CASE: WRK.File positioned by user? is Yes
+     C           WUFPBU    IFEQ 'Y'                        *IF
+      * User has previously positioned file.
+      * CASE: CTL.Batch Date Screen is Blank
+     C           #CBDTS    IFEQ *BLANK                     *IF
+     C                     Z-ADDWUEBDT    #2BEDT           Batch Entry Dat
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     MOVEL'N'       WUFPBU           File positioned
+     C                     MOVEL#CBDTS    WUSBDS           Store Batch Dat
+     C                     END                             *FI
+     C                     END                             *FI
+      * Ensure screen function field for Batch Entry Date positions correctly.
+      * CASE: CTL.Batch Date Screen is Not blank
+     C           #CBDTS    IFNE *BLANK                     *IF
+     C                     MOVEL'Y'       WUFPBU           File positioned
+     C                     MOVEL#CBDTS    WUSBDS           Store Batch Dat
+      * User enters DDMMMYY (7A) so month must be converted to numeric value.
+      * Convert date (MMM to MM) - Standard functions  *
+     C                     CALL 'GL0105U'              90  Convert date (M
+     C                     PARM #CBDTS    WQ0014  7        Batch Date Scre
+     C           WUBDTN    PARM *BLANK    WQ0015  6        Batch Date (6 n
+     C           WUERCD    PARM *BLANK    WQ0016  1        Error Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: WRK.Error Code is Error Found
+     C           WUERCD    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#CBDTS    ZA0003           Batch Date Scre
+      * Send message 'Date not valid'
+     C                     MOVEL'GLX0279' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check date entered is valid.
+      * Check Numeric - Standard functions  *
+     C                     MOVE *IN20     UUIN20  1
+     C                     MOVE *IN21     UUIN21  1
+     C                     MOVELWUBDTN    UUVLDT
+     C                     MOVE '0'       UUVLDT
+     C                     TESTN          UUVLDT       21
+     C           *IN21     IFEQ '1'
+     C                     MOVEL'0'       UUVLDT
+     C                     END
+     C                     TESTN          UUVLDT     20
+     C           *IN20     IFEQ '0'
+     C                     MOVE '*NUMERR' W0RTN
+     C                     ELSE
+     C                     MOVE *BLANKS   W0RTN
+     C                     END
+     C                     MOVE UUIN20    *IN20
+     C                     MOVE UUIN21    *IN21
+      * CASE: PGM.*Return code is *Numeric Error
+     C           W0RTN     IFEQ '*NUMERR'                  *IF
+      * Setup message data for message
+     C                     MOVEL#CBDTS    ZA0004           Batch Date Scre
+      * Send message 'Date not valid'
+     C                     MOVEL'GLX0279' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Copy VDate Display To Num - Standard functions  *
+     C*
+     C                     MOVE *BLANK    UUDNUM                          LN0402
+     C                     MOVE WUBDTN    UUDNUM
+     C                     Z-ADDUUDNUM    WUDTNF
+      * Midas Conv. Date to Day - Standard functions  *
+     C                     CALL 'ZDATE1'               90  Midas Conv. Dat
+     C           W0RTN     PARM W0RTN     WQ0017  7        *Return code
+     C                     PARM WUDTNF    WQ0018  60       Date (numeric f
+     C           WUDTFF    PARM WUDTFF    WQ0019  1        Date Format fla
+     C           WUVLDT    PARM *ZERO     WQ0020  50       Value date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     Z-ADDWUVLDT    #2BEDT           Batch Entry Dat
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  88*
+     C           *IN88     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+      * Set screen conditioning indicators
+     C                     EXSR GADSA1
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  88*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,37
+     C                     SETOF                     98    *
+      * USER: Process subfile record (Pre-confirm)
+      * Set up SPF Action Code from Subfile Selection
+      * CASE: RCD.*SFLSEL is Blank
+     C           #1SEL     IFEQ *BLANK                     *IF
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: RCD.*SFLSEL is *Print
+     C           #1SEL     IFEQ 'P'                        *IF
+     C                     MOVEL'P'       WUSACD           SPF Action Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'E'       WUSACD           SPF Action Code
+     C                     END                             *FI
+     C                     END                             *FI
+      * Validate Action Code
+      * CASE: WRK.Multibranching Indicator is Yes
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * Validate For a multibranched environment
+      * CASE: RCD.Multiple Branch Batch is Yes
+     C           #1MBRB    IFEQ 'Y'                        *IF
+     C                     Z-ADD*ZERO     WUSPEC           SPF Error Condi
+      * Val. Action Cde & Bch U/P - Standard functions  *
+     C                     CALL 'ZVACTBU'              90  Val. Action Cde
+     C                     PARM WUSACD    WQ0021  1        SPF Action Code
+     C                     PARM #1BCDA    WQ0022  3        Branch code
+     C           WUSPEC    PARM *ZERO     WQ0023  10       SPF Error Condi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * CASE: WRK.SPF Error Condition is No Errors
+     C           WUSPEC    IFEQ *ZERO                      *IF
+     C                     MOVEL#1BTNB    WUBNOP           Batch No Parame
+     C                     MOVEL#1BEDT    WUBEDA                                              261299
+      * ZVACTBU Check on CCY File - Standard functions  *
+     C**********           CALL 'GL0142U'              90  ZVACTBU Check o                    261299
+     C********** WUSPEC    PARM WUSPEC    WQ0024  10       SPF Error Condi                    261299
+     C********** WUSACD    PARM WUSACD    WQ0025  1        SPF Action Code                    261299
+     C********** WUBNOP    PARM WUBNOP    WQ0026  3        Batch No Parame                    261299
+     C                     CALL 'GL0142H'              90                                     261299
+     C           WUSPEC    PARM WUSPEC    WQ0024  10                                          261299
+     C           WUSACD    PARM WUSACD    WQ0025  1                                           261299
+     C           WUBNOP    PARM WUBNOP    WQ0026  3                                           261299
+     C                     PARM           WUBEDA                                              261299
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     END                             *FI
+     C                     MOVEL'Y'       WUBROV           Branch Option V
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: RCD.*SFLSEL is Branch Enquiry
+     C           #1SEL     IFEQ 'B'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0005           *SFLSEL
+      * Send message 'Branch Enquiry Not Valid'
+     C                     MOVEL'GLX0184' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9837  *
+      *
+     C                     MOVEL'N'       WUBROV           Branch Option V
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADD*ZERO     WUSPEC           SPF Error Condi
+      * Val. Action Cde & Bch U/P - Standard functions  *
+     C                     CALL 'ZVACTBU'              90  Val. Action Cde
+     C                     PARM WUSACD    WQ0027  1        SPF Action Code
+     C                     PARM #1BCDA    WQ0028  3        Branch code
+     C           WUSPEC    PARM *ZERO     WQ0029  10       SPF Error Condi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     MOVEL'Y'       WUBROV           Branch Option V
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Validate for a single Branch Environment
+      * CASE: RCD.*SFLSEL is Branch Enquiry
+     C           #1SEL     IFEQ 'B'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1SEL     ZA0006           *SFLSEL
+      * Send message 'Invalid SFLSEL Entered'
+     C                     MOVEL'GLX0185' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9837  *
+      *
+     C                     MOVEL'N'       WUBROV           Branch Option V
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     Z-ADD*ZERO     WUSPEC           SPF Error Condi
+      * Val. Action Cde User/Pgm - Standard functions  *
+     C                     CALL 'ZVACTU'               90  Val. Action Cde
+     C                     PARM WUSACD    WQ0030  1        SPF Action Code
+     C           WUSPEC    PARM *ZERO     WQ0031  10       SPF Error Condi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C                     MOVEL'Y'       WUBROV           Branch Option V
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.SPF Error Condition is No Errors
+     C           WUSPEC    IFEQ *ZERO                      *IF
+      * Enquiry
+      * CASE: RCD.*SFLSEL is *Enquire
+     C           #1SEL     IFEQ 'E'                        *IF
+      * History Currency Enquiry - Journal History Summary  *
+     C                     MOVEL*BLANK    PARC
+     C                     Z-ADD#1BEDT    PABEDT           Batch Entry Dat
+     C                     MOVEL#1BTNB    PABTNB           Batch number
+     C                     MOVEL#1BCDA    PABCDA           Branch Code - A
+     C                     MOVEL#1DPCD    PADPCD           Dept Code
+     C                     MOVEL#1WSID    PAWSID           Workstation id.
+     C                     Z-ADD#1HIIN    PAHIIN           Hash integer in
+     C                     Z-ADD#1HDIN    PAHDIN           Hash decimal in
+     C                     Z-ADD#1HINI    PAHINI           Hash item no.in
+     C                     MOVEL#1SHPI    PASHPI           Shadow post ind
+     C                     MOVEL#1RAPI    PARAPI           Retail advice p
+     C                     MOVEL#1MBRB    PAMBRB           Multiple Branch
+     C                     MOVEL#1RVVD    PARVVD           Reversal / Void
+     C                     MOVEL#1BDES    PABDES           Batch Descripti
+      *
+     C                     CALL 'GL0115D'              90  History Currenc
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             RCD: Journal Hi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+      * Setup message data for message
+     C                     MOVEL#1BTNB    ZA0007           Batch number
+      * Send message 'Batch Displayed'
+     C                     MOVEL'GLX0087' ZAMSID
+     C                     MOVEL'*INFO  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     END                             *FI
+      * Branch Enquiry
+      * CASE: RCD.*SFLSEL is Branch Enquiry
+     C           #1SEL     IFEQ 'B'                        *IF
+      * CASE: WRK.Branch Option Valid is Yes
+     C           WUBROV    IFEQ 'Y'                        *IF
+      * Hist Currency Branch Enq - Journal History Summary  *
+     C                     MOVEL*BLANK    PBRC
+     C                     Z-ADD#1BEDT    PBBEDT           Batch Entry Dat
+     C                     MOVEL#1BTNB    PBBTNB           Batch number
+     C                     MOVEL#1BCDA    PBBCDA           Branch Code - A
+     C                     MOVEL#1DPCD    PBDPCD           Dept Code
+     C                     MOVEL#1WSID    PBWSID           Workstation id.
+     C                     Z-ADD#1HIIN    PBHIIN           Hash integer in
+     C                     Z-ADD#1HDIN    PBHDIN           Hash decimal in
+     C                     Z-ADD#1HINI    PBHINI           Hash item no.in
+     C                     MOVEL#1SHPI    PBSHPI           Shadow post ind
+     C                     MOVEL#1RAPI    PBRAPI           Retail advice p
+     C                     MOVEL#1MBRB    PBMBRB           Multiple Branch
+     C                     MOVEL#1RVVD    PBRVVD           Reversal / Void
+     C                     MOVEL#1BDES    PBBDES           Batch Descripti
+      *
+     C                     CALL 'GL0114D'              90  Hist Currency B
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             RCD: Journal Hi
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+      * Setup message data for message
+     C                     MOVEL#1BTNB    ZA0008           Batch number
+      * Send message 'Batch Displayed'
+     C                     MOVEL'GLX0087' ZAMSID
+     C                     MOVEL'*INFO  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Print Request
+      * CASE: RCD.*SFLSEL is *Print
+     C           #1SEL     IFEQ 'P'                        *IF
+      * Submit report GL0125P
+      * Submit Sgl Batch (Hist).
+      * Submit the Single Batch Report for History file to Batch.
+     C                     MOVEL*BLANK    WUBEDA           Batch Entry Dat
+     C                     MOVEL#1BEDT    WUBEDA           Batch Entry Dat
+      * Setup message data for message
+     C                     MOVELWUBEDA    ZA0009           Batch Entry Dat
+     C                     MOVEL#1BTNB    ZA0010           Batch number
+      * Retrieve message Setup Bch,Date - Hist Rpt
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'GLX0277' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUCPAR    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+      * Call FC0040X RCF Submit - Standard functions  *
+     C                     CALL 'FC0040X'              90  Call FC0040X RC
+     C                     PARM WURTN     WQ0032  7        *Return code
+     C                     PARM 'GL0125'  WQ0033 10        Calling Program
+     C                     PARM 'GL0102C' WQ0034 10        CL Controlling
+     C                     PARM '10001'   WQ0035  5        CL Sequence Num
+     C                     PARM WUCPAR    WQ0036100        Calling Paramet
+     C                     PARM WUMLBI    WQ0037  1        Multi-Branching
+     C                     PARM 'S'       WQ0038  1        Level
+     C                     PARM *BLANK    WQ0039  3        Entity
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Setup message data for message
+     C                     MOVEL#1BTNB    ZA0011           Batch number
+      * Send message 'Batch Printed'
+     C                     MOVEL'GLX0086' ZAMSID
+     C                     MOVEL'*INFO  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Reset SPF Action Code for a Branch Enquiry
+      * CASE: RCD.*SFLSEL is Branch Enquiry
+     C           #1SEL     IFEQ 'B'                        *IF
+     C                     MOVEL'B'       WUSACD           SPF Action Code
+     C                     END                             *FI
+      * Process SPF Action Code Erorrs
+      * CASE: WRK.Multibranching Indicator is Yes
+     C           WUMBIN    IFEQ 'Y'                        *IF
+      * CASE: WRK.SPF Error Condition is One
+     C           WUSPEC    IFEQ 1                          *IF
+      * Setup message data for message
+     C                     MOVEL#1BCDA    ZA0012           Branch Code - A
+      * Send message 'SPF Atn Cde ERR 1 ZVACTBU'
+     C                     MOVEL'GLX0186' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     98    *
+      *
+     C                     ELSE
+      * CASE: WRK.SPF Error Condition is Two
+     C           WUSPEC    IFEQ 2                          *IF
+      * Setup message data for message
+     C                     MOVELWUSACD    ZA0013           SPF Action Code
+     C                     MOVEL#1BCDA    ZA0014           Branch Code - A
+     C                     MOVEL#1SEL     ZA0015           *SFLSEL
+      * Send message 'SPF Atn Cde ERR 4 ZVACTBU'
+     C                     MOVEL'GLX0191' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9837  *
+      *
+     C                     ELSE
+      * CASE: WRK.SPF Error Condition is Three
+     C           WUSPEC    IFEQ 3                          *IF
+      * Setup message data for message
+     C                     MOVELWUSACD    ZA0016           SPF Action Code
+     C                     MOVEL#1BTNB    ZA0017           Batch number
+     C                     MOVEL#1SEL     ZA0018           *SFLSEL
+      * Send message 'SPF Atn Cde ERR 3 ZVACTBU'
+     C                     MOVEL'GLX0190' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9837  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: WRK.SPF Error Condition is One
+     C           WUSPEC    IFEQ 1                          *IF
+      * Setup message data for message
+     C                     MOVELWUSACD    ZA0019           SPF Action Code
+      * Send message 'SPF Atn Cde ERR 2 ZVACTBU'
+     C                     MOVEL'GLX0188' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     98    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record
+      *================================================================
+     C                     MOVEL'0'       *IN78
+     C           WUMBIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control
+      *================================================================
+     C                     MOVEL'0'       *IN79
+     C           WUMBIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @JEHHDI fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     Z-ADDHHBEDT    #1BEDT           Batch Entry Dat
+     C                     MOVELHHWSID    #1WSID           Workstation id.
+     C                     Z-ADDHHHIIN    #1HIIN           Hash integer in
+     C                     Z-ADDHHHDIN    #1HDIN           Hash decimal in
+     C                     Z-ADDHHHINI    #1HINI           Hash item no.in
+     C                     MOVELHHSHPI    #1SHPI           Shadow post ind
+     C                     MOVELHHRAPI    #1RAPI           Retail advice p
+     C                     MOVELHHRVVD    #1RVVD           Reversal / Void
+     C                     MOVELHHBTNB    #1BTNB           Batch number
+     C                     MOVELHHBCDA    #1BCDA           Branch Code - A
+     C                     MOVELHHMBRB    #1MBRB           Multiple Branch
+     C                     MOVELHHDPCD    #1DPCD           Dept Code
+     C                     MOVELHHBDES    #1BDES           Batch Descripti
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     MOVEL*BLANK    #RBDTS           Batch Date Scre
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     Z-ADD*ZERO     #2BEDT           Batch Entry Dat
+     C                     MOVEL*BLANK    #2WSID           Workstation id.
+     C                     Z-ADD*ZERO     #2HIIN           Hash integer in
+     C                     Z-ADD*ZERO     #2HDIN           Hash decimal in
+     C                     Z-ADD*ZERO     #2HINI           Hash item no.in
+     C                     MOVEL*BLANK    #2SHPI           Shadow post ind
+     C                     MOVEL*BLANK    #2RAPI           Retail advice p
+     C                     MOVEL*BLANK    #2RVVD           Reversal / Void
+     C                     MOVEL*BLANK    #CBDTS           Batch Date Scre
+     C                     MOVEL*BLANK    #2BTNB           Batch number
+     C                     MOVEL*BLANK    #2BCDA           Branch Code - A
+     C                     MOVEL*BLANK    #2MBRB           Multiple Branch
+     C                     MOVEL*BLANK    #2DPCD           Dept Code
+     C                     MOVEL*BLANK    #2BDES           Batch Descripti
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve Earliest Date - Journal History Header  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KPSSA     KLIST
+     C                     KFLD           WABEDT           Batch Entry Dat
+      * Move fields to key list
+     C                     Z-ADDWUEBDT    WABEDT           Batch Entry Dat
+     C           KPSSA     SETLL@BEREDB                    *
+     C                     READ @BEREDB                  90*
+     C           *IN90     IFEQ '1'
+      * DBF record not found
+     C                     MOVEL'GLX0262' W0RTN   7
+      * USER: Processing if DBF record not found
+     C                     Z-ADD99999     WUEBDT           Batch Entry Dat
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process DBF record
+     C                     Z-ADDWABEDT    WUEBDT           Batch Entry Dat
+     C                     READ @BEREDB                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'GL0105D#'W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Earliest Batch Date
+     C                     Z-ADD*ZERO     WUEBDT  50
+      * Define work field File positioned by user?
+     C                     MOVEL*BLANK    WUFPBU  1
+      * Define work field Store Batch Date Screen
+     C                     MOVEL*BLANK    WUSBDS  7
+      * Define work field Batch Date (6 numeric)
+     C                     MOVEL*BLANK    WUBDTN  6
+      * Define work field Error Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN MIMGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Date (numeric format)
+     C                     Z-ADD*ZERO     WUDTNF  60
+      * Define work field Date Format flag
+     C                     MOVEL*BLANK    WUDTFF  1
+      * Define work field Value date
+     C                     Z-ADD*ZERO     WUVLDT  50
+      * Define work field Multibranching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field SPF Error Condition
+     C                     Z-ADD*ZERO     WUSPEC  10
+      * Define work field SPF Action Code
+     C                     MOVEL*BLANK    WUSACD  1
+      * Define work field Batch No Parameter
+     C                     MOVEL*BLANK    WUBNOP  3
+      * Define work field Branch Option Valid
+     C                     MOVEL*BLANK    WUBROV  1
+      * Define work field Batch Entry Date Alpha
+     C                     MOVEL*BLANK    WUBEDA  5
+      * Define work field Calling Parameters
+     C                     MOVEL*BLANK    WUCPAR100
+      * Define work field *Return code
+     C                     MOVEL*BLANK    WURTN   7
+      * Define work field Multi-Branching indicator
+     C                     MOVEL*BLANK    WUMLBI  1
+      * Define work field Midas Rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Runday Number
+     C                     Z-ADD*ZERO     WURDNO  50
+      * Define work field Setup Complete
+     C                     MOVEL*BLANK    WUSUCP  1
+      * Define work field User
+     C                     MOVEL*BLANK    WUUSID 10
+      * Define work field User Default Branch Code
+     C                     MOVEL*BLANK    WUUDBC  3
+      * Define work field User Default Department
+     C                     MOVEL*BLANK    WUUDDP  3
+      * Define work field User Bank Level Authority
+     C                     MOVEL*BLANK    WUUBLA  1
+     C                     Z-ADD15        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      **Scan*limit*****************************************************                     AR659451
+     C**********           Z-ADD500       W0SLM   50                                        AR659451
+      *................................................................
+      * USER: Initialise program
+      * Standard RPG Creation Par - Standard functions  *
+      * Copyright notice - Standard functions  *
+      * Last Amend Box - GL0105D - Journal History Header  *
+      * Access Midas rundate - Standard functions  *
+     C*   Access MIDAS Rundate from data-area RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE RDNO      WURDNO
+     C                     MOVE SUCP      WUSUCP
+     C                     MOVE DTFF      WUDTFF
+     C                     MOVE MBIN      WUMBIN
+      * Start of Fix E27263
+     C                     MOVELWUMBIN    WUMLBI           Multi-Branching
+      * End of Fix E27263
+      * Access ZMUSER - Standard functions  *
+     C*
+     C* Access data-area ZMUSER
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C                     MOVE USID      WUUSID           User Profile
+     C                     MOVE UDBC      WUUDBC           User Def Branch
+     C                     MOVE UDDP      WUUDDP           User Def Dept
+     C                     MOVE UBLA      WUUBLA           User Bank Lvl A
+      * Screen Footer (History) - Standard functions  *
+     C           WUMBIN    IFEQ 'Y'
+     C                     MOVEALNE,1     ##CTX1                          S01229
+     C                     ELSE
+     C                     MOVEALNE,2     ##CTX1                          S01229
+     C                     END
+     C                     MOVEL'Y'       WUFPBU           File positioned
+     C                     Z-ADD*ZERO     WUEBDT           Earliest Batch
+      * Retrieve Earliest Date - Journal History Header  *
+     C                     EXSR SARVGN
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**
+B=Branch Enquiry   E=Enquire   P=Print   F3=Main Menu   F5=Refresh
+E=Enquire   P=Print   F3=Main Menu   F5=Refresh

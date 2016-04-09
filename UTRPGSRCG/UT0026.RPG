@@ -1,0 +1,599 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Compare Message files')
+/*OVR *  OVRDBF FILE(CMPMSGF1) TOFILE(*LIBL/UTDSPMPD)                 *
+/*OVR *  OVRDBF FILE(CMPMSGF2) TOFILE(*LIBL/UTDSPMPD)                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - UT Module                                            *
+      *                                                               *
+      *  UT0026 - Compare message files                               *
+      *                                                               *
+      *  Called By: UTC0025                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK018  *MOVED     Date 25Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CUP002 *CREATE     Date 08Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK018 - MidasPlus packaging.  Moved to global layer.        *
+      *  CUP002 - Message files utilities                             *
+      *                                                               *
+      *****************************************************************
+      *
+      * Use of indicators
+      * 41 - Overflow exists in base file
+      * 42 - Overflow exists in compar file
+      * 60 - Base and compare messages are different - all except HLPT
+      * 61 - Base and compare messages are different - HLPT only
+      * 91 - No messages found in base file
+      * 92 - No messages found in compare file
+      *
+      *****************************************************************
+      *
+     FCMPMSGF1IF  E           K        DISK
+     FCMPMSGF2IF  E           K        DISK
+     F            UTDSPMD0                          KRENAMEUTDSPMD1
+     FUTCMPMPDO   E           K        DISK                           UC
+      *
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     I              '***File Summary***'  C         SUMTXT
+      *
+      * Data Structure to convert DSPMSGF record format to CMPMSGF
+      * record format, & to enable block move & compare operations.
+      * (HLPDTA has to be declared separately as it is too long to be
+      * defined either as a field or as a data structure sub-field)
+     IMSGINF    E DSUTCMPML0
+     I                                        2  11 DMFILE
+     I                                       12  21 DMLIBR
+     I                                       32  38 DMMIDR
+     I                                       39 188 DMMSGT
+     I                                      729 752 DMSUB1
+     I                                      753 776 DMSUB2
+     I                                      777 800 DMSUB3
+     I                                      801 824 DMSUB4
+     I                                      825 848 DMSUB5
+     I                                      849 908 DMDFTT
+     I                                      909 9120DMBYTR
+     I                                      913 9160DMBYTA
+     I                                      917 9200DMMSEV
+     I                                      921 9240DMAIND
+     I                                      925 933 DMAOPT
+     I                                      934 934 DMLIND
+     I                                      935 9390DMCCSS
+     I                                      940 9440DMCCSR
+     I                                      945 9490DMCCST
+     I                                      950 9530DMDFTO
+     I                                      954 9570DMDFTL
+     I                                      958 9610DMDFTA
+     I                                      962 9650DMMSGO
+     I                                      966 9690DMMSGL
+     I                                      970 9730DMMSGA
+     I                                      974 9770DMHLPO
+     I                                      978 9810DMHLPL
+     I                                      982 9850DMHLPA
+     I                                      986 9890DMSUBO
+     I                                      990 9930DMSUBL
+     I                                      994 9970DMSUBA
+     I                                      99810010DMSFMT
+     I                                     100210050DMFMTL
+     I                                     100610100DMFINO
+     I                                     101110150DMMGNO
+     I                                     101610200DMMOFL
+     I                                     102110250DMHOFL
+     I                                     102610300DMSOFL
+     I                                     103110350DMDOFL
+     I                                     103610400DMTOTL
+     I                                     101110400BFINFO
+     I                                     104610750CFINFO
+      * Set up Help text as separate DS - input
+     IDMHLPT      DS                            540
+      *
+      * Set up Help text as separate DS - output
+     ICMHLPT      DS                            540
+      *
+      * Temporary storage for message information from base file
+     IMSGIN1      DS
+     I                                        2  11 FILE1
+     I                                       12  21 LIB1
+     I                                        1  31 FLIB1
+     I                                       32  38 ID1
+     I                                     101110150BMSGNO
+     I                                     103610400BMTOTC
+     I                                     101110400BFINF1
+      *
+     ICMHLP1      DS                            540
+      *
+      * Temporary storage for message information from compare file
+     IMSGIN2      DS
+     I                                        2  11 FILE2
+     I                                       22  31 LIB2
+     I                                        1  31 FLIB2
+     I                                       32  38 ID2
+     I                                     104610500CMSGNO
+     I                                     107110750CMTOTC
+     I                                     104610750CFINF1
+      *
+     ICMHLP2      DS                            540
+      *
+      * Storage for comparison strings
+     ICOMP1       DS                           1000
+     ICOMP2       DS                           1000
+      *
+      **************************************************************************
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      * Parameters passed to program
+     C           *ENTRY    PLIST
+     C                     PARM           MATCH   8        *SING *MULT ILE
+      *
+     C                     OPEN UTCMPMPD
+      *
+      * Find first message file names in base and compare files and
+      * move initial values to temporary storage
+     C                     READ CMPMSGF1                 91
+     C           *IN91     IFEQ *OFF
+     C                     EXSR TEMP1
+     C                     ENDIF
+      *
+     C                     CLEARMSGINF
+     C                     READ CMPMSGF2                 92
+     C           *IN92     IFEQ *OFF
+     C                     EXSR TEMP2
+     C                     ENDIF
+      *
+      * If match = SINGLE skip direct to GETDTA subroutine
+     C           MATCH     IFEQ 'SINGLE'                   B01
+     C                     EXSR GETDTA
+     C                     MOVE *ON       *IN91
+     C                     MOVE *ON       *IN92
+     C                     ENDIF
+      *
+      * Loop through both files to find matching message files
+      * until end of either file
+     C           *IN91     DOWEQ*OFF                       D01
+     C           *IN92     ANDEQ*OFF
+      *
+      * If message file found in base file is not found in compare
+      * file, write, then get next message file in base file
+     C           *IN91     DOWEQ*OFF                       D02
+     C           FILE1     ANDLTFILE2
+      *
+      * Get file details
+     C                     CLEARMSGINF
+     C           FILE1     SETGTCMPMSGF1
+     C                     READPCMPMSGF1                 91
+     C                     EXSR TEMP1
+      *
+     C                     MOVE 'B'       TYPE    1
+     C                     EXSR WRITE1
+      *
+      * Get next file name
+     C                     CLEARMSGINF
+     C                     READ CMPMSGF1                 91
+     C                     EXSR TEMP1
+      *
+     C                     ENDDO                           ED02
+      *
+      * If message file found in compare file is not found in base
+      * file, write, then get next message file in compare file.
+     C           *IN92     DOWEQ*OFF                       D02
+     C           FILE2     ANDLTFILE1
+      *
+      * Get file details
+     C                     CLEARMSGINF
+     C           FILE2     SETGTCMPMSGF2
+     C                     READPCMPMSGF2                 92
+     C                     EXSR TEMP2
+      *
+     C                     MOVE 'C'       TYPE
+     C                     EXSR WRITE2
+      *
+      * Get next file name
+     C                     CLEARMSGINF
+     C                     READ CMPMSGF2                 92
+     C                     EXSR TEMP2
+      *
+     C                     ENDDO                           ED02
+      *
+      * If message file is found in both files, and in different
+      * libraries, compare all messages in both files.
+     C           FILE1     IFEQ FILE2                      B01
+     C                     EXSR GETDTA
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO                           ED01
+      *
+      * If compare file is finished but not base file get remaining
+      * message files from base file
+     C           *IN91     DOWEQ*OFF                       D01
+     C           *IN92     ANDEQ*ON
+      *
+      * Get file details
+     C                     CLEARMSGINF
+     C           FILE1     SETGTCMPMSGF1
+     C                     READPCMPMSGF1                 91
+     C                     EXSR TEMP1
+      *
+     C                     MOVE 'B'       TYPE
+     C                     EXSR WRITE1
+      *
+      * Get next file name
+     C                     CLEARMSGINF
+     C                     READ CMPMSGF1                 91
+     C                     EXSR TEMP1
+      *
+     C                     ENDDO                           ED01
+      *
+      * If base file is finished but not compare file get remaining
+      * message files from compare file
+     C           *IN92     DOWEQ*OFF                       D01
+     C           *IN91     ANDEQ*ON
+      *
+      * Get file details
+     C                     CLEARMSGINF
+     C           FILE2     SETGTCMPMSGF2
+     C                     READPCMPMSGF2                 92
+     C                     EXSR TEMP2
+      *
+     C                     MOVE 'C'       TYPE
+     C                     EXSR WRITE2
+      *
+      * Get next file name
+     C                     CLEARMSGINF
+     C                     READ CMPMSGF2                 92
+     C                     EXSR TEMP2
+      *
+     C                     ENDDO                           ED01
+      *
+     C                     CLOSEUTCMPMPD
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+     C           GETDTA    BEGSR
+     C                     CLEARTYPE
+     C                     Z-ADD0         WRITES  50
+     C                     Z-ADD0         BMTOTP  50
+     C                     Z-ADD0         CMTOTP  50
+      *
+      * Loop through both message files until one or other empty, then
+      * get remaining messages from open file
+     C           *IN91     DOWEQ*OFF                       D01
+     C           *IN92     ANDEQ*OFF                       D01
+      *
+      * If base message ID is less than compare message ID, message has
+      * been deleted from compare file.  Write if not found, then get
+      * next message
+     C           *IN91     DOWEQ*OFF                       D01
+     C           ID1       ANDLTID2
+      *
+     C                     MOVE 'D'       TYPE
+     C                     EXSR WRITE1
+      *
+     C                     CLEARMSGINF
+     C           FILE1     READECMPMSGF1               9191
+     C           *IN91     IFEQ *OFF
+     C                     EXSR TEMP1
+     C                     ENDIF                           ED01
+      *
+     C                     ENDDO                           ED01
+      *
+      * If compare message ID is less than base message ID, message has
+      * been inserted into compare file.  Write if not found, then get
+      * next message
+     C           *IN92     DOWEQ*OFF                       D01
+     C           ID2       ANDLTID1
+      *
+     C                     MOVE 'I'       TYPE
+     C                     EXSR WRITE2
+      *
+     C                     CLEARMSGINF
+     C           FILE2     READECMPMSGF2               9292
+     C           *IN92     IFEQ *OFF
+     C                     EXSR TEMP2
+     C                     ENDIF                           ED01
+      *
+     C                     ENDDO                           ED01
+      *
+      * If there are still messages in file, compare matching IDs and
+      * write if different
+     C           ID1       DOWEQID2                        B01
+     C           *IN91     ANDEQ*OFF
+     C           *IN92     ANDEQ*OFF
+      *
+      * Compare all data retrieved from message files - excluding
+      * non-message variables (File/Library name, message counters etc)
+     C                     MOVE *OFF      *IN60
+     C                     CLEARCOMP1
+     C                     CLEARCOMP2
+     C                     Z-ADD1005      FIN     50
+     C                     Z-ADD32        S       50
+     C                     SUB  S         FIN
+     C           FIN       SUBSTMSGIN1:S  COMP1
+     C           FIN       SUBSTMSGIN2:S  COMP2
+     C           COMP1     COMP COMP2                    60
+     C           CMHLP1    COMP CMHLP2                   61
+      *
+     C           *IN60     IFEQ *OFF                       B02
+     C           *IN61     OREQ *OFF                       B02
+     C                     MOVE 'A'       TYPE
+     C                     EXSR WRITE1
+     C                     EXSR WRITE2
+     C                     ELSE
+     C                     EXSR OFLOW1
+     C                     EXSR OFLOW2
+     C                     ENDIF                           E02
+      *
+      * Get next messages from same message file from both files
+     C                     CLEARMSGINF
+     C           FILE1     READECMPMSGF1               9191
+     C           *IN91     IFEQ *OFF
+     C                     EXSR TEMP1
+     C                     ENDIF                           E01
+      *
+     C                     CLEARMSGINF
+     C           FILE2     READECMPMSGF2               9292
+     C           *IN92     IFEQ *OFF
+     C                     EXSR TEMP2
+     C                     ENDIF                           E01
+      *
+     C                     ENDDO                           E01
+      *
+     C                     ENDDO                           E01
+      *
+      * If compare file is finished but not base file get remaining
+      * messages from base file
+     C           *IN91     DOWEQ*OFF                       D01
+     C           *IN92     ANDEQ*ON
+      *
+     C                     MOVE 'D'       TYPE
+     C                     EXSR WRITE1
+      *
+     C                     CLEARMSGINF
+     C           FILE1     READECMPMSGF1               9191
+     C           *IN91     IFEQ *OFF
+     C                     EXSR TEMP1
+     C                     ENDIF                           ED01
+      *
+     C                     ENDDO                           ED01
+      *
+      * If base file is finished but not compare file get remaining
+      * messages from compare file
+     C           *IN92     DOWEQ*OFF                       D01
+     C           *IN91     ANDEQ*ON
+      *
+     C                     MOVE 'I'       TYPE
+     C                     EXSR WRITE2
+      *
+     C                     CLEARMSGINF
+     C           FILE2     READECMPMSGF2               9292
+     C           *IN92     IFEQ *OFF
+     C                     EXSR TEMP2
+     C                     ENDIF                           ED01
+      *
+     C                     ENDDO                           ED01
+      *
+      * Get basic file information & file summaries
+     C                     CLEARMSGINF
+     C                     CLEARCMHLPT
+     C                     MOVELFILE1     CMFILE
+     C                     MOVELLIB1      CMLIB1
+     C                     MOVELLIB2      CMLIB2
+     C                     MOVELBFINF1    BFINFO
+     C                     MOVELCFINF1    CFINFO
+      *
+      * If WRITES is zero, nothing has been saved, therefore the files
+      * are identical. Write file summary.
+     C           WRITES    IFEQ 0
+     C                     MOVE 'X'       CMTYPE
+     C                     WRITEUTCMPMD0
+     C                     ELSE
+      *
+      * Otherwise, if differences have been found, write file summary.
+      * (To ensure that details of last messages in files are written)
+     C                     MOVE 'S'       CMTYPE
+     C                     MOVE '0000000' CMMIDR
+     C                     MOVELSUMTXT    CMMSGT
+     C                     WRITEUTCMPMD0
+     C                     ENDIF
+      *
+      * Reset base file and compare file
+     C                     MOVE *OFF      *IN91
+     C                     MOVE *OFF      *IN92
+     C                     CLEARMSGINF
+     C           FILE1     SETGTCMPMSGF1
+     C                     READ CMPMSGF1                 91
+     C                     EXSR TEMP1
+      *
+     C                     CLEARMSGINF
+     C           FILE2     SETGTCMPMSGF2
+     C                     READ CMPMSGF2                 92
+     C                     EXSR TEMP2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * TEMP1 - Move data from base file to temporary storage
+      *
+      *****************************************************************
+      *
+     C           TEMP1     BEGSR
+      *
+     C                     CLEARMSGIN1
+     C                     MOVELMSGINF    MSGIN1
+      *
+     C                     CLEARCMHLP1
+     C                     MOVELDMHLPT    CMHLP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * TEMP2 - Move data from compare file to temporary storage
+      *
+      *****************************************************************
+      *
+     C           TEMP2     BEGSR
+      *
+      * Move file information to Compare file fields
+     C                     MOVELDMLIBR    CMLIB2
+     C                     MOVELBFINFO    CFINFO
+     C                     CLEARDMLIBR
+     C                     CLEARBFINFO
+      *
+     C                     CLEARMSGIN2
+     C                     MOVELMSGINF    MSGIN2
+      *
+     C                     CLEARCMHLP2
+     C                     MOVELDMHLPT    CMHLP2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * WRITE1 - Process base file and write
+      *
+      *****************************************************************
+      *
+     C           WRITE1    BEGSR
+      *
+      * Get basic file information & file summaries
+     C                     CLEARMSGINF
+     C                     CLEARCMHLPT
+     C                     MOVELFILE1     CMFILE
+     C                     MOVELLIB1      CMLIB1
+     C                     ADD  BMSGNO    CMMNO1
+      *
+      * If TYPE = Insertion, Amendment, or Deletion show all details.
+     C           TYPE      IFEQ 'I'
+     C           TYPE      OREQ 'A'
+     C           TYPE      OREQ 'D'
+     C                     MOVELMSGIN1    MSGINF
+     C                     MOVELCMHLP1    CMHLPT
+     C                     CLEARCFINFO
+     C                     ENDIF
+      *
+     C                     MOVE TYPE      CMTYPE
+     C                     WRITEUTCMPMD0
+     C                     ADD  1         WRITES
+      *
+      * If TYPE = Insertion, Amendment, or Deletion check overflow
+     C           TYPE      IFEQ 'I'
+     C           TYPE      OREQ 'A'
+     C           TYPE      OREQ 'D'
+     C                     EXSR OFLOW1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * WRITE2 - Process compare file and write
+      *
+      *****************************************************************
+      *
+     C           WRITE2    BEGSR
+      *
+      * Get basic file information & file summaries
+     C                     CLEARMSGINF
+     C                     CLEARCMHLPT
+     C                     MOVELFILE2     CMFILE
+     C                     MOVELLIB2      CMLIB2
+     C                     ADD  CMSGNO    CMMNO2
+      *
+      * If TYPE = Insertion, Amendment, or Deletion show all details.
+     C           TYPE      IFEQ 'I'
+     C           TYPE      OREQ 'A'
+     C           TYPE      OREQ 'D'
+     C                     MOVELMSGIN2    MSGINF
+     C                     MOVELCMHLP2    CMHLPT
+     C                     CLEARBFINFO
+     C                     ENDIF
+      *
+     C                     MOVE TYPE      CMTYPE
+     C                     WRITEUTCMPMD0
+     C                     ADD  1         WRITES
+      *
+      * If TYPE = Insertion, Amendment, or Deletion check overflow
+     C           TYPE      IFEQ 'I'
+     C           TYPE      OREQ 'A'
+     C           TYPE      OREQ 'D'
+     C                     EXSR OFLOW2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * OFLOW1 - Check whether all message details have been retrieved
+      *          from base file
+      *
+      *****************************************************************
+      *
+     C           OFLOW1    BEGSR
+      *
+      * Compare current overflow total with previously saved one
+     C           BMTOTC    COMP BMTOTP               41
+      *
+     C           *IN41     IFEQ *ON
+     C                     CLEARMSGINF
+     C                     CLEARCMHLPT
+     C                     MOVELMSGIN1    MSGINF
+     C                     MOVELCMHLP1    CMHLPT
+     C                     MOVE 'O'       CMTYPE
+      *
+     C                     WRITEUTCMPMD0
+     C                     MOVE *OFF      *IN41
+     C                     MOVE ' '       CMTYPE
+     C                     Z-ADDBMTOTC    BMTOTP
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * OFLOW2 - Check whether all message details have been retrieved
+      *          from compare file
+      *
+      *****************************************************************
+      *
+     C           OFLOW2    BEGSR
+      *
+      * Compare current overflow total with previously saved one
+     C           CMTOTC    COMP CMTOTP               42
+      *
+     C           *IN42     IFEQ *ON
+     C                     CLEARMSGINF
+     C                     CLEARCMHLPT
+     C                     MOVELMSGIN2    MSGINF
+     C                     MOVELCMHLP2    CMHLPT
+     C                     MOVE 'O'       CMTYPE
+      *
+     C                     WRITEUTCMPMD0
+     C                     MOVE *OFF      *IN42
+     C                     MOVE ' '       CMTYPE
+     C                     Z-ADDCMTOTC    CMTOTP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,813 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - ICI Component')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RE4006 - ICI Component                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. AR1026473          Date 24Aug12               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 244324             Date 18Dec09               *
+      *                 231583             Date 18Dec09               *
+      *                 220095             Date 18Dec09               *
+      *                 227320             Date 18Dec09               *
+      *                 227316             Date 18Dec09               *
+      *                 223609             Date 18Dec09               *
+      *                 209008             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 118466             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  AR1026473 - MPHAS was checked before retrieving its value.   *
+      *              Fix is to move codes for MPHAS checking.         *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  244324  - Ensure that end date from previous record is       *
+      *            passed on.                                         *
+      *  231583  - Balance not updated for credit only threshold rate.*
+      *  227320 - Periods are not rolling over correctly              *
+      *  220095 - Impossible to enquire on account beyond Period and  *
+      *           Penalty                                             *
+      *  227316 - Next Cap dates are not being advanced correctly     *
+      *  223609 - Next Cap date not being set up for a new account    *
+      *  209008 - Interest Notifications not being dropped. Use A5RTDI*
+      *           field in SDACODX1 if E3RTDE in RENVMVPP is blank.   *
+      *           /Copy added RE4006MK01, RE4006MK02.                 *
+      *  BUG27460 - Applied client fix EPK041 EPK040 EEE015 AS0001    *
+      *             AH0002                                            *
+      *  EPK041 - Term and Notice Threshold rates method.             *
+      *  EPK040 - Term Frequency:                                     *
+      *           Add number of months field.                         *
+      *  118466 - Various changes to solve problems with accrued int. *
+      *  EEE015 - Retention of Notifications                          *
+      *  AS0001 - More dets reqd when converting BAL to actual amount *
+      *  AH0002 - Rework if only 'Z' record on file with value date   *
+      *           eqal to run date                                    *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+      *
+     FGLPPOSPDIF  E                    DISK
+     FREPRPNPDIF  E           K        DISK
+     FRENFMVPDIF  E           K        DISK
+     FRE4006AUO   E             89     PRINTER                                                118466
+      *
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      244 246 WSID
+     I                                      254 263 SUSER
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Parameters
+      *
+     IACFMT     E DSACCNTAB                                                                   EEE015
+      *
+      ** Account details                                                                      EEE015
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Bank details
+      *
+     IJNSTAT    E DSJNSTAT                                                                    118466
+      *                                                                                       118466
+      ** Journal details (for previous run date)                                              118466
+      *                                                                                       AS0001
+     I              'TERMINATE'           C         CFMTP1                                    AS0001
+     I              'INTEREST '           C         CFMTP2                                    AS0001
+     I              'USER     '           C         CFMTP3                                    AS0001
+      *                                                                                       118466
+     I              'TERM_MAT_TODAY'      C         CON1                                118466223609
+     I              'PRD_MAT_TODAY'       C         CON2                                118466223609
+     I              'RECHECK_TERMINATION' C         CON3                                      118466
+     I              'NEW_DR_CAP_PRD_TODAY'C         CON5                                      118466
+     I              'NEW_CR_CAP_PRD_TODAY'C         CON6                                      118466
+     I              'NEW_PRD_TODAY'       C         CON7                                      227320
+      *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      ** Apply interest to be notified for deposit/ withdrawal
+      *
+     C                     EXSR DOINT
+      *
+      ** Update P+P details
+      *
+     C                     EXSR DOPP
+      *
+      ** Update Notification details
+      *
+     C                     EXSR DONOTI
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  DOINT: Process Interest                                      *
+      *                                                               *
+      *****************************************************************
+     C           DOINT     BEGSR
+      *
+      ** Read through all interest postings
+      *
+     C                     Z-ADD1         RRRN    80
+      *
+     C           RRRN      CHAINGLPPOSPD             71
+      *
+     C           *IN71     DOWEQ'0'
+      *
+     C                     MOVELACNO      E2KEY1    P                                         EEE015
+      *
+      ** (CR interest requires notif of DR withdrawal, and vice versa)
+      *
+     C           DRCR      IFEQ 0
+     C                     MOVEL'C'       PDC01
+     C                     MOVEL'C'       PDC02
+     C                     ELSE
+     C                     MOVEL'D'       PDC01
+     C                     MOVEL'D'       PDC02
+     C                     END
+      *
+     C                     Z-ADDPSTA      PREAM
+     C                     Z-ADDPSTA      PCAVL
+     C                     Z-ADDPSTD      PRECD
+      *
+     C                     CALL 'RE4012'
+     C                     PARM '*ADDINT' PWMODE  7
+     C                     PARM E2KEY1    PKEY1  24
+     C                     PARM *BLANKS   PTRR1   8
+     C                     PARM           PREAM  150
+     C                     PARM           PDC01   1
+     C                     PARM           PCAVL  150
+     C                     PARM           PDC02   1
+     C                     PARM 0         PDEFF   50
+     C                     PARM           PRECD   50
+     C                     PARM 0         PHISB  150
+     C                     PARM 'D'       PDC03   1
+     C                     PARM -2        PRTDE   20                                          EEE015
+      *
+     C                     COMIT
+      *
+     C                     ADD  1         RRRN
+     C           RRRN      CHAINGLPPOSPD             71
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DOPP: Process Penalty                                        *
+      *                                                               *
+      *****************************************************************
+     C           DOPP      BEGSR
+      *
+      ** Read first period set/session to see if maturity before today
+      *
+     C                     MOVEL*ON       *IN89                                               118466
+     C                     Z-ADD0         W0NBRU  80                                          118466
+     C           *LOVAL    SETLLREPRPNPD
+     C                     READ REPRPNPD                 71
+     C           *IN71     DOWEQ'0'
+      *
+     C                     MOVEL'*EXIST ' MAINT   7 P
+     C           E2BRCA    IFEQ *BLANKS
+     C           E2CNUM    OREQ *BLANKS
+     C           E2CCY     OREQ *BLANKS
+     C           E2ACOD    OREQ *ZEROS
+     C           E2ACSQ    OREQ *ZEROS
+     C                     MOVEL'*DFT   ' MAINT     P
+     C                     END
+      *                                                                                       118466
+      ** Rework details where...                                                              118466
+      *                                                                                       118466
+     C                     MOVEL*BLANKS   W0REAS256                                           118466
+      *                                                                                       118466
+      **  active term has matured                                                             118466
+      *                                                                                       118466
+     C           E2EVNT    IFEQ 'A'                                                           118466
+     C           E2ITEM    ANDEQ1                                                             118466
+     C           E2MDAT    ANDLTNXTDAY                                                  118466223609
+     C           MAINT     ANDEQ'*EXIST'                                                      118466
+      *                                                                                       118466
+      **         (rolling over after final 1 term in current period)                          118466
+      **         (note, although 2 or more terms may have rolled on since                     118466
+      **          previous working day, it is not easy to identify this                       118466
+      **          case, so report will indicate new term, rather than new                     118466
+      **          period, in all cases with 2 or more terms outstanding                       118466
+      *                                                                                       118466
+     C           E2CEDE    IFLE 1                                                             118466
+     C           E2CEDE    ORGT 999                                                           118466
+      *                                                                                       118466
+      **         (rolling over after end date of current period)                              118466
+      *                                                                                       118466
+     C           E2CEDE    ANDLTNXTDAY                                                  118466223609
+     C                     CAT  CON2:1    W0REAS                                              118466
+     C                     ELSE                                                               118466
+     C                     CAT  CON1:1    W0REAS                                              118466
+     C                     END                                                                118466
+     C                     END                                                                118466
+      *                                                                                       227320
+      ** New period has started                                                               227320
+      *                                                                                       227320
+     C           E2EVNT    IFNE 'A'                                                           227320
+     C           E2EVNT    ANDNE'Z'                                                           227320
+     C           E2ITEM    ANDEQ1                                                             227320
+     C           E2VDAT    ANDLENXTDAY                                                        227320
+     C           MAINT     ANDEQ'*EXIST'                                                      227320
+     C                     CAT  CON7:1    W0REAS                                              227320
+     C                     ENDIF                                                              227320
+      *                                                                                       118466
+      **  active term matured in previous run today (rerun in IC)                             118466
+      *                                                                                       118466
+     C           E2EVNT    IFEQ 'Z'                                                           118466
+     C           E2ITEM    ANDEQ1                                                             118466
+     C           E2VDAT    ANDEQNXTDAY                                                  118466223609
+     C           MAINT     ANDEQ'*EXIST'                                                      118466
+     C           MPHAS     ANDEQ'A'                                                           118466
+     C           E2EVNT    OREQ 'Z'                                                           CCB020
+     C           E2ITEM    ANDEQ1                                                             CCB020
+     C           E2VDAT    ANDEQNXTDAY                                                        CCB020
+     C           MAINT     ANDEQ'*EXIST'                                                      CCB020
+     C           MPHAS     ANDEQ'G'                                                           CCB020
+     C                     CAT  CON3:1    W0REAS                                              118466
+     C                     END                                                                118466
+     C                     MOVE ' '       CADATE  1                                           220095
+      *                                                                                       118466
+      **  active debit cap date has passed                                                    118466
+      *                                                                                       118466
+     C           E2EVNT    IFEQ 'A'                                                           118466
+     C           E2ITEM    ANDEQ1                                                             118466
+     C           E2NDID    ANDLTNXTDAY                                                  118466223609
+     C           MAINT     ANDEQ'*EXIST'                                                      118466
+     C                     CAT  CON5:1    W0REAS                                              118466
+     C                     MOVE 'Y'       CADATE                                              220095
+     C                     END                                                                118466
+      *                                                                                       118466
+      **  active credit cap date has passed                                                   118466
+      *                                                                                       118466
+     C           E2EVNT    IFEQ 'A'                                                           118466
+     C           E2ITEM    ANDEQ1                                                             118466
+     C           E2NCID    ANDLTNXTDAY                                                  118466223609
+     C           MAINT     ANDEQ'*EXIST'                                                      118466
+     C                     CAT  CON6:1    W0REAS                                              118466
+     C                     MOVE 'Y'       CADATE                                              220095
+     C                     END                                                                118466
+      *                                                                                       118466
+     C           W0REAS    IFGT *BLANKS                                                       118466
+      *                                                                                       118466
+     C                     MOVELE2BRCA    PBRCA                                               118466
+     C                     MOVE E2CNUM    PCNUM                                               118466
+     C                     MOVELE2CCY     PCCY                                                118466
+     C                     MOVE E2ACOD    PACOD                                               118466
+     C                     MOVE E2ACSQ    PACSQ                                               118466
+     C                     MOVE E2EVNT    PEVNT                                               118466
+      *                                                                                       118466
+     C                     ADD  1         W0NBRU                                              118466
+     C           *IN89     IFEQ *ON                                                           118466
+     C                     MOVEL*OFF      *IN89                                               118466
+     C                     WRITEAUHEAD                                                        118466
+     C                     END                                                                118466
+     C                     MOVELPBRCA     R1ACCN    P                                         118466
+     C                     CAT  PCNUM:0   R1ACCN                                              118466
+     C                     CAT  PCCY:0    R1ACCN                                              118466
+     C                     CAT  PACOD:0   R1ACCN                                              118466
+     C                     CAT  PACSQ:0   R1ACCN                                              118466
+     C                     MOVELW0REAS    R1NARR                                              118466
+     C                     WRITEAUDETS                                                        118466
+      *
+      ** Process next cap date
+      *
+     C           CADATE    IFEQ 'Y'
+     C           P#BRCA    ORNE E2BRCA
+     C           P#CNUM    ORNE E2CNUM
+     C           P#CCY     ORNE E2CCY
+     C           P#ACOD    ORNE E2ACOD
+     C           P#ACSQ    ORNE E2ACSQ
+     C                     Z-ADDNXTDAY    P#DATE  50
+     C                     MOVE PBRCA     P#BRCA  3
+     C                     MOVE PCNUM     P#CNUM  6
+     C                     MOVE PCCY      P#CCY   3
+     C                     MOVE PACOD     P#ACOD 100
+     C                     MOVE PACSQ     P#ACSQ  20
+     C                     MOVEL'*COB   ' P#MODE  7
+     C                     CALL 'RETNCAP1'
+     C                     PARM           P#DATE
+     C                     PARM           P#BRCA
+     C                     PARM           P#CNUM
+     C                     PARM           P#CCY
+     C                     PARM           P#ACOD
+     C                     PARM           P#ACSQ
+     C                     PARM           P#MODE
+     C                     PARM           PRTCD
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'RE4006  'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     COMIT                                                              227320
+     C                     ENDIF
+      *
+      ** Get ledger balance for account, and pass on                                          EPK041
+      ** to calculate threshold rate.                                                         EPK041
+      ** ...but only if term is maturing in this COB (i.e. new term                           231583
+      **    starting ) otherwise pass on existing balance                                     231583
+      *                                                                                       231583
+     C           E2MDAT    IFGE NXTDAY                                                        231583
+     C                     Z-ADDE2BALN    PBALN                                               231583
+     C                     ELSE                                                               231583
+     C                     Z-ADD0         PBALN                                               EPK041
+      *                                                                                       EPK041
+     C                     MOVE ' '       GETBAL  1                                           EPK041
+     C           E2DNIR    IFEQ 'P'                                                           231583
+     C           E2DCST    ANDNE0                                                             231583
+     C                     MOVE 'Y'       GETBAL                                              EPK041
+     C                     ENDIF                                                              EPK041
+      *                                                                                       EPK041
+     C           E2CNIR    IFEQ 'P'                                                           231583
+     C           E2CCST    ANDNE0                                                             231583
+     C                     MOVE 'Y'       GETBAL                                              EPK041
+     C                     ENDIF                                                              EPK041
+      *                                                                                       EPK041
+     C           GETBAL    IFEQ 'Y'                                                           EPK041
+     C                     CALL 'AOACCTR0'                                                    EPK041
+     C                     PARM           P@RTCD  7                                           EPK041
+     C                     PARM '*KEY'    P@OPTN  7                                           EPK041
+     C                     PARM *BLANKS   P@RETL 10                                           EPK041
+     C                     PARM PCNUM     P@CNUM  6                                           EPK041
+     C                     PARM PCCY      P@CUCD  3                                           EPK041
+     C                     PARM PACOD     P@ACCD 10                                           EPK041
+     C                     PARM PACSQ     P@ACSQ  2                                           EPK041
+     C                     PARM PBRCA     P@BRCA  3                                           EPK041
+     C           ACFMT     PARM *BLANKS   P@FMT                                               EPK041
+     C           P@RTCD    IFEQ *BLANKS                                                       EPK041
+     C           ACFMT     ANDNE*BLANKS                                                       EPK041
+     C                     Z-ADDLDBL      PBALN                                               EPK041
+     C                     ENDIF                                                              EPK041
+     C                     ENDIF                                                              EPK041
+     C                     ENDIF                                                              231583
+      *                                                                                       EPK041
+      ** Use Next working day for date of rollover calculation                                EPK041
+      ** unless already in input cycle (i.e. SCC0411 already run).                            EPK041
+      *                                                                                       EPK041
+     C           MPHAS     IFEQ 'A'
+     C           MPHAS     OREQ 'G'                                                           CCB020
+     C                     MOVE '*RUND'   PRUND
+     C                     ELSE
+     C                     MOVE '*NXWD'   PRUND
+     C                     ENDIF
+      *                                                                                       EPK041
+     C                     MOVEL'*REWORK 'PMODE                                               118466
+      *
+      ** Iniitialise preceding end date to zero if new account
+      *
+     C           P#BRCA    IFNE E2BRCA                                                        244324
+     C           P#CNUM    ORNE E2CNUM                                                        244324
+     C           P#CCY     ORNE E2CCY                                                         244324
+     C           P#ACOD    ORNE E2ACOD                                                        244324
+     C           P#ACSQ    ORNE E2ACSQ                                                        244324
+     C                     Z-ADD0         PREND                                               244324
+     C                     ENDIF                                                              244324
+     C/COPY WNCPYSRC,RE4006MK01
+     C                     CALL 'RE4010R'
+     C                     PARM           PMODE   7
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  10
+     C                     PARM           PACSQ   2
+     C                     PARM           PEVNT   1
+     C                     PARM           PBALN  150
+     C                     PARM           PRTCD   7
+     C                     PARM           MAINT   7
+     C                     PARM           PRUND   5
+     C                     PARM           PREND   50                                          244324
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'RE4006  'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     COMIT                                                              118466
+      *                                                                                       118466
+     C                     END                                                                118466
+      *                                                                                       118466
+     C           KPRPN1    SETGTREPRPNPD                                                      118466
+     C                     READ REPRPNPD                 71                                   118466
+     C                     END                                                                118466
+      *                                                                                       118466
+     C           W0NBRU    IFGT 0                                                             118466
+     C                     MOVEL'*FREE   'PMODE                                               118466
+     C                     CALL 'RE4010R'                                                     118466
+     C                     PARM           PMODE   7
+      *
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  10
+     C                     PARM           PACSQ   2
+     C                     PARM           PEVNT   1
+     C                     PARM           PBALN  150
+     C                     PARM           PRTCD   7
+     C                     PARM           MAINT   7
+     C                     PARM           PRUND   5
+     C                     FREE 'RE4010R'                                                     118466
+      *                                                                                       118466
+     C                     MOVEL*BLANKS   PCNUM                                               118466
+     C                     END                                                                118466
+      *                                                                                       118466
+     C           *IN89     IFEQ *ON                                                           118466
+     C                     MOVEL*OFF      *IN89                                               118466
+     C                     WRITEAUHEAD                                                        118466
+     C                     END                                                                118466
+     C           W0NBRU    IFEQ 0                                                             118466
+     C                     WRITENODETL                                                        118466
+     C                     ELSE                                                               118466
+     C                     WRITEAUEOR                                                         118466
+     C                     END                                                                118466
+      *                                                                                       118466
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DONOTI: Process Notification                                 *
+      *                                                               *
+      *****************************************************************
+     C           DONOTI    BEGSR
+      *
+      ** Read notifications
+      *
+     C           *LOVAL    SETLLRENFMVPD
+     C                     READ RENFMVPD                 71
+     C           *IN71     DOWEQ'0'
+      *
+      ** If BAL has been entered and the balance is now known, update
+      *
+     C           E3REAM    IFEQ *ALL'9'
+     C           E3CAVL    ANDEQ*ALL'9'
+     C           E3FMTP    ANDNECFMTP1                                                        AS0001
+     C           E3DEFF    ANDLENXTDAY                                                        223609
+     C           E3FMTP    OREQ CFMTP1                                                        118466
+     C           E3DEFF    ANDGTRUNDAY                                                        223609
+     C           E3DEFF    ANDLENXTDAY                                                        223609
+     C                     MOVELE3TRR1    PTRR1                                               AS0001
+     C                     MOVELE3DEFF    PDEFF                                               AS0001
+     C                     CALL 'RE4012'
+     C                     PARM '*BAL    'PWMODE
+     C                     PARM E3KEY1    PKEY1
+     C                     PARM           PTRR1
+     C                     PARM           PREAM
+     C                     PARM           PDC01
+     C                     PARM           PCAVL
+     C                     PARM           PDC02
+     C                     PARM           PDEFF
+     C                     PARM           PRECD
+     C                     PARM           PHISB
+     C                     PARM           PDC03
+     C                     PARM           PRTDE                                               EEE015
+     C                     END
+      *                                                                                       209008
+      ** If E3RTDE is -1 (in RENFMVPD) CALL SDE036 to check for the                           209008
+      ** Retention of Interest Notification in SDACODX1, If *NE TO -1,                        209008
+      ** then this value should be used.                                                      209008
+      *                                                                                       209008
+     C           E3FMTP    IFEQ CFMTP2                                                        209008
+     C           E3RTDE    ANDEQ-1                                                            209008
+     C                     MOVE ACOD      PACCD                                               209008
+     C                     CALL 'SD0031T'                                                     209008
+     C                     PARM           PACCD  10                                           209008
+     C                     PARM           PATTY   1                                           209008
+     C                     PARM           PCHIA  10                                           209008
+     C                     PARM           PRTTY   5                                           209008
+     C                     PARM           PNVCD   2                                           209008
+     C                     PARM           PPRFC   4                                           209008
+     C                     PARM           PRTDN   2                                           209008
+     C                     PARM           PRTDI   2                                           209008
+     C                     PARM           PRTCD   7                                           209008
+     C           PRTDI     IFEQ *BLANKS                                                       209008
+     C                     Z-ADD-1        E3RTDE                                              209008
+     C                     ELSE                                                               209008
+     C                     MOVE PRTDI     E3RTDE                                              209008
+     C                     END                                                                209008
+     C                     END                                                                209008
+      *                                                                                       EEE015
+      ** Calculate expiry date (ie the morning where notif is dropped)                        EEE015
+      *                                                                                       EEE015
+     C           E3RTDE    IFEQ -1                                                            EEE015
+     C           E3FMTP    OREQ CFMTP1                                                        EEE015
+     C                     Z-ADD99999     XXEXPI  50                                          EEE015
+     C                     ELSE                                                               EEE015
+      *                                                                                       EEE015
+      **  interest ntf uses notif date (=pstd) + 1, as avail date=0                           EEE015
+      *                                                                                       EEE015
+     C           E3FMTP    IFEQ CFMTP2                                                        EEE015
+     C           E3RECD    ADD  1         XXEXPI                                              EEE015
+     C           XXEXPI    ADD  E3RTDE    XXEXPI                                              EEE015
+     C                     END                                                                EEE015
+      *                                                                                       EEE015
+      **  customer ntf uses avail date                                                        EEE015
+      *                                                                                       EEE015
+     C           E3FMTP    IFEQ CFMTP3                                                        EEE015
+     C           E3DEFF    ADD  E3RTDE    XXEXPI                                              EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+      *                                                                                       EEE015
+      ** Reset notification if expired                                                        EEE015
+      *                                                                                       EEE015
+     C           XXEXPI    IFLE NXTDAY                                                        223609
+      *                                                                                       EEE015
+      ** Drop interest notif (set amount to zero)                                             EEE015
+      *                                                                                       EEE015
+     C           E3REAM    IFNE 0                                                             EEE015
+     C           E3CAVL    ORNE 0                                                             EEE015
+      *                                                                                       EEE015
+      ** (use ADDINT as RMVINT converts non-zero int to cust notif)                           EEE015
+      *                                                                                       EEE015
+     C           E3FMTP    IFEQ CFMTP2                                                        EEE015
+     C                     MOVELE3TRR1    PTRR1                                               EEE015
+     C                     MOVELE3DEFF    PDEFF                                               EEE015
+     C                     Z-ADDE3REAM    PREAM                                               EEE015
+     C           E3DC01    IFEQ 'D'                                                           EEE015
+     C                     MOVEL'C'       PDC01                                               EEE015
+     C                     ELSE                                                               EEE015
+     C                     MOVEL'D'       PDC01                                               EEE015
+     C                     END                                                                EEE015
+     C                     Z-ADDE3CAVL    PCAVL                                               EEE015
+     C           E3DC02    IFEQ 'D'                                                           EEE015
+     C                     MOVEL'C'       PDC02                                               EEE015
+     C                     ELSE                                                               EEE015
+     C                     MOVEL'D'       PDC02                                               EEE015
+     C                     END                                                                EEE015
+     C                     CALL 'RE4012'                                                      EEE015
+     C                     PARM '*ADDINT 'PWMODE                                              EEE015
+     C                     PARM E3KEY1    PKEY1                                               EEE015
+     C                     PARM           PTRR1                                               EEE015
+     C                     PARM           PREAM                                               EEE015
+     C                     PARM           PDC01                                               EEE015
+     C                     PARM           PCAVL                                               EEE015
+     C                     PARM           PDC02                                               EEE015
+     C                     PARM           PDEFF                                               EEE015
+     C                     PARM           PRECD                                               EEE015
+     C                     PARM           PHISB                                               EEE015
+     C                     PARM           PDC03                                               EEE015
+     C                     PARM           PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+      *                                                                                       EEE015
+      **  drop customer/interest notif (deletion)                                             EEE015
+      *                                                                                       EEE015
+     C           E3FMTP    IFEQ CFMTP3                                                        EEE015
+     C           E3FMTP    OREQ CFMTP2                                                        209008
+     C                     MOVELE3TRR1    PTRR1                                               EEE015
+     C                     MOVELE3DEFF    PDEFF                                               EEE015
+     C                     CALL 'RE4012'                                                      EEE015
+     C                     PARM '*DLT    'PWMODE                                              EEE015
+     C                     PARM E3KEY1    PKEY1                                               EEE015
+     C                     PARM           PTRR1                                               EEE015
+     C                     PARM           PREAM                                               EEE015
+     C                     PARM           PDC01                                               EEE015
+     C                     PARM           PCAVL                                               EEE015
+     C                     PARM           PDC02                                               EEE015
+     C                     PARM           PDEFF                                               EEE015
+     C                     PARM           PRECD                                               EEE015
+     C                     PARM           PHISB                                               EEE015
+     C                     PARM           PDC03                                               EEE015
+     C                     PARM           PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+      *                                                                                       EEE015
+      **  A cust/int notification can be deleted when a/c terminated                          EEE015
+      *                                                                                       EEE015
+     C           E3FMTP    IFEQ CFMTP2                                                        EEE015
+     C           E3FMTP    OREQ CFMTP3                                                        EEE015
+     C           XXEXPI    ANDGTNXTDAY                                                        223609
+     C                     MOVELE3KEY1    P@RETL    P                                         EEE015
+     C                     CALL 'AOACCTR0'                                                    EEE015
+     C                     PARM           P@RTCD  7                                           EEE015
+     C                     PARM '*KEY'    P@OPTN  7                                           EEE015
+     C                     PARM           P@RETL 10                                           EEE015
+     C                     PARM *BLANKS   P@CNUM  6                                           EEE015
+     C                     PARM *BLANKS   P@CUCD  3                                           EEE015
+     C                     PARM *BLANKS   P@ACCD 10                                           EEE015
+     C                     PARM *BLANKS   P@ACSQ  2                                           EEE015
+     C                     PARM *BLANKS   P@BRCA  3                                           EEE015
+     C           ACFMT     PARM *BLANKS   P@FMT                                               EEE015
+     C           P@RTCD    IFEQ *BLANKS                                                       EEE015
+     C           ACFMT     ANDNE*BLANKS                                                       EEE015
+     C                     MOVELBRCA      E2BRCA                                              EEE015
+     C                     MOVE CNUM      E2CNUM                                              EEE015
+     C                     MOVELCCY       E2CCY                                               EEE015
+     C                     MOVE ACOD      E2ACOD                                              EEE015
+     C                     MOVE ACSQ      E2ACSQ                                              EEE015
+     C                     MOVEL*BLANKS   E2EVNT                                              EEE015
+     C                     MOVE 0         E2ITEM                                              EEE015
+     C           KPRPN1    SETLLREPRPNPD                                                      EEE015
+     C           KPRPN3    READEREPRPNPD                 71                                   EEE015
+     C           *IN71     IFEQ '0'                                                           EEE015
+     C           E2EVNT    ANDEQ'Z'                                                           EEE015
+     C                     SETON                     71                                       EEE015
+     C                     END                                                                EEE015
+     C           *IN71     IFEQ '1'                                                           EEE015
+     C                     MOVELE3TRR1    PTRR1                                               EEE015
+     C                     MOVELE3DEFF    PDEFF                                               EEE015
+     C                     CALL 'RE4012'                                                      EEE015
+     C                     PARM '*DLT    'PWMODE                                              EEE015
+     C                     PARM E3KEY1    PKEY1                                               EEE015
+     C                     PARM           PTRR1                                               EEE015
+     C                     PARM           PREAM                                               EEE015
+     C                     PARM           PDC01                                               EEE015
+     C                     PARM           PCAVL                                               EEE015
+     C                     PARM           PDC02                                               EEE015
+     C                     PARM           PDEFF                                               EEE015
+     C                     PARM           PRECD                                               EEE015
+     C                     PARM           PHISB                                               EEE015
+     C                     PARM           PDC03                                               EEE015
+     C                     PARM           PRTDE                                               EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+     C                     END                                                                EEE015
+      *
+     C                     COMIT
+     C           KNFMV1    SETGTRENFMVPD
+     C                     READ RENFMVPD                 71
+      *
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT: Program Initialization                                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *                                                                                       EEE015
+     C           KPRPN3    KLIST                                                              EEE015
+     C                     KFLD           E2BRCA                                              EEE015
+     C                     KFLD           E2CNUM                                              EEE015
+     C                     KFLD           E2CCY                                               EEE015
+     C                     KFLD           E2ACOD                                              EEE015
+     C                     KFLD           E2ACSQ                                              EEE015
+      *
+     C           KNFMV1    KLIST
+     C                     KFLD           E3KEY1
+     C                     KFLD           E3DEFF
+     C                     KFLD           E3TRR1
+      *                                                                                       118466
+     C           PLIST1    PLIST                                                              118466
+     C                     PARM           PMODE   7                                           118466
+     C                     PARM           PBRCA   3                                           118466
+     C                     PARM           PCNUM   6                                           118466
+     C                     PARM           PCCY    3                                           118466
+     C                     PARM           PACOD  10                                           118466
+     C                     PARM           PACSQ   2                                           118466
+     C                     PARM           PDATE   50                                          118466
+     C                     PARM           PEVNT   1                                           118466
+     C                     PARM           PITEM   50                                          118466
+     C                     PARM           PVDAT   50                                          118466
+     C                     PARM           PMDAT   50                                          118466
+     C                     PARM           PCEDE   50                                          118466
+     C                     PARM           PFREQ   1                                           118466
+     C                     PARM           PNDPD   30                                          118466
+     C                     PARM           PNMPD   20                                          EPK040
+     C                     PARM           PIRLI   1                                           118466
+     C                     PARM           PTPRD   1                                           118466
+     C                     PARM           PDRIB   2                                           118466
+     C                     PARM           PDRIS  117                                          118466
+     C                     PARM           PDICT   2                                           118466
+     C                     PARM           PDCST   50                                          118466
+     C                     PARM           PDRIC   10                                          118466
+     C                     PARM           PDNIR   1                                           118466
+     C                     PARM           PDRIF   1                                           118466
+     C                     PARM           PDACP  24                                           118466
+     C                     PARM           PNDID   50                                          118466
+     C                     PARM           PDRDY   40                                          118466
+     C                     PARM           PCRIB   2                                           118466
+     C                     PARM           PCRIS  117                                          118466
+     C                     PARM           PCICT   2                                           118466
+     C                     PARM           PCCST   50                                          118466
+     C                     PARM           PCRIC   10                                          118466
+     C                     PARM           PCNIR   1                                           118466
+     C                     PARM           PCRIF   1                                           118466
+     C                     PARM           PCACP  24                                           118466
+     C                     PARM           PNCID   50                                          118466
+     C                     PARM           PCRDY   40                                          118466
+     C                     PARM           PRTTD   5                                           118466
+     C                     PARM           PDYBD   1                                           118466
+     C                     PARM           PDRST   1                                           118466
+     C                     PARM           PRTTC   5                                           118466
+     C                     PARM           PDYBC   1                                           118466
+     C                     PARM           PCRST   1                                           118466
+     C                     PARM           PDAYM   20                                          118466
+     C                     PARM           PKEY1  24                                           118466
+     C                     PARM           PBALN  150                                          EPK041
+     C                     PARM           PRTCD   7                                           118466
+     C                     PARM           PRUND   5                                           118466
+      *                                                                                       118466
+     C           PLIST2    PLIST                                                              118466
+     C                     PARM           PBRCA   3                                           118466
+     C                     PARM           PCNUM   6                                           118466
+     C                     PARM           PCCY    3                                           118466
+     C                     PARM           PACOD  10                                           118466
+     C                     PARM           PACSQ   2                                           118466
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *
+     C           *NAMVAR   DEFN           JNSTAT                                              118466
+     C                     IN   JNSTAT                                                        118466
+     C********** MPHAS     IFNE 'A'                                                 223609 AR1026473
+     C**********           Z-ADDBJDNWD    NXTDAY  50                                223609 AR1026473
+     C**********           Z-ADDBJRDNB    RUNDAY  50                                223609 AR1026473
+     C**********           ELSE                                                     223609 AR1026473
+     C**********           Z-ADDBJRDNB    NXTDAY  50                                223609 AR1026473
+     C**********           Z-ADDPRUN      RUNDAY  50                                223609 AR1026473
+     C**********           ENDIF                                                    223609 AR1026473
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Check system phase                                                                   118466
+      *                                                                                       118466
+     C           *NAMVAR   DEFN           MPHAS   1                                           118466
+     C                     IN   MPHAS                                                         118466
+      *                                                                                    AR1026473
+     C           MPHAS     IFNE 'A'                                                        AR1026473
+     C           MPHAS     ANDNE'G'                                                           CCB020
+     C                     Z-ADDBJDNWD    NXTDAY  50                                       AR1026473
+     C                     Z-ADDBJRDNB    RUNDAY  50                                       AR1026473
+     C                     ELSE                                                            AR1026473
+     C                     Z-ADDBJRDNB    NXTDAY  50                                       AR1026473
+     C                     Z-ADDPRUN      RUNDAY  50                                       AR1026473
+     C                     ENDIF                                                           AR1026473
+      *                                                                                    AR1026473
+     C/COPY WNCPYSRC,RE4006MK02
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR

@@ -1,0 +1,181 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *  TEXT('Midas LE Lending bulk transfer')                       *
+/*E*I *:*MODULE(LE2015M)********************************************:**                       CPK016
+/*EXI *: MODULE(LE2015M) ACTGRP(*CALLER)                            : *                       CPK016
+/*E*I**:*BNDSRVPGM(ZA0001S)*BNDDIR(*NONE)*ACTGRP(*CALLER)***********:**                       174621
+/*E*I ***BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)****************                174621 CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2015  - Lending Bulk Transfer                              *
+      *                                                               *
+      *  Function:                                                    *
+      *                                                               *
+      *  This program is called automatically during                  *
+      *  the COB after all the Customer Lending updates have been     *
+      *  performed, to download data from the Customer Lending master *
+      *  files to the Lending PC application. It also performs the    *
+      *  download of the Standing Data as required by the Lending PC  *
+      *  application. It can also be executed through an on request   *
+      *  option at start up or for recovery purposes.                 *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  LEC2015  - COB Lending Bulk Transfer Component               *
+      *  LEC2015A - On Request Lending Bulk Transfer Component        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSD095             Date 08Apr14               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CCB020             Date 06Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 235907             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 228849             Date 06Aug04               *
+      *                 227709             Date 26May04               *
+      *                 227249             Date 21May04               *
+      *                 227199             Date 20May04               *
+      *                 226496             Date 15Apr04               *
+      *                 226089             Date 30Mar04               *
+      *                 225427             Date 03Mar04               *
+      *                 223603             Date 26Feb04               *
+      *                 219071             Date 26Feb04               *
+      *                 CLE035             Date 22Sep03               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CPK016             Date 29Jul03               *
+      *                 CLE034             Date 05May03               *
+      *                 CLE033             Date 01Apr03               *
+      *                 CLE028             Date 20Feb03               *
+      *                 CLE031             Date 10Feb03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 211532             DATE 17Jan03               *
+      *                 210749             DATE 17Oct02               *
+      *                 210696             DATE 16Oct02               *
+      *                 203561             DATE 21Jun02               *
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 195720             DATE 22Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193083             DATE 06Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 23May01               *
+      *                 CLE011             Date 07Nov00               *
+      *                 CPB003             DATE 04Dec00               *
+      *                 189612             DATE 14Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             DATE 04MAY00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 174745             Date 09Feb00               *
+      *                 174621             Date 03Feb00               *
+      *                 163486             Date 14Oct99               *
+      *                 CLE009             Date 11May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU030             Date 03Nov98               *
+      *                 CLE005 *CREATE     Date 22May97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *           (Recompile)                                         *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  228849 - Last Rollover Date was being filled with incorrect  *
+      *           data if it was zeros. (recompile)                   *
+      *  227709 - The receive settlement method should always be sent *
+      *           regardless of it being zero on settlement allocation*
+      *           (recompile)                                         *
+      *  227249 - Recompile due to change to select only type AT and  *
+      *           type LE extended settlements for download           *
+      *  227199 - Recompile due to introduction of new logicals to    *
+      *           ensure transactions are downloaded to Loan Manager  *
+      *           in PC reference order                               *
+      *  226496 - Recompile due to introduction of new logical for    *
+      *           income splits download                              *
+      *  226089 - Recompile due to change to include bank details in  *
+      *           COB download via system value                       *
+      *  225427 - Recompile due to change to allow user to select     *
+      *           which items of static data are downloaded during    *
+      *           I/C download and during COB download                *
+      *  223603 - Recompile due to change to introduce variable delay *
+      *           between batches of 60 messages                      *
+      *  219071 - Recompile over change in LE2015M for processing     *
+      *           empty files during the download                     *
+      *  CLE035 - Lending Enhancements for Nordea Phase 1 Priority 2: *
+      *           Income Splits (Recompile)                           *
+      *  CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2: *
+      *           Allow specific base rates (Recompile)               *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  CLE034 - Lending Enhancements Phase 1 Priority 1A            *
+      *           (Recompile)                                         *
+      *  CLE033 - Settlement method 09                                *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s) (recompile)  *
+      *  CLE031 - Lending Enhancements.                               *
+      *  211532 - Download SWIFT financial institution as separate    *
+      *           field (including backing out of 189612) - recompile *
+      *  210749 - Recompiled for changes to LE2015M                   *
+      *  210696 - Recompiled for changes to LE2015M                   *
+      *  203561 - Recompiled for changes to LE2015M                   *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  195720 - Recompiled due to changes in LE2015M                *
+      *  193083 - Allow non-Loan Manager branches to have a blank     *
+      *           or duplicate bulk download queue on SDBRCHPD        *
+      *  CSD006 - Market Data Feed (recompile)                        *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CPB003 - Portfolio Reference Changes in Loan Manager for PB  *
+      *           Recompiled                                          *
+      *  189612 - Recompiled due to changes in LE2015M                *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  174745 - ZA0001S made redundant.  Therefore recompiled.      *
+      *  174621 - FIXNBR(*ZONED) now incorporated into RPGBASEMOD     *
+      *           creation parameter in LE2015M. (Recompile)          *
+      *  163486 - Recompiled due to changes to LVENT in LE2015M       *
+      *  CLE009 - LE I/C Swift Message Generation for Fees (Recompile)*
+      *  149721 - Use longer data structure to access AOEXSTR0        *
+      *           (recompile only)                                    *
+      *  CEU030 - EMU Loan Manager Enhancements (Recompile Only)      *
+      *  CLE005 - Customer Lending Enhancements - Others (T3)         *
+      *                                                               *
+      *****************************************************************

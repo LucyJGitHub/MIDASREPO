@@ -1,0 +1,699 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Interface Start-Up')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4420 - CI Interface Start-Up                               *
+      *                                                               *
+      *  Function:  This program starts up Cashier Interface          *
+      *             background jobs and function tasks before the     *
+      *             branch is opened to receive any request           *
+      *  (I/C or I/C Init)                                            *
+      *                                                               *
+      *  Called By: REC4420 - CI Interface Start-Up                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 122060             Date 06Aug97               *
+      *                 CRT003  *CREATE    Date 22Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+      *  122060 - Drafts Issuance.                                    *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FREACJBL0IF  E           K        DISK         KINFSR *PSSR
+      **  CI Active Jobs
+      *
+     FSDBAIJPDIF  E           K        DISK         KINFSR *PSSR
+      **  CI Jobs File
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - LOKUP.                                                  *
+      *  12 - EOF ind                                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  P03    -  Process Background Tasks                           *
+      *  P04    -  Prepare Start Up Details                           *
+      *  P05    -  Submit Start-Up                                    *
+      *  P06    -  Count No. of Jobs                                  *
+      *  P07    -  Process Background Jobs                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E**********          PGM        25 10                                                    CRT005
+     E                    PGM        29 10                                                    CRT005
+      ** Array containing Program Names from CIPGMN
+      *
+      /EJECT
+      *
+     ICIREST    E DSCIREST                       10
+      ** Data area for status
+      *
+     I                                        1  10 WREST
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDSTAT    E DSSDSTAT                      256
+      ** SD data area
+      *
+     I                                        6   7 WPRFX
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CRT005
+      ** External DS for Switchable Features                                                  CRT005
+      *                                                                                       CRT005
+     ISDBAII    E DSSDBAIIPD
+      **  CI ICD
+      *
+     ISDBAIC    E DSSDBAICPD
+      **  CI Configuration
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd   DS for access programs, Long  data structure
+      *
+     I I            'RE4144DRI'               1   9 PDRIS                 122060
+      *                                                                   122060
+      /COPY ZSRSRC,CIPGMNI1
+      **  CI Function Program Names
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing.                       *
+      *                                                               *
+      * CALLS      P03    - Process Background Tasks Routine          *
+      *            P07    - Process Background Jobs Routine           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Process Background Tasks
+      *
+     C********** WX        IFLE 25                                                            CRT005
+     C           WX        IFLE 29                                                            CRT005
+     C                     EXSR P03
+     C                     END
+      *
+      ** Process Background Jobs
+      *
+     C                     EXSR P07
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             P03   - Process Background Tasks                  *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Processing.                          *
+      *                                                               *
+      * CALLS      P04    - Prepare Start Up Processing               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           P03       BEGSR                           ** P03    **
+      *
+      ** Retail Account Balance Enquiry is on
+      *
+     C           FUBALE    IFEQ 'Y'
+     C           WX        IFLE 1
+     C                     MOVELFUBALP    WPGM   10
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Retail Account Transfer is on
+      *
+     C           FURTFR    IFEQ 'Y'
+     C           WX        IFLE 2
+     C                     MOVELFUTFRP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cash Deposit in Account Currency is on
+      *
+     C           FUCDAC    IFEQ 'Y'
+     C           WX        IFLE 3
+     C                     MOVELFUCDAP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cheque Deposit in Account Currency is on
+      *
+     C           FUCQDA    IFEQ 'Y'
+     C           WX        IFLE 4
+     C                     MOVELPGM,4     WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 5
+     C                     MOVELPGM,5     WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cash Deposit in Non-Account Currency is on
+      *
+     C           FUCDNC    IFEQ 'Y'
+     C           WX        IFLE 6
+     C                     MOVELFUCDNP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cheque Deposit in Non-Account Currency is on
+      *
+     C           FUCQNA    IFEQ 'Y'
+     C           WX        IFLE 7
+     C                     MOVELPGM,7     WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 8
+     C                     MOVELPGM,8     WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cash Withdrawal in Account Currency
+      *
+     C           FUCWAC    IFEQ 'Y'
+     C           WX        IFLE 9
+     C                     MOVELFUCWAP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cash Withdrawal in Non-Account Currency is on
+      *
+     C           FUCWNA    IFEQ 'Y'
+     C           WX        IFLE 10
+     C                     MOVELFUCWNP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cheque Withdrawal in Account Currency is on
+      *
+     C           FUCQWA    IFEQ 'Y'
+     C           WX        IFLE 11
+     C                     MOVELFUCQWP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Cheque Withdrawal in Non-Account Currency is on
+      *
+     C           FUCQWN    IFEQ 'Y'
+     C           WX        IFLE 12
+     C                     MOVELFUCQWQ    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Bureau de change is on
+      *
+     C           FUBDCT    IFEQ 'Y'
+     C           WX        IFLE 13
+     C                     MOVELFUBDCP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Buy Travellers Cheques is on
+      *
+     C           FUBTC     IFEQ 'Y'
+     C           WX        IFLE 14
+     C                     MOVELPGM,14    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 15
+     C                     MOVELPGM,15    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 16
+     C                     MOVELPGM,16    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 17
+     C                     MOVELPGM,17    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Sell Travellers Cheque is on
+      *
+     C           FUSTC     IFEQ 'Y'
+     C           WX        IFLE 18
+     C                     MOVELPGM,18    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 19
+     C                     MOVELPGM,19    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 20
+     C                     MOVELPGM,20    WPGM
+     C                     EXSR P04
+     C                     END
+     C           WX        IFLE 21
+     C                     MOVELPGM,21    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Transaction Reversal is on
+      *
+     C           FUTXRV    IFEQ 'Y'
+     C           WX        IFLE 22
+     C                     MOVELFUTXRP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Passbook Update is on
+      *
+     C           FUPUPD    IFEQ 'Y'
+     C           WX        IFLE 23
+     C                     MOVELFUPUPP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Passbook Name and Address is on
+      *
+     C           FUPNAD    IFEQ 'Y'
+     C           WX        IFLE 24
+     C                     MOVELFUPNAP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *
+      ** Draft Issuance is on
+      *
+     C           FUDISS    IFEQ 'Y'
+     C           WX        IFLE 25
+     C                     MOVELFUDISP    WPGM
+     C                     EXSR P04
+     C                     END
+     C                     END
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+      *                                                                                       CRT005
+      ** Teller Cross In                                                                      CRT005
+      *                                                                                       CRT005
+     C           FUTCI     IFEQ 'Y'                                                           CRT005
+     C           WX        ANDLE26                                                            CRT005
+     C                     MOVELFUTCIP    WPGM                                                CRT005
+     C                     EXSR P04                                                           CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Teller Cross out                                                                     CRT005
+      *                                                                                       CRT005
+     C           FUTCO     IFEQ 'Y'                                                           CRT005
+     C           WX        ANDLE27                                                            CRT005
+     C                     MOVELFUTCOP    WPGM                                                CRT005
+     C                     EXSR P04                                                           CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Teller Treasury In                                                                   CRT005
+      *                                                                                       CRT005
+     C           FUTTI     IFEQ 'Y'                                                           CRT005
+     C           WX        ANDLE28                                                            CRT005
+     C                     MOVELFUTTIP    WPGM                                                CRT005
+     C                     EXSR P04                                                           CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Teller Treasury Out                                                                  CRT005
+      *                                                                                       CRT005
+     C           FUTTO     IFEQ 'Y'                                                           CRT005
+     C           WX        ANDLE29                                                            CRT005
+     C                     MOVELFUTTOP    WPGM                                                CRT005
+     C                     EXSR P04                                                           CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            P04    - Prepare Start-Up Processing               *
+      *                                                               *
+      * CALLED BY  P03    - Process Background Tasks Routine          *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            P05    - Submit Start Up                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           P04       BEGSR                           ** P04    **
+      *
+      ** Save Pgm-Function to dtaara CIREST
+      *
+     C           *LOCK     IN   CIREST
+     C                     MOVELWPGM      WREST
+     C                     OUT  CIREST
+      *
+     C           WPGM      IFEQ 'CASH_REC'                                122060
+     C                     MOVEL'RE4144'  WKPGM  10                       122060
+     C                     MOVEL'DRI'     WKFNC   3                       122060
+     C                     ELSE                                           122060
+     C           6         SUBSTWPGM:1    WKPGM  10
+     C           3         SUBSTWPGM:7    WKFNC   3
+     C                     ENDIF                                          122060
+      *
+     C                     CALL 'AOBAICR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WKPGM     @KEY1  10
+     C                     PARM WKFNC     @KEY2   3
+     C           SDBAIC    PARM SDBAIC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVEL'SDBAICPD'DBFILE
+     C                     MOVELWPGM      DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Get the program parameters and the
+      ** default no of pgm started from SDBAICPD
+      *
+     C                     MOVELCFPGPM    WPRM   50
+     C                     Z-ADDCFPGDF    WDFN    20
+      *
+      ** Submit Start-Up
+      *
+     C                     EXSR P05
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            P05    - Submit Start Up                           *
+      *                                                               *
+      * CALLED BY  P04    - Prepare Start-Up Processing               *
+      *            P07    - Process Background Jobs                   *
+      *                                                               *
+      * CALLS      P06    - Count No of Jobs                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           P05       BEGSR                           ** P04    **
+      *
+     C                     Z-ADD0         WNOTS   20
+      *
+      ** Count no of active jobs
+      *
+     C                     EXSR P06
+     C                     Z-ADDWNOAJ     WNOTS
+      *
+     C           WPGM      IFEQ 'CASH_REC'                                122060
+     C           PDRIS     CAT  WPRM      WPLST  60                       122060
+     C                     ELSE                                           122060
+     C           WPGM      CAT  WPRM      WPLST  60
+     C                     ENDIF                                          122060
+      *
+      ** Call the tasks using the above parameter list
+      *
+     C           WNOTS     DOWLTWDFN
+     C                     CALL 'REC4435'
+     C                     PARM           WPLST
+     C                     PARM FUJBDE    WJOBD  10
+     C                     PARM FUJBQU    WJOBQ  10
+      *
+     C                     ADD  1         WNOTS
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            P06    - Count No of Jobs                          *
+      *                                                               *
+      * CALLED BY  P05    - Submit Start Up                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           P06       BEGSR                           ** P06    **
+      *
+     C                     Z-ADD0         WNOAJ   20
+      *
+     C           WPGM      SETLLREACJBD0
+     C                     READ REACJBD0                 12
+      *
+     C           *IN12     DOWEQ'0'
+     C           WPGM      ANDEQRQJBNM
+     C                     ADD  1         WNOAJ
+     C                     READ REACJBD0                 12
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            P07    - Process Background Jobs                   *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Processing                           *
+      *                                                               *
+      * CALLS      P05    - Submit Start-Up                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           P07       BEGSR                           ** P07    **
+      *
+     C                     READ SDBAIJD0                 12
+     C           *IN12     DOWEQ'0'
+     C                     MOVELF0PGPM    WPRM
+     C                     Z-ADD1         WDFN
+     C                     MOVELF0BPGM    WPGM
+      *
+      ** Save Pgm-Function to dtaara CIREST
+      *
+     C           *LOCK     IN   CIREST
+     C                     MOVELWPGM      WREST
+     C                     OUT  CIREST
+      *
+      ** Submit Start-Up
+      *
+     C                     EXSR P05
+     C                     READ SDBAIJD0                 12
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4420'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERR  -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *NAMVAR   DEFN           SDSTAT
+     C                     IN   SDSTAT
+      *
+     C           *NAMVAR   DEFN           CIREST
+     C                     IN   CIREST
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+      ** Get the CI ICD
+      *
+     C**********           CALL 'AOBAIIR0'                                                    CRT005
+     C                     CALL 'AOBAIIR1'                                                    CRT005
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBAII    PARM SDBAII    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBAIIPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *                                                                                       CRT005
+      ** Determine if CRT005 is installed                                                     CRT005
+      *                                                                                       CRT005
+     C                     CALL 'AOSARDR0'                                                    CRT005
+     C                     PARM *BLANKS   PRTCD   7                                           CRT005
+     C                     PARM '*VERIFY 'POPTN   7                                           CRT005
+     C                     PARM 'CRT005'  PSARD   6                                           CRT005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFNE *BLANKS                                                       CRT005
+     C           PRTCD     ANDNE'*NRF   '                                                     CRT005
+     C           *LOCK     IN   LDA                                                           CRT005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRT005
+     C                     Z-ADD03        DBASE                                               CRT005
+     C                     MOVEL'CRT005'  DBKEY                                               CRT005
+     C                     EXSR DBERR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFEQ *BLANKS                                                       CRT005
+     C                     MOVE 'Y'       CRT005  1                                           CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVE 'N'       CRT005                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      ** Fill the function pgm array
+      *
+     C                     MOVELWBALP     PGM,1
+     C                     MOVELWTFRP     PGM,2
+     C                     MOVELWCDAP     PGM,3
+     C                     MOVELWCQDP1    PGM,4
+     C                     MOVELWCQDP2    PGM,5
+     C                     MOVELWCDNP     PGM,6
+     C                     MOVELWCQNP1    PGM,7
+     C                     MOVELWCQNP2    PGM,8
+     C                     MOVELWCWAP     PGM,9
+     C                     MOVELWCWNP     PGM,10
+     C                     MOVELWCQWP     PGM,11
+     C                     MOVELWCQWQ     PGM,12
+     C                     MOVELWBDCP     PGM,13
+     C                     MOVELWBTCP1    PGM,14
+     C                     MOVELWBTCP2    PGM,15
+     C                     MOVELWBTCP3    PGM,16
+     C                     MOVELWBTCP4    PGM,17
+     C                     MOVELWSTCP1    PGM,18
+     C                     MOVELWSTCP2    PGM,19
+     C                     MOVELWSTCP3    PGM,20
+     C                     MOVELWSTCP4    PGM,21
+     C                     MOVELWTXRP     PGM,22
+     C                     MOVELWPUPP     PGM,23
+     C                     MOVELWPNAP     PGM,24
+     C                     MOVELWDISP     PGM,25
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+      *                                                                                       CRT005
+     C                     MOVELWTCIP     PGM,26                                              CRT005
+     C                     MOVELWTCOP     PGM,27                                              CRT005
+     C                     MOVELWTTIP     PGM,28                                              CRT005
+     C                     MOVELWTTOP     PGM,29                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      ** Check from which point submission of programs will restart
+      *
+     C                     Z-ADD1         WX      20
+      *
+     C           WREST     IFNE *BLANKS
+     C           WREST     LOKUPPGM,WX                   11
+     C           *IN11     IFEQ '0'
+     C                     Z-ADD99        WX
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

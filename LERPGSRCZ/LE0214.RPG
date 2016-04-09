@@ -1,0 +1,2093 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility activity enquiry (AG)')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0214  - Midas LE Facility Activity Enquiry (AG)            *
+      *                                                               *
+      *  Function:  This program writes records to file LEFCENPD when *
+      *  (I/C)      facility being enquired is an AG                  *
+      *                                                               *
+      *  Called By: LE0211 - Facility Activity Enquiry                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. 240697             Date 17Mar15               *
+      *  Prev Amend No. AR936915           Date 07Oct14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG22126 *CREATE   Date 23Jan09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  240697 - Recompiled due to changed LF/LEFCAML8.              *
+      *  AR936915 - Syndicated facility filtered by From Date shows   *
+      *             Facility Increase for Funding Part in Facility    *
+      *             Activity Enquiry. Filter events of participants   *
+      *             by date. Also, remove previous defined arrays:    *
+      *             1. CLRPFM FILE(QTEMP/LEFCENPD)                    *
+      *             2. CLRPFM FILE(QTEMP/LEFATRPD)                    *
+      *             and instead, clear new filenames passed.          *
+      *             (Child: AR936917)                                 *
+      *           - Applied for MD030660                              *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  BUG22126 - Activity Enquiry for Aggregate Facilities         *
+      *                                                               *
+      *****************************************************************
+     FLEFCAML8IF  E           K        DISK         KINFDS FSDS
+     FLEFCAMLAIF  E           K        DISK
+     F            LOAMSDKF                          KRENAMELOAMSDLA
+     FLEMNFUL0IF  E           K        DISK
+     F            LEMNFUPF                          KRENAMELEMNF13
+     FLEMNFUL7IF  E           K        DISK
+     F            LEMNFUPF                          KRENAMELEMNUPLJ
+     FFACHSAL3IF  E           K        DISK
+     F            FACHISAF                          KRENAMEFACHISLJ
+     FCLOAN   IF  E           K        DISK
+     F            CLOANCLF                          KRENAMECLOANF
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLEAGFCL0IF  E           K        DISK
+     F            FCLTYFMF                          KRENAMEFCLTYF
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FLEFCLTLEIF  E           K        DISK
+     F            FCLTYFMF                          KRENAMELEFCLTZ1
+     FFACHSAL1IF  E           K        DISK
+     F            FACHISAF                          KRENAMEFACHISA1
+     FHISLAML0IF  E           K        DISK
+     F            LOAMSDKF                          KRENAMELOAMS213
+     FLEFCENPDO   E                    DISK         KCOMIT            UC
+     FLEFATRPDO   E                    DISK         KCOMIT            UC
+     FFCLTYFM IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTYG
+     FFACHSAL6IF  E           K        DISK
+     F            FACHISAF                          KRENAMEFACHISA6
+     FLEFCGRL1IF  E           K        DISK
+     FLEFCLNL3IF  E           K        DISK
+     F            LEFCLND0                          KRENAMELEFCLND3
+     FLEFCLNL4IF  E           K        DISK
+     F            LEFCLND0                          KRENAMELEFCLND4
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Record not Found                                      *
+      *   02  - Record not Found in LF/LEFCAML8                       *
+      *   03  - Record not Found                                      *
+      *   05  - End of file LF/LEFCAMLA                               *
+      *   08  - RE record from history, skip INT computation          *
+      *   09  - Record not found in LF/LEMNFUL7                       *
+      *   13  - Record not found in LF/FACHSAL3                       *
+      *   15  - Record found in Past Due Array                        *
+      *   16  - Chain to CLOAN.                                       *
+      *   20  - Record not found in LF/LEFCGRL1                       *
+      *   22  - Record not found in LF/LEFCLNL3                       *
+      *   23  - Record not found in LF/LEFCLNL4                       *
+      *   37  - Record not found in LF/HISLAML0                       *
+      *   50  - Record not found in LF/LEFCLTLE                       *
+      *   97  - Record not found in LF/FACHISAL6                      *
+      *   99  - End of file for FCLTYFM                               *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRFACH - Subroutine to Process Records in FACHISA            *
+      *  SRFCAM - Subroutine to Process Records in LEFCAML8 when      *
+      *           facility being enquired is a CA                     *
+      *  SRFTRA - Subroutine to Process Records in LEFCAML8 when      *
+      *           facility being enquired is a participant facility   *
+      *  SRLOAM - Subroutine to Process Records in LOAMSDK            *
+      *  SRFRMT - Subroutine to Format Fields in LEFCENPD             *
+      *  SRTRCH - Subroutine to search for Tranche                    *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E**********          PSDU      150  6 0             Past Due maturity                    CLE148
+     E                    PSDU      150  6                                                    CLE148
+     E**********          CMD     1   2 27               QCMDEXC Cmd                        AR936915
+     E                    CMD     1   1 27               QCMDEXC Cmd                        AR936915
+     E/COPY ZSRSRC,ZDATE9Z1
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     IHISTSHMF
+      ** Rename history header fields
+      *
+     I              BRCA                            BRCAHL
+     I              CNUM                            CNUMHL
+     I              LNRF                            LNRFHL
+     I              VDAT                            VDATHL
+     I              AMTP                            AMTPHL
+     I              PRAM                            PRAMHL
+     I              BRTT                            BRTTHL
+     I              BRTE                            BRTEHL
+     I              RTSP                            RTSPHL
+     I              SPIN                            SPINHL
+     I              REPT                            REPTHL
+     I              INTC                            INTCHL
+     I              SUTP                            SUTPHL
+     I              LCD                             LCDHL
+     I              CPAM                            CPAMHL
+     I              AITC                            AITCHL
+     I              INTR                            INTRHL
+     I              AIAP                            AIAPHL
+     I              IPRD                            IPRDHL
+     I              WTIN                            WTINHL
+     I              TOTI                            TOTIHL
+     I              CALC                            CALCHL
+     I              CLAS                            CLASHL
+      *
+     IHISTSHPF
+      ** Rename history amount fields
+      *
+     I              BRCA                            BRCAHL
+     I              CNUM                            CNUMHL
+     I              LNRF                            LNRFHL
+     I              VDAT                            VDATHL
+     I              AMTP                            AMTPHL
+     I              PRAM                            PRAMHL
+     I              INTA                            INTAHL
+     I              WTXA                            WTXAHL
+     I              FEAM                            FEAMHL
+     I              WOIN                            WOINHL
+     I              SUTP                            SUTPHL
+     I              LCD                             LCDHL
+     I              CPAM                            CPAMHL
+     I              AITC                            AITCHL
+     I              INTR                            INTRHL
+     I              AIAP                            AIAPHL
+     I              IPRD                            IPRDHL
+     I              MNSG                            MNSGHL
+     I              GASS                            GASSHL
+     I              ROLN                            ROLNHL
+     I              CLAS                            CLASHL
+      *
+     IHISTSHQF
+      ** Rename history rate fields
+      *
+     I              BRCA                            BRCAHL
+     I              CNUM                            CNUMHL
+     I              LNRF                            LNRFHL
+     I              VDAT                            VDATHL
+     I              CCY                             CCYHL
+     I              AMTP                            AMTPHL
+     I              BRTT                            BRTTHL
+     I              BRTE                            BRTEHL
+     I              RTSP                            RTSPHL
+     I              SPIN                            SPINHL
+     I              STAI                            STAIHL
+     I              IRCF                            IRCFHL
+     I              LCD                             LCDHL
+     I              CPAM                            CPAMHL
+     I              AITC                            AITCHL
+     I              INTR                            INTRHL
+     I              AIAP                            AIAPHL
+     I              IPRD                            IPRDHL
+     I              MNSG                            MNSGHL
+     I              RLCY                            RLCYHL
+     I              CALC                            CALCHL
+      *
+     ILOAMS213
+      ** Rename Loan Amendments file
+      *
+     I              BRCA                            BRCAHL
+     I              CNUM                            CNUMHL
+     I              LNRF                            LNRFHL
+     I              VDAT                            VDATHL
+     I              AMTP                            AMTPHL
+     I              BRTT                            BRTTHL
+     I              RTSP                            RTSPHL
+     I              BRTE                            BRTEHL
+     I              SPIN                            SPINHL
+     I              CCY                             CCYHL
+     I              PRAM                            PRAMHL
+     I              INTA                            INTAHL
+     I              TAMT                            TAMTHL
+     I              STAI                            STAIHL
+     I              LCD                             LCDHL
+     I              CHTP                            CHTPHL
+     I              REPT                            REPTHL
+     I              GASS                            GASSHL
+      *
+     ILOAMSDLA
+      ** Rename Loan Amendments file file from LEFCAMLA
+      *
+     I              BRCA                            BRCALA
+     I              FCUS                            FCUSLA
+     I              FTYP                            FTYPLA
+     I              FSEQ                            FSEQLA
+     I              LNRF                            LNRFLA
+     I              VDAT                            VDATLA
+     I              AMTP                            AMTPLA
+     I              CCY                             CCYLA
+      *
+     ILEMNUPLJ
+      ** Rename fields of LEMNFUL7
+      *
+     I              RECI                            RECILJ
+     I              BRCA                            BRCALJ
+     I              CNUM                            CNUMLJ
+     I              FACT                            FACTLJ
+     I              FCNO                            FCNOLJ
+     I              SQNO                            SQNOLJ
+     I              STDT                            STDTLJ
+     I              EXDT                            EXDTLJ
+      *
+     ILEMNF13
+     I              RECI                            RECI13
+     I              BRCA                            BRCA13
+     I              CNUM                            CNUM13
+     I              FACT                            FACT13
+     I              FCNO                            FCNO13
+     I              SQNO                            SQNO13
+     I              STDT                            STDT13
+     I              UCCY                            UCCY13
+     I              UAMT                            UAMT13
+     I              UNAR                            UNAR13
+     I              USTS                            USTS13
+     I              ORED                            ORED13
+     I              CHTP                            CHTP13
+     I              PUAM                            PUAM13
+     ILEFCLTZ1
+     I              CNUM                            CNUMZ1
+     I              FACT                            FACTZ1
+     I              FCNO                            FCNOZ1
+     I              BRCA                            BRCAZ1
+     I              CANM                            CANMZ1
+     I              CAFN                            CAFNZ1
+     I              CAFT                            CAFTZ1
+     I              TRCA                            TRCAZ1
+      *
+     ILEFCLND3
+      ** Rename fields for LEFCLNL3
+      *
+     I              FCHYID                          FCHYL3
+     I              FCLNID                          FCLNL3
+     I              FCENDI                          FCENL3
+     I              FCLEVL                          FCLEL3
+     I              FCPRNT                          FCPRL3
+     I              FCTRRN                          FCTRL3
+     I              FCZONE                          FCZOL3
+     ILEFCLND4
+      ** Rename fields for LEFCLNL4
+      *
+     I              FCHYID                          FCHYL4
+     I              FCLNID                          FCLNL4
+     I              FCENDI                          FCENL4
+     I              FCLEVL                          FCLEL4
+     I              FCPRNT                          FCPRL4
+     I              FCTRRN                          FCTRL4
+     I              FCZONE                          FCZOL4
+     ILEFRBS      DS                       9999
+     I**********                              1   60WRLNRF                                    CLE148
+     I                                        1   6 WRLNRF                                    CLE148
+     I                                    P   7  130WRRAMT
+      *
+     I            DS                                                                        AR936915
+     I                                        1  27 CMD                                     AR936915
+     I                                       13  22 FLNAME                                  AR936915
+      *                                                                                     AR936915
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     ISCSARD    E DSSCSARDPD
+      ** SAR file details accessed via access program AOSARDR0
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for Access Objects
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for Access Objects
+      *
+     ISDGELR    E DSSDGELRPD
+      **  External DS for general ledger details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details accesseD via access program
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  External data structures for Customer Details
+     I            DS
+     I                                        1  14 WCTRRN
+     I                                        1   3 WBRC1
+     I                                        4   9 WCNM1
+     I                                       10  12 WFCT1
+     I                                       13  14 WFCN1
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IFSDS        DS
+      ** File Status Data Structure
+      *
+     I                                     *RECORD  FREC
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+     I/COPY ZSRSRC,ZHOLI
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+     C           WFCLT     CHAINLEAGFCL0             01
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVELPBRCA     WKEY   14
+     C                     MOVELPCNUM     WFCLTY 11
+     C                     MOVELPFACT     WFATY   5
+     C                     MOVE PFCNO     WFATY
+     C                     MOVE WFATY     WFCLTY
+     C                     MOVE WFCLTY    WKEY
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'LEAGFCL0'DBFILE           * DBERR 01 *
+     C                     MOVEL'*KEY  '  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     EXSR SRFACH
+      *
+     C                     EXSR SRCRAG
+     C                     EXSR SRFCAM
+      *
+      ** check all tranches attached to that AG
+      *
+     C           WAGGR     CHAINLEFCGRL1             20
+      *
+     C           *IN20     IFEQ *OFF
+     C                     MOVE FCHYID    WHYID  150
+     C                     MOVE FCGRID    WGRID  150
+     C           WHYKY2    CHAINLEFCLNL3             22
+      *
+     C           *IN22     IFEQ *OFF
+     C                     Z-ADD0         WCTR1
+     C           FCENL3    ADD  1         WCTR1
+      *
+     C           WCTR1     DOWLEFCENL3
+     C           WHYKY1    CHAINLEFCLNL4             23
+      *
+      ** if a tranche is found, retrieve all US records of that TR in
+      ** FACHISA.
+      *
+     C           *IN23     IFEQ '0'
+     C                     MOVE FCTRL4    WCTRRN
+     C                     MOVELWBRC1     WBRCH
+     C                     MOVE WCNM1     WCSNO
+     C                     MOVELWFCT1     WFLTY
+     C                     MOVE WFCN1     WFLTY
+     C                     MOVE '0'       *IN13
+     C           WFACH     SETLLFACHSAL3
+     C           *IN13     DOWEQ'0'
+     C           WFACH     READEFACHSAL3                 13
+      *
+      ** if US record was found in FACHISA, get FADATE and sequence
+      *
+     C           *IN13     IFEQ '0'
+     C                     Z-ADDFASQNO    TSEQ    30
+     C                     Z-ADDFADATE    TDATE   50
+     C           WLEMN7    SETLLLEMNFUL7
+     C           WLEMN7    READELEMNFUL7                 09
+     C           *IN09     IFEQ '0'
+     C                     Z-ADDEXDTLJ    TREXDT
+     C                     ELSE
+     C                     Z-ADD1         TREXDT
+     C                     ENDIF
+     C                     MOVE CNUM      TRCNUM
+     C                     Z-ADDFACT      TRFACT
+     C                     Z-ADDFCNO      TRFCNO
+     C                     Z-ADDTDATE     TRSTDT
+     C                     Z-ADDTSEQ      TRTSEQ
+     C                     WRITELEFATRD0
+      *                    ENDIF
+     C                     ELSE
+     C                     MOVE '1'       *IN13
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ADD  1         WCTR1
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : QCMDEXC                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PFACT   30
+     C                     PARM           PFCNO   20
+     C                     PARM           PCCY    3
+     C                     PARM           PVLDT   50
+     C                     PARM           PCODE   1
+     C                     PARM           PNWPF1 10                                         AR936915
+     C                     PARM           PNWPF2 10                                         AR936915
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Determine if CLE014 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CLE014'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SCSARDPD'DBFILE
+     C                     MOVELPSARD     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** CLE014 is installed
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CLE014  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE014
+     C                     ENDIF
+      *
+     C           CLE014    IFEQ 'Y'
+     C                     Z-ADD*ZERO     C       40
+     C                     Z-ADD*ZERO     Z       40
+     C                     Z-ADD*ZERO     X       30
+     C                     Z-ADD*ZERO     Y       30
+     C                     ENDIF
+     C/COPY WNCPYSRC,LEH01306
+      *
+      ** Read bank details via access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '003'     DBASE            **********
+     C                     MOVEL'*FIRST ' DBOPTN  7        *  003   *
+     C                     MOVEL'*FIRST ' DBKEY            **********
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVEL'1'       *IN98
+     C                     ENDIF
+      *
+     C**********           MOVELCMD,1     PCMD                                              AR936915
+     C                     MOVELPNWPF1    FLNAME                                            AR936915
+     C                     CALL 'QCMDEXC'              04
+     C**********           PARM           PCMD   27                                         AR936915
+     C                     PARM           CMD                                               AR936915
+     C                     PARM 27        PLEN   155
+     C**********           MOVELCMD,2     PCMD                                              AR936915
+     C                     MOVELPNWPF2    FLNAME                                            AR936915
+     C                     CALL 'QCMDEXC'              06
+     C**********           PARM           PCMD   27                                         AR936915
+     C                     PARM           CMD                                               AR936915
+     C                     PARM 27        PLEN   155
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C                     MOVELPFACT     WFCTY   50
+     C                     MOVE PFCNO     WFCTY
+      *
+     C           WFCLT     KLIST
+     C                     KFLD           PCNUM
+     C                     KFLD           PFACT
+     C                     KFLD           PFCNO
+      *
+     C           WFAKY     KLIST
+     C                     KFLD           PCNUM
+     C                     KFLD           WFCTY
+      *
+     C           WFCKY     KLIST
+     C                     KFLD           PCNUM
+     C                     KFLD           PFACT
+     C                     KFLD           PFCNO
+      *
+      ** Key list to chain LF/HISLAML0
+      *
+     C           KEYH      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           LNRF
+      *
+     C           WFACH     KLIST
+     C                     KFLD           WCSNO
+     C                     KFLD           WFLTY
+      *
+     C           WLEMN7    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+     C                     KFLD           TDATE
+     C                     KFLD           TSEQ
+      *
+     C           WCAKY     KLIST
+     C                     KFLD           WCSNO
+     C                     KFLD           WFLTY
+      *
+     C           WLEM13    KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           WFACT
+     C                     KFLD           WFCNO
+     C                     KFLD           WSQNO
+      *
+     C           WCLON     KLIST
+     C                     KFLD           WLNRF
+      *
+     C           WPTKY     KLIST
+     C                     KFLD           WFCUS   6
+     C                     KFLD           WFTYP   30
+     C                     KFLD           WFSEQ   20
+      *
+     C           WHYKY1    KLIST
+     C                     KFLD           FCHYID
+     C                     KFLD           WCTR1
+      *
+     C           WHYKY2    KLIST
+     C                     KFLD           FCHYID
+     C                     KFLD           FCGRID
+      *
+     C                     OPEN LEFCENPD
+      *
+     C                     OPEN LEFATRPD
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFACH - Subroutine to Process Records in FACHISA            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFACH    BEGSR
+      *
+     C           WFAKY     SETLLFACHISA1
+      *
+     C           WFAKY     READEFACHISA1                 01
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN01     ANDEQ*OFF
+     C           WFAKY     READEFACHISA1                 01
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           *IN01     DOWEQ'0'
+      * Only display historic events if after selection date, and
+      * if the User did not specify only Backvalued or only Past Due,
+     C           FADATE    IFGE PVLDT
+     C           PCODE     ANDNE'P'
+     C           PCODE     ANDNE'B'
+     C                     MOVE *BLANK    WREC    1
+      *
+      ** Exclude participant transactions when code is not A
+      *
+     C           PRTR      IFNE 'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C           PCODE     ANDNE'A'
+     C**********           Z-ADDFALOAN    WLNRF   60                                          CLE148
+     C                     MOVELFALOAN    WLNRF   6                                           CLE148
+     C           WCLON     CHAINCLOAN                03
+     C                     SELEC
+     C           *IN03     WHEQ '0'
+     C           LPFI      ANDNE'P'
+     C           LPFI      ANDNE'I'
+     C           LPFI      ANDNE'R'
+     C           LPFI      ANDNE'S'
+     C                     MOVE FCUS      WFCUS
+     C                     Z-ADDFTYP      WFTYP
+     C                     Z-ADDFSEQ      WFSEQ
+     C           WPTKY     SETLLLEAGFCL0
+     C           WPTKY     READELEAGFCL0                 03
+     C           *IN03     IFEQ '0'
+     C           PRTR      ANDEQ'P'
+     C           *IN03     OREQ '0'
+     C           PRTR      ANDEQ'I'
+     C           *IN03     OREQ '0'
+     C           PRTR      ANDEQ'R'
+     C           *IN03     OREQ '0'
+     C           PRTR      ANDEQ'S'
+     C                     MOVEL'Y'       WREC
+     C                     ENDIF
+     C           WFCLT     CHAINLEAGFCL0             01
+     C           *IN03     WHEQ '0'
+     C                     MOVE 'Y'       WREC
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C********** FALOAN    IFNE 0                                                             CLE148
+     C**********           Z-ADDFALOAN    WLNRF                                               CLE148
+     C           FALOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVELFALOAN    WLNRF                                               CLE148
+     C           WCLON     CHAINCLOAN                03
+     C           *IN03     IFEQ '0'
+     C           RECI      ANDEQ'R'
+     C                     MOVE 'Y'       WREC
+     C                     ENDIF
+      *
+      * If loan was reversed before today, do not display
+      *
+     C           FAREVI    IFEQ 'R'
+     C                     MOVE 'Y'       WREC
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C           FAACTN    IFEQ 'US'
+     C           FAACTN    OREQ 'UI'
+     C           FAACTN    OREQ 'UD'
+      *
+      * If MFU was reversed before today, do not display
+      *
+     C           FAREVI    IFEQ 'R'
+     C                     MOVE 'Y'       WREC
+     C                     END
+      *
+     C           FAREVI    IFEQ ' '
+      *
+     C                     MOVE BRCA      WBRCA   3
+     C                     MOVE FACNUM    WCNUM   6
+     C                     Z-ADDFACT      WFACT   30
+     C                     Z-ADDFCNO      WFCNO   20
+     C                     Z-ADDFASQNO    WSQNO   30
+     C           TRCA      IFEQ 'AG'
+      *                    MOVEL
+     C           WLEMCA    KLIST
+      *
+     C                     KFLD           WCNUM
+     C                     KFLD           WFACT
+     C                     KFLD           WFCNO
+      *
+     C           WLEMCA    SETLLLEFCLTLE
+     C           WLEMCA    READELEFCLTLE                 50
+      *
+     C           *IN50     DOWEQ'0'
+     C                     MOVE BRCAZ1    WBRCA
+     C                     MOVE CNUMZ1    WCNUM
+     C                     Z-ADDFACTZ1    WFACT
+     C                     Z-ADDFCNOZ1    WFCNO
+      *
+     C           WLEM13    CHAINLEMNFUL0             03
+     C           *IN03     IFEQ '0'
+     C           RECI13    ANDEQ'R'
+     C                     MOVE 'Y'       WREC
+     C                     ENDIF
+     C           WLEMCA    READELEFCLTLE                 50
+     C                     ENDDO
+      *
+     C                     ELSE
+     C           WLEM13    CHAINLEMNFUL0             03
+     C           *IN03     IFEQ '0'
+     C           RECI13    ANDEQ'R'
+     C                     MOVE 'Y'       WREC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WREC      IFEQ *BLANK
+     C                     MOVE FARECI    RECI
+     C**********           Z-ADDFALOAN    LNRF                                                CLE148
+     C                     MOVELFALOAN    LNRF                                                CLE148
+     C                     Z-ADDFADATE    ADAT
+     C                     MOVELPCCY      CCY
+     C                     Z-ADDFAAAMT    AMNT
+     C                     MOVELFAACTN    ATYP
+     C                     Z-ADDFASQNO    USEQ
+     C                     MOVEL'H'       CODE
+     C                     MOVE FARCIN    RVCR
+     C                     Z-ADD*ZEROS    EDAT
+      *
+      ** If FAACTN is 'US' for participations check LEMNFUPD for the
+      ** MFU expiry date.
+      *
+     C           FAACTN    IFEQ 'US'
+     C           TRCA      ANDNE'AG'
+     C                     MOVE '0'       *IN09
+     C           WLEMN     KLIST
+     C                     KFLD           PBRCA
+     C                     KFLD           PCNUM
+     C                     KFLD           PFACT
+     C                     KFLD           PFCNO
+     C                     KFLD           PDATE
+     C                     KFLD           PSEQ
+      *
+     C                     Z-ADDFADATE    PDATE   50
+     C                     Z-ADDFASQNO    PSEQ    30
+      *
+      *
+     C           WLEMN     SETLLLEMNFUL7
+     C           WLEMN     READELEMNFUL7                 09
+     C           *IN09     IFEQ '0'
+     C                     Z-ADDEXDTLJ    EDAT
+     C                     ELSE
+      *
+      ** if not found Z-ADD 1 to EDAT to make sure that the correct
+      ** narrative will be used by LE0211.
+      *
+     C                     Z-ADD1         EDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   CNUM
+     C                     Z-ADD0         FACT
+     C                     Z-ADD0         FCNO
+     C                     WRITELEFCEND0
+     C                     ENDIF
+     C                     ENDIF
+     C           WFAKY     READEFACHISA1                 01
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN01     ANDEQ*OFF
+     C           WFAKY     READEFACHISA1                 01
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Check if primary has participants, if so, display its FIs
+      *
+     C           PCODE     IFEQ 'H'
+     C           PCODE     OREQ 'A'
+     C                     EXSR SRPART
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFCAM - Subroutine to Process Records in LEFCAML8 when      *
+      *           facility being enquired is an Aggregate             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : SRTRCH                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFCAM    BEGSR
+      *
+     C                     MOVELPBRCA     WAGG1   9
+     C                     MOVE PCNUM     WAGG1
+     C                     MOVELPFACT     WAGG2   5
+     C                     MOVE PFCNO     WAGG2
+     C                     MOVELWAGG1     WAGGR  14
+     C                     MOVE WAGG2     WAGGR
+      *
+     C           WAGGR     CHAINLEFCGRL1             20
+      *
+     C           *IN20     IFEQ *OFF
+     C           WHYKY2    CHAINLEFCLNL3             22
+      *
+     C           *IN22     IFEQ *OFF
+     C                     Z-ADD0         WCTR1
+     C           FCLNL3    ADD  1         WCTR1  150
+      *
+     C           WCTR1     DOWLEFCENL3
+     C           WHYKY1    CHAINLEFCLNL4             23
+     C                     EXSR SRTRCH
+     C                     ADD  1         WCTR1
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRCH - Subroutine to retrieve tranche details              *
+      *                                                               *
+      *  Called by: SRFCAM                                            *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRCH    BEGSR
+     C                     MOVE FCTRL4    WCTRRN
+     C                     MOVELWBRC1     WBRCH   3
+     C                     MOVE WCNM1     WCSNO   6
+     C                     MOVELWFCT1     WFLTY   50
+     C                     MOVE WFCN1     WFLTY
+      *
+      ** Retrieve actions
+      *
+     C           PCODE     IFEQ 'A'
+     C           PCODE     ORNE 'A'
+     C           PRTR      ANDNE'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C           WCAKY     SETLLLEFCAML8
+     C           WCAKY     READELEFCAML8                 02
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN02     ANDEQ*OFF
+     C           WCAKY     READELEFCAML8                 02
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           *IN02     DOWEQ'0'
+     C                     MOVEL'N'       PASTDU
+     C           PCODE     IFEQ 'B'
+     C           VDAT      ANDLTAGRDNB
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           ORED      ANDEQAGRDNB
+     C           PCODE     OREQ 'P'
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           AMTP      ANDEQ'PD'
+     C           PCODE     OREQ 'B'
+     C           VDAT      ANDLTAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+     C           CLE014    OREQ 'Y'
+     C           PCODE     ANDEQ'B'
+     C           NRPD      ANDLTAGRDNB
+     C           FREC      ANDEQ'CLOANCL5'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'B'
+     C           STDT      ANDLTAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'F'
+     C           VDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           PCODE     OREQ 'F'
+     C           VDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+      *
+      ** Future-valued Maturity date of loans
+      *
+     C           PCODE     OREQ 'F'
+     C           MDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'CLOANCL3'
+     C           RECI      ANDNE'R'
+      *
+     C           PCODE     OREQ 'F'
+     C           MDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'CLOANCL4'
+     C           RECI      ANDNE'R'
+      *
+     C           CLE014    OREQ 'Y'
+     C           PCODE     ANDEQ'F'
+     C           NRPD      ANDGEAGRDNB
+     C           FREC      ANDEQ'CLOANCL5'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'F'
+     C           STDT      ANDGEAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+      *
+      ** For PCODE 'F', future manual utisation expiry date
+      *
+     C           PCODE     OREQ 'F'
+     C           EXDT      ANDGEAGRDNB
+     C           FREC      ANDEQ'LEMNFUPE'
+      *
+     C           PCODE     OREQ *BLANKS
+     C           FREC      ANDNE'FACHISAF'
+     C           FREC      ANDNE'CLOANCL2'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'A'
+     C           FREC      ANDNE'FACHISAF'
+     C           FREC      ANDNE'CLOANCL2'
+     C           RECI      ANDNE'R'
+      *
+     C                     MOVE 'Y'       WPRIN   1
+     C           AMTP      IFEQ 'MR'
+     C           PRAM      ANDEQ0
+     C                     MOVE 'N'       WPRIN
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PD'
+     C           PRAM      ANDEQ0
+     C                     MOVE 'N'       WPRIN
+     C                     ENDIF
+      *
+     C           FREC      IFEQ 'LOAMSDKF'
+     C           AMTP      ANDEQ'PD'
+     C           WPRIN     ANDEQ'Y'
+     C                     Z-ADDVDAT      WVDAT   50
+     C           LNRF      CHAINCLOAN                16
+     C           WVDAT     IFEQ MDAT
+     C           X         IFLE 150
+     C           X         ADD  1         X
+     C**********           Z-ADDLNRF      PSDU,X                                              CLE148
+     C                     MOVELLNRF      PSDU,X                                              CLE148
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDWVDAT     VDAT
+     C                     ENDIF
+      *
+      *
+     C           CLE014    IFEQ 'Y'
+     C           FREC      ANDEQ'CLOANCL5'
+     C                     EXSR SRRAMT
+     C                     ENDIF
+      *
+      * If Maturity, check whether this loan has gone Past Due
+     C           FREC      IFEQ 'CLOANCL3'
+     C                     Z-ADD1         Y       30
+     C           LNRF      LOKUPPSDU,Y                   15
+     C           *IN15     IFEQ '1'
+     C                     MOVE 'Y'       PASTDU  1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+      ** LOAMSDK uses VDAT not VLDT
+      *
+     C           VDAT      IFGE PVLDT
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           WPRIN     ANDEQ'Y'
+     C           VDAT      ORGE PVLDT
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+      *
+     C           VDAT      ORGE AGRDNB
+     C           VDAT      ANDGEPVLDT
+     C           ORED      ANDNEAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+      *
+     C           STDT      ORGE PVLDT
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+     C           STDT      ORGE AGRDNB
+     C           PVLDT     ANDEQ*ZERO
+     C           ORED      ANDLTAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+      *
+      ** Manual Utilisation expiry/end date greater than or equal to
+      ** from activity date (PVLDT).
+      *
+     C           EXDT      ORGE PVLDT
+     C           FREC      ANDEQ'LEMNFUPE'
+      *
+      ** Future loan maturity date
+      *
+     C           MDAT      ORGE PVLDT
+     C           FREC      ANDEQ'CLOANCL3'
+     C           PASTDU    ANDNE'Y'
+      *
+     C           MDAT      ORGE PVLDT
+     C           FREC      ANDEQ'CLOANCL4'
+      *
+     C           CLE014    OREQ 'Y'
+     C           NRPD      ANDGEPVLDT
+     C           FREC      ANDEQ'CLOANCL5'
+     C           WRAMT     ANDGT*ZERO
+     C                     EXSR SRFRMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C           WCAKY     READELEFCAML8                 02
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN02     ANDEQ*OFF
+     C           WCAKY     READELEFCAML8                 02
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFRMT - Subroutine to Format Fields in LEFCENPD             *
+      *                                                               *
+      *  Called By: SRFCAM, SRFTRA                                    *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFRMT    BEGSR
+      *
+     C                     MOVEL*BLANK    WREC
+     C                     Z-ADD0         USEQ
+     C           CLE014    IFEQ 'Y'
+     C                     MOVEL*BLANK    FREQ
+     C                     MOVEL*BLANK    EXFR
+     C                     ENDIF
+     C                     SELEC
+      *
+     C           FREC      WHEQ 'LEFCAMPF'
+     C**********           Z-ADD0         LNRF                                                CLE148
+     C                     MOVEL*BLANKS   LNRF                                                CLE148
+     C                     Z-ADDVLDT      ADAT
+     C                     MOVELACCY      CCY
+     C                     Z-ADDAAMT      AMNT
+     C                     MOVELFATP      ATYP
+      *
+     C           TRCA      IFEQ 'AG'
+     C                     MOVE *BLANKS   CNUM
+     C                     Z-ADD0         FACT
+     C                     Z-ADD0         FCNO
+     C                     ENDIF
+      *
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           VLDT      IFLT AGRDNB
+     C                     MOVEL'B'       CODE
+     C                     ELSE
+     C                     MOVEL'F'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+     C           FREC      WHEQ 'LOAMSDKF'
+     C                     Z-ADDVDAT      ADAT
+     C                     Z-ADDTAMT      AMNT
+     C                     MOVELAMTP      ATYP
+      *
+     C           REPT      IFEQ 1
+     C           AMTP      ANDEQ'RE'
+     C                     Z-ADDPRAM      AMNT
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MR'
+     C                     Z-ADDPRAM      AMNT
+     C                     ENDIF
+      *
+      ** Check for Past Due loan amendments:
+     C           AMTP      IFEQ 'PD'
+     C                     Z-ADDPRAM      AMNT
+     C                     MOVEL'P'       CODE
+     C                     ELSE
+      *
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           VDAT      IFLT AGRDNB
+     C                     MOVEL'B'       CODE
+     C                     ELSE
+     C                     MOVEL'F'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Exclude participant transactions when code is not A
+      *
+     C           PCODE     IFNE 'A'
+     C           PRTR      ANDNE'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C**********           Z-ADDLNRF      WLNRF                                               CLE148
+     C                     MOVELLNRF      WLNRF                                               CLE148
+     C           WCLON     CHAINCLOAN                03
+     C           *IN03     IFEQ '0'
+     C           LPFI      ANDEQ'P'
+     C           *IN03     OREQ '0'
+     C           LPFI      ANDEQ'I'
+     C           *IN03     OREQ '0'
+     C           LPFI      ANDEQ'R'
+     C           *IN03     OREQ '0'
+     C           LPFI      ANDEQ'S'
+     C                     MOVEL'Y'       WREC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FREC      WHEQ 'CLOANCL1'
+     C           FREC      OREQ 'CLOANCL2'
+     C                     Z-ADDVDAT      ADAT
+     C                     Z-ADDCPAM      AMNT
+     C                     MOVEL'ST'      ATYP
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           VDAT      IFLT AGRDNB
+     C                     MOVEL'B'       CODE
+     C                     ELSE
+     C                     MOVEL'F'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+      ** Exclude participant transactions when code is not A
+      *
+     C           PCODE     IFNE 'A'
+     C           PRTR      ANDNE'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C           LPFI      IFEQ 'P'
+     C           LPFI      OREQ 'I'
+     C           LPFI      OREQ 'R'
+     C           LPFI      OREQ 'S'
+     C                     MOVEL'Y'       WREC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FREC      WHEQ 'CLOANCL3'
+     C           FREC      OREQ 'CLOANCL4'
+      *
+     C                     Z-ADD*ZEROS    WCALC
+     C                     Z-ADD*ZEROS    WIPAID
+     C                     Z-ADDMDAT      WMDAT   50
+     C                     Z-ADDCPAM      MAMNT  130
+     C**********           Z-ADDLNRF      WLOAN   60                                          CLE148
+     C                     MOVELLNRF      WLOAN   6                                           CLE148
+     C                     Z-ADDIACD      WLICD   50
+     C                     MOVE SPIN      WCUSI   1
+     C                     Z-ADDINTR      WCURT
+     C                     Z-ADDBRTE      WCUBR
+     C                     Z-ADDRTSP      WCUSP
+     C                     Z-ADDIACD      WLASD
+     C                     MOVE ICBS      WICBS
+     C                     MOVE *BLANK    WSTAC   1
+      *
+      ** read LEFCAMLA to get all loan amendments which concerns
+      ** principal for repayment types 1 and 2
+      *
+     C                     MOVE '0'       *IN05
+      *
+     C           NRPD      IFNE 0
+     C                     Z-ADDNRPD      ZDAYNO
+     C                     Z-ADDRDYN      ZMDAY
+     C                     MOVELCCY       ZCCY
+     C                     MOVELRFRQ      ZFREQ
+     C                     ENDIF
+      *
+     C           REPT      IFLE 2
+      *
+     C           WLOAN     SETLLLEFCAMLA
+     C                     READ LEFCAMLA                 05
+      *
+     C           *IN05     DOWEQ'0'
+     C           WLOAN     ANDEQLNRFLA
+      *
+     C           VDATLA    IFLE ZDAYNO
+      *
+     C           AMTPLA    IFEQ 'MR'
+     C           AMTPLA    OREQ 'RE'
+     C           AMTPLA    OREQ 'PF'
+      *
+      ** Subtract movement amount from current principal to project
+      ** maturity amount.
+      *
+     C           MAMNT     SUB  PRAM      MAMNT
+     C                     ELSE
+      *
+      ** Add PRAM to maturity amount for amendment types PI and PT
+      *
+     C           AMTPLA    IFEQ 'PI'
+     C           AMTPLA    OREQ 'PT'
+     C                     ADD  PRAM      MAMNT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ LEFCAMLA                 05
+      *
+     C                     ELSE
+     C           MAMNT     IFGT 0
+     C                     SUB  RAMT      MAMNT
+     C           MAMNT     IFLT 0
+     C                     Z-ADD0         MAMNT
+     C                     ENDIF
+     C                     ENDIF
+     C           RFRQ      IFNE ' '
+     C                     EXSR ZFREQB
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Continue the computation of principal at maturity.
+      *
+     C           ZDAYNO    DOWLTMDAT
+     C           MAMNT     ANDGT0
+      *
+     C                     SUB  RAMT      MAMNT
+     C           RFRQ      IFNE ' '
+     C                     EXSR ZFREQB
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     ENDIF
+      *
+     C           MAMNT     IFLT 0
+     C                     Z-ADD0         MAMNT
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ** repayment type 3
+      *
+     C                     Z-ADDCPAM      WCUPR
+     C                     MOVE FCUS      CNUM
+      *
+     C                     MOVE '0'       *IN37
+     C                     Z-ADD0         WLASD   50
+     C           KEYH      SETLLHISLAML0
+     C           KEYH      READEHISLAML0                 37
+      *
+      ** If no history or no amendments against the loan
+      *
+     C           *IN37     IFEQ '1'
+     C                     Z-ADDCPAM      MAMNT
+     C                     Z-ADDVDAT      WLASD
+     C                     ELSE
+      *
+     C           *IN37     DOWEQ'0'
+      *
+      ** If loan has not start yet and there is an RE, initialise WLASD
+      ** so that interest will be computed.
+      *
+     C           AMTPHL    IFNE 'ST'
+     C           WLASD     ANDEQ0
+     C                     Z-ADDVDAT      WLASD
+     C                     ENDIF
+      *
+      ** Accumulate interest on change of date
+      *
+     C           VDATHL    IFLE ZDAYNO
+      *
+     C           WLASD     IFNE VDATHL
+     C           WLASD     ANDNE*ZEROS
+     C           WSTAC     ANDEQ*BLANK
+     C                     Z-ADDVDATHL    ZIEND
+     C                     EXSR SRINCL
+     C                     ADD  ZINTR     WCALC  152
+     C                     ENDIF
+      *
+     C           AMTPHL    IFEQ 'ST'
+     C           AMTPHL    OREQ 'RO'
+     C           AMTPHL    OREQ 'MC'
+     C                     MOVE CALCHL    WICBS   10
+     C                     MOVE SPINHL    WCUSI
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+     C           AMTPHL    WHEQ 'ST'
+     C           AMTPHL    OREQ 'MC'
+      *
+     C           AMTPHL    IFEQ 'ST'
+     C                     Z-ADDPRAMHL    WCUPR
+     C                     ELSE
+     C                     Z-ADDCPAMHL    WCUPR
+     C                     ENDIF
+      *
+     C                     Z-ADDBRTEHL    WCUBR  117
+     C                     Z-ADDRTSPHL    WCUSP  117
+     C                     Z-ADDINTRHL    WCURT  117
+     C                     Z-ADDVDATHL    WLICD
+      *
+     C           AMTPHL    WHEQ 'IN'
+      *
+      ** WIPAID is interest paid for the loan
+      *
+     C                     ADD  INTAHL    WIPAID 152
+     C           INTCHL    IFEQ 'Y'
+     C                     ADD  INTAHL    WCUPR  130
+     C                     ENDIF
+      *
+     C           AMTPHL    WHEQ 'RO'
+      *
+     C           PRINRO    IFNE *ZEROS
+     C                     Z-ADDPRINRO    WCUPR
+     C                     ENDIF
+      *
+     C                     Z-ADDBRTEHL    WCUBR
+     C                     Z-ADDRTSPHL    WCUSP
+     C                     Z-ADDINTRHL    WCURT
+     C                     Z-ADDVDATHL    WLICD   50
+      *
+     C           AMTPHL    WHEQ 'PT'
+     C           AMTPHL    OREQ 'PI'
+     C                     ADD  PRAMHL    WCUPR
+      *
+     C           AMTPHL    WHEQ 'PF'
+     C                     SUB  PRAMHL    WCUPR
+      *
+     C           AMTPHL    WHEQ 'MR'
+     C           AMTPHL    OREQ 'RE'
+     C           AMTPHL    OREQ 'MA'
+      *
+      ** If RE is from LOAMSDK, compute for the outstanding interest to
+      ** date to determine what portion of the repayment amount will go
+      ** to the principal.
+      *
+     C           AMTPHL    IFEQ 'RE'
+     C                     MOVE '0'       *IN08
+      *
+      ** If RE is from history, skip computation of outstanding INT
+      *
+     C           VDATHL    IFLT AGRDNB
+     C           LCDHL     ANDLTAGRDNB
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+      ** If RE is from LOAMSDK
+      *
+     C           *IN08     IFEQ '0'
+     C           WCALC     SUB  WIPAID    WOUTIN 152
+      *
+      ** Compute for the interest to be paid
+      *
+     C           WOUTIN    IFLE TAMTHL
+     C           TAMTHL    SUB  WOUTIN    PRAMHL 130
+     C                     Z-ADDWOUTIN    INTAHL
+      *
+      ** If over paid
+      *
+     C           WOUTIN    IFLT 0
+     C                     Z-ADDTAMTHL    PRAMHL
+     C                     Z-ADD0         INTAHL
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    PRAMHL
+     C                     Z-ADDTAMTHL    INTAHL
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  INTAHL    WIPAID
+     C                     SUB  PRAMHL    WCUPR
+      *
+     C           AMTPHL    WHEQ 'BR'
+     C           AMTPHL    OREQ 'BC'
+     C                     Z-ADDBRTEHL    WCUBR
+     C                     EXSR SRNEWI
+      *
+     C           AMTPHL    WHEQ 'SC'
+     C                     Z-ADDRTSPHL    WCUSP
+     C                     EXSR SRNEWI
+      *
+     C           AMTPHL    WHEQ 'MI'
+     C                     ADD  INTAHL    WCALC  152
+      *
+     C           AMTPHL    WHEQ 'SA'
+     C           STAIHL    IFEQ *BLANK
+     C                     Z-ADDVDATHL    WLICD
+     C                     ELSE
+     C                     MOVE 'Y'       WSTAC
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     Z-ADDVDATHL    WLASD
+      *
+     C           KEYH      READEHISLAML0                 37
+      *
+     C                     ELSE
+      *
+     C           WLASD     IFNE ZDAYNO
+     C           WLASD     ANDNE*ZEROS
+     C           WSTAC     ANDEQ*BLANK
+     C           ZDAYNO    ANDLTMDAT
+     C                     Z-ADDZDAYNO    ZIEND
+     C                     EXSR SRINCL
+     C                     ADD  ZINTR     WCALC
+     C                     Z-ADDZDAYNO    WLASD
+     C           RFRQ      IFNE ' '
+     C                     EXSR ZFREQB
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WCALC     SUB  WIPAID    WOUTIN
+      *
+      ** Compute for the interest to be paid
+      *
+     C           WOUTIN    IFLE RAMT
+     C           RAMT      SUB  WOUTIN    WPRAM  130
+     C                     Z-ADDWOUTIN    WINTA  130
+      *
+      ** If over paid
+      *
+     C           WOUTIN    IFLT 0
+     C                     Z-ADDRAMT      WPRAM
+     C                     Z-ADD0         WINTA
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WPRAM
+     C                     Z-ADDRAMT      WINTA
+     C                     ENDIF
+      *
+     C                     ADD  WINTA     WIPAID
+     C           WCUPR     IFGT 0
+     C                     SUB  WPRAM     WCUPR
+     C           WCUPR     IFLT 0
+     C                     Z-ADD0         WCUPR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     Z-ADDWCUPR     MAMNT
+      *
+      ** Continue the computation of principal at maturity.
+      *
+     C           ZDAYNO    DOWLTMDAT
+     C           MAMNT     ANDGT0
+      *
+     C           WLASD     IFNE ZDAYNO
+     C           WLASD     ANDNE*ZEROS
+     C           WSTAC     ANDEQ*BLANK
+     C                     Z-ADDZDAYNO    ZIEND
+     C                     EXSR SRINCL
+     C                     ADD  ZINTR     WCALC
+     C                     Z-ADDZDAYNO    WLASD
+     C                     ENDIF
+     C           RFRQ      IFNE ' '
+     C                     EXSR ZFREQB
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     ENDIF
+      *
+     C           WCALC     SUB  WIPAID    WOUTIN
+      *
+      ** Compute for the interest to be paid
+      *
+     C           WOUTIN    IFLE RAMT
+     C           RAMT      SUB  WOUTIN    WPRAM  130
+     C                     Z-ADDWOUTIN    WINTA  130
+      *
+      ** If over paid
+      *
+     C           WOUTIN    IFLT 0
+     C                     Z-ADDRAMT      WPRAM
+     C                     Z-ADD0         WINTA
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WPRAM
+     C                     Z-ADDRAMT      WINTA
+     C                     ENDIF
+      *
+     C                     ADD  WINTA     WIPAID
+     C           WCUPR     IFGT 0
+     C                     SUB  WPRAM     WCUPR
+     C           WCUPR     IFLT 0
+     C                     Z-ADD0         WCUPR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDWCUPR     MAMNT
+     C                     ENDIF
+      *
+     C                     MOVEL'MT'      ATYP
+      *
+      ** Check if there are existing frequency based repayments against
+      ** the loan.
+      *
+     C           CLE014    IFEQ 'Y'
+     C                     Z-ADD1         Z       40
+     C           LNRF      DOUEQWRLNRF
+     C********** WRLNRF    OREQ *ZERO                                                         CLE148
+     C           WRLNRF    OREQ *BLANKS                                                       CLE148
+     C           Z         OCUR LEFRBS
+     C           LEFRBS    IFEQ *BLANK
+     C**********           Z-ADD*ZERO     WRLNRF                                              CLE148
+     C                     MOVEL*BLANKS   WRLNRF                                              CLE148
+     C                     Z-ADD*ZERO     WRRAMT
+     C                     ENDIF
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+      ** If a repayment is found, subtract repayment amount to maturi
+      ** ty amount.
+      *
+     C           LNRF      IFEQ WRLNRF
+     C                     MOVE 'Y'       EXFR
+     C                     ENDIF
+     C                     ENDIF
+     C                     Z-ADDMAMNT     AMNT
+     C                     Z-ADDWMDAT     ADAT
+      *
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           MDAT      IFGE AGRDNB
+     C                     MOVEL'F'       CODE
+     C                     ELSE
+     C                     MOVEL'P'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+      ** Exclude participant transactions when code is not A
+      *
+     C           PCODE     IFNE 'A'
+     C           PRTR      ANDNE'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C           LPFI      IFEQ 'P'
+     C           LPFI      OREQ 'I'
+     C           LPFI      OREQ 'R'
+     C           LPFI      OREQ 'S'
+     C                     MOVEL'Y'       WREC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CLE014    WHEQ 'Y'
+     C           FREC      ANDEQ'CLOANCL5'
+     C                     ADD  1         C
+     C           C         OCUR LEFRBS
+     C**********           Z-ADDLNRF      WRLNRF                                              CLE148
+     C                     MOVELLNRF      WRLNRF                                              CLE148
+     C                     Z-ADDWRAMT     WRRAMT
+     C                     Z-ADDNRPD      ADAT
+     C                     Z-ADDWRAMT     AMNT
+     C                     MOVEL'RE'      ATYP
+     C           PCODE     IFEQ *BLANK
+     C           PCODE     OREQ 'A'
+     C           NRPD      IFLT AGRDNB
+     C                     MOVE 'B'       CODE
+     C                     ELSE
+     C                     MOVE 'F'       CODE
+     C                     ENDIF
+     C                     MOVE RFRQ      FREQ
+     C                     ENDIF
+      *
+     C           FREC      WHEQ 'LEMNFUPF'
+     C**********           Z-ADD0         LNRF                                                CLE148
+     C                     MOVEL*BLANKS   LNRF                                                CLE148
+     C                     Z-ADDSTDT      ADAT
+     C                     Z-ADDEXDT      EDAT
+     C                     MOVELUCCY      CCY
+     C                     Z-ADDUAMT      AMNT
+     C                     MOVEL'US'      ATYP
+     C                     Z-ADDSQNO      USEQ
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           STDT      IFLT AGRDNB
+     C                     MOVEL'B'       CODE
+     C                     ELSE
+     C                     MOVEL'F'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+      ** Set up details of future manual utilisation end date/expiry.
+      *
+     C           FREC      WHEQ 'LEMNFUPE'
+     C**********           Z-ADD0         LNRF                                                CLE148
+     C                     MOVEL*BLANKS   LNRF                                                CLE148
+     C                     Z-ADDEXDT      ADAT
+     C                     MOVELUCCY      CCY
+     C                     Z-ADDUAMT      AMNT
+     C                     MOVEL'UE'      ATYP
+     C                     Z-ADDSQNO      USEQ
+     C           PCODE     IFEQ *BLANKS
+     C           PCODE     OREQ 'A'
+     C           EXDT      IFGE AGRDNB
+     C                     MOVEL'F'       CODE
+     C                     ELSE
+     C                     MOVEL'B'       CODE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELPCODE     CODE
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C           WREC      IFEQ *BLANKS
+     C           FREC      IFNE 'LEMNFUPF'
+     C           FREC      ANDNE'LEMNFUPE'
+     C                     Z-ADD*ZEROS    EDAT
+     C                     ENDIF
+     C                     WRITELEFCEND0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRAMT  -  Set Repayment Amount                              *
+      *                                                               *
+      *  Called by: SRFRMT                                            *
+      *  Calls:                                                       *
+      *  GLINTC - Calculates interest                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRAMT    BEGSR
+      *
+      ** Initialise repayment amount workfield
+      *
+     C                     Z-ADD*ZERO     WRAMT  150
+     C                     SELEC
+      *
+      ** Repayment type 1 or 2
+      *
+     C           REPT      WHEQ 1
+     C           REPT      OREQ 2
+     C                     Z-ADDRAMT      WRAMT
+      *
+      ** Repayment type 3
+      *
+     C           REPT      WHEQ 3
+      *
+      ** Compute for interest
+      *
+     C                     Z-ADDSLID      ZIBEG
+     C                     Z-ADDNRPD      ZIEND
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDCPAM      ZIAMT
+     C                     Z-ADDINTR      ZIRATE
+     C/COPY WNCPYSRC,LEH01307
+     C                     EXSR GLINTC
+     C/COPY WNCPYSRC,LEH01396
+      *
+      ** Round down interest if required
+      *
+     C           RDFC      IFEQ 'Y'
+     C                     Z-ADDZINTR     WRDOWN 130
+     C                     Z-ADDWRDOWN    ZINTR
+     C                     ELSE
+     C                     Z-ADDZINTR     WRUP   130H
+     C                     Z-ADDWRUP      ZINTR
+     C                     ENDIF
+      *
+     C           RAMT      SUB  ZINTR     WRAMT
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRNEWI  -  Compute for new interest rate                      *
+      * Called by: SRFRMT                                             *
+      *                                                               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRNEWI    BEGSR
+      *
+      ** Reflect spread to effective interest
+      *
+     C                     SELEC
+     C           WCUSI     WHEQ 'A'
+     C           WCUBR     ADD  WCUSP     WCURT
+     C           WCUSI     WHEQ 'S'
+     C           WCUBR     SUB  WCUSP     WCURT
+     C           WCUSI     WHEQ 'P'
+     C           WCUSP     DIV  100       WWORK  119
+     C           WCUBR     MULT WWORK     WCURT
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRINCL  -  Interest calculation                               *
+      * Called by: SRFRMT                                             *
+      *                                                               *
+      * Calls    : GLINTC                                             *
+      *****************************************************************
+     C           SRINCL    BEGSR
+      *
+      ** Do not compute for interest if not greater than 0
+      *
+     C           WCURT     IFLE *ZEROS
+     C           CPAM      OREQ *ZEROS
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     ELSE
+      *
+     C                     Z-ADDWLICD     ZIBEG
+     C                     MOVE WICBS     ZICALC
+     C                     Z-ADDWCUPR     ZIAMT
+     C                     Z-ADDWCURT     ZIRATE
+     C/COPY WNCPYSRC,LEH01308
+     C                     EXSR GLINTC
+     C/COPY WNCPYSRC,LEH01397
+      *
+      ** Round down interest if required
+      *
+     C           RDFC      IFEQ 'Y'
+     C                     Z-ADDZINTR     RDWORK 130
+     C                     Z-ADDRDWORK    ZINTR
+     C                     ELSE
+     C                     Z-ADDZINTR     RUWORK 130H
+     C                     Z-ADDRUWORK    ZINTR
+     C                     ENDIF
+     C                     Z-ADDZIEND     WLICD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCRAG - Subroutine to Process Records in LEFCAML8 when      *
+      *           facility being enquired is a CA                     *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCRAG    BEGSR
+      *
+     C                     MOVELBRCA      WBRCH   3
+     C                     MOVE PCNUM     WCSNO   6
+     C                     MOVELPFACT     WFLTY   50
+     C                     MOVE PFCNO     WFLTY
+      *
+      ** Retrieve actions
+      *
+     C           PCODE     IFEQ 'A'
+     C           PCODE     ORNE 'A'
+     C           PRTR      ANDNE'P'
+     C           PRTR      ANDNE'I'
+     C           PRTR      ANDNE'R'
+     C           PRTR      ANDNE'S'
+     C           WCAKY     SETLLLEFCAML8
+     C           WCAKY     READELEFCAML8                 02
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN02     ANDEQ*OFF
+     C           WCAKY     READELEFCAML8                 02
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           *IN02     DOWEQ'0'
+     C           PCODE     IFEQ 'B'
+     C           VLDT      ANDLTAGRDNB
+     C           FREC      ANDEQ'LEFCAMPF'
+     C           PCODE     OREQ 'B'
+     C           VDAT      ANDLTAGRDNB
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           PCODE     OREQ 'B'
+     C           VDAT      ANDLTAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'B'
+     C           STDT      ANDLTAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'F'
+     C           VLDT      ANDGEAGRDNB
+     C           FREC      ANDEQ'LEFCAMPF'
+     C           PCODE     OREQ 'F'
+     C           VDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           PCODE     OREQ 'F'
+     C           VDAT      ANDGEAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'F'
+     C           STDT      ANDGEAGRDNB
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ *BLANKS
+     C           FREC      ANDNE'FACHISAF'
+     C           FREC      ANDNE'CLOANCL2'
+     C           RECI      ANDNE'R'
+     C           PCODE     OREQ 'A'
+     C           FREC      ANDNE'FACHISAF'
+     C           FREC      ANDNE'CLOANCL2'
+     C           RECI      ANDNE'R'
+      *
+     C                     MOVE 'Y'       WPRIN
+     C           AMTP      IFEQ 'MR'
+     C           PRAM      ANDEQ0
+     C                     MOVE 'N'       WPRIN
+     C                     ENDIF
+      *
+     C           VLDT      IFGE PVLDT
+     C           FREC      ANDEQ'LEFCAMPF'
+     C           VDAT      ORGE PVLDT
+     C           FREC      ANDEQ'LOAMSDKF'
+     C           WPRIN     ANDEQ'Y'
+     C           VDAT      ORGE PVLDT
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+      *
+     C           VDAT      ORGE PVLDT
+     C           VDAT      ANDGEAGRDNB
+     C           ORED      ANDNEAGRDNB
+     C           FREC      ANDEQ'CLOANCL1'
+     C           RECI      ANDNE'R'
+      *
+     C           STDT      ORGE PVLDT
+     C           ORED      ANDEQAGRDNB
+     C           FREC      ANDEQ'LEMNFUPF'
+     C           RECI      ANDNE'R'
+     C                     EXSR SRFRMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C           WCAKY     READELEFCAML8                 02
+      *
+     C           PBRCA     IFNE 'ALL'
+     C           PBRCA     DOWNEBRCA
+     C           *IN02     ANDEQ*OFF
+     C           WCAKY     READELEFCAML8                 02
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Program exception error routine                   *
+      *             Called automatically if a program error occurs,   *
+      *             or directly by the program code using EXSR.       *
+      *             This subroutine DUMPs the program just once.      *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPART  - Check if facility enquired on has participant(s)   *
+      *                                                               *
+      *  Called By: SRFACH                                            *
+      *                                                               *
+      *  Calls    : SRCUST                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPART    BEGSR
+      *
+     C                     READ FCLTYG                   99
+     C           *IN99     DOWEQ*OFF
+      *
+      ** Do While not EOF
+      *
+     C           PMFC      IFEQ PCNUM
+     C           PMFT      ANDEQPFACT
+     C           PMFN      ANDEQPFCNO
+      *
+     C                     MOVELBRCA      WBRCA   3
+     C                     MOVE CNUM      WCSNO
+     C                     MOVELFACT      WFLTY
+     C                     MOVE FCNO      WFLTY
+     C                     MOVE *OFF      *IN97
+     C           WFACH     SETLLFACHISA6
+     C           *IN97     DOWEQ*OFF
+     C           WFACH     READEFACHISA6                 97
+     C           *IN97     IFEQ *OFF
+     C           FADATE    ANDGEPVLDT                                                       AR936915
+     C                     MOVELCNUM      ##CNUM 10
+     C                     EXSR SRCUST
+     C                     MOVE FARECI    RECI
+     C**********           Z-ADDFALOAN    LNRF                                                CLE148
+     C                     MOVELFALOAN    LNRF                                                CLE148
+     C                     Z-ADDFADATE    ADAT
+     C                     MOVELPCCY      CCY
+     C                     Z-ADDFAAAMT    AMNT
+     C                     MOVELFAACTN    ATYP
+     C                     Z-ADDFASQNO    USEQ
+     C                     MOVEL'H'       CODE
+     C                     MOVE FARCIN    RVCR
+     C                     Z-ADD*ZEROS    EDAT
+     C                     WRITELEFCEND0
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     READ FCLTYG                   99
+     C                     ENDDO
+      *
+      ** Retrieve the details of the original facility
+      *
+     C           WFCLT     CHAINLEAGFCL0             01
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST - Verify Customer Number                              *
+      *                                                               *
+      *  Called By: SRPART                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM ##CNUM    P@KEY1 10
+     C                     PARM           P@KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE    P      ***************
+     C                     MOVEL##CNUM    DBKEY     P      * DB ERROR 004
+     C                     Z-ADD004       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,GLINTCZ1
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/COPY ZSRSRC,ZDAT10Z2
+     C/COPY ZSRSRC,ZFREQBZ2
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZCHKH
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** CMD - QCMDEXC COMMAND
+CLRPFM FILE(          )                                                                     AR936915
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

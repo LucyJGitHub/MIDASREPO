@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility to populate T_GZNOSREX from V_ACCNTNOS')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       SMUC00300 - Utility to populate T_GZNOSREX from V_ACCNTNOS  */
+/*                   and delete 'T_GZNOSREX' record from T_UDFDEF    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD021070 *CREATE   Date 28Jun13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021070 - "[SQL0204] T_GZNOSREX in *LIBL type *FILE not    */
+/*                  found.", message is displayed.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCLF       FILE(T_GZNOSREX)
+ 
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Populate T_GZNOSREX from V_ACCNTNOS. */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+ 
+             SCRUNSQL   SQL('INSERT INTO T_GZNOSREX (DDBRCA, DDCUSN, +
+                          DDCCY, DDACOD, DDACSQ, DDNONB, ZONE, +
+                          DDCYCD) SELECT BRCA, CGGLOB, CCY, +
+                          PADACOD, PADACSQ, A7NONB, CUSTZONE, CCY +
+                          FROM V_ACCNTNOS')
+             ENDDO
+ 
+/** Delete T_GZNOSREX record from T_UDFDEF. */
+ 
+             SCRUNSQL   SQL('DELETE FROM T_UDFDEF WHERE UDFDD = +
+                          ''T_GZNOSREX''')
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00300 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM
+ 

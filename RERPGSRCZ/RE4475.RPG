@@ -1,0 +1,962 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI transaction analysis report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4475 - CI Transaction Analysis Report                      *
+      *                                                               *
+      *  Function:  This program will be called from the on Request   *
+      *             Reporting menu during Midas' Input Cycle.  It     *
+      *             will provide a list of all communication with the *
+      *             remote branch controllers based upon the details  *
+      *             held in the CI Communications Log file.  It will  *
+      *             be presented in a selection of sorted sequences.  *
+      *             It will be available either with or without the   *
+      *             communications message details.  It will be       *
+      *             on request during the Close Of Business.          *
+      *                                                               *
+      *  Called By: REC4475 - (program name)                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 179520             Date 25May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT003 *CREATE     Date 22Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  179520 - No need to dump if Teller or Branch is blank.       *
+      *  CRT003 - Cashier.                                            *
+      *           New Report Program.                                 *
+      *                                                               *
+      *****************************************************************
+     FRE4475AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FRE4475P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     F            DTLSUBHDR                         KRENAMEDTLSUB
+     FREPLOGPDIF  E           K        DISK                           UC
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1HDR - Write Header of Report                              *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE1 - Validate Date and Convert into Midas Day Number     *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZDAYS  - Calculation Number of Days between Two Dates        *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    ZMNM   12  12  3
+     E                    SYS     1   1 45
+      *
+      ** Array containing Month
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for RE4475P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for RE4475AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Codes
+      *
+     ISDTELD    E DSSDTELDPD
+      ***  External data structures for Teller Name
+      *
+     ISDBAIT    E DSSDBAITPD
+      ***  External data structures for BAI Transaction Type
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, Short data structure
+      *
+     IPARM1       DS
+     I                                        1   5 PSEQ
+      *
+     I            DS
+     I                                        1   8 WDATE
+     I                                        1   20WDY1
+     I                                        4   50WDY2
+     I                                        7   80WDY3
+      *
+      ***  DS for date manipulation
+      *
+     I            DS
+     I                                        1   7 PIRCDT
+     I                                        1   2 PDD
+     I                                        3   5 PMMM
+     I                                        6   7 PYY2
+      ***  DS for date on Print File
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  ZDAT   -                                                     *
+      *  ZDAT   -                                                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C                     PARM           @MSGD   1
+     C                     PARM           @ROPT   1
+     C                     PARM           @DTFM   3
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'RE4475'  DBPGM
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     Z-ADD01        DBASE            * DBERR 01 *
+     C                     EXSR DBERR                      ************
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      **   If Multibranching on, set on *IN37.
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           @ROPT     ANDNE'3'
+     C           @ROPT     ANDNE'6'
+     C           @ROPT     ANDNE'7'
+     C                     MOVE *ON       *IN37
+     C                     END
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         WRQLN   30
+     C                     Z-ADD0         WDFLN   30
+      *
+      ***  Open a Logical File.
+      *
+     C                     OPEN REPLOGPD
+      *
+      ***  Set *ON a w-first-time-pass-flag.
+      *
+     C                     MOVE *ON       WFTFLG  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read first record from File.
+      *
+     C                     READ REPLOGD0                 89
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ***  If first time pass OR
+      ***  if report selected is by branch and there is a change in branch
+      *
+     C           WFTFLG    IFEQ *ON
+     C           RIBRCA    ORNE PIXBRC
+     C           @ROPT     ANDNE'3'
+     C           @ROPT     ANDNE'6'
+     C           @ROPT     ANDNE'7'
+      *
+      ***  If not first time pass
+      *
+     C           WFTFLG    IFEQ *OFF
+     C                     Z-ADDWBRCT     PBRCST
+     C                     Z-ADD0         WBRCT
+      *
+      ***  Seton indicator if report requested should be sorted by branch
+      *
+     C                     SELEC
+     C           @ROPT     WHEQ '1'
+     C                     MOVE *ON       WKBR1   1
+     C           @ROPT     WHEQ '2'
+     C                     MOVE *ON       WKBR2   1
+     C           @ROPT     WHEQ '4'
+     C                     MOVE *ON       WKBR4   1
+     C           @ROPT     WHEQ '5'
+     C                     MOVE *ON       WKBR5   1
+     C                     ENDSL
+      *
+     C                     ELSE
+     C                     MOVELRIBRCA    PIXBRC           *
+     C                     MOVELRITELD    PIXTEL           * Move to previous
+     C                     MOVELRITXTP    PIXTXT           *
+     C                     OPEN RE4475P1
+     C                     ENDIF
+      *
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+      ***   If report selected should be printed by branch/teller and
+      ***   there is a change in teller OR
+      ***   there is a change in branch
+      *
+     C           @ROPT     IFEQ '1'
+     C           RITELD    ANDNEPIXTEL
+     C           @ROPT     OREQ '4'
+     C           RITELD    ANDNEPIXTEL
+     C           WKBR1     OREQ *ON
+     C           WKBR4     OREQ *ON
+     C*
+     C                     Z-ADDWELCT     PTELST
+     C                     Z-ADD0         WELCT
+     C                     ENDIF
+      *
+      ***   If report selected should be printed by branch/tran type and
+      ***   there is a change in tran type OR
+      ***   there is a change in branch
+      *
+     C           @ROPT     IFEQ '2'
+     C           RITXTP    ANDNEPIXTXT
+     C           WKBR2     OREQ *ON
+      *
+     C                     Z-ADDWRNCT     PTRNST
+     C                     Z-ADD0         WRNCT
+     C                     ENDIF
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         WBRAU   30
+     C                     ADD  1         WBRCT   30
+     C                     ADD  1         WELCT   30
+     C                     ADD  1         WRNCT   30
+      *
+      ***  Save Break Variables.
+      *
+     C                     MOVELRIBRCA    PIXBRC
+     C                     MOVELRITELD    PIXTEL
+     C                     MOVELRITXTP    PIXTXT
+      *
+     C                     MOVE *OFF      WKBR1
+     C                     MOVE *OFF      WKBR2
+     C                     MOVE *OFF      WKBR4
+     C                     MOVE *OFF      WKBR5
+      *
+      ***  Read next record.
+      *
+     C                     READ REPLOGD0                 89
+      *
+     C                     MOVE *OFF      WFTFLG
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      ***  Write final records and Totals to Report.
+      *
+     C                     EXSR REPORT
+      *
+     C                     Z-ADDWBRCT     PBRCST
+     C                     Z-ADDWELCT     PTELST
+     C                     Z-ADDWRNCT     PTRNST
+      *
+     C           @ROPT     IFEQ '1'
+     C           @ROPT     OREQ '4'
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+     C                     WRITESUBTOT1
+     C                     ENDIF
+      *
+     C           @ROPT     IFEQ '2'
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+     C                     WRITESUBTOT2
+     C                     ENDIF
+      *
+     C           @ROPT     IFEQ '1'
+     C           @ROPT     OREQ '2'
+     C           @ROPT     OREQ '5'
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+     C                     WRITESUBTOT3
+     C                     ENDIF
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      *----------------------------------------------------------------
+      *
+      *    Perform any necessary processing before writing detail line
+      *
+      *----------------------------------------------------------------
+      *
+     C                     MOVELRICMSQ    PICMSQ
+     C                     MOVELRIBRCA    PIBRCA
+     C                     MOVELRIRMDN    PIRMDN
+     C                     MOVELRITELD    PITELD
+     C                     MOVELRITXTP    PITXTP
+     C                     MOVELRIRCDT    WDATE
+     C                     MOVELRIRCTM    PIRCTM
+     C                     MOVELRISUCM    PISUCM
+     C                     MOVELRITMPS    PITMPS
+     C                     MOVELRISTAT    PISTAT
+     C                     MOVELRISTTM    PISTTM
+      *
+      ** Format date DDMMMYY
+      *
+     C                     SELEC
+     C           @DTFM     WHEQ 'MDY'
+     C                     MOVE ZMNM,WDY1 PMMM
+     C                     MOVE WDY2      PDD
+     C           @DTFM     WHEQ 'DMY'
+     C                     MOVE ZMNM,WDY2 PMMM
+     C                     MOVE WDY1      PDD
+     C           @DTFM     WHEQ 'YMD'
+     C                     MOVE ZMNM,WDY2 PMMM
+     C                     MOVE WDY3      PDD
+     C                     ENDSL
+      *
+     C                     MOVE WDY3      PYY2
+      *
+     C           @MSGD     IFNE 'N'
+     C           100       SUBSTRICMSG:1  PMSG1
+     C           100       SUBSTRICMSG:101PMSG2
+     C           100       SUBSTRICMSG:201PMSG3
+     C           100       SUBSTRICMSG:301PMSG4
+     C           100       SUBSTRICMSG:401PMSG5
+     C           100       SUBSTRICMSG:501PMSG6
+     C           100       SUBSTRICMSG:601PMSG7
+     C           100       SUBSTRICMSG:701PMSG8
+     C           100       SUBSTRICMSG:801PMSG9
+     C                     ENDIF
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***   If report selected should be printed by branch/teller and
+      ***   there is a change in teller OR
+      ***   there is a change in branch
+      *
+     C           @ROPT     IFEQ '1'
+     C           RITELD    ANDNEPIXTEL
+     C           @ROPT     OREQ '4'
+     C           RITELD    ANDNEPIXTEL
+     C           WKBR1     OREQ *ON
+     C           WKBR4     OREQ *ON
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+      ***   Print teller subtotals
+      *
+     C                     WRITESUBTOT1
+     C                     ENDIF
+      *
+      ***   If report selected should be printed by branch/tran type and
+      ***   there is a change in tran type OR
+      ***   there is a change in branch
+      *
+     C           @ROPT     IFEQ '2'
+     C           RITXTP    ANDNEPIXTXT
+     C           WKBR2     OREQ *ON
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+      ***   Print tran type subtotals
+      *
+     C                     WRITESUBTOT2
+     C                     ENDIF
+      *
+     C           WKBR1     IFEQ *ON
+     C           WKBR2     OREQ *ON
+     C           WKBR4     OREQ *ON
+     C           WKBR5     OREQ *ON
+      *
+     C                     Z-ADD2         WRQLN
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+      ***   Print branch subtotals
+      *
+     C                     WRITESUBTOT3
+      *
+     C                     EXSR WP1END
+      *
+     C                     OPEN RE4475P1
+      *
+     C                     ENDIF
+      *
+      ***   If not EOF
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***   If first pass flag is on  OR
+      ***   if report selected should be printed by branch/teller and
+      ***   there is a change in teller OR
+      ***   If report selected should be printed by branch/tran type and
+      ***   there is a change in tran type OR
+      ***   there is a change in branch
+      *
+     C           WFTFLG    IFEQ *ON
+     C           @ROPT     OREQ '1'
+     C           RITELD    ANDNEPIXTEL
+     C           @ROPT     OREQ '2'
+     C           RITXTP    ANDNEPIXTXT
+     C           @ROPT     OREQ '4'
+     C           RITELD    ANDNEPIXTEL
+     C           WKBR1     OREQ *ON
+     C           WKBR2     OREQ *ON
+     C           WKBR4     OREQ *ON
+     C           WKBR5     OREQ *ON
+      *
+     C                     EXSR WP1HDR
+      *
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      ***  If @MSGD = 'N' do not print message details
+      *
+     C           @MSGD     IFNE 'N'
+     C                     Z-ADD13        WRQLN
+     C                     ELSE
+     C                     Z-ADD2         WRQLN
+     C                     ENDIF
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C           @MSGD     IFNE 'N'
+     C                     WRITEDETLS2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1HDR
+      *****************************************************************
+      *                                                               *
+      *  WP1HDR - Subroutine to Write Header of Report.               *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1HDR    BEGSR                           *** WP1HDR ***
+      *
+      ***  '***' - system generated
+      *
+     C           PIBRCA    IFEQ '***'
+     C           PIBRCA    OREQ '   '                                     179520
+      *
+     C                     MOVEASYS       PIBRNM
+      *
+     C                     ELSE
+      *
+      ***  Get Branch Name.
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PIBRCA    @TYPD   3
+     C*                    PARM *BLANKS   @KYST   7
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C**  Check if error occurred
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD04        DBASE            * DBERR 04 *
+     C                     MOVELRIBRCA    DBKEY            ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     MOVELA8BRNM    PIBRNM
+      *
+     C                     ENDIF
+      *
+      ***  Write out Header Format.
+      *
+     C                     MOVELBJURPT    PIURPT
+     C                     MOVELBJMRDT    PIMRDT
+      *
+     C                     WRITEHEADP1
+      *
+     C           @ROPT     IFEQ '1'
+     C           @ROPT     OREQ '4'
+      *
+      ***  '***' - system generated
+      *
+     C           PITELD    IFEQ '***'
+     C           PITELD    OREQ '   '                                     179520
+      *
+     C                     MOVEASYS       PITLNM
+      *
+     C                     ELSE
+      *
+      ***  Get Teller Name.
+      *
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PITELD    @TYPD   3
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+     C**  Check if error occurred
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDTELDPD'DBFILE           ************
+     C                     Z-ADD02        DBASE            * DBERR 02 *
+     C                     MOVELRITELD    DBKEY            ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     MOVELFRTLNM    PITLNM
+      *
+     C                     WRITESUBHDR1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           @ROPT     IFEQ '2'
+     C           @ROPT     OREQ '3'
+      *
+      ***  '***' - system generated
+      *
+     C           PITXTP    IFEQ '   '
+      *
+     C                     MOVEASYS       PITXDS
+      *
+     C                     ELSE
+      *
+      ***  Get BAI Transaction Type.
+      *
+     C                     CALL 'AOBAITR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PITXTP    @TYPE  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDBAIT    PARM SDBAIT    DSFDY
+      *
+     C**  Check if error occurred
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBAITPD'DBFILE           ************
+     C                     Z-ADD03        DBASE            * DBERR 03 *
+     C                     MOVELRITXTP    DBKEY            ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     MOVELFXTXDS    PITXDS
+      *
+     C                     WRITESUBHDR2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     WRITEDTLSUB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C           *IN37     IFEQ *ON
+     C                     Z-ADD6         WRQLN
+     C                     ELSE
+     C                     Z-ADD3         WRQLN
+     C                     ENDIF
+     C           OFLLN1    SUB  PRTLN1    WDFLN
+     C           WDFLN     IFLE WRQLN
+     C                     EXSR WP1HDR
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     CLOSERE4475P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***
+      *
+     C                     MOVE WBRAU     RCOUNT
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CLOSE*ALL
+      *
+      ***  End Program and Return.
+      *
+     C                     CLOSE*ALL
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR   - Database Error Handling : Terminates program       *
+      *                                                               *
+      *  Called By:                                                   *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C                     OUT  LDA
+     C                     DUMP
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  SYS - System Generated Message
+System Generated Message

@@ -1,0 +1,551 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Select Cashflow Horizonts')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                     *
+     F*                                                               *
+     F*  PM0811 - Select Cashflow Details to be reported              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO.            LV      DATE 23SEP94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*         - Portfolio Management Upgrade to Release 10.         *
+     F*           Program created fromPM0810 without Customer &       *
+     F*           portfolio processing.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPM0811DFCF  E                    WORKSTN
+     F                                        WWRRN KSFILE PM0811E2
+     F**
+     F*==================================================================
+     F**                FUNCTION OF INDICATORS
+     F**
+     F**  08      - PM0811DF : ERROR DURING HORIZON INPUT
+     F**
+     F**  25      - PM0811DF : ERROR DURING 60 DAY DETAILED INPUT
+     F**  26      - PM0811DF : ERROR DURING MONTH TOTAL INPUT
+     F**  27      - PM0811DF : ERROR DURING YEAR TOTAL INPUT
+     F**  50      - PM0841DF : VLDCMDKEY
+     F**  52      - PM0841DF : SFLEND WHEN OFF
+     F**
+     F**  80      - ERROR
+     F**
+     F**  U7 U8   - DATABASE ERROR / DATABASE CONTROL ERROR
+     F**
+     F**  * 'WWAID' VALUES USED:
+     F**  03      - CF03
+     F**  RA      - ENTER
+     F**
+     F**  KC      - CMD/3
+     F**  LR      - LAST RECORD ON FILE
+     F**
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   --   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   --   --   --   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   -- *
+     F**      * 51   --   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   -- *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     F**
+     F*==================================================================
+     F/EJECT
+     E*==================================================================
+     E**
+     E                    CPY@    1   1 80
+     E**
+     E*==================================================================
+     E/EJECT
+     I*==================================================================
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details Accesses Via Access Program
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS For Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second DS For Access Programs, Long Data Structure
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IRPARM       DS                            100
+     I                                        1   1 ODAYD
+     I                                        2   2 OMOND
+     I                                        3   3 OYEAR
+     I*
+     IPSDS       SDS
+     I                                      244 253 WKSTN
+     I                                      254 263 USER
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I**
+     I*=================================================================
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      * *PSSR    -  DATABASE ERROR                                       *
+      * ZASNMS   -  Send messages                                        *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * Y2CLMSC  -  Clear program message queue                          *
+      * Y2SNMGC  -  Send message to program message queue                *
+      *                                                                  *
+      ********************************************************************
+     C**           MAIN PROGRAM  START
+     C**================================================================
+     C*
+     C**  DEFINE INPUT PARAMETERS:
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           RPARM
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0811'  DBPGM
+     C*
+     C**  PERFORM INITIAL PROCESSING :
+     C           WWFRST    IFEQ *BLANK                     - B1
+     C                     EXSR #INIT
+     C                     END                             - E1
+     C*
+     C**  PROCESS REPORT SELECTION AND PROMPTS:
+     C                     EXSR #P1002
+     C*
+     C**  IF F3 PRESSED, SET RETURN CODE TO '1' AND TERMINATE PROGRAM:
+     C           WWAID     IFEQ '03'
+     C                     MOVE '1'       *INLR
+     C                     MOVE 'E'       RCMD
+     C                     END
+     C*
+     C                     RETRN
+     C**================================================================
+     C*            MAIN PROGRAM  END
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRRN    -  RELATIVE RECORD NUMBER                               *
+      * WWFRST   -  INITIALISATION INDICATOR                             *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           * #INIT BEGSR *
+     C*                                                    ***************
+     C**  PREPARE LDA:
+     C                     MOVEL'PM0811'  DBPGM  10
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C                     MOVEL'PMUSRMSG'MSGER
+     C                     Z-ADD1         WWRRN   30
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C*
+     C**   Fill in fields for subroutine ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C                     MOVE 'Y'       WWFRST  1
+     C*
+     C**  GET BANK DETAILS:
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'01'      DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                    ***************
+     C                     ENDSR                           * #INIT ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      * Y2CLMSC  -  Clear program message queue                          *
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -  CHIEF PROGRAM                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -  FUNCTION KEY                                         *
+      *                                                                  *
+      ********************************************************************
+     C           #P1002    BEGSR                           * #P1002 BGSR *
+     C*                                                    ***************
+      **  FORMAT SCREEN TITLE:
+     C                     EXSR #TITLE
+     C*
+     C**  DO UNTIL CMD/3 IS TAKEN,
+     C**  OR IF ENTER IS PRESSED AND VALIDATION SUCCESSFULY PERFORMED:
+     C           WWAID     DOUEQ'03'                       - B1
+     C           WWAID     OREQ 'RA'
+     C           *IN80     ANDEQ'0'
+     C*
+     C**  REDISPLAY SCREEN WITH ERROR MESSAGES:
+     C                     WRITEPM0811F2
+     C                     EXFMTPM0811F1
+     C                     MOVE '0'       *IN80
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ
+     C                     PARM           TOPRQ
+     C*
+     C**  CHECK KEY PRESSED:
+     C                     EXSR #AID
+     C*
+     C**  WHEN 'ENTER' PRESSED:
+     C           WWAID     IFEQ 'RA'                       - B2
+     C*
+     C**  SET UP DEFAULT VALUES:
+     C                     EXSR #U1001
+     C*
+     C**  SET ERROR INDICATORS OFF:
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C*
+     C**  VALIDATE SCREEN INPUT:
+     C                     EXSR #V1001
+     C*
+     C**  IF INPUT IS VALID AND ENTER PRESSED:
+     C           *IN80     IFEQ '0'                        - B3
+     C           WWAID     ANDEQ'RA'
+     C*
+     C**  PREPARE FIELDS FOR RETURN TO CALLING PROGRAM:
+     C                     EXSR #RTRN
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1002 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TITLE   -  FORMAT SCREEN TITLE                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLP    -  CL CALLING PROGRAM PARAMETER                         *
+      *                                                                  *
+      ********************************************************************
+     C           #TITLE    BEGSR                           * #TITLE BGSR *
+     C*                                                    ***************
+      **  RESET SCREEN DETAILS TO DEFAULTS:
+     C                     MOVE 'Y'       DDDAYD
+     C                     MOVE 'Y'       DDMONT
+     C                     MOVE 'Y'       DDYEAR
+     C*                                                    ***************
+     C                     ENDSR                           * #TITLE EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #AID     -  TEST WHICH KEY IS PRESSED                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -  FUNCTION KEY                                         *
+      *                                                                  *
+      ********************************************************************
+     C           #AID      BEGSR                           * #AID BEGSR *
+     C*                                                    **************
+     C**  WHEN CMD/3 PRESSED:
+     C           *INKC     IFEQ '1'                        - B1
+     C                     MOVE '03'      WWAID   2
+     C                     END                             - E1
+     C*
+     C**  WHEN ENTER PRESSED:
+     C           *IN50     IFEQ '0'                        - B1
+     C                     MOVE 'RA'      WWAID
+     C                     END                             - E1
+     C*                                                    **************
+     C                     ENDSR                           * #AID ENDSR *
+     C*                                                    **************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U1001   -  SET UP DEFAULT FIELDS                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLP    -  CL CALLING PROGRAM PARAMETER                         *
+      *                                                                  *
+      ********************************************************************
+     C           #U1001    BEGSR                           * #U1001 BGSR *
+     C*
+     C           DDDAYD    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDDAYD
+     C                     END                             - E1
+     C*
+     C           DDMONT    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDMONT
+     C                     END                             - E1
+     C*
+     C           DDYEAR    IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       DDYEAR
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #U1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZASNMS   -  Send message to program message queue                *
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #V1001    BEGSR                           * #V1001 BGSR *
+     C*
+     C**  IF 60 DAY DETAILED HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 115:
+     C           DDDAYD    IFNE 'Y'                        - B1
+     C           DDDAYD    ANDNE'N'
+     C*
+     C                     MOVEL'PM81115' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN25
+     C                     END                             - E1
+     C*
+     C**  IF MONTHLY TOTAL HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 116:
+     C           DDMONT    IFNE 'Y'                        - B1
+     C           DDMONT    ANDNE'N'
+     C*
+     C                     MOVEL'PM81116' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN26
+     C                     END                             - E1
+     C*
+     C**  IF YEARLY TOTAL HORIZON IS NEITHER 'Y' OR 'N' AS INPUT,
+     C**  PERFORM ERROR 117:
+     C           DDYEAR    IFNE 'Y'                        - B1
+     C           DDYEAR    ANDNE'N'
+     C*
+     C                     MOVEL'PM81117' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN27
+     C                     END                             - E1
+     C*
+     C**  IF NEITHER 60 DAY DETAILED HORIZON NOR MONTHLY TOTAL HORIZON
+     C**  NOR YEARLY TOTAL HORIZON IS SELECTED,
+     C**  PERFORM ERROR 118:
+     C           DDDAYD    IFNE 'Y'                        - B1
+     C           DDMONT    ANDNE'Y'
+     C           DDYEAR    ANDNE'Y'
+     C*
+     C                     MOVEL'PM81118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN25
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN27
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #V1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #RTRN    -  SET UP TO RETURN TO CALLING PROGRAM                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   -  PROCESS SELECT CASHFLOW DETAILS TO BE REPORTED       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WW60DD   -  60 DAY DETAILED HORIZON PARAMETER                    *
+      * WWMOTT   -  MONTHLY HORIZON PARAMETER                            *
+      * WWYETT   -  YEARLY HORIZON PARAMETER                             *
+      *                                                                  *
+      ********************************************************************
+     C           #RTRN     BEGSR                           * #RTRN BEGSR *
+     C*                                                    ***************
+     C*
+     C**  WHICH PARAMETER TO PASS FOR HORIZON:
+     C                     MOVE DDDAYD    ODAYD
+     C                     MOVE DDMONT    OMOND
+     C                     MOVE DDYEAR    OYEAR
+     C*                                                    ***************
+     C                     ENDSR                           * #RTRN ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZASNMS    - Send message to program message queue             *
+     C*                                                               *
+     C* CALLS     - Y2SNMGC                                           *
+     C*                                                               *
+     C* CALLED BY - #V1001 - Validate screen                          *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    -  DATABASE ERROR                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    -  INITIALIZE - ACCESS STANDING DATA                    *
+      * #V1001   -  VALIDATE SCREEN                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C**  ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM:
+     C                     DUMP
+     C                     RETRN
+     C*                                                    ***************
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*                                                    ***************
+     C**=================================================================
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,376 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ZM Convert SWIFT amount to Midas format')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.
+     F*                                                               *
+     F*  ZM1340 - CONVERSION OF AMOUNT/RATE FROM SWIFT TO MIDAS       *
+     F*                                                               *
+     F* PURPOSE :                                                     *
+     F*                                                               *
+     F*  To convert an  amount (ZAMNT) (13,0) to SWIFT                *
+     F*  input format (ZSAMNT) (17A) AND ZOAMNT (21)                  *
+     F*                                                               *
+     F*  1.A decimal comma is inserted dependant on the number of     *
+     F*    decimal places returned from the access to sdcurrpd.       *
+     F*  2.Leading zeros must be dropped.                             *
+     F*  3.The decimal comma must have at least one leading digit.    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 167826             Date 23Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01401             Date 10Feb93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  167826 - DataBase error in ZM1340 at 061. Apply 153374.      *
+     F*  S01401 - The generation of MT500 SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    90  - 0 Decimal places from sdcurrpd.                      *
+     F*    91  - 1 Decimal place from sdcurrpd.                       *
+     F*    92  - 2 Decimal places from sdcurrpd.                      *
+     F*    93  - 3 Decimal places from sdcurrpd.                      *
+     F*    94  - Used in the blank of leading zeros.                  *
+     F*    95  - Used to end the blank of leading zeros.              *
+     F*    96  - Record not found on SDCURRL3                         *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    ZAA        17  1
+     E** ARRAY USED IN CONVERSION.
+     E*
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E** ARRAYS USED IN #SEDIT
+     E*
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E** ARRAYS USED IN #SALIGN
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Customer Details
+     I*
+     I** DATA STRUCTURE FOR #SEDIT
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     C*
+     C**  Entry of currency and amount
+     C           *ENTRY    PLIST
+     C                     PARM           ZAMNT  16
+     C                     PARM           ZCCY    3
+     C                     PARM           ZTYP    1
+     C                     PARM           ZOAMNT 16
+     C                     PARM           ZERR    1
+     C                     PARM           ZGNMDP  10                      167826
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C                     SETOF                     9699
+     C                     MOVE *BLANKS   ZOAMNT
+     C                     MOVE *BLANKS   ZERR
+     C                     MOVE 'J'       ZECODE  1
+     C*
+     C           ZTYP      IFEQ 'A'
+     C*
+     C           ZCCY      IFEQ *BLANKS
+      *                                                                   167826
+     C           ZGNMDP    IFNE *ZEROS                                    167826
+     C                     Z-ADDZGNMDP    ZADEC                           167826
+     C           15        SUB  ZADEC     ZADIG                           167826
+     C                     ELSE                                           167826
+     C                     Z-ADD0         ZADEC
+     C                     END                                            167826
+      *                                                                   167826
+     C                     ELSE
+     C*
+     C** Access SDCURRPD using key of ZCCY passed into program
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM ZCCY      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** If record not found
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'Y'       ZERR
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE A6NBDP    ZADEC
+     C                     END
+     C           15        SUB  ZADEC     ZADIG
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD8         ZADEC
+     C                     END
+     C*
+     C                     MOVE ZAMNT     ZFIELD
+     C                     EXSR SALIGN
+     C** If error found
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'Y'       ZERR
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE ZFIELD    ZFLD15 150
+     C                     EXSR #SEDIT
+     C** If error found
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'Y'       ZERR
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Termination Processing.
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**
+     C**   SALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           SALIGN    BEGSR                           *** SALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL COMMA. ERROR IF SECOND DECIMAL COMMA.
+     C           ZA1,ZX    COMP ','                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT ',' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL COMMA ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #SEDIT subroutine to insert a decimal point and sign into a  *
+     C** numeric field and to blank out leading zeros (optionaly      *
+     C** inserting commas).                                           *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           #SEDIT    BEGSR
+     C*
+     C** SET UP WORK FIELDS
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C* Check if numeric field is negative
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C** CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C           ZADEC     CABEQ0         ZS10
+     C*
+     C** SET UP DECIMALS
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZADEC
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C** PUT IN DECIMAL PLACE
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C** SET UP INTEGERS
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C** If edit code is 'J', insert a ',' before each group of three
+     C** digits - not if beginning of array reached.
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C*
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PUT IN LEADING BLANKS
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C** IF NO INTEGERS PUT IN LEADING ZERO
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C*
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SET UP OUTPUT FIELD
+     C                     MOVEAZS2,Z2    ZOAMNT
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

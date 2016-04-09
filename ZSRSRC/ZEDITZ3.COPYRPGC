@@ -1,0 +1,128 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZEDITZ3 - To insert a decimal point into a numeric field     *
+      *             and to blank out leading zeros.                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Any changes made to this /COPY member may also need to be    *
+      *  incorporated in ZEDITZ3LE.                                   *
+      *                                                               *
+      *  Last Amend No. 245692  *CREATE    Date 21Sep13               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *                                                               *
+      ********************************************************************
+      *                                                                  *
+      *   ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*
+      *   AND TO BLANK OUT LEADING ZEROES.                               *
+      *       INPUT FIELDS:   ZFIELD 16/                                 *
+      *                       ZADEC                                      *
+      *                       ZADIG - NOT ACTUALLY USED                  *
+      *                                                                  *
+      *       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *
+      *                                                                  *
+      *       OUTPUT FIELD   ZFIELD                                      *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           ZEDIT     BEGSR
+      *
+      ** Calculation to define number structure control fields.
+      *
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+      *
+      ** Set up work fields
+      *
+     C                     MOVEA' '       ZA1
+     C                     MOVEA' '       ZA2
+      *
+     C                     Z-ADD16        Z1      20
+     C                     Z-ADD16        Z2      20
+      *
+     C           16        SUB  ZADEC     ZADEC2  20
+      *
+     C                     MOVEAZFIELD    ZA1
+      *
+      ** Check to see if there are any decimal places
+      *
+     C           ZADEC     COMP 0                        91
+     C   91                GOTO ZT20
+      *
+     C           ZT10      TAG
+      *
+      ** Set up decimals
+      *
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+      *
+     C           Z2        COMP 0                        90
+     C   90                GOTO ZT30
+      *
+      ** ChecK if end of decimals
+      *
+     C           Z2        COMP ZADEC2               90
+     C   90                GOTO ZT10
+      *
+      ** Put in decimal place
+      *
+     C                     MOVE BNDCSP    ZA2,Z2
+     C           Z2        SUB  1         Z2
+      *
+     C           ZT20      TAG
+      *
+      ** Set up integers
+      *
+     C                     MOVE ZA1,Z1    ZA2,Z2
+     C           Z1        SUB  1         Z1
+     C           Z2        SUB  1         Z2
+      *
+     C           Z2        COMP 0                    90
+     C   90                GOTO ZT20
+      *
+      ** Put in leading blanks
+      *
+     C           ZT30      TAG
+      *
+     C                     Z-ADD1         Z2
+      *
+     C           ZT40      TAG
+      *
+     C           ZA2,Z2    COMP '0'                  9090
+     C   90      ZA2,Z2    COMP ' '                  9090
+      *
+     C   90                GOTO ZT50
+      *
+     C                     MOVE ' '       ZA2,Z2
+     C           Z2        ADD  1         Z2
+      *
+     C           Z2        COMP 16                     90
+     C   90                GOTO ZT40
+      *
+      ** If no integers put in leading zero
+      *
+     C           ZT50      TAG
+      *
+     C                     Z-ADDZADEC2    Z2
+     C  N91      Z2        SUB  1         Z2
+     C           ZA2,Z2    COMP ' '                      90
+     C   90                MOVE '0'       ZA2,Z2
+      *
+      ** Set up output field
+      *
+     C           ZT60      TAG
+      *
+     C                     MOVEAZA2       ZFIELD 16
+      *
+     CSR         ZEND      ENDSR
+      *****************************************************************

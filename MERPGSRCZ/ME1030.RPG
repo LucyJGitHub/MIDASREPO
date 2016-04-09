@@ -1,0 +1,365 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Verify network message')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1030 - Verify Network Message                              *
+     F*                                                               *
+     F*  Function:  This program verifies that an Incoming Message    *
+     F*  may be added to the database                                 *
+     F*                                                               *
+     F*  Called By: ME1020  - Add Network Message To Database         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 069250             Date 03May94               *
+      *                 S01435             Date 23Jul93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  60    Invalid Message - chain fail/parameters don't match    *
+     F*  90    Chain fail                                             *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINMVL1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Valid Message Control File
+      *
+     F/COPY WNCPYSRC,ME1030DFPG
+      *
+      *  /Copy point for File Definition
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1030DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E/EJECT
+     I/COPY WNCPYSRC,ME1030DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IINMC      E DSMEINMCPD
+      *
+      *  Define parameters to be passed for message checking
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing source
+      *
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   8
+     C                     PARM           W0DATA
+     C                     PARM           W0RTN   7
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0DATA    W0PREF
+      *
+      *  Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Verify Details
+      *
+     C                     EXSR SRVERY
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVERY   : Verify that message may be added to the database. *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRVERY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRVERY'  @STK,Q
+      *
+      * Move passed parameter to data structure
+      *
+     C                     MOVELW0DATA    INMC
+      *
+      * Access Incoming Valid Messages File. This determines if the
+      * Incoming Message may be processed dependant on the value of the
+      * Network, Sender and Message Type fields of the message and the
+      * value of the Access Point that is set in the calling program.
+      *
+      * The Msg Type, Sender and Access Point fields are optional on
+      * the Incoming Valid Messages file but the passed parameters will
+      * always hold a value.
+      *
+      * Initially check if a record exists containing all variables.
+      * If one doesn't, try again with a blank Sender and if neccessary
+      * try again with a blank message type.
+      *
+     C           KYINMV    KLIST
+     C                     KFLD           KFNWRK
+     C                     KFLD           KFMTPY
+     C                     KFLD           KFSNDR
+      *
+     C                     MOVELMCNWRK    KFNWRK
+     C                     MOVELMCMTPY    KFMTPY
+     C                     MOVELMCSNDR    KFSNDR
+      *
+     C           KYINMV    CHAINMEINMVL1             60
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL*BLANKS   KFSNDR
+     C           KYINMV    CHAINMEINMVL1             60
+     C                     END
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'ALL'     KFMTPY
+     C           KYINMV    CHAINMEINMVL1             60
+     C                     END
+      *
+      * If a record is found and an Access Point is defined, check that
+      * the passed access point matches.
+      *
+      * Determine if the Incoming Message may be processed by the value
+      * of the Include/Exclude flag.
+      *
+     C           *IN60     IFEQ '0'
+      *
+     C                     SELEC                                       ***
+      *
+      * Exclude message
+      *
+     C           MVINEX    WHEQ 'E'                                    ***
+     C           MVACPT    IFEQ MCACPT                                 ***
+     C           MCACPT    OREQ '*FT    '                              ***
+     C           MVACPT    ANDNE'*ENTRY '                              ***
+     C           MCACPT    OREQ '*AUTO  '                              ***
+     C           MVACPT    ANDNE'*ENTRY '                              ***
+     C           MCACPT    OREQ '*AUTO  '                              ***
+     C           MVACPT    ANDNE'*FT    '                              ***
+     C                     MOVEL'1'       *IN60
+     C                     END                                         ***
+      *
+      * Message access type *ENTRY
+      *
+     C           MCACPT    WHEQ '*ENTRY '                              ***
+      *
+     C           MVACPT    IFNE '*ENTRY '                              ***
+     C           MVACPT    ANDNE'*FT    '                              ***
+     C           MVACPT    ANDNE'*AUTO  '                              ***
+      *
+     C                     MOVEL'1'       *IN60
+     C                     END
+      *
+      * Message access type *FT - process in FT
+      *
+     C           MCACPT    WHEQ '*FT    '                              ***
+      *
+     C           MVACPT    IFNE '*FT    '                              ***
+     C           MVACPT    ANDNE'*AUTO  '                              ***
+      *
+     C                     MOVEL'1'       *IN60
+     C                     END
+      *
+      * Message access type *AUTO - generate FT transaction
+      * automatically
+      *
+     C           MCACPT    WHEQ '*AUTO '                               ***
+      *
+     C           MVACPT    IFNE '*AUTO  '                              ***
+      *
+     C                     MOVEL'1'       *IN60
+     C                     END
+      *
+     C                     ENDSL
+      *
+     C                     END
+      *
+      *  /Copy point for Extension file actions
+      *
+     C/COPY WNCPYSRC,ME1030DACT
+      *
+      * Set up pay msg flag and return code
+      *
+     C           *IN60     IFEQ '0'
+     C                     MOVELMVPMFG    MCPMFG           Pay msg ?
+     C                     MOVELMVBRCA    MCBRCA           Branch code
+     C                     MOVELINMC      W0DATA
+     C                     MOVEL'MIN0090' W0RTN            Valid
+     C                     ELSE
+     C                     MOVELMVPMFG    MCPMFG           Pay msg ?
+     C                     MOVELINMC      W0DATA
+     C                     MOVEL'MIN0091' W0RTN            Invalid
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXVERY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN MCNWRK    KFNWRK
+     C           *LIKE     DEFN MCMTPY    KFMTPY
+     C           *LIKE     DEFN MCSNDR    KFSNDR
+      *
+     C           *LIKE     DEFN INMC      W0DATA
+      *
+      * Open Files
+      *
+     C                     OPEN MEINMVL1
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1030DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1030DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

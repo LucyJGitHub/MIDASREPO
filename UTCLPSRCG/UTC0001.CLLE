@@ -1,0 +1,983 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Create any object')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0001 - Create any object from creation parameters        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD034741           Date 22Jun15              */
+/*       Prev Amend No. AR959086           Date 08Jun12              */
+/*                      AR887384A          Date 11Jan12              */
+/*                      AR887384           Date 09Jan12              */
+/*                      CUT008  *REWRITE   Date 15Nov10              */
+/*                      BUG27989           Date 08Aug10              */
+/*                      BUG27832           Date 11Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025             Date 11May06              */
+/*                      CPK022             Date 10Nov05              */
+/*                      BUG9193            Date 16Jan06              */
+/*                      BUG870             Date 31Mar04              */
+/*                      BG3834             Date 18Jul04              */
+/*                      CPK018  *MOVED     Date 26Apr04              */
+/*                      CPK016             Date 10Jul03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015             Date 28May02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 22Oct01              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      178905             Date 12May00              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CPK010             Date 23Feb00              */
+/*                      174739             DATE 07Feb00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP006             DATE 07Dec98              */
+/*                      CAP005             Date 03Feb99              */
+/*                      141051             Date 21MAY98              */
+/*                      CUT004             Date 15OCT98              */
+/*                      144174             Date 02OCT98              */
+/*                      144164             Date 02OCT98              */
+/*                      CAP002             Date 21MAY98              */
+/*                      CAA017             Date 29JUL97              */
+/*                      CAA015             Date 11JUL97              */
+/*                      CPK008             Date 12FEB97              */
+/*                      117186             Date 23APR97              */
+/*                      094890             Date 28FEB97              */
+/*                      CAA013             Date 17DEC96              */
+/*                      CAA009             Date 19AUG96              */
+/*                      CAA008             Date 19AUG96              */
+/*                      CAAA01             Date 26OCT95              */
+/*                      S01408             Date 04MAY95              */
+/*                      089436             DATE 20JUN95              */
+/*                      087054             DATE 02MAY95              */
+/*                      084652             DATE 13MAR95              */
+/*                      081965             DATE 18JAN95              */
+/*                      078080             DATE 28OCT94              */
+/*                      074291             DATE 08AUG94              */
+/*                      S01516             DATE 18JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD034741 - Change the addition of *ML as the new internal   */
+/*                  creation parameter has bypassed this.            */
+/*       AR959086 - Change source member for object as well          */
+/*       AR887384A - Monitor for stored procedure not being found    */
+/*                   (added monitor message)                         */
+/*       AR887384 - Monitor for stored procedure not being found.    */
+/*       CUT008  - CRTOBJ rewrite                                    */
+/*       BUG27989 - HATS should run with/without LDAP                */
+/*       BUG27832- Cater for System generated data areas used by SQL */
+/*                 SEQUENCE function                                 */
+/*       BG18886 - Amend non-standard codes                          */
+/*       CPK025 - Improve handling for the type of stored procedures */
+/*                that are not visible on the iSeries.               */
+/*       CPK022 - Prevent running Binding Directory for 2nd run of   */
+/*                SRVPGM compilation when using CRTALLOBJ.           */
+/*       BUG9193 - CHKOBJ doesn't recognise SQLRPGLE objects.        */
+/*       BUG870 - Stop CRTOBJ falling over when creating RPGLE       */
+/*                stored procedures                                  */
+/*       BG3834 - Addition of SQLRPGLE processing.                   */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       CPK016 - Release 5 packaging.  Change binding directory     */
+/*                name to avoid conflict with message file GBMIDAS.  */
+/*                - Amend to create SQL objects.                     */
+/*       CPK015 - 4.01 packaging.  Change submit job USER.           */
+/*       CPK014 - Release 4 packaging                                */
+/*              - Let CHGOBJ handle its own validity checking        */
+/*              - Expand number of XAIs and XBIs allowed.            */
+/*       178905 - New creation parameter types - XBS/XBI, XAS/XAI    */
+/*                to enable multiple line pre- & post-compilation    */
+/*                instructions.  Also allow external creation        */
+/*                parameters.                                        */
+/*       CPK010 - Enable service programs to be created without      */
+/*                source being present in library list               */
+/*       174739 - Allow *LIBCRTAUT authority to be specified         */
+/*       CAP006 - APIs enhancement to use service programs.          */
+/*                OPTION keyword added.  For full header-box         */
+/*                text, see the CRTOBJ command source.               */
+/*       CAP005 - Only rebuild the binding directory (for ILE PGMs & */
+/*                SRVPGMs) if it is being used.                      */
+/*                Also multiple Pattern Length variables for QCLSCAN */
+/*                rationalised.                                      */
+/*       141051 - Reduce logging for batch creation of *PGM/*SRVPGM  */
+/*       CUT004 - Allow Core and Non-Core mode of compilation for    */
+/*                Multilanguage                                      */
+/*       144174 - Allow /COPYs in Multilanguage DSPFs to be converted*/
+/*       144164 - Allow CRTOBJ to work if there is another file      */
+/*                SOURCE in the library list                         */
+/*       CAP002 - If the object being created is an ILE PGM then     */
+/*                the MIDAS binding directory should be created      */
+/*                in QTEMP.                                          */
+/*              - Ensure that only /*CRT lines are copied from       */
+/*                STDCRTPARM.                                        */
+/*       CAA017 - Create new version of CRTOBJDM that shares the     */
+/*                programs used by CRTOBJ                            */
+/*       CAA015 - Code stripped for clarity.                         */
+/*              - Code for retain expanded source processing only    */
+/*                works once.                                        */
+/*              - Extra parameter to allow *NOGEN create.            */
+/*       CPK008 - DBA R2 Packaging:                                  */
+/*              - Changes for source being 112 long.                 */
+/*              - Changes to cope with ILE object types.             */
+/*       117186 - If the STDCRTPARM member referred to is not found  */
+/*                in the library list, send a message to that effect */
+/*                instead of the general purpose message.            */
+/*       094890 - Utility can not work when sources files are        */
+/*                with different CSSID                               */
+/*       CAA013 - Allow for creation of multilanguage display files  */
+/*                in batch. Call to UT0063 to fetch source library to*/
+/*                allow creation of Tables.                          */
+/*       CAA009 - Make two level RPG compilation switchable; this    */
+/*                will be helpful when using interactive debug.      */
+/*       CAA008 - Change processing so that standard creation        */
+/*                parameters can be use for panel groups             */
+/*       CAAA01 - Allow expanded source to be retained for Midas GUI */
+/*                Collector to run                                   */
+/*              - For batch jobs, submit interactive job to run in   */
+/*                batch instead of using a database job              */
+/*              - Adjust *ML text on multilanguage display file src  */
+/*              - Additionally, the reference to member type 'BSCF'  */
+/*                was changed to be 'BSCF38', as the latter is the   */
+/*                correct value (the former does not exist on the    */
+/*                AS/400).  This allows the CRTOBJ function to       */
+/*                correctly update the object description of BSCF38s.*/
+/*       S01408 - Addition of core hook UTC0001MP1                   */
+/*       089436 - Do not use SDSTAT                                  */
+/*       087054 - Allow for creation of printer files with blank     */
+/*                SRCMBR( ) creation parameter.                      */
+/*       084652 - GRTOBJAUT command incorrect - there should be no   */
+/*                space between USER & (*PUBLIC)                     */
+/*       081965 - Allow for creation of printer files using the      */
+/*                SRCMBR( ) creation technique.                      */
+/*       078080 - Add OWNER to command                               */
+/*       074291 - Further enhancements to CRTOBJ                     */
+/*       S01516 - Incorporation of enhanced CRTOBJ into core         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJECT &SOURCE &SRCMBR &OWNER &AUTL +
+                          &NOCRT &KEEP &MLSYS &RVKAUT &KEEPSRC +
+                          &REPLACE &OUTPUT &BOLD &MLLIB &MLCORE +
+                          &DEBUG &RPG2LVL &OPTIONS)
+
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SOURCE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NOCRT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&KEEP) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MLSYS) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RVKAUT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&KEEPSRC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&REPLACE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OUTPUT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&BOLD) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MLLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLCORE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RPG2LVL) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DEBUG) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OPTIONS) TYPE(*CHAR) LEN(242)
+             DCL        VAR(&MBNDDIR) TYPE(*CHAR) LEN(10) +
+                          VALUE('MIDASBNDDR')
+
+             DCL        VAR(&NBROPTSB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBROPTS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&OPTSTRING) TYPE(*CHAR) LEN(257) +
+                          VALUE('OPTION(')
+             DCL        VAR(&OPTPTRIN) TYPE(*DEC) LEN(3 0) VALUE(3)
+             DCL        VAR(&OPTPTROUT) TYPE(*DEC) LEN(3 0) VALUE(8)
+             DCL        VAR(&OPTSCOUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&OPTSTART) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&OPTLENGTH) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&OPTSTATE) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&POSAFTOPT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&LENAFTOPT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&NOGENPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&GENFLAG) TYPE(*CHAR) LEN(1) VALUE('Y')
+
+             DCL        VAR(&CRTAUT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CUROWNAUT) TYPE(*CHAR) LEN(7) +
+                          VALUE('*SAME  ')
+
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&OBJTXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SRCFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLSTCHG) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&MBRTXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&KEEPSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEEPSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHKCRTPRM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ML) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RPL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BNDDIR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SRC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DBG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UT000025RC) TYPE(*CHAR) LEN(1)
+
+/* UTC0015 parameters. */
+             DCL        VAR(&SUBM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLD) TYPE(*CHAR) LEN(1) VALUE('N')
+
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SPECMBR) TYPE(*CHAR) LEN(1) VALUE('N')
+
+/* ML variables. */
+             DCL        VAR(&CORE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MLTXT) TYPE(*CHAR) LEN(50)
+
+             DCL        VAR(&CRTPRM) TYPE(*CHAR) LEN(948) VALUE(' ')
+             DCL        VAR(&XBCRTPRM) TYPE(*CHAR) LEN(7000) VALUE(' ')
+             DCL        VAR(&XACRTPRM) TYPE(*CHAR) LEN(7000) VALUE(' ')
+             DCL        VAR(&CRTPRMLEN) TYPE(*DEC) LEN(3 0) VALUE(0)
+
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CURUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&CRTPRMSRC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DBGPRM) TYPE(*CHAR) LEN(16) VALUE(' ')
+
+             DCL        VAR(&LIBNSRC) TYPE(*CHAR) LEN(21)
+             DCL        VAR(&LIBNOBJ) TYPE(*CHAR) LEN(21)
+
+/* QCLSCAN parameters. */
+             DCL        VAR(&TXTLEN) TYPE(*DEC) LEN(3 0) VALUE(948)
+             DCL        VAR(&STPOS1) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&TRANS) TYPE(*CHAR) LEN(1) VALUE('0')
+             DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1) VALUE('0')
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1) VALUE(' ')
+
+/* UT000027 parameters. */
+             DCL        VAR(&STRING) TYPE(*CHAR) LEN(999)
+             DCL        VAR(&LARG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RARG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FNDTXT) TYPE(*CHAR) LEN(999)
+             DCL        VAR(&FNDTXTPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&FNDTXTLEN) TYPE(*DEC) LEN(3 0)
+
+             DCL        VAR(&UT000028RC) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MTA) TYPE(*CHAR) LEN(28)
+             DCL        VAR(&SRRTNVAL) TYPE(*INT) LEN(4)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABEND))
+
+             CHGJOB     SWS('00000000')
+
+/* Build object and source combinations. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJECT 1 10))
+             CHGVAR     VAR(&OBJLIB) VALUE(%SST(&OBJECT 11 10))
+             CHGVAR     VAR(&SRCFILE) VALUE(%SST(&SOURCE 1 10))
+             CHGVAR     VAR(&SRCFLIB) VALUE(%SST(&SOURCE 11 10))
+             IF         COND(&SRCMBR *EQ '*OBJ') THEN(DO)
+                CHGVAR     VAR(&SRCMBR) VALUE(&OBJ)
+             ENDDO
+
+             RTVMBRD    FILE(&SRCFLIB/&SRCFILE) MBR(&SRCMBR) +
+                          RTNLIB(&SRCFLIB) SRCTYPE(&SRCTYPE) +
+                          SRCCHGDATE(&SRCLSTCHG) TEXT(&MBRTXT)
+
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+
+             IF         COND(&NOCRT *EQ '*NO ') THEN(DO)
+/* Call program to determine member type, object type and other settings */
+/*  relevant to the member type.                                         */
+
+/* Override input file INPSRC to file CHKCRTPRM created in UTC0001.        */
+/* It will be used to determine if object is *MODULE or *PGM in UT000025.  */
+                OVRDBF     FILE(INPSRC) TOFILE(QTEMP/CHKCRTPRM) +
+                             MBR(&SRCMBR)
+                CALL       PGM(UT000025) PARM(&SRCTYPE &UT000025RC +
+                             &OBJTYPE &CHKCRTPRM &ML &SQL &OPTION +
+                             &RPL &BNDDIR &SRC &DBG)
+                DLTOVR     FILE(INPSRC)
+             ENDDO
+
+             RTVJOBA    NBR(&JOBNBR) CURUSER(&CURUSER) TYPE(&JOBTYPE)
+             CHGVAR     VAR(&CRTPRMSRC) VALUE('W' *CAT &JOBNBR)
+
+             CHGVAR     &MTA VALUE('0000' *CAT &SRCMBR *CAT &OBJLIB)
+
+/* Call program to produce expanded source if requested. */
+             IF         COND(&NOCRT *EQ '*YES') THEN(DO)
+                CHGVAR     VAR(&SUBM) VALUE('N')
+                CHGVAR     VAR(&JOBQ) VALUE('          ')
+                IF         COND(&BOLD *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&BLD) VALUE('Y')
+                ENDDO
+                CALL       PGM(UTC0015) PARM(&SRCMBR &SOURCE &SUBM +
+                             &OUTPUT &JOBQ &BLD)
+                GOTO       CMDLBL(REPORT)
+             ENDDO
+
+/* Handle items with no creation parameters. */
+             IF         COND(&CHKCRTPRM *EQ 'N') THEN(DO)
+/* Create non-SQL table manually. */
+                IF         COND(&SRCTYPE *EQ 'TBL') THEN(DO)
+                   IF         COND(&OBJ *EQ &SRCMBR) THEN(DO)
+                      CRTTBL     TBL(&OBJLIB/&OBJ) SRCFILE(&SRCFLIB/&SRCFILE) +
+                                 SRCMBR(*TBL) TEXT(&MBRTXT)
+                      MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABEND))
+                      ENDDO
+                   ELSE       CMD(DO)
+                      CRTTBL     TBL(&OBJLIB/&OBJ) SRCFILE(&SRCFLIB/&SRCFILE) +
+                                    SRCMBR(&SRCMBR) TEXT(&MBRTXT)
+                      MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABEND))
+                   ENDDO
+                ENDDO
+/* Call program to process SQL scripts. */
+                IF         COND(&SQL *EQ 'Y') THEN(DO)
+                   CALL       PGM(UTC000007) PARM(&OBJ &OBJLIB &SRCFILE +
+                                &SRCFLIB &SRCMBR &SRCTYPE &OBJTYPE)
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      GOTO       CMDLBL(ABEND)
+                   ENDDO
+                ENDDO
+
+                GOTO       CMDLBL(CHGOBJD)
+             ENDDO
+
+/* To stop the joblog getting too large, reduce the logging if the */
+/* job is in batch.                                                */
+             IF         COND(&JOBTYPE *EQ '0') THEN(DO)
+                CHGJOB     JOB(*) LOG(*SAME 11)
+             ENDDO
+
+/* Create creation parameters strings (&CRTPRM, &XBCRTPRM, &XACRTPRM from */
+/* file &CRTPRMSRC.                                                       */
+             OVRDBF     FILE(INPSRC) TOFILE(QTEMP/&CRTPRMSRC) +
+                          MBR(&SRCMBR)
+             CALL       PGM(UT000026) PARM(&CRTPRM &XBCRTPRM +
+                          &XACRTPRM &CRTPRMLEN)
+             DLTOVR     FILE(INPSRC)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             return from UT000026 - see program dump') +
+                             TOPGMQ(*SAME) MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ABEND)
+             ENDDO
+
+/* If an ILE type PGM or SRVPGM is being created then rebuild the binding */
+/* directory if specified in creation parameters.                         */
+             IF         COND(&BNDDIR *EQ 'Y') THEN(DO)
+                CALLSUBR   SUBR(SRBNDDIR) RTNVAL(&SRRTNVAL)
+                IF         COND(&SRRTNVAL *EQ -1) THEN(DO)
+                   GOTO       CMDLBL(ABEND)
+                ENDDO
+             ENDDO
+
+/* IF OPTIONS are supported and OPTIONS parameters are entered, concatenate the OPTIONS */
+/* parameters into the string &CRTPRM, replacing the option lists if exists in &CRTPRM. */
+             IF         COND(&OPTION *NE 'N') THEN(DO)
+                CHGVAR     VAR(&NBROPTSB) VALUE(%SST(&OPTIONS 1 2))
+                CHGVAR     VAR(&NBROPTS) VALUE(%BIN(&NBROPTSB))
+                IF         COND(&NBROPTS *NE 0) THEN(DO)
+                   CALLSUBR   SUBR(SROPTIONS) RTNVAL(&SRRTNVAL)
+                   IF         COND(&SRRTNVAL *EQ -1) THEN(GOTO CMDLBL(ABEND))
+                ENDDO
+             ENDDO
+
+/* Replace fillers in &CRTPRM with object, source file and library names. */
+             CHGVAR     VAR(&LIBNOBJ) VALUE(&OBJLIB *TCAT '/' *CAT &OBJ)
+             CHGVAR     VAR(&LIBNSRC) VALUE('QTEMP/SOURCE')
+             CALL       PGM(UT000029) PARM(&LIBNOBJ &LIBNSRC &SRC +
+                          &CRTPRM)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             return from UT000029 - see program dump') +
+                             TOPGMQ(*SAME) MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ABEND)
+             ENDDO
+
+/* Add DEBUG parameter if keyword DEBUG is entered. */
+             IF         COND(&DEBUG *EQ '*YES') THEN(DO)
+                IF         COND(&DBG *EQ 'L') THEN(DO)
+                   CHGVAR     VAR(&DBGPRM) VALUE('DBGVIEW(*LIST)')
+                ENDDO
+                IF         COND(&DBG *EQ 'S') THEN(DO)
+                   CHGVAR     VAR(&DBGPRM) VALUE('DBGVIEW(*SOURCE)')
+                ENDDO
+                IF         COND(&DBGPRM *NE '     ') THEN(DO)
+                   CHGVAR     VAR(&CRTPRM) VALUE(&CRTPRM *BCAT &DBGPRM)
+                ENDDO
+             ENDDO
+
+             CHGVAR     VAR(&FROMMBR) VALUE(&SRCMBR)
+
+/* Check if SRCMBR is specified in PRTF, change the &FROMMBR to this value. */
+             IF         COND(&SRCTYPE *EQ 'PRTF') THEN(DO)
+                CALLSUBR   SUBR(SRCHKSMBR) RTNVAL(&SRRTNVAL)
+                IF         COND(&SRRTNVAL *EQ -1) THEN(GOTO CMDLBL(ABEND))
+             ENDDO
+
+/* If souce member specified, use this source member in *LIBL as input */
+/* file to UT0009 to create extanded source in QTEMP.                  */
+             IF         COND(&SPECMBR *EQ 'N') THEN(DO)
+                OVRDBF     INPSRC TOFILE(&SRCFLIB/&SRCFILE) MBR(&FROMMBR)
+             ENDDO
+             ELSE       CMD(DO)
+                OVRDBF     FILE(INPSRC) TOFILE(*LIBL/&SRCFILE) +
+                                    MBR(&FROMMBR)
+             ENDDO
+
+/* Create empty source file from which object will be created. */
+             CRTSRCPF   FILE(QTEMP/SOURCE) RCDLEN(112)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RMVM       FILE(QTEMP/SOURCE) MBR(*ALL)
+               MONMSG     MSGID(CPF0000)
+             ENDDO
+             ADDPFM     FILE(QTEMP/SOURCE) MBR(&SRCMBR) +
+                          TEXT(&MBRTXT) SRCTYPE(&SRCTYPE)
+             MONMSG     MSGID(CPF0000)
+
+/* Write creation source from original. */
+             CALL       PGM(UT0009) PARM(&SRCTYPE &RPG2LVL)
+
+/* If source member specified for PRTF, copy the creation source created  */
+/* in UT0009 to another source member with the specified member name.     */
+             IF         COND(&SPECMBR *EQ 'Y') THEN(DO)
+                RNMMBR     OLDFILE(QTEMP/SOURCE) MBR(&SRCMBR) +
+                             NEWMBR(&FROMMBR) DELETE(*NO) +
+                             TEXT(&MBRTXT)
+             ENDDO
+
+/* If a Display File is being created in multilanguage then update the */
+/* source.                                                             */
+             IF         COND(&ML *EQ 'Y') THEN(DO)
+                IF         COND(&MLSYS *EQ '*YES') THEN(DO)
+                   CALLSUBR   SUBR(SRMLSRC)
+                ENDDO
+             ENDDO
+
+/* Compile to create object. */
+             OVRDBF     FILE(SOURCE) TOFILE(QTEMP/SOURCE) +
+                          MBR(&SRCMBR)
+             CALL       PGM(UTC0003) PARM(&CRTPRM &XBCRTPRM +
+                          &XACRTPRM &MTA &SRCMBR)
+
+/* Compilation failed. */
+             MONMSG     MSGID(SYS0009) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                IF         COND(&DPLIB *NE '          ') THEN(DO)
+                   RMVM       FILE(&DPLIB/MLDDSSRC) MBR(&SRCMBR)
+                   MONMSG     MSGID(CPF7310)
+                ENDDO
+             ENDDO
+
+/* File created, member not added. */
+             MONMSG     MSGID(SYS0010) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                IF         COND(&DPLIB *NE '          ') THEN(DO)
+                   RMVM       FILE(&DPLIB/MLDDSSRC) MBR(&SRCMBR)
+                   MONMSG     MSGID(CPF7310)
+                ENDDO
+             ENDDO
+
+/* Return any diagnostic messages. */
+             MONMSG     MSGID(SYS9898) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+
+/* Retain the source if this has been requested (even if object failed to */
+/* create).                                                               */
+             IF         COND(&KEEP *EQ '*YES') THEN(DO)
+                CALLSUBR   SUBR(SRKEEPSRC)
+             ENDDO
+
+/* If there was an object creation error, send the appropriate escape message */
+/* which will then cause the program to terminate.                            */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                RCVMSG     MSGTYPE(*EXCP) MSG(&MSGDTA)
+                SNDPGMMSG  MSGID(SYS9898) MSGF(UTMSGF) MSGDTA(&MSGDTA) +
+                             MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+
+             IF         COND(&DPLIB *NE '          ') THEN(DO)
+                RMVM       FILE(&DPLIB/MLDDSSRC) MBR(&SRCMBR)
+                MONMSG     MSGID(CPF7310)
+             ENDDO
+
+CHGOBJD:
+/* When object has been generated ... */
+             IF         COND(&GENFLAG = 'Y') THEN(DO)
+/* Change desc, text and LVLCHK (if applicable) of the object generated. */
+                CALLSUBR   SUBR(SROBJATTR)
+/* Change object authority. */
+                CALLSUBR   SUBR(SROBJAUTH)
+             ENDDO
+
+REPORT:
+/* Report any missing or empty /COPY members. */
+             CALL       PGM(UP008010) PARM(*REPORT 'CRTOBJ' ' ')
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&OBJ)
+
+
+/* Tidy up. */
+PGMTIDY:
+             DLTF       FILE(QTEMP/CHKCRTPRM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/&CRTPRMSRC)
+             MONMSG     MSGID(CPF0000)
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             RCLRSC
+             GOTO       CMDLBL(END)
+
+ABEND:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                          occurred in CRTOBJ - see low level +
+                          messages') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to rebuild MIDASBNDDR if it is specified in parameter  */
+/* for keyword BNDDIR.                                               */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRBNDDIR)
+
+/* CALL UT000028 to check if MIDASBNDDR is specified for keyword BNDDIR. */
+             CALL       PGM(UT000028) PARM(&CRTPRM &UT000028RC)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             return from UT000028 - see program dump') +
+                             TOPGMQ(*SAME) MSGTYPE(*DIAG)
+                RTNSUBR    RTNVAL(-1)
+             ENDDO
+
+/* If MIDASBNDDR not specified, leave this subrutine. */
+             IF         COND(&UT000028RC *EQ 'N') THEN(DO)
+                RTNSUBR
+             ENDDO
+
+/* Check if CRTALLOBJ is being run; if it is then the output queue should be */
+/*  present.  If CRTALLOBJ is being run then it would rebuild the binding    */
+/*  directory many times which would be very inefficient.                    */
+             CHKOBJ     OBJ(&SRCFLIB/CRTALLOBJ) OBJTYPE(*OUTQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CALLSUBR   SUBR(SRBDBNDDIR)
+                RTNSUBR
+             ENDDO
+             CHKOBJ     OBJ(QTEMP/&MBNDDIR) OBJTYPE(*BNDDIR)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CALLSUBR   SUBR(SRBDBNDDIR)
+             ENDDO
+
+             ENDSUBR
+
+ /* End of subroutine SRBNDDIR. */
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to rebuild MIDASBNDDR.                                 */
+/* - called from SRBNDDIR                                            */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRBDBNDDIR)
+
+             DLTBNDDIR  BNDDIR(QTEMP/&MBNDDIR)
+             MONMSG     MSGID(CPF0000)
+             CRTBNDDIR  BNDDIR(QTEMP/&MBNDDIR)
+             RBDBNDDIR  BNDDIR(QTEMP/&MBNDDIR) OBJLIB(*USRLIBL) +
+                          OBJTYP(*BOTH)
+
+             ENDSUBR
+/* End of subroutine SRBDBNDDIR. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to cope with OPTIONS parameter.                        */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SROPTIONS)
+
+/* If any entries for the OPTION keyword have been made, concatenate */
+/* the suitably-edited keyword onto the end of the existing string.  */
+/* No attempt is made here (or in the validity checker) to check     */
+/* the validitiy of a particular value of the keyword for a          */
+/* particular command; however, use of the keyword should have been  */
+/* prevented by the validity checker for source types whose creation */
+/* commands do not support it.                                       */
+
+/* CALL UT000027 to check if keyword OPTION already exists in the    */
+/* creation parameters string, and if so whether it is the last      */
+/* thing in the string.  Set a three-valued variable, &OPTSTATE, to  */
+/* indicate which situation was found.  See below for a table giving */
+/* the meaning of &OPTSTATE's values.                                */
+
+             CHGVAR     VAR(&STRING) VALUE(&CRTPRM)
+             CHGVAR     VAR(&LARG) VALUE('OPTION(')
+             CHGVAR     VAR(&RARG) VALUE(')')
+
+             CALL       PGM(UT000027) PARM(&STRING &LARG &RARG +
+                          &FNDTXT &FNDTXTPOS &FNDTXTLEN)
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             return from UT000027 in SR/SROPTIONS - +
+                             see program dump') TOPGMQ(*SAME) +
+                             MSGTYPE(*DIAG)
+                RTNSUBR    RTNVAL(-1)
+             ENDDO
+
+/* If keyword OPTION not found, set &OPSTATE = 0. */
+             IF         COND(&FNDTXTPOS *EQ 0) THEN(DO)
+                CHGVAR     VAR(&OPTSTATE) VALUE(0)
+             ENDDO
+             ELSE       CMD(DO)
+/* Save the length of the OPTION parameter including 'OPTION(' and ')'. */
+                CHGVAR     VAR(&OPTLENGTH) VALUE(&FNDTXTLEN + 8)
+/* Find start position of 'OPTION('. */
+                CHGVAR     VAR(&OPTSTART) VALUE(&FNDTXTPOS - 7)
+/* Determine whether there are any nonblank characters after the end */
+/* of the OPTION parameter and set the value to &OPTSTATE.           */
+                CHGVAR     VAR(&POSAFTOPT) VALUE(&FNDTXTPOS + &FNDTXTLEN + 1)
+                CHGVAR     VAR(&LENAFTOPT) VALUE(&TXTLEN - &POSAFTOPT + 1)
+
+                IF         COND(%SST(&CRTPRM &POSAFTOPT &LENAFTOPT) *EQ +
+                             ' ') THEN(DO)
+                   CHGVAR     VAR(&OPTSTATE) VALUE(1)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OPTSTATE) VALUE(2)
+                ENDDO
+             ENDDO
+
+/* Loop to build string &OPTSTRING from the OPTION parameter list entries. */
+OPTIONLOOP:
+             CHGVAR     VAR(%SST(&OPTSTRING &OPTPTROUT 10)) +
+                          VALUE(%SST(&OPTIONS &OPTPTRIN 10))
+
+/* Move the string pointers and increment the count of number of elements. */
+             CHGVAR     VAR(&OPTPTRIN) VALUE(&OPTPTRIN + 10)
+             CHGVAR     VAR(&OPTPTROUT) VALUE(&OPTPTROUT + 11)
+             CHGVAR     VAR(&OPTSCOUNT) VALUE(&OPTSCOUNT + 1)
+
+/* If we have not yet processed all the entries in the incoming parameter, */
+/* loop to process the next one.                                           */
+             IF         COND(&OPTSCOUNT *LT &NBROPTS) THEN(DO)
+                GOTO       CMDLBL(OPTIONLOOP)
+             ENDDO
+
+/* Otherwise we have processed all the incoming parameter entries; complete */
+/* the outgoing parameter by adding ')' at the end ...                      */
+             CHGVAR     VAR(&OPTPTROUT) VALUE(&OPTPTROUT - 1)
+             CHGVAR     VAR(%SST(&OPTSTRING &OPTPTROUT 1)) VALUE(')')
+
+/* . . . and append the OPTION parameter onto the existing command string. */
+/* There are three possible options for this process, indicated by the     */
+/* &OPTSTATE variable, which is set above:                                 */
+
+/* Value of &OPTSTATE   Meaning                                      */
+/*                                                                   */
+/*       0              The OPTION parameter does not already exist  */
+/*                      in the creation parameters.                  */
+/*                                                                   */
+/*       1              The OPTION parameter already exists in the   */
+/*                      creation parameters, but there are no other  */
+/*                      parameters after it.                         */
+/*                                                                   */
+/*       2              The OPTION parameter already exists in the   */
+/*                      creation parameters, and there are other     */
+/*                      parameters after it.                         */
+/*                                                                   */
+/* For 1 and 2 we will clear the existing value of the OPTION        */
+/* parameter: the values entered on the command prompt take          */
+/* precedence over the values in the creation parameters.            */
+/* For 0 and 2 we will just append the new OPTION string to the      */
+/* existing command string.  For 1 we will reposition the pointer in */
+/* the command string so that the space that was formerly used by    */
+/* the embedded OPTION parameter is reused.                          */
+/*                                                                   */
+/* Clear the string from the start of 'OPTION' to the next ')'       */
+/* (command parameters overriding values in the creation             */
+/* parameters).                                                      */
+             IF         COND(&OPTSTATE *NE 0) THEN(DO)
+                CHGVAR     VAR(%SST(&CRTPRM &OPTSTART &OPTLENGTH)) +
+                             VALUE(' ')
+             ENDDO
+
+/* Set the start position at the end of the &CRTPRM */
+             IF         COND(&OPTSTATE *NE 1) THEN(DO)
+                CHGVAR     VAR(&OPTSTART) VALUE(&CRTPRMLEN + 2)
+             ENDDO
+             CHGVAR     VAR(%SST(&CRTPRM &OPTSTART &OPTPTROUT)) +
+                          VALUE(%SST(&OPTSTRING 1 &OPTPTROUT))
+
+/* Check whether the options include *NOGEN; if so, set a flag to indicate */
+/* indicate that the program should not try to update the object letter.   */
+             CALL       PGM(QCLSCAN) PARM(&CRTPRM &TXTLEN &STPOS1 +
+                          '*NOGEN' X'006F' &TRANS &TRIM &WILD +
+                          &NOGENPOS)
+
+             IF         COND(&NOGENPOS *NE 0) THEN(DO)
+                CHGVAR     VAR(&GENFLAG) VALUE('N')
+             ENDDO
+
+             ENDSUBR
+/* End of subroutine SROPTIONS. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to check if the value for keyword SRCMBR in &CRTPARM   */
+/* is specified. If it is specified, use this value as source file   */
+/* from member.                                                      */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRCHKSMBR)
+
+             CHGVAR     VAR(&STRING) VALUE(&CRTPRM)
+             CHGVAR     VAR(&LARG) VALUE('SRCMBR(')
+             CHGVAR     VAR(&RARG) VALUE(')')
+
+             CALL       PGM(UT000027) PARM(&STRING &LARG &RARG +
+                          &FNDTXT &FNDTXTPOS &FNDTXTLEN)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             return from UT000027 in SR/SRCHKSMBR - +
+                             see program dump') TOPGMQ(*SAME) +
+                             MSGTYPE(*DIAG)
+             RTNSUBR    RTNVAL(-1)
+             ENDDO
+
+             IF         COND(&FNDTXTLEN *GT 0) THEN(DO)
+                IF         COND((&FNDTXT *NE '*FILE') *AND (&FNDTXT *NE +
+                             ' ')) THEN(DO)
+                   CHGVAR     VAR(&FROMMBR) VALUE(&FNDTXT)
+                   CHGVAR     VAR(&SPECMBR) VALUE('Y')
+                ENDDO
+             ENDDO
+
+             ENDSUBR
+/* End of subroutine SRCHKSMBR. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to update the source member in QTEMP/SOURCE for        */
+/* multilanguage. Text of the source member will have 'ML'.          */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRMLSRC)
+
+/* Set up library name for MLDDSSRC. */
+             RTVOBJD    OBJ(MLDDSSRC) OBJTYPE(*FILE) RTNLIB(&DPLIB)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&DPLIB = '          ') THEN(DO)
+                CRTSRCPF   FILE(QTEMP/MLDDSSRC) RCDLEN(112)
+                CHGVAR     VAR(&DPLIB) VALUE(QTEMP)
+             ENDDO
+
+/* Check source member is not already in use. */
+             CHKOBJ     OBJ(&DPLIB/MLDDSSRC) OBJTYPE(*FILE) +
+                          MBR(&SRCMBR)
+             MONMSG     MSGID(CPF9801 CPF9815) EXEC(DO)
+                GOTO       CMDLBL(CONTIN)
+             ENDDO
+
+             SNDPGMMSG  MSGID(SYS0013) MSGF(UTMSGF) MSGTYPE(*ESCAPE)
+
+CONTIN:
+             CPYF       FROMFILE(QTEMP/SOURCE) +
+                          TOFILE(&DPLIB/MLDDSSRC) FROMMBR(&SRCMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE)
+
+/**Indicate*ML*in*member*text.**/ /*                                                 */ /*MD034741*/
+/**********  CHGVAR     VAR(&MLTXT) VALUE(%SST(&MBRTXT 1 9) *CAT +                   */ /*MD034741*/
+/**********               '*ML' *BCAT %SST(&MBRTXT 10 33))                           */ /*MD034741*/
+/**********  CHGVAR     VAR(&MBRTXT) VALUE(&MLTXT)                                   */ /*MD034741*/
+/**********  CHGPFM     FILE(&DPLIB/MLDDSSRC) MBR(&SRCMBR) +                         */ /*MD034741*/
+/**********               TEXT(&MBRTXT)                                              */ /*MD034741*/
+/**********  CHGPFM     FILE(QTEMP/SOURCE) MBR(&SRCMBR) TEXT(&MBRTXT)                */ /*MD034741*/
+
+/* Update the source for Multilanguage. */
+             IF         COND(&MLCORE *EQ '*YES') THEN(DO)
+                CHGVAR     VAR(&CORE) VALUE('Y')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&CORE) VALUE('N')
+             ENDDO
+
+             CALL       PGM(MLC0120) PARM(&SRCMBR &DPLIB MLDDSSRC +
+                          &MLLIB 'QPRINT    *LIBL' &CORE)
+
+             CPYF       FROMFILE(&DPLIB/MLDDSSRC) +
+                          TOFILE(QTEMP/SOURCE) FROMMBR(&SRCMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE)
+
+             ENDSUBR
+/* End of subroutine SRMLSRC. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Retain the source if this has been requested (even if object      */
+/* failed to create).                                                */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRKEEPSRC)
+
+                CHGVAR     VAR(&KEEPSRCF) VALUE(%SST(&KEEPSRC 1 10))
+                CHGVAR     VAR(&KEEPSRCLIB) VALUE(%SST(&KEEPSRC 11 10))
+
+/* See if source file already exists; if not create it. */
+             CHKOBJ     OBJ(&KEEPSRCLIB/&KEEPSRCF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                RCVMSG     MSGTYPE(*EXCP) RMV(*YES)
+                CRTSRCPF   FILE(&KEEPSRCLIB/&KEEPSRCF) RCDLEN(112)
+             ENDDO
+
+/* See if member already exists; if not then copy. */
+             CHKOBJ     OBJ(&KEEPSRCLIB/&KEEPSRCF) OBJTYPE(*FILE) +
+                          MBR(&SRCMBR)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                RCVMSG     MSGTYPE(*EXCP) RMV(*YES)
+                CPYF       FROMFILE(QTEMP/SOURCE) +
+                             TOFILE(&KEEPSRCLIB/&KEEPSRCF) +
+                             FROMMBR(&SRCMBR) TOMBR(*FROMMBR) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP)
+                RTNSUBR
+             ENDDO
+
+/* If yes, check REPLACE parameter. */
+             IF         COND(&REPLACE *EQ '*YES') THEN(DO)
+                CPYF       FROMFILE(QTEMP/SOURCE) +
+                             TOFILE(&KEEPSRCLIB/&KEEPSRCF) +
+                             FROMMBR(&SRCMBR) TOMBR(*FROMMBR) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP)
+             ENDDO
+
+             ENDSUBR
+/* End of subroutine SRKEEPSRC. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Change object desc, text and lvlchk if applicable.                */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SROBJATTR)
+
+/* Change object description to refer to original source. */
+/**********  CHGOBJ     OBJ(&OBJLIB/&OBJ) OBJTYP(&OBJTYPE) +                         */ /*AR959086*/
+/**********               NEWFIL(&SRCFILE) NEWLIB(&SRCFLIB) +                        */ /*AR959086*/
+/**********               SRCLSTCHG(&SRCLSTCHG)                                      */ /*AR959086*/
+             CHGOBJ     OBJ(&OBJLIB/&OBJ) OBJTYP(&OBJTYPE) +
+                          NEWFIL(&SRCFILE) NEWLIB(&SRCFLIB) +
+                          NEWMBR(&SRCMBR) SRCLSTCHG(&SRCLSTCHG)                         /*AR959086*/
+             MONMSG     MSGID(CPF0000)
+
+/* If the object does not have text or is SQL PROC which do not */
+/* write text, change to source member text.                    */
+             RTVOBJD    OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                          TEXT(&OBJTXT)
+             MONMSG     MSGID(CPF9811)                                                  /*AR887384*/
+             IF         COND((&OBJTXT *EQ '     ') *OR (&SRCTYPE *EQ +
+                          'SQLPROC')) THEN(DO)
+                CHGOBJD    OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             TEXT(&MBRTXT)
+                MONMSG     MSGID(CPF2105)                                               /*AR887384*/
+             ENDDO
+
+/* Change object text for multi-language display files. */                              /*MD034741*/
+             IF         COND(&MLSYS *EQ '*YES' *AND &SRCTYPE *EQ +
+                          'DSPF') THEN(DO)                                              /*MD034741*/
+                CHGVAR     VAR(&MLTXT) VALUE(%SST(&OBJTXT 1 9) *CAT +
+                             '*ML' *BCAT %SST(&OBJTXT 10 33))                           /*MD034741*/
+                CHGVAR     VAR(&OBJTXT) VALUE(&MLTXT)                                   /*MD034741*/
+                CHGOBJD    OBJ(&OBJLIB/&OBJ) OBJTYPE(*FILE) +
+                             TEXT(&OBJTXT)                                              /*MD034741*/
+             ENDDO                                                                      /*MD034741*/
+
+/* Change LVLCHK of the file created from source type SQLTBL and SQLVIEW. */
+             IF         COND(&SRCTYPE *EQ 'SQLTBL') THEN(DO)
+                CHGPF      FILE(&OBJLIB/&OBJ) LVLCHK(*NO)
+             ENDDO
+             IF         COND(&SRCTYPE *EQ 'SQLVIEW') THEN(DO)
+                CHGLF      FILE(&OBJLIB/&OBJ) LVLCHK(*NO)
+             ENDDO
+
+             ENDSUBR
+/* End of subroutine SROBJATTR. */
+
+/*********************************************************************/
+/*                                                                   */
+/* Change object authority.                                          */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SROBJAUTH)
+
+/* If owner is not to be *USER, change object authority for the user. */
+             IF         COND((&OWNER *NE '*USER') *AND (&OWNER *NE +
+                          &CURUSER)) THEN(DO)
+                IF         COND(&RVKAUT *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&CUROWNAUT) VALUE('*REVOKE')
+                ENDDO
+                CHGOBJOWN  OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             NEWOWN(&OWNER) CUROWNAUT(&CUROWNAUT)
+                MONMSG     MSGID(CPF2208)                                              /*AR887384A*/
+             ENDDO
+
+/* Change authority for *PUBLIC only when &AUTL is not *COMPILER which */
+/* has already been used to compile object.                            */
+             IF         COND(&AUTL *EQ '*COMPILER') THEN(DO)
+                RTNSUBR
+             ENDDO
+
+             IF         COND(%SST(&AUTL 1 1) *EQ '*') THEN(DO)
+                IF         COND(&AUTL *EQ '*LIBCRTAUT') THEN(DO)
+                   RTVLIBD    LIB(&OBJLIB) CRTAUT(&CRTAUT)
+                   IF         COND(&CRTAUT *EQ '*SYSVAL') THEN(DO)
+                      RTVSYSVAL  SYSVAL(QCRTAUT) RTNVAR(&CRTAUT)
+                   ENDDO
+                   CHGVAR     VAR(&AUTL) VALUE(&CRTAUT)
+                ENDDO
+             ENDDO
+
+/* It is possible that an authorisation list name was returned as the */
+/*  library's CRTAUT so it needs to be checked again.                 */
+             IF         COND(%SST(&AUTL 1 1) *EQ '*') THEN(DO)
+                RVKOBJAUT  OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             USER(*PUBLIC) AUT(*ALL)
+                MONMSG     MSGID(CPF2208)                                              /*AR887384A*/
+                GRTOBJAUT  OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             USER(*PUBLIC) AUT(&AUTL)
+                MONMSG     MSGID(CPF2208)                                              /*AR887384A*/
+             ENDDO
+             ELSE       CMD(DO)
+                GRTOBJAUT  OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) AUTL(&AUTL)
+                MONMSG     MSGID(CPF2208)                                              /*AR887384A*/
+                GRTOBJAUT  OBJ(&OBJLIB/&OBJ) OBJTYPE(&OBJTYPE) +
+                             USER(*PUBLIC) AUT(*AUTL)
+                MONMSG     MSGID(CPF2208)                                              /*AR887384A*/
+             ENDDO
+
+             ENDSUBR
+/* End of subroutine SROBJAUTH. */
+
+END:
+             ENDPGM

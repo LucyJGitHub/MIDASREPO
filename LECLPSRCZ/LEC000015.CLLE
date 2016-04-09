@@ -1,0 +1,133 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas LE Manual Fclty Util. Exchange Rate Update')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000015 - Manual Facility Utilisation Exchange Rate       */
+/*                   Update                                          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Prev Amend No. BUG28123           Date 04Oct10              */
+/*                      CER059             Date 19Jul10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CLE025  *CREATE    Date 20Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       BUG28123 - Omit deletion of XLEMNFUPD                       */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*              - LT018 LEC0609C 00001 failed. XLEMNFUPD not found.  */
+/*       CLE025 - Credit Lines                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC000015 - Manual Facility Utilisation +
+                            Exchange Rate Update') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator. */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+/**********     DLTF       FILE(XLEMNFUPD) */                                           /*BUG28123*/
+/**********     MONMSG     MSGID(CPF2105) */                                            /*BUG28123*/
+/**********     CPYF       FROMFILE(LEMNFUPD) + */                                      /*BUG28123*/
+/**********                  TOFILE(&DPLIB/XLEMNFUPD) + */                              /*BUG28123*/
+/**********                  MBROPT(*REPLACE) CRTFILE(*YES) */                          /*BUG28123*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) */                            /*BUG28123*/
+                CPYF       FROMFILE(LEMNFUPD) +
+                             TOFILE(&DPLIB/XLEMNFUPD) +
+                             MBROPT(*REPLACE)                                           /*BUG28123*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(XLEMNFUPD))                               /*BUG28123*/
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+                CPYF       FROMFILE(XLEMNFUPD) TOFILE(LEMNFUPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(LEMNFUPD))
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Call Rollover of Deal Number Update on Collaterals File Program */
+ 
+             CALL       PGM(LE000015)
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+/**********     DLTF       FILE(XLEMNFUPD)                            */                  /*CER059*/
+/**********     MONMSG     MSGID(CPF2105)                             */                  /*CER059*/
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('LEC000015 Manual Facility Utilisation +
+                          Exchange Rate Update Ended +
+                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             ENDPGM

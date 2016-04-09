@@ -1,0 +1,763 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas AS NPV historic file maintenance')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Accounting Standards Module                         */
+/*                                                                   */
+/*       ASC000025 - AS NPV Historic File Maintenance                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. AR813443           Date 19Aug14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 228948             Date 27Oct04              */
+/*                      CAS006             Date 21Jan03              */
+/*                      CAS005  *CREATE    Date 16Dec02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR813443 - Program is running too long due to numerous      */
+/*                  members being copied for recovery process.       */
+/*                  Change the recovery process of the program.      */
+/*                - Applied for MD020810.                            */
+/*       228948 - Add 'Exclude Accrued Interest in Unrealized Profit */
+/*                or Loss' (Recompile).                              */
+/*       CAS006 - Hedge Accounting Phase B                           */
+/*       CAS005 - Enhancements to CAS001, CAS002 and CAS004          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&FILMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MONTH1) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&DAY1N) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&DAY1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&YEAR1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MONTH2) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&YEAR2) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&A) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&B) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&C) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&BCHR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&WYEAR) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&MTHID) TYPE(*DEC) LEN(2 0)
+ 
+             DCLF       FILE(SDHEDGPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ASC000025 - Midas Hedge NPV files Monthly +
+                          Backup') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+ 
+             RTVDTAARA  DTAARA(RUNDAT (3 3)) RTNVAR(&MONTH1)
+             RTVDTAARA  DTAARA(RUNDAT (1 2)) RTNVAR(&DAY1)
+             RTVDTAARA  DTAARA(RUNDAT (6 2)) RTNVAR(&YEAR1)
+ 
+/** Move the value of DAY to a numeric field to have a prefix +
+    of zero if the DAY is less than 10 */
+ 
+             CHGVAR     VAR(&DAY1N) VALUE(&DAY1)
+             CHGVAR     VAR(&DAY1) VALUE(&DAY1N)
+             CHGVAR     VAR(&FILMBR) VALUE(&MONTH1 *CAT &YEAR1 *CAT &DAY1)
+             CHGVAR     VAR(&WYEAR) VALUE(&YEAR1)
+ 
+/** Read Hedge ICD file */
+ 
+             RCVF
+ 
+             IF         COND(&FSNMBU *EQ 0) THEN(GOTO CMDLBL(END))
+ 
+/** Set equivalent numeric integer of rundate month */
+ 
+             IF         COND(&MONTH1 *EQ 'JAN') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(1)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'FEB') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(2)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'MAR') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(3)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'APR') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(4)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'MAY') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(5)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'JUN') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(6)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'JUL') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(7)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'AUG') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(8)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'SEP') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(9)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'OCT') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(10)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'NOV') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(11)
+             ENDDO
+             IF         COND(&MONTH1 *EQ 'DEC') THEN(DO)
+                  CHGVAR     VAR(&MTHID) VALUE(12)
+             ENDDO
+ 
+             CHGVAR     VAR(&A) VALUE(&MTHID - &FSNMBU)
+ 
+CHKDAT:
+ 
+/** Set the name of the month of the member to be deleted */
+ 
+             IF         COND(&A >= 0) THEN(DO)
+ 
+             IF         COND(&A *EQ 1) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('JAN')
+             ENDDO
+             IF         COND(&A *EQ 2) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('FEB')
+             ENDDO
+             IF         COND(&A *EQ 3) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('MAR')
+             ENDDO
+             IF         COND(&A *EQ 4) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('APR')
+             ENDDO
+             IF         COND(&A *EQ 5) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('MAY')
+             ENDDO
+             IF         COND(&A *EQ 6) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('JUN')
+             ENDDO
+             IF         COND(&A *EQ 7) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('JUL')
+             ENDDO
+             IF         COND(&A *EQ 8) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('AUG')
+             ENDDO
+             IF         COND(&A *EQ 9) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('SEP')
+             ENDDO
+             IF         COND(&A *EQ 10) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('OCT')
+             ENDDO
+             IF         COND(&A *EQ 11) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('NOV')
+             ENDDO
+             IF         COND(&A *EQ 0) THEN(DO)
+                  CHGVAR     VAR(&MONTH2) VALUE('DEC')
+             ENDDO
+ 
+             ENDDO
+ 
+/** Set the year of the member to be deleted when ICD (number of months) +
+    fall on the previous year/s */
+ 
+             IF         COND(&A <= 0) THEN(DO)
+                  CHGVAR     VAR(&WYEAR) VALUE(&WYEAR - 1)
+ 
+                  IF          COND(&WYEAR < 0) THEN(DO)
+                       CHGVAR     VAR(&B) VALUE(2000 + &WYEAR)
+                       CHGVAR     VAR(&BCHR) VALUE(&B)
+                       CHGVAR     VAR(&WYEAR) VALUE(%SUBSTRING(&BCHR 3 2))
+                  ENDDO
+             ENDDO
+ 
+             CHGVAR     VAR(&YEAR2) VALUE(&WYEAR)
+ 
+/** Set the name of the month when ICD (number of months) fall on +
+    the previous year/s */
+ 
+             IF         COND(&A < 0) THEN(DO)
+                   CHGVAR     VAR(&A) VALUE(12 + &A)
+                   GOTO       CMDLBL(CHKDAT)
+             ENDDO
+ 
+/** Setup date to be cleared from historic file */
+ 
+             CHGVAR     VAR(&C) VALUE(&MONTH2 *CAT &YEAR2 *CAT '*')
+ 
+/** Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/***If*it*is*not*a*restart**/                                                           /*AR813443*/
+ 
+/**********  IF         COND(&STAT *NE 'Y') THEN(DO) */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XDLHNPLPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XMMHNPAPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XMMHNPLPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XIRHNPAPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XIRHNPBPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XRXHNPAPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XRXHNPBPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+                                                                                          /*CAS006*/
+/**********       DLTF       FILE(XFRHNPAPD)         */                          /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                          /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********       DLTF       FILE(XFRHNPLPD)         */                          /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                          /*CAS006 AR813443*/
+ 
+/**********       DLTF       FILE(XLEHNPAPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+ 
+/**********       DLTF       FILE(XLEHNPLPD)         */                                 /*AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                                 /*AR813443*/
+                                                                                          /*CAS006*/
+/**********       DLTF       FILE(XSEHMKAPD)         */                          /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                          /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********       DLTF       FILE(XSEHMKLPD)         */                          /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2105)          */                          /*CAS006 AR813443*/
+ 
+ 
+/**Create*a*backup*for*Historic*NPV*files */                                            /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(DLHNPLPD) TOFILE(&DPLIB/XDLHNPLPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(MMHNPAPD) TOFILE(&DPLIB/XMMHNPAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(MMHNPLPD) TOFILE(&DPLIB/XMMHNPLPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(IRHNPAPD) TOFILE(&DPLIB/XIRHNPAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(IRHNPBPD) TOFILE(&DPLIB/XIRHNPBPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(RXHNPAPD) TOFILE(&DPLIB/XRXHNPAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(RXHNPBPD) TOFILE(&DPLIB/XRXHNPBPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+                                                                                          /*CAS006*/
+/**********       CPYF       FROMFILE(FRHNPAPD) TOFILE(&DPLIB/XFRHNPAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */   /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */   /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********       CPYF       FROMFILE(FRHNPLPD) TOFILE(&DPLIB/XFRHNPLPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */   /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */   /*CAS006 AR813443*/
+ 
+/**********       CPYF       FROMFILE(LEHNPAPD) TOFILE(&DPLIB/XLEHNPAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+ 
+/**********       CPYF       FROMFILE(LEHNPLPD) TOFILE(&DPLIB/XLEHNPLPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */          /*AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */          /*AR813443*/
+                                                                                          /*CAS006*/
+/**********       CPYF       FROMFILE(SEHMKAPD) TOFILE(&DPLIB/XSEHMKAPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */   /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */   /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********       CPYF       FROMFILE(SEHMKLPD) TOFILE(&DPLIB/XSEHMKLPD) +  */          /*AR813443*/
+/**********                     FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES) */   /*CAS006 AR813443*/
+/**********       MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                 */   /*CAS006 AR813443*/
+ 
+/**********  ENDDO     */                                                               /*AR813443*/
+ 
+/** If it is a restart */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+ 
+             RMVM       FILE(&DMLIB/DLHNPLPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/DLHNPLPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XDLHNPLPD) TOFILE(&DMLIB/DLHNPLPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/MMHNPAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/MMHNPAPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XMMHNPAPD) TOFILE(&DMLIB/MMHNPAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/MMHNPLPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/MMHNPLPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XMMHNPLPD) TOFILE(&DMLIB/MMHNPLPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/IRHNPAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/IRHNPAPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XIRHNPAPD) TOFILE(&DMLIB/IRHNPAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/IRHNPBPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/IRHNPBPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XIRHNPBPD) TOFILE(&DMLIB/IRHNPBPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/RXHNPAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/RXHNPAPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XRXHNPAPD) TOFILE(&DMLIB/RXHNPAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/RXHNPBPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/RXHNPBPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XRXHNPBPD) TOFILE(&DMLIB/RXHNPBPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/FRHNPAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/FRHNPAPD) MBR(*ALL)                     */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */   /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XFRHNPAPD) TOFILE(&DMLIB/FRHNPAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */   /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/FRHNPLPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/FRHNPLPD) MBR(*ALL)                     */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */   /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XFRHNPLPD) TOFILE(&DMLIB/FRHNPLPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */   /*CAS006 AR813443*/
+ 
+             RMVM       FILE(&DMLIB/LEHNPAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/LEHNPAPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XLEHNPAPD) TOFILE(&DMLIB/LEHNPAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/LEHNPLPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/LEHNPLPD) MBR(*ALL)                     */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */          /*AR813443*/
+/**********  CPYF       FROMFILE(XLEHNPLPD) TOFILE(&DMLIB/LEHNPLPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */          /*AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */          /*AR813443*/
+ 
+             RMVM       FILE(&DMLIB/SEHMKAPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/SEHMKAPD) MBR(*ALL)                     */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */   /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XSEHMKAPD) TOFILE(&DMLIB/SEHMKAPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */   /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/SEHMKLPD) MBR(&FILMBR)                              /*AR813443*/
+             MONMSG     MSGID(CPF5815)                                                  /*AR813443*/
+/**********  RMVM       FILE(&DMLIB/SEHMKLPD) MBR(*ALL)                     */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                      */   /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XSEHMKLPD) TOFILE(&DMLIB/SEHMKLPD) +       */          /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +                   */          /*AR813443*/
+/**********               MBROPT(*ADD)                                      */   /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                      */   /*CAS006 AR813443*/
+ 
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/** Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Remove expired member from the historic file */
+ 
+             RMVM       FILE(&DMLIB/DLHNPLPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/MMHNPAPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/MMHNPLPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/IRHNPAPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/IRHNPBPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/RXHNPAPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/RXHNPBPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/FRHNPAPD) MBR(&C)                                     /*CAS006*/
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                                    /*CAS006*/
+ 
+             RMVM       FILE(&DMLIB/FRHNPLPD) MBR(&C)                                     /*CAS006*/
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                                    /*CAS006*/
+ 
+             RMVM       FILE(&DMLIB/LEHNPAPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+ 
+             RMVM       FILE(&DMLIB/LEHNPLPD) MBR(&C)
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/SEHMKAPD) MBR(&C)                                     /*CAS006*/
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                                    /*CAS006*/
+                                                                                          /*CAS006*/
+             RMVM       FILE(&DMLIB/SEHMKLPD) MBR(&C)                                     /*CAS006*/
+             MONMSG     MSGID(CPF5815 CPF7303 CPF7301)                                    /*CAS006*/
+ 
+             SNDPGMMSG  MSG('ASC000025 - NPV records for ' *CAT &C *CAT +
+                          ' has expired and been removed from the history files') +
+                        TOMSGQ(MOPERQ)
+ 
+/** Create historic NPV records for this month */
+ 
+             ADDPFM     FILE(&DMLIB/DLHNPLPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(DLHNPLPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/DLNPVLPD) +
+                          TOFILE(&DMLIB/DLHNPLPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/MMHNPAPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(MMHNPAPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/MMNPVAPD) +
+                          TOFILE(&DMLIB/MMHNPAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/MMHNPLPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(MMHNPLPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/MMNPVLPD) +
+                          TOFILE(&DMLIB/MMHNPLPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/IRHNPAPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(IRHNPAPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/IRNPVAPD) +
+                          TOFILE(&DMLIB/IRHNPAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/IRHNPBPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(IRHNPBPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/IRNPVBPD) +
+                          TOFILE(&DMLIB/IRHNPBPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/RXHNPAPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(RXHNPAPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/RXNPVAPD) +
+                          TOFILE(&DMLIB/RXHNPAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/RXHNPBPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(RXHNPBPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/RXNPVBPD) +
+                          TOFILE(&DMLIB/RXHNPBPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                                                                                          /*CAS006*/
+             ADDPFM     FILE(&DMLIB/FRHNPAPD) MBR(&FILMBR)                                /*CAS006*/
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)                                   /*CAS006*/
+             CLRPFM     FILE(FRHNPAPD) MBR(&FILMBR)                                       /*CAS006*/
+             ENDDO                                                                        /*CAS006*/
+             CPYF       FROMFILE(&DMLIB/FRNPVAPD) +
+                          TOFILE(&DMLIB/FRHNPAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)                                     /*CAS006*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CAS006*/
+                                                                                          /*CAS006*/
+             ADDPFM     FILE(&DMLIB/FRHNPLPD) MBR(&FILMBR)                                /*CAS006*/
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)                                   /*CAS006*/
+             CLRPFM     FILE(FRHNPLPD) MBR(&FILMBR)                                       /*CAS006*/
+             ENDDO                                                                        /*CAS006*/
+             CPYF       FROMFILE(&DMLIB/FRNPVLPD) +
+                          TOFILE(&DMLIB/FRHNPLPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)                                     /*CAS006*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CAS006*/
+ 
+             ADDPFM     FILE(&DMLIB/LEHNPAPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(LEHNPAPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/LENPVAPD) +
+                          TOFILE(&DMLIB/LEHNPAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ADDPFM     FILE(&DMLIB/LEHNPLPD) MBR(&FILMBR)
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)
+             CLRPFM     FILE(LEHNPLPD) MBR(&FILMBR)
+             ENDDO
+             CPYF       FROMFILE(&DMLIB/LENPVLPD) +
+                          TOFILE(&DMLIB/LEHNPLPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                                                                                          /*CAS006*/
+             ADDPFM     FILE(&DMLIB/SEHMKAPD) MBR(&FILMBR)                                /*CAS006*/
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)                                   /*CAS006*/
+             CLRPFM     FILE(SEHMKAPD) MBR(&FILMBR)                                       /*CAS006*/
+             ENDDO                                                                        /*CAS006*/
+             CPYF       FROMFILE(&DMLIB/SEMKVAPD) +
+                          TOFILE(&DMLIB/SEHMKAPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)                                     /*CAS006*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CAS006*/
+                                                                                          /*CAS006*/
+             ADDPFM     FILE(&DMLIB/SEHMKLPD) MBR(&FILMBR)                                /*CAS006*/
+             MONMSG     MSGID(CPF5812 CPF7306) EXEC(DO)                                   /*CAS006*/
+             CLRPFM     FILE(SEHMKLPD) MBR(&FILMBR)                                       /*CAS006*/
+             ENDDO                                                                        /*CAS006*/
+             CPYF       FROMFILE(&DMLIB/SEMKVLPD) +
+                          TOFILE(&DMLIB/SEHMKLPD) FROMMBR(*FIRST) +
+                          TOMBR(&FILMBR) MBROPT(*ADD)                                     /*CAS006*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CAS006*/
+ 
+/***Call*CB0150*to*update*restart*indicator**/                                          /*AR813443*/
+ 
+/**********  CHGVAR     VAR(&STAT) VALUE('N')                                           /*AR813443*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)                             /*AR813443*/
+ 
+/***If*no*error*occured*in*copying*the*files**/                                         /*AR813443*/
+ 
+/**********  DLTF       FILE(XDLHNPLPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XMMHNPAPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XMMHNPLPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XIRHNPAPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XIRHNPBPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XRXHNPAPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XRXHNPBPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+                                                                                          /*CAS006*/
+/**********  DLTF       FILE(XFRHNPAPD)                                          /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                           /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********  DLTF       FILE(XFRHNPLPD)                                          /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                           /*CAS006 AR813443*/
+ 
+/**********  DLTF       FILE(XLEHNPAPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+ 
+/**********  DLTF       FILE(XLEHNPLPD)                                                 /*AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                                  /*AR813443*/
+                                                                                          /*CAS006*/
+/**********  DLTF       FILE(XSEHMKAPD)                                          /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                           /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********  DLTF       FILE(XSEHMKLPD)                                          /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF2105)                                           /*CAS006 AR813443*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        ASC000025 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Put the saved NPV records back to the file if there is error */
+ 
+/**********  IF         COND(&STAT *EQ 'Y') THEN(DO)                  */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/DLHNPLPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XDLHNPLPD) TOFILE(&DMLIB/DLHNPLPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/MMHNPAPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XMMHNPAPD) TOFILE(&DMLIB/MMHNPAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/MMHNPLPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XMMHNPLPD) TOFILE(&DMLIB/MMHNPLPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/IRHNPAPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XIRHNPAPD) TOFILE(&DMLIB/IRHNPAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/IRHNPBPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XIRHNPBPD) TOFILE(&DMLIB/IRHNPBPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/RXHNPAPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XRXHNPAPD) TOFILE(&DMLIB/RXHNPAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/RXHNPBPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XRXHNPBPD) TOFILE(&DMLIB/RXHNPBPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+                                                                                          /*CAS006*/
+/**********  RMVM       FILE(&DMLIB/FRHNPAPD) MBR(*ALL)               */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XFRHNPAPD) TOFILE(&DMLIB/FRHNPAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********  RMVM       FILE(&DMLIB/FRHNPLPD) MBR(*ALL)               */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XFRHNPLPD) TOFILE(&DMLIB/FRHNPLPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/LEHNPAPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XLEHNPAPD) TOFILE(&DMLIB/LEHNPAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+ 
+/**********  RMVM       FILE(&DMLIB/LEHNPLPD) MBR(*ALL)               */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+/**********  CPYF       FROMFILE(XLEHNPLPD) TOFILE(&DMLIB/LEHNPLPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */                /*AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */                /*AR813443*/
+                                                                                          /*CAS006*/
+/**********  RMVM       FILE(&DMLIB/SEHMKAPD) MBR(*ALL)               */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XSEHMKAPD) TOFILE(&DMLIB/SEHMKAPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+                                                                                          /*CAS006*/
+/**********  RMVM       FILE(&DMLIB/SEHMKLPD) MBR(*ALL)               */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+/**********  CPYF       FROMFILE(XSEHMKLPD) TOFILE(&DMLIB/SEHMKLPD) + */                /*AR813443*/
+/**********               FROMMBR(*ALL) TOMBR(*FROMMBR) +             */                /*AR813443*/
+/**********               MBROPT(*ADD)                                */         /*CAS006 AR813443*/
+/**********  MONMSG     MSGID(CPF0000)                                */         /*CAS006 AR813443*/
+ 
+/**********  ENDDO                                                    */                /*AR813443*/
+ 
+END:
+ 
+             ENDPGM

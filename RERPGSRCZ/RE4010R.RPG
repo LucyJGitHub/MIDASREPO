@@ -1,0 +1,359 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - Period Rtv/Upd Routine')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RPG/RE4010R - Period Rtv/Upd Routine                         *
+      *                                                               *
+      *  Function:  This program will perform the routines for period *
+      *  (I/C)      retrieval and update processing.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. 244324             Date 18Dec09               *
+      *                 118466             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  244324  - Ensure that end date from previous record is       *
+      *            passed on.                                         *
+      *  118466 - Accrual calculation incorrect on retail term account*
+      *  BUG27460 - Applied client fix EEE015                         *
+      *  EEE015 - Retention of Notification                           *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDUF  E           K        DISK         KCOMIT
+      *
+      *****************************************************************
+      *
+      ** Convert counter to (binary) bit settings
+      *
+     IDSCVT       DS
+     I                                    B   1   20WEIGHT
+     I                                        2   2 BYTE
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Period and Penalty details
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      ** Local Data Area
+      *
+     IJNSTAT    E DSJNSTAT
+      *
+      *****************************************************************
+      *
+      ** Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** UPDATE MODE
+      *
+     C           PMODE     IFEQ '*REWORK'
+     C                     EXSR REWORK
+     C                     END
+      *
+      ** FREE MODE
+      *
+     C           PMODE     IFEQ '*FREE'
+     C                     CALL 'ZFRQB5'                                                      118466
+     C                     PARM *BLANKS   ZFREQ   1                                           118466
+     C                     PARM           ZDAYNO  50                                          118466
+     C                     PARM           ZMDAY   20                                          118466
+     C                     PARM           ZCCY    3                                           118466
+     C                     PARM           ZLOC    3                                           118466
+     C                     PARM           ZDIREC  1                                           118466
+     C                     PARM *BLANKS   ZRTRN   7                                           118466
+     C                     FREE 'ZFRQB5'                                                      118466
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialization Processing                   *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   7
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  10
+     C                     PARM           PACSQ   2
+     C                     PARM           PEVNT   1
+     C                     PARM           PBALN  150
+     C                     PARM           PRTCD   7
+     C                     PARM           MAINT   7
+     C                     PARM           PRUND   5
+     C                     PARM           PDATE   50                                          244324
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Bank details
+      *
+     C           BKFMT     IFEQ *BLANKS
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+     C                     END
+      *
+      ** Get previous run date, PRUN.
+      *
+     C           *NAMVAR   DEFN           JNSTAT
+     C                     IN   JNSTAT
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *
+     C           KPRPN2    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+      *
+      ** If working run date is *PRUN or *RUND or *NXWD
+      ** get previous run date or run date or next working day
+      ** respectively.
+      *
+     C                     SELEC
+     C           PRUND     WHEQ '*PRUN'
+     C                     Z-ADDPRUN      RUNDAY  50
+     C           PRUND     WHEQ '*RUND'
+     C                     Z-ADDBJRDNB    RUNDAY  50
+     C           PRUND     WHEQ '*NXWD'
+     C                     Z-ADDBJDNWD    RUNDAY  50
+     C                     OTHER
+     C                     MOVE PRUND     RUNDAY
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  REWORK - Rework Processing                                   *
+      *                                                               *
+      *****************************************************************
+     C           REWORK    BEGSR
+      *
+      ** Chain to record to set pointer
+      *
+     C                     MOVELPBRCA     E2BRCA
+     C                     MOVE PCNUM     E2CNUM
+     C                     MOVELPCCY      E2CCY
+     C                     MOVE PACOD     E2ACOD
+     C                     MOVE PACSQ     E2ACSQ
+     C                     MOVELPEVNT     E2EVNT
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN2    CHAINREPRPNPD             81
+      *
+      ** Set new threshold balance
+      *
+     C                     Z-ADDPBALN     E2BALN
+      *
+      ** Calculate value, maturity, end dates
+      *
+     C                     EXSR CALDAT
+      *
+      ** Do interest notifications
+      *
+     C                     EXSR DONOTI
+      *
+      ** Update P+P file
+      *
+     C                     EXSR UPDFIL
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CALDAT - Date Calculation Processing                         *
+      *                                                               *
+      *****************************************************************
+     C           CALDAT    BEGSR
+      *
+     C                     CALL 'RETNDAT1'
+     C                     PARM           REPFMT
+     C                     PARM '*COB'    MAINT#  7
+     C                     PARM PRUND     RUNCHG  5
+     C                     PARM           PDATE   50
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'RETNDAT1'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DONOTI - A change in Termination period start date or        *
+      *           interest notif type requires a change in            *
+      *           P+P notifications (termination and interest).       *
+      *****************************************************************
+     C           DONOTI    BEGSR
+      *
+     C           E2EVNT    IFEQ 'Z'
+      *
+     C           MAINT     IFEQ '*EXIST'
+     C           MAINT     OREQ '*NEW  '
+      *
+      **  Update termination notification
+      *
+     C                     CALL 'RE4012'
+     C                     PARM '*TERMIN' PWMODE  7
+     C                     PARM E2KEY1    PKEY1  24
+     C                     PARM *BLANKS   PTRR1   8
+     C                     PARM -1        PREAM  150
+     C                     PARM *BLANKS   PDC01   1
+     C                     PARM -1        PCAVL  150
+     C                     PARM *BLANKS   PDC02   1
+     C                     PARM E2VDAT    PDEFF   50
+     C                     PARM RUNDAY    PRECD   50
+     C                     PARM -1        PHISB  150
+     C                     PARM *BLANKS   PDC03   1
+     C                     PARM -2        PRTDE   20                                          EEE015
+      *
+      **  Update interest notification
+      *
+     C           E2IRLI    IFEQ 'F'
+     C                     CALL 'RE4012'
+     C                     PARM '*RMVINT' PWMODE
+     C                     PARM E2KEY1    PKEY1
+     C                     PARM *BLANKS   PTRR1
+     C                     PARM -1        PREAM
+     C                     PARM *BLANKS   PDC01
+     C                     PARM -1        PCAVL
+     C                     PARM *BLANKS   PDC02
+     C                     PARM 0         PDEFF
+     C                     PARM 0         PRECD
+     C                     PARM -1        PHISB
+     C                     PARM *BLANKS   PDC03
+     C                     PARM -2        PRTDE   20                                          EEE015
+     C                     END
+     C           E2IRLI    IFEQ 'P'
+     C                     CALL 'RE4012'
+     C                     PARM '*ADDINT' PWMODE
+     C                     PARM E2KEY1    PKEY1
+     C                     PARM *BLANKS   PTRR1
+     C                     PARM 0         PREAM
+     C                     PARM 'D'       PDC01
+     C                     PARM 0         PCAVL
+     C                     PARM 'D'       PDC02
+     C                     PARM 0         PDEFF
+     C                     PARM 0         PRECD
+     C                     PARM 0         PHISB
+     C                     PARM 'D'       PDC03
+     C                     PARM -2        PRTDE   20                                          EEE015
+     C                     END
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPFIL  - File Processing                                     *
+      *                                                               *
+      *****************************************************************
+     C           UPDFIL    BEGSR
+      *
+      ** If no record exists, then ignore
+      ** else if maturity date >= run date (i.e. valid term)
+      ** update record
+      *
+     C           *IN81     IFEQ '0'
+     C           E2MDAT    IFGE RUNDAY
+      *
+      ** If active, but a B-Y record, change to an A record.
+      *
+     C           E2VDAT    IFLE RUNDAY
+     C           E2EVNT    ANDNE'A'
+     C           E2EVNT    ANDNE'Z'
+     C                     MOVE 'A'       E2EVNT
+     C                     ENDIF
+      *
+     C                     UPDATREPRPND0
+     C                     ELSE
+      *
+      ** else if maturity date < run date (i.e. expired) delete record
+      *
+     C                     DELETREPRPND0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     ENDSR

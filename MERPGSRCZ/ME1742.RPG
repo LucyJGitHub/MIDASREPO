@@ -1,0 +1,199 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Update MEISOCPD (feature CFT017)')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1742 - ME Update MEISOCPD (feature CFT017)                 *
+      *                                                               *
+      *  Function:  This program initialises the 'EEA Member' flag    *
+      *             on PF/MEISOCPD.                                   *
+      *                                                               *
+      *  Called By: MEC1742                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSW213             Date 03Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CFT017  *CREATE    Date 12Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  CFT017 - Multilateral Inter-bank Exchange Fee.               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FMEISOCL0UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      /EJECT
+      *
+     C           *ENTRY    PLIST
+     C           PMODE     PARM           PMODE   1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE 'N'       WKERR   1
+      *
+      ** If the Processing Mode is '1' for feature being set on
+      *
+     C           PMODE     IFEQ '1'
+     C                     EXSR SRDFLT
+     C                     ENDIF
+      *
+      ** If error is encountered, roll back the values, else commit
+      *
+     C           WKERR     IFEQ 'Y'
+     C                     ROLBK
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRDFLT - Subroutine that reads MEISOCL0 and update non-'Y'    *
+      *          valued EEA member flag.                              *
+      *                                                               *
+      * Called by: Main                                               *
+      *                                                               *
+      * Calls: SR/*PSSR                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDFLT    BEGSR
+      *
+     C           *LOVAL    SETLLMEISOCL0
+     C                     READ MEISOCL0               0504
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE 'Y'       WKERR   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'MEISOCPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN04     DOWEQ'0'
+      *
+      ** If EEA Member field is not 'Y', default this to 'N'
+      *
+     C           M3EEAM    IFNE 'Y'
+     C                     MOVE 'N'       M3EEAM
+     C                     MOVE 'A'       M3ACTY
+     C                     UPDAT@ISOCL0                05
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE 'Y'       WKERR   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'MEISOCPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ MEISOCL0               0504
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE 'Y'       WKERR   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'MEISOCPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     ROLBK
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

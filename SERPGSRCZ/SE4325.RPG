@@ -1,0 +1,261 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Drop off Mvt Status Records')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SE Module                                            *
+      *                                                               *
+      *  SE4325 - Drop off Movements Status Records                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSE039  *CREATE    Date 17Feb03               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSE039 - Automatic Settlements of Trades                     *
+      *                                                               *
+      *****************************************************************
+     FSEMVTSL4UF  E           K        DISK
+      *
+      * PF: Midas SE Movements Status
+      ********************************************************************
+      *
+      * Description     : Copyright notice for inclusion in all programs
+      *
+     E                    CPY@    1   1 80               Copyright array
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ********************************************************************
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      **  LOCAL DATA AREA FOR DATA BASE ERRORS.
+      *
+     IDAYWK       DS
+      *   DATA STRUCTURE FOR DATE MANIPULATIONS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+      *
+     IZZMNYR      DS
+      *   DATA STRUCTURE OVER CALCULATED MONTH/YEAR
+     I                                        1   20ZZMNTH
+     I                                        3   40ZZYR
+      *
+     ISDSTRD    E DSSDSTRDPD
+      * SE TRADING DATA
+      *
+     ISCSARD    E DSSCSARDPD
+      * Switchable Features details
+      *
+     ISDBANK    E DSSDBANKPD
+      * BANK details
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     IDSFDY     E DSDSFDY
+      * SECOND DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      /EJECT
+      *****************************************************************
+      * Initial Processing
+     C                     EXSR #IINIT
+      *
+      * Process File
+     C                     EXSR #IPROC
+      *
+      * End program
+     C                     EXSR #IEND
+      *
+      *****************************************************************
+      *                                                               *
+      * #IINIT -                                                      *
+      *                                                               *
+      *****************************************************************
+     C           #IINIT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define Local Data Area for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Retrieve Back Valuation Period & Trades Retention Period
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDSTRDPD'DBFILE
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve RUNDATE from SDBANKDP
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C                     PARM           SDBANK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE4325 ' DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Check if CSE039 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CSE039'  PSARD   6
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CSE039  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE039
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #IPROC -                                                      *
+      *                                                               *
+      *****************************************************************
+     C           #IPROC    BEGSR
+      *
+      ** IF CSE039 is ON, read and drop off records from SEMVTSPD
+     C           CSE039    IFEQ 'Y'
+      *
+      ** Read SEMVTSPD and delete records if Notification Date is
+      ** earlier than (Rundate - retention period) or
+      ** earlier than (Rundate - backvalue period)
+      *
+      ** Rundate - Retention Period = UDAT1
+      **
+      **     Calculate month/year - no. months prior to rundate
+      **     - convert rundate to ddmmyy then add on no. months
+      **
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DAYWK
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVE DD        MM
+     C                     END
+      *
+     C           MM        SUB  BVROST    MMWK    20
+      *
+     C           MMWK      IFLE 0
+     C           YY        SUB  1         ZZYR
+     C           MMWK      ADD  12        ZZMNTH
+     C                     ELSE
+     C                     Z-ADDMMWK      ZZMNTH
+     C                     Z-ADDYY        ZZYR
+     C                     END
+      *
+     C                     Z-ADDZZYR      YY
+     C                     Z-ADDZZMNTH    MM
+      *
+     C                     MOVELDAYWK     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    UDAT1   50
+      *
+      ** Rundate - Backvalue Period = UDAT2
+     C           BJRDNB    SUB  BVBVP     UDAT2   50
+      *
+     C           UDAT1     IFLT UDAT2
+     C                     Z-ADDUDAT1     UDAT3   50
+     C                     ELSE
+     C                     Z-ADDUDAT2     UDAT3
+     C                     ENDIF
+      *
+     C           *LOVAL    SETLLSEMVTSL4                 89
+     C                     READ SEMVTSL4                 89
+     C           *IN89     DOWEQ*OFF
+      *
+     C           TMNTDT    IFLT UDAT3
+     C                     DELETSEMVTSD0
+      *
+     C                     READ SEMVTSL4                 89
+     C                     ELSE
+     C                     SETON                     89
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z4
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #IEND    - Exit the program.                       *
+      *                                                               *
+      *                                                               *
+      * CALLED BY            Main processing.
+      *                                                               *
+      ********************************************************************
+     C           #IEND     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVEL'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     ELSE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2003
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

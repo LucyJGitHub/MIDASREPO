@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Change object information')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000005 - Change object information                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. BUG27980           Date 05Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27133 *CREATE   Date 21Feb08              */
+/*                      xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27980 - Remove DBGVIEW (Recompile).                      */
+/*       BUG27133 - CHGOBJINF utility - delivery to core.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJLIB &TYPE &SRCF &SRCFLIB &SRCMBR +
+                          &SRCDATE &COMPILER &OBJLVL &LICPGM &PTF +
+                          &APAR &USRDFNATR &TEXT &USECOUNT +
+                          &PRDOPTLDID &PRDOPTID &CMPID &USEDATE +
+                          &CHGDATE &MBRUSECNT)
+ 
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCDATE) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&COMPILER) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&OBJLVL) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LICPGM) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&PTF) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&APAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&USRDFNATR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USECOUNT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PRDOPTLDID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PRDOPTID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CMPID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&USEDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CHGDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MBRUSECNT) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RODSRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RODSRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RODSRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNMSGD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNMSGDTA) TYPE(*CHAR) LEN(27)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Break down parameters. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJLIB 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&OBJLIB 11 10))
+ 
+/* Retrieve object description about where the object was created from. */
+             RTVOBJD    OBJ(&LIB/&OBJ) OBJTYPE(&TYPE) SRCF(&RODSRCF) +
+                          SRCFLIB(&RODSRCFLIB) SRCMBR(&RODSRCMBR)
+ 
+/* Call program to run API. */
+             CALL       PGM(UT000005) PARM(&OBJLIB &TYPE &SRCF +
+                          &SRCFLIB &SRCMBR &SRCDATE &COMPILER +
+                          &OBJLVL &LICPGM &PTF &APAR &USRDFNATR +
+                          &TEXT &USECOUNT &PRDOPTLDID &PRDOPTID +
+                          &CMPID &USEDATE &CHGDATE &MBRUSECNT +
+                          &RODSRCF &RODSRCFLIB &RODSRCMBR &RTNMSGD +
+                          &RTNMSGDTA)
+             IF         COND(&RTNMSGD *NE ' ') THEN(DO)
+                SNDPGMMSG  MSGID(&RTNMSGD) MSGF(QCPFMSG) +
+                             MSGDTA(&RTNMSGDTA) MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

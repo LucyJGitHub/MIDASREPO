@@ -1,0 +1,927 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Amend holidays')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0160X - Midas SD Amend Holidays                            *
+      *                                                               *
+      *  Function:  This program processes Midas SD Holidays          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSC043             Date 18Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG11792           Date 29Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSD012             Date 15Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 15Apr99               *
+      *                 S01459             Date 15APR99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSC043 - MidasPlus IASP Enablement                           *
+      *  BUG11792 - Holiday deleted in central not cascaded in        *
+      *             zonal list view                                   *
+      *  CSD031 - Enhanced Centralised Static data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD012 - Standing Data Authorisation.                        *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     FSDHOLL0 IF  E           K        DISK                           UC                      CSD012
+     F                                              KCOMIT                                    CSD031
+      * RTV : Holidays                                                                        CSD012
+      *                                                                                       CSD012
+     FSDHOSHL1UF  E           K        DISK                                                   CSD012
+     F                                              KCOMIT                                    CSD012
+      * UPD : Holidays Shadow file                                                            CSD012
+      *                                                                                       CSD012
+     FSDAULGL1UF  E           K        DISK                                                   CSD012
+     F                                              KCOMIT                                    CSD012
+      * UPD : Authorisation Log - by Key                                                      CSD012
+      *                                                                                       CSD012
+     FGPHOLIL0IF  E           K        DISK                           UC                      CSD031
+     F                                              KCOMIT                                    CSD031
+      * RTV : GP Central Holiday Details                                                      CSD031
+      *                                                                                       CSD031
+     FGPZONEL0IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      *                                                                                       CSD031
+     F********************************************************************                    CSD012
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     E                    CMD     1   2 60               QCMD's                               CSD012
+     I*
+      /EJECT
+      * Data structures:
+      *                                                                                       CSD012
+     ILDA       E DSLDA                         256                                           CSD012
+     I              SPARE                           SPAREX                                    CSD012
+      ** Local data area for database error details                                           CSD012
+      *                                                                                       CSD012
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      * Outward parameters
+     IPARC        DS                             10
+      * KEY : Midas SD Holidays test access path
+      * I : MAP Currency Code
+     I                                        1   3 PACYCD
+      * I : MAP Location Code
+     I                                        4   6 PALCCD
+      * I : MAP Year Number
+     I                                        7  10 PAYRNB
+      *
+      * Outward parameters
+     IPBRC        DS                             10
+      * KEY : Midas SD Holidays test access path
+      * I : MAP Currency Code
+     I                                        1   3 PBCYCD
+      * I : MAP Location Code
+     I                                        4   6 PBLCCD
+      * I : MAP Year Number
+     I                                        7  10 PBYRNB
+      *
+      * Outward parameters
+     IPCRC        DS                             10
+      * KEY : Midas SD Holidays test access path
+      * I : MAP Currency Code
+     I                                        1   3 PCCYCD
+      * I : MAP Location Code
+     I                                        4   6 PCLCCD
+      * I : MAP Year Number
+     I                                        7  10 PCYRNB
+      *
+      * Outward parameters
+     IPDRC        DS                             10
+      * KEY : Midas SD Holidays test access path
+      * I : MAP Currency Code
+     I                                        1   3 PDCYCD
+      * I : MAP Location Code
+     I                                        4   6 PDLCCD
+      * I : MAP Year Number
+     I                                        7  10 PDYRNB
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Holidays test access path
+      * I : RST Currency Code
+     I                                        1   3 P1CYCD
+      * I : RST Location Code
+     I                                        4   6 P1LCCD
+      * I : RST Year Number
+     I                                        7  10 P1YRNB
+     IP2PARM      DS
+      * I :  Action Code
+     I                                        1   1 P2ANCD
+     IP3PARM      DS
+      * O : MAP Duplicate Return Code
+     I                                        1   7 P3DRTC
+     I@1DBRC    E DSSDHOLL0                                                                   CSD012
+      * RTV : Holidays                                                                        CSD012
+      *                                                                                       CSD012
+     I***#1DBRC*      DS                            386                               CSD012  CSD031
+     I#1DBRC      DS                            431                                           CSD031
+     I                                        1 200 #1DRC1                                    CSD031
+     I                                      201 431 #1DRC2                                    CSD031
+      * Stored master file format fields                                                      CSD012
+      *                                                                                       CSD012
+     I#2DBRC      DS                            386                                           CSD012
+      * Stored shadow file format fields                                                      CSD012
+      *                                                                                       CSD012
+     I#3DBRC      DS                            431                                         BUG11792
+     I                                      386 386 #3ACTD                                  BUG11792
+      * Stored master file format fields                                                    BUG11792
+      *                                                                                     BUG11792
+     I***K1HOL**     DS                             20                                 CSD012 CGL029
+     IK1HOL       DS                             26                                           CGL029
+     I                                        1   3 K1CYCD                                    CSD012
+     I                                        4   6 K1LCCD                                    CSD012
+     I                                        7  10 K1YRNB                                    CSD012
+      *                                                                                       CSD012
+      * Data structure for AOSVALR0 string                                                    CSD012
+     I            DS                                                                          CSD012
+     I                                        1 200 SVAL1                                     CSD012
+     I                                        1   1 SVAL11                                    CSD012
+      *                                                                                       CSD012
+      * System Value                                                                          CSD012
+     I            DS                                                                          CSD012
+     I I            'AuthReqHolidaysMaint'    1  20 SVALK1                                    CSD012
+      *                                                                                       CSD012
+      * Function Description                                                                  CSD012
+     I            DS                                                                          CSD012
+     I I            'HOLIDAY DETAILS'         1  21 FUNCD                                     CSD012
+      ** Local data area for DTAQ msg                                                         CSD031
+     IWDTQ        DS                                                                          CSD031
+     I                                        1  10 WPFNAM                                    CSD031
+     I                                       11  40 WKEYS                                     CSD031
+     I                                       41 240 WDAT1                                     CSD031
+     I                                      241 471 WDAT2                                     CSD031
+     IPDQMSG      DS                           4040                                           CSD031
+     I**********    'XLIB/SDCSNDDTQ'      C         PGMB                               CSD031 CSC043
+     I              'XPLIB/SDCSNDDTQ'     C         PGMB                                      CSC043
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Holidays
+     C           P2ANCD    PARM           WP0001  1        Action Code
+     C           P3DRTC    PARM P3DRTC    WP0002  7        Duplicate Retur
+     C                     PARM           MODE    1        Mode                               CSD031
+     C                     PARM           WACTZ   1        Accept to Zone                     CSD031
+     C                     PARM           WEFFD   6        Effective Date                     CSD031
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Amend Holidays
+      * SD0160X PRECOMPILER - Holidays  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Define ##MRDT - Holidays  *
+     C                     MOVE ##MRDT    ##MRDT  7
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVE P1YRNB    WUYRNF           Year - Numeric
+      * Calc. Day for 1JANxxxx - Holidays  *
+     C                     MOVE WUYRNF    UYR     20
+     C           UYR       MULT 1.25      UYRTOT  30
+     C                     ADD  1         UYRTOT
+     C* CALCULATE WHETHER IT IS A LEAP YEAR
+     C           UYR       IFLT 72
+     C           100       ADD  UYR       UYRLP   30
+     C                     ADD  6         UYRTOT
+     C                     ELSE
+     C                     ADD  UYR       UYRLP
+     C                     END
+     C           UYRLP     DIV  4         UYRDIV  30
+     C                     MVR            URMD    10
+     C** IF REMAINDER IS ZERO THEN IT IS A LEAP YEAR
+     C           URMD      IFEQ 0
+     C                     MOVE 'Y'       WULYRI
+     C                     ELSE
+     C                     MOVE 'N'       WULYRI
+     C                     ADD  1         UYRTOT
+     C                     END
+     C** DIVIDE BY SEVEN REMAINDER GIVES THE DAY
+     C** 1 - SUNDAY
+     C** 2 - MONDAY
+     C** 3 - TUESDAY
+     C** 4 - WEDNESDAY
+     C** 5 - THURSDAY
+     C** 6 - FRIDAY
+     C** 7 - SATURDAY
+     C           UYRTOT    DIV  7         UYRTOT
+     C                     MVR            WUDYCD
+     C                     MOVEL'Y'       WUCNLP           Continue Loop
+     C                     MOVEL'PGM01'   WUWRTC           Work Return cod
+     C                     MOVEL'N'       WUPGMR           Program recalle
+      * DO WHILE: WRK.Continue Loop is Correct
+     C           WUCNLP    DOWEQ'Y'                        *DOW
+      * CASE: WRK.Work Return code is First Program
+     C           WUWRTC    IFEQ 'PGM01'                    *IF
+      *                                                                                     BUG11792
+      ** Store Holiday record to a temporary DS for later retrieval                         BUG11792
+      ** in SRSDTQ.                                                                         BUG11792
+     C           CSD041    IFEQ 'Y'                                                         BUG11792
+     C           *INU1     ANDEQ*ON                                                         BUG11792
+     C           P2ANCD    ANDEQ'D'                                                         BUG11792
+     C                     EXSR SRGHPD                                                      BUG11792
+     C                     ENDIF                                                            BUG11792
+      * Edit a Years Holidays - Holidays  *
+     C                     CLEARPARC
+     C                     MOVELP1CYCD    PACYCD           Currency Code
+     C                     MOVELP1LCCD    PALCCD           Location Code
+     C                     MOVELP1YRNB    PAYRNB           Year Number
+      *
+     C                     CALL 'SD0161R'              90  Edit a Years Ho
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Holidays
+     C                     PARM P2ANCD    WQ0001  1        Action Code
+     C                     PARM WUDYCD    WQ0002  10       Day Code
+     C                     PARM WULYRI    WQ0003  1        Leap Year Indic
+     C                     PARM WUPGMR    WQ0004  1        Program recalle
+     C                     PARM           MODE             Mode                               CSD031
+     C                     PARM           WACTZ            Accept to Zone                     CSD031
+     C                     PARM           WEFFD            Effective Date                     CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0161R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'PGM02'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'PGM02'   WUWRTC           Work Return cod
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Second Program
+     C           WUWRTC    IFEQ 'PGM02'                    *IF
+      *                                                                                     BUG11792
+      ** Store Holiday record to a temporary DS for later retrieval                         BUG11792
+      ** in SRSDTQ.                                                                         BUG11792
+     C           CSD041    IFEQ 'Y'                                                         BUG11792
+     C           *INU1     ANDEQ*ON                                                         BUG11792
+     C           P2ANCD    ANDEQ'D'                                                         BUG11792
+     C                     EXSR SRGHPD                                                      BUG11792
+     C                     ENDIF                                                            BUG11792
+      * Edit a Years Holidays 2 - Holidays  *
+     C                     CLEARPBRC
+     C                     MOVELP1CYCD    PBCYCD           Currency Code
+     C                     MOVELP1LCCD    PBLCCD           Location Code
+     C                     MOVELP1YRNB    PBYRNB           Year Number
+      *
+     C                     CALL 'SD0162R'              90  Edit a Years Ho
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             KEY: Holidays
+     C                     PARM P2ANCD    WQ0005  1        Action Code
+     C                     PARM WUDYCD    WQ0006  10       Day Code
+     C                     PARM WULYRI    WQ0007  1        Leap Year Indic
+     C                     PARM           MODE             Mode                               CSD031
+     C                     PARM           WACTZ            Accept to Zone                     CSD031
+     C                     PARM           WEFFD            Effective Date                     CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0162R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'PGM03'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: PGM.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'PGM01'   WUWRTC           Work Return cod
+     C                     MOVEL'Y'       WUPGMR           Program recalle
+     C                     ELSE
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'PGM03'   WUWRTC           Work Return cod
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Third Program
+     C           WUWRTC    IFEQ 'PGM03'                    *IF
+      *                                                                                     BUG11792
+      ** Store Holiday record to a temporary DS for later retrieval                         BUG11792
+      ** in SRSDTQ.                                                                         BUG11792
+     C           CSD041    IFEQ 'Y'                                                         BUG11792
+     C           *INU1     ANDEQ*ON                                                         BUG11792
+     C           P2ANCD    ANDEQ'D'                                                         BUG11792
+     C                     EXSR SRGHPD                                                      BUG11792
+     C                     ENDIF                                                            BUG11792
+      * Edit a Years Holidays 3 - Holidays  *
+     C                     CLEARPCRC
+     C                     MOVELP1CYCD    PCCYCD           Currency Code
+     C                     MOVELP1LCCD    PCLCCD           Location Code
+     C                     MOVELP1YRNB    PCYRNB           Year Number
+      *
+     C                     CALL 'SD0163R'              90  Edit a Years Ho
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PCRC             KEY: Holidays
+     C                     PARM P2ANCD    WQ0008  1        Action Code
+     C                     PARM WUDYCD    WQ0009  10       Day Code
+     C                     PARM WULYRI    WQ0010  1        Leap Year Indic
+     C                     PARM           MODE             Mode                               CSD031
+     C                     PARM           WACTZ            Accept to Zone                     CSD031
+     C                     PARM           WEFFD            Effective Date                     CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0163R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'PGM04'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: PGM.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'PGM02'   WUWRTC           Work Return cod
+     C                     ELSE
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'PGM04'   WUWRTC           Work Return cod
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Fourth Program
+     C           WUWRTC    IFEQ 'PGM04'                    *IF
+      *                                                                                     BUG11792
+      ** Store Holiday record to a temporary DS for later retrieval                         BUG11792
+      ** in SRSDTQ.                                                                         BUG11792
+     C           CSD041    IFEQ 'Y'                                                         BUG11792
+     C           *INU1     ANDEQ*ON                                                         BUG11792
+     C           P2ANCD    ANDEQ'D'                                                         BUG11792
+     C                     EXSR SRGHPD                                                      BUG11792
+     C                     ENDIF                                                            BUG11792
+      * Edit a Years Holidays 4 - Holidays  *
+     C                     CLEARPDRC
+     C                     MOVELP1CYCD    PDCYCD           Currency Code
+     C                     MOVELP1LCCD    PDLCCD           Location Code
+     C                     MOVELP1YRNB    PDYRNB           Year Number
+      *
+     C                     CALL 'SD0164R'              90  Edit a Years Ho
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PDRC             KEY: Holidays
+     C                     PARM P2ANCD    WQ0011  1        Action Code
+     C                     PARM WUDYCD    WQ0012  10       Day Code
+     C                     PARM WULYRI    WQ0013  1        Leap Year Indic
+     C                     PARM           MODE             Mode                               CSD031
+     C                     PARM           WACTZ            Accept to Zone                     CSD031
+     C                     PARM           WEFFD            Effective Date                     CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0164R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * If CSD012 is On and Currency Detail Authorisation is On                               CSD012
+      * Need to see if any details have actually been amended in                              CSD012
+      * Amend mode. If not then delete from SDAULGPD and SDHOSHPD.                            CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+     C           W0RTN     ANDNE'USR0790'                                                     CSD012
+     C           P2ANCD    IFEQ 'A'                                                           CSD012
+     C                     OPEN SDHOLL0                                                       CSD012
+     C                     MOVELPDCYCD    K1CYCD                                              CSD012
+     C                     MOVELPDLCCD    K1LCCD                                              CSD012
+     C                     MOVELPDYRNB    K1YRNB                                              CSD012
+     C                     MOVE *BLANKS   @1DBRC                                              CSD012
+     C           KHOL      CHAIN@HOLPHG              90    *                                  CSD012
+      * Last change date and type of last change to be the                                    CSD012
+      * same as on Shadow file.                                                               CSD012
+     C                     MOVE 'A'       DGTYLC                                              CSD012
+     C                     Z-ADDWURDNB    DGLCD                                               CSD012
+     C                     MOVE *BLANKS   #1DBRC                                              CSD012
+     C                     MOVEL@1DBRC    #1DBRC                                              CSD012
+     C                     MOVE *BLANKS   @1DBRC                                              CSD012
+     C           KHOL      CHAINSDHOSHL1             90    *                                  CSD012
+      *                                                                                       CSD012
+      * If record found on SDHOSHPD then compare the 2 records.                               CSD012
+      * if no differences then delete from SDHOSHPD                                           CSD012
+     C           *IN90     IFEQ *OFF                                                          CSD012
+      *                                                                                       CSD012
+     C                     MOVEL*BLANKS   #2DBRC                                              CSD012
+     C                     MOVEL@1DBRC    #2DBRC                                              CSD012
+     C           #1DBRC    IFEQ #2DBRC                                                        CSD012
+     C                     DELETSDHOSHD0                                                      CSD012
+     C*                                                                                       CSD012
+     C           KAULG     CHAINSDAULGL1             90                                       CSD012
+     C           *IN90     IFEQ *OFF                                                          CSD012
+     C                     DELETSDAULGD0                                                      CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+     C                     CLOSESDHOLL0                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     ELSE
+      * CASE: PGM.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'PGM03'   WUWRTC           Work Return cod
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUCNLP           Continue Loop
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *ITR
+      * If the programs return code is blank then normal exit commit chan
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C           CSD041    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     EXSR SRSDTQ                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     COMIT
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     ROLBK
+     C                     END                             *FI
+     C                     MOVELW0RTN     P3DRTC           Duplicate Retur
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *                                                                                       CSD012
+      * Delete Override for SDAULGL1                                                          CSD012
+     C                     Z-ADD56        MSGLEN 155                                          CSD012
+     C                     MOVEACMD,2     PCMD   60                                           CSD012
+     C                     CALL 'QCMDEXC'                                                     CSD012
+     C                     PARM           PCMD                                                CSD012
+     C                     PARM           MSGLEN                                              CSD012
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           *NAMVAR   DEFN           LDA                                                 CSD012
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Year - Numeric Field
+     C                     Z-ADD*ZERO     WUYRNF  40
+      * Define work field Day Code
+     C                     Z-ADD*ZERO     WUDYCD  10
+      * Define work field Leap Year Indicator
+     C                     MOVEL*BLANK    WULYRI  1
+      * Define work field Continue Loop
+     C                     MOVEL*BLANK    WUCNLP  1
+      * Define work field Work Return code
+     C                     MOVEL*BLANK    WUWRTC  5
+      * Define work field Program recalled
+     C                     MOVEL*BLANK    WUPGMR  1
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     MOVEL'N'       W0PMT   1
+      *                                                                                       CSD012
+      * Define keylist for SDAULGL1                                                           CSD012
+     C           KAULG     KLIST                                                              CSD012
+     C                     KFLD           K1HOL                                               CGL029
+     C**********           KFLD           K1HOL  20                                    CSD012 CGL029
+      *                                                                                       CSD012
+      * Define keylist for Holiday Details and Holiday Shadow files                           CSD012
+     C           KHOL      KLIST                                                              CSD012
+     C                     KFLD           K1CYCD                                              CSD012
+     C                     KFLD           K1LCCD                                              CSD012
+     C                     KFLD           K1YRNB                                              CSD012
+      *                                                                                       CSD012
+      * Check if CSD012 is switched on                                                        CSD012
+     C                     CALL 'AOSARDR0'                                                    CSD012
+     C                     PARM           PRTCD   7                                           CSD012
+     C                     PARM '*VERIFY' POPTN   7                                           CSD012
+     C                     PARM 'CSD012'  PSARD   6                                           CSD012
+      *                                                                                       CSD012
+     C           PRTCD     IFEQ *BLANKS                                                       CSD012
+     C                     MOVE 'Y'       CSD012  1                                           CSD012
+     C                     ELSE                                                               CSD012
+     C                     MOVE 'N'       CSD012                                              CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+      * Check if Holiday Authorisation is on                                                  CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+      *                                                                                       CSD012
+     C                     CALL 'AOSVALR0'                                                    CSD012
+     C                     PARM *BLANKS   RTNCDE  7                                           CSD012
+     C                     PARM           SVALK1 20                                           CSD012
+     C                     PARM           SVAL1 200                                           CSD012
+     C                     PARM           SVALK2 20                                           CSD012
+     C                     PARM           SVAL2 200                                           CSD012
+     C                     PARM           SVALK3 20                                           CSD012
+     C                     PARM           SVAL3 200                                           CSD012
+     C                     PARM           SVALK4 20                                           CSD012
+     C                     PARM           SVAL4 200                                           CSD012
+     C                     PARM           SVALK5 20                                           CSD012
+     C                     PARM           SVAL5 200                                           CSD012
+     C                     PARM           SVALK6 20                                           CSD012
+     C                     PARM           SVAL6 200                                           CSD012
+     C                     PARM           SVALK7 20                                           CSD012
+     C                     PARM           SVAL7 200                                           CSD012
+     C                     PARM           SVALK8 20                                           CSD012
+     C                     PARM           SVAL8 200                                           CSD012
+     C                     PARM           SVALK9 20                                           CSD012
+     C                     PARM           SVAL9 200                                           CSD012
+     C                     PARM           SVALK0 20                                           CSD012
+     C                     PARM           SVAL10200                                           CSD012
+      *                                                                                       CSD012
+     C           RTNCDE    IFNE *BLANKS                                                       CSD012
+     C           SVAL10    IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK0    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL9     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK9    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL8     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK8    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL7     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK7    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL6     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK6    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL5     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK5    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL4     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK4    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL3     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK3    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL2     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK2    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL1     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK1    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           *LOCK     IN   LDA                                                           CSD012
+     C                     Z-ADD1         DBASE                                               CSD012
+     C                     MOVE 'SDSVALPD'DBFILE                                              CSD012
+     C                     MOVE 'SD0160X' DBPGM                                               CSD012
+     C                     OUT  LDA                                                           CSD012
+     C                     EXSR *PSSR                                                         CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+      * Override file SDAULGL1                                                                CSD012
+     C                     Z-ADD56        MSGLEN 155                                          CSD012
+     C                     MOVEACMD,1     PCMD   60                                           CSD012
+     C                     CALL 'QCMDEXC'                                                     CSD012
+     C                     PARM           PCMD                                                CSD012
+     C                     PARM           MSGLEN                                              CSD012
+      *                                                                                       CSD012
+     C                     MOVE *BLANKS   CSD041  1                                           CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM *BLANKS   PRTCD                                               CSD031
+     C                     PARM '*VERIFY' POPTN                                               CSD031
+     C                     PARM 'CSD041'  PSARD                                               CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD041                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD041                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0160XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0160XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRBCH
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0160XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     CSR         SRSDTQ    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * Setup details and send message to data queue                                          CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+      ** If CSD041 *eq 'Y' and *INU1 *eq to *ON. Use GPHOLIL0 file                            CSD031
+      *                                                                                       CSD031
+     C                     OPEN GPZONEL0                                                      CSD031
+     C           P2ANCD    IFEQ 'D'                                                         BUG11792
+     C                     MOVEL'D'       #3ACTD                                            BUG11792
+     C                     MOVEL#3DBRC    #1DBRC                                            BUG11792
+     C                     ELSE                                                             BUG11792
+     C                     OPEN GPHOLIL0                                                      CSD031
+     C                     MOVELPDCYCD    K1CYCD                                              CSD031
+     C                     MOVELPDLCCD    K1LCCD                                              CSD031
+     C                     MOVELPDYRNB    K1YRNB                                              CSD031
+     C                     MOVE *BLANKS   @1DBRC                                              CSD031
+     C                     MOVE *BLANKS   #1DBRC                                              CSD031
+      *                                                                                       CSD031
+     C           KHOL      CHAINSDHOLD0              90    *                                  CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVEL@1DBRC    #1DBRC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     CLOSEGPHOLIL0                                                      CSD031
+     C                     ENDIF                                                            BUG11792
+      *                                                                                       CSD031
+     C                     MOVEL'GPHOLIPD'WPFNAM                                              CSD031
+     C                     MOVELPARC      WKEYS                                               CSD031
+     C                     MOVEL#1DRC1    WDAT1                                               CSD031
+     C                     MOVEL#1DRC2    WDAT2                                               CSD031
+     C                     MOVELWDTQ      PDQMSG                                              CSD031
+     C           'SD'      CAT  'ACCPDTQ' PDQNAM                                              CSD031
+      *                                                                                       CSD031
+     C           *LOVAL    SETLLGPZONEL0                                                      CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C           *IN90     DOWEQ*OFF                                                          CSD031
+      *                                                                                       CSD031
+     C********** ZOMSYS    CAT  PGMB      PGMNAM 16                                    CSD031 CSC043
+     C           ZOMSYS    CAT  PGMB      PGMNAM 17                                           CSC043
+     C           ZOMSYS    CAT  'DPLIB'   PDQLIB                                              CSD031
+     C                     CALL PGMNAM                                                        CSD031
+     C                     PARM           PDQNAM 10                                           CSD031
+     C                     PARM           PDQLIB 10                                           CSD031
+     C                     PARM           PDQMSG                                              CSD031
+      *                                                                                       CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C                     ENDDO                                                              CSD031
+      *================================================================                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      *                                                                                     BUG11792
+      *****************************************************************                     BUG11792
+      * SRGHPD - Get holiday codes record                             *                     BUG11792
+      *          This will read a holiday code record and store it    *                     BUG11792
+      *          to a seperate DS record #1DRBRC before calling       *                     BUG11792
+      *          program that would delete the record.                *                     BUG11792
+      *          NOTE: (N) Extender was used to make sure that this   *                     BUG11792
+      *          will not lock the record and make it available to    *                     BUG11792
+      *          other programs for update or retrieval               *                     BUG11792
+      *****************************************************************                     BUG11792
+     CSR         SRGHPD    BEGSR                                                            BUG11792
+      *                                                                                     BUG11792
+     C           P2ANCD    IFEQ 'D'                                                         BUG11792
+      *                                                                                     BUG11792
+      ** Set-up parameters, it will be coming from parameters passed to this                BUG11792
+      ** program                                                                            BUG11792
+     C                     MOVELP1CYCD    K1CYCD                                            BUG11792
+     C                     MOVELP1LCCD    K1LCCD                                            BUG11792
+     C                     MOVELP1YRNB    K1YRNB                                            BUG11792
+     C                     MOVE *BLANKS   @1DBRC                                            BUG11792
+     C                     MOVE *BLANKS   #3DBRC                                            BUG11792
+      *                                                                                     BUG11792
+      ** Open Holiday Codes File for retrieval                                              BUG11792
+     C                     OPEN GPHOLIL0                                                    BUG11792
+     C           KHOL      CHAINSDHOLD0             N90    *                                BUG11792
+     C           *IN90     IFEQ *OFF                                                        BUG11792
+      *                                                                                     BUG11792
+      ** Store Holiday code records to a temporary DS for later                             BUG11792
+      ** use in SRSDTQ (Background file update)                                             BUG11792
+     C                     MOVEL@1DBRC    #3DBRC                                            BUG11792
+     C                     ENDIF                                                            BUG11792
+     C                     CLOSEGPHOLIL0                                                    BUG11792
+     C                     ENDIF                                                            BUG11792
+      *                                                                                     BUG11792
+     CSR                   ENDSR                                                            BUG11792
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001
+** CMD ** System commands                                                                     CSD012
+OVRDBF FILE(SDAULGL1) SHARE(*NO)                                                              CSD012
+DLTOVR FILE(SDAULGL1)                                                                         CSD012

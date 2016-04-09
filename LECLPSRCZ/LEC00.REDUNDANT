@@ -1,0 +1,207 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - Customer Lending Module                       */
+/*                                                                  */
+/*       LEC00 - INITIAL FILE SET UP                                */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*       Prev Amend No. CPK014              31Oct01                 */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      091600              09AUG95                 */
+/*                      080941              21DEC94                 */
+/*                      S01194              08FEB90                 */
+/*                      E18674              19/06/89                */
+/*                      S01179 - AS400 INCORPORATION                */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CPK014 - Call to new program SCC3012 to set on the          */
+/*                mandatory LE switchable features.                  */
+/*       091600 - Remove call to LE0010 because TABLETX already set  */
+/*                up with copy from TABLETXDC in the DTALIB          */
+/*       080941 - Check that lending module is switched on before    */
+/*                running lending file setup programs.               */
+/*                Also, output database error messages to *EXT, and  */
+/*                to MRUNQ/MOPERQ if program terminates abnormally.  */
+/*       S01194 - STANDING DATA AMENDMENTS                          */
+/*       E18674 - JOB SWITCHES RESET TO ALLOW RESTART               */
+/*                                                                  */
+/********************************************************************/
+             PGM
+                                                                      /*080941*/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                /*080941*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                 /*080941*/
+             DCL        VAR(&LE) TYPE(*CHAR) LEN(2)                   /*080941*/
+             DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)              /*080941*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+             DCL VAR(&LESTAT) TYPE(*CHAR) LEN(256)
+/************DCLDTAARA  DTAARA(LESTAT)                              *  *S01179*/
+/************DCLDTAARA  DTAARA(LETEMP)                              *  *S01179*/
+                                                                      /*080941*/
+/*  Global Monitor Message                                            /*080941*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO ABNOR)       /*080941*/
+                                                                      /*080941*/
+/*  DL must be switched on before LE file setup can be run  */        /*080941*/
+             RTVDTAARA  DTAARA(MMOD (10 1)) RTNVAR(&LE)               /*080941*/
+             IF COND(&LE *NE 'Y') THEN(DO)                            /*080941*/
+             SNDPGMMSG  MSG('Switch on LE via Mode 1 Modules +
+                          Maintainance option before running +
+                          Lending File Setup program') +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*080941*/
+                                                                      /*080941*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW    */      /*080941*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Switch on LE +
+                          via Mode 1 Modules Maint. option')          /*080941*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('before +
+                          running Lending File Setup program')        /*080941*/
+             CALL       PGM(SCC0010) PARM('LEC00' 'ENTER' +
+                             &NOREPLY)                                /*080941*/
+             GOTO       CMDLBL(END)                                   /*080941*/
+             ENDDO                                                    /*080941*/
+                                                                      /*080941*/
+             RTVDTAARA  DTAARA(LESTAT)  RTNVAR(&LESTAT)
+             SNDPGMMSG  MSG('INITIAL CUSTOMER LENDING FILE SET UP') +
+                TOMSGQ(MOPERQ)
+/**/
+             CHGJOB     SWS(00000000)                                 /*E18674*/
+/**/
+             IF         COND(%SUBSTRING(&LESTAT 1 5) *EQ '     ') THEN(DO)
+/**/
+                CALL       PGM(LE0005)
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                           CMDLBL(ABNOR))                             /*080941*/
+/************** OVRDBF     FILE(TABLE) TOFILE(TABSDU)                * *S01194*/
+/************** CALL       PGM(LE0010) */                             /*091600*/
+/************** IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +   /*091600*/
+/**************            CMDLBL(ABNOR))                  /*080941*/ /*091600*/
+/************** DLTOVR     FILE(*ALL)                                * *S01194*/
+                CHGDTAARA  DTAARA(LESTAT) VALUE('01000NNNOLDNNNNNNN')
+                CHGDTAARA  DTAARA(LETEMP) VALUE('01000NNNOLDNNNNNNN')
+/**/
+                INZPFM     FILE(LTRIX) TOTRCDS(1000)
+                CALL       PGM(LE0832)
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                           CMDLBL(ABNOR))                             /*080941*/
+                                                                                          /*CPK014*/
+/* Set on the mandatory LE switchable features */                                         /*CPK014*/
+                                                                                          /*CPK014*/
+                CALL       PGM(SCC3012) PARM('LENDING MODULE      ')                      /*CPK014*/
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CPK014*/
+                                                                                          /*CPK014*/
+/* Prompt the CLE004 initialisation program(s) */                                         /*CPK014*/
+                                                                                          /*CPK014*/
+                CALL       PGM(SC3090M) PARM(' ' 'CLE004' 'Lending +
+                             Enhancements - Tranches 1 and 2')                            /*CPK014*/
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CPK014*/
+                                                                                          /*CPK014*/
+/* Prompt the CLE005 initialisation program(s) */                                         /*CPK014*/
+                                                                                          /*CPK014*/
+                CALL       PGM(SC3090M) PARM(' ' 'CLE005' 'Lending +
+                             Enhancements - Tranche 3')                                   /*CPK014*/
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CPK014*/
+                                                                                          /*CPK014*/
+/* Prompt the CLE009 initialisation program(s) */                                         /*CPK014*/
+                                                                                          /*CPK014*/
+                CALL       PGM(SC3090M) PARM(' ' 'CLE009' 'Lending +
+                             Input Cycle Fees')                                           /*CPK014*/
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CPK014*/
+                                                                                          /*CPK014*/
+/* Prompt the CLE105 initialisation program(s) */                                         /*CPK014*/
+                                                                                          /*CPK014*/
+                CALL       PGM(SC3090M) PARM(' ' 'CLE105' 'New Maint. +
+                             Funct - Enhanced Lending Input')                             /*CPK014*/
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CPK014*/
+                                                                                          /*CPK014*/
+/**/
+                CALL       PGM(LEC05)
+                IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
+                           CMDLBL(ABNOR))                             /*080941*/
+/***************IF         COND(%SWITCH(XXXXXXX0)) +
+/***************           THEN(SNDPGMMSG MSG('CUSTOMER LENDING +
+/***************           FILES SET UP') TOMSGQ(MOPERQ))             /*080941*/
+/************** IF COND(%SWITCH(1XXXXXX0)) +                         * *S01194*/
+/**************            THEN(SNDPGMMSG MSG('CUSTOMER LENDING TABLE +*S01194*/
+/**************            HEADER ALREADY EXISTS') TOMSGQ(MOPERQ))     *S01194*/
+             IF         COND(%SWITCH(1XXXXXX0)) THEN(DO)              /*080941*/
+             SNDPGMMSG  MSG('LE standing data already exists') +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*080941*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('LE standing +
+                          data already exists')                       /*080941*/
+                   CALL       PGM(SCC0010) PARM('LEC00' 'ENTER' +
+                               &NOREPLY)                              /*080941*/
+                   GOTO       CMDLBL(END)                             /*080941*/
+                   ENDDO                                              /*080941*/
+/***************IF COND(%SWITCH(1XXXXXX0)) +
+/***************           THEN(SNDPGMMSG MSG('CUSTOMER LENDING STANDING +
+/***************           DATA ALREADY EXISTS') TOMSGQ(MOPERQ))*S01194 080941*/
+/**/
+             ENDDO
+/**/
+/************ELSE       CMD(SNDPGMMSG    ('CUSTOMER LENDING FILES ALREADY +
+/************              EXIST') TOMSGQ(MOPERQ))')  TOMSGQ(MOPERQ)) /*080941*/
+             ELSE          CMD(DO)                                    /*080941*/
+                   SNDPGMMSG  MSG('Lending files already exist') +
+                                TOMSGQ(MOPERQ MRUNQ)                  /*080941*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Lending +
+                                files already exist')                 /*080941*/
+                   CALL       PGM(SCC0010) PARM('LEC00' 'ENTER' +
+                               &NOREPLY)                              /*080941*/
+                   GOTO       CMDLBL(END)                             /*080941*/
+             ENDDO                                                    /*080941*/
+                                                                      /*080941*/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)              /*080941*/
+                   SNDPGMMSG  MSG('Lending files set up succesfully') +
+                               TOMSGQ(MRUNQ)                          /*080941*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Lending +
+                               files set up succesfully')             /*080941*/
+                   CALL       PGM(SCC0010) PARM('LEC00' 'ENTER' +
+                               &NOREPLY)                              /*080941*/
+                   GOTO       CMDLBL(END)                             /*080941*/
+             ENDDO                                                    /*080941*/
+             ELSE (DO)                                                /*080941*/
+                   GOTO       CMDLBL(ABNOR)                           /*080941*/
+             ENDDO                                                    /*080941*/
+                                                                      /*080941*/
+             GOTO       CMDLBL(END)                                   /*080941*/
+                                                                      /*080941*/
+/*  Abnormal Termination                                               *080941*/
+ABNOR:                                                                /*080941*/
+/*  If database error, output message to user  */                     /*080941*/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)              /*080941*/
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                      /*080941*/
+             CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))            /*080941*/
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)           /*080941*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Database +
+                          error in LE File Setup program')            /*080941*/
+             ENDDO                                                    /*080941*/
+             ELSE       CMD(DO)                                       /*080941*/
+             SNDPGMMSG  MSG('Lending files set up terminated +
+                          abnormally') TOMSGQ(MRUNQ)                  /*080941*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Lending +
+                          files set up terminated abnormally')        /*080941*/
+             ENDDO                                                    /*080941*/
+             CALL       PGM(SCC0010) PARM('DLC00' 'ENTER' &NOREPLY)   /*080941*/
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/************ENDPGM                                                   /*080941*/
+END:      ENDPGM                                                      /*080941*/

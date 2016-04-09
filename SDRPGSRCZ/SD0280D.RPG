@@ -1,0 +1,2326 @@
+     H        1   Y
+      *****************************************************************
+/*OVR *  OVRDBF FILE(GPPRDXL0) TOFILE(GPPRODXL0)                      *                       BG1346
+/*OVR *  OVRDBF FILE(GPINSXL0) TOFILE(GPINSTXL0)                      *                       BG1346
+/*OVR *: OVRDBF FILE(GZSDBANK) TOFILE(GZSDBANKL2)                   : *                       CSD031
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Loan type/subtype display subfile')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0280D - Loan Type/Subtype Subfile Display.                 *
+      *                                                               *
+      *  Function:  This program allows the user to select a          *
+      *             specific record for enquiry or maintenance.       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE164             Date 18Aug14               *
+      *  Prev Amend No. AR678116           Date 27Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 259934             Date 30Apr09               *
+      *                 256648A            Date 25Nov08               *
+      *                 256648             Date 03Oct08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 255408             Date 15Aug08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12557           Date 07Nov06               *
+      *                 BUG11799           Date 30Jul06               *
+      *                 BUG11801           Date 28Jul06               *
+      *                 BUG11759           Date 26Jul06               *
+      *                 BUG11727           Date 19Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CAAA03             Date 30Mar04               *
+      *                 BG1346             Date 01Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080676             DATE 22DEC94               *
+      *                 S01486             DATE 26JUL94               *
+      *                 S01459             DATE 26JUL94               *
+      *                 S01117             DATE 10AUG90               *
+      *                 LN0168             DATE 26JUN90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *           (Recompile)                                         *
+      *  AR678116 - SD There is "X" option that does not work and not *
+      *             in the list of description.                       *
+      *             Reverse the fix introduced by 255408. Validation  *
+      *             was set in the display file using *IN71.          *
+      *             (Child: AR679541)                                 *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  259934 - Search by Description is not working for Deal Types/*
+      *           Subtypes and Loan Types/Subtypes.                   *
+      *  256648A- Amend fix 256648 to use QGLCNVCS API to convert     *
+      *           case for non-alphanumeric characters.               *
+      *  256648 - Cyrillic narrative is not recognized by the system  *
+      *           Set QCLSCAN to not translate input field to upper-  *
+      *           case.                                               *
+      *  255408 - Action code 'X' is invalid if CSD042 is switched OFF*
+      *  BUG12557 - Amortization Cost Account Indicator not reflected *
+      *             if global to zone layer.                          *
+      *  BUG11799 - DB error on amend and delete mode                 *
+      *  BUG11801 - Cannot locate record in zonal acceptance list     *
+      *             when record was globally deleted                  *
+      *  BUG11759 - DB Error encountered when page down was pressed   *
+      *  BUG11727 - White fields in listview                          *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CAAA03 - Webfacing Changes.                                  *
+      *  BG1346 - Global instrument and product code not displayed    *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  080676 - Wrong Instrument Type used for Portfolio Lending    *
+      *  S01486 - Private Banking Development:                        *
+      *           Regenerate / compile.                               *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01117 - Release 10 changes.                                 *
+      *  LN0168 - Set scan limit to 99999.                            *
+      *                                                               *
+      *****************************************************************
+     FSD0280D#CF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Loan type/subtype display subfile
+      *
+     FSDLOANL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Loan types/sub-types retrieval
+     FGPPRDXL0IF  E           K        DISK                           UC                      BG1346
+     F                                              KINFSR *PSSR                              BG1346
+     F            GPPRODXD0                         KRENAMEGPPRDXD0                           BG1346
+      ** Midas GP Global Products X-Reference                                                 BG1346
+      *                                                                                       BG1346
+     FGPINSXL0IF  E           K        DISK                           UC                      BG1346
+     F                                              KINFSR *PSSR                              BG1346
+     F            GPINSTXD0                         KRENAMEGPINSXD0                           BG1346
+      ** Midas GP Global Instruments X-Reference                                              BG1346
+      *                                                                                       BG1346
+      *
+     FGZSDBANKIF  E           K        DISK                           UC                      CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      ** Bank ICD Keyed on DNWD                                                               CSD031
+      *                                                                                       CSD031
+     FSDALTSL0UF  E           K        DISK                                                   CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     F            SDLOAND0                          KRENAMESDALTSD0                           CSD031
+      ** Loan Type/SubType Acceptance File                                                    CSD031
+      *                                                                                       CSD031
+     FSDLOANL0UF  E           K        DISK                      A    UC                      CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     F            @AYRECK                           KRENAMESDLOAND2                           CSD031
+      * SD Loan types/sub-types for write and update                                          CSD031
+      *                                                                                       CSD031
+     FSDFCTLL0UF  E           K        DISK                                                   CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      * UPD : Midas SD Standing data controls update                                          CSD031
+      *                                                                                       CSD031
+     FGPLOANL1IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     F            SDLOAND0                          KRENAMEGPLOAND1                           CSD031
+      * RTV : Midas GP Loan types/sub-types retrieval                                         CSD031
+     FSDLNX1L0IF  E           K        DISK                                                 BUG11799
+     F                                              KINFSR *PSSR                            BUG11799
+     F            SDLOANF6                          KRENAMERTVIDX                           BUG11799
+      * Midas SD Loan type/sub-typ - LU Ext. File                                           BUG11799
+     FSDLNX1PDUF  E           K        DISK                           UC                    BUG11799
+     F                                              KINFSR *PSSR                            BUG11799
+     F                                              KCOMIT                                  BUG11799
+     F            SDLOANF6                          KRENAMEUPDIDX                           BUG11799
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E**********          OVRC    1   2 80                                             BG1346 CSD031
+     E                    OVRC    1   3 80                                                    CSD031
+      ** Override Command Array                                                               BG1346
+      *                                                                                       BG1346
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     I@1DBRC    E DSSDLOANL0                                                                  CSD031
+      * UPD : Midas SD Loan types/sub-types update                                            CSD031
+     IQSDFC1    E DSSDFCTLL0                                                                  CSD031
+      * UPD : Midas SD Standing data controls update                                          CSD031
+     IYARDCS      DS                             22                                           CSD031
+     IWUDELR      DS                                                                          CSD031
+     I                                        1 250 WUDR01                                    CSD031
+     I                                      251 500 WUDR02                                    CSD031
+     I                                      501 750 WUDR03                                    CSD031
+     I                                      7511000 WUDR04                                    CSD031
+     I                                     10011250 WUDR05                                    CSD031
+     I                                     12511500 WUDR06                                    CSD031
+     I                                     15011750 WUDR07                                    CSD031
+     I                                     17512000 WUDR08                                    CSD031
+     I                                     20012250 WUDR09                                    CSD031
+     I                                     22512500 WUDR00                                    CSD031
+     I                                     25012750 WUDR11                                    CSD031
+     I                                     27513000 WUDR12                                    CSD031
+     I#1DBRC      DS                            134                                           CSD031
+      * Stored master file format fields                                                      CSD031
+     I                                        1   1 #1DB1                                     CSD031
+     I            DS                                                                          CSD031
+     I                                        1   6 DDATEC                                    CSD031
+     I                                        1   60DDATEN                                    CSD031
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     ISDBANK    E DSSDBANKPD                                                                  CSD031
+      *                                                                                       CSD031
+      * Outward parameters
+     I*PARC*******DS******************************4                                           CLE042
+     IPARC        DS                              8                                           CLE042
+      * KEY : Midas SD Loan types/sub-types retrieval
+      * I : MAP Loan Type
+     I                                        1   2 PALNTY
+      * I : MAP Loan Sub-type
+     I                                        3   4 PALNST
+      * I : MAP Loan Class                                                                    CLE042
+     I                                        5   8 PALNCL                                    CLE042
+      *
+      * Outward parameters
+     I*PBRC*******DS******************************4                                           CLE042
+     IPBRC        DS                              8                                           CLE042
+      * KEY : Midas SD Loan types/sub-types retrieval
+      * I : MAP Loan Type
+     I                                        1   2 PBLNTY
+      * I : MAP Loan Sub-type
+     I                                        3   4 PBLNST
+      * I : MAP Loan Class                                                                    CLE042
+     I                                        5   8 PBLNCL                                    CLE042
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Display file mode
+     I                                        1   1 P1DFMD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'SSF on can't delete'
+      * *SFLSEL
+     I                                        1   1 ZA0001
+      * Message data for 'value for field not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0002
+      * Message data for 'value for field not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0003
+     ISCSARD    E DSSCSARDPD                                                                  BG1346
+      ** Dummy record format for access to Switchable Features Details.                       BG1346
+      *                                                                                       BG1346
+     IDSFDY     E DSDSFDY                                                                     BG1346
+      ** First DS for access programs, short data structure                                   BG1346
+      *                                                                                       BG1346
+     ILDA       E DSLDA                                                                       BG1346
+      ** Local data area for database error details                                           BG1346
+      *                                                                                       BG1346
+      *                                                                                     BUG11799
+     IDATALX      DS                           1024                                         BUG11799
+     I                                        1   2 #LNTY                                   BUG11799
+     I                                        3   4 #LNST                                   BUG11799
+     I                                        5   8 #LNCL                                   BUG11799
+      ** Data area for QLGCNVCS API                                                          256648A
+      *                                                                                      256648A
+     IRBLOCK      DS                                                                         256648A
+     I I            1                     B   1   40REQTY                                    256648A
+     I I            0                     B   5   80CCSID                                    256648A
+     I I            0                     B   9  120CASET                                    256648A
+     I I            X'0000000000'            13  17 RSVED1                                   256648A
+     I I            X'0000000000'            18  22 RSVED2                                   256648A
+     IOTHPAR      DS                                                                         256648A
+     I I            30                    B   1   40LENGTH                                   256648A
+     I I            0                     B   5   80ERRCOD                                   256648A
+      *                                                                                      256648A
+      *                                                                                     BUG11799
+     I              'GOGETZONE'           C         GOPGM                                     BG1346
+     I              'ERROR IN GOGETZONE'  C         GOMSG                                     BG1346
+     I              'Accept to'           C         WACZN1                                    CSD031
+     I              'Zone'                C         WACZN2                                    CSD031
+     I              'Central'             C         WCNDT1                                    CSD031
+     I              'Data'                C         WCNDT2                                    CSD031
+     I              ' Last '              C         WLSAC1                                    CSD031
+     I              'Action'              C         WLSAC2                                    CSD031
+     I              'SDLOANPD  '          C         FILENM                                    CSD031
+     I              'AaBbCcDdEeFfGgHhIiJj-C         ALPHAN                                    256648
+     I              'KkLlMmNnOoPpQqRrSsTt-                                                    256648
+     I              'UuVvWwXxYyZz 0123456-                                                    256648
+     I              '789'                                                                     256648
+      ** Global Processing Constants                                                          BG1346
+      *                                                                                       BG1346
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1DFMD    PARM           WP0001  1        Display file mo
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+      *                                                                                       CSD031
+     C           *IN11     IFEQ *ON                                                           CSD031
+     C           *IN12     OREQ *ON                                                           CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVELWACZN1    #WACZ1                                              CSD031
+     C                     MOVELWACZN2    #WACZ2                                              CSD031
+     C                     MOVE *OFF      *IN43                                               CSD031
+     C                     MOVE *OFF      *IN44                                               CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVELWCNDT1    #WACZ1                                              CSD031
+     C                     MOVELWCNDT2    #WACZ2                                              CSD031
+     C                     MOVELWLSAC1    #WLAC1                                              CSD031
+     C                     MOVELWLSAC2    #WLAC2                                              CSD031
+      *                                                                                       CSD031
+     C           WMODEZ    IFEQ 'Y'                                                           CSD031
+     C                     MOVEL'N'       WMODEZ                                              CSD031
+     C                     MOVE *OFF      *IN71                                               CSD031
+     C                     MOVE *OFF      *IN72                                               CSD031
+     C**********           MOVE *ON       *IN41                                      CSD031 BUG11801
+     C                     ELSE                                                               CSD031
+     C                     MOVE *ON       *IN71                                               CSD031
+     C                     MOVE *ON       *IN72                                               CSD031
+     C**********           MOVE *OFF      *IN41                                      CSD031 BUG11801
+     C                     MOVEL'Y'       WMODEZ                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           *IN11     IFEQ *ON                                                           CSD031
+     C                     MOVE *ON       *IN43                                               CSD031
+     C                     MOVE *OFF      *IN44                                               CSD031
+     C                     MOVEL*BLANKS   #WACZ1                                              CSD031
+     C                     MOVEL*BLANKS   #WACZ2                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'CSD0022' WUMSID                                              CSD031
+     C                     CALL 'SDRTVTXT'             90                                     CSD031
+     C           WUMSID    PARM WUMSID    WQ0286                                              CSD031
+     C           WUMSGF    PARM WUMSGF    WQ0287                                              CSD031
+     C           WUMTXT    PARM WUMTXT    WQ0288                                              CSD031
+     C                     MOVELWUMTXT    ##CTX1                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           *IN12     IFEQ *ON                                                           CSD031
+     C                     MOVE *OFF      *IN43                                               CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+      *                                                                                       CSD031
+      ** Setup footer text:                                                                   CSD031
+      ** A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh  F11=For Accept               CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'CSD0030' WUMSID                                              CSD031
+     C                     CALL 'SDRTVTXT'             90                                     CSD031
+     C           WUMSID    PARM WUMSID    WQ0286                                              CSD031
+     C           WUMSGF    PARM WUMSGF    WQ0287                                              CSD031
+     C           WUMTXT    PARM WUMTXT    WQ0288                                              CSD031
+     C                     MOVELWUMTXT    ##CTX1                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     EXSR BAIZSF                                                        CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           AYLNTY           Loan Type
+     C                     KFLD           AYLNST           Loan Sub-type
+     C                     KFLD           AYLNCL           Loan Class                         CLE042
+      * Setup key
+     C                     MOVEL#2LNTY    AYLNTY           Loan Type
+     C                     MOVEL#2LNST    AYLNST           Loan Sub-type
+     C                     MOVEL#2LNCL    AYLNCL           Loan Class                         CLE042
+     C********** KPOS      SETLL@AYRECL                                                       CSD031
+     C**********           READ @AYRECL                8782*82=EOF                            CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    IFEQ 'Y'                                                           CSD031
+     C           KPOS      SETLLSDALTSL0                                                      CSD031
+     C                     READ SDALTSL0               8782                                   CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           KPOS      SETLLGPLOANL1                                                      CSD031
+     C                     READ GPLOANL1               8782                                   CSD031
+     C                     ELSE                                                               CSD031
+     C           KPOS      SETLLSDLOANL1                                                      CSD031
+     C                     READ SDLOANL1               8782                                   CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+     C           KPOS      SETLLSDLOANL1                                                      CSD031
+     C                     READ SDLOANL1               8782                                   CSD031
+     C                     ENDIF                                                              CSD031
+      * Save previous selector values
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2LNPT    WZLNPT
+     C                     MOVEL#2LNPT    WZLNPT           Loan Processing
+     C           *LIKE     DEFN #2LNTY    WZLNTY
+     C                     MOVEL#2LNTY    WZLNTY           Loan Type
+     C           *LIKE     DEFN #2LNST    WZLNST
+     C                     MOVEL#2LNST    WZLNST           Loan Sub-type
+     C           *LIKE     DEFN #2LNCL    WZLNCL                                              CLE042
+     C                     MOVEL#2LNCL    WZLNCL           Loan Class                         CLE042
+     C           *LIKE     DEFN #2LNTD    WZLNTD
+     C                     MOVEL#2LNTD    WZLNTD           Loan Type Descr
+     C           *LIKE     DEFN #2PRDC    WZPRDC                                              BG1346
+     C                     MOVEL#2PRDC    WZPRDC           Global Product                     BG1346
+     C           *LIKE     DEFN #2INSC    WZINSC                                              BG1346
+     C                     MOVEL#2INSC    WZINSC           Global Instrument                  BG1346
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *LIKE     DEFN #2ACZN    WZACZN                                              CDS031
+     C                     MOVEL#2ACZN    WZACZN                                              CSD031
+     C           *LIKE     DEFN #2EFDT    WZEFDT                                              CDS031
+     C                     MOVEL#2EFDT    WZEFDT                                              CSD031
+     C           *LIKE     DEFN #2LSAC    WZLSAC                                              CDS031
+     C                     MOVEL#2LSAC    WZLSAC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      * Translate search mask for text field
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2LNTD    WQLNTD           Loan Type Descr
+      * Check for Valid Alphanumeric Characters, if invalid use QLGCNVCS                     256648A
+      * to convert Narrative to upper-case.                                                  256648A
+     C           ALPHAN    CHECK#2LNTD                   50                                  256648A
+     C           *IN50     IFEQ *OFF                                                         256648A
+     C                     CALL 'QDCXLATE'
+      * Length
+     C                     PARM 30        WQA5N   50
+     C                     PARM #2LNTD    WQLNTD           Loan Type Descr
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+     C                     ELSE                                                              256648A
+     C                     CALL 'QLGCNVCS'                                                   256648A
+     C                     PARM           RBLOCK                                             256648A
+     C                     PARM           #2LNTD                                             256648A
+     C                     PARM           WQLNTD                                             256648A
+     C                     PARM           LENGTH                                             256648A
+     C                     PARM           ERRCOD                                             256648A
+     C                     ENDIF                                                             256648A
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    IFEQ 'Y'                                                           CSD031
+     C           *IN82     IFEQ *OFF                                                          CSD031
+     C                     READPSDALTSL0                 90                                   CSD031
+     C                     READ SDALTSL0                 90                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C**N82*****           READP@AYRECL                  90*                                  CSD031
+     C**N82*****           READ @AYRECL                  90*                                  CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           *IN82     IFEQ *OFF                                                          CSD031
+     C                     READPGPLOANL1                 90                                   CSD031
+     C                     READ GPLOANL1                 90                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C           *IN82     IFEQ *OFF                                                          CSD031
+     C                     READPSDLOANL1                 90                                   CSD031
+     C                     READ SDLOANL1                 90                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C           *IN82     IFEQ *OFF                                                          CSD031
+     C                     READPSDLOANL1                 90                                   CSD031
+     C                     READ SDLOANL1                 90                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C**N82*****           READP@AYRECL                  90*                                BUG11759
+     C**N82*****           READ @AYRECL                  90*                                BUG11759
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,34
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           #2ACZN    IFNE *BLANKS                                                       CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+     C                     MOVELAYGPDT    #1ACZN                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVELAYAACC    #1ACZN                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #1ACZN    IFNE #2ACZN                                                        CSD031
+     C                     GOTO BB020                                                         CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #2EFDT    IFNE *BLANKS                                                       CSD031
+     C                     MOVE AYEACC    WVLDTE                                              CSD031
+     C                     EXSR ZDATE2                                                        CSD031
+     C                     MOVELWZDATE    DDATEN                                              CSD031
+     C           DDATEC    IFNE #2EFDT                                                        CSD031
+     C                     GOTO BB020                                                         CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #2LSAC    IFNE *BLANKS                                                       CSD031
+     C           AYTYLC    IFNE #2LSAC                                                        CSD031
+     C                     GOTO BB020                                                         CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Check selection fields - if fail, read next record
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           AYLCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           AYTYLC    CABNE#2TYLC    BB020            Type of Last Ch
+     C                     END
+     C           #2LNPT    IFNE *ZERO                      Loan Processing
+     C           AYLNPT    CABNE#2LNPT    BB020            Loan Processing
+     C                     END
+     C           #2LNTY    IFEQ *BLANK                     Loan Type
+     C           #2LNST    IFNE *BLANK                     Loan Sub-type
+     C           AYLNST    CABNE#2LNST    BB020            Loan Sub-type
+     C                     END
+     C           #2LNCL    IFNE *BLANK                     Loan Class                         CLE042
+     C           AYLNCL    CABNE#2LNCL    BB020            Loan Class                         CLE042
+     C                     END                                                                CLE042
+     C                     END
+     C           #2LNTD    IFNE *BLANK                     Loan Type Descr
+      **Check*for*Valid*Alphanumeric*Characters,*if*invalid*set*QCLSCAN*              256648 256648A
+      * Check for Valid Alphanumeric Characters, if invalid use QLGCNVCS                     256648A
+      * to not translate the field.                                                           256648
+     C           *LIKE     DEFN AYLNTD    OUT2                                               256648A
+     C           ALPHAN    CHECK#2LNTD                   50                                   256648
+     C**N50*****           MOVE '1'       WQD1                                        256648 256648A
+     C***50*****           MOVE '0'       WQD1                                        256648 256648A
+     C           *IN50     IFEQ *ON                                                          256648A
+     C                     CALL 'QLGCNVCS'                                                   256648A
+     C                     PARM           RBLOCK                                             256648A
+     C                     PARM           AYLNTD                                             256648A
+     C                     PARM           OUT2                                               256648A
+     C                     PARM           LENGTH                                             256648A
+     C                     PARM           ERRCOD                                             256648A
+      *                                                                                       259934
+     C                     MOVE OUT2      AYLNTD                                              259934
+     C                     ENDIF                                                             256648A
+      * Scan for search string
+     C                     CALL 'QCLSCAN'
+     C                     PARM           AYLNTD           Loan Type Descr
+      * Length
+     C                     PARM 30        WQA3N   30
+      * Start
+     C                     PARM 1         WQB3N   30
+      * Mask
+     C                     PARM           WQLNTD
+      * Length
+     C                     PARM 30        WQC3N   30
+      * Translate
+     C                     PARM '1'       WQD1    1
+      * Trim
+     C                     PARM '1'       WQE1    1
+      * Wild
+     C                     PARM '?'       WQF1    1
+      * Result
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      *                                                                                       BG1346
+      ** Move the Global Product and Instrument Codes to screen fields                        BG1346
+      ** if CGP001 is enabled.                                                                BG1346
+      *                                                                                       BG1346
+     C           CGP001    IFEQ 'Y'                                                           BG1346
+     C                     EXSR SRGPPI                                                        BG1346
+     C                     ENDIF                                                              BG1346
+     C           #2PRDC    IFNE *BLANK                     Global Product                     BG1346
+     C           #1PRDC    CABNE#2PRDC    BB020            Global Product                     BG1346
+     C                     END                                                                BG1346
+     C           #2INSC    IFNE *BLANK                     Global Instrument                  BG1346
+     C           #1INSC    CABNE#2INSC    BB020            Global Instrument                  BG1346
+     C                     END                                                                BG1346
+      * Load SFL fields
+     C                     EXSR MBFL#1
+      * Output to subfile
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    IFEQ 'Y'                                                           CSD031
+     C                     READ SDALTSL0                 82                                   CSD031
+     C                     ELSE                                                               CSD031
+     C**********           READ @AYRECL                  82*82=EOF                            CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     READ GPLOANL1                 82                                   CSD031
+     C                     ELSE                                                               CSD031
+     C                     READ SDLOANL1                 82                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     READ SDLOANL1                 82                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+     C           BB900     TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVE *OFF      *IN86                                               CSD031
+     C                     ENDIF                                                              CSD031
+     C                     MOVE *IN81     CAIN81  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVE *OFF      *IN34                                               CSD031
+     C                     ENDIF                                                              CSD031
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Change of position specified
+     C           WZLNTY    CASNE#2LNTY    FBRQRL
+     C           WZLNST    CASNE#2LNST    FBRQRL
+     C           WZLNCL    CASNE#2LNCL    FBRQRL                                              CLE042
+     C           WZLNTD    CASNE#2LNTD    FBRQRL
+     C           WZPRDC    CASNE#2PRDC    FBRQRL                                              BG1346
+     C           WZINSC    CASNE#2INSC    FBRQRL                                              BG1346
+     C           WZACZN    CASNE#2ACZN    FBRQRL                                              CSD031
+     C           WZEFDT    CASNE#2EFDT    FBRQRL                                              CSD031
+     C           WZLSAC    CASNE#2LSAC    FBRQRL                                              CSD031
+     C                     END
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * CASE: CTL.*CMD key is *Go to 'Add' mode
+     C           *IN09     IFEQ '1'                        *IF
+      * Edit loan type/Fr - Loan Types/Sub-types  *
+     C                     CLEARPARC
+     C                     MOVEL*BLANK    PALNTY           Loan Type
+     C                     MOVEL*BLANK    PALNST           Loan Sub-type
+     C                     MOVEL*BLANK    PALNCL           Loan Class                         CLE042
+      *
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    IFEQ 'N'                                                           CSD031
+     C                     MOVEL'1'       PPARM3                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVEL'2'       PPARM3                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CALL 'SD0281R'              90  Edit loan type/
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Loan Types
+     C                     PARM 'I'       WQ0001  1        Action Code
+     C                     PARM           PPARM3                                              CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0281R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: CTL.*CMD key is *Go to 'Add' mode
+     C           *IN09     IFEQ '1'                        *IF
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO DAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,34
+     C                     SETOF                     98    *
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVEL*OFF      *IN84                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           #1ACZN    ANDEQ*BLANK                                                        CSD031
+     C                     MOVE 'N'       #1ACZN                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           #1SEL     ANDEQ'D'                                                           CSD031
+     C           #1ACZN    ANDEQ'Y'                                                           CSD031
+     C           CSD042    ANDEQ'Y'                                                           CSD031
+     C                     MOVEL*ON       *IN34                                               CSD031
+     C                     MOVEL*ON       *IN84                                               CSD031
+     C                     Z-ADDWGDNWD    WVLDTE                                              CSD031
+     C                     EXSR ZDATE2                                                        CSD031
+     C                     MOVELWRNDTE    ZAMSDA                                              CSD031
+     C                     MOVEL'CSD0007' ZAMSID                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINGPLOANL1             90                              CSD031 BUG11799
+     C           KEY03     CHAINGPLOANL1             90                                     BUG11799
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     Z-ADDAYEACC    WVEFDT  50                                          CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C           #1SEL     ANDEQ'D'                                                           CSD031
+     C           WMODEZ    ANDNE'Y'                                                           CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINSDALTSL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             90                                     BUG11799
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVEL*ON       *IN34                                               CSD031
+     C                     MOVEL*ON       *IN84                                               CSD031
+     C                     MOVEL'CSD0002' ZAMSID                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * USER: Process subfile record (Pre-confirm)
+      * CASE: RCD.*SFLSEL is *Enquire
+     C           #1SEL     IFEQ 'E'                        *IF
+     C           #1SEL2    OREQ 'E'                                                         AR678116
+      * Display loan type/Fr - Loan Types/Sub-types  *
+     C                     CLEARPBRC
+     C                     MOVEL#1LNTY    PBLNTY           Loan Type
+     C                     MOVEL#1LNST    PBLNST           Loan Sub-type
+     C                     MOVEL#1LNCL    PBLNCL           Loan Class                         CLE042
+      *
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    IFEQ 'N'                                                           CSD031
+     C                     MOVEL'G'       PPARM3  1                                           CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVEL'Z'       PPARM3                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CALL 'SD0281E'              90  Display loan ty
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             KEY: Loan Types
+     C                     PARM           PPARM3                                              CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0281E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    ANDEQ'Y'                                                           CSD031
+     C           #1SEL     ANDEQ'A'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     MOVEL'ASM0002' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     MOVE *ON       *IN34                                               CSD031
+     C                     MOVE *ON       *IN84                                               CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    ANDEQ'N'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C           #1SEL     ANDEQ'X'                                                           CSD031
+     C                     MOVEL'ASM0002' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     MOVE *ON       *IN34                                               CSD031
+     C                     MOVE *ON       *IN84                                               CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           WMODEZ    ANDEQ'N'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           #1SEL     ANDEQ'X'                                                           CSD031
+     C                     MOVEL'ASM0002' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     MOVE *ON       *IN34                                               CSD031
+     C                     MOVE *ON       *IN84                                               CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C********** #1SEL     IFEQ 'X'                                                  255408 AR678116
+     C********** CSD042    IFEQ 'N'                                                  255408 AR678116
+     C**********           MOVEL'ASM0002' ZAMSID                                     255408 AR678116
+     C**********           MOVEL'SDUSRMSG'ZAMSGF                                     255408 AR678116
+     C**********           EXSR ZASNMS                                               255408 AR678116
+     C**********           MOVE *ON       *IN34                                      255408 AR678116
+     C**********           MOVE *ON       *IN84                                      255408 AR678116
+     C**********           GOTO DCEXIT                                               255408 AR678116
+     C**********           ENDIF                                                     255408 AR678116
+     C**********           ENDIF                                                     255408 AR678116
+      * CASE: RCD.*SFLSEL is *Amend
+     C           #1SEL     IFEQ 'A'                        *IF
+     C           #1SEL2    OREQ 'A'                                                         AR678116
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+      *                                                                                       CSD031
+      ** Check if PGM is not in the zone                                                      CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+     C           WMODEZ    ANDEQ'N'                                                           CSD031
+     C                     MOVEL#1LNTY    KYLNTY                                              CSD031
+     C                     MOVEL#1LNST    KYLNST                                              CSD031
+     C                     MOVEL#1LNCL    KYLNCL                                            BUG11799
+     C           KLTSL0    CHAINSDALTSL0             90                                       CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVEL*ON       *IN34                                               CSD031
+     C                     MOVEL*ON       *IN84                                               CSD031
+     C                     MOVEL'CSD0002' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Edit loan type/Fr - Loan Types/Sub-types  *
+     C                     CLEARPARC
+     C                     MOVEL#1LNTY    PALNTY           Loan Type
+     C                     MOVEL#1LNST    PALNST           Loan Sub-type
+     C                     MOVEL#1LNCL    PALNCL           Loan Class                         CLE042
+      *
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     SELEC                                                              CSD031
+      *                                                                                       CSD031
+      ** Called for zonal file                                                                CSD031
+      *                                                                                       CSD031
+     C           WMODEZ    WHEQ 'N'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     MOVEL'1'       PPARM3                                              CSD031
+      *                                                                                       CSD031
+      ** Called for acceptance file                                                           CSD031
+      *                                                                                       CSD031
+     C           WMODEZ    WHEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     MOVEL'2'       PPARM3                                              CSD031
+      *                                                                                       CSD031
+      ** Called for global file                                                               CSD031
+      *                                                                                       CSD031
+     C                     OTHER                                                              CSD031
+     C                     MOVEL' '       PPARM3                                              CSD031
+     C                     ENDSL                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CALL 'SD0281R'              90  Edit loan type/
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Loan Types
+     C                     PARM 'A'       WQ0002  1        Action Code
+     C                     PARM           PPARM3                                              CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0281R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * Start of Fix S01117
+      * CASE: RCD.*SFLSEL is *Delete
+     C           #1SEL     IFEQ 'D'                        *IF
+     C           #1SEL2    OREQ 'D'                                                         AR678116
+      * CASE: WRK.Set Up Complete is No
+     C           WUSUC     IFEQ 'N'                        *IF
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+      *                                                                                       CSD031
+      ** Check if PGM    is not in the zone                                                   CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+     C           WMODEZ    ANDEQ'N'                                                           CSD031
+     C                     MOVEL#1LNTY    KYLNTY                                              CSD031
+     C                     MOVEL#1LNST    KYLNST                                              CSD031
+     C           KLTSL0    CHAINSDALTSL0             90                                       CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVEL*ON       *IN34                                               CSD031
+     C                     MOVEL*ON       *IN84                                               CSD031
+     C                     MOVEL'CSD0002' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     GOTO DCEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      * Edit loan type/Fr - Loan Types/Sub-types  *
+     C                     CLEARPARC
+     C                     MOVEL#1LNTY    PALNTY           Loan Type
+     C                     MOVEL#1LNST    PALNST           Loan Sub-type
+     C                     MOVEL#1LNCL    PALNCL           Loan Class                         CLE042
+      *
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     SELEC                                                              CSD031
+      *                                                                                       CSD031
+      ** Called for zonal file                                                                CSD031
+      *                                                                                       CSD031
+     C           WMODEZ    WHEQ 'N'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     MOVEL'1'       PPARM3                                              CSD031
+      *                                                                                       CSD031
+      ** Called for acceptance file                                                           CSD031
+      *                                                                                       CSD031
+     C           WMODEZ    WHEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     MOVEL'2'       PPARM3                                              CSD031
+      *                                                                                       CSD031
+      ** Called for global file                                                               CSD031
+      *                                                                                       CSD031
+     C                     OTHER                                                              CSD031
+     C                     MOVEL' '       PPARM3                                              CSD031
+     C                     ENDSL                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CALL 'SD0281R'              90  Edit loan type/
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Loan Types
+     C                     PARM 'D'       WQ0003  1        Action Code
+     C                     PARM           PPARM3                                              CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0281R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C           *IN71     IFEQ '0'                                                         AR678116
+     C                     MOVEL#1SEL     ZA0001           *SFLSEL
+     C                     ELSE                                                             AR678116
+     C                     MOVEL#1SEL2    ZA0001                                            AR678116
+     C                     ENDIF                                                            AR678116
+      * Send message 'SSF on can't delete'
+     C                     MOVEL'USR0826' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9834  *
+      *
+     C                     END                             *FI
+      * End of Fix S01117
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: RCD.*SFLSEL is *Amend
+     C           #1SEL     IFEQ 'A'                        *IF
+     C           #1SEL2    OREQ 'A'                        *IF                              AR678116
+      * Setup message data for message
+     C           *IN71     IFEQ '0'                                                         AR678116
+     C                     MOVEL#1SEL     ZA0002           *SFLSEL
+     C                     ELSE                                                             AR678116
+     C                     MOVEL#1SEL2    ZA0002                                            AR678116
+     C                     ENDIF                                                            AR678116
+      * Send message 'value for field not valid'
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9834  *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: RCD.*SFLSEL is *Delete
+     C           #1SEL     IFEQ 'D'                        *IF
+     C           #1SEL2    OREQ 'D'                                                         AR678116
+      * Setup message data for message
+     C           *IN71     IFEQ '0'                                                         AR678116
+     C                     MOVEL#1SEL     ZA0003           *SFLSEL
+     C                     ELSE                                                             AR678116
+     C                     MOVEL#1SEL2    ZA0003                                            AR678116
+     C                     ENDIF                                                            AR678116
+      * Send message 'value for field not valid'
+     C                     MOVEL'USR0553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9834  *
+      *
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C           #1SEL     ANDEQ'X'                                                           CSD031
+     C                     EXSR SRACPT                                                        CSD031
+     C                     EXSR FBRQRL                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Start of Fix S01117
+      * Fast Exit
+      * CASE: PGM.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * End of Fix S01117
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVEL*BLANK    #1SEL2                                            AR678116
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @AYRECL fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVEL*BLANK    #1SEL2                                            AR678116
+     C                     Z-ADDAYLCD     #1LCD            Last Change Dat
+     C                     MOVELAYTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDAYLNPT    #1LNPT           Loan Processing
+     C                     Z-ADDAYEXPC    #1EXPC           Exposure Percen
+     C*                                                                   080676
+     C******************** MOVELAYINN1    #1INN1           PM Instrument C080676
+     C*                                                                   080676
+     C                     MOVELAYINNR    #1INNR           PM Instrument C
+     C                     MOVELAYLVLD    #1LVLD           Loan to be Valu
+     C                     MOVELAYDPRC    #1DPRC           Default Product
+     C                     MOVELAYRANG    #1RANG           Range Number (L
+     C                     MOVELAYILTY    #1ILTY           Internal Loan P
+     C                     MOVELAYILST    #1ILST           Internal Loan P
+     C                     MOVELAYLNTY    #1LNTY           Loan Type
+     C                     MOVELAYLNST    #1LNST           Loan Sub-type
+     C                     MOVELAYLNCL    #1LNCL           Loan Class                         CLE042
+     C                     MOVELAYLNTD    #1LNTD           Loan Type Descr
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+     C                     MOVEL*BLANK    #1SEL2                                            AR678116
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVELAYTYLC    #1LSAC                                              CSD031
+     C                     MOVE *BLANKS   #1EFDT                                              CSD031
+     C                     MOVE AYEACC    WVLDTE                                              CSD031
+     C                     EXSR ZDATE2                                                        CSD031
+     C                     MOVE WZDATE    DDATEN                                              CSD031
+     C                     MOVE DDATEC    #1EFDT                                              CSD031
+     C           #1EFDT    IFEQ '000000'                                                      CSD031
+     C                     MOVE *BLANKS   #1EFDT                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVELAYAACC    #1ACZN                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVELAYGPDT    #1ACZN                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     MOVEL@1DBRC    #1DBRC                                              CSD031
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #2LNPT           Loan Processing
+     C                     MOVEL*BLANK    #2LNTY           Loan Type
+     C                     MOVEL*BLANK    #2LNST           Loan Sub-type
+     C                     MOVEL*BLANK    #2LNCL           Loan Class                         CLE042
+     C                     MOVEL*BLANK    #2LNTD           Loan Type Descr
+     C                     MOVEL*BLANK    #2PRDC           Global Product                     BG1346
+     C                     MOVEL*BLANK    #2INSC           Global Instrument                  BG1346
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVEL*BLANK    #2ACZN                                              CSD031
+     C                     MOVEL*BLANK    #2EFDT                                              CSD031
+     C                     MOVEL*BLANK    #2LSAC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT                                                                                  BG1346
+      *****************************************************************                       BG1346
+      *                                                               *                       BG1346
+      *  SRGPPI - Gets the Global Product and Instrument Codes.       *                       BG1346
+      *                                                               *                       BG1346
+      *****************************************************************                       BG1346
+     C           SRGPPI    BEGSR                                                              BG1346
+      *                                                                                       BG1346
+     C                     MOVE *BLANKS   #1PRDC                                              BG1346
+     C                     MOVE *BLANKS   #1INSC                                              BG1346
+      *                                                                                       BG1346
+     C                     MOVE WZONE     KZONE                                               BG1346
+     C                     MOVE 'LE'      KMOD                                                BG1346
+     C                     MOVELAYLNTY    KTRTP                                               BG1346
+     C                     MOVELAYLNST    KTRST                                               BG1346
+      *                                                                                       BG1346
+     C           KGPXR     CHAINGPPRDXL0            N46                                       BG1346
+      *                                                                                       BG1346
+     C           *IN46     IFEQ *OFF                                                          BG1346
+     C                     MOVE PDGPRD    #1PRDC                                              BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       BG1346
+     C           KGPXR     CHAINGPINSXL0            N46                                       BG1346
+      *                                                                                       BG1346
+     C           *IN46     IFEQ *OFF                                                          BG1346
+     C                     MOVE INGINS    #1INSC                                              BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       BG1346
+     C                     ENDSR                                                              BG1346
+      *****************************************************************                       BG1346
+      /EJECT                                                                                  BG1346
+      *****************************************************************                       BG1346
+      *                                                               *                       BG1346
+      *  SRGPOF - Opens the Global Processing Cross-Reference Files.  *                       BG1346
+      *                                                               *                       BG1346
+      *****************************************************************                       BG1346
+     C           SRGPOF    BEGSR                                                              BG1346
+      *                                                                                       BG1346
+     C                     Z-ADD80        PLEN   155                                          BG1346
+      *                                                                                       BG1346
+     C                     DO   2         WIDX    10                                          BG1346
+      *                                                                                       BG1346
+     C                     MOVE OVRC,WIDX PCMD   80                                           BG1346
+      *                                                                                       BG1346
+     C                     CALL 'QCMDEXC'                                                     BG1346
+     C                     PARM           PCMD                                                BG1346
+     C                     PARM           PLEN                                                BG1346
+      *                                                                                       BG1346
+     C                     ENDDO                                                              BG1346
+      *                                                                                       BG1346
+     C                     OPEN GPPRDXL0                                                      BG1346
+     C                     OPEN GPINSXL0                                                      BG1346
+      *                                                                                       BG1346
+     C                     ENDSR                                                              BG1346
+      *****************************************************************                       BG1346
+      /EJECT                                                                                  BG1346
+      *****************************************************************                       BG1346
+      *                                                               *                       BG1346
+      *  SRGPGZ - Gets the Zone via GOGETZONE.                        *                       BG1346
+      *                                                               *                       BG1346
+      *****************************************************************                       BG1346
+     C           SRGPGZ    BEGSR                                                              BG1346
+      *                                                                                       BG1346
+     C                     CALL GOPGM                                                         BG1346
+     C                     PARM *BLANKS   PZRTCD  7                                           BG1346
+     C                     PARM *BLANKS   PZERMS 50                                           BG1346
+     C                     PARM 'N'       PZFCHK  1                                           BG1346
+     C                     PARM *BLANKS   PZZONE 10                                           BG1346
+     C                     PARM *BLANKS   PZSHTC  4                                           BG1346
+     C                     PARM *ZERO     PZRDNB  50                                          BG1346
+     C                     PARM *ZERO     PZDNWD  50                                          BG1346
+     C                     PARM *BLANKS   PZBCCY  3                                           BG1346
+     C                     PARM *ZERO     PZNJOB  10                                          BG1346
+      *                                                                                       BG1346
+     C           PZRTCD    IFEQ *BLANKS                                                       BG1346
+     C                     MOVE PZZONE    WZONE  10                                           BG1346
+     C                     ELSE                                                               BG1346
+      *                                                                                       BG1346
+     C           PZRTCD    IFEQ '*ERROR'                                                      BG1346
+     C                     MOVELGOMSG     PZERMS                                              BG1346
+     C                     MOVE *ON       *INU7                                               BG1346
+     C                     MOVE *ON       *INU8                                               BG1346
+     C                     MOVE *ON       *INLR                                               BG1346
+     C                     EXSR *PSSR                                                         BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       BG1346
+     C                     ENDSR                                                              BG1346
+      *****************************************************************                       BG1346
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+      *                                                                                       BG1346
+      ** Global Processing X-Reference Key List                                               BG1346
+      *                                                                                       BG1346
+     C           KGPXR     KLIST                                                              BG1346
+     C                     KFLD           KZONE  10                                           BG1346
+     C                     KFLD           KMOD    2                                           BG1346
+     C                     KFLD           KTRTP   5                                           BG1346
+     C                     KFLD           KTRST   5                                           BG1346
+      *                                                                                       BG1346
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0280D#
+     C**********           OPEN SDLOANL1                                                      CSD031
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD14        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of change S01459.
+      * SD0280D Precompiler - Loan Types/Sub-types  *
+      * Remove Last Amend Box and Creation Parameters functions.
+      * End of change S01459.
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Start of Fix S01117
+      * DSPF Delete Footer - Standard Functions  *
+     C*****************************************************************
+     C*
+     C* Set up the function key text for the multi-mode display files
+     C* this source is only used where deletions are not allowed after
+     C* the system set up flag has been set on.
+     C*
+     C*****************************************************************
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'E'
+      * Disable F9 when equire mode.                                                          CAAA03
+     C                     MOVE '0'       *IN60                                               CAAA03
+      *                                                                                       CAAA03
+     C* Setup footer text:
+     C* E=Enquire   F3=Main Menu   F5=Refresh
+     C                     MOVEL'USR3341' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C           P1DFMD    IFEQ 'M'
+      * Enable F9 when maintenance mode.                                                      CAAA03
+     C                     MOVE '1'       *IN60                                               CAAA03
+      *                                                                                       CAAA03
+     C           WUSUC     IFEQ 'N'
+     C* Setup footer text:
+     C* A=Amend  D=Delete  E=Enquire  F3=Main Menu  F5=Refresh
+     C* F9=Go to 'Add'
+     C                     MOVEL'USR3334' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C* Setup footer text:
+     C* A=Amend   E=Enquire   F3=Main Menu   F5=Refresh
+     C* F9=Go to 'Add'
+     C                     MOVEL'USR3335' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C*
+      * Header for Dsp file Mnt. - Loan Types/Sub-types  *
+     C*****************************************************************
+     C*
+     C* Set up the title for the LOAN TYPES display file.
+     C*
+     C*****************************************************************
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C           P1DFMD    IFEQ 'M'
+     C* Setup footer text:
+     C* Loan Types/Sub Types Maintenance
+     C                     MOVEL'USR3434' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##URPT
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C* Setup footer text:
+     C* Loan Types/Sub Types Enquiry
+     C                     MOVEL'USR3435' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##URPT
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      * End of Fix S01117
+      * Start of Fix LN0168
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * End of Fix LN0168
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *                                                                                       CLE042
+      ** Access SAR details to see if CLE042 is switched on                                   CLE042
+      *                                                                                       CLE042
+     C                     CALL 'AOSARDR0'                                                    CLE042
+     C                     PARM *BLANKS   PRTCD                                               CLE042
+     C                     PARM '*VERIFY' POPTN                                               CLE042
+     C                     PARM 'CLE042'  PSARD                                               CLE042
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE042
+      *                                                                                       CLE042
+     C           PRTCD     IFEQ *BLANKS                                                       CLE042
+     C                     MOVE 'Y'       CLE042  1                                           CLE042
+     C                     MOVE *ON       *IN66                                               CLE042
+     C                     ENDIF                                                              CLE042
+      *                                                                                       BG1346
+      ** Check if CGP001 is enabled.                                                          BG1346
+      *                                                                                       BG1346
+     C                     CALL 'AOSARDR0'                                                    BG1346
+     C                     PARM *BLANKS   PRTCD   7                                           BG1346
+     C                     PARM '*VERIFY' POPTN   7                                           BG1346
+     C                     PARM 'CGP001'  PSARD   6                                           BG1346
+     C           SCSARD    PARM SCSARD    DSFDY                                               BG1346
+      *                                                                                       BG1346
+     C                     MOVE 'N'       CGP001  1                                           BG1346
+     C           PRTCD     IFEQ *BLANKS                                                       BG1346
+     C                     MOVE 'Y'       CGP001                                              BG1346
+     C                     MOVE *ON       *IN57                                               BG1346
+      *                                                                                       BG1346
+      ** Open the Global Processing Files.                                                    BG1346
+      *                                                                                       BG1346
+     C                     EXSR SRGPOF                                                        BG1346
+      *                                                                                       BG1346
+      ** Get the Zone.                                                                        BG1346
+      *                                                                                       BG1346
+     C                     EXSR SRGPGZ                                                        BG1346
+     C                     ELSE                                                               BG1346
+      *                                                                                       BG1346
+     C           PRTCD     IFNE '*NRF'                                                        BG1346
+     C                     MOVEL'SCSARDPD'DBFILE                                              BG1346
+     C                     MOVEL'CGP001'  DBKEY                                               BG1346
+     C                     MOVEL'07'      DBASE                                               BG1346
+     C                     MOVE *ON       *INU7                                               BG1346
+     C                     MOVE *ON       *INU8                                               BG1346
+     C                     MOVE *ON       *INLR                                               BG1346
+     C                     EXSR *PSSR                                                         BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       BG1346
+     C                     ENDIF                                                              BG1346
+      *                                                                                       CSD031
+     C**********           MOVE *ON       *IN41                                      CSD031 BUG11801
+      *                                                                                       CSD031
+      ** Check for switchable feature                                                         CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM *BLANKS   PRTCD                                               CSD031
+     C                     PARM '*VERIFY' POPTN                                               CSD031
+     C                     PARM 'CSD042'  PSARD                                               CSD031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD042  1                                           CSD031
+     C                     MOVE *OFF      *IN42                                               CSD031
+     C                     MOVE *OFF      *IN72                                               CSD031
+     C                     MOVE *OFF      *IN70                                             BUG11727
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD042                                              CSD031
+     C                     MOVE *ON       *IN42                                               CSD031
+     C                     MOVE *ON       *IN72                                               CSD031
+     C                     MOVE *ON       *IN71                                             BUG11727
+     C                     MOVE *ON       *IN70                                             BUG11727
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       WMODEZ  1                                           CSD031
+     C                     MOVE *OFF      *IN71                                               CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVE *OFF      *IN44                                               CSD031
+     C                     MOVE *OFF      *IN43                                               CSD031
+     C                     MOVE *ON       *IN60                                               CSD031
+     C                     MOVE *ON       *IN70                                             BUG11727
+     C                     MOVELWACZN1    #WACZ1                                              CSD031
+     C                     MOVELWACZN2    #WACZ2                                              CSD031
+     C                     MOVEL'SD0280D' PGMNME 10                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'CSD0029' WUMSID                                              CSD031
+     C                     CALL 'SDRTVTXT'             90                                     CSD031
+     C           WUMSID    PARM WUMSID    WQ0286                                              CSD031
+     C           WUMSGF    PARM WUMSGF    WQ0287                                              CSD031
+     C           WUMTXT    PARM WUMTXT    WQ0288                                              CSD031
+     C                     MOVELWUMTXT    ##URPT                                              CSD031
+      *                                                                                       CSD031
+      ** Acces GZSDBANKL2                                                                     CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD80        PLEN   155                                          CSD031
+     C                     MOVE OVRC,3    PCMD   80                                           CSD031
+     C                     CALL 'QCMDEXC'                                                     CSD031
+     C                     PARM           PCMD                                                CSD031
+     C                     PARM           PLEN                                                CSD031
+      *                                                                                       CSD031
+     C                     OPEN GZSDBANK                                                      CSD031
+     C           *HIVAL    SETLLGZSDBANK                                                      CSD031
+     C                     READ GZSDBANK                 90                                   CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVE BJDNWD    WGDNWD  50                                          CSD031
+     C                     MOVE BJDFIN    WGDFIN  1                                           CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CLOSEGZSDBANK                                                      CSD031
+      *                                                                                       CSD031
+      ** If U1=OFF                                                                            CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *OFF      *IN43                                               CSD031
+     C                     MOVE *OFF      *IN60                                               CSD031
+     C                     MOVE *OFF      *IN70                                             BUG11727
+     C                     MOVELWCNDT1    #WACZ1                                              CSD031
+     C                     MOVELWCNDT2    #WACZ2                                              CSD031
+     C                     MOVELWLSAC1    #WLAC1                                              CSD031
+     C                     MOVELWLSAC2    #WLAC2                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'CSD0030' WUMSID                                              CSD031
+     C                     CALL 'SDRTVTXT'             90                                     CSD031
+     C           WUMSID    PARM WUMSID    WQ0286                                              CSD031
+     C           WUMSGF    PARM WUMSGF    WQ0287                                              CSD031
+     C           WUMTXT    PARM WUMTXT    WQ0288                                              CSD031
+     C                     MOVELWUMTXT    ##CTX1                                              CSD031
+      *                                                                                       CSD031
+     C           *IN90     IFEQ *ON                                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD031
+     C                     MOVEL*BLANKS   W0CLPG                                              CSD031
+     C                     MOVEL'SDRTVTXT'W0CLPG                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD031
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD031
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOBANKR0'                                                    CSD031
+     C                     PARM '*MSG   ' PRTCD   7                                           CSD031
+     C                     PARM '*FIRST ' POPTN   7                                           CSD031
+     C           SDBANK    PARM SDBANK    DSFDY                                               CSD031
+      *                                                                                       CSD031
+      ** DB error if not found                                                                CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFNE *BLANK                                                        CSD031
+     C                     MOVEL'SDBANKPD'DBFILE                                              CSD031
+     C                     Z-ADD001       DBASE                                               CSD031
+     C                     MOVELPOPTN     DBKEY                                               CSD031
+     C                     MOVEL'SD0280D' DBPGM                                               CSD031
+     C                     MOVE *ON       *INU7                                               CSD031
+     C                     MOVE *ON       *INU8                                               CSD031
+     C                     MOVE *ON       *INLR                                               CSD031
+     C                     DUMP                                                               CSD031
+     C                     RETRN                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'Y'       WMODEZ                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** Klist for Zone Acceptance                                                            CSD031
+      *                                                                                       CSD031
+     C           KLTSL0    KLIST                                                              CSD031
+     C                     KFLD           KYLNTY  2                                           CSD031
+     C                     KFLD           KYLNST  2                                           CSD031
+     C                     KFLD           KYLNCL  4                                         BUG11799
+     C           KEY02     KLIST                                                              CSD031
+     C                     KFLD           KDLNTY  2                                           CSD031
+     C                     KFLD           KDLNST  2                                           CSD031
+     C           KEY03     KLIST                                                            BUG11799
+     C                     KFLD           KDLNTY  2                                         BUG11799
+     C                     KFLD           KDLNST  2                                         BUG11799
+     C                     KFLD           KDLNCL  4                                         BUG11799
+      *                                                                                       CSD031
+     C           CSD042    IFEQ 'Y'                                                           CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     OPEN GPLOANL1                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C                     OPEN SDLOANL0                                                      CSD031
+     C                     OPEN SDLOANL1                                                      CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     OPEN SDLOANL0                                                      CSD031
+     C                     OPEN SDLOANL1                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      *                                                                                     BUG11799
+      ** Access SAR details to see if ULX004 is switched on                                 BUG11799
+      *                                                                                     BUG11799
+     C           *NAMVAR   DEFN           LDA                                               BUG11799
+     C                     MOVE 'N'       ULX004  1                                         BUG11799
+      *                                                                                     BUG11799
+     C                     CALL 'AOSARDR0'                                                  BUG11799
+     C                     PARM *BLANKS   PRTCD                                             BUG11799
+     C                     PARM '*VERIFY' POPTN                                             BUG11799
+     C                     PARM 'ULX004'  PSARD                                             BUG11799
+     C           SCSARD    PARM SCSARD    DSFDY                                             BUG11799
+      *                                                                                     BUG11799
+     C           PRTCD     IFNE *BLANKS                                                     BUG11799
+     C           PRTCD     ANDNE'*NRF   '                                                   BUG11799
+     C           *LOCK     IN   LDA                                                         BUG11799
+     C                     MOVEL'SD0280D 'DBPGM                                             BUG11799
+     C                     MOVEL'SCSARDPD'DBFILE                                            BUG11799
+     C                     Z-ADD2         DBASE                                             BUG11799
+     C                     MOVEL'ULX004'  DBKEY                                             BUG11799
+     C                     OUT  LDA                                                         BUG11799
+     C                     EXSR *PSSR                                                       BUG11799
+     C                     ENDIF                                                            BUG11799
+      *                                                                                     BUG11799
+     C           PRTCD     IFEQ *BLANKS                                                     BUG11799
+     C                     MOVE 'Y'       ULX004                                            BUG11799
+     C                     ENDIF                                                            BUG11799
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT                                                                                  CSD031
+     CSR         ZDATE2    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * Convert Date                                                                          CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+     C                     CALL 'ZDATE2'                                                      CSD031
+     C                     PARM           WVLDTE  50                                          CSD031
+     C                     PARM           WDTFMT  1                                           CSD031
+     C                     PARM           WZDATE  60                                          CSD031
+     C                     PARM           WRNDTE  7                                           CSD031
+      *                                                                                       CSD031
+      *================================================================                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      /EJECT                                                                                  CSD031
+     CSR         SRACPT    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * Check Last Action in Acceptance file                                                  CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+      ** Release record lock                                                                  CSD031
+      *                                                                                       CSD031
+     C                     MOVE *BLANKS   WYRANG  2                                           CSD031
+     C                     MOVE *BLANKS   WYILTY  2                                           CSD031
+     C                     MOVE *BLANKS   WYILST  2                                           CSD031
+     C                     MOVE *BLANKS   WYDPRC  4                                           CSD031
+     C                     MOVE *BLANKS   WYINNR  3                                           CSD031
+     C                     MOVE *BLANKS   WYLNTD 30                                           CSD031
+     C                     MOVE *BLANKS   WYACAI  1                                         BUG12557
+     C                     UNLCKSDFCTLL0               91                                     CSD031
+     C           *IN91     IFEQ *ON                                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y2U0004' W0RTN                                               CSD031
+     C                     GOTO ENDCPT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     UNLCKSDLOANL0               91                                     CSD031
+      *                                                                                       CSD031
+     C           *IN91     IFEQ *ON                                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y2U0004' W0RTN                                               CSD031
+     C                     GOTO ENDCPT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      *----------------------------------------------------                                   CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINSDALTSL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             90                                     BUG11799
+      *                                                                                       CSD031
+      ** Store the fields to work variable to be used during amends                           CSD031
+      *                                                                                       CSD031
+     C                     MOVE AYRANG    WYRANG                                              CSD031
+     C                     MOVE AYILTY    WYILTY                                              CSD031
+     C                     MOVE AYILST    WYILST                                              CSD031
+     C                     MOVE AYDPRC    WYDPRC                                              CSD031
+     C                     MOVE AYINNR    WYINNR                                              CSD031
+     C                     MOVE AYLNTD    WYLNTD                                              CSD031
+     C                     MOVE AYACAI    WYACAI                                            BUG12557
+      *                                                                                     BUG11799
+      ** Check if record exists in LUX                                                      BUG11799
+      *                                                                                     BUG11799
+     C                     MOVE 'I'       ACTION  1                                         BUG11799
+     C                     MOVE 'N'       FNDLUX  1                                         BUG11799
+     C           KEY02     CHAINSDLNX1L0             90                                     BUG11799
+     C           *IN90     DOWEQ'0'                                                         BUG11799
+     C           VILNCL    IFEQ #1LNCL                                                      BUG11799
+     C                     MOVE 'Y'       FNDLUX                                            BUG11799
+     C                     LEAVE                                                            BUG11799
+     C                     ENDIF                                                            BUG11799
+     C           KEY02     READESDLNX1L0                 90                                 BUG11799
+     C                     ENDDO                                                            BUG11799
+     C           FNDLUX    IFEQ 'Y'                                                         BUG11799
+     C                     MOVE 'A'       ACTION                                            BUG11799
+     C                     ENDIF                                                            BUG11799
+      *                                                                                       CSD031
+      ** Check Last action from acceptance                                                    CSD031
+      *                                                                                       CSD031
+      *                                                                                       CSD031
+      ** If last action is 'I'                                                                CSD031
+      *                                                                                       CSD031
+     C                     SELEC                                                              CSD031
+     C           AYTYLC    WHEQ 'I'                                                           CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+      *                                                                                       CSD031
+     C********** KEY02     CHAINSDLOANL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDLOANL0             90                                     BUG11799
+     C           *IN90     IFEQ *ON                                                           CSD031
+     C********** KEY02     CHAINSDALTSL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             90                                     BUG11799
+     C                     MOVE WURDNB    AYEACC                                              CSD031
+     C                     MOVE WURDNB    AYLCD                                               CSD031
+     C                     MOVE 'I'       AYTYLC                                              CSD031
+     C                     WRITESDLOAND2                                                      CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+      ** Move the stored variables to the file that need to be updated.                       CSD031
+      *                                                                                       CSD031
+     C                     MOVE WYRANG    AYRANG                                              CSD031
+     C                     MOVE WYILTY    AYILTY                                              CSD031
+     C                     MOVE WYILST    AYILST                                              CSD031
+     C                     MOVE WYDPRC    AYDPRC                                              CSD031
+     C                     MOVE WYINNR    AYINNR                                              CSD031
+     C                     MOVE WYLNTD    AYLNTD                                              CSD031
+     C                     MOVE WURDNB    AYEACC                                              CSD031
+     C                     MOVE WURDNB    AYLCD                                               CSD031
+     C                     MOVE 'A'       AYTYLC                                              CSD031
+     C                     MOVE WYACAI    AYACAI                                            BUG12557
+     C                     UPDATSDLOAND2                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           FILENM    CHAINSDFCTLL0             9091                                     CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C           AYTYLC    IFEQ 'I'                                                           CSD031
+     C                     ADD  1         AHNORC                                              CSD031
+     C                     ADD  1         AHNOIN                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     ADD  1         AHNOAM                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     UPDAT@AHREAU                91                                     CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     EXSR SRTAB6                                                        CSD031
+      *                                                                                       CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINSDALTSL0             40                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             40                                     BUG11799
+     C           *IN40     IFEQ *OFF                                                          CSD031
+     C                     DELETSDALTSD0                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                     BUG11799
+      ** Call LUX extension                                                                 BUG11799
+      *                                                                                     BUG11799
+     C                     EXSR SR0282                                                      BUG11799
+      *                                                                                       CSD031
+      ** If last action is 'A'                                                                CSD031
+      *                                                                                       CSD031
+     C           AYTYLC    WHEQ 'A'                                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+      *                                                                                       CSD031
+     C********** KEY02     CHAINSDLOANL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDLOANL0             90                                     BUG11799
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVE WYRANG    AYRANG                                              CSD031
+     C                     MOVE WYILTY    AYILTY                                              CSD031
+     C                     MOVE WYILST    AYILST                                              CSD031
+     C                     MOVE WYDPRC    AYDPRC                                              CSD031
+     C                     MOVE WYINNR    AYINNR                                              CSD031
+     C                     MOVE WYLNTD    AYLNTD                                              CSD031
+     C                     MOVE WURDNB    AYLCD                                               CSD031
+     C                     MOVE WURDNB    AYEACC                                              CSD031
+     C                     MOVE 'A'       AYTYLC                                              CSD031
+     C                     MOVE WYACAI    AYACAI                                            BUG12557
+     C                     UPDATSDLOAND2                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C********** KEY02     CHAINSDALTSL0             40                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             40                                     BUG11799
+     C                     MOVE WURDNB    AYLCD                                               CSD031
+     C                     MOVE WURDNB    AYEACC                                              CSD031
+     C                     MOVE 'I'       AYTYLC                                              CSD031
+     C                     WRITESDLOAND2                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           FILENM    CHAINSDFCTLL0             9091                                     CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C           AYTYLC    IFEQ 'A'                                                           CSD031
+     C                     ADD  1         AHNOAM                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     ADD  1         AHNORC                                              CSD031
+     C                     ADD  1         AHNOIN                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     UPDAT@AHREAU                91                                     CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     EXSR SRTAB6                                                        CSD031
+      *                                                                                       CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINSDALTSL0             40                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             40                                     BUG11799
+     C           *IN40     IFEQ *OFF                                                          CSD031
+     C                     DELETSDALTSD0                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                     BUG11799
+      ** Call LUX extension                                                                 BUG11799
+      *                                                                                     BUG11799
+     C                     EXSR SR0282                                                      BUG11799
+      *                                                                                       CSD031
+      ** If last action is 'D'                                                                CSD031
+      *                                                                                       CSD031
+     C           AYTYLC    WHEQ 'D'                                                           CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+      *                                                                                       CSD031
+     C********** KEY02     CHAINSDLOANL0             90                              CSD031 BUG11799
+     C           KEY03     CHAINSDLOANL0             90                                     BUG11799
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     DELETSDLOAND2                                                      CSD031
+      *                                                                                       CSD031
+     C           FILENM    CHAINSDFCTLL0             9091                                     CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     ADD  1         AHNODL                                              CSD031
+     C                     SUB  1         AHNORC                                              CSD031
+     C                     UPDAT@AHREAU                91                                     CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'D'       AYTYLC                                              CSD031
+     C                     EXSR SRTAB6                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVEL#1LNTY    KDLNTY                                              CSD031
+     C                     MOVEL#1LNST    KDLNST                                              CSD031
+     C                     MOVEL#1LNCL    KDLNCL                                            BUG11799
+     C********** KEY02     CHAINSDALTSL0             40                              CSD031 BUG11799
+     C           KEY03     CHAINSDALTSL0             40                                     BUG11799
+     C           *IN40     IFEQ *OFF                                                          CSD031
+     C                     DELETSDALTSD0                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                     BUG11799
+      ** Check if record exists in LUX                                                      BUG11799
+      *                                                                                     BUG11799
+     C                     OPEN SDLNX1PD                                                    BUG11799
+     C           KEY03     CHAINSDLNX1PD             90                                     BUG11799
+     C           *IN90     IFEQ '0'                                                         BUG11799
+     C                     DELETUPDIDX                                                      BUG11799
+     C                     ENDIF                                                            BUG11799
+      *                                                                                       CSD031
+     C                     ENDSL                                                              CSD031
+      *Commitment Contol                                                                      CSD031
+     C                     COMIT                                                              CSD031
+      *                                                                                       CSD031
+      *================================================================                       CSD031
+     CSR         ENDCPT    ENDSR                                                              CSD031
+      /EJECT                                                                                  CSD031
+     CSR         SRTAB6    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * Update Tablet6 file                                                                   CSD031
+      *================================================================                       CSD031
+      *
+     C                     CALL 'TABLET6'              90                                     CSD031
+     C                     PARM *BLANKS   PRETN   7        *Return code                       CSD031
+     C                     PARM #1LNTY    PLTYPE  2        Loan Type                          CSD031
+     C                     PARM #1LNST    PLSTPE  2        Loan Sub-type                      CSD031
+     C                     PARM AYLNTD    PDESC  30        Loan Type Descr                    CSD031
+     C                     PARM AYLNPT    PLPROC  20       Loan Processing                    CSD031
+     C                     PARM AYTYLC    PTLCHG  1        Type of Last Ch                    CSD031
+     C                     PARM BJRDNB    PMIDNO  50       Run day number                     CSD031
+      *================================================================                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      /EJECT                                                                                  CSD031
+     CSR         ZDATE1    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+     C                     CALL 'ZDATE1'                                                      CSD031
+     C                     PARM           ZDATEA  6                                           CSD031
+     C                     PARM           ZDAYNO  50                                          CSD031
+     C                     PARM           WGDFIN                                              CSD031
+     C                     PARM           ERORFL  1                                           CSD031
+      *                                                                                       CSD031
+      *================================================================                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      /EJECT                                                                                  CSD031
+     CSR         SR0282    BEGSR                                                            BUG11799
+      *================================================================                     BUG11799
+      * Call SD0282 instead of WN0010 when ULX004 is ON                                     BUG11799
+      *================================================================                     BUG11799
+     C           ULX004    IFEQ 'Y'                                                         BUG11799
+     C                     CLEARDATALX                                                      BUG11799
+     C                     MOVE #1LNTY    #LNTY                                             BUG11799
+     C                     MOVE #1LNST    #LNST                                             BUG11799
+     C           CLE042    IFEQ 'Y'                                                         BUG11799
+     C                     MOVE #1LNCL    #LNCL                                             BUG11799
+     C                     ENDIF                                                            BUG11799
+     C                     CALL 'SD0282'                                                    BUG11799
+     C                     PARM           ACTION  1                                         BUG11799
+     C                     PARM           DATALX                                            BUG11799
+     C                     PARM *BLANKS   W0RTN                                             BUG11799
+     C                     ENDIF                                                            BUG11799
+     CSR                   ENDSR                                                            BUG11799
+      /EJECT                                                                                BUG11799
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0280DPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0280DPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0280DPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001
+** OVRC                                                                                       BG1346
+OVRDBF FILE(GPPRDXL0) TOFILE(GPPRODXL0) SHARE(*NO)                                            BG1346
+OVRDBF FILE(GPINSXL0) TOFILE(GPINSTXL0) SHARE(*NO)                                            BG1346
+OVRDBF FILE(GZSDBANK) TOFILE(GZSDBANKL2)                                                      CSD031

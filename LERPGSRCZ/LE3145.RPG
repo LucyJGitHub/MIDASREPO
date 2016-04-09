@@ -1,0 +1,1299 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Tranche facilities by credit agreement')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE3145 - Tranche Facilities by  Credit Agreement             *
+      *                                                               *
+      *  Function:  This new subfile enquiry will show details of all *
+      *  (I/C)      Tranche Facilities entered against a              *
+      *             specified Prime Facility.  A select option will   *
+      *             be given to the user.  Option 1 will link to the  *
+      *             Tranche Facility Details Enquiry.  While          *
+      *             option 2 will link to Loans by Tranche Facility   *
+      *             Enquiry.                                          *
+      *                                                               *
+      *  Called By: LEC0309 - Tranche Facilities by Credit Agreement  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 201127             Date 20Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204670             Date 08Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             DATE 04MAY00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180573             Date 21Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 159021             Date 15Apr99               *
+      *                 158194             Date 12Apr99               *
+      *                 157308             Date 18Mar99               *
+      *                 154594             Date 03Feb99               *
+      *                 147221  *CREATE    Date 17Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00180                                 *
+      *             WNCPYSRC,LEH00181                                 *
+      *             WNCPYSRC,LEH00182                                 *
+      *             WNCPYSRC,LEH00183                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  201127 - Recompiled over changes made in LE3145DF.           *
+      *  204670 - F12 returns to menu from second screen whereas it   *
+      *           should return to the first screen. The program      *
+      *           should not end when F12 is pressed.                 *
+      *           Applied fix 194860.                                 *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  180573 - Original message IDs have subsequently been over-   *
+      *           written for new programs.                           *
+      *  159021 - Branch selected not passed by linked enquiry to     *
+      *           LE0181.                                             *
+      *  158194 - All TR facilities w/ different branches are being   *
+      *           displayed even w/o selecting 'ALL' in branch field. *
+      *  157308 - Program gives an error message 'Facility not        *
+      *           found' if tranche selected is non-syndicated.       *
+      *           Changed array value CMD,1 to also process           *
+      *           non-syndicated facilities.                          *
+      *  154594 - Database error 2 when 'ALL' entered for branch.     *
+      *  147221 - Credit Agreement extra processing                   *
+      *                                                               *
+      *****************************************************************
+     FLE3145DFCF  E                    WORKSTN
+     F                                        SFRRN KSFILE LE3145S0
+     F                                              KINFDS INFDS#
+      ** Tranche Facilities by Credit Agreement Screen
+      *
+     FLEFCLTL9IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTY9
+      ** Facility File by Credit Agreement
+      *
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      ** Facility File
+     F/COPY WNCPYSRC,LEH00180
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 25-27 - Subfile Control Indicators                            *
+      *   29  - Display Facility Details                              *
+      *                                                               *
+      *   37  - Multibranching                                        *
+      *                                                               *
+      *   40  - Error in Subfile Control                              *
+      *   41  - Error in Customer Number                              *
+      *   42  - Error in Branch                                       *
+      *   43  - Error in Facility                                     *
+      *   44  - No option for loans displayed if syndicated CA        *
+      *                                                               *
+      *   50  - Error in Subfile Record                               *
+      *   51  - Error in Option                                       *
+      *                                                               *
+      *   60  - Facility Record not found                             *
+      *   61  - End of Facility by Prime                              *
+      *   62  - End of Subfile Record                                 *
+      *   63  - Facility Found                                        *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRVALD - Validation of Input Fields                          *
+      *  SRSPRC - Subfile Processing                                  *
+      *  SRSFIL - Subfile Fill                                        *
+      *  SRSVLD - Subfile Validation                                  *
+      *  SRSLCT - Option Processing                                   *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRSMSG - Send message to program's message queue.            *
+      *  SRCMSG - Clear program's message queue.                      *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CMD     1   4 60
+      *
+      ** Array containing Command parameter
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     E/COPY WNCPYSRC,LEH00181
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IINFDS#    E DSY2I#DSP
+     I                                    B 370 3710DROW
+     I                                    B 378 3790LRRN
+      *
+      ** Display file data structure.
+      *
+     IZMUSER    E DSZMUSER
+      *
+      ** Data Area giving User Authority Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                     *PARMS   NOPARM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      ** Dummy Data Structures used by Access Programs.
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  External data structures for Customer Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ***  External data structures for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IEMSDS     E DSEMDTA
+      ***  Link Enquiry Data Area
+      *
+     I                                      141 146 CUSTNO
+     I                                      147 149 BRANCH
+     I                                      150 152 COMPNY
+      *
+     IPARMS1      DS                             11
+      ***  Parameters to pass to LE0170
+      *
+     I                                        1   6 P1CNUM
+     I                                        7   9 P1FACT
+     I                                       10  11 P1FCNO
+      *
+     IPARMS2      DS                             15
+      ***  Parameters to pass to LE0181
+      *
+     I                                        1   6 P2CNUM
+     I                                        7   9 P2BRCD
+     I                                       10  12 P2FACT
+     I                                       13  14 P2FCNO
+     I                                       15  15 P2PART
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+     I              'All Branches'        C         C#ALBR                154594
+      *****************************************************************
+      /EJECT
+     C/TITLE Main Processing
+      *****************************************************************
+      *
+      *  MAIN PROCESSING
+      *
+      *****************************************************************
+      *
+      ** Initialization Routine
+      *
+     C                     EXSR SRINIT
+      *
+      ** If no Parameters have been passed then skip to subfile screen
+      ** otherwise continue.
+      *
+     C                     Z-ADD*ZERO     FIRST
+     C           NOPARM    IFNE 0
+     C           FIRST     ANDEQ0
+      *
+      ** Clear the Subfile
+      *
+     C                     MOVE *OFF      *IN26
+     C                     MOVE *OFF      *IN27
+     C                     WRITELE3145C0
+      *
+      ** Reset Subfile Control Errors
+      *
+     C                     MOVEA'0000'    *IN,40
+     C                     EXSR SRCMSG
+      *
+      ** Save Screen Input Fields
+      *
+     C                     MOVELP4CNUM    CCNUM
+     C                     MOVELP4BRCD    CBRCA
+     C                     MOVELP4FACT    CFACT
+     C                     MOVELP4FCNO    CFCNO
+     C                     MOVELCCNUM     WCNUM  10
+     C                     MOVELCBRCA     WBRCA   3
+     C                     MOVELCFACT     WFACT   3
+     C                     MOVELCFCNO     WFCNO   2
+      *
+      ** Validate Input Fields
+      *
+     C                     EXSR SRVALD
+      *
+      ** Process Subfile
+      *
+     C                     EXSR SRSPRC
+     C                     Z-ADD1         FIRST
+      *
+     C                     ENDIF
+     C*
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           FIRST     ANDNE0
+     C           NOPARM    OREQ 0
+      *
+      ** Write Screen Heading with Facility Details non-displayed
+      *
+     C           FIRST     IFEQ 0
+     C                     MOVE *OFF      *IN29
+     C                     WRITELE3145F1
+      *
+      ** Get Input
+      *
+     C                     MOVE *ON       *IN27
+     C                     EXFMTLE3145C0
+     C                     ENDIF
+      *
+      ** Do While Not F3
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+      ** Reset Subfile Control Errors
+      *
+     C                     MOVEA'0000'    *IN,40
+     C                     EXSR SRCMSG
+      *
+      ** Validate Input Fields
+      *
+     C                     EXSR SRVALD
+      *
+      ** If Errors in Subfile Control
+      *
+     C           *IN40     IFEQ *ON
+      *
+      ** Write Screen Heading with Facility Details non-displayed
+      *
+     C                     MOVE *OFF      *IN29
+     C                     WRITELE3145F1
+      *
+      ** Display Error Message
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Get Input
+      *
+     C                     MOVE *OFF      *IN26
+     C                     MOVE *ON       *IN27
+     C                     EXFMTLE3145C0
+      *
+      ** Else, no Subfile Control Error
+      *
+     C                     ELSE
+      *
+      ** Save Screen Input Fields
+      *
+     C                     MOVELCCNUM     WCNUM  10
+     C                     MOVELCBRCA     WBRCA   3
+     C                     MOVELCFACT     WFACT   3
+     C                     MOVELCFCNO     WFCNO   2
+      *
+      ** Process Subfile
+      *
+     C                     EXSR SRSPRC
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Return
+      *
+     C           *INKL     IFEQ *ON
+     C           NOPARM    IFNE 0
+     C                     MOVE 'P'       P4RTCD
+     C                     ENDIF
+     C                     ELSE
+     C           NOPARM    IFNE 0
+     C                     MOVE 'T'       P4RTCD
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+     C/TITLE SR/SRINIT
+      *****************************************************************
+      *
+      *  SRINIT - Program Initialisation
+      *
+      *  Called by: Main Processing
+      *
+      *  Calls:
+      *  AOBANKR0 Access Program for Bank Details
+      *  *PSSR  - Program Error Processing Subroutine
+      *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive data from calling program, if any.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P4CNUM  6
+     C                     PARM           P4FACT  3
+     C                     PARM           P4FCNO  2
+     C                     PARM           P4BRCD  3
+     C                     PARM           P4RTCD  1
+      *
+      ** Reset couter for first call of program.
+      *
+     C                     Z-ADD*ZERO     FIRST   10
+      *
+      ** Set up Facility Keys
+      *
+     C           FCLTYK    KLIST
+     C**********           KFLD           #CNUM   60                                          CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           #FACT   30
+     C                     KFLD           #FCNO   20
+     C                     KFLD           #RCTP   1
+     C                     MOVEL'A'       #RCTP
+      *
+      ** Set up Facility by Credit Agreement Keys
+      *
+     C           FCLT9K    KLIST
+     C                     KFLD           #CNUM
+     C                     KFLD           #FACT
+     C                     KFLD           #FCNO
+      *
+      ** Access the data areas RUNDAT and ZMUSER
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   RUNDAT
+     C                     IN   ZMUSER
+      *
+     C                     MOVELAGMRDT    SRUNA
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE    P      ***************
+     C                     MOVEL'FIRST'   DBKEY     P      * DB ERROR 01 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access and Update LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3145'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Set Date Format Indicator *IN98 on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ** Set Multibranching Indicator.
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     END
+      *
+     C/COPY WNCPYSRC,LEH00182
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRVALD
+      *****************************************************************
+      *
+      *  SRVALD - Validation of Input Fields
+      *
+      *  Called by: Main Processing, SRSPRC
+      *
+      *  Calls:
+      *  AOCUSTR0 Access Program for Customer Details
+      *  SRSMSG - Send message to program's message queue
+      *  ZVACTU - Menu item authority validation
+      *  ZVACTBU  Menu item and Branch authority validation
+      *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** '?' Processing on Customer Number/Shortname
+      *
+     C           CCNUM     IFEQ '?'
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM CCNUM     P@KEY1 10
+     C                     PARM           P@KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVELBBCUST    CCNUM
+      *
+     C                     ENDIF
+      *
+      ** Access Customer Details
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM CCNUM     P@KEY1 10
+     C                     PARM           P@KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Invalid Customer Number
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE *ON       *IN40
+      *
+     C           P@KYST    IFEQ '*CNUM'
+     C           P@KYST    OREQ '*ERROR'
+      *
+      ** Send error message: Customer not on Customer's File (LER0151)
+      *
+     C                     MOVEL'LER0151' ZAMSID
+     C                     MOVE *ON       *IN41
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+      *
+      ** Invalid Customer Shortname
+      *
+     C           P@KYST    IFEQ '*CSHT'
+      *
+      ** Send error message: Customer Shortname is not on the
+      **                     Shortnames' File (LER0152)
+      *
+     C                     MOVEL'LER0152' ZAMSID
+     C                     MOVE *ON       *IN41
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   CCNUM
+     C                     MOVELBBCUST    CCNUM
+      *
+     C                     ENDIF
+      *
+      ** Validate Customer/Facility Combination
+      *
+     C                     MOVELCCNUM     #CNUM
+     C                     MOVELCFACT     #FACT
+     C                     MOVELCFCNO     #FCNO
+     C           FCLTYK    CHAINFCLTY                60
+      *
+      ** Invalid Facility
+      *
+     C           *IN60     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'E'
+      *
+      ** Send error message: Facility is not found in the Facilities
+      **                     File (LER0153)
+      *
+     C                     MOVEL'LER0153' ZAMSID
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN43
+     C                     EXSR SRSMSG
+      *
+     C                     ELSE
+      *
+      ** Not Credit Agreement or Syndicated Credit Agreement
+      *
+     C           SYIN      IFEQ 'Y'
+     C           PRTR      ANDEQ'A'
+     C           TRCA      ANDEQ'CA'
+     C           TRCA      OREQ 'CA'
+     C                     ELSE
+      *
+      ** Send error message: Facility is not a Syndicated or Prime
+      **                     Credit Agreement(LER0211)
+      *
+     C                     MOVEL'LER0211' ZAMSID
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN43
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Branch
+      ** Check if branch entered exists.  If blanks, default to           158194
+      ** defaulting branch defined for user.                              158194
+      *
+     C           *IN43     IFEQ *OFF                                      158194
+     C           CBRCA     IFNE *BLANKS                                   158194
+     C           CBRCA     ANDNE'ALL'                                     158194
+      *                                                                   158194
+     C                     CALL 'AOBRCHR1'                                158194
+     C                     PARM *BLANKS   P@RTCD                          158194
+     C                     PARM '*KEY    'P@OPTN                          158194
+     C                     PARM CBRCA     P@BRCD  3                       158194
+     C           SDBRCH    PARM SDBRCH    DSSDY                           158194
+      *                                                                   158194
+     C           P@RTCD    IFNE *BLANK                                    158194
+     C                     MOVEL'LER0220' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+     C                     ELSE                                           158194
+     C           CBRCA     IFEQ *BLANKS                                   158194
+     C                     MOVE DBRN      CBRCA                           158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+     C***********CBRCA     IFEQ *BLANKS                                   158194
+     C***********          MOVELBRCA      CBRCA                           158194
+     C***********          ENDIF                                          158194
+      ***********                                                         158194
+      ***Branch*Entered not Same as Branch of Facility                    158194
+      ***********                                                         158194
+     C***********CBRCA     IFNE BRCA                                      158194
+     C***********CBRCA     ANDNE'ALL'                              154594 158194
+      ***********                                                         158194
+      ***Send*error message: Branch entered is not the same as the        158194
+      ***********            Branch of Facility (LER0155)                 158194
+      ***********                                                         158194
+     C***********          MOVEL'LER0155' ZAMSID                          158194
+     C***********          MOVE *ON       *IN40                           158194
+     C***********          MOVE *ON       *IN42                           158194
+     C***********          EXSR SRSMSG                                    158194
+      ***********                                                         158194
+     C***********          ENDIF                                          158194
+      *
+      ** Validate Menu Item Authorisation
+      *
+     C           *IN37     IFEQ *OFF
+     C                     CALL 'ZVACTU'
+     C                     PARM 'E'       ZACTN   1
+     C                     PARM 0         ERR     10
+      *
+      ** Not Authorised
+      *
+     C           ERR       IFGT 0
+      *
+      ** Send error message: User is not authorised for this menu item
+      **                     (LER0156)
+      *
+     C                     MOVEL'LER0156' ZAMSID
+     C                     MOVE *ON       *IN40
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+      *
+      ** Validate Menu Item and Branch Authorisation
+      *
+     C                     ELSE
+      *                                                                   158194
+      ** Do not perform authorisation checks if branch is not valid       158194
+      *                                                                   158194
+     C           *IN42     IFEQ *OFF                                      158194
+      *                                                                   158194
+      *                                                                   158194
+      ** Check user's access to facility branch                           158194
+      *                                                                   158194
+     C                     CALL 'ZVBBU'                                   158194
+     C                     PARM BRCA      ZBR                             158194
+     C                     PARM           ERR                             158194
+      *                                                                   158194
+     C           ERR       IFEQ 1                                         158194
+     C                     MOVEL'LER0222' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+     C           ERR       IFEQ 2                                         158194
+     C                     MOVEL'LER0223' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+      ** If branch selected is 'ALL', Bank level authority for user       158194
+      ** must be 'Y'                                                      158194
+      *                                                                   158194
+     C           CBRCA     IFEQ 'ALL'                                     158194
+     C           BANK      ANDNE'Y'                                       158194
+     C                     MOVEL'LER0221' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+      ** Check user's access to selected branch                           158194
+      *                                                                   158194
+     C           CBRCA     IFNE 'ALL'                                     158194
+     C                     CALL 'ZVBBU'                                   158194
+     C                     PARM CBRCA     ZBR                             158194
+     C                     PARM           ERR                             158194
+      *                                                                   158194
+     C           ERR       IFEQ 1                                         158194
+     C                     MOVEL'LER0222' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+     C           ERR       IFEQ 2                                         158194
+     C                     MOVEL'LER0224' ZAMSID                          158194
+     C                     MOVE *ON       *IN40                           158194
+     C                     MOVE *ON       *IN42                           158194
+     C                     EXSR SRSMSG                                    158194
+     C                     ENDIF                                          158194
+     C                     MOVE *ON       *IN26                           158194
+     C                     ENDIF                                          158194
+      *                                                                   158194
+     C           CBRCA     IFNE 'ALL'                                     154594
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'E'       ZACTN   1
+     C                     PARM CBRCA     ZBR     3
+     C                     PARM 0         ERR     10
+      *
+      ** Not Authorised
+      *
+     C           ERR       IFGT 0
+      *
+      ** Send error message: User is not authorised for this menu item
+      **                     and branch (LER0157)
+      *
+     C                     MOVEL'LER0157' ZAMSID
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN42
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+     C                     ENDIF                                          154594
+      *
+     C                     ENDIF
+     C                     ENDIF                                          158194
+     C                     ENDIF                                          158194
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRSPRC
+      *****************************************************************
+      *
+      *  SRSPRC - Subfile Processing
+      *
+      *  Called by: Main Processing
+      *
+      *  Calls:
+      *  AOBRCHR1 Access Program for Branch Details
+      *  *PSSR  - Program Error Processing Subroutine
+      *  SRCMSG - Clear program's message queue.
+      *  SRSFIL - Subfile Fill
+      *  SRSLCT - Option Processing
+      *  SRVALD - Validation of Input Fields
+      *  SRSVLD - Subfile Validation
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)
+      *
+      *****************************************************************
+      *
+     C           SRSPRC    BEGSR
+      *
+      ** Clear the Subfile
+      *
+     C                     MOVE *OFF      *IN26
+     C                     MOVE *OFF      *IN27
+     C                     WRITELE3145C0
+     C                     Z-ADD0         SFRRN
+      *
+      ** Format Customer name and facility details for output
+      *
+     C                     MOVELBBCRNM    FCRNM
+     C                     MOVELBBCSSN    FCSSN
+     C                     MOVELBBCUST    FCNUM
+      *
+     C                     MOVELFACT      FFACT
+     C                     MOVE '/  '     FFACT
+     C                     MOVE FCNO      FFACT
+     C                     MOVELRVCR      FRVCR
+     C                     MOVEL*BLANKS   FFCTI
+     C/COPY WNCPYSRC,LEH00183
+      *
+     C           FCTI      IFEQ 'C'
+     C                     MOVEL'Committe'FFCTI
+     C                     MOVE 'd'       FFCTI
+     C                     ENDIF
+      *
+     C           FCTI      IFEQ 'F'
+     C                     MOVEL'Confirme'FFCTI
+     C                     MOVE 'd'       FFCTI
+     C                     ENDIF
+      *
+     C           FCTI      IFEQ 'I'
+     C                     MOVEL'Guidance'FFCTI     P
+     C                     ENDIF
+      *
+      ** Format Branch for output
+      *
+     C           CBRCA     IFEQ 'ALL'                                     154594
+     C                     MOVE *BLANKS   FBRCA                           154594
+     C                     MOVELC#ALBR    FBRNM     P                     154594
+     C                     ELSE                                           154594
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM CBRCA     P@BRCD  3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE    P      ***************
+     C                     MOVELCBRCA     DBKEY     P      * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8BRCD    FBRCA
+     C                     MOVELA8BRNM    FBRNM
+     C                     ENDIF                                          154594
+      *
+      ** Format date approved and expiry date for output
+      *
+     C                     Z-ADDDTAP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    FDTAP
+      *
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    FDTEX
+      *
+      ** Fill Subfile
+      *
+     C                     MOVE *OFF      *IN26
+     C                     EXSR SRSFIL
+      *
+      ** Write Heading with Facility details displaying
+      *
+     C                     MOVE *ON       *IN29
+     C                     WRITELE3145F1
+     C                     WRITE#MSGCTL
+      *
+      ** Get Input
+      *
+     C                     MOVE *ON       *IN27
+     C                     EXFMTLE3145C0
+      *
+      ** Do While Subfile Errors
+      *
+     C                     MOVE *ON       *IN50
+     C           *IN50     DOWEQ*ON
+     C           *IN26     ANDEQ*ON
+     C           *INKC     ANDEQ*OFF
+      *
+      ** Reset Subfile Error
+      *
+     C                     MOVEA'00'      *IN,50
+     C                     EXSR SRCMSG
+      *
+      ** Validate Subfile
+      *
+     C                     EXSR SRSVLD
+      *
+      ** Validate Input Fields
+      *
+     C                     EXSR SRVALD
+      *
+      ** If No Subfile Error
+      *
+     C           *IN50     IFEQ *OFF
+      *
+      ** Process Option
+      *
+     C                     EXSR SRSLCT
+      *
+     C                     ELSE
+      *
+      ** Display Error Message
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Get Input
+      *
+     C                     MOVE *ON       *IN27
+     C                     EXFMTLE3145C0
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *OFF      *IN50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRSFIL
+      *****************************************************************
+      *
+      *  SRSFIL - Subfile Fill
+      *
+      *  Called by: SRSPRC
+      *
+      *  Calls:
+      *  AOCURRR0 Access Program for Currency Details
+      *  AOCUSTR0 Access Program for Customer Details
+      *  *PSSR  - Program Error Processing Subroutine
+      *  ZFRPED - Edit an Amount
+      *
+      *****************************************************************
+      *
+     C           SRSFIL    BEGSR
+      *
+      ** Get First Record on LEFCLTL9
+      *
+     C                     MOVELCCNUM     #CNUM
+     C                     MOVELCFACT     #FACT
+     C                     MOVELCFCNO     #FCNO
+     C           FCLT9K    SETLLLEFCLTL9                 63
+     C           *IN63     IFEQ *OFF
+      *
+      ***Send*message:*There are not Tranches for this CA (LER0212)                           180573
+      ** Send message: There are not Tranches for this CA (LER0227)                           180573
+      *
+     C***********          MOVEL'LER0212' ZAMSID                                              180573
+     C                     MOVEL'LER0227' ZAMSID                                              180573
+     C                     MOVE *ON       *IN40
+     C                     MOVE *ON       *IN43
+     C                     EXSR SRSMSG
+     C                     ELSE
+      *
+      *
+     C           FCLT9K    READELEFCLTL9                 61
+      *
+      ** Do While not EOF
+      *
+     C           *IN61     DOWEQ*OFF
+      *                                                                   158194
+     C           CBRCA     IFEQ 'ALL'                                     158194
+     C           CBRCA     OREQ BRCA                                      158194
+      *
+      ** Format Customer Number and Shortname
+      *
+     C                     MOVELCNUM      ##CNUM 10
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM ##CNUM    P@KEY1 10
+     C                     PARM           P@KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE    P      ***************
+     C                     MOVEL##CNUM    DBKEY     P      * DB ERROR 03 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBBCUST    SCUST
+     C                     MOVELBBCSSN    SCSSN
+      *
+      ** Format Facility Amount
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM FCCY      P@K101  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELFCCY      DBKEY     P      * DB ERROR 04 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDFAMT      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    SFAMT
+      *
+      ** Format Other Fields for Output
+      *
+     C                     MOVELBRCA      SBRCA
+     C                     MOVELFACT      SFACT
+     C                     MOVE '/  '     SFACT
+     C                     MOVE FCNO      SFACT
+     C                     MOVELFCCY      SFCCY
+     C                     MOVEL*BLANKS   SOPTN
+      *
+      ** Write Record to Subfile
+      *
+     C                     MOVE *ON       *IN26
+     C           SFRRN     ADD  1         SFRRN   30
+     C                     WRITELE3145S0
+     C                     ENDIF                                          158194
+      *
+      ** Get Another Record on LEFCLTL9
+      *
+     C           FCLT9K    READELEFCLTL9                 61
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRSVLD
+      *****************************************************************
+      *
+      *  SRSVLD - Subfile Validation
+      *
+      *  Called by: SRSPRC
+      *
+      *  Calls:
+      *  SRSMSG - Send message to program's message queue
+      *
+      *****************************************************************
+      *
+     C           SRSVLD    BEGSR
+      *
+      ** Go to top of the Subfile
+      *
+     C                     Z-ADD1         SFRRN
+      *
+      ** Read Changed Record
+      *
+     C                     READCLE3145S0                 62
+      *
+      ** Do While Not EOSF
+      *
+     C           *IN62     DOWEQ*OFF
+      *
+      ** Check if option is either 1 or 2
+      *
+     C           SOPTN     IFNE '1'
+     C           SOPTN     ANDNE'2'
+     C           SOPTN     ANDNE' '
+      *
+      ** Send error message: Valid are: 1-Tranche Facility Details
+      ***********            2-Loans by Tranche Facility (LER0213)                            180573
+      **                     2-Loans by Tranche Facility (LER0226)                            180573
+      *
+     C***********          MOVEL'LER0213' ZAMSID                                              180573
+     C                     MOVEL'LER0226' ZAMSID                                              180573
+     C                     MOVE *ON       *IN50
+     C                     MOVE *ON       *IN51
+     C                     EXSR SRSMSG
+      *
+     C                     ENDIF
+      *
+      ** Update Subfile
+      *
+     C                     MOVE *ON       *IN55
+     C                     UPDATLE3145S0
+     C                     MOVE *OFF      *IN55
+     C                     MOVE *OFF      *IN51
+      *
+      ** Read Changed Record
+      *
+     C                     READCLE3145S0                 62
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/SRSLCT
+      *****************************************************************
+      *
+      *  SRSLCT - Option Processing
+      *
+      *  Called by: SRSPRC
+      *
+      *  Calls:
+      *  QCMDEXC  Execute a Command
+      *
+      *****************************************************************
+      *
+     C           SRSLCT    BEGSR
+      *
+      ** Go to top of the Subfile
+      *
+     C                     Z-ADD1         SFRRN
+      *
+      ** Read Changed Record
+      *
+     C                     READCLE3145S0                 62
+      *
+      ** Do While Not EOSF
+      *
+     C           *IN62     DOWEQ*OFF
+      *
+      ** Access Data Area EMSDS
+      *
+     C           *NAMVAR   DEFN           EMSDS
+     C           *LOCK     IN   EMSDS
+      *
+     C                     MOVE *BLANKS   RQDTD
+     C                     MOVE *BLANKS   PARMS1
+     C                     MOVE *BLANKS   PARMS2
+      *
+     C                     MOVE 'LE'      RQDTD
+     C                     MOVE *BLANK    RETND
+      *
+      ** If Option 1 is taken
+      *
+     C           SOPTN     IFEQ '1'
+      *
+      ** Setup Customer number and Facility number for LE0170
+      *
+     C                     MOVELSCUST     P1CNUM
+     C                     MOVELSFACT     P1FACT
+     C                     MOVE SFACT     P1FCNO
+     C                     MOVELPARMS1    RQDTD
+      *
+     C                     OUT  EMSDS
+      *
+      ** Call LE0170
+      *
+     C                     Z-ADD56        MSGLEN 155
+     C                     MOVEACMD,1     PCMD   60
+     C                     CALL 'QCMDEXC'
+     C                     PARM           PCMD
+     C                     PARM           MSGLEN
+      *
+     C                     CALL 'LE0170'
+     C                     PARM 'I'       PFCDT   1                                           204670
+      *
+     C                     Z-ADD18        MSGLEN 155
+     C                     MOVEACMD,3     PCMD   60
+     C                     CALL 'QCMDEXC'
+     C                     PARM           PCMD
+     C                     PARM           MSGLEN
+      *
+     C                     ENDIF
+      *
+      ** If Option 2 is taken
+      *
+     C           SOPTN     IFEQ '2'
+      *
+      ** Setup Customer number, Branch code and Facility number for
+      ** LE0181
+      *  Pass additional parameter to LE0181 to retrieve the
+      *  correct loan details
+      *
+     C                     MOVELSCUST     P2CNUM
+     C***********          MOVELSBRCA     P2BRCD                          159021
+     C                     MOVELCBRCA     P2BRCD                          159021
+     C                     MOVELSFACT     P2FACT
+     C                     MOVE SFACT     P2FCNO
+     C                     MOVE 'P'       P2PART
+     C                     MOVELPARMS2    RQDTD
+      *
+     C                     OUT  EMSDS
+      *
+      ** Call LE0181
+      *
+     C                     CALL 'LE0181'
+     C                     PARM 'OSLP'    PTYPE   4
+      *
+     C                     ENDIF
+      *
+      ** Blank Out Select Field, Update Subfile Record
+      *
+     C                     MOVEL*BLANKS   SOPTN
+     C                     UPDATLE3145S0
+      *
+      ** Read Changed Record
+      *
+     C                     READCLE3145S0                 62
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+      ** Process DB Error Screen
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSMSG - Send message to program's message queue.            *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           SRSMSG    BEGSR
+      *
+     C                     MOVEL'GBLERMSG'ZAMSGF
+     C                     MOVE 'F '      ZAMSGF
+     C                     MOVELPGM       ZAPGNM
+      *
+     C                     CALL 'Y2SNMGC'                  SEND MESSAGE
+     C                     PARM           ZAPGNM 10        I:PGM Q NAME,*EXT
+     C                     PARM           ZAPGRL  5        I:*SAME,*EXT,*PRV
+     C                     PARM           ZAMSID  7        I:MESSAGE ID
+     C                     PARM           ZAMSGF 10        I:MESSAGE FILE
+     C                     PARM           ZAMSDA132        I:MESSAGE DATE
+     C                     PARM           ZAMSTP  7        I:MESSAGE TYPE
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCMSG - Clear program's message queue.                      *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           SRCMSG    BEGSR
+      *
+     C                     MOVELPGM       ##PGNM
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ##PGNM 10
+     C                     PARM '*SAME'   ##PGRL  5
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   CMD ** System commands (147221)
+OVRDBF FILE(FCLTY) SHARE(*NO)
+OVRDBF FILE(CLOAN) TOFILE(LELOANL6) MBR(*ALL) SHARE(*NO)
+DLTOVR FILE(FCLTY)
+DLTOVR FILE(CLOAN)
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

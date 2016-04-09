@@ -1,0 +1,1441 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display customer lending ICD data')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9111E - Customer Lending ICD Enquiry                       *
+      *                                                               *
+      *  Function:  This program allows a user to view the ICD        *
+      *             values for the Customer Lending module.           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGP001             Date 05Dec03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 123857             Date 12Jan98               *
+      *                 CSD003             Date 27Oct97               *
+      *                 CLE004             Date 12FEB97               *
+      *                 S01408             Date 31MAY96               *
+      *                 S01465             Date 12APR94               *
+      *                 S01459             Date 12APR94               *
+      *                 S01339             Date 28MAY92               *
+      *                 LN0650             Date 20AUG90               *
+      *                 S01117             Date 16Aug90               *
+      *                 LN0255             Date 15Jun90               *
+      *                 S01212             Date 14Sep89               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan processing                       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGP001 - Global processing.  New ICD setting for             *
+      *           Authorisation of Fee Adjustments.                   *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  123857 - Add field for Authorisation to Review All Screens   *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CLE004 - Lending Enhancements:                               *
+      *           Call second screen (SD9112E) if switchable feature  *
+      *           is 'on'.                                            *
+      *  S01408 - Addition of core hook:                              *
+      *           SD9111ECP1                                          *
+      *  S01465 - BLI Lending Development:                            *
+      *           - Display new field 'Default Auto-settle Indicator'.*
+      *           - Display new field 'Guarantees Issued Active'.     *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01339 - Program runs from MITEM.                            *
+      *  LN0650 - Addition of expired retention period to file.       *
+      *  S01117 - Release 10 Changes.                                 *
+      *  LN0255 - Standardise ICD Headers and Footers.                *
+      *  S01212 - Local Returns /COPY Incorporation.                  *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SD9111EFPG
+     FSD9111E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Customer lending ICD enquiry
+      *
+     FSDCLNDL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer Lending ICD retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     E/COPY WNCPYSRC,SD9111EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,GUE1DTA                                          S01229
+     I/COPY QWINDSRC,SD9110GDTA                                           S01229
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+      * Outward parameters
+     IPARC        DS                             10
+      * KEY : Midas SD Customer Lending ICD retrieval
+      * I : MAP Customer Lend
+     I                                        1  10 PACLND
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Customer Lending ICD retrieval
+      * I : RST Customer Lend
+     I                                        1  10 P1CLND
+     IP2PARM      DS
+      * B :  Work Return code
+     I                                        1   5 P2WRTC
+     IDSFDY     E DSDSFDY                                                                     CAS001
+      **  First DS for access programs, Short data structure                                  CAS001
+      *                                                                                       CAS001
+     ILDA       E DSLDA                                                                       CAS001
+      *                                                                                       CAS001
+     ISCSARD    E DSSCSARDPD                                                                  CAS001
+      **  External data structures for Switchable Features Details                            CAS001
+      *                                                                                       CAS001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Customer L
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CLND    IFEQ *BLANK                     Customer Lend
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C                     EXSR MAIZ#2                                                        CLE134
+     C                     ENDIF                                                              CLE134
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BPCLND           Customer Lend
+      * Setup key
+     C                     MOVEL#1CLND    BPCLND           Customer Lend
+     C           KRTV      CHAIN@BPREER              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Customer Lending Data  NF'
+     C                     MOVEL'USR0213' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C                     EXSR MBFL#2                                                        CLE134
+     C                     ENDIF                                                              CLE134
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111ESFF - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111ESFF
+     C                     END                             *FI
+      * USER: Load detail screen from DBF record
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111ELDS - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111ELDS
+     C                     END                             *FI
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EVKS - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EVKS
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EPKR - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EPKR
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P2WRTC           Work Return cod
+     C                     MOVEL'PREV'    P2WRTC           Work Return cod
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *                                                                                       CLE134
+      ** If Past Due Processing is on, display the second screen                              CLE134
+      *                                                                                       CLE134
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C                     EXSR RCD2                                                          CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+      *================================================================                       CLE134
+     CSR         RCD2      BEGSR                                                              CLE134
+      *                                                                                       CLE134
+     C                     SETOF                     86                                       CLE134
+     C                     WRITE#MSGCTL                                                       CLE134
+     C                     WRITE#CMDTXT2                                                      CLE134
+     C                     EXFMT#RCDDTL2                                                      CLE134
+      *                                                                                       CLE134
+      ** Cancel & exit program                                                                CLE134
+      *                                                                                       CLE134
+     C   03                CAS            ZXEXPG                                              CLE134
+     C                     ENDCS                                                              CLE134
+      *                                                                                       CLE134
+     CSR         RCD2EX    ENDSR                                                              CLE134
+      /EJECT                                                                                  CLE134
+     CSR         MAIZ#2    BEGSR                                                              CLE134
+      *================================================================                       CLE134
+      * Initialise record - screen 2                                                          CLE134
+      *================================================================                       CLE134
+     C                     Z-ADD*ZERO     #2LCD                                               CLE134
+     C                     MOVEL*BLANK    #2TYLC                                              CLE134
+     C                     MOVEL*BLANK    #2LCCY                                              CLE134
+     C                     Z-ADD*ZERO     #2AMNT                                              CLE134
+     C                     Z-ADD*ZERO     #2PERC                                              CLE134
+     C                     MOVE *BLANKS   #2CLD1                                              CLE134
+     C                     MOVE *BLANKS   #2CLD2                                              CLE134
+     C                     MOVE *BLANKS   #2CLD3                                              CLE134
+     C                     MOVE *BLANKS   #2CLD4                                              CLE134
+     C                     MOVE *BLANKS   #2CLD5                                              CLE134
+     C                     MOVE *BLANKS   #2CLD6                                              CLE134
+     C                     MOVE *BLANKS   #2CLD7                                              CLE134
+     C                     MOVE *BLANKS   #2CLD8                                              CLE134
+     C                     MOVE *BLANKS   #2CLD9                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN1                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN2                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN3                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN4                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN5                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN6                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN7                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN8                                              CLE134
+     C                     Z-ADD*ZEROS    #2CLN9                                              CLE134
+     C                     MOVE *BLANK    #2MTDL                                              CLE134
+     C                     MOVE *BLANKS   #2RCD1                                              CLE134
+     C                     MOVE *BLANKS   #2RCD2                                              CLE134
+     C                     MOVE *BLANKS   #2RCD3                                              CLE134
+     C                     MOVE *BLANKS   #2RCD4                                              CLE134
+     C                     MOVE *BLANKS   #2RCD5                                              CLE134
+     C                     MOVE *BLANKS   #2RCD6                                              CLE134
+     C                     MOVE *BLANKS   #2RCD7                                              CLE134
+     C                     MOVE *BLANKS   #2RCD8                                              CLE134
+     C                     MOVE *BLANKS   #2RCD9                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN1                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN2                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN3                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN4                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN5                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN6                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN7                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN8                                              CLE134
+     C                     Z-ADD*ZEROS    #2RCN9                                              CLE134
+     C                     MOVEL*BLANK    #2RMTL                                              CLE134
+     C                     Z-ADD*ZERO     #2MXCH                                              CLE134
+      *                                                                                       CLE134
+     CSR         M2EXIT    ENDSR                                                              CLE134
+     C/EJECT                                                                                  CLE134
+     CSR         MBFL#2    BEGSR                                                              CLE134
+      *================================================================                       CLE134
+      * Move fields to screen                                                                 CLE134
+      *================================================================                       CLE134
+     C                     MOVELBPCLND    #2CLND                                              CLE134
+     C                     Z-ADDBPLCD     #2LCD                                               CLE134
+     C                     MOVELBPTYLC    #2TYLC                                              CLE134
+     C                     MOVELBPLCCY    #2LCCY                                              CLE134
+     C                     Z-ADDBPAMNT    #2AMNT                                              CLE134
+     C                     Z-ADDBPPERC    #2PERC                                              CLE134
+     C                     MOVELBPCLD1    #2CLD1                                              CLE134
+     C                     MOVELBPCLD2    #2CLD2                                              CLE134
+     C                     MOVELBPCLD3    #2CLD3                                              CLE134
+     C                     MOVELBPCLD4    #2CLD4                                              CLE134
+     C                     MOVELBPCLD5    #2CLD5                                              CLE134
+     C                     MOVELBPCLD6    #2CLD6                                              CLE134
+     C                     MOVELBPCLD7    #2CLD7                                              CLE134
+     C                     MOVELBPCLD8    #2CLD8                                              CLE134
+     C                     MOVELBPCLD9    #2CLD9                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD1    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN41                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN1    #2CLN1                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD2    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN42                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN2    #2CLN2                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD3    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN43                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN3    #2CLN3                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD4    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN44                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN4    #2CLN4                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD5    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN45                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN5    #2CLN5                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD6    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN46                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN6    #2CLN6                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD7    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN47                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN7    #2CLN7                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD8    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN48                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN8    #2CLN8                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2CLD9    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN49                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPCLN9    #2CLN9                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     MOVELBPMTDL    #2MTDL                                              CLE134
+     C                     MOVELBPRCD1    #2RCD1                                              CLE134
+     C                     MOVELBPRCD2    #2RCD2                                              CLE134
+     C                     MOVELBPRCD3    #2RCD3                                              CLE134
+     C                     MOVELBPRCD4    #2RCD4                                              CLE134
+     C                     MOVELBPRCD5    #2RCD5                                              CLE134
+     C                     MOVELBPRCD6    #2RCD6                                              CLE134
+     C                     MOVELBPRCD7    #2RCD7                                              CLE134
+     C                     MOVELBPRCD8    #2RCD8                                              CLE134
+     C                     MOVELBPRCD9    #2RCD9                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD1    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN51                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN1    #2RCN1                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD2    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN52                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN2    #2RCN2                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD3    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN60                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN3    #2RCN3                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD4    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN54                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN4    #2RCN4                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD5    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN55                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN5    #2RCN5                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD6    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN56                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN6    #2RCN6                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD7    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN57                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN7    #2RCN7                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD8    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN58                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN8    #2RCN8                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C           #2RCD9    IFEQ *BLANKS                                                       CLE134
+     C                     MOVE *ON       *IN59                                               CLE134
+     C                     ELSE                                                               CLE134
+     C                     Z-ADDBPRCN9    #2RCN9                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     MOVELBPRMTL    #2RMTL                                              CLE134
+     C                     Z-ADDBPMXCH    #2MXCH                                              CLE134
+      *                                                                                       CLE134
+     CSR                   ENDSR                                                              CLE134
+     C/EJECT                                                                                  CLE134
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111ESFF - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111ESFF
+     C                     END                             *FI
+      * USER: Validate detail screen
+     C/COPY WNCPYSRC,SD9111EC01
+      * Start CLE004
+      * CASE: WRK.Switchable Feature CLE004 is Present
+     C           WULE04    IFEQ 'Y'                        *IF
+      * Dsp Cust Lend ICD - Auth - Customer Lending Data  *
+     C                     CLEARPARC
+     C                     MOVEL#1CLND    PACLND           Customer Lend
+      *
+     C                     CALL 'SD9112E'              90  Dsp Cust Lend I
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Customer L
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9112E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END                             *FI
+      * CASE: PGM.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PGM.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+     C                     END                             *FI
+      * End CLE004
+      * CASE: WRK.S01212 is Fix installed
+     C/COPY WNCPYSRC,SD9111EC02
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * S01339 - remove F8 (further records) processing
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9111ECP1 - Customer Lending Data  *
+     C/COPY WNCPYSRC,SD9111ECP1
+      * Start of SAR S01117
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C***********          PARM           SPARE 256        Spare Field                 LN0355 CAS001
+     C                     PARM           SPAREF256        Spare Field                        CAS001
+      * End of SAR S01117
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C/COPY WNCPYSRC,SD9111EC03
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/COPY member SD9111EVSW - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EVSW
+     C                     END                             *FI
+     C                     END                             *FI
+     C/COPY WNCPYSRC,SD9111EC04
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EVDS - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EVDS
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EPCA - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EPCA
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EPCK - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EPCK
+     C                     END                             *FI
+      * S01339 - remove F8 (further records) processing
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1ELAP           End of Last Act
+     C                     MOVEL*BLANK    #1CONR           Consolidated Co
+     C                     MOVEL*BLANK    #1FAAU           Facilities to b
+     C                     MOVEL*BLANK    #1LOAU           Loans to be Aut
+     C                     MOVEL*BLANK    #1PPAU           Parts Purch to
+     C                     MOVEL*BLANK    #1PSAU           Parts Sold to b
+     C                     MOVEL*BLANK    #1ROAU           Rollovers to be
+     C                     MOVEL*BLANK    #1LMAU           Loan Amends to
+     C                     MOVEL*BLANK    #1MRAU           Manual Reps to
+     C                     MOVEL*BLANK    #1REAU           Repay Schds to
+     C                     MOVEL*BLANK    #1TPAU           Trnsfr Prin to
+     C                     MOVEL*BLANK    #1FEAU           Fees to be Auth
+     C                     MOVEL*BLANK    #1FSAU           Fees Settmt to
+     C                     MOVEL*BLANK    #1GUAU           Guarnt/Coll to
+     C                     MOVEL*BLANK    #1FAAM           Faclty Amds to
+     C                     MOVEL*BLANK    #1FAUT           Man Fac Uts to
+     C                     MOVEL*BLANK    #1CAAU           Credit Apls to
+     C                     Z-ADD*ZERO     #1GRPR           Grace Days for
+     C                     Z-ADD*ZERO     #1GRIR           Grace Days for
+     C                     MOVEL*BLANK    #1AURV           Auth to Review 123857
+     C                     MOVEL*BLANK    #1BRCF           Base Rate Chang
+     C                     MOVEL*BLANK    #1GEEB           Generate Events
+     C                     Z-ADD*ZERO     #1HRPR           Historic Retent
+     C                     Z-ADD*ZERO     #1EFRP           Exp. Fac. Reten
+     C                     MOVEL*BLANK    #1BTIN           Billing Telex I
+     C                     Z-ADD*ZERO     #1DBDY           Default Billing
+     C                     Z-ADD*ZERO     #1LGAM           Large Amount
+     C                     Z-ADD*ZERO     #1PND1           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND2           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND3           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND4           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND5           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND6           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND7           Past Due Notice
+     C                     Z-ADD*ZERO     #1PND8           Past Due Notice
+     C                     MOVEL*BLANK    #1DBKC           Default Book Co
+     C                     MOVEL*BLANK    #1DASI           Default Auto-se
+     C                     MOVEL*BLANK    #1GIAV           Guarantees Issu
+     C                     MOVEL*BLANK    #1FJAU           Fee Adjustments                    CGP001
+      *                                                                                       CAS001
+      ** If CAS001 enhancement is installed                                                   CAS001
+      *                                                                                       CAS001
+     C           CAS001    IFEQ 'Y'                                                           CAS001
+     C                     MOVEL*BLANKS   #1BCPL                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CLE023
+      ** If CLE023 is installed, initialise Default Rate to Spot.                             CLE023
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     MOVEL*BLANK    #1DRTS                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CAS005
+      ** Initialise No. of Days to Maturity if CAS005 is enabled.                             CAS005
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+     C                     Z-ADD*ZERO     #1NODM                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BPREER fields to screen
+      *================================================================
+     C                     MOVELBPCLND    #1CLND           Customer Lend
+     C                     Z-ADDBPLCD     #1LCD            Last Change Dat
+     C                     MOVELBPTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDBPELAP    #1ELAP           End of Last Act
+     C                     MOVELBPCONR    #1CONR           Consolidated Co
+     C                     MOVELBPFAAU    #1FAAU           Facilities to b
+     C                     MOVELBPLOAU    #1LOAU           Loans to be Aut
+     C                     MOVELBPPPAU    #1PPAU           Parts Purch to
+     C                     MOVELBPPSAU    #1PSAU           Parts Sold to b
+     C                     MOVELBPROAU    #1ROAU           Rollovers to be
+     C                     MOVELBPLMAU    #1LMAU           Loan Amends to
+     C                     MOVELBPMRAU    #1MRAU           Manual Reps to
+     C                     MOVELBPREAU    #1REAU           Repay Schds to
+     C                     MOVELBPTPAU    #1TPAU           Trnsfr Prin to
+     C                     MOVELBPFEAU    #1FEAU           Fees to be Auth
+     C                     MOVELBPFSAU    #1FSAU           Fees Settmt to
+     C                     MOVELBPGUAU    #1GUAU           Guarnt/Coll to
+     C                     MOVELBPFAAM    #1FAAM           Faclty Amds to
+     C                     MOVELBPFAUT    #1FAUT           Man Fac Uts to
+     C                     MOVELBPCAAU    #1CAAU           Credit Apls to
+     C                     Z-ADDBPGRPR    #1GRPR           Grace Days for
+     C                     Z-ADDBPGRIR    #1GRIR           Grace Days for
+     C                     MOVELBPAURV    #1AURV           Auth to Review 123857
+     C                     MOVELBPBRCF    #1BRCF           Base Rate Chang
+     C                     MOVELBPGEEB    #1GEEB           Generate Events
+     C                     Z-ADDBPHRPR    #1HRPR           Historic Retent
+     C                     Z-ADDBPEFRP    #1EFRP           Exp. Fac. Reten
+     C                     MOVELBPBTIN    #1BTIN           Billing Telex I
+     C                     Z-ADDBPDBDY    #1DBDY           Default Billing
+     C                     Z-ADDBPLGAM    #1LGAM           Large Amount
+     C                     Z-ADDBPPND1    #1PND1           Past Due Notice
+     C                     Z-ADDBPPND2    #1PND2           Past Due Notice
+     C                     Z-ADDBPPND3    #1PND3           Past Due Notice
+     C                     Z-ADDBPPND4    #1PND4           Past Due Notice
+     C                     Z-ADDBPPND5    #1PND5           Past Due Notice
+     C                     Z-ADDBPPND6    #1PND6           Past Due Notice
+     C                     Z-ADDBPPND7    #1PND7           Past Due Notice
+     C                     Z-ADDBPPND8    #1PND8           Past Due Notice
+     C                     MOVELBPDBKC    #1DBKC           Default Book Co
+     C                     MOVELBPDASI    #1DASI           Default Auto-se
+     C                     MOVELBPGIAV    #1GIAV           Guarantees Issu
+     C                     MOVELBPFJAU    #1FJAU           Fee Adjustments                    CGP001
+      *                                                                                       CAS001
+      ** If CAS001 enhancement is installed                                                   CAS001
+     C           CAS001    IFEQ 'Y'                                                           CAS001
+     C                     MOVELBPBCPL    #1BCPL                                              CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS001
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C                     MOVELBPDRTS    #1DRTS                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CAS005
+      ** Set No. of Days to Maturity if CAS005 is enabled.                                    CAS005
+      *                                                                                       CAS005
+     C           CAS005    IFEQ 'Y'                                                           CAS005
+     C                     Z-ADDBPNODM    #1NODM                                              CAS005
+     C                     ENDIF                                                              CAS005
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1CLND    #1CLND           Customer Lend
+      * USER: Load key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111ELKS - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111ELKS
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY member SD9111EEPP - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EEPP
+     C                     END                             *FI
+      * Start of Fix S01117
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'CMD01'   P2WRTC           Work Return cod
+     C                     END                             *FI
+      * End of Fix S01117
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Switchable Feature CLE004
+     C                     MOVEL*BLANK    WULE04  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field SAR number field
+     C                     MOVEL*BLANK    WUSARN  6
+      * Define work field Access obj dummy DS (76)
+     C                     MOVEL*BLANK    WUFDY  76
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9111E#
+     C                     OPEN SDCLNDL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of change S01459.
+      * SD9111E Precompiler - Customer Lending Data  *
+      * Remove Last Amend Box and Creation Parameters functions.
+      * End of change S01459.
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Start CLE004
+      * Is Lending Enhancements - CLE004 switched On ?
+     C                     MOVEL'N'       WULE04           Switchable Feat
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'CLE004'  WUSARN           SAR number fiel
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0001  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0002  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0003  6        SAR number fiel
+     C                     PARM WUFDY     WQ0004 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Is CLE004 switched on ?
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WULE04           Switchable Feat
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WULE04           Switchable Feat
+     C                     END                             *FI
+      * End CLE004
+      *                                                                                       CLE023
+      ** Initialise LDA                                                                       CLE023
+      *                                                                                       CLE023
+     C           *LOCK     IN   LDA                                                           CLE023
+     C                     MOVEL'SD9111E 'DBPGM                                               CLE023
+     C                     MOVE *BLANKS   DBFILE                                              CLE023
+     C                     MOVE *BLANKS   DBKEY                                               CLE023
+     C                     Z-ADD*ZEROS    DBASE                                               CLE023
+     C                     MOVE *BLANKS   DBMOD                                               CLE023
+     C                     MOVE *BLANKS   DBPROC                                              CLE023
+     C                     MOVE *BLANKS   ZZ053                                               CLE023
+     C                     OUT  LDA                                                           CLE023
+      *                                                                                       CLE023
+      ** Check if CLE023 is installed.                                                        CLE023
+      *                                                                                       CLE023
+     C                     CALL 'AOSARDR0'                                                    CLE023
+     C                     PARM *BLANKS   PRTCD   7                                           CLE023
+     C                     PARM '*VERIFY' POPTN   7                                           CLE023
+     C                     PARM 'CLE023'  PSARD   6                                           CLE023
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE023
+      *                                                                                       CLE023
+     C           PRTCD     IFEQ *BLANKS                                                       CLE023
+     C                     MOVE 'Y'       CLE023  1                                           CLE023
+     C                     MOVE '1'       *IN50                                               CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE 'N'       CLE023                                              CLE023
+     C                     MOVE '0'       *IN50                                               CLE023
+     C           PRTCD     IFNE '*NRF    '                                                    CLE023
+     C           *LOCK     IN   LDA                                                           CLE023
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE023
+     C                     Z-ADD01        DBASE                                               CLE023
+     C                     MOVEL'CLE023'  DBKEY                                               CLE023
+     C                     OUT  LDA                                                           CLE023
+     C                     EXSR *PSSR                                                         CLE023
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * Data Stuct. for Cus. Ldg - Customer Lending Data  *
+      * 00/COPY member SD9111EFPG - Customer Lending Data  * S01212
+      * 00/COPY member SD9111EEPG - Customer Lending Data  * S01212
+      * 00/COPY member SD9111EIPG - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EIPG
+      * 00/COPY member SD9111ECPG - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111ECPG
+      * 00/COPY member SD9111EOPG - Customer Lending Data  * S01212
+     C/COPY WNCPYSRC,SD9111EOPG
+     C                     END                             *FI
+      *                                                                                       CAS001
+      ** Determine if CAS001 is installed                                                     CAS001
+      *                                                                                       CAS001
+     C                     CALL 'AOSARDR0'                                                    CAS001
+     C                     PARM *BLANKS   PRTCD   7                                           CAS001
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS001
+     C                     PARM 'CAS001'  PSARD   6                                           CAS001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS001
+      *                                                                                       CAS001
+     C           PRTCD     IFNE *BLANKS                                                       CAS001
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS001
+     C           *NAMVAR   DEFN           LDA                                                 CAS001
+     C           *LOCK     IN   LDA                                                           CAS001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS001
+     C                     Z-ADD1         DBASE                                               CAS001
+     C                     MOVEL'CAS001'  DBKEY                                               CAS001
+     C                     OUT  LDA                                                           CAS001
+     C                     MOVE *ON       *INU7                                               CAS001
+     C                     MOVE *ON       *INU8                                               CAS001
+     C                     MOVE *ON       *INLR                                               CAS001
+     C                     EXSR *PSSR                                                         CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS001
+     C           PRTCD     IFEQ *BLANKS                                                       CAS001
+     C                     MOVE 'Y'       CAS001  1                                           CAS001
+     C                     MOVE *OFF      *IN32                                               CAS001
+     C                     ELSE                                                               CAS001
+     C                     MOVE 'N'       CAS001                                              CAS001
+     C                     MOVE *ON       *IN32                                               CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS005
+      ** Access SAR details to see if CAS005 is enabled.                                      CAS005
+      *                                                                                       CAS005
+     C                     CALL 'AOSARDR0'                                                    CAS005
+     C                     PARM *BLANKS   PRTCD                                               CAS005
+     C                     PARM '*VERIFY' POPTN                                               CAS005
+     C                     PARM 'CAS005'  PSARD                                               CAS005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS005
+      *                                                                                       CAS005
+     C                     MOVE 'N'       CAS005  1                                           CAS005
+     C                     MOVE *ON       *IN53                                               CAS005
+     C           PRTCD     IFEQ *BLANKS                                                       CAS005
+     C                     MOVE 'Y'       CAS005                                              CAS005
+     C                     MOVE *OFF      *IN53                                               CAS005
+     C                     ELSE                                                               CAS005
+      *                                                                                       CAS005
+     C           PRTCD     IFNE '*NRF'                                                        CAS005
+     C           *LOCK     IN   LDA                                                           CAS005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS005
+     C                     Z-ADD2         DBASE                                               CAS005
+     C                     MOVEL'CAS005'  DBKEY                                               CAS005
+     C                     OUT  LDA                                                           CAS005
+     C                     MOVE *ON       *INU7                                               CAS005
+     C                     MOVE *ON       *INU8                                               CAS005
+     C                     MOVE *ON       *INLR                                               CAS005
+     C                     EXSR *PSSR                                                         CAS005
+     C                     ENDIF                                                              CAS005
+      *                                                                                       CAS005
+     C                     ENDIF                                                              CAS005
+      *                                                                                       CLE134
+      ** Is Past Due Processing - CLE134 - switched on?                                       CLE134
+      *                                                                                       CLE134
+     C                     MOVEL'N'       CLE134                                              CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   PRTCD                                               CLE134
+     C                     PARM '*VERIFY' POPTN                                               CLE134
+     C                     PARM 'CLE134'  PSARD                                               CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+      *                                                                                       CLE134
+     C                     MOVE 'N'       CLE134  1                                           CLE134
+     C           PRTCD     IFEQ *BLANKS                                                       CLE134
+     C                     MOVE 'Y'       CLE134                                              CLE134
+     C                     ELSE                                                               CLE134
+      *                                                                                       CLE134
+     C           PRTCD     IFNE '*NRF'                                                        CLE134
+     C           *LOCK     IN   LDA                                                           CLE134
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE134
+     C                     Z-ADD2         DBASE                                               CLE134
+     C                     MOVEL'CLE134'  DBKEY                                               CLE134
+     C                     OUT  LDA                                                           CLE134
+     C                     MOVE *ON       *INU7                                               CLE134
+     C                     MOVE *ON       *INU8                                               CLE134
+     C                     MOVE *ON       *INLR                                               CLE134
+     C                     EXSR *PSSR                                                         CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     ENDIF                                                              CLE134
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9111EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9111EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9111EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

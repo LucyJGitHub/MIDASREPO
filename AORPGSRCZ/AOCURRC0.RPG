@@ -1,0 +1,555 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Currency codes access object')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  ACCESS OBJECTS                                        *
+     F*                                                               *
+     F*     AOCURRC0 - CURRENCY CODES UPDATE                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246888             Date 24Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 10Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW097             Date 20May99               *
+     F*                 152522             Date 14Jan99               *
+     F*                 CRT003             DATE 12Mar97               *  *
+     F*                 CSW005             DATE 05DEC96               *  *
+     F*                 E85931             DATE 10APR95               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  246888 - Save value in P@OPTN before checking if feature     *
+      *           CSC022 is on, then restore value back after.        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CSD006 - Recompiled over changed SDCURRPD.                   *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*           - Recompiled over changed SDCURRPD.                 *
+     F*  CSW097 - SWIFT 1997 Changes for FRAIRS MT34* and MT36*.      *
+     F*           Recompiled over changed SDCURRPD                    *
+     F*  152522 - EMU - Enhancement to reverse reciprocal rates.      *
+     F*           Recompiled over changed SDCURRPD.                   *
+     F*  CRT003 - RECOMPILED OVER CHANGED SDCURRPD.                   *  *
+     F*  CSW005 - RECOMPILED OVER CHANGED SDBSRTPD.                   *  *
+     F*  E85931 - Update of Spot Rate on Currencies Files.            *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDCURRL1UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F* IN  - @A6REA3 Currencies       (CYCD)
+     FSDFCTLL0UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*** Standing Data Controls    Update index
+     F*
+     FTABTG10 UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  FUNCTION OF INDICATOR                                        *
+     F*                                                               *
+     F*        01     INITIALISATION                                  *
+     F*        90     FILE ERROR                                      *
+     F*        91     OPEN ERROR                                      *
+     F*        92     CLOSE ERROR                                     *
+     F*        93     NO RECORD FOUND                                 *
+     F*        94     UPDATE ERROR                                    *
+     F*        95     OPTION ERROR                                    *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E* Description     : Copyright notice
+     E*
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E*****************************************************************
+     I*
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     ITABLETAF
+     I              RECT                            RECTA
+     I*
+     I*
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     I*
+     IPSDS       SDS
+     I*** Program Status Data Structure - gives Job and
+     I*** User ID
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I                                     *PROGRAM ##PGM
+     I*
+     ILDA       E DSLDA
+     I*** Local data area for database error details
+     I*
+     ID@FMT     E DSSDCURRPD
+     I* @A6REA3 - Currency record format data structure
+     I*
+     IP@FMT     E DSDSSDY
+     I* External Data structure to hold the outgoing record format
+     I* of the file.
+      **                                                                                      CSC022
+      ** SAR Details                                                                          CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I              LCD                             LLCD                                      CSC022
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** Short data structure for access object                                               CSC022
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I*
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@KEY   3        I:Key field
+     C           D@FMT     PARM           P@FMT            O:Format
+     C*
+     C           *LIKE     DEFN P@RTCD    W@RTCD
+     C           *LIKE     DEFN P@KEY     WCCY
+     C                     MOVE *BLANKS   SV@OPT  7                                           246888
+     C*
+     C*****************************************************************
+     C*
+     C*
+     C                     EXSR INIT
+     C*
+     C*
+     C                     SELEC
+     C*** Get keyed record
+     C           P@OPTN    WHEQ '*KEY   '
+     C                     MOVE P@KEY     WCCY
+     C           WCCY      CHAIN@A6REA3              9390
+     C           *IN93     IFEQ *ON
+     C           *IN90     OREQ *ON
+     C                     EXSR FILERR
+     C                     ENDIF
+     C*
+     C*** Update record
+     C           P@OPTN    WHEQ '*UPDATE'
+     C                     EXSR UPDSD
+     C                     EXSR UPDTAB
+     C*
+     C*** Last call - close file and terminate program :
+     C           P@OPTN    WHEQ '*CLOSE '
+     C                     CLOSESDCURRL1               92
+     C           *IN92     IFEQ *ON
+     C                     EXSR FILERR
+     C                     ENDIF
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*
+     C*
+     C                     OTHER
+     C*** Option error
+     C                     MOVE *ON       *IN95
+     C                     DUMP                                                               246888
+     C                     EXSR FILERR
+     C                     ENDSL
+     C*
+     C*
+     C*** Pass data back to caller
+     C           P@OPTN    IFNE '*CLOSE '
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+     C*
+     C*** Return to caller :
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* INIT   -  Initial processing                                  *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           ** INIT SR **
+     C*
+     C*
+     C*** Setup LDA
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C*** Reset error indicators 90 - 95
+     C                     MOVEA'000000'  *IN,90
+     C*
+      ** Save value from P@OPTN                                                               246888
+      **                                                                                      246888
+     C                     MOVE P@OPTN    SV@OPT                                              246888
+      **                                                                                      246888
+     C*** First call - open file
+     C           *IN01     IFEQ '0'
+     C                     MOVE *ON       *IN01
+     C                     OPEN SDCURRL1               91
+     C           *IN91     IFEQ *ON
+     C                     EXSR FILERR
+     C                     ENDIF
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Save value from P@OPTN                                                               246888
+      **                                                                                      246888
+     C                     MOVE P@OPTN    SV@OPT                                              246888
+      **                                                                                      246888
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY 'P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           JOB       LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C           *LOCK     IN   LDA                                                           CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     MOVEL##PGM     DBPGM                                               CSC022
+     C                     Z-ADD9         DBASE                                               CSC022
+     C                     OUT  LDA                                                           CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF
+     C*
+      ** Restore saved value of P@OPTN                                                        246888
+      **                                                                                      246888
+     C                     MOVELSV@OPT    P@OPTN                                              246888
+      **                                                                                      246888
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* File or option error - return error code:                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FILERR    BEGSR                           ** FILERR **
+     C*
+     C*
+     C                     MOVE *BLANK    P@RTCD
+     C                     SELEC
+     C*** File error
+     C           *IN90     WHEQ *ON
+     C                     MOVE '*ERROR ' P@RTCD
+     C*** Open error
+     C           *IN91     WHEQ *ON
+     C                     MOVE '*OPEN  ' P@RTCD
+     C*** Close error
+     C           *IN92     WHEQ *ON
+     C                     MOVE '*CLOSE ' P@RTCD
+     C*** No record found
+     C           *IN93     WHEQ *ON
+     C                     MOVE '*NRF   ' P@RTCD
+     C*** Update error
+     C           *IN94     WHEQ *ON
+     C                     MOVE '*UPDATE' P@RTCD
+     C*** Option error
+     C           *IN95     WHEQ *ON
+     C                     MOVE '*OPTION' P@RTCD
+     C                     ENDSL
+     C*
+     C*** Return to caller
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* UPDSD  - Update the SD Currencies Files                       *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDSD     BEGSR                           ** UPDSD    **
+     C*
+     C*
+     C*** Change Standing Data Currency File
+     C                     UPDAT@A6REA3                94
+     C           *IN94     IFEQ *ON
+     C                     EXSR FILERR
+     C                     ENDIF
+     C*
+     C*** Change Standing Data Controls
+     C*
+     C*** Get the Currency Control Record
+     C                     MOVEL'SDCURRPD'WSDFIL 10
+     C           WSDFIL    CHAIN@AHREAU              8889
+     C***   Record not found
+     C           *IN88     IFEQ *ON
+     C***   Record locked
+     C           *IN89     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDFCTLL0'DBFILE           *DB ERR. 001  *
+     C                     MOVELWSDFIL    DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** Update No. of Amends
+     C                     ADD  1         AHNOAM
+     C*
+     C*** Update the Control Record
+     C                     UPDAT@AHREAU                89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDFCTLL0'DBFILE           *DB ERR. 002  *
+     C                     MOVELWSDFIL    DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* UPDTAB - Update the TABTG files                               *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDTAB    BEGSR                           ** UPDTAB   **
+     C*
+     C*
+     C*** Retrieve record from file - TABTG10
+     C           WCCY      CHAINTABTG10              80
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'TABTG10 'DBFILE           *DB ERR. 003  *
+     C                     MOVELWCCY      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** Update Spot Rate
+     C                     Z-ADDA6LCD     LCD
+     C                     MOVE A6TYLC    CHTP
+     C                     Z-ADDA6SPRT    SPOT
+     C                     Z-ADDA6ERLC    ERLC
+     C*
+     C*** Update TABTG Record
+     C                     UPDATTABTG10F               80
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'TABTG10 'DBFILE           *DB ERR. 004  *
+     C                     MOVELWCCY      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*
+     C*** Retrieve old trailer file record
+     C           '20'      CHAINTABLETXF             83
+     C           *IN83     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'TABLETX 'DBFILE           *DB ERR. 005  *
+     C                     MOVEL'20'      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** If first access to the file then get header record
+     C           NINS      IFEQ 0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 83
+     C           *IN83     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'TABLETA 'DBFILE           *DB ERR. 006  *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** Set print indicator and update
+     C                     ADD  1         ICUR
+     C                     UPDATTABLETAF               83
+     C           *IN83     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'TABLETA 'DBFILE           *DB ERR. 007  *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C*** Update the number of amends
+     C*** on the trailer file
+     C                     ADD  1         NAMD
+     C                     UPDATTABLETXF               83
+     C           *IN83     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVEL'TABLETX 'DBFILE           *DB ERR. 008  *
+     C                     MOVEL'20'      DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C***  Check if *PSSR has already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C*
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C                     ROLBK
+     C                     ENDIF                                                              CSC022
+     C*
+     C                     MOVEL'DBERR  ' P@RTCD
+     C*
+     C                     DUMP
+     C*
+     C*
+     C                     ENDIF
+     C*
+     C***  If *PSSR already run, just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

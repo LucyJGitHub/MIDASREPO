@@ -1,0 +1,960 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate action details list - prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7533P - Corporate Action Details Audit List Prompt         *
+      *                                                               *
+      *  Function:  Prompt Program for Corporate Action Details Audit *
+      *  (I/C)      List                                              *
+      *                                                               *
+      *  Called by: FCC0201  - Standard Report Requests Program for   *
+      *                        reports with prompt programs           *
+      *                                                               *
+      *  Calls    : AOBANKR0 - Access Program for bank details        *
+      *             AOSARDR0 - Access Program for Switchable Features *
+      *             Y2CLMSC  - Program to clear message subfile       *
+      *             Y2SNMGC  - Program to send message on subfile     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No.  CEU017            Date 05Mar98               *
+      *  Prev Amend No.  CSE007  *CREATE   Date 01Dec97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     FSE7533DFCF  E                    WORKSTN
+      **  Display File
+      *
+     FSECORFL0IF  E           K        DISK         KINFSR *PSSR
+      **  Corporate Action - References
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  01    Reverse Image for Reference Field                      *
+      *  02    Reverse Image for Status Field                         *
+      *  03    Reverse Image for All Corporate Actions Field          *
+      *  04    Reverse Image for Dividend Events Field                *
+      *  05    Reverse Image for Free Allocation Field                *
+      *  06    Reverse Image for Right Issues Field                   *
+      *  07    Reverse Image for Capital Changes Field                *
+      *  08    Reverse Image for Corporate Reorganisations Field      *
+      *  09    Reverse Image for Offers Field                         *
+      *  10    Reverse Image for Exercises Field                      *
+      *  11    Reverse Image for Non-financial Events Field           *
+      *  12    Reverse Image for Name Changes Field                   *
+      *  13    Reverse Image for Currency Changes                     *   CEU017
+      *  14    Corporate Actions (CSE007) is ON                       *
+      *  15    Securities Redenomination (CEU017) is ON               *   CEU017
+      *  17    Reverse Image for Status Field                         *
+      *  18    If on move CO00005 else move CO00007                   *
+      *  70    LOKUP indicator                                        *
+      *  80    CHAIN indicator                                        *
+      *  KC    F3 pressed = Exit                                      *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - Initial processing                                 *
+      *  SRSET0 - Reset indicators                                   *
+      *  SRVAL  - SR to validate screen fields                       *
+      *  SRVREF - SR to validate Corporate Action Reference          *
+      *  SRALL  - SR to check if other fields are blank              *
+      *  SRCHK  - SR to check if error occured                       *
+      *  ZASNMS - SR to send message on queue                        *
+      *  SRCHKY - SR to check if there are more than one field set   *
+      *           to 'Y'                                             *
+      *  *PSSR  - Error routine                                      *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     E                    AREF        6  1
+      **  Reference numbers
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      /EJECT
+      ****************************************************************
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     IWPARM       DS                            100
+     I                                        1   6 SCARE
+     I                                        7   7 SCAST
+     I                                        8   8 SACOA
+     I                                        9   9 SDIEV
+     I                                       10  10 SFRAL
+     I                                       11  11 SRTIS
+     I                                       12  12 SCACH
+     I                                       13  13 SCORE
+     I                                       14  14 SOFFR
+     I                                       15  15 SEXER
+     I                                       16  16 SNFEV
+     I                                       17  17 SNCHA
+     I                                       18  18 SCCHA                 CEU017
+     I/COPY WNCPYSRC,SE7533PI01
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable features
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRINIT - Program Initialisation                    *
+      *            SRSET0 - Initialize indicators                     *
+      *            SRVAL  - Validate all fields                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *ENTRY    PLIST                           ** Main **
+     C                     PARM           WRSEQ   5
+     C                     PARM           WRLEV   1
+     C                     PARM           WENT    3
+     C                     PARM           WPARM
+     C                     PARM           WACT    1
+     C                     PARM           WCMD    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      WCPY   80
+      *
+      **  Perform Intialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRSET0
+      *
+     C                     EXSR SRDFT
+      *
+     C           *INKC     DOWEQ'0'
+     C           WVALID    ANDEQ0
+      *
+      ** Read Input Screen
+      *
+     C                     Z-ADD1         WVALID  10
+     C                     WRITESE7533C0
+     C                     EXFMTSE7533F1
+      *
+     C                     EXSR SRSET0
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       WCMD
+     C                     MOVE ' '       SCARE
+     C                     MOVE ' '       SCAST
+     C                     MOVE ' '       SACOA
+     C                     MOVE ' '       SCCHA                           CEU017
+     C                     MOVE ' '       SDIEV
+     C                     MOVE ' '       SFRAL
+     C                     MOVE ' '       SRTIS
+     C                     MOVE ' '       SCACH
+     C                     MOVE ' '       SCORE
+     C                     MOVE ' '       SOFFR
+     C                     MOVE ' '       SEXER
+     C                     MOVE ' '       SNFEV
+     C                     MOVE ' '       SNCHA
+     C/COPY WNCPYSRC,SE7533PC01
+     C                     GOTO END
+     C                     ENDIF
+      *
+     C                     EXSR SRVAL
+      *
+     C                     ENDDO
+      *
+     C           END       TAG
+      *
+     C           SCARE     IFNE *BLANKS
+     C                     MOVE WSCARE    SCARE
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * CALLS      *PSSR  - Database Error Processing                 *
+      *            AOBANKR0 - Access Program for Bank Details         *
+      *            AOSARDR0 - Access Program for Switchable Features  *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE7533P 'DBPGM
+     C                     OUT  LDA
+      *
+      ** Access the Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001*
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' WRTCD
+     C                     PARM '*VERIFY' WOPTN
+     C                     PARM 'CSE007'  WSARD  10
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN15
+     C                     MOVE 'N'       CSE007  1
+     C                     ELSE
+     C                     MOVE 'Y'       CSE007
+     C                     MOVE '0'       *IN15
+     C                     ENDIF
+      *                                                                   CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' WRTCD                           CEU017
+     C                     PARM '*VERIFY' WOPTN                           CEU017
+     C                     PARM 'CEU017'  WSARD  10                       CEU017
+     C           SCSARD    PARM SCSARD    DSSDY                           CEU017
+      *                                                                   CEU017
+     C           WRTCD     IFNE *BLANK                                    CEU017
+     C                     MOVE '1'       *IN14                           CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     ELSE                                           CEU017
+     C                     MOVE '0'       *IN14                           CEU017
+     C                     MOVE 'Y'       CEU017                          CEU017
+     C                     ENDIF                                          CEU017
+     C/COPY WNCPYSRC,SE7533PC02
+      *
+     C                     MOVE BJMRDT    SMRDT
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10
+     C                     MOVELSPGM      PGMNAM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSET0 - SR to initialse indicators to '0'         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSET0    BEGSR                           ** SRSET0 **
+      *
+     C                     MOVEA'00000000'*IN,01
+     C                     MOVEA'00000'   *IN,09
+     C/COPY WNCPYSRC,SE7533PC03
+     C                     MOVEA'000'     *IN,17
+     C/COPY WNCPYSRC,SE7533PC04
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVAL  - Validate All Fields                       *
+      *                                                               *
+      * CALLS      SRCHKY - Check if there is more than one field set *
+      *                     to 'Y'                                    *
+      *            Y2CLMSC- Clear Subfile                             *
+      *            ZASNMS - Adds Error Messages to Message Subfile    *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR                           ** SRVAL **
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Validate Corporate Action Reference
+      *
+     C           SCARE     IFNE *BLANKS
+     C                     EXSR SRVREF
+     C                     GOTO ENDVAL
+     C                     ENDIF
+      *
+      ** Validate Corporate Action Status
+      *
+     C           SCAST     IFNE 'I'
+     C           SCAST     ANDNE'L'
+     C           SCAST     ANDNE'S'
+     C           SCAST     ANDNE'X'
+     C           SCAST     ANDNE'C'
+     C           SCAST     ANDNE'R'
+     C           SCAST     ANDNE*BLANKS
+     C                     MOVEL'CO00185' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+      *
+     C                     EXSR SRCAST
+      *
+     C           SACOA     IFEQ ' '
+     C                     MOVE 'N'       SACOA
+     C                     ENDIF
+      *                                                                   CEU017
+     C           SCCHA     IFEQ ' '                                       CEU017
+     C                     MOVE 'N'       SCCHA                           CEU017
+     C                     ENDIF                                          CEU017
+      *
+     C           SDIEV     IFEQ ' '
+     C                     MOVE 'N'       SDIEV
+     C                     ENDIF
+      *
+     C           SFRAL     IFEQ ' '
+     C                     MOVE 'N'       SFRAL
+     C                     ENDIF
+      *
+     C           SRTIS     IFEQ ' '
+     C                     MOVE 'N'       SRTIS
+     C                     ENDIF
+      *
+     C           SCACH     IFEQ ' '
+     C                     MOVE 'N'       SCACH
+     C                     ENDIF
+      *
+     C           SCORE     IFEQ ' '
+     C                     MOVE 'N'       SCORE
+     C                     ENDIF
+      *
+     C           SOFFR     IFEQ ' '
+     C                     MOVE 'N'       SOFFR
+     C                     ENDIF
+      *
+     C           SEXER     IFEQ ' '
+     C                     MOVE 'N'       SEXER
+     C                     ENDIF
+      *
+     C           SNFEV     IFEQ ' '
+     C                     MOVE 'N'       SNFEV
+     C                     ENDIF
+      *
+     C           SNCHA     IFEQ ' '
+     C                     MOVE 'N'       SNCHA
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7533PC05
+      *
+      ** Validate All Corporate Actions
+      *
+     C           SACOA     IFNE 'Y'
+     C           SACOA     ANDNE'N'
+     C                     MOVE '1'       *IN03
+     C                     ENDIF
+      *
+     C           *IN15     IFEQ '0'
+      *
+      ** Validate Dividend Events
+      *
+     C           SDIEV     IFNE 'Y'
+     C           SDIEV     ANDNE'N'
+     C                     MOVE '1'       *IN04
+     C                     ENDIF
+      *
+      ** Validate Free Allocation
+      *
+     C           SFRAL     IFNE 'Y'
+     C           SFRAL     ANDNE'N'
+     C                     MOVE '1'       *IN05
+     C                     ENDIF
+      *
+      ** Validate Rights Issues
+      *
+     C           SRTIS     IFNE 'Y'
+     C           SRTIS     ANDNE'N'
+     C                     MOVE '1'       *IN06
+     C                     ENDIF
+      *
+      ** Validate Capital Change
+      *
+     C           SCACH     IFNE 'Y'
+     C           SCACH     ANDNE'N'
+     C                     MOVE '1'       *IN07
+     C                     ENDIF
+      *
+      ** Validate Corporate Reorganisation
+      *
+     C           SCORE     IFNE 'Y'
+     C           SCORE     ANDNE'N'
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+      ** Validate Offers
+      *
+     C           SOFFR     IFNE 'Y'
+     C           SOFFR     ANDNE'N'
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+      *
+      ** Validate Exercises
+      *
+     C           SEXER     IFNE 'Y'
+     C           SEXER     ANDNE'N'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+      ** Validate Non Financial Events
+      *
+     C           SNFEV     IFNE 'Y'
+     C           SNFEV     ANDNE'N'
+     C                     MOVE '1'       *IN11
+     C                     ENDIF
+      *
+      ** Validate Name Changes
+      *
+     C           SNCHA     IFNE 'Y'
+     C           SNCHA     ANDNE'N'
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7533PC06
+      *
+     C                     ENDIF
+      *
+     C           *IN14     IFEQ '0'                                       CEU017
+      *                                                                   CEU017
+     C           SCCHA     IFNE 'Y'                                       CEU017
+     C           SCCHA     ANDNE'N'                                       CEU017
+     C                     MOVE '1'       *IN13                           CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+     C                     ENDIF                                          CEU017
+      *
+     C           *IN19     IFEQ '0'
+     C                     EXSR SRCHK
+     C                     EXSR SRCHKY
+     C                     ENDIF
+      *
+     C           ENDVAL    TAG
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVREF - Validate Corporate Action Reference       *
+      *                                                               *
+      * CALLS      SRALL  - SR to check if other fields are blank     *
+      *            ZASNMS - Adds Error Messages to Message Subfile    *
+      *                                                               *
+      * CALLED BY  SRVAL  - SR to validate all fields                 *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVREF    BEGSR                           ** SRVREF **
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SCARE     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'CO00182' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     GOTO ENDREF
+      *
+     C                     ELSE
+     C                     MOVE ZFIELD    WSCARE  6
+     C                     ENDIF
+      *
+     C           WSCARE    IFEQ '000000'
+     C                     MOVEL'CO00183' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     GOTO ENDREF
+      *
+     C                     ELSE
+      *
+     C                     MOVEASCARE     AREF
+      *
+      ** Check if Reference Number has a decimal point
+      *
+     C           '.'       LOKUPAREF                     70
+      *
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'CO00182' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     GOTO ENDREF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check Reference Number if Existing
+      *
+     C           WSCARE    CHAINSECORFD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'CO00181' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     GOTO ENDREF
+     C                     ENDIF
+      *
+     C           MARECI    IFNE 'D'
+     C                     MOVEL'CO00259' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     GOTO ENDREF
+     C                     ENDIF
+      *
+      ** Check other fields if not blank then send error message
+      *
+     C                     EXSR SRALL
+      *
+     C           ENDREF    TAG
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRALL  - SR to check if other fiedls are blank     *
+      *                                                               *
+      * CALLED BY  SRVREF - SR to validate Corporate Action Reference *
+      *                                                               *
+      * CALLS      SRCHK  - SR to check if error occured              *
+      *                                                               *
+      * FLDS USED                                                     *
+      *                                                               *
+      *****************************************************************
+     C           SRALL     BEGSR                           ** SRALL **
+      *
+     C           SCAST     IFNE *BLANKS
+     C                     MOVE '1'       *IN17
+     C                     ENDIF
+      *
+     C           SACOA     IFNE 'N'
+     C                     MOVE '1'       *IN03
+     C                     ENDIF
+      *
+     C           *IN15     IFEQ '0'
+      *
+     C           SDIEV     IFNE 'N'
+     C                     MOVE '1'       *IN04
+     C                     ENDIF
+      *
+     C           SFRAL     IFNE 'N'
+     C                     MOVE '1'       *IN05
+     C                     ENDIF
+      *
+     C           SRTIS     IFNE 'N'
+     C                     MOVE '1'       *IN06
+     C                     ENDIF
+      *
+     C           SCACH     IFNE 'N'
+     C                     MOVE '1'       *IN07
+     C                     ENDIF
+      *
+     C           SCORE     IFNE 'N'
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+     C           SOFFR     IFNE 'N'
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+      *
+     C           SEXER     IFNE 'N'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+     C           SNFEV     IFNE 'N'
+     C                     MOVE '1'       *IN11
+     C                     ENDIF
+      *
+     C           SNCHA     IFNE 'N'
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7533PC07
+     C                     ENDIF
+      *                                                                   CEU017
+     C           *IN14     IFEQ '0'                                       CEU017
+      *                                                                   CEU017
+     C           SCCHA     IFNE 'N'                                       CEU017
+     C                     MOVE '1'       *IN13                           CEU017
+     C                     ENDIF                                          CEU017
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN18
+     C                     EXSR SRCHK
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCHK  - Check if error occured                    *
+      *                                                               *
+      * CALLS      ZASNMS - Send messages on queue                    *
+      *                                                               *
+      * CALLED BY  SRVREF - Validate Corporate Action Reference       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCHK     BEGSR                           ** SRCHK **
+      *
+      ** Check if error occured, then send error message
+      *
+     C           *IN03     IFEQ '1'
+     C           *IN04     OREQ '1'
+     C           *IN05     OREQ '1'
+     C           *IN06     OREQ '1'
+     C           *IN07     OREQ '1'
+     C           *IN09     OREQ '1'
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C           *IN13     OREQ '1'                                       CEU017
+     C/COPY WNCPYSRC,SE7533PC08
+     C           *IN17     OREQ '1'
+      *
+     C           *IN18     IFEQ '1'
+     C                     MOVEL'CO00184' ZAMSID
+     C                     ELSE
+     C                     MOVEL'CO00186' ZAMSID
+     C                     ENDIF
+      *
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+     C           *IN18     IFEQ '1'
+     C           *IN17     ANDEQ'1'
+     C                     MOVEL'CO00295' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - SR to send message on queue               *
+      *                                                               *
+      * CALLS      Y2SNMGC- Program to send messages on queue         *
+      *                                                               *
+      * CALLED BY  SRVREF - Validate Corporate Action Reference       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELSPGM      ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C                     MOVE 0         WVALID
+      *
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCHKY - Check if there is more than one field set *
+      *                     to 'Y'                                    *
+      *                                                               *
+      * CALLS      ZASNMS - Send messages on queue                    *
+      *                                                               *
+      * CALLED BY  SRVAL  - Validate all fields                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCHKY    BEGSR                           ** SRCHKY **
+      *
+     C                     Z-ADD0         WYCTR   20
+      *
+     C           SACOA     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SDIEV     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SFRAL     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SRTIS     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SCACH     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SCORE     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SOFFR     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SEXER     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SNFEV     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *
+     C           SNCHA     IFEQ 'Y'
+     C                     ADD  1         WYCTR
+     C                     ENDIF
+      *                                                                   CEU017
+     C           SCCHA     IFEQ 'Y'                                       CEU017
+     C                     ADD  1         WYCTR                           CEU017
+     C                     ENDIF                                          CEU017
+     C/COPY WNCPYSRC,SE7533PC09
+      *
+     C           WYCTR     IFGT 1
+      *
+     C           SACOA     IFEQ 'Y'
+     C                     MOVE '1'       *IN03
+     C                     ENDIF
+      *
+     C           SDIEV     IFEQ 'Y'
+     C                     MOVE '1'       *IN04
+     C                     ENDIF
+      *
+     C           SFRAL     IFEQ 'Y'
+     C                     MOVE '1'       *IN05
+     C                     ENDIF
+      *
+     C           SRTIS     IFEQ 'Y'
+     C                     MOVE '1'       *IN06
+     C                     ENDIF
+      *
+     C           SCACH     IFEQ 'Y'
+     C                     MOVE '1'       *IN07
+     C                     ENDIF
+      *
+     C           SCORE     IFEQ 'Y'
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+     C           SOFFR     IFEQ 'Y'
+     C                     MOVE '1'       *IN09
+     C                     ENDIF
+      *
+     C           SEXER     IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+     C           SNFEV     IFEQ 'Y'
+     C                     MOVE '1'       *IN11
+     C                     ENDIF
+      *
+     C           SNCHA     IFEQ 'Y'
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+      *                                                                   CEU017
+     C           SCCHA     IFEQ 'Y'                                       CEU017
+     C                     MOVE '1'       *IN13                           CEU017
+     C                     ENDIF                                          CEU017
+     C/COPY WNCPYSRC,SE7533PC10
+      *
+     C                     MOVE 0         WVALID
+     C                     MOVEL'CO00187' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRDFT  - SR to default fields to 'N'               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRDFT     BEGSR                           ** SRDFT  **
+      *
+     C                     MOVE 'N'       SACOA
+     C                     MOVE 'N'       SCCHA                           CEU017
+     C                     MOVE 'N'       SDIEV
+     C                     MOVE 'N'       SFRAL
+     C                     MOVE 'N'       SRTIS
+     C                     MOVE 'N'       SCACH
+     C                     MOVE 'N'       SCORE
+     C                     MOVE 'N'       SOFFR
+     C                     MOVE 'N'       SEXER
+     C                     MOVE 'N'       SNFEV
+     C                     MOVE 'N'       SNCHA
+     C/COPY WNCPYSRC,SE7533PC11
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCAST - Check if at least one field is 'Y'        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRVAL  - Validate all fields                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCAST    BEGSR                           ** SRCAST **
+      *
+     C           SACOA     IFEQ 'N'
+     C           SDIEV     ANDEQ'N'
+     C           SFRAL     ANDEQ'N'
+     C           SRTIS     ANDEQ'N'
+     C           SCACH     ANDEQ'N'
+     C           SCORE     ANDEQ'N'
+     C           SOFFR     ANDEQ'N'
+     C           SEXER     ANDEQ'N'
+     C           SNFEV     ANDEQ'N'
+     C           SNCHA     ANDEQ'N'
+     C           SCCHA     ANDEQ'N'                                       CEU017
+     C/COPY WNCPYSRC,SE7533PC12
+      *
+     C                     MOVEL'CO00297' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN03
+     C                     MOVE '1'       *IN04
+     C                     MOVE '1'       *IN05
+     C                     MOVE '1'       *IN06
+     C                     MOVE '1'       *IN07
+     C                     MOVE '1'       *IN08
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13                           CEU017
+     C/COPY WNCPYSRC,SE7533PC13
+     C                     MOVE '1'       *IN19
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Exception Error Routine.          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRINIT - Initial Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** Dump and return to the calling program
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     MOVE 'E'       WCMD
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

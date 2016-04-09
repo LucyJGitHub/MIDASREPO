@@ -1,0 +1,1300 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Profitability Format File Maintenance')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER410 - Profitability Format File Maintenance               *
+     F*                                                               *
+     F*  Function:  This program allows the input of profitability    *
+     F*             reporting parameters by Business Group or         *
+     F*             by Account Code during Input Cycle.               *
+     F*                                                               *
+     F*  Called By: LERC41  - Profitability Format File Maintenance   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+     F*                 062780             DATE 18OCT94               *
+     F*                 ALIEN1             DATE 08JUL92               *
+     F*                 Snnnnn             DATE ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  062780 - ALLOW INPUT OF 'N' FOR ACCOUNT CODE DETAILS REQUEST *
+     F*           FIELD.                                              *
+     F*  ALIEN1 - Increase number of A/C codes from 5 to 32.          *
+     F*           Add flag for option to report Other Fees and        *
+     F*           Charges by account or consolidated.                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     FPEFMTC  UF  E                    DISK                      A
+     F* Profitability Format control
+     F*
+     FPEFMTD  UF  E           K        DISK                      A
+     F* Profitability Format Detail
+     F*
+     FSDLOANL1IF  E           K        DISK
+     F* Loan types/Sub-types
+     F*
+     FLER410DFCF  E                    WORKSTN
+     F* Display File
+     F*
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   01  - First cycle indicator                                   *
+     F*   02  - First cycle indicator                                   *
+     F*                                                                 * ALIEN1
+     F*   03 to 18  - Error in A/C code validation (#6 to #21 respect.) * ALIEN1
+     F*                                                                 *
+     F****15**-*Screen*validation*error********************************** ALIEN1
+     F*                                                                 *
+     F*   19  - Help key pressed                                        *
+     F*                                                                 *
+     F*   27  - Action not I, A, D, or E.                               *
+     F*                                                                 *
+     F*   28  - Error indicator screen 2                                *
+     F*   29  - Error indicator screen 3                                *
+     F*                                                                 *
+     F*   30  - Error in Account Code validation                        *
+     F*                                                                 *
+     F*   50  - Action D or E.                                          *
+     F*                                                                 *
+     F*   60  - Business Group not numeric.                             *
+     F*                                                                 *
+     F*   61  - CHAIN fail PEFMTD.                                      *
+     F*   62  - Error in CHAIN to AOLOANR0.                             *
+     F*                                                                 *
+     F*   64  - Generic Loan-type/sub-type requested.                   *
+     F*   65  - Generic Loan-type requested.                            *
+     F*                                                                 *
+     F*   67  - Errors in screen 2 validation.                          *
+     F*   68  - Errors in screen 2 validation.                          *
+     F*                                                                 * ALIEN1
+     F*   69  - Error in Report option validation.                      * ALIEN1
+     F*   70 to 80  - Error in A/C code validation (#22 to #32 respec.) * ALIEN1
+     F*                                                                 *
+     F*   81  - Action D.                                               *
+     F*                                                                 *
+     F*   82  - Enables F12.                                            *
+     F*                                                                 *
+     F*   89  - CHAIN fail PEFMTC.                                      *
+     F*                                                                 *
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  INIT   - Initialization subroutine                             *
+     F*  B0000  - Blank out initial screen                              *
+     F*  C0000  - Display screen 1                                      *
+     F*  D0000  - Validate screen 1                                     *
+     F*  E0000  - Setup screen 2 or 3                                   *
+     F*  F0000  - Display screen 2 or 3                                 *
+     F*  G0000  - Validate screen 2 or 3                                *
+     F*  H0000  - Update database                                       *
+     F*  E1000  - Setup screen 2                                        *
+     F*  E2000  - Setup screen 2                                        *
+     F*  G2200  - Check for duplication/overlap                         *
+     F*  G1000  - Validate Account Code details                         *
+     F*  G2000  - Validate screen 3                                     *
+     F*  G2100  - Check loan-type/sub-type is on file                   *
+     F*  *PSSR  - Error handling                                        *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E********************AR1         5  4                                ALIEN1
+     E********************AR2         5  4                                ALIEN1
+     E**********          AR1        32  4                                             ALIEN1 CGL029
+     E**********          AR2        32  4                                             ALIEN1 CGL029
+     E                    AR1        32 10                                                    CGL029
+     E                    AR2        32 10                                                    CGL029
+     E                    ARE        32  1                                ALIEN1
+     E********************AR3        15  4                                                    CLE042
+     E********************AR4        15  4                                                    CLE042
+     E                    AR3        15  8                                                    CLE042
+     E                    AR4        15  8                                                    CLE042
+     E                    AR5        15  1
+     E********************AR8         4  1               Loan Type/Sub Type                   CLE042
+     E********************ARA         4  1                                                    CLE042
+     E                    AR8         8  1               Loan Type/Sub Type/Class             CLE042
+     E                    ARA         8  1                                                    CLE042
+     E                    CPY@    1   1 80
+      /EJECT
+      *
+     I            DS
+      *  Screen Charges/Fees A/C Codes
+     I****************************************1  20 AR1                   ALIEN1
+     I**********                              1 128 AR1                                ALIEN1 CGL029
+     I**********                              1   4 SCACD1                                    CGL029
+     I**********                              5   8 SCACD2                                    CGL029
+     I**********                              9  12 SCACD3                                    CGL029
+     I**********                             13  16 SCACD4                                    CGL029
+     I**********                             17  20 SCACD5                                    CGL029
+     I**********                             21  24 SCACD6                             ALIEN1 CGL029
+     I**********                             25  28 SCACD7                             ALIEN1 CGL029
+     I**********                             29  32 SCACD8                             ALIEN1 CGL029
+     I**********                             33  36 SCACD9                             ALIEN1 CGL029
+     I**********                             37  40 SCAC10                             ALIEN1 CGL029
+     I**********                             41  44 SCAC11                             ALIEN1 CGL029
+     I**********                             45  48 SCAC12                             ALIEN1 CGL029
+     I**********                             49  52 SCAC13                             ALIEN1 CGL029
+     I**********                             53  56 SCAC14                             ALIEN1 CGL029
+     I**********                             57  60 SCAC15                             ALIEN1 CGL029
+     I**********                             61  64 SCAC16                             ALIEN1 CGL029
+     I**********                             65  68 SCAC17                             ALIEN1 CGL029
+     I**********                             69  72 SCAC18                             ALIEN1 CGL029
+     I**********                             73  76 SCAC19                             ALIEN1 CGL029
+     I**********                             77  80 SCAC20                             ALIEN1 CGL029
+     I**********                             81  84 SCAC21                             ALIEN1 CGL029
+     I**********                             85  88 SCAC22                             ALIEN1 CGL029
+     I**********                             89  92 SCAC23                             ALIEN1 CGL029
+     I**********                             93  96 SCAC24                             ALIEN1 CGL029
+     I**********                             97 100 SCAC25                             ALIEN1 CGL029
+     I**********                            101 104 SCAC26                             ALIEN1 CGL029
+     I**********                            105 108 SCAC27                             ALIEN1 CGL029
+     I**********                            109 112 SCAC28                             ALIEN1 CGL029
+     I**********                            113 116 SCAC29                             ALIEN1 CGL029
+     I**********                            117 120 SCAC30                             ALIEN1 CGL029
+     I**********                            121 124 SCAC31                             ALIEN1 CGL029
+     I**********                            125 128 SCAC32                             ALIEN1 CGL029
+     I                                        1 320 AR1                                       CGL029
+     I                                        1  10 SCACD1                                    CGL029
+     I                                       11  20 SCACD2                                    CGL029
+     I                                       21  30 SCACD3                                    CGL029
+     I                                       31  40 SCACD4                                    CGL029
+     I                                       41  50 SCACD5                                    CGL029
+     I                                       51  60 SCACD6                                    CGL029
+     I                                       61  70 SCACD7                                    CGL029
+     I                                       71  80 SCACD8                                    CGL029
+     I                                       81  90 SCACD9                                    CGL029
+     I                                       91 100 SCAC10                                    CGL029
+     I                                      101 110 SCAC11                                    CGL029
+     I                                      111 120 SCAC12                                    CGL029
+     I                                      121 130 SCAC13                                    CGL029
+     I                                      131 140 SCAC14                                    CGL029
+     I                                      141 150 SCAC15                                    CGL029
+     I                                      151 160 SCAC16                                    CGL029
+     I                                      161 170 SCAC17                                    CGL029
+     I                                      171 180 SCAC18                                    CGL029
+     I                                      181 190 SCAC19                                    CGL029
+     I                                      191 200 SCAC20                                    CGL029
+     I                                      201 210 SCAC21                                    CGL029
+     I                                      211 220 SCAC22                                    CGL029
+     I                                      221 230 SCAC23                                    CGL029
+     I                                      231 240 SCAC24                                    CGL029
+     I                                      241 250 SCAC25                                    CGL029
+     I                                      251 260 SCAC26                                    CGL029
+     I                                      261 270 SCAC27                                    CGL029
+     I                                      271 280 SCAC28                                    CGL029
+     I                                      281 290 SCAC29                                    CGL029
+     I                                      291 300 SCAC30                                    CGL029
+     I                                      301 310 SCAC31                                    CGL029
+     I                                      311 320 SCAC32                                    CGL029
+      *
+     I            DS
+      *  File Charges/Fees A/C Codes
+     I****************************************1  20 AR2                   ALIEN1
+     I**********                              1 128 AR2                                ALIEN1 CGL029
+     I**********                              1   40PCACD1                                    CGL029
+     I**********                              5   80PCACD2                                    CGL029
+     I**********                              9  120PCACD3                                    CGL029
+     I**********                             13  160PCACD4                                    CGL029
+     I**********                             17  200PCACD5                                    CGL029
+     I**********                             21  240PCACD6                             ALIEN1 CGL029
+     I**********                             25  280PCACD7                             ALIEN1 CGL029
+     I**********                             29  320PCACD8                             ALIEN1 CGL029
+     I**********                             33  360PCACD9                             ALIEN1 CGL029
+     I**********                             37  400PCAC10                             ALIEN1 CGL029
+     I**********                             41  440PCAC11                             ALIEN1 CGL029
+     I**********                             45  480PCAC12                             ALIEN1 CGL029
+     I**********                             49  520PCAC13                             ALIEN1 CGL029
+     I**********                             53  560PCAC14                             ALIEN1 CGL029
+     I**********                             57  600PCAC15                             ALIEN1 CGL029
+     I**********                             61  640PCAC16                             ALIEN1 CGL029
+     I**********                             65  680PCAC17                             ALIEN1 CGL029
+     I**********                             69  720PCAC18                             ALIEN1 CGL029
+     I**********                             73  760PCAC19                             ALIEN1 CGL029
+     I**********                             77  800PCAC20                             ALIEN1 CGL029
+     I**********                             81  840PCAC21                             ALIEN1 CGL029
+     I**********                             85  880PCAC22                             ALIEN1 CGL029
+     I**********                             89  920PCAC23                             ALIEN1 CGL029
+     I**********                             93  960PCAC24                             ALIEN1 CGL029
+     I**********                             97 1000PCAC25                             ALIEN1 CGL029
+     I**********                            101 1040PCAC26                             ALIEN1 CGL029
+     I**********                            105 1080PCAC27                             ALIEN1 CGL029
+     I**********                            109 1120PCAC28                             ALIEN1 CGL029
+     I**********                            113 1160PCAC29                             ALIEN1 CGL029
+     I**********                            117 1200PCAC30                             ALIEN1 CGL029
+     I**********                            121 1240PCAC31                             ALIEN1 CGL029
+     I**********                            125 1280PCAC32                             ALIEN1 CGL029
+     I                                        1 320 AR2                                       CGL029
+     I                                        1  100PCACD1                                    CGL029
+     I                                       11  200PCACD2                                    CGL029
+     I                                       21  300PCACD3                                    CGL029
+     I                                       31  400PCACD4                                    CGL029
+     I                                       41  500PCACD5                                    CGL029
+     I                                       51  600PCACD6                                    CGL029
+     I                                       61  700PCACD7                                    CGL029
+     I                                       71  800PCACD8                                    CGL029
+     I                                       81  900PCACD9                                    CGL029
+     I                                       91 1000PCAC10                                    CGL029
+     I                                      101 1100PCAC11                                    CGL029
+     I                                      111 1200PCAC12                                    CGL029
+     I                                      121 1300PCAC13                                    CGL029
+     I                                      131 1400PCAC14                                    CGL029
+     I                                      141 1500PCAC15                                    CGL029
+     I                                      151 1600PCAC16                                    CGL029
+     I                                      161 1700PCAC17                                    CGL029
+     I                                      171 1800PCAC18                                    CGL029
+     I                                      181 1900PCAC19                                    CGL029
+     I                                      191 2000PCAC20                                    CGL029
+     I                                      201 2100PCAC21                                    CGL029
+     I                                      211 2200PCAC22                                    CGL029
+     I                                      221 2300PCAC23                                    CGL029
+     I                                      231 2400PCAC24                                    CGL029
+     I                                      241 2500PCAC25                                    CGL029
+     I                                      251 2600PCAC26                                    CGL029
+     I                                      261 2700PCAC27                                    CGL029
+     I                                      271 2800PCAC28                                    CGL029
+     I                                      281 2900PCAC29                                    CGL029
+     I                                      291 3000PCAC30                                    CGL029
+     I                                      301 3100PCAC31                                    CGL029
+     I                                      311 3200PCAC32                                    CGL029
+      *                                                                   ALIEN1
+     I            DS                                                      ALIEN1
+      *                                                                   ALIEN1
+      ** Error indicators for Charges/Fees A/C Codes                      ALIEN1
+      *                                                                   ALIEN1
+     I                                        1  32 ACERRI                ALIEN1
+     I                                        1   5 ERRIN5                ALIEN1
+     I                                        6  21 ERRI16                ALIEN1
+     I                                       22  32 ERRI11                ALIEN1
+      *
+     I            DS
+      * Screen Loan Type/Sub-Types
+     I                                        1 120 AR3                                       CLE042
+     I                                        1   8 SDLS01                                    CLE042
+     I                                        9  16 SDLS02                                    CLE042
+     I                                       17  24 SDLS03                                    CLE042
+     I                                       25  32 SDLS04                                    CLE042
+     I                                       33  40 SDLS05                                    CLE042
+     I                                       41  48 SDLS06                                    CLE042
+     I                                       49  56 SDLS07                                    CLE042
+     I                                       57  64 SDLS08                                    CLE042
+     I                                       65  72 SDLS09                                    CLE042
+     I                                       73  80 SDLS10                                    CLE042
+     I                                       81  88 SDLS11                                    CLE042
+     I                                       89  96 SDLS12                                    CLE042
+     I                                       97 104 SDLS13                                    CLE042
+     I                                      105 112 SDLS14                                    CLE042
+     I                                      113 120 SDLS15                                    CLE042
+     I*************************************** 1  60 AR3                                       CLE042
+     I*************************************** 1   4 SDLS01                                    CLE042
+     I*************************************** 5   8 SDLS02                                    CLE042
+     I*************************************** 9  12 SDLS03                                    CLE042
+     I***************************************13  16 SDLS04                                    CLE042
+     I***************************************17  20 SDLS05                                    CLE042
+     I***************************************21  24 SDLS06                                    CLE042
+     I***************************************25  28 SDLS07                                    CLE042
+     I***************************************29  32 SDLS08                                    CLE042
+     I***************************************33  36 SDLS09                                    CLE042
+     I***************************************37  40 SDLS10                                    CLE042
+     I***************************************41  44 SDLS11                                    CLE042
+     I***************************************45  48 SDLS12                                    CLE042
+     I***************************************49  52 SDLS13                                    CLE042
+     I***************************************53  56 SDLS14                                    CLE042
+     I***************************************57  60 SDLS15                                    CLE042
+      *
+     I            DS
+      * File loan Type/Sub-Types
+     I                                        1 120 AR4                                       CLE042
+     I                                        1   8 PDLS01                                    CLE042
+     I                                        9  16 PDLS02                                    CLE042
+     I                                       17  24 PDLS03                                    CLE042
+     I                                       25  32 PDLS04                                    CLE042
+     I                                       33  40 PDLS05                                    CLE042
+     I                                       41  48 PDLS06                                    CLE042
+     I                                       49  56 PDLS07                                    CLE042
+     I                                       57  64 PDLS08                                    CLE042
+     I                                       65  72 PDLS09                                    CLE042
+     I                                       73  80 PDLS10                                    CLE042
+     I                                       81  88 PDLS11                                    CLE042
+     I                                       89  96 PDLS12                                    CLE042
+     I                                       97 104 PDLS13                                    CLE042
+     I                                      105 112 PDLS14                                    CLE042
+     I                                      113 120 PDLS15                                    CLE042
+     I*************************************** 1  60 AR4                                       CLE042
+     I*************************************** 1   4 PDLS01                                    CLE042
+     I*************************************** 5   8 PDLS02                                    CLE042
+     I*************************************** 9  12 PDLS03                                    CLE042
+     I***************************************13  16 PDLS04                                    CLE042
+     I***************************************17  20 PDLS05                                    CLE042
+     I***************************************21  24 PDLS06                                    CLE042
+     I***************************************25  28 PDLS07                                    CLE042
+     I***************************************29  32 PDLS08                                    CLE042
+     I***************************************33  36 PDLS09                                    CLE042
+     I***************************************37  40 PDLS10                                    CLE042
+     I***************************************41  44 PDLS11                                    CLE042
+     I***************************************45  48 PDLS12                                    CLE042
+     I***************************************49  52 PDLS13                                    CLE042
+     I***************************************53  56 PDLS14                                    CLE042
+     I***************************************57  60 PDLS15                                    CLE042
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+0393 I*
+     ISDACOD    E DSSDACODPD
+     I** ACCOUNT CODE DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     C/EJECT
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           AUDR    1
+      *
+     C           PLIST1    PLIST
+     C                     PARM           PARM1   8
+      *
+     C           KEY001    KLIST
+     C                     KFLD           AYLNTY
+     C                     KFLD           AYLNST
+     C                     KFLD           AYLNCL                                              CLE042
+      *
+     C                     EXSR INIT
+      *
+     C                     SETON                     0102
+      *
+      ** Exit program if F3 pressed.
+     C           *INKC     DOWEQ'0'
+      *
+      ** Re-display initial screen if F12 pressed.
+     C           *INKL     DOWEQ'1'
+     C           *IN01     OREQ '1'
+      *
+     C                     EXSR B0000
+      *
+      ** Re-display initial screen if error present.
+     C           ERRIND    DOWNE'0000'
+     C           *IN01     OREQ '1'
+     C           *IN19     OREQ '1'
+      *
+     C                     EXSR C0000
+      *
+     C           *INKC     IFEQ '1'
+     C                     SETOF                     0102
+     C                     MOVE '0000'    ERRIND
+     C                     ELSE
+      *
+     C           *IN19     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR D0000
+     C                     SETOF                     01
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     EXSR E0000
+      *
+      ** Re-display second screen if error present.
+     C***********ERRIN5****DOWNE*ZEROS                                    ALIEN1
+     C           ACERRI    DOWNE*ZEROS                                    ALIEN1
+     C           ERRI15    ORNE *ZEROS
+     C           *IN19     OREQ '1'
+     C           *IN02     OREQ '1'
+     C           *IN69     OREQ '1'                                       ALIEN1
+      *
+     C                     EXSR F0000
+     C                     SETOF                     02
+      *
+     C           *INKC     IFEQ '0'
+     C           *IN19     IFEQ '0'
+     C           *INKJ     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR G0000
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Re-set indicators to enable screen 1 and screens 2 or 3
+      ** to be re-displayed if F12 pressed.
+     C           *INKL     IFEQ '1'
+     C                     SETON                     0102
+     C                     END
+      *
+     C                     END
+      *
+     C           *INKC     IFEQ '0'
+     C           ACTION    IFNE 'E'
+     C                     EXSR H0000
+     C                     END
+     C                     END
+      *
+     C                     SETON                     0102
+      *
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Initialisation Subroutine                            *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEL'*'       DDPGMQ
+     C                     SETON                     LR
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     MOVEA*ALL'0'   AR2
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * B0000  - Blanks out initial screen                            *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           B0000     BEGSR
+     C                     CALL 'GPCLRM'
+     C                     MOVE *BLANK    ACTION
+     C                     MOVE *BLANK    SBGID
+     C                     MOVE *BLANK    SACDRQ
+      *
+      ** Initialise error fields.
+     C                     MOVE '0000'    ERRIND
+     C*********************MOVE *ZEROS    ERRIN5                          ALIEN1
+     C                     MOVE *ZEROS    ACERRI                          ALIEN1
+     C                     MOVE *ZEROS    ERRI15
+     C                     SETOF                     69                   ALIEN1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * C0000  - Display screen 1                                     *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           C0000     BEGSR
+     C                     SETOF                     818219
+     C                     WRITELER410D1
+     C                     WRITELER410F5
+     C                     READ LER410F5                 89
+     C                     CALL 'GPCLRM'
+      *
+      ** HELP Key pressed
+     C           *IN19     IFEQ '1'
+     C                     MOVE 'LER4101 'PARM1
+     C                     CALL 'GPHELP'  PLIST1
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * D0000  - Validate screen 1                                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           D0000     BEGSR
+     C                     READ LER410D1                 89
+     C                     SETOF                     272829
+      *
+      ***If*action*not*blank,*check*user*is*authorised*to*action.         000053
+     C***********ACTION    IFEQ 'I'                                       000053
+     C***********ACTION    OREQ 'A'                                       000053
+     C***********ACTION    OREQ 'D'                                       000053
+     C***********ACTION    OREQ 'E'                                       000053
+     C***********          Z-ADD0         WERR                            000053
+     C***********          CALL 'ZVACTU'                                  000053
+     C***********          PARM ACTION    WZACTN  1                       000053
+     C***********          PARM           WERR    10                      000053
+      ***********                                                         000053
+     C***********WERR      IFNE 0                                         000053
+     C***********          MOVEL'LER0123' PMSGID                          000053
+     C***********          CALL 'GPADDM'                                  000053
+     C***********          PARM           PMSGID                          000053
+     C***********          SETON                     27                   000053
+     C***********          END                                            000053
+     C***********          END                                            000053
+      *
+      **  ACTION s/b Insert, Amend, Delete or Enquire
+     C           SACDRQ    IFEQ *BLANK
+     C           ACTION    IFNE 'I'
+     C           ACTION    ANDNE'A'
+     C           ACTION    ANDNE'D'
+     C           ACTION    ANDNE'E'
+     C                     SETON                     27
+     C                     MOVEL'LER0005' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+     C                     END
+      *
+      **  Either Action or A/C Code Details must be requested
+     C           ACTION    IFEQ *BLANK
+     C           SACDRQ    ANDEQ*BLANK
+     C                     SETON                     27
+     C                     MOVEL'LER0082' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+      **  Both ACTION and Account Code Details Request cannot be entered
+     C           ACTION    IFNE *BLANK
+     C           SACDRQ    ANDEQ'Y'
+     C                     SETON                     27
+     C                     MOVEL'LER0083' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+      ** Must input Business Group ID if not A/C Code Details request
+     C           SBGID     IFEQ *BLANK
+     C***********SACDRQ    ANDEQ' '                                       062780
+     C           SACDRQ    ANDEQ'N'                                       062780
+     C                     SETON                     28
+     C                     MOVEL'LER0082' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+      ** If account code details requested nothing else s/b input
+     C           SBGID     IFNE *BLANK
+     C           SACDRQ    ANDEQ'Y'
+     C                     SETON                     28
+     C                     MOVEL'LER0083' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+     C*
+     C****If*user*requests*Account*Code*input,*check*that*they*are        000053
+     C****authorised*for*action*'Insert'.                                 000053
+     C***********SACDRQ    IFEQ 'Y'                                       000053
+     C***********          MOVE 'I'       WZACTN                          000053
+     C***********          Z-ADD0         WERR                            000053
+     C***********          CALL 'ZVACTU'                                  000053
+     C***********          PARM           WZACTN  1                       000053
+     C***********          PARM           WERR    10                      000053
+      ***********                                                         000053
+     C***********WERR      IFNE 0                                         000053
+     C***********          MOVEL'LER0123' PMSGID                          000053
+     C***********          CALL 'GPADDM'                                  000053
+     C***********          PARM           PMSGID                          000053
+     C***********          SETON                     27                   000053
+     C***********          END                                            000053
+     C***********          END                                            000053
+      *
+      ** Business Group ID Must be numeric
+     C           SBGID     IFNE *BLANK
+     C                     MOVELSBGID     TESTN3  4
+     C                     MOVE '0'       TESTN3
+     C                     TESTN          TESTN3     60
+      *
+      **  Check Business Group ID only if valid numeric
+     C           *IN60     IFEQ '1'
+     C                     MOVE SBGID     PDGPID
+     C           PDGPID    CHAINPEFMTD               61
+     C                     END
+      *
+     C           ACTION    IFEQ 'I'
+      *
+      **  If INSERT, Business Group must be numeric
+     C           *IN60     IFEQ '0'
+     C                     SETON                     28
+     C                     MOVEL'LER0095' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     ELSE
+      *
+      **  If INSERT, Business Group must not already exist
+     C           *IN61     IFEQ '0'
+     C                     SETON                     28
+     C                     MOVEL'LER0084' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  If not INSERT Business Group must already exist
+     C           *IN61     IFEQ '1'
+     C           *IN60     OREQ '0'
+     C                     SETON                     28
+     C                     MOVEL'LER0085' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      ** A/C Code Details Requested can only be 'Y' if input
+     C           SACDRQ    IFNE 'Y'
+     C***********SACDRQ    ANDNE' '                                       062780
+     C           SACDRQ    ANDNE'N'                                       062780
+     C                     SETON                     29
+     C                     MOVEL'LER0086' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+      ** If Acount Code Details Requested, other fields must be blank
+     C***********SACDRQ    IFNE ' '                                       062780
+     C           SACDRQ    IFNE 'N'                                       062780
+     C           ACTION    ANDNE' '
+     C           SBGID     ANDNE*BLANK
+     C                     SETON                     29
+     C                     MOVEL'LER0087' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+      ** Account Code Details Request must be 'Y' if others blank
+     C           SACDRQ    IFNE 'Y'
+     C           ACTION    ANDEQ' '
+     C           SBGID     ANDEQ*BLANK
+     C                     SETON                     29
+     C                     MOVEL'LER0088' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C                     MOVEA*IN,27    ERRIND  4
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * E0000  - Setup either screen 2 or screen 3                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: E1000, E2000.                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           E0000     BEGSR
+      *
+     C           SACDRQ    IFEQ 'Y'
+     C                     EXSR E1000
+     C                     ELSE
+     C                     EXSR E2000
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * E1000  - Setup screen 2                                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           E1000     BEGSR
+     C           1         CHAINPEFMTC               89
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            **************
+     C                     MOVEL'BANK'    DBKEY            * DBERROR 02 *
+     C                     MOVEL'PEFMTC'  DBFILE           **************
+     C                     MOVEL'LER410  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVEAAR2       AR1
+      *
+     C*********************DO   5         X       20                      ALIEN1
+     C                     DO   32        X       20                      ALIEN1
+     C           AR1,X     IFEQ *ALL'0'
+     C                     MOVE '    '    AR1,X
+     C                     END
+     C                     END
+     C                     MOVE PCRPT     SCRPT                           ALIEN1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * E2000  - Setup screen 2                                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           E2000     BEGSR
+      *
+     C           ACTION    IFEQ 'I'
+     C                     MOVE *BLANK    AR3
+     C                     MOVE *BLANK    PDGPNA
+     C                     ELSE
+     C                     MOVEAAR4       AR3
+     C                     END
+      *
+     C           ACTION    IFEQ 'D'
+     C           ACTION    OREQ 'E'
+     C                     SETON                     50
+     C                     ELSE
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * F0000  - Display screen 2 or 3                                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           F0000     BEGSR
+     C                     SETOF                     19
+     C                     SETON                     82
+      *
+     C           ACTION    IFEQ 'D'
+     C                     SETON                     81
+     C                     END
+      *
+     C           ACTION    IFEQ ' '
+     C                     WRITELER410D2
+     C                     ELSE
+     C                     WRITELER410D3
+     C                     END
+      *
+      **  Display and read Footer
+     C                     WRITELER410F5
+     C                     READ LER410F5                 89
+     C                     CALL 'GPCLRM'
+      *
+     C           *IN19     IFEQ '1'
+      *
+      ** Call HELP Program
+     C           ACTION    IFEQ ' '
+     C                     MOVE 'LER4102 'PARM1
+     C                     ELSE
+     C                     MOVE 'LER4103 'PARM1
+     C                     END
+      *
+     C                     CALL 'GPHELP'  PLIST1
+     C                     ELSE
+      *
+      **  Reset Error indicators
+     C*********************MOVE *ALL'0'   ERRIN5                          ALIEN1
+     C                     MOVE *ALL'0'   ACERRI                          ALIEN1
+     C                     MOVE *ALL'0'   ERRI15 15
+     C                     MOVEAERRIN5    *IN,30
+     C                     MOVEAERRI16    *IN,03                          ALIEN1
+     C                     MOVEAERRI11    *IN,70                          ALIEN1
+     C                     MOVEAERRI15    *IN,35
+     C                     SETOF                     69                   ALIEN1
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G0000  - Validate screen 2 or 3                               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: G1000, G2000                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G0000     BEGSR
+     C           ACTION    CASEQ' '       G1000
+     C           ACTION    CASEQ'A'       G2000
+     C           ACTION    CASEQ'I'       G2000
+     C                     END
+      *
+      **  This keeps Delete or Enquiry on Screen 3 until CMDKey pressed
+     C           ACTION    IFEQ 'D'
+     C           ACTION    OREQ 'E'
+     C*********************MOVE 1         ERRIN5                          ALIEN1
+     C                     MOVE 1         ACERRI                          ALIEN1
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G1000  - Validate Account Code Details                        *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G1000     BEGSR
+     C                     READ LER410D2                 89
+     C*********************MOVE '0'       AR5                             ALIEN1
+     C                     MOVE '0'       ARE                             ALIEN1
+      *
+      ****Test*each*of*the*5*Charges/Fees*Account*Codes                   ALIEN1
+     C*********************DO   5         X                               ALIEN1
+      *                                                                   ALIEN1
+      ** Test each of the 32 Charges/Fees Account Codes                   ALIEN1
+      *                                                                   ALIEN1
+     C                     DO   32        X                               ALIEN1
+      *
+      **  Ignore blank fields
+     C           AR1,X     IFNE *BLANK
+     C                     MOVEAAR1,X     TESTN4  5
+     C                     MOVE '0'       TESTN4
+     C                     TESTN          TESTN4     60
+      *
+     C           *IN60     IFEQ '0'
+      *
+      **  Non-numeric error
+     C*********************MOVE '1'       AR5,X                           ALIEN1
+     C                     MOVE '1'       ARE,X                           ALIEN1
+     C                     ELSE
+      *
+      **  Check A/C Code
+     C                     MOVE AR1,X     PKEY4A
+     C                     CALL 'AOACODR0'
+     C*********************PARM '*DBERR ' PRTCD                           ALIEN1
+     C                     PARM '*MSG   ' PRTCD                           ALIEN1
+     C                     PARM '*KEY   ' POPTN
+     C**********           PARM           PKEY4A  4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM           PKEY4A 10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C*********************SETON                         62               ALIEN1
+     C*********************END                                            ALIEN1
+      *
+     C************IN62*****IFEQ '1'                                       ALIEN1
+     C*********************MOVE '1'       AR5,X                           ALIEN1
+     C                     MOVE '1'       ARE,X                           ALIEN1
+     C*********************SETOF                         62               ALIEN1
+      *
+      **  Not found error
+     C                     ELSE
+      *
+      **  Account Type must not be 'R' or 'N'
+     C           A5ACTY    IFEQ 'R'
+     C           A5ACTY    OREQ 'N'
+     C*********************MOVE '1'       AR5,X                           ALIEN1
+     C                     MOVE '1'       ARE,X                           ALIEN1
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+     C*********************MOVEAAR5       ERRIN5  5                       ALIEN1
+     C                     MOVEAARE       ACERRI                          ALIEN1
+      *
+     C***********ERRIN5****IFNE *ALL'0'                                   ALIEN1
+     C           ACERRI    IFNE *ALL'0'                                   ALIEN1
+     C                     MOVEL'LER0089' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C                     MOVEAERRIN5    *IN,30
+     C                     MOVEAERRI16    *IN,03                          ALIEN1
+     C                     MOVEAERRI11    *IN,70                          ALIEN1
+      *                                                                   ALIEN1
+      ** Consolidate reporting of Charges/Fees must be 'Y' or 'N'.        ALIEN1
+      *                                                                   ALIEN1
+     C           SCRPT     IFNE 'Y'                                       ALIEN1
+     C           SCRPT     ANDNE'N'                                       ALIEN1
+     C                     SETON                     69                   ALIEN1
+     C                     MOVE 'LER0139 'PMSGID                          ALIEN1
+     C                     CALL 'GPADDM'                                  ALIEN1
+     C                     PARM           PMSGID                          ALIEN1
+     C                     END                                            ALIEN1
+      *                                                                   ALIEN1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G2000  - Validate Screen 3                                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: G2100, G2200                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G2000     BEGSR
+     C                     SETOF                     6768
+     C                     READ LER410D3                 89
+     C                     MOVE *ALL'0'   AR5
+     C                     Z-ADD0         Y       10
+     C                     Z-ADD0         Z       20
+     C                     Z-ADD0         W       20
+      *
+      **  Check each of 15 Loan Type/Sub-Types
+     C                     DO   15        X
+     C           AR3,X     IFNE '    '
+     C                     MOVEAAR3,X     AR8
+     C           '*'       LOKUPAR8                      64
+      *
+     C           *IN64     IFEQ '1'
+      *
+      **  Grouped Item
+     C           AR8,1     IFNE 'H'
+     C           AR8,1     ANDNE'J'
+     C           AR8,1     ANDNE'K'
+     C                     MOVE '1'       AR5,X
+     C                     ELSE
+      *
+     C           AR8,2     IFEQ '*'
+     C                     EXSR G2100
+     C                     MOVE *IN,65    AR5,X
+     C                     ELSE
+      *
+     C           AR8,3     IFEQ '*'
+     C           AR8,4     ANDEQ'*'
+     C                     MOVEAAR8,1     AYLNTY
+      *
+      **  Access object not used because it cannot be called with
+      **  a blank loan sub-type.
+     C           AYLNTY    CHAINSDLOANL1             65
+     C                     MOVE *IN,65    AR5,X
+     C                     ELSE
+     C                     MOVE '1'       AR5,X
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVEAAR8,1     AYLNTY
+     C                     MOVEAAR8,3     AYLNST
+     C                     MOVEAAR8,5     AYLNCL                                              CLE042
+      *
+     C           KEY001    CHAINSDLOANL1             65
+     C                     MOVE *IN,65    AR5,X
+     C                     SETOF                     65
+     C                     END
+      *
+     C           AR5,X     IFEQ '0'
+      *
+     C                     EXSR G2200
+      *
+     C           AR5,X     IFEQ '1'
+     C                     SETON                     68
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     67
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     MOVEAAR5       ERRI15
+     C                     MOVEAERRI15    *IN,35
+      *
+     C           ERRI15    IFNE *ALL'0'
+      *
+     C           *IN67     IFEQ '1'
+     C                     MOVEL'LER0090' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C           *IN68     IFEQ '1'
+     C                     MOVEL'LER0091' PMSGID  8
+     C                     CALL 'GPADDM'
+     C                     PARM           PMSGID
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G2100  - Check loan type/sub-type is on file                  *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G2100     BEGSR
+     C                     MOVEAAR8,1     PMAJ    2
+     C                     MOVEAAR8,3     PSUB    2
+     C                     MOVEAAR8,5     PCLS    4                                           CLE042
+     C                     MOVE PMAJ      AYLNTY
+     C                     MOVE 'A'       AYLNTY
+     C           AYLNTY    SETLLSDLOANL1
+     C                     READ SDLOANL1                 65
+      *
+     C                     SETOF                     63
+      *
+     C           *IN65     DOWEQ'0'
+     C           *IN63     ANDEQ'0'
+      *
+     C                     MOVE PSUB      AYLNST
+     C                     MOVE PCLS      AYLNCL                                              CLE042
+     C           KEY001    SETLLSDLOANL1
+     C                     READ SDLOANL1                 65
+      *
+     C           *IN65     IFEQ '0'
+     C                     MOVELAYLNTY    PAYA    1
+      *
+     C           PAYA      IFGT AR8,1
+     C                     SETON                     65
+     C                     END
+     C           AYLNST    IFEQ PSUB
+     C           AYLNCL    ANDEQPCLS                                                          CLE042
+     C                     SETON                     63
+     C                     END
+     C*
+     C           AYLNTY    SETGTSDLOANL1
+     C                     READ SDLOANL1                 65
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * G2200  - Check for duplication/over-lap                       *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           G2200     BEGSR
+      *
+     C                     DO   X         U       20
+     C           AR5,X     IFNE '1'
+     C           X         ANDNEU
+     C           AR5,U     ANDNE'1'
+      *
+     C                     MOVEAAR3,U     ARA
+      *
+     C           AR8,1     IFEQ ARA,1
+      *
+     C           AR8,2     IFEQ '*'
+      *
+     C           AR8,3     IFEQ ARA,3
+     C           AR8,4     ANDEQARA,4
+     C           ARA,3     OREQ '*'
+     C                     MOVE '1'       AR5,X
+     C                     END
+      *
+     C                     ELSE
+     C           AR8,3     IFEQ '*'
+      *
+     C           ARA,2     IFEQ '*'
+     C           AR8,2     OREQ ARA,2
+     C                     MOVE '1'       AR5,X
+     C                     END
+     C                     ELSE
+      *
+     C           ARA,2     IFEQ '*'
+      *
+     C           AR8,3     IFEQ ARA,3
+     C           AR8,4     ANDEQARA,4
+     C                     MOVE '1'       AR5,X
+     C                     END
+      *
+     C                     ELSE
+     C           AR8,2     IFEQ ARA,2
+     C           ARA,3     IFEQ '*'
+     C           AR8,3     OREQ ARA,3
+     C           AR8,4     ANDEQARA,4
+     C                     MOVE '1'       AR5,X
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * H0000  - Update database                                      *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           H0000     BEGSR
+      *
+     C           ACTION    IFEQ ' '
+      *
+     C*********************DO   5         X                               ALIEN1
+     C                     DO   32        X                               ALIEN1
+     C           AR1,X     IFNE *BLANK
+     C                     MOVE AR1,X     AR2,X
+     C                     ELSE
+     C                     MOVE *ALL'0'   AR2,X
+     C                     END
+     C                     END
+     C                     MOVE SCRPT     PCRPT                           ALIEN1
+      *
+     C                     ELSE
+     C           1         CHAINPEFMTC               89
+     C                     MOVE 'Y'       PCAUDR
+     C                     MOVE 'Y'       AUDR
+      *
+     C           ACTION    IFEQ 'A'
+     C           ACTION    OREQ 'I'
+     C                     Z-ADDBJRDNB    PDLCDT
+     C                     MOVEAAR3       AR4
+      *
+     C           ACTION    IFEQ 'A'
+     C                     MOVE 'A'       PDLCTP
+     C                     UPDATPEFMTDF
+     C                     ELSE
+     C                     MOVE 'I'       PDLCTP
+     C                     ADD  1         PCNREC
+     C                     WRITEPEFMTDF
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           *INKJ     IFEQ '1'
+     C                     DELETPEFMTDF
+     C                     SUB  1         PCNREC
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  Update control file
+     C           *INKL     IFEQ '0'
+      *
+     C           *IN89     IFEQ '0'
+     C                     UPDATPEFMTCF
+     C                     ELSE
+     C                     WRITEPEFMTCF
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   Nothing                                *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C           PSSR      ENDSR
+      *
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

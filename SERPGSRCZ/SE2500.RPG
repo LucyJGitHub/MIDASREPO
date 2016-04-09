@@ -1,0 +1,437 @@
+     H                                                                    ST2500
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Week End/Month End Check')                    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2500 - CHECK FOR END OF WEEK & END OF MONTH                *
+     F*                                                               *
+     F*  Function: To check for end of week/month for accrual and     *
+     F*   (COB)    accounting purposes.                               *
+     F*                                                               *
+     F*  Called by: EODRUN  - End of Day Run Controlling component    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1988, 1991.                                              *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01502             Date 08Jul94               *
+     F*                 052254             Date 10Jan94               *
+     F*                 S01195             DATE 21MAY91               *
+     F*                 S01117             DATE 21MAY91               *
+     F*                 S01269             DATE 01AUG90               *
+     F*                 E17697             DATE 31/03/89              *
+     F*                 S01129             DATE 27/08/87              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01195 - HOLIDAY PROCESSING                                  *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED FILE   *
+     F*           TABSE                                               *
+     F*  E17697 - RECREATE DUE TO WRONG VERSION OF FILE               *   E17697
+     F*           DESCRIPTION BEING USED FOR DATA AREA 'SESTAT'.      *   E17697
+     F*  S01129 - CHANGE TO USE TABTB36 INSTEAD OF TABTB35            *   S01129
+     F*           AND SESTAT INSTEAD OF STSTAT                        *   S01129
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*ABLE***UF  E           K        DISK                           *   S01129
+     FTABSE   UF  E           K        DISK                               S01129
+     F            TABLETAF                          KIGNORE
+     F*****       TABTB20F                          KIGNORE               S01129
+     F*****       TABTB30F                          KIGNORE               S01129
+     F            TABTB40F                          KIGNORE
+     F*****       TABTB50F                          KIGNORE               S01129
+     F*****       TABTB55F                          KIGNORE               S01129
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   40 - ACCRUAL/PROFIT INDICATOR IS 'M' - MONTHLY              *
+     F*   41 - LAST DAY OF LAST WEEK IS EARLIER THAN RUN DATE         *
+     F*   43 - END OF MONTH                                           *
+     F*   42 - END OF WEEK                                            *
+     F*   89 - CHAIN FAIL                                             *
+     F*   99 - ERROR IN SUBROUTINE                                    *
+     F*U7-U8       DATABASE ERROR                                     *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E******              ZHC        50  3               ZDATE5 SR.ARRAY
+     E******              HOLA       25  3               ZDATE5 SR.ARRAY
+     E******/COPY ZSRSRC,ZDATE6Z1                                         S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+      /EJECT
+     ISDBANK    E DSSDBANKPD                                              S01195
+     I** Bank Details                                                     S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     IDSFDY     E DSDSFDY                                                 S01195
+     I** First DS for access programs, short data structure               S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*       LOCAL DATA AREA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I*TSTAT**** UDS                            256                       S01129
+     I*ESTAT     UDS                            256                       S01129
+     I*                                      21  21 EOM
+     I*                                      22  22 EOW
+     IDTAARA    E DSSESTAT                                                SD1730
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/EJECT
+     C**
+     C***** SET ON LAST RECORD INDICATOR
+     C**
+     C                     SETON                     LR
+     C*                                                                   S01117
+     C*    OBTAIN LDA AND UPDATE DATA BASE FIELDS                         S01117
+     C*                                                                   S01117
+     C*
+     C*    SET UP LDA DATABASE FIELDS  DBPGM  AND  DPFILE.
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVE 'ST2500  'DBPGM
+     C                     MOVE 'TABLE'   DBFILE
+     C                     OUT  LDA                                       S01117
+     C*
+     C*    SET UP KEY FOR INSTALLATION CONTROL DATA RECORD 1.
+     C*
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C*
+     C*    CHAIN TO THE TABLE FILE FOR ICD1
+     C*
+     C********** ZTABKY    CHAINTABLE                89    -REC NOT FOUND S01129
+     C           ZTABKY    CHAINTABSE                89    -REC NOT FOUND S01129
+     C  N89      RECI      COMP 'D'                  8989  -IS DELETED
+     C**
+     C  N89                GOTO NOERR1
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     GOTO ENDD
+     C*
+     C           NOERR1    TAG
+     C*
+     C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           DATF      COMP 'M'                      98-MMDDYY
+     C*
+     C*    SET UP KEY FOR INSTALLATION CONTROL DATA RECORD 2.
+     C*
+     C                     MOVE '  11'    ZTABKY
+     C*
+     C*    CHAIN TO THE TABLE FILE FOR ICD2
+     C*
+     C********** ZTABKY    CHAINTABLE                89    -REC NOT FOUND S01129
+     C           ZTABKY    CHAINTABSE                89    -REC NOT FOUND S01129
+     C  N89      RECI      COMP 'D'                  8989  -IS DELETED
+     C**
+     C  N89                GOTO NOERR2
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     GOTO ENDD
+     C*
+     C           NOERR2    TAG
+     C*                                                                   S01195
+     C**  ACCESS BANK DETAILS FOR SYSTEM LOCATION                         S01195
+     C*                                                                   S01195
+     C                     CALL 'AOBANKR0'                                S01195
+     C                     PARM '*DBERR'  @RTCD   7                       S01195
+     C                     PARM '*FIRST'  @OPTN   7                       S01195
+     C           SDBANK    PARM SDBANK    DSFDY                           S01195
+     C*
+     C*  SET UP KEY FOR INSTALLATION CONTROL DATA RECORD FOR SEC. TRADIN
+     C*
+     C**********           MOVE '  35'    ZTABKY                          S01129
+     C                     MOVE '  36'    ZTABKY                          S01129
+     C*
+     C*    CHAIN TO THE TABLE FILE
+     C*
+     C********** ZTABKY    CHAINTABLE                89    -REC NOT FOUND S01129
+     C           ZTABKY    CHAINTABSE                89    -REC NOT FOUND S01129
+     C  N89      RECI      COMP 'D'                  8989  -IS DELETED
+     C**
+     C  N89                GOTO NOERR3
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     GOTO ENDD
+     C*
+     C           NOERR3    TAG
+     C**
+     C*********EPTION OUTPUT TO RELEASE TABTB35***                        S01129
+     C**    EXCEPTION OUTPUT TO RELEASE TABTB36                           S01129
+     C**
+     C**********           EXCPTREL35                                     S01129
+     C                     EXCPTREL36                                     S01129
+     C*
+     C**    SET DEFAULT VALUES OF PARAMETERS
+     C**
+     C           *NAMVAR   DEFN SESTAT    DTAARA
+     C           *LOCK     IN   DTAARA                                    SD1730
+     C                     MOVE 'N'       EOM
+     C                     MOVE 'N'       EOW
+     C**
+     C                     EXSR MTHCHK
+     C                     EXSR WKCHK
+     C**
+     C**    SET PARAMETER VALUES
+     C**
+     C   43                MOVE 'Y'       EOM
+     C   42                MOVE 'Y'       EOW
+     C                     OUT  DTAARA
+     C*
+     C******C C E S S   T A B T B 3 5   F O R   U P D A T E***           *S01129
+     C**  ACCESS TABTB36 FOR UPDATE                                      *S01129
+     C*
+     C*  SET UP KEY FOR INSTALLATION CONTROL DATA RECORD FOR SEC. TRADIN
+     C*
+     C**********           MOVE '  35'    ZTABKY                          S01129
+     C                     MOVE '  36'    ZTABKY                          S01129
+     C*
+     C*    CHAIN TO THE TABLE FILE
+     C*
+     C********** ZTABKY    CHAINTABLE                89    -REC NOT FOUND S01129
+     C           ZTABKY    CHAINTABSE                89    -REC NOT FOUND S01129
+     C  N89      RECI      COMP 'D'                  8989  -IS DELETED
+     C**
+     C  N89                GOTO NOERR4
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     GOTO ENDD
+     C*
+     C           NOERR4    TAG
+     C**
+     C*****TRIEVE LAST DAY OF WEEK (DLWK) FROM ZDTEMP                     S01129
+     C** RETRIEVE LAST DAY OF WEEK (EOWK) FROM ZDTEMP                     S01129
+     C**
+     C**********           Z-ADDZDTEMP    DLWK                            S01129
+     C                     Z-ADDZDTEMP    EOWK                            S01129
+     C**
+     C**
+     C********CEPTION OUTPUT TO UPDATE TABTB35***                         S01129
+     C**    EXCEPTION OUTPUT TO UPDATE TABTB36                            S01129
+     C**
+     C**********           EXCPTUPD35                                     S01129
+     C                     EXCPTUPD36                                     S01129
+     C**
+     C**    END OF PROCESSING TAG
+     C**
+     C           ENDD      TAG                              ** ENDD  TAG *
+     C**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   MTHCHK SR. TO CHECK FOR END OF MONTH                       *
+     C**         CALLED FROM DETAIL PROCESSING                        *
+     C**                                                              *
+     C**         CALLS  SUBROUTINE  SR.ZDATE2                         *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           MTHCHK    BEGSR                           *** MTHCHK ***
+     C**
+     C**    CHECK IF ACRUAL/PROFIT INDICATOR IS 'M'
+     C**
+     C           APFQ      COMP 'M'                      40
+     C**
+     C**    CHECK IF ACRUAL/PROFIT DATE IS LESS THAN NEXT WORKING DAY
+     C**
+     C   40      APDA      COMP DNWD                   43
+     C   40                GOTO MTHEND
+     C**
+     C**   SET UP YEAR NUMBER AND MONTH NUMBER OF TODAY
+     C**
+     C                     MOVE RUNA      WRK5    5
+     C                     MOVELWRK5      MONTH   3
+     C**
+     C**   SET UP MONTH NUMBER OF NEXT WORKING DAY
+     C**
+     C                     MOVE DNWD      ZDAYNO
+     C                     EXSR ZDATE2
+     C**
+     C**   CHECK TODAYS AND TOMORROWS VALUES
+     C**
+     C           ZMNM,ZMTH COMP MONTH                4343
+     C**
+2518 C           MTHEND    ENDSR                           ** MTHEND TAG *
+2520 C**
+2521 C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   WKCHK SR. TO CHECK FOR END OF WEEK                         *
+     C**         CALLED FROM DETAIL PROCESSING                        *
+     C**                                                              *
+     C**         CALLS  SUBROUTINE  SR.ZDATE5                         *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           WKCHK     BEGSR                           *** WKCHK ***
+     C**
+     C**  CHECK IF LAST DAY OF LAST WEEK IS LESS THAN RUN DATE
+     C**
+     C           DATTAG    TAG                             ** DATTAG TAG *
+     C********** DLWK      COMP RUND                   41                 S01129
+     C           EOWK      COMP RUND                   41                 S01129
+     C**
+     C**  ADD SEVEN DAYS TO LAST DAY OF LAST WEEK
+     C**
+     C***41***** DLWK      ADD  7         DLWK                            S01129
+     C   41      EOWK      ADD  7         EOWK                            S01129
+     C   41                GOTO DATTAG
+     C**
+     C**  SAVE VALUE OF LAST DAY OF WEEK AS A TEMPORARY DATE
+     C**  FOR HOLIDAY CHECKING
+     C**
+     C**********           Z-ADDDLWK      ZDAYNO                          S01129
+     C                     Z-ADDEOWK      ZDAYNO                          S01129
+     C                     MOVE LOCY      ZCCY
+     C                     MOVE BJSLCD    ZLOC                            S01195
+     C**
+     C**  CHAIN TO HOLIDAYS FILE TO SEE IF DATE IS A HOLIDAY
+     C**  FOR LOCAL CURRENCY
+     C**
+     C***********HOLTAG    TAG                                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C***********                                                         S01195
+     C***IF*DATE*IS A HOLIDAY, 99 IS SET ON.                              S01195
+     C***SUBTRACT 1 FROM DATE AND CHECK FOR HOLIDAY AGAIN                 S01195
+     C***********                                                         S01195
+     C***99******          SUB  1         ZDAYNO                          S01195
+     C***99******          GOTO HOLTAG                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C**                                                                  S01195
+     C** IF DATE IS A HOLIDAY, ZIND is H                                  S01195
+     C** SUBTRACT 1 FROM DATE AND CHECK FOR HOLIDAY AGAIN                 S01195
+     C**                                                                  S01195
+     C           ZIND      DOWEQ'H'                                       S01195
+     C                     SUB  1         ZDAYNO                          S01195
+     C                     EXSR ZCHKH                                     S01195
+     C                     END                                            S01195
+     C**
+     C** IF DATE IS NOT A HOLIDAY, COMPARE WITH RUN DATE TO CHECK
+     C** FOR END OF WEEK
+     C**
+     C           RUND      COMP ZDAYNO                   42
+     C**
+     C** IF CURRENT DATE IS END OF WEEK INCREMENT LAST DAY OF
+     C** LAST WEEK BY SEVEN
+     C**
+     C***42***** DLWK      ADD  7         DLWK                            S01129
+     C   42      EOWK      ADD  7         EOWK                            S01129
+     C**
+     C*****VE LAST DAY OF WEEK (DLWK) AS ZDTEMP                           S01129
+     C** SAVE LAST DAY OF WEEK (EOWK) AS ZDTEMP                           S01129
+     C**
+     C**********           Z-ADDDLWK      ZDTEMP  50                      S01129
+     C                     Z-ADDEOWK      ZDTEMP  50                      S01129
+     C**
+2518 C                     ENDSR
+2520 C**
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C***********/COPY ZSRSRC,ZDATE6Z2                                    S01195
+     O********************************************************************
+     O**
+     O**  R E L E A S E   T A B T B 3 5  A F T E R   F I R S T   C H A I N
+     O**
+     O*ABTB35FE****            REL35                                      S01129
+     OTABTB36FE                REL36                                      S01129
+     O**
+     O**  U P D A T E   D L W K  I N   T A B T B 3 5 F
+     O**
+     O*ABTB35FE****            UPD35                                      S01129
+     O*****                    DLWK                                       S01129
+     OTABTB36FE                UPD36                                      S01129
+     O                         EOWK                                       S01129
+     O********************************************************************
+     O/EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

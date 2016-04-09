@@ -1,0 +1,165 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX Daily Housekeeping - event file saves')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC004801 - Update date and clear events files              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CMX014  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CMX014 - COB Restructure - MX COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&COB) TYPE(*CHAR) LEN(1) VALUE(Y)
+             DCL        VAR(&SOM) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&NOMB) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Update dates on data-area MXEXPCTL */
+             CALL       PGM(MXEXCTUPD) PARM(&RTCD &ERMS &COB &SOM)
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004801 ended abnormally - see job +
+                            log') TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If start of the month, save then clear monthly events files */
+             IF         COND(&SOM *EQ 'Y') THEN(DO)
+ 
+             CLRPFM     FILE(MXMEGLPPD)
+             CLRPFM     FILE(MXMEDLPPD) MBR(*ALL)
+             CLRPFM     FILE(MXMELELPPD) MBR(*ALL)
+ 
+/* Save */
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'ACCT' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEGLPD) TOFILE(MXMEGLPPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'FXDL' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(FXDL) TOMBR(FXDL) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'LDNI' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(LDNI) TOMBR(LDNI) MBROPT(*REPLACE) +
+                          INCREL((*IF EAEVID *NE -1))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'NASP' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(NASP) TOMBR(NASP) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'NASS' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(NASS) TOMBR(NASS) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'FRAS' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(FRAS) TOMBR(FRAS) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'SIRS' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(SIRS) TOMBR(SIRS) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'CIRS' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(CIRS) TOMBR(CIRS) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'CFCO' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMEDLPD) TOFILE(MXMEDLPPD) +
+                          FROMMBR(CFCO) TOMBR(CFCO) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'CLLN' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMELELPD) TOFILE(MXMELELPPD) +
+                          FROMMBR(CLLN) TOMBR(CLLN) MBROPT(*REPLACE) +
+                          INCREL((*IF EAEVID *NE -1))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'CLPS' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMELELPD) TOFILE(MXMELELPPD) +
+                          FROMMBR(CLPS) TOMBR(CLPS) MBROPT(*REPLACE) +
+                          INCREL((*IF EAEVID *NE -1))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CALL       PGM(MXGETDGDT) PARM(&RTCD &ERMS 'CLGU' &NOMB)
+             IF         COND(&NOMB *EQ '2') THEN(DO)
+             CPYF       FROMFILE(MXMELELPD) TOFILE(MXMELELPPD) +
+                          FROMMBR(CLGU) TOMBR(CLGU) MBROPT(*REPLACE) +
+                          INCREL((*IF EAEVID *NE -1))
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004801 ended abnormally') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Clear */
+ 
+             CLRPFM     FILE(MXMEGLPD)
+             CLRPFM     FILE(MXMEDLPD) MBR(*ALL)
+             CLRPFM     FILE(MXMELEFPD)
+             CLRPFM     FILE(MXMELELPD) MBR(*ALL)
+             CLRPFM     FILE(MXMESETPD)
+             CLRPFM     FILE(MXMESEBPD)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program MXC004801 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,127 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Monthly Hist Proc/Rprtg - End Task Split')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC1001T4  - Midas LE Monthly History processing and        */
+/*                    reporting - End Task Split                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD019855           Date 12Apr13              */
+/*       Prev Amend No. CLE137 *CREATE     Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD019855 - LEC10A 00003 in FOOB during Day 3 EN COB         */
+/*       CLE137 - LE Monthly History processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('LEHIS     ')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('LEC1001T4 - LE Monthly History Proc - +
+                          End Task Split') TOMSGQ(MRUNQ)
+ 
+/* Determine full DMLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+ 
+/* Determine DTAQLIB library name */
+ 
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Delete main data queue */
+ 
+             DLYJOB     DLY(1)
+ 
+/**********  DLTDTAQ    DTAQ(&DTAQLIB/LEHISSERVE)  */                                   /*MD019855*/
+/**********  MONMSG     MSGID(CPF2105 CPF9801)     */                                   /*MD019855*/
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(LEHISUPD) RTNMBR(&MEMBER)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* Delete sub-task data queue */
+ 
+ LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(LEHISUPD) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+/* Remove all members from driving file */
+ 
+ REMOVE:
+             RMVM       FILE(LEHISUPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             CPYF       FROMFILE(LEHISTPD) TOFILE(QTEMP/LEHISTPD) +
+                          FROMMBR(*ALL) TOMBR(*FIRST) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+             MONMSG     (CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(LEHIDTPD) TOFILE(QTEMP/LEHIDTPD) +
+                          FROMMBR(*ALL) TOMBR(*FIRST) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+             MONMSG     (CPF2817) CMPDTA(CPF2869)
+ 
+             OVRDBF     FILE(LEHISTPD) TOFILE(QTEMP/LEHISTPD)
+             OVRDBF     FILE(LEHIDTPD) TOFILE(QTEMP/LEHIDTPD)
+ 
+             CALL       LE09002
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             DLTOVR     FILE(LEHISTPD)
+             DLTOVR     FILE(LEHIDTPD)
+             DLTF       FILE(QTEMP/LEHISTPD)
+             DLTF       FILE(QTEMP/LEHIDTPD)
+             RMVM       FILE(LEHISTPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+             RMVM       FILE(LEHIDTPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program LEC1001T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             ENDCMTCTL
+ 
+END:         ENDPGM

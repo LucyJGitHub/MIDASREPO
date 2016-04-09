@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*XBIA   CRTDUPOBJ OBJ(OBJECTLOCK) FROMLIB(*LIBL)                    */
+/*XBIA   OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(OBJLCK)                  */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Kill Object Locks')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - System Control Module                           */
+/*                                                                   */
+/*       SCKOBJLCK - Kill Object Locks                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. MD021351           Date 06May14              */
+/*       Prev Amend No. CSC054             Date 23Feb12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 23May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG4912            Date 01Mar05              */
+/*                      BUG3834 *Create    Date 18Jul04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021351 - Design for Kill object locks                     */
+/*       CSC054 - Period End Adjustments                             */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       BUG4912 - Ignore Cashier Interface Jobs.                    */
+/*       BUG3834 - New programs created to deal with object locks    */
+/*                                                                   */
+/*********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJ &LIB &OBJTYPE &JNAM &JUSR &LOCKST &FIRSTC)
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JUSR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOCKST) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FIRSTC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TJNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TJUSR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TLOCKST) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JTMP) TYPE(*CHAR) LEN(6)                                    /*BUG4912*/
+             DCL        VAR(&PIMMED) TYPE(*CHAR) LEN(1) VALUE('Y')                      /*MD021351*/
+             DCLF       FILE(QTEMP/OBJLCK)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDP))
+             IF         COND(&FIRSTC = 'Y') THEN(DO)
+             DLTF       FILE(QTEMP/OBJLCK)
+             MONMSG     MSGID(CPF0000)
+/**********  CALL       PGM(SCCOBJLCKR) PARM(&OBJ &LIB &OBJTYPE +
+                          'OBJLCK' 'QTEMP') */                                          /*MD021351*/
+             CALL       PGM(SCCOBJLCKR) PARM(&OBJ &LIB &OBJTYPE +
+                          'OBJLCK' 'QTEMP' &PIMMED)                                     /*MD021351*/
+             ENDDO
+             OVRDBF     FILE(OBJLCK) TOFILE(QTEMP/OBJLCK)
+ LOOP:       RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDP))
+/**********  IF         COND(&JNAM****'*ALL') THEN(CHGVAR VAR(&TJNAM) +  */              /*BG18886*/
+/**********               VALUE(&JNAM))                                  */              /*BG18886*/
+             IF         COND(&JNAM *NE '*ALL') THEN(CHGVAR VAR(&TJNAM) +
+                          VALUE(&JNAM))                                                  /*BG18886*/
+             IF         COND(&JNAM = '*ALL') THEN(CHGVAR VAR(&TJNAM) +
+                          VALUE(&JOBNAME))
+/**********  IF         COND(&JUSR****'*ALL') THEN(CHGVAR VAR(&TJUSR) +  */              /*BG18886*/
+/**********               VALUE(&JUSR))                                  */              /*BG18886*/
+             IF         COND(&JUSR *NE '*ALL') THEN(CHGVAR VAR(&TJUSR) +
+                          VALUE(&JUSR))                                                  /*BG18886*/
+             IF         COND(&JUSR = '*ALL') THEN(CHGVAR VAR(&TJUSR) +
+                          VALUE(&JOBUSERID))
+/**********  IF         COND(&LOCKST ***'*ALL') THEN(CHGVAR +            */              /*BG18886*/
+/**********               VAR(&TLOCKST) VALUE(&LOCKST))                  */              /*BG18886*/
+             IF         COND(&LOCKST *NE '*ALL') THEN(CHGVAR +
+                          VAR(&TLOCKST) VALUE(&LOCKST))                                  /*BG18886*/
+             IF         COND(&LOCKST = '*ALL') THEN(CHGVAR +
+                          VAR(&TLOCKST) VALUE(&LOCKSTATE))
+                                                                                         /*BUG4912*/
+/**********  CHGVAR     VAR(%SUBSTRING(&JOBNAME 1 6)) VALUE(&JTMP)       */   /*BUG4912*/ /*CSC054*/
+             CHGVAR     VAR(&JTMP) VALUE(%SUBSTRING(&JOBNAME 1 6))                        /*CSC054*/
+             IF         COND(&JTMP = 'BRANCH') THEN(GOTO CMDLBL(LOOP))                   /*BUG4912*/
+                                                                                         /*BUG4912*/
+             IF         COND(&JOBNAME = &TJNAM *AND &JOBUSERID = +
+                          &TJUSR *AND &LOCKSTATE = &TLOCKST) THEN(DO)
+             ENDJOB     JOB(&JOBNUMBER/&JOBUSER/&JOBNAME) +
+                          OPTION(*IMMED)
+             MONMSG CPF0000
+             SNDMSG     MSG('Job ' *CAT &JOBNUMBER *CAT '/' *CAT +
+                          &JOBUSER *CAT '/' *CAT &JOBNAME *CAT +
+                          'ended by SCKOBJLCK') TOMSGQ(MOPERQ)
+             MONMSG CPF0000
+             ENDDO
+             GOTO LOOP
+ENDP:        ENDPGM

@@ -1,0 +1,107 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_MLLIMIT - Midas GP Limits                                           */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Last Amend No. BG18886            Date 02Jun08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Prev Amend No. CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      BUG3877            Date 08Mar05                        */
+/*                      BUG5320            Date 02Feb05                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG4521            Date 17Nov04                        */
+/*                      BUG3860            Date 11Aug04                        */
+/*                      BUG2703            Date 01Jul04                        */
+/*                      BUG3094            Date 08JUN04                        */
+/*                      BUG2816            Date 25May04                        */
+/*                      BUG2643            Date 20May04                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       BUG3877- Excess incorrect on Expired Limits                           */
+/*       BUG5320- Additional Field to show Tenor Period                        */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG4521 - Predeal Check Performance Enhancement (Recompiled)          */
+/*       BUG3860 - (recompile)                                                 */
+/*       BUG2703- Additional changes for deletion handling. (Recompile)        */
+/*       BUG3094- Change in V_MLCUST (Recompile)                               */
+/*       BUG2816- Customer Limits                                              */
+/*       BUG2643- Customer Limits                                              */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT T_MLLIMIT.*,                                                           :
+/*-- Tenor Table                                                                :
+    TTBLCODE AS LITNRTBL,                                                       :
+    TFROM AS LITNRFRM,                                                          :
+    TTO AS LITNRTO,                                                             :
+****TFROM****' - '****TTO*AS*LITNRPRD,******************************************:Bug5320 BG18886
+    TFROM CONCAT ' - ' CONCAT TTO AS LITNRPRD,                                  :Bug5320 BG18886
+    -- Excess ( is never negative)                                              :
+    CASE                                                                        :
+       WHEN LISTATUS='A' AND (COALESCE(LIEXPOSURE,0) - LIAMT >0)                :
+             THEN COALESCE(LIEXPOSURE,0) - LIAMT                                :
+       WHEN LISTATUS<>'A' AND LIEXPOSURE>0                                      :BUG3877
+             THEN LIEXPOSURE                                                    :BUG3877
+       ELSE NULL                                                                :
+    END LIEXCESS,                                                               :
+    -- Available Amount (can be positive or negative)                           :
+****CASE LISTATUS                                                               :BUG2816
+****     WHEN  'A' THEN                                                         :BUG2816
+****        LIAMT - COALESCE(LIEXPOSURE,0)                                      :BUG2816
+****    ELSE -1 * COALESCE(LIEXPOSURE,0)                                        :BUG2816
+****END  LIAVAILAMT,                                                            :BUG2816
+    CASE                                                                        :BUG2816
+         WHEN LISTATUS = 'A'                                                    :BUG2816
+         AND (LIAMT - COALESCE(LIEXPOSURE,0) > 0) THEN                          :BUG2816
+            LIAMT - COALESCE(LIEXPOSURE,0)                                      :BUG2816
+         ELSE  0                                                                :BUG2816
+    END AS LIAVAILAMT,                                                          :BUG2816
+    -- Entity                                                                   :
+    CASE LIENTYTYPE                                                             :
+        WHEN 1 THEN BRCH.A8BRNM                                                 :
+        WHEN 2 THEN BRCHGP.BGNAME                                               :
+****END AS LIENTYNAME                                                           :BUG2643
+    END AS LIENTYNAME,                                                          :BUG2643
+    CASE LIUTSRTYPE                                                             :BUG2643
+        WHEN 1 THEN V_MLCUST.CUSACTIVE                                          :BUG2643
+        WHEN 5 THEN V_GPINDSPD.IDCHTP                                           :BUG2643
+    END AS LICUSTACT                                                            :BUG2643
+    FROM T_MLLIMIT                                                              :
+    LEFT OUTER JOIN T_MLTENOR                                                   :
+    ON LITENOR = TID LEFT OUTER JOIN                                            :
+    GZSDBRCHPD BRCH ON LIENTYCODE=A8BRCD                                        :
+    AND LIENTYTYPE=1                                                            :
+    LEFT OUTER JOIN T_GRBRCHG BRCHGP                                            :
+    ON LIENTYCODE= CAST(BGID                                                    :
+     AS VARCHAR(10))                                                            :
+****AND LIENTYTYPE=2;                                                           :BUG2643
+    AND LIENTYTYPE=2                                                            :BUG2643
+    LEFT OUTER JOIN V_MLCUST                                                    :BUG2643
+    ON V_MLCUST.CUSGLOB=LIUTSRCODE                                              :BUG2643
+    LEFT OUTER JOIN V_GPINDSPD                                                  :BUG2643
+    ON V_GPINDSPD.IDGIND=LIUTSRCODE;                                            :BUG2643
+                                                                                :BUG2643
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Limits                                   ';                     :
+                                                                                :

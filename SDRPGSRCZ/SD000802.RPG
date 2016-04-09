@@ -1,0 +1,168 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check Transactions for customer closure')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD000802 - Midas SD Check GL Transactions for Customer       *
+      *             Closure                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Function: This module is used to check if there is any       *
+      *            posting taking place today or in the future.       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD023  *CREATE    Date 18Nov04               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD023 - Automatic Customer Account Closure                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FRSACMTL8IF  E           K        DISK
+      *
+     FRSACMTL1IF  E           K        DISK
+     F            RSACMTPO                          KIGNORE
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * Sar Text details
+     ISDSARD    E DSSCSARDPD
+      *
+      * Bank detaisl
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Short Data Structure for Access Objects
+     IDSFDY     E DSDSFDY
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Indicators:                                                   *
+      * 99 - EOF or error ll of program                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RTCD
+     C                     PARM           W0BRCA
+     C                     PARM           W0CNUM
+     C                     PARM           W0CCY
+     C                     PARM           W0ACOD
+     C                     PARM           W0ACSQ
+      *
+      *** Key lists to access GL movements
+      *
+     C           *LIKE     DEFN BRCA      W0BRCA
+     C           *LIKE     DEFN CNUM      W0CNUM
+     C           *LIKE     DEFN CCY       W0CCY
+     C           *LIKE     DEFN ACOD      W0ACOD
+     C           *LIKE     DEFN ACSQ      W0ACSQ
+     C           *LIKE     DEFN VUDT      W0VUDT
+      *
+     C           W0KEY0    KLIST
+     C                     KFLD           W0BRCA
+     C                     KFLD           W0CNUM
+     C                     KFLD           W0CCY
+     C                     KFLD           W0ACOD
+     C                     KFLD           W0ACSQ
+      *
+     C           W0KEY1    KLIST
+     C                     KFLD           W1CNUM  6
+      *
+     C                     MOVE *BLANKS   @RTCD
+      *
+      *** Call to the Switchable features file to check if CSD023
+      *** is switched on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSD023'  @SARD   6
+     C           SDSARD    PARM SDSARD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *** Retrieve the Bank's details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *** Check for GL postings with PSTD = today or VALD >= today
+      *
+     C                     MOVE BJRDNB    W0VUDT
+     C                     MOVE *OFF      W0GLMV  1
+      *
+     C           W0KEY0    SETLLRSACMTL8                 99
+     C   99      W0KEY0    READERSACMTL8               9898
+      *
+     C           *IN99     DOWEQ*ON
+     C           *IN98     ANDEQ*OFF
+      *
+     C           PTDT      IFEQ BJRDNB
+     C           VUDT      ORGE BJRDNB
+     C                     MOVE *ON       W0GLMV
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           W0KEY0    READERSACMTL8               9898
+     C                     ENDDO
+      *
+     C           W0GLMV    IFEQ *ON
+     C                     MOVE '*POST '  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *** Check for GL postings with value date = today or in the future
+      *
+     C           W0KEY0    SETLLRSACMTL1                 99
+     C   99      W0KEY0    READERSACMTL1               9898
+      *
+     C           *IN99     DOWEQ*ON
+     C           *IN98     ANDEQ*OFF
+      *
+     C           PSTD      IFEQ BJRDNB
+     C           VALD      ORGE BJRDNB
+     C                     MOVE *ON       W0GLMV
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           W0KEY0    READERSACMTL1               9898
+     C                     ENDDO
+      *
+     C           W0GLMV    IFEQ *ON
+     C                     MOVE '*CLEAR'  @RTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************

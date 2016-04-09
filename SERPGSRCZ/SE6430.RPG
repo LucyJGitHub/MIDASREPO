@@ -1,0 +1,2353 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Gen SC postings from settlements')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                    *
+     F*                                                               *
+     F*  RPG/SE6430 - Generate Safe Custody Fee Postings from         *
+     F*                 Settlements                                   *
+     F*                                                               *
+     F*  Function:  This Program generates postings for all           *
+     F*  (COB)      authorised fee settlements on the settlement date *
+     F*                                                               *
+     F*  Called by: SEC6430 - Generate Postings from Settlements      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 195788             Date 08May02               *
+      *                 181936             Date 18Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 179044             Date 17Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+     F*                 CAC003             Date 25Feb97               *
+     F*                 102953             Date 08MAY96               *
+     F*                 049067             DATE 01MAY96               *
+     F*                 091522             DATE 14AUG95               *
+     F*                 S01464             DATE 04APR94               *
+     F*                 B10672             DATE 13DEC91               *
+     F*                    48360      DW   Date 12DEC92               *
+     F*                    48201      DW   Date 07DEC92               *
+     F*                    48200      GB   Date 04DEC92               *
+     F*                    47719           Date 24NOV92               *
+     F*                    B07942     SC   Date 15JUL91               *
+     F*                    R5513      SC   Date 21FEB91               *
+     F*                    R0190      SC   Date 19FEB91               *
+     F*                    R00142     SC   Date 11FEB91               *
+     F*                    R0854           Date 20NOV90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Posting     *
+      *           Information                                         *
+      *  195788 - If settlement branch is blank, do not produce       *
+      *           database error instead force to post to suspense.   *
+      *  181936 - Produce postings for Spot Position and Base Ccy Eqv.*
+      *  179044 - Use S01522 processing to enable Multi-language      *
+      *           Posting Narratives in Safe Custody Fees.            *
+      *  CGL007 - Account Postings Enquiry.  Recompile.               *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*  102953 - Check for live settlement account. If not,          *
+     F*           post to suspense.                                   *
+     F*  049067 - System must generate reversing entries if RECI = *  *
+     F*           and then physically delete the record.              *
+     F*  091522 - Safe Custody Fees - Private Banking (CSE001)        *
+     F*  S01464 - Safe Custody Fees                                   *
+     F*  B10672 - DO NOT OVERWRITE NARRATIVE FOR SETTLEMENT POSTINGS  *
+     F*           AMEND FIX R0190                                     *
+     F*  48360  - DO NOT OUTPUT POSTINGS WITH ZERO AMOUNT             *
+     F*  48201  - ONLY GENERATE INTER CURRENCY ENTRIES IF BANK CHARGE *
+     F*           CCY OR CUSTOMER SETTLEMENT CCY *NE BASE CCY &       *
+     F*           CORRECT CONVERSION OF AMOUNTS                       *
+     F*  48200  - SUPPRESS SUBR FOR CONVERSION OF AN AMOUNT           *
+     F*           IN ANOTHER CURRENCY USING THE KONVENTIONKURSE       *
+     F*           EXCHANGE RATE (SWISS)                               *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  B07942 - SET UP CLOSING BRACKET ON NARRATIVE                 *
+     F*  R5513  - BOOK SPOT TRADE + EQUIVALENT IN BASE CURRENCY       *
+     F*  R0190  - DO NOT OVERWRITE NARRATIVE FOR SETTLEMENT POSTINGS  *
+     F*  R00142 - CHANGE NARRATIVE IN MULTILANGUAGE                   *
+     F*           SHOW GOOD POSITION FOR GE-SC                        *
+     F*  R0854  - REPLACE ACCESS OF SDPLCSL0 BY SDCUSTL1              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SE6430F002
+      *
+      ** Bank Details  (Prefix:BJ)
+     FSDBANKL1IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+      *
+      ** General Ledger Details  (Prefix:BK)
+     FSDGELRL1IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+      *
+     F***Safe*Custody*ICD**(Prefix:SA)*********************************   S01464
+     F***SCICDPPDIF**E********************DISK***********************UC   S01464
+     F**********************************************KINFSR**PSSR*******   S01464
+      *
+      ** Trading Data  (Prefix:BL)
+     FSDTRADL1IF  E           K        DISK                           UC
+     F                                              KINFSR *PSSR
+      *
+     F***Portfolio*Details**(Prefix:P9)********************************   S01464
+     F***SDPORTPDIF**E********************DISK***********************UC   S01464
+     F**********************************************KINFSR**PSSR*******   S01464
+      *
+      ** SC Generated Entries Trailer
+     FGESCZZ  UF  E           K        DISK                      A
+     F                                              KINFSR *PSSR
+      *
+     F***Run*Control*Report********************************************   S01464
+     F***SE6430AUO***E********************DISK*************************   S01464
+     F**********************************************KINFSR**PSSR*******   S01464
+     F*                                                                   S01464
+     FSE6430AUO   E                    PRINTER      KINFSR *PSSR          S01464
+     F** Audit report printer file                                        S01464
+      *
+      ** Customer Master File  (Prefix:BB-QB)
+     F*SDPLCSL0IF**E***********K        DISK                              R0854
+     F**SDCUSTL1IF**E***********K********DISK***********************R0854 S01464
+     F*****************************************************************   S01464
+     F*                                                                   R5553
+     FSDACODL0IF  E           K        DISK                               R5553
+      *
+      ** Branch Codes  (Prefix:A8)
+     FSDBRCHL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     F***Currency*Codes**(Prefix:A6-CY)********************************   S01464
+     F***SDCURRJ0IF**E***********K********DISK*************************   S01464
+     F**********************************************KINFSR**PSSR*******   S01464
+      *
+     FSDCURRL0IF  E           K        DISK                               48200
+     F                                              KINFSR *PSSR          48200
+      *
+     FSDNARRL0IF  E           K        DISK                               R00142
+      *                                                                   R00142
+      ** GL Account Master
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KINFSR *PSSR
+      *
+      ** RE Account Number
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMF
+     F                                              KINFSR *PSSR
+      *
+      ** SC Generated Entries
+     FGESCPD  O   E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     F***Outstanding*SC*Fees*Settlements**(Prefix:SE)******************   S01464
+     F***SCOCFSPDUF**E***********K********DISK*************************   S01464
+     F**********************************************KINFSR *PSSR*******   S01464
+     F*                                                                   S01464
+     FSEOCFSPDUF  E           K        DISK         KINFSR *PSSR          S01464
+     F**                                                                  S01464
+     F*                                                                   S01464
+     F/COPY WNCPYSRC,SE6430F001
+      /EJECT
+      *
+      **  Function of indicators
+      *   ----------------------
+      *
+      *   20      Profit Centre Accounting is installed                   CAC003
+      *   71      ERROR WHEN ACCESSING A FILE
+      ****80******ERROR*WHEN*ACCESSING*SDCURRJ0*IN*SR/ZCCYKK***********   S01464
+      *   80      Error when accessing SDCURRL0 in SR/ZCCYKK              S01464
+      *   83      Error when accessing SDNARRPD or CLINTCC                R00142
+      ****85******DATABASE*ERROR*ON*SDCURRJ0*IN*SR/ZCCYKK**************   S01464
+      *   85      Database error on SDCURRL0 in SR/ZCCYKK                 S01464
+      *
+      *   98      DATE FORMAT
+      *   90-99   STANDARD SUBROUTINES
+      *   LR      END OF FILE PF/PMCHRGPP
+      *
+      /EJECT
+      *
+      ***'CUSTODY*FEE*FOR*'*NARRATIVE*ARRAY**********                     R00142
+     E********************NARR****1***1*16***********                     R00142
+      *
+      ** POWER ARRAY FOR SR/ZCCYXR
+     E                    POWER   1   7  7 3             POWER ARRAY
+      *
+      ** ARRAY FOR COPYRIGHT INSERTION
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,SE6430E001
+      /EJECT
+     I*****************************************************************   S01464
+     I***LOCAL*DATA*AREA*FOR*DATABASE*ERROR*DETAILS********************   S01464
+     I***LDA********UDS****************************256                    S01464
+     I**************************************132 183 DBLOT                 S01464
+     I**************************************132 141 DBFILE                S01464
+     I**************************************142 170 DBKEY                 S01464
+     I**************************************171 180 DBPGM                 S01464
+     I**************************************181 1830DBASE                 S01464
+     IACCNTABF                                                            CAC003
+     I              PRFC                            APRFC                 CAC003
+      *
+      ** DATA STRUCTURE FOR THE CUSTOMER SETTLEMENT ACCOUNT
+     IDSCUSA      DS
+     I**********                              1   60DSCNUM                                    CSD027
+     I                                        1   6 DSCNUM                                    CSD027
+     I**********                              7  10 DSACOD                                    CGL029
+     I**********                             11  12 DSACSQ                                    CGL029
+     I                                        7  16 DSACOD                                    CGL029
+     I                                       17  18 DSACSQ                                    CGL029
+      *
+      ** DATA STRUCTURE FOR THE POSTING NARRATIVE
+     IDSNARR      DS
+     I                                        1  16 DSNAR1
+     I                                       17  22 DSNAR2
+     I                                       23  24 DSNAR3
+     I                                       25  28 DSNAR4
+     I                                       29  30 DSNAR5
+     I                                       23  30 DSNAR6
+     I*
+     I***Data*structure*for*compilation*-*copyright*insertion.*********   S01464
+     I***CPYR@#******DS************************************************   S01464
+     I****************************************1  80 CPY@                  S01464
+     I****************************************1  20 CPY@##                S01464
+     I*                                                                   S01464
+     IRUNDT     E DSRUNDAT                                                S01464
+     I** Data area for rundate                                            S01464
+     I*                                                                   S01464
+     ILDA         DS                            256                       S01464
+     I** Local Data Area for Database Error details                       S01464
+     I*                                                                   S01464
+     I                                      134 141 DBFILE                S01464
+     I                                      142 170 DBKEY                 S01464
+     I                                      171 180 DBPGM                 S01464
+     I                                      181 1830DBASE                 S01464
+     I/COPY WNCPYSRC,SE6430I001
+     ISDSCFE    E DSSDSCFEPD                                              S01464
+     I** Safe custody fees details                                        S01464
+     I*                                                                   S01464
+     ISDMMOD    E DSSDMMODPD                                              091522
+     I** Midas Modules File                                               091522
+     I*                                                                   091522
+     ISDPORT    E DSSDPORTPD                                              091522
+     I** Portfolio Management ICD                                         091522
+     I*                                                                   CAC003
+     ISDPCAC    E DSSDPCACPD                                              CAC003
+     I* External DS for PCA                                               CAC003
+     I*                                                                   CAC003
+     ISDPRFC    E DSSDPRFCPD                                              CAC003
+     I** Profit Centre details                                            CAC003
+     I*                                                                   091522
+     I/COPY WNCPYSRC,SE6430I002
+     I** Short DS for access programs                                     091522
+     IDSFDY     E DSDSFDY                                                 091522
+     I*                                                                   091522
+     IDSSDY     E DSDSSDY                                                 S01464
+     I** Long DS for access programs                                      S01464
+     I*                                                                   S01464
+      *                                                                   179044
+      ** SAR File Details Accessed via access program AOSARDR0            179044
+      *                                                                   179044
+     ISCSARD    E DSSCSARDPD                                              179044
+      *                                                                   179044
+      ** UDC Multi Language Narrative Data Structure                      179044
+      *                                                                   179044
+     ICGPNAR    E DSCGPNARPD                                              179044
+      *                                                                   179044
+      ** Customer Details                                                 179044
+      *                                                                   179044
+     ISDCUST    E DSSDCUSTPD                                              179044
+      *                                                                   179044
+      ** Data Structure for Customer and Branch                           179044
+      *                                                                   179044
+     I##PRM1      DS                                                      179044
+     I                                        1   6 A#CUST                179044
+     I                                        7   9 A#BRCA                179044
+     I/EJECT                                                              179044
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P01     - ACCESS CUSTOMER DETAILS                               *
+      * #SCURR   - ACCESS CURRENCY CODES FILE                            *
+      * #SBRCH   - ACCESS BRANCH CODES FILE                              *
+      * #P02     - GENERATE POSTINGS                                     *
+      * #P03     - GENERATE ADJUSTMENT POSTINGS                          *
+      * #U01     - UPDATE OUTSTANDING CUSTODY FEES SETTLEMENTS           *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      * ZCCYKK   - CONVERT AN AMOUNT USING THE SWISS KK EXCH. RATES      *
+      * ZCCYCN   - CONVERT AN AMOUNT USING THE SPOT RATES                *
+      * ZCCYXR   - CONVERT AN AMOUNT USING AN EXCHANGE RATE BETWEEN      *
+      * #P05     - GENERATE BASE CURRENCY SETTLEMENT ENTRIES             *
+      * #P06     - GENERATE CROSS-CURRENCY SETTLEMENT ENTRIES            *
+      * #P07     - GENERATE INTER-BRANCH SETTLEMENT ENTRIES              *
+      * #W01     - WRITE SUSPENSE ENTRIES TO PF/GESCPD                   *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P08     - AUDIT PROCESSING                                      *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      *
+      ** KLIST TO ACCESS LF/ACCNT
+     C           KACCNT    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA                            S01464
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P R O G R A M   S T A R T                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      ** INITIAL PROCESSING
+     C                     EXSR #INIT
+      *
+     C***READ*FROM*OUTSTANDING*SC*FEES*SETTLEMENTS*(PF/SCOCFSPD)*******   S01464
+     C***********          READ SCOCFSPD                 LR               S01464
+     C*                                                                   S01464
+     C** Read from oustanding SC fees settlements                         S01464
+     C*                                                                   S01464
+     C                     READ SEOCFSPD                 LR               S01464
+      *
+      ** DOWHILE NOT END OF FILE
+     C           *INLR     DOWEQ'0'
+     C/COPY WNCPYSRC,SE6430C016
+      *
+      ** ACCESS CUSTOMER DETAILS
+     C                     EXSR #P01
+      *
+      ** GENERATE POSTINGS
+      *                                                                   049067
+     C           SERECI    IFNE '*'                                       049067
+     C                     Z-ADDSEAFTS    WWPSTA
+     C                     EXSR #P02
+     C                     END                                            049067
+      *
+      ** IF 'ACTUAL FEE TO BE SETTLED' NOT = 'CUSTODY FEE ACCRUED'
+      ** GENERATE ADJUSTMENT SETTLEMENT ENTRIES
+     C           SERECI    IFNE '*'                                       049067
+     C           SEAFTS    IFNE SECFAC
+     C           SEAFTS    SUB  SECFAC    WWPSTA
+     C                     EXSR #P03
+     C                     END
+      *                                                                   049067
+     C                     ELSE                                           049067
+      ** GENERATE REVERSAL ACCRUAL ENTRIES                                049067
+     C           SECFAC    MULT -1        WWPSTA                          049067
+     C                     EXSR #P03                                      049067
+     C                     END                                            049067
+      *
+     C***UPDATE*PF/SCOCFSPD********************************************   S01464
+     C*                                                                   S01464
+     C** Update PF/SEOCFSPD                                               S01464
+     C*                                                                   S01464
+     C                     EXSR #U01
+      *
+     C***READ*NEXT*RECORD*FROM*PF/SCOCFSPD*****************************   S01464
+     C***********          READ SCOCFSPD                 LR               S01464
+     C*                                                                   S01464
+     C** Read next record from file                                       S01464
+     C*                                                                   S01464
+     C                     READ SEOCFSPD                 LR               S01464
+      *
+      ** END OF FILE
+     C                     END
+      *
+      ** AUDIT PROCESSING
+     C                     EXSR #P08
+      *
+     C/COPY WNCPYSRC,SE6430C011
+     C                     MOVE '1'       *INLR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - ACCESS CUSTOMER DETAILS                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      * #SBRCH   - ACCESS BRANCH CODES FILE                              *
+      * #SCURR   - ACCESS CURRENCY CODES FILE                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPREV   - PREVIOUS CUSTOMER READ                                *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      **WWCBBA***-*INTERBRANCH*BRANCH*ACCOUNT*FOR*CUSTOMER*BRANCH******   S01464
+      **WWCBHO***-*INTERBRANCH*H.O.*ACCOUNT*FOR*CUSTOMER*BRANCH********   S01464
+      * WWDFAC   - Due from account code                              *   S01464
+      * WWDTAC   - Due to account code                                *   S01464
+      * WWSCSR   - CUST. SETTLEMENT CCY SPOT RATE                        *
+      * WWSCND   - CUST. SETTLEMENT CCY DECIMAL PLACES                   *
+      * WWSCMI   - CUST. SETTLEMENT CCY MULT/DIV IND                     *
+      * WWSCSA   - CUST. SETTLEMENT CCY SPOT TRADE EQUIVALENT ACCOUNT    *
+      * WWBRCD   - WORK BRANCH CODE                                      *
+      * WWSBIN   - BRANCH INTERNAL CUSTOMER FOR CUST. SETTL. BRANCH      *
+      * WWSBBA   - INTERBRANCH BRANCH ACCOUNT FOR CUST. SETTL. BRANCH    *
+      * WWSBHO   - INTERBRANCH H.O. ACCOUNT FOR CUST. SETTL. BRANCH      *
+      * WWSAPR   - SUSPENSE ACCOUNT POSTINGS REQUIRED FLAG               *
+      * WWCNUM   - WORK CUSTOMER NUMBER                                  *
+      * WWACOD   - WORK ACCOUNT CODE                                     *
+      * WWACSQ   - WORK ACCOUNT SEQUENCE                                 *
+      * WWATYP   - WORK ACCOUNT TYPE                                     *
+      * WWRIND   - WORK RETAIL INDICATOR                                 *
+      * WWTRAT   - WORK TRANSACTION NUMBER                               *
+      * WWACNO   - WORK RETAIL ACCOUNT NUMBER                            *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           **#P01 BEGSR **
+     C/COPY WNCPYSRC,SE6430C005
+      *
+     C***IF*CHANGE*OF*CUSTOMER*****************************************   S01464
+     C***********SECNUM    IFNE WWPREV                                    S01464
+     C***********                                                         S01464
+     C***ACCESS*CUSTOMER*DETAILS*FROM*LF/SDPLCSL0**********************   S01464
+     C***********          MOVE SECNUM    BBCUST                          S01464
+     C***********BBCUST    CHAINSDPLCSL0             71                   R0854
+     C***********BBCUST    CHAINSDCUSTL1             71             R0854 S01464
+     C************IN71     IFEQ '1'                                       S01464
+     C***********          Z-ADD07        DBASE            ***************S01464
+     C***********          MOVEL'SDPLCSL0'DBFILE           **DB ERROR 07**R0854
+     C***********          MOVEL'SDCUSTL1'DBFILE     **DB ERROR 07**R0854 S01464
+     C***********          MOVELBBCUST    DBKEY            ***************S01464
+     C***********          EXSR *PSSR                                     S01464
+     C***********          END                                            S01464
+     C***********                                                         R00142
+     C*****Retreive*the*posting*narrative*in*file*SDNARRL0*********R00142 S01464
+     C***********KEYNAR    CHAINSDNARRL0             83            R00142 S01464
+     C***********                                                  R00142 S01464
+     C************IN83     IFEQ '1'                                R00142 S01464
+     C***********          MOVEL'13'      DBASE     ***************R00142 S01464
+     C***********          MOVEL'SDNARRPD'DBFILE    *  DB ERROR 13 R00142 S01464
+     C***********          MOVEL'  C5'    DBKEY     ***************R00142 S01464
+     C***********          MOVELBBLANG    DBKEY                    R00142 S01464
+     C***********          EXSR *PSSR                              R00142 S01464
+     C***********          END                                     R00142 S01464
+      *
+      ** ACCESS LF/SDBRCHL1 USING CUSTOMER BRANCH FROM LF/SDPLCSL0
+     C*                                                                   S01464
+     C           @BBTMP    IFNE SEBRCA                                    S01464
+     C                     MOVE SEBRCA    @BBTMP  3                       S01464
+     C*                                                                   S01464
+     C***********          MOVE BBBRCD    A8BRCD                          S01464
+     C                     MOVE SEBRCA    A8BRCD                          S01464
+     C                     EXSR #SBRCH
+      *
+     C***SAVE*BRANCH*INTERNAL*CUST.*NR,*INTERBRANCH*BRANCH*AND*H.O.****   S01464
+     C***ACCOUNT*CODES*FOR*THE*CUSTOMER*BRANCH*************************   S01464
+     C***********          MOVE A8BICN    WWCBIN                          S01464
+     C***********          MOVE A8IBAC    WWCBBA                          S01464
+     C***********          MOVE A8IHOA    WWCBHO                          S01464
+     C*                                                                   S01464
+     C** Save branch internal customer, due from account code, due to     S01464
+     C**   account code                                                   S01464
+     C*                                                                   S01464
+     C                     MOVE A8BICN    WWCBIN                          S01464
+     C                     MOVE A8DFAC    WWDFAC                          S01464
+     C                     MOVE A8DTAC    WWDTAC                          S01464
+     C                     END                                            S01464
+     C***********                                                         S01464
+     C***SAVE*SETTLEMENT*CUSTOMER*NUMBER*IN*PREVIOUS*CUSTOMER*NUMBER***   S01464
+     C***********          MOVE SECNUM    WWPREV                          S01464
+     C***********                                                         S01464
+     C***END*OF*CHANGE*OF*CUSTOMER*************************************   S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+      *-------------------------------------------------------------------
+      *
+     C***ACCESS*LF/SDCURRJO*USING*CUST*SETTLEMENT*CCY*FR*PF/SCOCFSPD***   S01464
+     C*                                                                   S01464
+     C** Access currencies file using customer settlement currency from   S01464
+     C**   PF/SEOCFSPD                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE SECSCY    A6CYCD
+     C                     EXSR #SCURR
+      *
+      ** SAVE SPOT RATE, NR OF DEC. PLACES, SPOT TRADE EQUIVALENT ACCOUNT
+      ** AND MULT./DIV. INDICATOR FOR THE BANK CHARGING CURRENCY
+     C                     Z-ADDA6SPRT    WWSCSR
+     C                     Z-ADDA6NBDP    WWSCND
+     C                     MOVE A6MDIN    WWSCMI
+     C                     MOVE A6SPAE    WWSCSA
+      *                                                                   195788
+      ** If Customer-Settlement Branch is blank set to customer brch      195788
+      ** blank-out the settlement account to force suspense posting.      195788
+      *                                                                   195788
+     C           SECUSB    IFEQ *BLANKS                                   195788
+     C                     MOVE SEBRCA    SECUSB                          195788
+     C                     MOVE *BLANKS   SECUSA                          195788
+     C                     ENDIF                                          195788
+      *
+     C***IF*CUST*BRCH*(LF/SDPLCSL0)*NOT*=*CUST.SETTL.BRCH*(PF/SCOCFSPD)   S01464
+     C***ACCESS*LF/SDBRCHL1*USING*CUST*SETTLEMENT*BRCH*FROM*PF/SCOCFSPD   S01464
+     C*                                                                   S01464
+     C** If customer branch (cust file) <> customer settlement branch     S01464
+     C** (PF/SEOCFSPD), access branch file using cust settlement branch   S01464
+     C*                                                                   S01464
+     C                     MOVE SECUSB    WWBRCD
+     C***********BBBRCD    IFNE WWBRCD                                    S01464
+     C           SEBRCA    IFNE WWBRCD                                    S01464
+      *
+     C                     MOVE SECUSB    A8BRCD
+     C                     EXSR #SBRCH
+      *
+     C***SAVE*BRANCH*INTERNAL*CUST.*NR,*INTERBRANCH*BRANCH*AND*H.O.****   S01464
+     C***ACCOUNT*CODES*FOR*THE*CUSTOMER*SETTLEMENT*BRANCH**************   S01464
+     C***********          MOVE A8BICN    WWSBIN                          S01464
+     C***********          MOVE A8IBAC    WWSBBA                          S01464
+     C***********          MOVE A8IHOA    WWSBHO                          S01464
+     C***********                                                         S01464
+     C***********          ELSE                                           S01464
+     C***********                                                         S01464
+     C***TAKE*BRANCH*INTERNAL*CUST.*NR,*INTERBRANCH*BRANCH*AND*H.O.****   S01464
+     C***ACCOUNT*CODES*FROM*THE*CUSTOMER*BRANCH*(PREVIOUSLY*SAVED)*****   S01464
+     C***FOR*THE*CUSTOMER*SETTLEMENT*BRANCH****************************   S01464
+     C***********          MOVE WWCBIN    WWSBIN                          S01464
+     C***********          MOVE WWCBBA    WWSBBA                          S01464
+     C***********          MOVE WWCBHO    WWSBHO                          S01464
+     C*                                                                   S01464
+     C** Save branch internal customer, due from account code,            S01464
+     C** and due to account code for the customer settlement branch.      S01464
+     C*                                                                   S01464
+     C                     MOVE A8BICN    WWSBIN                          S01464
+     C                     MOVE A8DFAC    WWSBBA                          S01464
+     C                     MOVE A8DTAC    WWSBHO                          S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C*                                                                   S01464
+     C** Take branch internal customer, due from account code,            S01464
+     C**   due to account code (previously saved) for the customer        S01464
+     C**   settlement branch.                                             S01464
+     C*                                                                   S01464
+     C                     MOVE WWCBIN    WWSBIN                          S01464
+     C                     MOVE WWDFAC    WWSBBA                          S01464
+     C                     MOVE WWDTAC    WWSBHO                          S01464
+      *
+     C                     END
+      *
+      *-------------------------------------------------------------------
+      *
+      ** SET FLAG 'SUSPENSE ACCOUNT POSTINGS REQUIRED' TO 'N'
+     C                     MOVE 'N'       WWSAPR
+      *
+     C***IF*THE*LAST*2*CHAR.*OF*THE*CUST.*SETTLEMENT*A/C*(PF/SCOCFSPD)*   S01464
+     C***ARE*BLANK,*ACCESS*LF/ACNUM*WITH*FIRST*10*CHAR.****************   S01464
+     C*                                                                   S01464
+     C** If the last 2 characters of the customer settlement account      S01464
+     C**   (PF/SEOCFSPD) are blank, access LF/ACNUM with 1st 10 chars.    S01464
+     C*                                                                   S01464
+     C                     MOVE SECUSA    DSCUSA
+     C           DSACSQ    IFEQ *BLANK
+      *
+     C                     MOVELSECUSA    ACNO
+     C           ACNO      CHAINACNUM                71
+     C*                                                                   CAC003
+     C** Chain to ACCNT if *IN20 is on and *IN71 is off and RECI is 'D'   CAC003
+     C*                                                                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C           *IN71     ANDEQ'0'                                       CAC003
+     C           RECI      ANDEQ'D'                                       CAC003
+     C           KACCNT    CHAINACCNT                71                   CAC003
+     C                     ENDIF                                          CAC003
+      *
+      ** OTHERWISE, ACCESS LF/ACCNT
+     C                     ELSE
+     C**********           Z-ADDDSCNUM    CNUM                                                CSD027
+     C                     MOVE DSCNUM    CNUM                                                CSD027
+     C                     MOVE SECSCY    CCY
+     C                     MOVE DSACOD    ACOD
+     C                     MOVE DSACSQ    ACSQ
+     C                     MOVE SECUSB    BRCA                            S01464
+     C           KACCNT    CHAINACCNT                71
+      *
+     C                     END
+      *
+      ** LIVE RECORD READ ON LF/ACNUM OR LF/ACCNT
+     C           *IN71     IFEQ '0'
+     C           RECI      ANDEQ'D'                                       102953
+     C**********           Z-ADDCNUM      WWCNUM                                              CSD027
+     C                     MOVE CNUM      WWCNUM                                              CSD027
+     C                     Z-ADDACOD      WWACOD
+     C                     Z-ADDACSQ      WWACSQ
+     C                     MOVE ATYP      WWATYP
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       WWRIND
+     C                     Z-ADD94051     WWTRAT
+     C                     MOVE ACNO      WWACNO
+     C                     ELSE
+     C                     MOVE *ZEROS    WWRIND
+     C                     Z-ADD*ZEROS    WWTRAT
+     C                     MOVE *ZEROS    WWACNO
+     C                     END
+      *
+      ** OTHERWISE (NO LIVE RECORD),
+      ** SET FLAG 'SUSPENSE ACCOUNT POSTINGS REQUIRED' TO 'Y'
+     C                     ELSE
+     C                     MOVE 'Y'       WWSAPR
+     C                     END
+      *
+      ** SET THE POSTING NARRATIVE
+     C*********************MOVEANARR,1    DSNAR1                          R00142
+     C                     MOVELALDON     DSNAR1                          R00142
+     C                     MOVE SECNUM    DSNAR2
+     C***********SACFCP    IFEQ 'C'                                       S01464
+     C           FBCFCP    IFEQ 'C'                                       S01464
+     C                     MOVE *BLANK    DSNAR6
+     C                     ELSE
+     C                     MOVE ' ('      DSNAR3
+     C***********SEPTFR    IFEQ '9997'                                    S01464
+     C***********          MOVE P9R997    DSNAR4                          S01464
+     C***********          ELSE                                           S01464
+     C***********SEPTFR    IFEQ '9999'                                    S01464
+     C***********          MOVE P9R999    DSNAR4                          S01464
+     C***********          ELSE                                           S01464
+     C***********          MOVE SEPTFR    DSNAR4                          S01464
+     C***********          END                                            S01464
+     C***********          END                                            S01464
+     C           SEPTFR    IFEQ '9997'                                    091522
+     C                     MOVE FCR997    DSNAR4                          091522
+     C                     ELSE                                           091522
+     C           SEPTFR    IFEQ '9999'                                    091522
+     C                     MOVE FCR999    DSNAR4                          091522
+     C                     ELSE                                           091522
+     C                     MOVE SEPTFR    DSNAR4                          091522
+     C                     END                                            091522
+     C                     END                                            091522
+     C**                   MOVE ')  '     DSNAR5                          B07942
+     C                     MOVE ') '      DSNAR5                          B07942
+     C                     END
+      *
+     C                     ENDSR                           **#P01 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #SCURR   - ACCESS CURRENCY CODES FILE                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - ACCESS CUSTOMER DETAILS                               *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #SCURR    BEGSR                           **#SCURR BSR **
+      *
+     C***********A6CYCD    CHAINSDCURRJ0             71
+     C           A6CYCD    CHAINSDCURRL0             71                   S01464
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD08        DBASE            ***************
+     C***********          MOVEL'SDCURRJ0'DBFILE           **DB ERROR 08**S01464
+     C                     MOVEL'SDCURRL0'DBFILE           **DB ERROR 08**S01464
+     C                     MOVELA6CYCD    DBKEY            ***************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR                           **#SCURR ESR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #SBRCH   - ACCESS BRANCH CODES FILE                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - ACCESS CUSTOMER DETAILS                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #SBRCH    BEGSR                           **#SBRCH BSR **
+      *
+     C           A8BRCD    CHAINSDBRCHL1             71
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD09        DBASE            ***************
+     C                     MOVEL'SDBRCHL1'DBFILE           **DB ERROR 09**
+     C                     MOVELA8BRCD    DBKEY            ***************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR                           **#SBRCH ESR**
+      *
+      ********************************************************************R5553
+      /EJECT                                                              R5553
+      ********************************************************************R5553
+      *                                                                   R5553
+      **   #ACOD - Subroutine to access account code details              R5553
+      *                                                                   R5553
+      **   Called by                                                      R5553
+      *                                                                   R5553
+      **   Calls - *PSSR                                                  R5553
+      *                                                                   R5553
+      *===================================================================R5553
+     C           #ACOD     BEGSR                           * #ACOD BEGS **R5553
+      *                                                                   R5553
+     C**********           MOVE ACOD      KKACOD  4                                     R5553 CGL029
+     C                     MOVE ACOD      KKACOD 10                                           CGL029
+     C           KKACOD    CHAINSDACODL0             81                   R5553
+     C           *IN81     IFEQ '0'                                       R5553
+     C                     MOVE A5ACTY    ATYP                            R5553
+     C                     ELSE                                           R5553
+      **   DB error:                                                      R5553
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD14        DBASE            ***************R5553
+     C                     MOVEL'SDACODL0'DBFILE           *  DB ERROR 14 R5553
+     C***********          MOVEL'KKACOD'  DBKEY      ***************R5553 S01464
+     C                     MOVELKKACOD    DBKEY                     R5553 S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR                                     R5553
+     C                     END                                            R5553
+      *                                                                   R5553
+     C                     ENDSR                           * #ACOD ENDS **R5553
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - GENERATE POSTINGS                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      * #P05     - GENERATE BASE CURRENCY SETTLEMENT ENTRIES             *
+      * #P06     - GENERATE CROSS-CURRENCY SETTLEMENT ENTRIES            *
+      * #P07     - GENERATE INTER-BRANCH SETTLEMENT ENTRIES              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBCAM   - AMOUNT IN BANK CHARGING CURRENCY                      *
+      * WWBRCD   - WORK BRANCH CODE                                      *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           **#P02 BEGSR **
+      *
+      ** SAVE POSTING AMOUNT PASSED (AMOUNT IN BANK CHARGING CCY)
+     C                     Z-ADDWWPSTA    WWBCAM
+      *
+      ** GENERATE STANDARDS POSTINGS
+     C                     EXSR #P04
+      *
+      ** IF BANK CHARGING CURRENCY NOT = CUSTOMER SETTLEMENT CURRENCY
+     C***********SABCGC    IFNE SECSCY                                    S01464
+     C           FBBCGC    IFNE SECSCY                                    S01464
+      *
+      ** IF BANK CHARGING CURRENCY NOT = BASE CURRENCY
+      ** GENERATE INTER-CURRENCY ACCOUNTING ENTRIES
+     C**         SABCGC    IFNE BJCYCD                                    R5513
+     C                     EXSR #P05
+     C**                   END                                            R5513
+      *
+      ** IF CUSTOMER SETTLEMENT CURRENCY NOT = BASE CURRENCY
+      ** GENERATE INTER-CURRENCY ACCOUNTING ENTRIES
+     C**         SECSCY    IFNE BJCYCD                                    R5513
+     C           SECSCY    IFNE BJCYCD                                    48201
+     C/COPY WNCPYSRC,SE6430C006
+     C                     EXSR #P06
+     C                     END                                            48201
+     C**                   END                                            R5513
+      *
+     C                     END
+      *
+      ** IF CUSTOMER SETTLEMENT BRANCH NOT = CUSTOMER BRANCH
+      ** GENERATE INTER-BRANCH ACCOUNTING ENTRIES
+     C                     MOVE SECUSB    WWBRCD
+     C***********WWBRCD    IFNE BBBRCD                                    S01464
+     C           WWBRCD    IFNE SEBRCA                                    S01464
+     C                     EXSR #P07
+     C                     END
+      *
+     C                     ENDSR                           **#P02 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - GENERATE ADJUSTMENT POSTINGS                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPSTA   - WORK POSTING AMOUNT                                   *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR                           **#P03 BEGSR **
+      *
+      ** GENERATE ADJUSTMENT ENTRY  D E B I T
+     C                     Z-ADDWWPSTA    PSTA
+     C                     MOVE WWCBIN    CNUM
+     C***********          MOVE SABCGC    CCY                             S01464
+     C***********          MOVE SAAACT    ACOD                            S01464
+     C                     MOVE FBBCGC    CCY                             S01464
+     C                     MOVE FBAACT    ACOD                            S01464
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C           WWPSTA    IFGT 0
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C           WWPSTA    IFLT 0
+     C                     Z-SUBPSTA      PSTA
+     C                     END
+     C                     END
+     C***********          MOVE BBBRCD    BRCD                            S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     Z-ADD0         RIND
+     C*********************MOVE 'G'       ATYP                            R5553
+     C                     EXSR #ACOD                                     R5553
+     C*                                                                   CAC003
+     C** Check if Analytical Accounting is switched on.                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C                     MOVE FBPCSF    PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     EXSR #W02
+      *
+      ** GENERATE ADJUSTMENT ENTRY  C R E D I T
+     C***********          MOVE SAINCA    ACOD                            S01464
+     C                     MOVE FBINCA    ACOD                            S01464
+     C           DRCR      IFEQ 0
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     END
+     C                     EXSR #ACOD                                     R5553
+     C                     EXSR #W02
+      *
+     C                     ENDSR                           **#P03 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #U01     - UPDATE OUTSTANDING CUSTODY FEES SETTLEMENTS           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWMRDT   - WORK MIDAS RUN DATE                                   *
+      *                                                                  *
+      ********************************************************************
+     C           #U01      BEGSR                           **#U01 BEGSR **
+      *
+     C                     MOVE '*'       SERECI
+     C                     MOVELBJMRDT    SEDLUP
+     C                     MOVE BJMRDT    WWMRDT  5
+     C                     MOVELWWMRDT    SEMLUP
+     C                     MOVE BJMRDT    SEYLUP
+     C                     TIME           SETLUP
+     C                     MOVE 'P'       SECHTP
+     C                     Z-ADDBJRDNB    SELCD
+      *
+     C***********          UPDATSCOCFSP0                                  S01464
+     C***********          UPDATSEOCFSP0                                  S01464
+     C                     DELETSEOCFSP0                                  049067
+     C/COPY WNCPYSRC,SE6430C021
+      *
+     C                     ENDSR                           **#U01 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZCCYKK   - CONVERT AN AMOUNT USING THE SWISS KK EXCH. RATES      *
+      * #W01     - WRITE SUSPENSE ENTRIES TO PF/GESCPD                   *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - GENERATE POSTINGS                                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBCAM   - AMOUNT IN BANK CHARGING CURRENCY                      *
+      * WWSCAM   - AMOUNT IN CUSTOMER SETTLEMENT CURRENCY                *
+      * WWSAPR   - SUSPENSE ACCOUNT POSTINGS REQUIRED FLAG               *
+      * WWCNUM   - WORK CUSTOMER NUMBER                                  *
+      * WWACOD   - WORK ACCOUNT CODE                                     *
+      * WWACSQ   - WORK ACCOUNT SEQUENCE                                 *
+      * WWACNO   - WORK RETAIL ACCOUNT NUMBER                            *
+      * WWTRAT   - WORK TRANSACTION NUMBER                               *
+      * WWRIND   - WORK RETAIL INDICATOR                                 *
+      * WWATYP   - WORK ACCOUNT TYPE                                     *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      *                                                                  *
+      ********************************************************************
+     C           #P04      BEGSR                           **#P04 BEGSR **
+     C/COPY WNCPYSRC,SE6430C007
+      *
+      ** CONVERT THE POSTING AMOUNT IN BANK CHARGING CCY
+      ** INTO AN AMOUNT IN CUSTOMER SETTLEMENT CCY
+     C                     Z-ADDWWBCAM    ZAMTF
+     C/COPY WNCPYSRC,SE6430C008
+     C                     Z-ADD0         ZAMTT
+     C***********          MOVE SABCGC    ZCCYF                           S01464
+     C                     MOVE FBBCGC    ZCCYF                           S01464
+     C                     MOVE SECSCY    ZCCYT
+     C                     MOVE BJCYCD    ZCCYB
+     C*******************  EXSR ZCCYKK                                    48200
+     C/COPY WNCPYSRC,SE6430C001
+     C                     EXSR ZCCYGB                                    48200
+     C/COPY WNCPYSRC,SE6430C002
+     C                     Z-ADD0         WWBMLT 138
+     C                     Z-ADD0         WWMRAT 148
+     C                     Z-ADD0         WWSMLT 138
+     C           *IN85     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD10        DBASE            ***************
+     C***********          MOVEL'SDCURRJ0'DBFILE           **DB ERROR 10**S01464
+     C                     MOVEL'SDCURRL0'DBFILE           **DB ERROR 10**S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR                      ***************
+     C                     END
+     C                     Z-ADDZAMTT     WWSCAM
+      *
+      ** GENERATE STANDARD SETTLEMENT ENTRY  D E B I T
+     C                     Z-ADDWWSCAM    PSTA
+     C/COPY WNCPYSRC,SE6430C026
+     C                     MOVE SECSCY    CCY
+     C                     Z-ADD0         DRCR
+      *                                                                                       CGL020
+      ** Output 'F' to Fee Flag, Posting amount (PSTA) to Fee value                           CGL020
+      ** and 100 to Fee Percent if CGL020 is installed                                        CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE 'F'       FEEFLG                                              CGL020
+     C                     Z-ADDPSTA      FEEVAL                                              CGL020
+     C                     Z-ADD100       FEEVAL                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *
+      ** IF 'SUSPENSE ACCOUNT POSTINGS REQUIRED' FLAG IS = 'Y'
+      ** WRITE A SUSPENSE ENTRY TO PF/GESCPD
+     C           WWSAPR    IFEQ 'Y'
+     C                     EXSR #W01
+      *
+      ** OTHERWISE WRITE A NON-SUSPENSE ENTRY TO PF/GESCPD
+     C                     ELSE
+     C                     MOVE WWCNUM    CNUM
+     C                     Z-ADDWWACOD    ACOD
+     C                     Z-ADDWWACSQ    ACSQ
+     C                     Z-ADDWWACNO    ACNO
+     C                     Z-ADDWWTRAT    TRAT
+     C***********          MOVE SECUSB    BRCD                            S01464
+     C                     MOVE SECUSB    BRCA                            S01464
+     C                     Z-ADDWWRIND    RIND
+     C                     MOVE WWATYP    ATYP
+      **   show a narrative without customer detail                       R00142
+     C                     MOVE *BLANKS   PNAR                            R00142
+     C                     MOVELALDON     PNAR                            R00142
+     C                     MOVE 'A'       NARIN   1                       R0190
+     C/COPY WNCPYSRC,SE6430C017
+     C*                                                                   CAC003
+     C** Check if Analytical Accounting is switched on.                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C           ATYP      IFEQ 'R'                                       CAC003
+     C           ATYP      OREQ 'N'                                       CAC003
+     C                     MOVE APRFC     PRFC                            CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE FBPCSF    PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+      *                                                                   R00142
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C018
+      *                                                                   R00142
+     C                     MOVE ' '       NARIN                           R0190
+      **   Reset narratives for internal account                          R00142
+     C                     MOVE DSNARR    PNAR                            R00142
+     C                     END
+      *                                                                                       CGL020
+      ** Clear Fee Flag, Fee Value and Fee Percent                                            CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE *BLANKS   FEEFLG                                              CGL020
+     C                     Z-ADD0         FEEVAL                                              CGL020
+     C                     Z-ADD0         FEEVAL                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *
+      ** GENERATE STANDARD SETTLEMENT ENTRY  C R E D I T
+     C                     Z-ADDWWBCAM    PSTA
+     C                     MOVE WWCBIN    CNUM
+     C***********          MOVE SABCGC    CCY                             S01464
+     C***********          Z-ADDSAAACT    ACOD                            S01464
+     C                     MOVE FBBCGC    CCY                             S01464
+     C                     Z-ADDFBAACT    ACOD                            S01464
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD1         DRCR
+     C***********          MOVE BBBRCD    BRCD                            S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     Z-ADD0         RIND
+     C*********************MOVE 'G'       ATYP                            R5553
+     C                     EXSR #ACOD                                     R5553
+     C*                                                                   CAC003
+     C** Check if Analytical Accounting is switched on.                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C                     MOVE FBPCSF    PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C009
+      *
+     C                     ENDSR                           **#P04 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * SUPPRESSED  - REPKACED BY ZCCYGB                                 *48200
+      * ZCCYKK   - CONVERT AN AMOUNT USING THE SWISS KK EXCH. RATES      *
+      *                                                                  *
+      * (CONVERT AN AMOUNT IN ONE CURRENCY TO AN AMOUNT IN ANOTHER       *
+      *  CURRENCY USING THE SWISS KONVENTIONKURSE EXCHANGE RATE)         *
+      *                                                                  *
+      *  INPUT  FIELDS                                                   *
+      *       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                   *
+      *       ZCCYF   3A     'FROM' CURRENCY                             *
+      *       ZCCYT   3A     'TO' CURRENCY                               *
+      *       ZCCYB   3A     BASE CURRENCY                               *
+      *                                                                  *
+      *  OUTPUT  FIELDS                                                  *
+      *       ZAMTT  150     AMOUNT IN 'TO' CURRENCY                     *
+      *       ZCRSRT 138     CROSS EXCHANGE RATE                         *
+      *       ZCRSMD  1A     CROSS RATE MULT/DIV IND                     *
+      *       ZSCYDP  10     SETTLEMENT CCY DEC PLACES                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZCCYCN   - CONVERT AN AMOUNT USING THE SPOT RATES                *
+      *                                                                  *     F
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBMLT   - WORK BUY CONVENTION RATE                              *
+      * WWSMLT   - WORK SELL CONVENTION RATE                             *
+      * WWMRAT   - WORK MID RATE (SR/ZCCYKK)                             *
+      *                                                                  *
+      ********************************************************************
+     C***        ZCCYKK    BEGSR                           *** ZCCYKK ***
+      ***
+      ***DEFINE WORK FIELDS
+     C***                  Z-ADDZAMTF     ZAMTF  150
+     C***                  MOVE ZCCYF     ZCCYF   3
+     C***                  MOVE ZCCYT     ZCCYT   3
+     C***                  MOVE ZCCYB     ZCCYB   3
+     C***                  Z-ADDZAMTT     ZAMTT  150
+     C***                  Z-ADDZCRSRT    ZCRSRT 138
+     C***                  MOVE ZCRSMD    ZCRSMD  1
+     C***                  MOVE ZSCYDP    ZSCYDP  10
+      ***
+      ***INITIALISE WORK IND FOR DATABASE ERROR
+     C***                  MOVE '0'       *IN85
+      ***
+      ***CHECK IF THE 'FROM' CCY = THE 'TO'CCY
+     C***        ZCCYF     IFEQ ZCCYT
+     C***                  Z-ADDZAMTF     ZAMTT
+     C***                  Z-ADD1         ZCRSRT
+     C***                  MOVE 'M'       ZCRSMD
+      ***
+     C***                  ELSE
+      ***
+      ***ACCESS CCY FILE USING THE 'FROM' CCY
+     C***        ZCCYF     CHAINSDCURRJ0             80
+     C***        *IN80     IFEQ '1'
+     C***        A6TYLC    OREQ 'D'
+     C***                  MOVE '1'       *IN85
+     C***                  MOVELZCCYF     DBKEY
+     C***                  ELSE
+      ***
+      ***CHECK THE 'FROM' CCY AGAINST THE BASE CCY
+     C***        ZCCYF     IFEQ ZCCYB
+     C***                  Z-ADDA6NBDP    ZCDPF
+     C***                  MOVE 'M'       ZMDINF
+     C***                  Z-ADD1         ZRATEF
+     C***                  ELSE
+      ***
+      ***CHECK THE 'TO' CCY AGAINST THE BASE CCY
+     C***        ZCCYT     IFEQ ZCCYB
+     C***                  Z-ADDA6NBDP    ZCDPF
+     C***                  MOVE CYSELI    ZMDINF
+     C***                  Z-ADDCYSELR    ZRATEF
+     C***                  ELSE
+      ***
+      ***CHECK CONVENTION BID MULT/DIV IND
+     C***        CYBUYI    IFEQ 'D'
+      ***
+      ***TAKE THE INVERSE OF BID RATE - CHECK FOR DIVIDE BY ZERO
+     C***        CYBUYR    IFNE 0
+     C***        1         DIV  CYBUYR    WWBMLT 138H
+     C***                  ELSE
+     C***                  Z-ADD0         WWBMLT
+     C***                  END
+     C***                  ELSE
+     C***                  Z-ADDCYBUYR    WWBMLT
+     C***                  END
+      ***
+      ***CHECK CONVENTION SELL MULT/DIV IND
+     C***        CYSELI    IFEQ 'D'
+      ***
+      ***TAKE THE INVERSE OF SELL RATE - CHECK FOR DIVIDE BY ZERO
+     C***        CYSELR    IFNE 0
+     C***        1         DIV  CYSELR    WWSMLT 138H
+     C***                  ELSE
+     C***                  Z-ADD0         WWSMLT
+     C***                  END
+     C***                  ELSE
+     C***                  Z-ADDCYSELR    WWSMLT
+     C***                  END
+      ***
+     C***                  Z-ADDA6NBDP    ZCDPF
+     C***                  MOVE 'M'       ZMDINF
+     C***        WWBMLT    ADD  WWSMLT    WWMRAT 148
+     C***        WWMRAT    DIV  2         ZRATEF
+     C***                  END
+     C***                  END
+      ***
+      ***ACCESS CCY FILE USING THE 'TO' CCY
+     C***        ZCCYT     CHAINSDCURRJ0             80
+     C***        *IN80     IFEQ '01'
+     C***        A6TYLC    OREQ 'D'
+     C***                  MOVE '1'       *IN85
+     C***                  MOVELZCCYT     DBKEY
+     C***                  ELSE
+      ***
+      ***CHECK THE 'TO' CCY AGAINST THE BASE CCY
+     C***        ZCCYT     IFEQ ZCCYB
+     C***                  Z-ADDA6NBDP    ZCDPT
+     C***                  MOVE 'M'       ZMDINT
+     C***                  Z-ADD1         ZRATET
+     C***                  ELSE
+      ***
+     C***                  Z-ADDA6NBDP    ZCDPT
+     C***                  MOVE CYBUYI    ZMDINT
+     C***                  Z-ADDCYBUYR    ZRATET
+     C***                  END
+      ***
+     C***                  EXSR ZCCYCN
+     C***                  Z-ADDZCDPT     ZSCYDP
+      ***
+     C***                  END
+     C***                  END
+     C***                  END
+      ***
+     C***        ZKKEND    ENDSR
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P05     - GENERATE BASE CURRENCY SETTLEMENT ENTRIES             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZCCYCN   - CONVERT AN AMOUNT USING THE SPOT RATES                *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - GENERATE POSTINGS                                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBCAM   - AMOUNT IN BANK CHARGING CURRENCY                      *
+      **WWBCRS***-*SELL*CONVENTION*RATE*(BANK*CHARG.CCY)***************   S01464
+      **WWBCIS***-*SELL*CONVENTION*RATE*MULT/DIV*IND*(BANK*CHARG.CCY)**   S01464
+      * WWSMLT   - WORK SELL CONVENTION RATE                             *
+      **WWBCIB***-*BUY*CONVENTION*RATE*MULT/DIV*IND*(BANK*CHARG.CCY)***   S01464
+      **WWBCRB***-*BUY*CONVENTION*RATE*(BANK*CHARG.CCY)****************   S01464
+      * WWBMLT   - WORK BUY CONVENTION RATE                              *
+      * WWMRAT   - WORK MID RATE (SR/ZCCYKK)                             *
+      * WWBCND   - BANK CHARGING CCY DECIIMAL PLACES                     *
+      * WWBAND   - BASE CCY DECIMAL PLACES                               *
+      * WWBAAM   - AMOUNT IN BASE CURRENCY                               *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      * WWBCSA   - BANK CHARGING CCY SPOT TRADE EQUIVALENT ACCOUNT       *
+      *                                                                  *
+      ********************************************************************
+     C           #P05      BEGSR                           **#P05 BEGSR **
+      *
+      ** CONVERT THE POSTING AMOUNT IN BANK CHARGING CCY
+      ** INTO AN AMOUNT IN BASE CCY
+     C                     Z-ADDWWBCAM    ZAMTF
+     C                     Z-ADD0         ZAMTT
+     C***********          MOVE SABCGC    ZCCYF                           S01464
+     C                     MOVE FBBCGC    ZCCYF                           S01464
+     C                     MOVE BJCYCD    ZCCYT
+     C****       SECSCY    IFEQ BJCYCD                     B1             48201
+     C****                 Z-ADDWWBCRS    ZRATEF                          48201
+     C****                 MOVE WWBCIS    ZMDINF                          48201
+     C****                 ELSE                            X1             48201
+     C****       WWBCIS    IFEQ 'D'                        B2             48201
+     C****       WWBCRS    IFNE 0                          B3             48201
+     C****       1         DIV  WWBCRS    WWSMLT                          48201
+     C****                 ELSE                            X3             48201
+     C****                 Z-ADD0         WWSMLT                          48201
+     C****                 END                             E3             48201
+     C****                 ELSE                            X2             48201
+     C****                 Z-ADDWWBCRS    WWSMLT                          48201
+     C****                 END                             E2             48201
+     C****       WWBCIB    IFEQ 'D'                        B2             48201
+     C****       WWBCRB    IFNE 0                          B3             48201
+     C****       1         DIV  WWBCRB    WWBMLT                          48201
+     C****                 ELSE                            X3             48201
+     C****                 Z-ADD0         WWBMLT                          48201
+     C****                 END                             E3             48201
+     C****                 ELSE                            X2             48201
+     C****                 Z-ADDWWBCRB    WWBMLT                          48201
+     C****                 END                             E2             48201
+     C****       WWSMLT    ADD  WWBMLT    WWMRAT                          48201
+     C****       WWMRAT    DIV  2         ZRATEF                          48201
+     C****                 MOVE 'M'       ZMDINF                          48201
+     C****                 END                             E1             48201
+     C                     Z-ADDWWBCSR    ZRATEF                          48201
+     C                     Z-ADDWWBCND    ZCDPF                           48201
+     C                     MOVE WWBCMI    ZMDINF                          48201
+     C                     Z-ADD1         ZRATET
+     C                     MOVE 'M'       ZMDINT
+     C****                 Z-ADDWWBCND    ZCDPF                           48201
+     C                     Z-ADDWWBAND    ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWBAAM
+      *
+      ** GENERATE INTER-CURRENCY SETTLEMENT ENTRY  D E B I T
+      ** (BANK CHARGING CURRENCY NOT = BASE CURRENCY)
+     C***********SABCGC    IFNE BJCYCD                              48201 S01464
+     C********** FBBCGC    IFNE BJCYCD                             S01464 181936
+     C           WWBCSA    IFNE *BLANKS                                   181936
+     C           BLSPTA    ANDNE*BLANKS                                   181936
+     C/COPY WNCPYSRC,SE6430C010
+     C                     Z-ADDWWBCAM    PSTA
+     C                     MOVE WWCBIN    CNUM
+     C***********          MOVE SABCGC    CCY                             S01464
+     C                     MOVE FBBCGC    CCY                             S01464
+     C                     MOVE BLSPTA    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD0         DRCR
+     C***********          MOVE BBBRCD    BRCD                            S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     Z-ADD0         RIND
+     C*********************MOVE 'G'       ATYP                            R5553
+     C                     EXSR #ACOD                                     R5553
+     C*                                                                   CAC003
+     C** Check if Analytical Accounting is switched on.                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C                     MOVE WPCTR     PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C/COPY WNCPYSRC,SE6430C019
+     C*                                                                   CAC003
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C022
+      *
+      ** GENERATE INTER-CURRENCY SETTLEMENT ENTRY  C R E D I T
+      ** (BANK CHARGING CURRENCY NOT = BASE CURRENCY)
+     C                     Z-ADDWWBAAM    PSTA
+     C                     MOVE BJCYCD    CCY
+     C                     MOVE WWBCSA    ACOD
+     C                     Z-ADD1         DRCR
+     C                     EXSR #ACOD                                     R5553
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C020
+     C                     END                                            48201
+      *
+     C                     ENDSR                           **#P05 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P06     - GENERATE CROSS-CURRENCY SETTLEMENT ENTRIES            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - GENERATE POSTINGS                                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBCAM   - AMOUNT IN BANK CHARGING CURRENCY                      *
+      * WWBAAM   - AMOUNT IN BASE CURRENCY                               *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      * WWSCSA   - CUST. SETTLEMENT CCY SPOT TRADE EQUIVALENT ACCOUNT    *
+      * WWSCAM   - AMOUNT IN CUSTOMER SETTLEMENT CURRENCY                *
+      *                                                                  *
+      ********************************************************************
+     C           #P06      BEGSR                           **#P06 BEGSR **
+      *
+      ** GENERATE INTER-CURRENCY SETTLEMENT ENTRY  D E B I T
+      ** (CUSTOMER SETTLEMENT CURRENCY NOT = BASE CURRENCY)
+     C***********SABCGC    IFEQ BJCYCD                                    S01464
+     C           FBBCGC    IFEQ BJCYCD                                    S01464
+     C                     Z-ADDWWBCAM    PSTA
+     C                     ELSE
+     C                     Z-ADDWWBAAM    PSTA
+     C                     END
+     C                     MOVE WWCBIN    CNUM
+     C                     MOVE BJCYCD    CCY
+     C                     MOVE WWSCSA    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD0         DRCR
+     C***********          MOVE BBBRCD    BRCD                            S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     Z-ADD0         RIND
+     C*********************MOVE 'G'       ATYP                            R5553
+     C                     EXSR #ACOD                                     R5553
+     C*                                                                   CAC003
+     C** Check if Analytical Accounting is switched on.                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C                     MOVE WPCTR     PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C023
+      *
+      ** GENERATE INTER-CURRENCY SETTLEMENT ENTRY  C R E D I T
+      ** (CUSTOMER SETTLEMENT CURRENCY NOT = BASE CURRENCY)
+     C                     Z-ADDWWSCAM    PSTA
+     C                     MOVE SECSCY    CCY
+     C                     MOVE BLSPTA    ACOD
+     C                     Z-ADD1         DRCR
+     C                     EXSR #ACOD                                     R5553
+     C                     EXSR #W02
+     C/COPY WNCPYSRC,SE6430C024
+      *
+     C                     ENDSR                           **#P06 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P07     - GENERATE INTER-BRANCH SETTLEMENT ENTRIES              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - GENERATE POSTINGS                                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWSCAM   - AMOUNT IN CUSTOMER SETTLEMENT CURRENCY                *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      **WWCBBA***-*INTERBRANCH*BRANCH*ACCOUNT*FOR*CUSTOMER*BRANCH******   S01464
+      * WWSBIN   - BRANCH INTERNAL CUSTOMER FOR CUST. SETTL. BRANCH      *
+      * WWSBHO   - INTERBRANCH H.O. ACCOUNT FOR CUST. SETTL. BRANCH      *
+      *                                                                  *
+      ********************************************************************
+     C           #P07      BEGSR                           **#P07 BEGSR **
+     C*                                                                   S01464
+     C** Perform only if Analytical Accounting is not available.          CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C                     MOVE FTPRFP    PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C** If system is multibranching                                      S01464
+     C**   and posting is not going into suspense ---                     S01464
+     C*                                                                   S01464
+     C           AGMBIN    IFEQ 'Y'                                       S01464
+     C           WWSAPR    ANDEQ'N'                                       S01464
+     C*                                                                   S01464
+     C** If interbranch accounting is via main branch, postings are:      S01464
+     C*                                                                   S01464
+     C           BKIEMB    IFEQ 'Y'                                       S01464
+     C*                                                                   S01464
+     C** Debit account                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     MOVE WWMBIC    CNUM                            S01464
+     C                     MOVE WWDTAC    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD0         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C** Creditaccount                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE BKMABR    BRCA                            S01464
+     C                     MOVE WWCBIN    CNUM                            S01464
+     C                     MOVE WWMBDF    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD1         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C** Debit account                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE BKMABR    BRCA                            S01464
+     C                     MOVE WWSBIN    CNUM                            S01464
+     C                     MOVE WWMBDT    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD0         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C** Creditaccount                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE SECUSB    BRCA                            S01464
+     C                     MOVE WWMBIC    CNUM                            S01464
+     C                     MOVE WWSBBA    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD1         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C*                                                                   S01464
+     C** Debit account                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE SEBRCA    BRCA                            S01464
+     C                     MOVE WWSBIN    CNUM                            S01464
+     C                     MOVE WWDTAC    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD0         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C** Creditaccount                                                    S01464
+     C*                                                                   S01464
+     C                     MOVE SECUSB    BRCA                            S01464
+     C                     MOVE WWCBIN    CNUM                            S01464
+     C                     MOVE WWSBBA    ACOD                            S01464
+     C                     MOVE '01'      ACSQ                            S01464
+     C                     Z-ADD1         DRCR                            S01464
+     C                     EXSR #ACOD                                     S01464
+     C                     EXSR #W02                                      S01464
+     C*                                                                   S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C***GENERATE*INTER-BRANCH*SETTLEMENT*ENTRY**D*E*B*I*T*************   S01464
+     C***(CUSTOMER*SETTLEMENT*BRANCH*NOT*=*CUSTOMER*BRANCH)************   S01464
+     C***********          Z-ADDWWSCAM    PSTA                            S01464
+     C***********          MOVE WWCBIN    CNUM                            S01464
+     C***********          MOVE SECSCY    CCY                             S01464
+     C***********          MOVE WWCBBA    ACOD                            S01464
+     C***********          Z-ADD01        ACSQ                            S01464
+     C***********          Z-ADD0         ACNO                            S01464
+     C***********          Z-ADD0         TRAT                            S01464
+     C***********          Z-ADD0         DRCR                            S01464
+     C***********          MOVE BBBRCD    BRCD                            S01464
+     C***********          Z-ADD0         RIND                            S01464
+     C*********************MOVE 'G'       ATYP                      R5553 S01464
+     C***********          EXSR #ACOD                               R5553 S01464
+     C***********          EXSR #W02                                      S01464
+     C***********                                                         S01464
+     C***GENERATE*INTER-BRANCH*SETTLEMENT*ENTRY**C*R*E*D*I*T***********   S01464
+     C***(CUSTOMER*SETTLEMENT*BRANCH*NOT*=*CUSTOMER*BRANCH)************   S01464
+     C***********          MOVE WWSBIN    CNUM                            S01464
+     C***********          MOVE WWSBHO    ACOD                            S01464
+     C***********          Z-ADD1         DRCR                            S01464
+     C***********          MOVE SECUSB    BRCD                            S01464
+     C***********          EXSR #ACOD                               R5553 S01464
+     C***********          EXSR #W02                                      S01464
+      *
+     C                     ENDSR                           **#P07 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE SUSPENSE ENTRIES TO PF/GESCPD                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWSBIN   - BRANCH INTERNAL CUSTOMER FOR CUST. SETTL. BRANCH      *
+      * WWRCNT   - WORK NUMBER OF RECORDS                                *
+      * WWHTOT   - WORK HASH-TOTAL                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR                           **#W01 BEGSR **
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVE WWSBIN    CNUM
+     C                     MOVE BKACCD    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDSESEVD    VALD
+     C                     Z-ADD0         TRAT
+     C***********NARIN     IFEQ ' '                                 R0190 B10672
+     C                     MOVELDSNARR    PNAR
+     C***********          END                                      R0190 B10672
+     C**********           Z-ADDSECNUM    ASOC                                                CSD027
+     C                     MOVE SECNUM    ASOC                                                CSD027
+     C                     Z-ADD0         CHQN
+     C*********************MOVE 'GE-SC  ' SPOS                            R00142
+     C                     MOVE '  GE-SC' SPOS                            R00142
+     C***********          Z-ADDSECUSB    BRCD                            S01464
+     C                     MOVE SECUSB    BRCA                            S01464
+     C                     Z-ADD0         RIND
+     C                     Z-ADD0         REJC
+     C                     MOVE *BLANK    DPMT
+     C                     Z-ADD0         RRNM
+     C*********************MOVE 'G'       ATYP                            R5553
+     C                     EXSR #ACOD                                     R5553
+     C                     MOVE '0'       EXIN
+     C                     BITOF'01234567'PRIN
+     C***********          MOVE 'S'       GETP                            S01464
+     C                     MOVE 'B'       GETP                            S01464
+     C                     Z-ADD0         ACUM
+      *
+     C** Perform only if Analytical Accounting is not available.          CAC003
+     C           *IN20     IFEQ '0'                                       CAC003
+     C                     MOVE *BLANK    PRFC
+     C                     ELSE                                           CAC003
+     C                     MOVE FTPRFP    PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C***********          MOVE *BLANK    REBI                            S01464
+     C***********          Z-ADD0         CHGA                            S01464
+     C                     MOVE *BLANK    SWCR
+     C                     MOVE *BLANK    DLREF
+     C                     MOVE *BLANK    FACO
+     C**********           Z-ADD0         DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+     C                     MOVE *BLANK    PREF
+     C***********          Z-ADD0         NITMS                           S01464
+     C                     MOVE *BLANK    OTRF
+     C                     MOVE *BLANK    OTST
+     C                     MOVE *BLANK    OTTP
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVE *BLANK    BOKC
+      *                                                                   179044
+      ** Message ID                                                       179044
+      *                                                                   179044
+     C                     MOVE 'GBC5000' ##MGID                          179044
+      *
+      ** WRITE A RECORD ON PF/GESCPD
+     C           PSTA      IFNE 0                                         48360
+      *                                                                   179044
+      ** Determine the posting narrative                                  179044
+      *                                                                   179044
+     C                     EXSR SRPNAR                                    179044
+      *                                                                   179044
+     C                     WRITEAPOSTPDF
+      *
+     C/COPY WNCPYSRC,SE6430C012
+      ** ADD 1 TO THE NUMBER OF RECORDS WRITTEN ON PF/GESCPD
+     C                     ADD  1         WWRCNT
+      *
+      ** ADD POSTING AMOUNT TO THE TOTAL FOR HASH CONTROL
+     C                     ADD  PSTA      WWHTOT
+     C                     END                                            48360
+      *
+     C                     ENDSR                           **#W01 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W02     - WRITE NON-SUSPENSE ENTRIES TO PF/GESCPD               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - GENERATE ADJUSTMENT POSTINGS                          *
+      * #P04     - GENERATE STANDARD SETTLEMENT ENTRIES                  *
+      * #P05     - GENERATE BASE CURRENCY SETTLEMENT ENTRIES             *
+      * #P06     - GENERATE CROSS-CURRENCY SETTLEMENT ENTRIES            *
+      * #P07     - GENERATE INTER-BRANCH SETTLEMENT ENTRIES              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRCNT   - WORK NUMBER OF RECORDS                                *
+      * WWHTOT   - WORK HASH-TOTAL                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR                           **#W02 BEGSR **
+      *
+     C                     MOVE 'P'       RECI
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDSESEVD    VALD
+     C           NARIN     IFEQ ' '                                       B10672
+     C                     MOVELDSNARR    PNAR
+     C                     END                                            B10672
+     C/COPY WNCPYSRC,SE6430C025
+     C**********           Z-ADDSECNUM    ASOC                                                CSD027
+     C                     MOVE SECNUM    ASOC                                                CSD027
+     C                     Z-ADD0         CHQN
+     C*********************MOVE 'GE-SC  ' SPOS                            R00142
+     C                     MOVE '  GE-SC' SPOS                            R00142
+     C                     Z-ADD0         REJC
+     C                     MOVE *BLANK    DPMT
+     C                     Z-ADD0         RRNM
+     C                     MOVE '0'       EXIN
+     C                     BITOF'01234567'PRIN
+     C***********          MOVE *BLANK    GETP                            S01464
+     C                     MOVE 'B'       GETP                            S01464
+     C                     Z-ADD0         ACUM
+     C                     MOVELSECNUM    OTRF
+     C                     MOVELSEPTFR    OTRF8   8
+     C                     MOVE OTRF8     OTRF
+     C                     MOVEL'SC'      OTTP
+      *
+     C** Perform only if Analytical Accounting is not available.          CAC003
+     C           *IN20     IFEQ '0'                                       CAC003
+     C                     MOVE *BLANK    PRFC
+     C                     ENDIF                                          CAC003
+     C***********          MOVE *BLANK    REBI                            S01464
+     C***********          Z-ADD0         CHGA                            S01464
+     C                     MOVE *BLANK    SWCR
+     C                     MOVE *BLANK    DLREF
+     C                     MOVE *BLANK    FACO
+     C**********           Z-ADD0         DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+     C                     MOVE *BLANK    PREF
+     C***********          Z-ADD0         NITMS                           S01464
+     C                     MOVE *BLANK    OTST
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVE *BLANK    BOKC
+      *                                                                   179044
+      ** Message ID                                                       179044
+      *                                                                   179044
+     C                     MOVE 'GBC5000' ##MGID                          179044
+      *
+      ** WRITE A RECORD ON PF/GESCPD
+     C           PSTA      IFNE 0                                         48360
+      *                                                                   179044
+      ** Determine the posting narrative                                  179044
+      *                                                                   179044
+     C                     EXSR SRPNAR                                    179044
+      *                                                                   179044
+     C                     WRITEAPOSTPDF
+     C/COPY WNCPYSRC,SE6430C013
+      *
+      ** ADD 1 TO THE NUMBER OF RECORDS WRITTEN ON PF/GESCPD
+     C                     ADD  1         WWRCNT
+      *
+      ** ADD POSTING AMOUNT TO THE TOTAL FOR HASH CONTROL
+     C                     ADD  PSTA      WWHTOT
+     C                     END                                            48360
+      *
+     C                     ENDSR                           **#W02 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     C/COPY WNCPYSRC,SE6430C014
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      * #SCURR   - ACCESS CURRENCY CODES FILE                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPREV   - PREVIOUS CUSTOMER READ                                *
+      * WWBAND   - BASE CCY DECIMAL PLACES                               *
+      * WWBAAM   - AMOUNT IN BASE CURRENCY                               *
+      * WWBCSR   - BANK CHARGING CCY SPOT RATE                           *
+      * WWBCND   - BANK CHARGING CCY DECIIMAL PLACES                     *
+      * WWBCMI   - BANK CHARGING CCY MULT/DIV IND                        *
+      * WWBCSA   - BANK CHARGING CCY SPOT TRADE EQUIVALENT ACCOUNT       *
+      **WWBCRS***-*SELL*CONVENTION*RATE*(BANK*CHARG.CCY)***************   S01464
+      **WWBCIS***-*SELL*CONVENTION*RATE*MULT/DIV*IND*(BANK*CHARG.CCY)**   S01464
+      **WWBCRB***-*BUY*CONVENTION*RATE*(BANK*CHARG.CCY)****************   S01464
+      **WWBCIB***-*BUY*CONVENTION*RATE*MULT/DIV*IND*(BANK*CHARG.CCY)***   S01464
+      * WWBCAM   - AMOUNT IN BANK CHARGING CURRENCY                      *
+      * WWSCSR   - CUST. SETTLEMENT CCY SPOT RATE                        *
+      * WWSCND   - CUST. SETTLEMENT CCY DECIMAL PLACES                   *
+      * WWSCMI   - CUST. SETTLEMENT CCY MULT/DIV IND                     *
+      * WWSCSA   - CUST. SETTLEMENT CCY SPOT TRADE EQUIVALENT ACCOUNT    *
+      * WWSCAM   - AMOUNT IN CUSTOMER SETTLEMENT CURRENCY                *
+      * WWCBIN   - BRANCH INTERNAL CUSTOMER FOR CUSTOMER BRANCH          *
+      **WWCBBA***-*INTERBRANCH*BRANCH*ACCOUNT*FOR*CUSTOMER*BRANCH******   S01464
+      **WWCBHO***-*INTERBRANCH*H.O.*ACCOUNT*FOR*CUSTOMER*BRANCH********   S01464
+      * WWDFAC   - Due from account code                              *   S01464
+      * WWDTAC   - Due to account code                                *   S01464
+      * WWSBIN   - BRANCH INTERNAL CUSTOMER FOR CUST. SETTL. BRANCH      *
+      * WWSBBA   - INTERBRANCH BRANCH ACCOUNT FOR CUST. SETTL. BRANCH    *
+      * WWSBHO   - INTERBRANCH H.O. ACCOUNT FOR CUST. SETTL. BRANCH      *
+      * WWSAPR   - SUSPENSE ACCOUNT POSTINGS REQUIRED FLAG               *
+      * WWHTOT   - WORK HASH-TOTAL                                       *
+      * WWHRWN   - WORK HASH-TOTAL WHOLE NUMBERS                         *
+      * WWHRDC   - WORK HASH-TOTAL DECIMALS                              *
+      * WWRCNT   - WORK NUMBER OF RECORDS                                *
+      * WWCNUM   - WORK CUSTOMER NUMBER                                  *
+      * WWACOD   - WORK ACCOUNT CODE                                     *
+      * WWACSQ   - WORK ACCOUNT SEQUENCE                                 *
+      * WWACNO   - WORK RETAIL ACCOUNT NUMBER                            *
+      * WWRIND   - WORK RETAIL INDICATOR                                 *
+      * WWTRAT   - WORK TRANSACTION NUMBER                               *
+      * WWPSTA   - WORK POSTING AMOUNT                                   *
+      * WWATYP   - WORK ACCOUNT TYPE                                     *
+      * WWBRCD   - WORK BRANCH CODE                                      *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           *#INIT BEGSR**
+     C*                                                                   S01464
+     C/COPY WNCPYSRC,SE6430C015
+     C** Copyright statement                                              S01464
+     C*                                                                   S01464
+     C                     MOVEACPY@      BIS@   80                       S01464
+     C*                                                                   S01464
+     C** Prepare LDA and RUNDAT                                           S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01464
+     C                     IN   RUNDT                                     S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN           LDA                             S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     MOVEL*BLANK    DBFILE                          S01464
+     C                     MOVEL*BLANK    DBKEY                           S01464
+     C                     Z-ADD*ZEROS    DBASE                           S01464
+     C                     MOVEL'SE6430'  DBPGM                           S01464
+     C                     OUT  LDA                                       S01464
+      *
+      ** DEFINE AND INITIALIZE WORK FIELDS
+     C                     Z-ADD0         WWPREV  60       PREVIOUS CUST READ
+      *
+      ** BASE CURRENCY WORK FIELDS
+     C                     Z-ADD0         WWBAND  10       NBR OF DEC PLACES
+     C                     Z-ADD0         WWBAAM 150       AMOUNT IN BASE CCY
+      *
+      ** BANK CHARGING CURRENCY WORK FIELDS
+     C                     Z-ADD0         WWBCSR 138       SPOT RATE
+     C                     Z-ADD0         WWBCND  10       NBR OF DEC PLACES
+     C                     MOVE *BLANK    WWBCMI  1        MULT/DIV IND
+     C**********           MOVE *BLANK    WWBCSA  4        SPOT TRADE EQUIV ACNT              CGL029
+     C                     MOVE *BLANKS   WWBCSA 10                                           CGL029
+     C***********          Z-ADD0         WWBCRS 138 CONVENTION SELL RATE S01464
+     C***********          MOVE *BLANK    WWBCIS  1  CONVENTION SELL M/D IS01464
+     C***********          Z-ADD0         WWBCRB 138 CONVENTION BUY RATE  S01464
+     C***********          MOVE *BLANK    WWBCIB  1  CONVENTION BUY M/D I S01464
+     C                     Z-ADD0         WWBCAM 150       AMOUNT IN BK CHRG CCY
+      *
+      ** CUSTOMER SETTLEMENT CURRENCY WORK FIELDS
+     C                     Z-ADD0         WWSCSR 138       SPOT RATE
+     C                     Z-ADD0         WWSCND  10       NBR OF DEC PLACES
+     C                     MOVE *BLANK    WWSCMI  1        MULT/DIV IND
+     C**********           MOVE *BLANK    WWSCSA  4        SPOT TRADE EQUIV ACNT              CGL029
+     C                     MOVE *BLANKS   WWSCSA 10                                           CGL029
+     C                     Z-ADD0         WWSCAM 150       AMOUNT IN CUST SETL C
+      *                                                                   R00142
+      **   Write the narrative code to chain in sdnarrl0                  R00142
+     C                     MOVE 'C5'      C5VAR   2                       R00142
+     C*                                                                   S01464
+     C           C5VAR     CHAINSDNARRL0             83                   S01464
+     C*                                                                   S01464
+     C           *IN83     IFEQ '1'                                       S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     MOVEL'13'      DBASE            *************  S01464
+     C                     MOVEL'SDNARRPD'DBFILE           *  DBERR 13 *  S01464
+     C                     MOVEL'C5'      DBKEY            *************  S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR                                     S01464
+     C                     END                                            S01464
+      *                                                                   R00142
+     C*****Key*definition*for*the*narrative*code*in*multilanguage**R00142 S01464
+     C***********KEYNAR    KLIST                                   R00142 S01464
+     C***********          KFLD           BBLANG                   R00142 S01464
+     C***********          KFLD           C5VAR                    R00142 S01464
+     C*****************************************************************
+     C***CUSTOMER*BRANCH*WORK*FIELDS***********************************
+     C***********          MOVE *BLANK    WWCBIN  6 INTERNAL CUST NUMBER  S01464
+     C***********          MOVE *BLANK    WWCBBA  4 INTERBRANCH BRCH ACNT S01464
+     C***********          MOVE *BLANK    WWCBHO  4 INTERBRANCH H.O. ACNT S01464
+     C*                                                                   S01464
+     C** Define customer branch work fields (internal customer, due from  S01464
+     C**   account code, due to account code)                             S01464
+     C*                                                                   S01464
+     C                     MOVE *BLANK    WWCBIN  6                       S01464
+     C**********           MOVE *BLANK    WWDFAC  4                                    S01464 CGL029
+     C**********           MOVE *BLANK    WWDTAC  4                                    S01464 CGL029
+     C                     MOVE *BLANKS   WWDFAC 10                                           CGL029
+     C                     MOVE *BLANKS   WWDTAC 10                                           CGL029
+      *
+      ** CUSTOMER SETTLEMENT BRANCH WORK FIELDS
+     C                     MOVE *BLANK    WWSBIN  6        INTERNAL CUST NUMBER
+     C**********           MOVE *BLANK    WWSBBA  4        INTERBRANCH BRCH ACNT              CGL029
+     C**********           MOVE *BLANK    WWSBHO  4        INTERBRANCH H.O. ACNT              CGL029
+     C                     MOVE *BLANKS   WWSBBA 10                                           CGL029
+     C                     MOVE *BLANKS   WWSBHO 10                                           CGL029
+     C*                                                                   S01464
+     C** Define main branch work fields (internal customer, due from      S01464
+     C**   account code, due to account code)                             S01464
+     C*                                                                   S01464
+     C                     MOVE *BLANK    WWMBIC  6                       S01464
+     C**********           MOVE *BLANK    WWMBDF  4                                    S01464 CGL029
+     C**********           MOVE *BLANK    WWMBDT  4                                    S01464 CGL029
+     C                     MOVE *BLANKS   WWMBDF 10                                           CGL029
+     C                     MOVE *BLANKS   WWMBDT 10                                           CGL029
+      *
+      ** OTHER WORK FIELDS
+     C                     MOVE *BLANK    WWSAPR  1        SUSPENS ACNT POST RQD
+      *
+     C                     Z-ADD0         WWHTOT 180       HASH TOTAL
+     C                     Z-ADD0         WWHRWN 150       HASH INTEGER
+     C                     Z-ADD0         WWHRDC  40       HASH DECIMAL
+     C                     Z-ADD0         WWRCNT  50       NUMBER OF RECORDS
+     C**********           Z-ADD0         WWCNUM  60       WORK CUSTOMER NUMBER               CSD027
+     C                     MOVE *BLANKS   WWCNUM  6        WORK CUSTOMER NUMBER               CSD027
+     C**********           Z-ADD0         WWACOD  40        ..  ACCOUNT CODE                  CGL029
+     C                     Z-ADD0         WWACOD 100                                          CGL029
+     C                     Z-ADD0         WWACSQ  20        ..  ACCOUNT SEQUENCE
+     C                     Z-ADD0         WWACNO 100        ..  RETAIL ACCOUNT
+     C                     Z-ADD0         WWRIND  10        ..  RETAIL INDICATOR
+     C                     Z-ADD0         WWTRAT  50        ..  TRANS. TYPE
+     C                     Z-ADD0         WWPSTA 150        ..  POSTING AMOUNT
+     C                     MOVE *BLANK    WWATYP  1         ..  ACCOUNT TYPE
+     C                     MOVE *BLANK    WWBRCD  3         ..  BRANCH CODE
+      *
+     C***SETUP*DATA*BASE*ERROR*FIELDS**********************************   S01464
+     C***********          MOVEL'SE6430  'DBPGM                           S01464
+      *
+      ** ACCESS LF/SDBANKL1 TO GET BANK DETAILS
+     C                     OPEN SDBANKL1
+     C                     READ SDBANKL1                 71
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**
+     C                     MOVEL*BLANK    DBKEY            ***************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR
+     C                     END
+     C                     CLOSESDBANKL1
+      *
+      ** ACCESS LF/SDCURRJO USING BASE CCY FROM LF/SDBANKL1
+     C                     MOVE BJCYCD    A6CYCD
+     C                     EXSR #SCURR
+      *
+      ** SAVE NR OF DEC. PLACES FOR THE BASE CURRENCY
+     C                     Z-ADDA6NBDP    WWBAND
+      *
+      ** CHECK THE FORMAT OF THE DATE
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** ACCESS LF/SDGELRL1 TO GET GENERAL LEDGER DETAILS
+     C                     OPEN SDGELRL1
+     C                     READ SDGELRL1                 71
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVEL'SDGELRL1'DBFILE           **DB ERROR 02**
+     C                     MOVEL*BLANK    DBKEY            ***************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR
+     C                     END
+     C                     CLOSESDGELRL1
+      *
+      ** SET THE ACCRUAL PROFIT DATE FOR ZFRQA
+     C                     Z-ADDBKAPDT    APDA    50
+      *
+     C***ACCESS*PF/SCICDPPD*TO*GET*SAFE*CUSTODY*DETAILS****************   S01464
+     C***********          OPEN SCICDPPD                                  S01464
+     C***********          READ SCICDPPD                 71               S01464
+     C************IN71     IFEQ '1'                                       S01464
+     C***********          Z-ADD03        DBASE            ***************S01464
+     C***********          MOVEL'SCICDPPD'DBFILE           **DB ERROR 03**S01464
+     C***********          MOVEL*BLANK    DBKEY            ***************S01464
+     C***********          EXSR *PSSR                                     S01464
+     C***********          END                                            S01464
+     C***********          CLOSESCICDPPD                                  S01464
+     C*                                                                   091522
+     C** Check if Portfolio Management is ON using access object.         091522
+     C*                                                                   091522
+     C                     CALL 'AOMMODR0'                                091522
+     C                     PARM *BLANKS   @RTCD                           091522
+     C                     PARM '*FIRST ' @OPTN                           091522
+     C           SDMMOD    PARM SDMMOD    DSFDY                           091522
+     C*                                                                   091522
+     C** Database error if no record found.                               091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANKS                                   091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     Z-ADD4         DBASE            ***************091522
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 004 *091522
+     C                     MOVE *BLANKS   DBKEY            ***************091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR *PSSR                                     091522
+     C                     END                                            091522
+     C*                                                                   091522
+     C** If Portfolio Management is ON, access Portfolio Management       091522
+     C** ICD.                                                             091522
+     C*                                                                   091522
+     C           BGPFMG    IFEQ 'Y'                                       091522
+     C*                                                                   091522
+     C                     CALL 'AOPORTR0'                                091522
+     C                     PARM *BLANKS   @RTCD                           091522
+     C                     PARM '*FIRST ' @OPTN                           091522
+     C           SDPORT    PARM SDPORT    DSFDY                           091522
+     C*                                                                   091522
+     C** Database error if no record found.                               091522
+     C*                                                                   091522
+     C           @RTCD     IFNE *BLANKS                                   091522
+     C           *LOCK     IN   LDA                                       091522
+     C                     Z-ADD6         DBASE            ***************091522
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERROR 006 *091522
+     C                     MOVE *BLANKS   DBKEY            ***************091522
+     C                     OUT  LDA                                       091522
+     C                     EXSR *PSSR                                     091522
+     C                     END                                            091522
+     C*                                                                   091522
+     C                     END                                            091522
+      *                                                                   179044
+      **  Check for Switchable feature                                    179044
+      *                                                                   179044
+     C                     MOVE 'N'       SEPNAR  1                       179044
+     C           BGN1ST    IFEQ 'Y'                                       179044
+      *                                                                   179044
+     C                     CALL 'AOSARDR0'                                179044
+     C                     PARM '       ' @RTCD   7                       179044
+     C                     PARM '*VERIFY' @OPTN   7                       179044
+     C                     PARM 'SEPNAR'  @SARD   6                       179044
+     C           SCSARD    PARM SCSARD    DSFDY                           179044
+      *                                                                   179044
+     C           @RTCD     IFEQ *BLANK                                    179044
+     C                     MOVE 'Y'       SEPNAR                          179044
+     C                     ENDIF                                          179044
+     C                     ENDIF                                          179044
+     C*                                                                   S01464
+     C** Access safe custody fees details                                 S01464
+     C*                                                                   S01464
+     C                     CALL 'AOSCFER0'                                S01464
+     C                     PARM '       ' @RTCD   7                       S01464
+     C                     PARM '*FIRST ' @OPTN   7                       S01464
+     C           SDSCFE    PARM SDSCFE    DSSDY                           S01464
+     C*                                                                   S01464
+     C           @RTCD     IFNE *BLANK                                    S01464
+     C           *LOCK     IN   LDA                                       S01464
+     C                     MOVE 'SDSCFEPD'DBFILE           ************   S01464
+     C                     MOVEL@OPTN     DBKEY            * DBERR 03 *   S01464
+     C                     Z-ADD3         DBASE            ************   S01464
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR                                     S01464
+     C                     END                                            S01464
+      *                                                                   CAC003
+      ** Check if CAC003 is switched on.                                  CAC003
+      *                                                                   CAC003
+     C                     SETOF                     20                   CAC003
+      *                                                                   CAC003
+     C                     CALL 'AOSARDR0'                                CAC003
+     C                     PARM           @RTCD                           CAC003
+     C                     PARM '*VERIFY' @OPTN                           CAC003
+     C                     PARM 'CAC003'  WUSARN  6                       CAC003
+     C                     PARM *BLANK    DSFDY                           CAC003
+      *                                                                   CAC003
+     C           @RTCD     IFEQ *BLANK                                    CAC003
+     C           BGN0ST    ANDEQ'Y'                                       CAC003
+     C                     SETON                     20                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** If Analytical Accounting is present and switchable               CAC003
+     C** feature is on, retrieve FX Position Profit Centre                CAC003
+     C** field.                                                           CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOPRFCR0'                                CAC003
+     C                     PARM *BLANKS   @RTCD   7                       CAC003
+     C                     PARM '*KEY   ' @OPTN   7                       CAC003
+     C                     PARM FBPCSF    @PKEY   4                       CAC003
+     C           SDPRFC    PARM SDPRFC    DSFDY                           CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFNE *BLANKS                                   CAC003
+     C           @RTCD     ANDNE'*NRF   '                                 CAC003
+     C           *LOCK     IN   LDA                                       CAC003
+     C                     MOVE *BLANKS   DBFILE           ***************CAC003
+     C                     MOVEL'SDPRFCPD'DBFILE           * DBERROR 015 *CAC003
+     C                     MOVE FBPCSF    DBKEY            ***************CAC003
+     C                     Z-ADD15        DBASE                           CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C           DSFPPC    IFNE *BLANK                                    CAC003
+     C                     MOVE DSFPPC    WPCTR   4                       CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE FBPCSF    WPCTR                           CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOPCACR0'                                CAC003
+     C                     PARM *BLANKS   @RTCD   7                       CAC003
+     C                     PARM '*FIRST ' @OPTN   7                       CAC003
+     C           SDPCAC    PARM SDPCAC    DSFDY                           CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFNE *BLANKS                                   CAC003
+     C           *LOCK     IN   LDA                                       CAC003
+     C                     MOVE *BLANKS   DBFILE           ***************CAC003
+     C                     MOVEL'SDPCACPD'DBFILE           * DBERROR 016 *CAC003
+     C                     MOVE *BLANKS   DBKEY            ***************CAC003
+     C                     Z-ADD16        DBASE                           CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+      *
+      ** ACCESS LF/SDCURRJO USING BANK CHARGING CCY FROM PF/SCICDPPD
+     C***********          MOVE SABCGC    A6CYCD                          S01464
+     C                     MOVE FBBCGC    A6CYCD                          S01464
+     C                     EXSR #SCURR
+      *
+      ** SAVE SPOT RATE, NR OF DEC. PLACES, SPOT TRADE EQUIVALENT ACCOUNT
+      ** AND MULT./DIV. INDICATOR FOR THE BANK CHARGING CURRENCY
+     C                     Z-ADDA6SPRT    WWBCSR
+     C                     Z-ADDA6NBDP    WWBCND
+     C                     MOVE A6MDIN    WWBCMI
+     C                     MOVE A6SPAE    WWBCSA
+      *
+     C***SAVE*SELL*CONVENTION*RATE*AND*MULT./DIV.*INDICATOR8AND********   S01464
+     C***BUY*CONVENTION*RATE*AND*MULT./DIV.*INDICATOR*FOR*BANK*********   S01464
+     C***CHARGING*CURRENCY*********************************************   S01464
+     C***********          Z-ADDCYSELR    WWBCRS                          S01464
+     C***********          MOVE CYSELI    WWBCIS                          S01464
+     C***********          Z-ADDCYBUYR    WWBCRB                          S01464
+     C***********          MOVE CYBUYI    WWBCIB                          S01464
+      *
+      ** READ LF/SDTRADL1 TO GET TRADING DATA DETAILS
+     C                     OPEN SDTRADL1
+     C                     READ SDTRADL1                 71
+     C           *IN71     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD05        DBASE            **************
+     C                     MOVEL'SDTRADL1'DBFILE           **DB ERROR 05*
+     C                     MOVEL*BLANK    DBKEY            **************
+     C                     OUT  LDA                                       S01464
+     C                     EXSR *PSSR
+     C                     END
+     C                     CLOSESDTRADL1
+     C*                                                                   S01464
+     C** Define main branch work fields (internal customer, due from      S01464
+     C**   account code, due to account code)                             S01464
+     C*                                                                   S01464
+     C                     MOVE *BLANK    WWMBIC  6                       S01464
+     C**********           MOVE *BLANK    WWMBDF  4                                    S01464 CGL029
+     C**********           MOVE *BLANK    WWMBDT  4                                    S01464 CGL029
+     C                     MOVE *BLANKS   WWMBDF                                              CGL029
+     C                     MOVE *BLANKS   WWMBDT                                              CGL029
+     C*                                                                   S01464
+     C** Access branch details using main branch from SDGELRPD            S01464
+     C*                                                                   S01464
+     C                     MOVE BKMABR    A8BRCD                          S01464
+     C                     EXSR #SBRCH                                    S01464
+     C*                                                                   S01464
+     C** Move main branch details into work fields                        S01464
+     C*                                                                   S01464
+     C                     MOVE A8BICN    WWMBIC  6                       S01464
+     C**********           MOVE A8DFAC    WWMBDF  4                                    S01464 CGL029
+     C**********           MOVE A8DTAC    WWMBDT  4                                    S01464 CGL029
+     C                     MOVE A8DFAC    WWMBDF                                              CGL029
+     C                     MOVE A8DTAC    WWMBDT                                              CGL029
+      *
+     C***READ*PF/SDPORTPD*TO*GET*PORTFOLIO*DETAILS*********************   S01464
+     C***********          OPEN SDPORTPD                                  S01464
+     C***********          READ SDPORTPD                 71               S01464
+     C************IN71     IFEQ '1'                                       S01464
+     C***********          Z-ADD06        DBASE            ************** S01464
+     C***********          MOVEL'SDPORTPD'DBFILE           **DB ERROR 06* S01464
+     C***********          MOVEL*BLANK    DBKEY            ************** S01464
+     C***********          EXSR *PSSR                                     S01464
+     C***********          END                                            S01464
+     C***********          CLOSESDPORTPD                                  S01464
+      *
+     C/COPY WNCPYSRC,SE6430C003
+      *                                                                                       CGL020
+      ** Check if Compliance Watch - Anti Money Laundering is installed                       CGL020
+      *                                                                                       CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM *BLANKS   @RTCD                                               CGL020
+     C                     PARM '*VERIFY' @OPTN                                               CGL020
+     C                     PARM 'CGL020'  @SARD                                               CGL020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL020
+      *                                                                                       CGL020
+     C           @RTCD     IFNE *BLANKS                                                       CGL020
+     C           @RTCD     ANDNE'*NRF   '                                                     CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     MOVEL@SARD     DBKEY                                               CGL020
+     C                     Z-ADD19        DBASE                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     EXSR *PSSR                                                         CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C           @RTCD     IFEQ *BLANK                                                        CGL020
+     C                     MOVEL'Y'       CGL020  1                                           CGL020
+     C                     ELSE                                                               CGL020
+     C                     MOVEL'N'       CGL020                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDSR                           *#INIT ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P08     - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWHRWN   - WORK HASH-TOTAL WHOLE NUMBERS                         *
+      * WWHRDC   - WORK HASH-TOTAL DECIMALS                              *
+      * WWRCNT   - WORK NUMBER OF RECORDS                                *
+      *                                                                  *
+      ********************************************************************
+     C           #P08      BEGSR                           **#P08 BEGSR **
+      *
+      ** CALCULATE HASH-TOTAL OF RCDS WHOLE NUMBERS AND DECIMALS
+     C           WWHTOT    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+      *
+      ** READ PF/GESCZZ
+     C                     READ GESCZZ                   71
+      *
+      ** IF TRAILER ALREADY EXISTS THEN UPDATE
+     C           *IN71     IFEQ '0'
+     C                     ADD  WWRCNT    NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+     C           WWHRDC    IFGT 1000
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+      *
+      ** OTHERWISE WRITE
+     C                     ELSE
+     C                     Z-ADDWWHRDC    HRDC
+     C                     END
+     C                     UPDATAPOSTZZF
+     C                     ELSE
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDWWRCNT    NORE1
+     C                     ADD  2         NORE1                           S01464
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+     C                     WRITEAPOSTZZF
+     C                     END
+      *
+     C***PRODUCE*GENERATE*POSTINGS*FROM*SETTLEMENTS*AUDIT*REPORT*******   S01464
+     C***********          Z-ADDWWRCNT    RRCNT                           S01464
+     C***********          WRITEHEADAU                                    S01464
+     C***********          WRITETOTAU                                     S01464
+     C***********          WRITEENDAU                                     S01464
+     C*                                                                   S01464
+     C** PRODUCE GENERATE POSTINGS FROM SETTLEMENTS AUDIT REPORT          S01464
+     C*                                                                   S01464
+     C                     Z-ADDWWRCNT    RRCNT                           S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITECONTROL                                   S01464
+      *
+     C                     ENDSR                           **#P08 ENDSR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS ABNORMAL END OF PROGRAM                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - ACCESS CUSTOMER DETAILS                               *
+      * #SCURR   - ACCESS CURRENCY CODES FILE                            *
+      * #SBRCH   - ACCESS BRANCH CODES FILE                              *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR BSR**
+      *
+      ** DUMP AND RETURN TO THE CALLING PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C***********          WRITEHEADAU                                    S01464
+     C***********          WRITEERRORAU                                   S01464
+     C***********          WRITEENDAU                                     S01464
+     C                     WRITEHEADER                                    S01464
+     C                     WRITEDBERROR                                   S01464
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR                            ** *PSRR ESR**
+      *
+     C/EJECT                                                              179044
+      *****************************************************************   179044
+      *                                                               *   179044
+      * SRPNAR - Subroutine to determine required posting narratives  *   179044
+      *                                                               *   179044
+      * Called by: #W01, #W02                                         *   179044
+      *                                                               *   179044
+      * Calls: *PSSR                                                  *   179044
+      *                                                               *   179044
+      *****************************************************************   179044
+      *                                                                   179044
+     C           SRPNAR    BEGSR                                          179044
+      *                                                                   179044
+      ** Define the data structure parameter                              179044
+      *                                                                   179044
+     C           *LIKE     DEFN CGPNAR    ##PNAR                          179044
+      *                                                                   179044
+     C                     CLEARCGPNAR                                    179044
+     C                     CLEAR##PRM1                                    179044
+      *                                                                   179044
+      ** If the facility is switched off or unavailable,                  179044
+      ** or UDC is not installed, exit this subroutine                    179044
+      *                                                                   179044
+     C           SEPNAR    IFNE 'Y'                                       179044
+     C                     GOTO EXPNAR                                    179044
+     C                     ENDIF                                          179044
+      *                                                                   179044
+      ** Determine the customer's name:                                   179044
+      *                                                                   179044
+     C********** CNUM      IFNE *ZEROS                                                 179044 CSD027
+     C           CNUM      IFNE *BLANKS                                                       CSD027
+     C                     MOVELCNUM      ##KEY     P                     179044
+      *                                                                   179044
+     C                     CALL 'AOCUSTR0'                                179044
+     C                     PARM           ##RTN                           179044
+     C                     PARM '*KEY   ' ##OPT   7                       179044
+     C                     PARM           ##KEY  10                       179044
+     C                     PARM           ##STS   7                       179044
+     C           SDCUST    PARM SDCUST    DSSDY                           179044
+      *                                                                   179044
+     C           ##RTN     IFNE *BLANKS                                   179044
+     C                     MOVEL'SDCUSTPD'DBFILE             *************179044
+     C                     MOVEL'017'     DBASE              * DBERR 017 *179044
+     C                     MOVEL##KEY     DBKEY              *************179044
+     C                     EXSR *PSSR                                     179044
+     C                     SETON                     U7U8                 179044
+     C                     ENDIF                                          179044
+      *                                                                   179044
+      ** Determine the value for the narrative using AOPNARR0             179044
+      *                                                                   179044
+     C                     MOVE 'SE'      MNMODI                          179044
+     C                     MOVE CNUM      MNCUST                          179044
+     C                     MOVE CCY       MNCYCD                          179044
+     C                     MOVE ACOD      MNACCD                          179044
+     C                     MOVE ACSQ      MNACSQ                          179044
+     C                     MOVE BRCA      MNBRCA                          179044
+     C                     MOVE BOKC      MNBOKC                          179044
+     C                     MOVE BBCRNM    MNCRNM                          179044
+     C                     MOVELPNAR      MNNARR    P                     179044
+     C                     MOVE ASOC      MNASOC                          179044
+     C                     MOVE ACNO      MNRACN                          179044
+     C                     MOVE OTRF      MNTRNO                          179044
+     C                     MOVE SECNUM    MNSECN                          179044
+      *                                                                   179044
+     C                     CALL 'AOPNARR0'                                179044
+     C                     PARM           ##RTN   7                       179044
+     C                     PARM           ##MGID  7                       179044
+     C                     PARM           ##PRM1                          179044
+     C           CGPNAR    PARM CGPNAR    ##PNAR                          179044
+     C                     PARM           ##NARR 50                       179044
+      *                                                                   179044
+     C           ##RTN     IFNE *BLANKS                                   179044
+     C                     MOVEL'CGPNARPD'DBFILE             *************179044
+     C                     Z-ADD18        DBASE              * DBERR 018 *179044
+     C                     MOVELMNCUST    DBKEY              *************179044
+     C                     EXSR *PSSR                                     179044
+     C                     SETON                     U7U8                 179044
+     C                     ENDIF                                          179044
+     C                     ENDIF                                          179044
+      *                                                                   179044
+     C                     MOVEL##NARR    PNAR      P                     179044
+      *                                                                   179044
+     C           EXPNAR    TAG                                            179044
+      *                                                                   179044
+     C                     ENDSR                                          179044
+      ********************************************************************
+     C/EJECT                                                              E20380
+     C/COPY ZSRSRC,ZCCYCN                                                 E20380
+     C/COPY ZSRSRC,ZCCYGBZ1                                               48200
+     C****/EJECT                                                    47719 E20380
+     C****/COPY ZSRSRC,ZCCYXR                                       47719 E20380
+     C/COPY WNCPYSRC,SE6430C004
+      /EJECT
+*******NARR                                                               R00142
+*******CUSTODY FEE FOR                                                    R00142
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

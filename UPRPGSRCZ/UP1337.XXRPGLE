@@ -1,0 +1,209 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1337 - Process Action File for MXEXFFPD                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP022 *CREATE     Date 13Jan03               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP022 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPEXFFL0  IF   E           K DISK    INFSR(*PSSR)
+     FMXEXFFL3  UF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(MXEXFFP0:EXFFF) PREFIX(X)
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     COMP          KLIST
+     C                   KFLD                    WHFILE
+     C                   KFLD                    WHFSQN
+     C                   KFLD                    WHFLDI
+      *
+     C     *LOVAL        SETLL     UPEXFFL0
+      *
+     C                   READ      UPEXFFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     WHACTC        IFEQ      'I'
+     C                   EXSR      SETVAL
+     C                   WRITE     EXFFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     WHACTC        IFEQ      'D'
+     C     COMP          CHAIN     MXEXFFL3                           3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    EXFFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     WHACTC        IFEQ      'A'
+     C                   MOVEL     WHFILE        FILEX            10
+     C                   MOVEL     WHFSQN        FSQNX             1
+     C                   MOVEL     WHFLDI        FLDIX            10
+     C                   READ      UPEXFFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     WHFILE        IFNE      FILEX
+     C     WHFSQN        ANDNE     FSQNX
+     C     WHFLDI        ANDNE     FLDIX
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     COMP          CHAIN     MXEXFFL3                           3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    EXFFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   READ      UPEXFFL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+     C                   MOVEL     WHFILE        XWHFILE
+     C                   MOVEL     WHFSQN        XWHFSQN
+     C                   MOVEL     WHFLDI        XWHFLDI
+     C                   MOVEL     WHFTYP        XWHFTYP
+     C                   Z-ADD     WHFOBO        XWHFOBO
+     C                   Z-ADD     WHIBO         XWHIBO
+     C                   Z-ADD     WHFLDB        XWHFLDB
+     C                   Z-ADD     WHFLDD        XWHFLDD
+     C                   Z-ADD     WHFLDP        XWHFLDP
+     C                   MOVEL     WHFTXT        XWHFTXT
+     C                   MOVEL     WHFLDT        XWHFLDT
+     C                   MOVEL     WHINEX        XWHINEX
+     C                   MOVEL     WHMFNM        XWHMFNM
+     C                   MOVEL     WHDS01        XWHDS01
+     C                   MOVEL     WHDS02        XWHDS02
+     C                   MOVEL     WHDS03        XWHDS03
+     C                   MOVEL     WHDS04        XWHDS04
+     C                   MOVEL     WHDS05        XWHDS05
+     C                   MOVEL     WHDS06        XWHDS06
+     C                   MOVEL     WHDS07        XWHDS07
+     C                   MOVEL     WHDS08        XWHDS08
+     C                   MOVEL     WHDS09        XWHDS09
+     C                   MOVEL     WHDS10        XWHDS10
+     C                   MOVEL     WHDS11        XWHDS11
+     C                   MOVEL     WHLSEQ        XWHLSEQ
+     C                   MOVEL     WHSREF        XWHSREF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

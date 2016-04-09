@@ -1,0 +1,277 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas DL FRA/IRS i/c rate fixing maintenance')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Dealing Module                                       *
+     A*                                                               *
+     A*  DSPF/DL4030DF - FRA/IRS Input Cycle Rate Fixing Maint Dspf   *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 226723             Date 12May04               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CSW005   *Create   Date 01Aug96               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  226723 - Correctly display negative rates.  Applied 219286.  *
+     A*  CSW005 - FRAIRS MG34n and MG36n message generation           *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      MSGLOC(24)
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A                                      CA03(03 'Exit')
+     A*
+     A          R DL4030F0
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      CF05(05 'Refresh')
+     A                                      OVERLAY
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'DL4030'
+     A  01                              1 29'FRA/IRS RATE FIX RE-RUN'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N01                              1 27'FRA/IRS RATE FIX MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            SWSID     R        O  1 60REFFLD(JOJOB)
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A                                  3  2'Booking Branch'
+     A            SBRCA          3A  B  3 17
+     A                                      DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A  50                                  DSPATR(RI)
+     A  50                                  DSPATR(PC)
+     A                                  3 23'Deal Type'
+     A            SDTYP          2A  B  3 33
+     A                                      DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A  51                                  DSPATR(RI)
+     A  51                                  DSPATR(PC)
+     A                                  3 38'Currency'
+     A            SCCY           3A  B  3 47
+     A                                      DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A  52                                  DSPATR(RI)
+     A  52                                  DSPATR(PC)
+     A                                  3 53'Base Rate Code'
+     A            SBRTT          2A  B  3 68
+     A                                      DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A  53                                  DSPATR(RI)
+     A  53                                  DSPATR(PC)
+     A*/COPY WNCPYSRC,DL4030DF01
+     A                                 23  2'F3=Exit   F5=Refresh'
+     A*
+     A          R DL4030F1
+     A                                      OVERLAY
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'DL4030'
+     A  01                              1 29'FRA/IRS RATE FIX RE-RUN'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N01                              1 27'FRA/IRS RATE FIX MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            SWSID     R        O  1 60REFFLD(JOJOB)
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A                                  3  2'Booking Branch'
+     A            SBRCA          3A  O  3 17DSPATR(HI)
+     A                                  3 23'Deal Type'
+     A            SDTYP          2A  O  3 33DSPATR(HI)
+     A                                  3 38'Currency'
+     A            SCCY           3A  O  3 47DSPATR(HI)
+     A                                  3 53'Base Rate Code'
+     A            SBRTT          2A  O  3 68DSPATR(HI)
+     A*/COPY WNCPYSRC,DL4030DF02
+     A*
+     A          R DL4030F2
+     A                                      OVERLAY
+     A                                      CF12(12 'Initial Screen')
+     A                                  5 24'***   NO DETAILS TO DISPLAY   ***'
+     A                                      DSPATR(HI)
+     A                                 23  2'F3=Exit'
+     A                                 23 12'F12=Initial Screen'
+     A*
+     A          R DL4030S0                  SFL
+     A            SEL            1   B  8  2
+     A  02                                  DSPATR(RI)
+     A N02                                  DSPATR(HI)
+     A            SSERR          1   H
+     A            SDLNO          6   O  8  4DSPATR(HI)
+     A            SCNUM         10   O  8 13DSPATR(HI)
+     A            SBRCH          3   O  8 27DSPATR(HI)
+     A            SDLTP          2   O  8 35DSPATR(HI)
+     A            SCCYS          3   O  8 40DSPATR(HI)
+     A            SBRTC          2   O  8 46DSPATR(HI)
+     A            SWIFT         24   O  8 51DSPATR(HI)
+     A            SBSOT          1   O  8 78DSPATR(HI)
+     A                                  9  4'Current Rate:'
+     A            SEINR         12   O  9 18DSPATR(HI)
+      *
+      **Start of change 226723
+      *
+     A            SSIGN          1   O  9 31DSPATR(HI)
+     A**********                        9 32'New Rate:'                                       226723
+     A                                  9 33'New Rate:'
+     A**********  SNRT          12   O  9 42DSPATR(HI)                                        226723
+     A            SNRT          12   O  9 43DSPATR(HI)
+     A            SNSGN          1   O  9 56DSPATR(HI)
+     A**********                        9 56'Last Chg. Date:'                                 226723
+     A                                  9 58'Last Chg. Date:'
+      *
+      **End of change 226723
+      *
+     A            SLCD           7   O  9 74DSPATR(HI)
+     A                                 10  5' '
+     A            WARN           1   H
+     A            SRFIN          1   H
+     A          R DL4030C0                  SFLCTL(DL4030S0)
+     A                                      SFLSIZ(0025)
+     A                                      SFLPAG(0005)
+     A                                      CF12(12 'Initial Screen')
+     A  33                                  CF13(13 'Select All')
+     A                                      OVERLAY
+     A N75                                  SFLDSP
+     A N75                                  SFLDSPCTL
+     A  75                                  SFLCLR
+     A  40                                  SFLEND
+     A N40                                  ROLLUP(28)
+     A            RRN            4S 0H      SFLRCDNBR(CURSOR)
+     A                                  6  4'Number'
+     A                                      DSPATR(UL)
+     A                                  5  5'Deal'
+     A                                  5 34'Deal'
+     A                                  5 40'   '
+     A                                  5 45'Base'
+     A                                  5 77'B/S'
+     A                                  6 12'Counterparty'
+     A                                      DSPATR(UL)
+     A                                  6 26'Branch'
+     A                                      DSPATR(UL)
+     A                                  6 34'Type'
+     A                                      DSPATR(UL)
+     A                                  6 40'CCY'
+     A                                      DSPATR(UL)
+     A                                  6 45'Rate'
+     A                                      DSPATR(UL)
+     A                                  6 53'Base Rate SWIFT Code'
+     A                                      DSPATR(UL)
+     A                                  6 77'O/T'
+     A                                      DSPATR(UL)
+     A*
+     A          R DL4030S1                  SFL
+     A            SEL1           1   H
+     A            SSERR1         1   H
+     A            SDLNO1         6   O  8  4DSPATR(HI)
+     A            SCNUM1        10   O  8 13DSPATR(HI)
+     A            SBRCH1         3   O  8 27DSPATR(HI)
+     A            SDLTP1         2   O  8 35DSPATR(HI)
+     A            SCCYS1         3   O  8 40DSPATR(HI)
+     A            SBRTC1         2   O  8 46DSPATR(HI)
+     A            SWIFT1        24   O  8 51DSPATR(HI)
+     A            SBSOT1         1   O  8 78DSPATR(HI)
+     A                                  9  4'Current Rate:'
+     A            SEINR1        12   O  9 18DSPATR(HI)
+      *
+      **Start of change 226723
+      *
+     A            SSIGN1         1   O  9 31DSPATR(HI)
+     A**********                        9 32'New Rate:'                                       226723
+     A                                  9 33'New Rate:'
+     A**********  SNRT1         12   O  9 42DSPATR(HI)                                        226723
+     A            SNRT1         12   O  9 43DSPATR(HI)
+     A            SNSGN1         1   O  9 56DSPATR(HI)
+     A**********                        9 56'Last Chg. Date:'                                 226723
+     A                                  9 58'Last Chg. Date:'
+      *
+      **End of change 226723
+      *
+     A            SLCD1          7   O  9 74DSPATR(HI)
+     A            WARN1          1   H
+     A            SRFIN1         1   H
+     A*
+     A          R DL4030C1                  SFLCTL(DL4030S1)
+     A                                      SFLSIZ(0025)
+     A                                      SFLPAG(0007)
+     A                                      CF12(12 'Cancel')
+     A                                      OVERLAY
+     A N75                                  SFLDSP
+     A N75                                  SFLDSPCTL
+     A  75                                  SFLCLR
+     A  40                                  SFLEND
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'DL4030'
+     A  01                              1 29'FRA/IRS RATE FIX RE-RUN'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N01                              1 27'FRA/IRS RATE FIX MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            SWSID     R        O  1 60REFFLD(JOJOB)
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A                                  3  2'Press Enter to confirm your choice-
+     A                                      s'
+     A                                      DSPATR(HI)
+     A                                  6  4'Number'
+     A                                      DSPATR(UL)
+     A                                  5  5'Deal'
+     A                                  5 34'Deal'
+     A                                  5 40'   '
+     A                                  5 45'Base'
+     A                                  5 77'B/S'
+     A                                  6 12'Counterparty'
+     A                                      DSPATR(UL)
+     A                                  6 26'Branch'
+     A                                      DSPATR(UL)
+     A                                  6 34'Type'
+     A                                      DSPATR(UL)
+     A                                  6 40'CCY'
+     A                                      DSPATR(UL)
+     A                                  6 45'Rate'
+     A                                      DSPATR(UL)
+     A                                  6 53'Base Rate SWIFT Code'
+     A                                      DSPATR(UL)
+     A                                  6 77'O/T'
+     A                                      DSPATR(UL)
+     A*
+     A          R DL4030F3
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 12'F12=Initial Screen'
+     A  33                             23 34'F13=Select All'
+     A                                 23 52'X=Select'
+     A                                 23 63'Rollup/Rolldown'
+     A*
+     A          R DL4030F4
+     A                                      OVERLAY
+     A                                 23  2'F12=Cancel'
+     A*
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================

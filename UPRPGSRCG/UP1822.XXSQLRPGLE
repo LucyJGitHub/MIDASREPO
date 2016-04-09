@@ -1,0 +1,415 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                       CUP021
+/*E*I****COMPILEOPT('ALWNULL(*USRCTL)')********************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1822 - Process Action File for T_WIPCF                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CUP037  *CREATE    Date 04Dec06               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP037 - Action File for T_WIPCF                             *
+      *                                                               *
+      *****************************************************************
+     FT_WIPCF   IF   E           K DISK    USROPN
+     F                                     RENAME(T_WIPCF:WPCFF) PREFIX(Y)
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     DACTFDS         E DS                  EXTNAME(UPWPCFPD)  PREFIX(X)
+      *
+     D                 DS
+     D LastCoreID              1      9  0
+     D LastCoreIDA             1      9
+      *
+     DWC_APIInd        S              2B 0
+     DWC_CATInd        S              2B 0
+     DWC_BONSTPInd     S              2B 0
+     DWC_BOASTPInd     S              2B 0
+     DWC_BOACInd       S              2B 0
+     DWC_BOACNEInd     S              2B 0
+     DWC_BOACAMInd     S              2B 0
+     DWC_BOACAUInd     S              2B 0
+     DWC_BOACCLInd     S              2B 0
+     DWC_BOACDEInd     S              2B 0
+     DWC_BOACREInd     S              2B 0
+     DWC_BOACCHInd     S              2B 0
+     DWC_AUTOAInd      S              2B 0
+     DWC_AUTLVLInd     S              2B 0
+     DWC_ZONEInd       S              2B 0
+     DWC_SYSTEMInd     S              2B 0
+     DWC_BOFLD1Ind     S              2B 0
+     DWC_BOFLD2Ind     S              2B 0
+     DWC_BOFLD3Ind     S              2B 0
+     DWC_BOFLD4Ind     S              2B 0
+     DWC_BOFLD5Ind     S              2B 0
+     D APIX            S                   LIKE(XWC_API)
+     D SYSTEMX         S                   LIKE(XWC_SYSTEM)
+     D ZONEX           S                   LIKE(XWC_ZONE)
+     D RSTMAXIDCmd     S             50    INZ('RESETMAXID FILE(T_WIPCF)')
+     D CmdLen          S             15  5 INZ(50)
+     D SaveId          S              9  0 INZ(0)
+     D CheckId         S              9  0 INZ(0)
+     D Finish          S              1    INZ('N')
+     D RSTOPT          S              7
+      *
+      *
+      * T_WIPCF is divided into two halves; records with an Id of < 1000 are
+      *  core and those above 1000 are custome.  The first subroutine checks
+      *  for the last Id number before 1000.
+     C                   EXSR      CheckCoreID
+      *
+      * Reset the auto generated field on T_WIPCF to avoid dupicate keu problems.
+     C                   CALL      'QCMDEXC'                            69
+     C                   PARM                    RSTMAXIDCmd
+     C                   PARM                    CmdLen
+      *
+     C/EXEC SQL
+     C+  WHENEVER SQLERROR GO TO TAGSQLERR
+     C/END-EXEC
+      *
+      * Set pointer for retrieving record from UPWPCFPD.
+     C/EXEC SQL
+     C+  DECLARE ActionF_crsr CURSOR FOR
+     C+  Select *
+     C+  from UPWPCFPD
+     C+  where WCACTC = 'A' or WCACTC = 'D' or WCACTC = 'I'
+     C+  order by WCACTC, WC_API, WC_SYSTEM, WC_ZONE
+     C/END-EXEC
+      *
+      * Open UPWPCFPD.
+     C/EXEC SQL
+     C+  Open ActionF_crsr
+     C/END-EXEC
+      *
+      * Get record from UPWPCFPD into fields prefixed with X.
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XWCACTC,
+     C+    :XWC_ID,
+     C+    :XWC_API:WC_APIInd,
+     C+    :XWC_CAT:WC_CATInd,
+     C+    :XWC_BONSTP:WC_BONSTPInd,
+     C+    :XWC_BOASTP:WC_BOASTPInd,
+     C+    :XWC_BOAC:WC_BOACInd,
+     C+    :XWC_BOACNE:WC_BOACNEInd,
+     C+    :XWC_BOACAM:WC_BOACAMInd,
+     C+    :XWC_BOACAU:WC_BOACAUInd,
+     C+    :XWC_BOACCL:WC_BOACCLInd,
+     C+    :XWC_BOACDE:WC_BOACDEInd,
+     C+    :XWC_BOACRE:WC_BOACREInd,
+     C+    :XWC_BOACCH:WC_BOACCHInd,
+     C+    :XWC_AUTOA:WC_AUTOAInd,
+     C+    :XWC_AUTLVL:WC_AUTLVLInd,
+     C+    :XWC_ZONE:WC_ZONEInd,
+     C+    :XWC_SYSTEM:WC_SYSTEMInd,
+     C+    :XWC_BOFLD1:WC_BOFLD1Ind,
+     C+    :XWC_BOFLD2:WC_BOFLD2Ind,
+     C+    :XWC_BOFLD3:WC_BOFLD3Ind,
+     C+    :XWC_BOFLD4:WC_BOFLD4Ind,
+     C+    :XWC_BOFLD5:WC_BOFLD5Ind
+     C/END-EXEC
+      *
+      * Process while there is no error or not EOF.
+     C                   DOW       SQLCOD =  0
+      *
+     C                   IF        XWCACTC = 'I'
+      *
+      * Check that generated numbers won't clash with the 1000 ceiling.
+     C                   IF        LastCoreId <> 0
+     C                   EVAL      CheckId = 1000 - LastCoreId
+     C                   IF        CheckId = 0
+      * Set auto generated field back to next available.
+     C                   EVAL      RSTMAXIDCmd = 'RESETMAXID FILE(T_WIPCF)'
+     C                   CALL      'QCMDEXC'                            69
+     C                   PARM                    RSTMAXIDCmd
+     C                   PARM                    CmdLen
+     C                   EVAL      LastCoreId = 0
+     C                   ELSE
+     C                   EVAL      LastCoreId = LastCoreId + 1
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C
+      * If insert, insert record into T_WIPCF setting the auto generated number as
+      *    calculated.
+     C/EXEC SQL
+     C+ Insert into T_WIPCF (
+     C+ WC_API,
+     C+ WC_CAT,
+     C+ WC_BONSTP,
+     C+ WC_BOASTP,
+     C+ WC_BOAC,
+     C+ WC_BOACNE,
+     C+ WC_BOACAM,
+     C+ WC_BOACAU,
+     C+ WC_BOACCL,
+     C+ WC_BOACDE,
+     C+ WC_BOACRE,
+     C+ WC_BOACCH,
+     C+ WC_AUTOA,
+     C+ WC_AUTLVL,
+     C+ WC_ZONE,
+     C+ WC_SYSTEM,
+     C+ WC_BOFLD1,
+     C+ WC_BOFLD2,
+     C+ WC_BOFLD3,
+     C+ WC_BOFLD4,
+     C+ WC_BOFLD5
+     C+ )
+     C+ values(
+     C+ :XWC_API:WC_APIInd,
+     C+ :XWC_CAT:WC_CATInd,
+     C+ :XWC_BONSTP:WC_BONSTPInd,
+     C+ :XWC_BOASTP:WC_BOASTPInd,
+     C+ :XWC_BOAC:WC_BOACInd,
+     C+ :XWC_BOACNE:WC_BOACNEInd,
+     C+ :XWC_BOACAM:WC_BOACAMInd,
+     C+ :XWC_BOACAU:WC_BOACAUInd,
+     C+ :XWC_BOACCL:WC_BOACCLInd,
+     C+ :XWC_BOACDE:WC_BOACDEInd,
+     C+ :XWC_BOACRE:WC_BOACREInd,
+     C+ :XWC_BOACCH:WC_BOACCHInd,
+     C+ :XWC_AUTOA:WC_AUTOAInd,
+     C+ :XWC_AUTLVL:WC_AUTLVLInd,
+     C+ :XWC_ZONE:WC_ZONEInd,
+     C+ :XWC_SYSTEM:WC_SYSTEMInd,
+     C+ :XWC_BOFLD1:WC_BOFLD1Ind,
+     C+ :XWC_BOFLD2:WC_BOFLD2Ind,
+     C+ :XWC_BOFLD3:WC_BOFLD3Ind,
+     C+ :XWC_BOFLD4:WC_BOFLD4Ind,
+     C+ :XWC_BOFLD5:WC_BOFLD5Ind
+     C+ )
+     C/END-EXEC
+      *
+     C                   ENDIF                                                  Insert
+      *
+      * If Delete, delete record from file T_WIPCF.
+     C                   IF        XWCACTC = 'D'
+      *
+     C/EXEC SQL
+     C+ Delete from T_WIPCF
+     C+ where WC_API = :XWC_API and WC_SYSTEM = :XWC_SYSTEM
+     C+   and WC_ZONE = :XWC_ZONE
+     C/END-EXEC
+      *
+      * Error if no record found, run *PSSR.
+     C                   IF        SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  Delete
+      *
+      * If Action code = AMEND then read next record.
+     C                   IF        XWCACTC = 'A'
+      *
+     C                   EVAL      APIX     = XWC_API
+     C                   EVAL      SYSTEMX  = XWC_SYSTEM
+     C                   EVAL      ZONEX    = XWC_ZONE
+      *
+      * Get next record from file UPWPCFPD.
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XWCACTC,
+     C+    :XWC_ID,
+     C+    :XWC_API:WC_APIInd,
+     C+    :XWC_CAT:WC_CATInd,
+     C+    :XWC_BONSTP:WC_BONSTPInd,
+     C+    :XWC_BOASTP:WC_BOASTPInd,
+     C+    :XWC_BOAC:WC_BOACInd,
+     C+    :XWC_BOACNE:WC_BOACNEInd,
+     C+    :XWC_BOACAM:WC_BOACAMInd,
+     C+    :XWC_BOACAU:WC_BOACAUInd,
+     C+    :XWC_BOACCL:WC_BOACCLInd,
+     C+    :XWC_BOACDE:WC_BOACDEInd,
+     C+    :XWC_BOACRE:WC_BOACREInd,
+     C+    :XWC_BOACCH:WC_BOACCHInd,
+     C+    :XWC_AUTOA :WC_AUTOAInd,
+     C+    :XWC_AUTLVL:WC_AUTLVLInd,
+     C+    :XWC_ZONE:WC_ZONEInd,
+     C+    :XWC_SYSTEM:WC_SYSTEMInd,
+     C+    :XWC_BOFLD1:WC_BOFLD1Ind,
+     C+    :XWC_BOFLD2:WC_BOFLD2Ind,
+     C+    :XWC_BOFLD3:WC_BOFLD3Ind,
+     C+    :XWC_BOFLD4:WC_BOFLD4Ind,
+     C+    :XWC_BOFLD5:WC_BOFLD5Ind
+     C/END-EXEC
+      *
+      * If key fields of the next record from UPWPCFPD do not match or
+      * no more record, run *PSSR.
+     C                   IF        XWC_API <> APIX  or
+     C                             XWC_SYSTEM <> SYSTEMX  or
+     C                             XWC_ZONE <> ZONEX  or
+     C                             SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Update T_WIPCF with values from UPWPCFPD record.
+     C/EXEC SQL
+     C+ Update T_WIPCF  set
+     C+    WC_API      = :XWC_API:WC_APIInd,
+     C+    WC_CAT      = :XWC_CAT:WC_CATInd,
+     C+    WC_BONSTP   = :XWC_BONSTP:WC_BONSTPInd,
+     C+    WC_BOASTP   = :XWC_BOASTP:WC_BOASTPInd,
+     C+    WC_BOAC     = :XWC_BOAC:WC_BOACInd,
+     C+    WC_BOACNE   = :XWC_BOACNE:WC_BOACNEInd,
+     C+    WC_BOACAM   = :XWC_BOACAM:WC_BOACAMInd,
+     C+    WC_BOACAU   = :XWC_BOACAU:WC_BOACAUInd,
+     C+    WC_BOACCL   = :XWC_BOACCL:WC_BOACCLInd,
+     C+    WC_BOACDE   = :XWC_BOACDE:WC_BOACDEInd,
+     C+    WC_BOACRE   = :XWC_BOACRE:WC_BOACREInd,
+     C+    WC_BOACCH   = :XWC_BOACCH:WC_BOACCHInd,
+     C+    WC_AUTOA    = :XWC_AUTOA:WC_AUTOAInd,
+     C+    WC_AUTLVL   = :XWC_AUTLVL:WC_AUTLVLInd,
+     C+    WC_ZONE     = :XWC_ZONE:WC_ZONEInd,
+     C+    WC_SYSTEM   = :XWC_SYSTEM:WC_SYSTEMInd,
+     C+    WC_BOFLD1   = :XWC_BOFLD1:WC_BOFLD1Ind,
+     C+    WC_BOFLD2   = :XWC_BOFLD2:WC_BOFLD2Ind,
+     C+    WC_BOFLD3   = :XWC_BOFLD3:WC_BOFLD3Ind,
+     C+    WC_BOFLD4   = :XWC_BOFLD4:WC_BOFLD4Ind,
+     C+    WC_BOFLD5   = :XWC_BOFLD5:WC_BOFLD5Ind
+     C+ where WC_API  = :XWC_API and WC_SYSTEM = :XWC_SYSTEM
+     C+   and WC_ZONE = :XWC_ZONE
+     C/END-EXEC
+      *
+      * Error if no record found in T_WIPCF.
+     C                   IF        SQLCOD = 100
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDIF                                                  Amend
+      *
+      * Get next record from Action file UPWPCFPD
+     C/EXEC SQL
+     C+  Fetch ActionF_crsr  into
+     C+    :XWCACTC,
+     C+    :XWC_ID,
+     C+    :XWC_API:WC_APIInd,
+     C+    :XWC_CAT:WC_CATInd,
+     C+    :XWC_BONSTP:WC_BONSTPInd,
+     C+    :XWC_BOASTP:WC_BOASTPInd,
+     C+    :XWC_BOAC:WC_BOACInd,
+     C+    :XWC_BOACNE:WC_BOACNEInd,
+     C+    :XWC_BOACAM:WC_BOACAMInd,
+     C+    :XWC_BOACAU:WC_BOACAUInd,
+     C+    :XWC_BOACCL:WC_BOACCLInd,
+     C+    :XWC_BOACDE:WC_BOACDEInd,
+     C+    :XWC_BOACRE:WC_BOACREInd,
+     C+    :XWC_BOACCH:WC_BOACCHInd,
+     C+    :XWC_AUTOA :WC_AUTOAInd,
+     C+    :XWC_AUTLVL:WC_AUTLVLInd,
+     C+    :XWC_ZONE:WC_ZONEInd,
+     C+    :XWC_SYSTEM:WC_SYSTEMInd,
+     C+    :XWC_BOFLD1:WC_BOFLD1Ind,
+     C+    :XWC_BOFLD2:WC_BOFLD2Ind,
+     C+    :XWC_BOFLD3:WC_BOFLD3Ind,
+     C+    :XWC_BOFLD4:WC_BOFLD4Ind,
+     C+    :XWC_BOFLD5:WC_BOFLD5Ind
+     C/END-EXEC
+      *
+     C                   ENDDO
+      *
+     C/EXEC SQL
+     C+  Close  ActionF_crsr
+     C/END-EXEC
+      *
+      * Set auto generated field back to next available.
+     C                   EVAL      RSTMAXIDCmd = 'RESETMAXID FILE(T_WIPCF)'
+     C                   CALL      'QCMDEXC'                            69
+     C                   PARM                    RSTMAXIDCmd
+     C                   PARM                    CmdLen
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+     C     TAGSQLERR     TAG
+      *
+     C                   EXSR      *PSSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CheckCoreID - Check for last available core Id                *
+      *                                                               *
+      *****************************************************************
+     C     CheckCoreID   BEGSR
+      *
+     C                   OPEN      T_WIPCF
+     C     *LOVAL        SETLL     T_WIPCF
+     C                   READ      T_WIPCF
+     C                   DOU       %EOF or Finish = 'Y'
+     C                   IF        YWC_ID >= 1000
+     C                   EVAL      Finish = 'Y'
+     C                   IF        SaveID = 999
+     C                   EVAL      RSTOPT = '*RSTMAX'
+     C                   ELSE
+     C                   EVAL      LastCoreID = SaveID + 1
+      *
+     C                   IF        LastCoreID < 10
+     C                   EVAL      RSTOPT = %SUBST(LastCoreIDA:9)
+     C                   ELSE
+     C                   IF        LastCoreID < 100
+     C                   EVAL      RSTOPT = %SUBST(LastCoreIDA:8)
+     C                   ELSE
+     C                   IF        LastCoreID < 1000
+     C                   EVAL      RSTOPT = %SUBST(LastCoreIDA:7)
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   EVAL      SaveID = YWC_ID
+     C                   READ      T_WIPCF
+     C                   ENDDO
+      *
+     C                   CLOSE     T_WIPCF
+      *
+     C                   EVAL      RSTMAXIDCmd = %TRIMR(RSTMAXIDCmd) +
+     C                             ' RSTOPT(' + RSTOPT + ')'
+      *
+     C     CheckCoreIDE  ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR

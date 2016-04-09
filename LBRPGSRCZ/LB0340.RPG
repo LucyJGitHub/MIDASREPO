@@ -1,0 +1,945 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Portfolio Lending Customer Enquiry')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0340 - Portfolio Lending Customer Enquiry                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 087628             Date 01Sep95               *
+      *                 S01498             Date 11Aug94               *
+     F*                 B8267              DATE 21OCT91               *
+     F*                 B7985              DATE 19JUN91               *
+     F*                 R0058              DATE 30JAN91               *
+     F*                 R00300             DATE 20AUG90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*  087628 - Recompiled over LBPLEGPD                            *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  B8267  - If no specific client is entered the system         *
+     F*           does not display all customer.                      *
+     F*  B7985  - PROGRAM LOOPS WHEN NO RECORD BEYOND IN FILE.        *
+     F*  R0058  - Only customers who issued pledges should be shown   *
+     F*  R00300 - Message file changes                                *
+     F*                                                               *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F** FILE DEFINITIONS
+     F** ----------------
+     F*
+     F***Bank*Details*File.*Prefix*-*BJ********************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F** Client master file (customer number) Prefix - BB & CU
+     F***SDLBCSL0IF**E           K        DISK         KINFSR *PSSR       S01498
+     FLBLBCSJ0IF  E           K        DISK         KINFSR *PSSR          S01498
+     F            SDLBCSJ0                          KRENAMESDLBCSF1
+     F*
+     F** Client master file (customer shortname) Prefix - BB & CU
+     F***SDLBCSL5IF**E           K        DISK         KINFSR *PSSR       S01498
+     FLBLBCSJ5IF  E           K        DISK         KINFSR *PSSR          S01498
+     F            SDLBCSJ0                          KRENAMESDLBCSF2
+     F** Guarantees/Pledges detail. Prefix - PG                           R0058
+     F*BPLEGLAIF  E           K        DISK         KINFSR *PSSR     R0058B8267
+     FLBPLEGLAIF  E           K        DISK         KINFSR *PSSR      UC  B8267
+     F*
+     F** Workstation File
+     FLB0340DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFLRR2KSFILE LB0340S2
+     F                                              KINFDS FDS001
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                  ----------------------                         *
+     F**      10          Work indicator for "R0058".                     R0058
+     F**      11          Work indicator for "B8267".                     B8267
+     F**                                                                  R0058
+     F**      26          SFLEND    ------) Message Subfile              *
+     F**      27          ROLLUP                                         *
+     F**                                                                 *
+     F**      28          SFLDSP    ------)                              *
+     F**      29          SFLDSPCTL       )                              *
+     F**      30          SFLCLR          ) Input Screen 2 Subfile       *
+     F**      31          SFLEND    ------)                              *
+     F**                                                                 *
+     F**      50 51       Display file indicators                        *
+     F**      40          Error indicator for customer no./name screen 2 *
+     F**      41          Error indicator for customer no./name screen 2 *
+     F********70**********Read*fail*on*Bank*Details*file*SDBANKPD******  *S01498
+     F**                                                                 *
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     E*
+     E** Array of alphanumerics
+     E                    ALPNU  37  37  1
+     E*
+     E** Array of numbers                                                                     CSD027
+     E***********         NUM    10  10  1                                                    CSD027
+     E*
+     E** Array to split customer field into individual characters
+     E                    CUS        10  1
+     E*
+     E** Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     I*
+     I** File information data structure for display file
+     IFDS001      DS
+     I                                    B 378 3790FDSRR1
+     I*
+     I** Program status data structure
+     IPSDS       SDS
+     I**************************************244 253 DDWSID                S01498
+     I**************************************254 263 DDUSER                S01498
+     I                                      244 253 SWSID                 S01498
+     I                                      254 263 SUSER                 S01498
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - Copyright Insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** Local data area
+     I***LDA********UDS***********************     256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Data Structure to split customer number/shortname field
+     ICNUMDS      DS
+     I                                        1  10 DDFLD1
+     I                                        1  10 DDFLD2
+     I                                        1  10 CUS
+     I                                        1   1 WWCCH1
+     I                                        7  10 WWC710
+     I**                                                                  R0058
+     I            DS                                                      R0058
+     I                                        1   6 BBCUST                R0058
+     I**********                              1   60NNCUST                              R0058 CSD027
+     I                                        1   6 NNCUST                                    CSD027
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** PARAMETER LIST DECLARATIONS
+     C** ---------------------------
+     C** WWFLG  - INPUT CYCLE FLAG - 0 = CALLED FROM MENU
+     C**                           - 1 = CALLED FROM ANOTHER PROGRAM
+     C** WWCSN  - CUSTOMER NUMBER/SHORTNAME
+     C** WWCNO  - RETURN CUSTOMER NUMBER PARAMETER
+     C** WWFKY  - RETURN FUNCTION KEY INDICATOR
+     C*
+     C** Input parameter list
+     C           *ENTRY    PLIST
+     C                     PARM           WWMFLG  1
+     C                     PARM           WWCSN  10
+     C**********           PARM           WWCNO   60                                          CSD027
+     C                     PARM           WWCNO   6                                           CSD027
+     C                     PARM           WWFKY   2
+     C*                                                                   S01498
+     C**  Copyright statement                                             S01498
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C**  Define local data area for database error                       S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**             START MAINLINE
+     C**             --------------
+     C** Initialisation
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C                     EXSR #B
+     C*
+     C** End program
+     C                     MOVE '1'       *INLR
+     C   10                CLOSELBPLEGLA                                  B8267
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**                    INDEX TO SUBROUTINES                         *
+     C**                    --------------------                         *
+     C**                                                                 *
+     C**  1.ZASNMS - Send message to program's message queue             *
+     C**  2.#ZCB   - Enter processing for second screen                  *
+     C**  3.#ZCBA  - Validate second screen                              *
+     C**  4.#ZCA   - CMD/12 processing                                   *
+     C**  5.#ZB    - Validate initial screen                             *
+     C**  6.#ZC    - Initial screen 2 processing                         *
+     C**  7.#ZD    - Load 14 subfile records                             *
+     C**  8.#ZE    - Main screen 2 processing                            *
+     C**  9.#A     - Initialisation                                      *
+     C** 10.#ZA    - Database error handling routine                     *
+     C** 11.#B     - Main processing (called from another program)       *
+     C** 12.#BA    - Main processing (program called from menu)          *
+     C** 13.*PSSR  - Program error handling routine                      *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASNMS    - Send message to program's message queue             *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C** CALLS     - Y2SNMGC                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZCB     - Enter pressed on subfile screen                      *
+     C**                                                                 *
+     C** CALLS     -  #ZB #ZC #ZD #ZCBA                                  *
+     C**                                                                 *
+     C** CALLED BY -  #ZC                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZCB      BEGSR
+     C           DDFLD1    IFNE *BLANKS
+     C           WWMFLG    IFEQ '1'
+     C*
+     C** Blank out selection input fields
+     C                     DO   WWLSTR    WWSFCT
+     C           WWSFCT    CHAINLB0340S2             79
+     C                     MOVE *BLANKS   DD2SEL
+     C                     UPDATLB0340S2
+     C                     END
+     C                     END
+     C                     MOVE 'Y'       WWVLD1
+     C*
+     C** Validate customer number/shortname
+     C                     EXSR #ZB
+     C           WWVLD1    IFEQ 'N'
+     C                     Z-ADDWWREC     SFLRR2
+     C                     GOTO #ZCB0
+     C                     END
+     C*
+     C** New shortname is the same as previous shortname
+     C           WWSNM     IFEQ BBCSSN
+     C                     Z-ADD1         SFLRR2
+     C                     GOTO #ZCB0
+     C                     END
+     C*
+     C** Rebuild subfile for new shortname/customer number
+     C           *IN77     IFEQ '0'
+     C                     EXSR #ZC
+     C                     EXSR #ZD
+     C                     ELSE
+     C*
+     C** Shortname/customer number beyond end of file or invalid
+     C                     MOVEL'LBM0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     Z-ADDWWREC     SFLRR2
+     C                     END
+     C                     GOTO #ZCB0
+     C                     ELSE
+     C           WWMFLG    IFEQ '1'
+     C*
+     C** LB0340 called from another program
+     C                     EXSR #ZCBA
+     C           WWVLD2    IFEQ 'N'
+     C*
+     C** Ensures page with first error in subfile is displayed
+     C                     Z-ADDWW1STE    SFLRR2
+     C                     GOTO #ZCB0
+     C                     END
+     C*
+     C*
+     C                     DO   WWLSTR    WWSFCT
+     C           WWSFCT    CHAINLB0340S2             79
+     C           DD2SEL    IFNE *BLANKS
+     C*
+     C** One valid selection is made
+     C                     MOVE DD2CNO    WWCNO
+     C                     MOVE '1'       WWEDF
+     C                     END
+     C                     END
+     C           WWEDF     IFEQ '1'
+     C                     MOVE '1'       *INKC
+     C                     ELSE
+     C                     Z-ADDWWREC     SFLRR2
+     C                     END
+     C                     ELSE
+     C*
+     C** Customer field blank and program called from menu
+     C           WWMFLG    IFEQ '0'
+     C                     Z-ADDWWREC     SFLRR2
+     C                     END
+     C                     END
+     C                     END
+     C           #ZCB0     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZCBA    - Validate second screen                               *
+     C**                                                                 *
+     C** CALLS     -                                                     *
+     C**                                                                 *
+     C** CALLED BY -  #ZCB                                               *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZCBA     BEGSR
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C                     MOVE '0'       *IN41
+     C                     Z-ADD0         WW1STE  40
+     C                     MOVE '0'       WWONEX
+     C                     MOVE 'Y'       WWVLD2  1
+     C                     DO   WWLSTR    WWSFCT
+     C           WWSFCT    CHAINLB0340S2             79
+     C*
+     C** Invalid selection field
+     C           DD2SEL    IFNE 'X'
+     C           DD2SEL    ANDNE' '
+     C*
+     C** First error encountered
+B1   C           WW1STE    IFEQ 0
+B1   C                     MOVE WWSFCT    WW1STE
+     C                     END
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       WWMSG1
+     C                     END
+     C*
+     C** Valid selection field
+     C           DD2SEL    IFEQ 'X'
+     C           WWONEX    IFEQ '0'
+     C                     MOVE '1'       WWONEX  1
+     C                     MOVE '0'       *IN41
+B1   C                     ELSE
+B1   C           WW1STE    IFEQ 0
+     C                     MOVE WWSFCT    WW1STE
+     C                     END
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       WWMSG2
+     C                     END
+     C                     END
+     C                     UPDATLB0340S2
+     C                     MOVE '0'       *IN41
+     C                     END
+     C*
+     C** Write to message subfile
+     C           WWMSG1    IFEQ 'Y'
+     C                     MOVE 'N'       WWVLD2
+     C                     MOVEL'LBM0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C           WWMSG2    IFEQ 'Y'
+     C                     MOVE 'N'       WWVLD2
+     C                     MOVEL'LBM0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZCA     - Cmd/12 processing                                    *
+     C**                                                                 *
+     C** CALLS     -                                                     *
+     C**                                                                 *
+     C** CALLED BY -  #ZC                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZCA      BEGSR
+     C           WWMFLG    IFEQ '0'
+     C                     MOVE *BLANKS   DDFLD1
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZB         - This subroutine validates input screen 1          *
+     C**                                                                 *
+     C** CALLS       - NONE                                              *
+     C**                                                                 *
+     C** CALLED BY   - #B #BA                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZB       BEGSR
+     C*
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C** Validate the customer number or shortname
+     C*
+     C** The first character must be alphanumeric or blank
+     C*
+     C           WWCCH1    LOKUPALPNU                    34
+B1   C           *IN34     IFEQ '0'
+     C                     MOVEL'LBM0007' ZAMSID
+     C                     MOVE '1'       *IN40
+     C                     GOTO #ZB9
+E1   C                     END
+     C*
+     C***If*the*first*char.*is*non-numeric, check for a valid shortname                       CSD027
+     C** Check as a shortname or a number                                                     CSD027
+     C***********                                                                             CSD027
+     C********** WWCCH1    LOKUPNUM                      34                                   CSD027
+     C***********                                                                             CSD027
+B1   C************IN34     IFEQ '0'                                                           CSD027
+     C***********                                                                             CSD027
+     C***********DDFLD1    SETLLSDLBCSL5             40                   S01498              CSD027
+     C***********DDFLD1    SETLLLBLBCSJ5             40                   S01498              CSD027
+     C************IN40     IFEQ '1'                                                           CSD027
+     C***********          MOVEL'LBM0059' ZAMSID                                              CSD027
+     C***********          GOTO #ZB9                                                          CSD027
+     C***********          END                                                                CSD027
+     C***********          READ SDLBCSL5                 77               S01498              CSD027
+     C***********          READ LBLBCSJ5                 77               S01498              CSD027
+     C************IN77     IFEQ '1'                                                           CSD027
+     C***********          MOVEL'LBM0059' ZAMSID                                              CSD027
+     C***********          MOVE '1'       *IN40                                               CSD027
+     C***********          GOTO #ZB9                                                          CSD027
+     C***********          END                                                                CSD027
+     C***********                                                                             CSD027
+X1   C************         ELSE                                                               CSD027
+     C***********                                                                             CSD027
+     C***The*first*character*is*numeric*so*check*that*the*next*5*chars.                       CSD027
+     C***are*also*numeric*and*the*last*4*are*blank.*If*still*valid*then                       CSD027
+     C***check*that*the*customer*number*exists************************                        CSD027
+     C***********                                                                             CSD027
+     C***********          Z-ADD1         WWFLD1  20                                          CSD027
+B2   C***********WWFLD1    DOWLT6                                                             CSD027
+     C***********          ADD  1         WWFLD1                                              CSD027
+     C***********CUS,WWFLD1LOKUPNUM                      34                                   CSD027
+B3   C************IN34     IFEQ '0'                                                           CSD027
+     C***********          MOVE '1'       *IN40                                               CSD027
+     C***********          MOVEL'LBM0007' ZAMSID                                              CSD027
+     C***********          GOTO #ZB9                                                          CSD027
+E3   C***********          END                                                                CSD027
+E2   C***********          END                                                                CSD027
+     C***********                                                                             CSD027
+      * Check as a shortname                                                                  CSD027
+     C           DDFLD1    CHAINLBLBCSJ5             77                                       CSD027
+      * If shortname was not found                                                            CSD027
+     C           *IN77     IFEQ *ON                                                           CSD027
+      *                                                                                       CSD027
+B2   C           WWC710    IFNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'LBM0007' ZAMSID
+     C                     GOTO #ZB9
+E2   C                     END
+     C*
+     C                     MOVELDDFLD1    WWCNSN  6
+     C***********WWCNSN    SETLLSDLBCSL0             40                   S01498
+     C           WWCNSN    SETLLLBLBCSJ0             40                   S01498
+     C           *IN40     IFEQ '1'
+     C                     MOVEL'LBM0059' ZAMSID
+     C                     GOTO #ZB9
+E1   C                     END
+     C***********          READ SDLBCSL0                 77               S01498
+     C                     READ LBLBCSJ0                 77               S01498
+     C           *IN77     IFEQ '1'
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'LBM0059' ZAMSID
+     C                     GOTO #ZB9
+     C                     END
+     C                     END                                                                CSD027
+     C*
+E1   C************         END                                                                CSD027
+     C*
+     C*
+     C** Invalid customer found, load message to message subfile
+     C           #ZB9      TAG                             **  #BAA9    **
+     C           *IN40     IFEQ '1'
+     C                     MOVE 'N'       WWVLD1
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZC      - Initial screen 2 processing                          *
+     C**                                                                 *
+     C** CALLS     -                                                     *
+     C**                                                                 *
+     C** CALLED BY - #BA #BA                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZC       BEGSR
+     C*
+     C** Save customer short name
+     C                     MOVE BBCSSN    WWSNM
+     C*
+     C** Clear subfile
+     C                     MOVE '1'       *IN30
+     C                     WRITELB0340C2
+     C                     MOVE '0'       *IN30
+     C***********WWSNM     SETLLSDLBCSL5                                  S01498
+     C           WWSNM     SETLLLBLBCSJ5                                  S01498
+     C                     Z-ADD0         WWLSTR
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZD      - Load 14 subfile records                              *
+     C**                                                                 *
+     C** CALLS     -  NONE                                               *
+     C**                                                                 *
+     C** CALLED BY -  #ZCB #B #BA                                        *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZD       BEGSR                           **  #ZA      **
+     C*
+     C                     Z-ADDWWLSTR    SFLRR2
+     C                     Z-ADD0         WWSFCT
+     C*
+     C** Reset record found flag
+     C                     MOVE 'N'       WWRECF  1
+     C***********          READ SDLBCSL5                 31               S01498
+     C                     READ LBLBCSJ5                 31               S01498
+     C           *IN31     DOWEQ'0'
+     C           WWSFCT    ANDLT15
+      *                                                                   R0058
+     C**         NNCUST    CHAINLBPLEGD0             10              R0058B8267
+     C**N10                DO                                        R0058B8267
+     C   10      NNCUST    CHAINLBPLEGD0             11                   B8267
+     C           *IN10     IFEQ '0'                                       B8267
+     C           *IN10     OREQ '1'                                       B8267
+     C           *IN11     ANDEQ'0'                                       B8267
+     C*
+     C** Load subfile fields
+     C                     MOVE BBCSSN    DD2SNM
+     C                     MOVE BBCUST    DD2CNO
+     C                     MOVE BBCRNM    DD2RNM
+     C                     MOVE BBCRTN    DD2RTN
+     C*
+     C** Set record found flag
+     C                     MOVE 'Y'       WWRECF
+     C                     ADD  1         WWSFCT
+     C                     ADD  1         SFLRR2
+     C                     WRITELB0340S2
+     C                     END                                            R0058
+      *                                                                   R0058
+     C***********          READ SDLBCSL5                 31               S01498
+     C                     READ LBLBCSJ5                 31               S01498
+     C                     END
+     C           *IN31     IFEQ '0'
+     C***********          READPSDLBCSL5                 79               S01498
+     C***********          READPLBLBCSJ5                 79               S01498
+     C                     ELSE                                           B7985
+     C           WWRECF    IFNE 'Y'                                       B7985
+     C                     MOVE '1'       *INKL                           B7985
+     C                     END                                            B7985
+     C                     END
+     C                     Z-ADDSFLRR2    WWLSTR
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZE      - Process second screen                                *
+     C**                                                                 *
+     C** CALLS     -  #ZD #ZCA #ZCB                                      *
+     C**                                                                 *
+     C** CALLED BY -  #B #BA                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZE       BEGSR
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Process until cmd/3 or cmd/12 pressed
+     C           WWRECF    IFEQ 'Y'
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   DDFLD1
+     C                     END
+     C*
+     C** Enable cmd/key 12
+     C                     MOVE '1'       *IN51
+     C*
+     C** Write heading
+     C                     MOVE '1'       *IN51
+     C                     WRITELB0340F2
+     C*
+     C** Write subfile control format
+     C                     WRITELB0340C2
+     C           *IN40     IFEQ '1'
+     C           WWVLD2    OREQ 'N'
+     C*
+     C** Write message subfile line
+     C                     WRITELB0340C1
+     C                     MOVEA'00'      *IN,40
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C                     END
+     C                     MOVE 'N'       WWMSG1  1
+     C                     MOVE 'N'       WWMSG2  1
+     C                     READ LB0340C2                 79
+     C*
+     C** Maintains correct SFLRRN during enter processing
+     C           FDSRR1    IFEQ 0
+     C                     Z-ADDSFLRR2    WWREC   40
+     C                     ELSE
+     C                     Z-ADDFDSRR1    WWREC
+     C                     END
+     C           *INKC     IFEQ '0'
+     C           *IN27     CASEQ'1'       #ZD              rollup
+     C           *INKL     CASEQ'1'       #ZCA             cmd/12
+     C                     CAS            #ZCB             enter
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A          - This subroutine performs the initial processing   *
+     C**                                                                 *
+     C** CALLS       - #ZA                                               *
+     C**                                                                 *
+     C** CALLED BY   - MAINLINE                                          *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C*********************MOVEL'LXGBMSGF'ZAMSGF                          R00300
+     C                     MOVEL'LBUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*
+     C** Initialise display file fields
+     C                     MOVE *BLANKS   DD2SEL
+     C                     MOVE *BLANKS   DD2SNM
+     C**********           MOVE *ZEROS    DD2CNO                                              CSD027
+     C                     MOVE *BLANKS   DD2CNO                                              CSD027
+     C                     MOVE *BLANKS   DD2RNM
+     C                     MOVE *BLANKS   DD2RTN
+     C*
+     C** Initialise work fields
+     C*
+     C                     MOVE '0'       WWEDF   1
+     C**********           MOVE *ZEROS    WWCNO                                               CSD027
+     C                     MOVE *BLANKS   WWCNO                                               CSD027
+     C                     Z-ADD0         WWLSTR  40
+     C                     Z-ADD0         WWSFCT  40
+     C                     MOVE *BLANKS   WWSNM  10
+     C*
+     C** Initialise the message subfile
+     C                     MOVE *BLANKS   DDPGMQ
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C** Set error message subfile end indicator to '1'
+     C                     MOVE '1'       *IN26
+     C*
+     C** Initialise subfile
+     C                     MOVEA'111'     *IN,28
+     C                     WRITELB0340C2
+     C                     MOVE '0'       *IN30
+     C*
+     C** Initialise database error fields
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'LB0340'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                       S01498
+     C*
+     C***Read*the*record*on*the*bank*details*file**********************   S01498
+     C*
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 70               S01498
+     C*
+B1   C************IN70     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                        ***************S01498
+     C*                                                                   S01498
+     C** Get bank details using access object                             S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST ' P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C** Check if an error occurred                                       S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA
+E1   C                     END
+     C*                                                                   S01498
+     C**  Rundate in DDMMMYY format                                       S01498
+     C*                                                                   S01498
+     C                     MOVE BJMRDT    SRUNA                           S01498
+      *                                                                   B8267
+     C           WWFKY     IFEQ 'AA'                                      B8267
+     C                     MOVE *BLANKS   WWFKY                           B8267
+     C                     SETON                     10                   B8267
+     C                     OPEN LBPLEGLA                                  B8267
+     C                     END                                            B8267
+      *                                                                   B8267
+E1   C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZA      - Database error handling routine.                     *
+     C**                                                                 *
+     C** CALLS     -  NONE                                               *
+     C**                                                                 *
+     C** CALLED BY -  #A                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZA       BEGSR                           **  #ZA      **
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C   10                CLOSELBPLEGLA                                  B8267
+     C                     RETRN
+     C*
+     C           #ZA0      ENDSR                           **  #ZA0     **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B       - Main processing subroutine                           *
+     C**                                                                 *
+     C** CALLS     -  #BA #ZB #ZC #ZD #ZE                                *
+     C**                                                                 *
+     C** CALLED BY -  Mainline                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C                     MOVE 'N'       WWVLD1  1
+     C           WWMFLG    IFEQ '0'
+     C*
+     C** Program called from menu
+     C                     EXSR #BA
+     C                     ELSE
+     C           WWMFLG    IFEQ '1'
+     C*
+     C** Program called from another program
+     C** Seton indicator to enable cmd/12
+     C*
+     C                     MOVE '1'       *IN51
+     C*
+     C** Seton indicator to display selection field for subfile screen
+     C                     MOVE '1'       *IN50
+     C*
+     C** Move shortname/customer number parameter to input field
+     C                     MOVE WWCSN     DDFLD1
+     C                     MOVE 'Y'       WWVLD1
+     C*
+     C** Validate shortname/customer
+     C                     EXSR #ZB
+     C           WWVLD1    IFEQ 'Y'
+     C*
+     C** Initial screen 2 processing
+     C                     EXSR #ZC
+     C*
+     C** Load 14 subfile records
+     C                     EXSR #ZD
+     C*
+     C** Screen 2 processing
+     C                     EXSR #ZE
+     C                     END
+     C           *INKC     IFEQ '1'
+     C           WWEDF     IFEQ '0'
+     C                     MOVE '03'      WWFKY
+     C                     END
+     C                     ELSE
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      WWFKY
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C           #B0       ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA      - First screen processing                              *
+     C**                                                                 *
+     C** CALLS     -  #ZB #ZC #ZD #ZE                                    *
+     C**                                                                 *
+     C** CALLED BY -  #B                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C** Don't display selection field for subfile screen
+     C                     MOVE '0'       *IN50
+     C*
+     C** Disable cmd/key 12
+     C                     MOVE '0'       *IN51
+     C           *INKC     DOWEQ'0'
+     C*
+     C** If cmd/12 is pressed from subfile screen , menu option = '0'
+     C                     MOVE 'N'       WWVLD1  1
+     C           *INKC     DOWEQ'0'
+     C           WWVLD1    ANDEQ'N'
+     C*
+     C** Output initial screen
+B1   C                     WRITELB0340F1
+B1   C           *IN40     IFEQ '1'
+     C*
+     C** Display message subfile
+     C                     WRITELB0340C1
+     C                     MOVE '0'       *IN40
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C                     END
+     C*
+     C** Read input field on initial screen
+B1   C                     READ LB0340F1                 79
+B1   C           *INKC     IFEQ '0'
+     C*
+     C** Enter pressed on initial screen when program called from menu
+     C                     MOVE 'Y'       WWVLD1
+     C                     EXSR #ZB
+     C                     END
+     C                     END
+     C           *INKC     IFEQ '0'
+     C*
+     C** Initial screen 2 processing
+     C                     EXSR #ZC
+     C*
+     C** Load 14 subfile records
+     C                     EXSR #ZD
+     C                     EXSR #ZE
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR       - This subroutine processes a program file error    *
+     C**                                                                 *
+     C** CALLS       - *NONE                                             *
+     C**                                                                 *
+     C** CALLED BY   - *NONE                                             *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C********************************************************************
+      *  Following array was removed
+      * ** NUM   - Array of numbers
+      *0123456789
+** ALPHU - Array of alphanumerics A-Z, BLANK & 0-9
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

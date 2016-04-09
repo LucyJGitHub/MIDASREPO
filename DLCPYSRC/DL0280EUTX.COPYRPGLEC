@@ -1,0 +1,402 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280EUTX                                          *
+      *                                                               *
+      *  Last Amend No. MD026788           Date 04Nov14               *
+      *  Prev Amend No. CER069             Date 03Jul14               *
+      *                 MD024874A          Date 19Aug14               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG25233           Date 31Jul09               *
+      *                 BUG24051           Date 27May09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 BUG22911           Date 17Feb09               *
+      *                 CER048A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG10237           Date 30Jan06               *
+      *  Prev Amend No. CGL035             Date 01Mar05               *
+      *                 235126             Date 01Sep05               *
+      *                 234306             Date 21Jun05               *
+      *                 234354             Date 21Jun05               *
+      *                 233983             Date 08Jun05               *
+      *                 233956             Date 07Jun05               *
+      *                 233565             Date 18May05               *
+      *                 233324             Date 02May05               *
+      *                 233319             Date 02May05               *
+      *                 233277  *CREATE    Date 28Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD026788 - Always use the Deal Customer for European Tax     *
+      *             checking when system value UseDealCustforEuTax    *
+      *             is 'Y'.                                           *
+      *             Applied for MD-31062.                             *
+      *  CER069 - German Tax Enhancement                              *
+      *  MD024874A - Prevent trading imbalance at interim interest    *
+      *              payment date. Move NIDT to @@ENDD if not deal    *
+      *              amendment.                                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG25233 - Secondary tax is being computed on taxable        *
+      *             non-resident customer                             *
+      *  BUG24051 - Incorrect Threshold Utilisation Postings          *
+      *  CER054  - German Features - Church Tax                       *
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *                     (Recompile)                               *
+      *  BUG22911 - Changes for Correct Tax Calculation               *
+      *  CER048A  - German Features - Taxes                           *
+      *  BUG10237 - DB Error upon calling ZAGETSETAC                  *
+      *  CGL035 - EUSD Upgrade to MidasPlus                           *
+      *  235126 - EU tax missing on Interest Capitalisation.          *
+      *  234306 - Error on Tax in Joined Accounts                     *
+      *  234354 - Don't calculate tax when maturity date is lower     *
+      *           than the effective date                             *
+      *  233983 - DBASE Error when ZAGETSETAC is called               *
+      *  233956 - Use counterpart as beneficiary when payment not     *
+      *           through retail or general ledger account            *
+      *  233565 - Account key problems.                               *
+      *  233324 - Add new fields in DEALSDC for EU Tax.               *
+      *  233319 - Money market rollover tax is never posted           *
+      *  233277 - Output to SDCSINPD should be done in DL0280         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREUTX - Calculation of EU Tax Amount                        *
+      *                                                               *
+      *****************************************************************
+     C     SREUTX        BEGSR
+      *
+     C                   MOVEL     'ZAGETSET'    WRLE1            10
+     C                   MOVE      'AC'          WRLE1
+      *
+     C                   MOVE      PCCY          P@ACCY
+     C     IPDS          IFEQ      'Y'
+     C                   MOVE      IMET          P@STYP
+     C                   MOVEL     INSA          P@SACT
+     C                   MOVE      INSA          P@BRCA
+     C                   ELSE
+     C                   Z-ADD     PSTM          P@STYP
+     C                   MOVE      PONS          P@SACT
+     C                   MOVE      POBR          P@BRCA
+     C                   ENDIF
+     C                   MOVE      CNUM          P@CNUM                                       233983
+      *
+     C     P@STYP        IFEQ      04                                                         233956
+     C     DealCust      ANDNE     'Y'                                                      MD026788
+     C     P@STYP        OREQ      05                                                         233956
+     C     DealCust      ANDNE     'Y'                                                      MD026788
+     C     P@STYP        OREQ      14                                                         233956
+     C     DealCust      ANDNE     'Y'                                                      MD026788
+      *                                                                                       233956
+     C                   CALL      WRLE1
+      *
+      ** Output Parameters
+      *
+     C                   PARM      *BLANKS       P@RETC           10
+     C                   PARM      *ZEROS        P@ACCT
+     C                   PARM      *ZEROS        P@ASEQ
+     C                   PARM      'N'           P@MEIN            1
+     C                   PARM      'N'           P@PRIN            1
+      *
+      ** Input/Output Parameters
+      *
+     C                   PARM                    P@BRCA            3
+     C**********         PARM *ZEROS             P@CNUM                                       233983
+     C                   PARM                    P@CNUM                                       233983
+     C                   PARM                    P@ACCY            3
+      *
+      ** Input Parameters
+      *
+     C                   PARM                    P@STYP
+     C**********         PARM                    P@SACT           12                        BUG10237
+     C                   PARM                    P@SACT           18                        BUG10237
+      *
+     C     P@RETC        IFNE      *BLANKS
+     C                   MOVE      P@SACT        DBKEY
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C                   MOVE      *ON           *INLR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *                                                                                       233956
+     C                   ELSE                                                                 233956
+      *                                                                                       233956
+     C                   MOVEL     BRCA          P@BRCA                                       233956
+     C                   MOVEL     CNUM          P@CNUM                                       233956
+     C                   MOVEL     PCCY          P@ACCY                                       233956
+      *                                                                                       233956
+     C                   ENDIF                                                                233956
+      *
+      ** Branch details
+      *
+     C                   CALL      'AOBRCHR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    BRCA
+     C     @BRCH         PARM      @BRCH         DSSDY
+      *
+      **  Database Error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   MOVEL     '*KEY   '     DBKEY
+     C                   MOVEL     'SDBRCHPD'    DBFILE
+     C                   MOVEL     '046'         DBASE
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+      ** Country code details
+      *
+     C                   CALL      'AOLOCNR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    A8LCCD
+     C     SDLOCN        PARM      SDLOCN        DSFDY
+      *
+      **  Database Error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   MOVEL     '*KEY   '     DBKEY
+     C                   MOVEL     'SDLOCNPD'    DBFILE
+     C                   MOVEL     '047'         DBASE
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+     C                   MOVEL     *BLANK        @PKEY1           10
+     C**********         MOVEL     CNUM          @PKEY1                                       233319
+     C                   MOVEL     P@CNUM        @PKEY1                                       233319
+      *                                                                                       233319
+     C*****P@CNUM        IFEQ      *ZEROS                                              233319 233956
+     C**********         GOTO      ENEUTX                                              233319 233956
+     C**********         ENDIF                                                         233319 233956
+      *
+      ** Customer details
+      *
+     C                   CALL      'AOCUSTR0'
+     C                   PARM      *BLANK        PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    @PKEY1
+     C                   PARM                    @PKYST            7
+     C     SDCUST        PARM      SDCUST        DSSDY
+      *
+      ** Database Error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   MOVEL     '*KEY   '     DBKEY
+     C                   MOVEL     'SDCUSTPD'    DBFILE
+     C                   MOVEL     '048'         DBASE
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+      ** Country of Tax
+      *
+     C                   MOVEL     DVCNCD        WCNCD             2
+     C                   MOVEL     BBCOLC        WCOLC             2
+     C                   MOVEL     BBCOLC        WWCOLC            2                          234306
+      *
+     C                   CALL      'AOCTTXR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    WCNCD
+     C                   PARM                    WCOLC
+     C     SDCTTX        PARM      SDCTTX        DSFDY
+      *
+     C     PRTCD         IFEQ      '*NRF   '
+      *
+     C                   MOVE      *BLANKS       WCOLC
+     C                   CALL      'AOCTTXR0'
+     C                   PARM      *BLANKS       PRTCD
+     C                   PARM      '*KEY   '     POPTN
+     C                   PARM                    WCNCD
+     C                   PARM                    WCOLC
+     C     SDCTTX        PARM      SDCTTX        DSFDY
+      *
+      ** Database Error
+      *
+     C     PRTCD         IFNE      *BLANKS
+     C                   MOVEL     WCNCD         DBKEY
+     C                   MOVE      WCOLC         DBKEY
+     C                   MOVEL     'SDCTTXPD'    DBFILE
+     C                   MOVEL     '049'         DBASE
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *                                                                                     BUG25233
+      ** Set Flag EU, Local or German                                                       BUG25233
+      *                                                                                     BUG25233
+     C     BBCOLC        IFNE      EWCTRT                                                   BUG25233
+     C                   MOVE      'E'           WELGTX            1                        BUG25233
+     C                   ELSE                                                               BUG25233
+      *                                                                                     BUG25233
+     C     CER048        IFEQ      'Y'                                                      BUG25233
+     C     BBCOLC        IFEQ      EWCTRT                                                   BUG25233
+     C     EWTHMD        ANDEQ     'Y'                                                      BUG25233
+     C                   MOVE      'G'           WELGTX                                     BUG25233
+     C                   ELSE                                                               BUG25233
+     C                   MOVE      'L'           WELGTX                                     BUG25233
+     C                   ENDIF                                                              BUG25233
+      *                                                                                     BUG25233
+     C                   ELSE                                                               BUG25233
+      *                                                                                     BUG25233
+     C                   MOVE      'G'           WELGTX                                     BUG25233
+     C                   ENDIF                                                              BUG25233
+      *                                                                                     BUG25233
+     C                   ENDIF                                                              BUG25233
+      *
+     C     SLID          IFGT      *ZERO
+     C                   Z-ADD     SLID          @@STRD
+     C                   ELSE
+     C                   Z-ADD     VDAT          @@STRD
+     C                   ENDIF
+      *
+      ** Set up end date at interest due date
+      *
+     C     WTYP          IFEQ      'INT'
+     C*****INTC*         IFNE      'Y'                                              233565 MD024874A
+     C                   MOVE      NIDT          @@ENDD
+     C**********         ELSE                                                       233565 MD024874A
+     C**********         MOVE      VDATDM        @@ENDD                             233565 MD024874A
+     C**********         ENDIF                                                      233565 MD024874A
+     C     AMTP          IFEQ      'CI'                                                       235126
+     C     AMTP          OREQ      'SI'                                                    MD024874A
+     C                   MOVE      VDATDM        @@ENDD                                       235126
+     C                   ENDIF                                                                235126
+     C                   ENDIF
+      *
+      ** Set up end date at maturity date
+      *
+     C     WTYP          IFEQ      'MAT'
+     C     WTYP          OREQ      'ROL'                                                      233319
+     C                   MOVE      MDAT          @@ENDD
+     C                   ENDIF
+      *                                                                                       233319
+      ** Set up total interest for rollover                                                   233319
+      *                                                                                       233319
+     C     WTYP          IFEQ      'ROL'                                                      233319
+     C                   Z-ADD     TOTI          WORKD                                        233319
+     C                   ENDIF                                                                233319
+      *
+      ** Calculate taxable interest amount
+      *
+     C     EWTRT1        IFEQ      '1'
+     C     @@STRD        ANDLT     EWEDT1                                                     233565
+     C     @@ENDD        SUB       @@STRD        WDY1              5 0
+     C     @@ENDD        SUB       EWEDT1        WDY2              5 0
+     C     WORKD         MULT(H)   WDY2          @@TOTI
+     C                   DIV(H)    WDY1          @@TOTI
+      *                                                                                       234354
+     C     @@ENDD        IFLT      EWEDT1                                                     234354
+     C                   Z-ADD     *ZERO         @@TOTI                                       234354
+     C                   ENDIF                                                                234354
+      *                                                                                       234354
+     C                   ELSE
+     C                   Z-ADD     WORKD         @@TOTI
+     C                   ENDIF
+      *
+     C                   MOVE      P@CNUM        WCNUM             6
+     C                   MOVE      DLNO          WDLNO             6
+      *
+      ** Call EU Tax Calculation for Private Individual
+      *
+     C                   MOVE      ' '           WTXPI             1
+     C                   MOVE      ' '           WTXJA             1
+     C                   Z-ADD     *ZERO         WNTAMT                                       233324
+     C                   MOVE      *BLANKS       JCNAHO
+     C                   Z-ADD     *ZERO         WNSTXA                                     BUG25233
+     C                   Z-ADD     *ZERO         WNTTXA                                     BUG25233
+      *
+     C                   CALL      'ZATXCLPI'
+      *
+     C                   PARM      'D'           @@MODI            1
+     C                   PARM      WDLNO         @@TRRF           18
+     C                   PARM      BRCA          @@BRCA            3
+     C                   PARM      WCNUM         @@CUST            6
+     C                   PARM                    @@STRD            5 0
+     C                   PARM                    @@ENDD            5 0
+     C                   PARM                    @@TOTI           15 0
+     C                   PARM      *ZERO         @@TAXR            6 4
+     C                   PARM      PCCY          @@OCCY            3
+     C**********         PARM      TAXI          PINTH             1                  CER048A CER069
+     C                   PARM      WTAXI         PINTH             1                          CER069
+      *
+      ** Output parameters
+      *
+     C                   PARM                    @@IAED           15 0
+     C                   PARM                    @@TAXA           15 0
+     C                   PARM                    @@TOTO           15 0
+     C                   PARM                    @@TXCY            3
+     C                   PARM                    @@CTAX            2
+     C                   PARM                    @@TXBS            2
+     C**********         PARM                    @@WTAC            4 0                        CGL035
+     C                   PARM                    @@WTAC           10 0                        CGL035
+     C                   PARM                    @@COLC            2
+     C                   PARM                    @@STAT            5
+     C                   PARM                    @@TRTE            1
+     C                   PARM                    @@TXR1            6 4
+     C**********         PARM                    @@STXB                             CER048A BUG22911
+     C**********         PARM                    @@STAC                             CER048A BUG22911
+     C**********         PARM                    @@STTR                             CER048A BUG22911
+     C**********         PARM                    @@STTP                             CER048A BUG22911
+     C**********         PARM                    @@STXA                             CER048A BUG22911
+     C                   PARM                    @@KEY            10
+     C                   PARM                    @@FILE           10
+     C                   PARM                    @@RTRN            7
+     C     SDTXPA        PARM      SDTXPA        DSSDY                                      BUG22911
+      *
+     C                   SELECT
+      *
+     C     @@RTRN        WHENEQ    'ERROR'
+     C                   MOVE      @@FILE        DBFILE
+     C                   MOVE      @@KEY         DBKEY
+     C                   MOVE      *ON           *IN15
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C                   MOVE      *ON           *INLR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+      *
+     C     @@RTRN        WHENNE    'JOINT'
+     C     @@TOTO        IFNE      *ZERO
+     C     CER048        OREQ      'Y'                                                      BUG24051
+     C     @@STAT        IFEQ      'TAXAB'
+     C     @@STAT        OREQ      'DISCL'
+     C     @@STAT        OREQ      'SELF '
+     C                   MOVE      'Y'           WTXPI
+     C                   Z-ADD     @@TAXA        WNTAMT           13 0
+     C**********         Z-ADD     @@STXA        WNSTXA                             CER048A BUG22911
+     C     WELGTX        IFNE      'E'                                                      BUG25233
+     C                   Z-ADD     PSTXA         WNSTXA                                     BUG22911
+     C                   Z-ADD     PTTXA         WNTTXA                                       CER054
+     C                   ENDIF                                                              BUG25233
+     C                   EXSR      SRCSIN
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     @@RTRN        WHENEQ    'JOINT'
+     C                   MOVE      ' '           WTXPI
+     C                   EXSR      SRCALJ
+     C                   ENDSL
+      *
+     C**********         ENDSR                                                              233319
+     C*****ENEUTX        ENDSR                                                       233319 233956
+     C                   ENDSR                                                              233956
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280EUTX                                       *
+      *****************************************************************

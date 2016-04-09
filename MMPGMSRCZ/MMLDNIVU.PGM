@@ -1,0 +1,266 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(MMLDNIVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas MM Loans/deposits validate and update')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Money Market                                        *
+      *                                                               *
+      *  MMLDNIVU - LE Assignments validate and update                *
+      *                                                               *
+      *  Function: This program validates fee settlements for input   *
+      *            into the Midas database.                           *
+      *            The action code determines which processes are     *
+      *            executed as follows:                               *
+      *            - For I (=Insert) or A (=Amend)                    *
+      *              - Validate the transaction details fields        *
+      *            - For A (=AMEND),                                  *
+      *              - if transaction is a partial amendment, call a  *
+      *                separate function to complete the transaction  *
+      *                details.                                       *
+      *              - if transaction is valid, call a separate       *
+      *                function to check whether it is a valid        *
+      *                amendment.                                     *
+      *            - For D (=DELETE), call a separate function to     *
+      *              process the transaction and bypass the rest of   *
+      *              the validation.                                  *
+      *                                                               *
+      *            For all action codes, the decision to as to        *
+      *            whether to write to the valid or invalid file and  *
+      *            the call to the message handler will take place    *
+      *            in this module                                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 MD030436           Date 01Oct14               *
+      *                 MD027337A          Date 01Oct14               *
+      *                 CDL094             Date 01Sep14               *
+      *                 MD027415           Date 19Aug14               *
+      *                 MD027337           Date 04Jun14               *
+      *                 MD024884           Date 07Feb14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 MD022849           Date 13Oct13               *
+      *                 MD022656           Date 01Oct13               *
+      *                 AR751620           Date 12Jun13               *
+      *                 MD000091           Date 14May13               *
+      *                 AR1060863          Date 06Apr13               *
+      *                 AR665113           Date 28Nov12               *
+      *                 AR971184A          Date 22Jun12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 AR863263           Date 11Nov11               *
+      *                 CSF011             Date 12Sep11               *
+      *                 AR819540A          Date 30Aug11               *
+      *                 CER049             Date 06Dec10               *
+      *                 CRE073             Date 06Dec10               *
+      *                 259924A            Date 31May09               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23519           Date 24Mar09               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260428A            Date 10Jun09               *
+      *                 260428             Date 28May09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256638             Date 21Oct08               *
+      *                 256564             Date 17Sep08               *
+      *                 248297             Date 05Jun07               *
+      *                 244784             DATE 11JAN07               *
+      *                 244537             Date 17Aug05               *
+      *                 BUG5169            Date 03Oct06               *
+      *                 BUG12810A          Date 29Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12967           Date 21Dec06               *
+      *                 241685             Date 18Sep06               *
+      *                 BUG12589           Date 15Nov06               *
+      *                 BUG12551           Date 09Nov06               *
+      *                 239400             Date 26Jun06               *
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10943           Date 27Mar06               *
+      *                 BUG10718           Date 03Mar06               *
+      *                 BUG10725           Date 02Mar06               *
+      *                 BUG10695           Date 25Feb06               *
+      *                 BUG10677           Date 24Feb05               *
+      *                 BUG10341           Date 08Feb05               *
+      *                 BUG10563           Date 14Feb06               *
+      *                 BUG10296           Date 07Feb06               *
+      *                 CAP087             Date 02Sep05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CLE031             Date 26Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG8119            Date 20Oct05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 BUG6512            Date 21Apr05               *
+      *                 BUG6164            Date 01Apr05               *
+      *                 BUG4808            Date 16Nov04               *
+      *                 BUG4728            Date 05Nov04               *
+      *                 BUG3992            Date 01Oct04               *
+      *                 BUG4482            Date 29Sep04               *
+      *                 BUG3792            Date 28Sep04               *
+      *                 BUG4380            Date 29Sep04               *
+      *                 BUG4068            Date 03Sep04               *
+      *                 BUG4097            Date 01Sep04               *
+      *                 BUG3684            Date 13Aug04               *
+      *                 BUG3986            Date 13Aug04               *
+      *                 CMM105             Date 22Jun04               *
+      *                 BUG3869            Date 26Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL014             Date 20Oct03               *
+      *                 BUG2310            Date 29Apr04               *
+      *                 TCA002             Date 26Mar04               *
+      *                 CGL029             Date 26Mar04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CAP084  *CREATE    Date 07Sep03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  MD030436 - Enhance fix MD027337A to the cater defaulting of  *
+      *             settlement from '00' to SSI details. (Recompile)  *
+      *  MD027337A - Settlement details are not being re-defaulted    *
+      *              during amend. (Recompile)                        *
+      *            - Applied for MD030436.                            *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompile)                                         *
+      *  MD027415 - Unexpected validation of settlement instruction   *
+      *             during 'EDIT' of a deal after it's value date.    *
+      *           - Recompiled due to changes done in module.         *
+      *  MD027337 - Settlement details are not being defaulted during *
+      *             amend. (Recompile)                                *
+      *  MD024884 - Incorrect Payment and Receipt accounts (Recompile)*
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  MD022849 - Settlement Payment Fields cannot be amended error *
+      *             (Recompile)                                       *
+      *  MD022656 - Amendment is allowed for protected settlement     *
+      *             fields (Recompile)                                *
+      *  AR751620 - Recompiled due to changes made in MMLDNIVU.       *
+      *             (Child: AR751621)                                 *
+      *  MD000091 - Event Codes Substitution (Recompile)              *
+      *  AR1060863 - Deal irregular interest schedules lost           *
+      *            - Applied for AR1097090 (Recompile)                *
+      *  AR665113 - Recompiled due to changes made in MMLDNIVU.       *
+      *             (Child: AR665114)                                 *
+      *  AR971184A- During Amend Front Ofc Id must be updated with the*
+      *             new one (Recompile)                               *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  AR863263 - Further Pay/Receipt Settlement Accounts are       *
+      *             reset to blanks (Recompile)                       *
+      *  CSF011 - Customer Name on Inputs (Recompile)                 *
+      *  AR819540A - Mapping error encountered in LDNI (Recompile)    *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  259924A- Recompiled due to changes done in MOD/MMLDNIVU.     *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  BUG23519 - Warning messages with the same text are displayed *
+      *             at the same time (Recompile)                      *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  260428A - Always protect fields for validation if Authorise  *
+      *            (Recompile)
+      *  260428 - Skip validation on receipt side / pay side if       *
+      *           accounting has taken place already in the past.     *
+      *            (Recompile)
+      *  256638 - Add the parameters needed to prevent Serious Midas  *
+      *           Error message in Java screen.                       *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  248297 - EXTDTA is no more part of Output buffers            *
+      *           - Add DS in Buffer2                                 *
+      *           - Ensure MMLDNIR also use it                        *
+      *           - ROLLBACK updates in case of Problem               *
+      *  244784 - Recompiled due to changes in MMLDNIVU module        *
+      *  244537 - To avoid overriding front office identifier.        *
+      *  BUG5169 - Apply Base Rate at Value Date. Recompile           *
+      *  BUG12810A - Validate Fix Base Rate only for deal types IT,   *
+      *              TD, IP and TI only. (BUG12810 reopened)          *
+      *  BUG12967 - MM LDNI crashes with serious Midas Error          *
+      *  241685 - Recompiled due to changes in MMLDNIVU module        *
+      *  BUG12589 - When short term rate is specified, it is not      *
+      *             reflected as actual interest rate in the files    *
+      *             due to recalculation in calling MMLDNIVLP.        *
+      *             (Recompile)                                       *
+      *  BUG12551 - LDNI was unable to amend transaction.             *
+      *             Serious Midas Plus error occurred.                *
+      *             Reference Rate field was not updated properly.    *
+      *             (Recompile)                                       *
+      *  239400 - Add Front Office ID to be used by SOAP Interface    *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10943 - Interest Rate Change Schedule not displayed       *
+      *             (Recompile)                                       *
+      *  BUG10718 - Deletion of Fiduciary Placing Associated Takings  *
+      *             not deleted, no warning message. (Recompile)      *
+      *  BUG10725 - Fiduciary code/charges are not updated during     *
+      *             insertion thereby causing Midasplus error in      *
+      *             deal amendments (Recompile)                       *
+      *  BUG10695 - Wrong Total Interest being computed for           *
+      *             fiduciary deals.  (Recompile)                     *
+      *  BUG10677- Recompiled due to change in MMLDNIVU module        *
+      *  BUG10341- Recompiled due to change in MMLDNIVU module        *
+      *  BUG10563-Resolve conflict between BUG10296 and 9827          *
+      *  BUG10296 - LUX extension fields are missing                  *
+      *  CAP087  - REPO JAVA changes                                  *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG8119 - Fields returned incorrectly from API if update     *
+      *            flag set to 'Y' but data is invalid.               *
+      *  CDL033  - Floating Rate CDs Issued.                          *
+      *  BUG6512 - Retrieve TRAM details                              *
+      *  BUG6164 - For WIP authorise cannot call ValidateAc before    *
+      *            ValidateTr as HK* fields are not always retrieved. *
+      *  BUG4808 - Unable to authorise transaction because WIP do     *
+      *            not have correct Timestamp.                        *
+      *  BUG4728 - Serious Midas error with blank timestamp when      *
+      *            authorising insert of transaction.                 *
+      *  BUG3992- Call new program MMLDNIVLP to perform post          *
+      *           settlement detail validation. Revalidate dates.     *
+      *  BUG4482- Authorise should call Validate to show all the      *
+      *           warning errors.                                     *
+      *  BUG3792- Only allow Block/Unblock on Deposits.               *
+      *  BUG4380- Clear Multiple Sett Account fields if not selected  *
+      *  BUG4068- Deal number range for Fixed Loan/Deposit            *
+      *  BUG4097 - Ensure Block/Unblock action leaves deal authorised *
+      *  BUG3684 - Set up action field for Block/Unblock              *
+      *  BUG3986- Pass the status and TimeStamp out to the MidasPlus *
+      *  CMM105 - Core changes for GBO005                             *
+      *         - Fixed Deposits Held Under Lien                      *
+      *                  - Upgrade to Midasplus                       *
+      *  BUG3869 - Records lost from DLFSACPD on authorization        *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  BUG2310 - Interest Calculation Method being changed during   *
+      *            input (recompile).                                 *
+      *  TCA002 - 10-Digit Account Code Errors - Retrieve a/c details.*
+      *  CGL029 - 10-Digit Account Code Errors                        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CDL020 - Apply Base Rate at Value Date                       *
+      *           (Recompile)                                         *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic Rollover of Fixed Term Loan/Deposit       *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors (recompile).                     *
+      *  CAP084 - API Wrapper project                                 *
+      *                                                               *
+      *****************************************************************

@@ -1,0 +1,55 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       SDNOSTW0 - Bank Position Report Nostro and Pool Balances              */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2014                     */
+/*                                                                             */
+/*       Last Amend No. MD033599           Date 12Mar14                        */
+/*       Prev Amend No. CGL158   *CREATE   Date 18Aug14                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD033599 - Optimisation Transfers Error                               */
+/*       CGL158 - Nostro Sweeping                                              */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  NOSR.A7CYCD AS CCY,                                                           :
+  NOSR.A7NONB AS NOSTRO,                                                        :
+**CASE*WHEN*GLPRONOW0.PNB0*=**0*THEN*ACCNT.LDBL*+*IFNULL(ACCNT2.LDBL,'0')*+*****:           MD033599
+  CASE WHEN GLPRONOW0.PNB0 IS NULL THEN ACCNT.CLBL + IFNULL(ACCNT2.CLBL,'0') +  :           MD033599
+            IFNULL(GLTNOSTD.NCAMT0,'0') + IFNULL(GLPRONOW0.PNB0,'0')            :
+*******WHEN GLPRONOW0.PNB0*<>*0*THEN*ACCNT.LDBL*+*IFNULL(ACCNT2.LDBL,'0')*+*****:           MD033599
+       WHEN GLPRONOW0.PNB0 IS NOT NULL THEN ACCNT.CLBL +                        :           MD033599
+            IFNULL(ACCNT2.CLBL,'0') +                                           :           MD033599
+            IFNULL(GLTNOSTD.NCAMT0,'0') + (IFNULL(GLPRONOW0.PNB0,'0') -         :
+************ACCNT.LDBL)*********************************************************:           MD033599
+            ACCNT.CLBL)                                                         :           MD033599
+       END AS ESTIMATED_BAL                                                     :
+  FROM SDNOSTPD NOSR                                                            :
+       LEFT OUTER JOIN ACCNTAB ACCNT ON(NOSR.A7BRCD = ACCNT.BRCA                :
+            AND NOSR.A7CUST = ACCNT.CNUM                                        :
+            AND NOSR.A7CYCD = ACCNT.CCY                                         :
+            AND NOSR.A7ACCD = ACCNT.ACOD                                        :
+            AND NOSR.A7ACSN = ACCNT.ACSQ)                                       :
+       LEFT OUTER JOIN SDNOST2D NOSREX2 ON(NOSR.A7CYCD = NOSREX2.ERCYCD         :
+            AND NOSR.A7NONB = NOSREX2.ERNONB)                                   :
+       LEFT OUTER JOIN ACCNTAB ACCNT2 ON(NOSREX2.ERBRCA = ACCNT2.BRCA           :
+            AND NOSR.A7CUST = ACCNT2.CNUM                                       :
+            AND NOSR.A7CYCD = ACCNT2.CCY                                        :
+            AND NOSREX2.ERACCD = ACCNT2.ACOD                                    :
+            AND NOSREX2.ERACSN = ACCNT2.ACSQ)                                   :
+       LEFT OUTER JOIN GLTNOSTD GLTNOSTD ON(NOSR.A7CYCD = GLTNOSTD.NCCYCD       :
+            AND NOSR.A7NONB = GLTNOSTD.NCNONB)                                  :
+       LEFT OUTER JOIN GLPRONOW0 GLPRONOW0 ON(NOSR.A7CYCD = GLPRONOW0.CCY       :
+            AND NOSR.A7NONB = GLPRONOW0.NOSN)                                   :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas OF BPR Nostro and Pool Balances             ';                     :
+                                                                                :

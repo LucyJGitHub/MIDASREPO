@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Generic program to move database items')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC90000 - Generic program to move database items          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. CPK030             Date 19Mar15              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK030 - Clean up of deliverable data library.              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &OBJECT &OBJECTTYPE &FROM &TO)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJECTTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&FROM) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&TO) TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2015')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve library prefix depending on layer. */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                             'BrgMidasGlobalPrefix' &SVAL1 ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgMidasSystemPrefix' &SVAL1 ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                             ' ' ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&FROMLIB) VALUE(&PFX *TCAT &FROM *TCAT +
+                          'LIB')
+             CHGVAR     VAR(&TOLIB) VALUE(&PFX *TCAT &TO *TCAT 'LIB')
+ 
+/* Check if object already exists in 'to' library. */
+             CHKOBJ     OBJ(&TOLIB/&OBJECT) OBJTYPE(&OBJECTTYPE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* If it does not then check if it is in the 'from' library ... */
+                CHKOBJ     OBJ(&FROMLIB/&OBJECT) OBJTYPE(&OBJECTTYPE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+/* ... and if it is in neither then error ... */
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... otherwise move the object. */
+                MOVOBJ     OBJ(&FROMLIB/&OBJECT) OBJTYPE(&OBJECTTYPE) +
+                             TOLIB(&TOLIB)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

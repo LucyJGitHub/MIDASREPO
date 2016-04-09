@@ -1,0 +1,160 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - Branch Code processg')
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU61 - IML REPORTING - BRANCH CODE PROCESSING             *
+     H*                                                              *
+     H*  (c) Misys International Banking Systems Ltd. 2005           *
+     H*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Aug05               *
+      *  Prev Amend No. ERLU432 PT         Date 30Aug94               *
+     H*                                                              *
+     F*****************************************************************
+     H*                                                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*   ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY           *
+     H*                                                              *
+     H*****************************************************************
+     F***SDBRCHY6IF**E           K        DISK                                                CER001
+     FSDBRX4L0IF  E           K        DISK                                                   CER001
+      * VE - Branch Code Extension file for ER Luxembourg
+      *
+     F***ERCTRYL1IF**E           K        DISK                                                CER001
+     FERCTYXL0IF  E           K        DISK                                                   CER001
+     F* VQ - ER Country Code Details
+      *
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+      *
+      **  ACCESS BRANCH CODE TO RETRIEVE :
+      **   Include Data indicator & Origin of operation code           *****
+     C********** EXBRCD    CHAINSDBRCHY6             80                                       CER001
+     C           EXBRCD    CHAINSDBRX4L0             80                                       CER001
+      **   If record not found:
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'611'     DBASE            *****************
+     C**********           MOVEL'SDBRCHY6'DBFILE           ** DB ERROR 01 **                  CER001
+     C                     MOVEL'SDBRX4L0'DBFILE                                              CER001
+     C                     MOVELEXBRCD    DBKEY            *****************
+     C                     EXSR #BBERR
+     C                     ELSE                            - X1
+     C                     MOVELVEINCL    EXINCL                       01 **
+     C                     MOVELVEOROC    EXOROC                       01 **
+     C                     END                             - E1
+      *
+      **  ACCESS COUNTRY EXTENSION FILE  :
+      **   Retrieve ISO country code:                                  *****
+     C********** EXORCC    CHAINERCTRYL1             80                                       CER001
+     C           EXORCC    CHAINERCTYXL0             80                                       CER001
+      **   If record not found:
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'612'     DBASE            *****************
+     C**********           MOVEL'ERCTRYL1'DBFILE                                              CER001
+     C                     MOVEL'ERCTYXL0'DBFILE                                              CER001
+     C                     MOVELEXORCC    DBKEY            *****************
+     C                     EXSR #BBERR
+     C                     ELSE                            - X1
+     C                     MOVELVQISOC    EXORCL
+     C                     END                             - E1
+      *
+     C                     RETRN
+     C**=================================================================
+      **
+      **  *INZSR      Program initialisation sub-routine                STANDING
+      **
+     C           *INZSR    BEGSR
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      **                                                               *****
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXBRCD  3
+     C                     PARM           EXORCC  2
+      *  Output Parameters
+     C                     PARM           EXINCL  1
+     C                     PARM           EXOROC  10
+     C                     PARM           EXORCL  3
+     C                     PARM           ERROR   1                       ERL432
+      *
+      **                                                               *****
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+     C*================================================================
+      **
+      **  #BBERR      Program-detected exception OR monitored error     STANDING
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #BBERR    BEGSR
+     C*
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

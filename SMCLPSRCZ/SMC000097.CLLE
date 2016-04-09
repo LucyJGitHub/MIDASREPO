@@ -1,0 +1,157 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Securities Trading')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000097 - Set up initial Securities Trading               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 06Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SESTAT) TYPE(*CHAR) LEN(133)
+             DCL        VAR(&EOPM) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&EOMM) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&EOPT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCLF       FILE(SEC00ADF)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Securities Trading is switched on - data area MMOD and file SDMMODPD. */
+             RTVDTAARA  DTAARA(MMOD (21 1)) RTNVAR(&SE)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&SE *NE 'Y' *OR %SST(&FMT 31 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Clear relevant files. */
+             CLRPFM     FILE(BKMTHA)
+             CLRPFM     FILE(BKPHDA)
+             CLRPFM     FILE(BKPHHA)
+             CLRPFM     FILE(BKPOSA)
+             CLRPFM     FILE(BPACHA)
+             CLRPFM     FILE(CAPRHA)
+             CLRPFM     FILE(CDEPPA)
+             CLRPFM     FILE(CLIABA)
+             CLRPFM     FILE(CNCTRA)
+             CLRPFM     FILE(CPOSNA)
+             CLRPFM     FILE(DPOSNA)
+             CLRPFM     FILE(DPTMVA)
+             CLRPFM     FILE(FUNDSAC)
+             CLRPFM     FILE(HSTTRA)
+             CLRPFM     FILE(INVTPA)
+             CLRPFM     FILE(LMTPA)
+             CLRPFM     FILE(POSETA) MBR(POSETA)
+             CLRPFM     FILE(POSETA) MBR(CPOSN1)
+             CLRPFM     FILE(POSETA) MBR(CPOSN2)
+             CLRPFM     FILE(POSETA) MBR(DPOSN1)
+             CLRPFM     FILE(POSETA) MBR(DPOSN2)
+             CLRPFM     FILE(PRICEA)
+             CLRPFM     FILE(SEACKA)
+             CLRPFM     FILE(SECACA)
+             CLRPFM     FILE(SECTYA)
+             CLRPFM     FILE(SECGTA)
+             CLRPFM     FILE(SEEUCA)
+             CLRPFM     FILE(SEDEVA)
+             CLRPFM     FILE(SEMKCA)
+             CLRPFM     FILE(SETLEA)
+             CLRPFM     FILE(SETLXA)
+             CLRPFM     FILE(SLIMA)
+             CLRPFM     FILE(SNDEVA)
+             CLRPFM     FILE(STDSEA)
+             CLRPFM     FILE(TNRANAA)
+             CLRPFM     FILE(TRADSA)
+             CLRPFM     FILE(UDEPPA)
+             CLRPFM     FILE(ESETTST)
+             CLRPFM     FILE(EXVALZ)
+             CLRPFM     FILE(CUBRDA)
+             CLRPFM     FILE(CPPRIA)
+             CLRPFM     FILE(SEPCA)
+             CLRPFM     FILE(BPEVEA)
+             CLRPFM     FILE(CPEVEA)
+             CLRPFM     FILE(DPEVEA)
+             CLRPFM     FILE(TREVEA)
+             CLRPFM     FILE(BLKRFD)
+ 
+/* Call program to initialise headers and trailers. */
+             CALL       PGM(SE0005)
+ 
+/* Initialise relevant files. */
+             INZPFM     FILE(BPEVEA) TOTRCDS(1)
+             INZPFM     FILE(CPEVEA) TOTRCDS(1)
+             INZPFM     FILE(DPEVEA) TOTRCDS(1)
+             INZPFM     FILE(TREVEA) TOTRCDS(1)
+             INZPFM     FILE(BLKRFD) TOTRCDS(1)
+             INZPFM     FILE(POSETA) MBR(POSETA) TOTRCDS(1)
+             INZPFM     FILE(POSETA) MBR(CPOSN1) TOTRCDS(1)
+             INZPFM     FILE(POSETA) MBR(CPOSN2) TOTRCDS(1)
+             INZPFM     FILE(POSETA) MBR(DPOSN1) TOTRCDS(1)
+             INZPFM     FILE(POSETA) MBR(DPOSN2) TOTRCDS(1)
+ 
+/* Update SESTAT. */
+             CHGDTAARA  DTAARA(SESTAT (1 7)) VALUE('OLDNNNN')
+             CHGDTAARA  DTAARA(SESTAT (20 2)) VALUE('1N')
+             CHGDTAARA  DTAARA(SESTAT (27 13)) VALUE('NYN0000000000')
+             CHGDTAARA  DTAARA(SESTAT (40 12)) VALUE('0000000000N0')
+             CHGDTAARA  DTAARA(SESTAT (54 2)) VALUE('N ')
+ 
+DISPLAY:
+             SNDRCVF    DEV(*FILE) RCDFMT(FMT1)
+             IF         COND(&EOPM *EQ '     ') THEN(DO)
+                GOTO       CMDLBL(DISPLAY)
+             ENDDO
+             IF         COND(&EOMM *EQ '     ') THEN(DO)
+                GOTO       CMDLBL(DISPLAY)
+             ENDDO
+             IF         COND(&EOPT *EQ '     ') THEN(DO)
+                GOTO       CMDLBL(DISPLAY)
+             ENDDO
+             CHGDTAARA  DTAARA(SESTAT (8 5)) VALUE(&EOPM)
+             CHGDTAARA  DTAARA(SESTAT (13 7)) VALUE(&EOMM)
+             CHGDTAARA  DTAARA(SESTAT (56 5)) VALUE(&EOPT)
+ 
+/* Update SETEMP. */
+             RTVDTAARA  DTAARA(SESTAT) RTNVAR(&SESTAT)
+             CHGDTAARA  DTAARA(SETEMP) VALUE(&SESTAT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000097')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

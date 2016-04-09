@@ -1,0 +1,160 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#NASSOLD - Global NAS Sold                                          */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CSF011             Date 12Sep11                        */
+/*       Prev Amend No. CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG7451            Date 03Jun05                        */
+/*                      BUG6087            Date 24Feb05                        */
+/*                      BUG6207            Date 08Mar05                        */
+/*                      BUG5544            Date 20Jan05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type                                       */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG7451- Remove duplicate field CGZONE                                */
+/*       BUG6087- Performance Enhancement                                      */
+/*       BUG6207- Performance Enhancement                                      */
+/*       BUG5544- Performance Enhancement                                      */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+    HMRCID, HMDLTF, HMDLUP, HMMLUP, HMYLUP, HMTLUP, HMCHTP,                     :
+    HMLUID, HMPCDN, HMDADN, HMBKCD, HMCCY, HMCYDP, HMDDLT, HMDSTS,              :
+/***HMMTYP,*HMRBSI,*HMTYPE,*HMSTYP,*HMCSNM,*HMINTR,*HMBRCA,*HMDBRC,*************:             CDL038
+    HMMTYP, HMRBSI, HMTYPE, HMSTYP, HMCLAS, HMCSNM, HMINTR, HMBRCA, HMDBRC,     :             CDL038
+    HMBKCY, HMBCDP, HMFEDF, HMCDRF, HMIPFQ, HMICMT, HMIPDM, HMISUR,             :
+    HMFRAT, HMDCRT, HMFCLY, HMBRAT, HMDORM, HMDORI, HMMORI, HMDCPI,             :
+    HMMCPI, HMPCTN, HMCDRP, HMLACT, HMTIME, HMDUSC, HMAOFR, HMLDAT,             :
+    HMBOKC, HMRONS, HMRIBN, HMRIBA, HMPONS, HMPIBN, HMPIBA, HMRCRN,             :
+    HMRCRA, HMRVNO, HMAWBN, HMAWBA, HMBENN, HMBENA, HMDTP1, HMDTP2,             :
+    HMDTP3, HMDTP4, HMDCHG, HMBTB1, HMBTB2, HMBTB3, HMBTB4, HMBTB5,             :
+    HMBTB6, HMORBR, HMPRFC, HMROBR, HMCVMR, HMPCLI, HMPSZE, HMSTCY,             :
+    HMIC72, HMFRNT, HMAFRT,HMREPA, HMTMST, HMUSER,                              :
+    HMDN38, HMCNUM, HMISCN, HMORCM, HMLNKN, HMRSTM, HMPSTM,                     :Bug6207
+    HMROBN, HMROCN, HMPOBN, HMPOCN,                                             :Bug6207
+    DIGITS(HMDN38) AS PADHMDN38,                                                :
+****DIGITS(HMCNUM)*AS*PADHMCNUM,************************************************:             CSD027
+****DIGITS(HMISCN)*AS*PADHMISCN,************************************************:             CSD027
+           HMCNUM  AS PADHMCNUM,                                                :             CSD027
+           HMISCN  AS PADHMISCN,                                                :             CSD027
+    CASE HMBRKG WHEN 999999999999999 THEN NULL ELSE                             :
+****DEC(HMBRKG*C1.SCALING,31,4) END AS SHMBRKG,*********************************:Bug5544
+    HMBRKG END AS SHMBRKG,                                                      :Bug5544
+****CASE HMBRKG WHEN 999999999999999 THEN NULL ELSE*****************************:Bug5544
+****DEC(HMBRKG*C1.SCALING*C1.RATE,31,4) END AS "BSHMBRKG",**********************:Bug5544
+    CASE WHEN HMORCM = 0 THEN ' ' ELSE DIGITS(HMORCM) END AS PADHMORCM,         :
+    CASE WHEN HMLNKN = 0 THEN ' ' ELSE DIGITS(HMLNKN) END AS PADHMLNKN,         :
+    CASE WHEN HMRSTM = 0 THEN ' ' ELSE DIGITS(HMRSTM) END AS PADHMRSTM,         :
+    CASE WHEN HMPSTM = 0 THEN ' ' ELSE DIGITS(HMPSTM) END AS PADHMPSTM,         :
+****CASE*WHEN*HMROBN*=*0*THEN*'*'*ELSE*DIGITS(HMROBN)*END*AS*PADHMROBN,*********:             CSD027
+****CASE*WHEN*HMROCN*=*0*THEN*'*'*ELSE*DIGITS(HMROCN)*END*AS*PADHMROCN,*********:             CSD027
+****CASE*WHEN*HMPOBN*=*0*THEN*'*'*ELSE*DIGITS(HMPOBN)*END*AS*PADHMPOBN,*********:             CSD027
+****CASE*WHEN*HMPOCN*=*0*THEN*'*'*ELSE*DIGITS(HMPOCN)*END*AS*PADHMPOCN,*********:             CSD027
+    CASE WHEN HMROBN ='' THEN ' ' ELSE        HMROBN  END AS PADHMROBN,         :             CSD027
+    CASE WHEN HMROCN ='' THEN ' ' ELSE        HMROCN  END AS PADHMROCN,         :             CSD027
+    CASE WHEN HMPOBN ='' THEN ' ' ELSE        HMPOBN  END AS PADHMPOBN,         :             CSD027
+    CASE WHEN HMPOCN ='' THEN ' ' ELSE        HMPOCN  END AS PADHMPOCN,         :             CSD027
+    CASE WHEN HMLCD=0 THEN NULL ELSE DATE(HMLCD+719892) END AS FHMLCD,          :
+    CASE WHEN HMDVSD=0 THEN NULL ELSE DATE(HMDVSD+719892) END AS FHMDVSD,       :
+    CASE WHEN HMDDND=0 THEN NULL ELSE DATE(HMDDND+719892) END AS FHMDDND,       :
+    CASE WHEN HMNIPD=0 THEN NULL ELSE DATE(HMNIPD+719892) END AS FHMNIPD,       :
+    CASE WHEN HMSLID=0 THEN NULL ELSE DATE(HMSLID+719892) END AS FHMSLID,       :
+    CASE WHEN HMMATD=0 THEN NULL ELSE DATE(HMMATD+719892) END AS FHMMATD,       :
+    CASE WHEN HMDTDD=0 AND HMDTMM=0 AND HMDTYY=0 THEN NULL ELSE                 :
+    DATE(CAST (DIGITS(HMDTDD) AS CHAR(2)) CONCAT '.' CONCAT CAST                :
+    (DIGITS(HMDTMM) AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(HMDTYY)         :
+    AS CHAR(4))) END AS FHMDTDT,                                                :
+****DEC(HMAMNP*C1.SCALING,31,4) AS "SHMAMNP",***********************************:Bug5544
+    HMAMNP AS SHMAMNP,                                                          :Bug5544
+****DEC(HMAMNP*C1.SCALING*C1.RATE,31,4) AS "BSHMAMNP",**************************:Bug5544
+****DEC(HMFVAL*C1.SCALING,31,4) AS "SHMFVAL",***********************************:Bug5544
+    HMFVAL AS SHMFVAL,                                                          :Bug5544
+****DEC(HMFVAL*C1.SCALING*C1.RATE,31,4) AS "BSHMFVAL",**************************:Bug5544
+****A8ZONE AS CUSTZONE, V_GPGLCUSL.* *******************************************:Bug5544
+    A8ZONE AS CUSTZONE,                                                         :Bug5544
+    CGGLOB , CGCSSN , CGRNM  , CGRTN ,  CGICD ,                                 :Bug5544
+****CGACO ,  CGCNCZ , CGCOLC , CGBRCD , CGCUST**********************************:Bug5544/BUG6087
+    CGACO ,  CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE                         :BUG6087
+****, CGZONE********************************************************************:Bug6207/Bug7451
+   FROM GZMMDENSPP                                                              :
+   LEFT JOIN GZSDBRCHPD ON HMBRCA = A8BRCD                                      :
+***LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(HMCNUM)**********:BUG1912
+***LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = HMCNUM*********:BUG1912/Bug5544
+   LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = HMCNUM                    :Bug5544
+***LEFT JOIN V_GLOBRATE C1 ON C1.CCY=HMCCY;*************************************:Bug5544
+   ;                                                                            :Bug5544
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FHMDTDT IS 'Deal                Transaction         Date');                :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FHMDTDT TEXT IS 'Deal Transaction Date');                                  :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADHMDN38  AS HMDN38     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMCNUM  AS HMCNUM     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMISCN  AS HMISCN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD SHMBRKG    AS HMBRKG     USING GZMMDENSPP                      :
+***DESCRIBEFIELD*BSHMBRKG***AS*HMBRKG*****USING*GZMMDENSPP*(BASECCY)************:Bug5544
+ * DESCRIBEFIELD PADHMORCM  AS HMORCM     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMLNKN  AS HMLNKN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMRSTM  AS HMRSTM     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMPSTM  AS HMPSTM     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMROBN  AS HMROBN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMROCN  AS HMROCN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMPOBN  AS HMPOBN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD PADHMPOCN  AS HMPOCN     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMLCD     AS HMLCD      USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMDVSD    AS HMDVSD     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMDDND    AS HMDDND     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMNIPD    AS HMNIPD     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMSLID    AS HMSLID     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD FHMMATD    AS HMMATD     USING GZMMDENSPP                      :
+ * DESCRIBEFIELD SHMAMNP    AS HMAMNP     USING GZMMDENSPP                      :
+***DESCRIBEFIELD*BSHMAMNP***AS*HMAMNP*****USING*GZMMDENSPP*(BASECCY)************:Bug5544
+ * DESCRIBEFIELD SHMFVAL    AS HMFVAL     USING GZMMDENSPP                      :
+***DESCRIBEFIELD*BSHMFVAL***AS*HMFVAL*****USING*GZMMDENSPP*(BASECCY)************:Bug5544
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ NAS sold - GZMMDENSPP                    ';                     :
+                                                                                :

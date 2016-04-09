@@ -1,0 +1,608 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE FRN/Mortgage Rate Changes Expected Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8050 - Midas SE FRN/Mortgage Rate Changes Expected Report  *
+      *                                                               *
+      *  Program Function: This new report will list all base rates   *
+      *                    associated with FRN/Mortgage Securities,   *
+      *                    which are due to be fixed on the next      *
+      *                    working day.                               *
+      *                                                               *
+      *  Phase(s): COB - Automatic.                                   *
+      *                                                               *
+      *  Called By: SEC8050 - Midas SE FRN/Mortgage Rate Changes      *
+      *                       Expected Report Ctl.                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031  *CREATE    Date 09Nov01               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes               *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECTYL6 IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Securities by Ccy, Base rate, Security
+      *
+     FSE8050P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+      ** Midas SE FRN/Mortgage Rate Changes Expected Report
+      *
+     FSE8050AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      ** Midas SE FRN/Mortgage Rate Changes Expected Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *                    FUNCTION OF INDICATORS                     *
+      *                    **********************                     *
+      *                                                               *
+      *   50  - No Record to Report                                   *
+      *   51  - Insert blank line so that the same Currency/Base Rate *
+      *         combination are grouped together in the report.       *
+      *   80  - End of File SECTYL6                                   *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *                      SUBROUTINE INDEX                         *
+      *                      ****************                         *
+      *                                                               *
+      *  SRINIT   - Subroutine to do Program Initialisation.          *
+      *  SRPROC   - Subroutine to do Detail Processing.               *
+      *  SRFNWD   - Subroutine to determine if security is to be      *
+      *             fixed on the next working day.                    *
+      *  SRPRNT   - Subroutine to Print detail record.                *
+      *  SREND    - Subroutine to Write End of Report.                *
+      *  SRAUDT   - Subroutine to Output Audit report and End Program.*
+      *  SRRCFA   - Subroutine to register SE8050AU via RCF.          *
+      *  SRRCFP   - Subroutine to register SE8050P1 via RCF.          *
+      *  SRTERM   - Subroutine to Terminate program                   *
+      *  *PSSR    - Program exception error routine.                  *
+      *                                                               *
+      *  ZDATE2   - To Format a Midas Number in Alpha Date            *
+      *                                                               *
+      *****************************************************************
+      *
+     E/EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZNCDZ1
+      /COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      **  Short data structure for access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure to receive Bank Details
+      *
+     IINVTP     E DSINVTPD
+     I              LCD                             INLCD
+      ** Data Structure to receive Investment Type Details
+      *
+      ***  File Information Data Structure for SE8050P1.
+     ISPOOL1      DS
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ***  File Information Data Structure for SE8050AU.
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      /COPY ZSRSRC,ZNCDZ2
+      /COPY ZSRSRC,ZHOLI
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      **  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      **  Perform Termination Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *
+      *****************************************************************
+      *  SRINIT   - Subroutine to do Program Initialisation.          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     AOBANKR0                                          *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'SE8050'  DBPGM
+      *
+      ** Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01*
+     C                     MOVELPOPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      *                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Convert Next Working Day to DDMMMYY format
+      *
+     C                     MOVE BJDNWD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    H1DNWD
+      *
+      ** RCF Processing for Printer File
+      *
+     C                     EXSR SRRCFP
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+      ** Initialise all working fields
+      *
+     C                     Z-ADD*ZERO     ULRCNT  40       No of Rejn Code
+      *
+      ** Write Report header and column headings
+      *
+     C                     WRITEPGHEADER                   Report header
+     C                     WRITEDTHEADER                   Columns Header
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *  SRPROC   - Subroutine to do Detail Processing.               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Read Securities file
+      *
+     C           *LOVAL    SETLLSECTYL6
+     C                     READ SECTYL6                  80
+      *
+      ** Save Currency and Base Rate values
+     C                     MOVE NMCY      WNMCY   3
+     C                     Z-ADDBASC      WBASC   20
+     C                     Z-ADD*ZERO     WPASS   30
+     C                     MOVE 'Y'       FPASS   1
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Access AOINVTR0 to get the processing type
+     C                     CALL 'AOINVTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM SITP      PINVT   3
+     C                     PARM NMCY      PCCYI   3
+     C           INVTP     PARM INVTP     DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELNMCY      WKEY    7
+     C                     MOVE SITP      WKEY
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVE 'INVTPD  'DBFILE           *DB ERROR 02*
+     C                     MOVELWKEY      DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Only process FRN/Mortgage Securites. (i.e. Securities where
+      ** the Investment type has a processing type of 3 or 8.)
+     C           PROT      IFEQ '3'
+     C           PROT      OREQ '8'
+      *
+      ** Only process if Business Day convention is not blanks
+      ** and Auto Fix is 'Y'.
+     C           BCNV      IFNE *BLANKS
+     C           AUFX      ANDEQ'Y'
+      *
+      ** Determine if security is to be fixed on the next working day
+      *
+     C                     EXSR SRFNWD
+      *
+      ** Output details to report if Security is to be fixed
+     C           SFIX      IFEQ 'Y'
+     C                     ADD  1         ULRCNT
+     C                     EXSR SRPRNT
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Read next record
+     C                     READ SECTYL6                  80
+     C                     ENDDO
+      *
+      ** End of file so write trailer
+      *
+     C                     EXSR SREND
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRFNWD
+      *****************************************************************
+      *  SRFNWD - Subroutine to Determine if security is to be fixed  *
+      *           on the next working day.                            *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRFNWD    BEGSR
+      *
+      ** Calculate Next Coupon Date
+     C                     Z-ADDBJRDNB    ECD     50
+     C                     EXSR ZNCD
+      *
+      ** Calculate if Fixing Date is Next Working Day.
+      *
+     C                     Z-ADDFIXD      ZNRDYS
+     C                     MOVE VLCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZBKDT
+      *
+     C           ZDYNBR    IFEQ BJDNWD
+     C                     MOVE 'Y'       SFIX    1
+     C                     ELSE
+     C                     MOVE 'N'       SFIX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRPRNT
+      *****************************************************************
+      *  SRPRNT - Subroutine to write detail record                   *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEPGHEADER                   Page Header
+     C                     WRITEDTHEADER                   Customer Detail
+     C                     ENDIF
+      *
+      ** Flag the first pass of the same Currency/Base rate combination
+     C           NMCY      IFEQ WNMCY
+     C           BASC      ANDEQWBASC
+     C                     ADD  1         WPASS
+     C                     MOVE *OFF      *IN51
+     C                     ELSE
+     C                     Z-ADD*ZERO     WPASS
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+      ** If this is the first record output we do not want a blank line
+      ** after the header.
+     C           FPASS     IFEQ 'Y'
+     C                     MOVE *OFF      *IN51
+     C                     MOVE 'N'       FPASS
+     C                     ENDIF
+      *
+      ** Output Security details
+      *
+     C                     MOVE NMCY      P1NMCY
+     C                     MOVE BASC      P1BASC
+     C                     MOVE SESN      P1SESN
+     C                     MOVE SRPN      P1SRPN
+      *
+      ** Output Last Change Date in DDMMMYY format
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    P1LCD
+      *
+      ** Blank out Currency, Base rate and Last Change Date if part of
+      ** the same Currency/Base rate combination.
+     C           WPASS     IFGE 1
+     C                     MOVE *BLANKS   P1NMCY
+     C                     MOVE *BLANKS   P1BASC
+     C                     MOVE *BLANKS   P1LCD
+     C                     ENDIF
+      *
+     C                     WRITER1DETAIL
+      *
+      ** Save Currency and Base Rate values
+     C                     MOVE NMCY      WNMCY
+     C                     Z-ADDBASC      WBASC
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SREND
+      *****************************************************************
+      *  SREND - Subroutine to Write End of Report.                   *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEPGHEADER
+     C                     ENDIF
+      *
+      ** If no record processed then write 'NO RECORD TO REPORT'
+      *  on the FRN/Mortgage Rate Changes Expected report.
+      *
+     C           ULRCNT    IFEQ 0
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      ** Write Trailer
+      *
+     C                     WRITETRAILER
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADERAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+      ** Write Trailer for Audit Report.
+      *
+     C                     WRITEAUTRAIL
+      *
+      ** End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *
+      /TITLE SR/SRRCFP
+      *****************************************************************
+      *  SRRCFP  - Subroutine to register SE8050P1 via RCF.           *
+      *                                                               *
+      *  Called By: SRINIT                                            *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      *  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRRCFA
+      *****************************************************************
+      *  SRRCFA - Subroutine to register SE8050AU via RCF.            *
+      *                                                               *
+      *  Called By: SRINIT                                            *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM           PRENT
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           ULRUN     IFEQ *BLANK
+     C                     MOVE 'Y'       ULRUN   1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     EXSR SRAUDT
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/#LTERM
+      *****************************************************************
+      *  SRTERM   - Subroutine to do Terminate program                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      /EJECT
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

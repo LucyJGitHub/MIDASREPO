@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Build compares - 112 long source')           */
+/*OVR    CRTSRCPF FILE(QTEMP/OBJSRC) RCDLEN(112)                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0570 - Build of compares                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSM005  *MOVED     Date 17Aug05              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP001 *CREATE     DATE 21Dec98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSM005 - Changes for the Bridge compare for MidasPlus.      */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTRN &RECD &TYP &SEQ)
+ 
+             DCL        VAR(&RECD) TYPE(*CHAR) LEN(106)
+             DCL        VAR(&TYP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RTRN) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&NBR1) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NBR2) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+             DCLF       FILE(OBJSRC)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+X:
+             CHKOBJ     OBJ(QTEMP/OBJSRC) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTSRCPF   FILE(QTEMP/OBJSRC) RCDLEN(112) MBR(OBJ)
+             ENDDO
+             CLRPFM     FILE(QTEMP/OBJSRC) MBR(OBJ)
+             CALL       PGM(UP0570) PARM(&RECD &SEQ)
+             RTVMBRD    FILE(QTEMP/OBJSRC) MBR(OBJ) NBRCURRCD(&NBR1)
+             STRSEU     SRCFILE(QTEMP/OBJSRC) SRCMBR(OBJ) TYPE(&TYP) +
+                          OPTION(2)
+             RTVMBRD    FILE(QTEMP/OBJSRC) MBR(OBJ) NBRCURRCD(&NBR2)
+             IF         COND(&NBR1 *NE &NBR2) THEN(GOTO CMDLBL(X))
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(E))
+ E:
+             CHGVAR     VAR(%SST(&RECD 7 100)) VALUE(&SRCDTA)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      RCVMSG     MSGTYPE(*EXCP) RMV(*NO) MSGID(&MSGID)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             IF         COND(&MSGID *EQ ' ') THEN(CHGVAR VAR(&MSGID) +
+                          VALUE('*NULL'))
+             CHGVAR     VAR(&MSG) VALUE('Error ' *CAT &MSGID *BCAT ' +
+                          caused program UPC0570 to terminate; see +
+                          errors previously listed')
+             SNDPGMMSG  MSG(&MSG)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

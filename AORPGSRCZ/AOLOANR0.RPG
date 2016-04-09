@@ -1,0 +1,399 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Loan types/sub-types')                        *
+     F*****************************************************************
+     F*                                                               *
+     F*     Midas  ACCESS OBJECTS                                     *
+     F*                                                               *
+     F*     AOLOANR0 - READ ACCESS TO LOAN TYPES/SUB-TYPES FILE       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE164             Date 18Aug14               *
+      *  Prev Amend No. MD019830A          Date 15Apr13               *
+      *                 MD019830           Date 10Apr13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12681           Date 20Nov06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CAS009             Date 16May05               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004             Date 02Apr97               *
+      *                 S01505             Date 18Jul94               *
+     F*                    S01486             DATE 18JUL94            *
+     F*                    S01230             DATE 23/11/89           *   S01230
+     F*                    S01230             DATE 06/11/89           *   S01230
+     F*                    E01168             DATE 14/02/89           *   E01168
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *           (Recompile)                                         *
+      *  MD019830A - Unable to amend authorised Loan (Reopened)       *
+      *  MD019830 - Unable to amend authorised Loan                   *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  BUG12681 - LEC0865 00001 failed dberror 5 occured on LE0865  *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *           (Recompiled over changed to SDLOANPD)               *
+     F*     CLE004 - Lending Enhancements:                            *
+     F*              - Recompiled over changed SDLOANPD.              *
+     F*     S01505 - Profit Centre Accounting Development:            *
+     F*              - Recompiled over changed SDLOANPD.              *
+     F*     S01486 - Private Banking Development:                     *
+     F*              - Recompiled over changed SDLOANPD.              *
+     F*     S01230 - STANDARDISE ACCESS PROGRAMS                      *   S01230
+     F*****************************************************************   S01230
+     F*                                                               *
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE - SDLOANL1
+     F*       50       CHECK FOR 1ST KEY CONTAINING A ?  LEN: 2 CHARS
+     F*       51       CHECK FOR 2ND KEY CONTAINING A ?  LEN: 2 CHAR
+     F*       52       CHECK FOR 3RD KEY CONTAINING A ?  LEN: 4 CHAR                          CLE042
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       94       END OF FILE
+     F*       95       NO RECORD FOUND
+     F*       96       OPTION ERROR
+     F*       97       NO SELECTION
+     F*       98       CALL ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDLOANL1IF  E           K        DISK                           UC
+      * IN  - @AYRECL Loan Types/Sub-Types (LNTY LNST)
+     F*GPLOANL1IF  E           K        DISK                           UC            CSD031 BUG12681
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I**********D@FMT     E DSSDLOAND0                                    S01230
+     ID@FMT     E DSSDLOANPD                                              S01230
+      * @AYRECL - LOAN TYPES/SUB-TYPES RECORD FORMAT DATA STRUCTURE
+      *
+     I***P@FMT     E DSDSFDY                                                           S01230 CLE134
+     I***P@FMT     E DSDSFDY                                                         CLE134 MD019830
+     I***P@FMT     E DSDSSDY                                                      MD019830 MD019830A
+     IP@FMT     E DSDSFDY                                                                  MD019830A
+     I* EXTERNAL DATA STRUCTURE TO HOLD THE OUTGOING RECORD FORMAT        S01230
+     I* OF THE FILE.                                                      S01230
+      *                                                                   S01230
+     I***SCSARD*   E DSSCSARDPD                                                      CSD031 BUG12681
+      ** Switchable Features file                                                             CSD031
+      *                                                                                       CSD031
+     I*********P@FMT       DS                             40              S01230
+     I*********                               1  40 P@DMMY                S01230
+     IP@LNTY      DS
+     I                                        1   1 W@SL01
+     I                                        2   2 W@SL02
+     IP@LNST      DS
+     I                                        1   1 W@SL03
+     I                                        2   2 W@SL04
+     IP@LNCL      DS                                                                          CLE042
+     I                                        1   1 W@SL05                                    CLE042
+     I                                        2   2 W@SL06                                    CLE042
+     I                                        3   3 W@SL07                                    CLE042
+     I                                        4   4 W@SL08                                    CLE042
+      *
+      ************************************************************
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************        S01230
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@LNTY           I:Loan type
+     C                     PARM           P@LNST           I:Loan sub-type
+     C                     PARM           P@LNCL           I:Loan class                       CLE042
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+     C                     SETOF                     52                                       CLE042
+     C                     SETOF                     5051   ¦
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      * DEFINE KEY LIST
+      *
+     C           K@KEY     KLIST
+     C*********************KFLD           AYLNTY                          S01230
+     C*********************KFLD           AYLNST                          S01230
+     C                     KFLD           P@LNTY                          S01230
+     C                     KFLD           P@LNST                          S01230
+     C                     KFLD           P@LNCL                                              CLE042
+      *                                                                                       CSD031
+      ** Check if Enhanced Centralised Static Data is installed                               CSD031
+      *                                                                                       CSD031
+     C**********           CALL 'AOSARDR0'                                           CSD031 BUG12681
+     C**********           PARM *BLANKS   PRTCD   7                                  CSD031 BUG12681
+     C**********           PARM '*VERIFY' POPTN   7                                  CSD031 BUG12681
+     C**********           PARM 'CSD031'  PSAR    6                                  CSD031 BUG12681
+     C********** SCSARD    PARM SCSARD    P@FMT                                      CSD031 BUG12681
+      *                                                                                       CSD031
+     C********** PRTCD     IFEQ *BLANKS                                              CSD031 BUG12681
+     C**********           MOVE 'Y'       CSD031  1                                  CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C**********           MOVE 'N'       CSD031                                     CSD031 BUG12681
+     C**********           ENDIF                                                     CSD031 BUG12681
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C**********           OPEN GPLOANL1               91                            CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C                     OPEN SDLOANL1               91    Open file
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 FREE PROG
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C**********           CLOSEGPLOANL1               92                            CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C                     CLOSESDLOANL1               92    Close file
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C********** *LOVAL    SETLLSDLOAND0             9390                            CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C           *LOVAL    SETLL@AYRECL              9390    Set file
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT REC
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C**********           READ SDLOAND0               9094                          CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C                     READ @AYRECL                9094  Read record
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST REC
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C********** *HIVAL    SETGTSDLOAND0               90                            CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C           *HIVAL    SETGT@AYRECL                90    Set file
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.REC
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C**********           READPSDLOAND0               9094                          CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C                     READP@AYRECL                9094  Read record
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEY ACC
+     C           P@OPTN    OREQ '*VERIFY'                   OR
+     C           W@SL01    IFEQ '?'                        IF 8 CHK KEY 1
+     C           W@SL02    OREQ '?'                         OR
+     C                     SETON                     50    KEY 1 = ?
+     C                     MOVE *BLANK    K@KEY1  2        INIT KEY NO.1
+     C                     ELSE                            OTHERWISE
+     C*********************MOVE AYLNTY    K@KEY1           SET TO INPUT   S01230
+     C                     MOVE P@LNTY    K@KEY1           SET TO INPUT   S01230
+     C                     END                             FI 8
+     C           W@SL03    IFEQ '?'                        IF 9 SELECT
+     C           W@SL04    OREQ '?'                        OR
+     C                     SETON                     51    KEY 2 = ?
+     C                     MOVE *BLANK    K@KEY2  2        INIT KEY NO.2
+     C                     ELSE                            OTHERWISE
+     C*********************MOVE AYLNST    K@KEY2           SET TO INPUT   S01230
+     C                     MOVE P@LNST    K@KEY2           SET TO INPUT   S01230
+     C                     END                             FI 9
+     C           W@SL05    IFEQ '?'                        IF 9 SELECT                        CLE042
+     C           W@SL06    OREQ '?'                        OR                                 CLE042
+     C           W@SL07    OREQ '?'                        OR                                 CLE042
+     C           W@SL08    OREQ '?'                        OR                                 CLE042
+     C                     SETON                     52    KEY 3 = ?                          CLE042
+     C                     MOVE *BLANK    K@KEY3  4        INIT KEY NO.3                      CLE042
+     C                     ELSE                            OTHERWISE                          CLE042
+     C                     MOVE P@LNCL    K@KEY3           SET TO INPUT                       CLE042
+     C                     END                             FI 9                               CLE042
+     C           *IN50     IFEQ '1'                        IF 10
+     C           *IN51     OREQ '1'                        OR
+     C           *IN52     OREQ '1'                        OR                                 CLE042
+     C*********************CALL 'SDMWSRR'              98    <SELECT>     S01230
+     C                     CALL 'SD0280S'              98    <SELECT>     S01230
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C*********************PARM K@KEY1    AYLNTY             B:Key NO 1   S01230
+     C*********************PARM K@KEY2    AYLNST             B:Key NO 2   S01230
+     C                     PARM K@KEY1    P@LNTY             B:Key NO 1
+     C                     PARM K@KEY2    P@LNST             B:Key NO 2
+     C                     PARM K@KEY3    P@LNCL             B:Key NO 3                       CLE042
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 10
+     C********** CSD031    IFEQ 'Y'                                                  CSD031 BUG12681
+     C********** *INU1     ANDEQ*ON                                                  CSD031 BUG12681
+     C********** K@KEY     CHAINSDLOAND0             9590                            CSD031 BUG12681
+     C**********           ELSE                                                      CSD031 BUG12681
+     C           K@KEY     CHAIN@AYRECL              9590    Get record
+     C**********           ENDIF                                                     CSD031 BUG12681
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 11 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter err
+     C                     END                             FI 11
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No rec found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 12 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 12
+      *
+      * Caller requests DB error handling :
+      *
+     C*          W@RTCD    IFEQ 'DBERR'                    IF             E01168
+     C           W@RTCD    IFEQ '*DBERR '                  IF             E01168
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 13
+     C           P@OPTN    ANDNE'*FREE  '                    AND
+     C           P@RTCD    ANDNE'*OPTION'                    AND
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDLOANPD  AOLOANR0  Loan Types / Sub-Types
+** CPY@     : Copyright notice for inclusion in all programs           graS01230
+(c) Misys International Banking Systems Ltd. 2001

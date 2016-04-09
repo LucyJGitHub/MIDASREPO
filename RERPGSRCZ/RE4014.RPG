@@ -1,0 +1,756 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - Rtv A/c Bal Rtne')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4014  - Retrieve A/c Balance Routine                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. AR757208           Date 12May11               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27460           Date 18Dec09               *
+      *                 155673             Date 18Dec09               *
+      *                 CCB002             Date 18Dec09               *
+      *                 CDL013             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  AR757208 - Compilation error due to undefined field          *
+      *             (child: AR757209)                                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27460 - Applied client fix RRFIX2 RD0001 RRFIX1 AH0006    *
+      *  RRFIX2 - Retrieve details from SDMMODPD required for HOOK.   *
+      *  RD0001 - Reinstate some code acidentally removed by CDL013.  *
+      *  155673 - Applied existing fix CCB002 and also amended CCB002 *
+      *           to use the correct parameter when calling the access*
+      *           object.                                             *
+      *  RRFIX1 - Make program compatible with ZSRSRC upgrade         *
+      *         - Added missing RTCCYSF1 copy hook                    *
+      *         - Added missing SCSARDPD I-spec                       *
+      *         - Initialise dummy function code PFNCD                *
+      *  CCB002 - COB Performance Enhancements                        *
+      *           Access now via access object                        *
+      *           MEMOS is now accessed via GL/RE key rather than old *
+      *           relative record number.                             *
+      *  CDL013 - REGIONAL TAX ENHANCEMENT                            *
+      *  AH0006 - CORRECT PARM                                        *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     FREIAC   IF  E           K        DISK
+     F            REIACAF                           KIGNORE
+     F            REIACZF                           KIGNORE
+     FREACR   IF  E           K        DISK
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FREFXAJL0IF  E           K        DISK
+     FACCNT   IF  E           K        DISK                           UC
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FSDSTAXPDIF  E                    DISK                           UC
+      *                                                                                       CDL013
+     FACCNTBY0IF  E           K        DISK                           UC                      CDL013
+     FSDSTAAL1IF  E           K        DISK                           UC                      CDL013
+      *                                                                                       CDL013
+      /COPY ZSRSRC,RTCCYSF1                                                                   RRFIX1
+      /COPY ZSRSRC,RTINDEF3
+      /COPY ZSRSRC,RTCOMMF1
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    POWER   1   7  7 3
+      /COPY ZSRSRC,RTINDEF1
+      /COPY ZSRSRC,RTCOMME1
+      /COPY ZSRSRC,RTCCYSE1
+      *****************************************************************
+      /COPY ZSRSRC,RTINDEF4
+      *****************************************************************
+      ** Parameters
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Program Status Data Structure
+      *
+     IPSDS       SDS
+      *
+      ** Field containing program ID
+      *
+     I                                        1  10 @PGM
+      *
+      ** Field containing workstation ID
+      *
+     I                                      244 253 @JOB
+      *
+      ** Field containing user ID
+      *
+     I                                      254 263 @USER
+      *
+     IDSFDY     E DSDSFDY
+      *                                                                                       RRFIX2
+      ** Parameters                                                                           RRFIX2
+      *                                                                                       RRFIX2
+     ISDMMOD    E DSSDMMODPD                                                                  RRFIX2
+      *                                                                                       RRFIX2
+      **  EXTERNAL DS FOR MIDAS MODULES DETAILS                                               RRFIX2
+      *                                                                                       RRFIX2
+     ISCSARD    E DSSCSARDPD                                                                  RRFIX1
+      *                                                                                       RRFIX1
+      ** Switchable SARs                                                                      RRFIX1
+      *
+     I              LCD                             SCLCD                                     CCB002
+     IUMEMER      DS                                                                          CCB002
+      *                                                                                       CCB002
+      ** Data structure for database error on call to AOMEMSR0/AOMEMSU0                       CCB002
+      *                                                                                       CCB002
+     I                                        1   6 U0CNUM                                    CCB002
+     I                                        7   9 U0CUCD                                    CCB002
+     I                                       10  190U0ACCD                                    CCB002
+     I                                       20  210U0ACSQ                                    CCB002
+     I                                       22  24 U0BRCA                                    CCB002
+     IDSMEMS    E DSMEMOS                                                                     CCB002
+      *                                                                                       CCB002
+      ** External data structure for MEMOS Details                                            CCB002
+      ** Renamed fields in PF/MEMOS                                                           CCB002
+      *                                                                                       CCB002
+     I              RECI                            MERECI                                    CCB002
+     I              CNUM                            MECNUM                                    CCB002
+     I              CCY                             MECCY                                     CCB002
+     I              ACOD                            MEACOD                                    CCB002
+     I              ACSQ                            MEACSQ                                    CCB002
+     I              ACNO                            MEACNO                                    CCB002
+      *                                                                                       CCB002
+     IACFMT     E DSACCNTAB
+     I              BRCA                            XXBRCA
+     I              CNUM                            XXCNUM
+     I              CCY                             XXCCY
+     I              ACOD                            XXACOD
+     I              ACSQ                            XXACSQ
+     I              ACODQQ                          XXACDQ
+      *
+      ** Account details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Ccy
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Customer
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank
+      *
+     ISDACOD    E DSSDACODPD
+      *
+      ** A/c code
+      *
+     I            DS
+      *
+      ** 12 Character key
+      *
+     I                                        1  12 @KEY
+     I                                        2   30@CHGT
+     I                                        4   80@CHST
+     I                                        9  11 @CHCY
+     I                                       12  12 @DDDD
+     ILDA         DS                            256
+      *
+      ** Local data area for data base errors.
+      *
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      *
+      ** Field combining the following fields
+      *
+     I                                      134 183 DBLOT
+      *
+      ** Name of database file in error
+      *
+     I                                      134 141 DBFILE
+      *
+      ** Key value causing database error
+      *
+     I                                      142 170 DBKEY
+      *
+      ** Name of program causing database error
+      *
+     I                                      172 180 DBPGM
+      *
+      ** Number of database error
+      *
+     I                                      181 1830DBASE
+      /COPY ZSRSRC,RTINDEF5
+      /COPY ZSRSRC,RTCOMMI1
+      /COPY ZSRSRC,RTXXXXI2
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           PKEY1  24
+     C                     PARM           PSODL  150
+     C                     PARM           PPRJL  150
+     C                     PARM           PSODC  150
+     C                     PARM           PPRJC  150
+     C                     PARM           PDISP  150
+     C                     PARM           PHELD  150
+     C                     PARM           POVER  150
+     C                     PARM           PACCR  150
+     C                     PARM           PCHRG  150
+     C                     PARM           PWTAX  150
+     C                     PARM           PRTCD   7
+      *
+     C                     EXSR INIT
+      *
+      ** Get account details
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM PKEY1     P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   DSSDY
+      *
+     C                     Z-ADDLDBL      PSODL
+     C                     Z-ADDCLBL      PSODC
+      *
+      ** Get ccy details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM XXCCY     P@K101  3                                           AH0006
+     C           SDCURR    PARM           DSSDY
+      *
+     C                     Z-ADDA6NBDP    @CYDP   10                                        AR757208
+     C                     Z-ADD1         FACT10  90
+     C           A6NBDP    IFGT 0
+     C                     DO   A6NBDP
+     C                     MULT 10        FACT10
+     C                     END
+     C                     END
+      *
+      ** Access today's projected cleared balance
+      *
+     C                     MOVE '0'       *IN71                                               CCB002
+      *                                                                                       CCB002
+     C                     CALL 'AOMEMSR0'                                                    CCB002
+     C                     PARM *BLANKS   W0RTCD  7                                           CCB002
+     C                     PARM '*KEY   ' W0OPTN  7                                           CCB002
+     C                     PARM ACNO      W0RETL 100                                          155673
+     C                     PARM *BLANKS   W0CNUM  6                                           CCB002
+     C                     PARM *BLANKS   W0CCY   3                                           CCB002
+     C                     PARM *ZERO     W0ACCD 100                                          CCB002
+     C                     PARM *ZERO     W0ACSQ  20                                          CCB002
+     C                     PARM *BLANKS   W0BRCA  3                                           CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                                               CCB002
+      *                                                                                       CCB002
+     C           W0RTCD    IFNE *BLANK                                                        CCB002
+     C                     MOVE '1'       *IN71                                               CCB002
+     C                     ENDIF                                                              CCB002
+      *                                                                                       CCB002
+     C                     Z-ADDLDBLN     PPRJL
+     C                     Z-ADDCLBLN     PPRJC
+      *
+      ** Add Credit overdraft
+      *
+     C           ODLN      MULT FACT10    POVER
+     C                     Z-SUBPOVER     POVER
+     C           PPRJC     ADD  POVER     PDISP
+      *
+      ** Add Debit held amount
+      *
+     C                     Z-ADDHELD      PHELD
+     C           PDISP     ADD  PHELD     PDISP
+      *
+      ** Use RTS closure routine for service charges
+      **  accrued interest
+      **  withholding tax
+      *
+     C                     MOVELXXBRCA    @BRCA
+     C                     MOVE XXCNUM    @CNUM
+     C                     MOVELXXCCY     @CCY
+     C                     MOVE XXACOD    @ACOD
+     C                     MOVE XXACSQ    @ACSQ
+     C                     MOVE ACNO      @ACNO
+     C                     MOVE PPRJC     @CLBL
+     C           CDL013    IFEQ 'Y'                                                           CDL013
+     C                     Z-ADDBASEDP    ZCDPT                                               CDL013
+     C                     OPEN ACCNTBY0                                                      CDL013
+     C                     EXSR #ERTCL                                                        CDL013
+     C                     CLOSEACCNTBY0                                                      CDL013
+     C                     ELSE                                                               CDL013
+     C                     EXSR RTCLSC
+     C                     ENDIF                                                              CDL013
+     C                     Z-ADD@INTR     PACCR
+     C                     Z-ADD@CHRG     PCHRG
+     C                     Z-ADD@WTAX     PWTAX
+      *
+      *****************************************************************
+     C                     SETON                     LR
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,RTINTRE
+      /COPY ZSRSRC,RTCCYSC1
+      /COPY ZSRSRC,RTCLSCC1
+      /COPY ZSRSRC,RTCHRGC1
+      /COPY ZSRSRC,RTINTRC1
+      /COPY ZSRSRC,RTCCYXC1
+      /COPY ZSRSRC,RTCOMMC1
+      *****************************************************************
+      *                                                               *
+      *  INIT: Program Initialization                                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Initialise dummy function code                                                       RRFIX1
+      *                                                                                       RRFIX1
+     C                     MOVE *BLANKS   PFNCD   3                                           RRFIX1
+      *                                                                                       RRFIX1
+     C           KLACNT    KLIST
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+     C                     KFLD           @BRCA
+     C           KLCOMM    KLIST
+     C                     KFLD           @BRCA
+     C                     KFLD           @CNUM
+     C                     KFLD           @CCY
+     C                     KFLD           @ACOD
+     C                     KFLD           @ACSQ
+      *
+     C                     MOVEL*BLANKS   PRTCD
+      /COPY ZSRSRC,RTINDEF2
+      *
+      **   Reset LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     OUT  LDA
+      *
+      ** Access Tax ICD for rate. Default is ZERO.
+      *
+     C                     Z-ADD0         TXWTRR
+     C                     OPEN SDSTAXPD
+     C           1         CHAINSDSTAXPD             93
+     C                     CLOSESDSTAXPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM *BLANKS   DSSDY
+      *
+     C                     Z-ADDBJRDNB    RUND    50
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+      *                                                                                       RRFIX2
+     C                     CALL 'AOMMODR0'                                                    RRFIX2
+     C                     PARM '*DBERR ' @RTCD   7                                           RRFIX2
+     C                     PARM '*KEY   ' @OPTN   7                                           RRFIX2
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               RRFIX2
+      *                                                                                       CDL013
+      ** Get BASE ccy details                                                                 CDL013
+      *                                                                                       CDL013
+     C                     CALL 'AOCURRR0'                                                    CDL013
+     C                     PARM *BLANKS   P@RTCD  7                                           CDL013
+     C                     PARM '*KEY'    P@OPTN  7                                           CDL013
+     C                     PARM BJCYCD    P@K101  3                                           CDL013
+     C           SDCURR    PARM           DSSDY                                               CDL013
+     C                     Z-ADDA6NBDP    BASEDP  10                                          CDL013
+     C                     Z-ADDA6NBDP    @CYDP                                             AR757208
+      *                                                                                       CDL013
+      ** Check if CAR CDL013 is installed                                                     CDL013
+      *                                                                                       CDL013
+     C                     CALL 'AOSARDR0'                                                    CDL013
+     C                     PARM '*BLANKS' @RTCD                                               CDL013
+     C                     PARM '*VERIFY' @OPTN                                               CDL013
+     C                     PARM 'CDL013'  @SARD   6                                           CDL013
+     C                     PARM           DSFDY                                               CDL013
+      *                                                                                       CDL013
+      ** CAR CDL013 is NOT installed                                                          CDL013
+      *                                                                                       CDL013
+     C           @RTCD     IFNE *BLANKS                                                       CDL013
+     C                     MOVE 'N'       CDL013  1                                           CDL013
+      *                                                                                       RD0001
+     C                     MOVE BJCYCD    @CCY                                                RD0001
+     C                     EXSR RTCCYS                                                        RD0001
+     C                     MOVE @CCY      ZCCYT                                               RD0001
+     C                     Z-ADDTRT,@I    ZRATET                                              RD0001
+     C                     MOVE TDP,@I    ZCDPT                                               RD0001
+     C                     MOVE TMD,@I    ZMDINT                                              RD0001
+      *                                                                                       CDL013
+      ** CAR CDL013 is installed                                                              CDL013
+      *                                                                                       CDL013
+     C                     ELSE                                                               CDL013
+      *                                                                                       CDL013
+     C                     MOVE 'Y'       CDL013  1                                           CDL013
+     C                     MOVEL'RETAIL'  ULSTAX 10 P                                         CDL013
+      *                                                                                       CDL013
+      ** Access WHT ICD record to determine WHT rate.                                         CDL013
+      *                                                                                       CDL013
+     C                     OPEN SDSTAAL1                                                      CDL013
+     C           ULSTAX    CHAINSDSTAAL1             70                                       CDL013
+     C                     CLOSESDSTAAL1                                                      CDL013
+      *                                                                                       CDL013
+     C           *IN70     IFEQ *ON                                                           CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVEL'SDSTAAL1'DBFILE                                              CDL013
+     C                     MOVEL'RETAIL'  DBKEY                                               CDL013
+     C                     Z-ADD50        DBASE                                               CDL013
+     C                     EXSR DBERR                                                         CDL013
+     C                     ENDIF                                                              CDL013
+     C                     ENDIF                                                              CDL013
+     C                     ENDSR                                                              CDL013
+      *****************************************************************                       CDL013
+      *                                                               *                       CDL013
+      *  #ERTCL: Process Regional Tax Enhancement                     *                       CDL013
+      *                                                               *                       CDL013
+      *****************************************************************                       CDL013
+     C           #ERTCL    BEGSR                                                              CDL013
+      *                                                                                       CDL013
+      ** Define parameters                                                                    CDL013
+      *                                                                                       CDL013
+     C                     Z-ADD@ACNO     @ACNO  100                                          CDL013
+     C                     Z-ADD@CLBL     @CLBL  150                                          CDL013
+     C                     Z-ADD@CHRG     @CHRG  150                                          CDL013
+     C                     Z-ADD@INTR     @INTR  150                                          CDL013
+     C                     Z-ADD@CLOB     @CLOB  150                                          CDL013
+      *                                                                                       CDL013
+     C                     Z-ADD@INTT     @INTT  150                                          CDL013
+     C                     Z-ADD@WTAX     @WTAX  150                                          CDL013
+     C                     Z-ADD@ACOD     @ACOD  100                                          CDL013
+     C                     Z-ADDRHISD     RHISD   50                                          CDL013
+     C                     Z-ADDRHISB     RHISB  150                                          CDL013
+      *                                                                                       CDL013
+      * Retrieve retail interest and charges                                                  CDL013
+      *                                                                                       CDL013
+     C           KLACNT    CHAINREIAC                80                                       CDL013
+      *                                                                                       CDL013
+      ** If record not found?                                                                 CDL013
+      *                                                                                       CDL013
+     C           *IN80     IFEQ '1'                                                           CDL013
+      *                                                                                       CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVEL@ACCN     DBKEY                                               CDL013
+     C                     MOVEL'REIAC'   DBFILE                                              CDL013
+      *                                                                                       CDL013
+     C                     ELSE                                                               CDL013
+      *                                                                                       CDL013
+      * Retrieve retail interest accrual ITD                                                  CDL013
+      *                                                                                       CDL013
+     C           KLACNT    CHAINREACR                80                                       CDL013
+      *                                                                                       CDL013
+      ** If record not found?                                                                 CDL013
+      *                                                                                       CDL013
+     C           *IN80     IFEQ '1'                                                           CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVEL@ACNO     DBKEY                                               CDL013
+     C                     MOVEL'REACR'   DBFILE                                              CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** If no database errors                                                                CDL013
+      *                                                                                       CDL013
+     C           *IN80     IFEQ '0'                                                           CDL013
+      *                                                                                       CDL013
+      ** Calculate charges                                                                    CDL013
+      *                                                                                       CDL013
+     C                     Z-ADDCHGT      @CHGT                                               CDL013
+     C                     Z-ADDCHST      @CHST                                               CDL013
+     C                     MOVEL@CCY      @CHCY                                               CDL013
+     C                     MOVELCHAC      @CHAC                                               CDL013
+     C                     Z-ADDRCA       @RCA                                                CDL013
+     C                     Z-ADDNRCA      @NRCA                                               CDL013
+     C                     Z-ADDLCD       RHISD                                               CDL013
+     C                     Z-ADDHISB      RHISB                                               CDL013
+      *                                                                                       CDL013
+      *                                                                                       CDL013
+      ** Get fixed account charge                                                             CDL013
+      *                                                                                       CDL013
+     C                     MOVE @BRCA     @BRCDX  3                                           CDL013
+     C           KFXA      CHAINREFXAJL0             88                                       CDL013
+     C                     Z-ADDRYACCH    @FXACM                                              CDL013
+      *                                                                                       CDL013
+     C                     EXSR RTCHRG                                                        CDL013
+      *                                                                                       CDL013
+      ** Calculate commissions - added to @CHRG                                               CDL013
+      *                                                                                       CDL013
+     C                     EXSR RTCOMM                                                        CDL013
+      *                                                                                       CDL013
+      ** If record not found?                                                                 CDL013
+      *                                                                                       CDL013
+     C           *IN80     IFEQ '0'                                                           CDL013
+      *                                                                                       CDL013
+      ** Calculate interest                                                                   CDL013
+      *                                                                                       CDL013
+     C                     MOVELDACP      @DACP  21                                           CDL013
+     C                     MOVELCACP      @CACP  21                                           CDL013
+     C                     Z-ADDMADI      @MADI  130                                          CDL013
+     C                     Z-ADDMACI      @MACI  130                                          CDL013
+     C                     Z-ADDGADI      @GADI  130                                          CDL013
+     C                     Z-ADDGACI      @GACI  130                                          CDL013
+     C                     Z-ADDDAIC1     @DAIC1 130                                          CDL013
+     C                     Z-ADDCAIC1     @CAIC1 130                                          CDL013
+      *                                                                                       CDL013
+     C                     EXSR RTINTR                                                        CDL013
+      *                                                                                       CDL013
+      ** Add net-interest & service charge to close balance                                   CDL013
+      *                                                                                       CDL013
+     C           @INTR     ADD  @CHRG     @CLOB                                               CDL013
+      *                                                                                       CDL013
+      ** If the customer is liable calculate tax                                              CDL013
+      *                                                                                       CDL013
+     C           BBCSTY    IFNE 'N'                                                           CDL013
+      *                                                                                       CDL013
+      ** Include withholding tax in closing balance                                           CDL013
+      *                                                                                       CDL013
+      ** If SDSTAXPA/TXWNDI is 'Y', compute tax from net interest (sum                        CDL013
+      ** of DR and CR interests).  Else, compute tax from gross                               CDL013
+      ** interest (CR interest only).                                                         CDL013
+      *                                                                                       CDL013
+     C           TXWNDI    IFEQ 'Y'                                                           CDL013
+     C                     Z-ADD@INTR     @INTT                                               CDL013
+     C                     ELSE                                                               CDL013
+     C                     Z-SUB@CRINT    @INTT                                               CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** If the resulting interest is zero or debit, no need to compute                       CDL013
+      ** for the w/holding tax.  It is automatically equal to zero.                           CDL013
+      *                                                                                       CDL013
+     C           @INTT     IFGE *ZERO                                                         CDL013
+     C                     Z-ADD*ZERO     @WTAX                                               CDL013
+     C                     ELSE                                                               CDL013
+      *                                                                                       CDL013
+      ** Retrieve Taxable indicator for this Account.                                         CDL013
+      *                                                                                       CDL013
+     C           ACNTXF    KLIST                                                              CDL013
+     C                     KFLD           @CNUM                                               CDL013
+     C                     KFLD           @CCY                                                CDL013
+     C                     KFLD           @ACOD                                               CDL013
+     C                     KFLD           @ACSQ                                               CDL013
+     C                     KFLD           @BRCDX                                              CDL013
+      *                                                                                       CDL013
+     C           ACNTXF    CHAINACCNTBY0             70                                       CDL013
+     C           *IN70     IFEQ *ON                                                           CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVEL'ACCNTBY0'DBFILE                                              CDL013
+     C                     MOVEL@CNUM     DBKEY                                               CDL013
+     C                     Z-ADD22        DBASE                                               CDL013
+     C                     EXSR DBERR                                                         CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** If Tax indicator is ZERO set WHT rate to ZERO,                                       CDL013
+      ** otherwise set WHT rate.                                                              CDL013
+      *                                                                                       CDL013
+     C                     SELEC                                                              CDL013
+     C           ATITAX    WHEQ '0'                                                           CDL013
+     C                     Z-ADD0         ULWHTR  52                                          CDL013
+     C           ATITAX    WHEQ '1'                                                           CDL013
+     C                     Z-ADDETXR1     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '2'                                                           CDL013
+     C                     Z-ADDETXR2     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '3'                                                           CDL013
+     C                     Z-ADDETXR3     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '4'                                                           CDL013
+     C                     Z-ADDETXR4     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '5'                                                           CDL013
+     C                     Z-ADDETXR5     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '6'                                                           CDL013
+     C                     Z-ADDETXR6     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '7'                                                           CDL013
+     C                     Z-ADDETXR7     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '8'                                                           CDL013
+     C                     Z-ADDETXR8     ULWHTR                                              CDL013
+     C           ATITAX    WHEQ '9'                                                           CDL013
+     C                     Z-ADDETXR9     ULWHTR                                              CDL013
+     C                     ENDSL                                                              CDL013
+      *                                                                                       CDL013
+      ** If WHT rate is ZERO set tax amount to ZERO.                                          CDL013
+      *                                                                                       CDL013
+     C           ULWHTR    IFEQ *ZERO                                                         CDL013
+     C                     Z-ADD0         @WTAX                                               CDL013
+      *                                                                                       CDL013
+      ** otherwise calculate tax amount.                                                      CDL013
+      *                                                                                       CDL013
+     C                     ELSE                                                               CDL013
+      *                                                                                       CDL013
+      ** If Account currency is in Base Currency.                                             CDL013
+      *                                                                                       CDL013
+     C           @CCY      IFEQ BJCYCD                                                        CDL013
+      *                                                                                       CDL013
+      ** Set work adjustment field according to number of decimal                             CDL013
+      ** places in currency before calculating the tax amount.                                CDL013
+      *                                                                                       CDL013
+     C                     SELEC                                                              CDL013
+     C           ZCDPT     WHEQ 0                                                             CDL013
+     C                     Z-ADD1         ULWKAD  40                                          CDL013
+     C           ZCDPT     WHEQ 1                                                             CDL013
+     C                     Z-ADD10        ULWKAD                                              CDL013
+     C           ZCDPT     WHEQ 2                                                             CDL013
+     C                     Z-ADD100       ULWKAD                                              CDL013
+     C           ZCDPT     WHEQ 3                                                             CDL013
+     C                     Z-ADD1000      ULWKAD                                              CDL013
+     C                     ENDSL                                                              CDL013
+      *                                                                                       CDL013
+      ** Account currency is in Base Currency round down gross                                CDL013
+      ** Interest Amount.                                                                     CDL013
+      *                                                                                       CDL013
+     C           @INTT     DIV  ULWKAD    ULTINT 150                                          CDL013
+     C                     MULT ULWKAD    ULTINT                                              CDL013
+      *                                                                                       CDL013
+      ** Calculate Tax Amount.                                                                CDL013
+      *                                                                                       CDL013
+     C           ULTINT    MULT ULWHTR    @WTAX                                               CDL013
+     C                     DIV  100       @WTAX                                               CDL013
+      *                                                                                       CDL013
+      ** Round down Tax Amount.                                                               CDL013
+      *                                                                                       CDL013
+     C           @WTAX     DIV  ULWKAD    @WTAX  150                                          CDL013
+     C                     MULT ULWKAD    @WTAX                                               CDL013
+      *                                                                                       CDL013
+      ** otherwise (Account Ccy NOT = Base Ccy) calculate                                     CDL013
+      ** Tax amount without rounding down.                                                    CDL013
+      *                                                                                       CDL013
+     C                     ELSE                                                               CDL013
+     C           @INTT     MULT ULWHTR    @WTAX                                               CDL013
+     C                     DIV  100       @WTAX     H                                         CDL013
+      *                                                                                       CDL013
+      ** Calculate the interest amount in base currency (ULTINT)                              CDL013
+      *                                                                                       CDL013
+      ** Retrieve Account Ccy details                                                         CDL013
+     C                     EXSR RTCCYS                                                        CDL013
+     C                     MOVE @CCY      ZCCYF                                               CDL013
+     C                     Z-ADDTRT,@I    ZRATEF                                              CDL013
+     C                     MOVE TDP,@I    ZCDPF                                               CDL013
+     C                     MOVE TMD,@I    ZMDINF                                              CDL013
+      *                                                                                       CDL013
+      ** Set amount in the Account Ccy                                                        CDL013
+      *                                                                                       CDL013
+     C                     Z-ADD@INTT     ZAMTF                                               CDL013
+      *                                                                                       CDL013
+      ** Convert the amount to the Base Ccy                                                   CDL013
+      *                                                                                       CDL013
+     C                     EXSR RTCCYX                                                        CDL013
+      *                                                                                       CDL013
+      ** Set amount in the Base Ccy                                                           CDL013
+      *                                                                                       CDL013
+     C                     Z-ADDZAMTT     ULTINT                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** Access account code details                                                          CDL013
+      *                                                                                       CDL013
+     C                     MOVE @ACOD     @ACODA 10                                           CDL013
+      *                                                                                       CDL013
+     C                     CALL 'AOACODR0'                                                    CDL013
+     C                     PARM *BLANKS   @RTCD                                               CDL013
+     C                     PARM '*KEY   ' @OPTN                                               CDL013
+     C                     PARM           @ACODA                                              CDL013
+     C           SDACOD    PARM SDACOD    DSFDY                                               CDL013
+      *                                                                                       CDL013
+      ** Error in SDACODX0                                                                    CDL013
+      *                                                                                       CDL013
+     C           @RTCD     IFNE *BLANKS                                                       CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVEL'SDACODPD'DBFILE                                              CDL013
+     C                     MOVEL@ACODA    DBKEY                                               CDL013
+     C                     Z-ADD21        DBASE                                               CDL013
+     C                     EXSR DBERR                                                         CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** Check if the interest amount in base ccy is below minimum                            CDL013
+      *                                                                                       CDL013
+     C                     Z-SUBULTINT    ULTINT                                              CDL013
+     C           ULTINT    IFLT A5MISU                                                        CDL013
+     C                     Z-ADD*ZERO     @WTAX                                               CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** Subtract Withholding Tax from Close Balance                                          CDL013
+      *                                                                                       CDL013
+     C                     Z-SUB@WTAX     @WTAX                                               CDL013
+     C                     ADD  @WTAX     @CLOB                                               CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+      ** Add cleared balance to close balance                                                 CDL013
+      *                                                                                       CDL013
+     C                     ADD  @CLBL     @CLOB                                               CDL013
+      *                                                                                       CDL013
+     C                     ELSE                                                               CDL013
+      *                                                                                       CDL013
+     C           *LOCK     IN   LDA                                                           CDL013
+     C                     MOVE 'RECRG'   DBFILE                                              CDL013
+     C                     MOVEL@KEY      DBKEY                                               CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDIF                                                              CDL013
+      *                                                                                       CDL013
+     C                     ENDSR                                                              CDL013
+      *****************************************************************
+      *                                                               *
+      *  DBERR: Database Error Processing                             *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR: Error Processing                                      *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+      ** Call standard database error program
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+**   ZYDY - Years in days cumulative, four year span
+0366073110961461
+**   ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+**   ZMNM - Months short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

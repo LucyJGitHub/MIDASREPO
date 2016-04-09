@@ -1,0 +1,1372 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Securities trading ICD enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD9211E# - Display Securities data                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 237754             Date 24Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12434           Date 16Nov06               *
+      *                 CSD027             Date 29Nov05               *
+      *                 224354             Date 16Jan04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006             Date 12May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137886             Date 14Jul98               *
+      *                 CEU017             Date 03Avr98               *
+      *                 CSE007             Date  1Dec97               *
+      *                 CSD003             Date 19JUN98               *
+      *                 CAC001             DATE 22JAN96               *
+      *                 S01502             DATE 03AUG94               *
+      *                 S01496             DATE 19JUL94               *
+      *                 S01464             DATE 04MAY94               *
+      *                 066562             DATE 09FEB94               *
+      *                 062031             DATE 14DEC93               *
+      *                 S01459             DATE 14DEC93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  237754 - If S01496 is switched off, 'Early Redemption Dummy  *
+      *           Customer' should not be displayed. Fix patterned    *
+      *           after re-open changes in SD9211R#.                  *
+      *  BUG12434 - Suppress display of trade authorisation field     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  224354 - Remove field Historic Prices Retention Period       *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CSE022 - Depository Definition Enhancement                   *
+      *  CSE006 - Repurchase Agreement (REPOS) enhancement. If switch *
+      *           able feature (CSE006) is active then new fields,    *
+      *           Repo ICD, will be displayed.                        *
+      *  137886 - Corporate Actions: Add the possibility to allocate  *
+      *           (or not) the balancing difference directly to the   *
+      *           Dummy Customer.                                     *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *           Same coding as CSE007                               *
+      *  CSE007 - Corporate Actions.                                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CAC001 - Profit Centre Accounting                            *
+      *           Additional field: 'SE Profit Centre'.               *
+      *  S01502 - Addition of 'Telekurs Interface' flag.              *
+      *  S01496 - Jyske Enhancements:                                 *
+      *           - Addition of Priority Indicators for Charge Dft.   *
+      *           - Addition of 'Retention of Position Settlement',   *
+      *             'Early Redemption Dummy Customer' and             *
+      *             'Trade Number Range'.                             *
+      *  S01464 - Addition of 'Safe Custody Fees Flag' to the screen. *
+      *  066562 - Field BVAPS renamed to BVAPST on SDSTRDPD.          *
+      *           Regenerate and recompile file.                      *
+      *  062031 - The 'Reprompt Defaults' and 'Reprompt Trade         *
+      *           Defaults' fields have the same function.            *
+      *           Remove 'Reprompt Trade Defaults', and change the    *
+      *           'Repromt Defaults.:' text to                        *
+      *           'Reprompts: Reprompt Defaults.:'                    *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#99
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD9211E#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD9211E1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 24'DISPLAY SECURITIES DATA KEY SCREEN'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                  4  2'Securities Trading:'
+     A            #1SCTR        10      4 22TEXT('Securities Trading')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD9211E#96
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'CMD: 1-Exit, 9-Change.'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD9211E#94
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLUP(27 'Next page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(28 'ROLLDOWN')
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD9211E2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 26'Securities Trading Data Enquiry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1SCTR        10   H      TEXT('Securities Trading')
+     A            #DDP01        10   H      TEXT('Depot 1')
+     A            #DDP04        10   H      TEXT('Depot 4')
+     A            #DDP07        10   H      TEXT('Depot 7')
+     A            #DDP10        10   H      TEXT('Depot 10')
+     A            #DDP02        10   H      TEXT('Depot 2')
+     A            #DDP05        10   H      TEXT('Depot 5')
+     A            #DDP08        10   H      TEXT('Depot 8')
+     A            #DDP03        10   H      TEXT('Depot 3')
+     A            #DDP06        10   H      TEXT('Depot 6')
+     A            #DDP09        10   H      TEXT('Depot 9')
+     A**Start of change CSE022
+     A**********  #1DR3          6   H      TEXT('Depot Ref 3, Kassenverein')                 CSE022
+     A            #1DR3          6   H      TEXT('Depot Reference 3 Custome')
+     A**End of change CSE022
+     A            #1DR2          6   H      TEXT('Depot Reference 2 - Cedel')
+     A            #1DR4          6   H      TEXT('Depot Reference 4 Custome')
+     A            #1DR5          6   H      TEXT('Depot Reference 5 Custome')
+     A            #1DR6          6   H      TEXT('Depot Reference 6 Custome')
+     A            #1DR7          6   H      TEXT('Depot Reference 7 Custome')
+     A            #1DR8          6   H      TEXT('Depot Reference 8 Custome')
+     A            #1DR9          6   H      TEXT('Depot Reference 9 Custome')
+     A            #1DR10         6   H      TEXT('Depot Reference 10 Custom')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1RPB          1   H      TEXT('Realised Profit Basis')
+     A            #1UPB          1   H      TEXT('Unrealised Profit Basis')
+     A            #1UPP          1   H      TEXT('Unrealised Profit Posting')
+     A            #1AUP          1   H      TEXT('Adjust Unrealise Profit')
+     A            #1SDTR         1   H      TEXT('Summarise Daily Trades')
+     A            #1TCTY         1   H      TEXT('Trading Confirmation Type')
+     A            #1TBRC         1   H      TEXT('Trade & Book Posn Recble')
+     A            #1FIFO         1   H      TEXT('FIFO Accounting')
+     A            #1SPIN         1   H      TEXT('Split Purchased Interest')
+     A            #1SNIN         1   H      TEXT('Split Negative Interest')
+     A            #1TSAK         1   H      TEXT('Trade Subtypes in A/c key')
+     A            #1CIAK         1   H      TEXT('Convertible Indicator A/k')
+     A            #1NPAC         1   H      TEXT('Negative position on A/K')
+     A            #1GDPK         1   H      TEXT('General Disc/Prem Keys')
+     A            #1SKTV         1   H      TEXT('Suppress keys on Trade/vl')
+     A            #1PSDM         1   H      TEXT('Post no Stnd Depot Mvmts')
+     A            #1CCYE         1   H      TEXT('Cross Currency Entries')
+     A            #1SDOV        13  0H      TEXT('Settlement Descrepancy Ov')
+     A            #1SDUN        13  0H      TEXT('Settlement Descrepancy Un')
+     A            #1APST         1   H      TEXT('Autopost Position Settle')
+     A            #1MMFQ         1   H      TEXT('Mark to Market Frequency')
+     A            #1MMBD         2  0H      TEXT('Mark to Market Base Date')
+     A            #DMMNS         6  0H      TEXT('Mark to Market Next (scr)')
+     A            #1MMND         5  0H      TEXT('Mark to Market Next Date')
+     A            #1RBAP         1   H      TEXT('Reallowance bank av/price')
+     A            #1CBAP         1   H      TEXT('Charges in bank av/price')
+     A            #1CMBP         1   H      TEXT('Commission in bank av/prc')
+     A            #1RCAP         1   H      TEXT('Reallowance cust. av/prc')
+     A            #1CCAP         1   H      TEXT('Charges in customer av/pr')
+     A            #1CMCP         1   H      TEXT('Commission in cust. av/pr')
+     A            #1DR1          6   H      TEXT('Depot 1 (EUROCLEAR)')
+     A            #1TVDV         1   H      TEXT('Trade/Value Date Valuatn')
+     A            #1TVC          1   H      TEXT('Trade/Value Collateral')
+     A            #1CCYC         3  0H      TEXT('Collateral Currency Convt')
+     A            #1FERK         3  0H      TEXT('Foreign Exchange Risk')
+     A            #1MBEX         1   H      TEXT('Market/Book Exposure')
+     A            #1AHLF         3  0H      TEXT('All Holdings Limit Factor')
+     A            #1DLF          3  0H      TEXT('Discretionary Limit Fact.')
+     A            #1CLF          3  0H      TEXT('Customers Limit Factor')
+     A            #1ROSD         1   H      TEXT('Redemptions on Sec Desc.')
+     A            #1RIDF         1   H      TEXT('Redemptions in Sec Full')
+     A            #1RDOT         1   H      TEXT('Reprompt Defaults on Trad')
+     A            #1PBDF         1   H      TEXT('Priority of Branch Dft')
+     A            #1PCSD         1   H      TEXT('Priority of Cust Grp Dft')
+     A            #1PIDF         1   H      TEXT('Priority of Invst typ Dft')
+     A            #1PMDF         1   H      TEXT('Priority of Market Dft')
+     A            #1POCD         1   H      TEXT('Priority of Cust Chrg Dft')
+     A            #1ROPS         2  0H      TEXT('Retention of Posn Settl.')
+     A            #1ERCU         6   H      TEXT('Early Redemption Dum. Cus')
+     A            #1TRNR         2  0H      TEXT('Trade Number Range')
+      *                                              Begin /CSE007/
+      * Begin /CSD027/
+     A**********  #1COTC         6  0H      TEXT('Corporate Action Trade +                    CSD027
+     A            #1COTC         6A  H      TEXT('Corporate Action Trade +
+      * End /CSD027/
+     A                                            Customer')
+     A            #1COTA         1   H      TEXT('Trade Subtypes in Corporate +
+     A                                            A/C Key')
+     A            #1CTNR         2  0H      TEXT('CA Trade Number Range')
+      *                                              End   /CSE007/
+      *                                              Begin /137886/
+     A            #1ALDC         1A  H      TEXT('Difference to Dummy Customer')
+      *                                              End   /137886/
+     A                                  4 12'Periods for: Matured Securities:'
+     A            #1ROMS         2  0   4 45TEXT('Retention of matured sec.')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4 50'Settled Trades..........:'
+     A            #1ROST         2  0   4 76TEXT('Retention of settled trd')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 25'Back Valuation....:'
+     A            #1BVP          3  0   5 45TEXT('Back value period')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 50'Diary Entries...........:'
+     A            #1RODY         2  0   5 76TEXT('Retention of diary')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+      **Start of change 224354
+     A*N64******                        6 25'Historic Prices...:'                             224354
+     A*N64******  #1BHPP         4  0   6 45TEXT('Historic Prices Ret. Period')               224354
+     A**********                            EDTCDE(4)                                         224354
+     A*N64N25***                            OVRDTA                                            224354
+     A*N64******                            DSPATR(HI)                                        224354
+      **End of change 224354
+     A**********                        6  6'Currency Code for: Euroclear.....-               CAS006
+     A**********                            ....:'                                            CAS006
+     A**********  #1EUCY         3      6 45TEXT('Euroclear Currency Code')                   CAS006
+     A                                  7  6'Currency Code for: Euroclear.....-
+     A                                      ....:'
+     A            #1EUCY         3      7 45TEXT('Euroclear Currency Code')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        6 50'Cedel...................:'                       CAS006
+     A**********  #1CCCY         3      6 76TEXT('Cedel Currency Code')                       CAS006
+     A                                  7 50'Cedel...................:'
+     A            #1CCCY         3      7 76TEXT('Cedel Currency Code')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        7 25'Deutsch Mark......:'                             CAS006
+     A**********  #1ECDM         3      7 45TEXT('E/C Deutsch Mark Equival.')                 CAS006
+     A                                  8 25'Deutsch Mark......:'
+     A            #1ECDM         3      8 45TEXT('E/C Deutsch Mark Equival.')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        7 50'Belgian Franc...........:'                       CAS006
+     A**********  #1ECBF         3      7 76TEXT('E/C Belgian Franc equiv.')                  CAS006
+     A                                  8 50'Belgian Franc...........:'
+     A            #1ECBF         3      8 76TEXT('E/C Belgian Franc equiv.')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        8 25'Japanese Yen......:'                             CAS006
+     A**********  #1ECJY         3      8 45TEXT('E/C Japanese Yen Equival.')                 CAS006
+     A                                  9 25'Japanese Yen......:'
+     A            #1ECJY         3      9 45TEXT('E/C Japanese Yen Equival.')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        9 10'Interfaces to: Euclid............:'              CAS006
+     A**********  #1EUCD         1      9 45TEXT('Euclid')                                    CAS006
+     A                                 10 10'Interfaces to: Euclid............:'
+     A            #1EUCD         1     10 45TEXT('Euclid')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                        9 50'Auto-transmission.......:'                       CAS006
+     A**********  #1ATI          1      9 76TEXT('Auto-transmission interfc')                 CAS006
+     A                                 10 50'Auto-transmission.......:'
+     A            #1ATI          1     10 76TEXT('Auto-transmission interfc')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       10 25'Dealing Events....:'                             CAS006
+     A**********  #1DEI          1     10 45TEXT('Dealing Events Interface')                  CAS006
+     A                                 11 25'Dealing Events....:'
+     A            #1DEI          1     11 45TEXT('Dealing Events Interface')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       10 50'FI Collateral...........:'                       CAS006
+     A**********  #1FICI         1     10 76TEXT('FI Collateral Interface')                   CAS006
+     A                                 11 50'FI Collateral...........:'
+     A            #1FICI         1     11 76TEXT('FI Collateral Interface')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       11 10'Default Books: Market............:'              CAS006
+     A**********  #1DMBC         2     11 45TEXT('Default Market Book Code')                  CAS006
+     A                                 12 10'Default Books: Market............:'
+     A            #1DMBC         2     12 45TEXT('Default Market Book Code')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       11 50'Portfolio...............:'                       CAS006
+     A**********  #1DPBC         2     11 76TEXT('Default Portfolio Book')                    CAS006
+     A                                 12 50'Portfolio...............:'
+     A            #1DPBC         2     12 76TEXT('Default Portfolio Book')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       12  2'Default Trade Subtype: Market....-               CAS006
+     A**********                            ........:'                                        CAS006
+     A**********  #1DMKS         2     12 45TEXT('Default Market Subtype')                    CAS006
+     A                                 13  2'Default Trade Subtype: Market....-
+     A                                      ........:'
+     A            #1DMKS         2     13 45TEXT('Default Market Subtype')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       12 50'Portfolio...............:'                       CAS006
+     A**********  #1DPFS         2     12 76TEXT('Default Portfolio Subtype')                 CAS006
+     A                                 13 50'Portfolio...............:'
+     A            #1DPFS         2     13 76TEXT('Default Portfolio Subtype')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       13 25'Book Transfer.....:'                             CAS006
+     A**********  #1DTDS         2     13 45TEXT('Default Transfer Deal Sub')                 CAS006
+     A                                 14 25'Book Transfer.....:'
+     A            #1DTDS         2     14 45TEXT('Default Transfer Deal Sub')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       14 14'Reprompts: Reprompt Defaults.:'                  CAS006
+     A**********  #1REDE         1     14 45TEXT('Reprompt defaults')                         CAS006
+     A                                 15 14'Reprompts: Reprompt Defaults.:'
+     A            #1REDE         1     15 45TEXT('Reprompt defaults')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       15 10'Extra Options: Bulk Input........:'              CAS006
+     A**********  #1BIOP         1     15 45TEXT('Bulk Input Option')                         CAS006
+     A                                 16 10'Extra Options: Bulk Input........:'
+     A            #1BIOP         1     16 45TEXT('Bulk Input Option')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       15 50'Review Trades Default...:'                       CAS006
+     A                                 16 50'Review Trades Default...:'
+      **End of change CAS006
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1RVBT         1     15 76TEXT('Review Bulk Trades Dft')                    CAS006
+     A            #1RVBT         1     16 76TEXT('Review Bulk Trades Dft')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       16 25'Default Agency Tr.:'                             CAS006
+     A                                 17 25'Default Agency Tr.:'
+      **End of change CAS006
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1DEAT         1     16 45TEXT('Default Agency Trade')                      CAS006
+     A            #1DEAT         1     17 45TEXT('Default Agency Trade')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       16 50'Trade Between Port Custs:'                       CAS006
+     A                                 17 50'Trade Between Port Custs:'
+      **End of change CAS006
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1ATPC         1     16 76TEXT('Allow Trades P/folio Clnt')                 CAS006
+     A            #1ATPC         1     17 76TEXT('Allow Trades P/folio Clnt')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       17 25'Default Brokerage.:'                             CAS006
+     A**********  #1DBCD         2     17 45TEXT('Default brokerage code')                    CAS006
+     A                                 18 25'Default Brokerage.:'
+     A            #1DBCD         2     18 45TEXT('Default brokerage code')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       17 50'Agency Book.............:'                       CAS006
+     A**********  #1ATBK         2     17 76TEXT('Agency Trading Book')                       CAS006
+     A                                 18 50'Agency Book.............:'
+     A            #1ATBK         2     18 76TEXT('Agency Trading Book')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       18 25'Autocharge Option.:'                             CAS006
+     A**********  #1ACOP         1     18 45TEXT('Autocharge Option')                         CAS006
+     A                                 19 25'Autocharge Option.:'
+     A            #1ACOP         1     19 45TEXT('Autocharge Option')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       18 50'Securities Profit Centre:'                       CAS006
+     A                                 19 50'Securities Profit Centre:'
+      **End of change CAS006
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1SEPC         4     18 76TEXT('SE Profit Centre')                          CAS006
+     A            #1SEPC         4     19 76TEXT('SE Profit Centre')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       19 25'Charges Currency..:'                             CAS006
+     A                                 20 25'Charges Currency..:'
+      **End of change CAS006
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1CHRC         3     19 45TEXT('SE charges currency')                       CAS006
+     A            #1CHRC         3     20 45TEXT('SE charges currency')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(ND)
+     A N77                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       19 50'Adjust Comm Same Day Tr.:'                       CAS006
+     A                                 20 50'Adjust Comm Same Day Tr.:'
+      **End of change CAS006
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********  #1ACSD         1     19 76TEXT('Adjust Comm s/day trade')                   CAS006
+     A            #1ACSD         1     20 76TEXT('Adjust Comm s/day trade')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(ND)
+     A N77                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS006
+     A**********                       20 25'Extel Option......:'                             CAS006
+     A**********  #1EXOP         1     20 45TEXT('Extel Option')                              CAS006
+     A                                 21 25'Extel Option......:'
+     A            #1EXOP         1     21 45TEXT('Extel Option')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       20 50'Trade Authorisation Type:'                       CAS006
+     A**********  #1AUTH         2     20 76TEXT('Trade Authorisation Type')                  CAS006
+      *
+      ** Start of change BUG12434
+      *
+     A**********                       21 50'Trade Authorisation Type:'                     BUG12434
+     A**********  #1AUTH         2     21 76TEXT('Trade Authorisation Type')                BUG12434
+      **End of change CAS006
+     A*N25******                            OVRDTA                                          BUG12434
+     A**********                            DSPATR(HI)                                      BUG12434
+      *
+      ** End of change BUG12434
+      *
+      **Start of change CAS006
+     A**********                       21 25'Safe Custody Fees.:'                             CAS006
+     A**********  #1CUIN         1     21 45TEXT('Safe Custody Fees Flag')                    CAS006
+     A                                 22 25'Safe Custody Fees.:'
+     A            #1CUIN         1     22 45TEXT('Safe Custody Fees Flag')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CAS006
+     A**********                       21 50'Telekurs Interface......:'                       CAS006
+     A**********  #1TKIF         1     21 76TEXT('Telekurs Interface')                        CAS006
+     A                                 22 50'Telekurs Interface......:'
+     A            #1TKIF         1     22 76TEXT('Telekurs Interface')
+      **End of change CAS006
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD9211E#92
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu                     -
+     A                                                        Rollup'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#91
+     A          R #RCDDTL2                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD9211E#90
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLUP(27 'Next page.')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD9211E3'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 24'Securities Depot References Enqui-
+     A                                      ry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1SCTR        10   H      TEXT('Securities Trading')
+     A            #1DMKS         2   H      TEXT('Default Market Subtype')
+     A            #1DPFS         2   H      TEXT('Default Portfolio Subtype')
+     A            #1DTDS         2   H      TEXT('Default Transfer Deal Sub')
+     A            #1CCCY         3   H      TEXT('Cedel Currency Code')
+     A            #1ECBF         3   H      TEXT('E/C Belgian Franc equiv.')
+     A            #1ECDM         3   H      TEXT('E/C Deutsch Mark Equival.')
+     A            #1ECJY         3   H      TEXT('E/C Japanese Yen Equival.')
+     A            #1EUCY         3   H      TEXT('Euroclear Currency Code')
+     A            #1DR1          6   H      TEXT('Depot 1 (EUROCLEAR)')
+     A            #1DR2          6   H      TEXT('Depot Reference 2 - Cedel')
+     A**Start of change CSE022
+     A**********  #1DR3          6   H      TEXT('Depot Ref 3, Kassenverein')                 CSE022
+     A            #1DR3          6   H      TEXT('Depot Reference 3 Custome')
+     A**End of change CSE022
+     A            #1DR4          6   H      TEXT('Depot Reference 4 Custome')
+     A            #1DR5          6   H      TEXT('Depot Reference 5 Custome')
+     A            #1DR6          6   H      TEXT('Depot Reference 6 Custome')
+     A            #1DR7          6   H      TEXT('Depot Reference 7 Custome')
+     A            #1DR8          6   H      TEXT('Depot Reference 8 Custome')
+     A            #1DR9          6   H      TEXT('Depot Reference 9 Custome')
+     A            #1ATBK         2   H      TEXT('Agency Trading Book')
+     A            #1DR10         6   H      TEXT('Depot Reference 10 Custom')
+     A            #1DMBC         2   H      TEXT('Default Market Book Code')
+     A            #1DPBC         2   H      TEXT('Default Portfolio Book')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1RPB          1   H      TEXT('Realised Profit Basis')
+     A            #1UPB          1   H      TEXT('Unrealised Profit Basis')
+     A            #1UPP          1   H      TEXT('Unrealised Profit Posting')
+     A            #1AUP          1   H      TEXT('Adjust Unrealise Profit')
+     A            #1SDTR         1   H      TEXT('Summarise Daily Trades')
+     A            #1FIFO         1   H      TEXT('FIFO Accounting')
+     A            #1SPIN         1   H      TEXT('Split Purchased Interest')
+     A            #1SNIN         1   H      TEXT('Split Negative Interest')
+     A            #1TSAK         1   H      TEXT('Trade Subtypes in A/c key')
+     A            #1CIAK         1   H      TEXT('Convertible Indicator A/k')
+     A            #1NPAC         1   H      TEXT('Negative position on A/K')
+     A            #1GDPK         1   H      TEXT('General Disc/Prem Keys')
+     A            #1SKTV         1   H      TEXT('Suppress keys on Trade/vl')
+     A            #1PSDM         1   H      TEXT('Post no Stnd Depot Mvmts')
+     A            #1CCYE         1   H      TEXT('Cross Currency Entries')
+     A            #1SDOV        13  0H      TEXT('Settlement Descrepancy Ov')
+     A            #1APST         1   H      TEXT('Autopost Position Settle')
+     A            #1MMFQ         1   H      TEXT('Mark to Market Frequency')
+     A            #1MMBD         2  0H      TEXT('Mark to Market Base Date')
+     A            #1MMND         5  0H      TEXT('Mark to Market Next Date')
+     A            #1CBAP         1   H      TEXT('Charges in bank av/price')
+     A            #1CCAP         1   H      TEXT('Charges in customer av/pr')
+     A            #1CMBP         1   H      TEXT('Commission in bank av/prc')
+     A            #1CMCP         1   H      TEXT('Commission in cust. av/pr')
+     A            #1RCAP         1   H      TEXT('Reallowance cust. av/prc')
+     A            #1RBAP         1   H      TEXT('Reallowance bank av/price')
+     A            #1SDUN        13  0H      TEXT('Settlement Descrepancy Un')
+     A            #1BVP          3  0H      TEXT('Back value period')
+     A            #1ROST         2  0H      TEXT('Retention of settled trd')
+     A            #1RODY         2  0H      TEXT('Retention of diary')
+     A            #1ROMS         2  0H      TEXT('Retention of matured sec.')
+     A            #1EUCD         1   H      TEXT('Euclid')
+     A            #1ATI          1   H      TEXT('Auto-transmission interfc')
+     A            #1DEI          1   H      TEXT('Dealing Events Interface')
+     A            #1FICI         1   H      TEXT('FI Collateral Interface')
+     A            #1REDE         1   H      TEXT('Reprompt defaults')
+     A            #1TVDV         1   H      TEXT('Trade/Value Date Valuatn')
+     A            #1TVC          1   H      TEXT('Trade/Value Collateral')
+     A            #1CCYC         3  0H      TEXT('Collateral Currency Convt')
+     A            #1FERK         3  0H      TEXT('Foreign Exchange Risk')
+     A            #1MBEX         1   H      TEXT('Market/Book Exposure')
+     A            #1AHLF         3  0H      TEXT('All Holdings Limit Factor')
+     A            #1DLF          3  0H      TEXT('Discretionary Limit Fact.')
+     A            #1CLF          3  0H      TEXT('Customers Limit Factor')
+     A            #1ROSD         1   H      TEXT('Redemptions on Sec Desc.')
+     A            #1RIDF         1   H      TEXT('Redemptions in Sec Full')
+     A            #1DBCD         2   H      TEXT('Default brokerage code')
+     A            #1BIOP         1   H      TEXT('Bulk Input Option')
+     A            #1ACOP         1   H      TEXT('Autocharge Option')
+     A            #1EXOP         1   H      TEXT('Extel Option')
+     A            #1TCTY         1   H      TEXT('Trading Confirmation Type')
+     A            #1TBRC         1   H      TEXT('Trade & Book Posn Recble')
+     A            #1RDOT         1   H      TEXT('Reprompt Defaults on Trad')
+     A            #1AUTH         2   H      TEXT('Trade Authorisation Type')
+     A            #1CHRC         3   H      TEXT('SE charges currency')
+     A            #1ACSD         1   H      TEXT('Adjust Comm s/day trade')
+     A            #1DEAT         1   H      TEXT('Default Agency Trade')
+     A            #1RVBT         1   H      TEXT('Review Bulk Trades Dft')
+     A            #1ATPC         1   H      TEXT('Allow Trades P/folio Clnt')
+     A            #1CUIN         1   H      TEXT('Safe Custody Fees Flag')
+     A            #DRPSS         2   H      TEXT('Ret of Posn Settle SCR')
+     A            #1TKIF         1   H      TEXT('Telekurs Interface')
+     A            #1SEPC         4   H      TEXT('SE Profit Centre')
+     A                                  6  4'Euroclear Depot....:'
+     A            #DDP01        10      6 25TEXT('Depot 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6 46'Depot 6............:'
+     A            #DDP06        10      6 67TEXT('Depot 6')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  4'Cedel Depot........:'
+     A            #DDP02        10      7 25TEXT('Depot 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7 46'Depot 7............:'
+     A            #DDP07        10      7 67TEXT('Depot 7')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A**Start of change CSE022
+     A**********                        8  4'Kassenverein Depot.:'                            CSE022
+     A                                  8  4'Depot 3............:'
+     A**End of change CSE022
+     A            #DDP03        10      8 25TEXT('Depot 3')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  8 46'Depot 8............:'
+     A            #DDP08        10      8 67TEXT('Depot 8')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  4'Depot 4............:'
+     A            #DDP04        10      9 25TEXT('Depot 4')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9 46'Depot 9............:'
+     A            #DDP09        10      9 67TEXT('Depot 9')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 10  4'Depot 5............:'
+     A            #DDP05        10     10 25TEXT('Depot 5')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 10 46'Depot 10...........:'
+     A            #DDP10        10     10 67TEXT('Depot 10')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 12  2'Priority Indicators for Charge De-
+     A                                      faulting:'
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14  4'Branch Code.....:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PBDF         1     14 22TEXT('Priority of Branch Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14 31'Customer........:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1POCD         1     14 49TEXT('Priority of Cust Chrg Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 14 58'Customer Group..:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PCSD         1     14 76TEXT('Priority of Cust Grp Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15  4'Investment Type.:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PIDF         1     15 22TEXT('Priority of Invst typ Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15 31'Market Centre...:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PMDF         1     15 49TEXT('Priority of Market Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 17  4'Retention of Position Settlements-
+     A                                      .:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ROPS         2  0  17 40TEXT('Retention of Posn Settl.')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /137886/
+     A                                 17 48'Alloc. Diff. to Dummy Cust :'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ALDC         1A    17 77TEXT('Alloc. Diff. to Dummy +
+     A                                            Customer')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /137886/
+      *                                              Begin /CSE007/
+     A**********                       18  4'Early Redemption Dummy Customer..-
+     A**********                            .:'
+     A  80                             18  4'Early Redemption Dummy Customer..-
+     A                                      .:'
+      ** Start of change 237754
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+      ** End of change 237754
+     A N80                             18  4'Early Red/Corp Act Dummy Customer-
+     A                                      .:'
+      *                                              End   /CSE007/
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ERCU         6     18 40TEXT('Early Redemption Dum. Cus')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD9211E#01
+     A                                 19  4'Trade Number Range...............-
+     A                                      .:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1TRNR         2  0  19 40TEXT('Trade Number Range')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD9211E#02
+      *                                              Begin /CSE007/
+     A                                 20  4'Corporate Action Trade Customer..-
+     A                                      .:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+      * Begin /CSD027/
+     A**********  #1COTC         6  0  20 40TEXT('Corporate Action Trade +                    CSD027
+     A            #1COTC         6A    20 40TEXT('Corporate Action Trade +
+      * End /CSD027/
+     A                                            Customer')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 21  4'Trade Subtypes in Corporate A/C K-
+     A                                      ey:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1COTA         1     21 41TEXT('Trade Subtypes in Corporate +
+     A                                            A/C Key')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD9211E#03
+     A                                 22  4'Corporate Action Trade Number Ran-
+     A                                      ge:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1CTNR         2  0  22 41TEXT('CA Trade Number Range')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD9211E#04
+      *                                              End   /CSE007/
+     A*=========================================================================
+     A*
+      *                                      Begin/CSE006/
+     A*=========================================================================
+     A          R #RCDDT2B                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLUP(27 'Next page.')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD9211E3'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 24'Securities Depot References Enqui-
+     A                                      ry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                  3  4'Euroclear Depot....:'
+     A            #DDP01        10      3 25TEXT('Depot 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 46'Depot 6............:'
+     A            #DDP06        10      3 67TEXT('Depot 6')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4  4'Cedel Depot........:'
+     A            #DDP02        10      4 25TEXT('Depot 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4 46'Depot 7............:'
+     A            #DDP07        10      4 67TEXT('Depot 7')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A**Start of change CSE022
+     A**********                        5  4'Kassenverein Depot.:'                            CSE022
+     A                                  5  4'Depot 3............:'
+     A**End of change CSE022
+     A            #DDP03        10      5 25TEXT('Depot 3')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 46'Depot 8............:'
+     A            #DDP08        10      5 67TEXT('Depot 8')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  4'Depot 4............:'
+     A            #DDP04        10      6 25TEXT('Depot 4')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6 46'Depot 9............:'
+     A            #DDP09        10      6 67TEXT('Depot 9')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  4'Depot 5............:'
+     A            #DDP05        10      7 25TEXT('Depot 5')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7 46'Depot 10...........:'
+     A            #DDP10        10      7 67TEXT('Depot 10')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  2'Priority Indicators for Charge De-
+     A                                      faulting:'
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 11  4'Branch Code.....:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PBDF         1     11 22TEXT('Priority of Branch Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 11 31'Customer........:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1POCD         1     11 49TEXT('Priority of Cust Chrg Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 11 58'Customer Group..:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PCSD         1     11 76TEXT('Priority of Cust Grp Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 12  4'Investment Type.:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PIDF         1     12 22TEXT('Priority of Invst typ Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 12 31'Market Centre...:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PMDF         1     12 49TEXT('Priority of Market Dft')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 13  4'Retention of Position Settlements-
+     A                                      .:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ROPS         2  0  13 40TEXT('Retention of Posn Settl.')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /137886/
+     A                                 13 48'Alloc. Diff. to Dummy Cust :'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ALDC         1A    13 77TEXT('Alloc. Diff. to Dummy +
+     A                                            Customer')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A  80                             14  4'Early Redemption Dummy Customer..-
+     A                                      .:'
+      ** Start of change 237754
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+      ** End of change 237754
+     A N80                             14  4'Early Red/Corp Act Dummy Customer-
+     A                                      .:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ERCU         6     14 40TEXT('Early Redemption Dum. Cus')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15  4'Trade Number Range...............-
+     A                                      .:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1TRNR         2  0  15 40TEXT('Trade Number Range')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 16  4'Corporate Action Trade Customer..-
+     A                                      .:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+      * Begin /CSD027/
+     A**********  #1COTC         6  0  16 40TEXT('Corporate Action Trade +                    CSD027
+     A            #1COTC         6A    16 40TEXT('Corporate Action Trade +
+      * End /CSD027/
+     A                                            Customer')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 17  4'Trade Subtypes in Corporate A/C K-
+     A                                      ey:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1COTA         1     17 41TEXT('Trade Subtypes in Corporate +
+     A                                            A/C Key')
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 18  4'Corporate Action Trade Number Ran-
+     A                                      ge:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1CTNR         2  0  18 41TEXT('CA Trade Number Range')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 19  2'Repo ICD:'
+     A                                 20  4'Cash Value Tolerance %:  Lower'
+     A            #1RCTL         2     20 35TEXT('Lower %')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 20 40'Upper'
+     A            #1RCTU         2     20 46TEXT('Upper %')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 21  4'Maturing Securities'
+     A            #1RMAT         1     21 24TEXT('Maturing securities')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 21 29'Coupon Due'
+     A            #1RCPN         1     21 40TEXT('Coupon Due')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+      *                                        End/CSE006/
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#89
+     A          R #CMDTXT3                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD9211E#88
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu                     -
+     A                                                        Rollup   Rolldown'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#87
+     A          R #RCDDTL3                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD9211E#86
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(27 'ROLLUP')
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD9211E4'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 20'Securities Average Price/Accounti-
+     A                                      ng Enquiry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1SCTR        10   H      TEXT('Securities Trading')
+     A            #1DMKS         2   H      TEXT('Default Market Subtype')
+     A            #1DPFS         2   H      TEXT('Default Portfolio Subtype')
+     A            #1DTDS         2   H      TEXT('Default Transfer Deal Sub')
+     A            #1CCCY         3   H      TEXT('Cedel Currency Code')
+     A            #1ECBF         3   H      TEXT('E/C Belgian Franc equiv.')
+     A            #1ECDM         3   H      TEXT('E/C Deutsch Mark Equival.')
+     A            #1ECJY         3   H      TEXT('E/C Japanese Yen Equival.')
+     A            #1EUCY         3   H      TEXT('Euroclear Currency Code')
+     A            #1DR1          6   H      TEXT('Depot 1 (EUROCLEAR)')
+     A**Start of change CSE022
+     A**********  #1DR3          6   H      TEXT('Depot Ref 3, Kassenverein')                 CSE022
+     A            #1DR3          6   H      TEXT('Depot Reference 3 Custome')
+     A**End of change CSE022
+     A            #1DR10         6   H      TEXT('Depot Reference 10 Custom')
+     A            #1DR2          6   H      TEXT('Depot Reference 2 - Cedel')
+     A            #1DR4          6   H      TEXT('Depot Reference 4 Custome')
+     A            #1DR5          6   H      TEXT('Depot Reference 5 Custome')
+     A            #1DR6          6   H      TEXT('Depot Reference 6 Custome')
+     A            #1DR7          6   H      TEXT('Depot Reference 7 Custome')
+     A            #1DR8          6   H      TEXT('Depot Reference 8 Custome')
+     A            #1DR9          6   H      TEXT('Depot Reference 9 Custome')
+     A            #1ATBK         2   H      TEXT('Agency Trading Book')
+     A            #1DMBC         2   H      TEXT('Default Market Book Code')
+     A            #1DPBC         2   H      TEXT('Default Portfolio Book')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1MMND         5  0H      TEXT('Mark to Market Next Date')
+     A            #1SDOV        13  0H      TEXT('Settlement Descrepancy Ov')
+     A            #1SDUN        13  0H      TEXT('Settlement Descrepancy Un')
+     A            #1BVP          3  0H      TEXT('Back value period')
+     A            #1ROST         2  0H      TEXT('Retention of settled trd')
+     A            #1RODY         2  0H      TEXT('Retention of diary')
+     A            #1ROMS         2  0H      TEXT('Retention of matured sec.')
+     A            #1ATI          1   H      TEXT('Auto-transmission interfc')
+     A            #1DEI          1   H      TEXT('Dealing Events Interface')
+     A            #1EUCD         1   H      TEXT('Euclid')
+     A            #1FICI         1   H      TEXT('FI Collateral Interface')
+     A            #1REDE         1   H      TEXT('Reprompt defaults')
+     A            #1RIDF         1   H      TEXT('Redemptions in Sec Full')
+     A            #1DBCD         2   H      TEXT('Default brokerage code')
+     A            #1BIOP         1   H      TEXT('Bulk Input Option')
+     A            #1ACOP         1   H      TEXT('Autocharge Option')
+     A            #1EXOP         1   H      TEXT('Extel Option')
+     A            #1RDOT         1   H      TEXT('Reprompt Defaults on Trad')
+     A            #1AUTH         2   H      TEXT('Trade Authorisation Type')
+     A            #1CHRC         3   H      TEXT('SE charges currency')
+     A            #1ACSD         1   H      TEXT('Adjust Comm s/day trade')
+     A            #1DEAT         1   H      TEXT('Default Agency Trade')
+     A            #1RVBT         1   H      TEXT('Review Bulk Trades Dft')
+     A            #1ATPC         1   H      TEXT('Allow Trades P/folio Clnt')
+     A            #1CUIN         1   H      TEXT('Safe Custody Fees Flag')
+     A            #1PBDF         1   H      TEXT('Priority of Branch Dft')
+     A            #1PCSD         1   H      TEXT('Priority of Cust Grp Dft')
+     A            #1PIDF         1   H      TEXT('Priority of Invst typ Dft')
+     A            #1PMDF         1   H      TEXT('Priority of Market Dft')
+     A            #1POCD         1   H      TEXT('Priority of Cust Chrg Dft')
+     A            #1TKIF         1   H      TEXT('Telekurs Interface')
+     A            #1ROPS         2  0H      TEXT('Retention of Posn Settl.')
+     A            #1ERCU         6   H      TEXT('Early Redemption Dum. Cus')
+     A            #1TRNR         2  0H      TEXT('Trade Number Range')
+      *                                              Begin /CSE007/
+      * Begin /CSD027/
+     A**********  #1COTC         6  0H      TEXT('Corporate Action Trade +                    CSD027
+     A            #1COTC         6A  H      TEXT('Corporate Action Trade +
+      * End /CSD027/
+     A                                            Customer')
+     A            #1COTA         1   H      TEXT('Trade Subtypes in Corporate +
+     A                                            A/C Key')
+     A            #1CTNR         2  0H      TEXT('CA Trade Number Range')
+      *                                              End   /CSE007/
+      *                                              Begin /137886/
+     A            #1ALDC         1A  H      TEXT('Difference to Dummy Customer')
+      *                                              End   /137886/
+     A            #1SEPC         4   H      TEXT('SE Profit Centre')
+     A                                  3  2'Include in Average Price:'
+     A                                  4  2'Reallowance for Bank..........:'
+     A            #1RBAP         1      4 34TEXT('Reallowance bank av/price')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  4 40'Customer....................:'
+     A            #1RCAP         1      4 70TEXT('Reallowance cust. av/prc')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'Charges/Commission for Bank...:'
+     A            #1CBAP         1      5 34TEXT('Charges in bank av/price')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 36'/'
+     A            #1CMBP         1      5 38TEXT('Commission in bank av/prc')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 40'Customer....................:'
+     A            #1CCAP         1      5 70TEXT('Charges in customer av/pr')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5 72'/'
+     A            #1CMCP         1      5 74TEXT('Commission in cust. av/pr')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Trade/Value Date Valuations...:'
+     A            #1TVDV         1      6 34TEXT('Trade/Value Date Valuatn')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6 40'Trade/Value Collateral......:'
+     A            #1TVC          1      6 70TEXT('Trade/Value Collateral')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'Collateral Currency Conversion:'
+     A            #1CCYC         3  0   7 34TEXT('Collateral Currency Convt')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7 40'Market/Book Exposure........:'
+     A            #1MBEX         1      7 70TEXT('Market/Book Exposure')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  8  2'Foreign Exchange Risk.........:'
+     A            #1FERK         3  0   8 34TEXT('Foreign Exchange Risk')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  2'All Holdings Limit Factor.....:'
+     A            #1AHLF         3  0   9 34TEXT('All Holdings Limit Factor')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9 40'Discretionary Limit Factor..:'
+     A            #1DLF          3  0   9 70TEXT('Discretionary Limit Fact.')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 10  2'Customers Limit Factor........:'
+     A            #1CLF          3  0  10 34TEXT('Customers Limit Factor')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 10 40'Realised Profit Basis.......:'
+     A            #1RPB          1     10 70TEXT('Realised Profit Basis')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 11  2'Unrealised Profit Basis.......:'
+     A            #1UPB          1     11 34TEXT('Unrealised Profit Basis')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 11 40'Unrealised Profit Posting...:'
+     A            #1UPP          1     11 70TEXT('Unrealised Profit Posting')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 12  2'Adjust Unrealised Profit......:'
+     A            #1AUP          1     12 34TEXT('Adjust Unrealise Profit')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 12 40'Summarise Daily Trades......:'
+     A            #1SDTR         1     12 70TEXT('Summarise Daily Trades')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 13  2'FIFO Accounting...............:'
+     A            #1FIFO         1     13 34TEXT('FIFO Accounting')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 13 40'Split Purchased Interest....:'
+     A            #1SPIN         1     13 70TEXT('Split Purchased Interest')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 14  2'Split Negative Accrual........:'
+     A            #1SNIN         1     14 34TEXT('Split Negative Interest')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 14 40'Trade Subtypes in A/c key...:'
+     A            #1TSAK         1     14 70TEXT('Trade Subtypes in A/c key')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 15  2'Convertible in A/c Key........:'
+     A            #1CIAK         1     15 34TEXT('Convertible Indicator A/k')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 15 40'Negative position on A/c....:'
+     A            #1NPAC         1     15 70TEXT('Negative position on A/K')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 16  2'Generate D/P Key for non-amort:'
+     A            #1GDPK         1     16 34TEXT('General Disc/Prem Keys')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 16 40'Suppress keys on T/V date...:'
+     A            #1SKTV         1     16 70TEXT('Suppress keys on Trade/vl')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 17  2'Post no STD Depot Movements...:'
+     A            #1PSDM         1     17 34TEXT('Post no Stnd Depot Mvmts')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 17 40'Redemptions on Sec Desc.....:'
+     A            #1ROSD         1     17 70TEXT('Redemptions on Sec Desc.')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 18  2'Cross Currency Entries........:'
+     A            #1CCYE         1     18 34TEXT('Cross Currency Entries')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 18 40'Autopost Position Settle....:'
+     A            #1APST         1     18 70TEXT('Autopost Position Settle')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 19  2'Mark to Market Frequency......:'
+     A            #1MMFQ         1     19 34TEXT('Mark to Market Frequency')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 19 40'Base Day:'
+     A            #1MMBD         2  0  19 50TEXT('Mark to Market Base Date')
+     A                                      EDTCDE(4)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 19 53'Next Date:'
+     A            #DSMDT         7     19 64TEXT('screen mark to market dte')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 20  2'Settlement Discrepancy Over...:'
+     A            #DSDOF        14     20 34TEXT('Setl Discrepancy Over Fun')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 20 50'Under:'
+     A            #DSDUF        14     20 57TEXT('Setl Discrepancy Undr Fun')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 21  2'Trading Confirmation Type.....:'
+     A            #1TCTY         1     21 34TEXT('Trading Confirmation Type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 21 40'Trade & Book Posn Recble....:'
+     A            #1TBRC         1     21 70TEXT('Trade & Book Posn Recble')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#85
+     A          R #CMDTXT4                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD9211E#84
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu                     -
+     A                                                        Rolldown'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#83
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD9211E#82
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#81
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD9211E#80
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD9211E#79

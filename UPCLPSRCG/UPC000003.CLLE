@@ -1,0 +1,133 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP CPP for RESETMAXID')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000003 - CPP for RESETMAXID                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP035A            Date 04Oct06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025             Date 05Sep06              */
+/*                      BUG8856            Date 07Oct05              */
+/*                      CUP030  *CREATE    Date 21Dec04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP035A- Automate handling of ID colums (auto-generated     */
+/*                fields).                                           */
+/*       CPK025 - MidasPlus 1.3 packaging.  Use core templates for   */
+/*                IBM outfiles to prevent problems with operating    */
+/*                system upgrades.                                   */
+/*       BUG8856 - DSPFFD changed at V5R3. Use core outfile instead  */
+/*       CUP030 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILELIB &RSTOPT)
+ 
+             DCL        VAR(&FILELIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RSTOPT) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FIELD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQL_FILE) TYPE(*CHAR) LEN(21)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)                             /*CUP035A*/
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&IN01) TYPE(*LGL)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CHGVAR     VAR(&FILE) VALUE(%SST(&FILELIB 1 10))
+             CHGVAR     VAR(&LIBRARY) VALUE(%SST(&FILELIB 11 10))
+             IF         COND(&LIBRARY *EQ '*LIBL') THEN(DO)
+                CHGVAR     VAR(&SQL_FILE) VALUE(&FILE)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&SQL_FILE) VALUE(&LIBRARY *TCAT '/' +
+                             *TCAT &FILE)
+             ENDDO
+ 
+/* Create work file to retain maximim id. */
+             DLTF       FILE(QTEMP/MAXID)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/MAXAMT)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/MAXID) RCDLEN(15) +
+                          TEXT('Temporary file for RESETMAXID command')
+             RNMOBJ     OBJ(QTEMP/MAXID) OBJTYPE(*FILE) NEWOBJ(MAXAMT)
+/* Delete work file for CREATE TABLE AS SQL used in RPG. */
+             DLTF       FILE(QTEMP/UP000003QT)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Retrieve field name. */
+             RTVDTAARA  DTAARA(RESETMAXID (1 10)) RTNVAR(&FIELD)
+ 
+/* If *RSTALL is requested then check if there are any records.  If there are */         /*CUP035A*/
+/*  none then change the option To *RSTMAX to avoid copying problems.         */         /*CUP035A*/
+             IF         COND(&RSTOPT *EQ '*RSTALL') THEN(DO)                             /*CUP035A*/
+                RTVMBRD    FILE(&LIBRARY/&FILE) NBRCURRCD(&NBRCURRCD)                    /*CUP035A*/
+                IF         COND(&NBRCURRCD *EQ 0) THEN(DO)                               /*CUP035A*/
+                   CHGVAR     VAR(&RSTOPT) VALUE('*RSTMAX')                              /*CUP035A*/
+                ENDDO                                                                    /*CUP035A*/
+             ENDDO                                                                       /*CUP035A*/
+ 
+                                                                                         /*BUG8856*/
+/* Override to working copy of core DSPFFD outfile */                                    /*BUG8856*/
+/**********  OVRDBF     FILE(UPCDFDPD) TOFILE(QTEMP/UPCDFDPD) +                           /*CPK025*/
+/**********               OVRSCOPE(*JOB)                                   */ /*BUG8856*/ /*CPK025*/
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(QTEMP/UPFFDSTPD) +
+                          OVRSCOPE(*JOB)                                                  /*CPK025*/
+ 
+             CALL       PGM(UP000003) PARM(&FIELD &SQL_FILE &RSTOPT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+ /* Recursive error.*/
+             IF         COND(&IN01) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(*LIBL/QCPFMSG) +
+                             MSGDTA('Recursive error in pgm +
+                             UPC000003') MSGTYPE(*ESCAPE)
+             ENDDO
+             CHGVAR     VAR(&IN01) VALUE('1')
+ERROR2:
+ /* Receive diagnostic error message */
+             RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+ 
+             IF         COND(&MSGID *NE ' ') THEN(DO)
+ /* Pass it back to calling program */
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+             GOTO       CMDLBL(ERROR2)
+             ENDDO
+ /* Receive escape error message */
+             RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                          MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+ /* Pass it back to calling program */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                          MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+ENDPGM:
+/**********  DLTOVR     FILE(UPCDFDPD) LVL(*JOB)                           */ /*BUG8856*/ /*CPK025*/
+             DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                         /*CPK025*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG8856*/
+             ENDPGM

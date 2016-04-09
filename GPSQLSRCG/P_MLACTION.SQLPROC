@@ -1,0 +1,249 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       P_MLACTION - Midas GP Account Officer Actions                         */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Last Amend No. BG18886            Date 02Jun08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Prev Amend No. CSD031             Date 10Apr06                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  DYNAMIC RESULT SETS 1                                                         :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC P_MLACTION                                                           :
+                                                                                :
+  BEGIN                                                                         :
+  DECLARE C1 CURSOR FOR                                                         :
+  SELECT 'LIMIT' AS Type,                                                       :
+  LILIMITID AS LIMITID,                                                         :
+  LITYPE AS LIMITTYPE,                                                          :
+  CASE                                                                          :
+***WHEN LIUTSRTYPE=1*THEN*(SELECT*CUCRNM****','****CUCRTN FROM GPCUSTPD*********:            BG18886
+   WHEN LIUTSRTYPE=1 THEN (SELECT CUCRNM CONCAT ',' CONCAT CUCRTN FROM GPCUSTPD :            BG18886
+   WHERE CUGCUS = LIUTSRCODE)                                                   :
+   WHEN LIUTSRTYPE=2 THEN (SELECT CGNAME FROM T_GRCUSTG WHERE CAST(CGID AS      :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+   WHEN LIUTSRTYPE=3 THEN (SELECT IDDESC FROM GPINDSPD WHERE IDGIND =           :
+   LIUTSRCODE)                                                                  :
+   WHEN LIUTSRTYPE=4 THEN (SELECT  IGNAME FROM T_GRINDSG  WHERE CAST(IGID AS    :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+   WHEN LIUTSRTYPE=7 THEN (SELECT  A4CNNM FROM GPCTRYPD  WHERE  A4CNCD =        :
+   LIUTSRCODE)                                                                  :
+   WHEN LIUTSRTYPE=8 THEN (SELECT RGNAME FROM T_GRCTRYG WHERE CAST(RGID AS      :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+  END AS UTILISER,                                                              :
+  LIENTYCODE AS ENTITYCODE,                                                     :
+  LIEXPBRCH AS EXPBRANCH,                                                       :
+  CASE WHEN LITYPE='S' THEN 'SETTLEMENT LIMIT'                                  :
+   ELSE CAST(COALESCE(LIINSTGRP,0) AS CHAR(10))                                 :
+  END AS INSTRUMENT,                                                            :
+  LITENOR AS TENOR,                                                             :
+  LICCY AS CURRENCY,                                                            :
+                                                                                :
+  CASE                                                                          :
+   WHEN LIUTSRTYPE=1 THEN 'Customer'                                            :
+   WHEN LIUTSRTYPE=2 THEN 'CustomerGroup'                                       :
+   WHEN LIUTSRTYPE=3 THEN 'Industry'                                            :
+   WHEN LIUTSRTYPE=4 THEN 'IndustryGroup'                                       :
+   WHEN LIUTSRTYPE=7 THEN 'Country'                                             :
+   WHEN LIUTSRTYPE=8 THEN 'CountryGroup'                                        :
+  END AS  UTILISERTYPE,                                                         :
+                                                                                :
+  CASE                                                                          :
+   WHEN LISTATUS = 'A' THEN LIEXPOSURE - LIAMT                                  :
+   WHEN LISTATUS = 'I' THEN LIEXPOSURE                                          :
+   WHEN LISTATUS = 'E' THEN NULL                                                :
+   WHEN LISTATUS = 'D' THEN NULL                                                :
+  END AS EXCESS,                                                                :
+  LISTATUS AS STATUS,                                                           :
+  LIAMT AS AMOUNT,                                                              :
+  LIEXPDATE AS EXPIRYDATE,                                                      :
+  LIRVWDATE AS REVIEWDATE,                                                      :
+  B.AZACOC AS MONOFFICER,                                                       :
+  A.AZACOC AS APROFFICER,                                                       :
+  B.ACGACO AS MONOFCRNAM,                                                       :
+  A.ACGACO AS APROFCRNAM,                                                       :
+  LIREMARK AS NARRATIVE,                                                        :
+  CUGACO AS ACOFCODE,                                                           :
+                                                                                :
+  CASE                                                                          :
+   WHEN LIAMT >= LIEXPOSURE AND LIRVWDATE IS NULL AND LIEXPDATE IS NULL THEN    :
+   NULL                                                                         :
+   WHEN LIAMT >= LIEXPOSURE AND LIRVWDATE IS NULL AND LIEXPDATE IS NOT NULL     :
+   THEN LIEXPDATE                                                               :
+   WHEN LIAMT >= LIEXPOSURE AND LIRVWDATE IS NOT NULL AND LIEXPDATE IS NULL     :
+   THEN LIRVWDATE                                                               :
+   WHEN LIAMT >= LIEXPOSURE AND LIRVWDATE IS NOT NULL AND LIEXPDATE IS NOT      :
+   NULL AND LIEXPDATE >= LIRVWDATE THEN LIRVWDATE                               :
+   WHEN LIAMT >= LIEXPOSURE AND LIRVWDATE IS NOT NULL AND LIEXPDATE IS NOT      :
+   NULL AND LIEXPDATE < LIRVWDATE THEN LIEXPDATE                                :
+   WHEN LIAMT <  LIEXPOSURE THEN (SELECT MIN(DATE(BJRDNB + 719892)) AS RUNDATE  :
+   FROM GZSDBANKPD)                                                             :
+  END AS ACTIONDATE,                                                            :
+   LIOFFSET AS OFFSET,                                                          :
+   LIEXPOSURE AS EXPOSURE,                                                      :
+                                                                                :
+  CASE                                                                          :
+   WHEN LITYPE='C' and LISTATUS = 'A' THEN LIAMT - coalesce(LIEXPOSURE,0)       :
+   ELSE                                                                         :
+    NULL                                                                        :
+  END AS AVLBLEAMT                                                              :
+  FROM T_MLLIMIT                                                                :
+  LEFT OUTER JOIN GPCUSTPD ON LIUTSRCODE = CUGCUS                               :
+  LEFT OUTER JOIN T_GRCUSTG ON LIUTSRCODE = CAST(CGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPCTRYPD ON LIUTSRCODE = A4CNCD                               :
+  LEFT OUTER JOIN T_GRCTRYG ON LIUTSRCODE = CAST(RGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPINDSPD ON LIUTSRCODE = IDGIND                               :
+  LEFT OUTER JOIN T_GRINDSG ON LIUTSRCODE = CAST(IGID AS CHAR(10))              :
+  LEFT OUTER JOIN T_GRINSTG ON LIINSTGRP = NGID                                 :
+                                                                                :
+  INNER JOIN V_MLACOFA  AS A ON LIAPROFCR = A.ACGACO                            :
+  INNER JOIN V_MLACOFA AS B ON LIMONOFCR = B.ACGACO                             :
+                                                                                :
+  UNION ALL                                                                     :
+  SELECT 'TLC' AS Type,                                                         :
+  TLID AS LIMITID,                                                              :
+  LITYPE AS LIMITTYPE,                                                          :
+  CASE                                                                          :
+****WHEN*LIUTSRTYPE=1*THEN*(SELECT*CUCRNM****','****CUCRTN*FROM*GPCUSTPD********:            BG18886
+    WHEN LIUTSRTYPE=1 THEN (SELECT CUCRNM CONCAT ',' CONCAT CUCRTN FROM GPCUSTPD:            BG18886
+    WHERE CUGCUS = LIUTSRCODE)                                                  :
+    WHEN LIUTSRTYPE=2 THEN (SELECT CGNAME FROM T_GRCUSTG WHERE CAST(CGID AS     :
+    CHAR(10)) = LIUTSRCODE)                                                     :
+    WHEN LIUTSRTYPE=3 THEN (SELECT IDDESC FROM GPINDSPD WHERE IDGIND =          :
+    LIUTSRCODE)                                                                 :
+    WHEN LIUTSRTYPE=4 THEN (SELECT IGNAME FROM T_GRINDSG  WHERE CAST(IGID AS    :
+    CHAR(10)) = LIUTSRCODE)                                                     :
+    WHEN LIUTSRTYPE=7 THEN (SELECT A4CNNM FROM GPCTRYPD  WHERE  A4CNCD =        :
+    LIUTSRCODE)                                                                 :
+    WHEN LIUTSRTYPE=8 THEN (SELECT RGNAME FROM T_GRCTRYG WHERE CAST(RGID AS     :
+    CHAR(10)) = LIUTSRCODE)                                                     :
+  END AS UTILISER,                                                              :
+  LIENTYCODE AS ENTITYCODE,                                                     :
+  LIEXPBRCH AS EXPBRANCH,                                                       :
+                                                                                :
+  CASE WHEN LITYPE='S' THEN 'SETTLEMENT LIMIT'                                  :
+   ELSE CAST(COALESCE(LIINSTGRP,0) AS CHAR(10))                                 :
+  END AS INSTRUMENT,                                                            :
+  LITENOR AS TENOR,                                                             :
+  LICCY AS CURRENCY,                                                            :
+                                                                                :
+  CASE                                                                          :
+   WHEN LIUTSRTYPE=1 THEN 'Customer'                                            :
+   WHEN LIUTSRTYPE=2 THEN 'CustomerGroup'                                       :
+   WHEN LIUTSRTYPE=3 THEN 'Industry'                                            :
+   WHEN LIUTSRTYPE=4 THEN 'IndustryGroup'                                       :
+   WHEN LIUTSRTYPE=7 THEN 'Country'                                             :
+   WHEN LIUTSRTYPE=8 THEN 'CountryGroup'                                        :
+  END AS UTILISERTYPE,                                                          :
+  CAST(NULL AS DECIMAL) AS EXCESS,                                              :
+  TLSTATUS AS STATUS,                                                           :
+  TLAMT AS AMOUNT,                                                              :
+  TLEXPDT AS EXPIRYDATE,                                                        :
+  CAST(NULL AS DATE) AS REVIEWDATE,                                             :
+  B.AZACOC AS MONOFFICER,                                                       :
+  A.AZACOC AS APROFFICER,                                                       :
+  B.ACGACO AS MONOFCRNAM,                                                       :
+  A.ACGACO AS APROFCRNAM,                                                       :
+  TLREMARK AS NARRATIVE,                                                        :
+  CUGACO AS ACOFCODE,                                                           :
+  TLEXPDT AS ACTIONDATE,                                                        :
+  CAST(NULL AS DECIMAL) AS OFFSET,                                              :
+  CAST(NULL AS DECIMAL) AS EXPOSURE,                                            :
+  CAST(NULL AS DECIMAL) AS AVLBLEAMT                                            :
+  FROM T_MLLIMIT                                                                :
+  INNER JOIN T_MLTLC ON LILIMITID = TLID                                        :
+  LEFT OUTER JOIN GPCUSTPD ON LIUTSRCODE = CUGCUS                               :
+  LEFT OUTER JOIN T_GRCUSTG ON LIUTSRCODE = CAST(CGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPCTRYPD ON LIUTSRCODE = A4CNCD                               :
+  LEFT OUTER JOIN T_GRCTRYG ON LIUTSRCODE = CAST(RGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPINDSPD ON LIUTSRCODE = IDGIND                               :
+  LEFT OUTER JOIN T_GRINDSG ON LIUTSRCODE = CAST(IGID AS CHAR(10))              :
+  LEFT OUTER JOIN T_GRINSTG ON LIINSTGRP =NGID                                  :
+  INNER JOIN V_MLACOFA  AS A ON LIAPROFCR = A.ACGACO                            :
+  INNER JOIN V_MLACOFA AS B ON LIMONOFCR = B.ACGACO                             :
+                                                                                :
+  UNION ALL                                                                     :
+  SELECT 'MLU' AS Type,                                                         :
+  MLID AS LIMITID,                                                              :
+  LITYPE AS LIMITTYPE,                                                          :
+  CASE                                                                          :
+***WHEN*LIUTSRTYPE=1*THEN*(SELECT*CUCRNM****','****CUCRTN*FROM*GPCUSTPD*********:            BG18886
+   WHEN LIUTSRTYPE=1 THEN (SELECT CUCRNM CONCAT ',' CONCAT CUCRTN FROM GPCUSTPD :            BG18886
+   WHERE CUGCUS = LIUTSRCODE)                                                   :
+   WHEN LIUTSRTYPE=2 THEN (SELECT CGNAME FROM T_GRCUSTG WHERE CAST(CGID AS      :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+   WHEN LIUTSRTYPE=3 THEN (SELECT IDDESC FROM GPINDSPD WHERE IDGIND =           :
+   LIUTSRCODE)                                                                  :
+   WHEN LIUTSRTYPE=4 THEN (SELECT IGNAME FROM T_GRINDSG WHERE CAST(IGID AS      :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+   WHEN LIUTSRTYPE=7 THEN (SELECT A4CNNM FROM GPCTRYPD WHERE  A4CNCD =          :
+   LIUTSRCODE)                                                                  :
+   WHEN LIUTSRTYPE=8 THEN (SELECT RGNAME FROM T_GRCTRYG WHERE CAST(RGID AS      :
+   CHAR(10)) = LIUTSRCODE)                                                      :
+  END AS UTILISER,                                                              :
+  LIENTYCODE AS ENTITYCODE,                                                     :
+  LIEXPBRCH AS EXPBRANCH,                                                       :
+  CASE WHEN LITYPE='S' THEN 'SETTLEMENT LIMIT'                                  :
+   ELSE CAST(COALESCE(LIINSTGRP,0) AS CHAR(10))                                 :
+  END AS INSTRUMENT,                                                            :
+  LITENOR AS TENOR,                                                             :
+  LICCY AS CURRENCY,                                                            :
+                                                                                :
+  CASE                                                                          :
+   WHEN LIUTSRTYPE=1 THEN 'Customer'                                            :
+   WHEN LIUTSRTYPE=2 THEN 'CustomerGroup'                                       :
+   WHEN LIUTSRTYPE=3 THEN 'Industry'                                            :
+   WHEN LIUTSRTYPE=4 THEN 'IndustryGroup'                                       :
+   WHEN LIUTSRTYPE=7 THEN 'Country'                                             :
+   WHEN LIUTSRTYPE=8 THEN 'CountryGroup'                                        :
+  END AS UTILISERTYPE,                                                          :
+  CAST(NULL AS DECIMAL) AS EXCESS,                                              :
+  MLSTATUS AS STATUS,                                                           :
+  MLAMT AS AMOUNT,                                                              :
+  MLEXPDT AS EXPIRYDATE,                                                        :
+  CAST(NULL AS DATE) AS REVIEWDATE,                                             :
+  B.AZACOC AS MONOFFICER,                                                       :
+  A.AZACOC AS APROFFICER,                                                       :
+  B.ACGACO AS MONOFCRNAM,                                                       :
+  A.ACGACO AS APROFCRNAM,                                                       :
+  MLREMARK AS NARRATIVE,                                                        :
+  CUGACO AS ACOFCODE,                                                           :
+  MLEXPDT AS ACTIONDATE,                                                        :
+  CAST(NULL AS DECIMAL) AS OFFSET,                                              :
+  CAST(NULL AS DECIMAL) AS EXPOSURE,                                            :
+  CAST(NULL AS DECIMAL) AS AVLBLEAMT                                            :
+  FROM T_MLLIMIT                                                                :
+  INNER JOIN T_MLMLU ON LILIMITID = MLID                                        :
+  LEFT OUTER JOIN GPCUSTPD ON LIUTSRCODE = CUGCUS                               :
+  LEFT OUTER JOIN T_GRCUSTG ON LIUTSRCODE = CAST(CGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPCTRYPD ON LIUTSRCODE = A4CNCD                               :
+  LEFT OUTER JOIN T_GRCTRYG ON LIUTSRCODE = CAST(RGID AS CHAR(10))              :
+  LEFT OUTER JOIN GPINDSPD ON LIUTSRCODE = IDGIND                               :
+  LEFT OUTER JOIN T_GRINDSG ON LIUTSRCODE = CAST(IGID AS CHAR(10))              :
+  LEFT OUTER JOIN T_GRINSTG ON LIINSTGRP =NGID                                  :
+  INNER JOIN V_MLACOFA  AS A ON LIAPROFCR = A.ACGACO                            :
+  INNER JOIN V_MLACOFA AS B ON LIMONOFCR = B.ACGACO;                            :
+                                                                                :
+  OPEN C1;                                                                      :
+  END;                                                                          :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas GP Account Officer Actions                  ';                     :
+                                                                                :

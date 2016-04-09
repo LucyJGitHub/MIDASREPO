@@ -1,0 +1,287 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB CoB tracer')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                     *
+      *                                                               *
+      *  CB0534 - Close of business Tracer                            *
+      *                                                               *
+      *  Function:  This program is in charge to trace the actions    *
+      *             taken during CoB                                  *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. S01420             Date 22MAY95               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBTRACPDO   E                    DISK
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+      *
+      *
+     E                    CPY@    1   1 80
+     E                    CAL     1  12  3   CALM    2
+     E                    RES       200  1
+     E                    TGT       203  1
+      *
+      /SPACE 3
+     I            DS
+     I                                    B   1   40WWSTRT
+     I                                    B   5   80WWLENG
+     I            DS
+     I                                        1  20 WWCCNT
+     I                                        1  10 WWUSPC
+     I                                       11  20 WWULIB
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IWWPHAS      DS                              1
+     I                                        1   1 PHASE
+     IWWRUND      DS                             13
+     I                                        1   7 RDATE
+      ** Transmitter data area
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I                                      264 269 NBR
+      **
+     I** TIME DATA STRUCTURE
+     I            DS
+     I                                        1  120TIMER
+     I                                        1   6 WWTIME
+     I                                        7  12 WWDATE
+     I            DS
+     I                                        1   2 WWFRST
+     I                                        3   4 WWSCND
+     I                                        5   6 WWTHRD
+     I                                        1   6 WWFULL
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * #MAIN    - MAIN SUBROUTINE                                       *
+      * #INIT    - INITIAL PROCESSING SUBROUTINE                         *
+      * #END     - END PROCESSING SUBROUTINE                             *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+      *
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #END
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MAIN    - MAIN SUBROUTINE                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #MAIN     BEGSR
+      *
+      * PROCESS ACTION TAKEN
+      *
+     C                     EXSR #ACTN
+      *
+     C                     MOVELUSER      TRUSER
+     C                     MOVELWSID      TRJOB
+     C                     MOVELNBR       TRNBR
+     C**
+     C                     MOVE WWDATE    TRDATE
+     C                     MOVE WWTIME    TRTIME
+     C           2         SUBSTRDATE:1   WWFRST
+     C           3         SUBSTRDATE:3   WWCAL   3
+     C                     Z-ADD1         X       30
+     C           WWCAL     LOKUPCAL,X                    80
+     C                     MOVE CALM,X    WWSCND
+     C           2         SUBSTRDATE:6   WWTHRD
+     C                     MOVELWWFULL    TRDATS
+     C**
+     C                     MOVE PHASE     TRPHAS
+     C                     MOVEATGT,1     TRACTN
+     C**
+     C                     WRITECBTRACD0
+      *
+     C                     ENDSR
+      ********************************************************************
+     C           #ACTN     BEGSR
+     C**
+     C                     Z-ADD1         X
+     C                     Z-ADD1         Y       30
+     C                     Z-ADD1         Z       30
+     C           '        'SCAN WWTEMP:X  Y
+     C                     Z-ADDY         WWSAVE  30
+     C                     Z-ADD1         Y
+      * INSERT END OF MESSAGE CONTROL IN TARGET
+     C                     MOVEAWWTEMP    RES,X
+     C           X         DOUGTWWSAVE                     B1
+     C           Y         IFEQ 75                         B2
+     C                     MOVEL'/'       TGT,Z
+     C                     Z-ADD0         Y
+     C                     ADD  1         Z
+     C                     END                             E2
+     C                     MOVE RES,X     TGT,Z
+     C                     ADD  1         X
+     C                     ADD  1         Y
+     C                     ADD  1         Z
+     C                     END                             E1
+     C                     MOVE '&'       TGT,Z
+     C**
+     C                     ENDSR
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING SUBROUTINE                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+     C           *NAMVAR   DEFN MPHAS     WWPHAS
+     C           *NAMVAR   DEFN RUNDAT    WWRUND
+      *
+     C                     IN   WWPHAS
+     C                     IN   WWRUND
+     C**
+     C                     MOVEL*BLANKS   WWACTN180
+     C                     MOVEL'USRTRACE'WWUSPC
+     C                     MOVEL'*LIBL '  WWULIB
+     C                     Z-ADD1         WWSTRT
+     C                     Z-ADD180       WWLENG
+     C**
+     C                     CALL 'QUSRTVUS'             99
+     C                     PARM           WWCCNT
+     C                     PARM           WWSTRT
+     C                     PARM           WWLENG
+     C                     PARM           WWACTN
+     C**
+     C           *IN99     IFEQ '0'
+     C**
+     C                     MOVELWWACTN    WWTEMP195
+     C                     MOVEL*BLANKS   WWACTN
+      **
+     C                     MOVEL'USRTRACE'WWUSPC
+     C                     MOVEL'*LIBL '  WWULIB
+     C                     Z-ADD1         WWSTRT
+     C                     Z-ADD185       WWLENG
+      **
+     C                     CALL 'QUSCHGUS'             99
+     C                     PARM           WWCCNT
+     C                     PARM           WWSTRT
+     C                     PARM           WWLENG
+     C                     PARM           WWACTN
+     C                     PARM '0'       WWFRCA  1
+     C                     END
+     C**
+     C                     TIME           TIMER
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #END     - END PROCESSING SUBROUTINE                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #END      BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN SUBROUTINE                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+      *
+      ** Roll back changes, print DUMP and Cancel program
+      *
+     C                     ROLBK
+     C                     DUMP
+     C                     END
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  CAL
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12

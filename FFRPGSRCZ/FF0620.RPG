@@ -1,0 +1,927 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Amortisation A/c Keys Generation')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0620  -  AMORTISATION ACCOUNT KEY GENERATION                 *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. MD034233           Date 27Apr15               *
+      *  Prev Amend No. CFF015             Date 11Mar15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 223713             Date 20Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 173953             Date 13Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 112056             Date 18Feb98               *
+      *                 CFF003             Date 07Apr97               *
+     F*                  119513             Date 19Jun97              *
+     F*                  CFF004             Date 02Oct96              *
+     F*                  S71062             Date 19Dec95              *
+     F*                  S01455             DATE 09NOV93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE  10AUG92                *
+     F*                  E44713 (FUJI-F00017) DATE 18SEP92               *
+     F*                  E37909             DATE  17SEP92                *
+     F*                  AUS022             DATE  11AUG92                *
+     F*                  FO0005             DATE  23JAN91                *
+     F*                  E22129             DATE  03MAY90                *
+     F*                  S01117             DATE  30MAR90                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD034233 - Updates on CFF015 design                             *
+      *  CFF015 - Differentiate accounting keys as Put or Call option.*
+      *  223713 - DBERR in FF0620.  Do not end if chain to INTYP and  *
+      *           FOPCK fails for old amortization records that were  *
+      *           never dropped.                                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  173953 - Correct weekend processing for accrual for          *
+      *           non-working days = 0.                               *
+     F*   112056 -  FIX 86328 INTEGRATION FROM R2 PROBLEM                *
+     F*             REVIEW PROCESSING                                    *
+     F*  CFF003  - ENHANCED OTC PROCESSING -PHASE II                  *
+     F*            UPGRADE FROM BLI LBL001 (RECOMPILE ONLY)           *
+     F*  119513 - FF0620 was not picking the correct profit centre.   *
+     F*    CFF004  - Increase in size of Price Fields,(Recompiled Only)  *
+     F*    S71062  -  FF/PM Interface (Just recompiled)                  *
+     F*    S01455  -  Upgrade from release 3. Depending on the ICD       *
+     F*               indicator, the fields 'BXPROT' and 'BXISTY'        *
+     F*               are optional on the account key.                   *
+     F*    S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT           *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*     E44713 -  Amortisation errors. Also used at CCF NY           *
+     F*               NY ref - 50365.                                    *
+     F*               Incorporation of  pre rel-10  error fix
+     F*     E37909  - TOTAL REALIZED PROFIT/LOSS REVERSED AT END OF
+     F*               AMORTISATION PERIOD
+     F*               Incorporation of  pre rel-10  error fix
+     F*   AUS022  -  AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*              PF/INTYPD.  Recompile program only.                 *
+     F*   FO0005  -  FOR DAILY ACCRUALS, PROGRAM USES ACCRUAL CONTROL    *
+     F*              DATE OF DNWD - 1, EVEN IF EOM DATE FALLS IN BETWEEN,*
+     F*              GIVING INCORRECT EOM REPORTS. SD1030 WAS AMENDED BY *
+     F*              E20929 TO CORRECTLY UPDATE APDA IN THIS CASE, AND   *
+     F*              IF ACCRUAL/PROFIT DATE IS LESS THAN DNWD - 1, THIS  *
+     F*              DATE SHOULD THEN BE USED AS ACCRUAL CONTROL DATE    *
+     F*   E22129  -  EVENT AMOUNT IS NOT RESET AFTER EACH CALCULATION    *
+     F*              FOR FINAL POST                                      *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E                    DISK                               S01117
+     F*ABTB11*IF* E                    DISK                               S01117
+     FFF0620AUO   E                    PRINTER
+     F*ABLETR*IF* E           K        DISK                               S01117
+     FINTYP   IF  E           K        DISK
+     F*FOPCK**IF* E           K        DISK                           UC               S01117 223713
+     FFOPCK   IF  E           K        DISK                      A    UC                      223713
+     FFOKEYA  UF  E                    DISK
+     FFOKEYD  O   E                    DISK
+     FAMORT   UP  E           K        DISK
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*     50          FIRST CYCLE PROCESSING HAS BEEN PERFORMED
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*            L1   CHANGE OF INSTRUMENT
+     F*            L2   CHANGE OF BOOK
+     F*            L3   CHANGE OF CURRENCY
+     F*            L4   CHANGE OF BRANCH
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+      *
+      * LF/AMORT is update primary file, level breaks on Branch, Currency
+      * Book, and Instrument Type
+      *
+     E                    CPY@    1   1 80
+     IAMORTDF
+     I***********                                   BRCD  L4              S01117
+     I                                              BRCA  L4              S01117
+     I                                              CCY   L3
+     I                                              BOKC  L2
+     I                                              ISTT  L1
+     I*
+     IFFKY        DS
+     I*
+      ** ACCOUNT KEY SUB-FIELDS
+     I*
+     I                                        1   1 TYPE
+     I                                        2   2 INVA                  S01455
+     I                                        3   3 ETYP
+     I                                        4   5 BOOK
+     I                                        3  10 MKINST
+     I                                        6  10 INSTYP                S01455
+     I                                       12  12 ATYP
+     I                                       14  14 AMTC
+     I*
+     ISDSTAT      DS                            256
+     I*  STANDING DATA DATAAREA FOR CLOSE OF BUSINESS TYPE
+     I                                      116 1160COBTYP
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISCSARD    E DSSCSARDPD                                              CFF015
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJDNWD                          DNWD                  S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS                          S01117
+     I              BKAPDT                          APDA                  S01117
+     I              BKAPFQ                          APFQ                  S01117
+     I              BKALDI                          ACLD                  S01117
+     I              BKPRCU                          PRCU                  S01117
+      *                                                                   S01117
+     ISDFODA    E DSSDFODAPD                                              S01455
+      * SDFODAPD - Futures and Options Data data structure                S01455
+     I              QQACCD                          QQACD1                                    CGL029
+      *                                                                   S01455
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+     I**                                                                  S01117
+     IXFOPKY      DS                             10                       S01117
+      **  DS FOR ERROR HANDLING OF FOPCK FILE KEY                         S01117
+     I**                                                                  S01117
+     I                                        1   3 BRCA                  S01117
+     I                                        4   5 BOKC                  S01117
+     I                                        6  10 ISTT                  S01117
+      *
+     IPSDS       SDS                                                                          223713
+     I*    Program Status data structure                                                      223713
+     I                                      244 246 WSID                                      223713
+     I                                      254 263 USRID                                     223713
+     I********************************************************************
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C********************************************************************
+      **                M A I N   P R O C E S S I N G
+     C********************************************************************
+     C*                                                                   S01117
+     C           FOPKY     KLIST                                          S01117
+     C*                                                                   S01117
+      ** FOPCK KEY LIST                                                   S01117
+     C*                                                                   S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           BOKC                            S01117
+     C                     KFLD           ISTT                            S01117
+     C*
+      **     IF *IN50 is off
+      **          Perform Initial Processing
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+      *******IF**INL4*is*on***********************************************S01117
+      ************Access*PF/TABLETR***************************************S01117
+     C***********                                                         S01117
+     C************INL4     IFEQ '1'                                       S01117
+     C***********BRCD      CHAINTABLETR              99                   S01117
+     C***********                                                         S01117
+     C************IF*No*live*record***************************************S01117
+     C*****************Perform*Database-error*Processing******************S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          MOVELBRCD      DBKEY            ***************S01117
+     C***********          SETON                     U7U8LR               S01117
+     C***********          WRITEDBERR                                     S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+      *                                                                                       223713
+      ** Check if still something to amortize                                                 223713
+      *                                                                                       223713
+     C           TRPL      ADD  RPAD      WAMRT  150                                          223713
+     C*
+      **     IF *INL1 is on
+      **          Access LF/INTYP
+     C*
+     C           *INL1     IFEQ '1'
+     C           ISTT      CHAININTYP                99
+     C*
+      **          IF No live record
+      **               Perform Database-error Processing
+     C*
+     C           *IN99     IFEQ '1'
+     C           WAMRT     ANDNE0                                                             223713
+     C           RECI      ORNE 'D'
+     C           WAMRT     ANDNE0                                                             223713
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'INTYP'   DBFILE           ***************S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************S01117
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVELISTT      DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     WRITEDBERR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+      **     ON CHANGE OF INSTRUMENT OR BOOK OR BRANCH,                   S01117
+      **     IF PROFIT CENTRE USED,                                       S01117
+      **          ACCESS LF/FOPCK FOR PROFIT CENTRE                       S01117
+      **     OTHERWISE                                                    S01117
+      **            SET PROFIT CENTRE TO BLANK                            S01117
+     C*                                                                   S01117
+     C           *INL1     IFEQ '1'                                       S01117
+     C************INL3     ANDNE'1'                                S01117 119513
+     C************INL4     OREQ '1'                                S01117 119513
+     C           PRCU      IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C           FOPKY     CHAINFOPCK                99                   S01117
+     C*                                                                   S01117
+      **          IF No live record                                       S01117
+      **               Perform Database-error Processing                  S01117
+     C*                                                                   S01117
+     C           *IN99     IFEQ '1'                                       S01117
+     C           WAMRT     ANDNE0                                                             223713
+     C           RECI      ORNE 'D'                                       S01117
+     C           WAMRT     ANDNE0                                                             223713
+     C           *IN99     IFEQ '1'                                                           223713
+     C                     MOVE 'D'       RECI                                                223713
+     C                     MOVE BRCA      BRCA                                                223713
+     C                     MOVE BOKC      BOKC                                                223713
+     C                     MOVE ISTT      ISTT                                                223713
+     C                     MOVE BRCA      @BRCD   3                                           223713
+      *                                                                                       223713
+      **  Set up base fields for Profit Centre default taking                                 223713
+      *                                                                                       223713
+     C                     CALL 'AOPRFMR0'                                                    223713
+     C                     PARM *BLANKS   @RTCD1  1                                           223713
+     C                     PARM BOKC      @BKCD   2                                           223713
+     C                     PARM *BLANKS   @TRTY   5                                           223713
+     C                     PARM *BLANKS   @SBTY   2                                           223713
+     C                     PARM           @BRCD   3                                           223713
+     C                     PARM *BLANKS   @DPCD   3                                           223713
+     C                     PARM USRID     @USID  10                                           223713
+     C                     PARM *BLANKS   @ACOC   2                                           223713
+     C                     PARM *BLANKS   @CUST   6                                           223713
+     C                     PARM *BLANK    PRFC    4                                           223713
+      *                                                                                       223713
+     C           @RTCD1    IFEQ '0'                                                           223713
+     C                     MOVELPRFC      PCBK                                                223713
+     C                     ELSE                                                               223713
+     C                     MOVE *BLANKS   PCBK                                                223713
+     C                     END                                                                223713
+      *                                                                                       223713
+     C                     Z-ADDRUND      LCD                                                 223713
+     C                     MOVE 'I'       CHTP                                                223713
+     C                     Z-ADD0         TNLU                                                223713
+     C                     WRITEFOPCKDF                                                       223713
+     C                     END                                                                223713
+     C************LOCK     IN   LDA                                                    S01117 223713
+     C***********          MOVEL'FOPCK'   DBFILE           ***************             S01117 223713
+     C***********          Z-ADD6         DBASE            * DB ERROR 06 *             S01117 223713
+     C***********          MOVELXFOPKY    DBKEY            ***************             S01117 223713
+     C***********          SETON                     U7U8LR                            S01117 223713
+     C***********          WRITEDBERR                                                  S01117 223713
+     C***********          EXSR *PSSR                                                  S01117 223713
+     C***********          RETRN                                                       S01117 223713
+     C***********          ELSE                                                        S01117 223713
+     C                     MOVE PCBK      PRFC                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   PRFC                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      **     IF Normal close of business run
+      **          Perform Final Post Processing
+      **     Otherwise
+      **          Perform Accrual Processing
+     C*
+     C           COBTYP    IFEQ 1
+     C                     EXSR FINAL
+     C                     ELSE
+     C                     EXSR ACCRAL
+     C                     END
+     C*
+      **     IF *INLR is on and Total time
+      **          Update FOKEYA
+      **          Write audit report
+     C*
+     CLR                   EXSR LAST
+     C*
+     C********************************************************************
+     C*
+      ** INDEX OF SUBROUTINES
+     C*
+      ** INIT     FIRST CYCLE CALCULATIONS
+     C*
+      ** ACCRAL   ACCRUAL RUN PROCESSING
+     C*
+      ** FINAL    FINAL POST PROCESSING
+     C*
+      ** LAST     LAST RECORD PROCESSING
+     C*                                                                   S01117
+      ** *PSSR    HANDLES ABNORMAL ERROR CONDITIONS                       S01117
+     C*
+      ** ZZADD    HASH TOTALLING ROUTINE
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R INIT TO PERFORM FIRST CYCLE CALCULATIONS
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+      **     Set on *IN50
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     MOVE 'FF0620  'DBPGM                        ***
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVEL*BLANKS   DBFILE                          S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     50
+     C*
+     C* OBTAIN RUN-DATE FROM RUNDAT                                       S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+      *******Access*PF/TABTB10********************************************S01117
+      **   ACCESS BANK DETAILS                                            S01117
+     C*
+     C***********          READ TABTB10                  99               S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*                                                                   S01117
+      ** Write report headings                                            S01117
+     C*                                                                   S01117
+     C                     WRITETITLE                                     S01117
+     C*
+      **     IF No live record
+      **          Perform Database-error Processing
+     C*
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01117
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     SETON                     U7U8LR
+     C                     WRITEDBERR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C***********                                                         S01117
+      ***Write*report*headings********************************************S01117
+     C***********                                                         S01117
+     C***********          WRITETITLE                                     S01117
+     C***********                                                         S01117
+      *******Access*PF/TABTB11********************************************S01117
+      **     ACCESS SDGELRPD FOR PROFIT CENTRE USED FLAG, ACCRUAL DATE,   S01117
+      **     ACCRUE ON LAST DAY IND. & FREQUENCY                          S01117
+     C***********                                                         S01117
+     C***********          READ TABTB11                  99               S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    @DSFDY                          S01117              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+      **     IF No live record
+      **          Perform Database-error Processing
+     C*
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C                     MOVEL'SDGELRPD'DBFILE           ***************S01117
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C***********          MOVEL'TABTB11' DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     SETON                     U7U8LR
+     C                     WRITEDBERR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*                                                                   S01117
+     C                     CALL 'AOFODAR0'                                S01455
+     C                     PARM '*MSG   ' @RTCD   7                       S01455
+     C                     PARM '*FIRST ' @OPTN   7                       S01455
+     C           SDFODA    PARM SDFODA    @DSFDY                          S01455
+     C*                                                                   S01455
+      **     IF No live record                                            S01455
+      **          Perform Database-error Processing                       S01455
+     C*                                                                   S01455
+     C           @RTCD     IFNE *BLANKS                                   S01455
+     C           *LOCK     IN   LDA                                       S01455
+     C                     MOVEL'SDGELRPD'DBFILE           ***************S01455
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *S01455
+     C                     MOVEL@OPTN     DBKEY            ***************S01455
+     C                     MOVEL@OPTN     DBOPTN  7                       S01455
+     C                     SETON                     U7U8LR               S01455
+     C                     WRITEDBERR                                     S01455
+     C                     EXSR *PSSR                                     S01455
+     C                     RETRN                                          S01455
+     C                     END                                            S01455
+     C*                                                                   S01455
+      **     OPEN LF/FOPCK WHEN PROFIT CENTRE USED = 'Y'                  S01117
+     C*                                                                   S01117
+     C           PRCU      IFEQ 'Y'                                       S01117
+     C                     OPEN FOPCK                                     S01117
+     C                     END                                            S01117
+     C*
+      **     Access SDSTAT
+     C*
+     C           *NAMVAR   DEFN           SDSTAT
+     C           *LOCK     IN   SDSTAT
+     C                     OUT  SDSTAT
+     C*
+      **     IF Accrual/Accrual followed by non-working day
+      **          Subtract 1 from DNWD
+      **          IF Result is less than APDA
+      **************and*System*Accrues*Daily*(APFQ=D)*********************FO0005
+      **              This is Accrual control date
+      **          Otherwise
+      **              APDA is accrual control date
+     C*
+     C           *LIKE     DEFN APDA      ACRDAT
+     C*
+     C           COBTYP    IFNE 1
+     C*                                                                   E44713
+     C           COBTYP    IFEQ 2                          B002           E44713
+     C                     Z-ADDAPDA      ACRDAT                          E44713
+     C                     ELSE                            X002           E44713
+      * COB type is 3                                                     E44713
+     C           APFQ      IFNE 'D'                        B003           E44713
+      *                                                                   E44713
+     C           DNWD      IFGE APDA                       B004           E44713
+     C                     Z-ADDAPDA      ACRDAT                          E44713
+     C                     ELSE                            X004           E44713
+      * Change processing type to Normal working day                      E44713
+     C                     Z-ADD1         COBTYP                          E44713
+     C                     END                             E004           E44713
+      *                                                                   E44713
+     C                     ELSE                            X003           E44713
+      * Daily Accruals                                                    E44713
+     C                     Z-ADDAPDA      ACRDAT                          E44713
+     C                     END                             E003           E44713
+     C                     END                             E002           E44713
+     C*                                                                   E44713
+     C********** DNWD      SUB  1         ACRDAT                          E44713
+     C**********                                                          E44713
+     C********** ACRDAT    IFGT APDA                                      E44713
+     C********** APFQ      IFNE 'D'                                 FO0005E44713
+     C**********           Z-ADDAPDA      ACRDAT                          E44713
+     C**********           END                                      FO0005E44713
+     C**********           END                                            E44713
+     C*
+     C                     END
+     C*
+      *                                                                                       CFF015
+      ** Access SAR Details to see if CFF015 (Differentiate account keys by Put and Call)     CFF015
+      ** is switched on                                                                       CFF015
+      *                                                                                       CFF015
+     C                     MOVEL'N'       CFF015  1                                           CFF015
+     C                     CALL 'AOSARDR0'                                                    CFF015
+     C                     PARM *BLANKS   @RTCD                                               CFF015
+     C                     PARM '*VERIFY '@OPTN                                               CFF015
+     C                     PARM 'CFF015'  @SARD   6                                           CFF015
+     C           SCSARD    PARM SCSARD    DSSDY                                               CFF015
+      *                                                                                       CFF015
+     C           @RTCD     IFEQ *BLANKS                                                       CFF015
+     C                     MOVEL'Y'       CFF015                                              CFF015
+     C                     ENDIF                                                              CFF015
+     C*                                                                                       CFF015
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R ACCRAL TO PERFORM ACCRUAL POST
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           ACCRAL    BEGSR
+     C*
+      **     Add accrual start date to accrual period
+      **     IF the result on or before accrual control date
+      **          Subtract Posted from Realised P/L amount giving event amount
+     C*
+     C           *LIKE     DEFN AMSD      AMDT
+     C           *LIKE     DEFN AMSD      AMDT1
+     C           *LIKE     DEFN EAMT      EVENTA
+     C*
+     C           AMSD      ADD  AMRP      AMDT
+     C*
+     C           AMDT      IFLE ACRDAT
+     C***********          Z-SUBTRPL      TRPL                     037909 112056
+     C           TRPL      SUB  RPAD      EVENTA
+     C                     END
+     C*
+      **     Otherwise
+      **          Subtract Amortisation start date from control date
+     C*
+     C           AMDT      IFGT ACRDAT
+     C***********AMSD******SUB  ACRDAT    AMDT1                          112056
+     C**                                                                 112056
+     C** CALCULATE THE NUMBER OF DAY TO ACCRUE                           112056
+     C** IF ACCRUAL BEFORE NON-WORKIN DAYS,                              112056
+     C**      ACCRUAL DATE - RUN DATE = NUMBER OF DAYS TO ACCRUE         112056
+     C** ELSE                                                            112056
+     C**      ACCRUAL DATE -                                             112056
+     C**      ((ALREADY AMORTIZE / TOTAL TO AMORTIZE * AMORT. PERIOD)    112056
+     C**      + AMORT. START DATE) = NUMBER OF DAYS TO ACCRUE            112056
+     C**                                                                 112056
+     C                     Z-ADD0         AMDT1                          112056
+     C**                                                                 112056
+     C           BKANWD    IFNE '2'                                      112056
+     C           BKANWD    IFEQ '0'                                      173953
+     C           ACRDAT    ANDGTRUND                                     173953
+     C           ACRDAT    SUB  RUND      AMDT1                          173953
+     C           AMDT1     SUB  1         AMDT1                          173953
+     C                     ELSE                                          173953
+     C           ACRDAT    SUB  RUND      AMDT1                          112056
+     C                     ENDIF                                         173953
+     C                     ELSE                                          112056
+     C           TRPL      IFNE 0                                        112056
+     C           RPAD      DIV  TRPL      DACR   139                     112056
+     C           DACR      MULT AMRP      AMDT1     H                    112056
+     C           AMDT1     ADD  AMSD      AMDT1                          112056
+     C           ACRDAT    SUB  AMDT1     AMDT1                          112056
+     C                     END                                           112056
+     C                     END                                           112056
+     C*
+      **          IF Accrue on last day = 'N'
+      **               Add 1 to result
+     C*
+     C           ACLD      IFEQ 'N'
+     C                     ADD  1         AMDT1
+     C                     END
+     C*
+      **          Multiply Total realised P/l by number of days so calculated
+      **          Divide by Amortisation period
+      **          Subtract Posted amount to give Event amount
+     C*
+     C           AMDT1     DIV  AMRP      AMDT2  139
+     C           AMDT2     MULT TRPL      EVENTA    H
+     C*********************SUB  RPAD      EVENTA                         112056
+     C                     END
+     C*
+      **     IF event amount is not zero
+     C*
+     C           EVENTA    IFNE 0
+     C*
+      **          Format Account key
+     C*
+     C                     MOVE *BLANK    FFKY
+     C                     MOVE 'F'       TYPE
+     C                     MOVE 'I'       ATYP
+     C                     MOVE 'A'       ETYP
+     C                     MOVE BOKC      BOOK
+     C*
+      ** The Instrument Type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "SDFODAPD"                                             S01455
+     C*                                                                   S01455
+     C           BXISTY    IFEQ 'Y'                                       S01455
+     C           ISTI      IFEQ 'N'
+     C                     MOVE ISTT      MKINST
+     C                     ELSE                                           S01455
+     C                     MOVEL'     '   INSTYP                          S01455
+     C                     END
+     C                     ELSE                                           S01455
+     C                     MOVEL'     '   INSTYP                          S01455
+     C                     END                                            S01455
+     C*                                                                   S01455
+      ** The processing type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "SDFODAPD"                                             S01455
+     C*                                                                   S01455
+     C           BXPROT    IFEQ 'Y'                                       S01455
+     C                     MOVE ISPT      INVA                            S01455
+     C                     ELSE                                           S01455
+     C                     MOVE *BLANKS   INVA                            S01455
+     C                     END                                            S01455
+      *                                                                                       CFF015
+      * If CFF015 is On, set position 2 of the account key equal to Put/Call indicator        CFF015
+     C           CFF015    IFEQ 'Y'                                                           CFF015
+     C           ISPT      IFEQ 4                                                           MD034233
+     C           ISPT      OREQ 5                                                           MD034233
+     C           ISPT      OREQ 6                                                           MD034233
+     C           ISPT      OREQ 8                                                           MD034233
+     C                     MOVE PCAL      INVA                                                CFF015
+     C                     END                                                                CFF015
+     C                     END                                                              MD034233
+     C*
+     C***********EVENTA    IFGT 0                                         112056
+     C           EVENTA    IFLE 0                                         112056
+     C                     MOVE 'P'       AMTC
+     C                     ELSE
+     C                     MOVE 'L'       AMTC
+     C                     END
+     C*
+      **          Write Account key
+     C*
+     C           EVENTA    IFGT 0
+     C                     Z-ADDEVENTA    EAMT
+     C                     ELSE
+     C                     Z-SUBEVENTA    EAMT
+     C                     END
+     C*
+     C***********          Z-ADDNSACS     ASEQ                            S01117
+     C                     MOVE '01'      ASEQ                            S01117
+     C                     Z-ADDACRDAT    VDAT
+     C                     Z-ADDACRDAT    EDAT
+     C*
+     C                     WRITEFOKEYDF
+     C*
+      **          Add 1 to record count
+     C*
+     C                     ADD  1         COUNT
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C*
+      **          Update AMORT
+     C*
+     C                     ADD  EVENTA    RPAD
+     C                     EXCPTPOST
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R FINAL TO PERFORM FINAL POST
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           FINAL     BEGSR
+     **                                                                   E22129
+     **      Reset EVENTA each time to prevent prev. records details      E22129
+     **      overwriting this record if it has EDAT *GE DNWD.             E22129
+     **                                                                   E22129
+     C                     Z-ADD*ZERO     EVENTA                          E22129
+     C*
+      **     Add accrual start date to accrual period
+      **     IF the result before DNWD
+      **          Subtract Posted from Realised P/L amount giving event amount
+     C*
+     C           AMSD      ADD  AMRP      EDAT
+     C*
+     C           EDAT      IFLT DNWD
+     C***********          Z-SUBTRPL      TRPL                     E37909 112056
+     C           TRPL      SUB  RPAD      EVENTA
+     C                     END
+     C*
+      **     IF event amount is not zero
+     C*
+     C           EVENTA    IFNE 0
+     C*
+      **          Format Account key
+     C*
+     C                     MOVE *BLANK    FFKY
+     C                     MOVE 'F'       TYPE
+     C                     MOVE 'I'       ATYP
+     C                     MOVE 'A'       ETYP
+     C                     MOVE BOKC      BOOK
+     C*
+      ** The Instrument Type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "SDFODAPD"                                             S01455
+     C*                                                                   S01455
+     C           BXISTY    IFEQ 'Y'                                       S01455
+     C           ISTI      IFEQ 'N'
+     C                     MOVE ISTT      MKINST
+     C                     ELSE                                           S01455
+     C                     MOVEL'     '   INSTYP                          S01455
+     C                     END
+     C                     ELSE                                           S01455
+     C                     MOVEL'     '   INSTYP                          S01455
+     C                     END                                            S01455
+     C*                                                                   S01455
+      ** The processing type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "SDFODAPD                                              S01455
+     C*                                                                   S01455
+     C           BXPROT    IFEQ 'Y'                                       S01455
+     C                     MOVE ISPT      INVA                            S01455
+     C                     ELSE                                           S01455
+     C                     MOVE *BLANKS   INVA                            S01455
+     C                     END                                            S01455
+      *                                                                                       CFF015
+      * If CFF015 is On, set position 2 of the account key equal to Put/Call indicator        CFF015
+     C           CFF015    IFEQ 'Y'                                                           CFF015
+     C                     MOVE PCAL      INVA                                                CFF015
+     C                     END                                                                CFF015
+     C*
+     C*
+     C           EVENTA    IFGT 0
+     C                     MOVE 'P'       AMTC
+     C                     ELSE
+     C                     MOVE 'L'       AMTC
+     C                     END
+     C*
+      **          Write Account key
+     C*
+     C           EVENTA    IFGT 0
+     C                     Z-ADDEVENTA    EAMT
+     C                     ELSE
+     C                     Z-SUBEVENTA    EAMT
+     C                     END
+     C*
+     C***********          Z-ADDNSACS     ASEQ                            S01117
+     C                     MOVE '01'      ASEQ                            S01117
+     C                     Z-ADDEDAT      VDAT
+     C*
+     C                     WRITEFOKEYDF
+     C*
+      **          Add 1 to record count
+     C*
+     C                     ADD  1         COUNT
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C*
+      **          Update AMORT
+     C*
+     C                     ADD  EVENTA    RPAD
+     C                     EXCPTPOST
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R LAST TO PERFORM LAST RECORD CALCULATIONS
+     C*
+      ** CALLED FROM MAIN PROCESSING
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           LAST      BEGSR
+     C*
+      ** Write audit report
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C                     WRITEAUDIT
+     C*
+      ** Access account key file trailer if update required
+     C*
+     C           COUNT     IFGT 0
+     C                     READ FOKEYA                   99
+     C*
+      **     IF No live record
+      **          Perform Database-error Processing
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'T'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'FOKEY'   DBFILE           ***************S01117
+     C                     MOVEL'FOKEY'   DBFILE           ***************S01117
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     MOVEL'TRAILER' DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     WRITEDBERR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+      ** Add number of records output to record count & update trailer
+     C*
+     C                     ADD  COUNT     NORE
+     C*
+     C           HRDC      DIV  1000      ZZAMT
+     C                     ADD  HRWN      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C*
+     C                     UPDATFOKEYAF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+      /EJECT                                                              S01117
+     C********************************************************************S01117
+      ** S/R *PSSR  - END PROGRAM WITH DATABASE-ERROR                     S01117
+      ** CALLED FROM  WHERE THERE IS DATABASE ERROR                       S01117
+      ** CALLS  NO OTHER SUBROUTINES                                      S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+      ** Program dump                                                     S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZZADDZ1
+     C********************************************************************
+     O*
+     OAMORTDF E                POST
+     O                         RPAD
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

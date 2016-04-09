@@ -1,0 +1,552 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU SE ICD background update')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABTB36 - BACKGROUND UPDATE OF TABTB36 FILE                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 224354             Date 16Jan04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01502             Date 02Dec94               *
+     F*                    S01448             DATE 09OCT93               *
+     F*                    S01446             DATE 09OCT93               *
+     F*                    S01322             DATE 11FEB91               *
+     F*                    LN1048             DATE 29NOV90               *S01230
+     F*                    S01269             DATE 05NOV90               *S01230
+     F*                    S01117             DATE 15MAY90               *S01230
+     F*                    S01230             DATE 07/11/89              *S01230
+     F*                    S01229             DATE 20/10/89              *S01229
+     F*                    E19465             DATE 31/08/89              *
+     F*                    E19464             DATE 31/08/89              *
+     F*                    E18371             DATE 25/05/89              *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  224354 - Remove field Historic Prices Retention Period       *
+      *  CAS006 - Hedge Accounting Phase B                            *
+     F* S01502 - BLI Telekurs Processing.  Recompiled due to change
+     F*          in length of SESTAT, 133 long.
+     F* S01448 - BULK INPUT ENHANCEMENTS:                                *
+     F*          - ADD 'DEFAULT AGENCY TRADE' FIELD TO PARM LIST.        *
+     F*          - ADD 'REVIEW BULK TRADES DEFAULT' FIELD TO PARM LIST.  *
+     F*          - ADD 'ALLOW TRADES BETWEEN PORTFOLIO                   *
+     F*            CUSTOMERS' FIELD TO PARM LIST.                        *
+     F* S01446 - CUSTOMER COMMISSIONS DEVELOPMENT:                       *
+     F*          - ADD 'CHARGES CURRENCY' FIELD TO PARM LIST.            *
+     F*          - ADD 'ADJUST COMMISSIONS SAME DAY TRADE' FIELD         *
+     F*             TO PARM LIST.                                        *
+     F* S01322 - REMOVAL OF RT BOND FIELD (LN1114)                       *
+     F* LN1048 - CORRECT PARAMETER LIST                                  *
+     F* S01269 - TRADE AUTHORISATION ADDED. (LN0952)                     *
+     F* S01117 - RELEASE 10 ENHANCEMENTS.                                *
+     F* S01230 - STANDARDISE PROGRAMS                                    *
+     F* S01229 - SYNON FIELD NAME CHANGES                                *S01229
+     F* E19465 - SESTAT IS NOT UPDATED WITH FIELDS EUCLID INTERFACE,     *
+     F*          EUCLID AUTO TRANSMISSION OPTION, AT BOND INTERFACE      *
+     F*          INDICATOR, DL EVENTS, FI COLLATERAL, BULK INPUT         *
+     F*          OPTION, AUTOCHARGES OPTION & EXTEL OPTION.              *
+     F*                                                                  *
+     F* E19464 - THE FIELDS AGENCY BOOK, DEFAULT BROKER BOOK, BULK       *
+     F*          INPUT, AUTOCHARGES & EXTEL INTERFACE ARE NOT            *
+     F*          UPDATED ON FILE TABTB36.                                *
+     F*                                                                  *
+     F* E18371 - CHANGING THE PARAMETER LIST SO THAT THEY ARE IN THE     *
+     F*          CORRECT ORDER                                           *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABTB36 FAILED/ERROR                         *
+     F*       31      ERROR ON TABTB36 FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABTB36 UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     ISESTDS    E DSSESTAT                                                E19465
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+      *
+     C                     PARM           P0RTN   7        RETURN CODE    E18371
+     C*********************PARM           WDMKS   2        MARKET SUBTYPE S01229
+     C*********************PARM           WDPFS   2        PORTFOLIO STYPES01229
+     C*********************PARM           WDTRS   2        TRANSFER SUBTYPS01229
+     C                     PARM           WDSTC   2        MARKET SUBTYPE S01229
+     C                     PARM           WDPDS   2        PORTFOLIO STYPES01229
+     C                     PARM           WDTDS   2        TRANSFER SUBTYPS01229
+     C*********************PARM           WCCYC   3        CEDEL CCY      S01229
+     C                     PARM           WCYCD   3        CEDEL CCY      S01229
+     C                     PARM           WECBF   3        BELGIAN FRANC
+     C                     PARM           WECDM   3        DEUTSCH MARK
+     C                     PARM           WECJY   3        JAPANESE YEN
+     C*********************PARM           WECYC   3        EUROCLEAR      S01229
+     C                     PARM           WEUCY   3        EUROCLEAR      S01229
+     C*********************PARM           WDSTB   3        DEFAULT BRANCH S01229
+     C*********************PARM           WDC01   6        EUROCLEAR      S01229
+     C*********************PARM           WDC03   6        KASSERVEREIN   S01229
+     C*********************PARM           WDC10   6        DEPOT 10       S01229
+     C*********************PARM           WDC02   6        CEDEL          S01229
+     C*********************PARM           WDC04   6        DEPOT 4        S01229
+     C*********************PARM           WDC05   6        DEPOT 5        S01229
+     C*********************PARM           WDC06   6        DEPOT 6        S01229
+     C*********************PARM           WDC07   6        DEPOT 7        S01229
+     C*********************PARM           WDC08   6        DEPOT 8        S01229
+     C*********************PARM           WDC09   6        DEPOT 9        S01229
+     C*********************PARM           WDR1    6        EUROCLEAR      S01229
+     C                     PARM           WCUST   6        CUSTOMER       S01229
+     C                     PARM           WDR3    6        KASSERVEREIN   S01229
+     C                     PARM           WDR10   6        DEPOT 10       S01229
+     C                     PARM           WDR2    6        CEDEL          S01229
+     C                     PARM           WDR4    6        DEPOT 4        S01229
+     C                     PARM           WDR5    6        DEPOT 5        S01229
+     C                     PARM           WDR6    6        DEPOT 6        S01229
+     C                     PARM           WDR7    6        DEPOT 7        S01229
+     C                     PARM           WDR8    6        DEPOT 8        S01229
+     C                     PARM           WDR9    6        DEPOT 9        S01229
+     C*********************PARM           WATBK   2        AGENCY BOOK    S01229
+     C*********************PARM           WDMKB   2        MARKET BOOK    S01229
+     C*********************PARM           WDPFB   2        PORTFOLIO BOOK S01229
+     C                     PARM           WBKCD   2        AGENCY BOOK    S01229
+     C                     PARM           WDMBC   2        MARKET BOOK    S01229
+     C                     PARM           WDPBC   2        PORTFOLIO BOOK S01229
+     C                     PARM           WLCD    50       LAST CHANGE DAT
+     C*********************PARM           WCHTP   1        CHANGE TYPE    S01229
+     C*********************PARM           WRPBS   1        REALISED P/B   S01229
+     C*********************PARM           WUPBS   1        UNREALISED P/B S01229
+     C*********************PARM           WUPPS   1        UNREALISED PTG S01229
+     C*********************PARM           WAUPR   1        ADJUST UNREAL  S01229
+     C*********************PARM           WSMDT   1        SUMMARISE      S01229
+     C                     PARM           WTYLC   1        CHANGE TYPE    S01229
+     C                     PARM           WRPB    1        REALISED P/B   S01229
+     C                     PARM           WUPB    1        UNREALISED P/B S01229
+     C                     PARM           WUPP    1        UNREALISED PTG S01229
+     C                     PARM           WAUP    1        ADJUST UNREAL  S01229
+     C                     PARM           WSDTR   1        SUMMARISE      S01229
+     C                     PARM           WFIFO   1        ACCOUNTING
+     C*********************PARM           WSPIT   1        SPLIT PURCH INTS01229
+     C*********************PARM           WSNAC   1        SPLIT NEG ACCRLS01229
+     C                     PARM           WSPIN   1        SPLIT PURCH INTS01229
+     C                     PARM           WSNIN   1        SPLIT NEG ACCRLS01229
+     C                     PARM           WTSAK   1        SUBTYPE IN KEY
+     C                     PARM           WCIAK   1        CONVERT IN KEY
+     C                     PARM           WNPAC   1        NEG POSTN
+     C                     PARM           WGDPK   1        DISC/PREM KEY
+     C*********************PARM           WSKTD   1        SUPPRESS TR/VALS01229
+     C*********************PARM           WPNDM   1        POST NO STD MVTS01229
+     C                     PARM           WSKTV   1        SUPPRESS TR/VALS01229
+     C                     PARM           WPSDM   1        POST NO STD MVTS01229
+     C                     PARM           WCCYE   1        X-CCY ENTRIES
+     C*********************PARM           WSMDO  130       SETTLE OVER    S01229
+     C*********************PARM           WAPNS   1        AUTOPOST SETTLES01229
+     C*********************PARM           WMMKF   1        MARK TO MKT FQ S01229
+     C                     PARM           WSDOV  130       SETTLE OVER    S01229
+     C                     PARM           WAPS    1        AUTOPOST SETTLES01229
+     C                     PARM           WMMFQ   1        MARK TO MKT FQ S01229
+     C                     PARM           WMMBD   20       BASE DATE
+     C                     PARM           WMMND   50       NEXT DATE
+     C                     PARM           WRBAP   1        REALLOWANCE A/P
+     C                     PARM           WCBAP   1        CHARGES A/P
+     C*********************PARM           WSMDU  130       SETTLE UNDER   S01229
+     C*********************PARM           WCOBP   1        COMM A/P       S01229
+     C                     PARM           WSDUN  130       SETTLE UNDER   S01229
+     C                     PARM           WCMBP   1        COMM A/P       S01229
+     C                     PARM           WRCAP   1        REALLOW CUST
+     C                     PARM           WCCAP   1        CHARGES CUST
+     C*********************PARM           WCOCP   1        COMM CUST      S01229
+     C*********************PARM           WBKVP   30       BACK VALUE     S01229
+     C*********************PARM           WRTST   20       RETAIN SET TRD S01229
+     C*********************PARM           WRTDE   20       RETAIL DIARY ENS01229
+     C*********************PARM           WRTMS   20       RETAIL SECS    S01229
+     C*********************PARM           WECLD   1        EUCLID         S01229
+     C*********************PARM           WATRM   1        AUTO TRANS     S01229
+     C                     PARM           WCMCP   1        COMM CUST      S01229
+     C                     PARM           WBVP    30       BACK VALUE     S01229
+     C                     PARM           WROST   20       RETAIN SET TRD S01229
+     C                     PARM           WRODY   20       RETAIL DIARY ENS01229
+     C                     PARM           WROMS   20       RETAIL SECS    S01229
+     C                     PARM           WEUCD   1        EUCLID         S01229
+     C                     PARM           WATI    1        AUTO TRANS     S01229
+     C*********************PARM           WATBD   1        RT BOND        S01229
+     C*********************PARM           WDLEV   1        DEALING EVENTS S01229
+     C*********************PARM           WFICL   1        COLLATERAL I/FCS01229
+     C*********************PARM           WRPMD   1        REPROMPT DFTS  S01229
+     C*********************PARM           WTVVL   1        TR/VAL VALUATNSS01229
+     C*********************PARM           WTVCL   1        TR/VAL COLLAT  S01229
+     C*********************PARM           WCCCV   30       COLLAT CONVERT S01229
+     C*********************PARM           WFEXR   30       FX CONVERT     S01229
+     C**********           PARM           WATBI   1        RT BOND  S01229S01233
+     C                     PARM           WDEI    1        DEALING EVENTS S01229
+     C                     PARM           WFICI   1        COLLATERAL I/FCS01229
+     C                     PARM           WREDE   1        REPROMPT DFTS  S01229
+     C                     PARM           WTVDV   1        TR/VAL VALUATNSS01229
+     C                     PARM           WTVC    1        TR/VAL COLLAT  S01229
+     C                     PARM           WCCYC   30       COLLAT CONVERT S01229
+     C                     PARM           WFERK   30       FX CONVERT     S01229
+     C                     PARM           WMBEX   1        MKT/BOOK EXPOS
+     C                     PARM           WAHLF   30       ALL HOLDINGS LT
+     C*********************PARM           WDSLF   30       DISCRET LIMIT  S01229
+     C*********************PARM           WCSLF   30       CUSTOMERS LIMT S01229
+     C                     PARM           WDLF    30       DISCRET LIMIT  S01229
+     C                     PARM           WCLF    30       CUSTOMERS LIMT S01229
+     C                     PARM           WROSD   1        REDEEM SEC DESC
+     C*********************PARM           WRSFD   1        REDEEM FULL    S01229
+     C*********************PARM           WDEBC   2        DFT BROK BOOK  S01229
+     C*********************PARM           WBIMO   2        BULK INPUT     S01229
+     C*********************PARM           WAUMO   2        AUTO-CHARGES   S01229
+     C*********************PARM           WEXMO   2        EXTEL          S01229
+     C*********************PARM           WTCFT   1        TRADING CONF TPS01229
+     C                     PARM           WRIDF   1        REDEEM FULL    S01229
+     C                     PARM           WDBCD   2        DFT BROK BOOK  S01229
+     C*********************PARM           WBIOP   2        BULK IN S01229 LN1048
+     C*********************PARM           WACOP   2        AUTO-CH S01229 LN1048
+     C*********************PARM           WEXOP   2        EXTEL   S01229 LN1048
+     C                     PARM           WBIOP   1        BULK INPUT     LN1048
+     C                     PARM           WACOP   1        AUTO-CHARGES   LN1048
+     C                     PARM           WEXOP   1        EXTEL          LN1048
+     C                     PARM           WTCTY   1        TRADING CONF TPS01229
+     C                     PARM           WTBRC   1        TRADE & BOOK   S01117
+     C***********          PARM           P0RTN   7        RETURN CODE    E18371
+     C                     PARM           WRDOT   1                       LN1048
+     C                     PARM           WAUTH   2        TRADE AUTHORISES01269
+     C                     PARM           WCHRC   3        CHARGES CCY    S01446
+     C                     PARM           WACSD   1        ADJ CCY COMM SDS01446
+     C                     PARM           WDEAT   1        DFT AGENCY TRADS01448
+     C                     PARM           WRVBT   1        REV BULK TRADESS01448
+     C                     PARM           WATPC   1        ALLOW TRADES POS01448
+      **********                                                                       CAS006 224354
+      ***Historic*Prices*Retention*Period******************************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           PARM           PBHPP   40                                   CAS006 224354
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP*****IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     READ TABTB36F                 30NO RECORDS
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C                     Z-ADD1         RECT
+     C                     Z-ADD36        RCDE
+     C*********************MOVE WCHTP     CHTP
+     C                     MOVE WTYLC     CHTP
+     C                     Z-ADDWLCD      LCD
+     C*********************MOVE WDMKS     DMKS
+     C*********************MOVE WDPFS     DPFS                            S01229
+     C*********************MOVE WDTRS     DTRS                            S01229
+     C                     MOVE WDSTC     DMKS                            S01229
+     C                     MOVE WDPDS     DPFS                            S01229
+     C                     MOVE WDTDS     DTRS                            S01229
+     C*********************MOVE WCCYC     CCYC                            S01229
+     C                     MOVE WCYCD     CCYC                            S01229
+     C                     MOVE WECBF     ECBF
+     C                     MOVE WECDM     ECDM
+     C                     MOVE WECJY     ECJY
+     C*********************MOVE WECYC     ECYC                            S01229
+     C                     MOVE WEUCY     ECYC                            S01229
+     C*********************MOVE WDSTB     DSTB                            S01229
+     C*********************MOVE WDC01     DC01                            S01229
+     C*********************MOVE WDC03     DC03                            S01229
+     C*********************MOVE WDC10     DC10                            S01229
+     C*********************MOVE WDC02     DC02                            S01229
+     C*********************MOVE WDC04     DC04                            S01229
+     C*********************MOVE WDC05     DC05                            S01229
+     C*********************MOVE WDC06     DC06                            S01229
+     C*********************MOVE WDC07     DC07                            S01229
+     C*********************MOVE WDC08     DC08                            S01229
+     C*********************MOVE WDC09     DC09                            S01229
+     C*********************MOVE WDR1      DC01                            S01229
+     C                     MOVE WCUST     DC01                            S01229
+     C                     MOVE WDR3      DC03                            S01229
+     C                     MOVE WDR10     DC10                            S01229
+     C                     MOVE WDR2      DC02                            S01229
+     C                     MOVE WDR4      DC04                            S01229
+     C                     MOVE WDR5      DC05                            S01229
+     C                     MOVE WDR6      DC06                            S01229
+     C                     MOVE WDR7      DC07                            S01229
+     C                     MOVE WDR8      DC08                            S01229
+     C                     MOVE WDR9      DC09                            S01229
+     C******************   MOVE WATBK     ATBK
+     C*********************MOVE WATBK     ATBK                            E19464
+     C                     MOVE WBKCD     ATBK                            E19464
+     C*********************MOVE WDMKB     DMKB                            S01229
+     C*********************MOVE WDPFB     DPFB                            S01229
+     C*********************MOVE WRPBS     RPBS                            S01229
+     C*********************MOVE WUPBS     UPBS                            S01229
+     C*********************MOVE WUPPS     UPPS                            S01229
+     C*********************MOVE WAUPR     AUPR                            S01229
+     C*********************MOVE WSMDT     SMDT                            S01229
+     C                     MOVE WDMBC     DMKB                            S01229
+     C                     MOVE WDPBC     DPFB                            S01229
+     C                     MOVE WRPB      RPBS                            S01229
+     C                     MOVE WUPB      UPBS                            S01229
+     C                     MOVE WUPP      UPPS                            S01229
+     C                     MOVE WAUP      AUPR                            S01229
+     C                     MOVE WSDTR     SMDT                            S01229
+     C                     MOVE WFIFO     FIFO
+     C*********************MOVE WSPIT     SPIT                            S01229
+     C*********************MOVE WSNAC     SNAC                            S01229
+     C                     MOVE WSPIN     SPIT                            S01229
+     C                     MOVE WSNIN     SNAC                            S01229
+     C                     MOVE WTSAK     TSAK
+     C                     MOVE WCIAK     CIAK
+     C                     MOVE WNPAC     NPAC
+     C                     MOVE WGDPK     GDPK
+     C*********************MOVE WSKTD     SKTD                            S01229
+     C*********************MOVE WPNDM     PNDM                            S01229
+     C                     MOVE WSKTV     SKTD                            S01229
+     C                     MOVE WPSDM     PNDM                            S01229
+     C                     MOVE WCCYE     CCYE
+     C*********************Z-ADDWSMDO     SMDO                            S01229
+     C*********************MOVE WAPNS     APNS                            S01229
+     C*********************MOVE WMMKF     MMKF                            S01229
+     C                     Z-ADDWSDOV     SMDO                            S01229
+     C                     MOVE WAPS      APNS                            S01229
+     C                     MOVE WMMFQ     MMKF                            S01229
+     C                     Z-ADDWMMBD     MMBD
+     C                     Z-ADDWMMND     MMND
+     C                     MOVE WRBAP     RBAP
+     C                     MOVE WCBAP     CBAP
+     C*********************Z-ADDWSMDU     SMDU                            S01229
+     C*********************MOVE WCOBP     COBP                            S01229
+     C                     Z-ADDWSDUN     SMDU                            S01229
+     C                     MOVE WCMBP     COBP                            S01229
+     C                     MOVE WRCAP     RCAP
+     C                     MOVE WCCAP     CCAP
+     C*********************MOVE WCOCP     COCP                            S01229
+     C*********************Z-ADDWBKVP     BKVP                            S01229
+     C*********************Z-ADDWRTST     RTST                            S01229
+     C*********************Z-ADDWRTDE     RTDE                            S01229
+     C*********************Z-ADDWRTMS     RTMS                            S01229
+     C*********************MOVE WECLD     ECLD                            S01229
+     C*********************MOVE WATRM     ATRM                            S01229
+     C                     MOVE WCMCP     COCP                            S01229
+     C                     Z-ADDWBVP      BKVP                            S01229
+     C                     Z-ADDWROST     RTST                            S01229
+     C                     Z-ADDWRODY     RTDE                            S01229
+     C                     Z-ADDWROMS     RTMS                            S01229
+     C                     MOVE WEUCD     ECLD                            S01229
+     C                     MOVE WATI      ATRM                            S01229
+     C*********************MOVE WATBD     ATBD                            S01229
+     C*********************MOVE WDLEV     DLEV                            S01229
+     C*********************MOVE WFICL     FICL                            S01229
+     C*********************MOVE WRPMD     RPMD                            S01229
+     C*********************MOVE WTVVL     TVVL                            S01229
+     C*********************MOVE WTVCL     TVCL                            S01229
+     C*********************Z-ADDWCCCV     CCCV                            S01229
+     C*********************Z-ADDWFEXR     FEXR                            S01229
+     C***********          MOVE WATBI     ATBD                      S01229S01322
+     C                     MOVE WDEI      DLEV                            S01229
+     C                     MOVE WFICI     FICL                            S01229
+     C                     MOVE WREDE     RPMD                            S01229
+     C                     MOVE WTVDV     TVVL                            S01229
+     C                     MOVE WTVC      TVCL                            S01229
+     C                     Z-ADDWCCYC     CCCV                            S01229
+     C                     Z-ADDWFERK     FEXR                            S01229
+     C                     MOVE WMBEX     MBEX
+     C                     Z-ADDWAHLF     AHLF
+     C*********************Z-ADDWDSLF     DSLF                            S01229
+     C*********************Z-ADDWCSLF     CSLF                            S01229
+     C                     Z-ADDWDLF      DSLF                            S01229
+     C                     Z-ADDWCLF      CSLF                            S01229
+     C                     MOVE WROSD     ROSD
+     C*********************MOVE WRSFD     RSFD                            S01229
+     C                     MOVE WRIDF     RSFD                            S01229
+     C*****************    MOVE WDEBC     DEBC
+     C*****************    MOVE WBIMO     BIMO
+     C*****************    MOVE WAUMO     AUMO
+     C*****************    MOVE WEXMO     EXMO
+     C*********************MOVE WDEBC     DEBC                     E19464 S01229
+     C*********************MOVELWBIMO     BIMO                     E19464 S01229
+     C*********************MOVELWAUMO     AUMO                     E19464 S01229
+     C*********************MOVELWEXMO     EXMO                     E19464 S01229
+     C                     MOVE WDBCD     DEBC                            S01229
+     C                     MOVELWBIOP     BIMO                            S01229
+     C                     MOVELWACOP     AUMO                            S01229
+     C                     MOVELWEXOP     EXMO                            S01229
+     C                     MOVELWAUTH     AUTT                            S01269
+     C                     MOVELWCHRC     CHRC                            S01446
+     C                     MOVELWACSD     ACSD                            S01446
+     C                     MOVELWDEAT     DEAT                            S01448
+     C                     MOVELWRVBT     RVBT                            S01448
+     C                     MOVELWATPC     ATPC                            S01448
+      **********                                                                       CAS006 224354
+      ***Moved*Historic*Price*to*TABTB36*file*field********************                CAS006 224354
+      **********                                                                       CAS006 224354
+     C**********           Z-ADDPBHPP     BHRP                                         CAS006 224354
+     C*
+     C* NOW BEING USED: TRADING CONFIRMATION TYPE
+     C*
+     C*********************MOVE WTCFT     TCFT             TRADING CONF TPS01229
+     C                     MOVE WTCTY     TCFT             TRADING CONF TPS01229
+     C                     MOVE WTBRC     TBRC             TRADE & BOOK TPS01229
+     C                     MOVE WRDOT     RDOT                            LN1048
+     C*
+     C*
+     C                     UPDATTABTB36F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABTB36
+     C*
+     C***********WCHTP*****IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     READ TABTB36F                 30NO RECORDS
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABTB36F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABTB36 UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* UPDATE SESTAT DATA AREA                                           E19465
+     C*                                                                   E19465
+     C                     MOVE FICL      ZFICL   1                       E19465
+     C           *NAMVAR   DEFN SESTAT    SESTDS                          E19465
+     C           *LOCK     IN   SESTDS                                    E19465
+     C                     MOVE ECLD      EINF                            E19465
+     C                     MOVE ATRM      EUAC                            E19465
+     C*********            MOVE ATBD      BINF                      E19465S01322
+     C                     MOVE ZFICL     FICL                            E19465
+     C                     MOVE DLEV      DSEV                            E19465
+     C                     MOVE BIMO      BIOS                            E19465
+     C                     MOVE AUMO      AUOS                            E19465
+     C                     MOVE EXMO      EXOS                            E19465
+     C                     MOVE WAUTH     TAUT    2                       S01269
+     C                     OUT  SESTDS                                    E19465
+     C*                                                                   E19465
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '01'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         INSC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP*****IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP*****IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

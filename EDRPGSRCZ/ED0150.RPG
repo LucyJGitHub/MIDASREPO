@@ -1,0 +1,328 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Currencies file special processing (i/c)')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0150 - Currencies file special processing - Input Cycle    *
+      *                                                               *
+      *  Function: This program is one of the 'Special Processing     *
+      *            programs' that are called when the Drip Feed       *
+      *            process encounters a journal entry from a certain  *
+      *            file. In this case the file is PF/SDCURRPD. An     *
+      *            insert or amend of a currency results in at least  *
+      *            four entries in the journal receiver. This program *
+      *            sends the last entry (the final update) to DTA and *
+      *            throws the others away.                            *
+      *                                                               *
+      *  Called By: ED0060 - Extract Journal entries within comit     *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 101973             Date 07FEB96               *
+      *                 101971 *CREATE     Date 15Sep95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  101973 - Phase V Modifications:                              *
+      *           -Amended module title and other 'Midas Data Export' *
+      *            refernce                                           *
+      *           -Correct deletion of journal entries after special  *
+      *            processing programs by handling it within those    *
+      *            programs.                                          *
+      *           -Improved error handling.                           *
+      *           NOTE: No attempt has been made to retain unwanted   *
+      *            Phase 2 code as commented out text.                *
+      *  101971 - Phase II Modifications                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDNEWJL3UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD3
+      * New journal entries by Commitment Cycle Id. (ascending) and
+      *                           Journal Sequence Number (descending)
+      *
+     FEDOLDJL3UF  E           K        DISK         KINFSR *PSSR      UC
+     F            QJORDJE                           KRENAMEEDOLDJD3
+      * Old journal entries by Commitment Cycle Id. (ascending) and
+      *                           Journal Sequence Number (descending)
+      *
+     FEDJRNEPDO   E                    DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDJRNED1
+      *
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    31  -  No record found in EDNEWJL3                         *
+      *    32  -  No record found in EDOLDJL3                         *
+      *    33  -  General indicator for processing deletions          *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    DATA2    3971  1
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Journal record data parameter
+     I                                        1 125 IN1
+     I                                        1   50INENTL
+     I                                        6  150INESQN
+     I                                        6  15 ALESQN
+     I                                       16  16 INCODE
+     I                                       17  18 INENTT
+     I                                       19  24 INDATE
+     I                                       25  300INTIME
+     I                                       31  40 INJOB
+     I                                       41  50 INUSER
+     I                                       51  560INNBR
+     I                                       57  66 INPGM
+     I                                       67  76 INOBJ
+     I                                       77  86 INLIB
+     I                                       87  96 INMBR
+     I                                       97 1060INCTRR
+     I                                      107 107 INFLAG
+     I                                      108 1170INCCID
+     I                                      118 125 INRES
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Entry Specific data in parm
+     I                                        1  31 IN2
+     I                                       31  31 A6TYLC
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Parameter entry list
+      *
+     C           *ENTRY    PLIST
+      *IN PARAMETERS
+     C                     PARM           DATA1
+     C                     PARM           DATA2
+     C                     PARM           SRCF    1
+      *OUT PARAMETERS
+     C                     PARM JOOBJ     CDFILE  8
+     C                     PARM ALESQN    CDBKEY 10
+     C                     PARM           WRTCD1  1
+     C                     PARM           RECCNT  50
+      *
+     C           *LIKE     DEFN IN1       DATA1
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      **  Set up key lists for reading files.
+      *
+     C                     MOVE DATA1     IN1
+      *
+     C           JRNKY1    KLIST
+     C                     KFLD           KOBJ   10
+     C                     KFLD           KCMID  100
+     C                     KFLD           KJSEQ  100
+      *
+     C           JRNKY2    KLIST
+     C                     KFLD           KOBJ
+     C                     KFLD           KCMID
+      *
+     C                     MOVEL'SDCURRPD'KOBJ
+     C                     Z-ADDINCCID    KCMID
+     C                     Z-ADD*HIVAL    KJSEQ
+      *
+      **  Set lower limits on EDNEWJL3 in preparation for reading the
+      **   LAST record from the commit cycle.
+      *
+     C           JRNKY1    SETLLEDNEWJL3
+      *
+      **  Read last record for this commit cycle. Note that it may not
+      **   exist since it could be in EDOLDJL3.
+      *
+     C           JRNKY2    READEEDNEWJL3                 31
+      *
+      **  If record found, write it to PF/EDJRNEPD. Also set JOENTT to 'PT'
+      **  if this is an insert.
+      *
+     C           *IN31     IFEQ '0'                        B1
+      *
+     C                     MOVEADATA2     IN2
+      *
+     C           A6TYLC    IFEQ 'I'                        B2
+     C                     MOVEL'PT'      JOENTT
+     C                     ENDIF                           E2
+      *
+     C                     WRITEEDJRNED1
+     C                     Z-ADD1         RECCNT
+      *
+      **  Loop to delete all records for this commitment cycle from
+      **  LF/EDNEWJL3
+      *
+     C                     SETOF                       33
+     C           *IN33     DOWNE'1'                        B2
+      *
+     C                     DELETEDNEWJD3
+      *
+     C           JRNKY2    READEEDNEWJL3                 33
+      *
+     C                     ENDDO                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      **  If Source File is 'N', there is no more processing because
+      **   there were no records for this commitment cycle in
+      **   LF/EDOLDJL3 (if there had been, the records in EDNEWJL3
+      **   would have already been deleted and so this program would
+      **   not have been called with a Source File of 'N').
+      *
+     C           SRCF      IFEQ 'O'                        B1
+      *
+      **  Set lower limits on EDOLDJL3 in preparation for reading the
+      **   LAST record from the commit cycle.
+      *
+     C           JRNKY1    SETLLEDOLDJL3
+      *
+      **  Read last record for this commit cycle from LF/EDOLDJL3.
+      *
+     C           JRNKY2    READEEDOLDJL3                 32
+      *
+      **  Data base error if record not found because it was there
+      **  when ED0060 called this program.
+      *
+     C           *IN32     IFEQ '1'                        B2
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'EDOLDJL3'DBFILE           * DB ERROR 01 *
+     C                     MOVE KCMID     DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+      **  If no record was found in LF/EDNEWJL3 (this is NOT a mistake,
+      **   I do mean LF/EDNEWJL3), then write this record to
+      **   PF/EDJRNEPD because it is the last record of the commitment
+      **   cycle.
+      *
+     C           *IN31     IFEQ '1'                        B2
+     C                     WRITEEDJRNED1
+     C                     Z-ADD1         RECCNT
+     C                     ENDIF                           E2
+      *
+      **  Loop to delete all records for this commitment cycle from
+      **   LF/EDOLDJL3
+      *
+     C                     SETOF                       33
+     C           *IN33     DOWNE'1'                        B2
+      *
+     C                     DELETEDOLDJD3
+      *
+     C           JRNKY2    READEEDOLDJL3                 33
+      *
+     C                     ENDDO                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR               *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  File EDNEWJL3 is always required (and so is not opened under
+      **   user control) but file EDOLDJL3 is only required if the
+      **   Source File is 'O'.
+      *
+     C           SRCF      IFEQ 'O'                        B1
+     C                     OPEN EDOLDJL3
+     C                     ENDIF                           E1
+      *
+      **  Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVE 'E'       WRTCD1
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0150'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     END                             E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

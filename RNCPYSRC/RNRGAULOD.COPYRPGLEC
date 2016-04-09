@@ -1,0 +1,100 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - FRS Regulatory Reporting                             *
+      *                                                               *
+      *  RNRGAULOD  - /Copy: used in the initial subroutine of        *
+      *                      the extract programs.                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CRN001  *Create    Date 20Jul05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRN001 - FRS Regulatory Reporting                            *
+      *                                                               *
+      *****************************************************************
+ 
+      * Determine Transaction Class.
+     c                   select
+     c                   when      (   kExsub  = 'DLKY'
+     c                             or  kExsub  = 'FTKY'
+     c                             or  kExsub  = 'LEKY' )
+     c                   eval      wTClass     = 'AKEY'
+ 
+     c                   when      (   kExsub  = 'DLEV'
+     c                             or  kExsub  = 'LEEV'
+     c                             or  kExsub  = 'PDUE' )
+     c                   eval      wTClass     = 'EVNT'
+ 
+     c                   when          kExsub  = 'FCLT'
+     c                   eval      wTClass     = 'LOAN'
+ 
+     c                   other
+     c                   eval      wTClass     = kExsub
+     c                   endsl
+ 
+      * Access Regulatory Authority control data, and load arrays.
+     c                   eval      rgEl        = 0
+ 
+     c                   if        pRaid       = *blanks
+     c     *start        setll     gpregbj0
+     c                   read      gpregbj0
+     c                   else
+     c     pRaid         setll     gpregbj0
+     c     pRaid         reade     gpregbj0
+     c                   endif
+ 
+     c                   dow       not %eof
+     c                   if        (  rftclass = wTClass
+     c                             and rfzone  = pZone )
+     c                   eval      rgEl        = rgEl + 1
+ 
+      * If the authority is already in the array, use data in the existing
+      * element; i.e. no need to get currency details again.
+     c                   eval      rgIx = %lookup(rbraid:aRaid:1:rgEl)
+     c                   if        rgIx > 0
+     c                   eval      aRegAuthData(rgEl) = aRegAuthData(rgIx)
+     c                   eval      aBrcd(rgEl) = rbbrcd
+     c                   eval      aPosLot(rgEl) = rbposlot
+     c                   eval      aMovLot(rgEl) = rbmovlot
+     c                   eval      aCusLot(rgEl) = rbcuslot
+ 
+      * Not already in the array.
+     c                   else
+     c                   eval      aRaid(rgEl) = rbraid
+     c                   eval      aBrcd(rgEl) = rbbrcd
+     c                   eval      aPosLot(rgEl) = rbposlot
+     c                   eval      aMovLot(rgEl) = rbmovlot
+     c                   eval      aCusLot(rgEl) = rbcuslot
+ 
+     c                   if        pRaid       = *blanks
+     c                   eval      aNxDt(rgEl) = rfextdate
+     c                   else
+     c                   eval      aNxDt(rgEl) = runDatIso
+     c                   endif
+ 
+      * Get Reporting Ccy details.
+     c                   eval      aRpCy(rgEl) = rarptccy
+     c                   eval      pCcy        = rarptccy
+     c                   exsr      getCcy
+     c                   eval      aRpCySprt(rgEl) = a6sprt
+     c                   eval      aRpCyMdin(rgEl) = a6mdin
+     c                   eval      aRpCyNbdp(rgEl) = a6nbdp
+     c                   endif
+     c                   endif
+ 
+     c                   if        pRaid       = *blanks
+     c                   read      gpregbj0
+     c                   else
+     c     pRaid         reade     gpregbj0
+     c                   endif
+     c                   enddo
+ 
+     c                   if        rgEl        = 0
+     c                   exsr      closedown
+     c                   endif

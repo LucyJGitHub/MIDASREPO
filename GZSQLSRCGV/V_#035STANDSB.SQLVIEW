@@ -1,0 +1,150 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#STANDSB - Global Standing Orders Detail                            */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. AR1026935B         Date 12Feb13                        */
+/*       Prev Amend No. AR1026935A         Date 12Feb13                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CAP187             Date 21Aug09                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 30May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      BUG10868           Date 21Mar06                        */
+/*                      BUG4897            Date 01Jun05                        */
+/*                      BUG3354            Date 22Jun04                        */
+/*                      CGP001  *CREATE    Date 14Apr04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       AR1026935B - Standing order invalid date format error                 */
+/*                    (Child:AR1026936)                                        */
+/*       AR1026935A - Standing order invalid date format error                 */
+/*                    (Child:AR1026936)                                        */
+/*       CAP187 - Document Linkage                                             */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG10868- Standing order confirmation sceen shows Midas day numbers   */
+/*       BUG4897 - Listview shows zero retail account numbers                  */
+/*       BUG3354 - Standing Orders changes for MidasPlus.                      */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   M.RECI, M.DRBR, M.MBSI, M.BRCA, M.CCY, M.PAYF, M.DLMV, M.NXTP, M.PNAR,       :
+   M.PNAM, M.PAYR, M.PAYB, M.PAYA, M.METH, M.DYTP, M.CBRC, M.PRFC, M.SWCRA,     :
+   M.SWCRB, M.TRAT, M.CHTP, M.TNLU, M.LCD,                                      :
+                                                                                :
+***DIGITS(M.STOR)*AS*PADSTOR,*DIGITS(M.DCUS)*AS*PADDCUS,************************:            BUG3354
+***DIGITS(M.DACD)*AS*PADDACD,*DIGITS(M.DACS)*AS*PADDACS,************************:            BUG3354
+***DIGITS(M.DRAN)*AS*PADDRAN,*DIGITS(M.CCUS)*AS*PADCCUS,************************:            BUG3354
+***DIGITS(M.CSCA)*AS*PADCSCA,*DIGITS(M.CACD)*AS*PADCACD,************************:            BUG3354
+***DIGITS(M.CRAN)*AS*PADCRAN,***************************************************:            BUG3354
+***DIGITS(M.STOR)*AS*PADSTOR,*M.STOR,*DIGITS(M.DCUS)*AS*PADDCUS,*M.DCUS,********:     BUG3354 CSD027
+   DIGITS(M.STOR) AS PADSTOR, M.STOR,        M.DCUS  AS PADDCUS, M.DCUS,        :             CSD027
+   DIGITS(M.DACD) AS PADDACD, M.DACD, DIGITS(M.DACS) AS PADDACS, M.DACS,        :            BUG3354
+***DIGITS(M.DRAN)*AS*PADDRAN,*M.DRAN,*DIGITS(M.CCUS)*AS*PADCCUS,*M.CCUS,********:            BUG4897
+   CASE WHEN M.DRAN = 0 THEN '' ELSE DIGITS(M.DRAN) END AS PADDRAN, M.DRAN,     :            BUG4897
+***DIGITS(M.CCUS)*AS*PADCCUS,*M.CCUS,*******************************************:     BUG4897 CSD027
+          M.CCUS  AS PADCCUS, M.CCUS,                                           :             CSD027
+   DIGITS(M.CSCA) AS PADCSCA, M.CSCA, DIGITS(M.CACD) AS PADCACD, M.CACD,        :            BUG3354
+***DIGITS(M.CRAN) AS PADCRAN, M.CRAN,*******************************************:    BUG3354 BUG4897
+   CASE WHEN M.CRAN = 0 THEN '' ELSE DIGITS(M.CRAN) END AS PADCRAN, M.CRAN,     :            BUG4897
+                                                                                :
+***M.DRBR**DIGITS(M.DCUS)**M.CCY**DIGITS(M.DACD)**DIGITS(M.DACS)*AS*DACN,*******:             CSD027
+***DIGITS(M.DCUS)**M.CCY**DIGITS(M.DACD)**DIGITS(M.DACS)*AS*SDACN,**************:    BUG3354  CSD027
+***M.CBRC**DIGITS(M.CCUS)**M.CCY**DIGITS(M.CSCA)**DIGITS(M.CACD)*AS*CACN,*******:             CSD027
+***DIGITS(M.CCUS)**M.CCY**DIGITS(M.CSCA)**DIGITS(M.CACD)*AS*SCACN,**************:    BUG3354  CSD027
+***M.DRBR*********M.DCUS **M.CCY**DIGITS(M.DACD)**DIGITS(M.DACS) AS DACN,*******:     CSD027 BG18886
+**********M.DCUS **M.CCY**DIGITS(M.DACD)**DIGITS(M.DACS) AS SDACN,**************:     CSD027 BG18886
+***M.CBRC*********M.CCUS **M.CCY**DIGITS(M.CSCA)**DIGITS(M.CACD) AS CACN,*******:     CSD027 BG18886
+**********M.CCUS **M.CCY**DIGITS(M.CSCA)**DIGITS(M.CACD) AS SCACN,**************:     CSD027 BG18886
+   M.DRBR CONCAT M.DCUS CONCAT M.CCY CONCAT DIGITS(M.DACD) CONCAT               :     CSD027 BG18886
+          DIGITS(M.DACS) AS DACN,                                               :     CSD027 BG18886
+          M.DCUS CONCAT M.CCY CONCAT DIGITS(M.DACD) CONCAT                      :     CSD027 BG18886
+          DIGITS(M.DACS) AS SDACN,                                              :     CSD027 BG18886
+   M.CBRC CONCAT M.CCUS CONCAT M.CCY CONCAT DIGITS(M.CSCA) CONCAT               :     CSD027 BG18886
+          DIGITS(M.CACD) AS CACN,                                               :     CSD027 BG18886
+          M.CCUS CONCAT M.CCY CONCAT DIGITS(M.CSCA) CONCAT                      :     CSD027 BG18886
+          DIGITS(M.CACD) AS SCACN,                                              :     CSD027 BG18886
+   SUBSTRING(M.PAYB,0,21) AS PYB1,                                              :
+   SUBSTRING(M.PAYB,21,40) AS PYB2,                                             :
+***M.SWCRA**M.SWCRB AS SWCR,****************************************************:     CSD027 BG18886
+   M.SWCRA CONCAT M.SWCRB AS SWCR,                                              :     CSD027 BG18886
+                                                                                :
+   DATE(M.DFPY+719892) AS FDFPY,                                                :
+   DATE(M.DSPY+719892) AS FDSPY,                                                :
+***DATE(M.DLPY+719892)*AS*FDLPY,************************************************:         AR1026935A
+***CASE*WHEN*M.DLPY=0*THEN*NULL*ELSE*DATE(M.DLPY+719892)*END*AS*FDLPY,*********AR1026935A AR1026935B
+   CASE WHEN M.DLPY=0 OR M.DLPY=99999 THEN NULL                                 :         AR1026935B
+        ELSE DATE(M.DLPY+719892) END AS FDLPY,                                  :         AR1026935B
+   CASE WHEN M.NXTP=0 THEN NULL ELSE DATE(M.NXTP+719892) END AS FNXTP,          :           BUG10868
+   CASE WHEN M.DLMV=0 THEN NULL ELSE DATE(M.DLMV+719892) END AS FDLMV,          :           BUG10868
+   CASE WHEN M.LCD=0 THEN NULL ELSE DATE(M.LCD+719892) END AS FLCD,             :           BUG10868
+                                                                                :
+   DEC(M.AFPY*C1.SCALING,31,4) AS SAFPY,                                        :
+   DEC(M.AFPY*C1.SCALING*C1.RATE,31,4) AS BSAFPY,                               :
+   DEC(M.ASPY*C1.SCALING,31,4) AS SASPY,                                        :
+   DEC(M.ASPY*C1.SCALING*C1.RATE,31,4) AS BSASPY,                               :
+   DEC(M.ALPY*C1.SCALING,31,4) AS SALPY,                                        :
+   DEC(M.ALPY*C1.SCALING*C1.RATE,31,4) AS BSALPY,                               :
+                                                                                :
+***A8ZONE*AS*CUSTZONE***********************************************************:             CAP187
+   A8ZONE AS CUSTZONE, TMST AS TMST                                             :             CAP187
+   FROM GZSTANDSB AS M                                                          :
+   LEFT JOIN GZSDBRCHPD ON BRCA =  A8BRCD                                       :
+   LEFT JOIN V_GLOBRATE C1 ON C1.CCY = M.CCY;                                   :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (DACN   IS 'Debit               account             number',                :
+     PYB1   IS 'Payee               Bank                      ',                :
+     PYB2   IS 'Payee               Bank                      ',                :
+     SWCR   IS 'SWIFT               common              reference',             :
+     CACN   IS 'Credit              account             number');               :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (DACN   Text is 'Debit account number',                                     :
+     PYB1   Text is 'Payee               Bank                      ',           :
+     PYB2   Text is 'Payee               Bank                      ',           :
+     SWCR   Text is 'SWIFT               common              reference',        :
+     CACN   Text is 'Credit account number');                                   :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADSTOR    AS STOR       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADDACD    AS DACD       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADDRAN    AS DRAN       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADCSCA    AS CSCA       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADCRAN    AS CRAN       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADDCUS    AS DCUS       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADDACS    AS DACS       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADCCUS    AS CCUS       USING GZSTANDSB                       :
+ * DESCRIBEFIELD PADCACD    AS CACD       USING GZSTANDSB                       :
+ * DESCRIBEFIELD FDFPY      AS DFPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD FDSPY      AS DSPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD FDLPY      AS DLPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD FNXTP      AS NXTP       USING GZSTANDSB                       :           BUG10868
+ * DESCRIBEFIELD FDLMV      AS DLMV       USING GZSTANDSB                       :           BUG10868
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZSTANDSB                       :           BUG10868
+ * DESCRIBEFIELD SAFPY      AS AFPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD BSAFPY     AS AFPY       USING GZSTANDSB  (BASECCY)            :
+ * DESCRIBEFIELD SASPY      AS ASPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD BSASPY     AS ASPY       USING GZSTANDSB  (BASECCY)            :
+ * DESCRIBEFIELD SALPY      AS ALPY       USING GZSTANDSB                       :
+ * DESCRIBEFIELD BSALPY     AS ALPY       USING GZSTANDSB  (BASECCY)            :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ RE Standing Orders detail - GZSTANDSB    ';                     :
+                                                                                :

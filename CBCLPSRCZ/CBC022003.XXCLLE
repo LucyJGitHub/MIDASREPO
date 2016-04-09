@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                /*MD024006A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC022003 - Midas CB List of Dependent Files                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD024006A*REDUNDANTDate 08Jan14              */
+/*       Prev Amend No. MD022554 *CREATE   Date 26Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024006A - Inefficiency of COB File Manager                */
+/*       MD022554 - Avoid conflict of ADDLF between GLAC and APOSTPD */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FNAME &MEMBR &ACTON &ACTCT &FNME2)
+ 
+             DCL        VAR(&FNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTON) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ACTCT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FNME2) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/** Extract dependent files from the given files */
+ 
+             DSPDBR     FILE(&FNAME) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/FILE1TMP)
+ 
+             DSPDBR     FILE(&FNME2) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/FILE2TMP)
+ 
+             CALL       PGM(CB022003)
+ 
+             CALL       PGM(CBC022001) PARM(&FNAME &MEMBR &ACTON &ACTCT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program CBC022003 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             DLTF       FILE(QTEMP/FILE1TMP)
+             MONMSG     MSGID(CPF2105)
+             DLTF       FILE(QTEMP/FILE2TMP)
+             MONMSG     MSGID(CPF2105)
+             ENDPGM

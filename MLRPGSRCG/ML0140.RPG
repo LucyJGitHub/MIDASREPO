@@ -1,0 +1,170 @@
+     H        1     J
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ML Add SFL text field retr to RPG source')
+      *****************************************************************
+      *                                                               *
+      *  Midas  MULTI LANGUAGE MODULE                             *
+      *                                                               *
+      *  ML0140 - UPDATE OF RPG PROGRAMS WITH THE TEXT ACCESS FOR     *
+      *           THE SFL TEXT FIELDS                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. S01516             DATE 18JUL94               *
+      *  PREV AMEND NO. nnnnnn             DATE ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S01516 - Incorporation into core                             *
+      *                                                               *
+      *****************************************************************
+     FRPGTEMP IPE F      80            DISK
+      * Original Source code
+      *
+     FRPGOUTP O   F      80            DISK
+      * New Source code
+      *
+     FSFLMSGPFUF  E           K        DISK
+      * Field/Msg.Id for SFL texts
+      *
+     FQSYSPRT O   F     132     OF     PRINTER
+     E                    ARA        80  1               Source Code Array
+     E                    TEXT    1  19 80               Source Code
+     IRPGTEMP NS  01
+     I                                        1  80 DATA
+     I                                        6   6 @SPEC
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           MSGFNM 10
+     C                     PARM           DSPFNM 10
+     C                     PARM           LIBRAR 10
+     C                     PARM           MULTLA 10
+     C                     PARM           MODUL   2
+      *
+      *----------------------------------------------------------------
+      *
+      *-Copy all source code untill first C,O spec found
+      *
+     C           *IN11     IFEQ '0'
+      *
+     C           @SPEC     IFEQ 'C'
+     C           @SPEC     OREQ 'O'
+      *
+     C                     MOVE '1'       *IN11
+     C                     MOVE '0'       *IN12
+      *
+      *-Insert new source code before first C,O spec
+      *  for each TEXT... field on the SFLMSGPF file
+      *
+     C           DSPFNM    SETLLSFLMSGPF
+      *
+     C                     DO   *HIVAL
+      *
+      * Read all MSG/Field records for this DSPF
+      *
+     C           DSPFNM    READESFLMSGPF                 77
+     C           *IN77     CABEQ'1'       END               >>> END >>>
+     C                     DELETSFLMSGFM               77
+      *
+     C                     Z-ADD0         I       20
+     C           *IN12     IFEQ '1'
+     C                     Z-ADD12        I
+     C                     END
+      *
+     C                     MOVE '1'       *IN12
+     C                     EXCPTUPD2
+      /EJECT
+      *
+      * Add Source Code Lines for MSG/Field record read
+      *
+     C           I         DOUEQ19
+      *
+     C                     ADD  1         I
+      * Add MSGID
+     C           I         IFEQ 13
+     C                     MOVEATEXT,I    ARA
+     C                     MOVEAMSGID     ARA,34
+     C                     MOVEAARA       TEXT,I
+     C                     END
+      * Add FIELD NAME
+     C           I         IFEQ 18
+     C                     MOVEATEXT,I    ARA
+     C                     MOVEAFLDNAM    ARA,43
+     C                     MOVEAARA       TEXT,I
+     C                     END
+      * Add source line
+     C                     MOVE TEXT,I    DATA2  80
+     C                     EXCPTUPD1
+      *
+      * DOU *eq 19 end
+     C                     END
+      * DO *hival end
+     C                     END
+      *----------------------------------------------------------------
+      * SPEC = C, O
+     C                     END
+      * *in11 = 0
+     C                     END
+      *----------------------------------------------------------------
+     C           END       TAG                             <<<<< END
+      *
+      *****************************************************************
+      /EJECT
+      *-Copy all source code untill E.O.F.
+     ORPGOUTP D        01   NLR
+     O                         DATA      80
+      *-ADD NEW source code
+     ORPGOUTP E                UPD1
+     O                         DATA2     80
+      *
+      *---------------------------------------------------------------
+      *
+     OQSYSPRT H  101   1P
+     O       OR        OF
+     O                                   35 'R P G   C O D E   C H A'
+     O                                 +  1 'G E S   F O R   M U L T'
+     O                                 +  1 'I L A N G U A G E'
+     O                                 + 10 'DATE :'
+     O                         UDATE Y +  1
+     O                                 +  5 'PAGE :'
+     O                         PAGE  Z +  0
+     O        D  1     1P
+     O       OR        OF
+     O                                   22 'Display File Name :'
+     O                         DSPFNM  +  1
+     O        D  1     1P
+     O       OR        OF
+     O                                   35 'Message Id'
+     O                                   45 'Field '
+     O        E  1             UPD2
+     O                         MSGID     35
+     O                         FLDNAM    45
+      * === end of source ===
+      *
+**   TEXT -- New Multilanguage Code array
+     IDLANG       DS                           1024
+      * Multilanguage Data Area
+     I                                     10111020 MSGNM
+     C********************************************************************
+      * Access Multilanguage Data Area
+      *
+     C           *NAMVAR   DEFN LANG      DLANG
+     C                     IN   DLANG
+      *
+      * Call SDRTVTXT pgm to access appropriate text
+      *  for a field used in a SFL
+      *
+     C                     MOVEL'msgid..' MSGDNB
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           MSGDNB  7
+     C                     PARM           MSGNM  10
+     C                     PARM           MSGTXT 80
+     C                     MOVELMSGTXT    fld...
+      *

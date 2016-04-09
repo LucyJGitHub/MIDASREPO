@@ -1,0 +1,586 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas TM DDS for MM Daily Summary (was DL3190DD)')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Treasury Management Module
+     A*                                                               *
+     A*  DSPF/TM3190DD - MONEY MARKET BOOK - DAILY SUMMARY            *
+     A*                  (FORMERLY DL3190DD)                          *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*  LAST AMEND NO. E39162             DATE 18JUN92               *
+     A*  PREV AMEND NO. S01319             DATE 06JAN92               *
+     A*                 E28491             DATE 12SEP91               *
+     A*                 S01280             DATE 16JAN91               *
+     A*                 S01117             DATE 30OCT90               *
+     A*                 S01253             DATE 17APR90               *
+     A*                 S01199             DATE 28FEB90               *
+     A*                 S01187             DATE 16JAN89               *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  E39162  -  CHANGE 'PRINT' TO 'PRINT(MPRINT)'.                *
+     A*  S01319  -  (HY0029) Fix E28491 solved the problem but was    *
+     A*             the standard solution.  The standard solution     *
+     A*             moves a message text into the field created in    *
+     A*             the multi-language version of the DDS source.     *
+     A*  E28491  -  IBM feature/omission will not show literals on    *
+     A*             subfile after multilanguage compile.              *
+     A*                                                               *
+     A*  S01280  -  Include FRA,IRS,FUTURES and CUSTOMER LENDING      *
+     A*             modules.                                          *
+     A*               - REMOVE 'GAP/CASH' TEXT, IT IS MISLEADING      *
+     A*               - MAKE SCREEN TIDIER TO MATCH LINKED ENQUIRIES  *
+     A*          -  INHIBIT F12 IF NO DETAILS TO DISPLAY FOR          *
+     A*             CCY/DATE COMBINATION SELECTED                     *
+     A*                                                               *
+     A*  S01117  -  ALL PROGRAMS/FILES SPECIFIC TO TREASURY MGMT.     *  S01117
+     A*             RENAMED TO HAVE 'TM' PREFIX                       *  S01117
+     A*             COPYRIGHT STATEMENT CHANGED                       *  S01117
+     A*                                                               *
+     A*  S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS              *
+     A*                                                               *
+     A*  S01199  -  HELP SYSTEM.                                  *
+     A*                                                               *
+     A*  S01187  -  RELEASE 1 TEST FIX                                *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A* INDICATORS TO BE RECEIVED FROM THE SCREEN - COMMANDS          *
+     A*                                                               *
+     A*     01   -  EXIT PROGRAM                                      *
+     A******02   -  RETURN TO SUMMARY                                /*S01187*/
+     A*     12   -  RETURN TO SUMMARY                                 *
+     A*     05   -  REFRESH SCREEN                                    *
+     A*     10   -  HELP KEY HAS BEEN PRESSED                         *
+     A*     15   -  PROTECT SELECT FIELD - NO INPUT ALLOWED           *
+     A*     25   -  ROLLUP REQUESTED                                  *
+     A*     26   -  ROLLDOWN REQUESTED                                *
+     A*     27   -  INHIBIT ROLL/REFRESH/SELECT KEYS & TEXT/ENQ TITLES*
+     A*     28   -  INHIBIT CMD/12                                    *   S01280
+     A*                                                               *
+     A* INDICATORS TO CONTROL THE ENQUIRY SUBFILE                     *
+     A*                                                               *
+     A*     30   -  ACTIVATE SUBFILE END                              *
+     A*     35   -  ACTIVATE SUBFILE DISPLAY                          *
+     A*     36   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+     A*     (N35N36   -  ACTIVATE SUBFILE CLEAR)                      *
+     A*                                                               *
+     A* INDICATORS TO CONTROL THE MESSAGE SUBFILE                     *
+     A*                                                               *
+     A*     40   -  ACTIVATE SUBFILE END                              *
+     A*     46   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+     A*                                                               *
+     A* INDICATORS TO REPORT ERRORS ON VALIDATION OF PROMPT SCREEN    *
+     A*                                                               *
+     A*     60   -  ERROR ON CURRENCY SELECTED                        *
+     A*     61   -  ERROR ON MONTH SELECTED                           *
+     A*     62   -  ERROR ON INCLUDED DEAL TYPES                      *
+     A*     63   -  ERROR ON INTERPOLATION METHOD                     *
+     A*     69   -  GENERAL INDICATOR ON VALIDATION OF PROMPT SCREEN  *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A  36                                  INVITE
+     A*********        START OF CHANGE                     /E39162/
+     A*********                             PRINT
+     A                                      PRINT(MPRINT)
+     A*                END OF CHANGE                       /E39162/
+     A                                      CA03(01 'F3 to Exit')
+     A**********                            CA02(02 'F2 - summary')   /*S01187*/
+     A*                                                         /*S01280*/
+     A*****                                 CA12(02 'F12 - summary')
+     A  28                                  CA12(02 'F12 - summary')
+     A*                                                         /*S01280*/
+     A                                      CA05(05 'F5 to Refresh')
+      *                                     START OF S01280
+      *                                                               /*S01280*/
+     A**************************************CF11(11 'F11 Gap/cashflow - profit')
+     A                                      CF11(11 'F11 Screen one - profit')
+      *                                                               /*S01280*/
+      *                                     END OF S01280
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                             /* S01117 */
+     A*                                                             /* S01117 */
+     A*                                                    /*S01199*/
+      *                                     START OF S01280
+     A          R TM3190F2                  TEXT('Title')
+     A*
+     A                                  1  2'Ref:TM3190'
+     A                                  1 61TIME
+     A*
+     A                                  1 70'WSID'
+     A            @WSID          3   O  1 75TEXT('Workstation Id')
+     A*
+     A*
+     A                                  2  2'MM BOOK - DAILY SUMMARY +
+     A                                       - PROFITABILITY'
+     A                                      DSPATR(UL HI)
+     A            DDMETH        10A     2 44TEXT('Interpolation')
+     A                                      DSPATR(HI)
+     A            DDCCY          3A     2 62TEXT('Currency selected')
+     A                                  2 66'(000''S)'
+     A            DDMTH          5A     3  2TEXT('Deal type')
+     A            DDTYPE        24A     3 10TEXT('Deal type')
+     A            DDSTS         23A  O  3 39TEXT('Take on...Time of..')
+     A            @STEND         5A     3 68TEXT('start/end/blank')
+     A*
+     A* Subfile Titles
+     A*
+     A                                  4  9'MAT IN'
+     A                                      DSPATR(UL)
+     A                                  4 20'AV. IN'
+     A                                      DSPATR(UL)
+     A                                  4 28'MAT OUT'
+     A                                      DSPATR(UL)
+     A                                  4 39'AV. OUT'
+     A                                      DSPATR(UL)
+     A                                  4 53'NET'
+     A                                      DSPATR(UL)
+     A                                  4 58'MKT. RATE'
+     A                                      DSPATR(UL)
+     A            DDTOG         10A     4 69TEXT('Total/Open/Closed')
+     A                                      DSPATR(UL)
+      *                                     END OF S01280
+     A*                                                             /* S01117 */
+     A**********R DL3190F0                  TEXT('Title')
+     A          R TM3190F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*                                                             /* S01117 */
+     A*
+     A*                                                             /* S01117 */
+     A**********                        1  2'Ref:DL3190'
+     A                                  1  2'Ref:TM3190'
+     A*                                                             /* S01117 */
+     A                                  1 61TIME
+     A*
+     A                                  1 70'WSID'
+     A            @WSID          3   O  1 75TEXT('Workstation Id')
+     A*
+     A*
+      *                                     START OF S01280
+     A**********                        2  2'MM BOOK - DAILY SUMMARY'
+     A***************                   2  2'MM BOOK - DAILY SUMMARY +/*S01280*/
+     A***************                        - GAP/CASH FLOW'         /*S01280*/
+     A                                  2  2'MM BOOK - DAILY SUMMARY'
+     A                                      DSPATR(UL HI)
+     A**********  DDMETH        10A     2 37TEXT('Interpolation')
+     A**********                            DSPATR(HI)
+      *                                     END OF S01280
+     A            DDCCY          3A     2 62TEXT('Currency selected')
+     A                                  2 66'(000''S)'
+      *                                     START OF S01280
+     A**********  DDTYPE         3A     3  2TEXT('Deal type')
+     A            DDMTH          5A     3  2TEXT('Deal type')
+     A            DDTYPE        24A     3 10TEXT('Deal type')
+     A            DDSTS         23A  O  3 39TEXT('Take on...Time of..')
+      *                                     END OF S01280
+     A            @STEND         5A     3 68TEXT('start/end/blank')
+     A*
+     A* Subfile Titles
+     A*
+      *                                     START OF S01280
+     A**********                        4 13'IN'
+     A**********                            DSPATR(UL)
+     A**********                        4 23'OUT'
+     A**********                            DSPATR(UL)
+     A**********                        4 35'MM NET/INT'
+     A**********                            DSPATR(UL)
+     A**********                        4 48'CTC. RATE'
+     A**********                            DSPATR(UL)
+     A**********                        4 58'MKT. RATE'
+     A**********                            DSPATR(UL)
+     A**********                        4 69'P/L UNITS'
+     A**********                            DSPATR(UL)
+     A                                  4 10'MAT IN'
+     A                                      DSPATR(UL)
+     A                                  4 19'MAT OUT'
+     A                                      DSPATR(UL)
+     A                                  4 30'VAL IN'
+     A                                      DSPATR(UL)
+     A                                  4 39'VAL OUT'
+     A                                      DSPATR(UL)
+     A                                  4 53'NET'
+     A                                      DSPATR(UL)
+     A                                  4 63'INT'
+     A                                      DSPATR(UL)
+     A                                  4 69'BALANCE'
+     A                                      DSPATR(UL)
+      *                                     END OF S01280
+     A*
+     A*                                                             /* S01117 */
+     A**********R DL3190F1                  TEXT('Command Keys Text')
+     A          R TM3190F1                  TEXT('Command Keys Text')
+     A*                                                             /* S01117 */
+     A                                      OVERLAY
+      *                                     START OF S01280
+     A**********                            PUTOVR
+     A*
+     A**********                       23  1'Press F3 to end,'
+     A                                 23  2'Press F3 to end,'
+      *                                     END OF S01280
+     A**********                       23 21'F2 for summary,'         /*S01187*/
+     A*                                                         /*S01280*/
+     A*****                            23 21'F12 for summary,'
+     A  28                             23 21'F12 for summary,'
+     A*                                                         /*S01280*/
+     A                                 23 40'F5 to refresh,'
+      *                                     START OF S01280
+     A                                 23 56'F11 for'
+      *                                                               /*S01280*/
+     A************DDOPTN        13     23 64TEXT('Gap/cash or Profitability')
+     A            DDOPTN        13     23 64TEXT('Screen one or Profitability')
+      *                                                               /*S01280*/
+     A**********                       24  1'Rollup/Rolldown for'
+     A**********                       24 21'further details.'
+     A                                 24  2'Rollup/Rolldown for'
+     A                                 24 22'further details.+
+     A**********                       24 38'Enter ''1'' for detail'
+     A                                       ''1'' for details.'
+     A**********                       24 59'enquiry.'
+     A  12                             24 55'F10 for'
+     A  12        DDOPTP        10     24 63TEXT('Total/Open/Closed')
+      *                                     END OF S01280
+     A*                                                             /* S01117 */
+     A**********R DL3190S0                  TEXT('Message Subfile')
+     A          R TM3190S0                  TEXT('Message Subfile')
+     A*                                                             /* S01117 */
+     A*
+     A* Message Subfile
+     A*
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            DDMGKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A*                                                             /* S01117 */
+     A**********R DL3190C0                  TEXT('Message Subfile Control')
+     A          R TM3190C0                  TEXT('Message Subfile Control')
+     A*                                                             /* S01117 */
+     A*
+     A* Message Subfile Control
+     A*
+     A*                                                             /* S01117 */
+     A**********                            SFLCTL(DL3190S0)
+     A                                      SFLCTL(TM3190S0)
+     A*                                                             /* S01117 */
+     A                                      SFLSIZ(15)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A  46                                  SFLDSPCTL
+     A                                      SFLINZ
+     A  40                                  SFLEND
+     A                                      OVERLAY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A*                                                             /* S01117 */
+     A**********R DL3190S1                  TEXT('Enquiry Subfile')
+     A          R TM3190S1                  TEXT('Enquiry Subfile')
+     A*                                                             /* S01117 */
+     A*
+     A* Subfile Record Format and a select field
+     A*
+     A                                      SFL
+     A N15        SSSLCT         1A  I  5  2TEXT('Select Field')
+     A  15                                  DSPATR(PR)
+     A*                                     START OF S01280
+     A**********  DDDAT          7A     5  4TEXT('Date')
+     A**********                            DSPATR(HI)
+     A**********  DDIN           9A     5 12TEXT('Amount In')
+     A**********                            DSPATR(HI)
+     A**********  DDOUT          9A     5 22TEXT('Amount Out')
+     A**********                            DSPATR(HI)
+     A**********  DDNET         15A     5 32TEXT('MM Net/Interest')
+     A**********                            DSPATR(HI)
+     A**********  DDCTC          9A     5 48TEXT('Cost to Close')
+     A**********                            DSPATR(HI)
+     A**********  DDMKT         10A     5 58TEXT('Market rate')
+     A**********                            DSPATR(HI)
+     A**********  DDPLU         11A     5 69TEXT('Profit/loss - units')
+     A**********                            DSPATR(HI)
+     A            DDDAT          2A     5  4TEXT('Date')
+     A                                      DSPATR(HI)
+     A            DDMIN          9A     5  7TEXT('Maturity in')
+     A                                      DSPATR(HI)
+     A            DDMUT          9A     5 17TEXT('Maturity out')
+     A                                      DSPATR(HI)
+     A            DDVIN          9A     5 27TEXT('Value in')
+     A                                      DSPATR(HI)
+     A            DDVUT          9A     5 37TEXT('Value out')
+     A                                      DSPATR(HI)
+     A            DDNET1         9A     5 47TEXT('Net')
+     A                                      DSPATR(HI)
+     A            DDINT          9A     5 57TEXT('Interest')
+     A                                      DSPATR(HI)
+     A            DDBAL          9A     5 67TEXT('Balance')
+     A                                      DSPATR(HI)
+     A            DDHID          7A  H
+      *                                     END OF S01280
+     A*                                                             /* S01117 */
+     A**********R DL3190C1                  TEXT('Enquiry Subfile Control')
+     A          R TM3190C1                  TEXT('Enquiry Subfile Control')
+     A*                                                             /* S01117 */
+     A*
+     A* Enquiry Subfile Control and prompts
+     A*
+     A*                                                             /* S01117 */
+     A**********                            SFLCTL(DL3190S1)
+     A                                      SFLCTL(TM3190S1)
+     A*                                                             /* S01117 */
+     A  35                                  SFLDSP
+     A  36                                  SFLDSPCTL
+     A N35N36                               SFLCLR
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0016)
+     A  30                                  SFLEND
+     A                                      OVERLAY
+     A*                                     START OF S01280
+     A                                      PUTOVR
+      *                                     END OF S01280
+     A N27                                  ROLLUP(25)
+     A N27                                  ROLLDOWN(26)
+     A*
+     A* Prompts
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*
+     A***********                      21  3'Currency'                /*S01280*/
+     A*********************************21  3'CURRENCY'                /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT1**********8A    21  3
+     A                                 21  3'Currency'
+     A*                                End of fix          /S01319/
+     A            @SRCCY         3A  B 21 12TEXT('Currency Selected')
+     A N60                                  DSPATR(HI)
+     A  60                                  DSPATR(RI PC)
+     A*
+     A***********                      21 16'Date'                    /*S01280*/
+     A*********************************21 16'DATE'                    /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT2**********4A    21 16
+     A                                 21 16'Date'
+     A*                                End of fix          /S01319/
+     A            @SRDAT         7A  B 21 22TEXT('Date Selected')
+     A N61                                  DSPATR(HI)
+     A  61                                  DSPATR(RI PC)
+     A*
+     A***********                      21 31'Included deal types'     /*S01280*/
+     A*********************************21 30'INCLUDE DEAL TYPES'      /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT3*********18A    21 30
+     A                                 21 30'Include deal types'
+     A*                                End of fix          /S01319/
+      *                                     START OF S01280
+     A**********  @DTYPE         3A  B 21 51TEXT('Deal type')
+     A***********                      21 51'ALL'                     /*S01280*/
+     A*********************************21 49'ALL'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT4**********3A    21 49
+     A                                 21 49'ALL'
+     A*                                End of fix          /S01319/
+     A*********** DDALL          1A  B 21 55TEXT('All')               /*S01280*/
+     A            DDALL          1A  B 21 54TEXT('All')
+      *                                     END OF S01280
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+      *                                     START OF S01280
+     A*********************************21 57'N/A'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT5**********3A    21 57
+     A                                 21 57'N/A'
+     A*                                End of fix          /S01319/
+     A*********** DDNA           1A  B 21 61TEXT('neg assets')        /*S01280*/
+     A            DDNA           1A  B 21 62TEXT('neg assets')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A***********                      21 63'L/D'                     /*S01280*/
+     A*********** DDLD           1A  B 21 67TEXT('loans/deposits')    /*S01280*/
+     A*********************************21 65'L/D'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT6**********3A    21 65
+     A                                 21 65'L/D'
+     A*                                End of fix          /S01319/
+     A            DDLD           1A  B 21 70TEXT('loans/deposits')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A***********                      21 69'LEN'                     /*S01280*/
+     A*********************************21 73'LEN'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT7**********3A    21 73
+     A                                 21 73'LEN'
+     A*                                End of fix          /S01319/
+     A N41                                  DSPATR(ND)
+     A*********** DDLEN          1A  B 21 73TEXT('lending')           /*S01280*/
+     A            DDLEN          1A  B 21 78TEXT('lending')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N41                                  DSPATR(ND PR)
+     A***********                      21 75'FRA'                     /*S01280*/
+     A*********************************22 49'FRA'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT8**********3A    22 49
+     A                                 22 49'FRA'
+     A*                                End of fix          /S01319/
+     A N42                                  DSPATR(ND)
+     A*********** DDFRA          1A  B 21 79TEXT('fra')               /*S01280*/
+     A            DDFRA          1A  B 22 54TEXT('fra')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N42                                  DSPATR(ND PR)
+     A***********                      22 51'IRS'                     /*S01280*/
+     A*********************************22 57'IRS'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT9**********3A    22 57
+     A                                 22 57'IRS'
+     A*                                End of fix          /S01319/
+     A N42                                  DSPATR(ND)
+     A*********** DDIRS          1A  B 22 55TEXT('irs')               /*S01280*/
+     A            DDIRS          1A  B 22 62TEXT('irs')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N42                                  DSPATR(ND PR)
+     A***********                      22 57'FUT'                     /*S01280*/
+     A*********************************22 65'FUT'                     /*E28491*/
+     A*                              Start of fix          /S01319/
+     A************@TXT10*********3A    22 65
+     A                                 22 65'FUT'
+     A*                                End of fix          /S01319/
+     A N43                                  DSPATR(ND)
+     A*********** DDFUT          1A  B 22 61TEXT('Futures')           /*S01280*/
+     A            DDFUT          1A  B 22 70TEXT('Futures')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N43                                  DSPATR(ND PR)
+     A**********                       21 56'Interpolation Method'
+     A**********  @INTM          1A  B 21 78TEXT('Method')
+     A*N63******                            DSPATR(HI)
+     A**63******                            DSPATR(RI PC)
+     A*
+     A          R TM3190S2                  TEXT('Enquiry Subfile')
+     A*
+     A* Subfile Record Format and a select field
+     A*
+     A                                      SFL
+     A N15        SSSLCT         1A  I  5  2TEXT('Select Field')
+     A  15                                  DSPATR(PR)
+     A                                      DSPATR(HI)
+     A            DDDAT          2A     5  4TEXT('Date')
+     A                                      DSPATR(HI)
+     A            DDMATI         8A     5  7TEXT('Maturity in')
+     A                                      DSPATR(HI)
+     A            DDAVIN         9A     5 17TEXT('Av.in')
+     A                                      DSPATR(HI)
+     A            DDMATO         8A     5 27TEXT('Mat out')
+     A                                      DSPATR(HI)
+     A            DDAVOT         9A     5 37TEXT('Av out')
+     A                                      DSPATR(HI)
+     A            DDNET          9A     5 47TEXT('Net')
+     A                                      DSPATR(HI)
+     A            DDMKT         10A     5 57TEXT('Market rate')
+     A                                      DSPATR(HI)
+     A            DDPLU         11A     5 68TEXT('P/L')
+     A                                      DSPATR(HI)
+     A            DDHID          7A  H
+     A*
+     A*
+     A          R TM3190C2                  TEXT('Enquiry Subfile Control')
+     A*
+     A* Enquiry Subfile Control and prompts
+     A*
+     A                                      SFLCTL(TM3190S2)
+     A  35                                  SFLDSP
+     A  36                                  SFLDSPCTL
+     A N35N36                               SFLCLR
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0016)
+     A  30                                  SFLEND
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A N27                                  ROLLUP(25)
+     A N27                                  ROLLDOWN(26)
+     A                                      CF10(10 'F10 Toggle')
+     A*
+     A* Prompts
+     A*
+     A                                 21  3'Currency'
+     A            @SRCCY         3A  B 21 12TEXT('Currency Selected')
+     A N60                                  DSPATR(HI)
+     A  60                                  DSPATR(RI PC)
+     A*
+     A                                 21 16'Date'
+     A            @SRDAT         7A  B 21 22TEXT('Date Selected')
+     A N61                                  DSPATR(HI)
+     A  61                                  DSPATR(RI PC)
+     A*
+      *                                     START OF S01280
+     A***********                      21 31'Included deal types'     /*S01280*/
+     A***********                      21 51'ALL'                     /*S01280*/
+     A*********** DDALL          1A  B 21 55TEXT('All')               /*S01280*/
+     A*********************************21 30'INCLUDE DEAL TYPES'      /*E28491*/
+     A                                 21 30'Include Deal Types'
+     A                                 21 49'ALL'
+     A            DDALL          1A  B 21 54TEXT('All')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A                                 21 57'N/A'
+     A*********** DDNA           1A  B 21 61TEXT('neg assets')        /*S01280*/
+     A            DDNA           1A  B 21 62TEXT('neg assets')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A***********                      21 63'L/D'                     /*S01280*/
+     A*********** DDLD           1A  B 21 67TEXT('loans/deposits')    /*S01280*/
+     A                                 21 65'L/D'
+     A            DDLD           1A  B 21 70TEXT('loans/deposits')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A***********                      21 69'LEN'                     /*S01280*/
+     A                                 21 73'LEN'
+     A N41                                  DSPATR(ND)
+     A*********** DDLEN          1A  B 21 73TEXT('lending')           /*S01280*/
+     A            DDLEN          1A  B 21 78TEXT('lending')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N41                                  DSPATR(ND PR)
+     A***********                      21 75'FRA'                     /*S01280*/
+     A                                 22 49'FRA'
+     A N42                                  DSPATR(ND)
+     A*********** DDFRA          1A  B 21 79TEXT('fra')               /*S01280*/
+     A            DDFRA          1A  B 22 54TEXT('fra')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N42                                  DSPATR(ND PR)
+     A***********                      22 51'IRS'                     /*S01280*/
+     A                                 22 57'IRS'
+     A N42                                  DSPATR(ND)
+     A*********** DDIRS          1A  B 22 55TEXT('irs')               /*S01280*/
+     A            DDIRS          1A  B 22 62TEXT('irs')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N42                                  DSPATR(ND PR)
+     A***********                      22 57'FUT'                     /*S01280*/
+     A                                 22 65'FUT'
+     A N43                                  DSPATR(ND)
+     A*********** DDFUT          1A  B 22 61TEXT('Futures')           /*S01280*/
+     A            DDFUT          1A  B 22 70TEXT('Futures')
+     A N62                                  DSPATR(HI)
+     A  62                                  DSPATR(RI PC)
+     A N43                                  DSPATR(ND PR)
+     A                                 22  3'Interpolation Method'
+     A            @INTM          1A  B 22 24TEXT('Method')
+     A N63                                  DSPATR(HI)
+     A  63                                  DSPATR(RI PC)
+      *                                     END OF S01280

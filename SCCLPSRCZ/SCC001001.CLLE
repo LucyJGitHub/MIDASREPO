@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Check object')                               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC001001  - Check Object type                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CCB022  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB022 - COB Restructure - COB File Manager                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &RTNC &MBR)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7) VALUE(*BLANKS)
+             DCL        VAR(&OBJTYP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check Object */
+ 
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) OBJATR(&OBJTYP)
+ 
+             IF  COND(&OBJTYP *NE 'LF        ') THEN(DO)
+             IF  COND(&OBJTYP *EQ 'PF        ') THEN(DO)
+                   CHGVAR VAR(&RTNC) VALUE('*ERROR ')
+             ENDDO
+             ELSE DO
+                   CHGVAR VAR(&RTNC) VALUE('*NRF   ')
+             ENDDO
+             ENDDO
+             ELSE DO
+                   CHGVAR VAR(&RTNC) VALUE('       ')
+             ENDDO
+ 
+/** Check Member if Existing */
+ 
+             IF  COND(&MBR *NE '*NONE') THEN(DO)
+                   CHKOBJ     OBJ(&FILE) OBJTYPE(*FILE) MBR(&MBR)
+                   MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&RTNC) +
+                                 VALUE('*NRF   '))
+             ENDDO
+             GOTO END
+ 
+/** Abnornal */
+ 
+ ABNOR:
+             CHGVAR     VAR(&RTNC) VALUE('*NRF   ')
+ 
+/** End program */
+ 
+ END:
+             ENDPGM

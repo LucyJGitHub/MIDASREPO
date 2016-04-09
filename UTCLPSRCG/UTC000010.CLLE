@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Send objects via FTP')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UTC000010 - Send objects via FTP.                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP096 *CREATE     Date 17Mar05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP096 - New utility                                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSTEM &REMOTEUSER &PASSWORD &FROMOBJL +
+                          &RMTSAVF &FROMLIB &OBJTYPEL &TGTRLS +
+                          &RESTORE &RSTLIB)
+ 
+             DCL        VAR(&SYSTEM    ) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&REMOTEUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PASSWORD  ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMOBJL  ) TYPE(*CHAR) LEN(1002)
+             DCL        VAR(&FROMLIB   ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPEL  ) TYPE(*CHAR) LEN(2102)
+             DCL        VAR(&TGTRLS    ) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RMTSAVF   ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RESTORE   ) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RSTLIB    ) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&TFile     ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&Tlib      ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMOBJ   ) TYPE(*CHAR) LEN(1000)
+             DCL        VAR(&NOOFOBJ   ) TYPE(*DEC) LEN(3)
+             DCL        VAR(&NoInList  ) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&Len      ) TYPE(*DEC) LEN(4)
+ 
+             DCL        VAR(&OBJTYPE   ) TYPE(*CHAR) LEN(2400)
+             DCL        VAR(&NoOfTypes ) TYPE(*DEC) LEN(3)
+ 
+             DCL        VAR(&CMD       ) TYPE(*CHAR) LEN(4000)
+             DCL        VAR(&CMDLEN    ) TYPE(*DEC) LEN(15 5)
+             DCL        VAR(&Error     ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&Subm      ) TYPE(*CHAR) LEN(1)
+ 
+/* Error message for interactive jobs                           */
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Delete work files                                  */
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FTPOBJ)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Recreate FTP command file/save file                */
+             CRTSRCPF   FILE(QTEMP/FTPCOMMAND) RCDLEN(212)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(INPUT)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(OUTPUT)
+             CRTSAVF    FILE(QTEMP/FTPOBJ)
+ 
+/* Break down incoming parameters                     */
+             CHGVAR     VAR(&TFile) VALUE(%SST(&RMTSAVF 1 10))
+             CHGVAR     VAR(&TLIB) VALUE(%SST(&RMTSAVF 11 10))
+             CHGVAR     VAR(&NoInList) VALUE(%SST(&FromobjL 1 2))
+             CHGVAR     VAR(&NOOFOBJ) VALUE(%BIN(&NoInList))
+             CHGVAR     VAR(&Len) VALUE(&NoOfObj*10)
+             CHGVAR     VAR(%SST(&FROMOBJ 1 &Len)) +
+                          VALUE(%SST(&FROMOBJL 3 &Len))
+ 
+             CHGVAR     VAR(&NoInList) VALUE(%SST(&OBJTYPEL 1 2))
+             CHGVAR     VAR(&NoOfTypes) VALUE(%BIN(&NoInList))
+             CHGVAR     VAR(&Len) VALUE(&NoOfTypes*7)
+             CHGVAR     VAR(%SST(&OBJTYPE 1 &Len)) +
+                          VALUE(%SST(&OBJTYPEL 3 &Len))
+ 
+/* Save objects....                                                  */
+             CHGVAR     VAR(&CMDLEN) VALUE(4000)
+             CHGVAR     VAR(&CMD) VALUE('SAVOBJ OBJ(' *CAT &FROMOBJ +
+                          *TCAT ') LIB(' *CAT &FROMLIB *TCAT ') +
+                          DEV(*SAVF) OBJTYPE(' *CAT &OBJTYPE *TCAT +
+                          ') SAVF(QTEMP/FTPOBJ) TGTRLS(' *CAT +
+                          &TGTRLS *TCAT ') CLEAR(*ALL) DTACPR(*YES)')
+             CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+ 
+/* .....and send them                                                */
+             OVRDBF     FILE(INPUT) TOFILE(QTEMP/FTPCOMMAND) MBR(INPUT)
+             OVRDBF     FILE(OUTPUT) TOFILE(QTEMP/FTPCOMMAND) +
+                          MBR(OUTPUT)
+             CALL       PGM(UT000010) PARM(&REMOTEUSER &PASSWORD +
+                          &TFILE &TLIB &RESTORE &FromLib &RSTLIB)
+             FTP        RMTSYS(&SYSTEM)
+ 
+/* Check if any errors                                               */
+             CALL       PGM(UTC000011) PARM(&Error)
+             IF         COND(&ERROR = '1') THEN(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(End)
+ 
+ ABNOR:
+             RTVJOBA    TYPE(&SUBM)
+/* Interactive mode: Set up messages for Midas Information Screen  */
+        IF         COND(&SUBM *EQ '1') THEN(DO)
+ 
+/* Populate data area MIDASMSG in QTEMP */
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA(UTC000010) MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog for details')
+                MONMSG     MSGID(CPF0000)
+                CALL       PGM(SCC0010) PARM('FTPOBJ' 'JOBLOG' 'Y')
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Batch mode: Send message to MOPERQ                              */
+ 
+             ELSE       CMD(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             UTC000010 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+/* Create logfile, and get rid of command file (contains password) */
+             CPYF       FROMFILE(QTEMP/FTPCOMMAND) +
+                          TOFILE(QTEMP/FTPLOG) FROMMBR(OUTPUT) +
+                          TOMBR(FTPLOG) MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

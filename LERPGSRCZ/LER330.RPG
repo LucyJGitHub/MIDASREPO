@@ -1,0 +1,731 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Adjusts - Accrd Mrgn Input Today Rpt')           *
+     F********************************************************************
+     F*                                                               *  *
+     F*  Midas - Customer Lending Module
+     F*                                                               *  *
+     F*  LER330 - Adjustments to Accrued Margin Input Today           *  *
+     F*                                                               *  *
+     F*  Function: To print an accrued margin adjustments report by   *  *
+     F*    (COB)   selecting Margin Adjustment File (MTRA1) records   *  *
+     F*            with record Ids of 'J'. The program is run in the  *  *
+     F*            Close of Business.                                 *  *
+     F*                                                               *  *
+     F*  Called By: LER330P - Adjustments to Accrued Margin and       *  *
+     F*                       Commitment Fees                         *  *
+     F*                                                               *  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *  *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CLE106             Date 09May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 MOF60              Date 02Apr92               *
+     F*                                                               *  *
+     F*---------------------------------------------------------------*--*
+     F*                                                               *  *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  MOF60  - CUSTOMER PROFITABILITY & FEES PROCESSING            *  *
+     F*                                                               *  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     F***MTRA1***IPE F     200 16AI     2 DISK                                                CLE106
+     FMTRA1   IPE F     219 16AI     2 DISK                                                   CLE106
+     FLER330AUO   F     132            PRINTER      KINFDS SPOOLU
+     FLER330P1O   F     132            PRINTER      KINFDS SPOOL      UC
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*   04  - MTRA1 Header
+     F*   05  - MTRA1 Detail
+     F*   06  - MTRA1 Catchall
+     F*
+     F*   20  - Off First Cycle
+     F*   25  - Page Change
+     F*   26  - Page Change
+     F*   27  - Input Record Count = 0
+     F*   28  - Header Increases/Decreases Not = 0
+     F*   29  - Hash Totals out of Balance
+     F*   32  - No Decimal Positions
+     F*   33  - 1 Decimal Position
+     F*   34  - 2 Decimal Position
+     F*   35  - 3 Decimal Position
+     F*   50  - Seton when Database Error
+     F*
+     F* 91-99 - Used by Standard Subroutines
+     F*
+     F* U7-U8 - Data Base Error
+     F*    U8 - File Controls out of Balance
+     F*
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  QFIRST - First Cycle Calculation Subroutine
+     F*  JCALC  - Main Processing Subroutine
+     F*  GLZADD - Subroutine to Add an Amount (ZZAMT) to the Total
+     F*           (ZZTOTI,ZZTOTD) where IND '99' is Set by an Overflow
+     F*           Error
+     F*  GLZSUM - Subroutine to Carry Out the Addition for Subroutines
+     F*           GLZADD, GLZSUB, GLZCMP
+     F*  *PSSR  - Error Processing Routine - DUMPs
+     F*           (Called automatically if Unexpected Error Occurs)
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     F/SPACE 3
+     I*
+     IMTRA1   NS  04   1 CH
+     I*  MTRA1 HEADER
+     I                                        1   1 RECI
+     I                                        2   60NAVT
+     I                                        7  110MNT
+     I                                    P  12  140NORC
+     I                                    P  15  170NOMA
+     I                                    P  18  250HMAW
+     I                                    P  26  270HMAD
+     I                                    P  28  300NOIL
+     I                                    P  31  380HLIW
+     I                                    P  39  400HLID
+     I                                    P  41  430NODL
+     I                                    P  44  510HLDW
+     I                                    P  52  530HLDD
+     I                                    P  67  690NOID
+     I                                    P  70  770HDIW
+     I                                    P  79  800HDID
+     I                                    P  81  830NODD
+     I                                    P  84  910HDDW
+     I                                    P  92  930HDDD
+     I                                    P  94  960NOIC
+     I                                    P  97 1040HCIW
+     I                                    P 105 1060HCID
+     I                                    P 107 1090NODC
+     I                                    P 110 1170HCDW
+     I                                    P 118 1190HCDD
+     I                                    P 120 1220NOIF
+     I                                    P 123 1300HFIW
+     I                                    P 131 1320HFID
+     I                                    P 133 1350NODF
+     I                                    P 136 1430HFDW
+     I                                    P 144 1450HFDD
+     I                                    P 195 1970RRNT
+     I                                    P 198 2000TNLU
+     I                                      201 215 PCRF                                      CLE106
+     I                                      216 216 ASTS                                      CLE106
+     I                                      217 217 CHTP                                      CLE106
+     I                                      218 219 AMTP                                      CLE106
+     I*
+     I        NS  05   1 CJ
+     I*  MTRA1 DETAIL TYPE-J
+     I                                        1   1 RECI
+     I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF                                      CLE148
+     I**********                              8  130CNUM                                      CSD027
+     I                                        8  13 CNUM                                      CSD027
+     I                                       14  16 CCY
+     I                                    P  17  230MAAM
+     I                                       24  24 SIGN
+     I                                       25  27 BRCA  L1
+     I**********                             28  380FCRF                                      CSD027
+     I                                       28  38 FCRF                                      CSD027
+     I                                       28  33 ##FC1                                     CSD027
+     I                                       34  36 ##FC2                                     CSD027
+     I                                       37  38 ##FC3                                     CSD027
+     I                                       39  58 CRNM
+     I                                       59  68 CTWN
+     I                                      189 1940UDTM
+     I                                    P 195 1970RRNT
+     I                                    P 198 2000TNLU
+     I*
+     I        NS  06
+     I* CATCHALL
+     I                                        1   1 RECI
+     I*
+     ISPOOL       DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+     I**
+     ISDBRCH    E DSSDBRCHPD
+     I** EXTERNAL DS FOR BRANCHES DETAILS
+     I              A8BRNM                          BRNM
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I              A6NBDP                          CDP
+     I*
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I*    LOCAL DATA AREA
+     I**
+     IRUNDAT    E DSRUNDAT
+     I**    DATA AREA RUNDAT
+     I              AGMRDT                          RUNA
+     I              AGMBIN                          MBIN
+     I**
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I**
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C         20          GOTO BY01
+     C*    DEFINE LDA
+     C           *NAMVAR   DEFN           LDA
+     C                     EXSR QFIRST
+     C*
+     C*FIRST CYCLE CALCULATIONS
+     C                     GOTO END                        ** BY01 TAG **
+     C           BY01      TAG
+     C* NOT 'J' REC: GOTO END
+     C         06          GOTO END
+     C*
+     C                     EXSR JCALC
+     C** CHECK FOR PAGE OVERFLOW
+     C           LINE      IFEQ 24
+     C                     EXCPTHEADER
+     C                     Z-ADD0         LINE
+     C                     END
+     C*
+     C      U7 U8          MOVE 'LER330'  DBPGM
+     C      U7 U8          SETON                     50
+     C*
+     C           END       TAG                             ** END TAG **
+     C*
+     C* CHECK CONTROLS AT END. IF NO 'J' RECS,  INCREASES & DECREASES
+     C* SHOULD = 0
+     CLR U7 U8             GOTO LRENDB
+     CLR         RECS      COMP 0                        27
+     CLR       27NOIL      COMP 0                    2828
+     CLRN27                EXCPTENDREP
+     CLR       27NODL      COMP 0                    2828
+     CLR       28          SETON                     U8
+     C* TOTAL HEADER FIELDS AND COMPARES TO PROGRAM CALCULATED CONTROLS.
+     CLR         NOIL      ADD  NODL      RECTOT  70
+     CLR         HLIW      ADD  HLDW      FIRST  150
+     CLR         HLID      ADD  HLDD      L1      40
+     C* ALLOW FOR ANY OVERFLOW IN LAST 3 DIGITS
+     CLR                   MOVELL1        L2      10
+     CLR                   MOVE L1        LAST    30
+     CLR         L2        ADD  FIRST     FIRST
+     C* COMPARES TO HASH TOTS.
+     CLR         RECTOT    COMP RECS                 2929
+     CLR       29          GOTO LREND
+     CLR         FIRST     COMP ZZTOTI               2929
+     CLR       29          GOTO LREND
+     CLR         LAST      COMP ZZTOTD               2929
+     C*
+     CLR         LREND     TAG                             ** LREND TAG **
+     CLR    28 27          SETOF                     27
+     CLR       29          SETON                     U8
+     CLR         LRENDB    TAG                             ** LRENDB TAG *
+     C**   ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     CLR                   Z-ADDSFNUMU    ZSNUMU
+     C*
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU  60
+     CLR                   PARM           ZSERR   1
+     CLR         ZSERR     IFEQ 'Y'
+     C**   ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C* QFIRST- FIRST CYCLE CALCULATION SUBROUTINE
+     C*
+     C* CALLED FROM: MAIN PROCESSING IN FIRST CYCLE
+     C*
+     C* CALLS: ZSYSTM
+     C*
+     C********************************************************************
+     C**
+     C           QFIRST    BEGSR                           ** SR-FIRST   *
+     C**
+     C**      IN THE DATAAREA RUNDAT
+     C**
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C**
+     C**      SETUP MULTIBRANCHING INDICATOR
+     C**
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     60
+     C                     END
+     C         04          GOTO F1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MTRA1'   DBFILE           ***************
+     C                     Z-ADD1         DBASE            *  D-BASE 01  *
+     C                     MOVEL'H'       DBKEY            ***************
+     C                     MOVEL'LER330'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C** I.E. IF FIRST RECORD NOT HEADER, DATA BASE ERROR.
+     C* - END PROCESSING
+     C*
+     C                     GOTO FEND
+     C*
+     C           F1        TAG                             ** F1 TAG **
+     C**
+     C**   ACCESS BANK DETAILS TO PICK UP I.C. REC.
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     SETON                     99
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     MOVEL@OPTN     DBKEY            * D-BASE 02  *
+     C                     Z-ADD2         DBASE            **************
+     C                     MOVEL'LER330'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C           *IN99     IFEQ '0'
+     C*  INITIALISE FIELDS FOR LINE COUNT & RECORD COUNT
+     C                     Z-ADD0         LINE    20
+     C                     Z-ADD0         RECS    50
+     C*
+     C                     SETON                     20
+     C**
+     C**      OPEN SPOOL FILE WHEN NON-MULTIBRANCHING
+     C**
+     C           MBIN      IFNE 'Y'
+     C                     SETON                       85  ALLOW OUTPUT
+     C                     OPEN LER330P1
+     C                     Z-ADD0         PAGE
+     C**   ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C                     Z-ADDSFNUM     ZSNUM
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR
+     C           ZSERR     IFEQ 'Y'
+     C**   ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     EXCPTHEADER
+     C                     END
+     C*
+     C                     END
+     C*
+     C           FEND      ENDSR
+     C/EJECT
+     C********************************************************************
+     C*
+     C* JCALC - MAIN PROCESSING SUBROUTINE
+     C*
+     C* CALLED FROM: MAIN PROCESSING FOR EVERY CYCLE (VALID RECORDS)
+     C*
+     C* CALLS: GLZADD (FOR HASH TOTALS)
+     C*
+     C********************************************************************
+     C*
+     C           JCALC     BEGSR                           ** SR-JCALC   *
+     C*
+     C*    AT CHANGE OF BRANCH CODE EXECUTE PRINT
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           *INL1     ANDEQ'1'
+     C           BRSTR     IFNE *BLANKS
+     C                     EXCPTENDREP
+     C                     END
+     C                     MOVE BRCA      BRSTR   3
+     C                     CLOSELER330P1
+     C                     SETON                       85  ALLOW OUTPUT
+     C                     OPEN LER330P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         LINE
+     C**   ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C                     Z-ADDSFNUM     ZSNUM
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C           ZSERR     IFEQ 'Y'
+     C**   ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  GET BRANCH NAME
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           *************
+     C                     MOVEL@DSNB     DBKEY            * D-BASE 03 *
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVEL'LER330'  DBPGM
+     C                     OUT  LDA
+     C                     MOVEL*BLANKS   BRNM
+     C                     EXSR *PSSR
+     C                     EXCPTHEADER
+     C                     GOTO JEND
+     C                     END
+     C**
+     C                     EXCPTHEADER
+     C**
+     C                     END
+     C**
+     C*  ACCESS CURRENCY DETAILS
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       TKEY    3                    A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            *  D-BASE 04  *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     MOVEL'LER330'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO JEND
+     C                     END
+     C           J1        TAG                             ** J1 TAG **
+     C*
+     C*  INCREMENT HASH TOTALS
+     C                     MOVE MAAM      ZZAMT
+     C                     EXSR GLZADD
+     C*  INCREMENT LINE & RECORD COUNTS.
+     C           LINE      ADD  1         LINE
+     C           RECS      ADD  1         RECS
+     C* CHECK DECIMAL POSITIONS TO EDIT CURRENCY.
+     C           CDP       COMP 1                      3233
+     C           CDP       COMP 2                    35  34
+     C*
+     C**
+     C   05N50             EXCPTDETAIL
+     C*
+     C           JEND      ENDSR
+     C/EJECT
+     C********************************************************************
+     C*
+     C* GLZADD - SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL
+     C*         (ZZTOTI,ZZTOTD; WHERE IND '99' IS SET BY AN OVERFLOW   )
+     C*          ERROR
+     C*
+     C* CALLED FROM: QFIRST
+     C*
+     C* CALLS: GLZSUM
+     C*
+     C********************************************************************
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C* GLZSUM - SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES
+     C*          GLZADD, GLZSUB, GLZCMP                                )
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     C* CALLED FROM: GLZADD
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C*  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/EJECT
+     OLER330P1E 3101           HEADER
+     O                                   14 'REFERENCE'
+     O                                   23 'LER330P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     OLER330P1E 1              HEADER
+     O                                   41 'ADJUSTMENTS TO ACCRUED'
+     O                                   60 'MARGIN INPUT TODAY'
+     O                                   77 '- CUSTOMER LOANS'
+     O                       60          90 'BRANCH'
+     O                       60BRCA      96
+     O                       60          97 '-'
+     O                       60BRNM     127
+     OLER330P1E 12             HEADER
+     O                                   41 '----------------------'
+     O                                   60 '---------------------'
+     O                                   77 '-----------------'
+     OLER330P1E 1              HEADER
+     O                                  103 'ADJUSTMENT'
+     OLER330P1E 11             HEADER
+     O                                   21 'BORROWER'
+     O                                   65 'FACILITY REF'
+     O                                   76 'LOAN'
+     O                                   84 'CCY'
+     O                                  101 'AMOUNT'
+     O                                  117 'TIME'
+     OLER330P1E 11             DETAIL
+     O                         CNUM      14
+     O                         CRNM      37
+     O                         CTWN      48
+     O************             FCRF      64 '      /   /  '                                   CSD027
+     O                         ##FC1     57                                                   CSD027
+     O                                   58 '/'                                               CSD027
+     O                         ##FC2     61                                                   CSD027
+     O                                   62 '/'                                               CSD027
+     O                         ##FC3     64                                                   CSD027
+     O                         LNRF      76
+     O                         CCY       84
+     O                       32MAAM     103 ' ,   ,   ,   , 0 '
+     O                       33MAAM     103 '   ,   ,   , 0 . '
+     O                       34MAAM     103 '  ,   ,   , 0 .  '
+     O                       35MAAM     103 ' ,   ,   , 0 .   '
+     O                         SIGN     104
+     O                         UDTM     119 '  .  .  '
+     O        E 3      L1 60   ENDREP
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   74 'BRANCH '
+     O                         BRSTR     77
+     O                                   81 '***'
+     O        E 3      LRN27N60ENDREP
+     O                                   76 '*** END OF REPORT ***'
+     OLER330AUT 3101   LR
+     O                                   14 'REFERENCE'
+     O                                   23 'LER330AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T 1      LR
+     O                                   53 'ADJUSTMENTS TO ACCRUED'
+     O                                   65 'MARGIN INPU'
+     O                                   88 'T TODAY - FILE CONTROLS'
+     O        T 13        LR
+     O                                   53 '----------------------'
+     O                                   68 '---------------'
+     O                                   90 '------------------------'
+     O        T 1      LR
+     O                                   13 'S/MTRA1'
+     O                                   28 '- RUN CONTROLS'
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T 11     LR
+     O                                   28 '----------------------'
+     O                                   59 'OF RECORDS'
+     O                                   84 'OF RECORDS'
+     O        T 11     LR
+     O                                   29 'TOTAL RECORDS ON FILE'
+     O                         RECTOT3   59
+     O                         FIRST Z   81
+     O                         LAST      84
+     O*
+     O        T 11     LR
+     O                                   29 'TOTAL RECORDS ON FILE'
+     O                                   42 '- CALCULATED'
+     O                         RECS  3   59
+     O                         ZZTOTIZ   81
+     O                         ZZTOTD    84
+     O                       28         111 '***   DIFFERENCE   ***'
+     O                       29         111 '***   DIFFERENCE   ***'
+     O        T 31     LR 27NU7
+     O                                   76 '* NO DETAILS TO REPORT *'
+     O        T 31     LR U7 U8
+     O                                   49 '*** REFERENCE LER330'
+     O                                   69 '- DATABASE ERROR AT'
+     O                         DBASE     73
+     O        T 1      LR U7 U8
+     O                                   35 'FILE NAME'
+     O                         DBFILE    44
+     O                                   49 'KEY'
+     O                         DBKEY     79
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

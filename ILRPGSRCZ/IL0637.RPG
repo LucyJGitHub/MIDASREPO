@@ -1,0 +1,320 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS IBLC 2002 Print Deals with MDATE changed')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0637    - Print Deals with Maturity Date Changed       *
+      *                                                               *
+      *  Function: This program is called by ILC0632 wich is always   *
+      *            active. This RPG produces a list of loans with     *
+      *            maturity date changed, depending on some criteria. *
+      *                                                               *
+      *  Called By: CLP/ILC0632  - Retrieve Deals with Maturity Date  *
+      *                            Changed                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX043             Date 28Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting. *
+      *           (Recompiled)                                        *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *            (recompile due to change in IL0637P1)              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILDMATPDIF  E           K        DISK         KINFSR *PSSR
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+     FIL0637P1O   E             66     PRINTER      KINFDS SPOOL1
+     FIL0637AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+      *
+      ***  Array for compilation - copyright insertion
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      ***  Standing Data - Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  Working Data Structure
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area
+     IDSFDY     E DSDSFDY
+      ***  Data Structure for compilation - copyright insertion
+      *
+     ICPY@#       DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ***  Data structure for deal's file
+      *
+     ISPOOLU      DS
+      *
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      *
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      * MAIN LINE
+      *****************************************************************
+      *
+      ***  ENTRY PARAMETER LIST
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *
+     C           *LOVAL    SETLLILDMATPD
+     C                     READ ILDMATPD                 60
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     WRITENODTL1
+     C                     ENDIF
+      *
+     C           *IN60     DOWEQ*OFF
+     C                     EXSR #PRINT
+      *
+     C                     READ ILDMATPD                 60
+     C                     ENDDO
+      *
+     C                     WRITEENDP1
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      ****************************************************************
+      *  *INZSR - Initial Processing                                 *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      CPY@2  80        Copyrights
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD33        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 033 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Record Audit file IL0637AU on RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     MOVELSFILEU    SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+      ***  Record Printer file IL0637P1 on RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     MOVELSFIL1     SFILE
+      *
+     C                     EXSR SRZSFL
+      *
+     C                     WRITEHEADP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      ****************************************************************
+      *  #PRINT - Print subroutine                                   *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #PRINT    BEGSR
+      *
+      ***  Customer Number, Loan Ref, Loan Type & subtype
+      *
+     C                     MOVE DCCNUM    RCUST
+     C                     MOVE DCDLNO    RDLNO
+     C                     MOVE DCDTYP    RTYPE
+     C                     MOVE DCDLST    RSTYP
+      *
+      ***  Amount
+      *
+     C           DCCYCD    CHAINSDCURRL0             61
+     C           *IN61     IFEQ *ON
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVEL'SDCURRL0'DBFILE           * DB ERROR 002 *
+     C                     MOVELDCCYCD    DBKEY            ****************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A6NBDP    WWDEC   10
+      *
+     C                     MOVE DCPCPL    ZFLD15
+     C                     Z-ADDWWDEC     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RAMNT
+      *
+      ***  Currency
+      *
+     C                     MOVE DCCYCD    RCCY
+      *
+      ***  Value Date
+      *
+     C                     MOVE DCVDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     RVDAT
+      *
+      *** Maturity Date Before
+      *
+     C                     MOVE DCMDAB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     RMBEF
+      *
+      *** Maturity Date After
+      *
+     C                     MOVE DCMDAA    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     RMAFT
+      *
+      ***  Check Overflow
+      *
+     C           *IN66     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN66
+     C                     ENDIF
+      *
+     C                     WRITEDETAP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      ****************************************************************
+      *  *PSSR  - error Subroutine                                   *
+      *  -------                                                     *
+      *  Called by : on FILE error                                   *
+      *              *INZSR                                          *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @RSEQ   5
+     C                     PARM           @RENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZSEDITZ3
+      *----------------------------------------------------------------
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Get next journal receiver name')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC0103A - On-Line Synchronisation of Global Layer          */
+/*                                                                   */
+/*       Function: This program will be called by GOC0103 whenever   */
+/*                 a new journal receiver has been attached for      */
+/*                 JRN/ICJRN.  The file PF/GOOSJSPD will be          */
+/*                 received to set up the new from receiver range    */
+/*                 and from entry sequence number.                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1004827 *CREATE     Date 17Jul12           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1004827 - Global updater stops immediately/fails when     */
+/*                   receiver changes (BUG16177A incomplete)         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JSEQNO &NXTJRC)
+ 
+             DCL        VAR(&JSEQNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NXTJRC) TYPE(*CHAR) LEN(10)
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+             DCLF       FILE(GOOSJSPD)
+ 
+/*    Global monitor message                                         */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             OVRDBF     FILE(GOOSJSPD) SHARE(*NO)
+ 
+/* Get last receiver and sequence number                             */
+ 
+             RCVF
+             CHGVAR     VAR(&JSEQNO) VALUE(&I#LASTSEQ)
+             CHGVAR     VAR(&NXTJRC) VALUE(&I#LASTRCV)
+ 
+             GOTO       CMDLBL(END)
+ 
+/*    Abnormal termination - batch job                               */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC0103A ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+END:
+             ENDPGM

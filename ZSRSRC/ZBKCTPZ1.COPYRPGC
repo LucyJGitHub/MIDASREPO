@@ -1,0 +1,165 @@
+     C********************************************************************
+     C*                                                                  *
+     C*  ZBKCTP- SUBROUTINE TO CALCULATE CONTRACT PRICE FOR BANK         *
+     C*
+     C***INPUT**-*FROM*TRADE*FILE***NOML*(11,0)*NOMINAL*******************E23586
+     C*  INPUT  - FROM TRADE FILE   NOML (15,0) NOMINAL                   E23586
+     C*                             TCSR (15,0) CONSIDERATION
+     C*                             RALL (9,5)  REALLOWANCE
+     C*                             TCA1,TCA2,TCA3,TCA4,TCA5 +           *S01176
+     C*                             TCA6,TCA7 (13,0) CHARGES             *S01176
+     C*                             TBCA,TCCA (13,0) COMMISSIONS
+     C*                             TAXA (13,0) TAX                      *S01176
+     C*                             TNMD (1,0)  NOM.CCY DEC.PLACES
+     C*                             PRIC (15,8)  TRADE PRICE
+     C************FROM*TABTB36****-*COBP*(1)*COMMISSION*TO*BE*INCLUDED****S01117
+     C******************************CBAP*(1)*CHARGES*TO*BE*INCLUDED*******S01117
+     C******************************RBAP*(1)*REALLOWANCE*TO*BE*INCLUDED***S01117
+     C************FROM TABTG10******CDP*(ZCDP)*(1,0)*NOM.CCY*DEC.PLS.*****S01117
+     C*           FROM SDSTRDPD   - BVCMBP (1) COMMISSION TO BE INCLUDED  S01117
+     C*                             BVCBAP (1) CHARGES TO BE INCLUDED     S01117
+     C*                             BVRBAP (1) REALLOWANCE TO BE INCLUDED S01117
+     C*           FROM CURRENCIES - ZCDP   (1,0) NOM.CCY DEC.PLS.         S01117
+     C*           FROM SECTYD     - SPBS (1) PRICE BASIS
+     C*                             POWER8 ARRAY MUST BE INCLUDED IN
+     C*                             CALLING PROGRAM
+     C*
+     C*  OUTPUT - ZCONP  (15,8) CONTRACT PRICE FOR CLIENT
+     C*
+     C*  CALLS - ZPRCI ZCNSD
+     C*          ZAVPR                                                   *E23586
+     C**                                                                 *
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01117             DATE 17JAN91                  *
+     C*  PREV AMEND NO. E23586             DATE 07SEP90                  *
+     C*                 E21076             DATE 08FEB90                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01117 - SD field name changes (Multibranching)                 *
+     C*  E23586 - Code superceded by standard subroutine ZAVPR.          *
+     C*  E21076 - SUBROUTINE FOR BANK CONTRACT PRICE                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZBKCTP    BEGSR                           **ZBKCTP BEGSR
+     C*
+     C* Define fields
+     C*
+     C                     Z-ADD0         ZCONP  158
+     C                     Z-ADD0         ZCPTOT 150
+     C                     Z-ADD0         ZWK158 158
+     C                     Z-ADD0         ZWK150 150
+     C                     Z-ADD0         ZNOML  150
+     C*
+     C*    If nominal is zero - contract price is zero
+     C*
+     C           NOML      IFEQ 0
+     C                     Z-ADD0         ZCONP
+     C                     ELSE
+     C*
+     C                     Z-ADDNOML      ZNOML                           E20232
+     C*
+     C* Add consideration to contract price total
+     C*
+     C                     Z-ADDTCSR      ZCPTOT
+     C*
+     C* If commission is to be included -
+     C*    add the two commission amounts to the contract price total
+     C*
+     C***********COBP      IFEQ 'Y'                                       S01117
+     C           BVCMBP    IFEQ 'Y'                                       S01117
+     C                     ADD  TBCA      ZCPTOT
+     C                     ADD  TCCA      ZCPTOT
+     C                     END
+     C*
+     C* If charges are to be included -
+     C*    add the seven charge amounts to the contract price total       S01176
+     C*
+     C***********CBAP      IFEQ 'Y'                                       S01117
+     C           BVCBAP    IFEQ 'Y'                                       S01117
+     C                     ADD  TCA1      ZCPTOT
+     C                     ADD  TCA2      ZCPTOT
+     C                     ADD  TCA3      ZCPTOT
+     C                     ADD  TCA4      ZCPTOT                          S01176
+     C                     ADD  TCA5      ZCPTOT                          S01176
+     C                     ADD  TCA6      ZCPTOT                          S01176
+     C                     ADD  TCA7      ZCPTOT                          S01176
+     C                     ADD  TAXA      ZCPTOT                          S01176
+     C                     END
+     C*
+     C* FORMAT REALLOWANCE AMOUNT
+     C*
+     C***********RBAP      IFEQ 'Y'                                       S01117
+     C           BVRBAP    IFEQ 'Y'                                       S01117
+     C           RALL      ANDNE0
+     C                     Z-ADDRALL      ZPRCIN
+     C*
+     C           RALL      IFLT 0
+     C                     MULT -1        ZPRCIN
+     C                     END
+     C*
+     C                     Z-ADDTDVD      ZFDATE
+     C                     EXSR ZPRCI
+     C*
+     C* Calculate reallowance amount and add to contract price total
+     C*
+     C                     Z-ADDZPRCOT    ZPRC                            E20232
+     C                     EXSR ZCNSD                                     E20232
+     C                     Z-ADDZCONS     ZRALL  150                      E20232
+     C*
+     C           RALL      IFLT 0
+     C                     MULT -1        ZRALL
+     C                     END
+     C*
+     C                     ADD  ZRALL     ZCPTOT
+     C                     END
+     C*
+     C* Calculate the contract price -
+     C* If contract total *EQ Consideration, use price from Trade record
+     C* to avoid rounding errors.
+     C*
+     C           TCSR      IFEQ ZCPTOT
+     C                     Z-ADDPRIC      ZCONP
+     C                     ELSE
+     C***********                                                         E23586
+     C**Convert*to*ccy*dec*places                                         E23586
+     C***********                                                         E23586
+     C***********                                                         E23586
+     C***********5         ADD  CDP       DC      10                      E23586
+     C***********          SUB  TNMD      DC                              E23586
+     C***********DC        IFLT 5                                         E23586
+     C***********ZCPTOT    DIV  POWER8,DC ZCPTOT    H                     E23586
+     C***********          END                                            E23586
+     C***********                                                         E23586
+     C**If*price*based .....                                              E23586
+     C***********                                                         E23586
+     C***********SPBS      IFEQ 'P'                                       E23586
+     C***********          MULT 100       ZCPTOT                          E23586
+     C***********          END                                            E23586
+     C***********                                                         E23586
+     C***********ZCPTOT    DIV  ZNOML     ZCONP     H                     E23586
+     C***********DC        IFGE 5                                         E23586
+     C***********ZCONP     DIV  POWER8,DC ZCONP     H                     E23586
+     C***********          END                                            E23586
+     C***********                                                         E23586
+     C***********          END                                            E23586
+     C*                                                                   E23586
+     C*** Caculate average price                                          E23586
+     C*                                                                   E23586
+     C                     Z-ADDZCPTOT    ZAPNC                           E23586
+     C                     EXSR ZAVPR                                     E23586
+     C                     Z-ADDZPRC      ZCONP                           E23586
+     C*                                                                   E23586
+     C                     END                                            E23586
+     C                     END                                            E23586
+     C*                                                                   E23586
+     C                     ENDSR                           *** ENDSR    ***
+     C*****************************************************************

@@ -1,0 +1,658 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Outgoing messages block release')
+/*OVRF*: OVRDBF FILE(MGOREFLI) TOFILE(MGOREFLK)                     : *
+/*OVRF*: OVRDBF FILE(MGOREFLU) TOFILE(MGOREFLK)                     : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0620 - Outgoing message block release                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD015             Date 14Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                    142823           DATE 20Oct99              *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                    141572           DATE 21SEP98              *
+      *                    113352           DATE 13FEB97              *
+      *                    074447           DATE 14JAN98              *
+      *                    090570           DATE 24JUL95              *
+      *                    067576           DATE 22FEB94              *
+      *                    E38493           DATE 16APR92              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CSD015 - Midas Compliance Watch - Watch List Checking       *
+      *   CDL008  - Continuous Linked Settlement (Recompiled MGOREFPD)*
+      *   142823  - Apply 137492. Output branch code not 'ALL'.       *
+      *   141572  - Recompile over changes in MGOREFPD                *
+      *   113352  - Recompile over changes in MGOREFPD                *
+      *   074447  - Program loops when user releases messages only    *
+      *             for the default branch. Fix is to set on End of   *
+      *             File indicator *IN98 when all messages for the    *
+      *             default branch have been processed.               *
+      *   090570  - RECOMPILED FOR CHANGE IN MGOREFLI.                *
+      *   067576  - OUTPUT CORRECT BRANCH CODE TO ZSFILE, TO ENSURE   *
+      *             THAT SPOOL FILE IS DISTRIBUTED CORRECTLY          *
+      *   E38493  -  SUPRESS ALL BRANCH INFO WHEN SINGLE BRANCHING    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMGOREFLUUF  E           K        DISK
+     F/COPY WNCPYSRC,ME0620F002
+     FMGOREFLIIF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREFDI
+     FME0620AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FME0620P1O   E             61     PRINTER      KINFDS SPOOLP     UC
+     FSDCWHTL1IF  E           K        DISK                                                   CSD015
+      ** Compliance Watch Hit List by Function Type                                           CSD015
+      *                                                                                       CSD015
+      *
+      *
+      * ID C  F  H  L   Function of indicaators
+      * 01              DSRUN (DATA AREA) not found indicator
+      * 98              End of file indicator
+      * 42 & 44         Used to control output in printer file ME0620P1
+      * 44              Also used for chain fail indicator
+      * 61              Over flow indicator
+      * 87               Multibranch environment                          E38493
+      * U7U8LR          DB error
+      *
+     F/COPY WNCPYSRC,ME0620F001
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,ME0620E001
+     I/COPY WNCPYSRC,ME0620I004
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      *
+      **  File information data structure
+      *
+     I/COPY WNCPYSRC,ME0620I001
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area data structure
+      *
+     ISDWLCC    E DSSDWLCCPD                                                                  CSD015
+      **  Midas Functions for Watch List Checking Details File                                CSD015
+      *                                                                                       CSD015
+     ISDSTAT    E DSSDSTAT                                                                    CSD015
+      ** SD data area                                                                         CSD015
+      *                                                                                       CSD015
+     ISCSARD    E DSSCSARDPD                                                                  CSD015
+      ** Switchable features file                                                             CSD015
+      *                                                                                       CSD015
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     I            DS
+     I                                        1   60RELT
+     I                                        1   2 @@HH
+     I                                        3   4 @@MM
+     I                                        5   6 @@SS
+      *
+      **  Data structure for TIME (RELT)
+      *
+     I            DS
+     I                                        1   8 @RELT
+     I                                        1   2 @HH
+     I I            ':'                       3   3 @
+     I                                        4   5 @MM
+     I I            ':'                       6   6 @@
+     I                                        7   8 @SS
+      *
+      **  Data structure for TIME (RELT)
+      *
+     I            DS
+     I                                        1   9 @@KEY
+     I                                        1   6 @@NWRK
+     I                                        7   9 @@BRCA
+      *
+      **  Save the Key field
+      *
+     I            DS
+     I                                        1   9 @NWBCH
+     I                                        1   6 @NET
+     I                                        7   9 @BCH
+      *
+      **  Save the compare key field
+      *
+     I/COPY WNCPYSRC,ME0620I002
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Bank details
+      *
+     I/COPY WNCPYSRC,ME0620I003
+     IDSFDY     E DSDSFDY
+      *
+      **  First data structure for access program, Short data structure
+      *
+     C/EJECT
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Parameters passed from FC0040X
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @@RSEQ  5
+     C                     PARM           @@LVL   1
+     C           @BCH      PARM           @@ENT   3
+     C                     PARM           @RPARM100
+      *
+      **  Parameters passed to AOBANKR0
+      *
+     C           PLIST1    PLIST
+     C                     PARM '*DBMSG  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Parameters passed to ZSFILE
+      *
+     C           PLIST2    PLIST
+     C                     PARM           @@RSEQ  5
+     C                     PARM BRCA2     @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      **  Set up key
+      *
+     C           NWBCH2    KLIST
+     C                     KFLD           @NET
+     C                     KFLD           @BCH
+     C                     KFLD           @TRNO  16
+      *
+      **  Set up Partial key
+      *
+     C           NWBCH     KLIST
+     C                     KFLD           @NET
+     C                     KFLD           @BCH
+      *
+     C           KWHTKY    KLIST                                                              CSD015
+     C                     KFLD           WFUNT   8                                           CSD015
+     C                     KFLD           WIDEN  40                                           CSD015
+     C                     KFLD           BRCA                                                CSD015
+      *                                                                                       CSD015
+     C           *NAMVAR   DEFN           LDA
+     C/EJECT
+      *
+      *******************************************************************
+      *                   Index to subroutines                          *
+      *   MAIN   - Main process                                         *
+      *   INIT   - Initial process                                      *
+      *   DETLP  - Detail processing                                    *
+      *   DETLP2 - Futher detail processing                             *
+      *   SPLF   - Printer error handling processing                    * 067576
+      ****SPLF***-*Printer*error*handling*processing***                 * 067576
+      *   *PSSR  - Error handling                                       *
+      *******************************************************************
+     C/EJECT
+      *******************************************************************
+      *   MAIN   - Main process                                         *
+      *   Calls  - INIT - Init process                                  *
+      *            DETLP - Detail processing                            *
+      *******************************************************************
+      *
+      **  Perform initial process
+      *
+     C                     EXSR INIT
+      *
+      **  Perform        process
+      *
+     C                     EXSR DETLP
+      *
+      **  Set on LR
+      *
+     C/COPY WNCPYSRC,ME0620C013
+     C                     SETON                     LR
+     C/EJECT
+      *******************************************************************
+      *   INIT   - Initial process                                      *
+      *   Called by main process                                        *
+      *   Calls  - *PSSR Error process                                  *
+      *******************************************************************
+     C           INIT      BEGSR
+      *
+      **  Extract from 100 long parameter the required data
+      *
+     C           54        SUBST@RPARM:11 STTLE
+     C           6         SUBST@RPARM:65 @NET
+     C           10        SUBST@RPARM:71 @USRP  10
+     C           1         SUBST@RPARM:81 SABCH   1
+     C           1         SUBST@RPARM:82 @IN42   1
+     C           3         SUBST@RPARM:83 @DBRN   3
+     C           10        SUBST@RPARM:86 @PDEV  10
+     C/COPY WNCPYSRC,ME0620C008
+      *
+     C                     MOVEL@NET      SNTWRK  6
+      *
+     C           @IN42     IFEQ 'Y'
+     C                     SETON                     42
+     C                     END
+      *
+      **  Access data area DSRUN to find date & multibranch indicator
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+     C           MBIN      COMP 'Y'                      87               E38493
+      *
+      **  If data area not found then perform database error processing
+      *
+     C           RDAT      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0620  'DBPGM
+     C                     MOVE '01'      DBASE            ***************
+     C                     MOVE 'RUNDAT'  DBFILE           * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access sdbankpd (via aobankr0) & verify date format
+      *
+     C                     CALL 'AOBANKR0'PLIST1
+      *
+      **  Error handling for access object
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0620  'DBPGM
+     C                     MOVE '02'      DBASE            ***************
+     C                     MOVE 'AOBANKR0'DBFILE           * DB ERROR 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,ME0620C007
+      *
+      **  If option All branches taken: Set lower limits using network
+      **  & read, else chain using network & branch
+      *
+     C           SABCH     IFEQ 'N'
+     C                     MOVEL'No '     SABCH2
+     C           NWBCH     CHAINMGOREFD0             9844
+     C/COPY WNCPYSRC,ME0620C009
+     C                     ELSE
+     C                     MOVEL'Yes'     SABCH2
+     C                     MOVEL'All'     @DBRN
+     C                     SETON                     40
+     C           @NET      SETLLMGOREFD0                 41
+      *
+      **  Records matching selection criteria do not exist
+     C           *IN41     IFEQ '0'
+     C                     SETON                     98
+     C                     ELSE
+     C                     READ MGOREFD0               4498
+     C/COPY WNCPYSRC,ME0620C014
+     C                     END
+      *
+     C                     MOVELBRCA      @BCH
+     C                     END
+      *
+     C           *IN44     IFNE '1'
+     C                     MOVELTRNO      @TRNO
+     C                     MOVELNWRK      @@NWRK
+     C                     MOVELBRCA      @@BRCA
+      *
+     C                     ELSE
+     C                     MOVE *LOVAL    @TRNO
+     C                     MOVEL@NET      @@NWRK
+      *
+     C           @BCH      IFEQ *BLANKS
+     C                     MOVE *LOVAL    @BCH
+     C                     MOVE *LOVAL    @@BRCA
+     C                     ELSE
+     C                     MOVE @BCH      @@BRCA
+     C                     END
+      *
+     C                     END
+      *                                                                                       CSD015
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD015
+     C                     IN   SDSTAT                                                        CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*VERIFY' @OPTN                                               CSD015
+     C                     PARM 'CSD015'  @SARD   6                                           CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C                     MOVEL'N'       CSD015  1                                           CSD015
+     C           @RTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVEL'Y'       CSD015  1                                           CSD015
+     C                     ELSE                                                               CSD015
+     C           @RTCD     IFNE '*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'CSD015'  DBKEY                                               CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD42        DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Check if function code is being monitored by compliance watch.                       CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C                     CALL 'AOWLCCR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*KEY   ' @OPTN                                               CSD015
+     C                     PARM 'MESSGENT'PFUNC   8                                           CSD015
+     C           SDWLCC    PARM SDWLCC    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** If return code not blank, then issue database error.                                 CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFNE *BLANKS                                                       CSD015
+     C           @RTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVE 'MESSGENT'DBKEY                                               CSD015
+     C                     MOVE 'SDWLCCPD'DBFILE                                              CSD015
+     C                     MOVE 43        DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *
+     C/COPY WNCPYSRC,ME0620C002
+     C                     ENDSR
+     C/EJECT
+      *******************************************************************
+      *   DETLP  - Detail processing                                    *
+      *   Called by main process                                        *
+      *   Calls  - DETLP2 & SPLF Further detail processing              *
+      *******************************************************************
+     C           DETLP     BEGSR
+      *
+      **  If no record found on the file MGOREFLU
+      *
+     C           *IN98     IFEQ '1'
+      *
+      **  Open Audit printer file PRTF/ME0620AU & call ZSFILE via SPLF
+      *
+     C                     OPEN ME0620AU
+     C                     MOVE AFILE     SFILE  10
+     C                     Z-ADDAFNUM     ZSNUM   60
+      *
+     C                     EXSR SPLF
+      *
+      **  Write 'no records to report'
+      *
+     C                     WRITER03
+      *
+      **  Close Audit printer file PRTF/ME0620AU
+      *
+     C                     CLOSEME0620AU
+      *
+      **  Else records present to process
+      *
+     C                     ELSE
+      *
+      **  Open Printer file PRTF/ME0620P1 & call ZSFILE via SPLF
+      *
+     C                     OPEN ME0620P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+     C                     EXSR SPLF
+      *
+      **  Report titles R00 & Page headings R01
+      *
+     C                     WRITER01
+     C                     WRITER00
+     C                     WRITER011
+     C/COPY WNCPYSRC,ME0620C020
+      *
+      **  Do until network changes or EOF
+      *
+     C           @NET      DOWEQ@@NWRK
+     C           *IN98     ANDNE'1'
+      *
+      **  If all branches selected DETLP2 has to be performed for all
+      **  branches within the network. If not selected DETLP2 has to be
+      **  performed for the default branch only
+      *
+     C           SABCH     IFEQ 'Y'
+     C                     EXSR DETLP2
+     C                     MOVELBRCA      @@BRCA
+     C                     ELSE
+     C                     EXSR DETLP2
+     C                     SETON                     98                   074447
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,ME0620C004
+      *
+      **  Close printer file PRTF/ME0620P1
+      *
+     C                     CLOSEME0620P1
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *******************************************************************
+      *   DETLP2 - Detail processing                                    *
+      *   Called by DETLP process                                       *
+      *******************************************************************
+     C           DETLP2    BEGSR
+      *
+      **  Do while records match key (Parameters passed from ME0615)
+      *
+     C           @NWBCH    DOWEQ@@KEY
+     C           *IN98     ANDNE'1'
+     C/COPY WNCPYSRC,ME0620C010
+      *
+      ** Do not release messages = 'TELEX' and T/K status = 'Y'
+      *
+     C           NWRK      IFEQ 'TELEX'
+     C           TSKS      ANDEQ'Y'
+     C/COPY WNCPYSRC,ME0620C001
+     C                     SETON                       46
+     C                     END
+      *
+      ** If Midas Compliance Watch is active and watch list                                   CSD015
+      ** checking applied, check trade if pending investigation                               CSD015
+      *                                                                                       CSD015
+     C           W1EWLC    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLMTR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*MTYP'   @OPTN                                               CSD015
+     C                     PARM MTPY      PMTPY   3                                           CSD015
+     C                     PARM *BLANKS   PMTAG   5                                           CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVE 'MGOREF  'WFUNT                                               CSD015
+     C                     MOVE *BLANK    WIDEN                                               CSD015
+     C                     MOVELTRNO      WIDEN                                               CSD015
+      *                                                                                       CSD015
+     C           KWHTKY    CHAINSDCWHTL1             74                                       CSD015
+      *                                                                                       CSD015
+     C           *IN74     IFEQ '0'                                                           CSD015
+     C           W3TREL    ANDNE'Y'                                                           CSD015
+     C                     MOVE '1'       *IN46                                               CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           *IN44     IFEQ '0'
+     C           *IN46     ANDEQ'0'
+      *
+      **  Update messages status  (MGST on LF/MGOREFLU) to RSND
+      **  Update messages status group (MGSG on LF/MGOREFLU) to '2'
+      *
+     C                     MOVEL@USRP     RUSR
+     C/COPY WNCPYSRC,ME0620C006
+     C                     MOVE 'RSND'    MGST
+     C                     MOVE '2'       MGSG
+     C/COPY WNCPYSRC,ME0620C003
+      *
+      **  Update Last action date, Last action time, Release date,
+      **  Release time & Releaased by workstation
+      *
+     C                     MOVE RDAT      LADT
+     C                     MOVE RDAT      RELD
+     C                     TIME           @TIME   60
+     C                     MOVE @TIME     LATM
+     C                     MOVE @TIME     RELT
+     C                     MOVE @PDEV     RWSN
+      *
+     C/COPY WNCPYSRC,ME0620C015
+     C                     UPDATMGOREFD0               44
+     C/COPY WNCPYSRC,ME0620C016
+     C                     END
+      *
+      **  If update fails
+      *
+     C           *IN44     IFEQ '1'
+      *
+      **  Set greater than on LF/MGOREFLI and read for input only (N.B.
+      **  if record is locked and cannot be updated, then you must use
+      **  'set greater than' to position the file pointer to the
+      **  correct record on the file that is defined for input only)
+      *
+     C           NWBCH2    SETGTMGOREFDI
+      *
+     C                     READ MGOREFDI                 99
+      *
+      **  Reset pointer on the UPDATE file
+      *
+     C                     MOVELNWRK      @NET
+     C                     MOVELBRCA      @BCH
+     C                     MOVELTRNO      @TRNO
+     C           NWBCH2    SETGTMGOREFD0
+     C                     END
+      *
+      **  End of page handling
+      *
+     C           *IN61     IFEQ '1'
+      *
+     C                     WRITER01
+     C                     WRITER011
+     C                     SETOF                     61
+      *
+     C                     END
+      *
+      **  Set up time field
+      *
+     C                     MOVE @@HH      @HH
+     C                     MOVE @@MM      @MM
+     C                     MOVE @@SS      @SS
+      *
+      ** Print message - R02
+      *
+     C                     WRITER02
+     C/COPY WNCPYSRC,ME0620C011
+      *
+     C                     SETOF                       4446
+     C/COPY WNCPYSRC,ME0620C005
+      *
+      **  Read next record on LF/MGOREFLU
+      *
+     C                     READ MGOREFD0               4498
+     C/COPY WNCPYSRC,ME0620C017
+      *
+     C                     MOVELTRNO      @TRNO
+     C                     MOVELNWRK      @NET
+     C                     MOVELBRCA      @BCH
+      *
+     C/COPY WNCPYSRC,ME0620C012
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/COPY WNCPYSRC,ME0620C018
+     C/EJECT
+      *******************************************************************
+      *   SPLF  - Ensure Spool File recorded by RCF                     * 067576
+      ****SPLF**-*Printer*error*handling********************************* 067576
+      *   Called by - DETLP processing                                  *
+      *******************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+      **  Set up key
+      *
+     C***********@@ENT     IFEQ 'ALL'                                     067576
+     C***********          MOVE *BLANKS   BRCA2   3                       067576
+     C***********          ELSE                                           067576
+     C***********          MOVE @@ENT     BRCA2                           067576
+     C***********          END                                            067576
+      *
+     C           @@ENT     IFEQ 'ALL'                                     142823
+     C                     MOVELBRCA      BRCA2                           142823
+     C                     ELSE                                           142823
+     C                     MOVE @@ENT     BRCA2   3                       067576
+     C                     END                                            142823
+      *                                                                   142823
+     C                     CALL 'ZSFILE'  PLIST2
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *   *PSSR - error handling                                         *
+      *   Called by - INIT & SPLF processing                             *
+      ********************************************************************
+      *
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+      *
+     C                     OPEN ME0620AU
+     C                     WRITER03
+     C                     WRITEDBERROR
+      *
+     C/COPY WNCPYSRC,ME0620C019
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY WNCPYSRC,ME0620X001

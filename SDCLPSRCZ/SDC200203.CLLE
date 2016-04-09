@@ -1,0 +1,61 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Take On NAHO & ACUS Religious Affiliation')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC200203 - Midas SD Take On NAHO and ACUS Religious        */
+/*                   Affiliation                                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CER054  *CREATE    Date 07Apr09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER054 - German Features - Church Tax                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             IF         COND(&PMODE *NE '3') THEN(DO)
+             CALL       PGM(SD200203)
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+             SNDPGMMSG  MSG('Program SDC200203 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+ 
+/* End Program */
+ 
+END:         MONMSG      MSGID(CPF2105)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+             ENDPGM
+ 

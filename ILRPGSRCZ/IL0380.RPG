@@ -1,0 +1,638 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 daily IBLC items  report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0380    - IBLC 2002 Daily IBLC item reports            *
+      *                                                               *
+      *  Called By: CLP/ILC0380  - Daily item reports                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. IL0008             Date 05Dec01               *
+      *                 ULX043             Date 28Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  IL0008 - ULX043 - Break on branch doesn't work properly      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILITEML2IP  E           K        DISK         KINFSR *PSSR
+      ***  IBLC Items - Branch/currency/Op. code/Refer.    Prefix IT
+      *
+     F                                              KINFDS INFDS
+      *
+     FIL0380AUO   E                    PRINTER      KINFDS SPOOLU
+     FIL0380P1O   E             70     PRINTER      KINFDS SPOOL1     UC
+      *
+      /EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+      ***  Working Array
+      *
+     E                    MONT   12  12  3
+      *
+      ***  Standard Subroutine Arrays
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      ***  Runtime Arrays
+      *****************************************************************
+      *
+      ***  Standard subroutine Arrays
+      *
+      /COPY ZSRSRC,ZFRPEDZ1                              Std ZFRPED
+      /EJECT
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,ZFRPEDZ2                                Std ZFRPED
+      *
+      ***  Working Data Structure
+      *
+     IILSTAT    E DSILSTAT
+      ***  IBLC 2002 - Data area
+     I                                        2   30ZA
+     I                                        4   50ZM
+     I                                        6   70ZJ
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database errors
+      *
+     IINFDS       DS
+      ***  Data structure for rpg 01218 error handling
+     I                                     *STATUS  STATUS
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     I            DS
+      ***  Data structure to convert accounting date
+     I                                        1   60ITACTD
+     I                                        1   60RACDT
+     I            DS
+      ***  Data structures to detect rupture : current record
+     I                                        1   3 RBRCH
+     I                                        1   3 ITBRCD
+     I                                        4   6 ITCURR
+     I                                        1   6 NEWBC
+     I                                        8  10 ITOPCO
+     I                                        1  10 NEWK
+      *
+     I            DS
+      ***  Data structures to detect rupture : previous record
+     I                                        1   3 RBRC2
+     I                                        4   6 RCUR2
+     I                                        1   6 OLDBC
+     I                                        8  10 OPCO2
+     I                                        1  10 OLDK
+      *
+     I            DS
+      ***  Data structure for transaction number
+     I                                        1  16 ITOPER
+     I                                        1  16 RTRAN
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     I                                       43  440WWBJD
+     I                                       45  47 WWBJM
+     I                                       48  490WWBJY
+     ISDCURR    E DSSDCURRPD
+      ***  standing data - Currency details
+     IDSFDY     E DSDSFDY
+      ***  DS for access programs, short data structure
+     IDSSDY     E DSDSSDY
+      ***  DS for access programs, long data structure
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      ***  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  ILTEML2 in PRIMARY ==> RPG cycle : detect rupture
+      *
+     C           OLDK      IFNE NEWK
+      *
+     C           OLDK      IFEQ *BLANK                     First cycle
+      *
+     C           @RENT     IFEQ 'ALL'
+     C           @RENT     OREQ '   '
+     C           @RENT     OREQ ITBRCD
+      *
+      ***  Start RCF for IL0380P1
+      *
+     C  N10                OPEN IL0380P1
+     C  N10                Z-ADDSFNUM1    ZSNUM
+     C  N10                MOVELSFIL1     SFILE
+     C  N10                EXSR SRZSFL
+      *
+     C                     MOVE NEWK      OLDK
+     C                     MOVE ITCURR    RCURR
+     C                     WRITEHEADP1
+     C                     WRITEBRCHP1
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Not the first cycle, Break on curr/branch
+      *
+     C           OLDBC     IFNE NEWBC
+      *
+     C           RBRCH     IFNE RBRC2                      Branch level
+     C                     MOVE *ON       WBRC2   1
+     C                     ENDIF
+      *
+      ***  Write Operation Code Totals
+      *
+     C                     EXSR #SUBT
+      *
+      ***  Write Currency Totals
+      *
+     C                     EXSR #TOTT
+      *
+      ***  Prepare for next currency
+      *
+     C                     MOVE ITCURR    RCURR
+      *
+      ***  In case of branch rupture, Close Printer file
+      *
+     C           WBRC2     IFEQ *ON
+     C                     WRITEENDP1
+     C                     CLOSEIL0380P1
+      *
+      ***  OPEN a new Printer file if ALL branches or COB call
+      *
+     C           @RENT     IFEQ 'ALL'
+     C           @RENT     OREQ '   '
+     C                     OPEN IL0380P1
+     C                     MOVE *OFF      WBRC2            wait next branch rupture
+     C                     ELSE
+      *
+      ***  Branch to report is terminated
+      *
+     C                     MOVE *ON       *INLR
+     C                     GOTO LASTR                      Leave PGM
+     C                     ENDIF                           @RENT
+     C                     ENDIF                           Rupture on branch
+     C                     WRITEHEADP1
+     C                     WRITEBRCHP1
+     C                     ELSE                            OLDBC=NEWBC
+      *
+      ***  if NEWK <> OLDK but Branch and currency aren't changed, Break on OP.code
+      ***  ==> Write out Operation code totals
+      *
+     C                     EXSR #SUBT
+     C                     ENDIF                           OLDBC = NEWBC
+      *                                                                   IL0008
+      ***  Save NEWK for next break on branch                             IL0008
+      *                                                                   IL0008
+     C                     MOVE NEWK      OLDK                            IL0008
+     C                     ENDIF                           OLDBK >< *BLANKS
+     C                     ENDIF                           OLDBK >< NEWBK
+      *
+      ***  Write detail read in IL0380P1
+      *
+     C                     EXSR #DETA
+      *
+      ***  first cycle : nothing to report
+      *
+     CLRN10                EXSR #NONE
+      *
+      ***  RPG cycle : Last record read
+      *
+     CLR         LASTR     TAG
+     CLR                   EXSR #END
+      *
+      /EJECT
+      ****************************************************************
+      *  #SUBT     Output subtotal by Operation Code                 *
+      *  -----                                                       *
+      *  Called by : mainline, #END                                  *
+      *  Calls     : -                                               *
+      ****************************************************************
+      *
+     C           #SUBT     BEGSR
+      *
+      ***  Fill in printer if non zero
+      *
+     C           STOTD     IFNE 0                          Debit side
+     C                     MOVE STOTD     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTOTD
+     C                     ELSE
+     C                     MOVE *BLANK    RTOTD
+     C                     ENDIF
+      *
+     C           STOTC     IFNE 0                          Credit side
+     C                     MOVE STOTC     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTOTC
+     C                     ELSE
+     C                     MOVE *BLANK    RTOTC
+     C                     ENDIF
+      *
+      ***  Check overflow
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     WRITEBRCHP1
+     C                     MOVE '0'       *IN70
+     C                     ENDIF
+      *
+      ***  Write subtotal by Operation code
+      *
+     C                     WRITESUBTP1
+      *
+      ***  Reset subtotal result fields
+      *
+     C                     MOVE ITOPCO    OPCO2            Previous (OLDK)
+     C                     Z-ADD0         STOTD  150       Reset to 0
+     C                     Z-ADD0         STOTC  150       Reset to 0
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #TOTT     Output Total by currency/branch                   *
+      *  -----                                                       *
+      *  Called by : mainline, #END                                  *
+      *  Calls     : -                                               *
+      ****************************************************************
+      *
+     C           #TOTT     BEGSR
+      *
+      ***  fill in fields for printing
+      *
+     C           TOTDE     IFNE 0                          Debit Side
+     C                     MOVE TOTDE     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTOCD
+     C                     ELSE
+     C                     MOVE *BLANK    RTOCD
+     C                     ENDIF
+      *
+     C           TOTCR     IFNE 0                          Credit side
+     C                     MOVE TOTCR     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTOCC
+     C                     ELSE
+     C                     MOVE *BLANK    RTOCC
+     C                     ENDIF
+      *
+      ***  Check overflow
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     WRITEBRCHP1
+     C                     MOVE '0'       *IN70
+     C                     ENDIF
+      *
+      ***  Write total by Currency/Branch
+      *
+     C                     WRITETOTLP1
+      *
+      ***  Reset total result fields
+      *
+     C                     Z-ADD0         TOTDE  150       Reset to 0
+     C                     Z-ADD0         TOTCR  150       Reset to 0
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #DETA     Write details in IL0380P1                         *
+      *  -----                                                       *
+      *  Called by : mainline                                        *
+      *  Calls     : -                                               *
+      ****************************************************************
+      *
+     C           #DETA     BEGSR                           ** #DETA  **
+      *
+      ***  Fill printer fields
+      *
+     C                     MOVE ITOPCO    ROPCO
+     C                     MOVE ITMODI    RMODI
+     C                     MOVE ITCOCO    RCTRY
+     C                     MOVE ITIDCO    RIDCO
+     C                     MOVE ITIDNB    RIDNB
+     C                     MOVELITTEXT    RTXT
+     C                     MOVELITBRCD    EBRCH
+     C                     MOVE ITCURR    RCUR2
+      *
+      ***  use 'J' editcode for amount (alpha string of 22)
+      *
+     C                     MOVE ITCURR    WWCURR
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCURR    WWAJCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Handle Database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVELWWCURR    DBKEY     P      * DB ERROR 001 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+      ***  Write detail in DeBIT or Credit side depending on ITDRCR indicator
+      *
+     C                     MOVE ITAMNT    ZFLD15
+     C                     MOVE ITAMNT    WRK15  150
+     C                     EXSR ZFRPED
+      *
+     C           ITDRCR    IFEQ 'D'                        Debit side
+     C                     MOVE ZOUT22    RAMNTD
+     C                     MOVE *BLANK    RAMNTC
+     C                     ADD  WRK15     STOTD            Cumul
+     C                     ADD  WRK15     TOTDE
+     C                     ELSE                            Credit Side
+     C                     MOVE ZOUT22    RAMNTC
+     C                     MOVE *BLANK    RAMNTD
+     C                     ADD  WRK15     STOTC            Cumul
+     C                     ADD  WRK15     TOTCR
+     C                     ENDIF
+      *
+      ***  Save ITCURR num. of Decimal for TOTALS Write out
+      *
+     C                     Z-ADDZDECS     SVDECS  10
+      *
+      ***  *IN85 : Write Amount in Original currency
+      *
+     C                     MOVE *OFF      *IN85
+     C                     MOVE *BLANKS   RTOCUR
+     C                     MOVE *BLANKS   RTOAMN
+      *
+     C           ITOCUR    IFNE WWCURR
+     C           ITOCUR    ANDNE*BLANKS
+     C                     MOVE ITOCUR    RTOCUR
+      *
+     C                     MOVE ITOCUR    WWCURR  3
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCURR    WWAJCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVELWWCURR    DBKEY     P      * DB ERROR 002 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS            Nom. Decimal Places
+      *
+      ***  IF amount is filled in, then write it on printer, else bypass
+      *
+     C           ITOAMN    IFNE 0
+      *
+      ***  use 'J' editcode for amount (alpha string of 22)
+      *
+     C                     MOVE ITOAMN    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   RTOAMN
+     C                     MOVE ZOUT22    RTOAMN
+     C                     MOVE *ON       *IN85            WRITE
+     C                     ENDIF
+     C                     ENDIF                           ITOCUR >< ITCURR
+      *
+      ***  Put back Number of Decimal of ITCURR
+      *
+     C                     Z-ADDSVDECS    ZDECS
+      *
+      ***  Check overflow
+      *
+     C           *IN70     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEBRCHP1
+     C                     MOVE *OFF      *IN70
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+      *
+     C  N10                MOVE *ON       *IN10            At least 1 write
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #NONE  - write no detail and leave the program              *
+      *  ------                                                      *
+      *  Called by : First RPG Cycle                                 *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #NONE     BEGSR
+      *
+     C                     WRITEHEADAU
+     C                     WRITENODLAU
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #END      Last write before leaving the program             *
+      *  -----                                                       *
+      *  Called by : mainline                                        *
+      *  Calls     : -                                               *
+      ****************************************************************
+     C           #END      BEGSR
+      *
+      ***  Write last totals
+      *
+     C                     EXSR #SUBT
+     C                     EXSR #TOTT
+      *
+      *** Write end of reports
+      *
+     C                     WRITEENDP1
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  *INZSR - Initial processing : Reset static fields           *
+      *  ------                        access standing data          *
+      *  Called by : First RPG Cycle                                 *
+      *  Calls     : *PSSR                                           *
+      ****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Define Entry Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 003 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Calculate date of report
+      *
+     C           *NAMVAR   DEFN           ILSTAT
+     C                     IN   ILSTAT
+      *
+     C                     Z-ADDZA        WWBJY
+     C                     Z-ADDZJ        WWBJD
+     C                     MOVE MONT,ZM   WWBJM
+      *
+      ***  Define Key List
+      *
+     C           KDPOS     KLIST
+     C                     KFLD           KBRAN   3
+     C                     KFLD           KCURR   3
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM            IL0380AU
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+      ***  Reset working Fields
+      *
+     C                     MOVE *BLANKS   WWCURR  3
+     C                     MOVE 'J'       ZECODE           XX,XXX.X
+     C                     Z-ADD0         TOTDE  150
+     C                     Z-ADD0         TOTCR  150
+     C                     Z-ADD0         STOTD  150
+     C                     Z-ADD0         STOTC  150
+     C                     MOVE *BLANK    OLDK
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  *PSSR  - error Subroutine                                   *
+      *  -------                                                     *
+      *  Called by : on FILE error                                   *
+      *              *INZSR                                          *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+      ***  Print error message in Audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      /COPY ZSRSRC,ZFRPEDZ3
+** MONT  MONTHS
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

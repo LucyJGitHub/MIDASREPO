@@ -1,0 +1,330 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Report - Prompt')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦DBA - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5291P - Penalty Termination Report Details - Prompt        *
+      *                                                               *
+      *  Function:  This program acts as the prompt program when      *
+      *             requesting for the Penalty Terminations report in *
+      *             I/C.                                              *
+      *                                                               *
+      *  Called By: FCC0201 - MIDAS FC I/C Rpt Request with Prompt.   *
+      *                                                               *
+      *  (C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008   *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 256795   *Create   Date 25Sep08               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FMM5291DFCF  E                    WORKSTN      KINFSR *PSSR
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   KC - F3                                                     *
+      *   KL - F12                                                    *
+      *                                                               *
+      *   30 - Error in Validation
+      *   31 - Error in "All Records:" input field                    *
+      *   32 - Error in "Todays Records:" input field                 *
+      *                                                               *
+      *   LR - Last Record/Program end indicator                      *
+      *   U7/U8 - Program error indicator                             *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *                                                               *
+      *  SRDISP - Display the screen                                  *
+      *  SRVALD - Screen field validation                             *
+      *  SRPARM - Set the PARM field                                  *
+      *                                                               *
+      *  ZASNMS - Write message to program message queue              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+      *
+      *-------------------------------------------------------------------
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Short Data Structure - used as parameter to access programs
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Area Definition
+     ILDA       E DSLDA
+      *
+      ** SD Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+     IP@PARM      DS                            100
+     I                                        3   3 TYPE
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PSEQ
+     C                     PARM           P@PLEV
+     C                     PARM           P@PENT
+     C                     PARM           P@PARM
+     C                     PARM           P@PACT
+     C                     PARM           P@PCMD
+      *
+     C                     EXSR SRINIT
+      *
+      ** Process the screen, until F3 or F12 has been pressed
+     C           *INKC     DOUEQ'1'                        B1
+     C           *INKL     OREQ '1'
+     C           *IN30     OREQ '0'
+      *
+     C                     EXSR SRDISP
+      *
+      ** Validate fields if enter is pressed
+     C           *INKC     IFEQ '0'                        B2
+     C           *INKL     ANDEQ'0'
+     C                     EXSR SRVALD
+     C                     ENDIF                           E2
+      *
+      ** If no errors found, update the parm fields
+     C           *IN30     IFEQ '0'                        B2
+     C                     EXSR SRPARM
+     C                     ENDIF                           E2
+      *
+     C   KC                MOVE 'E'       P@PCMD
+     C   KL                MOVE 'F'       P@PCMD
+      *
+     C                     ENDDO                           E1
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRDISP - Display the screen and clear program message queue     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRDISP    BEGSR
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     WRITEMM5291H1
+     C                     WRITECMDTXTF1
+     C                     EXFMTMM5291D1
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRVALD - Validate screen details                                *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+     C                     MOVEA'000'     *IN,30
+      *
+      ** Validate if all entries are blank
+     C           F1ALLR    IFEQ *BLANKS                    B1
+     C           F1TDYR    ANDEQ*BLANKS
+     C                     MOVEA'111'     *IN,30
+     C                     MOVEL'MMM5300' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVALD
+     C                     END                             E1
+      *
+      ** Validate if "All Records" field valid
+     C           F1ALLR    IFNE *BLANKS                    B1
+     C           F1ALLR    ANDNE'Y'
+     C                     MOVEA'11'      *IN,30
+     C                     MOVEL'MMM5301' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVALD
+     C                     END                             E1
+      *
+      ** Validate if "Todays Records" field valid
+     C           F1TDYR    IFNE *BLANKS                    B1
+     C           F1TDYR    ANDNE'Y'
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN32
+     C                     MOVEL'MMM5302' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVALD
+     C                     END                             E1
+      *
+      ** Validate if more than one entry is made
+     C           F1ALLR    IFNE *BLANKS                    B1
+     C           F1TDYR    ANDNE*BLANKS
+     C                     MOVEA'111'     *IN,30
+     C                     MOVEL'MMM5303' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVALD
+     C                     END                             E1
+      *
+     C           EVALD     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      *  SRPARM - File Update processing                                *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRPARM    BEGSR
+      *
+     C           F1ALLR    IFEQ 'Y'                        B1
+     C                     MOVE '1'       TYPE
+     C                     ENDIF                           E1
+      *
+     C           F1TDYR    IFEQ 'Y'                        B1
+     C                     MOVE '2'       TYPE
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * ZASNMS - Send Message to program message queue                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'DRSMM'   ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM           ZAPGRL
+     C                     PARM           ZAMSID
+     C                     PARM           ZAMSGF
+     C                     PARM           ZAMSDA
+     C                     PARM           ZAMSTP
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANKS   ZAMSDA
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINIT - Initial Program Subroutine                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Define Data Areas
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      ** Define program work fields
+     C                     MOVE *BLANKS   @RTCD   7
+     C                     MOVE *BLANKS   @OPTN   7
+      *
+     C                     MOVE *BLANKS   ZAPGMQ 10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+      ** Receive the passed parameters
+     C                     MOVE P@PSEQ    P@PSEQ  5
+     C                     MOVE P@PLEV    P@PLEV  1
+     C                     MOVE P@PENT    P@PENT  3
+     C                     MOVE P@PARM    P@PARM100
+     C                     MOVE P@PACT    P@PACT  1
+     C                     MOVE P@PCMD    P@PCMD  1
+      *
+      ** Access Bank Details (SDBANKPD)
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (SDBANKPD)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Setup Screen Title Fields
+     C                     MOVE USER      H1USER
+     C                     MOVE WSID      H1WSID
+     C                     MOVE BJMRDT    H1RUNA
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CDL052'  @SARD   6
+     C                     PARM           DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CDL052
+     C                     ELSE
+     C                     MOVE 'N'       CDL052  1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'MM5291P' DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *
+** CPY@     : Copyright notice for inclusion in all MISYS programs
+(C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008

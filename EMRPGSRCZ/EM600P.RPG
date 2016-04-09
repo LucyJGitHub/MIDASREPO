@@ -1,0 +1,432 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Customer Limits/Expo/Avail Prompt')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas EXPOSURE MANAGEMENT MODULE
+     F*                                                                  *
+     F*    EM600P - CUSTOMER LIMITS/EXPOSURE/AVAILABILITY PROMPT         *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01314             Date 12Mar91               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*    176443 - Avoid MCH3601 to be sent.                            *
+     F*             Pass correct parameter to AOCUSTR0.                  *
+     F*    S01314  -  CHANGES FOR PTF INCORPORATION (CHANGE LN0593 WAS   *
+     F*               NOT APPLIED TO THIS PROGRAM - INDICATOR 02         *
+     F*               PROCESSING REMOVED).                               *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                       INDICATORS USED                         *
+     F*                       ~~~~~~~~~~~~~~~                         *
+     F**02*-*INDICATOR*SET*BY*CF12.************                       *   S01314
+     F* 03 - INDICATOR SET BY CF10.                                   *
+     F* 04 - ENABLE COMMAND 10.                                       *
+     F* 07 - INDICATOR SET BY CF03.                                   *
+     F* 22 - ERROR ON CUSTOMERS BY PARENT FIELD.                      *
+     F* 23 - ERROR ON CUSTOMERS BY A/C OFFICER FIELD.                 *
+     F* 24 - ERROR ON CUSTOMERS BY COUNTRY FIELD.                     *
+     F* 25 - ERROR ON CUSTOMERS BY REGION FIELD.                      *
+     F* 26 - ERROR ON CUSTOMERS BY INDUSTRY FIELD.                    *
+     F* 27 - ERROR - CUSTOMER IS NOT A PARENT
+     F* 40 - GENERAL ERROR INDICATOR USED TO CONDITION ALL VALIDATION.*
+     F* 42 - DUMMY ERROR INDICATOR.                                   *
+     F* 44 - ERROR ON REPORT LEVEL REQUIRED FIELD.                    *
+     F* 75 - ERROR ON ALL CUSTOMERS FIELD.                            *
+     F*                                                               *
+     F*****************************************************************
+     FEM0600FMCF  E                    WORKSTN
+     F*
+     E*
+     E** COPYRIGHT STATEMENT
+     E*
+     E                    CPY@    1   1 80
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** SPLIT RPARM INTO SUBFIELDS
+     I*
+     IRPARM       DS                            100
+     I                                        1   1 SRPTLV
+     I                                        2   4 SALL
+     I                                        5  14 SPNOSN
+     I                                       15  16 SACOFF
+     I                                       17  18 SCTRYC
+     I                                       19  20 SREGCD
+     I                                       21  23 SINDCD
+     I                                        5   6 TST
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     I** DATA STRUCTURE FOR EXTERNAL DATA AREA RUNDAT
+     I*
+     IRUNDTE      DS                             13                       S01194
+     I                                        1   7 RUNDT                 S01194
+     I*
+     I** SPLIT PARAMETERS INTO SUBFIELDS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     ISDACOF    E DSSDACOFPD
+     ISDCTRY    E DSSDCTRYPD
+     ISDREGC    E DSSDREGNPD
+     ISDINDC    E DSSDINDSPD
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      *                                                                   S01194
+     C*
+     C** ENTRY PARAMETER LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           RPARM 100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOCUSTR0'
+     C*
+     C           PLIST1    PLIST
+     C                     PARM           RTCD    7
+     C                     PARM           OPTN    7
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOACOFR0'
+     C*
+     C           PLIST2    PLIST
+     C                     PARM           RTCD
+     C                     PARM           OPTN
+     C                     PARM           AKEY    2
+     C           SDACOF    PARM SDACOF    DSFDY
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOCTRYR0'
+     C*
+     C           PLIST3    PLIST
+     C                     PARM           RTCD
+     C                     PARM           OPTN
+     C                     PARM           TKEY    2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOREGNR0'
+     C*
+     C           PLIST4    PLIST
+     C                     PARM           RTCD
+     C                     PARM           OPTN
+     C                     PARM           RKEY    2
+     C           SDREGC    PARM SDREGC    DSFDY
+     C*
+     C** PARAMETER LIST FOR PROGRAM 'AOINDSR0'
+     C*
+     C           PLIST5    PLIST
+     C                     PARM           RTCD
+     C                     PARM           OPTN
+     C                     PARM           IKEY    3
+     C           SDINDC    PARM SDINDC    DSFDY
+     C*
+     C** INITIALISE FIELDS
+     C*
+     C                     MOVEL'*KEY'    OPTN
+     C                     MOVEL'*BLANK  'RTCD
+     C                     MOVEL'?'       QUEST  10
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**   READ DTAARA 'RUNDAT'                                           S01194
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTE                          S01194
+     C                     IN   RUNDTE                                    S01194
+     C*
+     C** SET ALL ERROR INDICATORS OFF
+     C*
+     C                     SETOF                     447522
+     C                     SETOF                     232425
+     C                     SETOF                     2640
+     C                     SETON                     42
+     C*
+     C** IF ACTION CODE IS ENQUIRE/DELETE DONT VALIDATE
+     C*
+     C           RACT      IFEQ 'E'
+     C                     SETON                     05
+     C                     END
+     C*
+     C           RACT      IFEQ 'D'
+     C                     SETON                     04
+     C                     END
+     C*
+     C** DO WHILE CF3/10/12 NOT PRESSED OR ERROR ON SCREEN
+     C*
+     C           *IN07     DOWEQ'0'
+     C           *IN03     ANDEQ'0'
+     C************IN02*****ANDEQ'0'                                       S01314
+     C           *IN42     ANDEQ'1'
+     C*
+     C                     SETOF                     42
+     C                     EXFMTEM0600F1
+     C*
+     C** RESET ERROR INDICATORS
+     C*
+     C                     SETOF                     404422
+     C                     SETOF                     232425
+     C                     SETOF                     2675
+     C*
+     C** CHECK VALIDATION ONLY IF INSERT OR AMEND
+     C*
+     C           RACT      IFEQ 'I'
+     C           RACT      OREQ 'A'
+     C*
+     C** REPORT LEVEL MUST BE EQUAL TO E OR F
+     C*
+     C           SRPTLV    IFNE 'E'
+     C           SRPTLV    ANDNE'F'
+     C                     SETON                     4440
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'014'     ERRMSG
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C*  IF NOT 'ALL', AT LEAST ONE ENTRY SHOULD BE MADE
+     C*
+     C           SPNOSN    IFEQ *BLANKS
+     C           SACOFF    ANDEQ*BLANKS
+     C           SCTRYC    ANDEQ*BLANKS
+     C           SREGCD    ANDEQ*BLANKS
+     C           SINDCD    ANDEQ*BLANKS
+     C           SALL      ANDEQ*BLANKS
+     C                     SETON                     754022
+     C                     SETON                     232425
+     C                     SETON                     26
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'015'     ERRMSG
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C           SALL      IFNE '   '
+     C           SALL      ANDNE'ALL'
+     C                     SETON                     7540
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C** IF SALL = ALL THEN ALL OTHER FIELDS MUST BE BLANK OR INVALID
+     C*
+     C           SPNOSN    IFNE *BLANKS
+     C           SACOFF    ORNE *BLANKS
+     C           SCTRYC    ORNE *BLANKS
+     C           SREGCD    ORNE *BLANKS
+     C           SINDCD    ORNE *BLANKS
+     C           SALL      IFEQ 'ALL'
+     C                     SETON                     7540
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'015'     ERRMSG
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C** CHECK IF CUSTOMER NAME OR NUMBER
+     C*
+     C           SPNOSN    IFNE *BLANKS
+     C                     TESTN          TST        73
+     C           *IN73     IFEQ '1'
+     C                     MOVE '*CNUM'   KEYSTS
+     C                     ELSE
+     C                     MOVE '*CHST'   KEYSTS
+     C                     END
+     C*
+     C** VALIDATE CUSTOMER
+     C*
+     C                     MOVE SPNOSN    CKEY
+     C                     CALL 'AOCUSTR0'PLIST1
+     C*
+     C** CHECK RETURN CODE FROM CALLED PROGRAM AND IF
+     C** RTCD BLANK,CHECK THAT CUSTOMER NUMBER IS A PARENT
+     C*
+     C           RTCD      IFNE *BLANKS
+     C           BBPAIN    ORNE 'P'
+     C                     SETON                     2240
+     C                     MOVEL'016'     ERRMSG
+     C                     END
+     C*
+     C           SPNOSN    IFEQ QUEST
+     C                     MOVELBBCUST    SPNOSN
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C           SACOFF    IFNE *BLANKS
+     C*
+     C** VALIDATE ACCOUNT OFFICER CODE
+     C*
+     C                     MOVE SACOFF    AKEY
+     C                     CALL 'AOACOFR0'PLIST2
+     C*
+     C** CHECK RETURN CODE FROM CALLED PROGRAM
+     C*
+     C           RTCD      IFNE *BLANKS
+     C                     SETON                     2340
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'016'     ERRMSG
+     C                     END
+     C           SACOFF    IFEQ QUEST
+     C                     MOVE AZACOC    SACOFF
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C           SCTRYC    IFNE *BLANKS
+     C*
+     C** VALIDATE COUNTRY CODE
+     C*
+     C                     MOVE SCTRYC    TKEY
+     C                     CALL 'AOCTRYR0'PLIST3
+     C*
+     C** CHECK RETURN CODE FROM CALLED PROGRAM
+     C*
+     C           RTCD      IFNE *BLANKS
+     C                     SETON                     2440
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'016'     ERRMSG
+     C                     END
+     C           SCTRYC    IFEQ QUEST
+     C                     MOVE A4CNCD    SCTRYC
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C           SREGCD    IFNE *BLANKS
+     C*
+     C** VALIDATE REGION CODE
+     C*
+     C                     MOVE SREGCD    RKEY
+     C                     CALL 'AOREGNR0'PLIST4
+     C*
+     C** CHECK RETURN CODE FROM CALLED PROGRAM
+     C*
+     C           RTCD      IFNE *BLANKS
+     C                     SETON                     2540
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'016'     ERRMSG
+     C                     END
+     C           SREGCD    IFEQ QUEST
+     C                     MOVE A3RGCD    SREGCD
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C*
+     C           SINDCD    IFNE *BLANKS
+     C*
+     C** VALIDATE INDUSTRY CODE
+     C*
+     C                     MOVE SINDCD    IKEY
+     C                     CALL 'AOINDSR0'PLIST5
+     C*
+     C** CHECK RETURN CODE FROM CALLED PROGRAM
+     C*
+     C           RTCD      IFNE *BLANKS
+     C                     SETON                     2640
+     C*
+     C** MOVE ERROR CODE INTO DISPLAY FILE FIELD
+     C*
+     C                     MOVEL'016'     ERRMSG
+     C                     END
+     C           SINDCD    IFEQ QUEST
+     C                     MOVE AOLICD    SINDCD
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF AN ERROR HAS OCCURED SET ON INDICATOR CONDITIONING LOOP
+     C*
+     C           *IN40     IFEQ '1'
+     C                     SETON                     42
+     C                     END
+     C                     END
+     C*
+     C** SET RETURN COMMANDS TO INDICATE HOW PROGRAM WAS EXITED
+     C*
+     C           *IN07     IFEQ '1'
+     C                     MOVE 'E'       RCMD
+     C                     END
+     C************IN02*****IFEQ '1'                                       S01314
+     C*********************MOVE 'F'       RCMD                            S01314
+     C*********************END                                            S01314
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'D'       RCMD
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C** COMPILE TIME DATA FOR COPYRIGHT ARRAY
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

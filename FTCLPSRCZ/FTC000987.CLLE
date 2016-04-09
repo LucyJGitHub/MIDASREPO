@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas FT Start/Stop Return Status Background Job')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Funds Transfer                                   */
+/*                                                                   */
+/*       FTC000987 - Start/Stop Return Status Background Job         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD031644 *CREATE   Date 05Jan15              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
+/*                  Status of Interfaced FT Payments). Unable        */
+/*                  to compile GP002900 due to zonal access.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTION) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+ 
+/* Declare parameters to AOSVALR0 */
+             DCL        VAR(&DTQNAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQLEN)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&DTQDTA)  TYPE(*CHAR) LEN(60)
+ 
+/* Declare parameters to AOSVALR0 */
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2015')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if feature CFT158 is ON */
+             CHGVAR     VAR(&RTNCDE) VALUE('       ')
+             CHGVAR     VAR(&SAR) VALUE('CFT158')
+             CHGVAR     VAR(&OPTION) VALUE('*VERIFY')
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTNCDE &OPTION &SAR &SCSARD)
+ 
+/* If feature is not switched ON, immediately end the program */
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO ENDCLPGM)
+ 
+/* Retrieve system prefix  - to be used in Jobname */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+/*----------------------*/
+/* Start background job */
+/*----------------------*/
+             IF         COND(&MODE *EQ 'START  ') THEN(DO)
+ 
+/* Check if the FTRETS_xx job is running */
+             ALCOBJ     OBJ((FTRETSLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDCLPGM))
+ 
+/* Deallocate dataarea as this will be allocated permanently within the */
+/* background job to be submitted  below */
+             DLCOBJ     OBJ((FTRETSLCK *DTAARA *EXCL))
+             MONMSG     MSGID(CPF0000)
+ 
+/* Submit FTRETS_xx background job */
+             CHGVAR     VAR(&JOBNAME) VALUE('FTRETS_' *CAT &PREFIX)
+             SBMJOB     CMD(CALL PGM(FTC000988)) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD)
+ 
+/* Send a message to MOPERQ indicating job was submitted */
+             SNDMSG     MSG('Background job started - FTRETS_' *CAT +
+                          &PREFIX *CAT ' FT Send Status Message') TOMSGQ(MOPERQ)
+ 
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+             ENDDO
+ 
+/*--------------------------*/
+/* Terminate background job */
+/*--------------------------*/
+             IF         COND(&MODE *EQ 'END    ') THEN(DO)
+ 
+/* Check if the FTRETS_xx job is running */
+             ALCOBJ     OBJ((FTRETSLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+ 
+/* Send 'END' message to data queue */
+             CHGVAR     VAR(&DTQNAM) VALUE('FTRETSDTQ')
+             CHGVAR     VAR(&DTQLIB) VALUE(&PREFIX *CAT 'DPLIB')
+             CHGVAR     VAR(&DTQLEN) VALUE(60)
+             CHGVAR     VAR(&DTQDTA) VALUE('END')
+             CALL       PGM(QSNDDTAQ) PARM(&DTQNAM &DTQLIB +
+                          &DTQLEN  &DTQDTA)
+ 
+/* Deallocate dataarea */
+             DLCOBJ     OBJ((FTRETSLCK *DTAARA *EXCL))
+             MONMSG     MSGID(CPF0000)
+ 
+/* Send termination message */
+             SNDMSG     MSG('Background job ended - FTRETS_' *CAT +
+                          &PREFIX *CAT ' FT Send Status Message') TOMSGQ(MOPERQ)
+ 
+             ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+/* Abnormal Processing */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          FTC000987 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ ENDCLPGM:
+             ENDPGM

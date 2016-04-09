@@ -1,0 +1,826 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Interest Dets-Log/Master File Update')
+0001 H***********                                                         S01117
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0219 - INTEREST DETAILS INPUT - S/TRANS                    *
+ 007 F*           MASTER FILE UPDATE                                  *
+0008 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990                                                     *
+0010 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CRE015             Date 18Dec09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 12SEP96               *
+     F*                 S01413             Date 13APR93               *
+     F*                 S01199                  27FEB90               *
+0011 F*                 S01117                  25JAN90               *
+0012 F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CRE015  -  Retail Term & Notice                              *
+     F*             Store historic changes to Interest type/subtype   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01408  -  Addition of core hook RE0219IIP1                  *
+     F*          -  Addition of core hook RE0219CCP2                  *
+     F*          -  Addition of core hook RE0219CCP1                  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*  S01199 - HELP SYSTEM.                                        *
+     F*  S01117  -  MULTIBRANCHING. LDA POSITIONS CHANGED.            *
+     F*                                                               *
+0013 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,RE0219F001
+0016 FRE0210FMCF  F     623            WORKSTN
+     F/COPY WNCPYSRC,RE0219F002
+0017 F*
+0019 FREINT   UF  F     320 12AI     2 DISK
+     F                                              KCOMIT
+0019 FREINHSL0O   E           K        DISK                                                   CRE015
+     F                                              KCOMIT                                    CRE015
+0022 FREINTD  O   F     320            DISK                      A
+     F                                              KCOMIT
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+0023 F*
+0024 F*       FUNCTION OF INDICATORS
+0025 F*       STANDARD INPUT PROGRAM INDICATORS
+0044 F*       76      SD SCREEN READ IN
+0043 F*       77      SA SCREEN READ IN
+0042 F*       78      SI SCREEN READ IN
+0041 F*       79      SYSTEM SET-UP FLAG ON
+0040 F*       80      BLINK DELETE CHECK FIELD LABEL
+0039 F*       81      OUTPUT INITIAL - SF - SCREEN
+0038 F*       82      OUTPUT INSERT - SI - SCREEN
+0037 F*       83      OUTPUT AMEND - SA - SCREEN
+0036 F*       84      OUTPUT DELETE - SD - SCREEN
+0035 F*       85      OUTPUT ENQUIRE - SE - SCREEN
+0034 F*       86      NON-DISPLAY USEFUL DATA
+0033 F*       87      NON-DISPLAY CHANGE DETAILS
+0032 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0031 F*       89      BLINK ACTION CODE LABEL
+0062 F*       HELP TEXT INDICATORS                                        S01199
+0061 F*                                                                   S01199
+0061 F*               INTEREST TYPE                                       S01199
+0061 F*               ~~~~~~~~~~~~~                                       S01199
+0061 F*           | 01    02    03   04                                   S01199
+0061 F*       ----|---------------------                                  S01199
+0061 F*       18  |  0     0     1    1                                   S01199
+0061 F*       19  |  0     1     0    1                                   S01199
+0061 F*                                                                   S01199
+0045 F*       RECORD ID INDICATORS
+0057 F*       64      RECORD UPDATED BY ANOTHER WORKSTATION
+0056 F*       65      WTRAN - SD RECORD
+0055 F*       66      WTRAN - SA RECORD
+0054 F*       67      WTARN - SI RECORD
+0050 F*       71      SPARE
+0049 F*       72      MASTER FILE - NO RECORD FOUND
+0048 F*       73      MASTER FILE - TRAILER
+0047 F*       74      MASTER FILE - DETAIL RECORD
+0046 F*       75      MASTER FILE - HEADER
+0027 F*       U7      DATABASE ERROR
+0058 F*       FILE UPDATE INDICATORS
+ 062 F*       52      UPDATE MASTER RECORD
+ 060 F*       54      UPDATE MASTER TRAILER RECORD
+0065 F*       SUNDRY INDS
+0015 F*       02      SET ON IF ERROR DURING READ FROM THE WORK STATION *
+0066 F*       49      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE
+0067 E*    STANDARD TABLES/ARRAYS
+0068 E                    ERCD       19  4               ERROR CODES
+0069 E                    ERCM    1   1 79               ERROR MESSAGES
+0070 E                    NR          5  5 0
+0071 E                    WN          5 15 0
+0072 E                    DC          5  3 0
+     E                    CPY@    1   1 80
+     E/EJECT
+0073 I*    STANDARD FILES
+0074 I*
+0075 I*    WORKSTATION FILE
+0076 I*
+0077 IRE0210FMNS
+0078 I*
+0079 I*    MASTER FILE - HEADER RECORD
+0080 I*
+0081 IREINT   NS  75   1 CA
+0082 I*
+0083 I*    MASTER FILE - TRAILER
+0084 I*
+0085 I        NS  73   1 CZ
+0086 I                                        1   1 RECI
+0087 I                                    P  31  330TNLU
+0088 I                                       34  34 IRRI
+0089 I                                    P  35  49 NR
+0090 I                                    P  50  89 WN
+0091 I                                    P  90  99 DC
+0092 I                                        1 200 OLD3
+0093 I                                      201 320 OLD4
+0094 I*
+0095 I*    MASTER FILE - DETAIL RECORD
+0096 I*
+0097 I        NS  74
+0098 I*
+0099 I*    STANDARD MASTER FILE TNLU AND OLD HASH AMOUNT
+     I                                        1   1 MRECI                                     CRE015
+     I                                        2  13 KEY                                       CRE015
+     I                                       14  30 ZZ017                                     CRE015
+     I                                    P  34  360ORED                                      CRE015
+     I                                    P  37  390LCD                                       CRE015
+     I                                       40  40 CHTP                                      CRE015
+     I                                       48  77 INNM                                      CRE015
+     I                                       78 165 BAL2                                      CRE015
+     I                                      166 231 RAT2                                      CRE015
+     I                                      232 2330BRT                                       CRE015
+     I                                      234 253 ZZ020                                     CRE015
+     I                                    P 254 2610INTH                                      CRE015
+     I                                    P 262 2640VDTC                                      CRE015
+     I                                    P 265 2670VDPC                                      CRE015
+     I                                      268 320 ZZ053                                     CRE015
+0100 I                                    P  31  330MTNLU
+0101 I                                    P  41  470OLDH
+0102 I*    OLD MASTER FILE CHARACTER STRINGS
+0103 I                                        1 200 OLD1
+0104 I                                      201 320 OLD2
+0164 I*
+0165 I*    STANDARD LOCAL DATA AREA FIELDS
+0166 I*
+0167 ILDA        UDS                            256
+0168 I                                        1   8 LPROC
+0169 I***********                           134 138 LFILE                 S01117
+0170 I***********                           139 167 LKEY                  S01117
+0171 I***********                           168 175 LPROG                 S01117
+0172 I***********                           176 1770LDBNO                 S01117
+0183 I                                      134 141 LFILE                 S01117
+0183 I                                      142 170 LKEY                  S01117
+0183 I                                      171 180 LPROG                 S01117
+0183 I                                      181 1830LDBNO                 S01117
+0183 I                                      134 141 DBFILE                S01117
+0183 I                                      142 170 DBKEY                 S01117
+0183 I                                      171 180 DBPGM                 S01117
+0183 I                                      181 1830DBASE                 S01117
+0173 I***********                           181 1850LRUND                 S01117
+0174 I***********                           186 192 LRUNA                 S01117
+0175 I***********                           193 193 LDATF                 S01117
+0176 I***********                           194 1940LSFLG                 S01117
+0177 I***********                           195 1960LKEYL                 S01117
+0178 I***********                           197 202 LISP                  S01117
+0179 I***********                           203 203 LTWOL                 S01117
+0180 I***********                           204 2040LLDLP                 S01117
+0181 I***********                           205 2090LTNLU                 S01117
+0182 I***********                           210 210 LDELM                 S01117
+0183 I***********                           211 211 LDUD                  S01117
+0190 I                                      187 1910LRUND                 S01117
+0191 I                                      192 198 LRUNA                 S01117
+0192 I                                      199 199 LDATF                 S01117
+0193 I**********                            200 2000LSFLG           S01117S01194
+0193 I                                      200 200 LSFLG                 S01194
+0194 I                                      201 2020LKEYL                 S01117
+0195 I                                      203 208 LISP                  S01117
+0196 I                                      209 209 LTWOL                 S01117
+0197 I                                      210 2100LLDLP                 S01117
+0198 I                                      211 2150LTNLU                 S01117
+0199 I                                      216 216 LDELM                 S01117
+0200 I                                      217 217 LDUD                  S01117
+0184 I*
+0185 I*  NON STANDARD LOCAL DATA AREA FIELDS
+0186 I*
+0187 I                                      100 131 LTITL
+0188 I                                      132 133 LITYP
+     I*
+0137 I*    WORKSTATION TRANSACTION FILE DATA STRUCTURE
+0138 I*
+0139 IWTRAN      UDS                            860
+0142 I*    MASTER FILE KEY
+0143 I                                        2  13 MASTKY
+0144 I*    STANDARD NEW HASH AMOUNT
+0145 I                                    P  41  470NEWH
+0146 I*    NEW MASTER FILE CHARACTER STRINGS
+0147 I                                        1 200 NEW1
+0148 I                                      201 320 NEW2
+0149 I                                      201 400 NEW200
+0152 I*    STANDARD SCREEN FIELDS
+0153 I                                      461 467 SRUNA
+0154 I                                      484 486 SWID
+0155 I                                      492 494 SICCY
+0156 I                                      495 495 SACTN
+0157 I                                      461 528 SCN68
+0158 I                                      461 716 SCN256
+0159 I                                      487 495 SCN9
+     I*    SCREEN IDENTIFICATION FIELD
+     I                                      468 469 SID
+     I*
+     I*  RETRIEVES WSID FROM PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     I**  DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I**
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**
+     I**   DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I**
+     I**   DATA STRUCTURE USED IN COMMITMENT
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SACTNX
+     I                                       26  35 USRIDX
+     I                                       51 306 SC256X
+     IDSFDY     E DSDSFDY                                                                     CRE015
+     I*                                                                                       CRE015
+     I** First DS for access programs, Short data structure                                   CRE015
+     I*                                                                                       CRE015
+     ISCSARD    E DSSCSARDPD                                                                  CRE015
+     I** Switchable SARs                                                                      CRE015
+      *                                                                   S01408
+     I/COPY WNCPYSRC,RE0219IIP1                                           S01408
+      *                                                                   S01408
+     I**
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C**   IF RPG 01021 ERROR THEN GOTO PROGRAM ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     EXSR UDLOG
+     C                     END
+     C**
+0189 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0190 C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRAN
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WTRAN
+     C*                                                                                       CRE015
+     C** Check if SAR CRE015 is set on                                                        CRE015
+     C                     CALL 'AOSARDR0'                                                    CRE015
+     C                     PARM *BLANKS   @RTCD   7                                           CRE015
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE015
+     C                     PARM 'CRE015'  @SARD   6                                           CRE015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE015
+     C*                                                                                       CRE015
+     C           @RTCD     IFEQ *BLANKS                                                       CRE015
+     C                     MOVE 'Y'       CRE015  1                                           CRE015
+     C                     ELSE                                                               CRE015
+     C                     MOVE 'N'       CRE015                                              CRE015
+     C                     END                                                                CRE015
+     C*                                                                                       CRE015
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE0219CCP1                                           S01408
+      *                                                                   S01408
+0180 C*
+0194 C                     MOVELLISP      WPROG   8
+0195 C                     MOVE '9  '     WPROG
+0196 C                     MOVELWPROG     SPID    6
+0197 C*  SET-UP STANDARD LDA FIELDS
+0198 C                     MOVE WPROG     LPROG
+0199 C                     Z-ADD9         LLDLP
+0200 C*  SET-UP STANDARD BLANK FIELDS
+0201 C                     MOVE ' '       BLK200200
+0202 C*  INITIALISE STANDARD INDICATORS
+0203 C                     SETON                     88    * NON-DISPLAY
+0204 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0205 C********** LSFLG     COMP 1                        79* SSF          S01194
+0205 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0206 C           LDELM     COMP '*'                      49* DELETE METHOD
+     C*
+     C*  DETERMINE TYPE OF WTRAN RECORD SI, SA OR SD?
+     C           SID       COMP 'SI'                     67
+     C           SID       COMP 'SA'                     66
+     C           SID       COMP 'SD'                     65
+0197 C*
+0208 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0209 C*
+0210 C                     MOVE BLK200    ERMSG  79
+0211 C                     MOVE '    '    ERCD
+0212 C                     Z-ADD0         S       20
+0217 C*
+0218 C                     Z-ADD0         ZERO05  50
+0219 C*
+0220 C*  SET-UP KEY FOR MASTER FILE TRAILER
+0221 C                     MOVEL'99999999'TRLRKY 12
+0222 C                     MOVE '999D'    TRLRKY
+0223 C*
+ 235 C*  EXECUTE UPDATE PROCEDURE
+0236 C*
+0237 C                     EXSR UDLOG
+0238 C*
+0239 C                     EXSR SUBSF
+     C*
+0494 C                     EXSR EXEPT
+     C                     OUT  LDA
+     C                     OUT  WTRAN
+     C   U7                SETON                     LR
+     C   LR U7             EXSR *PSSR                                     S01117
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C                     RETRN
+     C*
+     C* DUMMY READ OPERATION
+0191 C                     READ RE0210FM                 02
+0193 C                     SETOF                     02
+0240 C*
+0241 C********************************************************************
+0242 C**
+0243 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+0244 C**
+0245 C           SUBSF     BEGSR                           ***  SUBSF  ***
+     C**   Set up indicators for help text.                               S01199
+     C           LITYP     IFEQ '01'                                      S01199
+     C**   Interest type 01 - Tiered.                                     S01199
+     C                     MOVE '0'       *IN18                           S01199
+     C                     MOVE '0'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '02'                                      S01199
+     C**   Interest type 02 - Threshold.                                  S01199
+     C                     MOVE '0'       *IN18                           S01199
+     C                     MOVE '1'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '03'                                      S01199
+     C**   Interest type 03 - Tiered, minimum monthly balance.            S01199
+     C                     MOVE '1'       *IN18                           S01199
+     C                     MOVE '0'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '04'                                      S01199
+     C**   Interest type 04 - Threshold, minimum monthly balance.         S01199
+     C                     MOVE '1'       *IN18                           S01199
+     C                     MOVE '1'       *IN19                           S01199
+     C                     END                                            S01199
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE0219CCP2                                           S01408
+      *                                                                   S01408
+     C**                                                                  S01199
+0246 C                     SETON                     81
+0247 C                     MOVE '1  '     LPROC
+0248 C                     MOVE 'SF'      SID     2
+0249 C                     ENDSR
+0250 C********************************************************************
+0251 C**
+0252 C**   SUBR. - TO CHAIN TO MASTER FILE
+0253 C**
+0254 C           MASTCH    BEGSR                           *** MASTCH  ***
+0255 C                     SETOF                     727374
+0256 C                     SETOF                     75
+0257 C           MASTKY    CHAINREINT                72
+      *                                                                                       CRE015
+      ** If record exists store history if Term & Notice switched on                          CRE015
+     C           CRE015    IFEQ 'Y'                                                           CRE015
+     C           *IN72     ANDEQ'0'                                                           CRE015
+     C                     MOVE MRECI     H@RECI                                              CRE015
+     C                     MOVE KEY       H@KEY                                               CRE015
+     C                     MOVE ZZ017     H@ZZ17                                              CRE015
+     C                     Z-ADDMTNLU     H@TNLU                                              CRE015
+     C                     Z-ADDORED      H@ORED                                              CRE015
+     C                     Z-ADDLCD       H@LCD                                               CRE015
+     C                     MOVE CHTP      H@CHTP                                              CRE015
+     C                     Z-ADDOLDH      H@HASH                                              CRE015
+     C                     MOVE INNM      H@INNM                                              CRE015
+     C                     MOVE BAL2      H@BAL2                                              CRE015
+     C                     MOVE RAT2      H@RAT2                                              CRE015
+     C                     Z-ADDBRT       H@BRT                                               CRE015
+     C                     MOVE ZZ020     H@ZZ20                                              CRE015
+     C                     Z-ADDINTH      H@INTH                                              CRE015
+     C                     Z-ADDVDTC      H@VDTC                                              CRE015
+     C                     Z-ADDVDPC      H@VDPC                                              CRE015
+     C                     MOVE ZZ053     H@ZZ53                                              CRE015
+     C                     ENDIF                                                              CRE015
+      *                                                                                       CRE015
+0258 C                     ENDSR
+0268 C********************************************************************
+0269 C**
+0270 C**   SUBR. - TO PERFORM EXCEPTION OUTPUT
+0271 C**
+0272 C           EXEPT     BEGSR                           ***  EXEPT  ***
+0273 C                     EXCPT
+      ** Update history file                                                                  CRE015
+     C           CRE015    IFEQ 'Y'                                                           CRE015
+     C                     EXSR UPDHIS                                                        CRE015
+     C                     ENDIF                                                              CRE015
+      *                                                                                       CRE015
+0274 C                     SETOF                     525481
+0277 C                     ENDSR
+0278 C********************************************************************
+     C********************************************************************                    CRE015
+     C**                                                                                      CRE015
+     C**   SUBR. - Update the history file                                                    CRE015
+     C**                                                                                      CRE015
+     C           UPDHIS    BEGSR                                                              CRE015
+     C**                                                                                      CRE015
+     C** If interest type/subtype has been changed put old record to                          CRE015
+     C** history file                                                                         CRE015
+     C           *IN52     IFEQ '1'                                                           CRE015
+     C           *IN72     ANDEQ'0'                                                           CRE015
+     C                     WRITEREINHSD0                                                      CRE015
+     C                     ENDIF                                                              CRE015
+     C                     ENDSR                                                              CRE015
+     C********************************************************************                    CRE015
+0279 C**
+0280 C**   SUBR. - TO PERFORM UPDATING
+0281 C**
+0282 C           UDLOG     BEGSR                           ***  UDLOG  ***
+0283 C*
+     C**   IF RPG 01021 ERROR THEN GOTO PROGRAM ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS  50
+     C                     GOTO INFTAG
+     C                     END
+     C**
+0291 C                     TIME           MTIME   60
+0292 C*
+0293 C*  ZEROISE MASTER FILE TNLU
+0294 C                     Z-ADD0         MTNLU
+0295 C*
+0296 C*  UPDATE CHAIN TO THE MASTER FILE DETAIL RECORD
+0297 C                     EXSR MASTCH
+0298 C*
+0299 C*  CHECK IF STATUS CHANGED
+0300 C           MTNLU     COMP LTNLU                6464
+     C**
+     C           INFTAG    TAG                             ** INFTAG TAG *
+0301 C*
+0302 C*  OUTPUT INITIAL SCREEN WITH MSG IF STATUS CHANGED
+0303 C  N64                GOTO UDLOG1
+0304 C                     EXSR SUBSF
+0305 C                     SETOF                     88
+0306 C           S         ADD  1         S
+0308 C                     MOVELERCM,1    ERMSG
+0309 C                     EXSR EXEPT
+0310 C                     GOTO UDEND
+0311 C*
+0312 C           UDLOG1    TAG                             ** UDLOG1 TAG
+0313 C*
+     C**  OBTAIN LAST TRANSACTION NUMBER  AND SET UP STANDARD OUTPUT
+     C**  INFORMATION
+     C                     EXSR ZTNLU1
+     C                     MOVE 'RE'      MDID    2
+     C                     MOVEL'RE0219'  PGMN    8
+     C                     MOVE WSID      WSIDX
+     C                     MOVE USRID     USRIDX
+     C                     MOVE SACTN     SACTNX
+     C                     MOVE SCN256    SC256X
+     C**
+0376 C** UPDATE MASTER FILE DETAIL RECORD
+0377 C*
+0378 C                     SETON                     52
+0379 C                     EXSR EXEPT
+0392 C*
+0393 C*  UPDATE CHAIN TO THE MASTER FILE TRAILER
+0394 C                     MOVE TRLRKY    MASTKY
+0395 C                     EXSR MASTCH
+0396 C  N73                SETON                     U7
+0397 C  N73                MOVELWPROG     LFILE
+0398 C  N73                MOVE BLK200    LKEY
+0399 C  N73                MOVELMASTKY    LKEY
+0400 C  N73                MOVE '97'      LDBNO            ** DB ERROR 97
+0401 C  N73                GOTO UDEND
+0411 C*
+0412 C*  IF THERE IS NO HASH TOTAL FIELD ON THE MASTER FILE DETAIL RECORD,
+0413 C*  THEN ZEROISE OLDH/NEWH AND CONTINUE AS IF THERE IS.
+0414 C*
+0415 C                     Z-ADD0         OLDH   130
+0416 C                     Z-ADD0         NEWH   130
+0417 C*
+0418 C*  UPDATE FILE CONTROLS
+0419 C*
+0420 C*  UPDATE NUMBER AND HASH OF RECORDS ON FILE
+0421 C*
+0422 C*  NOT DONE FOR DELETE IF RECI NOT SET TO *
+0423 C*
+0424 C   65N49             GOTO UDLOG2
+0425 C*
+0426 C                     SETOF                     96
+0427 C*
+0428 C*  INSERT
+0429 C   67                Z-ADD1         H          97    *  ADD
+0430 C   67                MOVE NEWH      ZZAMT
+0431 C*  AMEND
+0432 C   66                Z-ADD1         H          97    *  ADD
+0433 C   66      NEWH      SUB  OLDH      WRK15  150
+0434 C   66                MOVE WRK15     ZZAMT
+0435 C*  SUPPRESS UPDATE OF NR,1 FOR AMENDMENT
+0436 C   66                SETON                     96
+0437 C*  DELETE - IF * PUT IN RECORD ID
+0438 C   65                Z-ADD1         H            97  *  SUBTRACT
+0439 C   65                MOVE OLDH      ZZAMT
+0440 C*
+0441 C                     EXSR NPZHSH
+0442 C*
+0443 C           UDLOG2    TAG                             ** UDLOG2 TAG
+0444 C*
+0445 C*  UPDATE NUMBER AND HASH OF RECORDS INSERTED/AMENDED/DELETED TODAY
+0446 C*
+0447 C                     SETOF                     96
+0448 C*
+0449 C*  INSERT
+0450 C   67                Z-ADD3         H          97    *  ADD
+0451 C   67                MOVE NEWH      ZZAMT
+0452 C*  AMEND
+0453 C   66                Z-ADD4         H          97    *  ADD
+0454 C   66      NEWH      SUB  OLDH      WRK15
+0455 C   66                MOVE WRK15     ZZAMT
+0456 C*  DELETE - WHETHER RECORD ID SET TO * OR NOT
+0457 C   65                Z-ADD5         H          97    *  ADD
+0458 C   65                MOVE OLDH      ZZAMT
+0459 C*
+0460 C                     EXSR NPZHSH
+0461 C*
+ 473 C*  UPDATE MASTER FILE TRAILER
+0474 C                     SETON                     54
+0475 C                     EXSR EXEPT
+0476 C*
+     C**  END COMMITMENT CYCLE
+     C           CMTTXT    COMIT
+     C**
+0496 C           UDEND     ENDSR                           ** UDEND TAG
+0497 C*
+0498 C********************************************************************
+0499 C**
+0500 C**   SUBR. - SUBROUTINE TO ADD  -97 ON-  OR SUBTRACT  -97 OFF-  1
+0501 C**           TO/FROM NR,H AND TO ADD/SUBTRACT ZZAMT TO/FROM WN/DC,H.
+0502 C**           96 ON SUPPRESSES THE UPDATE OF NR,H - USED FOR AMEND
+0503 C**
+0504 C           NPZHSH    BEGSR                           ***  NPZHSH ***
+0505 C                     Z-ADDH         H       10
+0506 C*
+0507 C   97N96   NR,H      ADD  1         NR,H
+0508 C  N97N96   NR,H      SUB  1         NR,H
+0509 C*
+0510 C                     Z-ADDWN,H      ZZTOTI
+0511 C                     Z-ADDDC,H      ZZTOTD
+0512 C   97                EXSR GLZADD
+0513 C  N97                EXSR GLZSUB
+0514 C                     Z-ADDZZTOTI    WN,H
+0515 C                     Z-ADDZZTOTD    DC,H
+0516 C*
+0517 C                     ENDSR
+0518 C********************************************************************
+0519 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0520 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0521 C*
+0522 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0523 C*
+0524 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0525 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0526 C*
+0527 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0528 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0529 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0530 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0531 C*
+0532 CSR                   EXSR GLZSUM
+0533 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0534 C*
+0535 C********************************************************************
+0536 C* SUBROUTINE TO SUBTRACT AN AMOUNT (ZZAMT) FROM THE TOTAL
+0537 C*                                                   (ZZTOTI,ZZTOTD)
+0538 C*  IND '99' IS SET BY AN OVERFLOW ERROR
+0539 CSR         GLZSUB    BEGSR                           *** GLZSUB ****
+0540 C* PROCESSING. JUST REVERSE THE 'SIGN' AND ADD
+0541 CSR                   Z-SUBZZAMT     ZZAMT  153       REVERSE 'SIGN'
+0542 CSR                   EXSR GLZADD                       AND 'ADD'
+0543 CSR                   Z-SUBZZAMT     ZZAMT            RESTORE 'SIGN'
+0544 CSR                   ENDSR
+0545 C********************************************************************
+0546 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0547 C*                        GLZADD, GLZSUB, GLZCMP.
+0548 C*          PARAMETERS PASSED -
+0549 C*                     I/P ZZAMTI ZZAMTD
+0550 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0551 C*
+0552 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0553 C*
+0554 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0555 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0556 CSR                   SETOF                     919293
+0557 CSR                   SETOF                     949599
+0558 C*
+0559 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0560 CSR         ZZAMTI    COMP 0                      9293
+0561 CSR 93      ZZAMTD    COMP 0                      9293
+0562 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0563 C*
+0564 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0565 CSR         ZZTOTI    COMP 0                      9193
+0566 CSR 93      ZZTOTD    COMP 0                      9193
+0567 C*
+0568 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0569 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0570 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0571 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0572 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0573 CSR 91N92
+0574 CORN91 92             GOTO ZZOFPS
+0575 C*
+0576 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0577 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0578 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0579 C*
+0580 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0581 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0582 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0583 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0584 C*
+0585 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0586 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0587 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0588 CSRN99                Z-ADDZZWK2     ZZTOTD
+0589 CSRN99                Z-ADDZZWK3     ZZTOTI
+0590 C*
+0591 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0592 CSR 99                Z-ADD0         ZZAMT  153
+0593 CSR                   GOTO ZZSEND
+0594 C*
+0595 C* THE 'SIGNS' ARE DIFFERENT
+0596 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0597 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0598 C*
+0599 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0600 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0601 C*
+0602 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0603 C*
+0604 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0605 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0606 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0607 C*
+0608 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0609 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0610 C*
+0611 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0612 CSR 95                Z-ADD0         ZZTOTI
+0613 CSR 95                Z-ADD0         ZZTOTD
+0614 CSR 95                GOTO ZZSEND
+0615 C*
+0616 C* IF ZZTOT GT. ZZAMT.
+0617 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0618 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0619 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0620 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0621 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0622 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0624 C*
+0625 C* IF ZZAMT GT. ZZTOT.
+0626 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0627 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0628 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0629 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0630 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0631 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0632 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0633 C*
+0634 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0635 CSR                   SETOF                     94
+0636 CSR 93 91
+0637 CORN93 92             SETON                     94
+0638 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0639 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0640 C**
+0641 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0642 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0643 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0644 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0645 C**
+0646 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0647 CSR                   SETOF                     96
+0648 CSR         ZZTOTD    COMP 0                        91
+0649 CSR 91      ZZTOTI    COMP 0                      96
+0650 CSR 96                MOVE '.000-'   ZZNEGD  5
+0651 CSR                   ENDSR                             ** ENDSR **
+0652 C********************************************************************
+     C*
+     C*   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C*                THEN UPDATE AND RELEASE THE DATA AREA.
+     C*
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*****************************************************************
+     C**   FILE EXEPTION/ERROR HANDLING SUBROUTINE
+     C**
+     C           INFSR     BEGSR
+     C**   CHECK ERROR TYPE
+     C           STATUS    IFEQ 01021
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C           MASTKY    CHAINREINT                72
+     C**
+     C           *IN72     IFEQ '0'
+     C**   ROLL BACK UPDATES ALREADY DONE
+     C                     ROLBK
+     C**   SET ON 'RECORD UPDATED BY ANOTHER WORKSTATION' INDICATOR
+     C                     SETON                     64
+     C**   RESET OTHER INDICATORS
+     C                     SETOF                     525481
+     C**
+     C                     MOVEL'*DETC'   EXTTAG  6
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ENDSREXTTAG
+     C**
+     C*****************************************************************
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+0653 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+0654 O*
+0655 ORE0210FME        81
+0656 O                                   K8 'RE0210F1'
+0657 O                         SRUNA      7
+0658 O                         SID        9
+0659 O                         SPID      15
+0660 O                         LTITL     47
+0662 O                         MTIME     55 '  .  .  '
+0661 O                         SWID      58
+0663 O                         LITYP     60
+0664 O                 64      SCN9      69
+0665 O*  ERROR FIELDS
+0666 O                         ERMSG    148
+0667 O                         ERCD     227
+0706 O*
+0707 O*  MASTER FILE - DETAIL RECORD UPDATE, FOR INSERT
+0708 O*  WHEN NO RECORD ON FILE
+0709 O*
+0710 OREINTD  EADD     52 72
+0711 O                         NEW1     200
+0712 O                         NEW2     320
+0713 O                         NATN      33P
+0714 O*
+0715 O*  MASTER FILE - DETAIL RECORD UPDATE, FOR INSERT OVER DELETED/
+0716 O*  BACKED OUT RECORD AND AMEND/DELETE
+0717 O*
+0718 OREINT   E        52N72
+0719 O                         NEW1     200
+0720 O                         NEW2     320
+0721 O                         NATN      33P
+0747 O*
+0748 O*  MASTER FILE - TRAILER UPDATE
+0749 O*
+0750 O        E        54
+0751 O                         OLD3     200
+0752 O                         OLD4     320
+0753 O                         NATN      33P
+0754 O                                   34 'Y'
+0755 O                         NR        49P
+0756 O                         WN        89P
+0757 O                         DC        99P
+0765 O*
+**   ERROR MESSAGES
+THIS RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

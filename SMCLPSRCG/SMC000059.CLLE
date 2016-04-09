@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMC200057F) TOFILE(UPDBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Remove logical files for CHGCCSIDS')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation                                      */
+/*                                                                   */
+/*       SMC000059 - Remove logical files for change of CCSIDs       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 256038  *CREATE    Date 11Jul08              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       256038 - Handle logical file problems.                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLAG)
+ 
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&SAVNAME) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(SMC200057F)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&FLAG) VALUE(' ')
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&WHREFI *NE &SAVNAME) THEN(DO)
+                CHGVAR     VAR(&SAVNAME) VALUE(&WHREFI)
+ 
+                DLTF       FILE(&WHRELI/&WHREFI)
+                MONMSG     MSGID(CPF2105)
+                MONMSG     MSGID(CPF3219) EXEC(DO)
+                   CHGVAR     VAR(&FLAG) VALUE('Y')
+                ENDDO
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&FLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

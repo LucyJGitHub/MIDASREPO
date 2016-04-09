@@ -1,0 +1,613 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Generate balancing entries')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0315 - Generate Balancing Entries                          *
+      *                                                               *
+      *  Function: This program balances the Management Accounts by   *
+      *   (COB)    branch, currency, value date and optionally by     *
+      *            profit centre. Balancing entries are posted to     *
+      *            the primary funding gap account.                   *
+      *                                                               *
+      *  Called by: MCC0310 - Balance Generated Postings              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 226963             Date 12Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 188827             Date 16Jan01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 149360             Date 30Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02MAR99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 CMC001 *CREATE     DATE 18MAR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  AMENDMENT HISTORY                                            *
+      *                                                               *
+      *  226963 - Remove 149360 (SC212958). Applied 218046            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  188827 - Exclude Primary funding gap account from calculation*
+      *           of Daily Gap funding requirement.                   *
+      *  149360 - When posting the balancing entry also post an       *
+      *           Interbranch Posting to keep the Ledger in balance   *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CMC001 - Management Accounts Enhancement for PCA.            *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *INPUT FILES
+     FMCMOVEL0IP  E           K        DISK
+     F            MCPCACD0                          KRENAMEMCMOVE
+      * Transaction Generated Entries
+      /SPACE
+      * OUTPUT FILES
+     FMCPCBLPDO   E                    DISK
+      * MC Profit Centre Balancing Entries
+     FMC0315AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       01      - Initial processing completed
+      *       11      - End of file on SDCURRL1
+      *       20      - Base Ccy Equivalent account
+      *       21      - Spot Trade account
+      *       90-99   - Standard subroutine indicators.
+      *
+      *          U7   Set on with U8 if a database error occurs.
+      *          U8   File out of balance if on on its own.
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     E                    TABA    1   1 30               NARRATIVE
+     E                    CPY@    1   1 80
+     E                    CCYC      999  3               Currency Codes
+     E                    SPAE      999  4               Spot Trd Eqv A/cs
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IMCMOVE
+     I                                              BRCA  L4
+     I                                              CCY   L3
+     I                                              EVDT  L2
+     I                                              PRFC  L1
+      *
+      *  Data Structure for Copyright Statement
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+      * branch
+     I            DS
+     I                                        1   30BRCD
+     I                                        1   3 BRCA
+      *
+      *  Data Structure used to store File Controls
+     ICNTRL       DS                          2
+     I                                        1  100ZZRECS
+     I                                       11  290TOTDR
+     I                                       30  480TOTCR
+      *
+      * Data Structure for Printer file MC0315AU
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+      *
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDACOD    E DSSDACODPD
+      **   Account code details
+      *
+     ISDBANK    E DSSDBANKPD
+      **   Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **   Branch details
+      *
+     ISDPCAC    E DSSDPCACPD
+      **   Profit Centre Acctg details
+     I              QQFNIC                          FNICQQ                                    CGL029
+     I              QQFNAA                          FNAAQQ                                    CGL029
+      *
+     ISCSARD    E DSSCSARDPD
+      **   Profit Centre Acctg details
+      *
+     IDSFDY     E DSDSFDY
+      * First DS for Access Programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      * Second DS for Access Programs, Long Data Structure
+      *
+     IRUNDT     E DSRUNDAT
+      *    Run date Data Area
+      *
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+      /SPACE
+      *  MAIN PROCESSING
+      *
+      **  First cycle to access the standing data
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *IN01     IFEQ '0'
+     C                     EXSR #INIT
+     C                     END
+      *
+      **  Main Processing to:
+      **     1. Generate Postings to Balance Profit Centres / Units
+      *
+      *
+      **  If single Branch, Set branch to Default Branch
+      *
+     C           AGMBIN    IFNE 'Y'
+     C                     MOVE BJSBRC    BRCA
+     C                     END
+      *
+      **  On Change of Branch, Access the Banch Internal Cust. Number
+      *
+     C           *INL4     IFEQ *ON
+     C                     EXSR #BRCHD
+     C                     END
+      *
+      **  Accumulate Movement Amount
+      *
+      *Move Numeric ACOD field into a working Character field for         188827
+      *comparison                                                         188827
+     C**********           MOVELACOD      WACOD   4                                    188827 CGL029
+     C                     MOVELACOD      WACOD  10                                           CGL029
+     C           WACOD     IFNE FTPFGA                                    188827
+     C                     ADD  PAMT      GAPBL
+     C                     ADD  PAMT      TOTBL
+     C                     ENDIF                                          188827
+      *
+      **  Count Records Read and Calculate the Input Total
+      *
+     C           1         OCUR CNTRL
+     C                     EXSR HASHR
+     C*
+      ******************************************************************
+      *    TOTAL TIME CALCULATIONS.                                    *
+      ******************************************************************
+      *
+      **  On Change of Branch, Currency, Profit Centre, or Value Date
+      **  Balance the Profit Centre / Unit
+      *
+     CL1                   EXSR #UNBAL
+     CL2                   EXSR #DFLT
+      *
+     CLRN01                EXSR #INIT
+     CLR                   EXSR #AUDIT
+      /EJECT
+      *****************************************************************
+      *
+      *  #INIT --- Subroutine to Perform Initial Processing
+      *
+      *  CALLED FROM: Main Processing, Total Time Processing
+      *
+      *  CALLS: AOBANKR0, RCFSP, DBERR
+      *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR                           ***  FIRST  ***
+      *
+      **  Access Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Define LDA & PCA Data areas
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Define Work fields
+      *
+     C           *LIKE     DEFN PAMT      TOTBL
+     C           *LIKE     DEFN PAMT      GAPBL
+      *
+      ** Set up Contants and Blank/Zeroise output formats
+      *
+     C           1         DO   2         W
+     C           W         OCUR CNTRL
+     C                     CLEARCNTRL
+     C                     ENDDO
+      *
+      **  Set up Fields for DB Error
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE *ZEROS    DBASE
+     C                     MOVEL'MC0315  'DBPGM
+     C                     OUT  LDA
+      *
+      ** Read Bank details via Access program for Title, Run Date, etc
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     OUT  LDA                        *************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Read PCA Installation Control Data for Primary Funding Gap     Unit,
+      ** Account Code and Primary Funding Profit Centre.
+      *
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDPCAC    PARM SDPCAC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPCACPD'DBFILE           *************
+     C                     Z-ADD3         DBASE            * DBERR 003 *
+     C                     MOVE *BLANKS   DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** If the primary funding gap account has not been defined in
+      ** PF/SDPCACPD, terminate process.
+      *
+     C           FTPFGA    IFEQ *BLANKS
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      /SPACE
+      *
+      **  Write Audit file Headings
+      *
+     C                     WRITEHEADAU
+      *
+     C                     MOVE '1'       *IN01
+      *
+      ** Get the Primary Funding Gap Account's account section          Unit,
+      *
+     C                     CALL 'AOACODR0'             99
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM FTPFGA    @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM FTPFGA    @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDACODPD'DBFILE           *************
+     C                     Z-ADD4         DBASE            * DBERR 004 *
+     C                     MOVEL@ACOD     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      /SPACE
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  #UNBAL --- Subroutine to Write Balancing Profit Centre Entries
+      *
+      *  CALLED FROM: Total Time Processing
+      *
+      *  CALLS:
+      *
+      *****************************************************************
+      *
+     C           #UNBAL    BEGSR
+      *
+      **  Output, if there is a gap funding requirement
+      *
+     C           GAPBL     IFNE *ZERO
+      *
+      **  Setup fields for Primary Funding Gap A/c
+      *
+     C                     MOVE 'F'       ATYP
+     C                     MOVE *BLANK    BOKC
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     MOVE A8BICN    CNUM
+     C                     MOVE FTPFGA    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     MOVE A5ACSC    ACSC
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELTABA      PNAR
+     C                     MOVE 'K'       GETP
+     C           BJRDNB    MULT 1000000   PDTM
+     C                     ADD  235959    PDTM
+     C                     Z-ADD0         VOIN
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+      *
+      **  Output to Primary Funding Gap Account with Posting Unit Code
+      *
+     C                     Z-SUBGAPBL     PAMT
+      *
+     C           2         OCUR CNTRL
+     C                     EXSR HASHR
+     C                     WRITEMCPCACD0
+     C                     ENDIF
+      *
+      **  Zeroise Gap Totals
+      *
+     C                     Z-ADD0         GAPBL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  #DFLT  --- Subroutine to Write Balancing Default Profit Centre
+      *
+      *  CALLED FROM: Total Time Processing
+      *
+      *  CALLS:
+      *
+      *****************************************************************
+      *
+     C           #DFLT     BEGSR
+      *
+      **  If there is a gap funding requirement and primary funding
+      **  profit centre has been defined, generate another posting.
+      *
+     C           TOTBL     IFNE *ZERO
+     C           FTPRFP    ANDNE*BLANKS
+      *
+      **  Setup fields for Primary Funding Gap A/c
+      *
+     C                     MOVE 'F'       ATYP
+     C                     MOVE *BLANK    BOKC
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     MOVE A8BICN    CNUM
+     C                     MOVE FTPFGA    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     MOVE A5ACSC    ACSC
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELTABA      PNAR
+     C                     MOVE 'K'       GETP
+     C           BJRDNB    MULT 1000000   PDTM
+     C                     ADD  235959    PDTM
+     C                     Z-ADD0         VOIN
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+     C                     MOVE FTPRFP    PRFC
+      *
+      **  Output to total for Date/Profit
+      *
+     C                     Z-ADDTOTBL     PAMT
+      *
+     C           2         OCUR CNTRL
+     C                     EXSR HASHR
+     C                     WRITEMCPCACD0
+      **ENSURE*THAT LEDGER IS KEPT IN BALANCE BY POSTING EXTRA ENTRY                  149360  226963
+     C********** TOTBL     IFGT *ZERO                                                 149360  226963
+     C**********           MOVE A8DFAC    ACOD                                        149360  226963
+     C**********           ELSE                                                       149360  226963
+     C**********           MOVE A8DTAC    ACOD                                        149360  226963
+      *
+     C                     ENDIF
+     C**********           Z-SUBTOTBL     PAMT                                        149360  226963
+     C********** 2         OCUR CNTRL                                                 149360  226963
+     C**********           EXSR HASHR                                                 149360  226963
+     C**********           WRITEMCPCACD0                                              149360  226963
+     C**********           ENDIF                                                      149360  226963
+      *
+      **  Zeroise Gap Total
+      *
+     C                     Z-ADD0         TOTBL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  #BRCHD --- Subroutine to process Change of Branch Code
+      *
+      *  CALLED FROM: MAIN
+      *
+      *  CALLS: AOBRCHR0, DBERR
+      *
+      *****************************************************************
+      *
+     C           #BRCHD    BEGSR
+      *
+      **  Access Branch information for Branch Internal Cust No.
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           *************
+     C                     MOVEL@BRCH     DBKEY            * DBERR 005 *
+     C                     Z-ADD5         DBASE            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  #AUDIT --- Subroutine to Print the Audit Report
+      *
+      *  CALLED FROM: Last Record Processing
+      *
+      *  CALLS: None
+      *
+      *****************************************************************
+     C           #AUDIT    BEGSR
+      *
+      **  Report Control Totals for each file
+      *
+     C           1         DO   2         W       30
+     C           W         OCUR CNTRL
+      *
+     C                     SELEC
+      *
+      **  Report Totals for MCMOVEPD
+      *
+     C           W         WHEQ 1
+     C                     Z-ADDZZRECS    P1RECS
+     C                     Z-ADDTOTDR     P1DR
+     C                     Z-ADDTOTCR     P1CR
+     C           TOTDR     SUB  TOTCR     P1BL
+      *
+      **  Report Totals for MCPCBLPD
+      *
+     C           W         WHEQ 2
+     C                     Z-ADDZZRECS    P2RECS
+     C                     Z-ADDTOTDR     P2DR
+     C                     Z-ADDTOTCR     P2CR
+     C           TOTDR     SUB  TOTCR     P2BL
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      **  Test File Controls
+      *
+     C           P1BL      IFNE *ZERO
+     C           P2BL      ORNE *ZERO
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+      **  Print File Control Totals
+      *
+     C                     WRITECONTROL
+      *
+     C           P1RECS    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  HASHR --- Subroutine to Accumulate Hash Totals
+      *
+      *  CALLED FROM: Main Processing
+      *
+      *  CALLS: None
+      *
+      *****************************************************************
+      *
+     C           HASHR     BEGSR
+      *
+      **   Count records read AND Accumulate Profit Centre Total
+      *
+     C                     ADD  1         ZZRECS
+      *
+     C           PAMT      IFGE *ZERO
+     C                     ADD  PAMT      TOTDR
+     C                     ELSE
+     C                     SUB  PAMT      TOTCR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *  DBERR --- Subroutine to handle Data base errors
+      *
+      *  CALLED FROM: After Data base error
+      *
+      *  CALLS: *PSSR
+      *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** Read database error details from LDA
+      *
+     C                     IN   LDA
+      *
+     C           *IN01     IFEQ '0'
+     C                     WRITEHEADAU
+     C                     END
+      *
+      ** Write database error details
+      *
+     C                     WRITEDBERROR
+      *
+      ** Set on database error indicators DUMP and exit program
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR                           ** DBERR **
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+      *
+      *  CALLED FROM: Abnormal Termination Processing, DBERR
+      *
+      *  CALLS: None
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      ********************************************************************
+**   TABA
+DAILY FUNDING REQUIREMENT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,605 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Address formatting routine')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *  FT0910 - Address formating routine                           *
+      *                                                               *
+      *  Function - This program takes the details from BIC+(Institu  *
+      *             tion, address, location and ZIP) and attempts to  *
+      *             construct a 4 line address without the truncation *
+      *             of any field.                                     *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Last Amend No. CFT007  *CREATE    Date 18Oct99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT007 - BIC Database Plus Integration                       *
+      *                                                               *
+      *****************************************************************
+      *
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   SRINIT  - Initialisation processing                         *
+     F*   CONC1   - Process one input address line                    *
+     F*   CONC2   - Process two input address lines                   *
+     F*   CONC3   - Process three input address lines                 *
+     F*   CONC4   - Process four input address lines                  *
+     F*   CONC5   - Concatenate ZIP Code and Location                 *
+     F*   CONC6   - Concatenate Location and ZIP Code                 *
+     F*   *PSSR   - Error handling                                    *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80               Midas copyright
+     E*
+      *
+     E                    @IAD        4 35               Input Address
+     E                    WAD         4 35               Working Address
+     E                    @OAD        4 35               Output Address
+     E                    W1L        35  1               Working Line
+      *
+     I*
+     ILDA         DS                            256
+     I**  Local data area data structure
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I**  Working DS : one working address line
+     I            DS
+     I                                        1  35 W1L
+     I                                        1  35 W1LINE
+      *
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+      * Initialise program
+      *
+     C                     EXSR SRINIT
+     C*
+     C*
+     C** Retrieve the first 35 characters of the institution
+     C*
+     C           35        SUBST@INST:1   @OAD,1
+     C           70        SUBST@INST:36  WREMND 70
+     C           WREMND    IFNE *BLANKS
+     C                     MOVE '*INSTOF' @RTCD
+     C                     ENDIF
+     C*
+     C* Check which of the address lines are not blanks.
+     C*
+     C           @IAD,1    IFNE *BLANKS
+     C                     ADD  1         WT
+     C                     MOVE @IAD,1    WAD,WT
+     C                     ENDIF
+     C*
+     C           @IAD,2    IFNE *BLANKS
+     C                     ADD  1         WT
+     C                     MOVE @IAD,2    WAD,WT
+     C                     ENDIF
+     C*
+     C           @IAD,3    IFNE *BLANKS
+     C                     ADD  1         WT
+     C                     MOVE @IAD,3    WAD,WT
+     C                     ENDIF
+     C*
+     C           @IAD,4    IFNE *BLANKS
+     C                     ADD  1         WT
+     C                     MOVE @IAD,4    WAD,WT
+     C                     ENDIF
+     C*
+     C*
+     C* Call the valid concation subroutine according to the number
+     C* of non-blank lines
+     C*
+     C                     SELEC
+     C           WT        WHEQ 1                          1 Line
+     C                     EXSR CONC1
+     C           WT        WHEQ 2                          2 Lines
+     C                     EXSR CONC2
+     C           WT        WHEQ 3                          3 Lines
+     C                     EXSR CONC3
+     C           WT        WHEQ 4                          4 Lines
+     C                     EXSR CONC4
+     C           WT        WHEQ 0                          0 Lines
+     C                     MOVE *BLANKS   @OAD,2
+     C                     MOVE *BLANKS   @OAD,3
+     C                     ENDSL
+     C*
+     C** 'Place ZIP last Indicator'
+     C           @ZIPI     IFEQ *BLANK
+     C           @ZIPI     OREQ 'N'
+     C** Concatenate ZIP and Location
+     C                     EXSR CONC5
+     C                     ELSE
+     C** Concatenate Location and ZIP
+     C                     EXSR CONC6
+     C                     ENDIF
+     C*
+     C*
+     C           @OAD,3    IFEQ *BLANKS
+     C                     MOVE W1LINE    @OAD,3
+     C                     ELSE
+     C                     MOVE W1LINE    @OAD,4
+     C                     ENDIF
+      * Remove Blank lines
+     C                     EXSR REMOV
+     C*
+     C                     SETON                         LR
+     C*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CONC1    : One Non Blank Input Address line                  *
+      *             This routine moves the first non-blank line       *
+      *             from the input address to the line 2 of           *
+      *             the output address.                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC1     BEGSR
+      *
+     C                     MOVE WAD,1     @OAD,2
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  CONC2    : Two non blank address Lines                       *
+      *             This routine moves the two first non-blank lines  *
+      *             from the input address to the lines 2 and 3 of    *
+      *             the output address.                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC2     BEGSR
+      *
+      *
+     C                     MOVE WAD,1     @OAD,2
+     C                     MOVE WAD,2     @OAD,3
+      *
+      *
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CONC3    : Three non blank address lines                     *
+      *             This routine try to concatenate the two first     *
+      *             non-blank input address lines, if the result is   *
+      *             greater than 35 char., then try to concatenate the*
+      *             second and the third. If this last result is also *
+      *             greater than 35 char., then set a warning.        *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC3     BEGSR
+      *
+     C*
+     C**   First line( Remove all trailing blanks)
+     C                     MOVE 'N'       WOFW
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,1:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C                     Z-ADDP1        P2
+     C                     ENDIF
+     C                     MOVE WCHAR     W1L,P1
+     C                     ADD  1         P1
+     C                     ENDDO
+     C** Insert a blank
+     C           P2        ADD  2         P2
+     C**  Second line (Concanate with the first line)
+     C                     Z-ADD1         P1
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,2:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ADD  1         P2
+     C                     ENDDO
+     C*
+     C** If no overflow
+     C           WOFW      IFNE 'Y'
+     C                     MOVE W1LINE    @OAD,2
+     C                     MOVE WAD,3     @OAD,3
+     C                     ELSE
+     C*
+     C**   Second line( Remove all trailing blanks)
+     C                     MOVE 'N'       WOFW
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,2:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C                     Z-ADDP1        P2
+     C                     ENDIF
+     C                     MOVE WCHAR     W1L,P1
+     C                     ADD  1         P1
+     C                     ENDDO
+     C** Insert a blank
+     C           P2        ADD  2         P2
+     C**  Second line (Concanate with the first line)
+     C                     Z-ADD1         P1
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,3:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ADD  1         P2
+     C                     ENDDO
+     C*
+     C                     MOVE WAD,1     @OAD,2
+     C                     MOVE W1LINE    @OAD,3
+     C*
+     C           WOFW      IFEQ 'Y'
+     C           @RTCD     ANDEQ*BLANKS
+     C** Set a warning error code
+     C                     MOVE '*ADDROF' @RTCD
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CONC4    : Four non blank address lines                      *
+      *             This routine concatenate the two first input      *
+      *             address lines and move the result into the second *
+      *             output address line, concatenate the third and the*
+      *             fourth address line and move the result into the  *
+      *             third output address line.                        *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC4     BEGSR
+      *
+     C*
+     C**   First line( Remove all trailing blanks)
+     C                     MOVE 'N'       WOFW
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,1:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C                     Z-ADDP1        P2
+     C                     ENDIF
+     C                     MOVE WCHAR     W1L,P1
+     C                     ADD  1         P1
+     C                     ENDDO
+     C** Insert a blank
+     C           P2        ADD  2         P2
+     C**  Second line (Concanate with the first line)
+     C                     Z-ADD1         P1
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,2:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ADD  1         P2
+     C                     ENDDO
+     C*
+     C                     MOVE W1LINE    @OAD,2
+     C*
+     C*
+     C**   Third line( Remove all trailing blanks)
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,3:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C                     Z-ADDP1        P2
+     C                     ENDIF
+     C                     MOVE WCHAR     W1L,P1
+     C                     ADD  1         P1
+     C                     ENDDO
+     C** Insert a blank
+     C           P2        ADD  2         P2
+     C**  Fourth line (Concanate with the first line)
+     C                     Z-ADD1         P1
+     C           P1        DOWLE35
+     C           1         SUBSTWAD,4:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 35
+     C                     MOVE WCHAR     W1L,P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ADD  1         P2
+     C                     ENDDO
+     C*
+     C                     MOVE W1LINE    @OAD,3
+     C** If overflow, set a warning error code
+     C           WOFW      IFEQ 'Y'
+     C           @RTCD     ANDEQ*BLANKS
+     C                     MOVE '*ADDROF' @RTCD
+     C                     ENDIF
+     C*
+     C*
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CONC5    : Concatenate ZIP and Location                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC5     BEGSR
+      *
+     C                     MOVE 'N'       WOFW
+     C*
+     C**   First line( Reduce sequences of embedded blank to 1 char.)
+     C                     MOVE 'Y'       WPREV   1
+     C                     MOVE *BLANKS   W1LINE
+     C                     Z-ADD1         P1      20
+     C                     Z-ADD1         P2      20
+     C           P1        DOWLE15
+     C           1         SUBST@ZIP:P1   WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C                     MOVE WCHAR     W1L,P2
+     C                     ADD  1         P2
+     C                     MOVE 'N'       WPREV
+     C                     ELSE
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     ENDIF
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ENDDO
+     C*
+     C** Insert a blank
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C*
+     C** Second line( Reduce sequences of embedded blank to 1 char. and
+     C**              concatenate with the ZIP Code)
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE90
+     C           1         SUBST@LOCA:P1  WCHAR
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ADD  1         P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW    1
+     C                     LEAVE
+     C                     ENDIF
+     C                     MOVE 'N'       WPREV
+     C                     ELSE
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     ENDIF
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ENDDO
+     C*
+     C** If overflow, set a warning error code
+     C           WOFW      IFEQ 'Y'
+     C           @RTCD     ANDEQ*BLANKS
+     C                     MOVE '*LOCZOF' @RTCD
+     C                     ENDIF
+     C*
+     C*
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CONC6    : Concatenate Location and ZIP                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         CONC6     BEGSR
+      *
+     C                     MOVE 'N'       WOFW
+     C*
+     C**   Location( Reduce sequences of embedded blank to 1 char.)
+     C                     MOVE 'Y'       WPREV   1
+     C                     MOVE *BLANKS   W1LINE
+     C                     Z-ADD1         P1      20
+     C                     Z-ADD1         P2      20
+     C           P1        DOWLE90
+     C           1         SUBST@LOCA:P1  WCHAR   1
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ADD  1         P2
+     C                     MOVE 'N'       WPREV
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW
+     C                     LEAVE
+     C                     ENDIF
+     C                     ELSE
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     ENDIF
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ENDDO
+     C*
+     C** Insert a blank
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C*
+     C** ZIP( Reduce sequences of embedded blank to 1 char. and
+     C**              concatenate with Location)
+     C                     Z-ADD1         P1      20
+     C           P1        DOWLE15
+     C           WOFW      ANDNE'Y'
+     C           1         SUBST@ZIP:P1   WCHAR
+     C           WCHAR     IFNE *BLANK
+     C           P2        IFLT 36
+     C                     MOVE WCHAR     W1L,P2
+     C                     ADD  1         P2
+     C                     ELSE
+     C                     MOVE 'Y'       WOFW    1
+     C                     LEAVE
+     C                     ENDIF
+     C                     MOVE 'N'       WPREV
+     C                     ELSE
+     C           WPREV     IFEQ 'N'
+     C                     ADD  1         P2
+     C                     ENDIF
+     C                     MOVE 'Y'       WPREV
+     C                     ENDIF
+     C                     ADD  1         P1
+     C                     ENDDO
+     C*
+     C** If overflow, set a warning error code
+     C           WOFW      IFEQ 'Y'
+     C           @RTCD     ANDEQ*BLANKS
+     C                     MOVE '*LOCZOF' @RTCD
+     C                     ENDIF
+     C*
+     C*
+     CSR                   ENDSR
+      *****************************************************************
+      *                                                               *
+      *  REMOV    : Remove blank lines from the 4 lines output        *
+      *             address.                                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         REMOV     BEGSR
+      *
+     C           @OAD,2    IFEQ *BLANK
+     C                     MOVE @OAD,3    @OAD,2
+     C                     MOVE *BLANKS   @OAD,3
+     C                     ENDIF
+      *
+     C           @OAD,3    IFEQ *BLANK
+     C                     MOVE @OAD,4    @OAD,3
+     C                     MOVE *BLANKS   @OAD,4
+     C                     ENDIF
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*   Called by - anywhere within the program                     *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'FT0910'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     END
+     C*
+     C                     MOVE '*ERROR'  @RTCD
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+     C** Declare the entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @INST 105        I:Institution
+     C                     PARM           @IAD             I:Address
+     C                     PARM           @LOCA  90        I:Location
+     C                     PARM           @ZIP   15        I:ZIP
+     C                     PARM           @ZIPI   1        I:Place ZIP last Ind.
+     C                     PARM           @OAD             O:4 address lines
+     C                     PARM           @RTCD   7        O:Return Code
+     C*
+     C** Declare the LDA as dataarea. No fields set up unless
+     C** DB error occurs as this program is called by other pgm.
+     C*
+     C           *NAMVAR   DEFN           LDA
+      *
+     C** Initialise the return code to blank
+     C*
+     C                     MOVE *BLANKS   @RTCD
+     C                     Z-ADD0         WT      10
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+     CSR         EXINIT    ENDSR
+     C*****************************************************************
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001

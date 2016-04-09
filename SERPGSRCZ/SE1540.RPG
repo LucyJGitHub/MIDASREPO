@@ -1,0 +1,1114 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Gen past due cust/depot posn events')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE1540 - Generate Past Due Customer and Depot Position       *
+      *           Events                                              *
+      *                                                               *
+      *  Function:  This program will read through the position       *
+      *    (COB)    settlements file, and then generate customer and  *
+      *             depot position events for live and unsettled      *
+      *             records with value date on or before the event    *
+      *             control date.                                     *
+      *                                                               *
+      *  Called By: SEC1112 - SE Past Due Cust/Depot Position Events  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 251950A            Date 27Feb12               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241795             Date 04Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 223682             Date 17Nov03               *
+      *                 223026             Date 17Nov03               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 191275             Date 12Jul01               *
+      *                 171324             Date 12Jul01               *
+      *                 175571             Date 12Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187848             Date 28Dec00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU011             Date 11Mar98               *
+      *                 117059             Date 23Feb98               *
+      *                 087177 *Create     Date 15Aug96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  251950A - Component SEC1112 0001 terminated abnormally.      *
+      *            Check if PSEB is blank, if it is move value of     *
+      *            PBCA to CCTA, if not move value of PSEB to CCTA.   *
+      *          - Applied for AR964313 (Child:AR964316)              *
+      *  CER049 - Stamp Tax                                           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241795 - Populate ECSS whether CEU011 is switched on or off. *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  223682 - Do not send database error if closure status is 'Y' *
+      *  223026 - When 'autopost position settlement' = 'N', create   *
+      *           event with RECI = 'A' if authorised. RECI will then *
+      *           be checked by GL0554 to extract nostro events.      *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  191275 - Problem with events appearing twice on events by    *
+      *           nostro report (GL0580P1) when End of Month followed *
+      *           by Non-Working Day.                                 *
+      *  171324 - IAB mortgage payment not appearing on Events by     *
+      *           Nostro report GL0580P1 if occurring on a weekend.   *
+      *           The program should include the processing of "MP"   *
+      *           events. Recompiled for changes in POSETDL0.         *
+      *  175571 - Coupons missing on Events file and Enquiry screens  *
+      *           for Projected Nostros where event flow is a weekend.*
+      *           Fix is to ensure that coupon events that falls on   *
+      *           a holiday is generated correctly in events file     *
+      *           both for monthend and not end of month processing.  *
+      *  187848 - Also process all forwards valued position settlement*
+      *           records which are generated by treaty tax as well.  *
+      *  CEU011 - Position/Risk Reporting                             *
+      *  117059 - Change control condition for adding record in Posn  *
+      *           Event Files: control based on Value Date and not on *
+      *           Due Date.                                           *
+      *  087177 - New program to create events for back-valued        *
+      *           position settlements.                               *
+      *                                                               *
+      *****************************************************************
+     FPOSETDL0IF  E           K        DISK
+     FSENDEFL0IF  E           K        DISK                                                   175571
+     FCDEVE   IF  E           K        DISK                                                   191275
+     F            CPEVEDF                           KRENAMECPEVEDO                            191275
+     F            DPEVEDF                           KRENAMEDPEVEDO                            191275
+     FPOSETDY3IF  E           K        DISK                                                   CER049
+     FCPEVED  O   E                    DISK                      A
+     FCPEVEA  UF  E                    DISK
+     FDPEVED  O   E                    DISK                      A
+     FDPEVEA  UF  E                    DISK
+     FSE1540AUO   E                    PRINTER
+     FSDCURRL1IF  E           K        DISK                               CEU011
+      **  SD Currency Codes Update                                        CEU011
+      *
+      *****************************************************************
+      *                                                               *
+      *     F U N C T I O N   O F   I N D I C A T O R S               *
+      *                                                               *
+      *    25            Record does not exist on events file         *                       175571
+      *    80            End of file on POSETDL0                      *
+      *    81            End of file on CPEVEA/DPEVEA                 *
+      *    82            Audit header already written                 *
+      *    U7-U8         Databaser error                              *
+      *    LR            End of program                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CUR       200  3                                CEU011
+     E                    SRT       200  2 0                              CEU011
+     I/SPACE 3
+      *
+     ICPEVEAF
+      *
+      ** Rename fields similar to DPEVEA
+      *
+     I              NORE                            CNORE
+     I              HRWN                            CHRWN
+     I              HRDC                            CHRDC
+      *
+     IDPEVEAF
+      *
+      ** Rename fields similar to CPEVEA
+      *
+     I              NORE                            DNORE
+     I              HRWN                            DHRWN
+     I              HRDC                            DHRDC
+      *
+     ISCSARD    E DSSCSARDPD                                              CEU011
+      **  Switchable Features File                                        CEU011
+      *                                                                   CEU011
+     ILDA         DS                            256
+      *
+     I** Local data area data structure
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS                             13
+     I** Data area RUNDAT
+     I                                       13  13 MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** Branch details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I** Customer details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** General ledger details
+     I*
+     ISDSECS    E DSSDSECSPD
+     I              QQACCD                          QQACD1                                    CGL029
+     I** Security client details
+     I*
+     ISDSTRD    E DSSDSTRDPD                                                                  223026
+      ** Securities Trading ICD                                                               223026
+      *                                                                                       223026
+     IDSFDY     E DSDSFDY
+     I** Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Long data structure
+     I*                                                                                       223682
+     IDSLDY     E DSDSLDY                                                                     223682
+     I*  THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE                               223682
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  S U B R O U T I N E    I N D E X                             *
+     C*                                                               *
+     C*  Main routine                                                 *
+     C*  #UINIT -  Initial processing                                 *
+     C*  #UOUTR -  Write record to customer or depot position events  *
+     C*  #UCUSP -  Setup record to add to customer position events    *
+     C*  #UDEPP -  Setup record to add to depot position events       *
+     C*  #UGBDT -  Get branch details from SDBRCHPD                   *
+     C*  #UGCDT -  Get customer details from SDCUSTPD                 *
+     C*  #UHASH -  Add events amounts to hash totals                  *
+     C*  #UAUDP -  Audit processing                                   *
+     C*  *PSSR  -  Error handling subroutine                          *
+     C*  ZEVCD  -  Calculate Event Control Date                       *
+     C*                                                               *
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*             S T A R T   O F   P R O G R A M                   *
+     C*****************************************************************
+     C*
+     C** Perform initial processing
+     C*
+     C                     EXSR #UINIT
+     C*
+     C** Write record to the appropriate file
+     C*
+     C                     EXSR #UOUTR
+     C*
+     C** Perform audit processing
+     C*
+     C                     EXSR #UAUDP
+     C*
+     C** End the program and return to calling program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UINIT - Initial Processing                                   *
+     C* Called from : Main process                                    *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C** Setup LDA for possible DB error processing later
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     MOVEL'SE1540'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** In RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Get bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Get general ledger details
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       223026
+     C                     CALL 'AOSTRDR0'                                                    223026
+     C                     PARM *BLANKS   @RTCD                                               223026
+     C                     PARM '*FIRST ' @OPTN                                               223026
+     C           SDSTRD    PARM SDSTRD    DSFDY                                               223026
+     C           @RTCD     IFNE *BLANKS                                                       223026
+     C           *LOCK     IN   LDA                                                           223026
+     C                     Z-ADD9         DBASE            ***************                    223026
+     C                     MOVEL'SDSTRDPD'DBFILE           * DB ERROR 09 *                    223026
+     C                     MOVEL'*FIRST'  DBKEY            ***************                    223026
+     C                     SETON                     U7U8LR                                   223026
+     C                     OUT  LDA                                                           223026
+     C                     EXSR *PSSR                                                         223026
+     C                     ENDIF                                                              223026
+      *                                                                                       175571
+      ** Keylist for chain to SNDEFD                                                          175571
+      *                                                                                       175571
+     C           SNKEY     KLIST                                                              175571
+     C                     KFLD           PSSH                                                175571
+     C                     KFLD           PDUD                                                175571
+     C                     KFLD           SNET                                                175571
+      *                                                                                       191275
+      ** Keylist for chain to DPEVED/CPEVED                                                   191275
+      *                                                                                       191275
+     C           CDKEY     KLIST                                                              191275
+     C                     KFLD           PCPY                                                191275
+     C                     KFLD           PSSH                                                191275
+     C                     KFLD           PDUD                                                191275
+     C                     KFLD           PEVT                                                191275
+      *                                                                   CEU011
+     C           KPOST3    KLIST                                                              CER049
+     C                     KFLD           PBCA                                                CER049
+     C                     KFLD           PSSH                                                CER049
+     C                     KFLD           PCPY                                                CER049
+     C                     KFLD           PDUD                                                CER049
+     C                     KFLD           PEVT                                                CER049
+     C                     KFLD           PTNLU   50                                          CER049
+      *                                                                                       CER049
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   WRTCD   7                       CEU011
+     C                     PARM '*VERIFY' WOPTN   7                       CEU011
+     C                     PARM 'CEU011'  WSARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           WRTCD     IFEQ *BLANKS                                   CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE 'N'       CEU011  1                       CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           WRTCD     IFNE *BLANKS                                   CEU011
+     C           WRTCD     ANDNE'*NRF   '                                 CEU011
+     C                     MOVEL'CEU011'  DBKEY            ************** CEU011
+     C                     MOVE 'SCSARDPD'DBFILE           * DB ERROR 08* CEU011
+     C                     MOVEL'008'     DBASE            ************** CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Determine if CER049 enhancement is installed                                         CER049
+      *                                                                                       CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM *BLANKS   WRTCD                                               CER049
+     C                     PARM '*VERIFY' WOPTN                                               CER049
+     C                     PARM 'CER049'  WSARD                                               CER049
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER049
+     C                     MOVE 'N'       CER049  1                                           CER049
+      *                                                                                       CER049
+      ** If feature is on, set up SAR work flag                                               CER049
+      *                                                                                       CER049
+     C           WRTCD     IFEQ *BLANKS                                                       CER049
+     C                     MOVE 'Y'       CER049                                              CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C           *LOVAL    SETLLSDCURRL1                                  CEU011
+     C                     READ SDCURRL1                 83               CEU011
+     C                     MOVE '0'       *IN83                           CEU011
+     C                     Z-ADD1         X                               CEU011
+     C           *IN83     DOWEQ'0'                                       CEU011
+     C                     MOVE A6CYCD    CUR,X                           CEU011
+     C                     MOVE A6SSNB    SRT,X                           CEU011
+     C                     ADD  1         X       30                      CEU011
+     C                     READ SDCURRL1                 83               CEU011
+     C                     ENDDO                                          CEU011
+     C**********           ENDIF                                                       CEU011 241795
+     C*
+     C** Calculate the event control date
+     C*
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     Z-ADDBKAPDT    ZZAPDT
+     C                     EXSR ZEVCD
+     C***********ECD       SETLLPOSETDL0                                  187848
+     C           *HIVAL    SETLLPOSETDL0                                  187848
+     C*
+     C** Initialise field accumulators and counters
+     C*
+     C                     Z-ADD0         WDNORE  50
+     C                     Z-ADD0         WDHRWN 150
+     C                     Z-ADD0         WDHRDC  30
+     C                     Z-ADD0         WCNORE  50
+     C                     Z-ADD0         WCHRWN 150
+     C                     Z-ADD0         WCHRDC  30
+     C                     Z-ADD0         RPOSR
+     C                     Z-ADD0         RDEPP
+     C                     Z-ADD0         RCUSP
+     C*
+     C** Write audit header
+     C*
+     C                     MOVE BJURPT    RTITL
+     C                     MOVE BJMRDT    RDATE
+     C                     Z-ADD1         RPAGE
+     C                     WRITEHEADAU
+     C                     MOVE '1'       *IN82
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UOUTR - Write record to customer/depot position events file  *
+     C* Called from : Main process                                    *
+     C* Calls : #UCUSP - Setup record to add to customer posn events  *
+     C*         #UDEPP - Setup record to add to depot posn events     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UOUTR    BEGSR
+     C*
+     C** For every record read with due date on or before event control date
+     C** output to customer or depot position events file
+     C*
+     C                     READ POSETDL0                 80
+     C           *IN80     DOWEQ'0'
+     C***********PDUD      ANDLEECD                                       117059
+     C           PSVL      IFLE ECD                                       117059
+     C           CRTX      ORNE *BLANK                                    187848
+     C*
+     C** Increment records read counter
+     C*
+     C                     ADD  1         RPOSR
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C                     MOVE 99999     PTNLU                                               CER049
+     C           KPOST3    SETGTPOSETDY3                                                      CER049
+     C                     READPPOSETDY3                 78                                   CER049
+     C           *IN78     IFEQ '1'                                                           CER049
+     C           PBCA      ORNE P3PBCA                                                        CER049
+     C           PSSH      ORNE P3PSSH                                                        CER049
+     C           PCPY      ORNE P3PCPY                                                        CER049
+     C           PDUD      ORNE P3PDUD                                                        CER049
+     C           PEVT      ORNE P3PEVT                                                        CER049
+     C                     Z-ADD30        DBASE                                               CER049
+     C                     MOVEL'POSETDY3'DBFILE                                              CER049
+     C                     MOVEL'KPOST3'  DBKEY                                               CER049
+     C                     SETON                     U7U8LR                                   CER049
+     C                     EXSR *PSSR                                                         CER049
+     C                     ENDIF                                                              CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       175571
+      ** Initialise indicator *IN25 as *ON for every record read.                             175571
+      *                                                                                       175571
+     C                     MOVE '1'       *IN25                                               175571
+      *                                                                                       175571
+      ** Check if event record exist in SNDEFD                                                175571
+      *                                                                                       175571
+     C           PEVT      IFEQ 'MT'                                                          175571
+     C                     MOVE 'MA'      SNET                                                175571
+     C                     ELSE                                                               175571
+     C                     MOVE PEVT      SNET                                                175571
+     C                     ENDIF                                                              175571
+      *                                                                                       175571
+     C           SNET      IFEQ 'MA'                                                          175571
+     C           SNET      OREQ 'CP'                                                          175571
+     C           SNKEY     CHAINSNDEVDF              25                                       175571
+     C                     ELSE                                                               191275
+     C           CDKEY     CHAINCDEVE                25                                       191275
+     C                     ENDIF                                                              175571
+      *                                                                                       175571
+      ** Do not process the event record if already exists in events                          175571
+      ** file.                                                                                175571
+      *                                                                                       175571
+     C           *IN25     IFEQ '1'                                                           175571
+     C*
+     C** Setup fields common to both files
+     C*
+     C           PSVL      IFGT ECD                                                           223026
+     C           BVAPST    ANDNE'Y'                                                           223026
+     C           PAUI      ANDEQ'Y'                                                           223026
+     C                     MOVE 'A'       RECI                                                223026
+     C                     ELSE                                                               223026
+     C                     MOVE 'D'       RECI
+     C                     END                                                                223026
+     C                     MOVE PBCA      CCBA
+     C                     MOVE PSSH      CCSS
+     C                     Z-ADDPDUD      CCDT
+     C                     MOVE PSCU      CCEC
+     C                     Z-ADDPSAT      CCEA
+     C                     Z-ADDPAMD      CCNA
+     C                     Z-ADDPNMP      CCNP
+     C                     MOVE PNCY      CCNC
+     C                     Z-ADD0         CCEP
+     C                     Z-ADDPSMT      CCSM
+     C                     MOVE PSEA      CCSA
+     C           PSEB      IFEQ *BLANKS                                                      251950A
+     C                     MOVE PBCA      CCTA                                               251950A
+     C                     ELSE                                                              251950A
+     C                     MOVE PSEB      CCTA
+     C                     ENDIF                                                             251950A
+     C                     MOVE *BLANKS   ORBR
+     C                     MOVE *BLANKS   OSBR
+     C                     MOVE *BLANKS   COOB
+     C                     Z-ADD0         CCAS
+     C                     Z-ADD0         CCAN
+     C                     MOVE '5'       CCTC
+     C*
+     C           PEVT      IFEQ 'MT'
+     C                     MOVE 'MA'      CCET
+     C                     MOVE 'F'       MDTI
+     C                     ELSE
+     C                     MOVE PEVT      CCET
+     C                     MOVE *BLANKS   MDTI
+     C                     ENDIF
+     C*
+     C** Setup interbranch fields
+     C*
+     C                     MOVE *BLANKS   EXEI
+     C                     MOVE 'B'       ELVB
+     C                     MOVE 'C'       ELVC
+     C                     MOVE 'S'       ELVS
+     C                     MOVE 'N'       IBRE
+     C                     MOVE 'Y'       ICYE
+     C*
+     C** Set up company of booking branch
+     C*
+     C                     MOVELCCBA      WBRCH
+     C                     EXSR #UGBDT
+     C                     MOVE A8CMCD    COBB
+     C*
+     C** For the first event, booking and event branch are the same.  Likewise,
+     C** company of booking branch is the same as the event company
+     C*
+     C                     MOVE CCBA      EBRC
+     C                     MOVE COBB      ECPY
+     C*
+     C** Determine client type (depot or portfolio customer)
+     C*
+     C                     MOVELPCPY      @CUST
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CUST   6
+     C           SDSECS    PARM SDSECS    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SDSECSPD'DBFILE           * DB ERROR 03 *
+     C                     MOVEL@CUST     DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CEU011
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C                     Z-ADD1         X                               CEU011
+     C           CCEC      LOKUPCUR,X                    84               CEU011
+     C           *IN84     IFEQ '0'                                       CEU011
+     C           *LOCK     IN   LDA                                       CEU011
+     C                     Z-ADD6         DBASE            ***************CEU011
+     C                     MOVEL'SDCURRL1'DBFILE           * DB ERROR 06 *CEU011
+     C                     MOVELCCEC      DBKEY            ***************CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     OUT  LDA                                       CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE SRT,X     ECSS    20                      CEU011
+     C                     ENDIF                                          CEU011
+     C**********           ENDIF                                                       CEU011 241795
+     C*
+     C** Set up then update the fields of the appropriate record
+     C*
+     C           BFCLAS    IFEQ 'S'
+     C           BFCLAS    OREQ 'D'
+     C                     MOVE 'Y'       WCUSF   1
+     C                     EXSR #UCUSP
+     C                     ELSE
+     C                     MOVE *BLANK    WCUSF
+     C                     EXSR #UDEPP
+     C                     ENDIF
+     C                     ENDIF                                                              175571
+     C                     END                                            117059
+     C*
+     C** Read next available record
+     C*
+     C                     READ POSETDL0                 80
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UCUSP - Setup record to add to customer position events      *
+     C* Called from : #UOUTR - Write record to output file            *
+     C* Calls : #UGCDT - Get customer report name and town            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UCUSP    BEGSR
+     C*
+     C** Set up customer, report name and town
+     C*
+     C**********           Z-ADDPCPY      CCCN                                                CSD027
+     C                     MOVE PCPY      CCCN                                                CSD027
+     C                     EXSR #UGCDT
+     C                     MOVELBBCRNM    CCRN
+     C                     MOVELBBCRTN    CCTR
+     C*
+     C** Setup event code
+     C*
+     C                     SELEC
+     C           CCET      WHEQ 'CP'
+     C                     MOVE '31C2'    CCCE
+     C           CCET      WHEQ 'DV'
+     C                     MOVE '31C3'    CCCE
+     C           CCET      WHEQ 'MA'
+     C                     MOVE '31C5'    CCCE
+     C           CCET      WHEQ 'MP'                                                          171324
+     C                     MOVE '31D4'    CCCE                                                171324
+     C                     ENDSL
+     C*
+     C** Set up due to or from customer field and I/O indicator
+     C*
+     C           PPRE      IFEQ 'P'
+     C                     MOVE 'T'       CCFC
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+     C                     MOVE 'F'       CCFC
+     C                     MOVE 'I'       CCIO
+     C                     Z-SUBCCNA      CCNA
+     C                     Z-SUBCCEA      CCEA
+     C                     ENDIF
+     C*
+     C** Setup payment date and confirmation produced flag
+     C*
+     C                     Z-ADDPSVL      CPYD
+     C                     MOVE *BLANKS   CPCF
+     C*
+     C** In a multibranching system, if booking and settle branches are
+     C** different, get and save settlement company
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           CCBA      ANDNECCTA
+     C                     MOVELCCTA      WBRCH
+     C                     EXSR #UGBDT
+     C                     MOVE A8CMCD    WSECY   3
+     C                     MOVE A8BICN    WBICN   6
+     C*
+     C** For the 1st interbranch event, clear settlement account and branch
+     C*
+     C                     MOVE *BLANKS   CCSA
+     C                     Z-ADD0         CCSM
+     C                     ENDIF
+     C*
+     C** Add the record to the customer position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITECPEVEDF
+     C                     ADD  1         RCUSP
+     C                     EXSR SRSTAX                                                        CER049
+     C           RECI      IFNE 'D'                                                           223026
+     C                     MOVE 'D'       RECI                                                223026
+     C                     END                                                                223026
+     C*
+     C** Generate second and third event records if interbranch event
+     C** These are the two events for the settlement branch
+     C*
+     C           CCBA      IFNE CCTA
+     C           CCTA      ANDNE*BLANKS
+     C*
+     C** Second record, between settlement branch and depot
+     C*
+     C                     MOVE CCTA      EBRC
+     C                     MOVE WSECY     ECPY
+     C                     MOVE 'Y'       IBRE
+     C*
+     C           COBB      IFNE WSECY
+     C                     MOVE 'Y'       ICYE
+     C                     ELSE
+     C                     MOVE 'N'       ICYE
+     C                     ENDIF
+     C*
+     C                     Z-ADDPSMT      CCSM
+     C                     MOVE PSEA      CCSA
+     C*
+     C** Write second record to the depot position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITECPEVEDF
+     C                     ADD  1         RCUSP
+     C                     EXSR SRSTAX                                                        CER049
+     C*
+     C** Third record, between settlement branch and booking branch
+     C** Switch the incoming/outgoing indicator
+     C*
+     C           CCIO      IFEQ 'I'
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+     C*
+     C** Customer is now the settlement branch internal customer number
+     C*
+     C                     MOVE WBICN     CCCN
+     C*
+     C** Clear the settlement account and method
+     C*
+     C                     Z-ADD0         CCSM
+     C                     MOVE *BLANKS   CCSA
+     C*
+     C** Write third record to the depot position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITECPEVEDF
+     C                     ADD  1         RCUSP
+     C                     EXSR SRSTAX                                                        CER049
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UDEPP - Setup record to add to depot position events         *
+     C* Called from : #UOUTR - Write record to output file            *
+     C* Calls : #UGCDT - Get customer report name and town            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UDEPP    BEGSR
+     C*
+     C** Set up depot, report name and town
+     C*
+     C**********           Z-ADDPCPY      CCDP                                                CSD027
+     C                     MOVE PCPY      CCDP                                                CSD027
+     C                     EXSR #UGCDT
+     C                     MOVELBBCRNM    CCDN
+     C                     MOVELBBCRTN    CCTW
+     C*
+     C** Set up event code
+     C*
+     C                     SELEC
+     C           CCET      WHEQ 'CP'
+     C                     MOVE '31D2'    CCCE
+     C           CCET      WHEQ 'DV'
+     C                     MOVE '31D3'    CCCE
+     C           CCET      WHEQ 'MA'
+     C                     MOVE '31D5'    CCCE
+     C           CCET      WHEQ 'MP'                                                          171324
+     C                     MOVE '31D4'    CCCE                                                171324
+     C                     ENDSL
+     C*
+     C** Set up due to or from depot field
+     C*
+     C           PPRE      IFEQ 'P'
+     C                     MOVE 'T'       CCFD
+     C                     MOVE 'O'       CCIO
+     C                     Z-SUBCCNA      CCNA
+     C                     Z-SUBCCEA      CCEA
+     C                     ELSE
+     C                     MOVE 'F'       CCFD
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+     C*
+     C** Setup payment date
+     C*
+     C                     Z-ADDPSVL      CCPD
+     C*
+     C** In a multibranching system, if booking and settle branches are
+     C** different, get and save settlement company
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           CCBA      ANDNECCTA
+     C                     MOVELCCTA      WBRCH
+     C                     EXSR #UGBDT
+     C                     MOVE A8CMCD    WSECY   3
+     C                     MOVE A8BICN    WBICN   6
+     C*
+     C** For the 1st interbranch event, clear settlement account and branch
+     C*
+     C                     MOVE *BLANKS   CCSA
+     C                     Z-ADD0         CCSM
+     C                     ENDIF
+     C*
+     C** Add the record to the depot position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITEDPEVEDF
+     C                     ADD  1         RDEPP
+     C           RECI      IFNE 'D'                                                           223026
+     C                     MOVE 'D'       RECI                                                223026
+     C                     END                                                                223026
+     C*
+     C** Generate second and third event records if interbranch event
+     C** These are the two events for the settlement branch
+     C*
+     C           CCBA      IFNE CCTA
+     C           CCTA      ANDNE*BLANKS
+     C*
+     C** Second record, between settlement branch and depot
+     C*
+     C                     MOVE CCTA      EBRC
+     C                     MOVE WSECY     ECPY
+     C                     MOVE 'Y'       IBRE
+     C*
+     C           COBB      IFNE WSECY
+     C                     MOVE 'Y'       ICYE
+     C                     ELSE
+     C                     MOVE 'N'       ICYE
+     C                     ENDIF
+     C*
+     C                     Z-ADDPSMT      CCSM
+     C                     MOVE PSEA      CCSA
+     C*
+     C** Write second record to the depot position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITEDPEVEDF
+     C                     ADD  1         RDEPP
+     C*
+     C** Third record, between settlement branch and booking branch
+     C** Switch the incoming/outgoing indicator
+     C*
+     C           CCIO      IFEQ 'I'
+     C                     MOVE 'O'       CCIO
+     C                     ELSE
+     C                     MOVE 'I'       CCIO
+     C                     ENDIF
+     C*
+     C** Depot is now the settlement branch internal customer number
+     C*
+     C                     MOVE WBICN     CCDP
+     C*
+     C** Clear the settlement account and method
+     C*
+     C                     Z-ADD0         CCSM
+     C                     MOVE *BLANKS   CCSA
+     C*
+     C** Write third record to the depot position events file
+     C*
+     C                     Z-ADDCCEA      #HAMT
+     C                     EXSR #UHASH
+     C                     WRITEDPEVEDF
+     C                     ADD  1         RDEPP
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UGBDT - Get branch details from SDBRCHPD                     *
+     C* Called from : #UOUTR - Write record to output file            *
+     C*               #UCUSP - Setup record to add to cust positions  *
+     C*               #UDEPP - Setup record to add to depot positions *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UGBDT    BEGSR
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM           WBRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C***********@RTCD     IFNE *BLANKS                               223682
+     C           WRTCD     IFNE *BLANKS                               223682
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 04 *
+     C                     MOVELWBRCH     DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UGCDT - Get customer details from SDCUSTPD                   *
+     C* Called from : #UOUTR - Write record to output file            *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UGCDT    BEGSR
+     C*
+     C                     MOVELPCPY      @KEY1
+     C***********          CALL 'AOCUSTR0'                               223682
+     C                     CALL 'AOCUSTR1'                               223682
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C******     SDCUST    PARM SDCUST    DSSDY                           223682
+     C           SDCUST    PARM SDCUST    DSLDY                           223682
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                       223682
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 05 *
+     C                     MOVELPCPY      DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UHASH - Subroutine to add Event Amounts To Hash Totals       *
+     C*          (Determine Dec. Posn. and ADD as Positive Values)    *
+     C* Called from : #UCUSP - Setup record to add to cust positions  *
+     C*               #UDEPP - Setup record to add to depot positions *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UHASH    BEGSR
+     C*
+     C** Set up fields to be hashed as positive
+     C*
+     C           #HAMT     IFGE 0
+     C                     Z-ADD#HAMT     #HAMT  150
+     C                     ELSE
+     C                     Z-SUB#HAMT     #HAMT
+     C                     ENDIF
+     C*
+     C** Split up the hash amount as  Integer & Decimal parts
+     C*
+     C                     MOVEL#HAMT     #HI    120
+     C                     MOVE #HAMT     #HD     30
+     C*
+     C** Add to the DECIMAL HASH TOTAL part and check for carry
+     C** Update the customer position trailer file
+     C*
+     C           WCUSF     IFEQ 'Y'
+     C                     ADD  1         WCNORE
+     C                     ADD  #HD       WCHRDC
+     C           WCHRDC    IFLT #HD
+     C                     ADD  1         #HI
+     C                     ENDIF
+     C                     ADD  #HI       WCHRWN
+     C                     ELSE
+     C*
+     C** Update the depot position trailer file
+     C*
+     C                     ADD  1         WDNORE
+     C                     ADD  #HD       WDHRDC
+     C           WDHRDC    IFLT #HD
+     C                     ADD  1         #HI
+     C                     ENDIF
+     C                     ADD  #HI       WDHRWN
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UAUDP - Audit Processing                                     *
+     C* Called from : Main processing                                 *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UAUDP    BEGSR
+     C*
+     C** If records are added to customer events file, update trailer file
+     C*
+     C           WCNORE    IFNE 0
+     C                     READ CPEVEA                   81
+     C*
+     C** Database error if no record in audit file
+     C*
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'CPEVEA'  DBFILE           * DB ERROR 06 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  WCNORE    CNORE
+     C                     ADD  WCHRDC    CHRDC
+     C           CHRDC     IFLT WCHRDC
+     C                     ADD  1         WCHRWN
+     C                     ENDIF
+     C                     ADD  WCHRWN    CHRWN
+     C                     UPDATCPEVEAF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** If records are added to depot events file, update trailer file
+     C*
+     C           WDNORE    IFNE 0
+     C                     READ DPEVEA                   81
+     C*
+     C** Database error if no record in audit file
+     C*
+     C           *IN81     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'DPEVEA'  DBFILE           * DB ERROR 07 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  WDNORE    DNORE
+     C                     ADD  WDHRDC    DHRDC
+     C           DHRDC     IFLT WDHRDC
+     C                     ADD  1         WDHRWN
+     C                     ENDIF
+     C                     ADD  WDHRWN    DHRWN
+     C                     UPDATDPEVEAF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Write audit controls
+     C*
+     C                     WRITECNTRLAU
+     C*
+     C                     ENDSR
+      *****************************************************************                       CER049
+      *                                                               *                       CER049
+      *  SRSTAX - Generate Stamp tax event type 49ST                  *                       CER049
+      *                                                               *                       CER049
+      *****************************************************************                       CER049
+      *                                                                                       CER049
+     C           SRSTAX    BEGSR                                                              CER049
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C           P3TAX     ANDEQ'Y'                                                           CER049
+      *                                                                                       CER049
+     C           CCCE      IFEQ '31C1'                                                        CER049
+     C           CCCE      OREQ '31C2'                                                        CER049
+     C           CCCE      OREQ '31C3'                                                        CER049
+     C           CCCE      OREQ '31C4'                                                        CER049
+     C           CCCE      OREQ '31C5'                                                        CER049
+     C                     MOVE CCCE      SCCCE   4                                           CER049
+     C                     MOVE CCIO      SCCIO   1                                           CER049
+     C                     MOVE CCEA      SCCEA  110                                          CER049
+     C                     MOVE '49ST'    CCCE                                                CER049
+     C                     MOVE 'O'       CCIO                                                CER049
+     C                     MOVE P3STAF    CCEA                                                CER049
+     C                     WRITECPEVEDF                                                       CER049
+      *                                                                                       CER049
+     C                     ADD  1         RCUSP                                               CER049
+     C                     Z-ADDCCEA      #HAMT                                               CER049
+     C                     EXSR #UHASH                                                        CER049
+     C                     MOVE SCCCE     CCCE                                                CER049
+     C                     MOVE SCCIO     CCIO                                                CER049
+     C                     MOVE SCCEA     CCEA                                                CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C                     ENDIF                                                              CER049
+     C                     ENDSR                                                              CER049
+      *                                                                                       CER049
+      *****************************************************************                       CER049
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR - Subroutine to handle abnormal error conditions        *
+     C* Called from : After abnormal operation occurs                 *
+     C* Calls : None                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** If header not written yet, write first before the db error msg
+     C*
+     C           *IN82     IFEQ '0'
+     C                     MOVE BJURPT    RTITL
+     C                     MOVE BJMRDT    RDATE
+     C                     Z-ADD1         RPAGE
+     C                     WRITEHEADAU
+     C                     ENDIF
+     C                     WRITEERRORAU
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN                                          CEU011
+     C*
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

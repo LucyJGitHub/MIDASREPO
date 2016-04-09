@@ -1,0 +1,1161 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Position profit centre Audit')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1190  -  Position Profit Centre Audit Report                 *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                    Date                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *                                                               *
+      *****************************************************************
+     F* Purpose:
+     F*                                                                  *
+     F* This program prints details of position  profit  centers.  If
+     F* the  report  is  run  as  a result of an input cycle  request
+     F* ,it lists only position profit  centers  changed (MODE = 'C')
+     F* today.    If  the  report is run as a result of a COB request
+     F* ,it lists all  position  profit  centers (MODE = 'A')  .  The
+     F* report  is  also run automatically in the COB  where it lists
+     F* only position profit centers changed today.
+     F*                                                                  *
+     F********************************************************************
+     F/EJECT
+     F*****************************************************************
+     FFF1190P1O   E             70     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FFF1190P2O   E             80     PRINTER                        UC
+     F                                              KINFDS SPOOL2
+     FFF1190A1O   E                    PRINTER                        UC
+     F                                              KINFDS SPLAU1
+     FFF1190A2O   E                    PRINTER                        UC
+     F                                              KINFDS SPLAU2
+     FFOPCLCD IF  E           K        DISK
+     FFOPKLCD IF  E           K        DISK
+     F/EJECT
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F* ID F  C  H  L
+     F*
+     F*      10        1= rpt chg details, 0= rpt all details
+     F*      25        End of file on lf/fopklcd
+     F*      30        End of file on lf/fopclcd
+     F*      35        1= MBIN is 'Y'    , 0= MBIN is 'N'
+     F*      65        FF1190A1 opened
+     F*      66        FF1190A2 opened
+     F*      70        Overflow for report FF1190P1
+     F*      80        Overflow for report FF1190P2
+     F*      98        1 = Date format MMDDYY
+     F*                0 = Date format DDMMYY
+     F*    U7+U8       Database Errors
+     F*      LR        Terminate program
+     F*
+     F/EJECT
+     E/SPACE 5
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E/SPACE 5
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPLAU1      DS
+     I                                       83  92 SFILA1
+     I                                    B 123 1240SFNUA1
+     ISPLAU2      DS
+     I                                       83  92 SFILA2
+     I                                    B 123 1240SFNUA2
+     IP@FMT     E DSDSFDY
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     ISDBRCH    E DSSDBRCHPD
+     I              A8BRNM                          BRNM
+     I I
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      134 183 DBLOT
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5        SEQUENCE NO    S01117
+     C                     PARM           ENT     3        ENTITY         S01117
+     C                     PARM           MODE    1        RUN MODE
+     C*
+     C           *LIKE     DEFN BRCA      BRSAV
+     C*
+     C/EJECT
+     C*****************************************************************
+     C* MAIN PROCESSING                                               *
+     C*****************************************************************
+     C*
+     C** Perform initial processing
+     C*
+     C                     EXSR INIT
+     C*
+     C** Produce book position profit centre report
+     C*
+     C                     EXSR BOOK
+     C*
+     C** Produce customer/broker position profit centre report
+     C*
+     C                     EXSR CUBR
+     C*
+     C** Terminate program
+     C*
+     C                     EXSR EXIT
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* S U B R O U T I N E   D E S C R I P T I O N
+     C*
+     C*****************************************************************
+     C*
+     C* Book   - Produce book position profit centre report
+     C* Cubr   - Produce cust/brok position profit centre report
+     C* Cbchg  - Output changed cust/brok position profit centre report
+     C* Cbcdet - Output detail report for changed cust/brok position
+     C*          profit centres.
+     C* Cball  - Output all cust/brok position profit centre report
+     C* Cbadet - Output detail report for all cust/brok position
+     C*          profit centres.
+     C* Bkchg  - Output changed book position profit centre report
+     C* Bkcdet - Output detail report for changed book position profit
+     C*          centres.
+     C* Bkall  - Output all book position profit centre report
+     C* Bkadet - Output detail report for all book position profit
+     C*          centres.
+      * RCFP1  - Update RCF details for a P1 report                       S01117
+      * RCFAU  - Update RCF details for an AU report                      S01117
+     C* BRCH   - Retrieves the branch name for multibranch systems
+     C* EXIT   - Exits from the program
+     C* DBERR  - Processes database errors
+     C* INIT   - Initialises the program
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* CUBR - Produce cust/brok position profit centre report
+     C*
+     C* CALLS: cbchg, cball
+     C*
+     C*****************************************************************
+     C*
+     C           CUBR      BEGSR
+      *
+      ** When report mode is 'C' process only changed position
+      ** profit centre records.
+      *
+     C           MODE      IFEQ 'C'
+     C*
+     C                     EXSR CBCHG
+     C*
+     C                     ELSE
+      *
+      ** Report all position profit centres.
+     C*
+     C                     EXSR CBALL
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C* Cbchg - Output changed cust/brok position profit centre report
+     C*
+     C* CALLS: Cbcdet
+     C*****************************************************************
+     C           CBCHG     BEGSR
+     C*
+     C           LCD       DOUEQRUND
+     C           *IN30     OREQ '1'
+     C*
+     C                     READ FOPCLCD                  30
+     C                     END
+      *
+      ** If no records found output no details to report to an
+      ** audit file and update RCF at the same time.
+      *
+     C           *IN30     IFEQ '1'
+     C*
+     C                     OPEN FF1190A1
+     C                     SETON                     65
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA1    @FILE
+     C                     Z-ADDSFNUA1    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** If the branch parameter is '   ' or 'ALL' output message
+      ** 'No Details to report ' -to the Audit file.
+     C*
+     C           ENT       IFEQ *BLANK
+     C           ENT       OREQ 'ALL'
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA102
+     C*
+     C                     ELSE
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA101
+     C*
+     C                     END
+     C*
+      *
+      ** Else records read but need to check if the branch on the
+      ** record matches the branch requested by the user.
+     C*
+     C                     ELSE
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE'   '
+     C           BRCA      ANDNEENT
+     C*
+      *
+      ** Open audit file and update RCF.
+      *
+     C                     OPEN FF1190A1
+     C                     SETON                     65
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA1    @FILE
+     C                     Z-ADDSFNUA1    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA101
+     C*
+     C                     ELSE
+      *
+      ** Output Detail report for changed cust/brok position profit
+      ** centres.
+     C*
+     C                     EXSR CBCDET
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Cbcdet- Output detail report for changed cust/brok position
+     C*         profit centres.
+     C*
+     C* CALLED BY: Cbchg
+     C* CALLS:
+     C*****************************************************************
+     C*
+     C           CBCDET    BEGSR
+     C*
+      ** While not end of file lf/fopclcd
+      *
+     C           *IN30     DOWNE'1'
+     C*
+      ** On change of branch open a new print file and output
+      ** report details if the user has requested the branch read.
+      *
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANK
+     C           ENT       OREQ BRCA
+     C*
+     C*
+     C                     CLOSEFF1190P1
+     C                     OPEN FF1190P1
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE1    @FILE
+     C                     Z-ADDSFNUM1    @SNUM
+     C                     EXSR RCFP1
+     C*
+      ** Access branch details in a multibranched enviroment
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFTP1HDR
+     C*
+     C                     MOVE BRCA      BRSAV
+     C*
+      ** While not end of file lf/fopclcd and branch code unchanged
+      *
+     C           *IN30     DOWNE'1'
+     C           BRCA      ANDEQBRSAV
+     C*
+      ** Convert last chg date to alpha format.
+      *
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DATE
+     C*
+      ** if page overflow has occured write header.
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEFTP1HDR
+     C                     SETOF                     70
+     C                     END
+     C*
+      ** write report detail line.
+      *
+     C                     WRITEFTP1DET
+     C*
+      ** read next record with last change date equal to rundate.
+     C*
+     C           LCD       DOUEQRUND
+     C           *IN30     OREQ '1'
+     C*
+     C                     READ FOPCLCD                  30
+     C                     END
+     C*
+      ** End loop to process records with the same branch code.
+     C*
+     C                     END
+     C*
+      ** if page overflow has occured write header.
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEFTP1HDR
+     C                     SETOF                     70
+     C                     END
+     C*
+      ** write end of report msg.
+      *
+     C                     WRITEFTP1END
+     C*
+      ** Else, ENT NE ALL and ENT NE '   ' and BRCA NE ENT.
+      ** therefore force end of file.
+     C*
+     C                     ELSE
+     C                     SETON                     30
+     C                     END
+     C*
+      ** End loop to process records while not end of file.
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Cball - Output all cust/brok position profit centre report
+     C*
+     C* CALLS:
+     C*****************************************************************
+     C           CBALL     BEGSR
+     C*
+     C*
+     C                     READ FOPCLCD                  30
+      *
+      ** If no records found output no details to report to an
+      ** audit file and update RCF at the same time.
+      *
+     C           *IN30     IFEQ '1'
+     C*
+     C                     OPEN FF1190A1
+     C                     SETON                     65
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA1    @FILE
+     C                     Z-ADDSFNUA1    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** If the branch parameter is '   ' or 'ALL' output message
+      ** 'No Details to report ' -to the Audit file.
+     C*
+     C           ENT       IFEQ *BLANK
+     C           ENT       OREQ 'ALL'
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA102
+     C*
+     C                     ELSE
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA101
+     C*
+     C                     END
+     C*
+      *
+      ** Else records read but need to check if the branch on the
+      ** record matches the branch requested by the user.
+     C*
+     C                     ELSE
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE'   '
+     C           BRCA      ANDNEENT
+     C*
+      ** open audit file and update RCF.
+     C*
+     C                     OPEN FF1190A1
+     C                     SETON                     65
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA1    @FILE
+     C                     Z-ADDSFNUA1    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA101
+     C*
+     C                     ELSE
+      *
+      ** Output Detail report for all cust/brok position profit
+      ** centres.
+     C*
+     C                     EXSR CBADET
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Cbadet- Output detail report for all cust/brok position
+     C*         profit centres.
+     C*
+     C* CALLED BY: Cball
+     C* CALLS:
+     C*****************************************************************
+     C*
+     C           CBADET    BEGSR
+     C*
+      ** While not end of file lf/fopclcd
+      *
+     C           *IN30     DOWNE'1'
+     C*
+      ** On change of branch open a new print file and output
+      ** report details if the user has requested the branch read.
+      *
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANK
+     C           ENT       OREQ BRCA
+     C*
+     C*
+     C                     CLOSEFF1190P1
+     C                     OPEN FF1190P1
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE1    @FILE
+     C                     Z-ADDSFNUM1    @SNUM
+     C                     EXSR RCFP1
+     C*
+      ** Access branch details in a multibranched enviroment
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFTP1HDR
+     C*
+     C                     MOVE BRCA      BRSAV
+     C*
+      ** While not end of file lf/fopclcd and branch code unchanged
+      *
+     C           *IN30     DOWNE'1'
+     C           BRCA      ANDEQBRSAV
+     C*
+      ** Convert last chg date to alpha format.
+      *
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DATE
+     C*
+      ** if page overflow has occured witre header.
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEFTP1HDR
+     C                     SETOF                     70
+     C                     END
+     C*
+      ** write report detail line.
+      *
+     C                     WRITEFTP1DET
+     C*
+      ** read next record
+     C*
+     C                     READ FOPCLCD                  30
+     C*
+      ** End loop to process records with the same branch code.
+     C*
+     C                     END
+     C*
+      ** if page overflow has occured write header.
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEFTP1HDR
+     C                     SETOF                     70
+     C                     END
+     C*
+      ** write end of report msg.
+      *
+     C                     WRITEFTP1END
+     C*
+      ** Else, ENT NE ALL and ENT NE '   ' and BRCA NE ENT.
+      ** therefore force end of file.
+     C*
+     C                     ELSE
+     C                     SETON                     30
+     C                     END
+     C*
+      ** End loop to process records while not end of file.
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* Book - Produce book position profit centre report
+     C*
+     C* CALLS: bkchg, bkall
+     C*
+     C*****************************************************************
+     C*
+     C           BOOK      BEGSR
+      *
+      ** When report mode is 'C' process only changed position
+      ** profit centre records.
+      *
+     C           MODE      IFEQ 'C'
+     C*
+     C                     EXSR BKCHG
+     C*
+     C                     ELSE
+      *
+      ** Report all position profit centres.
+     C*
+     C                     EXSR BKALL
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C* Bkchg - Output changed book position profit centre report
+     C*
+     C* CALLS: Bkcdet
+     C*****************************************************************
+     C           BKCHG     BEGSR
+     C*
+     C           LCD       DOUEQRUND
+     C           *IN25     OREQ '1'
+     C*
+     C                     READ FOPKLCD                  25
+     C                     END
+      *
+      ** If no records found output no details to report to an
+      ** audit file and update RCF at the same time.
+      *
+     C           *IN25     IFEQ '1'
+     C*
+     C                     OPEN FF1190A2
+     C                     SETON                     66
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA2    @FILE
+     C                     Z-ADDSFNUA2    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** If the branch parameter is '   ' or 'ALL' output message
+      ** 'No Details to report ' -to the Audit file.
+     C*
+     C           ENT       IFEQ *BLANK
+     C           ENT       OREQ 'ALL'
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA202
+     C*
+     C                     ELSE
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA201
+     C*
+     C                     END
+     C*
+      *
+      ** Else records read but need to check if the branch on the
+      ** record matches the branch requested by the user.
+     C*
+     C                     ELSE
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE'   '
+     C           BRCA      ANDNEENT
+      *
+      ** Open audit file and update RCF.
+      *
+     C                     OPEN FF1190A2
+     C                     SETON                     66
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA2    @FILE
+     C                     Z-ADDSFNUA2    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA201
+     C*
+     C                     ELSE
+      *
+      ** Output Detail report for changed book position profit
+      ** centres.
+     C*
+     C                     EXSR BKCDET
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Bkcdet- Output detail report for changed book position profit
+     C*         centres.
+     C*
+     C* CALLED BY: Bkchg
+     C* CALLS:
+     C*****************************************************************
+     C*
+     C           BKCDET    BEGSR
+     C*
+      ** While not end of file lf/fopclcd
+      *
+     C           *IN25     DOWNE'1'
+     C*
+      ** On change of branch open a new print file and output
+      ** report details if the user has requested the branch read.
+      *
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANK
+     C           ENT       OREQ BRCA
+     C*
+     C*
+     C                     CLOSEFF1190P2
+     C                     OPEN FF1190P2
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE2    @FILE
+     C                     Z-ADDSFNUM2    @SNUM
+     C                     EXSR RCFP1
+     C*
+      ** Access branch details in a multibranched enviroment
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFTP2HDR
+     C*
+     C                     MOVE BRCA      BRSAV
+     C*
+      ** While not end of file lf/fopclcd and branch code unchanged
+      *
+     C           *IN25     DOWNE'1'
+     C           BRCA      ANDEQBRSAV
+     C*
+      ** Convert last chg date to alpha format.
+      *
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DATE
+     C*
+      ** if page overflow has occured witre header.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITEFTP2HDR
+     C                     SETOF                     80
+     C                     END
+     C*
+      ** write report detail line.
+      *
+     C                     WRITEFTP2DET
+     C*
+      ** read next record with last change date equal to rundate.
+     C*
+     C           LCD       DOUEQRUND
+     C           *IN25     OREQ '1'
+     C*
+     C                     READ FOPKLCD                  25
+     C                     END
+     C*
+      ** End loop to process records with the same branch code.
+     C*
+     C                     END
+     C*
+      ** if page overflow has occured witre header.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITEFTP2HDR
+     C                     SETOF                     80
+     C                     END
+     C*
+      ** write end of report msg.
+      *
+     C                     WRITEFTP2END
+     C*
+      ** Else, ENT NE ALL and ENT NE '   ' and BRCA NE ENT.
+      ** therefore force end of file.
+     C*
+     C                     ELSE
+     C                     SETON                     25
+     C                     END
+     C*
+      ** End loop to process records while not end of file.
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Bkall - Output all book position profit centre report
+     C*
+     C* CALLS:
+     C*****************************************************************
+     C           BKALL     BEGSR
+     C*
+     C*
+     C                     READ FOPKLCD                  25
+      *
+      ** If no records found output no details to report to an
+      ** audit file and pdate RCF at the same time.
+      *
+     C           *IN25     IFEQ '1'
+     C*
+     C                     OPEN FF1190A2
+     C                     SETON                     66
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA2    @FILE
+     C                     Z-ADDSFNUA2    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** If the branch parameter is '   ' or 'ALL' output message
+      ** 'No Details to report ' -to the Audit file.
+     C*
+     C           ENT       IFEQ *BLANK
+     C           ENT       OREQ 'ALL'
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA202
+     C*
+     C                     ELSE
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA201
+     C*
+     C                     END
+     C*
+      *
+      ** Else records read but need to check if the branch on the
+      ** record matches the branch requested by the user.
+     C*
+     C                     ELSE
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE'   '
+     C           BRCA      ANDNEENT
+     C*
+      *
+      ** Open audit file and update RCF.
+      *
+     C                     OPEN FF1190A2
+     C                     SETON                     66
+     C*
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA2    @FILE
+     C                     Z-ADDSFNUA2    @SNUM
+     C                     EXSR RCFAU
+      *
+      ** Output msg. 'No Details to report for branch - 'XXX''
+      ** where 'xxx' is the entity parameter.
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA201
+     C*
+     C                     ELSE
+      *
+      ** Output Detail report for all book position profit
+      ** centres.
+     C*
+     C                     EXSR BKADET
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+     C/EJECT
+     C*****************************************************************
+     C* Bkadet- Output detail report for all book position profit
+     C*         centres.
+     C*
+     C* CALLED BY: Bkall
+     C* CALLS:
+     C*****************************************************************
+     C*
+     C           BKADET    BEGSR
+     C*
+      ** While not end of file lf/fopclcd
+      *
+     C           *IN25     DOWNE'1'
+     C*
+      ** On change of branch open a new print file and output
+      ** report details if the user has requested the branch read.
+      *
+     C           ENT       IFEQ 'ALL'
+     C           ENT       OREQ *BLANK
+     C           ENT       OREQ BRCA
+     C*
+     C*
+     C                     CLOSEFF1190P2
+     C                     OPEN FF1190P2
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILE2    @FILE
+     C                     Z-ADDSFNUM2    @SNUM
+     C                     EXSR RCFP1
+     C*
+      ** Access branch details in a multibranched enviroment
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     EXSR BRCH
+     C                     END
+     C                     WRITEFTP2HDR
+     C*
+     C                     MOVE BRCA      BRSAV
+     C*
+      ** While not end of file lf/fopclcd and branch code unchanged
+      *
+     C           *IN25     DOWNE'1'
+     C           BRCA      ANDEQBRSAV
+     C*
+      ** Convert last chg date to alpha format.
+      *
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DATE
+     C*
+      ** if page overflow has occured write header.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITEFTP2HDR
+     C                     SETOF                     80
+     C                     END
+     C*
+      ** write report detail line.
+      *
+     C                     WRITEFTP2DET
+     C*
+      ** read next record
+     C*
+     C                     READ FOPKLCD                  25
+     C*
+      ** End loop to process records with the same branch code.
+     C*
+     C                     END
+     C*
+      ** if page overflow has occured witre header.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITEFTP2HDR
+     C                     SETOF                     80
+     C                     END
+     C*
+      ** write end of report msg.
+      *
+     C                     WRITEFTP2END
+     C*
+      ** Else, ENT NE ALL and ENT NE '   ' and BRCA NE ENT.
+      ** therefore force end of file.
+     C*
+     C                     ELSE
+     C                     SETON                     25
+     C                     END
+     C*
+      ** End loop to process records while not end of file.
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** RCFP1  - Update RCF details for an P1 report                     S01117
+      ** CALLED FROM: Bkcdet                                              S01117
+      ** CALLS: Zsfile                                                    S01117
+      **                                                                  S01117
+      ** Input parameters: Spool file no.  - @snum                        S01117
+      **                   Spool file name - @file                        S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFP1     BEGSR                           ** RCFAU  **   S01117
+     C*                                                                   S01117
+     C**      ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           @FILE                           S01117
+     C                     PARM           @SNUM                           S01117
+     C                     PARM           ZSERR                           S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     EXSR EXIT                                      S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** RCFAU  - Update RCF details for an AU report                     S01117
+      ** CALLED FROM: Book                                                S01117
+      ** CALLS: Zsfile                                                    S01117
+      **                                                                  S01117
+      ** Input parameters: Spool file no.  - @snum                        S01117
+      **                   Spool file name - @file                        S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFAU     BEGSR                           ** RCFAU  **   S01117
+     C*                                                                   S01117
+     C**      ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           @FILE  10                       S01117
+     C                     PARM           @SNUM   60                      S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     EXSR EXIT                                      S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C*****************************************************************
+     C* BRCH  -  Retrives the branch details
+     C*                                                                   S01117
+     C* CALLED BY: Bkcdet
+     C* CALLS: Aobrchr0
+     C*                                                                   S01117
+     C*****************************************************************
+     C           BRCH      BEGSR
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    P@FMT                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C* ERROR IN SDBRCHPD
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *BLANKS   BRNM
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVEL'FF1190'  DBPGM
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELBRCA      DBKEY
+     C                     MOVEL@OPTN     DBOPTN  7        ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* INIT SR: Initialise the program
+     C* CALLS:
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C** DEFINE DATA AREAS LDA AND OBTAIN RUN DATE DETAILS
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C*
+     C                     IN   RUNDT
+     C*
+     C** Check whether only changed details are to be reported
+     C*
+     C           MODE      IFEQ 'C'
+     C                     SETON                     10
+     C                     ELSE
+     C                     SETOF                     10
+     C                     END
+     C*
+     C** OBTAIN USER REPORT TITLE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    P@FMT
+     C*
+     C           @RTCD     IFNE *BLANK
+     C*
+     C** WRITE ERROR DETAILS TO LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVEL'FF1190'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 01 *
+     C                     MOVEL@OPTN     DBOPTN           ***************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** CHECK BANKING ENVIROMENT TO SEE IF BRANCH IS DISPLAYED
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     35
+     C                     ELSE
+     C                     SETOF                     35
+     C                     END
+     C*
+     C** Check date format used for Zdate2
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* DBERR - Process database errors
+      *
+     C* CALLED BY:Init, Brch
+     C* CALLS:    EXIT - EXIT FROM PROGRAM
+      *
+     C*****************************************************************
+     C           DBERR     BEGSR
+      *
+      ** if the audit files have not been opened open
+      ** them and update RCF at the same time.
+      *
+     C*
+     C           *IN65     IFEQ '0'
+     C*
+     C                     OPEN FF1190A1
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA1    @FILE
+     C                     Z-ADDSFNUA1    @SNUM
+     C                     EXSR RCFAU
+     C*
+     C                     END
+     C*
+      *
+      ** output database error details to report the
+      *
+     C                     WRITEFMTA1HD
+     C                     WRITEFMTA103
+     C*
+     C           *IN66     IFEQ '0'
+     C*
+     C                     OPEN FF1190A2
+     C                     Z-ADD*ZERO     PAGE
+     C                     MOVE SFILA2    @FILE
+     C                     Z-ADDSFNUA2    @SNUM
+     C                     EXSR RCFAU
+     C*
+     C                     END
+     C*
+     C                     WRITEFMTA2HD
+     C                     WRITEFMTA203
+     C                     DUMP
+     C*
+     C** SETON U7 AND U8 AND END PROGRAM
+     C*
+     C                     SETON                     U7U8
+     C                     EXSR EXIT
+     C                     ENDSR
+     C*****************************************************************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* EXIT SR: EXITS FROM THE PROGRAM
+     C* CALLS:
+     C*****************************************************************
+     C           EXIT      BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

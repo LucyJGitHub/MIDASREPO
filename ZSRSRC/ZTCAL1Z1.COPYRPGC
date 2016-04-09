@@ -1,0 +1,311 @@
+     C********************************************************************
+     C**
+     C**   ZTCAL1 SR. TO CALCULATE TAX ON CHARGES/COMMISSIONS
+     C**
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01446             DATE 14OCT93                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01446 - Customer Commissions (Courtage) enhancement:
+     C*           Amended to cater for single charge currency            *
+     C*                                                                  *
+     C********************************************************************
+     C*                                                                  *
+     C**  ** INPUT CHARGE/COMMISSION AMOUNTS MUST BE SIGNED POSITIVE **
+     C**
+     C           ZTCAL1    BEGSR
+     C*
+     C*  WORK FIELDS
+     C*
+     C                     Z-ADD*ZERO     ZZ      20
+     C                     Z-ADD*ZERO     ZAM0   150
+     C                     Z-ADD*ZERO     ZAM1   151
+     C                     Z-ADD*ZERO     ZAM2   152
+     C                     Z-ADD*ZERO     ZAM3   153
+     C                     Z-ADD*ZERO     ZCHG0  150
+     C                     Z-ADD*ZERO     ZCHG1  151
+     C                     Z-ADD*ZERO     ZCHG2  152
+     C                     Z-ADD*ZERO     ZCHG3  153
+     C                     Z-ADD*ZERO     ZCG0   150
+     C                     Z-ADD*ZERO     ZCG1   151
+     C                     Z-ADD*ZERO     ZCG2   152
+     C                     Z-ADD*ZERO     ZCG3   153
+     C                     MOVEL*BLANK    ZFLAG   1
+     C                     MOVE *BLANK    UZCCY   3                       S01446
+     C                     MOVE *ZERO     UZCDP   10                      S01446
+     C                     MOVE S01446    S01446  1                       S01446
+     C*
+     C*  INPUT PARAMETERS
+     C*
+     C* FROM THE CHARGE TYPES FILE
+     C*
+     C                     MOVE ZCHGB     ZCHGB   1
+     C                     MOVE ZTHRI     ZTHRI   1
+     C                     Z-ADDZRA       ZRA
+     C                     Z-ADDZPC       ZPC
+     C                     Z-ADDZCG       ZCG
+     C                     Z-ADDZMNCH     ZMNCH  150
+     C                     Z-ADDZMXCH     ZMXCH  150
+     C*
+     C* THE CHARGE/COMMISSION AMOUNT ON WHICH THE TAX IS TO BE LEVIED
+     C* (ZCHGA) PLUS THE CHARGE CURRENCY NUMBER OF DECIMAL PLACES
+     C*
+     C                     Z-ADDZCHGA     ZCHGA  150
+     C                     Z-ADDZDECS     ZDECS   10
+     C*
+     C*  OUTPUT PARAMETERS - THE TAX CALCULATED (ZTAXA)
+     C*
+     C                     Z-ADD*ZERO     ZTAXA  150
+      *                                                                   S01446
+      *  Convert Charge Amount to nominal currency if S01446 is on the    S01446
+      *  switchable features file and the Charge Currency on SE ICD is    S01446
+      *  not blank                                                        S01446
+      *                                                                   S01446
+     C           S01446    IFEQ 'Y'                                       S01446
+     C           ZCCYI     ANDNE*BLANK                                    S01446
+     C                     Z-ADDZCHGA     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZCHGA                           S01446
+     C                     END                                            S01446
+      *
+      ** ADJUST CHARGE/COMMISSION AMOUNT IN FOR NO.OF DECIMAL PLACES
+      *
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCHGA     ZCHG0
+     C                     END
+      *
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCHGA     ZCHG1
+     C                     END
+      *
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCHGA     ZCHG2
+     C                     END
+      *
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCHGA     ZCHG3
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE FLAT TAX
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'F'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CHARGE/COMMISSION AMOUNT LESS THAN RANGE LIMIT
+     C*
+     C           ZCHGA     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZERO
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  ADD FLAT RATE TO WORK FIELD
+     C*
+     C                     Z-ADDZCG,ZZ    ZTAXA
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE Threshold BASED TAXES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFNE 'F'
+     C           ZTHRI     ANDEQ'Y'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CHARGE/COMMISSION AMOUNT LESS THAN RANGE LIMIT
+     C*
+     C           ZCHGA     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCHG0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCHG1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCHG2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCHG3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZTAXA
+     C                     END
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE Tiered BASED TAXES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFNE 'F'
+     C           ZTHRI     ANDEQ'N'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CHARGE/COMMISSION AMOUNT LESS THAN RANGE LIMIT
+     C*
+     C           ZCHGA     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C                     EXSR ZTCAL2
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZTAXA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZTAXA
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  SET MINIMUM AMOUNT
+     C*
+     C           ZTAXA     IFLT ZMNCH
+     C                     Z-ADDZMNCH     ZTAXA
+     C                     END
+     C*
+     C*  SET MAXIMUM AMOUNT
+     C*
+     C           ZMXCH     IFNE *ZERO
+     C           ZTAXA     ANDGTZMXCH
+     C                     Z-ADDZMXCH     ZTAXA
+     C                     END
+      *                                                                   S01446
+      *  Convert output amount to charge currency if S01446 is on the     S01446
+      *  switchable features file and the Charge Currency on SE ICD is    S01446
+      *  not blank                                                        S01446
+      *                                                                   S01446
+     C           S01446    IFEQ 'Y'                                       S01446
+     C           ZCCYI     ANDNE*BLANK                                    S01446
+     C                     MOVE ZCCYO     UZCCY                           S01446
+     C                     MOVE ZCCYI     ZCCYO                           S01446
+     C                     MOVE UZCCY     ZCCYI                           S01446
+     C                     MOVE ZCDPO     UZCDP                           S01446
+     C                     MOVE ZCDPI     ZCDPO                           S01446
+     C                     MOVE UZCDP     ZCDPI                           S01446
+     C           ZMD       IFEQ 'M'                                       S01446
+     C                     MOVE 'D'       ZMD                             S01446
+     C                     ELSE                                           S01446
+     C                     MOVE 'M'       ZMD                             S01446
+     C                     END                                            S01446
+     C                     Z-ADDZTAXA     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZTAXA                           S01446
+     C                     END                                            S01446
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************

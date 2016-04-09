@@ -1,0 +1,382 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG View utility 2 - display file')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG99Z2 - View Utility 2            Display File         )    *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: CG99Z1  - View Utility 1                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 100811             Date 29Aug96               *
+      *                 S01522             Date 22Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  100811 - Identification of RDE path                          *
+     F*  S01552 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     FCG99Z2DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F                                              KINFSR SRFILE
+     FCG99Z1F IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E                    ERR     1   2 76
+     E                    CMD@    1   1 80
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     I/EJECT
+     I/COPY CGCPYSRC,SRERRI
+     IDATAXX    E DSCG99Z1F
+     I              OSEQ                            ##OSEQ
+     I                                        6  10 DEITMA
+      /EJECT
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           DRITMA  5
+     C*
+     C* INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C* DISPLAY SCREEN
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR DSPLAY
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C* DISPLAY SCREEN
+     C*****************************************************************
+     C           DSPLAY    BEGSR
+     C*
+     C* FILL SUBFILE
+     C*
+     C                     EXSR FILLSB
+      * Update job time and last item reference
+     C                     TIME           ##TME
+     C*
+     C* Display Subfile
+     C*
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C*
+     C* Reset variables
+     C*
+     C                     MOVEL*BLANK    DDERR  80
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C*
+     C* Process Screen
+     C*
+     C*
+     C                     SELEC
+     C* F3 OR F12,  END
+     C*
+     C           *INKC     WHEQ '1'
+     C                     MOVEL'Y2U9999' P0RTN
+     C           *INKL     WHEQ '1'
+     C                     MOVEL'USR0790' P0RTN
+     C*
+     C* Rolldown
+     C           *IN05     WHEQ '1'
+     C                     EXSR ROLDWN
+     C                     ENDSL
+     C                     ENDSR
+     C********************************************************************
+     C* FILL SUBFILE
+     C********************************************************************
+     C           FILLSB    BEGSR
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITE#SFLCTL
+      * Position
+     C           CG99ZK    SETLLCG99Z1FF
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVELOSEQ      ##OSEQ
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##OSEQ
+     C                     Z-ADD*ZERO     OSEQ
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C           *IN99     DOWEQ'0'
+      * Setup path infor.                                                 100811
+     C                     EXSR SRPTH1                                    100811
+     C                     ADD  1         RRN     40     04*
+     C                     WRITE#SFLRCD
+     C           RRN       IFEQ 17
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     OSEQ
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C                     SETON                         99*
+     C                     END
+     C                     ELSE
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     OSEQ
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* SET SUBFILE CONTROL INDICATORS
+     C*
+     C                     SELEC
+     C           *IN,4     WHEQ '1'
+     C                     MOVEA'011'     *IN,1
+     C           *IN,4     WHEQ '0'
+     C           DDERR     ANDEQERR,1
+     C                     MOVEA'111'     *IN,1
+     C                     OTHER
+     C                     MOVEA'110'     *IN,1
+     C                     ENDSL
+     C                     ENDSR
+     C********************************************************************
+     C* ROLLDOWN REQUEST
+     C********************************************************************
+     C           ROLDWN    BEGSR
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##OSEQ    OSEQ
+      * Position
+     C           CG99ZK    SETGTCG99Z1FF
+      * Read (Previous)
+     C                     EXSR RDPFIL
+     C*
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT17
+      * Read (Previous)
+     C                     EXSR RDPFIL
+     C*
+     C                     ADD  1         RRN
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     OSEQ
+     C                     MOVELERR,2     DDERR            *START OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* READ (NEXT) FROM FILE
+     C********************************************************************
+     C           RDFFIL    BEGSR
+     C           CG99ZP    READECG99Z1FF                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C           CG99ZP    READECG99Z1FF                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* READ PREVIOUS FROM FILE
+     C********************************************************************
+     C           RDPFIL    BEGSR
+     C           CG99ZP    REDPECG99Z1FF                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C           CG99ZP    REDPECG99Z1FF                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* DETERMINE IF RECORD READ IS TO BE SELECTED FOR DISPLAY
+     C********************************************************************
+     C           SELCTN    BEGSR
+      *
+      ** END OF FILE
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     GOTO ESELCT
+     C                     END
+      *
+      ** RECORD TO BE SELECTED?
+      *
+     C                     MOVEL'Y'       SELT
+      *
+     C                     Z-ADDDEOSEQ    SSEQ
+     C                     MOVELDATA      DATAT
+      *
+     C           ESELCT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     C*****************************************************************
+     C* INITIAL PROCESSING
+     C*****************************************************************
+     C           INIT      BEGSR
+     C                     MOVELDRITMA    DEITMA
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+      *
+      * Override File
+      *
+     C                     Z-ADD80        QCELEN 155
+     C                     MOVEACMD@,1    QCE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCE    80
+     C                     PARM           QCELEN
+      *
+     C                     OPEN CG99Z1F
+     C*
+     C**  KEY LIST
+     C*
+     C           CG99ZK    KLIST
+     C                     KFLD           DEITEM
+     C                     KFLD           OSEQ
+     C           CG99ZP    KLIST
+     C                     KFLD           DEITEM
+     C                     ENDSR
+     C**********************************************************************
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C********************************************************************100811
+     C**  Subroutine SRPTH1 moves data to the PATH FIELD                **100811
+     C********************************************************************100811
+     C           SRPTH1    BEGSR                           * S R P T H 1 *100811
+      *                                                                   100811
+      * Add subroutine name to stack:                                     100811
+      *                                                                   100811
+     C                     ADD  1         Q                               100811
+     C                     MOVEL'SRPTH1'  @STK,Q                          100811
+      *                                                                   100811
+      * Setup path information                                            100811
+      *                                                                   100811
+     C                     MOVELDENPTH    NPTH                            100811
+     C                     MOVELDATA      RDE                             100811
+     C                     MOVEL*BLANKS   #1LIN1                          100811
+     C                     MOVEL*BLANKS   #1LIN2                          100811
+     C                     MOVEL*BLANKS   LIN1                            100811
+     C                     MOVEL*BLANKS   LIN2                            100811
+     C*                                                                   100811
+     C           RDE       IFNE *BLANKS                                   100811
+     C                     CALL 'CG8400A'              90                 100811
+     C                     PARM           NPTH    6                       100811
+     C                     PARM           RDE    10                       100811
+     C                     PARM           LIN1   30                       100811
+     C                     PARM           LIN2   30                       100811
+     C                     MOVELLIN1      #1LIN1                          100811
+     C                     MOVELLIN2      #1LIN2                          100811
+     C                     END                                            100811
+     C*                                                                   100811
+     C* Unwind subroutine stack:                                          100811
+     C*                                                                   100811
+     C                     MOVE *BLANKS   @STK,Q                          100811
+     C                     SUB  1         Q                               100811
+     C*                                                                   100811
+     C                     ENDSR                                          100811
+     C********************************************************************100811
+     C/EJECT                                                              100811
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ERR
+End of File
+Start of File
+** CMD@
+OVRDBF FILE(CG99Z1F) TOFILE(QTEMP/CG99Z1F) SHARE(*NO) SECURE(*YES)

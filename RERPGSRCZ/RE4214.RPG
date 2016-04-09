@@ -1,0 +1,447 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Daily posting by dept extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4214 - Daily Postings by Department Extract                *
+     F*                                                               *
+     F*  Function:  This program will extract posting records from    *
+     F*  (COB)      teller transaction generated entries ready for    *
+     F*             printing of the Daily Posting by Department       *
+     F*             Report.                                           *
+     F*                                                               *
+     F*  Called By: REC4214                                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG12867           Date 11Dec06               *
+      *  Prev Amend No. CSD027A            Date 16May06               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CPK016             Date 03Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  BUG12867 - Records extracted (POSTPD) must be selected       *
+      *             depending on the passed parameter for Entity      *
+      *             (branch code) in REC4214. Patterned after 229322. *
+      *           - Applied fix 241163                                *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     FGETTPH  IP  E                    DISK
+     FGETTPD  IS  E                    DISK
+     F            APOSTPDF                          KRENAMEGETTPDF
+     FGETTPZ  IS  E                    DISK
+     F            APOSTZZF                          KRENAMEGETTPZF
+     FACCNT   IF  E           K        DISK
+     FPOSTPH  O   E                    DISK
+     FPOSTPD  O   E           K        DISK
+     FPOSTPZ  O   E                    DISK
+     FRE4214AUO   E                    PRINTER
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01 - GETT   - HEADER RECORD                                *
+     F*    02 -        - DETAIL RECORD                                *
+     F*    03 -        - TRAILER REOCRD                               *
+     F*    07 - ACCNT  - DETAIL RECORD                                *
+     F*                                                               *
+     F*    22 - OUTPUT HEADER RECORDS TO S/POSTD                      *
+     F*                                                               *
+     F*    33 - FILE CONTROL OF S/GETT OUT OF BALANCE                 *
+     F*    36 - OUTPUT TRAILER RECORD TO S/POSTD                      *
+     F*                                                               *
+     F*    40 - INPUT POSTING INDICATOR = 'Y'                         *
+     F*    41 - OUTPUT A DETAIL RECORD OF S/GETT TO S/POSTD           *
+     F*                                                               *
+     F*    52 - CHAIN TO ACCNT FILE FAILED                            *
+     F*                                                               *
+     F*    77 - NOT FIRST CYCLE                                       *
+     F*    78 - KEY OF THE FILE WILL BE DISPLAYED IN THE              *
+     F*         ERROR MESSAGE                                         *
+     F*    79 - DESCRIPTION OF DATABASE ERROR WILL BE DISPLAYED       *
+     F*         IN THE ERROR MESSAGE                                  *
+     F*                                                               *
+     F* 90-99 - USED IN Z-SUBROUTINES                                 *
+     F*                                                               *
+     F*    U7 - FILE CONTROL OUT OF BALANCE                           *
+     F*    U8 - DATABASE ERROR, REQUIRED RECORD NOT FOUND             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  GLZADD - Subroutine to add an amount to the total            *
+     F*  GLZSUM - To carry out the addition for subroutines           *
+     F*  ZSYSTM - Access AOBANKR0                                     *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E                    CPY@    1   1 80
+      /EJECT
+     I**
+     I**   G E T T  F I L E
+     I**
+     I**   HEADER RECORD
+     I**
+     IGETTPHF     01
+     IGETTPDF     02
+     I              ACKEY                           ACKEYP                                    CPK016
+     IGETTPZF     03
+     IACCNTABF    07
+     I*
+     IACKYDS      DS
+     I**********                              1   60CNUM                                     CSD027A
+     I                                        1   6 CNUM                                     CSD027A
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+      /EJECT
+     C*
+     C           *ENTRY    PLIST                                                            BUG12867
+     C                     PARM           @RENT   3                                         BUG12867
+      *                                                                                     BUG12867
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C   77                GOTO START
+     C**
+     C**   FIRST CYCLE
+     C**
+     C                     SETON                     77
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4214'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C**   KEY FOR PF/ACCNTAB
+     C           ACKEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA                                              BUG12867
+     C***
+     C***   ACCESS SDBANKPD
+     C***
+     C                     EXSR ZSYSTM
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERROR 01*
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     GOTO END
+     C                     END
+     C*
+     C**
+     C**   DATABASE ERROR - S/GETT
+     C**
+     C  N01                SETON                     U7U8LR
+     C  N01                SETON                     79    ***************
+     C  N01                Z-ADD2         DBASE            **DB ERROR 02**
+     C  N01                MOVEL'GETTPH'  DBFILE           **************
+     C  N01                GOTO END
+     C*  OUTPUT HEADER TO PF/POSTPH
+     C                     MOVE 'A'       RECI
+     C                     WRITEPOSTPHF
+     C**
+     C**   S/GETT & S/POSTD RECORDS COUNT
+     C**
+     C           GETREC    ADD  1         GETREC  50
+     C           PSTREC    ADD  1         PSTREC  50
+     C                     GOTO END
+     C***
+     C***   DETAIL PROCESSING
+     C***
+     C           START     TAG                             ** START TAG **
+     C***
+     C***   S/GETT RECORDS COUNT
+     C***
+     C           GETREC    ADD  1         GETREC
+     C**
+     C**   RESET INDICATORS
+     C**
+     C                     SETOF                     2241
+     C**
+     C**   DETAIL RECORD OF S/GETT
+     C**
+     C   02                GOTO GETT
+     C**
+     C**   TRAILER RECORD OF S/GETT
+     C**
+     C   03                GOTO END
+     C**
+     C**   DATABASE ERROR - S/GETT
+     C**
+     C                     SETON                     U7U8LR
+     C                     SETON                     79    ***************
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C                     MOVEL'GETTPD'  DBFILE           **************
+     C                     GOTO END
+     C**
+     C**   PROCESS DETAIL RECORD OF S/GETT
+     C**
+     C           GETT      TAG                             **  GETT TAG **
+     C**
+     C**   HASH TOTAL OF POSTING AMOUNTS OF S/GETT
+     C**
+     C           PSTA      DIV  1000      ZZAMT
+     C                     Z-ADDGETHTI    ZZTOTI
+     C                     Z-ADDGETHTD    ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    GETHTI 150
+     C                     Z-ADDZZTOTD    GETHTD  30
+     C**
+     C**   DETERMINE IF INPUT POSTING INDICATOR = 'Y'
+     C**
+     C           TLIN      COMP 'Y'                      40
+     C  N40                GOTO END
+      *                                                                                     BUG12867
+     C           @RENT     IFNE 'ALL'                                                       BUG12867
+     C           @RENT     ANDNE*BLANKS                                                     BUG12867
+     C           @RENT     ANDNEBRCA                                                        BUG12867
+     C                     GOTO END                                                         BUG12867
+     C                     ENDIF                                                            BUG12867
+     C**
+     C**   CONVERT ORIGINAL AMOUNT FROM 9 DIGITS TO 13 DIGITS
+     C**
+     C                     Z-ADDORAMT     ORAMTT 130
+     C**
+     C**   CHAIN TO S/ACCNT TO OBTAIN A/C NAME & NUMBER
+     C**
+     C           ACKEY     CHAINACCNT                52
+     C  N07                SETON                     U7U8LR
+     C  N07                SETON                     78    ***************
+     C  N07                Z-ADD4         DBASE            **DB ERROR 04**
+     C  N07                MOVEL'ACCNT'   DBFILE           ***************
+     C  N07                MOVELACKYDS    DBKEY
+     C  N07                GOTO END
+     C**
+     C**   S/POSTD RECORDS COUNT
+     C**
+     C           PSTREC    ADD  1         PSTREC  50
+     C**
+     C**   HASH TOTALS OF ORIGINAL AMOUNTS OF S/POSTD
+     C**
+     C           ORAMT     DIV  1000      ZZAMT
+     C                     Z-ADDPSTHTI    ZZTOTI
+     C                     Z-ADDPSTHTD    ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    PSTHTI 150
+     C                     Z-ADDZZTOTD    PSTHTD  30
+     C                     MOVE 'D'       RECI
+     C**  OUTPUT A DETAIL RECORD OF S/GETTPD TO S/POSTPD
+     C                     WRITEPOSTPDF
+     C           END       TAG                             *** END TAG ***
+     C**
+     C**   COMPARE RECORDS COUNT & HASH TOTALS PROCESSED WITH THOSE ON
+     C**   THE S/GETT TRAILER
+     C**
+     CLR         GETREC    COMP NORE1                3333
+     CLRN33      GETHTI    COMP HRWN                 3333
+     CLRN33      GETHTD    COMP HRDC                 3333
+     CLR 33                SETON                     U7
+     C**
+     C**   PF/POSTPD RECORDS COUNT
+     C**
+     CLR         PSTREC    ADD  1         PSTREC
+     CLR                   WRITECONTROL
+     CLR U7 U8             WRITEERROR
+     CLR                   Z-ADDPSTREC    NORE1
+     CLR                   MOVE 'T'       RECI
+     CLR                   Z-ADDPSTHTI    HRWN
+     CLR                   Z-ADDPSTHTD    HRDC
+     CLR                   WRITEPOSTPZF
+     CLR                   WRITETRAILAU
+     C/SPACE 3
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C*******************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C/SPACE 3
+     C*******************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     CSR         ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C*
+     CSR                   CALL 'AOBANKR0'
+     CSR                   PARM '*BLANK ' @RTCD   7
+     CSR                   PARM '*FIRST ' @OPTN   7
+     CSR         SDBANK    PARM SDBANK    DSFDY
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     CSR         BJDFIN    COMP 'M'                      98MMDDYY, 98 ON.
+     C**
+     CSR                   ENDSR
+     C**
+     C********************************************************************
+** COPYRIGHT OBJECT **
+(c) Misys International Banking Systems Ltd. 2001

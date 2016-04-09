@@ -1,0 +1,511 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Depot Movements Link Maint. Audit Rpt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - PORTFOLIO MANAGEMENT                                 *
+     F*                                                               *
+     F*  PM4230 - DEPOT MOVEMENTS LINK MAINTENANCE AUDIT REPORT       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 15Jul96               *
+     F*                 S01486 MD          Date 09Nov94               *
+     F*                 53103  JS          Date 11Nov93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  S01486 - LDA Changes, Access object, Standartization of      *
+     F*           Reports Produced, Database Changes                  *
+     F*  53103  - CREATED FOR PERFORMANCE RECONCILIATION              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                         *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F* Links by depot movement reference maintened today (prefix LM)
+     FPMLKDML1IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**Bank*details*(prefix BJ)                                          S01486
+     F*SDBANKPDIF**E                    DISK         KINFSR *PSSR      UC S01486
+     F*
+     F* Depot movements link maintenance audit report
+     F*PM4230P1O***E                    PRINTER      KINFSR *PSSR         S01486
+     F*************                                 KINFDS DSPRT          S01486
+     FPM4230AUO   E                    PRINTER                            S01486
+     F                                              KINFDS SPOOLU         S01486
+     F*                                                                   S01486
+     F* Depot movements link maintenance detail report                    S01486
+     FPM4230P1O   E                    PRINTER                        UC  S01486
+     F                                              KINFDS SPOOL          S01486
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F*                                                                  *
+     F*  ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F*                  ------------------------                        *
+     F*                                                                  *
+     F*        30 -  Error on file       for OPEN/CLOSE                  *
+     F*        31 -  Error/EOF on file   for READ                        *
+     F*        37 -  If reports to details sets ON                       *S01486
+     F*        38 -  Found array element for LOKUP                       *
+     F*                                                                  *
+     F*        70 -  Non-print RRCUST, RRPTFR / Blank print line         *
+     F*                                                                  *
+     F*        U7 -  Database error                                      *
+     F*        U8 -  File control error                                  *
+     F*        LR -  Enf of program                                      *
+     F*                                                                  *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E*    Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*    Table for Last change type
+     E                    TABCHT  1   3  1   TABCHX  6
+     E********************************************************************
+     E*
+     E/EJECT
+     I********************************************************************
+     I*                                                                   S01486
+     I** Bank Details                                                     S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+      *                                                                   CPM005
+      ** Portfolio Management Details                                     CPM005
+      *                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+     I*                                                                   S01486
+     I** DS for access programs, short data structure                     S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I*
+     I***Information area for PRTF (overflow + last line)*****************S01486
+     I********************************************************************S01486
+     I*DSPRT*******DS                                                     S01486
+     I*************                       B 188 1890SSOFL                 S01486
+     I*************                       B 367 3680SSLSL                 S01486
+     I*                                                                   S01486
+     I**  DS FOR P1 SPOOL FILE NAME                                       S01486
+     I*                                                                   S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 188 1890SFOFL                 S01486
+     I*                                                                   S01486
+     I**  DS FOR AU SPOOL FILE NAME                                       S01486
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I*
+     I* Data structure for compilation - COPYRIGHT insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I* LOCAL DATA AREA for data base errors
+     I*
+     I*LDA********UDS                            256                      S01486
+     ILDA         DS                            256                       S01486
+     I************                          132 183 DBFLD                 S01486
+     I                                      134 183 DBFLD                 S01486
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I************                          181 183 DBASE                 S01486
+     I                                      181 1830DBASE                 S01486
+      *
+      **  Program status Data structure
+     IDSPGM     ESDSY2PGDSP
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - Main processing routine                               *
+      * #INIT    - Initial processing                                    *
+      * #REPP    - Report processing                                     *
+      * #DBERR   - Database error                                        *
+      * *PSSR    - File/program exeption handler                         *
+      * RCFAU  - RCF PROCESSING FOR AUDIT REPORT                         *S01486
+      * RCFP1  - RCF PROCESSING FOR P1 REPORT                            *S01486
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * MAIN     - Main processing routine                             ***
+      ********************************************************************
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LIKE     DEFN DBFLD     DBSAV                           S01486
+     C                     Z-ADD0         PAGE1                           S01486
+     C                     Z-ADD0         PAGE2                           S01486
+      *                                                                   S01486
+      ** RCF PROCESING FOR AUDIT REPORT                                   S01486
+      *                                                                   S01486
+     C                     EXSR RCFAU                                     S01486
+      *
+      ** Initial processing
+     C                     EXSR #INIT
+      *                                                                   S01486
+      ** IF PRINT REPORT TO DETAILS, IN37 SET ON AND OPEN PRTF PM4230P1   S01486
+      *                                                                   S01486
+     C                     MOVE '1'       *IN37                           S01486
+     C                     OPEN PM4230P1                                  S01486
+     C                     WRITEPM4230H1                                  S01486
+      *                                                                   S01486
+      ** RCF PROCESING FOR P1 REPORT                                      S01486
+      *                                                                   S01486
+     C                     EXSR RCFP1                                     S01486
+      *
+      ** Report processing
+     C                     EXSR #REPP
+      *
+      ***Check*Overflow*print*line****************************************S01486
+      ** Write HEADER to AU                                               S01486
+     C***********SSOFL     SUB  SSLSL     WWREST  40                      S01486
+     C***********WWREST    IFLE 3                                         S01486
+     C                     WRITEPM4230H
+     C***********          ENDIF                                          S01486
+      *
+      ***Write*END*OF*REPORT**********************************************S01486
+      ** Write END OF REPORT to P1                                        S01486
+     C***********          WRITEPM4230E                                   S01486
+     C                     WRITEPM4230E1                                  S01486
+      *
+      ** END PROGRAM **
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - Initial processing                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #DBERR   - Database error                                        *
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - Main processing routine                               *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      *  Assign fields from SDS
+     C                     CLEARDBFLD
+     C                     MOVEL##PGM     DBPGM
+      *
+      * Access ICD file SDBANKPD
+     C***********          OPEN SDBANKPD               30                 S01486
+     C***********          READ SDBANKPD               3131               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C************IN31     IFEQ *ON                                       S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C***********          MOVEL'SDBANKPD'DBFILE                          CPM005
+     C                     MOVE 'SDBANKPD'DBFILE                          CPM005
+     C                     MOVEL'READ'    DBKEY            *************
+     C                     MOVE '001'     DBASE            * DBERR 001 *
+     C                     EXSR #DBERR                     *************
+     C                     ENDIF
+      *
+      *  Assign fields and close file
+     C                     MOVE BJURPT    RRURPT
+     C                     MOVE BJMRDT    RRMRDT
+     C***********          CLOSESDBANKPD               30                 S01486
+      *                                                                   CPM005
+      ** Access the Portfolio Management Details                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD002       DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR #DBERR                                    CPM005
+     C                     ENDIF                                          CPM005
+      *
+      * Key list for file PMLKDML1 (full key)
+     C           KEYFUL    KLIST
+     C                     KFLD           WWLCD
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           WWLKRF
+      *
+      * Key list for file PMLKDML1 (only Last change date)
+     C           KEYONE    KLIST
+     C                     KFLD           WWLCD
+      *
+      * Set KEYFUL to  Run day no. (SDBANKPD)
+     C                     Z-ADDBJRDNB    WWLCD   50
+     C**********           Z-ADD*LOVAL    WWCNUM  60                                          CSD027
+     C                     MOVE *LOVAL    WWCNUM  6                                           CSD027
+     C                     MOVE *LOVAL    WWPTFR  4
+     C                     Z-ADD*LOVAL    WWLKRF  70
+      *
+      * Set lower limit PMLKDML1 using KEYFUL
+     C           KEYFUL    SETLLPMLKDML1
+      *
+      *  Read first record in PMLKDML1
+     C           KEYONE    READEPMLKDML1               3131
+      *
+      *  No record found -
+      *    print No movements, End of report, terminate pgm
+     C           *IN31     IFEQ *ON
+     C                     WRITEPM4230H
+     C                     WRITEPM4230N
+     C***********          WRITEPM4230E                                   S01486
+     C                     WRITEPM4230D                                   S01486
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - Main processing routine                               *
+      *                                                                  *
+      ********************************************************************
+     C           #REPP     BEGSR
+      *
+      * Cycle while records read from PMLKDML1
+      *  and Last change date *EQ Run day no. (SDBANKPD)
+     C           *IN31     DOWEQ*OFF
+      *
+      *  Set print indicator *IN70
+     C           LMCNUM    IFEQ WWCNUM
+     C           LMPTFR    ANDEQWWPTFR
+     C                     MOVE *OFF      *IN70
+     C                     ELSE
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+     C                     MOVELLMCNUM    WWCNUM
+     C                     MOVELLMPTFR    WWPTFR
+      *
+      *  Assign fileds to output
+     C                     MOVELLMCNUM    RRCNUM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           LMPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C           LMPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C           LMPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVELLMPTFR    RRPTFR
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVELLMWOS1    RRWOS1
+     C                     MOVELLMWOR1    RRWOR1
+     C                     MOVELLMWOS2    RRWOS2
+     C*
+     C           LMWOR2    IFNE 0
+     C                     MOVELLMWOR2    RRWOR2
+     C                     ELSE
+     C                     MOVE *BLANKS   RRWOR2
+     C                     END
+      *
+     C                     MOVELLMWIS1    RRWIS1
+     C                     MOVELLMWIR1    RRWIR1
+     C                     MOVELLMWIS2    RRWIS2
+     C*
+     C           LMWIR2    IFNE 0
+     C                     MOVELLMWIR2    RRWIR2
+     C                     ELSE
+     C                     MOVE *BLANKS   RRWIR2
+     C                     END
+      *
+     C                     MOVELLMUSER    RRUSER
+      *
+      *  Assign type of last change
+     C           LMCHTP    LOKUPTABCHT    TABCHX         38
+     C           *IN38     IFEQ *ON
+     C                     MOVELTABCHX    RRCHTX
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRCHTX
+     C                     ENDIF
+      *
+      *  Assign last change date
+     C                     MOVELBJMRDT    RRLCD
+      *
+      ** Check Overflow print line
+     C***********SSOFL     SUB  SSLSL     WWREST  40                      S01486
+     C           SFOFL     SUB  SFNUM     WWREST  40                      S01486
+     C           WWREST    IFLE 2
+     C***********          WRITEPM4230H                                   S01486
+     C                     WRITEPM4230H1                                  S01486
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+      *  Write details
+     C***********          WRITEPM4230D                                   S01486
+     C                     WRITEPM4230D1                                  S01486
+      *
+      *  Read next record in PMLKDML1
+     C           KEYONE    READEPMLKDML1               3131
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #DBERR   - Database error                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - Initial processing                                    *
+      *                                                                  *
+      ********************************************************************
+     C           #DBERR    BEGSR
+      *                                                                   S01486
+      **  Print Audit report                                              S01486
+      *                                                                   S01486
+     C                     WRITEPM4230H                                   S01486
+      *                                                                   S01486
+      **  LDA                                                             S01486
+      *                                                                   S01486
+     C                     MOVELDBFLD     DBSAV                           S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVELDBSAV     DBFLD                           S01486
+     C                     OUT  LDA                                       S01486
+      *                                                                   S01486
+     C                     WRITEPM4230E                                   S01486
+     C           *IN37     IFEQ *OFF                                      S01486
+     C                     WRITEPM4230D                                   S01486
+     C                     ELSE                                           S01486
+     C                     WRITEPM4230E1                                  S01486
+     C                     ENDIF                                          S01486
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - File/program exeption handler                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * Anytime is file or program in exception
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/EJECT                                                              S01486
+     C********************************************************************S01486
+     C*                                                                   S01486
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+     C*                                                                   S01486
+     C           RCFP1     BEGSR                            ** RCFP1 **   S01486
+     C*                                                                   S01486
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C**                                                                  S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM *BLANKS   SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+     C/EJECT                                                              S01486
+     C********************************************************************S01486
+     C*                                                                   S01486
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+     C*                                                                   S01486
+     C           RCFAU     BEGSR                            ** RCFAU **   S01486
+     C*                                                                   S01486
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C**                                                                  S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM *BLANKS   SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+      *****************************************************************   S01486
+      /EJECT
+** CPY@ ---------------------------------------------------------------
+(c) Misys International Banking Systems Ltd. 2001
+** TABCHT/TABCHX  for Type of last change  ----------------------------
+IINSERT
+AAMEND
+DDELETE

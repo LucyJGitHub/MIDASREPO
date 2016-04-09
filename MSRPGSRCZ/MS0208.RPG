@@ -1,0 +1,593 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS 2780 outgoing message compression')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                             *
+      *                                                               *
+      *   MS0208 - OUTGOING MESSAGE COMPRESSION (2780 PROTOCOL)       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 240269             Date 19Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 14Sep00               *
+      *                 CFT013             Date 14Sep00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                 123742             Date 24Mar98               *
+      *                  113352            DATE 13FEB97               *
+      *                  113964            DATE 16FEB98               *
+      *                  115237            DATE 16SEP97               *
+      *                  097042            DATE 05FEB97               *
+      *                  CSW095            DATE 10APR95               *
+      *                  CSW001            DATE 20MAR95               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  240269 - SWIFT skip a blank character when it fall on the    *
+      *           50th position. Applied fix 221026 or 240192.        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFT014 - MT103 Message Generation for FT                     *
+      *  CFT013 - MT103 Message Generation for Non-FT                 *
+      *           joint change with CFT014                            *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   123742 - Amend program to allow blank message field data,   *
+      *            as fields 15A/B/C introduced for SWIFT97 are       *
+      *            mandatory and are always blank.                    *
+      *   113352 - RECOMPILE OVER CHANGES IN MGOREFPD                 *
+      *   113964 - Ensure Delivery Notification set correctly for     *
+      *            urgent messages.                                   *
+      *            (Applied fix 068767).                              *
+      *   115237 - If file empty, return U8 to controlling CL program *
+      *   097042 - For customer defined with branch code, system      *
+      *            generates message with 'XXXX' replaced the original*
+      *            branch code. Follow correct program code of MS5090.*
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   CSW001   SWIFT Alliance Batch Interface (switchable)        *
+      *            Reformat trailing characters on last record to     *
+      *            avoid '$' after last message and remove filler '*' *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,MS0208F002
+     FMGOREFL3UF  E           K        DISK
+     F/COPY WNCPYSRC,MS0208F003
+     FMGOMSGPDIF  E           K        DISK
+     F/COPY WNCPYSRC,MS0208F004
+     FSDBANKPDIF  E                    DISK
+     F*S2780O*O***E                    DISK                      A        CSW001
+     FMS2780O UF  E                    DISK                      A        CSW001
+     FMS0208AUO   E                    PRINTER                        UC
+     F/COPY WNCPYSRC,MS0208F001
+      *
+      * ID F  C  H  L    Function of indicators
+      * 10               EOF MGOREFL3
+      * 15               EOF MGOMSGPD
+      * 16               1 Record written to MS2780O                      CSW001
+      * 17               Message tag (MTAG) found in Table/WTAB1          CDL008
+      * 30               MS0208AU open
+      * 31               LOKUP error
+      *       50         CHEKR for ' ' in last rec of MS2780O             CSW001
+      *    55            READP on MS2780O                                 CSW001
+      * 99               EOF SDBANKPD
+      * U7U8LR           DB error
+      *
+     E                    FLDA      398  1                                CSW001
+     E                    IMSG      256  1               incoming msg
+     E                    OMSG     9999  1               compressed msg   CSW095
+     E                    TMSG     9999  1                                CSW095
+     E***********         OMSG     4000  1               compressed msg   CSW095
+     E***********         TMSG     4000  1                                CSW095
+     E/COPY WNCPYSRC,MS0208E001
+     E                    CPY@    1   1 80
+     E********************WTAB1   1   1  5                         CDL008 CFT014
+     E                    WTAB1   1   2  5                                CFT014
+      *
+     I*                                                                   CSW001
+     ISCSARD    E DSSCSARDPD                                              CSW001
+     I**  SAR File Details Accessed via Access Program AOSARDR0           CSW001
+     I*                                                                   CSW001
+     IDSFDY     E DSDSFDY                                                 CSW001
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CSW001
+     IMSSTAT      DS                            256
+     I                                       24  24 PDEIND
+      **  MSSTAT data structure
+      *
+     I/COPY WNCPYSRC,MS0208I001
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     I            DS
+     I***********                            24  43 NWDS                  097042
+     I                                       32  43 @DST1                 097042
+     I                                       40  43 @WK4
+     I                                       41  43 @WK3
+     I                                       40  42 @WL3
+     I                                       43  43 @WK1
+      **  Destination address data structure
+      *
+     I            DS
+     I                                        1  49 @SW2
+     I                                        1   6 TXT1
+     I                                        7  18 @SND2
+     I                                       14  14 @TNG
+     I                                       19  33 TXT2
+     I                                       34  36 MTPY
+     I                                       37  48 @DST2
+     I                                       49  49 MPRY
+      **  SWIFT II message header
+      *
+     I            DS
+     I                                        1   5 MTAG
+     I                                        5   5 @WL1
+      **  Field tag data structure
+      *
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   REPT  - process error report                                *
+      *   WRIT  - output record                                       *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           REPT  - process error report                        *
+      *           WRIT  - output record                               *
+      *           *PSSR - error handling                              *
+      *****************************************************************
+      *
+      **  Execute initial process
+     C                     EXSR INIT
+      *
+      **  Read message reference file
+     C/COPY WNCPYSRC,MS0208C010
+     C           *LOVAL    SETLLMGOREFL3
+     C                     READ MGOREFL3                 10
+     C/COPY WNCPYSRC,MS0208C011
+      *
+      **  Do until EOF message reference file
+     C           *IN10     DOWEQ'0'
+     C/COPY WNCPYSRC,MS0208C001
+      *
+      **  Process message
+     C           TRNO      SETLLMGOMSGPD
+     C           PTDL      DOUNE'D'
+     C           *IN15     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 15
+     C                     END
+      *
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MGOMSGPD'DBFILE
+     C                     MOVELTRNO      DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE
+     C                     OUT  LDA
+     C                     OPEN MS0208AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Expand address to 12 characters with Xs
+     C                     MOVELNWDS      @DST1                           097042
+     C           @WK4      IFEQ '    '
+     C***********          MOVELNWDS      @DST2                           097042
+     C                     MOVE @DST1     @DST2                           097042
+     C                     MOVE 'XXXX'    @DST2
+     C                     ELSE
+     C           @WK3      IFEQ '   '
+     C***********          MOVELNWDS      @DST2                           097042
+     C                     MOVE @DST1     @DST2                           097042
+     C                     MOVE 'XXX'     @DST2
+     C                     ELSE
+     C           @WK1      IFEQ ' '
+     C                     MOVEL'X'       @WL4    4
+     C                     MOVE @WL3      @WL4
+     C***********          MOVELNWDS      @DST2                           097042
+     C                     MOVE @DST1     @DST2                           097042
+     C                     MOVE @WL4      @DST2
+     C                     ELSE
+     C***********          MOVELNWDS      @DST2                           097042
+     C                     MOVE @DST1     @DST2                           097042
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  Write SWIFT II header to message array
+     C                     MOVELNWSN      @SND2
+     C/COPY WNCPYSRC,MS0208C013
+     C                     MOVEA@SW2      OMSG,O
+     C                     ADD  49        O
+     C/COPY WNCPYSRC,MS0208C002
+      *
+      **  Write delivery notification to message array if not blank
+     C           MPRY      IFEQ 'U'                                       113964
+     C           DELC      ANDNE'3'                                       113964
+     C                     MOVEL'1'       DELC                            113964
+     C                     ENDIF                                          113964
+     C           DELC      IFNE *BLANKS
+     C                     MOVE DELC      OMSG,O
+     C                     ADD  1         O
+     C                     END
+     C/COPY WNCPYSRC,MS0208C007
+      *                                                                   CDL008
+      ** Output all Block 3 details first before Block 4                  CDL008
+      *                                                                   CDL008
+     C           *IN15     IFEQ *OFF                                      CDL008
+      *                                                                   CDL008
+     C           MTAG      LOKUPWTAB1                    17               CDL008
+      *                                                                   CDL008
+     C           *IN17     IFEQ *ON                                       CDL008
+      *                                                                   CDL008
+     C                     MOVEAWTXT4     OMSG,O                          CDL008
+     C                     ADD  4         O                               CDL008
+      *                                                                   CDL008
+     C           *IN15     DOWEQ*OFF                                      CDL008
+     C           *IN17     ANDEQ*ON                                       CDL008
+      *                                                                   CDL008
+     C                     MOVELMTAG      WBLK3   5                       CDL008
+     C                     MOVEL'{'       WBLK3                           CDL008
+     C                     MOVEAWBLK3     OMSG,O                          CDL008
+     C                     ADD  5         O                               CDL008
+      *                                                                   CDL008
+     C                     MOVEAMFLD      OMSG,O                          CDL008
+     C           OMSG,O    DOWNE*BLANK                                    CDL008
+     C                     ADD  1         O                               CDL008
+     C                     ENDDO                                          CDL008
+     C                     MOVEA'}'       OMSG,O                          CDL008
+     C                     ADD  1         O                               CDL008
+      *                                                                   CDL008
+     C           PTDL      DOUNE'D'                                       CDL008
+     C           *IN15     OREQ *ON                                       CDL008
+     C           TRNO      READEMGOMSGPD                 15               CDL008
+     C                     ENDDO                                          CDL008
+     C           *IN15     IFEQ *OFF                                      CDL008
+     C           MTAG      LOKUPWTAB1                    17               CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+     C                     ENDDO                                          CDL008
+      *                                                                   CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+      ** Output Block 4 for remaining records                             CDL008
+      *                                                                   CDL008
+     C                     MOVEATXT3      OMSG,O
+     C                     ADD  6         O
+      *
+      **  Process rest
+     C           *IN15     DOWEQ'0'
+      *
+      **  Write field tag to message array if not blank
+     C           MTAG      IFNE *BLANKS
+     C                     MOVEAMTAG      OMSG,O
+     C           @WL1      IFEQ *BLANKS
+     C                     ADD  4         O
+     C                     ELSE
+     C                     ADD  5         O
+     C                     END
+     C                     END
+      *
+      **  Write all non blank characters in field to message array
+     C                     MOVE *BLANKS   IMSG
+     C           MFLD      IFNE *BLANKS                                   123742
+     C                     MOVEAMFLD      IMSG
+     C/COPY WNCPYSRC,MS0208C008
+     C                     Z-ADD50        I       40
+     C           IMSG,I    DOWEQ' '
+     C                     SUB  1         I
+     C                     END
+     C                     ELSE                                           123742
+     C                     Z-ADD0         I                               123742
+     C                     END                                            123742
+      *                                                                                       240269
+      ** Add a blank character to the position 50 to avoid skipping.                          240269
+      *                                                                                       240269
+     C           I         IFEQ 49                                                            240269
+     C           CTRC      ANDEQ*BLANKS                                                       240269
+     C                     ADD  1         I                                                   240269
+     C                     ENDIF                                                              240269
+      *
+     C                     Z-ADDI         S       40
+     C                     Z-ADD1         I
+     C           S         DOWGEI
+     C                     MOVE IMSG,I    OMSG,O
+     C                     ADD  1         I
+     C                     ADD  1         O
+     C                     END
+      *
+      **  Write CRLF to message array if not blank
+     C           CTRC      IFNE *BLANKS
+     C                     MOVEACTRC      OMSG,O
+     C                     ADD  2         O
+     C                     END
+      *
+      **  Read outgoing messages file but ignore deleted parts.
+     C           PTDL      DOUNE'D'
+     C           *IN15     OREQ '1'
+     C           TRNO      READEMGOMSGPD                 15
+     C                     END
+     C                     END
+      *
+      **  Write end of text block
+     C                     MOVEA'-}'      OMSG,O
+     C                     ADD  2         O
+      *
+      **  Add trailer block (block 5)
+      **  PDE (possible duplicate) trailer...
+     C                     SETOF                     14
+      *
+     C           *NAMVAR   DEFN           MSSTAT
+     C                     IN   MSSTAT
+     C           PDEIND    IFEQ 'Y'
+     C                     SETON                     14
+     C                     MOVEA'{5:'     OMSG,O
+     C                     ADD  3         O
+     C                     MOVEA'{PDE:}'  OMSG,O
+     C                     ADD  6         O
+     C                     END
+      *
+      **  ...and TNG (training) trailer as required
+     C           @TNG      IFEQ '0'
+     C           *IN14     IFEQ '0'
+     C                     MOVEA'{5:'     OMSG,O
+     C                     ADD  3         O
+     C                     END
+     C                     SETON                     14
+     C                     MOVEA'{TNG:}'  OMSG,O
+     C                     ADD  6         O
+     C                     END
+      *
+      **  End trailer block
+     C           *IN14     IFEQ '1'
+     C                     MOVE '}'       OMSG,O
+     C                     ADD  1         O
+     C                     END
+      *
+      **  Add hash
+     C                     MOVEAHSH       OMSG,O
+     C           O         DIV  398       Y       20
+     C                     ADD  1         O
+      *
+      **  If compressed msg is greater than 2000 bytes output report
+     C***********O         IFGT 2000                                      CSW095
+     C           O         IFGT 8100                                      CSW095
+     C                     EXSR REPT
+     C                     END
+     C/COPY WNCPYSRC,MS0208C014
+      *
+      **  If ready output records
+     C           Y         IFGT 0
+     C                     EXSR WRIT
+     C                     END
+     C/COPY WNCPYSRC,MS0208C015
+      *
+      **  Update status on Message Reference file
+     C                     MOVE 'PEND'    MGST
+     C                     MOVE '2'       MGSG
+     C                     UPDATMGOREFD0
+     C                     COMIT
+      *
+     C/COPY WNCPYSRC,MS0208C003
+      **  Read message reference file
+     C                     READ MGOREFL3                 10
+     C/COPY WNCPYSRC,MS0208C012
+     C                     END
+     C/COPY WNCPYSRC,MS0208C016
+      *
+      **  Output remaining record
+     C           O         IFGT 1
+     C                     Z-ADD1         Y
+     C                     EXSR WRIT
+     C                     END
+     C/COPY WNCPYSRC,MS0208C005
+      *
+      ** If last record written, retrieve it and format the end.          CSW001
+      *  Only carry out processing if CSW001 is on and a record has       CSW001
+      *  been processed.                                                  CSW001
+      *                                                                   CSW001
+      *                                                                   CSW001
+     C           CSW001    IFEQ 'Y'                        B1             CSW001
+     C           *IN16     ANDEQ'1'                                       CSW001
+     C/COPY WNCPYSRC,MS0208C026
+     C           *HIVAL    SETGTMS2780O                                   CSW001
+     C                     READPMS2780O                  55               CSW001
+     C           *IN55     IFEQ '0'                        B2             CSW001
+     C           ' '       CHEKRFIELD     Q       50                      CSW001
+     C                     MOVEAFIELD     FLDA                            CSW001
+     C           Q         DO   398       W       50       B3             CSW001
+     C                     MOVE #00       FLDA,W                          CSW001
+     C                     ENDDO                           E3             CSW001
+     C                     MOVEAFLDA      FIELD                           CSW001
+     C                     UPDATMS2780F                                   CSW001
+     C                     ENDIF                           E2             CSW001
+     C                     ENDIF                           E1             CSW001
+     C/COPY WNCPYSRC,MS0208C006
+      *                                                                   CSW001
+      ** If *IN16 is off, no records output to MS2780, Set on U8 to       115237
+      ** ensure CL does not transmit empty file                           115237
+     C           *IN16     IFEQ '0'                                       115237
+     C                     MOVE '1'       *INU8                           115237
+     C                     MOVE '0'       *INU7                           115237
+     C                     END                                            115237
+     C/COPY WNCPYSRC,MS0208C023
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MS0208'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKL0 to find run date
+     C                     READ SDBANKPD                 99
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE
+     C                     OUT  LDA
+     C                     OPEN MS0208AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,MS0208C025
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVE *LOVAL    HSH     1
+     C                     BITON'13467'   HSH
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *                                                                   CSW001
+      **  Initialise X'00' field                                          CSW001
+     C                     BITOF'01234567'#00     1                       CSW001
+     C/COPY WNCPYSRC,MS0208C027
+      *
+      **  Initialise text fields
+     C                     MOVE '{1:F01'  TXT1
+     C                     MOVEL'99999999'TXT2
+     C                     MOVE '99}{2:I' TXT2
+     C                     MOVEL'}{3:'    WTXT4   4                       CDL008
+     C                     MOVEL'}{4:'    TXT3
+     C/COPY WNCPYSRC,MS0208C024
+     C                     MOVE CRLF      TXT3    6
+     C/COPY WNCPYSRC,MS0208C017
+      *
+     C                     Z-ADD1         O       40
+     C/COPY WNCPYSRC,MS0208C018
+      *                                                                   CSW001
+      * Access SAR details to see if CSW001 is switched on                CSW001
+      *                                                                   CSW001
+     C                     CALL 'AOSARDR0'                                CSW001
+     C                     PARM *BLANKS   @RTCD   7                       CSW001
+     C                     PARM '*VERIFY' @OPTN   7                       CSW001
+     C                     PARM 'CSW001'  @SARD   6                       CSW001
+     C           SCSARD    PARM SCSARD    DSFDY                           CSW001
+      *                                                                   CSW001
+     C                     MOVE *BLANKS   CSW001  1                       CSW001
+     C           @RTCD     IFEQ *BLANKS                    B1             CSW001
+     C                     MOVEL'Y'       CSW001                          CSW001
+     C                     ELSE                                           CSW001
+     C           @RTCD     IFNE '*NRF   '                  B2             CSW001
+     C           *LOCK     IN   LDA                                       CSW001
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CSW001
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 03 *   CSW001
+     C                     MOVE '03'      DBASE            ************   CSW001
+     C                     OUT  LDA                                       CSW001
+     C                     OPEN MS0208AU
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2             CSW001
+     C                     ENDIF                           E1             CSW001
+     C/COPY WNCPYSRC,MS0208C004
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,MS0208C009
+      *****************************************************************
+      *   WRIT - output record                                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           WRIT      BEGSR
+     C/COPY WNCPYSRC,MS0208C019
+      *
+     C                     DO   Y
+     C                     MOVEAOMSG      FIELD
+     C/COPY WNCPYSRC,MS0208C020
+     C                     WRITEMS2780F
+     C/COPY WNCPYSRC,MS0208C021
+     C                     MOVE '1'       *IN16                           CSW001
+      *
+      **  Move remaining data forward in array
+     C                     MOVEA*BLANKS   TMSG
+     C                     MOVEAOMSG,399  TMSG
+     C                     MOVEA*BLANKS   OMSG
+     C                     MOVEATMSG      OMSG
+     C                     SUB  398       O
+     C                     END
+     C/COPY WNCPYSRC,MS0208C022
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - process error report                                 *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      **  Update message reference record to 'A' if message > 2000
+     C                     MOVE 'AMND'    MGST
+     C                     MOVE '1'       MGSG
+     C                     UPDATMGOREFD0
+     C                     COMIT
+      *
+      * Output error report
+     C                     OPEN MS0208AU               30
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C                     CLOSEMS0208AU
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** WTAB1                                                                  CDL008
+:103:                                                                     CDL008
+:119:                                                                     CFT014

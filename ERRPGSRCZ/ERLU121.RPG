@@ -1,0 +1,157 @@
+     H        1   Y
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IML 1.2 column 13')                              *
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS ABS - EUROPEAN REPORTING                                *
+     F*                                                                  *
+     F*    ERLU121 - IML 1.2 COLUMN 13 RECORDS GENERATION                *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     F*                                                                  *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04OCt04               *
+      *                 187689             Date 19Dec00               *
+     F*    LAST AMEND NR. XXXXXX DDJ            DATE 20FEB96             *
+     F*                                                                  *
+     F********************************************************************
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     A*    187689  -  "GRD" currency in EMU                              *
+     A*    XXXXXX  -  REWRITTEN TO ONLY EXTRACT EXCHANGE RATE FOR V1.5   *
+     F********************************************************************
+      ** Devise de base
+     F***ERBANKPDIF**E           K        DISK                                                CER001
+     FERBNKXPDIF  E           K        DISK                                                   CER001
+      *
+      **** ER Currency Codes                                              187689
+     F***ERCURRL1IF  E           K        DISK                            187689
+     F* A6 - Currency Codes table                                         187689
+     FSDCURRL1IF  E           K        DISK                               187689
+      ** Table 1.2 - Details of Column 13
+     FERLU12PDO   F      22            DISK                               ERL404
+      *
+      /EJECT
+      *===================================================================
+      *   ARRAY FOR AVAILABLE CCY ON PC
+     E                    CCY    15 195  3
+      *===================================================================
+      *   ARRAY FOR MONTH
+     E                    MONTH  12  12  3
+      *===================================================================
+      *   ARRAY FOR LAST DAY OF MONTH
+     E                    DAY    12  12  2
+      /EJECT
+      *===================================================================
+      *   DATA STRUCTURE FOR THE DATE
+     I            DS
+     I                                        1   7 BJMRDT
+     I                                        3   5 XMONTH
+     I                                        6   70XYEAR
+      /EJECT
+      *===================================================================
+      *
+     C**********           READ ERBANKPD                 10                                   CER001
+     C                     READ ERBNKXPD                 10                                   CER001
+     C           *IN10     IFEQ '1'                        - B1
+     C                     MOVE 'LUF'     BJCYCD
+     C                     END                             - E1
+     C                     EXCPTHEADER
+      *  CHANGE LE MOIS EN ...
+     C                     Z-ADD1         MOIS    20
+     C           XMONTH    LOKUPMONTH,MOIS               20
+     C  N20                Z-ADD1         MOIS
+      *
+      *  TROUVE LE DERNIER JOUR ...
+     C                     MOVE DAY,MOIS  XDAY    2
+      *  AVANT OU PARES 2000
+     C                     MOVE '0'       *IN26
+     C           XYEAR     COMP 50                     2626
+      *
+      *
+     C                     EXCPTDATER
+     C***********          READ ERCURRL1                 10               187689
+     C                     READ SDCURRL1                 10               187689
+     C           *IN10     DOWEQ'0'                        - B1
+      *
+     C***********VRSWCY    IFEQ 'CZK'                      - B2           187689
+     C***********          MOVE 'CSK'     VRSWCY                          187689
+     C           A6SWCY    IFEQ 'CZK'                      - B2           187689
+     C                     MOVE 'CSK'     A6SWCY                          187689
+     C                     END                             - E2
+      *
+     C***********VRSWCY    IFEQ 'ZAR'                      - B2           187689
+     C***********          MOVE 'ZAL'     VRSWCY                          187689
+     C           A6SWCY    IFEQ 'ZAR'                      - B2           187689
+     C                     MOVE 'ZAL'     A6SWCY                          187689
+     C                     END                             - E2
+      *
+      ** Output detail record IF NOT BASE CCY
+      *
+     C***********VRSWCY    LOKUPCCY                      20               187689
+     C           A6SWCY    LOKUPCCY                      20               187689
+      *                    SI <> DEVISE DE BASE
+     C***********VRSWCY    IFNE BJCYCD                                    187689
+     C           A6SWCY    IFNE BJCYCD                                    187689
+     C   20                EXCPTDETAIL
+     C                     END
+      *
+     C************         READ ERCURRL1                 10               187689
+     C                     READ SDCURRL1                 10               187689
+     C                     END                             - E1
+      *
+      ** End of program
+      *
+     C                     SETON                       LR
+     C                     RETRN
+      *
+      /EJECT
+      *===================================================================
+      *
+     OERLU12PDE                DETAIL
+     O                         BJCYCD     3
+     O                                    4 ','
+     O****************         VRSWCY     7                               187689
+     O****************         VRSPRT B  22 '0     .        '             187689
+     O                         A6SWCY     7                               187689
+     O                         A6SPRT B  22 '0     .        '             187689
+     O                                    8 ','
+     OERLU12PDE                HEADER
+     O                                   14 'Taux de Change'
+     OERLU12PDE                DATER
+     O                N26                 2 '19'
+     O                 26                 2 '20'
+     O                         XYEAR X    4
+     O                         MOIS  X    6
+     O                         XDAY       8
+      *
+      *   *   *   *   *   *   *   *   *   *   *   *   *    *
+      * CCY : TABLE DES DEVISES ISO
+**  CCY
+ADPAEDAFAALLAMDANGAONARSATSAUDAWGAZMBBDBDTBEF
+BGLBHDBIFBMDBNDBOBBRLBSDBTNBWPBYBBZDCADCHFCLP
+CNYCOPCRCCUPCVECYPCZKDEMDJFDKKDOPDZDECSEEKEGP
+ESPETBFIMFJDFKPFRFGBPGELGHCGIPGMDGNFGRDGTQGWP
+GYDHKDHNLHRKHTGHUFIDRIEPILSINRIQDIRRISKITLJMD
+JODJPYKESKGSKHRKMFKPWKRWKWDKYDKZTLAKLBPLKRLRD
+LSLLTLLUFLVLLYDMADMDLMGFMKDMMKMNTMOPMROMTLMUR
+MVRMWKMXNMYRMZMNADNGNNIONLGNOKNPRNZDOMRPABPEN
+PGKPHPPKRPLNPLZPTEPYGQARROLRURRWFSARSBDSCRSDD
+SEKSGDSHPSITSKKSLLSOSSRGSTDSVCSYPSZLTHBTMMTND
+TOPTPETRLTTDTWDTZSUAKUGXUSDUYUUZSVEBVNDVUVWST
+XAFXAGXAUXBAXBBXBCXBDXBUXBVXCDXDRXEUXOFXPFXPD
+XPTXXXYERYUMZARZMKZRNZWDAORBADBOVCLFECVGPBTJR
+**  MONTH
+JANFEVMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  LAST DAY OF MONTH (TILL 2004)
+312831303130313130313031

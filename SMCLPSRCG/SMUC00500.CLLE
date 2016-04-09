@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Delete *PGM object on GPGENSRCG')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00500 - Midas SM Delete *PGM object on GPGENSRCG        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD020044A          Date 26Apr13              */
+/*       Prev Amend No. MD020044 *CREATE   Date 18Apr13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD020044A - *MODULE and *PGM points to the same source      */
+/*       MD020044 - *MODULE and *PGM points to the same source       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                     */                /*MD020044A*/
+             PGM        PARM(&LIB)                                                     /*MD020044A*/
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                                  /*MD020044A*/
+             DCLF       FILE(SMDLTGNPD)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if the library exists */                                                     /*MD020044A*/
+                                                                                       /*MD020044A*/
+             CHKOBJ     OBJ(QSYS/&LIB) OBJTYPE(*LIB)                                   /*MD020044A*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO +
+                          CMDLBL(END))                                                 /*MD020044A*/
+                                                                                       /*MD020044A*/
+/** Read the SMDLTGNPD file for objects to be deleted */                               /*MD020044A*/
+                                                                                       /*MD020044A*/
+START:
+             RCVF
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(END))
+/***LOOP:************************************************************/                 /*MD020044A*/
+/**********  DLTPGM     PGM(&SMFNAME)                               */                 /*MD020044A*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +  */                 /*MD020044A*/
+/**********               CMDLBL(START))                            */                 /*MD020044A*/
+/**********  GOTO       CMDLBL(LOOP)                                */                 /*MD020044A*/
+/**********  GOTO       CMDLBL(END)                                 */                 /*MD020044A*/
+             DLTPGM     PGM(&LIB/&SMFNAME)                                             /*MD020044A*/
+             MONMSG     MSGID(CPF2105) EXEC(GOTO CMDLBL(START))                        /*MD020044A*/
+             GOTO       CMDLBL(START)                                                  /*MD020044A*/
+ 
+ABNOR:
+             SNDUSRMSG  MSG('SMUC00500 ended in error.') MSGTYPE(*INFO)
+ 
+END:
+             ENDPGM

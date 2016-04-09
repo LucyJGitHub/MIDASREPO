@@ -1,0 +1,308 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME I.M.M. audit of today's actions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1230 - I.M.M. Audit List of Today's Actions                *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 069250             Date 03May94               *
+      *                 S01435             Date 23Jul93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*  91    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,ME1230DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1230DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+     I/COPY WNCPYSRC,ME1230DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     II#DTA       DS                            256
+      *
+      *  Input parameters data structure
+      *
+      *           Spool file name (if blank, name unchanged).
+      *                 N.B. To change name I#SPLR must be Y
+      *                 Unless first call of program
+      *
+     I                                        1  10 I#SPLN
+      *
+      *           Repeat open and close of spool file
+      *                 If Y create new spool file
+      *
+     I                                       11  11 I#SPLR
+      *
+      *           Report Reference if Access checking is off
+      *
+     I                                       12  21 I#REFN
+      *
+      *           Report Title/Underline (uses msg ID on MEMSG)
+      *
+     I                                       22  28 I#TITL
+     I                                       29  35 I#TUL
+      *
+      *           Branch
+      *
+     I                                       36  38 I#BRCA
+      *
+      *           Report selection dates - From/To
+      *
+     I                                       39  430I#FDAT
+     I                                       44  480I#TDAT
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0CMPN 10
+     C                     PARM           W0CMPS  50
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Print todays audit report
+      *
+     C                     EXSR SRPRT
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRT    : Print todays messages                             *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPRT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPRT '  @STK,Q
+      *
+      *  /Copy point for Print control
+      *
+     C/COPY WNCPYSRC,ME1230DPRT
+      *
+      *  Set up parameters
+      *
+     C                     CLEARI#DTA                      Input Data Str.
+      *
+      *  Input parameters data structure
+      *
+      *           Spool file name (if blank, name unchanged).
+      *                 N.B. To change name O#SPLR must be Y
+      *                 Unless first call of program
+      *
+     C                     MOVEL'ME1260P1'I#SPLN
+      *
+      *           Repeat open and close of spool file
+      *                 If Y create new spool file
+      *
+     C                     MOVEL*BLANKS   I#SPLR
+      *
+      *           Report Reference if Access checking is off
+      *
+     C                     MOVEL'ME1260P1'I#REFN
+      *
+      *           Report Title/Underline (uses msg ID on MEMSG)
+      *
+     C                     MOVEL'MIN0021' I#TITL
+     C                     MOVEL'MIN0022' I#TUL
+      *
+      *           Branch
+      *
+     C                     MOVEL*BLANKS   I#BRCA
+      *
+      *           Report selection dates - From/To
+      *
+     C                     Z-ADDWURDNB    I#FDAT
+     C                     Z-ADDWURDNB    I#TDAT
+      *
+      *  Call print routine
+      *
+     C                     CALL 'ME1170'               9090
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*PRINT  'W0ACT   8
+     C                     PARM           I#DTA            Input Data Str.
+     C                     PARM *BLANKS   I#RSQN  5
+      *
+     C           *IN90     IFEQ '1'
+     C           W0RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL'   W0FILE
+     C                     MOVEL'ME1170'  W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Call print routine to close printer file
+      *
+     C                     CLEARI#DTA                      Input Data Str.
+      *
+     C                     CALL 'ME1170'               9090
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA            Input Data Str.
+     C                     PARM *BLANKS   I#RSQN  5
+      *
+     C           W0RTN     IFNE *BLANKS
+     C                     MOVEL'*CALL'   W0FILE
+     C                     MOVEL'ME1170'  W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPRT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1230DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1230DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

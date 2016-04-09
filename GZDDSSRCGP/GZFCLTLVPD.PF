@@ -1,0 +1,596 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_RUNM                                                      *                       CGP015
+/*EXI *  TEXT('Midas GZ Global Facilities for Listview')              *
+/*E*S ***PF_STD********************************************************                       CGP015
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing                                    *
+      *                                                               *
+      *  PF/GZFCLTLVPD - Global Facilities for Listview               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. CGP016  *MOVED     Date 06Aug12               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGP015             Date 06Mar09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 257576  *CREATE    Date 06Nov08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *         - Moved from GZDDSSRCGM                               *
+      *  CLE064 - Enhancement of Lending Frequencies                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *         - LT039: include new fields introduced by CER020 in   *
+      *           GZFCLTYFM(V_#FCLTY), PEXD and PNXD.                 *
+      *  CGP015 - Task Split of Bulk update of Facilities listview    *
+      *  257576 - Performance: Facilities Input                       *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+     A          R FCLTLVD0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2008')
+     A            ACOF      R
+     A            AUSR      R               REFFLD(FACO)
+     A                                      TEXT('Amend User Profi]e')
+     A                                      COLHDG('Amd User' +
+     A                                             'Profile')
+     A            AWBA      R
+     A            AWBN      R
+     A            BENA      R
+     A            BENN      R
+     A            BRCA      R
+     A            CACY      R               REFFLD(CCY)
+     A                                      TEXT('Credit Agreement +
+     A                                            currency')
+     A                                      COLHDG('C/A Ccy')
+     A            CAXR      R               REFFLD(CHPC)
+     A                                      TEXT('Credit Agreement +
+     A                                            Exch. rate')
+     A                                      COLHDG('C/A Exch.' +
+     A                                             'Rate')
+     A            CMDI      R               TEXT('C/A Mult/Div +
+     A                                            Indicator')
+     A                                      COLHDG('C/A M/D' +
+     A                                             'Ind.')
+     A            DTP1      R
+     A            DTP2      R
+     A            DTP3      R
+     A            DTP4      R
+     A            CRSK      R
+     A            CVMR      R
+     A            DCHG      R
+     A            DFTP      R               REFFLD(LTYP)
+     A                                      TEXT('Default Part. Loan +
+     A                                            Type')
+     A                                      COLHDG('Def Part' +
+     A                                             'Loan Type')
+     A            DFST      R               REFFLD(SUTP)
+     A                                      TEXT('Default Part. Loan +
+     A                                            Subtype')
+     A                                      COLHDG('Def Part' +
+     A                                             'Loan Styp')
+     A            DFCL           4A         TEXT('Default Part. Loan +
+     A                                            Class')
+     A                                      COLHDG('Def Part' +
+     A                                             'Loan Class')
+     A            DICB      R               REFFLD(MRIN)
+     A                                      TEXT('Default Interest Basis')
+     A                                      COLHDG('Def' +
+     A                                             'Int')
+     A            DLFS      R
+     A            FCCY      R
+     A            FCTI      R
+     A            FSTS      R               REFFLD(SPIN)
+     A                                      TEXT('Facility Status +
+     A                                            Indicator')
+     A                                      COLHDG('Fac' +
+     A                                             'Sts')
+     A            IUSR      R               REFFLD(FACO)
+     A                                      TEXT('Insert User Profile')
+     A                                      COLHDG('Ins User' +
+     A                                             'Profile')
+     A            LPPS      R               REFFLD(SPIN)
+     A                                      TEXT('Late Payment Penalty +
+     A                                            Sign')
+     A                                      COLHDG('Late Pay' +
+     A                                             'Pen Sign')
+     A            LPTP      R               REFFLD(SPIN)
+     A                                      TEXT('Late Payment Penalty +
+     A                                            Type')
+     A                                      COLHDG('Late Pay' +
+     A                                             'Penalty')
+     A            MCCY      R
+     A            MCSI      R
+     A            NACD      R
+     A            NAR1      R
+     A            NAR2      R
+     A            NAR3      R
+     A            NAR4      R
+     A            NOMR      R
+     A            OMDB      R               TEXT('Pay - Settle +
+     A                                            Branch')
+     A                                      COLHDG('Pay Set' +
+     A                                             'Branch')
+     A            ORBR      R
+     A            OSDB      R               TEXT('Receipt - Settle +
+     A                                            Branch')
+     A                                      COLHDG('Rec Set' +
+     A                                             'Branch')
+     A            OVPC      R
+     A            PCOB      R               REFFLD(BRCA)
+     A                                      TEXT('PC Originating +
+     A                                            Branch')
+     A                                      COLHDG('PC Orig' +
+     A                                             'Branch')
+     A            PCRF      R               REFFLD(ZZ015)
+     A                                      TEXT('PC Transaction +
+     A                                            Reference')
+     A                                      COLHDG('PC Trans' +
+     A                                             'Reference')
+     A            PIBA      R
+     A            PIBN      R
+     A            PMFC           6A
+     A            PMFN      R               REFFLD(FCNO)
+     A                                      TEXT('Prime Facility +
+     A                                            Number')
+     A                                      COLHDG('Prime Fac' +
+     A                                             'Number')
+     A            PMFT      R               REFFLD(FACT)
+     A                                      TEXT('Prime Facility +
+     A                                            Type')
+     A                                      COLHDG('Prime Fac' +
+     A                                             'Type')
+     A            PONS          18A
+     A            PRTR      R               REFFLD(SPIN)
+     A                                      TEXT('Participant Facility +
+     A                                            Ind.')
+     A                                      COLHDG('Part' +
+     A                                             'Fac?')
+     A            PSTM      R
+     A            RCRA      R
+     A            RCRN      R
+     A            RCSI      R
+     A            RCTP      R
+     A            RECI      R
+     A            RIBA      R
+     A            RIBN      R
+     A            RLPD      R               REFFLD(RVDY)
+     A                                      TEXT('Irregular Rollover +
+     A                                            Period')
+     A                                      COLHDG('Irreg' +
+     A                                             'Rol Pd')
+     A            RONS          18A
+     A            RSTM      R
+     A            RVCR      R
+     A            RVDY      R
+     A            RVFR      R
+     A            RVNO      R
+     A            SCCY      R               REFFLD(CCY)
+     A                                      TEXT('Settlement Currency')
+     A                                      COLHDG('Sett. ccy')
+     A            SHTP      R               REFFLD(SPIN)
+     A                                      TEXT('Share Type')
+     A                                      COLHDG('Share' +
+     A                                             'Type')
+     A            SKFR      R               REFFLD(INTR)
+     A                                      TEXT('Skim Fees Rate')
+     A                                      COLHDG('Skim Fees Rate')
+     A            SKFS      R               REFFLD(SPIN)
+     A                                      TEXT('Skim Fees Rate Sign')
+     A                                      COLHDG('Skim Fees' +
+     A                                             'Rate Sign')
+     A            PSCY           3A
+     A                                      TEXT('Pay Settlement Currency')
+     A                                      COLHDG('Pay' 'Settlement' +
+     A                                           'Currency')
+     A            SKIR      R               REFFLD(INTR)
+     A                                      TEXT('Skim Interest Rate')
+     A                                      COLHDG('Skim Int Rate')
+     A            SKIS      R               REFFLD(SPIN)
+     A                                      TEXT('Skim Interest Rate +
+     A                                            Sign')
+     A                                      COLHDG('Skim Int' +
+     A                                             'Rate Sign')
+     A            SYCP      R               REFFLD(SPIN)
+     A                                      TEXT('Syndication Complete')
+     A                                      COLHDG('Synd' +
+     A                                             'Comp')
+     A            SYIN      R               REFFLD(SPIN)
+     A                                      TEXT('Syndication Indicator')
+     A                                      COLHDG('Synd' +
+     A                                             'Ind')
+     A            XUSR      R               REFFLD(FACO)
+     A                                      TEXT('Authorise User +
+     A                                            Profile')
+     A                                      COLHDG('Auth User' +
+     A                                             'Profile')
+     A            CHTP      R
+     A            PFTI      R               REFFLD(FATP)
+     A                                      TEXT('Previous Facility +
+     A                                            Type Ind.')
+     A                                      COLHDG('Prev. Fclty' +
+     A                                             'Type Ind.')
+     A            ICCY      R               REFFLD(CCY)
+     A                                      TEXT('IN Currency in +
+     A                                            Fld 72')
+     A                                      COLHDG('IN Ccy')
+     A            LAID      R               REFFLD(ACOF)
+     A                                      TEXT('Loan Administrator Id')
+     A                                      COLHDG('Loan'+
+     A                                             'Adm. Id')
+     A            PASI      R               REFFLD(SPIN)
+     A                                      TEXT('Assignment/ +
+     A                                            Participant')
+     A                                      COLHDG('Assign?')
+     A            REPI           1          TEXT('Replication Indicator')
+     A                                      COLHDG('Replication' 'Indicator')
+     A            BTB1      R
+     A            BTB2      R
+     A            BTB3      R
+     A            BTB4      R
+     A            BTB5      R
+     A            BTB6      R
+     A            MBFC      R
+     A            PRFC      R
+     A            BTIN      R
+     A            TRCA      R               REFFLD(LTYP)
+     A                                      TEXT('Tranche/Credit +
+     A                                            Agreement Ind.')
+     A                                      COLHDG('Tranche/' +
+     A                                             'Credit')
+     A            FRNT      R               REFFLD(FOTRNID)
+     A                                      TEXT('Front Office +
+     A                                            Transaction Id       ')
+     A                                      COLHDG('Front Office' +
+     A                                             'Transaction Id')
+     A            AFRT      R               REFFLD(FOTRNID)
+     A                                      TEXT('Associated Front +
+     A                                            Office Transaction Id')
+     A                                      COLHDG('Associated' +
+     A                                             'Front Office' +
+     A                                             'Transaction Id')
+     A            REPA      R               REFFLD(RPRLOC)
+     A                                      TEXT('Repair Location')
+     A                                      COLHDG('Repair' +
+     A                                             'Location')
+     A            STMP      R               REFFLD(TIMESTMP)
+     A                                      TEXT('Timestamp')
+     A                                      COLHDG('Timestamp')
+     A            PADCNUM        6A         TEXT('Customer number')
+     A                                      COLHDG('Customer            ' +
+     A                                      'Number')
+     A            PADFACT        3A         TEXT('Facility Type')
+     A                                      COLHDG('Facility Type')
+     A            PADFCNO        2A         TEXT('Facility Number')
+     A                                      COLHDG('Facility Number')
+     A            PADPMFC        6A         TEXT('Prime Facility +
+     A                                            Customer')
+     A                                      COLHDG('Prime Fac' +
+     A                                             'Customer')
+     A            PADPMFT        3A         TEXT('Prime Facility +
+     A                                            Type')
+     A                                      COLHDG('Prime Fac' +
+     A                                             'Type')
+     A            PADPMFN        2A         TEXT('Prime Facility +
+     A                                            Number')
+     A                                      COLHDG('Prime Fac' +
+     A                                             'Number')
+     A            PADANUM        6A         TEXT('Agent Customer Number')
+     A                                      COLHDG('Agent' 'Customer')
+     A            PADACSQ        2A         TEXT('Account Sequence Number')
+     A                                      COLHDG('Account' 'Seq. No.')
+     A            PADCANM        6A         TEXT('Credit Agreement +
+     A                                            Customer')
+     A                                      COLHDG('Cred Agree' +
+     A                                             'Customer')
+     A            PADCAFT        3A         TEXT('Credit Agreement +
+     A                                            Facility Type')
+     A                                      COLHDG('Cred Agree' +
+     A                                             'Fac Type')
+     A            PADCAFN        2A         TEXT('Credit Agreement +
+     A                                            Facility No.')
+     A                                      COLHDG('Cred Agree' +
+     A                                             'Fac No.')
+     A            PADINUM        6A         TEXT('Introduced By')
+     A                                      COLHDG('Introduced' +
+     A                                             'By')
+     A            PADPOBN        6A         TEXT('pay - ordering bank no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            PADPOCN        6A         TEXT('pay - ordering customer no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+     A            PADROBN        6A         TEXT('receipt - ordering bank no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            PADROCN        6A         TEXT('receipt - ordering customer +
+     A                                      no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+     A            PADLPBR        2A         TEXT('Late Penalty Base Rate')
+     A                                      COLHDG('Late Pen' +
+     A                                             'Base Rt')
+     A            FDTAP           L         TEXT('Date Approved')
+     A                                      COLHDG('Date Approved')
+     A            FDTEX           L         TEXT('Expiry Date')
+     A                                      COLHDG('Expiry Date')
+     A            FRVDT           L         TEXT('Review Date')
+     A                                      COLHDG('Review Date')
+     A            FCDTE           L         TEXT('Closing Date')
+     A                                      COLHDG('Closing' +
+     A                                             'Date')
+     A            FAVLD           L         TEXT('Last Availability Date')
+     A                                      COLHDG('Last Avail' +
+     A                                             'Date')
+     A            FJDTE           L         TEXT('Joining Date')
+     A                                      COLHDG('Joining' +
+     A                                             'Date')
+     A            FCOMD           L         TEXT('Date Committed')
+     A                                      COLHDG('Date' +
+     A                                             'Comm')
+     A            FVDTC           L         TEXT('Value Date of This +
+     A                                            Change')
+     A                                      COLHDG('Value Date' +
+     A                                             'of this Chg')
+     A            FORED           L         TEXT('Original Entry Date')
+     A                                      COLHDG('Original Entry Date')
+     A            FLCD            L         TEXT('Last Change Date')
+     A                                      COLHDG('Last Change Date')
+     A            FRVCD           L         TEXT('Revolving Credit Ind LCD')
+     A                                      COLHDG('Revolving' +
+     A                                             'Credit Indicator' +
+     A                                             'LCD')
+     A            FRUN00          L         TEXT('Run Date')
+     A                                      COLHDG('Run Date')
+     A            FRUN01          L         TEXT('Run Date + 1 working day')
+     A                                      COLHDG('Run Date +' +
+     A                                             '1 working day')
+     A            FRUN02          L         TEXT('Run Date + 2 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '2 working days')
+     A            FRUN03          L         TEXT('Run Date + 3 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '3 working days')
+     A            FRUN04          L         TEXT('Run Date + 4 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '4 working days')
+     A            FRUN05          L         TEXT('Run Date + 5 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '5 working days')
+     A            FRUN06          L         TEXT('Run Date + 6 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '6 working days')
+     A            FRUN07          L         TEXT('Run Date + 7 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '7 working days')
+     A            FRUN08          L         TEXT('Run Date + 8 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '8 working days')
+     A            FRUN09          L         TEXT('Run Date + 9 working days')
+     A                                      COLHDG('Run Date +' +
+     A                                             '9 working days')
+     A            SSHPC         20S16
+     A            SFAMT     R               REFFLD(FAMT)
+     A            SMTDH     R               REFFLD(MTDH)
+     A            SMTDL     R               REFFLD(MTDL)
+     A            SMTDA     R               REFFLD(MTDA)
+     A            SLPAM     R               REFFLD(FAMT)
+     A                                      TEXT('Late Payment Penalty +
+     A                                            Amount')
+     A                                      COLHDG('Late Pay' +
+     A                                             'Penalty Amt')
+     A            SCAMD     R               REFFLD(CAMD)
+     A            SOAM01    R               REFFLD(OAM1)
+     A            SOAM02    R               REFFLD(OAM2)
+     A            SOAM03    R               REFFLD(OAM3)
+     A            SOAM04    R               REFFLD(OAM4)
+     A            SOAM05    R               REFFLD(OAM5)
+     A            SOAM06    R               REFFLD(OAM6)
+     A            SOAM07    R               REFFLD(OAM7)
+     A            SOAM08    R               REFFLD(OAM8)
+     A            SOAM09    R               REFFLD(OAM9)
+     A            SOAM10    R               REFFLD(OA10)
+     A            SQTDA     R               REFFLD(QTDA)
+     A            SYTDA     R               REFFLD(YTDA)
+     A            ALCY01         3A         TEXT('Allowed Currency 1')
+     A                                      COLHDG('Allowed Currency 1')
+     A            ALCY02         3A         TEXT('Allowed Currency 2')
+     A                                      COLHDG('Allowed Currency 2')
+     A            ALCY03         3A         TEXT('Allowed Currency 3')
+     A                                      COLHDG('Allowed Currency 3')
+     A            ALCY04         3A         TEXT('Allowed Currency 4')
+     A                                      COLHDG('Allowed Currency 4')
+     A            ALCY05         3A         TEXT('Allowed Currency 5')
+     A                                      COLHDG('Allowed Currency 5')
+     A            ALCY06         3A         TEXT('Allowed Currency 6')
+     A                                      COLHDG('Allowed Currency 6')
+     A            ALCY07         3A         TEXT('Allowed Currency 7')
+     A                                      COLHDG('Allowed Currency 7')
+     A            ALCY08         3A         TEXT('Allowed Currency 8')
+     A                                      COLHDG('Allowed Currency 8')
+     A            ALCY09         3A         TEXT('Allowed Currency 9')
+     A                                      COLHDG('Allowed Currency 9')
+     A            ALCY10         3A         TEXT('Allowed Currency 10')
+     A                                      COLHDG('Allowed Currency 10')
+     A            ALCY11         3A         TEXT('Allowed Currency 11')
+     A                                      COLHDG('Allowed Currency 11')
+     A            ALCY12         3A         TEXT('Allowed Currency 12')
+     A                                      COLHDG('Allowed Currency 12')
+     A            DTPS01         1A         TEXT('Drawing Type 1')
+     A                                      COLHDG('Drawing Type 1')
+     A            DTPS02         1A         TEXT('Drawing Type 2')
+     A                                      COLHDG('Drawing Type 2')
+     A            DTPS03         1A         TEXT('Drawing Type 3')
+     A                                      COLHDG('Drawing Type 3')
+     A            DTPS04         1A         TEXT('Drawing Type 4')
+     A                                      COLHDG('Drawing Type 4')
+     A            DTPS05         1A         TEXT('Drawing Type 5')
+     A                                      COLHDG('Drawing Type 5')
+     A            DTPX01         1A         TEXT('Drawing Type 1')
+     A                                      COLHDG('Drawing Type 1')
+     A            DTPX02         1A         TEXT('Drawing Type 2')
+     A                                      COLHDG('Drawing Type 2')
+     A            DTPX03         1A         TEXT('Drawing Type 3')
+     A                                      COLHDG('Drawing Type 3')
+     A            DTPX04         1A         TEXT('Drawing Type 4')
+     A                                      COLHDG('Drawing Type 4')
+     A            DTPX05         1A         TEXT('Drawing Type 5')
+     A                                      COLHDG('Drawing Type 5')
+     A            DTPX06         1A         TEXT('Drawing Type 6')
+     A                                      COLHDG('Drawing Type 6')
+     A            RTPS01         1A         TEXT('Rollover Period 1')
+     A                                      COLHDG('Rollover Period 1')
+     A            RTPS02         1A         TEXT('Rollover Period 2')
+     A                                      COLHDG('Rollover Period 2')
+     A            RTPS03         1A         TEXT('Rollover Period 3')
+     A                                      COLHDG('Rollover Period 3')
+     A            RTPS04         1A         TEXT('Rollover Period 4')
+     A                                      COLHDG('Rollover Period 4')
+     A            RTPS05         1A         TEXT('Rollover Period 5')
+     A                                      COLHDG('Rollover Period 5')
+     A            RTPS06         1A         TEXT('Rollover Period 6')
+     A                                      COLHDG('Rollover Period 6')
+     A            ALCYS         36A         TEXT('Allowed Currencies')
+     A                                      COLHDG('Allowed Currencies')
+     A            BTB          210A         TEXT('Bank to Bank Info')
+     A                                      COLHDG('Bank to Bank Info')
+     A            DTP          140A         TEXT('Drawing Types')
+     A                                      COLHDG('Drawing Types')
+     A            NAR          140A         TEXT('Narrative')
+     A                                      COLHDG('Narrative')
+     A            YNCSEL    R               REFFLD(SPIN)
+     A                                      TEXT('Currency Selection +
+     A                                            Ind')
+     A                                      COLHDG('Ccy' +
+     A                                             'Sel?')
+     A            YNSECI    R               REFFLD(SECI)
+     A            PADFCXPOR      4S 0       TEXT('Portfolio')
+     A                                      COLHDG('Portfolio')
+     A            FCXLVR         3S 0       TEXT('Required Loan to Value Ratio')
+     A                                      COLHDG('Required' 'Loan to Value' +
+     A                                      'Ratio')
+     A            FCXLVA         3S 0       TEXT('Loan to Value Ratio +
+     A                                      Alert Level')
+     A                                      COLHDG('Loan to Value' 'Ratio' +
+     A                                      'Alert Level')
+     A            FCXLVW         3S 0       TEXT('Loan to Value Warning Level')
+     A                                      COLHDG('Loan to Value' 'Ratio' +
+     A                                      'Warning Level')
+     A            FCXALV         3S 0       TEXT('Advance Loan to Value Ratio')
+     A                                      COLHDG('Advance' 'Loan to Value' +
+     A                                      'Ratio')
+     A            SFCXOML       13P 0
+     A            FCXMST         3A         TEXT('FX Margin Type')
+     A                                      COLHDG('FX' 'Margin' 'Type')
+     A            FCXSTC         1A         TEXT('Subject to Call')
+     A                                      COLHDG('Subject' 'to' 'Call')
+     A            FCXPWF         3S 0       TEXT('Percentage over Required +
+     A                                      LTV for First Call')
+     A                                      COLHDG('Percentage over' +
+     A                                      'Required LTV' +
+     A                                      'for First Call')
+     A            FCXPIS         3S 0       TEXT('Percentage Increment for +
+     A                                      Subsequent Call')
+     A                                      COLHDG('Percentage' +
+     A                                      'Increment for' 'Subsequent Call')
+     A            FCXDEA         1A         TEXT('Drawdown Cannot Exceed +
+     A                                      Available')
+     A                                      COLHDG('Drawdown' 'Cannot Exceed' +
+     A                                      'Available')
+     A            AFCXCGP       20A         TEXT('Customer Group')
+     A                                      COLHDG('Customer' 'Group')
+     A            SFCXCOF       13P 0
+     A            SFCXCV2       15P 0
+     A            FCXLVL         1A         TEXT('LTV Level')
+     A                                      COLHDG('LTV' 'Level')
+     A            FCXCLV        15P 2       TEXT('Current LTV')
+     A                                      COLHDG('Current' 'LTV')
+     A            CLE024         1A
+     A            CLE025         1A
+     A            CUSTZONE      10A         TEXT('Zone')
+     A                                      COLHDG('Zone')
+     A            CGGLOB        10          TEXT('Global Customer ID')
+     A                                      COLHDG('Global' +
+     A                                             'Customer' +
+     A                                             'ID')
+     A            CGCSSN        10          TEXT('Customer Shortname')
+     A                                      COLHDG('Customer Shortname' )
+     A            CGRNM         20          TEXT('Customer Report Name')
+     A                                      COLHDG('Customer Report Name' )
+     A            CGRTN         10          TEXT('Customer Report Town')
+     A                                      COLHDG('Customer Report Town' )
+     A            CGICD         10          TEXT('Global Industry Code')
+     A                                      COLHDG('Global' +
+     A                                             'Industry Code' )
+     A            CGACO         10          TEXT('Global Account Officer Code')
+     A                                      COLHDG('Global' +
+     A                                             'Account Officer' +
+     A                                             'Code' )
+     A            CGCNCZ         2          TEXT('Country of Citizenship')
+     A                                      COLHDG('Country of' +
+     A                                             'Citizenship' )
+     A            CGCOLC         2          TEXT('Country of Location')
+     A                                      COLHDG('Country of' +
+     A                                             'Location' )
+     A            CGBRCD         3          TEXT('Branch')
+     A                                      COLHDG('Branch')
+     A            CGCUST         6          TEXT('Customer Number')
+     A                                      COLHDG('Customer Number')
+     A            CGZONE        10          TEXT('Zone')
+     A                                      COLHDG('Zone')
+     A            SAVAILAMT R               REFFLD(FAMT)
+      **Start of change CER059
+     A            PEXD      R               REFFLD(FDAT)
+     A                                      TEXT('Previous Expiry +
+     A                                            Date')
+     A                                      COLHDG('Previous Expiry' +
+     A                                             'Date')
+      *
+     A            PNXD      R               REFFLD(FDAT)
+     A                                      TEXT('Penultimate Expiry +
+     A                                            Date')
+     A                                      COLHDG('Penultimate' +
+     A                                             'Expiry Date')
+      **End of change CER059
+      **Start of change CLE064
+     A            RTPS07         1A         TEXT('Rollover Period 7')
+     A                                      COLHDG('Rollover Period 7')
+     A            RTPS08         1A         TEXT('Rollover Period 8')
+     A                                      COLHDG('Rollover Period 8')
+     A            RTPS09         1A         TEXT('Rollover Period 9')
+     A                                      COLHDG('Rollover Period 9')
+     A            RTPS10         1A         TEXT('Rollover Period 10')
+     A                                      COLHDG('Rollover Period 10')
+     A            RTPS11         1A         TEXT('Rollover Period 11')
+     A                                      COLHDG('Rollover Period 11')
+     A            RTPS12         1A         TEXT('Rollover Period 12')
+     A                                      COLHDG('Rollover Period 12')
+     A            RTPS13         1A         TEXT('Rollover Period 13')
+     A                                      COLHDG('Rollover Period 13')
+     A            RTPS14         1A         TEXT('Rollover Period 14')
+     A                                      COLHDG('Rollover Period 14')
+     A            RTPS15         1A         TEXT('Rollover Period 15')
+     A                                      COLHDG('Rollover Period 15')
+     A            RTPS16         1A         TEXT('Rollover Period 16')
+     A                                      COLHDG('Rollover Period 16')
+     A            RTPS17         1A         TEXT('Rollover Period 17')
+     A                                      COLHDG('Rollover Period 17')
+     A            RTPS18         1A         TEXT('Rollover Period 18')
+     A                                      COLHDG('Rollover Period 18')
+     A            RTPS19         1A         TEXT('Rollover Period 19')
+     A                                      COLHDG('Rollover Period 19')
+     A            RTPS20         1A         TEXT('Rollover Period 20')
+     A                                      COLHDG('Rollover Period 20')
+     A            RTPS21         1A         TEXT('Rollover Period 21')
+     A                                      COLHDG('Rollover Period 21')
+      **End of change CLE064

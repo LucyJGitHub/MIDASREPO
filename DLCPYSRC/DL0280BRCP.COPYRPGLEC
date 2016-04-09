@@ -1,0 +1,71 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280BRCP                           *
+      *                                                               *
+      *  Last Amend No. MD031936           Date 11Aug15               *
+      *  Prev Amend No. MD031631           Date 23Jun15               *
+      *                 MD031283 *CREATE   Date 24Nov14               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031936 - DL accrual does not take into account a base rate *
+      *             change                                            *
+      *  MD031631 - Backdated MM deal with base rate: the backdated   *
+      *             interest due/capitalized amounts are wrong        *
+      *  MD031283 - Different wrong/strange base rates applied to the *
+      *             backdated MM deals on a value date                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DLBRCP - Compute interest for backdated MM deals using       *
+      *           historic rates                                      *
+      *                                                               *
+      *****************************************************************
+     C     DLBRCP        BEGSR
+      *
+     C                   EVAL      WKINT =  0
+     C                   EVAL      RtvBV =  1
+      *
+     C                   DOW       CtrBV >= RtvBV
+      *
+     C                   EVAL      ZIBEG = ZiBegBV(RtvBV)
+     C                   EVAL      ZIEND = ZiEndBV(RtvBV)
+     C                   EVAL      ZIRATE= BsrtBV(RtvBV)
+      *
+      ** Process backdated interest payment date                                            MD031631
+      *                                                                                     MD031631
+     C                   IF        NIDATF = 'Y'    AND                                      MD031631
+     C                             NIPAR  < BJRDNB AND                                      MD031631
+     C                             ZIEND  > NIPAR                                           MD031631
+     C                   EVAL      ZIEND = NIPAR                                            MD031631
+     C                   EVAL      RtvBV = CtrBV                                            MD031631
+     C                   ENDIF                                                              MD031631
+      *                                                                                     MD031631
+     C     ZIEND         IFGT      IACD                                                     MD031936
+     C                   EXSR      GLINTC
+      *
+     C     *IN02         IFEQ      '1'
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WkIntBV
+     C                   ELSE
+     C                   Z-ADD(H)  ZINTR         WkIntBV
+     C                   ENDIF
+      *
+     C                   ADD       WkIntBV       WKINT
+     C                   ENDIF                                                              MD031936
+     C                   ADD       1             RtvBV
+      *
+     C                   ENDDO
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280BRCP                                       *
+      *****************************************************************

@@ -1,0 +1,2024 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades awaiting authrstn maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0190 - TRADES AWAITING AUTHORISATION MAINTENANCE           *
+     F*                                                               *
+     F*  Function: This process option is called directly from the    *
+     F*   (I/C)    menu.  When called, all the trades awaiting        *
+     F*            Approval or Authorisation are displayed.  A trade  *
+     F*            can then be selected for Approval, Authorisation   *
+     F*            OR Enquiry by entering the appropriate action      *
+     F*            code against the trade.  Once selected, the full   *
+     F*            details of the trade are displayed allowing        *
+     F*            Confirmation of the action.                        *
+     F*                                                               *
+     F*  Called By: SEC02 - Input Cycle Processing                    *
+     F*                                                               *
+     F*  Calls:     SE0050 - Trade Detail Maintenance                 *
+     F*             SE0180 - Trade Authorisation by Re-entry          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 229549             Date 14Sep04               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209093             Date 12Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 092728             DATE 06JUL95               *
+     F*                 086685             DATE 14JUN95               *
+     F*                 084981             DATE 06JUN95               *
+     F*                 084562             DATE 12APR95               *
+     F*                 084925             DATE 15MAR95               *
+     F*                 083547             DATE 20FEB95               *
+     F*                 079034             DATE 05DEC94               *
+     F*                 S01496             DATE 23AUG94               *
+     F*                 052254             DATE 07JAN94               *
+     F*                 E47428             DATE  1FEB93               *
+     F*                 E37169             DATE 19MAR92               *
+     F*                 E34914             DATE 03FEB92               *
+     F*                 E31982             DATE 03DEC91               *
+     F*                 E31949             DATE 29NOV91               *
+     F*                 S01117             DATE 20FEB91               *
+     F*                 S01269             DATE 11JUL90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  229549 - Incomplete trades are shown in TWAU. Only completed *
+      *           trades must be shown. Apply fix 216996.             *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD015 - Midas Compliance Watch - Watch List Checking        *
+      *  209093 - SETRAD being defined as 9A instead of 10A causes    *
+      *           the program name to be invalid when passing field   *
+      *           to SEC021 when calling SETRADSIN. Fix is to define  *
+      *           field SETRAD to 10A, which is the standard program  *
+      *           size.                                               *
+      *  CSE028 - Standing Settlement Instructions Enhancement        *
+     F*  092728 - Reset subfile correctly.                            *
+     F*  086685 - When validating authorising user as being different *
+     F*           to users previously actioning the trade, only check *
+     F*           actions since the last authorisation.               *
+     F*  084981  -  Allow more than one selection in a subfile        *
+     F*  084562 - Further to 079034, there is an inconsistency within *
+     F*           the Security Trading instruction manual with regard *
+     F*           to error codes output. If trades are authorised by  *
+     F*           re-entry, the different error code numbers are used *
+     F*           within manual compared to authorisation by display  *
+     F*           and confirmation (method depends on ICD).           *
+     F*           Program changed so that message subfile processing  *
+     F*           added by 079034 is used for output of all error     *
+     F*           messages to avoid discrepancies within manual.      *
+     F*           Also stop action code being duplicated within       *
+     F*           subfile when Pagedown/Rollup is taken.              *
+     F*           SE0190DF also changed to blank out a subfile message*
+     F*           that remains on screen even after program is exited *
+     F*  084925 - When checking authorisation limit validation the    *
+     F*           wrong number of decimal places was used for the     *
+     F*           trade currency.                                     *
+     F*  083547 - Recompiled over MUSERDD                             *
+     F*  079034 - Amend program to output correct messages at correct *
+     F*           time.  Add message handling subfile processing to   *
+     F*           program to display new messages added.              *
+     F*  S01496 - Jyske Enhancements - Change format parameter        *  *
+     F*           from DSFDY to DSSDY for AOSTRDR0                    *  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E47428 - Should not check originating branch authority if    *
+     F*           originating branch/user validation is not switched  *
+     F*           on                                                  *
+     F*  E37169 - If only record in subfile has been authorised do    *
+     F*           not try to redisplay subfile                        *
+     F*  E34914 - Only redisplay subfile if there is something in it  *
+     F*  E31982 - After calling appropriate program need to redisplay *
+     F*           the subfile so that any trades that have been       *
+     F*           authorised are no longer shown.                     *
+     F*  E31949 - Should check that user has authority to the trade's *
+     F*           originating branch when selecting                   *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - New program for Trade Authorisation                 *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0190DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SE0190S3
+     FMUSER   IF  E           K        DISK
+     F*SDBANKPDIF**E                    DISK                              S01117
+     F*SDSTRDPDIF**E                    DISK                              S01117
+     FTRAUT   IF  E           K        DISK
+     FTRADTA  IF  E           K        DISK
+     FSECOND  IF  E           K        DISK
+     F*TABEM***IF**E           K        DISK                              S01117
+     F**********  TABTB10F                          KIGNORE               S01117
+     F**********  TABTB11F                          KIGNORE               S01117
+     F**********  TABTB36F                          KIGNORE               S01117
+     F**********  TABTB95F                          KIGNORE               S01117
+     F**********  TABTE10F                          KIGNORE               S01117
+     F* CCYS *    TABTG10F                          KIGNORE
+     F**********  TABLETHF                          KIGNORE               S01117
+     F**********  TABLETIF                          KIGNORE               S01117
+     F**********  TABLETNF                          KIGNORE               S01117
+     F**********  TABLETTF                          KIGNORE               S01117
+     F*SDCURRL0IF**E           K        DISK                              S01117
+     F*
+     FSDCWHTL1IF  E           K        DISK                                                   CSD015
+      ** Compliance Watch Hit List by Function Type                                           CSD015
+      *                                                                                       CSD015
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*   F U N C T I O N   O F   I N D I C A T O R S                 *
+     F*                                                               *
+     F*  01 - CLEAR SUBFILE                                           *
+     F*  07 - ROLLUP REQUESTED                                        *
+     F***08*-*ROLLDOWN REQUESTED                                      *   084981
+     F***10*-*READ*FAILURE ON SDBANKPD OR SECOND                      *   S01117
+     F*  10 - READ FAILURE ON SECOND                                  *   S01117
+     F***11*-*READ*FAILURE ON SDSTRDPD                                *   S01117
+     F*  12 - READ FAILURE ON TRADTA                                  *
+     F*  13 - READ FAILURE ON TRAUT                                   *
+     F*  14 - POSITION TO TRADE INDICATOR                             *
+     F*  15 - ACTION CODE ENTERED                                     *
+     F*  21 - AUTHORISED TO RECORD                                    *   S01117
+     F*  22 - END OF FILE ENCOUNTERED                                 *
+     F*  23 - TOP OF FILE ENCOUNTERED                                 *
+     F*  24 - ENOUGH RECORDS TO FILL SUBFILE OR END OF FILE           *   S01117
+     F*  28 - Record Not Found                                        *                       CSD015
+     F*  70 - Indicator for SFLEND for Message subfile                *   079034
+     F*  71 - Indicator for SFLCLR for Message subfile                *   079034
+     F*  80 - VALIDATION ERROR ENCOUNTERED                            *
+     F*  83 - CHAIN FAILURE ON MUSER                                  *
+     F*  98 - DATE FORMAT IN ZDATE2                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - SUBROUTINE FOR INITIAL PROCESSING                   *
+     F*  P01    - SUBROUTINE TO WRITE RECORDS TO SUBFILE              *
+     F*  V01    - SUBROUTINE TO VALIDATE INPUT                        *
+     F*  P03    - SUBROUTINE TO CALL APPROPRIATE PROGRAM              *
+     F*  INSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO INSERTION  *
+     F*  AMSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO AMENDMENT  *
+     F*  CHSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO CHANGE     *
+     F*  DLSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO DELETION   *
+     F*  APSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO APPROVAL   *
+     F*  RVSR   - SUBROUTINE TO CHANGE LAST ACTION TYPE TO REVERSAL   *
+     F*  SRSMSG - Routine to send messages to message subfile.        *   079034
+     F*  SRSCRN - Routine for message subfile screen handling         *   079034
+     F*  ZA0340 - Send a message to the program message queue         *   079034
+     F*  ZA0250 - Clear program message queue                         *   079034
+     F*  ZDATE2 - FORMAT DATE                                         *
+     F*  ZSEDIT - FORMAT NUMERIC FIELDS FOR OUTPUT                    *
+     F*  *PSSR  - ERROR HANDLING                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E**  ERROR ARRAY
+     E*
+     E                    ERR        20  4               ERROR CODES
+     E*
+     E/COPY ZSRSRC,ZPOWERZ1
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      /EJECT
+     ITRADSDF
+     I*
+     I**  RENAME RECI FIELD
+     I*
+     I              RECI                            TRECI
+     I*
+     I*LDA********UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I**  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I**********                            134 177 DBLOT                 S01117
+     I**********                            134 138 DBFILE                S01117
+     I**********                            139 167 DBKEY                 S01117
+     I**********                            168 175 DBPGM                 S01117
+     I**********                            176 177 DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     ISESDS     E DS
+     I*
+     I**  LINK ENQUIRY DATA AREA
+     I*
+     I*
+     IPSDS       SDS
+     I                                        1  10 PROGRM
+     I                                      254 263 @USR
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**                                                                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01117
+     I**                                                                  S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01117
+     I**                                                                  S01117
+     ISDGELR    E DSSDGELRPD                                              E47428
+     I** EXTERNAL DS FOR GENERAL LEDGER DETAILS                           E47428
+     I**                                                                  E47428
+     ISDSTRD    E DSSDSTRDPD                                              S01117
+     I** EXTERNAL DS FOR SECURITY TRADING DETAILS                         S01117
+     I**                                                                  S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I**                                                                  S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01117
+     I*
+     ICPYR@#      DS
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     ISDWLCC    E DSSDWLCCPD                                                                  CSD015
+      **  Midas Functions for Watch List Checking Details File                                CSD015
+      *                                                                                       CSD015
+     ISC24X7    E DSSC24X7                                                                    CSD015
+      ** 24X7 status data area                                                                CSD015
+      *                                                                                       CSD015
+     ISDSTAT    E DSSDSTAT                                                                    CSD015
+      ** SD data area                                                                         CSD015
+      *                                                                                       CSD015
+     ISCSARD    E DSSCSARDPD                                                                  CSD015
+      ** External data structure for Switchable Features                                      CSD015
+      *                                                                                       CSD015
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C**  FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  Clear subfile for first pass                                    084981
+     C*                                                                   084981
+     C                     Z-ADD0         RRN     40                      084981
+     C                     Z-ADD0         WLREC                           084981
+     C                     SETON                     01                   084981
+     C                     WRITESFLCTLR                                   084981
+     C                     SETOF                     01                   084981
+     C*
+     C*
+     C**  EXECUTE SUBROUTINE TO WRITE RECORDS TO SUBFILE
+     C*
+     C                     EXSR P01
+     C*
+     C**  WRITE SCREEN HEADER
+     C*
+     C                     WRITETRAIL                                     084981
+     C                     WRITESE0190S2                                  084981
+     C           RRN       IFEQ 0                                         084981
+     C                     WRITENORECS                                    084981
+     C                     READ NORECS                   77               084981
+     C                     MOVE *BLANKS   CTRAD                           084981
+     C                     ELSE                                           084981
+     C                     EXFMTSFLCTLR                                   084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  Rewrite whole processing to cater for new subfile structure and 084981
+     C**  processing                                                      084981
+     C*                                                                   084981
+     C           *IN03     DOWEQ'0'                        DO   1         084981
+     C*                                                                   084981
+     C                     SETOF                     68                   084981
+     C*                                                                   084981
+     C**  Roll-up key is pressed.                                         084981
+     C*                                                                   084981
+     C           *IN07     IFEQ '1'                                       084981
+     C                     Z-ADDWLREC     RRN                             084981
+     C                     EXSR P01                                       084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  Selection is entered.                                           084981
+     C*                                                                   084981
+     C           CTRAD     IFNE *BLANKS                                   084981
+     C                     EXSR P01                                       084981
+     C                     MOVE *BLANKS   CTRAD                           084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  Enter key is pressed.                                           084981
+     C*                                                                   084981
+     C           *IN68     IFEQ '0'                                       084981
+     C*                                                                   084981
+     C**  If subfile is empty, display NO RECORD display file.            084981
+     C*                                                                   084981
+     C           RRN       IFEQ 0                                         084981
+     C                     WRITENORECS                                    084981
+     C                     READ NORECS                   77               084981
+     C                     MOVE *BLANKS   CTRAD                           084981
+     C*                                                                   084981
+     C**  Proceed to validation if subfile is not empty.                  084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C                     SETOF                     80                   084981
+     C                     MOVE *BLANKS   ERR                             084981
+     C                     Z-ADD0         Z       30                      084981
+     C                     Z-ADD0         COUNT   40                      084981
+     C*                                                                   084981
+     C**  Check for changed SELECT field and validate.                    084981
+     C*                                                                   084981
+     C           *IN15     DOUEQ'1'                                       084981
+     C                     READCSE0190S3                 15               084981
+     C           *IN15     IFEQ '0'                                       084981
+     C                     EXSR V01                                       084981
+     C           COUNT     IFEQ 0                                         084981
+     C           *IN80     ANDEQ'1'                                       084981
+     C                     Z-ADDRRN       DSPREC                          084981
+     C                     ADD  1         COUNT                           084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  If there are no errors, then proceed to process inputs          084981
+     C*                                                                   084981
+     C           *IN80     IFEQ '0'                                       084981
+     C                     SETOF                         15               084981
+     C           *IN15     DOUEQ'1'                                       084981
+     C           *IN03     OREQ '1'                                       084981
+     C                     READCSE0190S3                 15               084981
+     C           *IN15     IFEQ '0'                                       084981
+     C                     MOVE SELF      SELFC   1                       084981
+     C                     MOVE TDRF      TDRFC   6                       084981
+     C                     EXSR P03                                       084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  If the job completed normally, clear and reload the             084981
+     C**  subfile.                                                        084981
+     C*                                                                   084981
+     C           *IN03     IFEQ '0'                                       084981
+     C                     RESETSE0190S3                                  092728
+     C                     Z-ADD0         RRN                             084981
+     C                     Z-ADD0         WLREC                           084981
+     C                     SETON                         01               084981
+     C                     WRITESFLCTLR                                   084981
+     C                     SETOF                         01               084981
+     C*                                                                   084981
+     C                     EXSR P01                                       084981
+     C*                                                                   084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  Redisplay subfile or NORECORD Screen.                           084981
+     C*                                                                   084981
+     C           *IN03     IFEQ '0'                                       084981
+     C           RRN       IFEQ 0                                         084981
+     C                     WRITENORECS                                    084981
+     C                     READ NORECS                   77               084981
+     C                     MOVE *BLANKS   CTRAD                           084981
+     C                     ELSE                                           084981
+     C                     MOVEAERR       ERRMSG                          084981
+     C                     WRITETRAIL                                     084981
+     C                     WRITESE0190S2                                  084981
+     C                     EXFMTSFLCTLR                                   084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     ENDDO                           ENDD 1         084981
+     C***********          SETOF                     681580               084981
+     C***********          SETOF                     81                   084981
+     C***********          WRITETRAIL                                     084981
+     C***********          WRITESE0190S2                                  084981
+     C***********RRN       IFGT 0                                         084981
+     C***********          WRITESFLCTLR                                   084981
+     C***********          ELSE                                           084981
+     C***********          WRITENORECS                                    084981
+     C***********          END                                            084981
+     C*
+     C************IN03     DOWEQ'0'                                       084981
+     C*
+     C***********          SETOF                     6968                 084981
+     C***********          Z-ADD0         COUNT                           084981
+     C*
+     C**  REVIEW FROM FIELD
+     C*
+     C***********          READ SE0190S2                 77               084981
+     C*
+     C************IN03     IFEQ '0'                                       084981
+     C*
+     C**  IF ROLLUP PRESSED THEN EXECUTE APPROPRIATE SUBROUTINE
+     C*
+     C************IN07     IFEQ '1'                                       084981
+     C*
+     C***********          EXSR P01                                       084981
+     C***********          SETOF                     07                   084981
+     C*
+     C***********          END                                            084981
+     C*
+     C**  IF ROLLDOWN PRESSED THEN EXECUTE APPROPRIATE SUBROUTINE
+     C*
+     C************IN08     IFEQ '1'                                       084981
+     C*
+     C***********          EXSR P01                                       084981
+     C***********          SETOF                     08                   084981
+     C*
+     C***********          END                                            084981
+     C*
+     C***********CTRAD     IFNE '      '                                  084981
+     C*
+     C***********          SETON                     14                   084981
+     C***********          EXSR P01                                       084981
+     C***********          MOVE '      '  CTRAD                           084981
+     C***********          WRITESE0190S2                                  084981
+     C*
+     C***********          END                                            084981
+     C*
+     C**  IF ACTION CODE ENTERED THEN VALIDATE INPUT
+     C*
+     C************IN68     IFEQ '0'                                       084981
+     C*
+     C***********DSPREC    IFEQ 0                                         084981
+     C***********          WRITENORECS                                    084981
+     C***********          ELSE                                           084981
+     C*
+     C***********          Z-ADD1         RRN                             084981
+     C***********          MOVE *BLANK    ERR                             084981
+     C***********          Z-ADD0         Z       30                      084981
+     C***********          SETOF                     85            084562 084981
+     C************IN15     DOUEQ'1'                                       084981
+     C***********          READCSE0190S3                 15               084981
+     C************IN03     IFEQ '0'                                       084981
+     C************IN15     ANDEQ'0'                                       084981
+     C*
+     C**  IF ROLLUP PRESSED THEN EXECUTE APPROPRIATE SUBROUTINE
+     C*
+     C************IN07     IFEQ '1'                                       084981
+     C*
+     C***********          EXSR P01                                       084981
+     C***********          SETOF                     07                   084981
+     C*
+     C***********          ELSE                                           084981
+     C*
+     C**  IF ROLLDOWN PRESSED THEN EXECUTE APPROPRIATE SUBROUTINE
+     C*
+     C************IN08     IFEQ '1'                                       084981
+     C*
+     C***********          EXSR P01                                       084981
+     C***********          SETOF                     08                   084981
+     C*
+     C***********          ELSE                                           084981
+     C***********          SETON                     71            079034 084981
+     C***********          EXSR SRSCRN                             079034 084981
+     C***********          SETOF                     71            079034 084981
+      ** Clear messages for redisplay                                     084981
+     C***********          CALL 'ZA0250'                           084562 084981
+     C***********          EXSR V01                                084562 084981
+     C*
+     C**  IF INPUT IS NOT VALIDATED REVERSE IMAGE SCREEN FIELD
+     C*
+     C************IN85     IFEQ '1'                                       084981
+     C***********SELF      ANDNE*BLANK                                    084981
+     C***********          SETON                     0920                 084981
+     C***********          SETOF                     85            084562 084981
+     C***********          ELSE                                           084981
+     C***********          SETON                     09                   084981
+     C***********SELF      IFNE *BLANK                                    084981
+     C***********          MOVE SELF      SELFC   1                       084981
+     C***********          MOVE TDRF      TDRFC   6                       084981
+     C***********          END                                            084981
+     C***********          END                                            084981
+     C***********          END                                            084981
+     C*
+     C***********          UPDATSE0190S3                                  084981
+     C***********          ADD  1         RRN                             084981
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+     C**  IF ANY ERROR AND A SELECTION HAS BEEN MADE SHOW ERROR CODES
+     C*
+     C***********          Z-ADD1         RRN                             084981
+     C***********          MOVEAERR       ERRMSG                          084981
+     C***********          WRITETRAIL                                     084981
+     C***********DSPREC    IFGT 0                                         084981
+     C***********          WRITESFLCTLR                                   084981
+     C***********          ELSE                                           084981
+     C***********          WRITENORECS                                    084981
+     C***********          END                                            084981
+     C*                                                            084562 084981
+     C***********          EXSR SRSCRN                             084562 084981
+     C*
+     C**  IF NO ERRORS CALL APPROPRIATE PROGRAM
+     C*
+     C************IN80     IFEQ '0'                                       084981
+     C************IN85     ANDEQ'0'                                       084981
+     C***********COUNT     ANDEQ1                                         084981
+     C***********          EXSR P03                                       084981
+     C***********          MOVE 'Y'       REDSPY  1                E31982 084981
+     C***********          EXSR P01                                E31982 084981
+     C***********          Z-ADD1         RRN                      E31982 084981
+     C***********          MOVEAERR       ERRMSG                   E31982 084981
+     C***********          WRITETRAIL                              E31982 084981
+     C***********DSPREC    IFEQ 0                                  E34914 084981
+     C***********          WRITENORECS                             E34914 084981
+     C***********          ELSE                                    E34914 084981
+     C***********          WRITESFLCTLR                            E31982 084981
+     C***********          END                                     E34914 084981
+     C***********          MOVE ' '       REDSPY                   E31982 084981
+     C***********          END                                            084981
+     C***********          SETOF                     80                   084981
+     C*
+     C*                    END
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   FIRST - SR FOR INITIAL PROCESSING                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR
+     C*
+     C**  Get Bank details
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           SESDS
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   SESDS
+     C                     IN   RUNDT                                     S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     SETOF                     986769
+     C*                                                                   S01117
+     C**  Get Bank details                                                S01117
+     C*                                                                   S01117
+     C**********           READ SDBANKPD                 10               S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*
+      * Nominal currency details                                          084925
+     C                     CALL 'AOCURRR0'                                084925
+     C                     PARM '*DBERR ' @RTCD                           084925
+     C                     PARM '*KEY   ' @OPTN                           084925
+     C                     PARM BJCYCD    @CKEY                           084925
+     C           SDCURR    PARM SDCURR    DSSDY                           084925
+      *                                                                   084925
+     C           *LIKE     DEFN A6NBDP    BNBDP                           084925
+     C                     MOVELA6NBDP    BNBDP                           084925
+     C*                                                                   S01117
+     C********** *IN10     IFEQ '1'                                       S01117
+     C**********           SETON                     U7U8LR               S01117
+     C**********           MOVEL'SE0190'  DBPGM                           S01117
+     C**********           MOVE 'SDBAN'   DBFILE           ***************S01117
+     C**********           MOVE '01'      DBASE            * DB ERROR 01 *S01117
+     C**********           RETRN                           ***************S01117
+     C**********           END                                            S01117
+     C*
+     C**  Get Securities Trading details
+     C*
+     C**********           READ SDSTRDPD                 11               S01117
+     C                     CALL 'AOSTRDR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD                           S01117
+     C                     PARM '*FIRST ' @OPTN                           S01117
+     C***********SDSTRD    PARM SDSTRD    DSFDY                     S01117S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*
+     C********** *IN11     IFEQ '1'                                       S01117
+     C**********           SETON                     U7U8LR               S01117
+     C**********           MOVEL'SE0190'  DBPGM                           S01117
+     C**********           MOVE 'SDSTR'   DBFILE           ************** S01117
+     C**********           MOVE '02'      DBASE            ** DB ERROR ** S01117
+     C**********           RETRN                           **    02    ** S01117
+     C**********           END                             ************** S01117
+     C*                                                                   E47428
+     C**  Get General Ledger details                                      E47428
+     C*                                                                   E47428
+     C**********           CALL 'AOGELRR0'                                E47428              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD                           E47428
+     C                     PARM '*FIRST ' @OPTN                           E47428
+     C********** SDGELR    PARM SDGELR    DSFDY                           E47428              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C                     MOVELPROGRM    PGMNO   8
+     C/COPY WNCPYSRC,SE0190C001
+     C*
+      *                                                                                       CSE028
+     C                     MOVE 'N'       CAP125  1                                           CSE028
+     C                     CALL 'AOSARDR0'                                                    CSE028
+     C                     PARM *BLANKS   @RTCD   7                                           CSE028
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE028
+     C                     PARM 'CAP125'  @SARD   6                                           CSE028
+      *                                                                                       CSE028
+      ** If feature is installed                                                              CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFEQ *BLANKS                                                       CSE028
+     C                     MOVE 'Y'       CAP125                                              CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C**********           MOVEL'SETRAD'  SETRAD  9                                    CSE028 209093
+     C**********           MOVE 'SIN'     SETRAD                                       CSE028 209093
+     C                     MOVEL'SETRAD'  SETRAD 10                                           209093
+     C                     MOVE 'SIN '    SETRAD                                              209093
+      *                                                                                       CSD015
+      ** Compliance Watch Hit List Key List                                                   CSD015
+      *                                                                                       CSD015
+     C           CWHTKY    KLIST                                                              CSD015
+     C                     KFLD           WFUNT   8                                           CSD015
+     C                     KFLD           WIDEN  40                                           CSD015
+     C                     KFLD           TDBA                                                CSD015
+      *                                                                                       CSD015
+      ** Check if CSC011 (Midas 24X7) is active                                               CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSC011  1                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*VERIFY' @OPTN                                               CSD015
+     C                     PARM 'CSC011'  @SARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** Database Error (return code other than *NRF)                                         CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFNE *BLANKS                                                       CSD015
+     C           @RTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     MOVEL'CSC011'  DBKEY                                               CSD015
+     C                     Z-ADD1         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     MOVE *ON       *INU7                                               CSD015
+     C                     MOVE *ON       *INU8                                               CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     RETRN                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVE 'Y'       CSC011                                              CSD015
+     C           *NAMVAR   DEFN           SC24X7                                              CSD015
+     C                     IN   SC24X7                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD015
+     C                     IN   SDSTAT                                                        CSD015
+      *                                                                                       CSD015
+      ** Check if CSD015 (Midas Compliance Watch) is active                                   CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSD015  1                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*VERIFY' @OPTN                                               CSD015
+     C                     PARM 'CSD015'  @SARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** Database Error (return code other than *NRF)                                         CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFNE *BLANKS                                                       CSD015
+     C           @RTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     MOVEL'CSD015'  DBKEY                                               CSD015
+     C                     Z-ADD2         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     MOVE *ON       *INU7                                               CSD015
+     C                     MOVE *ON       *INU8                                               CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     RETRN                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVE 'Y'       CSD015                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Check if function code is being monitored by the compliance watch                    CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLCCR0'                                                    CSD015
+     C                     PARM *BLANKS   @RTCD                                               CSD015
+     C                     PARM '*KEY   ' @OPTN                                               CSD015
+     C                     PARM 'SECTTRAD'@KEY1   8                                           CSD015
+     C           SDWLCC    PARM SDWLCC    DSFDY                                               CSD015
+      *                                                                                       CSD015
+      ** Database Error (return code other than *NRF)                                         CSD015
+      *                                                                                       CSD015
+     C           @RTCD     IFNE *BLANKS                                                       CSD015
+     C           @RTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SDWLCCPD'DBFILE                                              CSD015
+     C                     MOVEL'SECTRAD' DBKEY                                               CSD015
+     C                     Z-ADD3         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     MOVE *ON       *INU7                                               CSD015
+     C                     MOVE *ON       *INU8                                               CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     RETRN                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSE028
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  P01  - SR TO WRITE RECORDS TO SUBFILE                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P01       BEGSR
+     C*
+     C***********          SETON                     0168                 084981
+     C                     SETON                     68                   084981
+     C                     SETOF                     80
+     C***********          WRITESFLCTLR                                   084981
+     C***********          SETOF                     01                   084981
+     C*
+     C**  SET LIMITS DEPENDING ON OPTION TAKEN
+     C*
+     C************IN14     IFEQ '1'                                       084981
+     C***********CTRAD     SETLLTRADTA               22                   084981
+     C***********          END                                            084981
+     C*
+     C************IN22     IFEQ '1'                                       084981
+     C************HIVAL    SETLLTRADTA                                    084981
+     C***********          END                                            084981
+     C*
+     C************IN07     IFEQ '1'                                       084981
+     C***********TDRB      SETGTTRADTA               23                   084981
+     C***********          END                                            084981
+     C*
+     C************IN23     IFEQ '1'                                       084981
+     C***********TDRT      SETGTTRADTA                                    084981
+     C***********          SETON                     69                   084981
+     C**********           ELSE                                           084562
+     C**********           MOVE ' '       SELF                            084562
+     C**********           SETOF                     20                   084562
+     C***********          END                                            084981
+     C***********          SETOF                     20            084562 084981
+     C***********          MOVE ' '       SELF                     084562 084981
+     C*
+     C*
+     C************IN08     IFEQ '1'                                       084981
+     C***********REDSPY    OREQ 'Y'                                 E31982E34914
+     C***********          SETOF                     67                   084981
+     C***********TDRT      SETLLTRADTA                                    084981
+     C***********          END                                            084981
+     C*                                                                   E34914
+     C** WHEN REDISPLAYING SCREEN IF THE RECORD CANNOT BE FOUND THEN      E34914
+     C** PROCESS AS IF A ROLL DOWN WAS REQUESTED                          E34914
+     C*                                                                   E34914
+     C***********REDSPY    IFEQ 'Y'                                E34914 084981
+     C***********          SETOF                     67            E34914 084981
+     C***********TDRT      SETLLTRADTA               08            E34914 084981
+     C***********          END                                     E34914 084981
+     C*
+     C************IN08     IFEQ '0'                                       084981
+     C************IN22     ANDEQ'0'                                       084981
+     C************IN23     ANDEQ'0'                                       084981
+     C***********          READ TRADTA                   12               084981
+     C***********          END                                            084981
+     C*
+     C************IN22     IFEQ '1'                                       084981
+     C************IN23     OREQ '1'                                       084981
+     C***********          READPTRADTA                   12               084981
+     C***********          END                                            084981
+     C*
+     C**  IF ROLL DOWN REQUESTED
+     C*
+     C************IN08     IFEQ '1'                                       084981
+     C*
+     C***********          SETOF                     12                   084981
+     C***********          DO   4                                         084981
+     C*
+     C***********          READPTRADTA                   12               084981
+     C*
+     C************IN12     IFEQ '1'                                       084981
+     C***********          SETON                     69                   084981
+     C************LOVAL    SETLLTRADTA                                    084981
+     C***********          READ TRADTA                   12               084981
+     C***********          ELSE                                           084981
+     C***********          MOVE ' '       SELF                            084981
+     C***********          SETOF                     20                   084981
+     C***********          END                                            084981
+     C*
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          END                                            084981
+     C*
+     C************IN12     IFEQ '0'                                       084981
+     C*
+     C***********          MOVE TDRF      TDRT    6                       084981
+     C**********           Z-ADD1         RRN     40                      S01117
+     C***********          Z-ADD0         RRN     40               S01117 S01117
+     C***********          Z-ADD0         DSPREC                   S01117 S01117
+     C***********          SETOF                     24            S01117 S01117
+     C*
+     C**********           DO   4                                         S01117
+     C************IN24     DOUEQ'1'                                S01117 S01117
+     C*                                                                   084981
+     C**  SET TRADTA FILE TO TOF IF FIRST TIME TO BUILD THE SUBFILE.      084981
+     C*                                                                   084981
+     C           *IN07     IFEQ '0'                                       084981
+     C           CTRAD     ANDEQ'      '                                  084981
+     C           *LOVAL    SETLLTRADTA                                    084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  FOR ROLL-UPS AND FIRST TIME SUBFILE LOADS                       084981
+     C*                                                                   084981
+     C           CTRAD     IFEQ '      '                                  084981
+     C                     Z-ADD1         WCTR    20                      084981
+     C                     READ TRADTA                   12               084981
+     C           *IN12     DOWEQ'0'                        **DO 1         084981
+     C           WCTR      ANDLE4                                         084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '0'                        **IF 1         084981
+     C*                                                                   084981
+     C**  IF OKAY, PROCESS RECORD AND WRITE TO SUBFILE                    084981
+     C*                                                                   084981
+     C           TINC      IFEQ 'C'                                                           229549
+     C                     EXSR P02                                       084981
+     C                     ENDIF                                                              229549
+     C*                                                                   S01117
+     C** CHECK WHETHER USER HAS AUTHORITY TO THIS RECORD OR NOT           S01117
+     C*                                                                   S01117
+     C***********MBIN      IFEQ 'Y'                                S01117 084981
+     C***********          CALL 'ZVBBU'                            S01117 084981
+     C***********          PARM TDBA      ZBRCDX  3                S01117 084981
+     C***********          PARM           @ERR    10               S01117 084981
+     C*                                                                   S01117
+     C***********@ERR      IFNE *ZEROS                             S01117 084981
+     C***********          SETON                     21            S01117 084981
+     C***********          ELSE                                    S01117 084981
+     C***********          SETOF                     21            S01117 084981
+     C***********          END                                     S01117 084981
+     C***********          END                                     S01117 084981
+     C*
+     C********** *IN12     IFEQ '0'                                       S01117
+     C************IN21     IFEQ '0'                                S01117 084981
+     C*
+     C***********          ADD  1         RRN                      S01117 084981
+     C***********          MOVE *BLANKS   TATYPL                          084981
+     C***********          Z-ADDRRN       DSPREC                          084981
+     C***********TDRF      SETGTTRAUT                                     084981
+     C***********          READPTRAUT                    13               084981
+     C*
+     C**  CHANGE LAST ACTION TYPE TO WORD
+     C*
+     C***********TATYP     CASEQ'IN'      INSR                            084981
+     C***********TATYP     CASEQ'AM'      AMSR                            084981
+     C***********TATYP     CASEQ'CH'      CHSR                            084981
+     C***********TATYP     CASEQ'DL'      DLSR                            084981
+     C***********TATYP     CASEQ'AP'      APSR                            084981
+     C***********TATYP     CASEQ'RV'      RVSR                            084981
+     C***********          END                                            084981
+     C*
+     C***********          MOVE TAUSR     TAUSRD                          084981
+     C*
+     C**  CONVERT VALUE DATE AND LAST ACTION DATE FORMAT USING ZDATE2
+     C*
+     C***********          MOVE TDVD      ZDAYNO                          084981
+     C***********          EXSR ZDATE2                                    084981
+     C***********          MOVE ZADATE    TDVDD   7                       084981
+     C***********          MOVE TADT      ZDAYNO                          084981
+     C***********          EXSR ZDATE2                                    084981
+     C***********          MOVE ZADATE    TADTD   7                       084981
+     C*
+     C**  CHANGE TIME FIELD IN TRAUT TO FORMAT HH:MM:SS
+     C*
+     C***********          MOVELTATM      HOUR    2                       084981
+     C***********          MOVE TATM      MINS    4                       084981
+     C***********          MOVELMINS      MINU    2                       084981
+     C***********          MOVE MINS      SECO    2                       084981
+     C***********          MOVELHOUR      TEMP1   3                       084981
+     C***********          MOVE ':'       TEMP1                           084981
+     C***********          MOVELTEMP1     TEMP2   5                       084981
+     C***********          MOVE MINU      TEMP2                           084981
+     C***********          MOVELTEMP2     TEMP3   6                       084981
+     C***********          MOVE ':'       TEMP3                           084981
+     C***********          MOVELTEMP3     TATML   8                       084981
+     C***********          MOVE SECO      TATML                           084981
+     C*
+     C****READ*SDCURRL0*FILE*TO*OBTAIN*NUMBER*OF*DECIMAL*PLACES           S01117
+     C**  ACCESS CURRENCY FILE TO OBTAIN NUMBER OF DECIMAL PLACES         S01117
+     C*
+     C********** TNMC      CHAINSDCURRL0             81                   S01117
+     C***********          CALL 'AOCURRR0'                         S01117 084981
+     C***********          PARM '*DBERR ' @RTCD                    S01117 084981
+     C***********          PARM '*KEY   ' @OPTN                    S01117 084981
+     C***********          PARM TNMC      @CKEY   3                S01117 084981
+     C***********SDCURR    PARM SDCURR    DSSDY                    S01117 084981
+     C*
+     C**  EDIT COUNTERVALUE AND NOMINAL USING ZSEDIT
+     C*
+     C***********          Z-ADDTCTR      ZFLD15                          084981
+     C***********          Z-ADDA6NBDP    ZDECS                           084981
+     C***********          EXSR ZSEDIT                                    084981
+     C***********          MOVE ZOUT21    TCTR13 13                       084981
+     C***********          Z-ADDNOML      ZFLD15                          084981
+     C***********          Z-ADDTNMD      ZDECS                           084981
+     C***********          EXSR ZSEDIT                                    084981
+     C***********          MOVE ZOUT21    NOML13 13                       084981
+     C*
+     C***********          Z-ADDA6NBDP    TNBDP                    084925 084981
+     C***********          MOVELA6MDIN    TMDIN                    084925 084981
+     C***********          WRITESE0190S3                                  084981
+     C***********          END                                     S01117 084981
+     C*                                                                   084981
+     C**  Read next record in file if counter is LE 4                     084981
+     C*                                                                   084981
+     C           WCTR      IFLE 4                                         084981
+     C                     READ TRADTA                   12               084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     END                             **ENDIF 1      084981
+     C*                                                                   084981
+     C                     END                             **ENDDO 1      084981
+     C*                                                                   084981
+     C**  If EOF is reached set subfile to end                            084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '1'                                       084981
+     C                     SETON                         67               084981
+     C*                                                                   084981
+     C**  If not, check if last record from TRADTA was already read.      084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C                     READ TRADTA                   12               084981
+     C           *IN12     IFEQ '1'                                       084981
+     C                     SETON                         67               084981
+     C                     ELSE                                           084981
+     C                     READPTRADTA                   77               084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C**  For Trade Selection                                             084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C*                                                                   084981
+     C**  See if the trade selected is already in the subfile             084981
+     C*                                                                   084981
+     C           CTRAD     IFLE LTDRF                      **IF  1        084981
+     C*                                                                   084981
+     C**  Position subfile to top and start the search.                   084981
+     C*                                                                   084981
+     C                     Z-ADD1         SRRN    40                      084981
+     C           SRRN      CHAINSE0190S3             15                   084981
+     C           SRRN      DOWLTWLREC                                     084981
+     C           TDRF      ANDLECTRAD                                     084981
+     C           *IN15     ANDEQ'0'                                       084981
+     C           SELF      IFNE ' '                                       084981
+     C                     SETON                         09               084981
+     C                     UPDATSE0190S3                                  084981
+     C                     SETOF                         09               084981
+     C                     END                                            084981
+     C                     ADD  1         SRRN                            084981
+     C           SRRN      CHAINSE0190S3             15                   084981
+     C                     END                                            084981
+     C                     Z-ADDSRRN      DSPREC                          084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C*                                                                   084981
+     C**  If selected trade is still not within the subfile, fill-up the  084981
+     C**  subfile until CTRAD record.                                     084981
+     C*                                                                   084981
+     C                     READ TRADTA                   12               084981
+     C           *IN12     DOWEQ'0'                        **DO 1         084981
+     C           TDRF      ANDLECTRAD                                     084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '0'                        **IF 1         084981
+     C*                                                                   084981
+     C**  IF OKAY, PROCESS RECORD AND WRITE TO SUBFILE                    084981
+     C*                                                                   084981
+     C           TINC      IFEQ 'C'                                                           229549
+     C                     EXSR P02                                       084981
+     C                     ENDIF                                                              229549
+     C*                                                                   084981
+     C**  Read next record in file                                        084981
+     C*                                                                   084981
+     C                     READ TRADTA                   12               084981
+     C*                                                                   084981
+     C                     END                             **ENDIF 1      084981
+     C*                                                                   084981
+     C                     END                             **ENDDO 1      084981
+     C*                                                                   084981
+     C**  If EOF is reached set subfile to end                            084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '1'                                       084981
+     C                     SETON                         67               084981
+     C*                                                                   084981
+     C**  If not EOF fill subfile to bottom of page.                      084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C                     Z-ADDRRN       LRRN    40                      084981
+     C*                                                                   084981
+     C**  Get number of records still to be written to subfile.           084981
+     C*                                                                   084981
+     C           LRRN      DIV  4         #WRK    40                      084981
+     C                     MVR            WCTR                            084981
+     C           WCTR      IFEQ 0                                         084981
+     C*                                                                   084981
+     C**  Read previous so as not to miss out previously read record      084981
+     C**  on next subfile load.                                           084981
+     C*                                                                   084981
+     C                     READPTRADTA                   77               084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C*                                                                   084981
+     C**  If there is remainder, fill up remaining records in subfile.    084981
+     C*                                                                   084981
+     C                     ADD  1         WCTR                            084981
+     C           *IN12     DOWEQ'0'                                       084981
+     C           WCTR      ANDLE4                                         084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '0'                                       084981
+     C           TINC      IFEQ 'C'                                                           229549
+     C                     EXSR P02                                       084981
+     C                     ENDIF                                                              229549
+     C*                                                                   084981
+     C           WCTR      IFLE 4                                         084981
+     C                     READ TRADTA                   12               084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C           *IN12     IFEQ '1'                                       084981
+     C                     SETON                     67                   084981
+     C*                                                                   084981
+     C**  If not, check if last record from TRADTA was already read.      084981
+     C*                                                                   084981
+     C                     ELSE                                           084981
+     C                     READ TRADTA                   12               084981
+     C           *IN12     IFEQ '1'                                       084981
+     C                     SETON                         67               084981
+     C                     ELSE                                           084981
+     C                     READPTRADTA                   77               084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     END                                            084981
+     C***********          MOVE TDRF      TDRB    6                       084981
+     C***********TDRF      SETGTTRADTA                                    084981
+     C***********          READ TRADTA                   12               084981
+     C************IN12     IFEQ '1'                                       084981
+     C***********          SETON                     67                   084981
+     C***********          END                                            084981
+     C************IN12     IFEQ '1'                                S01117 084981
+     C***********DSPREC    OREQ 4                                  S01117 084981
+     C***********          SETON                     24            S01117 084981
+     C***********          END                                     S01117 084981
+     C*
+     C**********           ADD  1         RRN                             S01117
+     C*
+     C**********           END                                            S01117
+     C*
+     C***********          END                                            084981
+     C*
+     C***********          ELSE                                    E37169 084981
+     C***********          Z-ADD0         DSPREC                   E37169 084981
+     C***********          END                                            084981
+     C*
+     C***********          SETOF                     131407               084981
+     C***********          SETOF                     082223               084981
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT                                                              084981
+     C*****************************************************************   084981
+     C*                                                               *   084981
+     C*  P02  - SR TO PROCESS DETAILS TO BE WRITTEN TO SUBFILE        *   084981
+     C*                                                               *   084981
+     C*****************************************************************   084981
+     C           P02       BEGSR                                          084981
+     C*                                                                   084981
+     C** Check whether user has authority to this record or not           084981
+     C*                                                                   084981
+     C           MBIN      IFEQ 'Y'                                       084981
+     C                     CALL 'ZVBBU'                                   084981
+     C                     PARM TDBA      ZBRCDX  3                       084981
+     C                     PARM           @ERR    10                      084981
+     C*                                                                   084981
+     C           @ERR      IFNE *ZEROS                                    084981
+     C                     SETON                     21                   084981
+     C                     ELSE                                           084981
+     C                     SETOF                     21                   084981
+     C                     END                                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C           *IN21     IFEQ '0'                                       084981
+     C*                                                                   084981
+     C                     ADD  1         RRN                             084981
+     C                     MOVE *BLANKS   TATYPL                          084981
+     C                     Z-ADDRRN       DSPREC                          084981
+     C                     ADD  1         WLREC   40                      084981
+     C                     ADD  1         WCTR                            084981
+     C                     MOVE TDRF      LTDRF   6                       084981
+     C           TDRF      SETGTTRAUT                                     084981
+     C                     READPTRAUT                    13               084981
+     C*                                                                   084981
+     C**  Change last action type to word                                 084981
+     C*                                                                   084981
+     C           TATYP     CASEQ'IN'      INSR                            084981
+     C           TATYP     CASEQ'AM'      AMSR                            084981
+     C           TATYP     CASEQ'CH'      CHSR                            084981
+     C           TATYP     CASEQ'DL'      DLSR                            084981
+     C           TATYP     CASEQ'AP'      APSR                            084981
+     C           TATYP     CASEQ'RV'      RVSR                            084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     MOVE TAUSR     TAUSRD                          084981
+     C*                                                                   084981
+     C**  Convert value date and last action date format using ZDATE2     084981
+     C*                                                                   084981
+     C                     MOVE TDVD      ZDAYNO                          084981
+     C                     EXSR ZDATE2                                    084981
+     C                     MOVE ZADATE    TDVDD   7                       084981
+     C                     MOVE TADT      ZDAYNO                          084981
+     C                     EXSR ZDATE2                                    084981
+     C                     MOVE ZADATE    TADTD   7                       084981
+     C*                                                                   084981
+     C**  Change time field in TRAUT to format HH:MM:SS                   084981
+     C*                                                                   084981
+     C                     MOVELTATM      HOUR    2                       084981
+     C                     MOVE TATM      MINS    4                       084981
+     C                     MOVELMINS      MINU    2                       084981
+     C                     MOVE MINS      SECO    2                       084981
+     C                     MOVELHOUR      TEMP1   3                       084981
+     C                     MOVE ':'       TEMP1                           084981
+     C                     MOVELTEMP1     TEMP2   5                       084981
+     C                     MOVE MINU      TEMP2                           084981
+     C                     MOVELTEMP2     TEMP3   6                       084981
+     C                     MOVE ':'       TEMP3                           084981
+     C                     MOVELTEMP3     TATML   8                       084981
+     C                     MOVE SECO      TATML                           084981
+     C*                                                                   084981
+     C**  Access CURRENCY FILE to obtain number of decimal places         084981
+     C*                                                                   084981
+     C                     CALL 'AOCURRR0'                                084981
+     C                     PARM '*DBERR ' @RTCD                           084981
+     C                     PARM '*KEY   ' @OPTN                           084981
+     C                     PARM TNMC      @CKEY   3                       084981
+     C           SDCURR    PARM SDCURR    DSSDY                           084981
+     C*                                                                   084981
+     C**  Edit countervalue and nominal using ZSEDIT                      084981
+     C*                                                                   084981
+     C                     Z-ADDTCTR      ZFLD15                          084981
+     C                     Z-ADDA6NBDP    ZDECS                           084981
+     C                     EXSR ZSEDIT                                    084981
+     C                     MOVE ZOUT21    TCTR13 13                       084981
+     C                     Z-ADDNOML      ZFLD15                          084981
+     C                     Z-ADDTNMD      ZDECS                           084981
+     C                     EXSR ZSEDIT                                    084981
+     C                     MOVE ZOUT21    NOML13 13                       084981
+     C*                                                                   084981
+     C                     WRITESE0190S3                                  084981
+     C                     END                                            084981
+     C*                                                                   084981
+     C                     ENDSR                                          084981
+     C*****************************************************************   084981
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   V01  - SR TO VALIDATE INPUT                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           V01       BEGSR
+     C*
+     C**********           SETOF                     2085                 084562
+     C                     SETOF                     20                   084562
+     C*
+     C           SELF      IFNE ' '
+     C***********          ADD  1         COUNT   30                      084981
+     C*
+     C**  CHECK THAT AUTHORISATION IS IN OPERATION
+     C*
+     C           BVAUTH    IFEQ '00'
+     C***********COUNT     ANDEQ1                                         084981
+     C***********          ADD  1         Z                               079034
+     C***********          MOVE ' 009'    ERR,Z                           079034
+     C                     MOVEL'SEW1001' ZAMSID                          079034
+     C                     EXSR SRSMSG                                    079034
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           EXSR SRSCRN                              079034084562
+      ***Clear*messages*for*redisplay                               079034084562
+     C**********           CALL 'ZA0250'                            079034084562
+     C                     END
+     C*
+     C**  ONLY ONE SELECTION ALLOWED
+     C*
+     C***********COUNT     IFEQ 2                                         079034
+     C***********          ADD  1         Z                               079034
+     C***********          MOVE ' 007'    ERR,Z                           079034
+     C***********COUNT     IFGT 1                                  079034 084981
+     C***********          MOVEL'SEW1000' ZAMSID                   079034 084981
+     C***********          EXSR SRSMSG                             079034 084981
+     C**********           SETON                     8085          079034 084981
+     C***********          SETON                     85            079034 084981
+     C**********           EXSR SRSCRN                              079034084562
+      ***Clear*messages*for*redisplay                               079034084562
+     C**********           CALL 'ZA0250'                            079034084562
+     C***********          END                                            084981
+     C*
+     C**  CHECK THAT ACTION CODE IS VALID
+     C*
+     C           SELF      IFNE 'P'
+     C           SELF      ANDNE'Y'
+     C           SELF      ANDNE'E'
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 001'    ERR,Z                           084562
+     C                     MOVEL'SEW1002' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C**  CHAIN TO GET TRADES RECORD
+     C*
+     C           TDRF      CHAINTRADSDF              12
+     C*                                                                   S01117
+     C** SPF VALIDATION                                                   S01117
+     C*                                                                   S01117
+     C           SELF      IFEQ 'P'                                       S01117
+     C           SELF      OREQ 'Y'                                       S01117
+     C           SELF      OREQ 'E'                                       S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SELF      @ZACTN  1                       S01117
+     C                     PARM           @ERR                            S01117
+     C*                                                                   S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C**********           ADD  1         Z                         S01117084562
+     C**********           MOVE ' 302'    ERR,Z                     S01117084562
+     C                     MOVEL'SEW1009' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C**********           SETON                     8085           S01117084562
+     C                     SETON                     85                   084562
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM SELF      @ZACTN                          S01117
+     C                     PARM TDBA      @ZBR    3                       S01117
+     C                     PARM           @ERR                            S01117
+     C*                                                                   S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C**********           ADD  1         Z                         S01117084562
+     C**********           MOVE ' 303'    ERR,Z                     S01117084562
+     C                     MOVEL'SEW1010' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C**********           SETON                     8085           S01117084562
+     C                     SETON                     85                   084562
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           @ERR      IFEQ 2                                         S01117
+     C**********           ADD  1         Z                         S01117084562
+     C**********           MOVE ' 304'    ERR,Z                     S01117084562
+     C                     MOVEL'SEW1011' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C**********           SETON                     8085           S01117084562
+     C                     SETON                     85                   084562
+     C                     END                                            S01117
+     C*                                                                   E31949
+     C** Check user has authority to the origining branch on if no        E31949
+     C** previous error and not going to enquire                          E31949
+     C*                                                                   E31949
+     C           @ERR      IFEQ *ZEROS                                    E31949
+     C           SELF      ANDNE'E'                                       E31949
+     C           BKOBRU    ANDEQ'Y'                                       E47428
+     C           BKOBUV    ANDEQ'Y'                                       E47428
+     C                     CALL 'ZVOBU'                                   E31949
+     C                     PARM ORBR      ZBRCDX                          E31949
+     C                     PARM           @ERR                            E31949
+     C*                                                                   E31949
+     C           @ERR      IFNE *ZEROS                                    E31949
+     C***********          ADD  1         Z                        E31949 084562
+     C**********           SETON                     8085           E31949084562
+     C                     SETON                     85                   084562
+     C           @ERR      IFEQ 1                                         E31949
+     C*                                                                   084981
+     C**  Before loading error code to error message array, check if      084981
+     C**  it is not there before adding the error message.                084981
+     C*                                                                   084981
+     C           ' 308'    LOKUPERR                      30               084981
+     C           *IN30     IFEQ '0'                                       084981
+     C                     ADD  1         Z                               084981
+     C                     MOVE ' 308'    ERR,Z                           E31949
+     C                     END                                            084981
+     C                     ELSE                                           E31949
+     C*                                                                   084981
+     C**  Before loading error code to error message array, check if      084981
+     C**  it is not there before adding the error message.                084981
+     C*                                                                   084981
+     C           ' 307'    LOKUPERR                      30               084981
+     C           *IN30     IFEQ '0'                                       084981
+     C                     ADD  1         Z                               084981
+     C                     MOVE ' 307'    ERR,Z                           E31949
+     C                     END                                            084981
+     C                     END                                            E31949
+     C                     END                                            E31949
+     C                     END                                            E31949
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*
+     C**  IF APPROVAL
+     C*
+     C           SELF      IFEQ 'P'
+     C*
+     C**  CHECK THAT AUTHORISATION TYPE NEEDS APPROVAL
+     C*
+     C           BVAUTH    IFEQ '10'
+     C           BVAUTH    OREQ '15'
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 003'    ERR,Z                           084562
+     C                     MOVEL'SEW1004' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C           BVAUTH    IFEQ '20'
+     C           BVAUTH    OREQ '25'
+     C*
+     C**  CHECK THAT TYPE IS NOT AMENDMENT OR DELETION
+     C*
+     C           TRECI     IFNE 'L'
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 002'    ERR,Z                           084562
+     C                     MOVEL'SEW1003' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  CHECK THAT TRADE IS NOT ALREADY APPROVED
+     C*
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    13
+     C           *IN13     IFEQ '1'
+     C           TDRF      ORNE TRDRF
+     C           TATYP     OREQ 'AP'
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 008'    ERR,Z                           079034
+     C**********           MOVE ' 006'    ERR,Z                     079034084562
+     C                     MOVEL'SEW1008' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF AUTHORISATION
+     C*
+     C           SELF      IFEQ 'Y'
+     C*
+     C**  CHECK THAT TRADE IS APPROVED
+     C*
+     C           BVAUTH    IFEQ '20'
+     C           BVAUTH    OREQ '25'
+     C*
+     C           TRECI     IFEQ 'L'
+     C*
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    13
+     C*
+     C           TATYP     IFNE 'AP'
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 004'    ERR,Z                           084562
+     C                     MOVEL'SEW1005' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C**  CHECK THAT AUTHORISER IS NOT THE SAME AS ENTERER
+     C*
+     C           SELF      IFEQ 'Y'
+     C           SELF      OREQ 'P'
+     C*
+     C           TRECI     IFEQ 'L'
+     C*
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    13
+     C*
+     C********** TDRF      DOWEQTRDRF                                     086685
+     C********** *IN13     ANDNE'1'                                       086685
+     C********** TAUSR     ANDNE@USR                                      086685
+     C**********           READPTRAUT                    13               086685
+     C**********           END                                            086685
+     C********** TAUSR     IFEQ @USR                                      086685
+     C********** TDRF      ANDEQTRDRF                                     086685
+     C*
+     C**********           SETON                     8085                 084562
+     C**********           SETON                     85            084562 086685
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 005'    ERR,Z                           084562
+     C**********           MOVEL'SEW1006' ZAMSID                   084562 086685
+     C**********           EXSR SRSMSG                             084562 086685
+     C*
+     C**********           END                                            086685
+     C*                                                                   086685
+     C           TDRF      SETGTTRAUTDF                                   086685
+     C           *IN13     DOUEQ'1'                                       086685
+     C           TRDRF     ORNE TDRF                                      086685
+     C           TAUSR     OREQ @USR                                      086685
+     C           TATYP     OREQ 'AU'                                      086685
+     C           TATYP     OREQ 'RV'                                      086685
+     C                     READPTRAUTDF                  13               086685
+     C                     END                                            086685
+     C                     SETOF                     13                   086685
+     C*                                                                   086685
+     C           TAUSR     IFEQ @USR                                      086685
+     C           TATYP     ANDNE'AU'                                      086685
+     C           TATYP     ANDNE'RV'                                      086685
+     C           TRDRF     ANDEQTDRF                                      086685
+     C                     SETON                     85                   086685
+     C                     MOVEL'SEW1006' ZAMSID                          086685
+     C                     MOVEL'SEUSRMSG'ZAMSGF                          086685
+     C                     EXSR SRSMSG                                    086685
+     C                     END                                            086685
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  CHECK THAT AUTHORISER IS NOT THE SAME AS ENTERER
+     C*
+     C           SELF      IFEQ 'Y'
+     C*
+     C           TRECI     IFEQ 'R'
+     C*
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    13
+     C*
+     C           TAUSR     IFEQ @USR
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 005'    ERR,Z                           084562
+     C                     MOVEL'SEW1006' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C           TRECI     IFEQ 'P'
+     C*
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    13
+     C*
+     C           TDRF      DOWEQTRDRF
+     C           TATYP     ANDNE'AU'
+     C           *IN13     ANDNE'1'
+     C*
+     C           TATYP     IFEQ 'AM'
+     C           TATYP     OREQ 'CH'
+     C*
+     C           TAUSR     IFEQ @USR
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 005'    ERR,Z                           084562
+     C                     MOVEL'SEW1006' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READPTRAUT                    13
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  CHECK THAT USER'S THRESHOLD IS LARGE ENOUGH
+     C*
+     C*
+     C**  CHAIN TO LF/MUSER ON USERID
+     C*
+     C           @USR      CHAINMUSERDDF             83
+     C*
+     C**  CONVERT COUNTERVALUE(IN NOMINAL CURR) TO BASE CURRENCY
+     C*
+     C***********          MOVELA6NBDP    ZCDPI                    S01117 084925
+     C*                                                                   S01117
+      * Retreiveal of nominal currency details is moved to first cycle    084925
+      * processing where it should be                                     084925
+     C***********          CALL 'AOCURRR0'                         S01117 084925
+     C***********          PARM '*DBERR ' @RTCD                    S01117 084925
+     C***********          PARM '*KEY   ' @OPTN                    S01117 084925
+     C***********          PARM BJCYCD    @CKEY                    S01117 084925
+     C***********SDCURR    PARM SDCURR    DSSDY                    S01117 084925
+     C*                                                                   S01117
+     C                     MOVELTNBDP     ZCDPI                           084925
+     C***********          MOVELA6NBDP    ZCDPO                    S01117 084925
+     C                     MOVELBNBDP     ZCDPO                           084925
+     C                     MOVE TCTR      ZAMTCI
+     C                     Z-ADDTBCR      ZEXCH
+     C***********          MOVE A6MDIN    ZMD                             084925
+     C                     MOVELTMDIN     ZMD                             084925
+     C                     MOVE TNMC      ZCCYI
+     C                     MOVE BJCYCD    ZCCYO
+     C                     EXSR ZCONV
+     C*
+     C**  COMPARE CONVERTED COUNTERVALUE TO USER'S THRESHOLD
+     C*
+     C           SELF      IFEQ 'P'
+     C           AUT1      IFLT ZAMTCO
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 006'    ERR,Z                           079034
+     C**********           MOVE ' 007'    ERR,Z                     079034084562
+     C                     MOVEL'SEW1007' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           SELF      IFEQ 'Y'
+     C           AUT2      IFLT ZAMTCO
+     C*
+     C**********           SETON                     8085                 084562
+     C                     SETON                     85                   084562
+     C**********           ADD  1         Z                               084562
+     C**********           MOVE ' 006'    ERR,Z                           079034
+     C**********           MOVE ' 007'    ERR,Z                     079034084562
+     C                     MOVEL'SEW1007' ZAMSID                          084562
+     C                     EXSR SRSMSG                                    084562
+     C*
+     C                     END
+     C*
+     C                     END
+      *                                                                                       CSD015
+      ** If Midas Compliance Watch is active and watch list                                   CSD015
+      ** checking applied, check trade if pending investigation                               CSD015
+      *                                                                                       CSD015
+     C           W1EWLC    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+     C           CSC011    IFEQ 'N'                                                           CSD015
+     C           LIBR      OREQ S1MAIN                                                        CSD015
+      *                                                                                       CSD015
+     C                     MOVEL'TRADSD  'WFUNT                                               CSD015
+     C                     MOVELTDRF      WIDEN                                               CSD015
+      *                                                                                       CSD015
+     C           CWHTKY    CHAINSDCWHTL1             28                                       CSD015
+      *                                                                                       CSD015
+      ** If record not found or found and status is 'TEMPRELASE'                              CSD015
+      ** continue as per current processing otherwise send                                    CSD015
+      ** error message.                                                                       CSD015
+      *                                                                                       CSD015
+     C           *IN28     IFEQ *OFF                                                          CSD015
+     C           W3TREL    ANDNE'Y'                                                           CSD015
+     C                     MOVE *ON       *IN85                                               CSD015
+     C                     MOVEL'SE10039' ZAMSID                                              CSD015
+     C                     EXSR SRSMSG                                                        CSD015
+     C                     EXSR SRSCRN                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C*                                                                   084981
+     C**  Issue subfile next change for subsequent READC's                084981
+     C**  Highlight errors and place cursor to appropriate DSPREC.        084981
+     C*                                                                   084981
+     C                     SETON                     09                   084981
+     C           *IN85     IFEQ '1'                                       084981
+     C                     SETON                     20                   084981
+     C                     END                                            084981
+     C*
+     C                     END
+     C                     UPDATSE0190S3                                  084981
+     C                     SETOF                     0920                 084981
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   P03  - SR TO CALL APPROPRIATE PROGRAM                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P03       BEGSR
+     C*
+     C**  IF ENQUIRY CALL TRADES ENQUIRY PROGRAM
+     C*
+     C           SELFC     IFEQ 'E'
+      *                                                                                       CSE028
+     C           CAP125    IFEQ 'Y'                                                           CSE028
+     C           TPGM      ANDEQ'SE0050  '                                                    CSE028
+     C                     CALL 'SEC021'                                                      CSE028
+     C                     PARM           SETRAD                                              CSE028
+     C                     PARM           SELFC                                               CSE028
+     C                     PARM           TDRFC                                               CSE028
+      *                                                                                       CSE028
+     C                     ELSE                                                               CSE028
+     C*
+     C**  Access Linked Enquiry Control File for program and option
+     C*
+     C           LKEY      KLIST
+     C                     KFLD           PGMNO
+     C                     KFLD           OPTN
+     C*
+     C                     MOVE SELFC     OPTN
+     C*
+     C           LKEY      CHAINSECONDF              10
+     C*
+     C**  If record not found then entered option is invalid
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C**  For valid option write out LDA and linked enquiry data area
+     C**  and call the program name obtained from SECOND
+     C*
+     C                     MOVE TDRFC     RQTDRF
+     C                     OUT  SESDS
+     C                     OUT  LDA
+     C                     CALL TPGM
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   SESDS
+     C*
+     C                     END
+     C*
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ELSE
+     C*
+     C**  CHOOSE BETWEEN AUTHORISATION BY REVIEW (SE0050) AND
+     C**  AUTHORISATION  BY RE-ENTRY (SE0180)
+     C*
+     C           BVAUTH    IFEQ '10'
+     C*
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,SE0190C002
+      *                                                                                       CSE028
+     C           CAP125    IFEQ 'Y'                                                           CSE028
+     C                     CALL 'SEC021'                                                      CSE028
+     C                     PARM           SETRAD                                              CSE028
+     C                     PARM           SELFC                                               CSE028
+     C                     PARM           TDRFC                                               CSE028
+     C                     ELSE                                                               CSE028
+     C                     CALL 'SE0050'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C                     ENDIF                                                              CSE028
+     C/COPY WNCPYSRC,SE0190C003
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+     C           BVAUTH    IFEQ '15'
+     C           TRECI     IFEQ 'L'
+     C*
+     C                     OUT  LDA
+     C                     CALL 'SE0180'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+     C           TRECI     IFEQ 'R'
+     C           TRECI     OREQ 'P'
+     C*
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,SE0190C004
+      *                                                                                       CSE028
+     C           CAP125    IFEQ 'Y'                                                           CSE028
+     C                     CALL 'SEC021'                                                      CSE028
+     C                     PARM           SETRAD                                              CSE028
+     C                     PARM           SELFC                                               CSE028
+     C                     PARM           TDRFC                                               CSE028
+     C                     ELSE                                                               CSE028
+     C                     CALL 'SE0050'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C                     ENDIF                                                              CSE028
+     C/COPY WNCPYSRC,SE0190C005
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           BVAUTH    IFEQ '20'
+     C           SELFC     IFEQ 'P'
+     C           SELFC     OREQ 'Y'
+     C*
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,SE0190C006
+      *                                                                                       CSE028
+     C           CAP125    IFEQ 'Y'                                                           CSE028
+     C                     CALL 'SEC021'                                                      CSE028
+     C                     PARM           SETRAD                                              CSE028
+     C                     PARM           SELFC                                               CSE028
+     C                     PARM           TDRFC                                               CSE028
+     C                     ELSE                                                               CSE028
+     C                     CALL 'SE0050'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C                     ENDIF                                                              CSE028
+     C/COPY WNCPYSRC,SE0190C007
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           BVAUTH    IFEQ '25'
+     C           SELFC     IFEQ 'P'
+     C*
+     C                     OUT  LDA
+     C                     CALL 'SE0180'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+     C           SELFC     IFEQ 'Y'
+     C*
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,SE0190C008
+      *                                                                                       CSE028
+     C           CAP125    IFEQ 'Y'                                                           CSE028
+     C                     CALL 'SEC021'                                                      CSE028
+     C                     PARM           SETRAD                                              CSE028
+     C                     PARM           SELFC                                               CSE028
+     C                     PARM           TDRFC                                               CSE028
+     C                     ELSE                                                               CSE028
+     C                     CALL 'SE0050'
+     C                     PARM           SELFC
+     C                     PARM           TDRFC
+     C                     ENDIF                                                              CSE028
+     C/COPY WNCPYSRC,SE0190C009
+     C           *LOCK     IN   LDA
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+     C                     SETON                     03LR                 S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   INSR   - SR TO CHANGE LAST ACTION TYPE TO INSERTION         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INSR      BEGSR
+     C*
+     C                     MOVEL'INSERT'  TATYPL  9
+     C                     MOVE 'ION'     TATYPL
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   AMSR   - SR TO CHANGE LAST ACTION TYPE TO AMENDMENT         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AMSR      BEGSR
+     C*
+     C                     MOVEL'AMENDM'  TATYPL  9
+     C                     MOVE 'ENT'     TATYPL
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   CHSR   - SR TO CHANGE LAST ACTION TYPE TO CHANGE            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHSR      BEGSR
+     C                     MOVEL'CHANGE'  TATYPL  9
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   DLSR   - SR TO CHANGE LAST ACTION TYPE TO DELETION          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DLSR      BEGSR
+     C                     MOVEL'DELETION'TATYPL  9
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   APSR   - SR TO CHANGE LAST ACTION TYPE TO APPROVAL          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           APSR      BEGSR
+     C                     MOVEL'APPROVAL'TATYPL  9
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   RVSR   - SR TO CHANGE LAST ACTION TYPE TO REVERSAL          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RVSR      BEGSR
+     C                     MOVEL'REVERSAL'TATYPL  9
+     C                     ENDSR
+      *****************************************************************   079034
+      /EJECT                                                              079034
+      *****************************************************************   079034
+      *                                                               *   079034
+      *  SRSMSG - Routine to send messages to message subfile.        *   079034
+      *                                                               *   079034
+      *****************************************************************   079034
+      *                                                                   079034
+     C           SRSMSG    BEGSR                                          079034
+      *                                                                   079034
+      ** Send specified message from specified message file to program    079034
+      ** message queue; then clear message id and message file            079034
+     C                     CALL 'ZA0340'                                  079034
+     C                     PARM 'SEUSRMSG'ZAMSGF 10                       079034
+     C                     PARM           ZAMSID 10                       079034
+      *                                                                   079034
+     C                     CLEARZAMSID                                    079034
+      *                                                                   079034
+     C                     ENDSR                                          079034
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************
+      *                                                               *   079034
+      *  SRSCRN - Routine to handle screen.                           *   079034
+      *                                                               *   079034
+      *****************************************************************   079034
+      *                                                                   079034
+     C           SRSCRN    BEGSR                                          079034
+      *                                                                   079034
+      ** Display messages and display screen                              079034
+     C                     WRITESE0190C4                                  079034
+      *                                                                   079034
+     C                     ENDSR                                          079034
+      *                                                                   079034
+      *****************************************************************   079034
+      /EJECT                                                              079034
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C*
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

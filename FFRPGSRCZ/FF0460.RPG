@@ -1,0 +1,772 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Delete Closeouts beyond Sett Date')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Futures and Options Module
+     F*                                                               *
+     F*  FF0460 - DELETE CLOSE-OUTS BEYOND SETTLEMENT DATE            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 243826A            Date 25Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF003             Date 07Apr97               *
+      *                 CFF004             Date 12Sep96               *
+     F*                 S71062             DATE 19DEC95               *
+     F*                 046303             DATE 14JAN94               *
+     F*                 E03643             DATE 23MAR93               *
+     F*                 E41252             DATE 15FEB93               *
+     F*                 S01393             DATE 30OCT92               *
+     F*                 FUJI-FF0011        DATE 10AUG92               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 AUS022             DATE 07AUG92               *
+     F*                 S01117             DATE 21MAR90               *
+     F*                 S01195             DATE 21MAR90               *
+     F*                 E19565             DATE 11SEP89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  243826A- Recompiled due to changes in FFPRCSZ2, FFPRCSZ3,    *
+      *           FFPRVLZ2 and FFPRVLZ3.                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  CFF003 - ENHANCED OTC PROCESSING - PHASE II                  *
+     F*           UPGRADE FROM BLI LBL001 (RECOMPILE ONLY)            *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S71062 - FF/PM Interface (Just recompiled)                   *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  E03643 - Recompile because of change to PF/CLOSTT            *
+     F*  E41252 - Futures and Options - Closed out Transactions       *
+     F*           file should be maintained on the database based     *
+     F*           on the F & O retention period                       *
+     F*  S01393 - Recompiled for Strategic Risk Management            *
+     F*  FUJI-FF0011 - The system does not differentiate between      *
+     F*           american and european option on exercise            *
+     F*           validation and OTC confirmation wording.            *
+     F*           *** RECOMPILE ONLY ***                              *
+     F*  E38323 - Recompilation of the program done due to a change   *
+     F*           in copy source ZFWDT subroutine                     *
+     F*  AUS022 - AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*           Types 7 and 8.                                      *
+     F*  S01117 - Multibranching                                      *
+     F*  S01195 - Holiday amendment                                   *
+     F*  E19565 - Amends TNBR so that if a matured transaction is     *
+     F*           to be output, it is shown with '-' on it,           *
+     F*           instead of the hex version of the negative no.      *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                     *
+     F*                                                               *
+     F*     IGNDECERR(*NO)                                            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*
+     F*ABTB10*IF* E           K        DISK                               S01117
+     F*ABLETJ*IF* E           K        DISK                               S01117
+     FMARKT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYPDF2
+     F*LOST9**UF* E           K        DISK                               S01117
+     FCLOST11 UF  E           K        DISK                               S01117
+     FCLOST10 UF  E           K        DISK
+     F*F0460P1O** E                    PRINTER                            S01117
+     FFF0460P1O   E                    PRINTER                        UC  S01117
+     F***********                                   KINFDS PRINT          S01117
+     F                                              KINFDS SPOOL          S01117
+     FFF0460AUO   E                    PRINTER                            S01117
+     F                                              KINFDS SPOOLU         S01117
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       15        DETAILS REPORT PRT/F HAS BEEN OPENED              S01117
+     F********20********END*OF*FILE**CLOST9*******************************S01117
+     F*       20        END OF FILE  CLOST11                              S01117
+     F*       30        RECORD NOT FOUND ON FILE  INTYP (OR INTYP2)
+     F*       40        RECORD NOT FOUND ON FILE  MARKT
+     F*       50        END OF FILE  CLOST10
+     F*       60        ON IF MULTIBRANCHING (MBIN = Y)                   S01117
+     F*
+     F*       90-98     RESERVED FOR STANDARD FF SUBROUTINES
+     F*
+     F*       98        DATE-FORMAT IS  MM/DD/YY
+     F********99********NON-LIVE*RECORD*ON*FILE**TABTB10******************S01117
+     F*
+     F*       U7+U8     DATABASE ERROR
+     F********************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/COPY ZSRSRC,FFDATEZ1
+     E** SR.ARRAY FOR FF SUBROUTINE.
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E** SR.ARRAY FOR BOTH ZDATE1 AND ZDATE2
+     E*
+     E*COPY*ZSRSRC,ZDATE3Z1***********************************************S01195
+     E***SR.ARRAY*FOR*ZDATE3**********************************************S01195
+     E********************************************************************S01195
+     E*COPY*ZSRSRC,ZDATE5Z1***********************************************S01195
+     E***SR.ARRAY*FOR*ZDATE5**********************************************S01195
+     E*
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR BOTH ZACCH AND ZCHKH                                S01195
+     E*                                                                   S01195
+     E/COPY ZSRSRC,FFPRCSZ2
+     E** SR.ARRAY FOR FFPRCS
+     I*****************************************************************
+     IINTYPDF2
+     I************* RECI ************************** RECI2 *************
+     I              ISTT                            ISTT2
+     I              ISTI                            ISTI2
+     I              ISPT                            ISPT2
+     I              ISCY                            ISCY2
+     I              QOTC                            QOTC2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I              OTHC                            OTHC2
+     I*COPY*ZSRSRC,ZDATE3Z2***********************************************S01195
+     I*COPY*ZSRSRC,ZDATE3Z3***********************************************S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I** SR.ARRAY FOR BOTH ZACCH AND ZCHKH                                S01195
+     I/COPY ZSRSRC,FFDATEZ2
+     I/COPY ZSRSRC,FFSRDSZ1
+     I/COPY ZSRSRC,FFPRCSZ3
+     I*
+     I*RINT****** DS                                                      S01117
+     I***DATASTRUCTURE**FOR*LINE-NUMBER*ON*REPORT-PAGE********************S01117
+     I*                                                                   S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I*                                                                   S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+     ISDFOD     E DSSDFODAPD                                              E41252
+      **  External DS for Futures and Options                             E41252
+      *                                                                   S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      ** EXTERNAL DS FOR BRANCHES DETAILS                                 S01117
+      *                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+     I**                                                                  S01117
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01195
+     I********************************************************************
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C********************************************************************
+     C**INITIAL*PROCESSING*TO*ACCESS*RUN-DATE*FROM*FILE**TABTB10**********S01117
+     C* INITIAL PROCESSING TO OBTAIN RUN-DATE FROM RUNDAT                 S01117
+     C* CALLS CLOSRD SUBROUTINE
+     C********************************************************************
+     C*
+     C** MOVE PROGRAM NUMBER TO LDA
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'FF0460'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBFILE                          S01117
+     C                     MOVEL*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C*
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+      *                                                                   S01117
+      **   ACCESS BANK DETAILS                                            S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*                                                                   S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'TABFF'   DBFILE                          S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C***********          MOVE *BLANKS   DBKEY                           S01117
+     C***********          MOVEL'01'      DBKEY                           S01117
+     C***********          MOVE '10'      DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVEL@OPTN     DBOPTN  7        *             *S01117
+     C                     OUT  LDA                        *             *S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*                                                                   S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**   SET MULTIBRANCHING INDICATOR                                   S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE '1'       *IN60                           S01117
+     C                     END                                            S01117
+     C*
+     C** SET *IN98 FOR MM/DD/YY FORMAT
+     C           DATF      COMP 'M'                      98
+     C*
+     C** MOVE RUNDATE INTO REPORT FIELD
+     C                     MOVE RUNA      RUNAF
+     C*                                                                   E41252
+     C** Access the F & O retention period from SDFODAPD (not TABTB80).   E41252
+     C*                                                                   E41252
+     C           *LIKE     DEFN RUND      RETDT                           E41252
+     C                     CALL 'AOFODAR0'                                E41252
+     C                     PARM '*MSG   ' @RTCD                           E41252
+     C                     PARM '*FIRST ' @OPTN                           E41252
+     C           SDFOD     PARM SDFOD     @DSFDY                          E41252
+     C*                                                                   E41252
+     C           @RTCD     IFNE *BLANK                                    E41252
+     C           *LOCK     IN   LDA                                       E41252
+     C                     MOVEL'SDFODAPD'DBFILE                          E41252
+     C                     MOVEL@OPTN     DBKEY            ***************E41252
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *E41252
+     C                     MOVEL@OPTN     DBOPTN           ***************E41252
+     C                     OUT  LDA                                       E41252
+     C                     EXSR DBERR                                     E41252
+     C                     END                                            E41252
+     C*                                                                   E41252
+     C** If historical period is non-zero, subtract from                  E41252
+     C** Rundate to give retention date else subtract 365 days            E41252
+     C** (1 year) from Rundate.                                           E41252
+     C*                                                                   E41252
+     C           BXHSPR    IFNE 0                                         E41252
+     C           RUND      SUB  BXHSPR    RETDT                           E41252
+     C                     ELSE                                           E41252
+     C           RUND      SUB  365       RETDT                           E41252
+     C                     END                                            E41252
+     C*                                                                   S01117
+     C**   ZEROISE HASH COUNT                                             S01117
+     C*                                                                   S01117
+     C                     Z-ADD*ZEROS    COUNT   50                      S01117
+     C*                                                                   S01117
+     C*
+     C***READ*CLOST9*AND*WRITE*HEADINGS*TO*REPORT*************************S01117
+     C*  READ CLOST11 AND WRITE HEADINGS TO REPORT                        S01117
+     C***********          READ CLOST9                   20               S01117
+     C                     READ CLOST11                  20               S01117
+     C***********          WRITEFMTP100                                   S01117
+     C*
+     C**IF*LIVE*RECORDS*ON*CLOST9*CALL*CLOSRD*SR.*TO*READ*ALL*RECORDS*****S01117
+     C* IF LIVE RECORDS ON CLOST11 CALL CLOSRD SR. TO READ ALL RECORDS    S01117
+     C           *IN20     IFNE '1'
+     C*
+     C                     EXSR CLOSRD
+     C*
+     C**WHEN*ALL*RECORDS*READ,*WRITE*'END*OF*REPORT'*MESSAGE**************S01117
+     C* WHEN ALL RECORDS READ, WRITE ENDING MESSAGE                       S01117
+     C           *IN15     IFEQ '1'                                       S01117
+     C           LINE      IFGE 58
+     C                     WRITEFMTP100
+     C                     END
+     C                     WRITEFMTP105
+     C                     END                                            S01117
+     C***********                                                         S01117
+     C**IF*NO*RECORDS*ON*FILE*WRITE*'NO*DETAILS'*AND*'END*OF*REPORT'******S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C***********          WRITEFMTP104                                   S01117
+     C***********          WRITEFMTP105                                   S01117
+     C***********                                                         S01117
+     C                     END
+     C*
+     C*  WRITE AUDIT REPORT                                               S01117
+     C*                                                                   S01117
+     C                     EXSR WRITAU                                    S01117
+     C*                                                                   S01117
+     C                     EXSR END
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**CLOSRD*SR.*TO*READ*ALL*LIVE*RECORDS*ON*CLOST9*********************S01117
+     C* CLOSRD SR. TO READ ALL LIVE RECORDS ON CLOST11                    S01117
+     C* CALLS OTCINS AND MKTINS SUBROUTINES
+     C********************************************************************
+     C*
+     C           CLOSRD    BEGSR
+     C*
+     C**PROCESS*CLOST9*WHILE*A*RECORD*ON*FILE*****************************S01117
+     C**PROCESS CLOST11 WHILE A RECORD ON FILE                            S01117
+     C           *IN20     DOWNE'1'
+     C*                                                                   S01117
+     C                     ADD  1         COUNT                           S01117
+     C*
+     C** ACCESS LF/INTYP TO GET SETTLEMENT DATE OR FORMULA
+     C           ISTT      CHAININTYPDF              30
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELISTT      DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                        *             *S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DETERMINE WHETHER INSTRUMENT IS OTC OR MARKET AND CALL THE
+     C** APPROPRIATE SUBROUTINE TO DETERMINE THE SETTLEMENT DATE.
+     C           ISTI      IFEQ 'Y'
+     C                     EXSR OTCINS
+     C                     ELSE
+     C                     EXSR MKTINS
+     C                     END
+     C*
+     C***READ*NEXT*CLOST9*RECORD******************************************S01117
+     C** READ NEXT CLOST11 RECORD                                         S01117
+     C***********          READ CLOST9                   20               S01117
+     C                     READ CLOST11                  20               S01117
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* OTCINS SR. TO CHECK SETTLEMENT DATE OF OTC AGAINST RUNDATE
+     C* CALLS CLOSDL SUBROUTINE
+     C********************************************************************
+     C*
+     C           OTCINS    BEGSR
+     C*
+     C***IF*SETTLEMENT*DATE*IS*LESS*THAN*RUNDATE*CALL*CLOSDL*SR.********* E41252
+     C***AND*FORMAT*SETTLEMENT*DATE*FOR*OUTPUT*TO*REPORT***************** E41252
+     C** If settlement date is less than retention date call CLOSDL SR.   E41252
+     C** and format settlement date for output to report                  E41252
+     C*                                                                   E41252
+     C***********SETD      IFLT RUND                                      E41252
+     C           SETD      IFLT RETDT                                     E41252
+     C                     MOVE SETD      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C**   IF INSTRUMENT IS AN OPTION :
+     C**     FORMAT STRIKE PRICE USING DATA FROM THE ACTUAL INSTRUMENT.
+     C*
+     C                     MOVE *BLANK    RSPRC
+     C           ISPT      IFGE 4
+     C           ISPT      ANDNE7                                         AUS022
+     C                     Z-ADDSTRP      FFPRIC
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    RSPRC
+     C                     END
+     C*
+     C                     EXSR CLOSDL
+     C*
+     C***DELETE*RECORD*FROM*CLOST9****************************************S01117
+     C** DELETE RECORD FROM CLOST11                                       S01117
+     C                     DELETCLOSTDF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* MKTINS SR. TO CHECK SETTLEMENT DATE OF MARKET INST AGAINST RUNDATE
+     C* CALLS CLOSDL SUBROUTINE
+     C********************************************************************
+     C*
+     C           MKTINS    BEGSR
+     C*
+     C** MOVE MARKET CODE OF INSTRUMENT TYPE TO WORK FIELD IN ORDER TO
+     C*  CHAIN TO LF/MARKT
+     C           *LIKE     DEFN MRKT      MKCH
+     C                     MOVELISTT      MKCH
+     C** ACCESS LF/MARKT TO GET MARKET-CURRENCY
+     C           MKCH      CHAINMARKTDF              40
+     C           *IN40     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELMKCH      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                        *             *S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C* MOVE FIELDS INTO FFDATE WORK FIELDS TO CALCULATE SPOT MONTH DATE
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     MOVE MTHN      FFMTH
+     C                     MOVE YRNO      FFYR
+     C                     MOVE MLOC      FFLOC                           S01195
+     C                     EXSR FFDATE
+     C*
+     C**IF*SETTLEMENT*DAY*IS*LESS*THAN*RUNDATE*CALL*CLOSDL*SR.*********** E41252
+     C***********FFDAY     IFLT RUND                                      E41252
+     C* If settlement day is less than retention date call CLOSDL SR.     E41252
+     C*                                                                   E41252
+     C           FFDAY     IFLT RETDT                                     E41252
+     C                     MOVE FFDAY     ZDAYNO
+     C*
+     C**      FORMAT SETTLEMENT DATE
+     C                     EXSR ZDATE2
+     C*
+     C**      IF INSTRUMENT IS AN OPTION :
+     C**        FORMAT STRIKE PRICE USING DATA FROM UNDERLYING INSTRUMENT.
+     C*
+     C                     MOVE *BLANK    RSPRC
+     C           ISPT      IFGE 4
+     C           ISPT      ANDNE7                                         AUS022
+     C*
+     C                     MOVE *BLANK    ISTT2
+     C                     MOVELMKCH      ISTT2
+     C                     MOVE FTRF      ISTT2
+     C           ISTT2     CHAININTYPDF2             30
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELISTT2     DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                        *             *S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     Z-ADDSTRP      FFPRIC
+     C                     Z-ADDTKDM2     FFTKDM
+     C                     Z-ADDMNPF2     FFMNPF
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    RSPRC
+     C                     END
+     C*
+     C                     EXSR CLOSDL
+     C*
+     C***DELETE*CLOST9*RECORD*********************************************S01117
+     C** DELETE CLOST11 RECORD                                            S01117
+     C                     DELETCLOSTDF
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* CLOSDL SR. TO DELETE ALL CLOST10 RECORDS  WITH SAME CLOSE-OUT NO.
+     C**AS*CLOST9*RECORD**************************************************S01117
+     C* AS CLOST11 RECORD                                                 S01117
+     C********************************************************************
+     C*
+     C           CLOSDL    BEGSR
+     C*
+     C** MOVE CLON INTO WORK FIELD
+     C           *LIKE     DEFN CLON      SMCLON
+     C                     MOVELCLON      SMCLON
+     C*
+     C** ACCESS FIRST CLOST10 RECORD WITH SAME CLOSE-OUT NO.
+     C           CLON      SETLLCLOST10
+     C                     READ CLOST10                  50
+     C*
+     C** ZEROISE DETAIL LINE COUNT
+     C           *LIKE     DEFN YRNO      DTL
+     C                     Z-ADD0         DTL
+     C*
+     C** DELETE ALL RECORDS WITH SAME CLOSE-OUT NUMBER.
+     C           CLON      DOWEQSMCLON
+     C           *IN50     ANDNE'1'
+     C*                                                                   S01117
+      **  AT CHANGE OF BRANCH CODE EXECUTE PRINT                          S01117
+     C*                                                                   S01117
+     C           BRCA      IFNE BRCAO                                     S01117
+     C*                                                                   S01117
+     C**  WRITE END OF REPORT MESSAGE ON CHANGE OF BRANCH                 S01117
+     C*                                                                   S01117
+     C           *IN15     IFEQ '1'                                       S01117
+     C           LINE      IFGE 58                                        S01117
+     C                     WRITEFMTP100                                   S01117
+     C                     END                                            S01117
+     C                     WRITEFMTP105                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     MOVE BRCA      BRCAO   3                       S01117
+     C                     CLOSEFF0460P1                                  S01117
+     C                     OPEN FF0460P1                                  S01117
+     C                     SETON                     15                   S01117
+     C*                                                                   S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C*                                                                   S01117
+      **   ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** GET BRANCH NAME                                                  S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    @DSFDY                          S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 10 *S01117
+     C                     Z-ADD10        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     MOVEL*BLANKS   BRNM   30                       S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     MOVELA8BRNM    BRNM                            S01117
+     C*                                                                   S01117
+     C*    PRINT HEADING FOR THE NEW SPOOL                                S01117
+     C*                                                                   S01117
+     C                     WRITEFMTP100                                   S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*
+     C** ADD 1 TO DETAIL COUNT FOR ALIGNING TRANSACTION NUMBERS
+     C** WITH THEIR RESPECTIVE CLOSE-OUTS
+     C                     ADD  1         DTL
+     C*
+     C** WRITE DETAIL LINES TO REPORT BEFORE DELETING RECORDS
+     C**       FIRST LINE DETAILS
+     C           DTL       IFEQ 1
+     C*
+     C           LINE      IFGE 57
+     C                     WRITEFMTP100
+     C                     END
+     C*                                                                   E19565
+      ** Transaction number may be negative                               E19565
+     C*                                                                   E19565
+     C           TNBR      IFGT *ZERO                                     E19565
+     C                     MOVELTNBR      RTNBR                           E19565
+     C                     MOVE '    '    RTNBR                           E19565
+     C                     ELSE                                           E19565
+     C                     Z-SUBTNBR      WTNBR   60                      E19565
+     C                     MOVELWTNBR     RTNBR                           E19565
+     C                     MOVE '-   '    RTNBR                           E19565
+     C                     END                                            E19565
+     C*                                                                   E19565
+     C                     WRITEFMTP101
+     C*
+     C                     END
+     C*
+     C**       SECOND LINE DETAILS
+     C           DTL       IFGT 1
+     C*
+     C           LINE      IFGE 59
+     C                     WRITEFMTP100
+     C                     END
+     C*                                                                   E19565
+      ** Transaction number may be negative                               E19565
+     C*                                                                   E19565
+     C           TNBR      IFGT *ZERO                                     E19565
+     C                     MOVELTNBR      RTNBR                           E19565
+     C                     MOVE '    '    RTNBR                           E19565
+     C                     ELSE                                           E19565
+     C                     Z-SUBTNBR      WTNBR                           E19565
+     C                     MOVELWTNBR     RTNBR                           E19565
+     C                     MOVE '-   '    RTNBR                           E19565
+     C                     END                                            E19565
+     C*                                                                   E19565
+     C                     WRITEFMTP102
+     C*
+     C                     END
+     C** DELETE RECORD; READ NEXT RECORD ON FILE.
+     C                     DELETCLOSTTF
+     C                     READ CLOST10                  50
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      ** END S/R TO END PGM UNDER NORMAL CONDITIONS
+     C********************************************************************
+     C*
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      ** DBERR   S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** WRITE DATABASE ERROR DETAILS TO REPORT
+     C** TO DETAILS REPORT IF IT IS OPENED                                S01117
+     C*
+     C           *IN15     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C           LINE      IFGE 55
+     C                     WRITEFMTP100
+     C                     END
+     C                     WRITEFMTP106
+     C                     WRITEFMTP105
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C                     EXSR WRITAU                                    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** WRITAU - SUBROUTINE TO OUTPUT AU REPORT                          S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           WRITAU    BEGSR                           ** WRITAU **   S01117
+     C*                                                                   S01117
+      ** ENSURE TOTAL SPOOL FILE RECORDED BY RCF                          S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** OUTPUT AUDIT REPORT HEADING                                      S01117
+     C*                                                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C*                                                                   S01117
+      ** OUTPUT RUN CONTROLS TOTAL TO AUDIT REPORT                        S01117
+     C*                                                                   S01117
+     C                     WRITEFMTAU02                                   S01117
+     C*                                                                   S01117
+      ** IF NO DETAIL TO REPORT, OUTPUT TO AUDIT REPORT                   S01117
+     C*                                                                   S01117
+     C           *IN15     IFEQ '0'                                       S01117
+     C           *INU7     ANDEQ'0'                                       S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** IF DATABASE ERROR, OUTPUT TO AUDIT REPORT                        S01117
+     C*                                                                   S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     WRITEFMTAU04                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C*COPY*ZSRSRC,ZDATE3Z4***********************************************S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+      /EJECT
+     C*COPY*ZSRSRC,ZDATE5Z2***********************************************S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT
+     C/COPY ZSRSRC,FFDATEZ3
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,FFPRCSZ4
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

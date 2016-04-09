@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Add/Remove LF Members')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LEC022001 - Midas LE Add/Remove LF Members                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD027436           Date 10Jun14              */
+/*       Prev Amend No. MD022968A          Date 25Oct13              */
+/*                      MD022968           Date 21Oct13              */
+/*                      MD022448 *CREATE   Date 18Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027436 - Component failed due to incorrect length for     */
+/*                  dtaara/LEPDCL. Revert length to 256.             */
+/*       MD022968A - Source sequence numbers not valid               */
+/*       MD022968 - LEC06A 90015 Trailer difference in CLOAM         */
+/*                - Applied for MD022448                             */
+/*       MD022448 - Lending files becomes empty in some conditions   */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&FNAME &MEMBR &ACTON &ACTCT)
+ 
+             DCL        VAR(&FNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTON) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ACTCT) TYPE(*CHAR) LEN(6)
+/**********  DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)  */                          /*MD022968A*/
+/**********  DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(7)              */   /*MD022968A*/ /*MD027436*/
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                               /*MD027436*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(LEPDCL *ALL) RTNVAR(&LEPDCL)
+ 
+             IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CALL       PGM(CBC022001) PARM(&FNAME &MEMBR &ACTON &ACTCT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program LEC022001 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

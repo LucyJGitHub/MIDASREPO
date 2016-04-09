@@ -1,0 +1,1819 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Cntry Limit/Exposure/Avail Enq')
+0002 F********************************************************************
+     F*  Midas EXPOSURE MANAGEMENT MODULE
+0004 F*                                                                  *
+0005 F*    EM0310 - DISPLAY COUNTRY LIMITS/EXPOSURE/AVAILABILITIES       *
+0004 F*                                                                  *
+     F*  Function: This enquiry shows up to date limits, exposure,
+     F*  (I/C)     availability and offset details as at the close
+     F*            of business the previous day for any country set
+     F*            up in the system.
+     F*
+     F*            For each selected country, the limits, exposures
+     F*            availability and offset amounts are shown split
+     F*            across the business areas of FX, MM, SE, LE, FRA,
+     F*            IRS, FF and Retail.
+     F*
+     F*            Overall country totals are shown. The exposure and
+     F*            offset totals will exclude any business area that
+     F*            the user specifies on the exposure scaling file.
+     F*
+     F*            The information shown is correct as the close of
+     F*            business the previous day.
+     F*
+     F*            All amounts are shown in the Exposure Management
+     F*            limit currency specified by the user.
+     F*
+     F*            All amounts are calculated rounded to the nearest
+     F*            whole unit of currency, but are displayed rounded
+     F*            to the nearest thousand whole units of currency.
+     F*
+     F*  Called By: Main Menu
+     F*
+     F*  Calls: None
+0006 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CAAA03             Date 26Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 22Oct98               *
+      *                 S01332             Date 28May91               *
+     F*                   S01314            DATE 29MAY91                 *
+     F*                   E22634            DATE 09AUG90                 *
+     F*                   LN0252            DATE 24MAY90                 *
+     F*                   LN0124            DATE 08MAY90                 *
+     F*                   E21191            DATE 27FEB90                 *
+     F*                   S01196            DATE 18NOV89                 *
+     F*                   S01199            DATE 06/11/89                *
+     F*                   S01117            DATE 24/10/89                *
+     F*                   E17241            DATE 16/03/89                *
+     F*                   S01129            DATE 03/11/87                *
+     F*                   E10842            DATE 12/06/87                *
+0009 F*                   S01128            DATE 29/12/86                *
+0010 F*                                                                  *
+0012 F********************************************************************
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CAAA03 - Webfacing Changes (Recompile)                       *
+     F*    CTI002 - TRADE INNOVATION PHASE 2                             *CTI002
+     F*    S01332 - EM REL 10 ENHANCEMENTS                               *S01332
+     F*    S01314 - CHGS MADE DURING PTF INCORPORATION                   *S01314
+     F*    E22634 - ANY REFERENCE TO 'FUTURES AND OPTIONS' AND           *E22634
+     F*             'FRA / IRS' REMOVED COMPLETELY.                      *E22634
+     F*    LN0252 - RECOMPILE TO MATCH SOURCE                            *E10842
+     F*    LN0124 - (C) ARRAY IN WRONG SEQ IN E SPECS AND AT END OF      *E10842
+     F*             SOURCE - S/BE THE LAST COMPILE TIME ARRAY            *E10842
+     F*    E21191 - PROGRAM SHOULD IGNORE EXPOSURE LIMITS RECORD IF IT   *
+     F*             HAS BEEN DELETED (* IN RECI)                         *
+     F*    S01196 - DROP LETTERS OF CREDIT MODULE                        *E10842
+     F*    S01199 - HELP CHANGES                                         *S01129
+     F*    S01117 - RELEASE TEN MULTIBRANCHING                           *S01129
+     F*    E17241 - POSITIVE AVAILIBILITY SHOWN WHEN LIMIT IS EXCEEDED   *E17241
+     F*             BY THE EXPOSURE FOR THAT CATEGORY.                   *E17241
+     F*             ALSO , IF MAXIMUM LIMIT IS INSERTED IT IS NOT        *E17241
+     F*             OUTPUT CORRECTLY ON THE ENQUIRY SCREEN.              *E17241
+     F*    S01129 - SECURITIES TRADING RELEASE 2                         *S01129
+     F*    E10842 - WHEN NO EXPOSURE IS OUTSTANDING AGAINST A COUNTRY    *E10842
+     F*             WITH LIMITS, SOMETIMES THE AVAILABLE AMOUNTS ARE     *E10842
+     F*             ZERO INSTEAD OF BEING THE SAME AS THE LIMIT AMOUNTS  *E10842
+0010 F*    S01128 - CHANGE 'TOTAL' TO 'OVERALL' ON DISPLAY SCREEN        *
+0010 F*    S01128 - OUTPUT FX OFFSET ON SCREEN                           *S01128
+0012 F********************************************************************
+     F**** EM0310FMCF  F     498            WORKSTN                       S01128
+     F**** EM0310FMCF  F     513            WORKSTN                       S01129
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**** EM0310FMCF  F     633            WORKSTN                 S01129S01332
+     F**** EMDE1   IF  F     128  2AI    15 DISK                          S01128
+     F*MDE1***IF  F     152  2AI    15 DISK                               S01129
+     F**** EMDE1   IF  F     178  2AI    15 DISK                    S01129S01332
+0018 F**** EMLIM   IF  F     128  7AI     2 DISK                          S01129
+0019 F**** TABLE   IF  F      96 12AI     2 DISK                          S01129
+0018 F**** EMLIM   IF  F     143  7AI     2 DISK                    S01129S01332
+     FEM0310FMCF  E                    WORKSTN                            S01332
+     F                                        RRN   KSFILE EM0310S1       S01332
+0018 F**** EMLIM   IF  F     165  7AI     2 DISK                    S01332CTI002
+     F**** EMDE1   IF  F     226  2AI    15 DISK                    S01332CTI002
+     FEMLIM   IF  F     175  7AI     2 DISK                               CTI002
+     FEMDE1   IF  F     250  2AI    15 DISK                               CTI002
+     FTABEM   IF  E           K        DISK                               S01129
+     F            TABTB11F                          KIGNORE               S01129
+     F            TABTB36F                          KIGNORE               S01129
+     F            TABTE10F                          KIGNORE               S01129
+     F            TABLETIF                          KIGNORE               S01129
+     F            TABLETNF                          KIGNORE               S01129
+     F            TABLETTF                          KIGNORE               S01129
+     F            TABTB95F                          KIGNORE               S01332
+     F            TABLETHF                          KIGNORE               S01332
+     FEMEXSCL1IF  E           K        DISK                               S01332
+0020 F*
+0021 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0022 F**
+0023 F* 01          WORKSTN - WORKSTATION INPUT RECORD.
+0024 F* 02            EMDE1 - FILE HEADER RECORD.
+0025 F* 03                  - DETAIL RECORD.
+0026 F* 04                  - TRAILER RECORD.
+0027 F* 05            EMLIM - FILE HEADER RECORD.
+0028 F* 06                  - DETAIL RECORD.
+0029 F* 07                  - DELETED DETAIL RECORD.
+0030 F* 08                  - TRAILER RECORD.
+0031 F* 09            TABLE - INSTALATION CONTROL RECORD 1.
+0032 F* 10                  - INSTALATION CONTROL RECORD EM               S01129
+0033 F* 11                  - COUNTRY RECORD.
+0034 F* 12                  - CURRENCY RECORD.
+0014 F* 14   SET ON IF ERROR DURING READ FROM THE WORK STATION/
+0034 F**********************-*HELP*KEY*PRESSED.                           S01199
+0035 F**
+0036 F**
+     F*       20           - CHAIN FAIL ON EMEXSCL1                       S01332
+     F*       21-23        - SUBFILE INDICATORS                           S01332
+0037 F*       41           - BLANK ENTERED ON SCREEN
+     F*       43           - NON-DISPLAY 'EXCLUDES' TEXT                  S01332
+0038 F*       44           - NON-DISPLAY DETAILS ON SCREEN
+0039 F*       45           - END OF EMDE1, OR NEXT REC DIFFERENT MCNC
+0040 F*       46           - INPUT CODE NOT FOUND ON EMDE1
+0041 F*       47           - EMLIM RECORD NOT FOUND
+0042 F*       49           - TABLE RECORD NOT FOUND
+0042 F********50-55********-*NO LEGENDS ON DETAILS SCREEEN*         S01129E22634
+0042 F********50-53********-*NO LEGENDS ON DETAILS SCREEEN          E22634S01332
+     F*       50           - SUBFILE END INDICATOR                        S01332
+0043 F*       56           - ROLLUP USED                                  S01129
+0044 F*       57           - ROLLDOWN USED                                S01129
+0044 F*       58           - ON IF 1ST SCREEN IS ON DISPLAY               S01129
+0043 F*       60           - NOT FIRST CYCLE
+0044 F*       64           - REDISPLAY SCREEN AS AT PREVIOUS CYCLE
+0045 F*       88           - BLINK CODE INPUT LINE 24 ON ERROR
+0046 F*       89           - NON-DISPLAY ERROR BAND, LINE 22
+0047 F**
+0048 F*       90-97   USED BY Z - SUBROUTINES.
+0049 F*       99      Z -SUBROUTINES, ERROR FOUND.
+0050 F*                     (DATABASE ERROR)
+0051 F**
+0052 F*               EXTERNAL INDICATOR MEANINGS-
+0053 F*       U7+U8   DATABASE ERROR.
+0054 F**
+0055 F*            LR RELEASE TO END PROGRAM
+0056 F**
+      /COPY ZSRSRC,ZSEDITZ1                                               S01129
+     E*************       CPY@    1   1 80         COPYRIGHT STATEMENT    LN0124
+0056 E** STORE OF DETAIL OUTPUT                                           S01129
+0057 E***********         LGS        10  7               LEGEND     S01129S01332
+0057 E***********         LMS        10 14               LIMITS     S01129S01332
+0058 E***********         XPS        10 15               EXPOSURE   S01129S01332
+0059 E***********         AVS        10 16               EXP. ACCUMUS01129S01332
+0060 E***********         OBS        10 15               EXP. OUTPUTS01129S01332
+0057 E***********         LGS        11  7               LEGEND     S01332CTI002
+0057 E***********         LMS        11 14               LIMITS     S01332CTI002
+0058 E***********         XPS        11 15               EXPOSURE   S01332CTI002
+0059 E***********         AVS        11 16               EXP. ACCUMUS01332CTI002
+0060 E***********         OBS        11 15               EXP. OUTPUTS01332CTI002
+0057 E                    LGS        12  7               LEGEND           CTI002
+0057 E                    LMS        12 14               LIMITS           CTI002
+0058 E                    XPS        12 15               EXPOSURE         CTI002
+0059 E                    AVS        12 16               EXP. ACCUMULATED CTI002
+0060 E                    OBS        12 15               EXP. OUTPUT      CTI002
+0056 E** ARRAYS FOR OUTPUT TO SCREEN                                      S01129
+0066 E***********         LEG    10  10  7               LEGENDS    S01129E22634
+     E***********         LEG    08  10  7               LEGENDS    E22634S01314
+     E***********         LEG    09  09  7               LEGENDS    S01314S01332
+0066 E***********         LEG    11  11  7               LEGENDS    S01332CTI002
+     E                    LEG     1  12  7               LEGENDS          CTI002
+0066 E***********         LGG         6  7               LEGENDS    S01129S01332
+0057 E***********         LMO         6 15               LIMITS     S01129S01332
+0058 E***********         XPAO        6 16               EXPOSURE   S01129S01332
+0059 E***********         AVO         6 16               EXP. ACCUMUS01129S01332
+0060 E***********         OBAO        6 16               EXP. OUTPUTS01129S01332
+0066 E***********         MSG     1   1 79               MESSAGE    S01129S01332
+0056 E***ARRAY*OVER*TABTB95*MODULE*SEQUENCES                        S01129S01332
+0057 E***********         MSQ        10  4 0                        S01129E22634
+0057 E***********         MSQ        08  4 0                        E22634S01314
+0057 E***********         MSQ        09  4 0                        S01314S01332
+0056 E** ARRAY OVER SDEXPMPD MODULE SEQUENCES                             S01332
+0057 E***********         MSQ        11  4 0                        S01332CTI002
+0057 E                    MSQ        12  4 0                              CTI002
+0056 E** ARRAY OVER EMLIM LIMITS                                          S01129
+0057 E***********         LIM        10 11 0                        S01129E22634
+0057 E***********         LIM        08 11 0                        E22634S01314
+0057 E***********         LIM        09 11 0                        S01314S01332
+0057 E***********         LIM        11 11 0                        S01332CTI002
+0057 E                    LIM        12 11 0                              CTI002
+0056 F**                                                                  S01129
+0057 E****                LM          4 11 0             LIMITS           S01129
+0058 E***********         XP         10 15 0             EXPOSURE   S01129S01332
+0059 E***********         XPA        10 15 0             EXP. ACCUMUS01129S01332
+0060 E***********         XPO        10 12 0             EXP. OUTPUTS01129S01332
+0058 E***********         XP         11 15 0             EXPOSURE   S01332CTI002
+0060 E***********         XPO        11 12 0             EXP. OUTPUTS01332CTI002
+0058 E                    XP         12 15 0             EXPOSURE         CTI002
+0060 E                    XPO        12 12 0             EXP. OUTPUT      CTI002
+0058 E****                XP          4 15 0             EXPOSURE         S01129
+0059 E****                XPA         4 15 0             EXP. ACCUMULATED S01129
+0060 E****                XPO         4 12 0             EXP. OUTPUT      S01129
+0061 E****                AV          4 12 0             AVAILABLE        S01129
+0061 E***********         AV         10 12 0             AVAILABLE  S01129S01332
+0062 E***********         OB         10 15 0             OFF-SET BALS01129S01332
+0063 E***********         OBA        10 15 0             O-S BALS ACS01129S01332
+0064 E***********         OBO        10 12 0             O-S BALS OUS01129S01332
+0061 E***********         AV         11 12 0             AVAILABLE  S01332CTI002
+0062 E***********         OB         11 15 0             OFF-SET BALS01332CTI002
+0064 E***********         OBO        11 12 0             O-S BALS OUS01332CTI002
+0061 E                    AV         12 12 0             AVAILABLE        CTI002
+0062 E                    OB         12 15 0             OFF-SET BALANCES CTI002
+0064 E                    OBO        12 12 0             O-S BALS OUTPUT  CTI002
+0062 E****                OB          4 15 0             OFF-SET BALANCES S01129
+0063 E****                OBA         4 15 0             O-S BALS ACCUMULDS01129
+0064 E****                OBO         4 12 0             O-S BALS OUTPUT  S01129
+0065 E                    ERRA       19  4               ERROR CODES ARRAY
+0066 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0067 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0068 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E* ARRAY FOR EXCLUDE NARRATIVE                                       S01332
+     E***********         XCN        56  1                          S01332CTI002
+     E                    XCN        59  1                                CTI002
+     E                    CPY@    1   1 80               COPYRIGHT STMT   LN0124
+0069 I/EJECT
+0070 I*
+0071 I*
+0072 I*  EXPOSURE MANAGEMENT    WORKSTATION FILE
+0073 I*
+0074 I****EM0310FMNS  01   1 CS   2 CF                                    S01332
+0075 I***********                             3   4 CCODI                 S01332
+0076 I***CATCHALL                                                         S01332
+0077 I********NS*                                                         S01332
+0078 I*
+0079 I*
+0080 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE FILE - HEADER RECORD
+0081 I*
+     IEMDE1   NS  02   1 CH
+     I                                       15  16 MCNC
+     I                                    P  17  190EDDT
+0085 I*
+0086 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE FILE - DETAIL RECORD
+0087 I*
+     IEMDE1   NS  03   1 CD
+     I                                       15  16 MCNC
+     I                                    P  17  240MFXE
+     I                                    P  25  320MFXB
+     I                                    P  33  400MMME
+     I                                    P  41  480MMMB
+     I                                    P  49  560MLEG                  S01128
+     I                                    P  57  640MLEE                  S01128
+     I                                    P  65  720MLEB                  S01128
+     I                                    P  73  800MLAE                  S01128
+     I                                    P  81  880MLAB                  S01128
+     I                                    P  89  960MREG                  S01128
+     I                                    P  97 1040MREE                  S01128
+     I                                    P 105 1120MREB                  S01128
+     I                                    P 113 1200MFRE                  S01332
+     I                                    P 121 1280MFRO                  S01332
+     I****                                P  49  560MLEE                  S01128
+     I****                                P  57  640MLEB                  S01128
+     I****                                P  65  720MREE                  S01128
+     I****                                P  73  800MREB                  S01128
+     I                                    P 153 1600MSIE                  S01129
+     I                                    P 161 1680MSCE                  S01129
+     I                                    P 169 1760MSPO                  S01129
+     I                                    P 179 1860MIRE                  S01332
+     I                                    P 187 1940MIRO                  S01332
+     I                                    P 195 2020MFUE                  S01332
+     I                                    P 203 2100MFUO                  S01332
+     I                                    P 211 2180MOPE                  S01332
+     I                                    P 219 2260MOPO                  S01332
+     I                                    P 227 2340TFEX                  CTI002
+     I                                    P 235 2420TFGR                  CTI002
+     I                                    P 243 2500TFOF                  CTI002
+0098 I*                                                                   S01128
+0099 I*
+0100 I*  EXPOSURE MANAGEMENT    EOD EXPOSURE - TRAILER RECORD
+0101 I*
+     IEMDE1   NS  04   1 CT
+     I                                       15  16 MCNC
+     I                                    P  17  190MNDR
+0105 I**
+0106 I** CATCHALL
+     I        NS
+0108 I*
+0109 I*
+0110 I*     EXPOSURE MANAGEMENT LIMITS FILE - HEADER RECORD.
+0111 I*
+0112 IEMLIM   NS  05   1 CH
+0113 I*
+0114 I*
+0115 I*     EXPOSURE MANAGEMENT LIMITS FILE - DETAIL RECORD
+0116 I*
+0117 I        NS  06   1 CD
+0118 I*******OR***07***1 C*                                               E21191
+0119 I                                        2   8 LIMKEY
+0120 I                                    P   9  110MXPD
+0121 I                                       12  12 MPI
+0122 I                                    P  13  180MOAL
+0123 I                                    P  19  240MFXL
+0124 I                                    P  25  300MMML
+0125 I                                    P  31  360MLEL
+0126 I                                    P  37  420MREL
+0127 I*************                       P  43  480MBCL                  S01196
+0128 I****                                P  49  540MSTL                  S01129
+0129 I***********                         P  55  600MFFL                  E22634
+0129 I***********                         P  55  600MFFL            S01314S01332
+0130 I                                    P  61  644MFXP
+0131 I                                    P  65  684MMMP
+0132 I                                    P  69  724MLEP
+0133 I                                    P  73  764MREP
+0134 I*************                       P  77  804MLOP                  S01196
+0208 I*************                       P  81  844MSEP                  S01129
+0209 I*************                       P  85  884MFFP                  S01129
+0210 I*************                       P 119 1210ORED                  S01129
+0211 I*************                       P 122 1240LCD                   S01129
+0212 I*************                         125 125 CHTP                  S01129
+0213 I*************                       P 126 1280TNLU                  S01129
+0208 I                                    P  81  860MSLI                  S01129
+0209 I                                    P  87  904MSPI                  S01129
+0209 I                                    P  91  960MSCL                  S01129
+0209 I                                    P  97 1004MSPC                  S01129
+0209 I***********                         P 101 1044MFFP            S01129E22634
+     I                                    P 105 1100MFRL                  S01332
+     I                                    P 111 1160MIRL                  S01332
+     I                                    P 117 1220MFUL                  S01332
+     I                                    P 123 1280MOPL                  S01332
+0210 I                                    P 134 1360ORED                  S01129
+0211 I                                    P 137 1390LCD                   S01129
+0212 I                                      140 140 CHTP                  S01129
+0213 I                                    P 141 1430TNLU                  S01129
+     I                                    P 166 1710TFLI                  CTI002
+0141 I*
+0142 I*
+0143 I*  EXPOSURE MANAGEMENT LIMITS FILE - TRAILER RECORD
+0144 I*
+0145 I        NS  08   1 CT
+0146 I                                        2   20RETP
+0147 I                                    P   9  110MRBU
+0148 I                                    P  12  140MNRI
+0149 I                                    P  15  170MNRD
+0150 I**
+0151 I** CATCHALL
+0152 I        NS
+0153 I**                                                                  S01129
+0154 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01129
+0155 I**                                                                  S01129
+0156 I*ABLE   NS  09   1 CD   2 C0   3 C1                                 S01129
+0157 I*      AND      12 C1  13 C0                                        S01129
+0158 I*                                       1   1 RECI                  S01129
+0159 I*                                      14  66 TITL                  S01129
+0160 I*                                      67  67 DATF                  S01129
+0161 I*                                   P  77  790RUND                  S01129
+0162 I*                                      80  86 RUNA                  S01129
+0163 I**                                                                  S01129
+0164 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.               S01129
+0165 I**                                                                  S01129
+0166 I*       NS  10   1 CD   2 C0   3 C1                                 S01129
+0167 I*      AND      12 C1  13 C1                                        S01129
+0168 I*                                      69  71 LCCY                  S01129
+0169 I**                                                                  S01129
+0170 I**     TABLE FILE - COUNTRY RECORD                                  S01129
+0171 I**                                                                  S01129
+0172 I*       NS  11   1 CD   2 C5   3 C0                                 S01129
+0173 I*                                       2  13 TABKEY                S01129
+0174 I*                                      12  13 CCOD                  S01129
+0175 I*                                      14  43 CNM                   S01129
+0176 I**                                                                  S01129
+0177 I**     TABLE FILE - CURRENCY RECORD                                 S01129
+0178 I**                                                                  S01129
+0179 I*       NS  12   1 CD   2 C2   3 C0                                 S01129
+0180 I*                                       2  13 CURKEY                S01129
+0181 I*                                      14  27 CCNM                  S01129
+0182 I**                                                                  S01129
+0183 I**   CATCHALL.                                                      S01129
+0184 I*       NS                                                          S01129
+0185 I/EJECT
+      /COPY ZSRSRC,ZSEDITZ2                                               S01129
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0186 I**   DATA STRUCTURE FOR LIMITS ARRAY
+0187 I            DS                                                      S01129
+0188 I***********                             1 110 LIM             S01129E22634
+0188 I***********                             1  88 LIM             E22634S01314
+0188 I***********                             1  99 LIM             S01314S01332
+0188 I***********                             1 121 LIM             S01332CTI002
+0188 I                                        1 132 LIM                   CTI002
+0189 I                                        1  110MFXL                  S01129
+0190 I                                       12  220MMML                  S01129
+     I                                       23  330MFRL                  S01332
+0191 I***********                            34  440MLEL            S01129E22634
+0192 I***********                            45  550MREL            S01129E22634
+0189 I*************                          56  660MBCL           S01129 S01196
+0190 I***********                            67  770MSCL            S01129E22634
+0191 I***********                            78  880MSLI            S01129E22634
+0192 I***********                           100 1100MFFL            S01129E22634
+0191 I***********                            23  330MLEL            E22634S01314
+0192 I***********                            34  440MREL            E22634S01314
+0189 I***********                            45  550MBCL            E22634S01314
+0191 I                                       34  440MLEL                  S01314
+0192 I                                       45  550MREL                  S01314
+0190 I***********                            56  660MSCL            E22634S01332
+0191 I***********                            67  770MSLI            E22634S01332
+0191 I***********                            89  990MFFL            S01314S01332
+     I                                       56  660MIRL                  S01332
+     I                                       67  770MSCL                  S01332
+     I                                       78  880MSLI                  S01332
+     I                                      100 1100MFUL                  S01332
+     I                                      111 1210MOPL                  S01332
+     I                                      122 1320TFLI                  CTI002
+0187 I***         DS                                                      S01129
+0188 I***                                     1  44 LM                    S01129
+0189 I***                                     1  110MFXL                  S01129
+0190 I***                                    12  220MMML                  S01129
+0191 I***                                    23  330MLEL                  S01129
+0192 I***                                    34  440MREL                  S01129
+0193 I**   DATA STRUCTURE FOR EXPOSURE ARRAY
+0194 I            DS
+0195 I***                                     1  60 XP                    S01129
+0195 I***********                             1 150 XP              S01129S01332
+0195 I***********                             1 165 XP              S01332CTI002
+0195 I                                        1 180 XP                    CTI002
+0196 I                                        1  150MFXE
+0197 I                                       16  300MMME
+     I****                                   31  450MLEE                  S01128
+     I****                                   31  450TEMP1                 S01129
+0199 I****                                   46  600MREE                  S01129
+     I***********                            46  600TEMP1           S01129E22634
+0199 I***********                            61  750MREE            S01129E22534
+     I***********                            91 1050MSCE            S01129E22634
+     I***********                           106 1200MSIE            S01129E22634
+     I***********                            31  450TEMP1           E22634S01314
+0199 I***********                            46  600MREE            E22634S01314
+     I                                       31  450MFRE                  S01332
+     I                                       46  600TEMP1                 S01314
+0199 I                                       61  750MREE                  S01314
+     I***********                            76  900MSCE            E22634S01332
+     I***********                            91 1050MSIE            E22634S01332
+     I                                       76  900MIRE                  S01332
+     I                                       91 1050MSCE                  S01332
+     I                                      106 1200MSIE                  S01332
+     I                                      136 1500MFUE                  S01332
+     I                                      151 1650MOPE                  S01332
+     I                                      166 1800TFEX                  CTI002
+0200 I**   DATA STRUCTURE FOR LIMKEY
+0201 I            DS
+0202 I                                        1   7 LIMKEY
+0203 I                                        1   10RETP
+0204 I                                        2   3 MLC
+0205 I**   DATA STRUCTURE FOR CURKEY
+0206 I***         DS                                                      S01129
+0207 I***                                     1  12 CURKEY                S01129
+0208 I***                                     1   2 RECT                  S01129
+0209 I***                                     9  11 CCY                   S01129
+0210 I***                                    12  12 SREC                  S01129
+0205 I**   DATA STRUCTURE FOR MODULE SEQUENCES
+0206 I            DS                                                      S01129
+0207 I                                        1   4 MSEQ                  S01129
+0208 I                                        1   20MS                    S01129
+0208 I                                        3   40MB                    S01129
+0205 I**   DATA STRUCTURE FOR MODULE SEQUENCES
+0206 I            DS                                                      S01129
+0207 I***********                             1  40 MSQ             S01129E22634
+0207 I***********                             1  32 MSQ             E22634S01314
+0207 I***********                             1  36 MSQ             S01314S01332
+0207 I***********                             1  44 MSQ             S01332CTI002
+0207 I                                        1  48 MSQ                   CTI002
+0208 I                                        1   20MSFXS                 S01129
+0208 I                                        5   60MSMMS                 S01129
+0208 I***********                             9  100MSIFS           S01129E22634
+0208 I***********                            13  140MSLNS           S01129E22634
+0208 I***********                            17  180MSRES           S01129E22634
+0208 I***********                            21  220MSLCS           S01129E22634
+0208 I***********                            25  260MSSCS           S01129E22634
+0208 I***********                            29  300MSSIS           S01129E22634
+0208 I***********                            33  340MSSPS           S01129E22634
+0208 I***********                            37  380MSFIS           S01129E22634
+0208 I***********                             9  100MSLNS           E22634S01314
+0208 I***********                            13  140MSRES           E22634S01314
+0208 I***********                            17  180MSLCS           E22634S01314
+     I***********                             9  100MSIFS           S01314S01332
+0208 I                                        9  100MSFRS                 S01332
+0208 I                                       13  140MSLNS                 S01314
+0208 I                                       17  180MSRES                 S01314
+0208 I***********                            21  220MSSCS           E22634S01332
+0208 I***********                            25  260MSSIS           E22634S01332
+0208 I***********                            29  300MSSPS           E22634S01332
+     I***********                            33  340MSFIS           S01314S01332
+0208 I                                       21  220MSIRS                 S01332
+     I                                       25  260MSSCS                 S01332
+     I                                       29  300MSSIS                 S01332
+     I                                       33  340MSSPS                 S01332
+0208 I                                       37  380MSFUS                 S01332
+     I                                       41  420MSOPS                 S01332
+     I                                       45  460MSTFS                 CTI002
+0208 I                                        3   40MS01                  S01129
+0208 I                                        7   80MS02                  S01129
+0208 I                                       11  120MS03                  S01129
+0208 I                                       15  160MS04                  S01129
+0208 I                                       19  200MS05                  S01129
+0208 I                                       23  240MS06                  S01129
+0208 I                                       27  280MS07                  S01129
+0208 I                                       31  320MS08                  S01129
+0208 I***********                            35  360MS09            S01129E22634
+0208 I                                       35  360MS09                  S01314
+0208 I***********                            39  400MS10            S01129E22634
+0208 I                                       39  400MS10                  S01332
+     I                                       43  440MS11                  S01332
+     I                                       47  480MS12                  CTI002
+0211 I**   DATA STRUCTURE FOR OFF-SETTING BALANCE ARRAY
+0212 I            DS
+0213 I***                                     1  60 OB                    S01129
+0213 I***********                             1 150 OB              S01129S01332
+0213 I***********                             1 165 OB              S01332CTI002
+     I                                        1 180 OB                    CTI002
+     I                                        1  150MFXB                  S01128
+0214 I                                       16  300MMMB
+     I****                                   31  450MLEB                  S01128
+     I*****                                  31  450TEMP2                 S01129
+0216 I*****                                  46  600MREB                  S01129
+     I***********                            46  600TEMP2           S01129E22634
+0216 I***********                            61  750MREB            S01129E22634
+     I***********                           121 1350MSPO            S01129E22634
+     I***********                            31  450TEMP2           E22634S01314
+0216 I***********                            46  600MREB            E22634S01314
+     I                                       31  450MFRO                  S01332
+     I                                       46  600TEMP2                 S01314
+0216 I                                       61  750MREB                  S01314
+     I                                       76  900MIRO                  S01332
+     I***********                           106 1200MSPO            E22634S01332
+     I                                      121 1350MSPO                  S01332
+     I                                      136 1500MFUO                  S01332
+     I                                      151 1650MOPO                  S01332
+     I                                      166 1800TFOF                  CTI002
+0217 I**   DATA STRUCTURE FOR ERROR CODE DISPLAY
+0218 I            DS
+0219 I                                        1  79 ERMSG
+0220 I                                        1  76 ERRA
+0221 I**  LOCAL DATA AREA FOR DATABASE RECORD
+0222 ILDA        UDS                            256
+0223 I**********                            134 138 DBFILE                S01117
+0224 I**********                            139 167 DBKEY                 S01117
+0225 I**********                            168 175 DBPGM                 S01117
+0226 I**********                            176 1770DBASE                 S01117
+0223 I                                      134 141 DBFILE                S01117
+0224 I                                      142 170 DBKEY                 S01117
+0225 I                                      171 180 DBPGM                 S01117
+0226 I                                      181 1830DBASE                 S01117
+     I**
+     IIPSDS      SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+      *                                                                   S01332
+     ISDEXPM    E DSSDEXPMPD                                              S01332
+      * DATA STRUCTURE FOR EXPOSURE MANAGEMENT ICD                        S01332
+      *                                                                   S01332
+     ISDCTRY    E DSSDCTRYPD                                              S01332
+      * DATA STRUCTURE FOR COUNTRY CODES                                  S01332
+      *                                                                   S01332
+     IDSFDY     E DSDSFDY                                                 S01332
+      * SHORT DUMMY DATA STRUCTURE FOR ACCESS PROGRAMS                    S01332
+      *                                                                   S01332
+0227 C/EJECT
+     C                     MOVEACPY@      BIS@   80
+0232 C********************************************************************
+0233 C**      START OF MAIN PROGRAM.  CALLS SR. CBCALC.
+0234 C**
+     C**
+     C*****READ*WORKSTATION*FILE*/*HELP*FACILITY                          S01199
+     C*    READ WORKSTATION FILE                                          S01199
+     C**
+     C           *IN60     IFEQ '1'
+     C************IN14     DOUEQ'0'                                       S01332
+     C***********          READ EM0310FM                 14               S01332
+     C************IN14*****IFEQ*'1'                                       S01199
+     C**********           MOVEAERRA      HERCD 160                       S01199
+     C**********           MOVEL'EM0310  'HBPGM   8                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           END                                            S01199
+     C***********          END                                            S01332
+     C                     GOTO TERM
+     C                     END
+     C*
+0228 C********************************************************************
+0229 C**
+0230 C**   FIRST CYCLE PROCESSING
+0231 C**
+0228 C********************************************************************
+0241 C                     EXSR ZERO                       ** EXSR ZERO   S01128
+0240 C*    ACCESS ICR1
+0241 C                     EXSR ZSYSTM                     ** EXSR ZSYSTM
+0242 C   99                MOVE 'TABLE'   DBFILE
+0243 C** 99                MOVE CURKEY    DBKEY                           S01129
+0243 C   99                MOVEL'IDCR1'   DBKEY                           S01129
+0244 C   99                MOVE 'EM0310'  DBPGM
+0245 C   99                Z-ADD01        DBASE            DATABASE 01
+0246 C   99                SETON                     LRU7U8
+0247 C***99******          GOTO TERM                                      S01332
+0247 C   99                RETRN                                          S01332
+0248 C******CCESS EM CURRENCY ON ICR2                                     S01129
+0248 C*****ACCESS*EM*CURRENCY*ON*TABTB95                            S01129S01332
+0249 C**
+0250 C******ET UP KEY FOR INSTALLATION CONTROL RECORD 2.                  S01129
+0250 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD*TABTB95       S01129S01332
+0251 C*                    MOVEL'01      'CURKEY                          S01129
+0252 C*                    MOVE '  11'    CURKEY                          S01129
+0251 C***********          MOVEL'01      'CURKEY 12                 S01129S01332
+0252 C***********          MOVE '  95'    CURKEY                    S01129S01332
+0253 C**
+0254 C**         CURKEY    CHAINTABLE                99    ON NOT THERE   S01129
+0254 C***********CURKEY    CHAINTABEM                10    ON NOT THS01129S01332
+0255 C**
+0256 C***10******          SETON                         99ON - DELES01129S01332
+0256 C**N10                SETON                         99ON - DELETED   S01129
+0256 C**N10******RECI      COMP '*'                      99ON - DELES01129S01332
+0257 C***99******          MOVE 'TABLE'   DBFILE                          S01332
+0258 C** 99                MOVE CURKEY    DBKEY                           S01129
+0258 C***99******          MOVELCURKEY    DBKEY                           S01129
+0259 C***99******          MOVE 'EM0310'  DBPGM                           S01332
+0260 C***99******          Z-ADD02        DBASE            DATABASE 02    S01332
+0261 C***99******          SETON                     LRU7U8               S01332
+0262 C***99******          GOTO TERM                                      S01332
+     C*                                                                   S01332
+     C**  ACCESS EXPOSURE MANAGEMENT ICD                                  S01332
+     C                     CALL 'AOEXPMR0'                                S01332
+     C                     PARM '*DBERR ' @RTCD   7                       S01332
+     C                     PARM '*FIRST ' @OPTN   7                       S01332
+     C           SDEXPM    PARM SDEXPM    DSFDY                           S01332
+     C*                                                                   S01332
+     C           @RTCD     IFNE *BLANKS                                   S01332
+     C                     MOVEL'SDEXPMPD'DBFILE                          S01332
+     C                     MOVE *BLANKS   DBKEY                           S01332
+     C                     MOVE 'EM0310'  DBPGM                           S01332
+     C                     Z-ADD02        DBASE            DATABASE 02    S01332
+     C                     SETON                     LRU7U8               S01332
+     C                     RETRN                                          S01332
+     C                     END                                            S01332
+0263 C**   SET UP KEY FOR CURRENCY RECORD 1.
+0264 C*                    MOVE LCCY      CCY                             S01129
+0264 C***********          MOVELLCCY      CCY     4                 S01129S01332
+0264 C                     MOVELBUCYCD    CCY     4                       S01332
+0265 C***********          MOVEL'20      'CURKEY                          S01332
+0265 C                     MOVEL'20      'CURKEY 12                       S01332
+0266 C*                    MOVE '1'       CURKEY                          S01129
+0266 C                     MOVE '1'       CCY                             S01129
+0265 C                     MOVE CCY       CURKEY                          S01129
+0267 C**
+0268 C***        CURKEY    CHAINTABLE                99    ON NOT THERE   S01129
+0268 C           CURKEY    CHAINTABEM                12    ON NOT THERE   S01129
+0269 C* N12                SETON                         99ON - DELETED   S01129
+0256 C   12                SETON                         99ON - DELETED   S01129
+0256 C  N12      RECI      COMP '*'                      99ON - DELETED   S01129
+0270 C   99                MOVE 'TABLE'   DBFILE
+0271 C   99                MOVE CURKEY    DBKEY
+0272 C   99                MOVE 'EM0310'  DBPGM
+0273 C   99                Z-ADD03        DBASE            DATABASE 03
+0274 C   99                SETON                     LRU7U8
+0275 C***99******          GOTO TERM                                      S01332
+0275 C   99                RETRN                                          S01332
+0276 C                     MOVE *BLANKS   CURKEY
+0277 C**
+0278 C**   READ FIRST RECORD ON EMDE1, HEADER RECORD
+0279 C**
+0280 C                     READ EMDE1                    99LAST RECORD
+0281 C**
+0282 C  N02                SETON                         99ON - DELETED
+0283 C  N99                EXSR CBCALC                     COB DATE CONV.
+0284 C   99                MOVE 'EMDE1'   DBFILE
+0285 C   99                MOVE MCNC      DBKEY
+0286 C   99                MOVE 'EM0310'  DBPGM
+0287 C   99                Z-ADD04        DBASE            DATABASE 04
+0288 C   99                SETON                     LRU7U8
+     C   99                RETRN                                          S01332
+0289 C                     SETON                     4489
+      /SPACE 5
+     C* SORT MODULE SEQUENCE ARRAY                                        S01129
+     C                     Z-ADD1         MS01                            S01129
+     C                     Z-ADD2         MS02                            S01129
+     C                     Z-ADD3         MS03                            S01129
+     C                     Z-ADD4         MS04                            S01129
+     C                     Z-ADD5         MS05                            S01129
+     C                     Z-ADD6         MS06                            S01129
+     C                     Z-ADD7         MS07                            S01129
+     C                     Z-ADD8         MS08                            S01129
+     C***********          Z-ADD9         MS09                      S01129E22634
+     C                     Z-ADD9         MS09                            S01314
+     C***********          Z-ADD10        MS10                      S01129E22634
+     C                     Z-ADD10        MS10                            S01332
+     C                     Z-ADD11        MS11                            S01332
+     C                     Z-ADD12        MS12                            CTI002
+     C***********          MOVE MSFX      MSFXS                     S01129S01332
+     C***********          MOVE MSMM      MSMMS                     S01129S01332
+     C***********          MOVE MSIF      MSIFS                     S01129E22634
+     C***********          MOVE MSIF      MSIFS                     S01314S01332
+     C***********          MOVE MSLN      MSLNS                     S01129S01332
+     C***********          MOVE MSRE      MSRES                     S01129S01332
+     C************         MOVE MSLC      MSLCS                     S01129S01196
+     C***********          MOVE MSSC      MSSCS                     S01129S01332
+     C***********          MOVE MSSI      MSSIS                     S01129S01332
+     C***********          MOVE MSSP      MSSPS                     S01129S01332
+     C***********          MOVE MSFI      MSFIS                     S01129E22634
+     C***********          MOVE MSFI      MSFIS                     S01314S01332
+     C                     MOVE BUMSFX    MSFXS                           S01332
+     C                     MOVE BUMSMM    MSMMS                           S01332
+     C                     MOVE BUMSFR    MSFRS                           S01332
+     C                     MOVE BUMSLN    MSLNS                           S01332
+     C                     MOVE BUMSRT    MSRES                           S01332
+     C                     MOVE BUMSIR    MSIRS                           S01332
+     C                     MOVE BUMSSC    MSSCS                           S01332
+     C                     MOVE BUMSSI    MSSIS                           S01332
+     C                     MOVE BUMSSP    MSSPS                           S01332
+     C                     MOVE BUMSFU    MSFUS                           S01332
+     C                     MOVE BUMSOP    MSOPS                           S01332
+     C                     MOVE BUMSTF    MSTFS                           CTI002
+     C                     SORTAMSQ                                       S01129
+     C*                                                                   S01332
+     C**   SET ON SUBFILE END INDICATOR                                   S01332
+     C                     SETON                     50                   S01332
+0290 C           TERM      TAG                             ** TAG TERM
+0291 C**
+0292 C**   END OF FIRST CYCLE PROCESSING
+0293 C**
+0294 C********************************************************************
+0295 C/EJECT
+0296 C********************************************************************
+0297 C*
+0298 C*    INITIAL SCREEN PROCESSING
+0299 C*
+0300 C********************************************************************
+0301 C**
+0302 C**   SCREEN VALIDATION
+0303 C**
+0304 C                     TIME           STIME   60
+     C*                                                                   S01332
+     C**   WRITE HEADINGS                                                 S01332
+     C                     WRITEEM0310F1                                  S01332
+     C*                                                                   S01332
+     C**   SET SUBFILE INDICATORS                                         S01332
+     C                     MOVEA'001'     *IN,21                          S01332
+     C                     Z-ADD1         RRN     30                      S01332
+     C                     WRITEEM0310C1                                  S01332
+     C                     MOVEA'011'     *IN,21                          S01332
+     C                     EXFMTEM0310C1                                  S01332
+     C*                                                                   S01332
+     C**   IF F3 TAKEN, END PROGRAM                                       S01332
+     C           *INKC     IFEQ '1'                                       S01332
+     C                     SETON                     LR                   S01332
+     C                     RETRN                                          S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**   DO WHILE F3 NOT TAKEN                                          S01332
+     C           *INKC     DOWEQ'0'                                       S01332
+     C*                                                                   S01332
+     C**   VALIDATE INPUT                                                 S01332
+     C                     EXSR VALID                                     S01332
+     C*                                                                   S01332
+     C**   DO WHILE INPUT INVALID                                         S01332
+     C           *IN88     DOWEQ'1'                                       S01332
+     C*                                                                   S01332
+     C**   WRITE SUBFILE SCREEN                                           S01332
+     C                     EXFMTEM0310C1                                  S01332
+     C*                                                                   S01332
+     C**   VALIDATE INPUT                                                 S01332
+     C                     EXSR VALID                                     S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**   SAVE SCREEN INPUT FIELD                                        S01332
+     C                     MOVE CCODI     SCCODI  2                       S01332
+     C*                                                                   S01332
+     C**   SET OFF INDICATOR TO DISPLAY DETAIL                            S01332
+     C                     SETOF                     44                   S01332
+     C                     WRITEEM0310F1                                  S01332
+     C*                                                                   S01332
+0305 C***KC******          SETON                     LR                   S01332
+0306 C**N60******                                                         S01332
+0307 C*OR*LR*****          GOTO ENDCLC                                    S01332
+0308 C****COMPARE*COUNTRY*CODE*TO*BLANKS*AND*TO*THE*LAST*CODE*ENTERED     S01332
+0309 C***********CCODI     COMP *BLANKS                  41               S01332
+0310 C***********CCODP     COMP CCODI                    64               S01332
+0311 C***64N41             GOTO ENDCLC                                    S01129
+0308 C**                                                                  S01129
+0308 C****CHECK*FOR*ROLLUP/DOWN*-*ERROR*IF*NOT*VALID*AT*THIS*TIME   S01129S01332
+     C************IN64     IFEQ '1'                                 S01129S01332
+     C************IN41     ANDEQ'0'                                 S01129S01332
+     C************IN56     IFEQ '1'                                 S01129S01332
+     C************IN58     IFEQ '0'                                 S01129S01332
+     C***********Z3        ORLT 7                                   S01129S01332
+     C***********          MOVE MSG,1     ERMSG                     S01129S01332
+     C***********          SETOF                     89             S01129S01332
+     C***********          GOTO ENDCLC                              S01129S01332
+     C***********          ELSE                                     S01129S01332
+     C***********          MOVE *BLANKS   ERMSG  79                 S01129S01332
+     C***********          SETON                       89           S01129S01332
+     C***********          SETOF                       88           S01129S01332
+     C***********          EXSR FILL2                               S01129S01332
+     C***********          GOTO ENDCLC                              S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          END                                      S01129S01332
+     C************IN57     IFEQ '1'                                 S01129S01332
+     C************IN58     IFEQ '1'                                 S01129S01332
+     C***********          MOVE MSG,1     ERMSG                     S01129S01332
+     C***********          SETOF                     89             S01129S01332
+     C***********          GOTO ENDCLC                              S01129S01332
+     C***********          ELSE                                     S01129S01332
+     C***********          MOVE *BLANKS   ERMSG  79                 S01129S01332
+     C***********          SETON                       89           S01129S01332
+     C***********          SETOF                       88           S01129S01332
+     C***********          EXSR FILL1                               S01129S01332
+     C***********          GOTO ENDCLC                              S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          END                                      S01129S01332
+0308 C**                                                                  S01129
+0312 C****CLEAR*58*TO*SHOW*NO*SCREEN*YET*SET*UP                     S01129S01332
+0314 C***********          SETOF                     58             S01129S01332
+0312 C****CLEAR*ERROR*MESSAGE*FIELD,*CLEAR*DETAILS*AND*SET*TIME           S01332
+0313 C***********          MOVE *BLANKS   ERMSG  79                       S01332
+0314 C***********          SETON                     4489                 S01332
+0315 C***********          SETOF                     88                   S01332
+0316 C***********          EXSR ZERO                                      S01332
+0317 C****BLANK*INPUT*ERROR                                               S01332
+0318 C***41******          MOVE '010'     ERRA,1                          S01332
+0319 C***41******          GOTO NOCHN                                     S01332
+0320 C*****SET*UP*KEY*FOR*COUNTRY*CHAIN                                   S01332
+0321 C***                  MOVE *BLANKS   TABKEY                          S01129
+0321 C***********          MOVE *BLANKS   TABKEY 12                 S01129S01332
+0322 C***********          MOVEL'50'      TABKEY                          S01332
+0323 C***********          MOVE CCODI     TABKEY                          S01332
+0324 C**         TABKEY    CHAINTABLE                49    ON NOT THERE   S01129
+0324 C***********TABKEY    CHAINTABEM                49    ON NOT THS01129S01332
+0325 C* N11                SETON                         49ON - DELETED   S01129
+0325 C**N49******RECI      COMP '*'                      49ON - DELES01129S01332
+0326 C****INVALID*COUNTRY*CODE*ERROR                                      S01332
+0327 C***49******          MOVE '011'     ERRA,1                          S01332
+0328 C***********NOCHN     TAG                             ** TAG NOCHN   S01332
+0329 C****VALID*INPUT*DETAIL*DISPLAY                                      S01332
+0330 C**N49N41***          SETOF                     44                   S01332
+0331 C****INVALID*INPUT*DISPLAY*ERRROR*CODES                              S01332
+0332 C***41******                                                         S01332
+0333 C*OR*49*****          SETOF                     89                   S01332
+0334 C***41******                                                         S01332
+0335 C*OR*49*****          SETON                     88                   S01332
+0336 C********************************************************************
+0337 C/EJECT
+0338 C********************************************************************
+0339 C**
+0340 C**   MAIN SCREEN PROCESSING
+0341 C**
+0342 C********************************************************************
+0343 C***41******                                                         S01332
+0344 C*OR*49*****                                                         S01332
+0345 C*OR*LR*****          GOTO ENDCLC                                    S01332
+     C*                                                                   S01332
+     C**    SET SUBFILE INDICATORS                                        S01332
+     C                     MOVEA'001'     *IN,21                          S01332
+     C                     Z-ADD1         RRN     30                      S01332
+     C                     WRITEEM0310C1                                  S01332
+     C                     MOVEA'011'     *IN,21                          S01332
+     C*                                                                   S01332
+0346 C**  VALID INPUT PROCESSING
+0347 C**  SET LIMKEY TO ACCESS LIMITS FILE
+0348 C                     MOVE '2'       RETP
+0349 C                     MOVE CCODI     MLC
+0350 C           LIMKEY    CHAINEMLIM                47
+0351 C  N06                SETON                         47ON - DELETED
+0352 C**  OUTPUT MESSAGE IF NO LIVE LIMIT FOUND OTHERWISE CALC EXPDAT
+0353 C  N47                EXSR EXPDAT
+0354 C**  ACCESS EXPOSURE FILE BY ALTERNATE KEY EMDE1
+0355 C**  CHAIN FOR FIRST RECORD WITH REQUIRED COUNTRY CODE
+0356 C           CCODI     CHAINEMDE1                46    ON NOT THERE
+0357 C  N03                SETON                         46ON - DELETED
+0358 C***46****************GOTO ENDCLC                                    E10842
+     C   46                GOTO CALCAV                                    E10842
+      /SPACE 5
+0359 C**  ACCUMULATE EXP AND OFF-SET BALANCE RECS FOR THE COUNTRY
+0359 C****(ONLY*IF*MODULE*SELECTED*ON*TABTB95)                      S01129S01332
+0359 C**  (ONLY IF MODULE SELECTED ON SDEXPMPD)                           S01332
+0360 C           LOOP      TAG                             ** TAG LOOP
+     C***********MSFX      IFEQ 0                                   S01129S01332
+     C           BUMSFX    IFEQ 0                                         S01332
+     C                     Z-ADD0         MFXE                            S01129
+     C                     Z-ADD0         MFXB                            S01129
+     C                     END                                            S01129
+     C***********MSMM      IFEQ 0                                   S01129S01332
+     C           BUMSMM    IFEQ 0                                         S01332
+     C                     Z-ADD0         MMME                            S01129
+     C                     Z-ADD0         MMMB                            S01129
+     C                     END                                            S01129
+     C           BUMSFR    IFEQ 0                                         S01332
+     C                     Z-ADD0         MFRE                            S01332
+     C                     Z-ADD0         MFRO                            S01332
+     C                     END                                            S01332
+     C***********MSLN      IFNE 0                                   S01129S01332
+     C           BUMSLN    IFNE 0                                         S01332
+     C                     Z-ADDMLEE      TEMP1                           S01128
+     C                     ADD  MLAE      TEMP1                           S01128
+     C                     Z-ADDMLEB      TEMP2                           S01128
+     C                     ADD  MLAB      TEMP2                           S01128
+     C                     ELSE                                           S01129
+     C                     Z-ADD0         TEMP1                           S01129
+     C                     Z-ADD0         TEMP2                           S01129
+     C                     END                                            S01129
+     C***********MSRE      IFEQ 0                                   S01129S01332
+     C           BUMSRT    IFEQ 0                                         S01332
+     C                     Z-ADD0         MREE                            S01129
+     C                     Z-ADD0         MREB                            S01129
+     C                     END                                            S01129
+     C           BUMSIR    IFEQ 0                                         S01332
+     C                     Z-ADD0         MIRE                            S01332
+     C                     Z-ADD0         MIRO                            S01332
+     C                     END                                            S01332
+     C***********MSSC      IFEQ 0                                   S01129S01332
+     C           BUMSSC    IFEQ 0                                         S01332
+     C                     Z-ADD0         MSCE                            S01129
+     C                     END                                            S01129
+     C***********MSSI      IFEQ 0                                   S01129S01332
+     C           BUMSSI    IFEQ 0                                         S01332
+     C                     Z-ADD0         MSIE                            S01129
+     C                     END                                            S01129
+     C***********MSSP      IFEQ 0                                   S01129S01332
+     C           BUMSSP    IFEQ 0                                         S01332
+     C                     Z-ADD0         MSPO                            S01129
+     C                     END                                            S01129
+     C           BUMSFU    IFEQ 0                                         S01332
+     C                     Z-ADD0         MFUE                            S01332
+     C                     Z-ADD0         MFUO                            S01332
+     C                     END                                            S01332
+     C           BUMSOP    IFEQ 0                                         S01332
+     C                     Z-ADD0         MOPE                            S01332
+     C                     Z-ADD0         MOPO                            S01332
+     C                     END                                            S01332
+     C           BUMSTF    IFEQ 0                                         CTI002
+     C                     Z-ADD0         TFEX                            CTI002
+     C                     Z-ADD0         TFOF                            CTI002
+     C                     END                                            CTI002
+0361 C***********          ADD  XP        XPA                             S01332
+0362 C***********          ADD  OB        OBA                             S01332
+0361 C                     ADD  XP        XPO                             S01332
+0362 C                     ADD  OB        OBO                             S01332
+0363 C                     READ EMDE1                    45
+0364 C  N45      CCODI     COMP MCNC                 4545
+0365 C  N45                GOTO LOOP
+      /SPACE 5
+0366 C***********XPA       DIV  1000      XPO       H                     S01332
+0367 C***********OBA       DIV  1000      OBO       H                     S01332
+0366 C           XPO       DIV  1000      XPO       H                     S01332
+0367 C           OBO       DIV  1000      OBO       H                     S01332
+0368 C**  CALCULATE EXPOSURE & O/S BAL TOTALS
+0369 C                     XFOOTXPO       XPTOT
+0370 C                     XFOOTOBO       OBTOT
+0371 C****REMOVE*FX*EXPOSURE*FROM*EXPOSURE*ARRAY*TOTAL                    S01332
+0372 C***********XPTOT     SUB  XPO,1     XPTOT                           S01332
+     C***********OBTOT     SUB  OBO,1     OBTOT                     S01128S01332
+0371 C****REMOVE*ST*COUNTERPARTY**FROM*EXPOSURE*ARRAY*TOTAL         S01129S01332
+0372 C***********XPTOT     SUB  XPO,7     XPTOT                     S01129E22634
+     C***********OBTOT     SUB  OBO,7     OBTOT                     S01129E22634
+0372 C***********XPTOT     SUB  XPO,6     XPTOT                     E22634S01332
+     C***********OBTOT     SUB  OBO,6     OBTOT                     E22634S01332
+0373 C**  CALCULATE AVAILABILITIES AND TOTAL
+     C           CALCAV    TAG                             ** TAG CALCAV  E10842
+     C*                                                                   S01332
+     C**  DETERMINE WHICH MODULES TO BE EXCLUDED FROM TOTALS              S01332
+     C                     EXSR EXCTOT                                    S01332
+0374 C           LIM       SUB  XPO       AV
+0375 C           MOAL      SUB  XPTOT     AVTOT
+      /SPACE 5                                                            S01129
+0373 C**  MOVE TO ARRAYS FOR STORAGE                                      S01129
+0376 C                     EXSR ARFILL                                    S01129
+0373 C**  FILL FIRST SCREEN                                               S01129
+     C                     WRITEEM0310F1                                  S01332
+     C                     Z-ADD1         Z       20                      S01332
+     C                     Z-ADD1         RRN                             S01332
+     C           RRN       DOWLEZ3                                        S01332
+0376 C                     EXSR FILL1                                     S01129
+     C                     ADD  1         Z                               S01332
+     C                     WRITEEM0310S1                                  S01332
+     C                     ADD  1         RRN            23               S01332
+     C                     END                                            S01332
+     C                     WRITEEM0310F2                                  S01332
+     C*                                                                   S01332
+     C**    IF RECORDS DISPLAYED ON SUBFILE, SET SUBFILE INDICATORS       S01332
+     C           *IN23     IFEQ '0'                                       S01332
+     C                     MOVEA'11'      *IN,21                          S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C           CCODI     DOWEQSCCODI                                    S01332
+     C*                                                                   S01332
+     C**   IF F3 TAKEN, END PROGRAM                                       S01332
+     C           *INKC     IFEQ '1'                                       S01332
+     C                     SETON                     LR                   S01332
+     C                     RETRN                                          S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**   WRITE SUBFILE SCREEN                                           S01332
+     C                     EXFMTEM0310C1                                  S01332
+     C**                                                                  S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+      /SPACE 5                                                            S01129
+0376 C***********ENDCLC    TAG                             ** TAG ENDCLC  S01332
+0377 C                     SETON                     60
+0378 C***********          MOVE CCODI     CCODP   2                       S01332
+0379 C********************************************************************
+0380 C/EJECT
+0381 C********************************************************************
+0382 C********************************************************************
+0383 C**
+0384 C**   SUBROUTINES
+0385 C**
+0386 C********************************************************************
+0387 C********************************************************************
+0388 C**
+0389 C**   ZERO SR. TO CONVERT ALL OUTPUT FIELDS TO ZERO.
+0390 C*****CALLED*BY*INITIAL*SCREEN*PROCESSING                            S01332
+0390 C**   CALLED BY INITIAL SCREEN PROCESSING, VALID                     S01332
+0391 C           ZERO      BEGSR
+0392 C** SET FIELDS TO ZERO
+0393 C***                  Z-ADD0         LM                              S01129
+0393 C                     Z-ADD0         LIM                             S01129
+0394 C                     Z-ADD0         XP
+0395 C***********          Z-ADD0         XPA                             S01332
+0396 C                     Z-ADD0         XPO                             S01129
+0397 C                     Z-ADD0         AV
+0398 C                     Z-ADD0         OB
+0399 C***********          Z-ADD0         OBA                       S01129S01332
+0400 C                     Z-ADD0         OBO
+0401 C                     Z-ADD0         MOAL   110
+0402 C*************        Z-ADD0         MBCL   110                      S01196
+0403 C                     Z-ADD0         MSTL   110
+0404 C***********          Z-ADD0         MFFL   110                      E22634
+0405 C                     Z-ADD0         XPTOT  120
+0406 C                     Z-ADD0         AVTOT  120
+0407 C                     Z-ADD0         OBTOT  120
+0407 C                     MOVE *BLANKS   LGS                             S01129
+0407 C                     MOVE *BLANKS   LMS                             S01129
+0407 C                     MOVE *BLANKS   XPS                             S01129
+0407 C                     MOVE *BLANKS   AVS                             S01129
+0407 C                     MOVE *BLANKS   OBS                             S01129
+0408 C                     ENDSR
+0409 C********************************************************************
+0410 C**
+0411 C**   CBCALC SR. TO CONVERT COB DATE TO DDMMMYY FORMAT
+0412 C**   CALLED BY FIRST CYCLE PROCESSING
+0413 C           CBCALC    BEGSR
+0414 C                     MOVE EDDT      ZDAYNO
+0415 C                     EXSR ZDATE2                     ** EXSR ZDATE2
+0416 C                     MOVE ZADATE    CBDAT   7
+0417 C                     ENDSR
+0418 C********************************************************************
+0419 C**
+0420 C**   EXPDAT SR. TO CONVERT EXPIRY DATE TO DDMMMYY FORMAT
+0421 C**   CALLED BY MAIN SCREEN PROCESSING
+0422 C           EXPDAT    BEGSR
+0423 C                     MOVE MXPD      ZDAYNO
+0424 C                     EXSR ZDATE2                     ** EXSR ZDATE2
+0425 C                     MOVE ZADATE    LXP     7
+0426 C                     ENDSR
+0427 C********************************************************************
+0418 C********************************************************************S01129
+0419 C**                                                                  S01129
+0420 C*****ARFILL*SR.*FILL*STORAGE*ARRAYS*DEPENDING*ON*TABTB95      S01129S01332
+0420 C**   ARFILL SR. FILL STORAGE ARRAYS DEPENDING ON SDEXPMPD           S01332
+0421 C**   CALLED BY MAIN SCREEN PROCESSING                               S01129
+0419 C**                                                                  S01129
+0420 C****MB*contains*orig*posn*in*TABTB95*,*MS*contains*req'd*posn S01129S01332
+0421 C******eg*if*MM(2nd*in*TABTB95)*had*req'd*seq*01*(ie*MSMM=01)  S01129S01332
+0419 C*********then*1st*MSQ*element*would*be*01(MS)*02(MB)          S01129S01332
+0420 C**  MB contains orig posn in SDEXPMPD, MS contains req'd posn       S01332
+0421 C**    eg if MM(2nd in SDEXPMPD) had req'd seq 01 (ie MSMM=01)       S01332
+0419 C**       then 1st MSQ element would be 01(MS) 02(MB)                S01332
+0419 C**                                                                  S01129
+0422 C           ARFILL    BEGSR                                          S01129
+     C                     Z-ADD0         Z3      20                      S01129
+     C***********          DO   10        Z1      20                S01129E22634
+     C***********          DO   08        Z1      20                E22634S01314
+     C***********          DO   09        Z1      20                S01314S01332
+     C***********          DO   11        Z1      20                S01332CTI002
+     C                     DO   12        Z1      20                      CTI002
+     C                     MOVE MSQ,Z1    MSEQ                            S01129
+      *                                                                   S01129
+      * Only fill line if module sequence is non-zero                     S01129
+     C           MS        IFNE 0                                         S01229
+      *                                                                   S01129
+      * Always fill legend                                                S01129
+     C                     ADD  1         Z3                              S01129
+     C                     MOVE LEG,MB    LGS,Z3                          S01129
+      *                                                                   S01129
+      * Fill limit except for SE portfolio                                S01129
+     C***********MB        IFNE 9                                   S01129E22634
+     C***********MB        IFNE 8                                   E22634S01332
+     C           MB        IFNE 9                                         S01332
+     C                     MOVE LIM,MB    LMS,Z3                          S01129
+     C                     END                                            S01129
+      *                                                                   S01129
+      **Fill*exp,avail,offset*bal*for*FX,MM,LE,RE                   S01129S01332
+      * Fill exp,avail,offset bal for FX,MM,FRA,LE,RE,IRS,Futures,        S01332
+      * Options                                                           S01332
+     C           MB        IFEQ 1                                         S01129
+     C           MB        OREQ 2                                         S01129
+     C***********MB        OREQ 4                                   S01129E22634
+     C***********MB        OREQ 5                                   S01129E22634
+     C           MB        OREQ 3                                         E22634
+     C           MB        OREQ 4                                         E22634
+     C           MB        OREQ 5                                         S01314
+     C***********MB        OREQ 9                                   S01314S01332
+     C           MB        OREQ 6                                         S01332
+     C           MB        OREQ 10                                        S01332
+     C           MB        OREQ 11                                        S01332
+     C           MB        OREQ 12                                        CTI002
+     C                     MOVE XPO,MB    XPS,Z3                          S01129
+     C                     MOVE AV,MB     AVS,Z3                          S01129
+     C                     MOVE OBO,MB    OBS,Z3                          S01129
+     C                     END                                            S01129
+      *                                                                   S01129
+      * Fill exp,avail for SE c/party,SE iss                              S01129
+     C***********MB        IFEQ 7                                   S01129E22634
+     C***********MB        OREQ 8                                   S01129E22634
+     C***********MB        IFEQ 6                                   E22634S01332
+     C***********MB        OREQ 7                                   E22634S01332
+     C           MB        IFEQ 7                                         S01332
+     C           MB        OREQ 8                                         S01332
+     C                     MOVE XPO,MB    XPS,Z3                          S01129
+     C                     MOVE AV,MB     AVS,Z3                          S01129
+     C                     END                                            S01129
+      *
+      * Fill offset bal for SE portfolio
+     C***********MB        IFEQ 9                                   S01129E22634
+     C***********MB        IFEQ 8                                   E22634S01332
+     C           MB        IFEQ 9                                         S01332
+     C                     MOVE OBO,MB    OBS,Z3                          S01129
+     C                     END                                            S01129
+      *
+     C                     END                                            S01129
+     C                     END                                            S01129
+0426 C                     ENDSR                                          S01129
+0427 C********************************************************************S01129
+0418 C********************************************************************S01129
+0419 C**                                                                  S01129
+0420 C**   FILL1  SR. FILL 1ST DETAIL SCREEN                              S01129
+0421 C**   CALLED BY MAIN SCREEN PROCESSING                               S01129
+0422 C           FILL1     BEGSR                                          S01129
+     C                     Z-ADD0         ZDECS                           S01129
+     C                     MOVE 'J'       ZECODE                          S01129
+     C***********          SETON                     58             S01129S01332
+     C***********          MOVE *BLANKS   LMO                       S01129S01332
+     C***********          MOVE *BLANKS   XPAO                      S01129S01332
+     C***********          MOVE *BLANKS   AVO                       S01129S01332
+     C***********          MOVE *BLANKS   OBAO                      S01129S01332
+     C***********          Z-ADD50        Z4      20                S01129S01332
+     C***********          DO   6         Z       10                S01129S01332
+     C                     MOVE *BLANKS   SLEGND                          S01332
+     C                     MOVE *BLANKS   SLIMIT                          S01332
+     C                     MOVE *BLANKS   SXPOSR                          S01332
+     C                     MOVE *BLANKS   SAVAIL                          S01332
+     C                     MOVE *BLANKS   SOFSBL                          S01332
+     C           LGS,Z     IFNE *BLANKS                                   S01229
+     C***********          MOVE '0'       *IN,Z4                    S01129S01332
+     C***********          MOVE LGS,Z     LGG,Z                     S01129S01332
+     C                     MOVE LGS,Z     SLEGND                          S01332
+     C           LMS,Z     IFNE *BLANKS                                   S01129
+     C                     MOVE *BLANKS   ZFLD15                          S01129
+     C                     MOVE LMS,Z     ZFLD15                          S01129
+     C                     EXSR ZSEDIT                                    S01129
+     C***********          MOVE ZOUT21    LMO,Z                     S01129S01332
+     C                     MOVE ZOUT21    SLIMIT                          S01332
+     C                     END                                            S01129
+     C           XPS,Z     IFNE *BLANKS                                   S01129
+     C                     MOVE *BLANKS   ZFLD15                          S01129
+     C                     MOVE XPS,Z     ZFLD15                          S01129
+     C                     EXSR ZSEDIT                                    S01129
+     C***********          MOVE ZOUT21    XPAO,Z                    S01129S01332
+     C                     MOVE ZOUT21    SXPOSR                          S01332
+     C                     END                                            S01129
+     C           AVS,Z     IFNE *BLANKS                                   S01129
+     C                     MOVE *BLANKS   ZFLD15                          S01129
+     C                     MOVE AVS,Z     ZFLD15                          S01129
+     C                     EXSR ZSEDIT                                    S01129
+     C***********          MOVE ZOUT21    AVO,Z                     S01129S01332
+     C                     MOVE ZOUT21    SAVAIL                          S01332
+     C                     END                                            S01129
+     C           OBS,Z     IFNE *BLANKS                                   S01129
+     C                     MOVE *BLANKS   ZFLD15                          S01129
+     C                     MOVE OBS,Z     ZFLD15                          S01129
+     C                     EXSR ZSEDIT                                    S01129
+     C***********          MOVE ZOUT21    OBAO,Z                    S01129S01332
+     C                     MOVE ZOUT21    SOFSBL                          S01332
+     C                     END                                            S01129
+     C***********          ELSE                                     S01129S01332
+     C***********          MOVE '1'       *IN,Z4                    S01129S01332
+     C                     END                                            S01129
+     C***********          ADD  1         Z4                        S01129S01332
+     C***********          END                                      S01129S01332
+0426 C                     ENDSR                                          S01129
+0427 C********************************************************************S01129
+     C*****************************************************************   S01332
+     C**                                                                  S01332
+     C**   VALID SR. TO VALIDATE COUNTRY CODE                             S01332
+     C**   CALLED BY INITIAL SCREEN PROCESSING                            S01332
+     C           VALID     BEGSR                                          S01332
+     C*                                                                   S01332
+     C**   CLEAR ERROR MESSAGE FIELD AND INDICATOR AND CLEAR DETAILS   ***S01332
+     C                     MOVE *BLANKS   ERMSG  79                       S01332
+     C                     SETON                     89                   S01332
+     C                     SETOF                     88                   S01332
+     C                     EXSR ZERO                                      S01332
+     C*                                                                   S01332
+     C**   IF F3 TAKEN, END PROGRAM                                       S01332
+     C           *INKC     IFEQ '1'                                       S01332
+     C                     SETON                     LR                   S01332
+     C                     RETRN                                          S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**   VALIDATE COUNTRY CODE                                          S01332
+     C*                                                                   S01332
+     C**   COUNTRY CODE NOT ENTERED                                       S01332
+     C           CCODI     IFEQ *BLANKS                                   S01332
+     C                     MOVEA'010'     ERRA,1                          S01332
+     C                     SETOF                     89                   S01332
+     C                     SETON                     88                   S01332
+     C                     ELSE                                           S01332
+     C*                                                                   S01332
+     C**   COUNTRY CODE ENTERED                                           S01332
+     C                     MOVE CCODI     @CCODI  2                       S01332
+     C                     CALL 'AOCTRYR0'                                S01332
+     C                     PARM *BLANKS   @RTCD                           S01332
+     C                     PARM '*KEY    '@OPTN                           S01332
+     C                     PARM @CCODI    @CTYCD  2                       S01332
+     C           SDCTRY    PARM SDCTRY    DSFDY                           S01332
+     C*                                                                   S01332
+     C**   INVALID COUNTRY CODE                                           S01332
+     C           @RTCD     IFNE *BLANKS                                   S01332
+     C                     MOVEA'011'     ERRA,1                          S01332
+     C                     SETOF                     89                   S01332
+     C                     SETON                     88                   S01332
+     C                     ELSE                                           S01332
+     C*                                                                   S01332
+     C**   VALID COUNTRY CODE                                             S01332
+     C                     MOVE *BLANKS   CCODI                           S01332
+     C                     MOVE A4CNCD    CCODI                           S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C                     ENDSR                                          S01332
+     C********************************************************************S01332
+     C********************************************************************S01332
+     C*                                                                   S01332
+     C*    EXCTOT SR TO DETERMINE WHICH MODULES TO EXCLUDE                S01332
+     C*                                                                   S01332
+     C**   CALLED BY MAIN SCREEN PROCESSING                               S01332
+     C**                                                                  S01332
+     C           EXCTOT    BEGSR                           ** EXCTOT   ***S01332
+     C*                                                                   S01332
+     C                     Z-ADD1         XX      20                      S01332
+     C                     MOVEA*BLANKS   XCN,XX                          S01332
+     C*                                                                   S01332
+     C**  ACCESS EM EXPOSURE SCALING FILE TO DETERMINE WHICH MODULES      S01332
+     C**  ARE TO BE EXCLUDED FROM TOTALS                                  S01332
+     C**  IF A RECORD FOUND AND INCLUDE IN TOTALS IS NOT 'Y',             S01332
+     C**     SUBTRACT APPROPRIATE EXPOSURE AND OFF-SETTING BALANCE FROM   S01332
+     C**     TOTALS AND MOVE APPROPRIATE TEXT TO EXCLUSION NARRATIVE      S01332
+     C**  (IF RECORD NOT FOUND, MEANS MODULE TO BE INCLUDED)              S01332
+     C*                                                                   S01332
+     C**  FX                                                              S01332
+     C           BUMSFX    IFNE 0                                         S01332
+     C           'FX'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,1     XPTOT                           S01332
+     C                     SUB  OBO,1     OBTOT                           S01332
+     C                     MOVEALEG,1     XCN,XX                          S01332
+     C                     ADD  2         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  MM                                                              S01332
+     C           BUMSMM    IFNE 0                                         S01332
+     C           'MM'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,2     XPTOT                           S01332
+     C                     SUB  OBO,2     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,2     XCN,XX                          S01332
+     C                     ADD  2         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  FRA                                                             S01332
+     C           BUMSFR    IFNE 0                                         S01332
+     C           'FR'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,3     XPTOT                           S01332
+     C                     SUB  OBO,3     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,3     XCN,XX                          S01332
+     C                     ADD  3         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  LOANS                                                           S01332
+     C           BUMSLN    IFNE 0                                         S01332
+     C           'LE'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,4     XPTOT                           S01332
+     C                     SUB  OBO,4     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,4     XCN,XX                          S01332
+     C                     ADD  5         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  RETAIL                                                          S01332
+     C           BUMSRT    IFNE 0                                         S01332
+     C           'RE'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,5     XPTOT                           S01332
+     C                     SUB  OBO,5     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,5     XCN,XX                          S01332
+     C                     ADD  6         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  IRS                                                             S01332
+     C           BUMSIR    IFNE 0                                         S01332
+     C           'IR'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,6     XPTOT                           S01332
+     C                     SUB  OBO,6     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,6     XCN,XX                          S01332
+     C                     ADD  3         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  SE-COUNTERPARTY                                                 S01332
+     C           BUMSSC    IFNE 0                                         S01332
+     C           'CP'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,7     XPTOT                           S01332
+     C                     SUB  OBO,7     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,7     XCN,XX                          S01332
+     C                     ADD  6         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  SE-ISSUER                                                       S01332
+     C           BUMSSI    IFNE 0                                         S01332
+     C           'IS'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,8     XPTOT                           S01332
+     C                     SUB  OBO,8     OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,8     XCN,XX                          S01332
+     C                     ADD  6         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  FUTURES                                                         S01332
+     C           BUMSFU    IFNE 0                                         S01332
+     C           'FU'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,10    XPTOT                           S01332
+     C                     SUB  OBO,10    OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,10    XCN,XX                          S01332
+     C                     ADD  7         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C**  OPTIONS                                                         S01332
+     C           BUMSOP    IFNE 0                                         S01332
+     C           'OP'      CHAINEMEXSCL1             20                   S01332
+     C           *IN20     IFEQ '0'                                       S01332
+     C           EKINTO    ANDNE'Y'                                       S01332
+     C                     SUB  XPO,11    XPTOT                           S01332
+     C                     SUB  OBO,11    OBTOT                           S01332
+     C           XX        IFNE 1                                         S01332
+     C                     MOVEA','       XCN,XX                          S01332
+     C                     ADD  1         XX                              S01332
+     C                     END                                            S01332
+     C                     MOVEALEG,11    XCN,XX                          S01332
+     C                     ADD  7         XX                              S01332
+     C                     END                                            S01332
+     C                     END                                            S01332
+     C*                                                                   CTI002
+     C**  TRADE FINANCE                                                   CTI002
+     C           BUMSTF    IFNE 0                                         CTI002
+     C           'TF'      CHAINEMEXSCL1             20                   CTI002
+     C           *IN20     IFEQ '0'                                       CTI002
+     C           EKINTO    ANDNE'Y'                                       CTI002
+     C                     SUB  XPO,12    XPTOT                           CTI002
+     C                     SUB  OBO,12    OBTOT                           CTI002
+     C           XX        IFNE 1                                         CTI002
+     C                     MOVEA','       XCN,XX                          CTI002
+     C                     ADD  1         XX                              CTI002
+     C                     END                                            CTI002
+     C                     MOVEALEG,12    XCN,XX                          CTI002
+     C                     ADD  3         XX                              CTI002
+     C                     END                                            CTI002
+     C                     END                                            CTI002
+     C*                                                                   S01332
+     C**  IF NO MODULES EXCLUDED, SET ON INDICATOR TO NON-DISPLAY         S01332
+     C**  'EXCLUDES:-' NARRATIVE                                          S01332
+     C           XX        IFEQ 1                                         S01332
+     C                     SETON                     43                   S01332
+     C*                                                                   S01332
+     C**  OTHERWISE, MOVE EXCLUSION NARRATIVE TO SCREEN FIELD             S01332
+     C                     ELSE                                           S01332
+     C                     SETOF                     43                   S01332
+     C*                                                                   S01332
+     C**  IF EXCLUSION NARRATIVE NOT FULL, MOVE BLANKS TO REST OF         S01332
+     C**  NARRATIVE                                                       S01332
+     C***********XX        IFLT 57                                  S01332CTI002
+     C*********************MOVEA*BLANKS   XCN,XX                    S01332CTI002
+     C*********************END                                      S01332CTI002
+     C           XX        IFLT 60                                        CTI002
+     C                     MOVEA*BLANKS   XCN,XX                          CTI002
+     C                     END                                            CTI002
+     C*                                                                   S01332
+     C                     MOVEAXCN       EXCNAR                          S01332
+     C                     END                                            S01332
+     C*                                                                   S01332
+     C                     ENDSR                           ** ENDSR **    S01332
+     C********************************************************************S01332
+0418 C********************************************************************S01129
+0419 C***********                                                   S01129S01332
+0420 C*****FILL2**SR.*FILL*2ND*DETAIL*SCREEN                        S01129S01332
+0421 C*****CALLED*BY*MAIN*SCREEN*PROCESSING                         S01129S01332
+0422 C***********FILL2     BEGSR                                    S01129S01332
+     C***********          MOVE *BLANKS   LMO                       S01129S01332
+     C***********          MOVE *BLANKS   XPAO                      S01129S01332
+     C***********          MOVE *BLANKS   AVO                       S01129S01332
+     C***********          MOVE *BLANKS   OBAO                      S01129S01332
+     C***********          SETOF                     58             S01129S01332
+     C***********          Z-ADD50        Z4      20                S01129S01332
+     C***********          Z-ADD7         Z3      20                S01129S01332
+     C***********          DO   4         Z       10                S01129S01332
+     C***********LGS,Z3    IFNE *BLANKS                             S01229S01332
+     C***********          MOVE '0'       *IN,Z4                    S01129S01332
+     C***********          MOVE LGS,Z3    LGG,Z                     S01129S01332
+     C***********LMS,Z3    IFNE *BLANKS                             S01129S01332
+     C***********          MOVE *BLANKS   ZFLD15                    S01129S01332
+     C***********          MOVE LMS,Z3    ZFLD15                    S01129S01332
+     C***********          EXSR ZSEDIT                              S01129S01332
+     C***********          MOVE ZOUT21    LMO,Z                     S01129S01332
+     C***********          END                                      S01129S01332
+     C***********XPS,Z3    IFNE *BLANKS                             S01129S01332
+     C***********          MOVE *BLANKS   ZFLD15                    S01129S01332
+     C***********          MOVE XPS,Z3    ZFLD15                    S01129S01332
+     C***********          EXSR ZSEDIT                              S01129S01332
+     C***********          MOVE ZOUT21    XPAO,Z                    S01129S01332
+     C***********          END                                      S01129S01332
+     C***********AVS,Z3    IFNE *BLANKS                             S01129S01332
+     C***********          MOVE *BLANKS   ZFLD15                    S01129S01332
+     C***********          MOVE AVS,Z3    ZFLD15                    S01129S01332
+     C***********          EXSR ZSEDIT                              S01129S01332
+     C***********          MOVE ZOUT21    AVO,Z                     S01129S01332
+     C***********          END                                      S01129S01332
+     C***********OBS,Z3    IFNE *BLANKS                             S01129S01332
+     C***********          MOVE *BLANKS   ZFLD15                    S01129S01332
+     C***********          MOVE OBS,Z3    ZFLD15                    S01129S01332
+     C***********          EXSR ZSEDIT                              S01129S01332
+     C***********          MOVE ZOUT21    OBAO,Z                    S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          ELSE                                     S01129S01332
+     C***********          MOVE '1'       *IN,Z4                    S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          ADD  1         Z4                        S01129S01332
+     C***********          ADD  1         Z3                        S01129S01332
+     C***********          END                                      S01129S01332
+     C***********          SETON                       5455         S01129S01332
+0426 C***********          ENDSR                                    S01129S01332
+0427 C********************************************************************S01129
+0428 C/EJECT
+0429 C********************************************************************
+0430 C**
+0431 C**   STANDARD SUBROUTINES
+0432 C**
+0433 C********************************************************************
+0434 C**
+0435 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0436 C**   CALLED BY FIRST CYCLE PROCESSING.
+0437 C**
+0438 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0439 C**
+0440 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0441 C                     MOVEL'01      'ZTABKY 12
+0442 C                     MOVE '  10'    ZTABKY
+0443 C**
+0444 C***        ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0444 C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0445 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0446 C**
+0447 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0448 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0449 C**
+0450 C                     ENDSR
+0451 C**
+0452 C**
+0453 C********************************************************************
+0454 C********************************************************************
+0455 C**
+0456 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0457 C**   CALLED BY FIRST CYCLE PROCESSING.
+0458 C**
+0459 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0460 C**
+0461 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0462 C**
+0463 C**   CLEAR DATE FIELDS.
+0464 C                     Z-ADD0         ZDATE   60
+0465 C                     MOVEL'       ' ZADATE  7
+0466 C**
+0467 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0468 C                     Z-ADDZDAYNO    ZDAYNO  50
+0469 C**
+0470 C**   DETERMINE YEAR NUMBER.
+0471 C**
+0472 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0473 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0474 C   99                GOTO ZDEND2
+0475 C**
+0476 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0477 C           ZDAYN1    DIV  1461      ZLYR    20
+0478 C                     MVR            ZDAYN1           SAVE REMAINING
+0479 C**                                                   DAYS
+0480 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0481 C                     Z-ADD1         ZWRK2   20
+0482 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0483 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0484 C  N90      ZWRK2     ADD  1         ZWRK2
+0485 C  N90                GOTO ZDTAG1
+0486 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0487 C**
+0488 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0489 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0490 C**
+0491 C**   CALCULATE ACTUAL YEAR NUMBER.
+0492 C           ZLYR      MULT 4         ZWRK3   30
+0493 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0494 C                     Z-ADDZWRK3     ZYEAR   20
+0495 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0496 C**
+0497 C**   DETERMINE MONTH NUMBER.
+0498 C**
+0499 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0500 C                     SETOF                     9293
+0501 C   91      ZDAYN1    COMP 59                     9293
+0502 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0503 C**
+0504 C**   CALCULATE MONTH NUMBER.
+0505 C                     Z-ADD2         ZWRK2
+0506 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0507 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0508 C  N94      ZWRK2     ADD  1         ZWRK2
+0509 C  N94                GOTO ZDTAG2
+0510 C           ZWRK2     SUB  1         ZWRK2
+0511 C**
+0512 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0513 C**
+0514 C**   DETERMINE DAY OF MONTH.
+0515 C**
+0516 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0517 C           ZDAYN1    ADD  1         ZDAYN1
+0518 C**
+0519 C**   CALCULATE DAY OF MONTH.
+0520 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0521 C**
+0522 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0523 C   93      ZDAY      ADD  1         ZDAY
+0524 C**
+0525 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0526 C  N98                MOVELZDAY      ZWRK4   40
+0527 C   98                MOVE ZDAY      ZWRK4
+0528 C  N98                MOVE ZMTH      ZWRK4
+0529 C   98                MOVELZMTH      ZWRK4
+0530 C                     MOVELZWRK4     ZDATE
+0531 C                     MOVE ZYEAR     ZDATE
+0532 C**
+0533 C**   FORMAT ALPHA DATE, DDMMMYY.
+0534 C           ZDAY      COMP 10                     95
+0535 C                     MOVELZDAY      ZWRK5   5
+0536 C   95                MOVEL' '       ZWRK5
+0537 C                     MOVE ZMNM,ZMTH ZWRK5
+0538 C                     MOVELZWRK5     ZADATE
+0539 C                     MOVE ZYEAR     ZADATE
+0540 C**
+0541 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0542 C**
+0543 C**
+     C** ARRAYS COMMENTED OUT                                             CTI002
+     C** ====================                                             CTI002
+     C**   LEG  - LEGENDS FOR SCREEN                                      CTI002
+     C**   FX MM  FRA  LoansRetailIRSSE-C/pSE-Iss SE-P/f FuturesOptions   CTI002
+      /COPY ZSRSRC,ZSEDITZ3                                               S01129
+0544 C********************************************************************
+0545 C/EJECT
+0546 O********************************************************************
+0547 O*
+0548 O*
+0549 O****EM0310FMD        60NLR                                          S01332
+0550 O***********                        K8 'EM0310FM'                    S01332
+0551 O***********                         2 'SF'                          S01332
+0552 O***********              STIME     10 '  .  .  '                    S01332
+0553 O***********              WSID      13                               S01332
+0554 O***********              CNM       43                               S01332
+0555 O***********              CCNM      57                               S01332
+0556 O***********     N47                71 'LIMITS EXPIRE '              S01332
+0557 O***********     N47      LXP       78                               S01332
+0558 O***********     N47                83 '     '                       S01332
+0559 O***********      47                78 'NO LIMIT INFORMATION '       S01332
+0560 O***********      47                83 'FOUND'                       S01332
+0561 O***********              CBDAT     90                               S01332
+     O*                                                                   S01129
+     O**** SCREEN OUTPUT CHANGED FOR SECURITIES TRADING RELEASE 2         S01129
+0562 O*****                    LGG,1     97                        S01129 E17241
+0562 O*****                    LMO,1    111                        S01129 E17241
+0563 O*****                    XPAO,1   126                        S01129 E17241
+0564 O*****                    AVO,1    142                        S01129 E17241
+     O*****                    OBAO,1   157                        S01129 E17241
+0562 O*****                    LGG,2    164                        S01129 E17241
+0562 O*****                    LMO,2    178                        S01129 E17241
+0563 O*****                    XPAO,2   193                        S01129 E17241
+0564 O*****                    AVO,2    209                        S01129 E17241
+     O*****                    OBAO,2   224                        S01129 E17241
+0562 O*****                    LGG,3    231                        S01129 E17241
+0562 O*****                    LMO,3    245                        S01129 E17241
+0563 O****                     XPAO,3   260                        S01129 E17241
+0564 O*****                    AVO,3    276                        S01129 E17241
+     O*****                    OBAO,3   291                        S01129 E17241
+0562 O*****                    LGG,4    298                        S01129 E17241
+0562 O*****                    LMO,4    312                        S01129 E17241
+0563 O*****                    XPAO,4   327                        S01129 E17241
+0564 O*****                    AVO,4    343                        S01129 E17241
+     O*****                    OBAO,4   358                        S01129 E17241
+0562 O*****                    LGG,5    365                        S01129 E17241
+0562 O*****                    LMO,5    379                        S01129 E17241
+0563 O*****                    XPAO,5   394                        S01129 E17241
+0564 O*****                    AVO,5    410                        S01129 E17241
+     O*****                    OBAO,5   425                        S01129 E17241
+0562 O*****                    LGG,6    432                        S01129 E17241
+0562 O*****                    LMO,6    446                        S01129 E17241
+0563 O*****                    XPAO,6   461                        S01129 E17241
+0564 O*****                    AVO,6    477                        S01129 E17241
+     O*****                    OBAO,6   492                        S01129 E17241
+0580 O*****                    MOAL     506 '  ,   ,   , 0 -'      S01129 E17241
+0581 O*****                    XPTOT    521 '   ,   ,   , 0 -'     S01129 E17241
+0582 O*****                    AVTOT    537 '   ,   ,   , 0 -'     S01129 E17241
+0583 O*****                    OBTOT    552 '   ,   ,   , 0 -'     S01129 E17241
+0584 O*****                    ERMSG    631                        S01129 E17241
+0585 O*****                    CCODI    633                        S01129 E17241
+0562 O***********              LGG,1     97                         E17241S01332
+0562 O***********              LMO,1    112                         E17241S01332
+0563 O***********              XPAO,1   127                         E17241S01332
+0564 O***********              AVO,1    142                         E17241S01332
+     O***********              OBAO,1   158                         E17241S01332
+0562 O***********              LGG,2    164                         E17241S01332
+0562 O***********              LMO,2    179                         E17241S01332
+0563 O***********              XPAO,2   194                         E17241S01332
+0564 O***********              AVO,2    209                         E17241S01332
+     O***********              OBAO,2   225                         E17241S01332
+0562 O***********              LGG,3    231                         E17241S01332
+0562 O***********              LMO,3    246                         E17241S01332
+0563 O***********              XPAO,3   261                         E17241S01332
+0564 O***********              AVO,3    276                         E17241S01332
+     O***********              OBAO,3   292                         E17241S01332
+0562 O***********              LGG,4    298                         E17241S01332
+0562 O***********              LMO,4    313                         E17241S01332
+0563 O***********              XPAO,4   328                         E17241S01332
+0564 O***********              AVO,4    343                         E17241S01332
+     O***********              OBAO,4   359                         E17241S01332
+0562 O***********              LGG,5    365                         E17241S01332
+0562 O***********              LMO,5    380                         E17241S01332
+0563 O***********              XPAO,5   395                         E17241S01332
+0564 O***********              AVO,5    410                         E17241S01332
+     O***********              OBAO,5   426                         E17241S01332
+0562 O***********              LGG,6    432                         E17241S01332
+0562 O***********              LMO,6    447                         E17241S01332
+0563 O***********              XPAO,6   462                         E17241S01332
+0564 O***********              AVO,6    477                         E17241S01332
+     O***********              OBAO,6   493                         E17241S01332
+0580 O***********              MOAL     507 '  ,   ,   , 0 -'       E17241S01332
+0581 O***********              XPTOT    522 '   ,   ,   , 0 -'      E17241S01332
+0582 O***********              AVTOT    537 '   ,   ,   , 0 -'      E17241S01332
+0583 O***********              OBTOT    553 '   ,   ,   , 0 -'      E17241S01332
+0584 O***********              ERMSG    631                         E17241S01332
+0585 O***********              CCODI    633                         E17241S01332
+0562 O***                      LM,1     104 '  ,   ,   , 0 '              S01129
+0563 O***                      XPO,1    119 '   ,   ,   , 0 '             S01129
+0564 O***                      AV,1     135 '   ,   ,   , 0 -'            S01129
+     O**** FX OFFSET ADDED. ADD 15 TO ALL RELATIVE POSITIONS              S01129
+     O***                      OBO,1    150 '   ,   ,   , 0 '             S01129
+0565 O***                      LM,2     164 '  ,   ,   , 0 '              S01129
+0566 O***                      XPO,2    179 '   ,   ,   , 0 '             S01129
+0567 O***                      AV,2     195 '   ,   ,   , 0 -'            S01129
+0568 O***                      OBO,2    210 '   ,   ,   , 0 '             S01129
+0569 O***                      LM,3     224 '  ,   ,   , 0 '              S01129
+0570 O***                      XPO,3    239 '   ,   ,   , 0 '             S01129
+0571 O***                      AV,3     255 '   ,   ,   , 0 -'            S01129
+0572 O***                      OBO,3    270 '   ,   ,   , 0 '             S01129
+0573 O***                      LM,4     284 '  ,   ,   , 0 '              S01129
+0574 O***                      XPO,4    299 '   ,   ,   , 0 '             S01129
+0575 O***                      AV,4     315 '   ,   ,   , 0 -'            S01129
+0576 O***                      OBO,4    330 '   ,   ,   , 0 '             S01129
+0577 O***                      MBCL     344 '  ,   ,   , 0 '              S01129
+0578 O***                      MSTL     358 '  ,   ,   , 0 '              S01129
+0579 O***                      MFFL     372 '  ,   ,   , 0 '              S01129
+0580 O***                      MOAL     386 '  ,   ,   , 0 '              S01129
+0581 O***                      XPTOT    401 '   ,   ,   , 0 '             S01129
+0582 O***                      AVTOT    417 '   ,   ,   , 0 -'            S01129
+0583 O***                      OBTOT    432 '   ,   ,   , 0 '             S01129
+0584 O***                      ERMSG    511                               S01129
+0585 O***                      CCODI    513                               S01129
+0585 O*                                                                   S01129
+0565 O*****                    LM,2     149 '  ,   ,   , 0 '              S01129
+0566 O*****                    XPO,2    164 '   ,   ,   , 0 '             S01128
+0567 O*****                    AV,2     180 '   ,   ,   , 0 -'            S01128
+0568 O*****                    OBO,2    195 '   ,   ,   , 0 '             S01128
+0569 O*****                    LM,3     209 '  ,   ,   , 0 '              S01128
+0570 O*****                    XPO,3    224 '   ,   ,   , 0 '             S01128
+0571 O*****                    AV,3     240 '   ,   ,   , 0 -'            S01128
+0572 O*****                    OBO,3    255 '   ,   ,   , 0 '             S01128
+0573 O*****                    LM,4     269 '  ,   ,   , 0 '              S01128
+0574 O*****                    XPO,4    284 '   ,   ,   , 0 '             S01128
+0575 O*****                    AV,4     300 '   ,   ,   , 0 -'            S01128
+0576 O*****                    OBO,4    315 '   ,   ,   , 0 '             S01128
+0577 O*****                    MBCL     329 '  ,   ,   , 0 '              S01128
+0578 O*****                    MSTL     343 '  ,   ,   , 0 '              S01128
+0579 O*****                    MFFL     357 '  ,   ,   , 0 '              S01128
+0580 O*****                    MOAL     371 '  ,   ,   , 0 '              S01128
+0581 O*****                    XPTOT    386 '   ,   ,   , 0 '             S01128
+0582 O*****                    AVTOT    402 '   ,   ,   , 0 -'            S01128
+0583 O*****                    OBTOT    417 '   ,   ,   , 0 '             S01128
+0584 O*****                    ERMSG    496                               S01128
+0585 O*****                    CCODI    498                               S01128
+0588 O********************************************************************
+**   LEG  - LEGENDS FOR SCREEN                                            CTI002
+FX                                                                        CTI002
+MM                                                                        CTI002
+FRA                                                                       CTI002
+Loans                                                                     CTI002
+Retail                                                                    CTI002
+IRS                                                                       CTI002
+SE-C/p                                                                    CTI002
+SE-Iss                                                                    CTI002
+SE-P/f                                                                    CTI002
+Futures                                                                   CTI002
+Options                                                                   CTI002
+T/F                                                                       CTI002
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

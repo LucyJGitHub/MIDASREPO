@@ -1,0 +1,616 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Prompt screen for customer input')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0014V# - Edit Further Customer Details.               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSD093             Date 01Apr13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG10154           Date 27Jan06               *
+      *                 CRN001             Date 31Oct05               *
+      *                 CSD028             Date 22Aug05               *
+      *                 CGL018             Date 18Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27Oct97               *
+      *                 CTI001             DATE 05Aug97               *
+      *                 CDL002             DATE 16JAN97               *
+      *                 S01408             DATE 01AUG96               *
+      *                 CPM004             DATE 18MAR96               *
+      *                 090199             DATE 07JUL95               *
+      *                 CCF001             DATE 11APR95               *
+      *                 S01522             DATE 12OCT94               *
+      *                 076220             DATE 21SEP94               *
+      *                 S01497             DATE 12JUL94               *
+      *                 S01486             DATE 30JUN94               *
+      *                 S01467             DATE 02JUN94               *
+      *                 S01464             DATE 04MAY94               *
+      *                 S01459             DATE 14JAN94               *
+      *                                    DATE                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD093 - Document Management                                 *
+      *  BUG10154 - Conflict with CRN001 and CSD028: both use in48    *
+      *             and in83. Amend so that CRN001 uses 49 and 84.    *
+      *  CRN001 - FRS Regulatory Reporting Interface                  *
+      *  CSD028 - KYC (Standing Data Authorisations)                  *
+      *  CGL018 - Customer Risk Weighted Assets code                  *
+      *  CSE023 - Treaty Withholding Tax                              *
+      *  CDL006 - Dealing Fiduciary                                   *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CTI001 - Midas-Trade Innovation Interface:                   *
+      *           - Addition of TI selection field.                   *
+      *  CDL002 - FX Netting: New option added, conditioned on        *
+      *           switchable feature being on.                        *
+      *  S01408 - Add standard hooks.                                 *
+      *  CPM004 - Bank Portfolios.                                    *
+      *           Regenerate & recompile.                             *
+      *  090199 - Re-compilation to correct Multi-Language            *
+      *           References.                                         *
+      *  CCF001 - Recompiled over changed SDCUSTPD.                   *
+      *  S01522 - Addition of 'User Defined Correspondence' option.   *
+      *           Re-arrange the command key texts on the footer.     *
+      *           Validate 'Securities and Futures and options'       *
+      *           in the action diagram (removed the validation       *
+      *           from the display file).                             *
+      *  076220 - Change the header to 'Further Customer Details'.    *
+      *           SD0013V has been merged into SD0014V therefore      *
+      *           SD0014V# will be the only screen appearing.         *
+      *           Addition of 'F5=Refresh' to the footer.             *
+      *  S01497 - Addition of non-core customer details option.       *
+      *  S01486 - Private Banking:                                    *
+      *           Addition of 'Portfolio Management' and 'Portfolio   *
+      *           Lending'.                                           *
+      *  S01467 - Midas-LEO Integration:                              *
+      *           Addition of LEO details.                            *
+      *  S01464 - The 'Customer Fees' option is available if either   *
+      *           'Customer Service Fees' S01423 and / or             *
+      *           'Safe Custody Fees' S01464 is present.              *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0014V#99
+     A          R #RCDDTL1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0014V#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A* COMMAND KEYS............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A                                      CF12(12 'CF12.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #DCHCM')
+     A                                      SETOF(32 'Invalid: #DFCUS')
+     A                                      SETOF(33 'Invalid: #DACFF')
+     A                                      SETOF(34 'Invalid: #DCFFF')
+     A                                      SETOF(35 'Invalid: #DCHCH')
+     A                                      SETOF(36 'Invalid: #DCHSA')
+     A                                      SETOF(37 'Invalid: #DFXND')
+     A                                      SETOF(38 'Invalid: #DCHST')
+     A                                      SETOF(39 'Invalid: #DCHFO')
+     A                                      SETOF(40 'Invalid: #DPMSC')
+     A                                      SETOF(41 'Invalid: #DPLSC')
+     A*/COPY WNCPYSRC,SD0014V#04
+     A                                      SETOF(42 'Invalid: #DLEOF')
+     A*/COPY WNCPYSRC,SD0014V#01
+     A                                      SETOF(43 'Invalid: #DUDCF')
+     A                                      SETOF(44 'Invalid: #DTICF')
+     A** Start of change CSE023
+     A                                      SETOF(46 'Invalid: SWITAX')
+     A** End of change CSE023
+     A** Start of change CGL018
+     A                                      SETOF(47 'Invalid: SWRWAC')
+     A** End of change CGL018
+      ** Start CRN001
+      ** Start BUG10154
+     A**********                            SETOF(48 'Invalid: #DRGRP')
+     A                                      SETOF(49 'Invalid: #DRGRP')
+      ** End   BUG10154
+      ** End   CRN001
+     A*.........................................................................
+     A*/COPY WNCPYSRC,SD0014V#02
+     A*/COPY WNCPYSRC,SD0014V#05
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0014V1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 29'Further Customer Details'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #DCSST        10   H      TEXT('Customer shortname ST')
+     A            #1CNA1        35   H      TEXT('Cust. Name & Address 1')
+     A            #1CNA2        35   H      TEXT('Cust. Name & Address 2')
+     A            #1CNA3        35   H      TEXT('Cust. Name & Address 3')
+     A            #1CNA4        35   H      TEXT('Cust. Name & Address 4')
+     A            #1PAIN         1   H      TEXT('Parent Indicator')
+     A            #1DRCS         7   H      TEXT('DRS Customer Shortname')
+     A            #1LCCD         3   H      TEXT('Location Code')
+     A            #1ACOC         2   H      TEXT('Account Officer Code')
+     A            #1CNCZ         2   H      TEXT('Country of Citizenship')
+     A            #1COLC         2   H      TEXT('Country of Location')
+     A            #1SSDT         5  0H      TEXT('Suspended Date')
+     A            #1DOIC         5  0H      TEXT('Date of Initial Contact')
+     A            #1PCNB         6   H      TEXT('Parent Customer Number')
+     A            #1CASC         8   H      TEXT('Customer Alpha Sort Code')
+     A            #1BRCD         3   H      TEXT('Branch code')
+     A            #1BNBI         1   H      TEXT('Bank/non-bank Indicator')
+     A            #1LINC         2   H      TEXT('Local Institution Code')
+     A            #1LICD         3   H      TEXT('Local Industry Code')
+     A            #1CTNB        12   H      TEXT('Customer Telephone Number')
+     A*/COPY WNCPYSRC,SD0014V#08
+     A            #1REID         4   H      TEXT('Reuter Id.')
+     A*/COPY WNCPYSRC,SD0014V#09
+     A            #1BSIN         1   H      TEXT('Branch/Subsidiary Ind.')
+     A            #1CSTY         1   H      TEXT('Customer Type')
+     A            #1TAIN         1   H      TEXT('Taxable Indicator')
+     A            #1CSID        12   H      TEXT('Customer Swift Id')
+     A            #1STAD        12   H      TEXT('STTX Address')
+     A            #1TXA1        10   H      TEXT('MIDAS Telex Shortname')
+     A            #1TXA2        10   H      TEXT('Telex Address 2')
+     A            #1TXA3        10   H      TEXT('Telex Address 3')
+     A            #1TXA4        10   H      TEXT('Telex Address 4')
+     A            #1TXA5        10   H      TEXT('Telex Address 5')
+     A            #1CHID         6  0H      TEXT('Chips Id')
+     A            #1CHSC         6  0H      TEXT('Chaps sort code')
+     A            #1CABA         3  0H      TEXT('Chips ABA')
+     A            #1BFIC         4   H      TEXT('BOJ Fin. Inst. Code')
+     A            #1BLCD         8   H      TEXT('Bankleitzahl Code (alpha)')
+     A            #1FWCD         9  0H      TEXT('Fedwire Code')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1LALD         5  0H      TEXT('Last Audit Letter Date')
+     A            #1LDHD         5  0H      TEXT('Last Dels History Date')
+     A            #1LRLD         5  0H      TEXT('Last Retail Letter Date')
+     A            #1DTDL         5  0H      TEXT('Date Deleted')
+     A            #1LETI         1   H      TEXT('LE Past/Int Telex Ind.')
+     A            #1CMTI         1   H      TEXT('Customer Module Telex Ind')
+     A            #1GSFM         1   H      TEXT('Generate SWIFT format msg')
+     A            #1STFG         1   H      TEXT('SWIFT or Telex flag')
+     A            #1RWCD         4   H      TEXT('Risk Weighting Code')
+     A            #1NG01         3   H      TEXT('Message Type Not Gen 1')
+     A            #1NG02         3   H      TEXT('Message Type Not Gen 2')
+     A            #1NG03         3   H      TEXT('Message Type Not Gen 3')
+     A            #1NG04         3   H      TEXT('Message Type Not Gen 4')
+     A            #1NG05         3   H      TEXT('Message Type Not Gen 5')
+     A            #1NG06         3   H      TEXT('Message Type Not Gen 6')
+     A            #1NG07         3   H      TEXT('Message Type Not Gen 7')
+     A            #1NG08         3   H      TEXT('Message Type Not Gen 8')
+     A            #1NG09         3   H      TEXT('Message Type Not Gen 9')
+     A            #1NG10         3   H      TEXT('Message Type Not Gen 10')
+     A            #1NG11         3   H      TEXT('Message Type Not Gen 11')
+     A            #1NG12         3   H      TEXT('Message Type Not Gen 12')
+     A            #1NG13         3   H      TEXT('Message Type Not Gen 13')
+     A            #1NG14         3   H      TEXT('Message Type Not Gen 14')
+     A            #1NG15         3   H      TEXT('Message Type Not Gen 15')
+     A            #1DS01         3   H      TEXT('Default Status released 1')
+     A            #1DS02         3   H      TEXT('Default Status Released 2')
+     A            #1DS03         3   H      TEXT('Default Status Released 3')
+     A            #1DS04         3   H      TEXT('Default Status Released 4')
+     A            #1DS05         3   H      TEXT('Default Status Released 5')
+     A            #1DS06         3   H      TEXT('Default Status Released 6')
+     A            #1DS07         3   H      TEXT('Default Status Released 7')
+     A            #1DS08         3   H      TEXT('Default Status Released 8')
+     A            #1DS09         3   H      TEXT('Default Status Released 9')
+     A            #1DS10         3   H      TEXT('Default Status Release 10')
+     A            #1DS11         3   H      TEXT('Default Status Release 11')
+     A            #1DS12         3   H      TEXT('Default Status Release 12')
+     A            #1DS13         3   H      TEXT('Default Status Release 13')
+     A            #1DS14         3   H      TEXT('Default Status Release 14')
+     A            #1DS15         3   H      TEXT('Default Status Release 15')
+     A            #1DNW1         6   H      TEXT('Default Network for MT1nn')
+     A            #1DNW2         6   H      TEXT('Default Network for MT2nn')
+     A            #1DNW3         6   H      TEXT('Default Network for MT3nn')
+     A            #1DNW4         6   H      TEXT('Default Network for MT4nn')
+     A            #1DNW5         6   H      TEXT('Default Network for MT5nn')
+     A            #1DNW6         6   H      TEXT('Default Network for MT6nn')
+     A            #1DNW7         6   H      TEXT('Default Network for MT7nn')
+     A            #1DNW8         6   H      TEXT('Default Network for MT8nn')
+     A            #1DNW9         6   H      TEXT('Default Network for MT9nn')
+     A            #1CGRP         1   H      TEXT('Retail Customer Group')
+     A            #1CDEL         1   H      TEXT('Allow Deletion in COB')
+     A            #1ABA2         4  0H      TEXT('Chips ABA for Chips 2')
+     A            #1OGID        10   H      TEXT('Midas Export Value OGID')
+     A            #1SSDL         1   H      TEXT('Stop Statement Download')
+     A            #1ORED         5  0H      TEXT('Original entry date')
+     A            #1MCAC         1   H      TEXT('MA Analysis by Assoc Cust')
+     A            #1CRPC         1   H      TEXT('Corporate Customer')
+     A            #1PSWC        11   H      TEXT('Pseudo SWIFT code')
+     A            #1MGTP         2  0H      TEXT('Margin Type')
+     A            #1NET          1   H      TEXT('Net Settlement')
+     A            #1NTGP         4   H      TEXT('Netting Group')
+     A            #1NTCP         1   H      TEXT('Net by Currency Pairs')
+     A            #1NTND         2  0H      TEXT('Net Notice Days')
+     A            #1NTMM         1   H      TEXT('Net Manual Matching')
+     A            #1TICS         1   H      TEXT('TI Customer Flag')
+     A            #1SWFI         1   H      TEXT('SWIFT Financial Inst Ind')
+     A                                  4  2'Customer.:'
+     A            #1CUST         6      4 13TEXT('Customer Number')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CSSN        10      4 22TEXT('Customer Shortname')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CRNM        20      4 35TEXT('Customer Report Name')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1CRTN        10      4 58TEXT('Customer Report Town')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'ADDITIONAL CUSTOMER INFORMATION:'
+ 
+      ** Start CRN001
+     A                                  8 44'Regulatory Reporting Detail...:'
+      ** Start BUG10154
+     A**83******                            DSPATR(ND)
+     A  84                                  DSPATR(ND)
+      ** End   BUG10154
+     A N25                                  OVRATR
+     A            #DRGRP         1   B  8 76
+     A N25                                  OVRDTA
+      ** Start BUG10154
+     A**83******                            DSPATR(PR)
+     A**48******                            DSPATR(RI)PC)
+     A**83N48***                            DSPATR(ND)
+     A*N83N48***                            DSPATR(UL)HI)
+     A  84                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A  84N49                               DSPATR(ND)
+     A N84N49                               DSPATR(UL HI)
+      ** End   BUG10154
+     A N25                                  OVRATR
+      ** End   CRN001
+ 
+     A                                  9  4'Marketing Information.........:'
+     A            #DCHCM         1   B  9 36TEXT('Choose Customer Marketing')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                  9 44'Further Customer Details......:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DFCUS         1   B  9 76TEXT('Further Customer Details')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A  79N32                               DSPATR(ND)
+     A N79N32                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 10  4'Additional Customer Details...:'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DACFF         1   B 10 36TEXT('Additional Cust Func Fld')
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A  78N33                               DSPATR(ND)
+     A N78N33                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 10 44'Customer Fees.................:'
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DCFFF         1   B 10 76TEXT('Customer Fees Func Fld')
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A  77N34                               DSPATR(ND)
+     A N77N34                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 11  4'Customer Cheque Details.......:'
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DCHCH         1   B 11 36TEXT('Choose Cheques and Cards')
+     A N25                                  OVRDTA
+     A  76                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A  76N35                               DSPATR(ND)
+     A N76N35                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A                                 11 44'Customer Safes Details........:'
+     A  76                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DCHSA         1   B 11 76TEXT('Choose Customer Safes')
+     A N25                                  OVRDTA
+     A  76                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A  76N36                               DSPATR(ND)
+     A N76N36                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD0014V#03
+     A                                 12  4'FX Netting Details............:'
+     A  75                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DFXND         1   B 12 36TEXT('FX Netting Dtls Func fld')
+     A N25                                  OVRDTA
+     A  75                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A  75N37                               DSPATR(ND)
+     A N75N37                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              Begin /CDL006/
+     A                                 12 44'Fiduciary Details ............:'
+     A N80                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            SFIDET         1   B 12 76TEXT('Fiduciary Details')
+     A N25                                  OVRDTA
+     A N80                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N80N45                               DSPATR(ND)
+     A  80N45                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      *                                              End   /CDL006/
+     A** Start of change CGL018
+     A********                         13  4'Risk Weighted Assets code ....:'
+     A                                 13  4'Risk Weighted Assets..........:'
+     A N82                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            SWRWAC         1   B 13 36TEXT('Risk Weighted Assets code')
+     A N25                                  OVRDTA
+     A N82                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N82N47                               DSPATR(ND)
+     A  82N47                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** End of change CGL018
+     A** Start of change CSE023
+     A                                 13 44'Withholding tax...............:'
+     A N81                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            SWITAX         1   B 13 76TEXT('Withholding Tax')
+     A N25                                  OVRDTA
+     A N81                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N81N46                               DSPATR(ND)
+     A  81N46                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** End of change CSE023
+      **Start of change CSD028
+     A                                 14  4'KYC Items ....................:'
+     A N83                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #KYCIT         1A  B 14 36TEXT('KYC Items ................:')
+     A N25                                  OVRDTA
+     A N83                                  DSPATR(PR)
+     A  48                                  DSPATR(RI)
+     A  48                                  DSPATR(PC)
+     A N83N48                               DSPATR(ND)
+     A  83N48                               DSPATR(UL)
+     A  83N48                               DSPATR(HI)
+     A N25                                  OVRATR
+      **End of Change CSD028
+      ** Start of change CSD093
+     A                                 14 44'Document Management...........:'
+     A N87                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #DDCMT         1   B 14 76TEXT('Doc Management')
+     A N25                                  OVRDTA
+     A N87                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N87N48                               DSPATR(ND)
+     A  87N48                               DSPATR(UL HI)
+     A N25                                  OVRATR
+      ** End of change CSD093
+     A** Start of change CGL018
+      **********
+     A**********                       14  2'PRODUCT INFORMATION:'
+      **Start of change CSD028
+     A**********                       15  2'PRODUCT INFORMATION:'                            CSD028
+     A                                 16  2'PRODUCT INFORMATION:'
+      **End of change CSD028
+     A** End of change CGL018
+     A  74                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********                       16  4'Securities Trading............:'
+      **Start of Change CSD028
+     A**********                       17  4'Securities Trading............:'                 CSD028
+     A                                 18  4'Securities Trading............:'
+      **End of change CSD028
+     A** End of change CGL018
+     A  73                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DCHST         1   B 16 36TEXT('Choose Securities Trading')
+      **Start of change CSD028
+     A**********  #DCHST         1   B 17 36TEXT('Choose Securities Trading')                 CSD028
+     A            #DCHST         1A  B 18 36TEXT('Choose Securities Trading')
+      **End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  73                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A  73N38                               DSPATR(ND)
+     A N73N38                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********                       16 44'Futures and Options...........:'
+      **Start of change CSD028
+     A**********                       17 44'Futures and Options...........:'                 CSD028
+     A                                 18 44'Futures and Options...........:'
+      **End of change CSD028
+     A** End of change CGL018
+     A  72                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DCHFO         1   B 16 76TEXT('Choose Futures & Options')
+      **Start of change CSD028
+     A**********  #DCHFO         1   B 17 76TEXT('Choose Futures & Options')                  CSD028
+     A            #DCHFO         1A  B 18 76TEXT('Choose Futures & Options')
+      **End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  72                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A  72N39                               DSPATR(ND)
+     A N72N39                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********                       17  4'Portfolio Management..........:'
+      **Start of change CSD028
+     A**********                       18  4'Portfolio Management..........:'                 CSD028
+     A                                 19  4'Portfolio Management..........:'
+      **End of change CSD028
+     A** End of change CGL018
+     A  71                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DPMSC         1   B 17 36TEXT('Portfolio Management Scr')
+      **Start of change CSD028
+     A**********  #DPMSC         1   B 18 36TEXT('Portfolio Management Scr')                  CSD028
+     A            #DPMSC         1A  B 19 36TEXT('Portfolio Management Scr')
+      **End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  71                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A  71N40                               DSPATR(ND)
+     A N71N40                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********                       17 44'Portfolio Lending.............:'
+      ** Start of change CSD028
+     A**********                       18 44'Portfolio Lending.............:'                 CSD028
+     A                                 19 44'Portfolio Lending.............:'
+      ** End of change CSD028
+     A** End of change CGL018
+     A  70                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DPLSC         1   B 17 76TEXT('Portfolio Lending Scr')
+      ** Start of change CSD028
+     A**********  #DPLSC         1   B 18 76TEXT('Portfolio Lending Scr')                     CSD028
+     A            #DPLSC         1A  B 19 76TEXT('Portfolio Lending Scr')
+      ** End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  70                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A  70N41                               DSPATR(ND)
+     A N70N41                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD0014V#06
+     A** Start of change CGL018
+     A**********                       18  4'Leo Customer Details..........:'
+      ** Start of change CSD028
+     A**********                       19  4'Leo Customer Details..........:'                 CSD028
+     A                                 20  4'Leo Customer Details..........:'
+      ** End of change CSD028
+     A** End of change CGL018
+     A  69                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DLEOF         1   B 18 36TEXT('LEO Function field')
+      ** Start of change CSD028
+     A**********  #DLEOF         1   B 19 36TEXT('LEO Function field')                        CSD028
+     A            #DLEOF         1A  B 20 36TEXT('LEO Function field')
+      ** End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  69                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A  69N42                               DSPATR(ND)
+     A N69N42                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SD0014V#07
+     A** Start of change CGL018
+     A**********                       18 44'User Defined Correspondence...:'
+      ** Start of change CSD028
+     A**********                       19 44'User Defined Correspondence...:'                 CSD028
+     A                                 20 44'User Defined Correspondence...:'
+      ** End of change CSD028
+     A** End of change CGL018
+     A  68                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DUDCF         1   B 18 76TEXT('UDC Function field')
+      ** Start of change CSD028
+     A**********  #DUDCF         1   B 19 76TEXT('UDC Function field')                        CSD028
+     A            #DUDCF         1A  B 20 76TEXT('UDC Function field')
+      ** End of change CSD028
+     A** End of change CGL018
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  68                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A  68N43                               DSPATR(ND)
+     A N68N43                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********                       19  4'Trade Innovation Cust Details.:'
+      ** Start of change CSD028
+     A**********                       20  4'Trade Innovation Cust Details.:'                 CSD028
+     A                                 21  4'Trade Innovation Cust Details.:'
+      ** End of change CSD028
+     A** End of change CGL018
+     A  67                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A** Start of change CGL018
+     A**********  #DTICF         1   B 19 36TEXT('Call TI Customer Function')
+      ** Start of change CSD028
+     A**********  #DTICF         1   B 20 36TEXT('Call TI Customer Function')                 CSD028
+     A            #DTICF         1A  B 21 36TEXT('Call TI Customer Function')
+      ** End of change CSD028
+     A** End of change CGL018
+     A N25                                  OVRDTA
+     A  67                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A  67N44                               DSPATR(ND)
+     A N67N44                               DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0014V#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0014V#96
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Client Details   F5=Refresh   -
+     A                                      F12=Previous'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0014V#95
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0014V#94
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0014V#93
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0014V#92
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0014V#91

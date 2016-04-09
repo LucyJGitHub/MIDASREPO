@@ -1,0 +1,1343 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Profitability Rpt/Enq File : Fclty')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER440 - Produce Profitability Report/Enquiry File:-         *
+     F*           Facilities.                                         *
+     F*                                                               *
+     F*  Function:  This program outputs profitability figures by     *
+     F*  (COB)      Customer, Account Officer, Department and Group   *
+     F*             to the file LENQFCD.                              *
+     F*                                                               *
+     F*  Called By: LERC440 - Produce Profitability File (Facilities).*
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 249087             Date 11Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 245349             Date 30Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK025             Date 28Aug06               *
+      *                 225714             Date 26May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 09May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. 163668             Date 14Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 158690 (BD5078)    Date 08MAY97               *
+      *                 158060             Date 24Mar99               *
+      *                 156766             Date 12Mar99               *
+     F*                 157377 (E46985)    DATE 04MAY94               *
+     F*                 148861             Date 22Dec98               *
+     F*                 148866             Date 22Dec98               *
+     F*                 052572             DATE 09DEC93               *
+     F*                 065337             DATE 11JAN96               *
+     F*                 052821             DATE 21DEC93               *
+     F*                 MOF60              DATE 16MAR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  249087 - Apply 245349.                                       *
+      *  245349 - Program loops due to incorrect conversion of date.  *
+      *  CPK025 - MidasPlus 1.3 packaging.  Missing arrays.           *
+      *  225714 - LER480 report incorrect. Year to date values should *
+      *           include month to date values plus previous months'  *
+      *           amounts.                                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+     F*  158690 - Remove 065337. Facilities that were live at any
+     F*           point during the year need to be reported, even if
+     F*           they are now closed or expired.
+     F*  158060 - Amend margin calculations for group totals          *
+     F*  156766 - Prevent facilities expiring in previous year from   *
+     F*           generating records on LENQFCD.                      *
+     F*  157377 - Change calculation of average aggregate balance     *
+     F*           : Using 'LASTFN'date from LERSTS instead of run day *
+     F*           as the end date.                                    *
+     F*  148861 - Ensure Credit agreements are not double accounted   *
+     F*           on facilities totals.                               *
+     F*  148866 - Calculate total facilities correctly                *
+     F*  052572 - Change calculation of average aggregate balance     *
+     F*           from active days to actual days in the month/year   *
+     F*  065337 - Prevent DB error 002 by producing profitability     *
+     F*           extract for LIVE records only (i.e. FDECFG='D').    *
+     F*  052821 - Prevent array index error if Facility Start Date    *
+     F*           is more than one year old, or matures next year.    *
+     F*  MOF60  - CUSTOMER PROFITABILITY & FEES PROCESSING            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F***PEFCJL0*IP  E           K        DISK                            163668
+     FLEPRFCL0IP  E           K        DISK                               163668
+     F            LEPRFCD0                          KRENAMEPRFCLF         163668
+     F*
+     FFCLTY   IF  E           K        DISK                               148861
+     F*                                                                   148861
+     FLEPRFCL1IF  E           K        DISK                               163668
+     F            LEPRFCD1                          KRENAMEPRFCLF1        163668
+     FLEFCLTL2IF  E           K        DISK                               163668
+     F            FCLTYFMF                          KRENAMEFCLTYM         163668
+     F*                                                                   163668
+     FLENQFCD O   E                    DISK
+     F*
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   10  - Initial Processing indicator                            *
+     F*                                                                 *
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  INIT   - Initialization subroutine                             *
+     F*  DETAIL - Detail record processing subroutine                   *
+     F*  WRITNQ - Yield and Margin rates calculations                   *
+     F*  CUSTSR - Outputs Customer totals to LENQFCD                    *
+     F*  ACOFSR - Outputs Account Officer totals to LENQFCD             *
+     F*  DEPTSR - Outputs Department totals to LENQFCD                  *
+     F*  TOTLSR - Outputs overall totals to LENQFCD                     *
+     F*  *PSSR  - Standard error processing subroutine                  *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E**  CPY@ Array holds copyright statement for object
+     E                    AGB        12 15 0             AGG BALANCES
+     E                    AGF        12 15 0             FEE AMOUNTS
+     E                    APB        12 15 0             Agg Balances     163668
+     E                    APF        12 15 0             Fee Amounts      163668
+     E********************CMDY*******31**1*0*************CUST DAYS-MTH    148866
+     E********************CYDY******366**1*0*************CUST DAYS-YR     148866
+     E********************AMDY*******31**1*0*************ACOF DAYS-MTH    148866
+     E********************AYDY******366**1*0*************ACOF DAYS-YR     148866
+     E********************DMDY*******31**1*0*************DEPT DAYS-MTH    148866
+     E********************DYDY******366**1*0*************DEPT DAYS-YR     148866
+     E********************TMDY*******31**1*0*************GROUP DAYS-MTH   148866
+     E********************TYDY******366**1*0*************GROUP DAYS-YRH   148866
+     E                    GMNM   12  12  3               MONTH NAMES
+     E                    NOS    12  12  2 0             DAYS IN MONTH
+     E/COPY ZSRSRC,ZDATE1Z1                                                                   225714
+      /EJECT
+     I*
+     I* DEFINE CONTROL GROUPS
+     I*
+     I***PEFCJL0F                                                         163668
+     IPRFCLF                                                              163668
+     I              BRCA                            FDBRCA
+     I                                              FDDEPTL3
+     I                                              FDACOFL2
+     I                                              FDFCUSL1
+     I*
+     I** SPLIT UP FACILITY NUMBER.
+     I*
+     I            DS
+     I                                        1   50FDFACN
+     I                                        1   30FTYP
+     I                                        4   50FSEQ
+     I*
+     I** AGGREGATE BALANCES DATA STRUCTURE
+     I*
+     I            DS
+     I                                    P   1  960AGB
+     I                                    P   1   80FDJANA
+     I                                    P   9  160FDFEBA
+     I                                    P  17  240FDMARA
+     I                                    P  25  320FDAPRA
+     I                                    P  33  400FDMAYA
+     I                                    P  41  480FDJUNA
+     I                                    P  49  560FDJULA
+     I                                    P  57  640FDAUGA
+     I                                    P  65  720FDSEPA
+     I                                    P  73  800FDOCTA
+     I                                    P  81  880FDNOVA
+     I                                    P  89  960FDDECA
+     I*
+     I** FEE AMOUNTS DATA STRUCTURE
+     I*
+     I            DS
+     I                                    P   1  960AGF
+     I                                    P   1   80FFDJAN
+     I                                    P   9  160FFDFEB
+     I                                    P  17  240FFDMAR
+     I                                    P  25  320FFDAPR
+     I                                    P  33  400FFDMAY
+     I                                    P  41  480FFDJUN
+     I                                    P  49  560FFDJUL
+     I                                    P  57  640FFDAUG
+     I                                    P  65  720FFDSEP
+     I                                    P  73  800FFDOCT
+     I                                    P  81  880FFDNOV
+     I                                    P  89  960FFDDEC
+      *                                                                   163668
+      ** Aggregate balances data structure                                163668
+      *                                                                   163668
+     I            DS                                                      163668
+     I                                    P   1  960APB                   163668
+     I                                    P   1   80FJANA                 163668
+     I                                    P   9  160FFEBA                 163668
+     I                                    P  17  240FMARA                 163668
+     I                                    P  25  320FAPRA                 163668
+     I                                    P  33  400FMAYA                 163668
+     I                                    P  41  480FJUNA                 163668
+     I                                    P  49  560FJULA                 163668
+     I                                    P  57  640FAUGA                 163668
+     I                                    P  65  720FSEPA                 163668
+     I                                    P  73  800FOCTA                 163668
+     I                                    P  81  880FNOVA                 163668
+     I                                    P  89  960FDECA                 163668
+      *                                                                   163668
+      ** Fee amounts data structure                                       163668
+      *                                                                   163668
+     I            DS                                                      163668
+     I                                    P   1  960APF                   163668
+     I                                    P   1   80FDJAN                 163668
+     I                                    P   9  160FDFEB                 163668
+     I                                    P  17  240FDMAR                 163668
+     I                                    P  25  320FDAPR                 163668
+     I                                    P  33  400FDMAY                 163668
+     I                                    P  41  480FDJUN                 163668
+     I                                    P  49  560FDJUL                 163668
+     I                                    P  57  640FDAUG                 163668
+     I                                    P  65  720FDSEP                 163668
+     I                                    P  73  800FDOCT                 163668
+     I                                    P  81  880FDNOV                 163668
+     I                                    P  89  960FDDEC                 163668
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+     I*                                                                     0110
+     ILERSTS    E DSLERSTS                                                  0110
+      ** Fees/Profitability enhancement status data area                    0110
+     I              FACHISD                         WHISST                  0110
+     I              LERC2030                        LERC20                  0110
+     I              LERC135                         LERC13                  0110
+     I              LERC315                         LERC35                  0110
+     I              LERC425                         LERC42                  0110
+     I              EOYFLAG                         EOYFLG                  0110
+     I            DS                                                                          225714
+     I                                        1   7 REPDT                                     225714
+     I                                        1   20REPDD                                     225714
+     I                                        3   5 REPMM                                     225714
+     I                                        6   70REPYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60PRFDT                                     225714
+     I                                        1   20PRFDD                                     225714
+     I                                        3   40PRFMM                                     225714
+     I                                        5   60PRFYY                                     225714
+     I            DS                                                                          225714
+     I                                        1   60WSTRMO                                    225714
+     I                                        1   20WSTRDD                                    225714
+      *
+     ISDLOAN    E DSSDLOANPD
+      ** LOAN PROCESSING TYPE DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+      ** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+     C*
+     C** PERFORM INITIAL PROCESSING.
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+     C*
+     C** ZEROIZE TOTALS OF RECORDS PROCESSED AT LEVEL BREAKS.
+     C           *INL1     IFEQ '1'
+     C                     Z-ADD0         CREC
+     C                     END
+     C*
+     C           *INL2     IFEQ '1'
+     C                     Z-ADD0         AREC
+     C                     END
+     C*
+     C           *INL3     IFEQ '1'
+     C                     Z-ADD0         DREC
+     C                     END
+     C*
+     C** PROCESS DETAIL RECORDS UNLESS FACILITY IS EXPIRED OR CLOSED
+     C** AND NO FEES EXIST.
+     C*
+     C                     XFOOTAGB       YAGG
+     C                     XFOOTAGF       QFYFEE
+      *                                                                                       225714
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           YAGG      SUB  AGB,WNXT  YAGG                                                225714
+     C           QFYFEE    SUB  AGF,WNXT  QFYFEE                                              225714
+     C                     ENDIF                                                              225714
+     C***        FDECFG    IFEQ 'D'                                065337 158690
+     C*                                                                   156766
+     C** Do not process detail records if facility expired in previous    156766
+     C** year.                                                            156766
+     C*                                                                   156766
+     C           FDFEDY    IFGT BJPEYD                                    156766
+     C           YAGG      IFNE 0
+     C           QFYFEE    ORNE 0
+     C***********FDECFG    OREQ 'D'                                       065337
+     C           FDECFG    OREQ 'D'                                       158690
+     C                     EXSR DETAIL
+     C                     END
+     C                     END                                            156766
+     C****                 END                                     065337 158690
+     C*
+     C** TOTAL TIME PROCESSING:
+     C*
+     C** PROCESS LEVEL BREAK ON CUSTOMER:
+     C*
+     CL1         CREC      CASGT0         CUSTSR
+     CL1                   END
+     C*
+     C** PROCESS LEVEL BREAK ON A/C OFFICER:
+     C*
+     CL2         AREC      CASGT0         ACOFSR
+     CL2                   END
+     C*
+     C** PROCESS LEVEL BREAK ON DEPARTMENT:
+     C*
+     CL3         DREC      CASGT0         DEPTSR
+     CL3                   END
+     C*
+     C** PROCESS TOTALS FOR ALL FACILITIES
+     C*
+     CLR         TREC      CASGT0         TOTLSR
+     CLR                   END
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETAIL - Detail record subroutine                             *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, WRITNQ                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** SET UP FIELDS FOR CALCS LATER.
+     C*
+     C**
+     C** COMPARE FACILITY END DAY THIS MONTH WITH FACILITY START DAY
+     C** CALCULATE THE ADJUSTED MONTH ACCORDINGLY
+     C** USE AN ARRAY DAYS TO LOOK UP THE NUMBER OF DAYS IN THE MONTH
+     C**
+     C** CALCULATE NO. OF DAYS FACILITY LIVE THIS MONTH.
+     C** N.B. IF FACILITY NOT LIVE THIS MONTH, AGGREGATE WILL BE ZERO.
+     C*
+     C                     Z-ADD0         AM      20
+     C                     MOVE DDRD      DDRDN   20
+     C           FDENDY    IFLT FDSTDY
+     C**
+     C           DDRDN     IFLE FDENDY
+     C           MN        SUB  1         AM      20
+     C**
+     C** CHECK WHETHER ADJUSTED MONTH IS ZERO
+     C**
+     C           AM        IFEQ 0
+     C                     ADD  12        AM
+     C                     END
+     C**
+     C                     ELSE
+     C                     Z-ADDMN        AM
+     C                     END
+     C**
+     C** LOOK UP THE NUMBER OF DAYS IN THE MONTH
+     C**
+     C                     Z-ADDNOS,AM    NOS1    20
+     C**
+     C** ADD THE NUMBER OF DAYS IN THE MONTH TO THE FACILITY END DAY
+     C** IN THE MONTH  AND SUBTRACT THE FACILITY START DAY
+     C**
+     C           NOS1      ADD  FDENDY    DTOT    20
+     C********** DTOT      SUB  FDSTDY    MTOT                            052572
+     C********** MTOT      ADD  1         MTOT                            052572
+     C**
+     C** RETRIEVE AGGREGATE VALUE FROM ARRAY
+     C**
+     C                     Z-ADDAGB,AM    MAGG
+     C*
+     C** SET UP MTD FEES
+     C*
+     C                     Z-ADDAGF,AM    QFMFEE
+     C**
+     C                     ELSE
+     C********   FDENDY    SUB  FDSTDY    MTOT                            052572
+     C********             ADD  1         MTOT                            052572
+     C                     Z-ADDAGB,MN    MAGG
+     C*
+     C** SET UP MTD FEES
+     C*
+     C                     Z-ADDAGF,MN    QFMFEE
+     C                     END
+     C*
+     C** CALCULATE NO. OF DAYS FACILITY LIVE THIS YEAR.
+     C** N.B. IF FACILITY NOT LIVE THIS YEAR, AGGREGATE WILL BE ZERO.
+     C*
+     C********   FDFEDY    SUB  FDFSDY    YTOT                            052572
+     C********             ADD  1         YTOT                            052572
+     C*
+     C** INCREMENT COUNT OF RECORDS PROCESSED BY CONTROL LEVEL.
+     C*
+     C                     ADD  1         CREC
+     C                     ADD  1         AREC
+     C                     ADD  1         DREC
+     C                     ADD  1         TREC
+     C*
+     C** SET UP MONTH-TO-DATE DATA:
+     C** ADD AGGREGATE IN TO TOTALS.
+     C*
+     C***********          ADD  MAGG      CMAG                            148866
+     C***********          ADD  MAGG      AMAG                            148866
+     C***********          ADD  MAGG      DMAG                            148866
+     C***********          ADD  MAGG      TMAG                            148866
+     C*
+     C** SET UP DAY ARRAYS:
+     C** SKIP IF START & END DATES ZERO.
+     C** SKIP IF FACILITY NOT LIVE THIS MONTH, I.E. IF MTD AGGREGATE = 0.
+     C*
+     C           FDSTDY    IFGT 0
+     C           FDENDY    ANDGT0
+     C           MAGG      ANDNE0
+     C**********************************************************            0110
+     C***CALCULATE*THE*DAYS*ACTIVE*IN*MONTH*USING*THE*MTOT*VALUE            0110
+     C***RATHER*THAN*COMPARING*THE*LOAN*START*AND*END*DATE*WHICH            0110
+     C***MAY*RESULT*IN*NO*DAYS*BEING*MADE*ACTIVE*(IE.*WHEN*THE*2            0110
+     C***DIGIT*START*DAY*IS*GREATER*THAN*THE*TWO*DIGIT*END*DAY)*            0110
+     C**********************************************************            0110
+     C*
+     C** Change the way that the array is updated so that the first         0110
+     C** element is correctly positioned using the start of month           0110
+     C** date on LERSTS                                                     0110
+     C*                                                                     0110
+     C*********************Z-ADD1         X       20                        0110
+     C***********X*********DOWLEMTOT                                        0110
+     C***********FDFSDY    IFLE STARMO                               0110 052572
+     C                     Z-ADD0         X       20                        0110
+     C***********          ELSE                                      0110 052572
+     C***********FDFSDY    SUB  STARMO    X                          0110 052572
+     C***********          END                                       0110 052572
+     C*                                                                     0110
+     C           X         ADD  MTOT      Y       20                        0110
+     C           X         ADD  1         X                                 0110
+     C*                                                                     0110
+     C           X         DOWLEY                                           0110
+     C***********          Z-ADD1         CMDY,X                          148866
+     C***********          Z-ADD1         AMDY,X                          148866
+     C***********          Z-ADD1         DMDY,X                          148866
+     C***********          Z-ADD1         TMDY,X                          148866
+     C                     ADD  1         X
+     C                     END
+     C*
+     C                     END
+      *                                                                   163668
+     C**********           Z-ADDFDFACL    K#FCUS                                       163668 CSD027
+     C                     MOVE FDFACL    K#FCUS                                              CSD027
+     C                     MOVELFDFACN    K#FTYP                          163668
+     C                     MOVE FDFACN    K#FSEQ                          163668
+     C                     MOVE 'A'       K#RTYP                          163668
+     C                     Z-ADD0         WMTOT  150                      163668
+     C                     Z-ADD0         WYTOT  150                      163668
+     C                     Z-ADD0         WMFEE  150                      163668
+     C                     Z-ADD0         WYFEE  150                      163668
+     C                     Z-ADD0         WYAGG  150                      163668
+     C           K#FCTY    CHAINFCLTY                11                   163668
+     C                     MOVE PRTR      WPRTR   1                       163668
+     C*
+     C** ADD FEE AGGREGATE IN TO TOTALS:
+     C           WPRTR     IFNE 'P'                                       163668
+     C           WPRTR     ANDNE'S'                                                           CLE106
+     C           WPRTR     ANDNE'R'                                                           CLE106
+     C                     ADD  QFMFEE    CMFE
+     C                     ADD  QFMFEE    AMFE
+     C                     ADD  QFMFEE    DMFE
+     C                     ADD  QFMFEE    TMFE
+     C                     ENDIF                                          163668
+      *                                                                   163668
+     C           WPRTR     IFNE 'P'                                       163668
+     C           WPRTR     ANDNE'I'                                       163668
+     C           WPRTR     ANDNE'S'                                                           CLE106
+     C           WPRTR     ANDNE'R'                                                           CLE106
+     C           KFCLT     SETLLLEFCLTL2                                  163668
+     C           KFCLT     READELEFCLTL2                 11               163668
+      *                                                                   163668
+     C           *IN11     DOWEQ'0'                                       163668
+     C                     MOVELFACT      WFACN                           163668
+     C                     MOVE FCNO      WFACN                           163668
+     C           KPRFL     CHAINLEPRFCL1             12                   163668
+      *                                                                   163668
+     C           *IN12     IFEQ '0'                                       163668
+     C                     Z-ADD0         AM                              163668
+     C           FENDY     IFLT FSTDY                                     163668
+     C**                                                                  163668
+     C           DDRDN     IFLE FENDY                                     163668
+     C           MN        SUB  1         AM                              163668
+      *                                                                   163668
+      ** Check whether adjusted month is zero                             163668
+      *                                                                   163668
+     C           AM        IFEQ 0                                         163668
+     C                     ADD  12        AM                              163668
+     C                     ENDIF                                          163668
+      *                                                                   163668
+     C                     ELSE                                           163668
+     C                     Z-ADDMN        AM                              163668
+     C                     ENDIF                                          163668
+      *                                                                   163668
+      ** Retrieve Aggregate Value from array                              163668
+      *                                                                   163668
+     C                     Z-ADDAPB,AM    WMAGG                           163668
+      *                                                                   163668
+      ** Set up MTD fees                                                  163668
+      *                                                                   163668
+     C                     Z-ADDAPF,AM    WMFEE                           163668
+      *                                                                   163668
+     C                     ELSE                                           163668
+     C                     Z-ADDAPB,MN    WMAGG  150                      163668
+     C*                                                                   163668
+     C** Set up MTD fees                                                  163668
+     C*                                                                   163668
+     C                     Z-ADDAPF,MN    WMFEE                           163668
+     C                     ENDIF                                          163668
+      *                                                                   163668
+     C                     XFOOTAPB       WYAGG                           163668
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           WYAGG     SUB  APB,WNXT  WYAGG                                               225714
+     C                     ENDIF                                                              225714
+     C                     ADD  WYAGG     WYTOT                           163668
+     C                     XFOOTAPF       WYFEE                           163668
+     C           WNXT      IFGT 1                                                             225714
+     C           WNXT      ANDLT13                                                            225714
+     C           WYFEE     SUB  APF,WNXT  WYFEE                                               225714
+     C                     ENDIF                                                              225714
+     C                     ADD  WMAGG     WMTOT                           163668
+     C                     SUB  WMFEE     CMFE                            163668
+     C                     SUB  WMFEE     AMFE                            163668
+     C                     SUB  WMFEE     DMFE                            163668
+     C                     SUB  WMFEE     TMFE                            163668
+     C                     SUB  WYFEE     CYFE                            163668
+     C                     SUB  WYFEE     AYFE                            163668
+     C                     SUB  WYFEE     DYFE                            163668
+     C                     SUB  WYFEE     TYFE                            163668
+     C                     ENDIF                                          163668
+      *                                                                   163668
+     C           KFCLT     READELEFCLTL2                 11               163668
+     C                     ENDDO                                          163668
+     C                     ENDIF                                          163668
+     C*
+     C** SET UP YEAR-TO-DATE DATA:
+     C*
+     C***********          ADD  YAGG      CYAG                            148866
+     C***********          ADD  YAGG      AYAG                            148866
+     C***********          ADD  YAGG      DYAG                            148866
+     C***********          ADD  YAGG      TYAG                            148866
+     C*
+     C** SET UP DAY ARRAYS:
+     C** CALCULATE START & END DAY NO. OF FACILITY IN YEAR.
+     C** SKIP IF FACILITY WAS NOT LIVE THIS YEAR, I.E. IF YTD AGGREGATE = 0.
+     C*
+     C           YAGG      IFNE 0
+     C*
+     C           FDFSDY    SUB  PREV      S       30
+     C           FDFEDY    SUB  PREV      E       30
+     C*
+     C           S         DOWLEE
+     C           S         ANDGT0                                         052821
+     C           S         ANDLT367                                       052821
+     C***********          Z-ADD1         CYDY,S                          148866
+     C***********          Z-ADD1         AYDY,S                          148866
+     C***********          Z-ADD1         DYDY,S                          148866
+     C***********          Z-ADD1         TYDY,S                          148866
+     C                     ADD  1         S
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ADD FEE AGGREGATE TO YTD TOTALS:
+     C*
+     C           WPRTR     IFNE 'P'                                       163668
+     C           WPRTR     ANDNE'S'                                                           CLE106
+     C           WPRTR     ANDNE'R'                                                           CLE106
+     C                     ADD  QFYFEE    CYFE
+     C                     ADD  QFYFEE    AYFE
+     C                     ADD  QFYFEE    DYFE
+     C                     ADD  QFYFEE    TYFE
+     C                     ENDIF                                          163668
+     C*
+     C** SET UP FIELDS FOR INDIVIDUAL LENQFCD RECORD.
+     C*
+     C                     MOVE 'F'       QFRTYP
+     C                     Z-ADD1         QFRSEQ
+     C                     MOVE FDDEPT    QFDEPT
+     C                     MOVE FDACOF    QFACOF
+     C**********           Z-ADDFDFCUS    QFFCUS                                              CSD027
+     C                     MOVE FDFCUS    QFFCUS                                              CSD027
+     C                     MOVELFDFACN    QFFTYP
+     C                     MOVE FDFACN    QFFSEQ
+     C                     MOVE FDBRCA    BRCA
+     C**********           Z-ADDFDFACL    QFFACL                                       163668 CSD027
+     C                     MOVE FDFACL    QFFACL                                              CSD027
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQFCD RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRITNQ - Calculates yield and margin rate and writes          *
+      *          LENQFCD record.                                      *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITNQ    BEGSR
+     C*
+     C** CALCULATE MTD AVERAGE BALANCE.
+     C*
+     C                     Z-ADD0         WMAVB                           163668
+     C                     Z-ADD0         WYAVB                           163668
+     C           CUSIND    IFNE 'Y'                                       148866
+     C           ACOIND    ANDNE'Y'                                       148866
+     C           DEPIND    ANDNE'Y'                                       148866
+     C           TOTIND    ANDNE'Y'                                       148866
+     C*                                                                   148866
+     C           MTOT      IFNE 0
+     C           MAGG      DIV  MTOT      QFMAVB    H
+     C           WMTOT     DIV  MTOT      WMAVB  150H                     163668
+      *                                                                   148861
+      ** Access facilities file to see if facility is a Credit Agreement  148861
+      *                                                                   148861
+     C***********          MOVELFDFCUS    K#FCUS                   148861 163668
+     C                     MOVELFDFACL    K#FCUS                          163668
+     C                     MOVELFDFACN    K#FTYP                          148861
+     C                     MOVE FDFACN    K#FSEQ                          148861
+     C                     MOVE 'A'       K#RTYP                          148861
+     C           K#FCTY    CHAINFCLTY                54                   148861
+     C           TRCA      IFNE 'CA'                                      148866
+     C           PRTR      ANDNE'P'                                       163668
+     C           PRTR      ANDNE'S'                                                           CLE106
+     C           PRTR      ANDNE'R'                                                           CLE106
+     C                     ADD  QFMAVB    CUSMAV                          148866
+     C                     ADD  QFMAVB    ACOMAV                          148866
+     C                     ADD  QFMAVB    DEPMAV                          148866
+     C                     ADD  QFMAVB    TOTMAV                          148866
+     C                     ADD  MAGG      CUSMAG                          158060
+     C                     ADD  MAGG      ACOMAG                          158060
+     C                     ADD  MAGG      DEPMAG                          158060
+     C                     ADD  MAGG      TOTMAG                          158060
+     C           PRTR      IFNE 'I'                                       163668
+     C                     SUB  WMAVB     CUSMAV                          163668
+     C                     SUB  WMAVB     ACOMAV                          163668
+     C                     SUB  WMAVB     DEPMAV                          163668
+     C                     SUB  WMAVB     TOTMAV                          163668
+     C                     SUB  WMAGG     CUSMAG                          163668
+     C                     SUB  WMAGG     ACOMAG                          163668
+     C                     SUB  WMAGG     DEPMAG                          163668
+     C                     SUB  WMAGG     TOTMAG                          163668
+     C                     ENDIF                                          163668
+     C                     ENDIF                                          148866
+     C                     ELSE
+     C                     Z-ADD0         QFMAVB
+     C                     END
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C           ACOIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDACOMAV    QFMAVB                          148866
+     C                     Z-ADD0         ACOMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           CUSIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDCUSMAV    QFMAVB                          148866
+     C                     Z-ADD0         CUSMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           DEPIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDDEPMAV    QFMAVB                          148866
+     C                     Z-ADD0         DEPMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           TOTIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDTOTMAV    QFMAVB                          148866
+     C                     Z-ADD0         TOTMAV                          148866
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** CALCULATE MTD YIELD RATE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       158060
+     C           ACOIND    ANDNE'Y'                                       158060
+     C           DEPIND    ANDNE'Y'                                       158060
+     C           TOTIND    ANDNE'Y'                                       158060
+     C*                                                                   158060
+     C           MAGG      IFNE 0
+     C           QFMFEE    DIV  MAGG      WRK158    H
+     C           WRK158    MULT CALCB     QFMAYR
+     C                     ELSE
+     C                     Z-ADD0         QFMAYR
+     C                     END
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C           CUSIND    IFEQ 'Y'                                       158060
+     C           CUSMAG    IFNE 0                                         158060
+     C           QFMFEE    DIV  CUSMAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFMAYR                          158060
+     C                     Z-ADD0         CUSMAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFMAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           ACOIND    IFEQ 'Y'                                       158060
+     C           ACOMAG    IFNE 0                                         158060
+     C           QFMFEE    DIV  ACOMAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFMAYR                          158060
+     C                     Z-ADD0         ACOMAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFMAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           DEPIND    IFEQ 'Y'                                       158060
+     C           DEPMAG    IFNE 0                                         158060
+     C           QFMFEE    DIV  DEPMAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFMAYR                          158060
+     C                     Z-ADD0         DEPMAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFMAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           TOTIND    IFEQ 'Y'                                       158060
+     C           TOTMAG    IFNE 0                                         158060
+     C           QFMFEE    DIV  TOTMAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFMAYR                          158060
+     C                     Z-ADD0         TOTMAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFMAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C                     ENDIF                                          158060
+     C*
+     C** CALCULATE YTD AVERAGE BALANCE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       148866
+     C           ACOIND    ANDNE'Y'                                       148866
+     C           DEPIND    ANDNE'Y'                                       148866
+     C           TOTIND    ANDNE'Y'                                       148866
+     C*                                                                   148866
+     C           YTOT      IFNE 0
+     C           YAGG      DIV  YTOT      QFYAVB    H
+     C           WYTOT     DIV  YTOT      WYAVB  150H                     163668
+     C           TRCA      IFNE 'CA'                                      148866
+     C           PRTR      ANDNE'P'                                       163668
+     C           PRTR      ANDNE'S'                                                           CLE106
+     C           PRTR      ANDNE'R'                                                           CLE106
+     C                     ADD  QFYAVB    CUSYAV                          148866
+     C                     ADD  QFYAVB    ACOYAV                          148866
+     C                     ADD  QFYAVB    DEPYAV                          148866
+     C                     ADD  QFYAVB    TOTYAV                          148866
+     C                     ADD  YAGG      CUSYAG                          158060
+     C                     ADD  YAGG      ACOYAG                          158060
+     C                     ADD  YAGG      DEPYAG                          158060
+     C                     ADD  YAGG      TOTYAG                          158060
+     C           PRTR      IFNE 'I'                                       163668
+     C                     SUB  WYAVB     CUSYAV                          163668
+     C                     SUB  WYAVB     ACOYAV                          163668
+     C                     SUB  WYAVB     DEPYAV                          163668
+     C                     SUB  WYAVB     TOTYAV                          163668
+     C                     SUB  WYAGG     CUSYAG                          163668
+     C                     SUB  WYAGG     ACOYAG                          163668
+     C                     SUB  WYAGG     DEPYAG                          163668
+     C                     SUB  WYAGG     TOTYAG                          163668
+     C                     ENDIF                                          163668
+     C                     ENDIF                                          148866
+     C                     ELSE
+     C                     Z-ADD0         QFYAVB
+     C                     END
+     C*                                                                   148866
+     C                     ELSE                                           148866
+     C*                                                                   148866
+     C           ACOIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDACOYAV    QFYAVB                          148866
+     C                     Z-ADD0         ACOYAV                          148866
+     C***********          MOVE ' '       ACOIND                    148866158060
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           CUSIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDCUSYAV    QFYAVB                          148866
+     C                     Z-ADD0         CUSYAV                          148866
+     C***********          MOVE ' '       CUSIND                    148866158060
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           DEPIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDDEPYAV    QFYAVB                          148866
+     C                     Z-ADD0         DEPYAV                          148866
+     C***********          MOVE ' '       DEPIND                    148866158060
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C           TOTIND    IFEQ 'Y'                                       148866
+     C                     Z-ADDTOTYAV    QFYAVB                          148866
+     C                     Z-ADD0         TOTYAV                          148866
+     C***********          MOVE ' '       TOTIND                    148866158060
+     C                     ENDIF                                          148866
+     C*                                                                   148866
+     C                     ENDIF                                          148866
+     C*
+     C** CALCULATE YTD YIELD RATE.
+     C*
+     C           CUSIND    IFNE 'Y'                                       158060
+     C           ACOIND    ANDNE'Y'                                       158060
+     C           DEPIND    ANDNE'Y'                                       158060
+     C           TOTIND    ANDNE'Y'                                       158060
+     C*                                                                   158060
+     C           YAGG      IFNE 0
+     C           QFYFEE    DIV  YAGG      WRK158    H
+     C           WRK158    MULT CALCB     QFYAYR
+     C                     ELSE
+     C                     Z-ADD0         QFYAYR
+     C                     END
+     C*                                                                   158060
+     C                     ELSE                                           158060
+     C*                                                                   158060
+     C           CUSIND    IFEQ 'Y'                                       158060
+     C           CUSYAG    IFNE 0                                         158060
+     C           QFYFEE    DIV  CUSYAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFYAYR                          158060
+     C                     Z-ADD0         CUSYAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFYAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           ACOIND    IFEQ 'Y'                                       158060
+     C           ACOYAG    IFNE 0                                         158060
+     C           QFYFEE    DIV  ACOYAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFYAYR                          158060
+     C                     Z-ADD0         ACOYAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFYAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           DEPIND    IFEQ 'Y'                                       158060
+     C           DEPYAG    IFNE 0                                         158060
+     C           QFYFEE    DIV  DEPYAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFYAYR                          158060
+     C                     Z-ADD0         DEPYAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFYAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C           TOTIND    IFEQ 'Y'                                       158060
+     C           TOTYAG    IFNE 0                                         158060
+     C           QFYFEE    DIV  TOTYAG    WRK158    H                     158060
+     C           WRK158    MULT CALCB     QFYAYR                          158060
+     C                     Z-ADD0         TOTYAG                          158060
+     C                     ELSE                                           158060
+     C                     Z-ADD0         QFYAYR                          158060
+     C                     END                                            158060
+     C                     END                                            158060
+     C*                                                                   158060
+     C*                                                                   158060
+     C                     MOVE ' '       ACOIND                          158060
+     C                     MOVE ' '       CUSIND                          158060
+     C                     MOVE ' '       DEPIND                          158060
+     C                     MOVE ' '       TOTIND                          158060
+     C*                                                                   158060
+     C                     ENDIF                                          158060
+     C*
+     C** WRITE RECORD TO LENQFCD
+     C*
+     C                     WRITELENQFCDF
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CUSTSR - Outputs customer totals to LENQFCD                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUSTSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'C'       QFRTYP
+     C                     Z-ADD2         QFRSEQ
+     C                     MOVE FDDEPT    QFDEPT
+     C                     MOVE FDACOF    QFACOF
+     C**********           Z-ADDFDFCUS    QFFCUS                                              CSD027
+     C                     MOVE FDFCUS    QFFCUS                                              CSD027
+     C                     Z-ADD0         QFFTYP
+     C                     Z-ADD0         QFFSEQ
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTCMDY      MTOT                            148866
+     C***********          Z-ADDCMAG      MAGG                            148866
+     C                     Z-ADDCMFE      QFMFEE
+     C*
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTCYDY      YTOT                            148866
+     C***********          Z-ADDCYAG      YAGG                            148866
+     C                     Z-ADDCYFE      QFYFEE
+     C                     MOVE 'Y'       CUSIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQFCD RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR CUSTOMER.
+     C*
+     C***********          Z-ADD0         CMDY                            148866
+     C***********          Z-ADD0         CMAG                            148866
+     C                     Z-ADD0         CMFE
+     C***********          Z-ADD0         CYDY                            148866
+     C***********          Z-ADD0         CYAG                            148866
+     C                     Z-ADD0         CYFE
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ACOFSR - Outputs A/C Officer totals to LENQFCD                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACOFSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'A'       QFRTYP
+     C                     Z-ADD2         QFRSEQ
+     C                     MOVE FDDEPT    QFDEPT
+     C                     MOVE FDACOF    QFACOF
+     C**********           Z-ADD0         QFFCUS                                              CSD027
+     C                     MOVE *BLANKS   QFFCUS                                              CSD027
+     C                     Z-ADD0         QFFTYP
+     C                     Z-ADD0         QFFSEQ
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTAMDY      MTOT                            148866
+     C***********          Z-ADDAMAG      MAGG                            148866
+     C                     Z-ADDAMFE      QFMFEE
+     C*
+     C                     MOVE 'Y'       ACOIND  1                       148866
+     C*                                                                   148866
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTAYDY      YTOT                            148866
+     C***********          Z-ADDAYAG      YAGG                            148866
+     C                     Z-ADDAYFE      QFYFEE
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQFCD RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR A/C OFFICER.
+     C*
+     C***********          Z-ADD0         AMDY                            148866
+     C***********          Z-ADD0         AMAG                            148866
+     C                     Z-ADD0         AMFE
+     C***********          Z-ADD0         AYDY                            148866
+     C***********          Z-ADD0         AYAG                            148866
+     C                     Z-ADD0         AYFE
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DEPTSR - Outputs Department  totals to LENQFCD                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C*
+     C           DEPTSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'D'       QFRTYP
+     C                     Z-ADD2         QFRSEQ
+     C                     MOVE FDDEPT    QFDEPT
+     C                     MOVE *BLANKS   QFACOF
+     C**********           Z-ADD0         QFFCUS                                              CSD027
+     C                     MOVE *BLANKS   QFFCUS                                              CSD027
+     C                     Z-ADD0         QFFTYP
+     C                     Z-ADD0         QFFSEQ
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTDMDY      MTOT                            148866
+     C***********          Z-ADDDMAG      MAGG                            148866
+     C                     Z-ADDDMFE      QFMFEE
+     C*
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTDYDY      YTOT                            148866
+     C***********          Z-ADDDYAG      YAGG                            148866
+     C                     Z-ADDDYFE      QFYFEE
+     C                     MOVE 'Y'       DEPIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQFCD RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C** CLEAR DAY ARRAYS & TOTAL FIELDS FOR DEPARTMENT.
+     C*
+     C***********          Z-ADD0         DMDY                            148866
+     C***********          Z-ADD0         DMAG                            148866
+     C                     Z-ADD0         DMFE
+     C***********          Z-ADD0         DYDY                            148866
+     C***********          Z-ADD0         DYAG                            148866
+     C                     Z-ADD0         DYFE
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TOTLSR - Outputs Overall totals to LENQFCD                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TOTLSR    BEGSR
+     C*
+     C** SET UP COMMON FIELDS.
+     C*
+     C                     MOVE 'T'       QFRTYP
+     C                     Z-ADD2         QFRSEQ
+     C                     MOVE *BLANKS   QFDEPT
+     C                     MOVE *BLANKS   QFACOF
+     C**********           Z-ADD0         QFFCUS                                              CSD027
+     C                     MOVE *BLANKS   QFFCUS                                              CSD027
+     C                     Z-ADD0         QFFTYP
+     C                     Z-ADD0         QFFSEQ
+     C*
+     C** SET UP MTD FIELDS.
+     C*
+     C***********          XFOOTTMDY      MTOT                            148866
+     C***********          Z-ADDTMAG      MAGG                            148866
+     C                     Z-ADDTMFE      QFMFEE
+     C*
+     C** SET UP YTD FIELDS.
+     C*
+     C***********          XFOOTTYDY      YTOT                            148866
+     C***********          Z-ADDTYAG      YAGG                            148866
+     C                     Z-ADDTYFE      QFYFEE
+     C                     MOVE 'Y'       TOTIND  1                       148866
+     C*
+     C** CALCULATE REMAINING FIELDS & WRITE LENQFCD RECORD.
+     C*
+     C                     EXSR WRITNQ
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Performs First Cycle Calculations                    *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: WRITNQ, *PSSR                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+     C*
+     C                     MOVE '1'       *IN10
+     C*                                                                     0078
+     C           *NAMVAR   DEFN           LERSTS                            0110
+     C                     IN   LERSTS                                      0110
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           PRTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'LER440'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C** STORE PREVIOUS END OF YEAR DATE IN FIELD PREV FOR USE LATER
+     C*
+     C                     ELSE
+     C                     Z-ADDBJPEYD    PREV    50
+     C********** BJDFIN    IFEQ 'M'                                                    225714 245349
+     C**********           MOVE '1'       *IN98                                        225714 245349
+     C**********           ENDIF                                                       225714 245349
+     C                     MOVE '0'       *IN98                                               245349
+     C                     END
+      *                                                                                       225714
+     C                     MOVE REPDAT    REPDT                                               225714
+     C                     Z-ADD1         X                                                   225714
+     C           REPMM     LOKUPGMNM,X                   97                                   225714
+     C           X         ADD  1         WNXT    20                                          225714
+     C                     MOVELREPDD     PRFDD                                               225714
+     C                     MOVE X         PRFMM                                               225714
+     C                     MOVE REPYY     PRFYY                                               225714
+     C                     MOVE PRFDT     ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WPRFDT  50                                          225714
+      *                                                                                       225714
+     C                     Z-ADDPRFDT     WSTRMO                                              225714
+     C                     Z-ADD01        WSTRDD                                              225714
+     C                     MOVE WSTRMO    ZDATE                                               225714
+     C                     EXSR ZDATE1                                                        225714
+     C                     Z-ADDZDAYNO    WSTART  50                                          225714
+      *
+     C                     MOVELBJMRDT    DDRD    2
+     C                     MOVE BJMRDT    WRK5A   5
+     C                     MOVELWRK5A     MMM     3
+     C                     MOVE WRK5A     YY      2
+     C                     MOVE REPMM     MMM                                                 225714
+     C*
+     C** ACCESS CURRENCY DETAILS FOR BASE CURRENCY DECIMAL PLACES.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BJCYCD    CURKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVELBJCYCD    DBKEY            *  DBERR 02   *
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL'LER440  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C** SETUP THE CORRECT NUMBER OF DAYS IN THE YEAR FROM THE
+     C** DEFAULT CALCULATION BASIS
+     C*
+     C                     ELSE
+     C           A6DICB    IFEQ '1'
+     C           A6DICB    OREQ '4'
+     C                     Z-ADD365       CALCB   30
+     C                     ELSE
+     C           A6DICB    IFEQ '6'
+     C                     Z-ADD366       CALCB
+     C                     ELSE
+     C                     Z-ADD360       CALCB
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           A6NBDP    ADD  1         DP      10
+     C*
+     C** GET CURRENT MONTH NUMBER FOR ACCESSING ARRAYS.
+     C*
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPGMNM,MN                  10
+     C*
+     C** DEFINE WORK FIELDS
+     C*
+     C                     Z-ADD0         MTOT    20
+     C                     Z-ADD0         YTOT    30
+     C                     Z-ADD0         MAGG   150
+     C                     Z-ADD0         YAGG   150
+     C                     Z-ADD0         WRK158 158
+     C                     Z-ADD0         CREC    50
+     C                     Z-ADD0         AREC    50
+     C                     Z-ADD0         DREC    50
+     C                     Z-ADD0         TREC    50
+     C************LIKE     DEFN MAGG      CMAG                            148866
+     C************LIKE     DEFN MAGG      AMAG                            148866
+     C************LIKE     DEFN MAGG      DMAG                            148866
+     C************LIKE     DEFN MAGG      TMAG                            148866
+     C************LIKE     DEFN YAGG      CYAG                            148866
+     C************LIKE     DEFN YAGG      AYAG                            148866
+     C************LIKE     DEFN YAGG      DYAG                            148866
+     C************LIKE     DEFN YAGG      TYAG                            148866
+     C           *LIKE     DEFN QFMFEE    CMFE
+     C           *LIKE     DEFN QFMFEE    AMFE
+     C           *LIKE     DEFN QFMFEE    DMFE
+     C           *LIKE     DEFN QFMFEE    TMFE
+     C           *LIKE     DEFN QFYFEE    CYFE
+     C           *LIKE     DEFN QFYFEE    AYFE
+     C           *LIKE     DEFN QFYFEE    DYFE
+     C           *LIKE     DEFN QFYFEE    TYFE
+     C           *LIKE     DEFN QFMAVB    CUSMAV                          148866
+     C           *LIKE     DEFN QFMAVB    ACOMAV                          148866
+     C           *LIKE     DEFN QFMAVB    DEPMAV                          148866
+     C           *LIKE     DEFN QFMAVB    TOTMAV                          148866
+     C           *LIKE     DEFN QFMAVB    CUSYAV                          148866
+     C           *LIKE     DEFN QFMAVB    ACOYAV                          148866
+     C           *LIKE     DEFN QFMAVB    DEPYAV                          148866
+     C           *LIKE     DEFN QFMAVB    TOTYAV                          148866
+     C           *LIKE     DEFN MAGG      CUSMAG                          158060
+     C           *LIKE     DEFN MAGG      ACOMAG                          158060
+     C           *LIKE     DEFN MAGG      DEPMAG                          158060
+     C           *LIKE     DEFN MAGG      TOTMAG                          158060
+     C           *LIKE     DEFN YAGG      CUSYAG                          158060
+     C           *LIKE     DEFN YAGG      ACOYAG                          158060
+     C           *LIKE     DEFN YAGG      DEPYAG                          158060
+     C           *LIKE     DEFN YAGG      TOTYAG                          158060
+      *                                                                   148861
+      ** Key list to access Credit Agreement Details for a prime          148861
+      ** Facility                                                         148861
+      *                                                                   148861
+     C           K#FCTY    KLIST                                          148861
+     C**********           KFLD           K#FCUS  60                                   148861 CSD027
+     C                     KFLD           K#FCUS  6                                           CSD027
+     C                     KFLD           K#FTYP  30                      148861
+     C                     KFLD           K#FSEQ  20                      148861
+     C                     KFLD           K#RTYP  1                       148861
+     C*
+     C           KPRFL     KLIST                                          163668
+     C                     KFLD           CNUM                            163668
+     C                     KFLD           WFACN   50                      163668
+      *                                                                   163668
+     C           KFCLT     KLIST                                          163668
+     C                     KFLD           BRCA                            163668
+     C                     KFLD           FDFACL                          163668
+     C                     KFLD           K#FTYP                          163668
+     C                     KFLD           K#FSEQ                          163668
+      *                                                                   052572
+      * Calculated number of actual days in the month                     052572
+     C***********BJRDNB    SUB  STARMO    MTOT                      052572157377
+     C********** LASTFN    SUB  STARMO    MTOT                                         157377 225714
+     C           STARMO    IFGT WPRFDT                                                        225714
+     C           WPRFDT    SUB  WSTART    MTOT                                                225714
+     C                     ELSE                                                               225714
+     C           WPRFDT    SUB  STARMO    MTOT                                                225714
+     C                     ENDIF                                                              225714
+     C                     ADD  1         MTOT                            052572
+      *                                                                   052572
+      * Calculated number of actual days in the year                      052572
+     C********** BJRDNB    SUB  BJPEYD    YTOT                      052572157377
+     C********** LASTFN    SUB  BJPEYD    YTOT                                         157377 225714
+     C           WPRFDT    SUB  BJPEYD    YTOT                                                225714
+      *                                                                   052572
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   AUDIT                                  *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   225714
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   GMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   NUMBER OF DAYS IN MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

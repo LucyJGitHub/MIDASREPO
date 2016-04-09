@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale Extract lending capitalised')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       CGC7250 - Interest Scale Extract Lending Movements          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CLE148             Date 23Jul12              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE148 - Alpha Loan Reference                               */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BRCA &CNUM &CCY &ACOD &ACSQ &REFN +
+                          &REFT &LNRF &INFD &INTD &INTA &ADDI &RDFC +
+                          &FRLS &RTCD)
+ 
+/*  Declare the variables                                       */
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ACOD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&ACSQ) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&REFN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REFT) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&LNRF) TYPE(*DEC) LEN(6 0)          */                        /*CLE148*/
+             DCL        VAR(&LNRF) TYPE(*CHAR) LEN(6)                                     /*CLE148*/
+             DCL        VAR(&INFD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&INTD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&INTA) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&ADDI) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RDFC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FRLS) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/*  If first pass override the file */
+             IF         COND(&FRLS *EQ 'FIRST') THEN(DO)
+                OVRDBF     FILE(HISTR) OVRSCOPE(*JOB) SHARE(*NO)
+             ENDDO
+ 
+/*  Call the  program */
+             CALL       PGM(CG7250) PARM(&BRCA &CNUM &CCY &ACOD +
+                          &ACSQ &REFN &REFT &LNRF &INFD &INTD &INTA +
+                          &ADDI &RDFC &FRLS &RTCD)
+ 
+/*  If last pass delete the override */
+             IF         COND(&FRLS *EQ 'LAST') THEN(DO)
+                 DLTOVR     FILE(*ALL)
+             ENDDO
+ 
+/*  Logical end of the program */
+ END:        ENDPGM

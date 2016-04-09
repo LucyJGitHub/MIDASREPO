@@ -1,0 +1,430 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ZM Convert amount to SW fmt; left align')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.
+     F*                                                               *
+     F*  ZM1240 - AMOUNT CONVERSION.                                  *
+     F*                                                               *
+     F* PURPOSE :                                                     *
+     F*                                                               *
+     F*  To convert an  amount (ZAMNT) (13,0) to SWIFT                *
+     F*  input format (ZSAMNT) (17A) AND ZOAMNT (21)                  *
+     F*                                                               *
+     F*  1.A decimal comma is inserted dependant on the number of     *
+     F*    decimal places returned from the access to sdcurrpd.       *
+     F*  2.Leading zeros must be dropped.                             *
+     F*  3.The decimal comma must have at least one leading digit.    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 167826             Date 22Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW020             Date 04Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01401             Date 10Feb93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  167826 - Database error at 061 in ZM1340. Apply 153374.      *
+     F*  CSW020 - SWIFT Decimal Places                                *
+     F*           Adjust the amount if the Swift decimal place differs*
+     F*           from the currency decimal place                     *
+     F*  S01401 - The generation of MT500 SWIFT Messages if the       *
+     F*           option is available.  NEW PROGRAM.                  *
+     F*                                                               *
+      *****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    90  - 0 Decimal places from SDCURRPD.                      *
+     F*    91  - 1 Decimal place from SDCURRPD.                       *
+     F*    92  - 2 Decimal places from SDCURRPD.                      *
+     F*    93  - 3 Decimal places from SDCURRPD.                      *
+     F*    94  - Used in the blank of leading zeros.                  *
+     F*    95  - Used to end the blank of leading zeros.              *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,ZM1240F001
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    ZAA        17  1
+     E** ARRAY USED IN CONVERSION.
+     E*
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E** ARRAYS USED IN #SEDIT
+     E*
+     E****************************************************************
+     E/EJECT
+     E****************************************************************
+     I*
+     I/COPY WNCPYSRC,ZM1240I001
+     I*                                                                   CSW020
+     IRUNDAT      DS                                                      CSW020
+     I                                        1   7 MRDT                  CSW020
+     I                                    P   8  100RDNB                  CSW020
+     I                                       11  11 SUC                   CSW020
+     I                                       12  12 DFF                   CSW020
+     I                                       13  13 MBIN                  CSW020
+     I*                                                                   CSW020
+     IDSSDY     E DSDSSDY
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Customer Details
+     I*
+     I            DS
+     I** DATA STRUCTURE FOR #SEDIT
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I****************************************************************
+     I/EJECT
+     I****************************************************************
+     C*
+     C**  Entry of currency and amount
+     C           *ENTRY    PLIST
+     C                     PARM           ZAMNT  130
+     C                     PARM           ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZOAMNT 21
+     C                     PARM           ZSCCY   3
+     C                     PARM           ZERR    1
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C                     MOVE *BLANKS   ZSAMNT
+     C                     MOVE *BLANKS   ZOAMNT
+     C                     MOVE *BLANKS   ZSCCY
+     C                     MOVE *BLANKS   ZERR
+      *                                                                   CSW020
+      * Control if feature 'Swift decimal places' is on.                  CSW020
+     C                     CALL 'AOSARDR0'                                CSW020
+     C                     PARM '       ' @RTCD   7                       CSW020
+     C                     PARM '*VERIFY' @OPTN   7                       CSW020
+     C                     PARM 'CSW020'  @SARD   6                       CSW020
+     C           @RTCD     IFEQ *BLANK                                    CSW020
+     C                     MOVE 'Y'       CSW020  1                       CSW020
+     C                     ENDIF                                          CSW020
+      * Get Rundate - Rundate  *                                          CSW020
+     C           *NAMVAR   DEFN           RUNDAT                          CSW020
+     C                     IN   RUNDAT                                    CSW020
+     C*                                                                   CSW020
+     C*
+     C** SET UP WORK FIELDS FOR #SEDIT
+     C                     MOVE 'J'       ZECODE  1
+     C                     Z-ADDZAMNT     ZFLD15 150
+     C*
+     C** ACCESS SDCURRL1 USING KEY OF ZCCY PASSED INTO PROGRAM
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM ZCCY      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** IF RECORD NOT FOUND
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE '1'       ZERR
+     C                     END
+     C*
+     C** Only do the following processing if there has not been a
+     C** database error.
+     C           ZERR      IFEQ *BLANKS
+     C*
+     C** To move the currency field names.
+     C                     MOVE A6SWCY    ZSCCY
+     C                     MOVE A6NBDP    ZCDP    10
+     C*
+     C** SET UP WORK FIELD FOR #SEDIT
+     C                     MOVE A6NBDP    ZDECS   10
+     C*                                                                   CSW020
+     C** Need to adjust amount if the Swift Decimal Places is             CSW020
+     C** different to the normal number of Decimal Places and the         CSW020
+     C** effective date has been reached.                                 CSW020
+     C*                                                                   CSW020
+     C           CSW020    IFEQ 'Y'                                       CSW020
+     C           A6NBDP    ANDNEA6SWDP                                    CSW020
+     C           A6SWDT    ANDLERDNB                                      CSW020
+     C*                                                                   CSW020
+     C* CHECK THE DIFFERENCE OF DECIMAL TO HAVE THE CORRECT AMOUNT        CSW020
+     C*                                                                   CSW020
+     C           A6SWDP    IFLT ZCDP                                      CSW020
+     C           ZCDP      SUB  A6SWDP    X       10                      CSW020
+     C                     ELSE                                           CSW020
+     C           A6SWDP    SUB  ZCDP      X                               CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C           X         IFEQ 1                                         CSW020
+     C                     Z-ADD10        Y       40                      CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 2                                         CSW020
+     C                     Z-ADD100       Y                               CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 3                                         CSW020
+     C                     Z-ADD1000      Y                               CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 4                                         CSW020
+     C                     Z-ADD10000     Y                               CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C           A6SWDP    IFLT ZCDP                                      CSW020
+     C           ZAMNT     DIV  Y         ZAMNT                           CSW020
+     C                     ELSE                                           CSW020
+     C           ZAMNT     MULT Y         ZAMNT                           CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C                     Z-ADDZAMNT     ZFLD15                          CSW020
+     C                     Z-ADDA6SWDP    ZCDP                            CSW020
+     C                     MOVE A6SWDP    ZDECS                           CSW020
+     C                     ENDIF                                          CSW020
+     C*
+     C/COPY WNCPYSRC,ZM1240C001
+     C** CALL #SEDIT TO FORMAT OUTPUT FIELD
+     C                     EXSR #SEDIT
+     C*
+     C** To obtain the number of currency decimal places.
+     C** No decimal places.
+     C           ZCDP      IFEQ 0
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C** One decimal place.
+     C           ZCDP      IFEQ 1
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C** Two decimal places.
+     C           ZCDP      IFEQ 2
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*
+     C** Three decimal places.
+     C           ZCDP      IFEQ 3
+     C                     MOVE '1'       *IN93
+     C                     END
+     C*
+     C** Ensure amount field is positive before processing
+     C           ZAMNT     IFLT 0
+     C           ZAMNT     MULT -1        ZAMNT
+     C                     END
+     C*
+     C** To move the midas amount to the 17A field including the decimal
+     C** comma. H16 is a holding field for the amount.
+     C/COPY WNCPYSRC,ZM1240C003
+     C                     MOVE ZAMNT     H16    16
+     C/COPY WNCPYSRC,ZM1240C004
+     C*
+     C** For no decimal places. *in90 =1. The decimal comma is placed at
+     C** the end of the amount.
+     C           *IN90     IFEQ '1'
+     C                     MOVELH16       ZAAL   17
+     C                     MOVE ','       ZAAL
+     C                     END
+     C*
+     C** For one decimal place. *in91 = 1. The amount field is split
+     C** to enable the comma to be inserted one digit before the end.
+     C** H1 is a holding field.
+     C           *IN91     IFEQ '1'
+     C                     MOVE H16       H1      1
+     C                     MOVE ','       H16
+     C                     MOVELH16       ZAAL
+     C                     MOVE H1        ZAAL
+     C                     END
+     C*
+     C** For two decimal places. *in92 = 1. The amount field is split
+     C** to enable the comma to be inserted two digits before the end.
+     C** H2 and H3 are holding fields.
+     C           *IN92     IFEQ '1'
+     C                     MOVE H16       H2      2
+     C                     MOVELH16       H14    14
+     C                     MOVE H2        H3      3
+     C                     MOVEL','       H3
+     C                     MOVELH14       ZAAL
+     C                     MOVE H3        ZAAL
+     C                     END
+     C*
+     C** For three decimal places. *in93 = 1. The amount field is split
+     C** to enable the comma to be inserted three digits before the end.
+     C** H2 , H3 and H4 are holding fields.
+     C           *IN93     IFEQ '1'
+     C                     MOVE H16       H3
+     C                     MOVELH16       H13    13
+     C                     MOVE H3        H4      4
+     C                     MOVEL','       H4
+     C                     MOVELH13       ZAAL
+     C                     MOVE H4        ZAAL
+     C                     END
+     C*
+     C** Blank out all leading zeros leaving at least one leading
+     C** integer.  Any remaining leading zeros are dropped,except
+     C** if there is one directly proceeding the decimal comma.
+     C** This is retained.
+     C                     MOVEAZAAL      ZAA
+     C                     Z-ADD1         ZA      20
+     C                     SETOF                     95
+     C                     MOVE '1'       *IN94
+     C*
+     C           *IN94     DOUEQ'0'
+     C*
+     C           ZAA,ZA    IFEQ '0'
+     C           ZAA,ZA    OREQ ' '
+     C                     MOVE '1'       *IN94
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '0'       *IN94
+     C                     END
+     C*
+     C           *IN94     IFEQ '1'
+     C                     MOVE ' '       ZAA,ZA
+     C                     ADD  1         ZA
+     C                     END
+     C*
+     C           *IN94     IFEQ '0'
+     C           ZAA,ZA    ANDEQ','
+     C                     MOVE '1'       *IN95
+     C                     END
+     C*
+     C********** ZA        IFEQ 16                                        167826
+     C**********           MOVE '0'       *IN94                           167826
+     C**********           SUB  1         ZA                              167826
+     C**********           MOVE ','       ZAA,ZA                          167826
+     C**********           END                                            167826
+     C*
+     C                     END
+     C*
+     C           *IN95     IFEQ '1'
+     C           ZA        SUB  1         ZA
+     C                     MOVE '0'       ZAA,ZA
+     C                     END
+     C*
+     C** Move to a 15A SWIFT format field for output.
+     C                     MOVEAZAA,ZA    ZSAMNT 17
+     C                     END
+     C/COPY WNCPYSRC,ZM1240C002
+     C*
+     C** Termination Processing.
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #SEDIT subroutine to insert a decimal point and sign into a  *
+     C** numeric field and to blank out leading zeros (optionaly      *
+     C** inserting commas).                                           *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           #SEDIT    BEGSR
+     C*
+     C** SET UP WORK FIELDS
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C** CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C** SET UP DECIMALS
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C** PUT IN DECIMAL PLACE
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C** SET UP INTEGERS
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C** If edit code is 'J', insert a ',' before each group of three
+     C** digits - not if beginning of array reached.
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C*
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PUT IN LEADING BLANKS
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C** IF NO INTEGERS PUT IN LEADING ZERO
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C*
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SET UP OUTPUT FIELD
+     C                     MOVEAZS2,Z2    ZOAMNT
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

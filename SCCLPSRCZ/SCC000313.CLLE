@@ -1,0 +1,317 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                 /*AR917384*/
+/*STD    CLPBASEBND                                                  */                 /*AR917384*/
+/*EXI    TEXT('Midas SC Backup Schemas/Libraries')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000313 - Backup Schemas/Libraries                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. MD029823           Date 27Jul15              */
+/*       Prev Amend No. AR917384           Date 21Feb12              */
+/*                      CBF002  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD029823 - Use correct library name for SAVF.               */
+/*       AR917384 - SCC1711 Error on Backup                          */
+/*                - Changed to *PGM to be included as adoption       */
+/*       CBF002 - BF Infrastructure: Backup and Recovery             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFKY &PFMT)
+ 
+             DCL        VAR(&PFKY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&FFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RDAT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RDATE) TYPE(*DEC) LEN(6 0)
+             DCL        VAR(&LIBN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SDAT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&DEVC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEVN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VOID) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&CLER) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&OUTP) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&UOPB) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&SAVA) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&SACP) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ASPD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&DTACNT) TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&PSAVF) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&PDEVC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PVOID) TYPE(*CHAR) LEN(40)
+             DCL        VAR(&PCLER) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&POUTP) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PUOPB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PLIBN) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PSAVA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PSACP) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PASPD) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PDATC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(300)
+             DCL        VAR(&FSAV) TYPE(*CHAR) LEN(10) VALUE('  +
+                          DILIB  ')
+             DCL        VAR(&DSAV) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+ 
+/*/COPY SDCPYSRC,SDSVALDCL                                           */
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Get run date */
+ 
+             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&RDAT)
+             CHGVAR     VAR(&RDATE) VALUE(&RDAT)
+             CALL       PGM(ZDATE1) PARM(&PERR &RDATE 'D' &SDAT)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Retrieve parameter values from Save Parameters Profile File */
+ 
+             CHGVAR     VAR(&RTCD) VALUE(' ')
+             CHGVAR     VAR(&OPTN) VALUE('*KEY   ')
+             IF         COND(&PFKY *EQ ' ') THEN(GOTO CMDLBL(ABNOR))
+             CALL       PGM(AOSVPRMR0) PARM(&RTCD &OPTN &PFKY &RFMT)
+ 
+             IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+             CHGVAR     VAR(&SAVT) VALUE(%SST(&RFMT 4 10))
+             CHGVAR     VAR(&SAVC) VALUE(%SST(&RFMT 54 10))
+             CHGVAR     VAR(&LIBN) VALUE(%SST(&PFMT 1 10))
+ 
+             CHGVAR     VAR(&DEVC) VALUE(%SST(&RFMT 64 10))
+             CHGVAR     VAR(&VOID) VALUE(%SST(&RFMT 126 32))
+             CHGVAR     VAR(&CLER) VALUE(%SST(&RFMT 74 8))
+             CHGVAR     VAR(&OUTP) VALUE(%SST(&RFMT 114 8))
+             CHGVAR     VAR(&UOPB) VALUE(%SST(&RFMT 122 4))
+             CHGVAR     VAR(&SAVA) VALUE(%SST(&RFMT 82 8))
+             CHGVAR     VAR(&SACP) VALUE(%SST(&RFMT 90 7))
+             CHGVAR     VAR(&ASPD) VALUE(%SST(&RFMT 104 10))
+             CHGVAR     VAR(&DATC) VALUE(%SST(&RFMT 97 7))
+ 
+/** Reset save status */
+ 
+             CALL       PGM(AOBKLBR1) PARM(&RTCD '*RESET ' &SDAT +
+                          &LIBN &SAVT)
+ 
+/** Prepare parameter values for SAVLIB/SAVSAVFDTA */
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(%SST(&FSAV 1 2)) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(%SST(&DSAV 1 2)) VALUE(%SST(&SDSTAT 6 2))
+ 
+             CHGVAR     VAR(&PVOID) VALUE('VOL(' *CAT %SST(&RFMT +
+                          126 32) *CAT ') ')
+             CHGVAR     VAR(&PCLER) VALUE('CLEAR(' *CAT %SST(&RFMT +
+                          74 8) *CAT ') ')
+             CHGVAR     VAR(&POUTP) VALUE('OUTPUT(' *CAT +
+                          %SST(&RFMT 114 8) *CAT ') ')
+             CHGVAR     VAR(&PUOPB) VALUE('USEOPTBLK(' *CAT +
+                          %SST(&RFMT 122 4) *CAT ') ')
+             CHGVAR     VAR(&PLIBN) VALUE('LIB(' *CAT %SST(&PFMT 1 +
+                          10) *CAT ') ')
+             CHGVAR     VAR(&PSAVA) VALUE('SAVACT(' *CAT %SST(&RFMT +
+                          82 8) *CAT ') ')
+ 
+/** Check if CSC003 is ON for access path option */
+ 
+             IF         COND(%SST(&RFMT 90 7) *EQ 'OPTION') THEN(DO)
+                CHGVAR     VAR(&RTCD) VALUE('       ')
+                CHGVAR     VAR(&SARD) VALUE('CSC003')
+                CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+                CHGVAR     VAR(&SARD) VALUE('CSC003')
+ 
+                CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FFMT)
+                IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                                '*NRF   ') THEN(DO)
+                   CHGVAR     VAR(&MSG) VALUE('Job Terminated - Database +
+                                Error in AOSARDR0')
+                   SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+                   CHGJOB     SWS(XXXXXX11)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+                IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                             VAR(&PSACP) VALUE('ACCPTH(*YES) '))
+ 
+                ELSE       CMD(CHGVAR VAR(&PSACP) VALUE('ACCPTH(*NO) '))
+             ENDDO
+ 
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&PSACP) VALUE('ACCPTH(' *CAT %SST(&RFMT +
+                             90 7) *CAT ') ')
+             ENDDO
+ 
+             CHGVAR     VAR(&PASPD) VALUE('ASPDEV(' *CAT %SST(&RFMT +
+                          104 10) *CAT ') ')
+ 
+/** Get System value for Data Compression */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             IF         COND(%SST(&RFMT 97 7) *EQ 'DTACPRV') +
+                          THEN(CALL PGM(AOSVALR0) PARM(&RTCD +
+                          'SavDataCompression' &SVAL1 +
+                          ' ' &SVAL2 +
+                          ' ' &SVAL3 +
+                          ' ' &SVAL4 +
+                          ' ' &SVAL5 +
+                          ' ' &SVAL6 +
+                          ' ' &SVAL7 +
+                          ' ' &SVAL8 +
+                          ' ' &SVAL9 +
+                          ' ' &SVAL10))
+             IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&PDATC) VALUE('DTACPR(' *CAT %SST(&SVAL1 +
+                             1 7) *CAT ') ')
+             ENDDO
+ 
+             IF         COND(%SST(&RFMT 97 7) *NE 'DTACPRV') THEN(DO)
+                CHGVAR     VAR(&PDATC) VALUE('DTACPR(' *CAT %SST(&RFMT +
+                             97 7) *CAT ') ')
+             ENDDO
+ 
+/** Retrieve save file name */
+ 
+             IF         COND(&SAVT *EQ 'ICT') THEN(CHGVAR VAR(&SAVF) +
+                          VALUE(%SST(&PFMT 71 10)))
+             IF         COND(&SAVT *EQ 'BOB') THEN(CHGVAR VAR(&SAVF) +
+                          VALUE(%SST(&PFMT 85 10)))
+             CHGVAR VAR(&FSAV) VALUE(%SST(&PFMT 61 10))                                 /*MD029823*/
+
+/** Create/Clear save file in xxDILIB */
+ 
+             CHKOBJ     OBJ(&FSAV/&SAVF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                CRTSAVF    FILE(&FSAV/&SAVF) TEXT(%SST(&PFMT 11 50)) +
+                             AUT(*ALL)
+                MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+             CLRSAVF    FILE(&FSAV/&SAVF)
+             CHGVAR     VAR(&PSAVF) VALUE('SAVF(' *TCAT &FSAV *TCAT +
+                          '/' *TCAT &SAVF *TCAT ') ')
+ 
+/** Retrieve device name from save options */
+ 
+             CALL       PGM(AOSVOPTR0) PARM(&RTCD &SFMT)
+             IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+             IF         COND(&SAVT *EQ 'ICT') THEN(CHGVAR VAR(&DEVN) +
+                          VALUE(%SST(&SFMT 53 10)))
+             IF         COND(&SAVT *EQ 'BOB') THEN(CHGVAR VAR(&DEVN) +
+                          VALUE(%SST(&SFMT 39 10)))
+ 
+/** Device is Disk - SAVF */
+ 
+             IF         COND((&DEVC *EQ 'DISK') *AND (&DEVN *EQ +
+                          'SAVF') *AND (&SAVC *EQ 'SAVLIB')) THEN(DO)
+                CHGVAR     VAR(&PDEVC) VALUE('DEV(*SAVF) ')
+                GOTO       CMDLBL(CONT)
+             ENDDO
+ 
+/** Device is Tape/Disk */
+ 
+             CHGVAR     VAR(&PDEVC) VALUE('DEV(' *CAT &DEVN *CAT ') ')
+ 
+/** Continue command generation as per save command */
+ 
+CONT:
+             IF         COND(&SAVC *EQ 'SAVSAVFDTA') THEN(GOTO +
+                          CMDLBL(SAVSAVFDTA))
+             IF         COND(&SAVC *EQ 'SAVLIB') THEN(GOTO +
+                          CMDLBL(SAVLIB))
+             ELSE       CMD(GOTO CMDLBL(ABNOR))
+ 
+/** SAVSAVFDTA command */
+ 
+ SAVSAVFDTA:
+             CHGVAR     VAR(&CMD) VALUE(&SAVC *BCAT &PSAVF *CAT &PDEVC)
+             IF         COND(&VOID *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PVOID))
+             IF         COND(&UOPB *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PUOPB))
+             IF         COND(&CLER *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PCLER))
+             IF         COND(&OUTP *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &POUTP))
+ 
+             CALL       PGM(QCMDEXC) PARM(&CMD 300)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             GOTO       CMDLBL(UPDATE)
+ 
+/** SAVLIB command */
+ 
+ SAVLIB:
+             CHGVAR     VAR(&CMD) VALUE(&SAVC *BCAT &PLIBN *CAT &PDEVC)
+             IF         COND(&DEVN *EQ 'SAVF') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PSAVF))
+             IF         COND(&VOID *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PVOID))
+             IF         COND(&UOPB *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PUOPB))
+             IF         COND(&CLER *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PCLER))
+             IF         COND(&OUTP *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &POUTP))
+             IF         COND(&SAVA *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PSAVA))
+             IF         COND(&SACP *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PSACP))
+             IF         COND(&ASPD *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PASPD))
+             IF         COND(&DATC *NE ' ') THEN(CHGVAR VAR(&CMD) +
+                          VALUE(&CMD *BCAT &PDATC))
+ 
+             CALL       PGM(QCMDEXC) PARM(&CMD 300)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Update Save Date - Backup Success */
+ 
+UPDATE:
+             CALL       PGM(AOBKLBR1) PARM(&RTCD '*SUCCES' &SDAT +
+                          &LIBN &SAVT)
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal Termination */
+ 
+ABNOR:
+             CALL       PGM(AOBKLBR1) PARM(&RTCD '*FAIL  ' &SDAT +
+                          &LIBN &SAVT)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Job +
+                          terminated - library' *CAT &LIBN *CAT +
+                          ' NOT saved') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Flag Backup status as finished */
+ 
+END:
+             RTVDTAARA  DTAARA(&DSAV/SCBKSTAT (4 3)) RTNVAR(&DTACNT)
+             CHGVAR     VAR(&CNT) VALUE(&DTACNT)
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             CHGVAR     VAR(&DTACNT) VALUE(&CNT)
+             CHGDTAARA  DTAARA(&DSAV/SCBKSTAT (4 3)) VALUE(&DTACNT)
+             ENDPGM
+ 

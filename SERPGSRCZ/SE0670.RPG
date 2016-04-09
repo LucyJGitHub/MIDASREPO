@@ -1,0 +1,1121 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Outstanding Trade Settlements Rpt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0670 - OUTSTANDING TRADE SETTLEMENTS                       *
+     F*                                                               *
+     F*  Function: To report Complete Trades past Value Date which    *
+     F*   (I/C)    have not been Fully Settled, with options to select*
+     F*   (COB)    Trades shown by the number of calendar days since  *
+     F*            Value Date.                                        *
+     F*                                                               *
+     F*  Called by: SEC0612H - Outstanding Trade Settlements          *
+     F*            Frequency:                                         *
+     F*            - On request during I/C                            *
+     F*            - Daily during COB                                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CER001             Date 20Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG6688            Date 01Jun05               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E42974             DATE 20AUG92               *
+     F*                 E37680             DATE 26MAR92               *
+     F*                 E34978             DATE 28JAN92               *
+     F*                 E33030             DATE 09DEC91               *
+     F*                 E32524             DATE 03DEC91               *
+     F*                 E29170             DATE 07OCT91               *
+     F*                 S01117             DATE 14MAY91               *
+     F*                 E24774             DATE 14MAY91               *
+     F*                 S01269             DATE 16JUL90               *
+     F*                 S01271             DATE 19JUN90               *
+     F*                 E21505             DATE 30MAR90               *
+     F*                 E20651             DATE 05JAN90               *
+     F*                 E20521             DATE 11DEC89               *
+     F*                 E20125             DATE 14NOV89               *
+     F*                 E17157             DATE 26JUL89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG6688- Branch record not found in TABLETR                  *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E42974 - Partial Settlements are being incorrectly omitted.  *
+     F*           "Settled Nominal = Trade Nominal" does not mean the *
+     F*           Trade is Fully Settled. Use "Date Fully Settled".   *
+     F*         - First Outstanding Settlement per Branch (including  *
+     F*           Single Branch) is never printed due to error in     *
+     F*           overcomplex conditioning. Changed the following:    *
+     F*           - Added OMIT RECI = '*' to LF/TRADSOS.              *
+     F*           - Made New Branch processing a separate Subroutine. *
+     F*           - Added some structure to program enabling the use  *
+     F*             of one unconditioned READ in the DO Loop instead  *
+     F*             of two conditioned READs. (Source of error).      *
+     F*           - All this enables removal of Ind's 51, 71 and 72.  *
+     F*  E37680 - In single branch mode no details are reported as    *
+     F*           branch is blank                                     *
+     F*  E34978 - Trade settled today still showing if partially      *
+     F*           settled on previous day                             *
+     F*  E33030 - Should only do diffence processing for 'ALL' reports*
+     F*  E32524 - Do not show trades settled today                    *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multibranching                                      *
+     F*  E24774 - Nominal ccy decimal places have not yet been        *
+     F*           obtained when countervalue is converted to          *
+     F*           settlement currency.                                *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trades Authorisation processing                     *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E21505 - Ignore Cancelled Trades.                            *   E21505
+     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
+     F*           New Error Numbers as follows.                       *   E20651
+     F*           DB ERROR 03  ->  09                                 *   E20651
+     F*           DB ERROR 03  ->  10                                 *   E20651
+     F*  E20521 - Oversettled text should appear under the Nominal    *   E20521
+     F*           and/or Countervalue to which it is actually         *   E20521
+     F*           referring.                                          *   E20521
+     F*  E20125 - Program recompiled over File SE0670AU.              *   E20125
+     F*  E17157 - Move blanks to text field after 'OVERSETTLED' or    *   E17157
+     F*           'UNALLOCATED' printed.                              *   E17157
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  THIS PROGRAM ACCEPTS 3 PARAMETERS:-                          *
+     F*                                                               *
+     F*      OPTION - VALUE 1,2,3 OR 4                                *
+     F*                                                               *
+     F*          1 - ALL OUTSTANDING TRANSACTIONS.                    *
+     F*          2 - TRANSACTIONS OUTSTANDING FOR A SPECIFIED         *
+     F*              NUMBER OF DAYS.                                  *
+     F*          3 - TRANSACTIONS OUTSTANDING FOR MORE THAN A         *
+     F*              SPECIFIED NUMBER OF DAYS.                        *
+     F*          4 - TRANSACTIONS WITHIN A RANGE OF DAYS (INCLUSIVE)  *
+     F*                                                               *
+     F*     NO. DAYS 1 - NUMBER OF DAYS 1 (OPTIONS 2,3 & 4).          *
+     F*                                                               *
+     F*     NO. DAYS 2 - NUMBER OF DAYS 2 (OPTION 4 ONLY MUST BE      *
+     F*                  LESS THAN NO. OF DAYS 1).                    *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0670AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE0670P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FTRADSA  IF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     FTRADSOS IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F*******     TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F*******     TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31  - END OF FILE FOR SECTY                                 *
+     F*   37  - MULTIBRANCHING ON                                     *   E29170
+     F*   41  - RECORD NOT FOUND WHEN CHAINING                        *
+     F*   50  - SED AS INDICATOR IN AUDIT PRINT FILE                  *
+     F****51**-*USED*ON*COMPARE*OF*BRANCH*CODES*BETWEEN*RECORDS********   E42974
+     F*   60  - USED FOR CONDITIONING PRINTING IN FILE P1             *
+     F*   61  - FIRST TIME INDICATOR FOR OPENING PRINT FILE SE0670P1  *
+     F*   66  - CLIENT RECORD NOT FOUND                               *
+     F****71**-*ON*WHEN*RECORD*NOT*FULLY*PROCESSED*&*CONDITIONS*READ***   E42974
+     F****72**-*SET*ON*WHEN*A*DELETED*RECORD*IS*READ,*DELETED**********   E42974
+     F**********RECORDS*ARE*NOT*PROCESSED*IN*ANY*WAY.******************   E42974
+     F**********ONLY*NEXT*RECORD*OBTAINED.*****************************   E42974
+     F*                                                               *
+     F*   99  - USED IN THE Z-SUBROUTINES                             *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  P01    - Checks for Oversettled and Unallocated Trades       *   E42974
+     F***PR01***-*CHECK*FOR*OVER*SETTLED/UNALLOCATED*******************   E42974
+     F*  PR01   - Processes a detail line for printing                *   E42974
+     F*  NEWBR  - Processes change of Branch                          *   E42974
+     F*  AUDIT  - OUTPUTS CONTROL REPORT AND UPDATES AUDIT RECORD     *
+     F*  *PSSR  - ERROR HANDLING                                      *
+     F*                                                               *
+     F*  ZDATE2 - DAYNO - DATE CONVERSION                             *
+     F*  ZSDESC - SECURITY DESCRIPTION SUBROUTINE                     *
+     F*  ZSEDIT - PUTS COMMAS, DEC.PL AND SIGN IN AMOUNT FIELD        *
+     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E                    WORK        4  6
+     E                    CPY@    1   1 80
+      /EJECT
+     I/COPY ZSRSRC,ZSEDITZ2
+     ILDA         DS                            256                       S01117
+     I***********LDA        UDS                            256            S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR SPOOL FILE NAME                                          E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IRUNDT       DS                                                      E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG6688
+     I              A8BRNM                          BRNM                                     CER001
+      ** Midas SD Branch Codes                                                               BUG6688
+      *                                                                                      BUG6688
+     IDSSDY     E DSDSSDY                                                                    BUG6688
+      ** Second DS for Access Programs, Long Data Structure                                  BUG6688
+      *                                                                                      BUG6688
+      /COPY ZSRSRC,ZSDESCZ2
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           OPTION  1
+     C                     PARM           DAYS1A  3
+     C                     PARM           DAYS2A  3
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C**  CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0670  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C***********          Z-ADD0         CHKBCH  30                      S01117
+     C                     MOVE *BLANKS   CHKBCH  3                       S01117
+     C*
+     C**  OBTAIN ICD INFO AND CALCULATE DAYS
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C**  CHECK THAT CURRENT RECORD MEETS SELECTION CRITERIA BEFORE ANY
+     C**  MORE PROCESSING, IF NOT THEN ADD 1 TO APPROPRIATE TOTAL COUNT
+     C*
+     C                     READ TRADSDF                  31
+      *                                                                   E42974
+      ***  Save of RECI should be done inside the loop.                   E42974
+      *                                                                   E42974
+     C***********          MOVE RECI      TRECI   1                       E42974
+      *                                                                   E42974
+     C           *IN31     DOWNE'1'
+     C                     MOVE RECI      TRECI   1                       E42974
+     C*                                                                   E29170
+     C** IF BRANCH REQUESTED IS NOT THE SAME AS THE BRANCH READ           E29170
+     C** THEN END PROCESSING                                              E29170
+     C*                                                                   E29170
+     C           ENT       IFNE 'ALL'                                     E29170
+     C           ENT       ANDNETDBA                                      E29170
+     C           MBIN      ANDEQ'Y'                                E29170 E37680
+     C                     SETON                     31                   E29170
+     C                     ELSE                                           E29170
+     C*
+      ***  RECI = '*' is now OMITted in LF/TRADSOS.                       E42974
+      *                                                                   E42974
+     C**IF*RECI*=***THEN*RECORD*IS*DELETED,*SO*SET*ON**IN72*AND*DO*NOT*   E42974
+     C****PROCESS*RECORD*ANY*FURTHER.*DO*NOT*ADD*1*TO*IREC.*READ*NEXT**   E42974
+     C****RECORD*******************************************************   E42974
+     C***********                                                         E42974
+     C***********RECI      IFEQ '*'                                       E42974
+     C***********          SETON                         72               E42974
+     C***********          ELSE                                           E42974
+     C*
+      ***  Check for change of Branch (for closing/opening Print          E42974
+      ***  Files) is now done in SR/PR01.                                 E42974
+      *                                                                   E42974
+     C****CHECK*THAT*THE*NEW*BRANCH*CODE*=*CURRENT*BRANCH*CODE*********   E42974
+     C***********                                                         E42974
+     C***********TDBR      COMP CHKBCH                   51               S01117
+     C***********TDBA      COMP CHKBCH                   51        S01117 E42974
+      *                                                                   E21505
+      **  If RECI = 'C', then do not process; add 1 to Count.             E21505
+      *                                                                   E21505
+     C           RECI      IFEQ 'C'                                       E21505
+     C                     ADD  1         CANCEL                          E21505
+     C***********          SETON                     71            E21505 E42974
+     C                     ELSE                                           E21505
+     C*
+     C**  IF RECORD ID EQ S THEN DO NOT PROCESS ADD 1 TO COUNT
+     C*   Trades settled today should be counted as settled               E32524
+     C*
+     C           TNSN      ADD  TNSP      STNOM  150                      E34978
+     C*                                                                   E34978
+     C           RECI      IFEQ 'S'
+      *                                                                   E42974
+     C           AUTS      OREQ 'Y'                                       E32524
+     C           TDVD      ANDLERUND                                      E32524
+     C           RECI      ANDEQ'D'                                       E32524
+     C           TINC      ANDNE'I'                                       E32524
+      *                                                                   E42974
+     C           AUTS      OREQ 'Y'                                       E32524
+     C           TDVD      ANDLERUND                                      E32524
+     C           RECI      ANDEQ'A'                                       E32524
+     C           TINC      ANDNE'I'                                       E32524
+      *                                                                   E42974
+     C***********TNSN      OREQ NOML                               E32524 E34978
+      *                                                                   E42974
+      ***  Settled Nominal = Trade Nominal does not mean the Trade is     E42974
+      ***  Fully Settled. Check Date Fully Settled instead.               E42974
+      *                                                                   E42974
+     C***********STNOM     OREQ NOML                               E34978 E42974
+     C           TDFS      ORNE 0                                         E42974
+      *                                                                   E42974
+     C                     ADD  1         FUSET
+     C***********          SETON                     71                   E42974
+     C                     ELSE
+      *
+      **  DO NOT INCLUDE BOOK TRANSFERS (DISCRETIONARY IND=I)
+      *
+     C           TCNR      CHAINCLINTSEF             66
+     C           *IN66     IFEQ '0'
+     C           C1DI      ANDEQ'I'
+     C                     ADD  1         FUSET
+     C***********          SETON                     71                   E42974
+     C                     ELSE
+     C*
+     C**  IF INCOMPLETE INDICATOR EQ I DO NOT PROCESS ADD 1 TO COUNT
+     C*
+     C           TINC      IFEQ 'I'
+     C                     ADD  1         INCOMP
+     C***********          SETON                     71                   E42974
+     C                     ELSE
+     C*                                                                   S01269
+     C* IF RECORD I.D. EQ L OR P DO NOT PROCESS ADD 1 TO COUNT            S01269
+     C*                                                                   S01269
+     C           TRECI     IFEQ 'L'                                       S01269
+     C           TRECI     OREQ 'P'                                       S01269
+     C                     ADD  1         UNAUTH                          S01269
+     C***********          SETON                     71            S01269 E42974
+     C                     ELSE
+     C*
+     C**  IF VALUE DATE GT RUN DATE  DO NOT PROCESS ADD 1 TO COUNT
+     C*
+     C           TDVD      IFGT RUND
+     C                     ADD  1         NOTOVD
+     C***********          SETON                     71                   E42974
+     C                     ELSE
+     C*
+     C**  IF BASIC SELECTION CRITERIA MET, CHECK THAT ADDITION CRITERIA
+     C**  ARE MET, OTHERWISE ADD 1 TO NOT REPORTED COUNT
+     C*
+     C           OPTION    IFEQ '1'
+     C           OPTION    OREQ '2'
+     C           TDVD      ANDEQDAYS1
+     C           OPTION    OREQ '3'
+     C           TDVD      ANDLTDAYS1
+     C           OPTION    OREQ '4'
+     C           TDVD      ANDGEDAYS1
+     C           TDVD      ANDLEDAYS2
+     C*
+     C**  IF ALL SELECTION CRITERIA MET CONTINUE WITH THE PROCESSING OF
+     C**  THE RECORD
+     C*
+     C**  EXSR PR01 TO PRINT DETAILS ON REPORT
+     C*
+     C***51******          EXSR P01                                       E24774
+     C                     EXSR PR01
+     C*
+      ***  The new structure added into program means that there only     E42974
+      ***  need be one unconditioned read at end of DO Loop. This         E42974
+      ***  avoids the problem of potentially double reading the file.     E42974
+      *                                                                   E42974
+     C****READ*NEXT*RECORD.********************************************   E42974
+     C***********                                                         E42974
+     C***51******          READ TRADSDF                  31               E42974
+     C***51******          MOVE RECI      TRECI                    S01269 E42974
+      *                                                                   E42974
+     C                     ELSE
+     C                     ADD  1         NOTRPT
+     C***********          SETON                     71                   E42974
+     C                     END
+      *                                                                   E42974
+     C                     END
+     C                     END
+     C                     END                                            S01269
+     C                     END
+     C                     END
+     C                     END                                            E21505
+     C***********          END                                            E42974
+     C*
+     C**  ADD 1 TO NUMBER OF RECORDS READ FROM PRIME FILE
+      ***  Now that RECI = '*' is OMITted in LF/TRADSOS, the count of     E42974
+      ***  records can be unconditional.                                  E42974
+     C*
+     C***71******                                                         E42974
+     C***OR*51***             ADD  1         IREC                         E42974
+     C                     ADD  1         IREC                            E42974
+     C*
+      ***  Now that program has a better structure, the READ of next      E42974
+      ***  Trades Record can be unconditional.                            E42974
+      ***  Also, save of RECI should be at beginning of loop.             E42974
+      *                                                                   E42974
+     C****READ*NEXT*RECORD*IF *IN71*OR *IN72*=*1***********************   E42974
+     C***********                                                         E42974
+     C***72******                                                         E42974
+     C*OR*71*****          READ TRADSDF                  31               S01269
+     C***OR*71***             DO                                   S01269 E42974
+      *                                                                   E42974
+     C                     READ TRADSDF                  31               S01269
+      *                                                                   E42974
+     C***********          MOVE RECI      TRECI                    S01269 E42974
+     C***********          END                                     S01269 E42974
+     C***********          SETOF                     517172               E42974
+      *                                                                   E42974
+      ***  END of IF/ELSE Multibranching test.                            E42974
+     C                     END                                            E29170
+      ***  END of DO While not end of selected records.                   E42974
+     C                     END
+      *                                                                   E42974
+     C   61                WRITETRAIL
+     C*
+     C           EAUDIT    TAG
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *
+      *  FIRST  - Subroutine to access the ICD Information.
+      *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C                     MOVE DAYS1A    NODYS1  30
+     C                     MOVE DAYS2A    NODYS2  30
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C*
+     C**  ACCESS ICDS
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     EXSR ZICDSE
+     C*
+     C**  IF ERROR FROM ACCESSING TABTB36, PERFORM STANDARD DB ERROR
+     C**  ROUTINE
+     C*
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C** - IF NO DB ERROR CALCULATE DAYS(1) AND (IF OPTION = 4) DAYS(2)
+     C*
+     C           OPTION    IFNE '1'
+     C           RUND      SUB  NODYS1    DAYS1   50
+      *                                                                   E42974
+     C           OPTION    IFEQ '2'
+     C                     MOVE 'TRADES'  WORK,1
+     C                     MOVE NODYS1    WORK,2
+     C                     MOVE ' DAYS '  WORK,3
+     C                     MOVE 'OLD  '   WORK,4
+     C                     MOVEAWORK      OPTTXT
+     C                     END
+      *                                                                   E42974
+     C           OPTION    IFEQ '3'
+     C                     MOVE 'MORE T'  WORK,1
+     C                     MOVEL'HAN   '  WORK,2
+     C                     MOVELNODYS1    WORK,3
+     C                     MOVE 'DA'      WORK,3
+     C                     MOVE 'YS OLD'  WORK,4
+     C                     MOVEAWORK      OPTTXT
+     C                     END
+      *                                                                   E42974
+     C           OPTION    IFEQ '4'
+     C           RUND      SUB  NODYS2    DAYS2   50
+     C                     MOVELNODYS2    WORK,1
+     C                     MOVE ' TO'     WORK,1
+     C                     MOVE NODYS1    WORK,2
+     C                     MOVE ' DAYS '  WORK,3
+     C                     MOVEL'OLD'     WORK,4
+     C                     MOVEAWORK      OPTTXT
+     C                     END
+      *                                                                   E42974
+     C                     ELSE
+     C                     MOVE 'ALL  '   WORK,1
+     C                     MOVE 'TRADES'  WORK,2
+     C                     MOVEAWORK      OPTTXT
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  P01    - Subroutine to check whether the Trade is Oversettled
+      *           or Unallocated.
+      *
+      *****************************************************************
+      *
+     C           P01       BEGSR
+     C*
+     C****GET*RECORD*FROM*SECTY*(SECURITIES*FILE),*FOR*CURRENT*SECURITY***E24774
+     C****IF*NOT*FOUND*PERFORM*STANDARD*DB*ERROR*ROUTINE******************E24774
+     C***********                                                         E24774
+     C***********TDSS      CHAINSECTYDF              41                   E24774
+     C************IN41     IFEQ '1'                                       E24774
+     C***********          MOVE '1'       *INU7                           E24774
+     C***********          MOVE '1'       *INU8                           E24774
+     C***********          MOVE 'SECTY'   DBFILE           ***************E24774
+     C***********          MOVELTDSS      DBKEY            * DB ERROR 09 *E24774
+     C**********           Z-ADD3         DBASE            ***************E20651
+     C***********          Z-ADD9         DBASE            *********E20651E24774
+     C***********          GOTO EAUDIT                                    E24774
+     C***********          END                                            E24774
+     C*
+     C**  Countervalue - convert to settle currency via ZCONV
+     C*
+     C                     MOVE TNMC      ZCCYI
+     C                     Z-ADDNMCDP     ZCDPI                           S01117
+     C                     MOVE SETC      ZCCYO
+     C                     Z-ADDCDP       ZCDPO                           S01117
+     C                     MOVE TMDI      ZMD
+     C                     Z-ADDTDER      ZEXCH
+     C                     Z-ADDTCTR      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            * DB ERROR 07 *S01117
+     C***********          Z-ADD7         DBASE            ***************S01117
+     C***********          GOTO EAUDIT                                    S01117
+     C***********          ELSE                                           S01117
+     C                     Z-ADDZAMTCO    TCTR
+     C***********          END
+     C*
+     C**  FIRST CHECK IF TRADE IS OVERSETTLED OR NOT
+     C*
+     C           TNSN      ADD  TNSP      TNS    110
+     C           TVSN      ADD  TVSP      TVS    110
+      *                                                                   E42974
+     C           TNS       IFGT NOML
+     C           TVS       ORGT TCTR
+     C*                                                                   E20521
+     C* PRINT OVERSETTLED TEXT UNDER THE CORRECT OUTSTANDING HEADING      E20521
+     C*                                                                   E20521
+     C***********          MOVEL'OVERSETT'TEXT   11                       E20521
+     C***********          MOVE 'LED'     TEXT                            E20521
+     C           TNS       IFGT NOML                                      E20521
+     C                     MOVEL'OVERSETT'TEXT1  11                       E20521
+     C                     MOVE 'LED'     TEXT1                           E20521
+     C                     END                                            E20521
+     C           TVS       IFGT TCTR                                      E20521
+     C                     MOVEL'OVERSETT'TEXT2  11                       E20521
+     C                     MOVE 'LED'     TEXT2                           E20521
+     C                     END                                            E20521
+      *                                                                   E42974
+     C                     ELSE
+     C*
+     C**  IF TRADE IS NOT OVERSETTLED, CHECK TO SEE IF UNALLOCATED,
+     C**  FOR TWO TRADE TYPES. FIRST FOR TRADE TYPE TP
+     C*
+     C           TDTP      IFEQ 'TP'
+     C           SMTH      IFEQ *ZEROS
+     C           PYFM      OREQ *BLANKS
+     C***********PYFB      OREQ *ZEROS                                    S01117
+     C           PYFA      OREQ *BLANKS                                   S01117
+     C********** DELT      OREQ *ZEROS                                                        CSD027
+     C           DELT      OREQ *BLANKS                                                       CSD027
+     C                     MOVEL'UNALLOCA'TEXT
+     C                     MOVE 'TED'     TEXT
+     C                     END
+     C                     END
+     C*
+     C**  CHECK FOR UNALLOCATED FOR TRADE TYPE TS
+     C*
+     C           TDTP      IFEQ 'TS'
+     C           SMTH      IFEQ *ZEROS
+     C           PAYT      OREQ *BLANKS
+     C***********PYTB      OREQ *ZEROS                                    S01117
+     C           PYTA      OREQ *BLANKS                                   S01117
+     C********** DELF      OREQ *ZEROS                                                        CSD027
+     C           DELF      OREQ *BLANKS                                                       CSD027
+     C                     MOVEL'UNALLOCA'TEXT
+     C                     MOVE 'TED'     TEXT
+     C                     END
+     C                     END
+     C*
+     C**  END FIRST IFXX
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  PR01   - Subroutine to print detail lines.
+      *
+      *****************************************************************
+      *
+     C           PR01      BEGSR
+     C*
+      ***  Instead of a big IF/ELSE, processing of new Branch has been    E42974
+      ***  put in a Subroutine, which is called if Branch read is not     E42974
+      ***  the same as Branch saved, (which is blank for first record).   E42974
+      *                                                                   E42974
+     C************IN51     IFEQ '1'                                       E42974
+      *                                                                   E42974
+     C           TDBA      IFNE CHKBCH                                    E42974
+     C                     EXSR NEWBR                                     E42974
+     C                     END                                            E42974
+     C*
+     C**  GET RECORD FROM SECTY (SECURITIES FILE), FOR CURRENT SECURITY
+     C**  IF NOT FOUND PERFORM STANDARD DB ERROR ROUTINE
+     C*
+     C           TDSS      CHAINSECTYDF              41
+     C           *IN41     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTDSS      DBKEY            * DB ERROR 10 *
+     C***********          Z-ADD3         DBASE            ***************E20651
+     C                     Z-ADD10        DBASE            ***************E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+      *                                                                   E42974
+      ***  There is no point having this ELSE after a GOTO.               E42974
+     C***********          ELSE                                           E42974
+     C                     END                                            E42974
+     C*
+     C** MOVE APPROPRIATE FIELDS TO WORK FIELDS FOR SR ZSDESC, THEN
+     C** EXECUTE ZICDSE TO GET RECORD FROM TABTB36, FIELD RSFD REQUIRED
+     C** BY ZSDESC.
+     C*
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE SFN1      ZSFN1
+     C                     MOVE SFN2      ZSFN2
+     C                     MOVE RSFD      ZRSFD                           S01117
+     C*
+     C**  PERFORM SR ZSDESC TO GET SECURITY DESCRIPTIONS
+     C*
+     C                     EXSR ZSDESC
+     C*
+     C**  OBTAIN VALUE DATE IN FORM DDMMMYY BY EXECUTING SR ZDATE2
+     C**  MOVE OUTPUT FIELD TO FIELD FOR OUPUT ON REPORT
+     C*
+     C                     MOVE TDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE1
+     C*
+     C**  MOVE FIELDS TO WORK FIELDS FOR ZSEDIT INORDER TO GET NOMINAL
+     C**  VALUE IN EDITED FORM. MOVE OUTPUT FIELD TO SMALLER FIELD TO
+     C**  DROP OF THE SIGN ON THE NUMBER.
+     C*
+     C                     Z-ADDNOML      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TEMP2  17
+     C                     MOVELTEMP2     ONOM1  16
+     C*
+     C**  GET TRADE DATE IN DATE FORM DDMMMYY FOR OUTPUT TO REPORT
+     C*
+     C                     MOVE TDDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ODATE2
+     C*
+     C**  CHAIN TO THE FILE TABTG10 TO GET NOMINAl CURRENCY DECIMAL
+     C**  PLACES
+     C*
+     C                     MOVE '1'       TEMP    4
+     C                     MOVELNMCY      TEMP
+     C                     MOVE TEMP      KEY
+     C                     MOVEL'20'      KEY
+     C           KEY       CHAINTABTG10F             41
+     C*
+     C**  IF TABTG10 RECORD NOT FOUND, PERFORM STANDARD DB ERROR
+     C**  ROUTINE
+     C*
+     C           *IN41     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELKEY       DBKEY            * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADDCDP       NMCDP   10
+     C                     MOVE *BLANKS   KEY
+     C***********          EXSR P01                                E24774 S01117
+     C*
+     C**  CHAIN TO THE FILE TABTG10 TO GET DECIMAL PLACES FOR CURRENCY
+     C**  THEN EXSR ZSEDIT TO OBTAIN COUNTERVALUE IN EDITED FORM
+     C*
+     C                     MOVE '1'       TEMP    4
+     C                     MOVELSETC      TEMP
+     C                     MOVE TEMP      KEY
+     C                     MOVEL'20'      KEY
+     C           KEY       CHAINTABTG10F             41
+     C*
+     C**  IF TABTG10 RECORD NOT FOUND, PERFORM STANDARD DB ERROR
+     C**  ROUTINE
+     C*
+     C           *IN41     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELKEY       DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C                     MOVE *BLANKS   KEY
+     C                     EXSR P01                                       S01117
+     C*
+     C**  USE ZSEDIT TO GET COUNTER VALUE IN EDITED FORM WITH DEC.PL. &
+     C**  COMMAS IN IT. MOVE OUTPUT FIELD TO OTHER FIELD TO GET RID OF
+     C**  SIGN
+     C*
+     C                     Z-ADDTCTR      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    ONOM2  20
+     C*
+     C**  USE SAME NOMINAL DEC PLS FOR CURRENT SECURITY TO EDIT THE
+     C**  OUTSTANDING NOMINAL FIELD AS FOR EDITING THE NOMINAL FIELD
+     C*
+     C                     Z-ADDTOSN      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    ONOM3  20
+     C*
+     C** USE SAME DEC PLS FROM TABTG10 TO EDIT OUTSTANDING COUNTERVALUE
+     C** FIELD AS FOR EDITING COUNTERVALUE.
+     C*
+     C**  Edit for nominal decimal places
+     C*
+     C                     Z-ADDTOSV      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    ONOM4  20
+     C*
+     C           RUND      IFEQ TDVD
+     C                     SETON                     60
+     C                     ELSE
+     C           RUND      SUB  TDVD      DAYSO   50
+     C                     SETOF                     60
+     C                     END
+     C*
+     C**  CHAIN TO THE CLIENT FILE TO GET THE CUSTOMER NAME & TOWN
+     C**  IF CUSTOMER NOT THERE FLAG AS DB ERROR.
+     C*
+     C           TCNR      CHAINCLINTCBF             41
+     C           *IN41     IFEQ '1'
+     C                     MOVE *BLANKS   CRNM
+     C                     MOVEL'NOT '    TMP3    9
+     C                     MOVE 'FOUND'   TMP3
+     C                     MOVELTMP3      CRNM
+     C                     MOVE *BLANKS   CTWN
+     C                     END
+     C*
+     C**  - WRITE HEADINGS IF START OF PRINT OR OVERFLOW
+     C*
+     C           LCNT      IFGE 55
+     C           LCNT      OREQ 0
+     C                     WRITEHEAD1
+     C                     Z-ADD12        LCNT
+     C                     END
+     C*
+     C**  - WRITE OUT THE DETAIL FOR CURRENT RECORD, ADD 2 TO LINE CNT
+     C**    ADD 1 TO COUNT OF RECORDS REPORTED.
+     C*
+     C                     WRITEDETAIL
+     C                     MOVE *BLANKS   TEXT                            E17157
+     C                     MOVE *BLANKS   TEXT1                           E20521
+     C                     MOVE *BLANKS   TEXT2                           E20521
+     C                     ADD  1         OREC
+     C                     ADD  4         LCNT
+     C*
+     C***********          END                                            E42974
+      *                                                                   E42974
+      ***  The original ELSE part of the big IF/ELSE has now been split   E42974
+      ***  into a separate Subroutine.                                    E42974
+      *                                                                   E42974
+     C                     ENDSR                                          E42974
+      *                                                                   E42974
+      *****************************************************************   E42974
+      /EJECT                                                              E42974
+      *****************************************************************   E42974
+      *                                                               *   E42974
+      *  NEWBR  - Subroutine to handle change of Branch (including    *   E42974
+      *           first time through).                                *   E42974
+      *                                                               *   E42974
+      *****************************************************************   E42974
+      *                                                                   E42974
+     C           NEWBR     BEGSR                           *** NEWBR ***  E42974
+     C*
+     C**  IF BRANCH CODE IS DIFFERENT FROM CURRENT, CLOSE CURRENT
+     C**  SE0670P1 AND OPEN NEW PRTF SE0670P1, EXCEPT ON FIRST TIME.
+     C*
+     C***********          ELSE                                           E42974
+     C           *IN61     IFEQ '1'
+     C                     WRITETRAIL
+     C                     CLOSESE0670P1
+     C                     ELSE
+     C                     SETON                     61
+     C                     END
+     C*
+     C**  AS NEW BRANCH READ, MOVE CODE TO TEMP CHECK FIELD
+     C*
+     C***********          MOVE TDBR      CHKBCH                          S01117
+     C                     MOVE TDBA      CHKBCH                          S01117
+     C                     Z-ADD0         PAGE
+     C                     OPEN SE0670P1
+     C                     Z-ADD0         LCNT    20
+     C                     EXSR RCFP1                                     E29170
+     C*
+     C**  GET BRANCH NAME FROM THE FILE TABLETR
+     C**  IF MULTIBRANCHING ON                                            E29170
+     C*
+     C           *IN37     IFEQ '1'                                       E29170
+     C***********          MOVE TDBR      KEY    12                       S01117
+     C                     MOVE TDBA      KEY    12                       S01117
+     C**********           MOVEL'10'      KEY                                                BUG6688
+     C********** KEY       CHAINTABLETRF             41                                      BUG6688
+      *                                                                                      BUG6688
+     C                     CALL 'AOBRCHR1'                                                   BUG6688
+     C                     PARM *BLANKS   PRTCD   7                                          BUG6688
+     C                     PARM '*KEY   ' POPTN   7                                          BUG6688
+     C                     PARM TDBA      PBRCH   3                                          BUG6688
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG6688
+      *                                                                                      BUG6688
+     C           PRTCD     IFNE *BLANKS                                                      BUG6688
+     C********** *IN41     IFEQ '1'                                                          BUG6688
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG6688
+     C**********           MOVELKEY       DBKEY            * DB ERROR 05 *                   BUG6688
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG6688
+     C                     MOVELTDBA      DBKEY                                              BUG6688
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+      *                                                                   E42974
+     C                     END                                            E29170
+     C                     MOVE *BLANKS   KEY
+     C***********          END                                            E42974
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  AUDIT  - Subroutine to output Audit Report using Information
+      *           from TRADSA and processing.
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+     C*
+     C**  IF NO DATABASE ERRORS FOUND READ TRADSA AUDIT RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C                     READ TRADSAF                  99
+     C*
+     C**  IF NOT FOUND - ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRADS'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C*
+     C**  CHECK FOR DIFFERENCE IN FILE AND CALCULATED TOTALS
+     C*
+     C           NORE      IFNE IREC
+     C***********ENT       ANDEQ'ALL'                              E33030 E37680
+     C           ENT       IFEQ 'ALL'                                     E37680
+     C           MBIN      OREQ 'N'                                       E37680
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *INU8
+     C                     END                                            E37680
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     WRITEHEADAU                                    E29170
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C*
+     C**  CHECK FOR ANY RECORDS READ
+     C*
+     C           IREC      IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM TDBA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

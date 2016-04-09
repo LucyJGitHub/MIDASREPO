@@ -1,0 +1,1218 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1551 - Report Action File for GPGLOBFPD                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP032             Date 20Feb06               *
+      *                 CUP022 *CREATE     Date 12Mar04               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP032 - Use one printer file for Action Files.              *
+      *  CUP022 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *       60      Amended records
+      *       61      No amended records to report
+      *       62      Amended records headers
+      *       63      Print field description for Amend
+      *       64      Print 'before' for Amend
+      *       65      Print 'after' for Amend
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPGLOBFL0 IF   E           K DISK    INFSR(*PSSR)
+     F*UP1551P1*O    E             PRINTER INFDS(SPOOL)                                       CUP032
+     FUP0799P1  O    E             PRINTER INFDS(SPOOL)                                       CUP032
+     F                                     OFLIND(*IN37)
+     F                                     USROPN
+      *
+      /EJECT
+      *
+      * File information data structure for P1 file; used for page end
+      *   handling
+     D SPOOL           DS
+     D  SFILE                 83     92
+     D  SFNUM                123    124B 0
+     D  OFLLN                188    189B 0
+     D  PRTLN                367    368B 0
+      *
+     D                 DS                                                                     CUP032
+     D KEYHDR                  1    132                                                       CUP032
+     D  HDR1                  10     24    INZ('Global Phy File')                             CUP032
+      *
+     D                 DS                                                                     CUP032
+     D KEYDTA                  1    132                                                       CUP032
+     D  DTA1                  10     19                                                       CUP032
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    HDRTXT
+      *
+     C**********         OPEN      UP1551P1                                                   CUP032
+     C                   OPEN      UP0799P1                                                   CUP032
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *LOVAL        SETLL     UPGLOBFD0
+      *
+     C                   READ      UPGLOBFL0                            6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If there are no records at all write 'no records'.
+     C     *IN20         IFEQ      *ON
+     C                   WRITE     NORECS                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   ENDIF
+      *
+     C     GFACTC        IFNE      'A'
+     C                   SETON                                        61
+     C                   WRITE     DTL1
+     C                   SETOFF                                       61
+     C                   ELSE
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   ENDIF
+      *
+     C     GFACTC        DOWEQ     'A'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       6237
+     C                   ENDIF
+      *
+     C                   EXSR      AMEND
+      *
+     C                   READ      UPGLOBFL0                            6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+      *
+     C     GFACTC        IFNE      'D'
+     C                   SETON                                        71
+     C                   WRITE     DTL2
+     C                   SETOFF                                       71
+     C                   ELSE
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       72
+     C                   ENDIF
+      *
+     C     GFACTC        DOWEQ     'D'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       7237
+     C                   ENDIF
+      *
+     C                   EXSR      DELETE
+      *
+     C                   READ      UPGLOBFL0                            6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+      *
+     C     GFACTC        IFNE      'I'
+     C                   SETON                                        81
+     C                   WRITE     DTL3
+     C                   SETOFF                                       81
+     C                   ELSE
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       82
+     C                   ENDIF
+      *
+     C     GFACTC        DOWEQ     'I'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       8237
+     C                   ENDIF
+      *
+     C                   EXSR      INSERT
+      *
+     C                   READ      UPGLOBFL0                            6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ENDPGM        TAG
+     C**********         CLOSE     UP1551P1                                                   CUP032
+     C                   CLOSE     UP0799P1                                                   CUP032
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      * AMEND subroutine - process amended records                    *
+      *                                                               *
+      *****************************************************************
+     C     AMEND         BEGSR
+      *
+     C**********         MOVEL     GFGPF         #GPF                                         CUP032
+     C                   EVAL      DTA1 = GFGPF                                               CUP032
+      *
+      * Check values for first and second amended records of pair
+      *
+     C                   MOVEL     GFMOD         MOD1              2
+     C                   MOVEL     GFZLF         ZLF1             10
+     C                   MOVEL     GFZLFF        ZLFF1            10
+     C                   MOVEL     GFZLF1        ZLF11            10
+     C                   MOVEL     GFZLF2        ZLF21            10
+     C                   MOVEL     GFZLF3        ZLF31            10
+     C                   MOVEL     GFZLF4        ZLF41            10
+     C                   MOVEL     GFZLF5        ZLF51            10
+     C                   MOVEL     GFZLF6        ZLF61            10
+     C                   MOVEL     GFZLF7        ZLF71            10
+     C                   MOVEL     GFZLF8        ZLF81            10
+     C                   MOVEL     GFZLF9        ZLF91            10
+     C                   MOVEL     GFZPF         ZPF1             10
+     C                   MOVEL     GFZPFF        ZPFF1            10
+     C                   MOVEL     GFGLF         GLF1             10
+     C                   MOVEL     GFGLFU        GLFU1            10
+     C                   MOVEL     GFGLFF        GLFF1            10
+     C                   MOVEL     GFGPFF        GPFF1            10
+     C                   MOVEL     GFZONE        ZONE1            10
+     C                   MOVEL     GFGBRC        GBRC1            10
+     C                   MOVEL     GFGKY1        GKY11            10
+     C                   MOVEL     GFGKY2        GKY21            10
+     C                   MOVEL     GFGKY3        GKY31            10
+     C                   MOVEL     GFGKY4        GKY41            10
+     C                   MOVEL     GFGKY5        GKY51            10
+     C                   MOVEL     GFGKY6        GKY61            10
+     C                   MOVEL     GFGKY7        GKY71            10
+     C                   MOVEL     GFGKY8        GKY81            10
+     C                   MOVEL     GFGKY9        GKY91            10
+     C                   MOVEL     GFZBRC        ZBRC1            10
+     C                   MOVEL     GFZKY1        ZKY11            10
+     C                   MOVEL     GFZKY2        ZKY21            10
+     C                   MOVEL     GFZKY3        ZKY31            10
+     C                   MOVEL     GFZKY4        ZKY41            10
+     C                   MOVEL     GFZKY5        ZKY51            10
+     C                   MOVEL     GFZKY6        ZKY61            10
+     C                   MOVEL     GFZKY7        ZKY71            10
+     C                   MOVEL     GFZKY8        ZKY81            10
+     C                   MOVEL     GFZKY9        ZKY91            10
+     C                   MOVEL     GFMULT        MULT1             1
+     C                   MOVEL     GFBLSY        BLSY1             1
+     C                   MOVEL     GFOLSY        OLSY1             1
+     C                   MOVEL     GFPBEF        PBEF1             1
+     C                   MOVEL     GFTRUP        TRUP1            10
+      *
+      * Read next record so that values can be compared.
+     C                   READ      UPGLOBFL0                            6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   MOVEL     GFMOD         MOD2              2
+     C                   MOVEL     GFZLF         ZLF2             10
+     C                   MOVEL     GFZLFF        ZLFF2            10
+     C                   MOVEL     GFZLF1        ZLF12            10
+     C                   MOVEL     GFZLF2        ZLF22            10
+     C                   MOVEL     GFZLF3        ZLF32            10
+     C                   MOVEL     GFZLF4        ZLF42            10
+     C                   MOVEL     GFZLF5        ZLF52            10
+     C                   MOVEL     GFZLF6        ZLF62            10
+     C                   MOVEL     GFZLF7        ZLF72            10
+     C                   MOVEL     GFZLF8        ZLF82            10
+     C                   MOVEL     GFZLF9        ZLF92            10
+     C                   MOVEL     GFZPF         ZPF2             10
+     C                   MOVEL     GFZPFF        ZPFF2            10
+     C                   MOVEL     GFGLF         GLF2             10
+     C                   MOVEL     GFGLFU        GLFU2            10
+     C                   MOVEL     GFGLFF        GLFF2            10
+     C                   MOVEL     GFGPFF        GPFF2            10
+     C                   MOVEL     GFZONE        ZONE2            10
+     C                   MOVEL     GFGBRC        GBRC2            10
+     C                   MOVEL     GFGKY1        GKY12            10
+     C                   MOVEL     GFGKY2        GKY22            10
+     C                   MOVEL     GFGKY3        GKY32            10
+     C                   MOVEL     GFGKY4        GKY42            10
+     C                   MOVEL     GFGKY5        GKY52            10
+     C                   MOVEL     GFGKY6        GKY62            10
+     C                   MOVEL     GFGKY7        GKY72            10
+     C                   MOVEL     GFGKY8        GKY82            10
+     C                   MOVEL     GFGKY9        GKY92            10
+     C                   MOVEL     GFZBRC        ZBRC2            10
+     C                   MOVEL     GFZKY1        ZKY12            10
+     C                   MOVEL     GFZKY2        ZKY22            10
+     C                   MOVEL     GFZKY3        ZKY32            10
+     C                   MOVEL     GFZKY4        ZKY42            10
+     C                   MOVEL     GFZKY5        ZKY52            10
+     C                   MOVEL     GFZKY6        ZKY62            10
+     C                   MOVEL     GFZKY7        ZKY72            10
+     C                   MOVEL     GFZKY8        ZKY82            10
+     C                   MOVEL     GFZKY9        ZKY92            10
+     C                   MOVEL     GFMULT        MULT2             1
+     C                   MOVEL     GFBLSY        BLSY2             1
+     C                   MOVEL     GFOLSY        OLSY2             1
+     C                   MOVEL     GFPBEF        PBEF2             1
+     C                   MOVEL     GFTRUP        TRUP2            10
+      *
+      * Compare values and write records to report.
+      *
+     C     MOD1          IFNE      MOD2
+     C                   MOVEL     'GFMOD'       FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     MOD1          #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     MOD2          #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF1          IFNE      ZLF2
+     C                   MOVEL     'GFZLF'       FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF1          #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF2          #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLFF1         IFNE      ZLFF2
+     C                   MOVEL     'GFZLFF'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLFF1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLFF2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF11         IFNE      ZLF12
+     C                   MOVEL     'GFZLF1'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF11         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF12         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF21         IFNE      ZLF22
+     C                   MOVEL     'GFZLF2'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF21         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF22         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF31         IFNE      ZLF32
+     C                   MOVEL     'GFZLF3'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF31         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF32         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF41         IFNE      ZLF42
+     C                   MOVEL     'GFZLF4'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF41         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF42         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF51         IFNE      ZLF52
+     C                   MOVEL     'GFZLF5'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF51         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF52         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF61         IFNE      ZLF62
+     C                   MOVEL     'GFZLF6'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF61         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF62         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF71         IFNE      ZLF72
+     C                   MOVEL     'GFZLF7'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF71         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF72         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF81         IFNE      ZLF82
+     C                   MOVEL     'GFZLF8'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF81         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF82         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZLF91         IFNE      ZLF92
+     C                   MOVEL     'GFZLF9'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF91         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZLF92         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZPF1          IFNE      ZPF2
+     C                   MOVEL     'GFZPF'       FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZPF1          #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZPF2          #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZPFF1         IFNE      ZPFF2
+     C                   MOVEL     'GFZPFF'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZPFF1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZPFF2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GLF1          IFNE      GLF2
+     C                   MOVEL     'GFGLF'       FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLF1          #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLF2          #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GLFU1         IFNE      GLFU2
+     C                   MOVEL     'GFGLFU'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLFU1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLFU2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GLFF1         IFNE      GLFF2
+     C                   MOVEL     'GFGLFF'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLFF1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GLFF2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GPFF1         IFNE      GPFF2
+     C                   MOVEL     'GFGPFF'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GPFF1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GPFF2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZONE1         IFNE      ZONE2
+     C                   MOVEL     'GFZONE'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZONE1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZONE2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GBRC1         IFNE      GBRC2
+     C                   MOVEL     'GFGBRC'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GBRC1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GBRC2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY11         IFNE      GKY12
+     C                   MOVEL     'GFGKY1'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY11         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY12         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY21         IFNE      GKY22
+     C                   MOVEL     'GFGKY2'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY21         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY22         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY31         IFNE      GKY32
+     C                   MOVEL     'GFGKY3'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY31         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY32         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY41         IFNE      GKY42
+     C                   MOVEL     'GFGKY4'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY41         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY42         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY51         IFNE      GKY52
+     C                   MOVEL     'GFGKY5'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY51         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY52         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY61         IFNE      GKY62
+     C                   MOVEL     'GFGKY6'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY61         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY62         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY71         IFNE      GKY72
+     C                   MOVEL     'GFGKY7'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY71         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY72         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY81         IFNE      GKY82
+     C                   MOVEL     'GFGKY8'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY81         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY82         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     GKY91         IFNE      GKY92
+     C                   MOVEL     'GFGKY9'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY91         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     GKY92         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZBRC1         IFNE      ZBRC2
+     C                   MOVEL     'GFZBRC'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZBRC1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZBRC2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY11         IFNE      ZKY12
+     C                   MOVEL     'GFZKY1'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY11         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY12         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY21         IFNE      ZKY22
+     C                   MOVEL     'GFZKY2'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY21         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY22         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY31         IFNE      ZKY32
+     C                   MOVEL     'GFZKY3'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY31         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY32         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY41         IFNE      ZKY42
+     C                   MOVEL     'GFZKY4'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY41         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY42         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY51         IFNE      ZKY52
+     C                   MOVEL     'GFZKY5'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY51         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY52         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY61         IFNE      ZKY62
+     C                   MOVEL     'GFZKY6'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY61         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY62         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY71         IFNE      ZKY72
+     C                   MOVEL     'GFZKY7'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY71         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY72         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY81         IFNE      ZKY82
+     C                   MOVEL     'GFZKY8'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY81         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY82         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     ZKY91         IFNE      ZKY92
+     C                   MOVEL     'GFZKY9'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY91         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ZKY92         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     MULT1         IFNE      MULT2
+     C                   MOVEL     'GFMULT'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     MULT1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     MULT2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     BLSY1         IFNE      BLSY2
+     C                   MOVEL     'GFBLSY'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     BLSY1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     BLSY2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     OLSY1         IFNE      OLSY2
+     C                   MOVEL     'GFOLSY'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     OLSY1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     OLSY2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     PBEF1         IFNE      PBEF2
+     C                   MOVEL     'GFPBEF'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     PBEF1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     PBEF2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C     TRUP1         IFNE      TRUP2
+     C                   MOVEL     'GFTRUP'      FIELD
+      * Write 'before' value of field.
+     C                   EXSR      SR01
+     C**********         MOVEL     *BLANKS       #GPF                                         CUP032
+     C                   EVAL      KEYDTA = *blanks                                           CUP032
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     TRUP1         #VALUE
+      * Write 'after' value of field.
+     C                   EXSR      SR02
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     TRUP2         #VALUE
+     C                   EXSR      SR03
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * DELETE subroutine - process deleted records                   *
+      *                                                               *
+      *****************************************************************
+     C     DELETE        BEGSR
+      *
+     C**********         MOVEL     GFGPF         #GPF                                         CUP032
+     C                   EVAL      DTA1 = GFGPF                                               CUP032
+      *
+      * If description field  exists then move this
+     C                   WRITE     DTL2                                 69
+     C     *IN69         IFEQ      *ON
+     C                   SETON                                        U7U8
+     C                   DUMP
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * INSERT subroutine - process inserted records                  *
+      *                                                               *
+      *****************************************************************
+     C     INSERT        BEGSR
+      *
+     C**********         MOVEL     GFGPF         #GPF                                         CUP032
+     C                   EVAL      DTA1 = GFGPF                                               CUP032
+      *
+      * If description field  exists then move this
+     C                   WRITE     DTL3                                 69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * OFLOW subroutine - handle overflow for print of field details *
+      *                                                               *
+      *****************************************************************
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN              2 0
+     C     3             IFGE      RMLN
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+      *
+     C**********         MOVEL     GFGPF         #GPF                                         CUP032
+     C                   EVAL      DTA1 = GFGPF                                               CUP032
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   ENDIF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR01 subroutine - 1st part of field compare                   *
+      *                                                               *
+      *****************************************************************
+     C     SR01          BEGSR
+      *
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ESR01         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR02 subroutine - 2nd part of field compare                   *
+      *                                                               *
+      *****************************************************************
+     C     SR02          BEGSR
+      *
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ESR02         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SR03 subroutine - 3rd part of field compare                   *
+      *                                                               *
+      *****************************************************************
+     C     SR03          BEGSR
+      *
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ESR03         ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

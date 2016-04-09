@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Historic Interface Detls File Purge')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL4490 - Historic Interface Details File Purge               *
+      *                                                               *
+      *  Function:  This program will delete from the historic        *
+      *  (COB)      interface details file GLHSIFPD those records     *
+      *             whose processing date is more than a month ago    *
+      *             from today.                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL028  *CREATE    Date 06Oct03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL028 - GL Postings Interface                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLHSIFL0UF  E           K        DISK
+      ** Historic Interface Details File - Update
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+     IA@CPY       DS                             80
+      * Copyright array
+      *
+     ILDA       E DSLDA
+      ** Local DTAARA for Database Error Details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data area RUNDAT
+      *
+      *****************************************************************
+      *
+      **         M A I N    P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initial Processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Position to records 30 days ago
+      *
+     C           KYHSIF    SETLLGLHSIFL0
+     C                     READPGLHSIFL0                 80
+      *
+      ** Delete all records which are more than 30 days old
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C                     DELETGLHSIFD0
+      *
+     C                     READPGLHSIFL0                 80
+      *
+     C                     ENDDO
+      *
+      ** End Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** SRINIT - Initial Processing
+      *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Setup copyright
+      *
+     C                     MOVEACPY@      A@CPY
+      *
+      ** Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'GL4490'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      ** Read in data area RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Define key list
+      *
+     C           KYHSIF    KLIST
+     C                     KFLD           WPRDN   50
+     C                     KFLD           WIFBN   3
+      *
+      ** Determine the date 30 days prior to today
+      *
+     C           AGRDNB    SUB  30        WPRDN
+     C                     MOVE *BLANKS   WIFBN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** *PSSR -  Error Processing
+      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+** CPY@
+(C) Copyright Misys International Banking Systems Ltd. 2003

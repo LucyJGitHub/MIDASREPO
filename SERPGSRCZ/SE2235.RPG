@@ -1,0 +1,1157 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Gen. Coupon Actions for Backvals')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2235 - GENERATE COUPON ACTIONS FOR BACKVALUATIONS.         *
+     F*                                                               *
+     F*  Function: For backvalued Trades, where a Coupon Date has     *
+     F*    (COB)   occurred between the Value Date of the Trade and   *
+     F*            the Last Coupon Date from the Security, if there   *
+     F*            is no Coupon Action on the Historic Actions File   *
+     F*            or Event on the Security Non-Diary Events File,    *
+     F*            for that Security/Date, then this program will     *
+     F*            generate them. These are vital for later processes.*
+     F*                                                               *
+     F*  Called By: SEC0605  - Generate Account Keys for Book Posns - *
+     F*              Forward Run. (Called just before SE2220).        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CAS008             Date 11May04               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CSE037             Date 29Apr02               *
+      *                 214425             Date 30Jan03               *
+      *                 CSE035             Date 22Apr02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 168141             Date 29Sep99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130862             Date 16Oct98               *
+     F*                 CEU017             Date 07Apr98               *
+     F*                 CSE007             Date 18Mar98               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 100228             DATE 31MAY96               *
+     F*                 097181             DATE 03MAY96               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 051107             DATE 25NOV93               *
+     F*                 054257             DATE 25NOV93               *
+     F*                 052254             DATE 25NOV93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E36490             DATE 27FEB92               *
+     F*                 E29170             DATE 06NOV91               *
+     F*                 E29304             DATE 09OCT91               *
+     F*                 E27092             DATE 04SEP91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E21516             DATE 06APR90               *
+     F*                 E21616             DATE 03APR90               *
+     F*                 E20085             DATE 06NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS008 - Delayed Hedge Assessment (Recompile)                *
+     F*  CAS006 - Hedge Accounting Phase B                            *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *  214425 - There are cases when the value of the field ZZLCD   *
+      *           (last coupon date) doesn't change during the        *
+      *           generation of CP actions which causes the looping   *
+      *           problem. The solution is to exit generation when    *
+      *           current ZZLCD is equal to the previous ZZLCD.       *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  168141 - Switchable feature CSE005 introduced the ability    *
+     F*           to use next working day as last coupon date if that *
+     F*           date was a non working day. Therefore need to est-  *
+     F*           ablish real coupon date to stop looping. ZLCDZ1     *
+     F*           sub routine therefore saves REAL LAST COUPON DATE   *
+     F*           as well as allowed LAST COUPON date ZZLCD to stop   *
+     F*           looping.                                            *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Same coding than CSE007                             *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  100228 - RECOMPILED FOR CHANGES TO SR ZLCDZ1                 *
+     F*  097181 - 051107 was generating book position actions for     *
+     F*           mortgage payments beyond next working day, and the  *
+     F*           posting amount included future dated trades. Fix is *
+     F*           to write a record only if event if before DNWD, and *
+     F*           make it a type 'V' record to ensure the posting     *
+     F*           amount is correct.                                  *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1                       *
+     F*  051107 - BACK-VALUATION PRIOR TO MORTGAGE PAYMENT SHOULD     *
+     F*           GENERATE BOOK POSITION ACTIONS, IF THEY DON'T EXIST *
+     F*  054257 - RECOMPILED as PREV CURRENT FACTOR amended from 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E36490  - New coupon action written even though one already  *
+     F*            existed.                                           *
+     F*  E29170  - Report Control Facility changes.                   *
+     F*  E29304  - Back-valuation prior to coupon date used to        *
+     F*            add coupon actions to BPACHD with a RECI=D.        *
+     F*            This causes problems if there are no records on    *
+     F*            PRFAJD to reset the RECI to 'H'. Program has been  *
+     F*            changed to write instead to BPACCD so that the RECI*
+     F*            is set to 'H' in the forward run of SE2220.        *
+     F*            **** Note that this replaces any other fixes to    *
+     F*            correct this problem. ****                         *
+     F*  E27092 - Recompiled over changed SR/ZLCD                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E21516 -'Actioned Date' (BCED) should be set to RUND on      *   E21516
+     F*           Output of a Coupon Action to BPACHD.                *   E21516
+     F*  E21616 - Recompiled over changed SR/ZLCD.                    *   E21616
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *   E20085
+     F*          - Program written to go between Reversal and Forward *   E20085
+     F*            modes of SE2220 to generate Coupon Actions for     *   E20085
+     F*            backvalued Trades between the Value Date and LCPN  *   E20085
+     F*            on the Security, where no Actions already exist on *   E20085
+     F*            PF/BPACHD, plus corresponding Events on PF/SNDEVD. *   E20085
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBPACTRD IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSECEO   UF  E           K        DISK         KINFDS SNDDS A
+     F                                              KINFSR SNDSR
+     FSNDEVA  UF  E           K        DISK         KINFDS SNADS
+     F                                              KINFSR SNASR
+     F*PACHCP*UF**E           K        DISK         KINFDS BPHDS A        E29304
+     FBPACC   UF  E           K        DISK         KINFDS BPHDS A        E29304
+     F            BPACCDF                           KRENAMEBPACCXF        E29304
+     F            BPACBDF                           KRENAMEBPACBXF        E29304
+     F            BPACHDF                           KRENAMEBPACHXF        E29304
+     F                                              KINFSR BPHSR
+     F*PACHA**UF**E           K        DISK         KINFDS BHADS          E29304
+     FBPACCA  UF  E           K        DISK         KINFDS BHADS          E29304
+     F                                              KINFSR BHASR
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F/COPY WNCPYSRC,SE2235F001
+     FSE2235AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   87  - ERROR on WRITE Operation.                             *
+     F*   88  - Generic CHAIN Fail.                                   *
+     F*   89  - EOF Fail on BPACTRD.                                  *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines.                         *
+     F* U7-U8 - Database Error.                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - Definitions and setup.                              *
+     F*  GENCP  - Generates Coupon Actions if necessary.              *
+     F***WBPACH**-**Set*up*and*write*out*a*record*to*BPACH.************   E29304
+     F*  WBPACH  -  Set up and write out a record to BPACC.           *   E29304
+     F*  WSNDEV - Set up and write out a record to SNDEV.             *
+     F*  AUDIT  - Updates Audit Files, Outputs a Control Report and   *
+     F*           Terminates the Program.                             *
+     F*  BPHSR  - Error Handling on Update of LF/BPACHCP.             *
+     F*  BHASR  - Error Handling on Update of PF/BPACHA.              *
+     F*  SNDSR  - Error Handling on Update of LF/SECEO.               *
+     F*  SNASR  - Error Handling on Update of PF/SNDEVA.              *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZDATE1 - Validates Dates and converts to Number of Days.     *
+     F*  ZDATE2 - Converts a Day Number to Date Format.               *
+     F*  ZLCD   - Obtains Prior Coupon Date.                          *
+     F*  ZSYSTM - Obtains ICD Information from TABTB10.               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZNCDZ1
+      /EJECT
+     IBPACBDF
+      ***  Rename the fields on BPACBD to look like BPACCD and BPACHD.
+     I              BBSS                            BCSS
+     I***********   BBBR                            BCBR                  S01117
+     I              BBBA                            BCBA                  S01117
+     I              BBMK                            BCMK
+     I              BBBK                            BCBO
+     I              BBAD                            BCAD
+     I              BBED                            BCED
+     I              BBAS                            BCAS
+     I              BBTP                            BCTP
+     I              BBIT                            BCIT
+     I              BBUN                            BCUN
+     I              BBCA                            BCCP
+     I              BBTA                            BCTA
+     I              BBCF                            BCCF
+     I              BBPC                            BCPC
+     I              BBNC                            BCNC
+     I              BBNR                            BCNR
+     I              BBOD                            BCOT
+     I              BBTV                            BCTV
+     I              BBTR                            BCTR
+     I              BBTS                            BCTS
+     I              BBPS                            BCPS
+     I              BBNM                            BCNL
+     I              BBCN                            BCCN
+     I              BBRA                            BCRA
+     I              BBCC                            BCCC
+     I              BBCT                            BCCT
+     I              BBPT                            BCTD
+     I              BBRI                            BCRV
+     I              BBPR                            BCPR
+     I              BBP1                            BCP1
+     I              BBP2                            BCP2
+     I              BBPL                            BCPL
+     I              BBAP                            BCAT
+     I              BBDV                            BCDV
+     I              BBPN                            BCPN                                      CAS006
+     ISECTYDF
+     I              RECI                            SRECI
+     IINVTPDF
+     I              RECI                            IRECI
+     I              SFLG                            ISFLG                                     CSE037
+     ISEDEVDF
+     I              RECI                            SDRECI
+      *
+     ICPYR@#      DS
+      ***  Data Structure for Copyright Insertion.
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      ***  Define BPAC Key Data Structures.
+      *
+     I            DS
+     I                                        1  16 OLDKEY
+     I                                        1  10 OLDSEC
+     I***********                            11  130OLDBR                 S01117
+     I                                       11  13 OLDBR                 S01117
+     I                                       14  15 OLDBK
+     I                                       16  16 OLDMK
+     I            DS
+     I                                        1  16 NEWKEY
+     I                                        1  19 BPHERR
+     I                                        1  10 BCSS
+     I***********                            11  130BCBR                  S01117
+     I                                       11  13 BCBA                  S01117
+     I                                       14  15 BCBO
+     I                                       16  16 BCMK
+     I                                    P  17  190BCAD
+     I            DS
+     I                                        1   6 INVERR
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1  15 SNDERR
+     I                                        1  10 SNSN
+     I                                    P  11  130SNDT
+     I                                       14  15 SNET
+      *
+      ***  Data Structures for Error Handling.
+      *
+     IBPHDS       DS
+     I                                     *STATUS  STSBPH
+      *
+     IBHADS       DS
+     I                                     *STATUS  STSBHA
+      *
+     ISNDDS       DS
+     I                                     *STATUS  STSSND
+      *
+     ISNADS       DS
+     I                                     *STATUS  STSSNA
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Do Program Setup
+      *
+     C                     EXSR FIRST
+      *
+      ***  Read the Backvalued Book Position Trade Actions File.
+      ***  Continue processing until End of File.
+      *
+     C                     READ BPACTRD                  89
+      *
+     C           *IN89     DOWEQ'0'
+      *
+     C                     ADD  1         IREC    50
+      *
+      ***  If no change in Key, then ignore the Action record.
+      ***  (Since the File is sorted in Date order, only need to
+      ***  process the first of each Security/Branch/Book/Market.)
+      *
+     C           NEWKEY    IFNE OLDKEY
+      *
+      ***  On Change of Security, obtain the Security Details (and
+      ***  chain to Investment Types File for PROT).
+      *
+     C           BCSS      IFNE OLDSEC
+     C           BCSS      CHAINSECTY                88
+      *
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELBCSS      DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+     C*
+     C           INVKEY    CHAININVTP                88
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE           ***************
+     C                     MOVELINVERR    DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C                     END
+     C*                                                                   051107
+     C                     Z-ADDBCAD      TRDATE  50                      051107
+      *
+      ***  If an Interest-bearing Security, execute SR/GENCP until a
+      ***  Last Coupon is found which is less than the Action Date.
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '6'
+     C           PROT      OREQ '8'
+      *
+     C           DYBS      IFNE '4'
+     C           SPBS      ANDNE'D'
+      *
+     C*********************Z-ADDBCAD      TRDATE  50                      051107
+      *
+      ***  Find Last Coupon Date before today (LCPN may not be correct
+      ***  at this point for our requirements).
+      *
+     C           RUND      SUB  1         ZECD
+     C                     EXSR ZLCD
+      *
+     C                     MOVE 'N'       WEXTCP  1                                           214425
+     C           TRDATE    DOWLTRUND
+     C           TRDATE    ANDLEZZLCD
+     C           ZZLCD     ANDGTITLD
+     C           WEXTCP    ANDEQ'N'                                                           214425
+      *                                                                                       214425
+      ** Save previous ZZLCD.                                                                 214425
+      *                                                                                       214425
+     C                     Z-ADDZZLCD     WSZLCD  50                                          214425
+     C                     EXSR GENCP
+      *                                                                                       214425
+      ** Exit loop when current ZZLCD is same as previous ZZLCD.                              214425
+      *                                                                                       214425
+     C           ZZLCD     IFEQ WSZLCD                                                        214425
+     C                     MOVE 'Y'       WEXTCP                                              214425
+     C                     ENDIF                                                              214425
+      *                                                                                       214425
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                   051107
+     C* If a mortgage-backed security, execute subroutine SR/GENMP        051107
+     C* write any missing mortgage payment book position actions.         051107
+     C*                                                                   051107
+     C           PROT      IFEQ '8'                                       051107
+     C                     EXSR GENMP                                     051107
+     C                     END                                            051107
+     C                     END
+      *
+     C                     MOVE NEWKEY    OLDKEY
+     C                     READ BPACTRD                  89
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+      ***  Update Audit Records, Output Control Report and End Program*
+      *                                                               *
+     C                     EXSR AUDIT
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to do Program Setup.                     *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *  Calls    : ZSYSTM - Obtains ICD Information from TABTB10.    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+      *
+      ***  Keylists for File CHAINs:
+      *
+      ***  Investment Types File.
+      *
+     C           INVKEY    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ***  Security Non-Diary Events.
+      *
+     C           SNDKEY    KLIST
+     C                     KFLD           BCSS
+     C                     KFLD           SNET
+     C                     KFLD           LCPDT
+     C                     MOVE 'CP'      SNET
+      *
+      ***  Security Diary Events.
+      *
+     C           SDEKEY    KLIST
+     C                     KFLD           SDSN
+     C                     KFLD           SDET
+     C                     KFLD           SDED
+     C           SDEPKY    KLIST                                          051107
+     C                     KFLD           SDSN                            051107
+     C                     KFLD           SDET                            051107
+      *
+      ***  Book Position Historic Action File.
+      *
+     C           BPHKEY    KLIST
+     C                     KFLD           BCSS
+     C***********          KFLD           BCBR                            S01117
+     C                     KFLD           BCBA                            S01117
+     C*********************KFLD           BCBO                            E29304
+     C*********************KFLD           BCMK                            E29304
+     C*********************KFLD           LCPDT                           E29304
+     C                     KFLD           BCMK                            E29304
+     C                     KFLD           BCBO                            E29304
+     C                     KFLD           TRDVAL  1                       E29304
+     C***********          KFLD           LCPDT                    E29304 051107
+     C                     KFLD           EVTDAT  50                      051107
+     C                     KFLD           ACTSEQ  2                       E29304
+     C***********          KFLD           TASRTS  1                E29304 E36490
+     C***********          KFLD           TRDREF  6                E29304 E36490
+     C***********          KFLD           REVIND  1                E29304 E36490
+     C***********          MOVEL'V'       TRDVAL                   E29304 051107
+     C***********          MOVEL'30'      ACTSEQ                   E29304 051107
+      *
+      ***  Set Up LDA Information.
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE2235  'DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                                       CAS006
+      ** Access SAR Details to see if CAS006 is installed                                     CAS006
+      *                                                                                       CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANKS                                                       CAS006
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD10        DBASE                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     MOVE '1'       *INU7                                               CAS006
+     C                     MOVE '1'       *INU8                                               CAS006
+     C                     MOVE '1'       *INLR                                               CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006  1                                           CAS006
+     C                     ELSE                                                               CAS006
+     C                     MOVE 'N'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+      *
+      ***  Access ICD Information.
+      *
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD   7                                           CSE035
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CSE035
+     C/COPY WNCPYSRC,SE2235C001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GENCP  - Subroutine to Check that Coupons between the Action *
+      ************Date*and*the*Run*Date*exist*on*BPACH*and*SNDEV.******   E29304
+      *           Date and the Run Date exist on BPACC and SNDEV.     *   E29304
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      ***Calls****:*WBPACH*-*Set*up*and*write*out*a*record*to*BPACH.***   E29304
+      *  Calls    : WBPACH - Set up and write out a record to BPACC.  *   E29304
+      *             WSNDEV - Set up and write out a record to SNDEV.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GENCP     BEGSR                           *** GENCP  ***
+      *
+      ***  Save Last Coupon Date and find the next Prior Coupon Date.
+      *
+     C                     Z-ADDZZLCD     LCPDT   50
+     C*                                                                   168141
+     C* Use REAL last coupon date instead of calculated last coupon       168141
+     C* date as calculated last coupon date may cause looping.            168141
+     C* problem introduced by CSE005. See GEMS for fuller explaination    168141
+     C*                                                                   168141
+     C***********ZZLCD     SUB  1         ZECD                            168141
+     C           ZZREAL    SUB  1         ZECD                            168141
+     C                     EXSR ZLCD
+      *
+      *****Check*to*see*if*the*Coupon*Action*exists*on*BPACHD.*********   E29304
+      ***  Check to see if the Coupon Action exists on BPACC.             E29304
+      *
+     C***********BPHKEY    CHAINBPACHCP              88                   E29304
+     C                     MOVEL'V'       TRDVAL                          051107
+     C                     Z-ADDLCPDT     EVTDAT                          051107
+     C                     MOVEL'30'      ACTSEQ                          051107
+     C           BPHKEY    CHAINBPACC                88                   E29304
+      *
+      ***  If Action not found, generate it.
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR WBPACH
+     C                     END
+      *
+      ***  Check to see if the Coupon Event exists on SNDEVD.
+      *
+     C           SNDKEY    CHAINSECEO                88
+      *
+      ***  If Event not found, generate it.
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR WSNDEV
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              051107
+      *****************************************************************   051107
+      *                                                               *   051107
+      *  GENMP  - Subroutine to output missing mortgage payment       *   051107
+      *           events to BPACC                                     *   051107
+      *                                                               *   051107
+      *  Called By: Main Processing.                                  *   051107
+      *  Calls    : WBPCMP - Set up and write out a record to BPACC.  *   051107
+      *                                                               *   051107
+      *****************************************************************   051107
+      *                                                                   051107
+     C           GENMP     BEGSR                           *** GENMP  *** 051107
+      *                                                                   051107
+      ***  Look for mortgage payments since the trade action date         051107
+      *                                                                   051107
+     C                     MOVE BCSS      SDSN                            051107
+     C                     MOVE 'MP'      SDET                            051107
+     C                     Z-ADD*HIVAL    SDED                            051107
+     C           SDEKEY    SETLLSEDEVDF                                   051107
+     C           SDEPKY    READESEDEVDF                  88               051107
+     C  N88      SDED      COMP 0                        88               051107
+     C           *IN88     DOWEQ'0'                                       051107
+     C           SDED      ANDGTTRDATE                                    051107
+     C           SDAD      ANDNE0                                         097181
+      *                                                                   051107
+      ***  Check to see if the Mortgage Payment Action exists on BPACC.   051107
+      *                                                                   051107
+     C***********          MOVEL'T'       TRDVAL                    051107097181
+     C                     MOVEL'V'       TRDVAL                          097181
+     C                     Z-ADDSDED      EVTDAT                          051107
+     C                     MOVEL'20'      ACTSEQ                          051107
+     C           BPHKEY    CHAINBPACC                88                   051107
+      *                                                                   051107
+      ***  If Action not found, generate it.                              051107
+      *                                                                   051107
+     C           *IN88     IFEQ '1'                                       051107
+     C                     EXSR WBPCMP                                    051107
+     C                     END                                            051107
+     C*                                                                   051107
+     C           SDEPKY    READESEDEVDF                  88               051107
+     C  N88      SDED      COMP 0                        88               051107
+     C                     END                                            051107
+     C*                                                                   051107
+     C                     ENDSR                                          051107
+      *                                                                   051107
+      *****************************************************************   051107
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      ***WBPACH*-*Set*up*and*Output*a*Coupon*Action*to*BPACHD.*********   E29304
+      *  WBPACH - Set up and Output a Coupon Action to BPACCD.        *   E29304
+      *                                                               *
+      *  Called By: GENCP.                                            *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WBPACH    BEGSR                           *** WBPACH ***
+      *
+      ***  Set up Coupon fields on Action record.
+      ***  (BCSS, BCBR, BCMK, BCBO already set up from key).
+      *
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDLCPDT     BCAD
+     C***********          Z-ADD*ZERO     BCED                            E21516
+     C                     Z-ADDRUND      BCED                            E21516
+     C                     MOVE '30'      BCAS
+     C                     MOVE 'CP'      BCTP
+     C                     MOVE SITP      BCIT
+      *
+     C                     Z-ADD*ZERO     BCUN
+     C                     Z-ADD*ZERO     BCCP
+     C                     Z-ADD*ZERO     BCTA
+      *
+      ***  Get Current Factors as at and prior to Action Date.
+      *
+     C           PROT      IFEQ '8'
+     C                     Z-ADDCFCT      BCCF
+     C                     Z-ADDCFCT      BCPC
+      *
+     C                     MOVE BCSS      SDSN
+     C                     MOVE 'MP'      SDET
+     C                     Z-ADDLCPDT     SDED
+     C           SDEKEY    SETLLSEDEVDF
+     C                     READ SEDEVDF                  88
+      *
+     C           *IN88     IFEQ '0'
+     C           SDSN      ANDEQBCSS
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      BCCF
+      *
+     C                     READ SEDEVDF                  88
+     C           *IN88     IFEQ '0'
+     C           SDSN      ANDEQBCSS
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      BCPC
+     C                     END
+      *
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SE2235C002
+      *
+      ***  Get Coupon Rate as at Action Date.
+      *
+     C                     MOVE BCSS      SDSN
+     C                     MOVE 'IR'      SDET
+     C                     Z-ADDLCPDT     SDED
+     C           SDEKEY    SETLLSEDEVDF
+     C                     READ SEDEVDF                  88
+     C           *IN88     IFEQ '0'
+     C           SDSN      ANDEQBCSS
+     C           SDET      ANDEQ'IR'
+     C                     Z-ADDSDNC      BCNC
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDSDNN      SNCX   117                                          CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     ELSE
+     C                     Z-ADDCPNR      BCNC
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDCPNN      SNCX                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     END
+      *
+     C                     MOVEL'COUPON D'NAR    11
+     C                     MOVE 'ATE'     NAR
+     C                     MOVE *BLANKS   BCNR
+     C                     MOVELNAR       BCNR
+      *
+     C                     Z-ADD*ZERO     BCOT
+     C                     MOVE 'V'       BCTV
+     C                     MOVE *BLANKS   BCTR
+     C                     MOVE *BLANKS   BCTS
+     C                     MOVE *BLANKS   BCPS
+     C                     Z-ADD*ZERO     BCNL
+     C                     Z-ADD*ZERO     BCCN
+     C                     Z-ADD*ZERO     BCRA
+     C                     Z-ADD*ZERO     BCCC
+     C                     Z-ADD*ZERO     BCCT
+     C                     Z-ADD*ZERO     BCTD
+     C                     MOVE *BLANKS   BCRV
+     C                     Z-ADD*ZERO     INAJ
+     C                     Z-ADD*ZERO     PCHI
+     C/COPY WNCPYSRC,SE2235C003
+     C                     MOVE *BLANKS   RMIP
+     C                     Z-ADD*ZERO     CNTP
+     C                     MOVE *BLANKS   ACRI
+     C**********           Z-ADD*ZERO     TRCP                                                CSD027
+     C                     MOVE *BLANKS   TRCP                                                CSD027
+     C                     Z-ADD*ZERO     BCPR
+     C                     Z-ADD*ZERO     BCP1
+     C                     Z-ADD*ZERO     BCP2
+     C                     Z-ADD*ZERO     BCPL
+     C                     Z-ADD*ZERO     BCAT
+     C                     Z-ADD*ZERO     BCDV
+     C                     Z-ADDZZLCD     LCCP
+     C                     MOVE *BLANKS   BCCOAF                          CSE007
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     BCPN                                                CAS006
+     C                     Z-ADD*ZERO     CNTN                                                CAS006
+     C                     Z-ADD*ZERO     INAN                                                CAS006
+     C                     Z-ADD*ZERO     PCHN                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *
+      *** Output Coupon Action record.
+      *
+     C************         WRITEBPACHDF                                   E29304
+     C                     WRITEBPACCXF                                   E29304
+     C                     ADD  1         OBPACH
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************   051107
+      *                                                               *   051107
+      *  WBPCMP - Set up and Output a Mort.Payment Action to BPACCD.  *   051107
+      *                                                               *   051107
+      *  Called By: GENMP.                                            *   051107
+      *  Calls    : None.                                             *   051107
+      *                                                               *   051107
+      *****************************************************************   051107
+      *                                                                   051107
+     C           WBPCMP    BEGSR                           *** WBPCMP *** 051107
+      *                                                                   051107
+      ***  Find the previous coupon date.                                 051107
+      *                                                                   051107
+     C           SDED      SUB  1         ZECD                            051107
+     C                     EXSR ZLCD                                      051107
+      *                                                                   051107
+      ***  Set up Coupon fields on Action record.                         051107
+      ***  (BCSS, BCBR, BCMK, BCBO already set up from key).              051107
+      *                                                                   051107
+     C                     MOVE 'D'       RECI                            051107
+     C                     Z-ADDSDED      BCAD                            051107
+     C                     Z-ADDRUND      BCED                            051107
+     C                     MOVE '20'      BCAS                            051107
+     C                     MOVE 'MP'      BCTP                            051107
+     C                     MOVE SITP      BCIT                            051107
+      *                                                                   051107
+     C                     Z-ADD*ZERO     BCUN                            051107
+     C                     Z-ADD*ZERO     BCCP                            051107
+     C                     Z-ADD*ZERO     BCTA                            051107
+      *                                                                   051107
+      ***  Current Factors                                                051107
+      *                                                                   051107
+     C                     Z-ADDSDCP      BCPC                            051107
+     C                     Z-ADDSDCP      BCCF                            051107
+      *                                                                   051107
+      ***  Coupon Rate                                                    051107
+      *                                                                   051107
+     C                     Z-ADDSDNC      BCNC                            051107
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDSDNN      SNCX                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                   051107
+     C                     MOVEL'REPAYMEN'NAR    11                       051107
+     C                     MOVE 'T  '     NAR                             051107
+     C                     MOVE *BLANKS   BCNR                            051107
+     C                     MOVELNAR       BCNR                            051107
+      *                                                                   051107
+     C                     Z-ADD*ZERO     BCOT                            051107
+     C                     MOVE TRDVAL    BCTV                            051107
+     C                     MOVE *BLANKS   BCTR                            051107
+     C                     MOVE *BLANKS   BCTS                            051107
+     C                     MOVE *BLANKS   BCPS                            051107
+     C                     Z-ADD*ZERO     BCNL                            051107
+     C                     Z-ADD*ZERO     BCCN                            051107
+     C                     Z-ADD*ZERO     BCRA                            051107
+     C                     Z-ADD*ZERO     BCCC                            051107
+     C                     Z-ADD*ZERO     BCCT                            051107
+     C                     Z-ADD*ZERO     BCTD                            051107
+     C                     MOVE *BLANKS   BCRV                            051107
+     C                     Z-ADD*ZERO     INAJ                            051107
+     C                     Z-ADD*ZERO     PCHI                            051107
+     C/COPY WNCPYSRC,SE2235C004
+     C                     MOVE *BLANKS   RMIP                            051107
+     C                     Z-ADD*ZERO     CNTP                            051107
+     C                     MOVE *BLANKS   ACRI                            051107
+     C**********           Z-ADD*ZERO     TRCP                                         051107 CSD027
+     C                     MOVE *BLANKS   TRCP                                                CSD027
+     C                     Z-ADD*ZERO     BCPR                            051107
+     C                     Z-ADD*ZERO     BCP1                            051107
+     C                     Z-ADD*ZERO     BCP2                            051107
+     C                     Z-ADD*ZERO     BCPL                            051107
+     C                     Z-ADD*ZERO     BCAT                            051107
+     C                     Z-ADD*ZERO     BCDV                            051107
+     C                     Z-ADDZZLCD     LCCP                            051107
+     C                     MOVE *BLANKS   BCCOAF                          CSE007
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     BCPN                                                CAS006
+     C                     Z-ADD*ZERO     CNTN                                                CAS006
+     C                     Z-ADD*ZERO     INAN                                                CAS006
+     C                     Z-ADD*ZERO     PCHN                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                   051107
+      *** Output Mortgage Payment Action record.                          051107
+      *                                                                   051107
+     C                     WRITEBPACCXF                                   051107
+     C                     ADD  1         OBPACH                          051107
+      *                                                                   051107
+     C                     ENDSR                                          051107
+      *                                                                   051107
+      *****************************************************************   051107
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WSNDEV - Set up and Output a Coupon Event to SNDEVD.         *
+      *                                                               *
+      *  Called By: GENCP.                                            *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WSNDEV    BEGSR                           *** WSNDEV ***
+      *
+      *****Set*up*SNDEV*fields*from*BPACH*fields.**********************   E29304
+      ***  Set up SNDEV fields from BPACC fields.                         E29304
+      *
+     C                     MOVE RECI      RECI
+     C                     MOVE BCSS      SNSN
+     C                     Z-ADDBCAD      SNDT
+     C                     MOVE BCTP      SNET
+     C                     Z-ADDBCNC      SNCR
+     C                     Z-ADDBCCF      SNCF
+     C                     Z-ADD*ZERO     SNCP
+     C                     Z-ADD*ZERO     SNCA
+     C                     Z-ADD*ZERO     SNPR
+     C                     MOVELBCNR      SNNA
+     C                     Z-ADDLCCP      LCCP
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDSNCX      SNCN                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *
+      ***  Output Coupon Event record.
+      *
+     C                     WRITESNDEVDF
+     C                     ADD  1         OSNDEV
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Update the Audit records, Output the  *
+      *           Control Report and terminate the program.           *
+      *                                                               *
+      *  Called By: Main Processing and each DB Error.                *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Only update Audit Files if there are no DB Errors.
+      *
+     C           *INU7     IFEQ '0'
+      *
+     C***********          READ BPACHAF                  88               E29304
+     C                     READ BPACCAF                  88               E29304
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'BPACH'   DBFILE           ***************E29304
+     C                     MOVEL'BPACC'   DBFILE           ***************E29304
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO ERRTAG
+      *
+     C                     ELSE
+     C                     ADD  OBPACH    NORE
+     C                     UPDATBPACCAF                                   E29304
+     C*********************ADD  OBPACH    RFGA                            E29304
+     C*********************UPDATBPACHAF                                   E29304
+     C                     END
+      *
+     C                     READ SNDEVAF                  88
+     C           *IN88     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SNDEV'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO ERRTAG
+      *
+     C                     ELSE
+     C                     Z-ADD2235      TNLU
+     C                     ADD  OSNDEV    NORE
+     C                     UPDATSNDEVAF
+     C                     END
+      *
+     C                     END
+      *
+      ***  Output Control Report.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  Database errors within SR/AUDIT must 'GOTO' here.
+      *
+     C           ERRTAG    TAG                             *** ERRTAG ***
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+      *
+     C***********IREC      IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C***********          END                                            E29170
+      *
+     C                     END
+      ***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+      *
+      ***  Terminate the Program.
+      *
+     C                     SETON                     LR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BPHSR  - Subroutine for Error handling of Action records.    *
+      *                                                               *
+      ***Called*By:*Write*error*on*BPACHD.*****************************   E29304
+      *  Called By: Write error on BPACC.                             *   E29304
+      *  Calls    : AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BPHSR     BEGSR                           *** BPHSR ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE 'BPACH'   DBFILE                          E29304
+     C                     MOVE 'BPACC'   DBFILE                          E29304
+     C                     MOVELBPHERR    DBKEY            ***************
+     C                     Z-ADD06        DBASE            * DB ERROR 06 *
+     C                     MOVE STSBPH    DBSTAT           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  BHASR  - Subroutine for Error handling of Action Audit.      *
+      *                                                               *
+      ***Called*By:*Write*error*on*BPACHA.*****************************   E29304
+      *  Called By: Write error on BPACCA.                            *   E29304
+      *  Calls    : AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BHASR     BEGSR                           *** BHASR ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C*********************MOVE 'BPACH'   DBFILE                          E29304
+     C                     MOVE 'BPACC'   DBFILE                          E29304
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     Z-ADD07        DBASE            * DB ERROR 07 *
+     C                     MOVE STSBHA    DBSTAT           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SNDSR  - Subroutine for Error handling of Diary records.     *
+      *                                                               *
+      *  Called By: Write error on SNDEVD.                            *
+      *  Calls    : AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNDSR     BEGSR                           *** SNDSR ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SNDEV'   DBFILE
+     C                     MOVELSNDERR    DBKEY            ***************
+     C                     Z-ADD08        DBASE            * DB ERROR 08 *
+     C                     MOVE STSSND    DBSTAT           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SNASR  - Subroutine for Error handling of Diary Audit.       *
+      *                                                               *
+      *  Called By: Write error on SNDEVA.                            *
+      *  Calls    : AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNASR     BEGSR                           *** SNASR ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SNDEV'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     Z-ADD09        DBASE            * DB ERROR 09 *
+     C                     MOVE STSSNA    DBSTAT           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   E18651
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

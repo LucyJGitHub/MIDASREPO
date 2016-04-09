@@ -1,0 +1,828 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Fees input maintenance display')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  DSPF/LE2210DF - Fees Input Maintenance Display               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12876           Date 12Dec06               *
+      *                 CLE034             Date 05May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 199709             Date 20Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CAP064             Date 07Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187705             Date 15Jan01               *
+      *                 187261             Date 15Jan01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 157302             Date 19Mar98               *
+      *                 140814             Date 15Feb99               *
+      *                 127966             Date 12Jan98               *
+      *                 CLE005 *Create     Date 22May97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      * BUG12876- FEE RECEIVABLE, FEE PAYABLE and INTERNAL FEE narra- *
+      *           rive should not be displayed is CLE006 is off.      *
+      *           Applied fix 234543.                                 *
+      *  CLE034 - Lending Enhancements for Phase 1 Priority 1A.       *
+      *  199709 - Remove underline if fields are non-amendable.       *
+      *  CAP064 - Lending API enhancements - Fees Input               *
+      *  187705 - Add processing to protect the Syndications input    *
+      *           fields if CLE006 is switched off.                   *
+      *  187261 - Do not display fields linked to Syndications unless *
+      *           CLE006 is switched on.                              *
+      *  157302 - Profit center cannot be inserted.                   *
+      *  140814 - Should be able to enter shortname as well as        *
+      *           customer number on input of fee                     *
+      *  127966 - Profit Centre Accounting Development:               *
+      *           This fix is already incorporated under the change no*
+      *           CLE005.(For information only see LER110DF)          *
+      *  CLE005 - Customer Lending  Enhancements - Others             *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      CF03
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A                                      PRINT(MPRINT)
+      *
+      ** Header format
+      *
+     A          R LE2210F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 14'LE2210'
+      *                                              Begin /CAP064/
+     A************                      1 35'FEES INPUT'                            CAP064
+     A N89                              1 35'FEES INPUT'                            CAP064
+     A************                          DSPATR(HI)                              CAP064
+     A N89                                  DSPATR(HI)                              CAP064
+     A  89                              1 35'FEES REPAIR'                           CAP064
+     A  89                                  DSPATR(HI)                              CAP064
+      *                                              End   /CAP064/
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 72TIME
+     A                                      EDTWRD('  :  :  ')
+      *
+      ** Initial screen
+      *
+     A          R LE2210F1
+     A                                      OVERLAY
+     A  25                                  CF12
+      *                                              Begin /140814/
+      *                                              End   /140814/
+      *
+     A                                  7 11'Action'
+     A            SFLCHT         1   B  7 21
+     A  30                                  DSPATR(RI PC)
+     A N30                                  DSPATR(HI UL)
+     A  25                                  DSPATR(PR)
+      *
+     A                                  7 31'Customer'
+      *                                              Begin /140814/
+     A*********** SFCNUM         6   B  7 50
+     A            SFCNUM        10   B  7 50
+      *                                              End   /140814/
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(HI UL)
+      *
+     A                                  8 31'Facility'
+     A            SFFACT         3   B  8 50
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(HI UL)
+      *
+     A            SFFCNO         2   B  8 54
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(HI UL)
+      *
+     A                                  9 31'Loan no'
+     A            SFLNRF         6   B  9 50
+     A  33                                  DSPATR(RI PC)
+     A N33                                  DSPATR(HI UL)
+      *
+     A                                 10 31'Fee Sequence'
+     A            SFFSEQ         2   B 10 50
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(HI UL)
+      *
+     A                                 12 36'OR'
+     A  25                                  DSPATR(ND)
+      *
+     A                                 14 11'Review from'
+     A  25                                  DSPATR(ND)
+      *
+     A                                 14 31'Customer'
+     A  25                                  DSPATR(ND)
+     A            SRCUS          6   B 14 50
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(HI UL)
+     A  25                                  DSPATR(ND PR)
+      *
+     A                                 15 31'Facility'
+     A  25                                  DSPATR(ND)
+     A            SRFCT          3   B 15 50
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI UL)
+     A  25                                  DSPATR(ND PR)
+      *
+     A            SRFCN          2   B 15 54
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI UL)
+     A  25                                  DSPATR(ND PR)
+      *
+     A                                 16 31'Loan no'
+     A  25                                  DSPATR(ND)
+     A            SRLON          6   B 16 50
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(HI UL)
+     A  25                                  DSPATR(ND PR)
+      *
+     A                                 17 31'Fee Sequence'
+     A  25                                  DSPATR(ND)
+     A            SRSEQ          2   B 17 50
+     A  38                                  DSPATR(RI PC)
+     A N38                                  DSPATR(HI UL)
+     A  25                                  DSPATR(ND PR)
+      *
+     A                                 18 31'Unauthorised Only?'
+     A  25
+     AON29                                  DSPATR(ND)
+     A            SRAUT          1   B 18 50
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI UL)
+     A  25
+     AON29                                  DSPATR(ND PR)
+      *
+     A                                 20 20'Sequence no. allocated to last -
+     A                                      fee'
+     A  24                                  DSPATR(ND)
+     A            WLSNA          2A  O 20 55
+     A  24                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A                                 22  2'F3=Exit'
+     A  25                             22 12'F12=Previous screen'
+      *
+      ** Subfile footer
+      *
+     A          R LE2210F2
+     A                                      OVERLAY
+     A                                 22  2'F3=Exit'
+     A                                 22 12'F5=Refresh'
+      *                                              Begin /CAP064/
+     A***********                      22 25'F9=Insert'                             CAP064
+     A***********                      22 37'F12=Previous screen'                   CAP064
+     A N89                             22 25'F9=Insert'                             CAP064
+     A N89                             22 37'F12=Previous screen'                   CAP064
+      *                                              End   /CAP064/
+     A  13                             23 71'Page keys'
+      *
+      ** Detail footer
+      *
+     A          R LE2210F3
+     A                                      OVERLAY
+      **Start of change CLE134
+     A**********                       23  2'F3=Exit'                                         CLE134
+     A**********                       23 10'F12=Previous screen'                             CLE134
+     A**27******                       23 30'F10=Delete'                                      CLE134
+     A**26******                       23 41'F11=Authorise'                                   CLE134
+     A**28******                       23 55'F14=Settlements'                                 CLE134
+      *
+     A       N86                       23  2'F3=Exit'
+     A       N86                       23 10'F12=Previous screen'
+     A  27   N86                       23 30'F10=Delete'
+     A  26   N86                       23 41'F11=Authorise'
+     A  28   N86                       23 55'F14=Settlements'
+      *
+     A        86                       23  2'F3=Exit'
+     A        86                       23 10'F12=Previous'
+     A  27    86                       23 24'F10=Delete'
+     A  26    86                       23 36'F11=Authorise'
+     A  28    86                       23 51'F14=Settlements'
+     A        86                       23 69'F15=Past Due'
+      **End of change CLE134
+      *
+      ** Details screen
+      *
+     A          R LE2210F4
+     A                                      OVERLAY
+     A  27                                  CF10
+     A  26                                  CF11
+     A                                      CF12
+     A  28                                  CF14
+      **Start of change CLE134
+     A  86                                  CF15
+      **End of change CLE134
+      *
+      *
+     A                                  4 43'Action'
+     A            SFLCHT         1   O  4 52DSPATR(HI)
+     A                                  4 57'Status'
+     A            SSTAT         16   O  4 64DSPATR(HI)
+     A            SFETP         14   O  5  3DSPATR(HI)
+     A N14                                  DSPATR(ND)                            BUG12876
+     A                                  6  3'Customer'
+      *                                              Begin /140814/
+     A*********** SFCNUM         6   O  6 13DSPATR(HI)
+     A***********                       6 22'Facility'
+      *                                              Begin /CAP064/
+     A*********** SFCNUM        10   O  6 12DSPATR(HI)                              CAP064
+     A            SFCNUM        10   B  6 12                                        CAP064
+     A  31                                  DSPATR(RI PC)                           CAP064
+     A N31N22 89                            DSPATR(UL)                              CAP064
+     A N89                                  DSPATR(PR)                              CAP064
+     A                                      DSPATR(HI)                              CAP064
+      *                                              End   /CAP064/
+     A                                  6 23'Facility'
+      *                                              End   /140814/
+     A  68                                  DSPATR(ND)
+      *                                              Begin /CAP064/
+     A*********** SFFACT         3   O  6 32DSPATR(HI)                              CAP064
+     A            SFFACT         3   B  6 32                                        CAP064
+     A  32                                  DSPATR(RI PC)                           CAP064
+     A N32N22 89                            DSPATR(UL)                              CAP064
+      *                                              End   /CAP064/
+     A  68                                  DSPATR(ND)
+      *                                              Begin /CAP064/
+     A N89                                  DSPATR(PR)                              CAP064
+     A                                      DSPATR(HI)                              CAP064
+     A*********** SFFCNO         2   O  6 36DSPATR(HI)                              CAP064
+     A            SFFCNO         2   B  6 36                                        CAP064
+     A  32                                  DSPATR(RI PC)                           CAP064
+     A N32N22 89                            DSPATR(UL)                              CAP064
+      *                                              End   /CAP064/
+     A  68                                  DSPATR(ND)
+      *                                              Begin /CAP064/
+     A N89                                  DSPATR(PR)                              CAP064
+     A                                      DSPATR(HI)                              CAP064
+      *                                              End   /CAP064/
+     A                                  6 41'Loan no'
+     A  69                                  DSPATR(ND)
+      *                                              Begin /CAP064/
+     A*********** SFLNRF         6   O  6 50DSPATR(HI)                              CAP064
+     A            SFLNRF         6   B  6 50                                        CAP064
+     A  33                                  DSPATR(RI PC)                           CAP064
+     A N33N22 89                            DSPATR(UL)                              CAP064
+      *                                              End   /CAP064/
+     A  69                                  DSPATR(ND)
+      *                                              Begin /CAP064/
+     A N89                                  DSPATR(PR)                              CAP064
+     A                                      DSPATR(HI)                              CAP064
+      *                                              End   /CAP064/
+     A                                  6 59'Fee Sequence'
+     A            SFFSEQ         2   O  6 73DSPATR(HI)
+     A                                  8  3'Fee Code'
+     A            SFECOD         2   B  8 15
+     A  40                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N40                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  8 20'Currency'
+     A            SFECUR         3   B  8 30
+     A  41                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N41                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  8 39'Amount'
+     A            SFEAMT        14   B  8 47
+     A  42                                  DSPATR(RI)
+     A  85N77
+     AO 42                                  DSPATR(PC)
+     A  84
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N77
+     A**End of change 199709
+     A N22N42                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFESGN         1   B  8 62
+     A  43                                  DSPATR(RI PC)
+     A  84
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N77
+     A**End of change 199709
+     A N22N43                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  9  3'Fee Period'
+     A                                  9 20'Start'
+     A            SFEPSD         6   B  9 30
+     A  44                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N44                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                  9 39'End'
+     A            SFEPED         6   B  9 47
+     A  45                                  DSPATR(RI)
+     A  84
+     AO 77
+     AO 45                                  DSPATR(PC)
+     A  22                                  DSPATR(PR)
+     A N22N45                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 10  3'Payment On'
+     A            SFEPON         1   B 10 15
+     A  46                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N46                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 10 20'Advice/Confirmed Ind'
+     A            SFEADV         1   B 10 42
+     A  47                                  DSPATR(RI PC)
+     A  79N77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A*N22N47***                            DSPATR(UL)                                        199709
+     A  79 77
+     A N22N47
+     AON79 77
+     A N22N47
+     AON79N77
+     A N22N47                               DSPATR(UL)
+     A**End of change 199709
+     A                                      DSPATR(HI)
+     A                                 10 47'Shared Fee'
+      *                                              Begin /187261/
+     A N14                                  DSPATR(ND)
+      *                                              End   /187261/
+     A            SFESHR         1   B 10 59
+      *                                              Begin /187261/
+     A N14                                  DSPATR(ND)
+      *                                              End   /187261/
+     A  48                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+      *                                              Begin /187705/
+     A*O*22*****                             DSPATR(PR)
+     AO 22
+     AON14                                  DSPATR(PR)
+      *                                              End   /187705/
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N48                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 12  3'Calculation Type'
+     A            SFCALT         2   B 12 21
+     A  49                                  DSPATR(RI PC)
+     A  84
+     AO 85
+     AO 77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N84N85N77
+     A**End of change 199709
+     A N22N49                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 13  3'Rates'
+     A            SFRTE1         8   B 13 10
+     A  50                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N50                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 13 21'Amounts'
+     A            SFAMT1        11   B 13 30
+     A  51                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N51                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFRTE2         8   B 14 10
+     A  52                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N52                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFAMT2        11   B 14 30
+     A  53                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N53                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFRTE3         8   B 15 10
+     A  54                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N54                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFAMT3        11   B 15 30
+     A  55                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N55                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFRTE4         8   B 16 10
+     A  56                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N56                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFAMT4        11   B 16 30
+     A  57                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N57                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFRTE5         8   B 17 10
+     A  58                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N58                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SFAMT5        11   B 17 30
+     A  59                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N59                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 19  3'Percent Ind'
+     A            SFPIND         1   B 19 16
+     A  60                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N60                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 19 19'Calculation Basis'
+     A            SFCALC         1   B 19 38
+     A  61                                  DSPATR(RI PC)
+     A  77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N77
+     A**End of change 199709
+     A N22N61                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 19 42'Exchange Rate'
+     A            SFEXRT        14   B 19 57
+     A  62                                  DSPATR(RI PC)
+     A  77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N77
+     A**End of change 199709
+     A N22N62                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 19 73'Ind'
+     A            SFMDIN         1   B 19 78
+     A  63                                  DSPATR(RI PC)
+     A  77
+     AO 22                                  DSPATR(PR)
+     A**Start of change 199709
+     A N77
+     A**End of change 199709
+     A N22N63                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 20  3'Next Payment Date'
+     A            SFNPYD         6   B 20 22
+     A  64                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N64                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 20 31'Frequency'
+     A            SFFREQ         1   B 20 42
+     A  65                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N65                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A                                 20 46'Day in Month'
+     A            SFDYIM         2   B 20 60
+     A  66                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N66                               DSPATR(UL)
+     A                                      DSPATR(HI)
+     A  70                             21  4'Profit Centre'
+     A  70        SPRFC          4A  B 21 18
+     A  73                                  DSPATR(RI PC)
+     A  22
+     AON71                                  DSPATR(PR)
+      *                                              Begin /157302/
+     A*N22N73****                           DSPATR(UL)
+     A N22N73 71                            DSPATR(UL)
+      *                                              Begin /CAP064/
+     A                                      DSPATR(HI)                              CAP064
+      *                                              End   /CAP064/
+      *                                              End   /157302/
+      **Start of Change CLE034
+     A  16                             21 31'Settlement Allocations'
+     A  16        SFSTAL         1A  B 21 56
+     A  76                                  DSPATR(RI PC)
+     A  22                                  DSPATR(PR)
+     A N22N76                               DSPATR(UL)
+     A                                      DSPATR(HI)
+      **End of Change CLE034
+      **Start of change CLE134
+     A          R LE2210F5
+     A                                      OVERLAY
+     A                                      CF12
+      *
+     A                                  4 43'Action'
+     A            SFLCHT         1   O  4 52DSPATR(HI)
+      *
+     A                                  4 57'Status'
+     A            SSTAT         16   O  4 64DSPATR(HI)
+     A            SFETP         14   O  5  3DSPATR(HI)
+     A N14                                  DSPATR(ND)
+      *
+     A                                  6  3'Customer'
+     A            SFCNUM        10   O  6 12
+     A                                      DSPATR(HI)
+      *
+     A                                  6 23'Facility'
+     A  68                                  DSPATR(ND)
+     A            SFFACT         3   O  6 32
+     A  68                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            SFFCNO         2   O  6 36
+     A  68                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A                                  6 41'Loan no'
+     A  69                                  DSPATR(ND)
+     A            SFLNRF         6   O  6 50
+     A  69                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A                                  6 59'Fee Sequence'
+     A            SFFSEQ         2   O  6 73DSPATR(HI)
+      **
+     A                                  8  2'PDCL Reference. . :'
+     A        50                            DSPATR(ND)
+     A            SFPLNR         6A  O  8 22DSPATR(HI)
+     A        50                            DSPATR(ND)
+      *
+     A                                  8 42'Facility Amount Utilisation:'
+     A        50                            DSPATR(ND)
+     A            SFFAMU         1   O  8 71DSPATR(HI)
+     A        50                            DSPATR(ND)
+      *
+     A                                 10  2'Reporting Past Due'
+     A                                      COLOR(BLU)
+     A        50                            DSPATR(ND)
+      *
+     A                                 10 42'Basel II Past Due'
+     A                                      COLOR(BLU)
+     A        50                            DSPATR(ND)
+      *
+     A                                 11  3'Initial Date . . :'
+     A        50                            DSPATR(ND)
+     A            SFRIDT         6   B 11 22
+     A  26                                  DSPATR(PR)
+     A N26N32                               DSPATR(UL)
+     A    N32                               DSPATR(HI)
+     A     32                               DSPATR(RI PC)
+     A        50                            DSPATR(ND)
+      *
+     A                                 11 43'Initial Date . . :'
+     A        50                            DSPATR(ND)
+     A            SFBIDT         6   B 11 62
+     A  26                                  DSPATR(PR)
+     A N26N33                               DSPATR(UL)
+     A    N33                               DSPATR(HI)
+     A     33                               DSPATR(RI PC)
+     A        50                            DSPATR(ND)
+      *
+     A                                 12  3'Classification . :'
+     A        50                            DSPATR(ND)
+     A            SFRCAT         1   B 12 22
+     A  26                                  DSPATR(PR)
+     A N26N34                               DSPATR(UL)
+     A    N34                               DSPATR(HI)
+     A     34                               DSPATR(RI PC)
+     A        50                            DSPATR(ND)
+     A            SFRCAX        15   O 12 25
+     A        50                            DSPATR(ND)
+      *
+     A                                 12 43'Classification . :'
+     A        50                            DSPATR(ND)
+     A            SFBCAT         1   B 12 62
+     A  26                                  DSPATR(PR)
+     A N26N35                               DSPATR(UL)
+     A    N35                               DSPATR(HI)
+     A     35                               DSPATR(RI PC)
+     A        50                            DSPATR(ND)
+     A            SFBCAX        15   O 12 65
+     A        50                            DSPATR(ND)
+      *
+     A                                 14  2'Suspended Fee'
+     A                                      COLOR(BLU)
+     A        51                            DSPATR(ND)
+      *
+     A                                 14 42'Partial Payments'
+     A                                      COLOR(BLU)
+     A        51                            DSPATR(ND)
+      *
+     A                                 15  3'Allowed. . . . . :'
+     A        51                            DSPATR(ND)
+     A            SFFSFA         1   B 15 22
+     A    N36                               DSPATR(HI)
+     A     36                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+     A                                      DSPATR(PR)
+      *
+     A                                 15 43'Allowed. . . . . :'
+     A        51                            DSPATR(ND)
+     A            SFFPPA         1   B 15 62
+     A  27                                  DSPATR(PR)
+     A N27N37                               DSPATR(UL)
+     A    N37                               DSPATR(HI)
+     A     37                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+      *
+     A                                 16  3'Amount Maximum . :'
+     A        51                            DSPATR(ND)
+     A            SFSFAM        13   B 16 22
+     A  27                                  DSPATR(PR)
+     A N27N38                               DSPATR(UL)
+     A    N38                               DSPATR(HI)
+     A     38                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+     A            SFSFA         13   O 17 22
+     A        51                            DSPATR(ND)
+      *
+     A                                 16 43'Indicator. . . . :'
+     A        51                            DSPATR(ND)
+     A            SFPSIN         1   B 16 62
+     A  27                                  DSPATR(PR)
+     A N27N39                               DSPATR(UL)
+     A    N39                               DSPATR(HI)
+     A     39                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+      *
+     A                                 17 43'Limit. . . . . . :'
+     A        51                            DSPATR(ND)
+     A            SFPSLM        13   B 17 62
+     A  27                                  DSPATR(PR)
+     A N27N40                               DSPATR(UL)
+     A    N40                               DSPATR(HI)
+     A     40                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+      *
+     A                                 18  3'Payments Maximum :'
+     A        51                            DSPATR(ND)
+     A            SFSFPM         3   B 18 22
+     A  27                                  DSPATR(PR)
+     A N27N41                               DSPATR(UL)
+     A    N41                               DSPATR(HI)
+     A     41                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+     A            SFSFP          3   O 19 22
+     A        51                            DSPATR(ND)
+      *
+     A                                 20  2'Early Maturity Condition:'
+     A        51                            DSPATR(ND)
+     A            SFFEMC         1   B 20 28
+     A  27                                  DSPATR(PR)
+     A N27N42                               DSPATR(UL)
+     A    N42                               DSPATR(HI)
+     A     42                               DSPATR(RI PC)
+     A        51                            DSPATR(ND)
+      *
+     A                                 23 10'F12=Previous screen'
+      **End of change CLE134
+      *
+      ** Subfile records
+      *
+     A          R LE2210S0
+     A                                      SFL
+     A  20                                  SFLNXTCHG
+     A            SBSEL          1   B 10  4
+     A  67                                  DSPATR(RI PC)
+     A N67                                  DSPATR(HI UL)
+     A            SBCNUM         6   O 10  8DSPATR(HI)
+     A            SBFLIN         1   O 10 17DSPATR(HI)
+     A            SBFALO         6   O 10 22DSPATR(HI)
+     A            SBFSEQ         2   O 10 32DSPATR(HI)
+     A            SBSTRD         7   O 10 36DSPATR(HI)
+     A            SBENDD         7   O 10 44DSPATR(HI)
+     A            SBAMNT        15   O 10 52DSPATR(HI)
+     A            SBCCY          3   O 10 68DSPATR(HI)
+     A            SBSTAT         6   O 10 73DSPATR(HI)
+     A            SBIUSR        10   H
+     A            SBAUSR        10   H
+     A            SBBRCA         3   H
+     A            SBASTS         1   H
+      *                                              Begin /CAP064/
+     A            XREPN          5S 0H                                              CAP064
+      *                                              End   /CAP064/
+     A*/COPY WNCPYSRC,LE2210DF01
+      *
+      ** Subfile control
+      *
+     A          R LE2210C0
+     A                                      CF05
+      *                                              Begin /CAP064/
+     A***********                           CF09                                    CAP064
+     A***********                           CF12                                    CAP064
+     A N89                                  CF09                                    CAP064
+     A N89                                  CF12                                    CAP064
+      *                                              End   /CAP064/
+     A                                      SFLCTL(LE2210S0)
+     A N11N12                               SFLDSP
+     A N11                                  SFLDSPCTL
+     A  11                                  SFLCLR
+     A  19                                  SFLEND(*MORE)
+     A N19                                  ROLLUP(21)
+     A                                      SFLPAG(10)
+     A                                      SFLSIZ(11)
+     A                                      OVERLAY
+     A            SRECN          4S 0H      SFLRCDNBR
+     A                                  4 44'Review from'
+     A            SRCUS          6   B  4 56
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(HI UL)
+     A            SRFCT          3   B  4 63
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI UL)
+     A            SRFCN          2   B  4 67
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI UL)
+     A            SRLON          6   B  4 70
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(HI UL)
+     A            SRSEQ          2   B  4 77
+     A  38                                  DSPATR(RI PC)
+     A N38                                  DSPATR(HI UL)
+     A                                  5 44'Unauthorised Only?'
+     A N29                                  DSPATR(ND)
+     A            SRAUT          1   B  5 64
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI UL)
+     A N29                                  DSPATR(ND PR)
+     A                                  5  2'Actions,'
+      *                                              Begin /CAP064/
+     A************                      6  3'E=Enquire'                             CAP064
+     A N89                              6  3'E=Enquire'                             CAP064
+     A************                      6 16'A=Amend'                               CAP064
+     A N89                              6 16'A=Amend'                               CAP064
+     A  89                              6  3'U=Amend'                               CAP064
+     A************                      6 27'D=Delete'                              CAP064
+     A N89                              6 27'D=Delete'                              CAP064
+     A  89                              6 14'Q=Delete'                              CAP064
+     A**29********                      6 39'X=Authorise'                           CAP064
+     A  29N89                           6 39'X=Authorise'                           CAP064
+      *                                              End   /CAP064/
+     A                                  8  3'Sel'
+     A                                  8  7'Customer'
+     A                                  8 16'Fac/'
+     A                                  8 22'Facility/'
+     A                                  8 32'Fee'
+     A                                  8 37'Start'
+     A                                  8 45'End'
+     A                                  8 57'Amount'
+     A                                  8 68'Ccy'
+     A                                  8 73'Status'
+     A                                  9  8'Number'
+     A                                  9 16'Loan'
+     A                                  9 22'Loan no'
+     A                                  9 32'Seq'
+     A                                  9 37'Date'
+     A                                  9 45'Date'
+      *
+      ** Message subfile record
+      *
+     A          R LE2210S1                  TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *
+      ** Message subfile control
+      *
+     A          R LE2210C1                  TEXT('Program messages')
+     A                                      SFLCTL(LE2210S1)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  19
+     AON19                                  SFLEND
+     A            ##PGM                     SFLPGMQ

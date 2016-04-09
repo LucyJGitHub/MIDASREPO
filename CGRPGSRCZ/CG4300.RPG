@@ -1,0 +1,407 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Securities depot movement confs - driver')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4300 - Securities Depot Movement Confirmations - Driver    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 243124A            Date 28Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 189700             Date 16Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 149087             Date 16Dec98               *
+      *                 105744             Date 26Feb97               *
+     F*                 088442             DATE 28MAY95               *
+     F*                 088441             DATE 27MAY95               *
+     F*                 082060             DATE 24JAN95               *
+     F*                 081961             DATE 12JAN95               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  243124A - DBase error caused by REPO with deal not yet       *
+      *            authorised.                                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  189700 - No confirmation were generated for cancelled walk-in*
+      *           or walk-out due to suppression made by fix 149087.  *
+      *           Fix is to reverse 149087 and allow cancellation     *
+      *           confirmation to be produced once transaction is     *
+      *           deleted.                                            *
+      *  CSE015 - Forward Valued Depot Movements (Recompiled)         *
+      *  CSE017 - Cum/Ex Indicator for Depot Movements (Recompile)    *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  149087 - No production of depot movements (WI/WO)
+     F*  105744 - Decimal data error.                                 *
+     F*  088442 - Standard format confirmations produced for items    *
+     F*           which should be UDC.                                *
+     F*             o standard program runs after this one, but, if   *
+     F*               input going on at the same time, it may         *
+     F*               pick up transactions this program has never     *
+     F*               read. Specify transactions suppressed by UDC    *
+     F*               explicitly in this  program, and only process   *
+     F*               these in SE0560.                                *
+     F*  088441 - Produces confimations for deleted transactions.     *
+     F*           Check RECI *EQ 'D' before processing (cf. SE0560)   *
+     F*  082060 - Redefine Binary fields as Decimal (9,0 Packed)      *
+     F*  081961 - User Defined Correspondence - Additions             *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*****************************************************************
+     FDPTCONF UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     IDSPARM    E DSDPTMVD
+     I**  External DS for parameter passed to CG4310
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C***********          SETON                     LR                   082060
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4310 - Securities Depot Movemt Confirmations *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Read from the Depot Movements for Confirmations file
+      ** (This logical selects DPTMVD records with DCFR = 'Y')
+      *
+     C************LOVAL    SETLLDPTCONF                                   081961
+     C           *HIVAL    SETLLDPTCONF                                   081961
+     C                     READ DPTCONF                  99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *                                                                   088441
+      ** Don't produce confirmations for deleted transactions             088441
+     C***********RECI      IFEQ 'D'                                 088441149087
+     C********** RECI      IFNE '*'                                                    149087 189700
+      *
+      **  Increment the count of DPTMVD records read.
+     C                     ADD  1         ##DREC  50
+      *
+      ** Produce Confirmation
+      *
+     C                     CALL 'CG4310'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM *BLANK    ##AUTO  1
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4310  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Confirmation Produced?
+      *
+     C           ##COPD    IFEQ 'Y'
+      *
+      ** Update Confirmation Required Indicator on DPTMVD
+      *
+     C                     MOVEL'N'       DCFR
+     C                     BITON'0'       DPMS
+     C                     EXCPTUDPTMV
+      *                                                                   088442
+      ** Else, if item suppresed in UDC, set confirmation_required flag   088442
+      ** to 'S'. SE0560 (standard process) changed to recognise only      088442
+      ** these.                                                           088442
+     C                     ELSE                                           088442
+      *                                                                                      243124A
+      ** Only if the record is not being bypassed.                                           243124A
+      *                                                                                      243124A
+     C           ##COPD    IFNE 'B'                                                          243124A
+     C                     MOVEL'S'       DCFR                            088442
+     C                     EXCPTUDPTMV                                    088442
+     C                     ENDIF                                                             243124A
+      *
+     C                     END                             * ##COPD IFEQ 'Y'
+      *                                                                   088441
+     C**********           ENDIF                           * RECI='D'                  088441 189700
+      *
+      ** Commit
+     C                     COMIT
+      *
+      ** Read next record from DPTCONF
+      *
+     C                     READ DPTCONF                  99*
+     C                     END                             * *IN99 DOWEQ '0'
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4300AU'I#SPLN
+     C                     MOVEL'CG4300  'I#REF
+     C                     MOVE 'CGD1514' I#TITL
+     C                     MOVE 'CGD1515' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4300  'I#REF
+     C                     MOVE 'CGD1514' I#TITL
+     C                     MOVE 'CGD1515' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'DPTMVD  'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1514' W0TITL  7
+     C                     PARM 'CGD1515' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4300  'I#REF
+     C                     MOVE 'CGD1514' I#TITL
+     C                     MOVE 'CGD1515' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+     ODPTMVDF E                UDPTMV
+     O                         DCFR
+     O                         DPMS
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

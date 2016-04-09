@@ -1,0 +1,816 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Extract journal entries within comit')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0060 -  Extract journal entries within commit cycles       *
+      *                                                               *
+      *  Function: This program will access all new (ie since last    *
+      *            call of this program) commits and write out all    *
+      *            journal entries within the same commitment cycle.  *
+      *                                                               *
+      *  Called By: EDC0050 - Batch Sender                            *
+      *                                                               *
+      *  Calls:     AOBANKR0                                          *
+      *             AOMEXPR0                                          *
+      *             ED0065                                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. 113417             DATE 28JAN97               *
+      *  PREV AMEND NO. 104193             DATE 05JUN96               *
+      *                 101973             DATE 31JAN96               *
+      *                 101971             DATE 17JUL95               *
+      *                 S01493 *CREATE     DATE 16MAY94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  113417 - Recompile over changed EDDFTFL1.                    *
+      *  104193 - Extend the file/member processing filter to include *
+      *           the originating program name.                       *
+      *  101973 - Phase V Modifications:                              *
+      *            Amended module title.                              *
+      *            Correct deletion of journal entries after special  *
+      *            processing programs by handling it within those    *
+      *            programs.  In order to preserve clarity, not all   *
+      *            reworked code has been commented out & reinserted. *
+      *  101971 - Phase II Modifications                              *
+      *  S01493 - Midas Export Data Module.                           *
+      *                                                               *
+      *****************************************************************
+     FEDOLDJL1UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDOLDJD1
+     F                                              KCOMIT
+      * Old journal entries by commitment cycle
+      *
+     FEDNEWJL1UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD1
+      * New journal entries by commitment cycle
+      *
+     FEDNEWJL2IF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD2
+      * New journal entries (selected on entry type = 'CM' OR 'RB')
+      *
+     FEDDFTFL1IF  E           K        DISK         KINFSR *PSSR
+      * Midas Drip Feed Transfer Files by Filename
+      *
+     FEDJRNEPDO   E           K        DISK                           UC
+     F            QJORDJE                           KRENAMEEDJRNED0
+     F                                              KINFSR *PSSR
+      * Journal entries to be exported
+      * NOTE - This is a multi-membered file
+      *
+     FEDSAVEPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      * Batches created for export via DTA
+      *
+     FEDDFAUPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      * Audit file
+      *
+     FED0060AUO   E                    PRINTER                        UC
+      * Audit report for program errors
+      *
+     F/EJECT
+      *****************************************************************
+      *                     INDICATOR USAGE                           *
+      *                     ---------------                           *
+      *                                                               *
+      *   01      Record not found on LF/EDNEWJL2                     *
+      *   02      Record not found on LF/EDOLDJL1                     *
+      *   03      Record not found on LF/EDNEWJL1                     *
+      *   07      Write to EDDFAUPD                                   *
+      *   21      Full batch                                          *
+      *   22      Access LF/EDDFTFL1                                  *
+      *   23      Header record on PF/EDJRNEPD not yet written        *
+      *   U7      Job Switch 7                                        *
+      *   U8      Job Switch 8                                        *
+      *   LR      Exit program                                        *
+      *                                                               *
+      *****************************************************************
+      *                     INDEX OF SUBROUTINES                      *
+      *                     --------------------                      *
+      *                                                               *
+      *   MAIN   - Main processing (Not a SR)                         *
+      *   #INIT  - Initial Processing                                 *
+      *   #CMTCY - Commit Cycles processing
+      *   #CLRNW - Clear journal entries with no Commit ID            *
+      *   #WSAVE - Write to List of Batches to Transfer               *
+      *   #WDFAU - Write to Drip Feed Audit File                      *
+      *   *PSSR  - Error handling SR                                  *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Copyright Statement
+      *
+     I/EJECT
+     I*  Rename COMMIT ID field
+     I*
+     IEDNEWJD2
+     I              JOENTT                          UCMTID
+      *
+     ICPYR@#      DS
+      ** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IWKFLDS      DS
+      ** Data Structure zoned work fields
+     I                                        1  100WSEQNO
+      *
+     I*KDFTF******DS                                                      104193
+      ***Data*Structure*LF/EDDFTFL1*Key*******                            104193
+     I****************************************1  10 UFILE                 104193
+     I***************************************11  20 UMMBR                 104193
+     IPSDS       SDS
+      ** Program Status
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      276 281 WDATE
+     I                                      282 287 WTIME
+      *                                                                   101971
+     ILDA         DS                            256
+      *
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     ISDMEXP    E DSSDMEXPPD
+      ** Midas Export Data ICD
+      *
+     IDSFDY     E DSDSFDY
+      ** Midas Access Object Short Data Structure
+      *
+     I            DS                                                      101971
+      ** Data Structure for Journal record data parameter                 101971
+     I                                        1 125 DATA1                 101971
+     I                                        1   50JOENTL                101971
+     I                                        6  150JOSEQN                101971
+     I                                       16  16 JOCODE                101971
+     I                                       17  18 JOENTT                101971
+     I                                       19  24 JODATE                101971
+     I                                       25  300JOTIME                101971
+     I                                       31  40 JOJOB                 101971
+     I                                       41  50 JOUSER                101971
+     I                                       51  560JONBR                 101971
+     I                                       57  66 JOPGM                 101971
+     I                                       67  76 JOOBJ                 101971
+     I                                       77  86 JOLIB                 101971
+     I                                       87  96 JOMBR                 101971
+     I                                       97 1060JOCTRR                101971
+     I                                      107 107 JOFLAG                101971
+     I                                      108 1170JOCCID                101971
+     I                                      118 125 JORES                 101971
+     C/EJECT
+      *****************************************************************
+      *
+     C                     EXSR #INIT
+      *
+      *** MAIN PROCESSING
+      *** ===============
+      *
+      ** Access the records from LF/EDNEWJL2. Each record read is a
+      ** commitment cycle completion - either a COMMIT or a ROLLBACK.
+      *
+     C                     Z-ADDPSEQNO    WSEQNO
+     C           WSEQNO    SETLLEDNEWJD2
+     C                     READ EDNEWJD2                 01
+      *
+     C                     SETOF                     21
+     C           *IN01     DOWEQ*OFF
+     C           *IN21     ANDEQ*OFF
+      *
+      ** Save the journal sequence number of the end of the commit
+      ** cycle being processed.  This is to allow ED0060, (when
+      ** next called), to start looking for new commit cycle completions
+      ** from the first unprocessed one.  (EDC0050 increments this before
+      ** updating the data area).
+      *
+     C                     Z-ADDJOSEQN    PSEQNO
+      *
+      ** Commit cycle processing
+      *
+     C                     EXSR #CMTCY
+      *
+      ***  If maximum no. of records has been reached then only
+      ***  continue writing to end of commitment cycle
+      *
+     C           UPCNT     IFGE E7DFMR
+     C           JOENTT    ANDEQ'CM'
+     C                     SETON                     21
+     C                     ELSE
+      *
+     C                     READ EDNEWJD2                 01
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      *** If End of File, set PEOF to 'Y' to stop an unneccesary call
+      *** of this program.
+      *
+     C           *IN01     IFEQ *ON
+     C                     MOVEL'Y'       PEOF
+     C                     ENDIF
+      *
+      *
+      *** Clear unwanted Journal Entries
+      *
+     C                     EXSR #CLRNW
+      *
+      *** If records were written then a batch really exists .....
+      *
+     C***********UPCNT     IFGT *ZERO                                     101971
+     C           UPCNT     IFGT 1                                         101971
+      *
+      *** Write to List of batches for transfer file
+      *
+     C                     EXSR #WSAVE
+      *
+      *** Write to Audit file
+      *
+     C                     EXSR #WDFAU
+      *
+     C                     MOVEL'Y'       PRW
+     C                     ENDIF
+      *
+      *** End Program
+      *
+     C                     CLOSEEDJRNEPD
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : #CMTCY  - Commitment cycle transaction          *
+      *                                                               *
+      *  CALLED BY  : Main                                            *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CMTCY    BEGSR                           ** #CMTCY **
+      *
+      ** Read each journal entry. If it has this commit id, write it to
+      ** PF/EDJRNEPD (overridden to a different member in calling pgm).
+      *
+      **  OLD journal entries
+      *
+     C           JOCCID    CHAINEDOLDJL1             02
+      *
+     C           *IN02     DOWEQ'0'                        B1
+      *
+      ***  If this journal entry was from a file and the commit cycle
+      ***  was successful, (rather than a rollback) then ....
+      *
+     C           JOOBJ     IFNE *BLANKS                    B2
+     C           UCMTID    ANDEQ'CM'
+      *
+      *****Set*up*key*for*file*and*member*name******                      104193
+      *
+     C*********************MOVEL*BLANKS   UFILE                           104193
+     C*********************MOVELJOOBJ     UFILE                           104193
+     C*********************MOVEL*BLANKS   UMMBR                           104193
+     C*********************MOVELJOMBR     UMMBR                           104193
+      *                                                                   104193
+      *** Set up key for file member and originating program name         104193
+      *                                                                   104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C                     MOVE JOMBR     FILMBR                          104193
+     C                     MOVELJOPGM     UPROG  10                       104193
+      *                                                                   104193
+     C           KDFTF     CHAINEDDFTFL1             22                   104193
+      *                                                                   104193
+      *** Set up key for file and originating program name                104193
+      *                                                                   104193
+     C           *IN22     IFEQ *ON                                       104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C           KDFTF     CHAINEDDFTFL1             22                   104193
+     C                     ENDIF                                          104193
+      *                                                                   104193
+      *** If above fails then locate file member and no originating       104193
+      *** program name                                                    104193
+      *                                                                   104193
+     C           *IN22     IFEQ *ON                                       104193
+     C                     MOVE JOMBR     FILMBR                          104193
+     C                     MOVEL*BLANKS   UPROG                           104193
+      *                                                                   104193
+      *
+     C           KDFTF     CHAINEDDFTFL1             22
+     C                     ENDIF                                          104193
+      *
+      ***  If member not found then see if DTA has not specified a
+      ***  particular member.
+      *
+     C           *IN22     IFEQ *ON                        B3
+     C*********************MOVEL*BLANKS   UMMBR                           104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C           KDFTF     CHAINEDDFTFL1             22
+     C                     ENDIF                           E3
+      *
+      *** If this record is for a wanted file then copy the record
+      *** to PF/EDJRNEPD
+      *
+     C           *IN22     IFEQ *OFF                       B3
+      *
+     C           *IN23     IFEQ *OFF                       B4
+     C                     CALL 'ED0065'
+     C                     PARM           URETC   1
+      *
+     C           URETC     IFNE *BLANK                     B5
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'ED0065  'DBFILE           * DB ERROR 05 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVELPBTCH     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E5
+      *
+     C                     ADD  1         UPCNT
+     C                     OPEN EDJRNEPD
+     C                     SETON                     23
+     C                     ENDIF                           E4
+      *
+      ** Check to see whether a special processing program exists for     101971
+      ** this file.                                                       101971
+      *                                                                   101971
+     C           EGSPPP    IFEQ *BLANK                     B4             101971
+      *                                                                   101971
+      ** If not then write the record to the output file ......           101971
+      *                                                                   101971
+     C                     WRITEEDJRNED0
+     C                     ADD  1         UPCNT
+      *                                                                   101973
+      *** .... and delete the entry on PF/EDOLDJPD as it is no longer     101973
+      *** needed.                                                         101973
+      *                                                                   101973
+     C                     DELETEDOLDJL1                                  101973
+      *                                                                   101971
+     C                     ELSE                            X4             101971
+      *                                                                   101971
+     C                     UNLCKEDOLDJL1                                  101971
+     C                     CALL EGSPPP                                    101971
+     C                     PARM           DATA1                           101971
+     C                     PARM           JOESD                           101971
+     C                     PARM 'O'       SRCF    1                       101971
+     C                     PARM           CDFILE  8                       101973
+     C                     PARM           CDBKEY 10                       101973
+     C                     PARM           WRTCD1  1                       101971
+     C                     PARM           RECCNT  50                      101971
+      *                                                                   101971
+     C           WRTCD1    IFNE *BLANKS                    B5             101971
+     C                     Z-ADD7         DBASE            ***************101971
+     C                     MOVELCDFILE    DBFILE           * DB ERROR 07  101971
+     C                     MOVELEGSPPP    DBKEY            ***************101971
+     C                     MOVE CDBKEY    DBKEY                           101971
+     C                     OUT  LDA                                       101971
+     C                     EXSR *PSSR                                     101971
+     C                     ENDIF                           E5             101971
+      *                                                                   101971
+      **  Increment the record count with the number of records added     101971
+      **   by the special processing program.                             101971
+      *                                                                   101971
+     C                     ADD  RECCNT    UPCNT                           101971
+      *                                                                   101971
+      ****Re-access*the*record**********                           101971 101973
+     C***********JOCCID****CHAINEDOLDJL1             02            101971 101973
+      *                                                                   101971
+     C                     ENDIF                           E4             101971
+      *                                                                   101971
+     C                     ELSE                            X3             101973
+      *                                                                   101973
+      *** This removes journal entries which are for files which are not  101973
+      *** required by DTA.                                                101973
+      *                                                                   101973
+     C                     DELETEDOLDJL1                                  101973
+      *                                                                   101973
+     C                     ENDIF                           E3
+      *                                                                   101973
+     C                     ELSE                            X2             101973
+      *                                                                   101973
+      *** This removes journal entries from Rollbacks and the like        101973
+      *                                                                   101973
+     C                     DELETEDOLDJL1                                  101973
+      *                                                                   101973
+     C                     ENDIF                           E2
+      *
+      ****Delete*the*journal*entry*on*PF/EDOLDJPD*-*it*is*no*longer*needed101973
+      ****(This*removes*journal*entries*for*Rollbacks*as*well*as*Commits.)101973
+      ********************************************************************101973
+     C***********          DELETEDOLDJL1                                  101973
+      *
+      *** Read next journal entry from this commit group
+      *** CHAIN is required because the file pointer may have been        101973
+      *** changed in a Special Processing Program.                        101973
+      *
+     C***********JOCCID    READEEDOLDJL1                 02               101973
+     C           JOCCID    CHAINEDOLDJL1             02                   101973
+      *                                                                   101973
+     C                     ENDDO                           E1
+      *
+      **  NEW journal entries
+      *
+     C           JOCCID    CHAINEDNEWJL1             03
+     C           *IN03     DOWEQ'0'                        B1
+      *
+      ***  If this journal entry was from a file and the commit cycle
+      ***  was successful, (rather than a rollback) then ....
+      *
+     C           JOOBJ     IFNE *BLANKS                    B2
+     C           UCMTID    ANDEQ'CM'
+      *
+      *****Set*up*key*for*file*and*member*name*****                       104193
+      *                                                                   104193
+      ***  Set up key for file, member and originating program name       104193
+      *
+     C*********************MOVELJOOBJ     UFILE                           104193
+     C*********************MOVELJOMBR     UMMBR                           104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C                     MOVE JOMBR     FILMBR                          104193
+     C                     MOVELJOPGM     UPROG                           104193
+      *                                                                   104193
+     C           KDFTF     CHAINEDDFTFL1             22                   104193
+      *                                                                   104193
+      *** Set up key for file and originating program name                104193
+      *                                                                   104193
+     C           *IN22     IFEQ *ON                                       104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C           KDFTF     CHAINEDDFTFL1             22                   104193
+     C                     ENDIF                                          104193
+      *                                                                   104193
+      *** If above fails then locate file member and no originating       104193
+      *** program name                                                    104193
+      *                                                                   104193
+     C           *IN22     IFEQ *ON                                       104193
+     C                     MOVE JOMBR     FILMBR                          104193
+     C                     MOVEL*BLANKS   UPROG                           104193
+      *
+     C           KDFTF     CHAINEDDFTFL1             22
+     C                     ENDIF                                          104193
+      *
+      ***  If member not found then see if DTA has not specified a
+      ***  particular member.
+      *
+     C           *IN22     IFEQ *ON                        B3
+     C*********************MOVEL*BLANKS   UMMBR                           104193
+     C                     MOVEL*BLANKS   FILMBR                          104193
+     C                     MOVELJOOBJ     FILMBR                          104193
+     C           KDFTF     CHAINEDDFTFL1             22
+     C                     ENDIF                           E3
+      *
+      *** If this record is for a wanted file then copy the record
+      *** to PF/EDJRNEPD
+      *
+     C           *IN22     IFEQ *OFF                       B3
+     C           *IN23     IFEQ *OFF                       B4
+     C                     CALL 'ED0065'
+     C                     PARM           URETC   1
+      *
+     C           URETC     IFNE *BLANK                     B5
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'ED0065  'DBFILE           * DB ERROR 06 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVELPBTCH     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E5
+      *
+     C                     OPEN EDJRNEPD
+     C                     ADD  1         UPCNT
+     C                     SETON                     23
+     C                     ENDIF                           E4
+      *
+      ** Check to see whether a special processing program exists for     101971
+      ** this file.                                                       101971
+      *                                                                   101971
+     C           EGSPPP    IFEQ *BLANK                     B4             101971
+      *                                                                   101971
+      ** If not then write the record to the output file ......           101971
+      *                                                                   101971
+     C                     WRITEEDJRNED0
+     C                     ADD  1         UPCNT
+      *                                                                   101973
+      *** .... and delete the entry on PF/EDNEWJPD as it is no longer     101973
+      *** needed.                                                         101973
+      *                                                                   101973
+     C                     DELETEDNEWJL1                                  101973
+      *                                                                   101971
+     C                     ELSE                            X4             101971
+      *                                                                   101971
+     C                     UNLCKEDNEWJL1                                  101971
+     C                     CALL EGSPPP                                    101971
+     C                     PARM           DATA1                           101971
+     C                     PARM           JOESD                           101971
+     C                     PARM 'N'       SRCF                            101971
+     C                     PARM           CDFILE                          101973
+     C                     PARM           CDBKEY                          101973
+     C                     PARM           WRTCD1                          101971
+     C                     PARM           RECCNT                          101971
+      *                                                                   101971
+     C           WRTCD1    IFNE *BLANKS                    B5             101971
+     C                     Z-ADD8         DBASE            ***************101971
+     C                     MOVELCDFILE    DBFILE           * DB ERROR 08  101971
+     C                     MOVELEGSPPP    DBKEY            ***************101971
+     C                     MOVE CDBKEY    DBKEY                           101971
+     C                     OUT  LDA                                       101971
+     C                     EXSR *PSSR                                     101971
+     C                     ENDIF                           E5             101971
+      *                                                                   101971
+      **  Increment the record count with the number of records added     101971
+      **   by the special processing program.                             101971
+      *                                                                   101971
+     C                     ADD  RECCNT    UPCNT                           101971
+      *                                                                   101971
+      ****Re-access*the*record**********                           101971 101973
+     C********** JOCCID    CHAINEDNEWJL1             02            101971 101973
+      *                                                                   101971
+     C                     ENDIF                           E4             101971
+      *                                                                   101971
+     C                     ELSE                            X3             101973
+      *                                                                   101973
+      *** This removes journal entries which are for files which are not  101973
+      *** required by DTA.                                                101973
+      *                                                                   101973
+     C                     DELETEDNEWJL1                                  101973
+      *
+     C                     ENDIF                           E3
+      *
+     C                     ELSE                            X2             101973
+      *                                                                   101973
+      *** This removes journal entries from Rollbacks and the like        101973
+      *                                                                   101973
+     C                     DELETEDNEWJL1                                  101973
+      *                                                                   101973
+     C                     ENDIF                           E2
+      *
+      ****Delete*the*journal*entry*on*PF/EDNEWJPD*-*it*is*no*longer*needed101973
+      ****(This*removes*journal*entries*for*Rollbacks*as*well*as*Commits.)101973
+      ********************************************************************101973
+     C**********           DELETEDNEWJL1                                  101973
+      *
+      *** Read next journal entry from this commit group
+      *** CHAIN is required because the file pointer may have been        101973
+      *** changed in a Special Processing Program.                        101973
+      *
+     C***********JOCCID    READEEDNEWJL1                 03               101973
+     C           JOCCID    CHAINEDNEWJL1             03                   101973
+      *                                                                   101973
+     C                     ENDDO                           E1
+      *
+     C           CMTCY9    ENDSR                           ** CMTCY9 **
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : #CLRNW - Delete journal items without Commits   *
+      *                                                               *
+      *  CALLED BY  : Main                                            *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CLRNW    BEGSR                           ** #CLRNW **
+      *
+      ***  If Journal entry has no Commit ID then delete it now
+      *
+     C           *LOVAL    SETLLEDNEWJL1
+     C                     READ EDNEWJL1                 03
+      *
+     C           *IN03     DOWEQ*OFF
+     C           JOCCID    IFEQ *ZERO
+     C                     DELETEDNEWJL1
+     C                     ENDIF
+      *
+     C                     READ EDNEWJL1                 03
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : #WSAVE - Write to List of Batches to Transfer   *
+      *                                                               *
+      *  CALLED BY  : Main                                            *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #WSAVE    BEGSR                           ** #WSAVE **
+      *
+      *** Write to List of Batches
+      *
+     C                     MOVELPSVLIB    EFLIBR
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDJRNEPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELPBTCH     EFMEMB
+      *
+     C                     WRITEEDSAVED0               06
+      *
+     C           *IN06     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'EDSAVEPD'DBFILE           * DB ERROR 03 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVELPBTCH     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           #WRSA9    ENDSR                           ** #WRSA9 **
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : WRDFAU - Write to Audit File.                   *
+      *                                                               *
+      *  CALLED BY  : Main                                            *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      *** Write to Audit file
+      *
+     C           #WDFAU    BEGSR                           ** #WDFAU **
+      *
+     C                     MOVELPBTCH     EEBTCH
+     C                     MOVEL'S'       EEBAST
+     C                     TIME           EECRET
+     C                     MOVELBJMRDT    EECRED
+     C                     Z-ADD0         EEDELT
+     C                     MOVEL*BLANKS   EEDELD
+     C                     MOVE '0'       EEAUDR                          101971
+     C                     WRITEEDDFAUD0               07
+      *
+     C           *IN07     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'EDDFAUPD'DBFILE           * DB ERROR 04 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVELPBTCH     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           #WRAU9    ENDSR                           ** #WRAU9 **
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : INIT - Initial Processing                       *
+      *                                                               *
+      *  CALLED BY  : Main                                            *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR                           ** #INIT  **
+      *
+      **  Program entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBTCH  10
+     C                     PARM           PSEQNO 100
+     C                     PARM           PSVLIB  7
+     C                     PARM           PRW     1
+     C                     PARM           PEOF    1
+      *
+      *** Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *** Declarations and initialisations
+      *
+     C           *LIKE     DEFN JONBR     UNBR
+     C           *LIKE     DEFN JOSEQN    USEQN
+     C           *LIKE     DEFN E7DFMR    UPCNT
+     C                     Z-ADD0         UPCNT
+     C                     MOVEL'N'       PRW
+     C                     MOVEL'N'       PEOF
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ED0060'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** Access ICD
+      *
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   104193
+      *** Define composite key to allow access to EDDFTFPD using a        104193
+      *** combination of file member and originating program name         104193
+      *                                                                   104193
+     C           KDFTF     KLIST                                          104193
+     C                     KFLD           FILMBR 20                       104193
+     C                     KFLD           UPROG                           104193
+      *                                                                   104193
+     C           #INIT9    ENDSR                           ** #INIT9 **
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE : *PSSR  - Error Handling Subroutine              *
+      *                                                               *
+      *  CALLED BY  : This routine is called if there are any program *
+      *               or file errors.                                 *
+      *                                                               *
+      *  CALLS      : -                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Ensure this routine is only performed once
+      *
+     C           WPSSR     IFEQ *BLANK
+     C                     MOVEL'Y'       WPSSR   1
+      *
+      ** Set on Error Indicators, U7 and U8 and LR.
+      *
+     C                     SETON                     U7U8LR
+      *
+      **  Print audit report ED0060AU
+      *
+     C                     OPEN ED0060AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0060AU
+      *
+      **  Dump program and return.
+      *
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     END
+      *
+     C           #PSSR9    ENDSR                           ** #PSSR9 **
+      *****************************************************************
+** CPY@ - Copyright Statement
+(c) Misys International Banking Systems Ltd. 2001

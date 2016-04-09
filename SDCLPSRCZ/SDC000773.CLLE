@@ -1,0 +1,174 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD EU W/H Tax Exchange of Info Extract')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SD000773 - Midas SD EU W/H Tax Exchange of Info Extract */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CGL032  *CREATE    Date 05Jul04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL032 - Automatic Exchange of Information                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Declare parameters fo access object AOSARDR0 */
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                          VALUE('*VERIFY')
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) +
+                          VALUE('CGL032')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&CGL032) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('Midas SD EU Withholding Tax Exchange of +
+                          Information Extract') TOPGMQ(*EXT) +
+                          TOMSGQ(MRUNQ)
+ 
+/* Check if SAR CGL032 is on */
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+             IF         COND(&RTCD *EQ *BLANKS) THEN(CHGVAR +
+                          VAR(&CGL032) VALUE('Y'))
+ 
+             IF         COND(&CGL032 *EQ 'N') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Get system prefix from SDSTAT and determine DPLIB */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+             CHGVAR VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+ 
+/* Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is not a restart */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+               DLTF       FILE(XSDCSINPD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XSDEXINPD)
+               MONMSG     MSGID(CPF2105)
+ 
+               CPYF       FROMFILE(SDCSINPD) TOFILE(&DPLIB/XSDCSINPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               CPYF       FROMFILE(SDEXINPD) TOFILE(&DPLIB/XSDEXINPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If it is a restart */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XSDCSINPD) TOFILE(SDCSINPD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(SDCSINPD))
+ 
+               CPYF       FROMFILE(XSDEXINPD) TOFILE(SDEXINPD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(SDEXINPD))
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Call COB processing program */
+ 
+             CALL       PGM(SD000773)
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator */
+ 
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               DLTF       FILE(XSDCSINPD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XSDEXINPD)
+               MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                            MSGDTA('SDC000773 ended abnormally - see +
+                            job log') TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,324 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Module name   ILE Module                             *
+      *                                                               *
+      *  SKFfffKDP  - xxxxxxxxxxxxxxxxxxxxxxxxx Key Screen            *
+      *                                                               *
+      *  Function:  This module displays the key screen of the        *
+      *             xxxxxxxxxxxxxxxxxxxxxxxxxx screen input function  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *                                                               *
+      *  Last Amend No. CAP0nn  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP0nn - Conversion of Mm inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+     FSKFfffKDF CF   E             WORKSTN
+ 
+      ** Table of field numbers and names
+     FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
+ 
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *     10-59 Field Error - highlight screen fields               *
+      *       97  Subfile end                                         *
+      *       99  Read error                                          *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY includes the MM standard declares:
+     D/COPY ZACPYSRC,STDDECLARE
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+     D/COPY ZACPYSRC,ERR_ARRAYS
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes all the definitions of the error
+      ** arrays, including the named constant giving the size of
+      ** the arrays.  Note that it uses #MsgID and *MsgData, and so requires
+      ** STD_D_SPEC.
+     D/COPY ZACPYSRC,FVAL_ARRAY
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+     D/COPY ZACPYSRC,APICTLARR
+      **------------------------------------------------------------------
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for fields
+      ** required by the message handler.
+     D/COPY ZACPYSRC,MSGHNDDCL
+      **------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
+     D @EI             S              1    DIM(60)
+ 
+     D TrnDets       E DS                  EXTNAME(SKFFFFPD)
+      ** Transaction Details in screen format
+ 
+     D OKTrnDets     E DS                  EXTNAME(SKEFfffPD)
+      ** Transaction Details OK indicators
+ 
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** External DS for Bank Details
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** First DS for Access Programs, short data structure
+ 
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      ** Second DS for Access Programs, long data structure
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the             ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      * Main processing
+     C                   EXSR      MAIN
+      *
+      * Return
+     C                   IF        @INKC = '1'
+     C                   SETON                                        LR
+     C                   ENDIF
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN - MAIN processing
+      *****************************************************************
+     C     MAIN          BEGSR
+      *
+     C                   MOVEA     OKTrnDets     @EI
+      *
+      * Set screen error indicators according to status of 'OK' flag
+     C                   Z-ADD     1             C                 2 0
+     C                   Z-ADD     10            E                 2 0
+      *
+     C                   DOU       C > 60
+     C                   IF        @EI(C) = 'N' OR
+     C                             @EI(C) = 'W'
+     C                   EVAL      *IN(E) = '1'
+     C                   ENDIF
+     C                   EVAL      C = C + 1
+     C                   EVAL      E = E + 1
+     C                   ENDDO
+ 
+      ** Set up the transaction reference to be used by the message handler
+     C                   EVAL      TranRef = DDTRNN
+     C                   EVAL      ActionCode = 'I'
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes processing for the error and
+      ** warning messages.
+     D/COPY ZACPYSRC,MSGHNDDSP1
+      **------------------------------------------------------------------
+      *
+      * Enable Function Keys
+      *
+      * Write message subfile, key details and footer screen
+     C                   TIME                    DDTIME
+     C                   WRITE     SKFfffKS0
+     C                   WRITE     SKFfffKD1
+     C                   WRITE     SKFfffKF1
+     C                   READ      SKFfffKD1                              99
+      *
+      * Clear message subfile
+      *
+      * Set screen error indicator off
+     C                   MOVEA     @Z0           *IN(10)
+      *
+      * Set return keys
+     C                   EVAL      @INKC = *INKC
+     C                   EVAL      @INKG = *INKG
+     C                   EVAL      @INKH = *INKH
+     C                   EVAL      @INKL = *INKL
+      *
+     C                   ENDSR
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes the ProcMsgs subroutine
+      ** to process error and warning messages.
+     D/COPY ZACPYSRC,MSGHNDDSP2
+      **------------------------------------------------------------------
+ 
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      * *INZSR - INITIAL PROCESSING
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Parameters
+     C     *ENTRY        PLIST
+      *
+      * Input Parameters :
+      * Return code
+     C                   PARM                    RetCodeIn
+ 
+      * Transaction Number / Reference
+     C                   PARM                    DDTRNN
+ 
+      ** Transaction Details in screen format
+     C                   PARM                    TrnDets
+ 
+      ** Transaction Details OK indicators
+     C                   PARM                    OKTrnDets
+ 
+      * Errors
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+ 
+      * Warning
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
+ 
+      * Output Parameters :
+ 
+      * Function Keys
+     C                   PARM                    @INKC             1
+     C                   PARM                    @INKG             1
+     C                   PARM                    @INKH             1
+     C                   PARM                    @INKL             1
+ 
+      ** Initialise program name
+     C                   EVAL      DBPGM = 'SKFfffKDSP'
+ 
+      ** Move user and workstation ID to screen fields.
+     C                   EVAL      DDUSER = PsUser
+     C                   EVAL      DDWID = PsJobName
+      *
+     C                   EVAL      *IN97 = '1'
+     C                   EVAL      DDPGMQ = '*'
+      *
+      ** Access Bank Details
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       @RTCD             7
+     C                   PARM      '*FIRST '     @OPTN             7
+     C     SDBANK        PARM      SDBANK        DSFDY
+      *
+      * Database Error
+     C                   IF        @RTCD <> *BLANKS
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBASE = '900'
+     C                   EVAL      DBKEY = @OPTN
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      **------------------------------------------------------------------
+      ** The following /COPY line sets up the fixed data for SD *DSP
+      ** functions for the message handler, ZAMSGHNDLE.
+     D/COPY SDCPYSRC,MSGHNDDATA
+      **------------------------------------------------------------------
+ 
+      ** Program, module and procedure names for dbase error processing
+      ** ==============================================================
+      ** The following /COPY sets these values.
+      /COPY ZACPYSRC,DBFIELDS
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program, and performs      *
+      *          a ROLLBACK.                                          *
+      *                                                               *
+      *****************************************************************
+      ** The following /COPY contains the standard program status
+      ** subroutine, including a bound call to the DBERRCTL module.
+     C/COPY ZACPYSRC,PSSR_ILE
+ 
+         Note: if non-standard processing required, use the PSSR_ILENE
+         subroutine
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+** @Z0
+000000000000000000000000000000000000000000000000000000000000

@@ -1,0 +1,201 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - Update ACCNTAB NDID/NCID')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RPG/RE4019  - Midas RE T&N Accounts - Update ACCNTAB NDID/   *
+      *                NCID                                           *
+      *                                                               *
+      *  Function:  This program updates ACCNTAB's Next Debit/Credit  *
+      *  (COB)      Capitalization Date from values in REPRPNPD.      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  INDICATORS                                                   *
+      *                                                               *
+      *  01 - End of file for REPRPNPD                                *
+      *  02 - No record found in ACCNTAB                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDIF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FACCNT   UF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KCOMIT
+      *
+      *****************************************************************
+      *
+      ** Local Data Area
+      *
+     ILDA       E DSLDA
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+     IAKEY1       DS                             24
+     I                                        1   6 E2CNUM
+     I                                        7   9 E2CCY
+     I                                       10  190E2ACOD
+     I                                       20  210E2ACSQ
+     I                                       22  24 E2BRCA
+      *
+      *****************************************************************
+      *
+      ** Initialise
+      *
+     C                     EXSR INIT
+      *
+      ** Read through REPRPNPD
+      *
+     C           *LOVAL    SETLLREPRPNPD
+     C                     READ REPRPNPD                 01
+      *
+     C           *IN01     DOWEQ'0'
+      *
+      ** Only process records full account records (i.e. not default)
+      *
+     C           E2VDAT    IFLE NXTDAY
+     C           E2MDAT    ANDGENXTDAY
+     C           E2CNUM    ANDNE*BLANKS
+     C           E2ACOD    ANDNE0
+     C           E2ACSQ    ANDNE0
+     C           E2CCY     ANDNE*BLANKS
+     C           E2BRCA    ANDNE*BLANKS
+     C           E2EVNT    ANDNE'Z'
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     READ REPRPNPD                 01
+      *
+     C                     ENDDO
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialization                              *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Define LDA Dtaara
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *
+     C********** *NAMVAR   DEFN           MPHAS   1                                           CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+     C********** MPHAS     IFNE 'A'                                                           CCB020
+     C           COBST     IFEQ '*YES'                                                        CCB020
+     C                     Z-ADDBJDNWD    NXTDAY  50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    NXTDAY  50
+     C                     ENDIF
+      *
+      ** Key fields
+      *
+     C           KACNT1    KLIST
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2BRCA
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main Processing                                     *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C                     MOVE 'N'       W#NDID  1
+     C                     MOVE 'N'       W#NCID  1
+      *
+      ** Get the corresponding record in ACCNTAB
+      *
+     C           *LOVAL    SETLLACCNTABF
+     C           KACNT1    CHAINACCNTABF             02
+      *
+      ** If account is found and not closed, check if Next Credit/Debot Capitali-
+      ** sation Dates needs to be updated.
+      *
+     C           *IN02     IFEQ '0'
+     C           ACST      ANDNE'C'
+      *
+     C           E2NDID    IFNE NDID
+     C                     Z-ADDE2NDID    NDID
+     C                     MOVE 'Y'       W#NDID
+     C                     ENDIF
+      *
+     C           E2NCID    IFNE NCID
+     C                     Z-ADDE2NCID    NCID
+     C                     MOVE 'Y'       W#NCID
+     C                     ENDIF
+      *
+     C           W#NDID    IFEQ 'Y'
+     C           W#NCID    OREQ 'Y'
+     C                     EXCPTACCNT1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error Processing                                    *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE '*ERROR'  P@RTCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     OACCNTABFE                ACCNT1
+     O                         NDID
+     O                         NCID

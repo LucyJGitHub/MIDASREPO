@@ -1,0 +1,198 @@
+     H        1
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(FNCD1)*TOFILE(UPFNCDTPD)**************************                CUP019 CUP021
+/*X*IB***OVRDBF*FILE(FNCD2)*TOFILE(UPFNCDTPD)**************************                CUP019 CUP021
+/*S*D****RPGBASE*******************************************************                       CUP021
+/*O*R ***OVRDBF*FNCD1*SDFNCDL0*****************************************                       CUP019
+/*O*R ***OVRDBF*FNCD2*SDFNCDL0*****************************************                       CUP019
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP1190 - Compare SD RTS Function codes file                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. CUP019             Date 10Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP006  *CREATE    Date 22Dec99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP019 - Use templates for Action Files.                     *
+      *  CUP006  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 81 Indicators for changed fields
+      *
+     FFNCD1   IF  E                    DISK         KINFSR *PSSR
+     FFNCD2   IF  E           K        DISK         KINFSR *PSSR
+     F********    @FNCDL0                           KRENAMEFNCDF                              CUP019
+     F            SDFNCDD0                          KRENAMEFNCDF                              CUP019
+     FUPFNCDPDO   E                    DISK         KINFSR *PSSR
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+      *
+     IFNCDF
+     I              FQFNCD                          FNCD
+     I              FQRNNR                          RNNR
+     I              FQDRC1                          DRC1
+     I              FQDRC2                          DRC2
+     I              FQCRC1                          CRC1
+     I              FQCRC2                          CRC2
+     I              FQVWIN                          VWIN
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C                     READ FNCD1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+     C           FQFNCD    CHAINFNCDF                3069
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode
+     C           *IN30     IFEQ *ON
+     C                     MOVE MODE      FQACTC
+     C                     WRITEUPFNCDD0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'
+     C           MODE      IFEQ 'D'
+      *
+      * If record found then look for any differences.
+     C           *IN30     IFEQ *OFF
+     C                     MOVE 'A'       FQACTC
+      * Function Code Narrative
+     C           FQRNNR    IFNE RNNR
+     C                     SETON                     70
+     C                     ENDIF
+      * Debit Tran. Code No.1
+     C           FQDRC1    IFNE DRC1
+     C                     SETON                     71
+     C                     ENDIF
+      * Debit Tran. Code No.2
+     C           FQDRC2    IFNE DRC2
+     C                     SETON                     72
+     C                     ENDIF
+      * Credit Tran. Code No.1
+     C           FQCRC1    IFNE CRC1
+     C                     SETON                     73
+     C                     ENDIF
+      * Credit Tran. Code No. 2
+     C           FQCRC2    IFNE CRC2
+     C                     SETON                     74
+     C                     ENDIF
+      * Validate/Warning Ind.
+     C           FQVWIN    IFNE VWIN
+     C                     SETON                     75
+     C                     ENDIF
+      *
+     C                     MOVEA*IN,70    INTEST  6
+     C                     MOVE INTEST    INTNUM  60
+      * If any indicators are set on then write record
+     C           INTNUM    IFNE 0
+     C                     WRITEUPFNCDD0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Set values to write second record
+     C                     MOVELRNNR      FQRNNR
+     C                     MOVELDRC1      FQDRC1
+     C                     MOVELDRC2      FQDRC2
+     C                     MOVELCRC1      FQCRC1
+     C                     MOVELCRC2      FQCRC2
+     C                     MOVELVWIN      FQVWIN
+      *
+      *
+     C                     WRITEUPFNCDD0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Read next record
+     C                     MOVEA'000000'  *IN,70
+     C                     MOVEA'0'       *IN,78
+     C                     READ FNCD1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

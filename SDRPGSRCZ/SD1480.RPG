@@ -1,0 +1,951 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Initiate market data feed')                   *
+/*XBIA*: OVRDBF MDFIL0 SDMDFIL0 SHARE(*NO)                          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1480 - Initiate Market Data Feed                           *
+      *                                                               *
+      *  Function:  This program resets the tolerance flags for all   *
+      *             the requests and sends a 'start' message to the   *
+      *             Market Watch application for each data feed       *
+      *             request that was active at the previous input     *
+      *             cycle termination.                                *
+      *  (phase(s)) I/C                                               *
+      *                                                               *
+      *  Called By: SDC1480 - Initiate MDF                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196570             Date 06Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 13Jul00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CSD006 - Market Data Feeds                                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** MDF Data Requests
+     FSDMDFRPDIF  E                    DISK         KINFSR *PSSR
+      *
+      ** Node Request message file
+     FSDDRQIPDO   E                    DISK         KINFSR *PSSR      UC
+     F                                              KCOMIT
+      *
+      ** MDF Data Requests
+     FSDMDFRL0UF  E           K        DISK         KINFSR *PSSR
+     F            SDMDFRD0                          KRENAMEMDFRL0
+     F                                              KCOMIT
+      *
+      ** MDF Data Requests Item
+     FMDFIL0  UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      ** MDF Data Requests Item selected by tolerance equal to 'Y'
+     FSDMDFIL1UF  E           K        DISK         KINFSR *PSSR
+     F            SDMDFID0                          KRENAMEMDFIL1
+     F                                              KCOMIT
+      *
+      ** Securities
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Currency file
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Depot positions
+     FDPOSS   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Base Rates
+     FSDBSRTL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - Error writing/updating file                           *
+      *   81  - EOF indicator for READ/E                              *
+      *   82  - EOF indicator for CHAIN                               *
+      *   83  - SETLL operation                                       *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Program Termination                                   *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *  SRMAIN - Detail Processing                                   *
+      *  SRTERM - Program Termination                                 *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  SRMDFI - DeleteS All Items defined for a particular Req.     *
+      *  SRMAPC - Call AOMAPCR0 to get API type                       *
+      *  SRSPOT - Initialise Spot Rates                               *
+      *  SRFWDR - Initialise Forward Rates                            *
+      *  SRBORW - Initialise Borrow Rates                             *
+      *  SRLEND - Initialise Lending Rates                            *
+      *  SRSECS - Initialise Securities                               *
+      *  SRBSRT - Initialise Base Rate                                *
+      *                                                               *
+      *  SD1460   - MDF Messaging                                     *
+      *  AOMAPCR0 - Access Object for Mapping Code                    *
+      *  AOBANKR0 - Access Object for Bank Details                    *
+      *  AOMDFCR0 - Access Object for MDF ICD                         *
+      *  DBERRCTL - Dbase Error Processing                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ISDMDFRD0
+      ** Rename MDF request fields
+      *
+     I              MRRECI                          RNRECI
+     I              MRREQI                          RNREQI
+     I              MRDESC                          RNDESC
+     I              MRMAPC                          RNMAPC
+     I              MRFRST                          RNFRST
+     I              MRLAST                          RNLAST
+     I              MRITRV                          RNITRV
+     I              MRSP01                          RNSP01
+     I              MRSP02                          RNSP02
+     I              MRSP03                          RNSP03
+     I              MRSP04                          RNSP04
+     I              MRSP05                          RNSP05
+     I              MRSP06                          RNSP06
+     I              MRSP07                          RNSP07
+     I              MRSP08                          RNSP08
+     I              MRSP09                          RNSP09
+     I              MRSP10                          RNSP10
+     I              MRACCY                          RNACCY
+     I              MRASEC                          RNASEC
+     I              MRASBP                          RNASBP
+     I              MRABRT                          RNABRT
+     I              MRREFD                          RNREFD
+     I              MRACTF                          RNACTF
+     I              MRTOLX                          RNTOLX
+     I              MRDTSC                          RNDTSC
+     I              MRLRQT                          RNLRQT
+     I              MRMSGC                          RNMSGC
+     I              MRLCD                           RNLCD
+     I              MRTYLC                          RNTYLC
+     I              MRTNLU                          RNTNLU
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy data structure used by access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy data structure used by access programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDMDFC    E DSSDMDFCPD
+      ** External data structures for MDF ICD
+      *
+     ISDMAPC    E DSSDMAPCPD
+      ** External data structures for MDF Mapping Codes
+      *
+     IPMDFR     E DSSDMDFRPD
+      ** MDF Request DS used as parameter to SD1460
+      *
+     I              MRRECI                          INRECI
+     I              MRREQI                          INREQI
+     I              MRDESC                          INDESC
+     I              MRMAPC                          INMAPC
+     I              MRFRST                          INFRST
+     I              MRLAST                          INLAST
+     I              MRITRV                          INITRV
+     I              MRSP01                          INSP01
+     I              MRSP02                          INSP02
+     I              MRSP03                          INSP03
+     I              MRSP04                          INSP04
+     I              MRSP05                          INSP05
+     I              MRSP06                          INSP06
+     I              MRSP07                          INSP07
+     I              MRSP08                          INSP08
+     I              MRSP09                          INSP09
+     I              MRSP10                          INSP10
+     I              MRACCY                          INACCY
+     I              MRASEC                          INASEC
+     I              MRASBP                          INASBP
+     I              MRABRT                          INABRT
+     I              MRREFD                          INREFD
+     I              MRACTF                          INACTF
+     I              MRTOLX                          INTOLX
+     I              MRDTSC                          INDTSC
+     I              MRLRQT                          INLRQT
+     I              MRMSGC                          INMSGC
+     I              MRLCD                           INLCD
+     I              MRTYLC                          INTYLC
+     I              MRTNLU                          INTNLU
+      *
+     ISDMDFR      DS
+     I                                        1   1 RNRECI
+     I                                        2  33 RNREQI
+     I                                       34  63 RNDESC
+     I                                       64  95 RNMAPC
+     I                                    P  96  980RNFRST
+     I                                    P  99 1010RNLAST
+     I                                    P 102 1040RNITRV
+     I                                    P 105 1070RNSP01
+     I                                    P 108 1100RNSP02
+     I                                    P 111 1130RNSP03
+     I                                    P 114 1160RNSP04
+     I                                    P 117 1190RNSP05
+     I                                    P 120 1220RNSP06
+     I                                    P 123 1250RNSP07
+     I                                    P 126 1280RNSP08
+     I                                    P 129 1310RNSP09
+     I                                    P 132 1340RNSP10
+     I                                      135 135 RNACCY
+     I                                      136 136 RNASEC
+     I                                      137 137 RNASBP
+     I                                      138 138 RNABRT
+     I                                      139 139 RNREFD
+     I                                      140 140 RNACTF
+     I                                      141 141 RNTOLX
+     I                                      142 173 RNDTSC
+     I                                    P 174 1760RNLRQT
+     I                                      177 177 RNMSGC
+     I                                    P 178 1800RNLCD
+     I                                      181 181 RNTYLC
+     I                                    P 182 1840RNTNLU
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Initial Processing.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Program Termination.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Detail Processing                                   *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR                           *** SRMAIN ***
+      *
+      ** Retrieve each requests by reading from the requests detail file
+      *
+     C                     READ SDMDFRPD                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Refresh daily and populate all ccys is enabled
+      *
+     C           RNREFD    IFEQ 'Y'
+     C           RNACCY    IFEQ 'Y'
+      *
+      ** Delete all the items that matches the request from the item lists
+      *
+     C                     EXSR SRMDFI
+      *
+      ** Get data source overrides of each API type for each currencies
+      *
+     C                     READ SDCURRL0                 81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+     C                     MOVELRNMAPC    WMAPCD 32
+      *
+      ** Determine API type thru mapping codes of each requests
+      *
+     C                     EXSR SRMAPC
+      *
+     C                     SELEC
+      *
+      ** Initialise Spot Rates
+      *
+     C           MCAPIT    WHEQ 'S'
+     C                     EXSR SRSPOT
+      *
+      ** Initialise Forward Rates
+      *
+     C           MCAPIT    WHEQ 'F'
+     C                     EXSR SRFWDR
+      *
+      ** Initialise Borrow Rates
+      *
+     C           MCAPIT    WHEQ 'B'
+     C                     EXSR SRBORW
+      *
+      ** Initialise Lending Rates
+      *
+     C           MCAPIT    WHEQ 'L'
+     C                     EXSR SRLEND
+      *
+     C                     ENDSL
+      *
+     C                     READ SDCURRL0                 81
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Refresh daily and populate all securities is enabled
+      *
+     C           RNASEC    IFEQ 'Y'
+      *
+      ** Delete all the items that matches the request from the item lists
+      *
+     C                     EXSR SRMDFI
+      *
+      ** Initialise Securities
+      *
+     C                     READ SECTY                    81
+      *
+     C           *IN81     DOWEQ*OFF
+     C                     EXSR SRSECS
+     C                     READ SECTY                    81
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Refresh daily and populate all securities positions is enabled
+      *
+     C           RNASBP    IFEQ 'Y'
+      *
+      ** Delete all the items that matches the request from the item lists
+      *
+     C                     EXSR SRMDFI
+      *
+      ** Initialise Depot positions
+      *
+     C                     READ DPOSS                    81
+     C                     MOVE *BLANK    WDSSC  10
+      *
+     C           *IN81     DOWEQ*OFF
+     C           DSSC      IFNE WDSSC
+     C                     MOVELDSSC      WDSSC
+     C           DSSC      CHAINSECTY                82
+     C           *IN82     IFEQ *OFF
+     C                     EXSR SRSECS
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ DPOSS                    81
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Refresh daily and populate all base rates is enabled
+      *
+     C           RNABRT    IFEQ 'Y'
+      *
+      ** Delete all the items that matches the request from the item lists
+      *
+     C                     EXSR SRMDFI
+      *
+      ** Initialise Base Rate
+      *
+     C                     READ SDBSRTL0                 81
+      *
+     C           *IN81     DOWEQ*OFF
+     C                     EXSR SRBSRT
+     C                     READ SDBSRTL0                 81
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Activate requests if active feed flag is set to 'Y'
+      *
+     C           RNACTF    IFEQ 'Y'
+     C                     CALL 'SD1460'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM *BLANK    PMSGD 256
+     C                     PARM *BLANK    PERRC  10
+     C                     PARM '*START'  PMODE  10
+     C                     PARM SDMDFR    PMDFR
+     C                     ENDIF
+      *
+      ** Reset Requests last request time and flags (Tolerance and Message
+      ** complete flags)
+      *
+     C           RNREQI    CHAINSDMDFRL0             82
+      *
+     C           *IN82     IFEQ *OFF
+     C           RNACTF    IFEQ 'Y'
+     C                     Z-ADDINLRQT    MRLRQT
+     C                     MOVELINMSGC    MRMSGC
+     C                     ELSE
+     C                     Z-ADD*ZERO     MRLRQT
+     C                     MOVEL*BLANK    MRMSGC
+     C                     ENDIF
+     C                     MOVEL*BLANK    MRTOLX
+     C                     UPDATMDFRL0                 80
+      *
+      ** Error updating file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            *************
+     C                     MOVEL'SDMDFRL0'DBFILE           * DBERR 011 *
+     C                     MOVELRNREQI    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If refresh list daily not requested, reset data items
+      *
+     C           RNREFD    IFNE 'Y'
+     C                     MOVELRNREQI    WREQID
+     C           KYMDFI    SETLLSDMDFIL1                 83
+     C           *IN83     IFEQ *ON
+     C           KYMDFI    READESDMDFIL1                 81
+      *
+     C           *IN81     DOWEQ*OFF
+     C                     MOVE *BLANK    MITOLX
+     C                     UPDATMDFIL1                 80
+      *
+      ** Error updating file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            *************
+     C                     MOVEL'SDMDFIL1'DBFILE           * DBERR 012 *
+     C                     MOVELRNREQI    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           KYMDFI    READESDMDFIL1                 81
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SDMDFRPD                 80
+      *
+      ** Set pointer to the first record for each detail file if
+      ** another request has been read
+      *
+     C           *IN80     IFEQ *OFF
+     C           *LOVAL    SETLLSDCURRL0
+     C           *LOVAL    SETLLSECTY
+     C           *LOVAL    SETLLDPOSS
+     C           *LOVAL    SETLLSDBSRTL0
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMDFI - Deletes All Items defined for a particular          *
+      *           Request.                                            *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMDFI    BEGSR                           *** SRMDFI ***
+      *
+     C                     MOVELRNREQI    WREQID
+      *
+     C           KYMDFI    SETLLMDFIL0                   83
+      *
+     C           *IN83     IFEQ *ON
+     C           KYMDFI    READEMDFIL0                   81
+      *
+     C           *IN81     DOWEQ*OFF
+     C                     DELETSDMDFID0               80
+      *
+      ** Error updating file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            *************
+     C                     MOVEL'SDMDFIL1'DBFILE           * DBERR 013 *
+     C                     MOVELRNREQI    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C           KYMDFI    READEMDFIL0                   81
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAPC - Calls AOMAPCR0 to get API type                      *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOMAPCR0    - Access Object for Mapping Code details         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAPC    BEGSR                           *** SRMAPC ***
+      *
+     C                     CALL 'AOMAPCR0'
+     C                     PARM *BLANK    WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WMAPCD    WMAPC  32
+     C           SDMAPC    PARM SDMAPC    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            *************
+     C                     MOVEL'SDMAPCPD'DBFILE           * DBERR 004 *
+     C                     MOVELMRMAPC    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSPOT - Initialise Spot Rates                               *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSPOT    BEGSR                           *** SRSPOT ***
+      *
+      ** If the spot rate data source override is defined, compare
+      ** to the current market data source, otherwise compare
+      ** the default spot rate data source to the current market
+      ** data source
+      *
+     C           A6SRDS    IFNE *BLANK
+     C           A6SRDS    ANDEQRNDTSC
+     C           A6SRDS    OREQ *BLANK
+     C           RNDTSC    ANDEQMDDSRS
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELA6CYCD    MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 005 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFWDR - Initialise Forward Rates                            *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFWDR    BEGSR                           *** SRFWDR ***
+      *
+      ** If the forward rate data source override is defined, compare
+      ** to the current market data source, otherwise compare to
+      ** the default forward rate data source to the current market
+      ** data source
+      *
+     C           A6FRDS    IFNE *BLANK
+     C           A6FRDS    ANDEQRNDTSC
+     C           A6FRDS    OREQ *BLANK
+     C           RNDTSC    ANDEQMDDFRS
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELA6CYCD    MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 006 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBORW - Initialise Borrow Rates                             *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBORW    BEGSR                           *** SRBORW ***
+      *
+      ** If the borrow rate data source override is defined, compare
+      ** to the current market data source, otherwise compare to
+      ** the default borrow rate data source to the current market
+      ** data source
+      *
+     C           A6BODS    IFNE *BLANK
+     C           A6BODS    ANDEQRNDTSC
+     C           A6BODS    OREQ *BLANK
+     C           RNDTSC    ANDEQMDDBOS
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELA6CYCD    MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 007 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLEND - Initialise Lending Rates                            *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLEND    BEGSR                           *** SRLEND ***
+      *
+      ** If the lending rate data source override is defined, compare
+      ** to the current market data source, otherwise compare to
+      ** the default lending rate data source to the current market
+      ** data source
+      *
+     C           A6LEDS    IFNE *BLANK
+     C           A6LEDS    ANDEQRNDTSC
+     C           A6LEDS    OREQ *BLANK
+     C           RNDTSC    ANDEQMDDLES
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELA6CYCD    MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 008 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSECS - Initialise Securities                               *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSECS    BEGSR                           *** SRSECS ***
+      *
+      ** If the sec. price data source override is defined, compare
+      ** to the current market data source, otherwise compare to
+      ** the default sec. price data source to the current market
+      ** data source
+      *
+     C           SPID      IFNE *BLANK
+      *
+     C           SPDS      IFNE *BLANK
+     C           SPDS      ANDEQRNDTSC
+     C           SPDS      OREQ *BLANK
+     C           RNDTSC    ANDEQMDDSPS
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELSESN      MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 009 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBSRT - Initialise Base Rate                                *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBSRT    BEGSR                           *** SRBSRT ***
+      *
+      ** If the base rate data source override is defined, compare
+      ** to the current market data source, otherwise compare to
+      ** the default base rate data source to the current market
+      ** data source
+      *
+     C           BAFRNT    IFNE *BLANK
+      *
+     C           BABRDS    IFNE *BLANK
+     C           BABRDS    ANDEQRNDTSC
+     C           BABRDS    OREQ *BLANK
+     C           RNDTSC    ANDEQMDDBRS
+     C                     MOVE *BLANK    MIDITM
+     C                     MOVELBACYCD    WDITM   5
+     C                     MOVE BABSRC    WDITM
+     C                     MOVELWDITM     MIDITM
+     C                     MOVELRNREQI    MIREQI
+     C                     WRITESDMDFID0               80
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            *************
+     C                     MOVEL'SDMDFIL0'DBFILE           * DBERR 010 *
+     C                     MOVELMIDITM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0    - Access Object for Bank Details                 *
+      *  AOMDFCR0    - Access Object for MDF ICD                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA for Database Error
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define keyfields
+      *
+     C           KYMDFI    KLIST
+     C                     KFLD           WREQID 32
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access MDF ICD
+      *
+     C                     CALL 'AOMDFCR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDMDFC    PARM SDMDFC    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVEL'SDMDFCPD'DBFILE           * DBERR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Write initialisation details
+      *
+     C                     MOVELMDTRGI    QINODK
+     C                     MOVEL'0'       QIACKN
+     C                     MOVEL'0'       QIPING
+     C                     MOVEL'0'       QIDSTR
+     C                     MOVEL'0'       QIAKUP
+      *
+     C                     OPEN SDDRQIPD
+     C                     WRITESDDRQID0               80
+     C                     CLOSESDDRQIPD
+      *
+      ** Error writing file
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVEL'SDDRQIPD'DBFILE           * DBERR 003 *
+     C                     MOVELMDTRGI    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Program Termination                                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+      ** Commit changes
+      *
+     C                     COMIT
+      *
+      ** End of pgm
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR ***
+      *
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     RETRN
+      *
+     C                     ENDSR
+      ****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

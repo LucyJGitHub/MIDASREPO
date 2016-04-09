@@ -1,0 +1,166 @@
+/*********************************************************************/
+/*STD    SVPBASE                                                     */
+/*EXI    MODULE(ZAVORGBRCH   ZAVPROFITC  ZAVCURCODE   ZAVSETACCT     */
+/*EXI           ZAVSETMETH   ZAVBRATCDE  ZAVBROKAGE   ZAVSPRRATE     */
+/*E*I***********ZAVTOTINT****ZSDESC***********************************/                   /*CAS001*/
+/*E*I***********ZAVTOTINT****ZSDESC******ZAVYLDC01********************/        /*CAS001*/ /*CDL020*/
+/*EXI           ZAVTOTINT    ZSDESC      ZAVYLDC01    ZACTOTINT      */                   /*CDL020*/
+/*E*I***********ZAVCALCB**********************************************/       /*BUG9342*/ /*CGL062*/
+/*EXI           ZAVCALCB     ZAMOD11VAL                              */                   /*CGL062*/
+/*EXI    ) SRCMBR(SP6ZA0001) ACTGRP(*CALLER)                         */
+/*EXI    TEXT('Midas SP ZA non-kernel validation functions 1')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Service Program                                     */
+/*                                                                   */
+/*       SP6ZA0001 - ZA Core Non-kernel Validation Functions 1       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. AR814519           Date 13Mar15              */
+/*       Prev Amend No. AR755195           Date 13Dec13              */
+/*                      MD000091           Date 23May13              */
+/*                      CLE134             Date 01Aug12              */
+/*                      AR863274           Date 11Nov11              */
+/*                      CRE075             Date 06Dec10              */
+/*                      CER059             Date 19Jul10              */
+/*                      BUG23140           Date 10Mar09              */
+/*                      BUG21437           Date 28Oct08              */
+/*                      CER043             Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CGL062             Date 20Jul06              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256564             Date 17Sep08              */
+/*                      249905             Date 28Aug07              */
+/*                      CRE026             Date 24May06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSD031             Date 10Apr06              */
+/*                      BUG11040           Date 28Mar06              */
+/*                      237774             Date 29Dec05              */
+/*                      CSD027             Date 13Dec05              */
+/*                      BUG10695           Date 25Feb06              */
+/*                      BUG9342            Date 14Feb06              */
+/*                      CLE042             Date 06Sep05              */
+/*                      CPK024             Date 25Apr05              */
+/*                      CDL038             Date 10May05              */
+/*                      CAS008             Date 16Jun04              */
+/*                      CLE025             Date 20Oct03              */
+/*                      CDL020             Date 03Feb04              */
+/*                      CGL029             Date 01Sep03              */
+/*                      CAS005             Date 16Dec02              */
+/*                      208241             Date 22Aug02              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      208051             Date 29Aug02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CAS001             Date 23Nov01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014  *CREATE    Date 09Oct01              */
+/*       ----------------------------------------------              */
+/*                      CSE016             Date 10Jan01              */
+/*                      CSD006             Date 17May01              */
+/*                      CSD009             Date 10Oct00              */
+/*                      179732             Date 26Jun00              */
+/*                      174745             Date 09Feb00              */
+/*                      164565             Date 11Aug99              */
+/*                      CAP006             Date 21Dec98              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR814519 - Allow negative rate. Recompile for ZAVTOTINT     */
+/*                - Applied for MD033488                             */
+/*       AR755195 - Get base rate from SDBSHSPD when transaction is  */
+/*                  back valued. (Child: AR755196) (Recompile)       */
+/*                - Applied for MD024110                             */
+/*       MD000091 - Event Codes Substitution (Recompile)             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       AR863274 - Valid GL account not accepted (Recompile)        */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG23140 - Total interest is not defaulted for CL/CD        */
+/*                  (Recompile)                                      */
+/*       BUG21437 - Defaulting of total interest is done on incorrect*/
+/*                  deal types (Recompile)                           */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting */
+/*                (Recompile)                                        */
+/*       CGL062 - Moduls 11 Check on Retail Account Number           */
+/*       256564 - Recompile due to PF changes done by fix 256330     */
+/*       249905 - Recompiled due to changes in MODULE/ZAVBRATCDE.    */
+/*       CRE026 - Consumer Banking (Recompile)                       */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)       */
+/*       BUG11040 - Recompiled due to changes in module ZAVYLDC01    */
+/*       237774 - Recompiled due to changes in module ZAVSETACCT.    */
+/*       CSD027 - Conversion Of Customer Number to Alpha             */
+/*       BUG10695 - Wrong Total Interest being computed for          */
+/*                  fiduciary deals.  (Recompile)                    */
+/*       BUG9342 - Incorrect error message - MMM0429                 */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                  *
+/*       CPK024 - Removed previous signatures                        */
+/*       CDL038 - Extended Deal Sub Type (Recompile)                  *
+/*       CAS008 - IAS 39 Enhancements (Recompile)                     *
+/*       CLE025 - Credit Lines (Recompile)                           */
+/*       CDL020 - Apply Base Rate at Value Date                      */
+/*       CGL029 - Increase Account Code to 10 digits                 */
+/*       CAS005 - Enhancements to CAS001, CAS002 and CAS004          */
+/*                (Recompile)                                        */
+/*       208241 - Recompiled over changed ZSDESC.                    */
+/*       208051 - Recomplie over changed ZAVTOTINT and ZAVSPRRATE.   */
+/*       CAS001 - Net Present Value (NPV) Accounting (Add ZAVYLDC01) */
+/*       CPK014 - Release 4 packaging:                               */
+/*                - Rebuilding of the service program structure to   */
+/*                  reduce the number of objects, simplify the       */
+/*                  system and reduce signature violation problems.  */
+/*                - The original header box entries have been        */
+/*                  retained for reference.                          */
+/*                - The following DBA3 service programs have been    */
+/*                  put into this one: SP460VAL.                     */
+/*       ----------------------------------------------------------  */
+/*       CSE016 - Extended Security Descriptions                     */
+/*       CSD006 - Recompiled over changed component.                 */
+/*       CSD009 - PCA Default Matrix Enhancement (Re-compiled)       */
+/*       179732 - Recompiled due to changes to  ZAVPROFITC module.   */
+/*       174745 - Recompile.                                         */
+/*                Put modules not previously contained in service    */
+/*                programs into service programs.                    */
+/*                Also removed modules which should not be included. */
+/*       164565 - Recompiled due to changes to  ZAVTOTINT module .   */
+/*       CAP006 - API service program breakdown                      */
+/*                                                                   */
+/*********************************************************************/
+ 
+             STRPGMEXP  PGMLVL(*CURRENT) LVLCHK(*YES) SIGNATURE(*GEN)
+                EXPORT     SYMBOL(ZAVORGBRCH)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVPROFITC)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVBRATCDE)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVBROKAGE)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVCURCODE)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVSETACCT)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVSETMETH)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVSPRRATE)                                             /*CAP006*/
+                EXPORT     SYMBOL(ZAVTOTINT)                                              /*CAP006*/
+                EXPORT     SYMBOL(ZSDESC)                                                 /*CSE016*/
+/* End of Midas Release 4 -------- Base -----------------------------*/
+                EXPORT     SYMBOL(ZAVYLDC01)                                              /*CAS001*/
+/* End of Midas Release 4.01 ----------------------------------------*/
+                EXPORT     SYMBOL(ZACTOTINT)                                              /*CDL020*/
+                EXPORT     SYMBOL(ZAVCALCB)                                              /*BUG9342*/
+                EXPORT     SYMBOL(ZAMOD11VAL)                                             /*CGL062*/
+/* End of Midas Plus 1.3 --------- Base -----------------------------*/
+             ENDPGMEXP
+             STRPGMEXP  PGMLVL(*PRV) LVLCHK(*YES) SIGNATURE(*GEN)                         /*CGL062*/
+                EXPORT     SYMBOL(ZAVORGBRCH)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVPROFITC)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVBRATCDE)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVBROKAGE)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVCURCODE)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVSETACCT)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVSETMETH)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVSPRRATE)                                             /*CGL062*/
+                EXPORT     SYMBOL(ZAVTOTINT)                                              /*CGL062*/
+                EXPORT     SYMBOL(ZSDESC)                                                 /*CGL062*/
+/* End of Midas Release 4 -------- Base -----------------------------*/                   /*CGL062*/
+                EXPORT     SYMBOL(ZAVYLDC01)                                              /*CGL062*/
+/* End of Midas Release 4.01 ----------------------------------------*/                   /*CGL062*/
+                EXPORT     SYMBOL(ZACTOTINT)                                              /*CGL062*/
+                EXPORT     SYMBOL(ZAVCALCB)                                               /*CGL062*/
+             ENDPGMEXP                                                                    /*CGL062*/
+                                                                                          /*CGL062*/

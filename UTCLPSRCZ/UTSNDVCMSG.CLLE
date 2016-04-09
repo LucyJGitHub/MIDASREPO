@@ -1,0 +1,105 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas UT Send a message for a validity checker')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Utilities module                                 */
+/*                                                                   */
+/*       UTSNDVCMSG - Send a message for a command validity checker  */
+/*                                                                   */
+/*       This function receives a message ID, file and data, and     */
+/*       retrieves the message text; it then sends CPD0006 with      */
+/*       this formatted message as the message data.                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*       Last Amend No. CUP021             Date 12Nov02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CAP002             Date 18Nov97              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Re-write of GENFLDNOS, to make it file driven.     */
+/*                Default to QCPFMSG if sending CPD0006              */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETURNCODE &MSGID &MSGF &MSGDTA +
+                          &PROGRAM &MODULE &PROCEDURE)
+ 
+/*/COPY WNCPYSRC,UTSNDVCMSG01                                           */
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(45)
+ 
+             DCL        VAR(&COMPMSG) TYPE(*CHAR) LEN(3000)
+ 
+/** +
+    The ILE program, module and procedure to which the message should +
+    be sent +
+**/
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MODULE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PROCEDURE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL') /* Named constant +
+                          containing '*LIBL' */
+ 
+/** Externalised declare of the &MSG and &ERR variables **/
+/*/COPY UTCPYSRC,DCL_MSG                                             */
+/*/COPY UTCPYSRC,DCL_EXIST                                           */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC,UTSNDVCMSG02                                           */
+ 
+/** +
+    Retrieve the complete message text +
+**/
+             CALLPRC    PRC(ZAMSGRTVMS) PARM(&RETURNCODE &COMPMSG +
+                          &MSGID &MSGDTA &MSGF &LIBL '1')
+ 
+/** +
+    Send the standard validity checker error message, with the +
+    retrieved test as the message data. +
+**/
+             CHGVAR     VAR(&MSGID) VALUE('CPD0006')
+             CHGVAR     VAR(&MSGF) VALUE('QCPFMSG')                                       /*CUP021*/
+             CHGVAR     VAR(&MSG) VALUE(&COMPMSG)
+ 
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGF) MSGDTA('0000' *CAT &MSG) +
+                          TOPGMQ(*PRV (&PROCEDURE &MODULE +
+                          &PROGRAM)) MSGTYPE(*DIAG)
+ 
+ 
+/*/COPY WNCPYSRC,UTSNDVCMSG03                                           */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,UTSNDVCMSG04                                           */
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('Error     ')
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,UTSNDVCMSG05                                           */
+ 
+             ENDPGM

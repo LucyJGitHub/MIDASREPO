@@ -1,0 +1,98 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CRT001  *CREATE    Date 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTINTR - Calculate interest                        *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @ACNO  - Retail account number                     *
+     C*            @DACP  - Account to post debit interest            *
+     C*            @CACP  - Account to post credit interest           *
+     C*            @MADI  - Manual adjustment debit interest          *
+     C*            @MACI  - Manual adjustment credit interest         *
+     C*            @GADI  - Generated adjustment debit interest       *
+     C*            @GACI  - Generated adjustment credit interest      *
+     C*            @DAIC1 - Debit accrual interest                    *
+     C*            @CAIC1 - Credit accrual interest                   *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @INTR  - Net interest                              *
+     C*            @DRINT - Debit interest                            *
+     C*            @CRINT - Credit interest                           *
+     C*                                                               *
+     C*****************************************************************
+     C           RTINTR    BEGSR                           ** RTINTR **
+     C*
+     C** Define parameters
+     C*
+     C                     Z-ADD@ACNO     @ACNO  100
+     C**********           MOVEL@DACP     @DACP  15                                           CGL029
+     C**********           MOVEL@CACP     @CACP  15                                           CGL029
+     C                     MOVEL@DACP     @DACP  21                                           CGL029
+     C                     MOVEL@CACP     @CACP  21                                           CGL029
+     C                     Z-ADD@MADI     @MADI  130
+     C                     Z-ADD@MACI     @MACI  130
+     C                     Z-ADD@GADI     @GADI  130
+     C                     Z-ADD@GACI     @GACI  130
+     C                     Z-ADD@DAIC1    @DAIC1 130
+     C                     Z-ADD@CAIC1    @CAIC1 130
+     C                     Z-ADD@INTR     @INTR  150
+     C                     Z-ADD@DRINT    @DRINT 150
+     C                     Z-ADD@CRINT    @CRINT 150
+     C                     MOVE @ACNO     @ACNOA 10
+     C                     Z-ADDCINT      CINT   150
+     C                     Z-ADDDINT      DINT   150
+     C*
+     C           @DACP     IFNE *BLANKS
+     C           @DACP     ANDNE@ACCN
+     C           @DACP     ANDNE@ACNOA
+     C                     Z-ADD0         @DRINT
+     C                     ELSE
+     C           @MADI     ADD  @GADI     @DRINT
+     C                     ADD  @DAIC1    @DRINT
+     C                     END
+     C*
+     C           @CACP     IFNE *BLANKS
+     C           @CACP     ANDNE@ACCN
+     C           @CACP     ANDNE@ACNOA
+     C                     Z-ADD0         @CRINT
+     C                     ELSE
+     C           @MACI     ADD  @GACI     @CRINT
+     C                     ADD  @CAIC1    @CRINT
+     C                     END
+     C*
+     C           @DRINT    SUB  @CRINT    @INTR
+     C*
+     C** Calculate additonal interest only if last change date is lower then run
+     C*  date
+     C*
+     C                     Z-ADD0         CINT
+     C                     Z-ADD0         DINT
+     C** GET INFORMATION FOR INTEREST CALCULATION
+     C           RHISD     IFLT RUND
+     C                     OPEN ACCNT
+     C           KLACNT    CHAINACCNT               N99
+     C                     CLOSEACCNT
+     C                     EXSR INTCAL
+     C                     END
+     C                     ADD  DINT      @INTR
+     C                     SUB  CINT      @INTR
+     C                     ADD  CINT      @CRINT
+     C                     ADD  DINT      @DRINT
+     C*
+     C                     ENDSR
+     C*****************************************************************

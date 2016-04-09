@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*E*I****TEXT('Midas*SM*Create*XPLIB*and*GXPLIB*objects')*************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000084 - Create XPLIB and GXPLIB objects                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP042 *REDUNDANT  Date 11Nov14              */
+/*       Prev Amend No. CUP005  *CREATE    Date 15Sep10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP042 - Changes for Bridge deliverable data split          */
+/*       CUP005 - Create output queues in XPLIB and GXPLIB.          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBGRP &LAYER)
+ 
+             DCL        VAR(&LIBGRP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)
+/* Parameters for QCLSCAN. */
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(2) VALUE('**')
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(2) VALUE(2)
+             DCL        VAR(&TRANSLATE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
+ 
+             DCLF       FILE(SMSETULB)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&XPLIB) VALUE(&LIBGRP *TCAT 'XPLIB')
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&XPLIB) VALUE(&LIBGRP *TCAT 'GXPLIB')
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Scan object name to replace '**' with system ID. */
+             CHGVAR     VAR(&RESULT) VALUE('0')
+             CHGVAR     VAR(&STRLEN) VALUE(10)
+             CALL       PGM(QCLSCAN) PARM(&DFNAME &STRLEN &STRPOS +
+                          &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                          &RESULT)
+             IF         COND(&RESULT *GT 0) THEN(DO)
+                CHGVAR     VAR(%SST(&DFNAME &RESULT 2 )) VALUE(&LIBGRP)
+             ENDDO
+ 
+/* Scan command to replace '**' with system ID. */
+SCAN:
+             CHGVAR     VAR(&RESULT) VALUE('0')
+             CHGVAR     VAR(&STRLEN) VALUE(300)
+             CALL       PGM(QCLSCAN) PARM(&DFCMD &STRLEN &STRPOS +
+                          &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                          &RESULT)
+             IF         COND(&RESULT *GT 0) THEN(DO)
+                CHGVAR     VAR(%SST(&DFCMD &RESULT 2 )) VALUE(&LIBGRP)
+                GOTO       CMDLBL(SCAN)
+             ENDDO
+ 
+/* Special processing for certain object types. */
+             IF         COND(%SST(&DFTYPE 1 1) *EQ '*') THEN(DO)
+                CHKOBJ     OBJ(&XPLIB/&DFNAME) OBJTYPE(&DFTYPE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CALL       PGM(QCMDEXC) PARM(&DFCMD 300)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

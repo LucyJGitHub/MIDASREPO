@@ -1,0 +1,2394 @@
+     H        1
+      *****************************************************************
+/*OVR *  OVRDBF FILE(GZSDBANK) TOFILE(GZSDBANKL2)                     *                       CSD031
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Customer Group Maintenance')
+/*OVRF*: OVRDBF FILE(TABLE2) TOFILE(TABCGU) SHARE(*NO)                *
+/*OVRF*: OVRDBF FILE(TABLE3) TOFILE(TABCGU) SHARE(*NO)                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Standing Data Module
+     F*                                                               *
+     F*  SD2351R - CUSTOMER GROUP MAINTENANCE                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CSC043             Date 18Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 244285             Date 08Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 15Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Aug98               *
+     F*                 062530             DATE 18NOV93               *
+     F*                 062531             DATE 17NOV93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSC043 - MidasPlus IASP Enablement                           *
+      *  244285 - Remove action code 'I' from the maintenance.        *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes (Recompile).                      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  062530 - Customer group maintenance gives wrong error        *
+     F*           if no delivered data in TABLEV4 .                   *
+     F*  062531 - Customer group maintenance allows title only        *
+     F*           accounts to be entered. Also, it should check that  *
+     F*           only Income or Expense account codes are defined.   *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSD2351R#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD                            CSD031
+     FTABTBRE IF  E                    DISK                           UC
+     F***TABLE2  UF  E           K        DISK         KCOMIT       A                         CSD031
+     FTABLE2  UF  E           K        DISK         KCOMIT       A    UC                      CSD031
+     F            TABTB10F                          KIGNORE
+     F**********  TABTE10F                          KIGNORE                                   CGL029
+     F            TABLETAF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F***TABLE3  UF  E           K        DISK         KCOMIT                                 CSD031
+     FTABLE3  UF  E           K        DISK         KCOMIT            UC                      CSD031
+     F            TABTB10F                          KIGNORE
+     F**********  TABTE10F                          KIGNORE                                   CGL029
+     F            TABLEV4F                          KIGNORE
+     F/EJECT
+     FGPRECGL0UF  E           K        DISK                      A    UC                      CSD031
+     F            TABLEV4F                          KRENAMETABLEVG                            CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     FSDARCGL0UF  E           K        DISK                           UC                      CSD031
+     F            TABLEV4F                          KRENAMESDARCGR0                           CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     FSDARCGL1IF  E           K        DISK                           UC                      CSD031
+     F            TABLEV4F                          KRENAMESDARCGR1                           CSD031
+     F                                              KCOMIT                                    CSD031
+     F                                              KINFSR *PSSR                              CSD031
+     FGPZONEL0IF  E           K        DISK                                                   CSD031
+      *                                                                                       CSD031
+      ** Zone                                                                                 CSD031
+      *                                                                                       CSD031
+     FGZSDBANKIF  E           K        DISK                           UC                      CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      *                                                                                       CSD031
+      ** Bank ICD's keyed on date of next working day                                         CSD031
+      *                                                                                       CSD031
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*****************************************************************
+     F*                                                               *
+     F*      21          ERROR ON ACTION CODE (002)                   *
+     F*      22          ERROR ON GROUP CODE (001)                    *
+     F*                                                               *
+     F*      23          ERROR ON MAX DEBIT BALANCE INDICATOR         *
+     F*      24          ERROR ON MAX DEBIT BALANCE ACCT CODE         *
+     F*      25          ERROR ON ACCOUNT INDICATOR                   *
+     F*      26          ERROR ON ACCOUNT ACCT CODE                   *
+     F*      27          ERROR ON DEBIT INTEREST INDICATOR            *
+     F*      28          ERROR ON DEBIT INTEREST ACCT CODE            *
+     F*      29          ERROR ON INACTIVE INDICATOR                  *
+     F*      30          ERROR ON INACTIVE ACCT CODE                  *
+     F*      31          ERROR ON MINIMUM BALANCE INDICATOR           *
+     F*      32          ERROR ON MINIMUM BALANCE ACCT CODE           *
+     F*      33          ERROR ON DAILY PAYMENTS INDICATOR            *
+     F*      34          ERROR ON DAILY PAYMENTS ACCT CODE            *
+     F*      35          ERROR ON FIXED INDICATOR                     *
+     F*      36          ERROR ON FIXED ACCT CODE                     *
+     F*                                                               *
+     F*      40          SYSTEM SET-UP FLAG IS ON                     *
+     F*      41          INVALID INITIAL SCREEN                       *
+     F*      42          INVALID DETAIL SCREEN                        *
+     F*      43          INVALID COMMISSION INDICATOR                 *
+     F*      44          INVALID COMMISSION ACCOUNT                   *
+     F*                                                               *
+     F*      45          GRP CODE RECORD EXISTS                       *
+     F*      46          UNSUCCESFUL UPDATE                           *
+     F*                                                               *
+     F*      48          ACTION CODE 'I'                              *
+     F*      49          ACTION CODE 'A'                              *
+     F*      51          ACTION CODE 'E'                              *
+     F*                                                               *
+     F*      53          GENERAL WORK INDICATOR                       *
+     F*      54          GENERAL WORK INDICATOR                       *
+     F*      59          GENERAL WORK INDICATOR                       *
+     F*                                                               *
+     F*                                                               *
+     F*      80          PROTECT OUTPUT FIELDS - INITIAL SCREEN       *
+     F*      81          NON-DISPLAY FIELDS - DETAIL SCREEN           *
+     F*      82          PROTECT OUTPUT FIELDS - DETAIL SCREEN        *
+     F*      83          NON-DISPLAY ERROR CODE LINE                  *
+     F*      84          NON-DISPLAY ERROR MESSAGE LINE               *
+     F*                                                               *
+     F*      KC          F3, END OF PROGRAM REQUEST                   *
+     F*      KL          F12, INITIAL SCREEN REQUEST                  *
+     F*                                                               *
+     F*      U7U8        DATABASE ERROR INDS.                         *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*********           ERMSG   1   5 47               ERROR MESSAGES   062531
+     E*********           ERMSG   1   7 47               ERROR MES 062531 062530
+     E                    ERMSG   1   8 47               ERROR MESSAGES   062530
+     E                    ERCD       21  4               ERROR CODE OUTPUT
+     E                    COMI        7  1               COMM. INDICATORS
+     E**********          COMA        7  4               COMM. ACCOUNTS                       CGL029
+     E**********          COMP        7  4               COMM. ACCOUNTS                       CGL029
+     E                    COMA        7 10                                                    CGL029
+     E                    COMP        7 10                                                    CGL029
+     E                    COMO        7  1               COMM. ACCOUNTS
+     E                    CPY@    1   1 80
+     E                    CMDT    1   1 54                                                    CSD031
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMMMISION INDICATOR AND ACCOUNTS
+     I*
+     I            DS
+     I                                        1   1 MDBI
+     I                                        2   2 ACMI
+     I                                        3   3 DINI
+     I                                        4   4 INAI
+     I                                        5   5 MINI
+     I                                        6   6 DYSI
+     I                                        7   7 FIXI
+     I                                        1   7 DSCOMI
+     I**********                              8  110MDBA                                      CGL029
+     I**********                             12  150ACMA                                      CGL029
+     I**********                             16  190DINA                                      CGL029
+     I**********                             20  230INAA                                      CGL029
+     I**********                             24  270MINA                                      CGL029
+     I**********                             28  310DYSA                                      CGL029
+     I**********                             32  350FIXA                                      CGL029
+     I**********                              8  35 DSCOMA                                    CGL029
+     I                                        8  170MDBA                                      CGL029
+     I                                       18  270ACMA                                      CGL029
+     I                                       28  370DINA                                      CGL029
+     I                                       38  470INAA                                      CGL029
+     I                                       48  570MINA                                      CGL029
+     I                                       58  670DYSA                                      CGL029
+     I                                       68  770FIXA                                      CGL029
+     I                                        8  77 DSCOMA                                    CGL029
+     I*
+     I**   DATA STRUCTURE FOR COMMMISION INDICATOR AND ACCOUNTS
+     I**        (DETAIL SCREEN FIELDS)
+     I*
+     I            DS
+     I                                        1   1 SMDBI
+     I                                        2   2 SACMI
+     I                                        3   3 SDINI
+     I                                        4   4 SINAI
+     I                                        5   5 SMINI
+     I                                        6   6 SDYSI
+     I                                        7   7 SFIXI
+     I                                        1   7 SSCOMI
+     I**********                              8  11 SMDBA                                     CGL029
+     I**********                             12  15 SACMA                                     CGL029
+     I**********                             16  19 SDINA                                     CGL029
+     I**********                             20  23 SINAA                                     CGL029
+     I**********                             24  27 SMINA                                     CGL029
+     I**********                             28  31 SDYSA                                     CGL029
+     I**********                             32  35 SFIXA                                     CGL029
+     I**********                              8  35 SSCOMA                                    CGL029
+     I                                        8  17 SMDBA                                     CGL029
+     I                                       18  27 SACMA                                     CGL029
+     I                                       28  37 SDINA                                     CGL029
+     I                                       38  47 SINAA                                     CGL029
+     I                                       48  57 SMINA                                     CGL029
+     I                                       58  67 SDYSA                                     CGL029
+     I                                       68  77 SFIXA                                     CGL029
+     I                                        8  77 SSCOMA                                    CGL029
+     I*
+     IPDQMSG      DS                           4040                                           CSD031
+      *                                                                                       CSD031
+     I            DS                                                                          CSD031
+     I                                        1 132 ZAMSDA                                    CSD031
+      *                                                                                       CSD031
+     IWDTQ        DS                                                                          CSD031
+     I                                        1  10 WPFNAM                                    CSD031
+     I                                       11  11 WKEYS                                     CSD031
+     I                                       41 251 WDATA                                     CSD031
+      *                                                                                       CSD031
+     I**   DATA STRUCTURE FOR LOTSCN ON COMMITMENT TEXT AREA
+     I*
+     IDSSCN     E DSSD2351R#
+     I              ACTCD                           DSSAC
+     I              SGRPC                           DSSGC
+     I              SGRPN                           DSSGN
+     I              SMDBI                           DSSI1
+     I              SMDBA                           DSSA1
+     I              SACMI                           DSSI2
+     I              SACMA                           DSSA2
+     I              SDINI                           DSSI3
+     I              SDINA                           DSSA3
+     I              SINAI                           DSSI4
+     I              SINAA                           DSSA4
+     I              SMINI                           DSSI5
+     I              SMINA                           DSSA5
+     I              SDYSI                           DSSI6
+     I              SDYSA                           DSSA6
+     I              SFIXI                           DSSI7
+     I              SFIXA                           DSSA7
+     I              #1AACC                          DSSZN                                     CSD031
+     I              #2EACC                          DSSDT                                     CSD031
+     I*
+     I**   DATA STRUCTURE FOR LAST UPDATE DATA.
+     I*
+     I            DS
+     I                                        1   50LCD
+     I                                        6   6 CHTP
+     I                                        7  110TNLU
+     I                                        1  11 LSTC
+     I                                       12  160LCDS
+     I                                       17  17 CHTPS
+     I                                       18  220TNLUS
+     I                                       12  22 LSTCS
+     I*
+     I**  DATA STRUCTURE TO RETRIEVE WSID
+     I*
+     IPSDS       SDS
+     I                                        1  10 ##PGM                                     CSD031
+     I                                      244 253 WSID
+     I                                      245 249 WSID2
+     I                                      254 263 USRID
+     I*
+     I**  DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I*
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I**  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     I*
+     ICMTTXT      DS                            300
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCD
+     I                                       26  35 USRIDX
+     I                                       51 300 LOTSCN
+     I*
+     I** DATA STRUCTURE USED IN THE EVENT OF DATABASE ERRORS
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR DATABASE ERROR FIELDS
+     I*
+     I            DS
+     I                                        1  14 KEY14
+     I                                        1   8 KEY08
+     I                                        9  14 KEY06
+     I*
+     I** DATA STRUCTURE FOR MANIPULATING KEY PRIOR TO CHAIN FUNCTION
+     I*
+     I            DS
+     I**********                              1   5 ZKEY05                                    CGL029
+     I**********                              1   4 ZKEY04                                    CGL029
+     I**********                              5   5 ZKEY01                                    CGL029
+     I                                        1  11 ZKEY05                                    CGL029
+     I                                        1  10 ZKEY04                                    CGL029
+     I                                       11  11 ZKEY01                                    CGL029
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 AGMBIN
+     I*
+     I@1DBRC    E DSGPRECGL0                                                                  CSD031
+     I              RECI                            GRECI                                     CSD031
+     I              RECT                            GRECT                                     CSD031
+     I              ZZ010                           GZZ010                                    CSD031
+     I              GRPN                            GGRPN                                     CSD031
+     I              MDBI                            GMDBI                                     CSD031
+     I              ACMI                            GACMI                                     CSD031
+     I              DINI                            GDINI                                     CSD031
+     I              INAI                            GINAI                                     CSD031
+     I              MINI                            GMINI                                     CSD031
+     I              DYSI                            GDYSI                                     CSD031
+     I              FIXI                            GFIXI                                     CSD031
+     I              TIMV                            GTIMV                                     CSD031
+     I              LCD                             GLCD                                      CSD031
+     I              CHTP                            GCHTP                                     CSD031
+     I              TNLU                            GTNLU                                     CSD031
+     I              MDBA                            GMDBA                                     CSD031
+     I              ACMA                            GACMA                                     CSD031
+     I              DINA                            GDINA                                     CSD031
+     I              INAA                            GINAA                                     CSD031
+     I              MINA                            GMINA                                     CSD031
+     I              DYSA                            GDYSA                                     CSD031
+     I              FIXA                            GFIXA                                     CSD031
+     I              ZONE                            GZONE                                     CSD031
+     I              AACC                            GAACC                                     CSD031
+     I              EACC                            GEACC                                     CSD031
+     I              GPDT                            GGPDT                                     CSD031
+      *                                                                                       CSD031
+     IZMUSER      DS                             17
+     I** DATA AREA OF MENU USER
+     I                                       11  13 DFBM
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I              BJSUC                           SFLG
+     I*
+     ISDACOD    E DSSDACODPD
+     I*
+     I** Account Code
+     I              A5ACTY                          ATYP
+     I              A5TOIN                          TOIN                  062531
+     I              A5ACSC                          ACSC                  062531
+     I*
+     IGPACOD    E DSGPACODL0                                                                  CSD031
+     I*                                                                                       CSD031
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IDSSARD    E DSSCSARDPD                                                                  CSD031
+      * Definition: Switchable Features Accessed Via Access Program.                          CSD031
+      *                                                                                       CSD031
+     I              LCD                             LCDR                                      CSD031
+      *                                                                                       CSD031
+     IJBDTTM      DS                                                                          CSD031
+      * Job date/time                                                                         CSD031
+     I                                        1   70##JDT                                     CSD031
+     I                                        1   10##JCC                                     CSD031
+     I                                        2   30##JYY                                     CSD031
+     I                                        4   50##JMM                                     CSD031
+     I                                        6   70##JDD                                     CSD031
+     I                                        8  130##JTM                                     CSD031
+     I                                        8   90##JHH                                     CSD031
+     I                                       10  110##JNN                                     CSD031
+     I                                       12  130##JSS                                     CSD031
+      *                                                                                       CSD031
+     I              'Accept to Zone:'     C         TXT1                                      CSD031
+     I              'Central Data:  '     C         TXT2                                      CSD031
+     I**********    'XLIB/SDCSNDDTQ'      C         PGMB                               CSD031 CSC043
+     I              'XPLIB/SDCSNDDTQ'     C         PGMB                                      CSC043
+     I********************************************************************
+     I/EJECT
+     C********************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN DBFILE    WBFILE
+     C           *LIKE     DEFN DBKEY     WBKEY
+     C           *LIKE     DEFN DBASE     WBASE
+     C           *LIKE     DEFN RUND      WRUND
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  CONTROL PROCESS
+     C*   ~~~~~~~~~~~~~~~
+     C*
+     C                     EXSR START
+     C*
+     C           *INKC     DOUEQ'1'
+     C                     EXSR INITSC
+     C  NKC                EXSR DETLSC
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     END
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+     C                     CLOSESDARCGL0                                                      CSD031
+     C                     CLOSESDARCGL1                                                      CSD031
+     C                     CLOSETABLE2                                                        CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+      ** Called from Central layer                                                            CSD031
+      *                                                                                       CSD031
+     C                     CLOSEGZSDBANK                                                      CSD031
+     C                     CLOSEGPRECGL0                                                      CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     SETON                     LR
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  START PROCESS
+     C*   ~~~~~~~~~~~~~
+     C*
+     C           START     BEGSR
+     C*
+     C**  ACCESS
+     C*
+     C                     OPEN TABTBRE
+     C           1         CHAINTABTBRE              99
+     C                     CLOSETABTBRE
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    WBKEY            ***************
+     C                     Z-ADD91        WBASE            * DB ERROR 91 *
+     C                     MOVE 'TABTBRE' WBFILE           ***************
+     C                     EXSR *PSSR
+     C                     END
+     C* H/O NOT INSTAL
+     C           CHOV      COMP 'Y'                  717178
+     C         71          MOVE 'N'       COMO,1
+     C         71          MOVE *BLANK    COMP,1
+     C         78          SETON                     79
+     C* TURNOVER NOT INSTAL
+     C           CDTO      COMP 'Y'                  727278
+     C         72          MOVE 'N'       COMO,2
+     C         72          MOVE *BLANK    COMP,2
+     C         78          SETON                     79
+     C* FIXED NOT INSTAL
+     C           FXAC      COMP 'Y'                  737378
+     C         73          MOVE 'N'       COMO,7
+     C         73          MOVE *BLANK    COMP,7
+     C         78          SETON                     79
+     C* DAILY STATEMENT NOT INSTAL
+     C           CNDS      COMP 'Y'                  747478
+     C         74          MOVE 'N'       COMO,6
+     C         74          MOVE *BLANK    COMP,6
+     C         78          SETON                     79
+     C* DEBIT INTEREST  NOT INSTAL
+     C           CDRI      COMP 'Y'                  757578
+     C         75          MOVE 'N'       COMO,3
+     C         75          MOVE *BLANK    COMP,3
+     C         78          SETON                     79
+     C* MINIMUM BALANCE NOT INSTAL
+     C           CMBL      COMP 'Y'                  767678
+     C         76          MOVE 'N'       COMO,5
+     C         76          MOVE *BLANK    COMP,5
+     C         78          SETON                     79
+     C* INACTIVE        NOT INSTAL
+     C           CINA      COMP 'Y'                  777778
+     C         77          MOVE 'N'       COMO,4
+     C         77          MOVE *BLANK    COMP,4
+     C* AT LEAST ONE COMMISSION INSTALED 79 ON
+     C         78          SETON                     79
+     C                     SETOF                     78
+      *                                                                                       CSD031
+     C                     MOVE 'N'       CSD050  1                                           CSD031
+     C                     MOVE *OFF      *IN64                                               CSD031
+     C                     MOVE *OFF      *IN65                                               CSD031
+     C                     MOVE *ON       *IN63                                               CSD031
+      *                                                                                       CSD031
+      ** Access SAR details to see if CSD050 is switched on                                   CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM *BLANKS   @RTCD                                               CSD031
+     C                     PARM '*VERIFY' @OPTN                                               CSD031
+     C                     PARM 'CSD050'  PSARD   6                                           CSD031
+     C           DSSARD    PARM *BLANKS   DSFDY                                               CSD031
+      *                                                                                       CSD031
+     C           @RTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD050                                              CSD031
+     C                     MOVE 'N'       WF11                                                CSD031
+     C                     MOVE *ON       *IN57                                               CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE *OFF      *IN57                                               CSD031
+     C                     ENDIF                                                              CSD031
+     C           @RTCD     IFNE *BLANKS                                                       CSD031
+     C           @RTCD     ANDNE'*NRF   '                                                     CSD031
+     C                     MOVEL'SCSARDPD'DBKEY                                               CSD031
+     C                     Z-ADD2         DBASE                                               CSD031
+     C                     EXSR *PSSR                                                         CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     MOVE 'CHG'     WMODE                                               CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     OPEN GZSDBANK                                                      CSD031
+     C                     OPEN GPRECGL0                                                      CSD031
+     C                     READ GZSDBANK                 47                                   CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'N'                                                           CSD031
+     C           CSD050    OREQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+      *                                                                                       CSD031
+     C                     OPEN SDARCGL0                                                      CSD031
+     C                     OPEN SDARCGL1                                                      CSD031
+     C                     OPEN TABLE2                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE *INU1     *IN89                                               CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+      *                                                                                       CSD031
+      ** ACCESS GZBANKL2                                                                      CSD031
+      *                                                                                       CSD031
+     C                     MOVE *ZEROS    WDNWD   50                                          CSD031
+     C           *HIVAL    SETLLGZSDBANK                                                      CSD031
+     C                     READ GZSDBANK                 90                                   CSD031
+     C           *IN90     IFEQ '0'                                                           CSD031
+     C                     MOVE BJDFIN    ZDATFM                                              CSD031
+     C                     MOVE BJMRDT    SRUNA                                               CSD031
+     C                     MOVE BJDNWD    WRUND                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C**  CHAIN TO ICDR 1 FOR RUNDATE AND SYSTEM SET-UP FLAG
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'WBFILE           ***************
+     C                     MOVEL@OPTN     WBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         WBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE RUNA      SRUNA
+     C                     MOVE RUND      WRUND
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C**  CHECK WHETHER SYSTEM SET-UP FLAG IS ON
+     C           SFLG      COMP 'Y'                      40
+     C*
+     C**  SET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C                     EXSR SETINI
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  INITIAL SCREEN PROCESS
+     C*   ~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           INITSC    BEGSR
+     C*
+     C**  RESET LAST UPDATE DATA FIELDS FOR NEW TRANSACTION.
+     C*
+     C                     Z-ADD0         LCDS
+     C                     MOVE ' '       CHTPS
+     C                     Z-ADD0         TNLUS
+     C                     MOVE 'N'       W0DTL   1                                           CSD031
+     C*
+     C**  DISPLAY INITIAL SREEN
+     C*
+     C                     EXSR SCREEN
+     C*
+     C                     MOVE 'Y'       W0DTL   1                                           CSD031
+      *                                                                                       CSD031
+     C**  CHECK FOR CMD/3
+     C   KC                GOTO ENDINI                     ** GO ENDINI **
+     C*
+     C**  AT THIS STAGE ASSUME THE INITIAL SCREEN IS INVALID
+     C                     SETON                     41
+     C*
+     C**  DO THE FOLLOWING UNTIL A SCREEN IS VALID OR CMD/3 PRESSED
+     C*
+     C           *IN41     DOUEQ'0'                        ** BEGIN DO1**
+     C           *INKC     OREQ '1'
+     C*
+      ** If CSD050 is on initialise screen indicators                                         CSD031
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+      *                                                                                       CSD031
+     C                     EXSR SETIND                                                        CSD031
+      *                                                                                       CSD031
+      ** Check if F11 was pressed, acceptance mode                                            CSD031
+      *                                                                                       CSD031
+     C           *INKK     IFEQ *ON                                                           CSD031
+     C                     MOVE *BLANKS   SGRPC                                               CSD031
+     C                     MOVE *BLANKS   SGRPN                                               CSD031
+     C                     EXSR SRACCP                                                        CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     MOVE 'CHG'     WMODE                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+      *                                                                                       CSD031
+     C           WF03      IFEQ 'Y'                                                           CSD031
+     C                     MOVE *ON       *INKC                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** Check if F12 was press in SRACCP routine                                             CSD031
+      *                                                                                       CSD031
+     C           WF12      IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       WF12                                                CSD031
+      *                                                                                       CSD031
+      ** Blank out the screen fields and reset indicators                                     CSD031
+      ** prior to display of initial screen                                                   CSD031
+      *                                                                                       CSD031
+     C                     EXSR SETINI                                                        CSD031
+     C                     GOTO RELOAD                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           SKIP2     TAG                                                                CSD031
+     C                     SETOF                     2122
+     C*
+     C**  VALIDATE GRP CODE (NUMERIC)
+     C                     MOVELSGRPC     XGRPC   20
+     C                     MOVELXGRPC     XGRPCA  1
+     C           XGRPCA    COMP SGRPC                2222
+     C*
+     C**  CHECK NUMERIC RANGE OF GROUP CODE - (MUST BE 1-8)
+     C  N22      SGRPC     COMP '1'                    22
+     C  N22      SGRPC     COMP '8'                  22
+     C*
+     C**  VALIDATE ACTION CODE (I, A, OR E)
+     C*
+     C                     MOVEA'0000'    *IN,48
+     C********** ACTCD     COMP 'I'                      48                                   244285
+     C           ACTCD     COMP 'A'                      49
+     C  N48N49   ACTCD     COMP 'E'                  212151
+     C*
+     C**    IGNORE THE FOLLOWING IF THE GROUP OR ACTION CODE IS INVALID
+     C*
+     C   21
+     COR 22                GOTO SKIP1                      ** GO SKIP1 **
+     C*
+     C**  IF ACTION CODE IS VALID, CHECK IF USER IS AUTHORISED
+     C**  IF SINGLE BRANCH SYSTEM, CHECK USER IS AUTHORISED TO ACTION CODE
+     C                     SETOF                     10
+     C           AGMBIN    IFEQ 'N'
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     CALL 'ZVACTU'
+     C                     PARM ACTCD     @ZACTN  1
+     C                     PARM           @ERR    10
+     C*
+     C           @ERR      IFNE 0
+     C                     SETON                     1021
+     C                     GOTO SKIP1
+     C                     END
+     C*
+     C                     ENDIF                                                              CSD031
+     C                     END
+     C*
+     C**  IF MULTIPLE BRANCH SYSTEM, USER MUST BE AUTHORISED TO ACTION
+     C**  ON BRANCH
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+     C                     CALL 'ZVACTBU'
+     C                     PARM ACTCD     @ZACTN
+     C                     PARM DFBM      @ZBR    3
+     C                     PARM           @ERR
+     C*
+     C           @ERR      IFNE 0
+     C                     SETON                     1021
+     C                     GOTO SKIP1
+     C                     END
+     C*
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     END
+     C*
+     C**  CHAIN TO GROUP CODE TABLE
+     C                     EXSR CHNGCT
+     C*
+     C**  GROUP CODE RECORD EXISTS
+     C           *IN59     COMP '0'                      45
+     C*
+     C**  SAVE LAST UPDATE DATA USING DATA STRUCTURE
+     C   45                MOVE LSTC      LSTCS
+     C*
+     C**  FOR ACTION 'I' LIVE REC MUST NOT EXIST
+     C*
+     C           *IN48     IFEQ '1'
+     C   45      RECI      IFEQ 'D'
+     C                     SETON                     21
+     C                     END
+     C                     END
+     C*
+     C**  FOR ACTIONS 'A' OR 'E' LIVE REC MUST EXIST
+     C*
+     C           *IN49     IFEQ '1'
+     C           *IN51     OREQ '1'
+     C**N45*******         SETON                     21                   062530
+     C  N45                SETON                     22                   062530
+     C   45      RECI      IFNE 'D'
+     C                     SETON                     21
+     C                     END
+     C                     END
+     C*
+     C           SKIP1     TAG                             ** SKIP1 TAG **
+     C*
+     C**  REDISPLAY INITIAL SCREEN IF EITHER CODE IS INVALID
+     C*
+     C           *IN21     IFEQ '1'                        B002
+     C           *IN22     OREQ '1'
+     C*
+     C**    SET UP ERROR CODES, ERROR MESSAGES AND INDICATORS
+     C*
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD0         S       30
+     C   22                ADD  1         S
+     C   22                MOVE '001'     ERCD,S
+     C   21                ADD  1         S
+     C   21                MOVE '002'     ERCD,S
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN21     ANDEQ'1'
+     C                     MOVE '021'     ERCD,S
+     C                     END
+     C*
+     C                     MOVE *BLANKS   SERCD
+     C                     MOVEAERCD      SERCD
+     C                     MOVE *BLANKS   SERMSG                                              CSD031
+     C*
+     C   21                MOVELERMSG,1   SERMSG
+     C   22N21             MOVELERMSG,2   SERMSG
+     C*
+     C           *IN59     IFEQ '1'                                       062530
+     C           SGRPC     ANDLE'8'                                       062530
+     C           SGRPC     ANDGE'1'                                       062530
+     C           *IN21     ANDEQ'0'                                       062530
+     C                     MOVELERMSG,8   SERMSG                          062530
+     C                     END                                            062530
+     C*
+     C           *IN10     IFEQ '1'
+     C           *IN21     ANDEQ'1'
+     C                     MOVELERMSG,5   SERMSG
+     C                     END
+     C*
+     C**      RESET INDICATORS PRIOR TO REDISPLAY OF INITIAL SCREEN
+     C                     SETOF                     808384
+     C                     SETON                     8182
+     C*
+     C           RELOAD    TAG                                                                CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     EXSR SCREEN
+     C*
+     C                     ELSE                            *002
+     C*
+     C**  CHECK FOR ERROR IN USER AUTHORISATION
+     C           *IN10     IFEQ '1'
+     C                     SETON                     41
+     C                     EXSR SCREEN
+     C                     ELSE
+     C*
+     C**      INITIAL SCREEN IS VALID
+     C                     SETOF                     41
+     C                     END
+     C                     END                             E002
+     C*
+     C                     END                             ** END DO1**
+     C*
+     C           ENDINI    ENDSR                           ** ENDINI **
+     C*
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  DETAIL SCREEN PROCESS
+     C*   ~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           DETLSC    BEGSR
+     C*
+     C**  SET UP DETAIL SCREEN INFO PRIOR TO DISPLAY
+     C*
+     C**  IF ACTION = 'I' THEN BLANK ALL SCREEN DETAILS
+     C**  OTHERWISE USE THE CURRENT GROUP CODE RECORD FIELDS
+     C*
+     C           *IN48     IFEQ '1'                        B001
+     C                     MOVE *BLANKS   SGRPN
+     C                     MOVE 'NNNNNNN' SSCOMI
+     C                     MOVE *BLANKS   SSCOMA
+     C                     MOVE *BLANKS   #1AACC                                              CSD031
+     C                     MOVE *BLANKS   #2EACC                                              CSD031
+     C*
+     C                     ELSE                            *001
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE *ON       *IN64                                               CSD031
+     C           SGRPC     IFEQ *BLANKS                                                       CSD031
+     C           SGRPN     ANDEQ*BLANKS                                                       CSD031
+      *                                                                                       CSD031
+     C                     EXSR SETINI                                                        CSD031
+     C                     GOTO SKIP                                                          CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE GRPN      SGRPN                                               CSD031
+     C                     MOVEADSCOMI    COMI                                                CSD031
+     C                     MOVEADSCOMA    COMA                                                CSD031
+     C                     DO   7         X                B002                               CSD031
+     C           COMA,X    COMP *ALL'0'                  59                                   CSD031
+     C   59                MOVEL*BLANKS   COMA,X                                              CSD031
+     C           COMO,X    IFEQ 'N'                                                           CSD031
+     C                     MOVE COMO,X    COMI,X                                              CSD031
+     C                     MOVE COMP,X    COMA,X                                              CSD031
+     C                     END                             E002                               CSD031
+     C                     END                             E002                               CSD031
+     C                     MOVEACOMA      SSCOMA                                              CSD031
+     C                     MOVEACOMI      SSCOMI                                              CSD031
+      *                                                                                       CSD031
+     C           WF11      IFEQ 'N'                                                           CSD031
+     C                     MOVE *OFF      *IN85                                               CSD031
+     C           GPDT      IFNE *BLANK                                                        CSD031
+     C                     MOVE GPDT      #1AACC                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE *BLANK    #1AACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE *ON       *IN85                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVE *ON       *IN65                                               CSD031
+     C                     MOVE AACC      #1AACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           EACC      IFEQ *ZERO                                                         CSD031
+     C                     MOVE *BLANKS   #2EACC                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE *BLANKS   #2EACC                                              CSD031
+     C                     CALL 'ZDATE2'                                                      CSD031
+     C                     PARM           EACC                                                CSD031
+     C                     PARM           BJDFIN                                              CSD031
+     C                     PARM           ZDATE                                               CSD031
+     C                     PARM           DATEB                                               CSD031
+     C                     MOVE ZDATE     #2EACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE GRPN      SGRPN
+     C                     MOVEADSCOMI    COMI
+     C                     MOVEADSCOMA    COMA
+     C                     DO   7         X                B002
+     C           COMA,X    COMP *ALL'0'                  59
+     C***59*****           MOVEA'    '    COMA,X                                              CGL029
+     C   59                MOVEL*BLANKS   COMA,X                                              CGL029
+     C           COMO,X    IFEQ 'N'
+     C                     MOVE COMO,X    COMI,X
+     C                     MOVE COMP,X    COMA,X
+     C                     END                             E002
+     C                     END                             E002
+     C                     MOVEACOMA      SSCOMA
+     C                     MOVEACOMI      SSCOMI
+     C*
+     C                     ENDIF                                                              CSD031
+     C                     END                             E001
+     C*
+     C**  RELEASE CUSTOMER GROUP TABLE REC
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C   45                UPDATTABLEVG                                                       CSD031
+     C                     ELSE                                                               CSD031
+     C   45                UPDATTABLEV4F
+     C                     ENDIF                                                              CSD031
+     C   45                COMIT
+     C*
+     C**    SET INDICATORS PRIOR TO DISPLAY OF DETAIL SCREEN
+     C*
+     C           SKIP      TAG                                                                CSD031
+     C                     SETOF                     4344
+     C                     SETOF                     2122
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVEA'0000000' *IN,30
+     C                     SETOF                     8182
+     C                     SETON                     808384
+     C   51                SETON                     82
+      *
+      **  If CSD050 is on, set Screen flag to Y and initialised
+      *
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'Y'       W0DTL                                               CSD031
+     C                     EXSR SETIND                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     EXSR SCREEN
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C**  CHECK FOR CMD/3
+     C   KC                GOTO ENDDTL                     ** GO ENDDTL **
+     C*
+     C**  CHECK FOR CMD/12
+     C           *INKL     IFEQ '1'                        B001
+     C**       BLANK OUT THE SCREEN FIELDS AND
+     C**       RESET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C**       FOR NEXT TRANSACTION
+     C                     EXSR SETINI
+     C                     GOTO ENDDTL                     ** GO ENDDTL **
+     C                     END                             E001
+     C*
+     C**  DO WHATEVER PROCESSING IS REQUIRED BY THE ACTION CODE
+     C*
+     C**    INPUT
+     C           *IN48     IFEQ '1'
+     C                     EXSR INPAMD                     INPUT/AMEND
+     C                     GOTO ENDDTL                     ** GO ENDDTL **
+     C                     END
+     C*
+     C**    AMEND
+     C           *IN49     IFEQ '1'
+     C                     EXSR INPAMD                     INPUT/AMEND
+     C                     GOTO ENDDTL                     ** GO ENDDTL **
+     C                     END
+     C*
+     C**    ENQUIRY
+     C           *IN51     IFEQ '1'                        B001
+     C*
+     C**       BLANK OUT THE SCREEN FIELDS AND
+     C**       RESET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C**       FOR NEXT TRANSACTION
+     C                     EXSR SETINI
+     C                     GOTO ENDDTL                     ** GO ENDDTL **
+     C                     END                             E001
+     C*
+     C*
+     C           ENDDTL    ENDSR                           **  ENDDTL **
+     C*
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C**  INPUT/AMEND PROCESS
+     C*   ~~~~~~~~~~~~~~~~~~~
+     C*
+     C           INPAMD    BEGSR
+     C*
+     C**  AT THIS STAGE ASSUME THE DETAIL SCREEN IS INVALID
+     C                     SETON                     42
+     C*
+     C**  ATTEMPT TO VALIDATE THE SCREEN UNTIL THE DETAILS ARE VALID
+     C*   OR CMD/3 IS PRESSED OR CMD/12 IS PRESSED
+     C*
+     C           *IN42     DOUEQ'0'                        B001
+     C           *INKC     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     EXSR VALID
+     C                     END                             E001
+     C*
+     C  NKCNKL             EXSR UPDATE
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  VALIDATION PROCESS
+     C*   ~~~~~~~~~~~~~~~~~~
+     C*
+     C           VALID     BEGSR
+     C*
+     C**  RESET DISPLAY INDICATORS PRIOR TO DISPLAY OF DETAIL SCREEN
+     C*
+     C                     SETOF                     2122
+     C                     SETOF                     4344
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVEA'0000000' *IN,30
+     C                     MOVEA'00'      *IN,37                                              CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C*
+     C**  CHECK FOR CMD/3
+     C   KC                GOTO ENDVAL                     ** GO ENDVAL **
+     C*
+     C**  CHECK FOR CMD/12
+     C           *INKL     IFEQ '1'                        B001
+     C**       BLANK OUT THE SCREEN FIELDS AND
+     C**       RESET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C**       FOR NEXT TRANSACTION
+     C                     EXSR SETINI
+     C                     GOTO ENDVAL                     ** GO ENDVAL **
+     C                     END                             E001
+     C*
+     C**  SET ON INDICATOR 84                                             062531
+     C                     SETON                     84                   062531
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+      *                                                                                       CSD031
+      ** 'Accept to Zone' should be 'Y' or 'N'                                                CSD031
+      *                                                                                       CSD031
+     C           #1AACC    IFNE *BLANKS                                                       CSD031
+     C           #1AACC    ANDNE'Y'                                                           CSD031
+     C           #1AACC    ANDNE'N'                                                           CSD031
+     C                     MOVEL'SCC0015' MSGID                                               CSD031
+     C                     MOVEL'SDUSRMSG'MSGF                                                CSD031
+     C                     EXSR SRRTTX                                                        CSD031
+     C                     MOVE *ON       *IN37                                               CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C                     MOVE *OFF      *IN84                                               CSD031
+     C                     MOVELMSGTXT    SERMSG                                              CSD031
+     C                     ENDIF                                                              CSD031
+      * If Accept to Zone is blank, default to N                                              CSD031
+     C           #1AACC    IFEQ *BLANK                                                        CSD031
+     C                     MOVE 'N'       #1AACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** Effective date may only be entered if 'Accept to Zone' is 'N'.                       CSD031
+      *                                                                                       CSD031
+     C           #1AACC    IFNE 'N'                                                           CSD031
+     C           #2EACC    ANDNE*BLANK                                                        CSD031
+     C                     MOVEL'CSD0001' MSGID                                               CSD031
+     C                     MOVEL'SDUSRMSG'MSGF                                                CSD031
+     C                     EXSR SRRTTX                                                        CSD031
+     C                     MOVE *ON       *IN38                                               CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C                     MOVE *OFF      *IN84                                               CSD031
+     C                     MOVELMSGTXT    SERMSG                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** effective date is invalid                                                            CSD031
+      *                                                                                       CSD031
+     C           #1AACC    IFEQ 'N'                                                           CSD031
+     C           #2EACC    ANDNE*BLANK                                                        CSD031
+      *                                                                                       CSD031
+     C                     TESTN          #2EACC     80                                       CSD031
+     C                     MOVE *ZERO     ZDATE                                               CSD031
+     C                     MOVE #2EACC    ZDATE                                               CSD031
+     C                     EXSR ZDATE1                                                        CSD031
+     C           ZERR      IFNE *BLANKS                                                       CSD031
+     C           *IN80     OREQ *OFF                                                          CSD031
+     C                     MOVEL'ASM0045' MSGID                                               CSD031
+     C                     MOVEL'SDUSRMSG'MSGF                                                CSD031
+     C                     EXSR SRRTTX                                                        CSD031
+     C                     MOVE *ON       *IN38                                               CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C                     MOVE *OFF      *IN84                                               CSD031
+     C                     MOVELMSGTXT    SERMSG                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** *INU1=*OFF                                                                           CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE SGRPC     ZZ010                                               CSD031
+     C           ZZ010     CHAINSDARCGL1             47                                       CSD031
+     C           *IN47     IFEQ *OFF                                                          CSD031
+     C                     MOVEL'CSD0002' MSGID                                               CSD031
+     C                     MOVEL'SDUSRMSG'MSGF                                                CSD031
+     C                     EXSR SRRTTX                                                        CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C                     SETOF                     84                                       CSD031
+     C                     MOVELMSGTXT    SERMSG                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C**  MOVE COMMISSION INDICATORS AND ACCOUNTS TO TABLE FIELDS
+     C                     MOVEASSCOMI    COMI
+     C                     MOVEASSCOMA    COMA
+     C*
+     C**  DO THE FOLLOWING 7 TIMES IN ALL, VALIDATING EACH INDICATOR
+     C**  AND ACCOUNT CODE IN TURN.
+     C                     DO   7         X       20       ** BEGIN DO3 **
+     C*
+     C                     SETOF                     535459
+     C*
+     C**    INDICATORS MUST BE 'Y' OR 'N'
+     C           COMI,X    IFNE 'Y'
+     C           COMI,X    ANDNE'N'
+     C                     SETON                     4353
+     C                     END
+     C*
+     C**    IF INDICATOR IS 'Y' AN ACCOUNT MUST BE ENTERED
+     C**    AS NUMERIC AND GREATER THAN ZERO
+     C           COMI,X    IFEQ 'Y'
+     C**********           MOVELCOMA,X    XCOMA   50                                          CGL029
+     C**********           MOVELXCOMA     XCOMAA  4                                           CGL029
+     C                     MOVELCOMA,X    XCOMA  110                                          CGL029
+     C                     MOVELXCOMA     XCOMAA 10                                           CGL029
+     C           COMA,X    COMP XCOMAA               5454
+     C  N54      XCOMA     COMP 0                      5454
+     C   54                SETON                     44
+     C                     END
+     C*
+     C**    IF INDICATOR IS 'N' AN ACCOUNT MUST NOT BE ENTERED
+     C           COMI,X    IFEQ 'N'
+     C           COMA,X    ANDNE*BLANKS
+     C                     SETON                     4454
+     C                     END
+     C*
+     C*
+     C**    IF INDICATOR IS 'Y' A NUMERIC ACCOUNT CODE IS ENTERED
+     C**    IT MUST EXIST ON THE ACCOUNT CODE TABLE
+     C*
+     C           COMI,X    IFEQ 'Y'                        B001
+     C           *IN,54    ANDEQ'0'
+     C*
+     C**      ACCESS ACCOUNT CODE TABLE RECORD.
+     C                     MOVEACOMA,X    ZKEY04
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     CALL 'AOGACDR0'                                                    CSD031
+     C                     PARM *BLANKS   @RTCD                                               CSD031
+     C                     PARM '*KEY   ' @OPTN                                               CSD031
+     C                     PARM ZKEY04    @ACCD  10                                           CSD031
+     C           GPACOD    PARM GPACOD    DSSDY                                               CSD031
+      *                                                                                       CSD031
+     C           @RTCD     IFNE *BLANK                                                        CSD031
+     C                     MOVE *ON       *IN44                                               CSD031
+     C                     MOVE *ON       *IN54                                               CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOACODR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM ZKEY04    @ACCD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM ZKEY04    @ACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                       4454
+     C                     END
+     C*
+     C**  IF ACCOUNT CODE EXISTS, IT MUST BE A 'G'.
+     C           ATYP      IFNE 'G'
+     C                     SETON                     4454
+     C                     END
+     C*                                                                   062531
+     C*  TITLE ONLY ACCOUNTS MUST NOT BE ENTERED                          062531
+     C*                                                                   062531
+     C           TOIN      IFEQ 'Y'                                       062531
+     C                     SETON                     5444                 062531
+     C                     SETOF                     84                   062531
+     C                     MOVELERMSG,6   SERMSG                          062531
+     C                     END                                            062531
+     C*                                                                   062531
+     C*  ACCOUNT CODE MUST BE INCOME OR EXPENSE                           062531
+     C*                                                                   062531
+     C           ACSC      IFNE 'IN'                                      062531
+     C           ACSC      ANDNE'EX'                                      062531
+     C                     SETON                     5444                 062531
+     C                     SETOF                     84                   062531
+     C                     MOVELERMSG,7   SERMSG                          062531
+     C                     END                                            062531
+     C*
+     C*
+     C                     END                             E001
+     C*
+     C**      SET INDICATORS IF COMMISSION INDICATORS IN ERROR
+     C   53N23   X         COMP 1                        23
+     C   53N25   X         COMP 2                        25
+     C   53N27   X         COMP 3                        27
+     C   53N29   X         COMP 4                        29
+     C   53N31   X         COMP 5                        31
+     C   53N33   X         COMP 6                        33
+     C   53N35   X         COMP 7                        35
+     C*
+     C**      SET INDICATORS IF COMMISSION ACCOUNT CODE IN ERROR
+     C   54N24   X         COMP 1                        24
+     C   54N26   X         COMP 2                        26
+     C   54N28   X         COMP 3                        28
+     C   54N30   X         COMP 4                        30
+     C   54N32   X         COMP 5                        32
+     C   54N34   X         COMP 6                        34
+     C   54N36   X         COMP 7                        36
+     C*
+     C                     END                             ** END DO 3 **
+     C*
+     C**  VALID DETAIL SCREEN
+     C  N43N44             SETOF                     42
+     C*
+     C**  INVALID DETAIL SCREEN - REDISPLAY
+     C*
+     C   42                DO                              B001
+     C*
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD0         S
+     C*
+     C**    SET UP  ERROR CODES
+     C   23                ADD  1         S
+     C   23                MOVE '003'     ERCD,S
+     C   25                ADD  1         S
+     C   25                MOVE '004'     ERCD,S
+     C   27                ADD  1         S
+     C   27                MOVE '005'     ERCD,S
+     C   29                ADD  1         S
+     C   29                MOVE '006'     ERCD,S
+     C   31                ADD  1         S
+     C   31                MOVE '007'     ERCD,S
+     C   33                ADD  1         S
+     C   33                MOVE '008'     ERCD,S
+     C   35                ADD  1         S
+     C   35                MOVE '009'     ERCD,S
+     C   24                ADD  1         S
+     C   24                MOVE '010'     ERCD,S
+     C   26                ADD  1         S
+     C   26                MOVE '011'     ERCD,S
+     C   28                ADD  1         S
+     C   28                MOVE '012'     ERCD,S
+     C   30                ADD  1         S
+     C   30                MOVE '013'     ERCD,S
+     C   32                ADD  1         S
+     C   32                MOVE '014'     ERCD,S
+     C   34                ADD  1         S
+     C   34                MOVE '015'     ERCD,S
+     C   36                ADD  1         S
+     C   36                MOVE '016'     ERCD,S
+     C   37                ADD  1         S                                                   CSD031
+     C   37                MOVE '017'     ERCD,S                                              CSD031
+     C   38                ADD  1         S                                                   CSD031
+     C   38                MOVE '018'     ERCD,S                                              CSD031
+     C*
+     C                     MOVE *BLANKS   SERCD
+     C                     MOVEAERCD      SERCD
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'Y'       W0DTL                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     SETOF                     83
+     C                     EXSR SCREEN
+     C                     SETON                     83
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE 'N'       W0DTL                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     END                             E001
+     C*
+     C**  CHECK FOR CMD/12
+     C           *INKL     IFEQ '1'                        B001
+     C**       BLANK OUT THE SCREEN FIELDS AND
+     C**       RESET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C**       FOR NEXT TRANSACTION
+     C                     EXSR SETINI
+     C                     GOTO ENDVAL                     ** GO ENDVAL **
+     C                     END                             E001
+     C*
+     C           ENDVAL    ENDSR                           **  ENDVAL  **
+     C*
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  UPDATE PROCESS
+     C*   ~~~~~~~~~~~~~~
+     C*
+     C           UPDATE    BEGSR
+     C*
+     C                     SETOF                     46
+     C*
+     C**  FOR ACTION 'INPUT' TO WRITE A REC THAT DOESN'T
+     C**  YET EXIST ON THE GROUP CODE TABLE
+     C*
+     C   48N45             DO                              B001
+     C*
+     C**    CHECK THAT REC HASN'T BEEN INSERTED BY ANOTHER WORKSTATION
+     C                     EXSR CHNGCT
+     C*
+     C  N59                SETON                     46    CHANGED|
+     C*
+     C**    IF CHANGED BY SOMEONE ELSE THEN ABORT THE UPDATE,
+     C*     RELEASE THE RECORD AND SET UP AN ERROR MESSAGE
+     C*     TO BE DISPLAYED ON THE INITIAL SCREEN
+     C*
+     C           *IN46     IFEQ '1'                        B002
+     C*
+     C                     ROLBK
+     C*
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD1         S
+     C                     MOVE '020'     ERCD,S
+     C                     MOVEAERCD      SERCD
+     C*
+     C                     MOVELERMSG,4   SERMSG
+     C*
+     C**    OTHERWISE UPDATE PROCEEDS AS NORMAL
+     C*
+     C                     ELSE                            *002
+     C*
+     C*
+     C**    SET UP AND WRITE THE GROUP CODE REC
+     C                     EXSR UPDGCR
+     C*
+     C**    UPDATE TABLE HEADER
+     C           CSD050    IFNE 'Y'                                                           CSD031
+     C           *INU1     ANDNE*ON                                                           CSD031
+     C                     EXSR UPDTHR
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     END                             E002
+     C*
+     C                     END                             E001
+     C*
+     C**  FOR 'INPUT' OR 'AMEND' OF A REC THAT
+     C**  ALREADY EXISTS ON THE GROUP CODE TABLE
+     C*
+     C   49
+     COR 48 45             DO                              B001
+     C*
+     C*
+     C**    CHECK THAT REC HASN'T BEEN UPDATED BY ANOTHER WORKSTATION
+     C                     EXSR CHNGCT
+     C*
+     C           LSTC      COMP LSTCS                4646  CHANGED|
+     C*
+     C**    IF CHANGED BY SOMEONE ELSE THEN ABORT THE UPDATE,
+     C*     RELEASE THE RECORD AND SET UP AN ERROR MESSAGE
+     C*     TO BE DISPLAYED ON THE INITIAL SCREEN
+     C*
+     C           *IN46     IFEQ '1'                        B002
+     C*
+     C                     ROLBK
+     C*
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD1         S
+     C                     MOVE '020'     ERCD,S
+     C                     MOVEAERCD      SERCD
+     C*
+     C                     MOVELERMSG,4   SERMSG
+     C*
+     C**    OTHERWISE UPDATE PROCEEDS AS NORMAL
+     C*
+     C                     ELSE                            *002
+     C*
+     C**    UPDATE THE GROUP CODE REC
+     C                     EXSR UPDGCR
+     C*
+     C**    AND UPDATE TABLE HEADER
+     C           CSD050    IFNE 'Y'                                                           CSD031
+     C           *INU1     ANDNE*ON                                                           CSD031
+     C                     EXSR UPDTHR
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     END                             E002
+     C*
+     C                     END                             E001
+     C*
+     C**  FOR SUCESSFUL UPDATE OF GROUP CODE RECORD,
+     C**  UPDATE TABLE HEADER FILE AND COMMIT ALL UPDATES
+     C*
+     C           *IN46     IFEQ '0'                        B001
+     C                     MOVE 'H'       RECI
+     C                     MOVEL'00      'KEY
+     C                     MOVE '    '    KEY
+     C*
+     C           CSD050    IFEQ 'N'                                                           CSD031
+     C           CSD050    OREQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     OPEN TABLE3                                                        CSD031
+      *                                                                                       CSD031
+     C           KEY       CHAINTABLE3               59
+     C                     MOVE '1'       ICGP
+     C                     UPDATTABLETAF
+     C                     CLOSETABLE3                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C**  REC UPDATED - END COMMITMENT CYCLE
+     C*
+     C                     EXSR COMMIT
+     C*
+     C                     END                             E001
+     C*
+     C**    BLANK OUT THE SCREEN FIELDS AND
+     C**    RESET INDICATORS PRIOR TO DISPLAY OF INITIAL SCREEN
+     C**    FOR NEXT TRANSACTION
+     C                     EXSR SETINI
+     C   46                SETOF                     8384
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C*
+     C**  DATABASE ERROR PROCESS
+     C*   ~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELWBFILE    DBFILE
+     C                     MOVELWBKEY     DBKEY
+     C                     MOVEL'SD2351R' DBPGM
+     C                     MOVE WBASE     DBASE
+     C                     OUT  LDA
+     C                     DUMP
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  ZTNLU1 PROCESS
+     C*   ~~~~~~~~~~~~~~
+     C*
+     C**  TO LOCK THE TRANSACTION NUMBER DATA AREA AND THEN
+     C**  UPDATE AND RELEASE THE DATA AREA.
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  SET INITIAL SCREEN INDICATORS
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C**  TO BLANK OUT THE APPROPRIATE FIELDS AND
+     C**  RESET THE RELEVANT INDICATORS PRIOR TO DISPLAYING
+     C**  THE INITIAL SCREEN, READY FOR THE NEXT TRANSACTION.
+     C*
+     C           SETINI    BEGSR
+     C*
+     C                     MOVE *BLANKS   ACTCD
+     C                     MOVE *BLANKS   SGRPC
+     C                     SETOF                     80
+     C                     SETON                     8182
+     C                     SETON                     8384
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     EXSR SETIND                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDSR
+     C*
+      *****************************************************************                       CSD031
+      *                                                               *                       CSD031
+      * SETIND - Initialised Screen Indicators                        *                       CSD031
+      *                                                               *                       CSD031
+      *****************************************************************                       CSD031
+      *                                                                                       CSD031
+     C           SETIND    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+      **  Condition Indicators accordingly if CSD050 is on                                    CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'N'       WF11                                                CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+      *                                                                                       CSD031
+     C                     MOVE *OFF      *IN65                                               CSD031
+     C                     MOVE *OFF      *IN64                                               CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *OFF                                                          CSD031
+      *                                                                                       CSD031
+     C           WMODE     IFEQ 'CHG'                                                         CSD031
+      *                                                                                       CSD031
+      ** Display Initial Screen  (ZONE)                                                       CSD031
+      *                                                                                       CSD031
+     C           W0DTL     IFEQ 'N'                                                           CSD031
+     C                     MOVE *OFF      *IN70                                               CSD031
+     C                     MOVE *ON       *IN82                                               CSD031
+     C                     MOVE *ON       *IN52                                               CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+      ** Display Detail Screen                                                                CSD031
+      *                                                                                       CSD031
+     C                     MOVE *ON       *IN64                                               CSD031
+     C                     MOVE *OFF      *IN70                                               CSD031
+     C                     MOVE *OFF      *IN52                                               CSD031
+     C                     SELEC                                                              CSD031
+     C           ACTCD     WHEQ 'I'                                                           CSD031
+     C                     MOVE *ON       *IN70                                               CSD031
+     C                     MOVE *OFF      *IN82                                               CSD031
+     C           ACTCD     WHEQ 'A'                                                           CSD031
+     C                     MOVE *ON       *IN70                                               CSD031
+     C                     MOVE *ON       *IN82                                               CSD031
+     C           ACTCD     WHEQ 'E'                                                           CSD031
+     C                     MOVE *ON       *IN63                                               CSD031
+     C                     MOVE *OFF      *IN65                                               CSD031
+     C                     MOVE *ON       *IN82                                               CSD031
+     C                     ENDSL                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+      ** Display Initial Screen  (GLOBAL)                                                     CSD031
+      *                                                                                       CSD031
+     C           W0DTL     IFEQ 'N'                                                           CSD031
+     C                     MOVE *OFF      *IN70                                               CSD031
+     C                     MOVE *ON       *IN82                                               CSD031
+     C                     MOVE *OFF      *IN52                                               CSD031
+     C                     MOVE *ON       *IN63                                               CSD031
+     C                     MOVE *OFF      *IN64                                               CSD031
+     C                     MOVE *OFF      *IN65                                               CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+      ** Display Detail Screen                                                                CSD031
+      *                                                                                       CSD031
+     C                     MOVE *ON       *IN64                                               CSD031
+     C                     MOVE *OFF      *IN70                                               CSD031
+     C                     MOVE *OFF      *IN52                                               CSD031
+     C                     SELEC                                                              CSD031
+     C           ACTCD     WHEQ 'I'                                                           CSD031
+     C                     MOVE *OFF      *IN63                                               CSD031
+     C                     MOVE *ON       *IN65                                               CSD031
+     C                     MOVE *ON       *IN70                                               CSD031
+     C                     MOVE *OFF      *IN82                                               CSD031
+     C           ACTCD     WHEQ 'A'                                                           CSD031
+     C                     MOVE *OFF      *IN63                                               CSD031
+     C                     MOVE *ON       *IN65                                               CSD031
+     C                     MOVE *ON       *IN70                                               CSD031
+     C                     MOVE *OFF      *IN82                                               CSD031
+     C           ACTCD     WHEQ 'E'                                                           CSD031
+     C                     MOVE *ON       *IN63                                               CSD031
+     C                     MOVE *OFF      *IN65                                               CSD031
+     C                     MOVE *ON       *IN82                                               CSD031
+     C                     ENDSL                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDSR                                                              CSD031
+      *                                                                                       CSD031
+     C*-------------------------------------------------------------------
+     C*
+     C**  SCREEN READ/DISPLAY PROCESS / WITH HELP FACILITY
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           SCREEN    BEGSR
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVELTXT1      ACCTXT                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVELTXT2      ACCTXT                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     EXFMTSD2350F1
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  CHAIN TO GROUP CODE TABLE
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           CHNGCT    BEGSR
+     C*
+     C                     MOVEL'81      'KEY
+     C                     MOVE '    '    KEY
+     C                     MOVE SGRPC     KEY
+     C                     MOVE SGRPC     ZZ010                                               CSD031
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           ZZ010     CHAINTABLEVG              59                                       CSD031
+     C                     ELSE                                                               CSD031
+     C           KEY       CHAINTABLE2               59
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  UPDATE GROUP CODE RECORD
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C**  TO SET UP AND WRITE THE GROUP CODE RECORD TABLEV4
+     C*
+     C           UPDGCR    BEGSR
+     C*
+     C                     MOVE *BLANKS   ZTABKY 12
+     C                     MOVEL'81      'ZTABKY
+     C                     MOVE SGRPC     ZTABKY
+     C                     MOVE ZTABKY    KEY
+     C                     MOVE SGRPC     ZZ010                                               CSD031
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     MOVE #1AACC    AACC                                                CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     MOVE *ZERO     ZDATE                                               CSD031
+     C                     MOVE #2EACC    ZDATE                                               CSD031
+     C                     MOVE BJDFIN    ZDATFM                                              CSD031
+     C                     MOVE 'Y'       GPDT                                                CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE #1EACC    ZDATE                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE DATF      ZDATFM                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     EXSR ZDATE1                                                        CSD031
+     C                     Z-ADDZDAYNO    EACC                                                CSD031
+     C*
+     C**  OBTAIN LAST TRANSACTION NUMBER, SET UP STANDARD OUTPUT INFO
+     C*
+     C                     TIME           MTIME   60
+     C                     EXSR ZTNLU1
+     C                     MOVE 'SD'      MDID
+     C                     MOVEL'SD2351R' PGMN
+     C                     MOVE WSID      WSIDX
+     C                     MOVE USRID     USRIDX
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE '81'      RECT                                                CSD031
+     C                     MOVE SGRPN     GRPN
+     C                     MOVE SSCOMI    DSCOMI
+     C*
+     C                     MOVE SMDBA     MDBA
+     C                     MOVE SACMA     ACMA
+     C                     MOVE SDINA     DINA
+     C                     MOVE SINAA     INAA
+     C                     MOVE SMINA     MINA
+     C                     MOVE SDYSA     DYSA
+     C                     MOVE SFIXA     FIXA
+     C*
+     C                     MOVE WRUND     LCD
+     C                     MOVE MTIME     TIMV
+     C   48N49             MOVE 'I'       CHTP
+     C  N48 49             MOVE 'A'       CHTP
+     C                     MOVE NATN      TNLU
+     C*
+     C                     CLEAR@1DBRC                                                        CSD031
+      *                                                                                       CSD031
+      ** Move records to GPRECGL0 fields for update                                           CSD031
+      *                                                                                       CSD031
+     C                     EXSR SRMOVE                                                        CSD031
+      *                                                                                       CSD031
+     C**    IF THE REC AREADY EXISTS THEN UPDATE OTHERWISE WRITE
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           *IN45     IFEQ *ON                                                           CSD031
+     C                     UPDATTABLEVG                                                       CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C   45                UPDATTABLEV4F
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           *IN45     IFEQ *OFF                                                          CSD031
+     C                     WRITETABLEVG                                                       CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ELSE                                                               CSD031
+     C  N45                WRITETABLEV4F
+     C                     ENDIF                                                              CSD031
+     C*
+     C           CSD050    IFEQ 'Y'                                                           CSD031
+     C                     EXSR SRDTAQ                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  UPDATE TABLE HEADER RECORD
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C**  TO SET UP AND WRITE THE TABLE HEADER RECORD TABLETX
+     C*
+     C           UPDTHR    BEGSR
+     C*
+     C                     MOVEL'81      'KEY
+     C                     MOVE '    '    KEY
+     C*
+     C           CSD050    IFEQ 'N'                                                           CSD031
+     C           CSD050    OREQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*OFF                                                          CSD031
+     C                     OPEN TABLE3                                                        CSD031
+     C           KEY       CHAINTABLE3               59
+     C*
+     C           *IN59     IFEQ '1'
+     C                     MOVE 'TABLETX' WBFILE           ***************
+     C                     MOVELKEY       WBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         WBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C   48N49             ADD  1         NINS             + 1 TO INSERTS
+     C  N48 49             ADD  1         NAMD             + 1 TO AMENDS
+     C*
+     C                     UPDATTABLETXF
+     C                     CLOSETABLE3                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C*
+     C                     ENDSR
+     C*
+     C*-------------------------------------------------------------------
+     C*
+     C**  COMMIT ALL FILE UPDATES
+     C*   ~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           COMMIT    BEGSR
+     C*
+     C                     MOVE ACTCD     DSSAC
+     C                     MOVE SGRPC     DSSGC
+     C                     MOVE SGRPN     DSSGN
+     C                     MOVE SMDBI     DSSI1
+     C                     MOVE SMDBA     DSSA1
+     C                     MOVE SACMI     DSSI2
+     C                     MOVE SACMA     DSSA2
+     C                     MOVE SDINI     DSSI3
+     C                     MOVE SDINA     DSSA3
+     C                     MOVE SINAI     DSSI4
+     C                     MOVE SINAA     DSSA4
+     C                     MOVE SMINI     DSSI5
+     C                     MOVE SMINA     DSSA5
+     C                     MOVE SDYSI     DSSI6
+     C                     MOVE SDYSA     DSSA6
+     C                     MOVE SFIXI     DSSI7
+     C                     MOVE SFIXA     DSSA7
+     C*
+     C                     MOVE *BLANKS   LOTSCN
+     C                     MOVELDSSCN     LOTSCN
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*-------------------------------------------------------------------
+      *****************************************************************                       CSD031
+      * SRMOVE - Move records to GPRECGL0 fields                      *                       CSD031
+      *****************************************************************                       CSD031
+     C           SRMOVE    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'D'       GRECI                                               CSD031
+     C                     MOVE '81'      GRECT                                               CSD031
+     C                     MOVE SGRPC     GZZ010                                              CSD031
+     C                     MOVELSGRPN     GGRPN                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE SMDBI     GMDBI                                               CSD031
+     C                     MOVE SACMI     GACMI                                               CSD031
+     C                     MOVE SDINI     GDINI                                               CSD031
+     C                     MOVE SINAI     GINAI                                               CSD031
+     C                     MOVE SMINI     GMINI                                               CSD031
+     C                     MOVE SDYSI     GDYSI                                               CSD031
+     C                     MOVE SFIXI     GFIXI                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE SMDBA     GMDBA                                               CSD031
+     C                     MOVE SACMA     GACMA                                               CSD031
+     C                     MOVE SDINA     GDINA                                               CSD031
+     C                     MOVE SINAA     GINAA                                               CSD031
+     C                     MOVE SMINA     GMINA                                               CSD031
+     C                     MOVE SDYSA     GDYSA                                               CSD031
+     C                     MOVE SFIXA     GFIXA                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE LCD       GLCD                                                CSD031
+     C                     MOVE TIMV      GTIMV                                               CSD031
+     C                     MOVE CHTP      GCHTP                                               CSD031
+     C                     MOVE TNLU      GTNLU                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE EACC      GEACC                                               CSD031
+     C                     MOVE AACC      GAACC                                               CSD031
+     C                     MOVE GPDT      GGPDT                                               CSD031
+      *                                                                                       CSD031
+     C                     ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * SRACCP - Acceptance List screen                                                       CSD031
+      *****************************************************************                       CSD031
+     C           SRACCP    BEGSR                                                              CSD031
+     C                     MOVE 'Y'       WF11    1                                           CSD031
+     C                     MOVE 'Y'       WF11    1                                           CSD031
+     C                     MOVE 'N'       WF12    1                                           CSD031
+     C                     Z-ADD13        ##SFPG  30       SFLPAG                             CSD031
+     C                     Z-ADD1         ##SFRC                                              CSD031
+     C                     MOVE 'ACC'     WMODE   3                                           CSD031
+     C                     MOVEACMDT,1    CMDMSG                                              CSD031
+     C                     MOVE *OFF      *IN88                                               CSD031
+     C                     MOVE *BLANKS   SERMSG                                              CSD031
+     C                     MOVE *BLANKS   ERCD                                                CSD031
+      *                                                                                       CSD031
+      ** Maximum record number                                                                CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD*ZERO     ##RRMX                                              CSD031
+      *                                                                                       CSD031
+      ** Scan limit                                                                           CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD500       W0SLM   50                                          CSD031
+      *                                                                                       CSD031
+      ** Subfile pages                                                                        CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD1         W0SPG   30                                          CSD031
+      *                                                                                       CSD031
+      ** Processed Subfile record                                                             CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD0         W0RR0   40                                          CSD031
+     C                     MOVEL*BLANK    W0GRP   1                                           CSD031
+     C                     DO   *HIVAL                                                        CSD031
+      *                                                                                       CSD031
+      ** Initialise & load subfile page                                                       CSD031
+      *                                                                                       CSD031
+     C                     EXSR BAIZSF                                                        CSD031
+     C                     MOVEL'N'       W0RSF   1                                           CSD031
+      *                                                                                       CSD031
+      ** Display screen until reload requested                                                CSD031
+      *                                                                                       CSD031
+     C           W0RSF     DOWEQ'N'                                                           CSD031
+      *                                                                                       CSD031
+      ** Display screen                                                                       CSD031
+      *                                                                                       CSD031
+     C                     EXSR CAEXFM                                                        CSD031
+      *                                                                                       CSD031
+      ** Process response                                                                     CSD031
+      ** Cancel & exit program                                                                CSD031
+      *                                                                                       CSD031
+     C   03                CAS            ZXEXPG                                              CSD031
+     C                     ENDCS                                                              CSD031
+     C           *INKL     IFEQ *ON                                                           CSD031
+     C                     MOVE 'Y'       WF12                                                CSD031
+      *                                                                                       CSD031
+      ** Enable F12=For Acceptance                                                            CSD031
+      *                                                                                       CSD031
+     C                     MOVE *OFF      *IN52                                               CSD031
+     C                     GOTO SREXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** Display next SFL page (27=ROLLUP key)                                                CSD031
+      *                                                                                       CSD031
+     C   27                CAS            BBLDSF                                              CSD031
+      *                                                                                       CSD031
+      ** Process screen input                                                                 CSD031
+      *                                                                                       CSD031
+     C                     CAS            DBPRSF                                              CSD031
+     C                     ENDCS                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDDO                           OD W0RSF                           CSD031
+     C                     ENDDO                           OD *HIVAL                          CSD031
+      *                                                                                       CSD031
+     C           SREXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * MEIZ#2 - Initialize subfile control                                                   CSD031
+      *****************************************************************                       CSD031
+     CSR         MEIZ#2    BEGSR                                                              CSD031
+     C                     MOVE *BLANK    #1GRPC                                              CSD031
+     C                     MOVE *BLANKS   #1GRPN                                              CSD031
+     C                     MOVE *BLANKS   #1EACC                                              CSD031
+     C                     MOVE *BLANKS   #1CHTP                                              CSD031
+     CSR                   ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * CAEXFM - Display screen                                                               CSD031
+      *****************************************************************                       CSD031
+     CSR         CAEXFM    BEGSR                                                              CSD031
+     C           W0HLP     DOUEQ'N'                                                           CSD031
+     C                     MOVEL'N'       W0HLP   1                                           CSD031
+     C                     MOVE *IN25     HELP25  1                                           CSD031
+     C                     MOVE *ALL'0'   ##OFF  30                                           CSD031
+     C                     MOVEA##OFF     *IN,1                                               CSD031
+     C                     MOVE HELP25    *IN25                                               CSD031
+      *                                                                                       CSD031
+      *                                                                                       CSD031
+      ** PUTOVR unless conditioned fields change                                              CSD031
+      *                                                                                       CSD031
+     C                     SETON                     86                                       CSD031
+     C           *IN81     IFNE CAIN81                                                        CSD031
+     C                     SETOF                     86                                       CSD031
+     C                     END                                                                CSD031
+     C                     MOVE *IN81     CAIN81  1                                           CSD031
+      *                                                                                       CSD031
+      ** Set cursor by *SET CURSOR data                                                       CSD031
+      *                                                                                       CSD031
+     C                     WRITE#MSGCTL                                                       CSD031
+     C                     WRITE#CMDTXT1                                                      CSD031
+     C                     EXFMT#SFLCTL                                                       CSD031
+     C           *INKL     IFEQ *ON                                                           CSD031
+     C                     MOVE *OFF      *IN21                                               CSD031
+     C                     MOVE *OFF      *IN22                                               CSD031
+     C                     MOVE 'Y'       WF12                                                CSD031
+     C                     MOVE *OFF      *IN55                                               CSD031
+     C                     GOTO CAEXIT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** Maintain subfile position where possible                                             CSD031
+      ** If help requested, display help text                                                 CSD031
+      *                                                                                       CSD031
+     C                     END                                                                CSD031
+      *                                                                                       CSD031
+      ** Update job time                                                                      CSD031
+      *                                                                                       CSD031
+     C                     TIME           ##JTM                                               CSD031
+      *                                                                                       CSD031
+      ** Clear messages from program message queue                                            CSD031
+      *                                                                                       CSD031
+     C                     CALL 'Y2CLMSC'                                                     CSD031
+     C                     PARM ##PGM     ZAPGMQ 10                                           CSD031
+     C                     PARM '*SAME'   ZAPGRL  5                                           CSD031
+      *                                                                                       CSD031
+      ** Reset first message only flag                                                        CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y'       ZAFSMS  1      99*                                  CSD031
+     C                     MOVE *OFF      *IN83                                               CSD031
+     C                     MOVE *OFF      *IN92                                               CSD031
+      *                                                                                       CSD031
+     CSR         CAEXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * ZXEXPG - Cancel and exit program                                                      CSD031
+      *****************************************************************                       CSD031
+     CSR         ZXEXPG    BEGSR                                                              CSD031
+     C                     MOVE 'Y'       WF03    1                                           CSD031
+     C                     SETON                     LR                                       CSD031
+     C                     RETRN                                                              CSD031
+     CSR         ZXEXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * BBLDSF - Load subfile page                                                            CSD031
+      *****************************************************************                       CSD031
+     CSR         BBLDSF    BEGSR                                                              CSD031
+     C   27                DO                                                                 CSD031
+     C  N82                READPSDARCGR1                 90*                                  CSD031
+     C  N82                READ SDARCGR1                 90*                                  CSD031
+     C                     END                                                                CSD031
+      *                                                                                       CSD031
+      ** Setof record error indicators                                                        CSD031
+      *                                                                                       CSD031
+     C                     MOVEL*ALL'0'   WKIND0  1                                           CSD031
+     C                     MOVEAWKIND0    *IN,33                                              CSD031
+      *                                                                                       CSD031
+      ** Start at previous highest record in SFL                                              CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD##RRMX    ##RR    50                                          CSD031
+      *                                                                                       CSD031
+      ** Reset count of DBF records read                                                      CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD0         ##RRRD  50                                          CSD031
+      *                                                                                       CSD031
+      ** Set required pages based on *Set Cursor or *Subfile Pages                            CSD031
+      *                                                                                       CSD031
+     C           W0RR0     IFGT 0                                                             CSD031
+     C           W0RR0     DIV  ##SFPG    ##SPG   30                                          CSD031
+     C                     MVR            ##SLIN  30                                          CSD031
+     C           ##SLIN    IFGT 0                                                             CSD031
+     C                     ADD  1         ##SPG                                               CSD031
+     C                     END                                                                CSD031
+     C           W0SPG     IFGT ##SPG                                                         CSD031
+     C                     Z-ADDW0SPG     ##SPG                                               CSD031
+     C                     END                                                                CSD031
+     C                     ELSE                                                               CSD031
+     C                     Z-ADDW0SPG     ##SPG                                               CSD031
+     C                     END                                                                CSD031
+      *                                                                                       CSD031
+      ** Compute lines required based on pages                                                CSD031
+      *                                                                                       CSD031
+     C           ##SPG     MULT ##SFPG    ##SFLN  90                                          CSD031
+     C           ##SFLN    IFGT 999                                                           CSD031
+     C                     Z-ADD999       ##SFLN                                              CSD031
+     C                     END                                                                CSD031
+      *                                                                                       CSD031
+      ** Load next SFL page until SFL page full, or                                           CSD031
+      ** Scan limit reached                                                                   CSD031
+      *                                                                                       CSD031
+     C           *IN82     DOWEQ'0'                        DO                                 CSD031
+     C           ##RROK    ANDLT##SFLN                                                        CSD031
+     C           ##RRRD    ANDLTW0SLM                                                         CSD031
+      *                                                                                       CSD031
+      ** Load SFL fields                                                                      CSD031
+      *                                                                                       CSD031
+     C                     EXSR MBFL#1                                                        CSD031
+      *                                                                                       CSD031
+      ** Output to subfile                                                                    CSD031
+      *                                                                                       CSD031
+     C                     ADD  1         ##RR                                                CSD031
+     C                     ADD  1         ##RROK     81    *                                  CSD031
+      *                                                                                       CSD031
+      ** If SFLRCD invalid, note that errors present                                          CSD031
+      *                                                                                       CSD031
+     C   98N99             SETON                     99    *                                  CSD031
+     C                     WRITE#SFLRCD                                                       CSD031
+     C           BB020     TAG                                                                CSD031
+      *                                                                                       CSD031
+      ** Increment scan check count                                                           CSD031
+      *                                                                                       CSD031
+     C                     ADD  1         ##RRRD                                              CSD031
+     C                     READ SDARCGR1                 82*82=EOF                            CSD031
+     C                     END                             OD 1 - ##SFPG                      CSD031
+      *                                                                                       CSD031
+     C           BB900     TAG                                                                CSD031
+      *                                                                                       CSD031
+      ** If no DBF records found, display error message                                       CSD031
+      *                                                                                       CSD031
+     C           ##RR      IFEQ *ZERO                                                         CSD031
+     C           *IN82     ANDEQ'1'                                                           CSD031
+      *                                                                                       CSD031
+      ** Send message '*No data to display'                                                   CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'Y2U0008' ZAMSID                                              CSD031
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     END                             FI ##RR = *ZERO                    CSD031
+      *                                                                                       CSD031
+      ** Save highest SFL record load can continue at end point                               CSD031
+      *                                                                                       CSD031
+     C           ##RR      IFGT ##RRMX                                                        CSD031
+      *                                                                                       CSD031
+      ** Calculate top line                                                                   CSD031
+      *                                                                                       CSD031
+     C           ##RROK    DIV  ##SFPG    ##SPG                                               CSD031
+     C                     MVR            ##SLIN                                              CSD031
+     C           ##SLIN    IFGT 0                                                             CSD031
+     C           ##RR      SUB  ##SLIN    ##SFRC                                              CSD031
+     C                     ELSE                                                               CSD031
+     C           ##RR      SUB  ##SFPG    ##SFRC                                              CSD031
+     C                     END                                                                CSD031
+     C                     ADD  1         ##SFRC                                              CSD031
+     C                     Z-ADD##RR      ##RRMX                                              CSD031
+     C                     END                                                                CSD031
+     C                     Z-ADD0         ##RROK                                              CSD031
+     CSR         BBEXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * MBFL#1 - Move fields to subfile                                                       CSD031
+      *****************************************************************                       CSD031
+     CSR         MBFL#1    BEGSR                                                              CSD031
+     C                     MOVE *BLANK    #1SEL                                               CSD031
+     C                     MOVE *BLANKS   #1CHTP                                              CSD031
+     C                     MOVE ZZ010     #1GRPC                                              CSD031
+     C                     MOVELGRPN      #1GRPN                                              CSD031
+     C                     SELEC                                                              CSD031
+     C           CHTP      WHEQ 'I'                                                           CSD031
+     C                     MOVEL'INSERT'  #1CHTP                                              CSD031
+     C           CHTP      WHEQ 'A'                                                           CSD031
+     C                     MOVEL'AMEND '  #1CHTP                                              CSD031
+     C           CHTP      WHEQ 'D'                                                           CSD031
+     C                     MOVEL'DELETE'  #1CHTP                                              CSD031
+     C                     ENDSL                                                              CSD031
+      *                                                                                       CSD031
+      ** Convert Effective Date to screen format                                              CSD031
+      *                                                                                       CSD031
+     C                     CALL 'ZDATE2'                                                      CSD031
+     C                     PARM           EACC                                                CSD031
+     C                     PARM           BJDFIN                                              CSD031
+     C                     PARM           ZDATE   60                                          CSD031
+     C                     PARM           DATEB   7                                           CSD031
+     C                     MOVELDATEB     #1EACC                                              CSD031
+     C                     MOVE ZDATE     #2EACC                                              CSD031
+     CSR                   ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * BAIZSF - Initialise and load subfile page                                             CSD031
+      *****************************************************************                       CSD031
+     CSR         BAIZSF    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+      ** Clear subfile                                                                        CSD031
+      *                                                                                       CSD031
+     C                     MOVE *ON       *IN80                                               CSD031
+     C                     WRITE#SFLCTL                                                       CSD031
+     C                     MOVE *OFF      *IN80                                               CSD031
+      *                                                                                       CSD031
+      ** Reset no of records in subfile                                                       CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD*ZERO     ##RRMX  50 81                                       CSD031
+     C           *LOVAL    SETLLSDARCGR1                                                      CSD031
+     C                     READ SDARCGR1               8782*82=EOF                            CSD031
+      *                                                                                       CSD031
+      ** Load subfile page                                                                    CSD031
+      *                                                                                       CSD031
+     C                     Z-ADD0         ##RROK  50                                          CSD031
+      *                                                                                       CSD031
+     C                     MOVE *OFF      *IN55                                               CSD031
+      *                                                                                       CSD031
+     C                     EXSR BBLDSF                                                        CSD031
+     CSR         BAEXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * ZASNMS - Send message to program message queue                                        CSD031
+      *****************************************************************                       CSD031
+     CSR         ZASNMS    BEGSR                                                              CSD031
+     C           ZAPGMQ    IFEQ *BLANK                                                        CSD031
+     C                     MOVEL##PGM     ZAPGMQ                                              CSD031
+     C                     END                                                                CSD031
+     C                     CALL 'Y2SNMGC'                                                     CSD031
+     C                     PARM           ZAPGMQ 10        Program queue                      CSD031
+     C                     PARM           ZAPGRL  5        Rel queue                          CSD031
+     C                     PARM           ZAMSID  7        Message ID                         CSD031
+     C                     PARM           ZAMSGF 10        Message file                       CSD031
+     C                     PARM           ZAMSDA132        Message data                       CSD031
+     C                     PARM           ZAMSTP  7        Message type                       CSD031
+      * Clear all fields for default mechanism next time                                      CSD031
+     C                     MOVEL*BLANK    ZAPGMQ                                              CSD031
+     C                     MOVEL*BLANK    ZAPGRL                                              CSD031
+     C                     MOVEL*BLANK    ZAMSID                                              CSD031
+     C                     MOVEL*BLANK    ZAMSGF                                              CSD031
+     C                     MOVEL*BLANK    ZAMSDA                                              CSD031
+     C                     MOVEL*BLANK    ZAMSTP                                              CSD031
+     CSR         ZAEXIT    ENDSR                                                              CSD031
+      *****************************************************************                       CSD031
+      * DBPRSF - Process modified subfile record                                              CSD031
+      *****************************************************************                       CSD031
+     CSR         DBPRSF    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+     C                     READC#SFLRCD                  60                                   CSD031
+     C           *IN60     DOWEQ'0'                                                           CSD031
+      *                                                                                       CSD031
+     C           #1SEL     IFNE ' '                                                           CSD031
+     C           #1SEL     ANDNE'D'                                                           CSD031
+     C           #1SEL     ANDNE'E'                                                           CSD031
+     C           #1SEL     ANDNE'X'                                                           CSD031
+     C                     MOVE *ON       *IN55                                               CSD031
+     C                     MOVELERMSG,1   SERMSG                                              CSD031
+     C                     SETON                     9984                                     CSD031
+     C                     UPDAT#SFLRCD                                                       CSD031
+     C                     GOTO END1                                                          CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #1SEL     IFEQ 'D'                                                           CSD031
+     C                     MOVE #1GRPC    WKEY   10                                           CSD031
+     C           WKEY      CHAINSDARCGL0             90                                       CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     DELETSDARCGR0                                                      CSD031
+     C                     EXSR SRCOMT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+     C                     MOVE 'Y'       W0RSF                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #1SEL     IFEQ 'E'                                                           CSD031
+     C                     MOVE #1GRPC    WKEY   10                                           CSD031
+     C           WKEY      CHAINSDARCGR1             90                                       CSD031
+     C           *IN90     IFEQ *OFF                                                          CSD031
+     C                     MOVE *OFF      *IN80                                               CSD031
+     C                     EXSR DETLS1                                                        CSD031
+     C                     MOVE *ON       *IN60                                               CSD031
+     C                     MOVE 'Y'       W0RSF                                               CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C           #1SEL     IFEQ 'X'                                                           CSD031
+     C                     EXSR SRSVAC                                                        CSD031
+     C                     MOVE 'Y'       W0RSF                                               CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Process subfile record                                                                CSD031
+     C                     MOVE #1SEL     W1SEL   1                                           CSD031
+     C                     MOVE *OFF      *IN55                                               CSD031
+     C                     MOVE *BLANK    #1SEL                                               CSD031
+     C                     MOVE *BLANK    SERMSG                                              CSD031
+     C                     UPDAT#SFLRCD                                                       CSD031
+     C                     READC#SFLRCD                  60                                   CSD031
+     C                     ENDDO                                                              CSD031
+      *                                                                                       CSD031
+     C           END1      ENDSR                                                              CSD031
+     C*                                                                                       CSD031
+      *================================================================                       CSD031
+      /EJECT                                                                                  CSD031
+      *================================================================                       CSD031
+     CSR         SRDTAQ    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+      ** Setup details and send message to data queue                                         CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'GPRECGPD'WPFNAM                                              CSD031
+     C                     MOVELSGRPC     WKEYS                                               CSD031
+     C                     MOVEL@1DBRC    WDATA                                               CSD031
+     C                     MOVELWDTQ      PDQMSG                                              CSD031
+     C           'SD'      CAT  'ACCPDTQ' PDQNAM                                              CSD031
+      *                                                                                       CSD031
+     C           *LOVAL    SETLLGPZONEL0                                                      CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C           *IN90     DOWEQ*OFF                                                          CSD031
+     C********** ZOMSYS    CAT  PGMB      PGMNAM 16                                    CSD031 CSC043
+     C           ZOMSYS    CAT  PGMB      PGMNAM 17                                           CSC043
+     C           ZOMSYS    CAT  'DPLIB'   PDQLIB                                              CSD031
+     C                     CALL PGMNAM                                                        CSD031
+     C                     PARM           PDQNAM 10                                           CSD031
+     C                     PARM           PDQLIB 10                                           CSD031
+     C                     PARM           PDQMSG                                              CSD031
+     C                     READ GPZONEL0                 90                                   CSD031
+     C                     ENDDO                                                              CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C/EJECT                                                                                  CSD031
+      *================================================================                       CSD031
+     CSR         DETLS1    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE #1SEL     ACTCD                                               CSD031
+     C                     MOVE #1GRPC    SGRPC                                               CSD031
+     C                     MOVEL#1GRPN    SGRPN                                               CSD031
+     C                     SUBST#1CHTP:1  ACTCD                                               CSD031
+     C                     MOVE MDBI      SMDBI                                               CSD031
+     C                     MOVE MDBA      SMDBA                                               CSD031
+     C                     MOVE ACMI      SACMI                                               CSD031
+     C                     MOVE ACMA      SACMA                                               CSD031
+     C                     MOVE DINI      SDINI                                               CSD031
+     C                     MOVE DINA      SDINA                                               CSD031
+     C                     MOVE INAI      SINAI                                               CSD031
+     C                     MOVE INAA      SINAA                                               CSD031
+     C                     MOVE MINI      SMINI                                               CSD031
+     C                     MOVE MINA      SMINA                                               CSD031
+     C                     MOVE DYSI      SDYSI                                               CSD031
+     C                     MOVE DYSA      SDYSA                                               CSD031
+     C                     MOVE FIXI      SFIXI                                               CSD031
+     C                     MOVE FIXA      SFIXA                                               CSD031
+     C           EACC      IFEQ *ZERO                                                         CSD031
+     C                     MOVE *BLANKS   #2EACC                                              CSD031
+     C                     ELSE                                                               CSD031
+     C                     CALL 'ZDATE2'                                                      CSD031
+     C                     PARM           EACC                                                CSD031
+     C                     PARM           BJDFIN                                              CSD031
+     C                     PARM           ZDATE                                               CSD031
+     C                     PARM           DATEB                                               CSD031
+     C                     MOVE ZDATE     #2EACC                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'N'       WDETL   1                                           CSD031
+     C           WDETL     DOWEQ'N'                                                           CSD031
+     C                     EXFMTSD2350F2                                                      CSD031
+     C           *INKC     IFEQ *ON                                                           CSD031
+     C           *INKL     OREQ *ON                                                           CSD031
+     C                     MOVE 'Y'       WDETL                                               CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDDO                                                              CSD031
+      *                                                                                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C/EJECT                                                                                  CSD031
+      *================================================================                       CSD031
+     CSR         SRSVAC    BEGSR                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVEL'81      'KEY                                                 CSD031
+     C                     MOVE '    '    KEY                                                 CSD031
+     C                     MOVE #1GRPC    KEY                                                 CSD031
+     C           KEY       CHAINTABLE2               71                                       CSD031
+     C           *IN71     IFEQ *OFF                                                          CSD031
+     C                     MOVE #1GRPC    ZZ010                                               CSD031
+     C                     MOVEL#1GRPN    GRPN                                                CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'Y'       GPDT                                                CSD031
+     C                     MOVE 'Y'       AACC                                                CSD031
+     C                     Z-ADDBJRDNB    EACC                                                CSD031
+      *                                                                                       CSD031
+     C                     SUBST#1CHTP:1  CHTP                                                CSD031
+     C                     UPDATTABLEV4F                                                      CSD031
+     C                     EXSR SRCOMT                                                        CSD031
+      *                                                                                       CSD031
+     C                     ELSE                                                               CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'NNNNNNN' SSCOMI                                              CSD031
+     C                     MOVE SSCOMI    DSCOMI                                              CSD031
+     C                     MOVE *BLANKS   SSCOMA                                              CSD031
+     C                     MOVE #1GRPC    ZZ010                                               CSD031
+     C                     MOVEL#1GRPN    GRPN                                                CSD031
+      *                                                                                       CSD031
+     C                     MOVE 'Y'       GPDT                                                CSD031
+     C                     MOVE 'Y'       AACC                                                CSD031
+     C                     Z-ADDBJRDNB    EACC                                                CSD031
+      *                                                                                       CSD031
+     C                     SUBST#1CHTP:1  CHTP                                                CSD031
+     C                     WRITETABLEV4F                                                      CSD031
+     C                     EXSR SRCOMT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE #1GRPC    ZZ010                                               CSD031
+     C           ZZ010     CHAINSDARCGL0             72                                       CSD031
+     C           *IN72     IFEQ *OFF                                                          CSD031
+     C                     DELETSDARCGR0                                                      CSD031
+     C                     EXSR SRCOMT                                                        CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C/EJECT                                                                                  CSD031
+      *================================================================                       CSD031
+     CSR         ZDATE1    BEGSR                                                              CSD031
+     C                     CALL 'ZDATE1'                                                      CSD031
+     C                     PARM           ZERR    7                                           CSD031
+     C                     PARM           ZDATE   60                                          CSD031
+     C                     PARM           ZDATFM  1                                           CSD031
+     C                     PARM           ZDAYNO  50                                          CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C/EJECT                                                                                  CSD031
+     C*-------------------------------------------------------------------                    CSD031
+     C*                                                                                       CSD031
+     CSR         SRCOMT    BEGSR                                                              CSD031
+      *================================================================                       CSD031
+      * COMMITMENT AND ROLLBACK                                                               CSD031
+      *================================================================                       CSD031
+      *                                                                                       CSD031
+     C           *IN90     IFEQ *ON                                                           CSD031
+      * Error: ROLLBACK any DBF changes                                                       CSD031
+     C                     ROLBK                                                              CSD031
+     C                     ELSE                                                               CSD031
+      * Otherwise COMMIT any DBF changes                                                      CSD031
+     C                     COMIT                                                              CSD031
+     C                     END                                                                CSD031
+     C                     MOVE *OFF      *IN90                                               CSD031
+     CSR                   ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C/EJECT                                                                                  CSD031
+      *================================================================                       CSD031
+     C*                                                                                       CSD031
+     C           SRRTTX    BEGSR                                                              CSD031
+     C                     CALL 'SDRTVTXT'                                                    CSD031
+     C                     PARM           MSGID   7                                           CSD031
+     C                     PARM           MSGF   10                                           CSD031
+     C                     PARM *BLANKS   MSGTXT 80                                           CSD031
+     C                     ENDSR                                                              CSD031
+      *================================================================                       CSD031
+     C*
+     C*
+     C*
+     C*
+**   ERRMSG - ERROR MESSAGES
+INVALID ACTION CODE
+INVALID GROUP CODE
+INVALID COMMAND KEY
+RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION
+USER IS NOT AUTHORISED TO ACTION CODE
+TITLE ONLY ACCOUNT IS INVALID
+ACCOUNT CODE MUST BE INCOME OR EXPENSE
+GROUP CODE NOT FOUND
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** CMDT                                                                                       CSD031
+D=Delete  E=Enquire  X=Accept  F3=Exit  F12=Previous                                          CSD031

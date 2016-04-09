@@ -1,0 +1,1106 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Pay/receive telexes')
+/*OVRF*: OVRDBF CNFRPX CNFRP2                                       : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0592  -  PAY/RECEIVE TELEX REPORT                            *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 02Oct96               *
+      *                 CFE001             Date 03Oct90               *
+     F*                  E22028             DATE 25JUN90                 *
+     F*                  E20771             DATE 20MAR90                 *
+     F*                  S01117             DATE 05MAR90                 *
+     F*                  E18343             DATE 11NOV89                 *
+     F*                  E15959             DATE 03OCT89                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   CFE001  -  AMEND PROGRAM TO ALLOW PAGE OVERFLOW                *
+     F*   E22028  -  PREVENT DOUBLE OUTPUT OF HEADINGS FOR DBERROR.      *
+     F*           -  ERROR FIX NOT RELEVANT TO REL.10 CODE.              *
+     F*   E20771  -  ADD CODING TO DEAL WITH CHANGE IN BRANCH            *
+     F*           -  ERROR FIX NOT RELEVANT TO REL.10 CODE               *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18343  -  PROGRAM RE-COMPILED DUE TO CHANGE IN ZSRSRC MEMBER  *
+     F*              ZFRPEDZ3                                            *
+     F*   E15959  -  AMENDS PGM TO FIND DETAILS OF AN ALPHA FACO.        *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*     OVRDBF     FILE(CNFRPX) TOFILE(CNFRP2)                       *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*F0592P1O** E                    PRINTER                            S01117
+     F***********                                   KINFDS PRINT          S01117
+     FFF0592P1O   E                    PRINTER                        UC  S01117
+     F                                              KINFDS SPOOL          S01117
+     FFF0592AUO   E                    PRINTER                            S01117
+     F                                              KINFDS SPOOLU         S01117
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FTABTG10 IF  E           K        DISK
+     FTABLETL IF  E           K        DISK
+     FTABLET2 IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FCNFRPX  IP  E           K        DISK
+     F*
+     F/SPACE 2
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*     10 - CHAIN FAIL ON TABTG10
+     F*
+     F*     15 - DETAILS REPORT PRT/F HAS BEEN OPENED                     S01117
+     F*     17 - INITIAL PROCESSING COMPLETED
+     F*
+     F*     20 - CHAIN FAIL ON CLINT
+     F*     21 - COUNTERPARTY NOSTRO NUMERIC
+     F*
+     F*     40 - CHAIN FAIL ON TABLET2
+     F*     50 - CHAIN FAIL ON TABLETL
+     F*                                                                   S01117
+     F*     60 - MULTIBRANCHING INDICATOR = Y                             S01117
+     F*
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*     ------------------------------------------------
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*     ---------------------------------------------------
+     F******98*-*MM/DD/YY*FORMAT*ON*TABTB10*******************************S01117
+     F******99*-*CHAIN*FAIL*ON*TABTB10************************************S01117
+     F*     98 - MM/DD/YY DATE FORMAT                                     S01117
+     F*     99 - CHAIN FAIL                                               S01117
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F******L*E*V*E*L***B*R*E*A*K*S**(ISCY,SETA,POCD,CBCD,FACO,CNOS)******S01117
+     F*     L E V E L   B R E A K S  (SBID,ISCY,SETA,POCD,CBCD,FACO,CNOS) S01117
+     F*     -------------------------------------------------------
+     F*SBID L7 - On change of Settlement Branch ID -                      S01117
+     F*          Access the branch name off SDBRCHPD and                  S01117
+     F*          open new spooled PRTF/FF0590P1 for each new branch.      S01117
+     F*ISCY L6 - On change of CNFRPX instrument currency -
+     F*          Access the currency name off TABTG10.
+     F*SETA L5 - On change of Settlement Account -
+     F*          Access Nostro name off TABLET1; access name and town
+     F*          off CLINT and move into report fields.
+     F*POCD L4 - On change of Position Change Date -
+     F*          Print test total and new page.
+     F*CBCD L3 - On change of customer -
+     F*          Access customer name and town off CLINT; move into
+     F*          report fields.
+     F*FACO L2 - On change of For Account Of -
+     F*          Access faco name and town off CLINT; move into report
+     F*          fields.
+     F*CNOS L1 - On change of Nostro -
+     F*          Access counterparty nostro name and town from TABLET2
+     F/SPACE 2
+     E*EXTENSION SPECIFICATIONS ***************************************
+     E*
+     E* C O M P I L E   T I M E   A R R A Y S
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    MNOS    1   2 20                                S01117
+     E                    CPY@    1   1 80
+     ICNFRPDF
+     I*
+      ** Level break descriptions for confirmations/telex file
+     I*
+     I                                              SBID  L7              S01117
+     I                                              ISCY  L6
+     I                                              SETA  L5
+     I                                              POCD  L4
+     I                                              CBCD  L3
+     I                                              FACO  L2
+     I                                              CNOS  L1
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I*RINT****** DS                                                      S01117
+     I***DS*FOR*LINE*NO.*TO*HANDLE*OVERFLOW*******************************S01117
+     I*                                                                   S01117
+      ** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I*                                                                   S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 367 3680LINE
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*
+     INOSDS       DS
+     I*
+      ** DATASTRUCTURE TO REPORT KLIST KEY FOR DB ERROR
+     I*
+     I                                        1   3 ISCY
+     I                                        4   50SET
+     I*
+     IERRDTL      DS
+     I**   Database error detail datastructure to concatenate filename
+     I*    and keyfield details
+     I                                        1   8 FILE
+     I                                       10  29 KEY
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+      **   Local Data Area for Database Error Details
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+      ** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      ** EXTERNAL DS FOR BRANCHES DETAILS                                 S01117
+      *                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+     I*
+     ISDCUST    E DSSDCUSTPD                                                                  CSD027
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                                     CSD027
+     I              QQDFAC                          QQDFAX                                    CSD027
+     I*                                                                                       CSD027
+     I********************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C********************************************************************
+     C*
+      ** Define KLIST for accessing TABLETL
+     C*
+     C           NOSKY     KLIST
+     C                     KFLD           ISCY
+     C                     KFLD           SET
+     C*
+      ** Define KLIST for accessing CLINT
+     C*
+     C           *LIKE     DEFN CNUM      CNUMK
+     C           CLINTK    KLIST
+     C                     KFLD           CNUMK
+     C                     KFLD           RCDT
+     C*
+      ** Pass parm indicating whether file override is to Pay or Rec telex
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PRPRM   1
+     C********************************************************************
+     C*    F I R S T   C Y C L E    P R O C E S S I N G
+     C********************************************************************
+     C*
+      ** Do following on first read of file only
+     C*
+     C           *IN17     IFNE '1'
+     C                     SETON                     17                   S01117
+     C                     EXSR INITSR
+     C                     END
+     C/EJECT
+     C*******************************************************************
+     C*
+      ****L*E*V*E*L***B*R*E*A*K*S**(BRCD,ISCY,SETA,POCD,CBCD,FACO,CNOS)***S01117
+      **  L E V E L   B R E A K S  (SBID,ISCY,SETA,POCD,CBCD,FACO,CNOS)   S01117
+     C*
+      **  D E T A I L   P R O C E S S I N G
+     C*
+     C*******************************************************************
+     C*                                                                   S01117
+      ** ACCUMULATE NO. OF RECORDS READ                                   S01117
+     C*                                                                   S01117
+     C                     ADD  1         COUNT                           S01117
+     C*                                                                   S01117
+      **  L7 - AT CHANGE OF SETTLEMENT BRANCH ID EXECUTE PRINT            S01117
+     C*                                                                   S01117
+     C           *INL7     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+      ** GET BRANCH NAME                                                  S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SBID      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    @DSFDY                          S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01117
+     C                     MOVEL@DSNB     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 10 *S01117
+     C                     Z-ADD10        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     MOVEL*BLANKS   SEBN                            S01117
+     C                     EXSR DBERR                                     S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C                     MOVELA8BRNM    SEBN                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     15                   S01117
+     C                     OPEN FF0592P1                                  S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C*                                                                   S01117
+      **   ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM SBID      SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*
+      ** L6 - ON CHANGE OF CURRENCY ACCESS CURRENCY NAME OFF TABTG10
+     C*
+     C           *INL6     IFEQ '1'
+     C*
+     C           ISCY      CHAINTABTG10F             10
+     C*
+      ** Report database error if no live record found
+     C*
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVEL'TABTG10' FILE
+     C                     MOVELISCY      KEY
+     C                     MOVELERRDTL    DBKEY            ***************
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     END
+     C*
+      **  L5 - ACCESS NOSTRO NAME OFF TABLET1, ACCESS NAME AND TOWN OFF
+      **      CLINT; MOVE INTO REPORT FIELDS.
+      **       IF SETTLEMENT ACCOUNT IS 00, SET CUSTOMER NAME AND TOWN    S01117
+      **      TO 'INCOMPLETE NOSTRO SETTLEMENT'.                          S01117
+     C*
+     C           *INL5     IFEQ '1'
+     C*
+     C                     MOVELSETA      SET
+     C*                                                                   S01117
+     C           SET       IFNE 00                                        S01117
+     C           NOSKY     CHAINTABLETLF             50
+     C*
+      ** If no live record found db-error
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELNOSDS     KEY
+     C                     MOVEL'TABLETL' FILE
+     C                     MOVELERRDTL    DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 06 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Chain to CLINT using nostro number obtained from TABLETL
+     C*
+     C**********           Z-ADDCNUM      CNUMK                                               CSD027
+     C                     MOVE CNUM      CNUMK                                               CSD027
+     C                     MOVE 'A'       RCDT
+     C           CLINTK    CHAINCLINTCBF             20
+     C*
+      ** Report database error if no live record found
+     C*
+     C           *IN20     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELCNUM      DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Move name and town into reporting fields
+     C*
+     C                     MOVE CRNM      NCNM
+     C                     MOVE CTWN      NTWN
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C                     MOVELMNOS,1    NCNM                            S01117
+     C                     MOVELMNOS,2    NTWN                            S01117
+     C                     END                                            S01117
+     C*
+     C                     END
+     C*
+      **  L4 -  ON CHANGE OF POSITION CHANGE DATE, PRINT TEST TOTAL AND
+     C*         NEW PAGE
+      **  Format position change date to ddmmmyy
+     C*
+     C           *INL4     IFEQ '1'
+     C                     Z-ADDPOCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    POCDA
+     C*
+      ** Output Report Headings
+     C*
+     C           PRPRM     IFEQ 'P'
+     C                     WRITEFMTP10P
+     C                     ELSE
+     C                     WRITEFMTP10R
+     C                     END
+     C*
+     C                     END
+     C*
+      **  L3 - ON CHANGE OF CUSTOMER ACCESS NAME AND TOWN OFF CLINT
+     C*
+     C           *INL3     IFEQ '1'
+     C*
+     C**********           Z-ADDCBCD      CNUMK                                               CSD027
+     C                     MOVE CBCD      CNUMK                                               CSD027
+     C                     MOVE 'A'       RCDT
+     C           CLINTK    CHAINCLINTCBF             20
+     C*
+      ** Report database error if no live record found
+     C*
+     C           *IN20     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CLINT'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELCBCD      DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Move into report fields
+     C*
+     C                     MOVE CRNM      CUSNM
+     C                     MOVE CTWN      CUSTN
+     C*
+     C                     END
+     C*
+      **  L2 - ON CHANGE OF "FOR ACCOUNT OF" ACCESS CLINT USING FIRST 6
+     C*        CHARS OF FACO FIELD (IF NOT BLANK)
+     C           *INL2     IFEQ '1'
+     C*
+     C           FACO      IFNE *BLANKS
+      * Use FACO to look for customer through access object.                                  CSD027
+      * If FACO is found then use details from customer.                                      CSD027
+      * If FACO is not found then check against TABLET2 to see if this is a c'party nostro    CSD027
+     C                     CALL 'AOCUSTR0'                 **2                                CSD027
+     C                     PARM '*MSG   ' @RTCD   7        **2                                CSD027
+     C                     PARM '*KEY   ' @OPTN   7        **2                                CSD027
+     C                     PARM FACO      @KEY1  10        **2                                CSD027
+     C                     PARM *BLANKS   @KYST   7        **2                                CSD027
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSD027
+     C           @RTCD     IFEQ *BLANKS                                                       CSD027
+      * Customer found so set up reporting fields                                             CSD027
+     C                     MOVE BBCRNM    FACNM                                               CSD027
+     C                     MOVE BBCRTN    FACTN                                               CSD027
+     C                     ELSE                                                               CSD027
+      * No customer found so check on TABLET2                                                 CSD027
+     C                     MOVELFACO      @FACO8  8                                           CSD027
+     C           @FACO8    CHAINTABLET2F             99                                       CSD027
+     C           *IN99     IFEQ '0'                                                           CSD027
+      * Counterparty nostro found so set up reporting fields                                  CSD027
+     C                     MOVELCPNM      FACNM                                               CSD027
+     C                     MOVELCPTN      FACTN                                               CSD027
+     C                     ELSE                                                               CSD027
+      * Not found on TABLET2 either so we have a database error                               CSD027
+     C           *LOCK     IN   LDA                                                           CSD027
+     C                     MOVE 'TABLE'   DBFILE                                              CSD027
+     C                     MOVE *BLANKS   DBKEY                                               CSD027
+     C                     MOVELFACO      DBKEY            ***************                    CSD027
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *                    CSD027
+     C                     OUT  LDA                                                           CSD027
+     C                     EXSR DBERR                      ***************                    CSD027
+     C                     END                                                                CSD027
+     C                     END                                                                CSD027
+     C************LIKE     DEFN CNUM      FAC                                                 CSD027
+     C***********          MOVELFACO      @FACO6  6                       E15959              CSD027
+     C***********          TESTN          @FACO6     21                   E15959              CSD027
+     C************                                                        E15959              CSD027
+      ****IF*'FOR A/C OF'  IS NUMERIC, ACCESS CLINTCB FOR                 E15959              CSD027
+      ****CUSTOMER REPORT NAME AND TOWN                                   E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C************IN21     IFEQ '1'                                       E15959              CSD027
+     C***********          MOVE 'A'       RCDT                                                CSD027
+     C***********          MOVELFACO      CNUMK                                               CSD027
+     C***********CLINTK    CHAINCLINTCBF             20                                       CSD027
+     C***********                                                                             CSD027
+      ****Report*database error if no live record found                                       CSD027
+     C***********                                                                             CSD027
+     C************IN20     IFEQ '1'                                                           CSD027
+     C***********RECI      ORNE 'D'                                                           CSD027
+     C************LOCK     IN   LDA                                       S01117              CSD027
+     C***********          MOVE 'CLINT'   DBFILE                                              CSD027
+     C***********          MOVE *BLANKS   DBKEY                                               CSD027
+     C***********          MOVELFACO      DBKEY            ***************                    CSD027
+     C***********          Z-ADD3         DBASE            * DB ERROR 03 *                    CSD027
+     C***********          OUT  LDA                                       S01117              CSD027
+     C***********          EXSR DBERR                      ***************                    CSD027
+     C***********          END                                                                CSD027
+     C***********                                                                             CSD027
+      ****Move*into reporting fields.                                                         CSD027
+     C***********                                                                             CSD027
+     C***********          MOVE CRNM      FACNM                                               CSD027
+     C***********          MOVE CTWN      FACTN                                               CSD027
+     C***********                                                         E15959              CSD027
+      **  ELSE 'FOR A/C OF' IS NON-NUMERIC                                E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********          ELSE                                           E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****READ*CLINT TO OBTAIN CUSTOMER NAME AND TOWN                     E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C************LOVAL    SETLLCLINTCBF                                  E15959              CSD027
+     C***********          READ CLINTCBF                 20               E15959              CSD027
+     C***********          MOVELCSNM      @CSNM6  6                       E15959              CSD027
+     C***********@CSNM6    DOWNE@FACO6                                    E15959              CSD027
+     C***********          READ CLINTCBF                 20               E15959              CSD027
+     C***********          MOVELCSNM      @CSNM6                          E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****IF*NO*LIVE RECORD FOUND, CHECK THAT IT ISN'T ON TABLET2         E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C************IN20     IFEQ '1'                                       E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********          MOVELFACO      @FACO8  8                       E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****READ*TABLET2 TO OBTAIN COUNTERPARTY NOSTRO NAME AND TOWN        E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********@FACO8    CHAINTABLET2F             99                   E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C************IN99     IFEQ '0'                                       E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****Move*into reporting fields. (FROM TABLET2)                      E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********          MOVELCPNM      FACNM                           E15959              CSD027
+     C***********          MOVELCPTN      FACTN                           E15959              CSD027
+     C***********          GOTO ENDL2                                     E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****Report*database error if no live record found                   E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********          ELSE                                           E15959              CSD027
+     C************LOCK     IN   LDA                                       S01117              CSD027
+     C***********          MOVE 'TABLE'   DBFILE                          E15959              CSD027
+     C***********          MOVE *BLANKS   DBKEY                           E15959              CSD027
+     C***********          MOVELFACO      DBKEY            ***************E15959              CSD027
+     C***********          Z-ADD9         DBASE            * DB ERROR 09 *E15959              CSD027
+     C***********          OUT  LDA                                       S01117              CSD027
+     C***********          EXSR DBERR                      ***************E15959              CSD027
+     C***********          END                                            E15959              CSD027
+     C***********          END                                            E15959              CSD027
+     C***********          END                                            E15959              CSD027
+     C***********                                                         E15959              CSD027
+      ****Move*into reporting fields. (FROM CLINT)                        E15959              CSD027
+     C***********                                                         E15959              CSD027
+     C***********          MOVE CRNM      FACNM                           E15959              CSD027
+     C***********          MOVE CTWN      FACTN                           E15959              CSD027
+     C***********          END                                            E15959              CSD027
+     C                     END
+     C*
+     C           FACO      IFEQ *BLANKS
+     C                     MOVE *BLANK    FACNM
+     C                     MOVE *BLANK    FACTN
+     C                     END
+     C*
+     C                     END
+     C           ENDL2     TAG                                            E15959
+     C*
+      **  L1 - ACCESS COUNTERPARTY NOSTRO NAME AND TOWN FROM TABLET2
+      **       OR CLINTCB
+     C*
+     C           *INL1     IFEQ '1'
+     C           CNOS      IFNE *BLANKS                                                       CSD027
+      * Use CNOS to look for customer through access object.                                  CSD027
+      * If CNOS is found then use details from customer.                                      CSD027
+      * If CNOS is not found then check against TABLET2 to see if this is a c'party nostro    CSD027
+     C                     CALL 'AOCUSTR0'                 **2                                CSD027
+     C                     PARM '*MSG   ' @RTCD   7        **2                                CSD027
+     C                     PARM '*KEY   ' @OPTN   7        **2                                CSD027
+     C                     PARM CNOS      @KEY1  10        **2                                CSD027
+     C                     PARM *BLANKS   @KYST   7        **2                                CSD027
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSD027
+     C           @RTCD     IFEQ *BLANKS                                                       CSD027
+      * Customer found so set up reporting fields                                             CSD027
+     C                     MOVE BBCRNM    CPNM                                                CSD027
+     C                     MOVE BBCRTN    CPTN                                                CSD027
+     C                     ELSE                                                               CSD027
+      * No customer found so check on TABLET2                                                 CSD027
+     C           CNOS      CHAINTABLET2F             99                                       CSD027
+     C           *IN99     IFEQ '0'                                                           CSD027
+      * Counterparty nostro found so OK                                                       CSD027
+     C                     ELSE                                                               CSD027
+      * Not found on TABLET2 either so we have a database error                               CSD027
+     C           *LOCK     IN   LDA                                                           CSD027
+     C                     MOVE 'TABLE'   DBFILE                                              CSD027
+     C                     MOVE *BLANKS   DBKEY                                               CSD027
+     C                     MOVELCNOS      DBKEY            ***************                    CSD027
+     C                     Z-ADD2         DBASE            * DB ERROR 09 *                    CSD027
+     C                     OUT  LDA                                                           CSD027
+     C                     EXSR DBERR                      ***************                    CSD027
+     C                     END                                                                CSD027
+     C                     END                                                                CSD027
+     C                     ELSE                                                               CSD027
+      * CNOS is Blanks                                                                        CSD027
+     C                     MOVE *BLANK    CPNM                                                CSD027
+     C                     MOVE *BLANK    CPTN                                                CSD027
+     C                     END                                                                CSD027
+     C***********          MOVELCNOS      CNOS6   6                                           CSD027
+     C***********          TESTN          CNOS6      21                                       CSD027
+     C***********                                                                             CSD027
+     C****IF*COUNTERPARTY NOSTRO IS NUMERIC, ACCESS CLINTCB FOR                               CSD027
+     C****CUSTOMER REPORT NAME AND TOWN                                                       CSD027
+     C***********                                                                             CSD027
+     C************IN21     IFEQ '1'                                                           CSD027
+     C***********          MOVE CNOS6     CNUMK                                               CSD027
+     C***********          MOVE 'A'       RCDT                                                CSD027
+     C***********CLINTK    CHAINCLINTCBF             20                                       CSD027
+     C***********                                                                             CSD027
+     C****Report*database error if no live record found                                       CSD027
+     C***********                                                                             CSD027
+     C************IN20     IFEQ '1'                                                           CSD027
+     C***********RECI      ORNE 'D'                                                           CSD027
+     C************LOCK     IN   LDA                                       S01117              CSD027
+     C***********          MOVE 'CLINT'   DBFILE                                              CSD027
+     C***********          MOVE *BLANKS   DBKEY                                               CSD027
+     C***********          MOVELCNOS6     DBKEY            ***************                    CSD027
+     C***********          Z-ADD8         DBASE            * DB ERROR 08 *                    CSD027
+     C***********          OUT  LDA                                       S01117              CSD027
+     C***********          EXSR DBERR                      ***************                    CSD027
+     C***********          END                                                                CSD027
+     C***********                                                                             CSD027
+     C****ELSE*COUNTERPARTY NOSTRO IS NON-NUMERIC                                             CSD027
+     C***********                                                                             CSD027
+     C***********          ELSE                                                               CSD027
+     C***********                                                                             CSD027
+     C****IF*COUNTERPARTY NOSTRO IS NOT BLANK, ACCESS TABLET2                                 CSD027
+     C****FOR*COUNTERPARTY NOSTRO NAME AND TOWN                                               CSD027
+     C***********CNOS      IFNE *BLANK                                                        CSD027
+     C***********CNOS      CHAINTABLET2F             40                                       CSD027
+     C***********                                                                             CSD027
+     C****Report*database error if no live record found                                       CSD027
+     C***********                                                                             CSD027
+     C************IN40     IFEQ '1'                                                           CSD027
+     C***********RECI      ORNE 'D'                                                           CSD027
+     C************LOCK     IN   LDA                                       S01117              CSD027
+     C***********          MOVE 'TABLE'   DBFILE                                              CSD027
+     C***********          MOVE *BLANKS   DBKEY                                               CSD027
+     C***********          MOVEL'TABLET2' FILE                                                CSD027
+     C***********          MOVELCNOS      KEY                                                 CSD027
+     C***********          MOVELERRDTL    DBKEY            ***************                    CSD027
+     C***********          Z-ADD2         DBASE            * DB ERROR 02 *                    CSD027
+     C***********          OUT  LDA                                       S01117              CSD027
+     C***********          EXSR DBERR                      ***************                    CSD027
+     C***********          END                                                                CSD027
+     C***********                                                                             CSD027
+      ****ELSE*COUNTERPARTY NOSTRO IS BLANK                                                   CSD027
+     C***********          ELSE                                                               CSD027
+     C***********          MOVE *BLANK    CPNM                                                CSD027
+     C***********          MOVE *BLANK    CPTN                                                CSD027
+     C***********                                                                             CSD027
+     C***********          END                                                                CSD027
+     C************         END                                                                CSD027
+     C                     END
+     C*
+      ** WRITE PAY/RECEIVE DETAIL LINE TO REPORT
+     C*
+      ** Transaction number may be negative (for trades at maturity)
+     C*
+     C           TNBR      IFGT *ZERO
+     C                     MOVELTNBR      RTNBR
+     C                     MOVE '    '    RTNBR
+     C                     ELSE
+     C                     Z-SUBTNBR      WTNBR   60
+     C                     MOVELWTNBR     RTNBR
+     C                     MOVE '-(M)'    RTNBR
+     C                     END
+     C*
+      ** If the transaction number is blank and the instrument is Market
+      ** output the instrument type, month/year, put/call and strike price
+     C*
+     C           TNBR      IFEQ 0
+     C*
+     C           MTHN      IFGT 0
+     C                     MOVE ZMNM,MTHN MTH
+     C                     MOVE YRNO      YRN
+     C*
+      ** If the transaction number is blank and the instrument is OTC
+      ** output the instrument type, put/call and strike price
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   MTH
+     C                     MOVE *BLANKS   YRN
+     C                     END
+     C*
+      ** Format strike price
+     C*
+     C                     END
+     C*
+      ** If override is to Pay Telexes, call PAYTEL Subroutine
+     C*
+     C           PRPRM     IFEQ 'P'
+     C                     EXSR PAYTEL
+     C*
+      ** If override is to Receive Telexes, call RECTEL Subroutine
+     C*
+     C                     ELSE
+     C                     EXSR RECTEL
+     C                     END
+     C*
+      ** Format pay/receive total using ZFRPED SR
+     C*
+     C                     Z-ADDPRTOT     ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C*
+      ** Move formatted total to report field
+     C*
+     C                     MOVE *BLANKS   PRTOTF
+     C                     MOVE ZOUT22    PRTOTF
+     C*
+     C***********LINE      IFGT 58                                        CFE001
+     C           LINE      IFGE 58                                        CFE001
+     C*
+     C           PRPRM     IFEQ 'P'
+     C                     WRITEFMTP10P
+     C                     ELSE
+     C                     WRITEFMTP10R
+     C                     END
+     C*
+     C                     END
+     C*
+     C           TNBR      IFEQ 0
+     C                     WRITEFMTP12I
+     C                     ELSE
+     C                     WRITEFMTP12T
+     C                     END
+     C*
+     C*******************************************************************
+     C*
+     C**  T O T A L   T I M E   P R O C E S S I N G
+     C*
+     C*******************************************************************
+     C*
+      ** Format pay/receive page total
+     C*
+     CL4 17                EXSR L4TOT
+     C*                                                                   S01117
+      ** Format details report when change of settlement branch id        S01117
+     C*                                                                   S01117
+     CL7 17                EXSR L7REP                                     S01117
+     C*
+     C***'End*of*report'*lines********************************************S01117
+     C** Last record processing                                           S01117
+     C*
+     CLR                   EXSR LASTR
+     C/EJECT
+     C*******************************************************************
+     C*
+     C*  INITSR SR.  TO  ACCESS TABLE FILES AND OUTPUT HEADINGS
+     C*  CALLED BY MAIN PROCESSING
+     C*
+     C*******************************************************************
+     C           INITSR    BEGSR
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE 'FF0592  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+      ** SET COUNTER OF NO. OF RECORDS READ                               S01117
+     C*                                                                   S01117
+     C                     Z-ADD*ZEROS    COUNT   50                      S01117
+     C*                                                                   S01117
+      ** ACCESS DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+      ** SET MULTIBRANCHING INDICATOR                                     S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     60                   S01117
+     C                     END                                            S01117
+     C***********          SETON                     17                   S01117
+     C***********                                                         S01117
+      ***ACCESS*TABTB10***************************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** Set *IN98 for mm/dd/yy format
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C                     ENDSR
+     C*******************************************************************
+     C*
+     C*  S/R PAYTEL TO PROCESS PAY TELEX RECORDS
+     C*
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C*******************************************************************
+     C*
+     C           PAYTEL    BEGSR
+     C*
+     C**  Zeroise Pay/Receive charges total field
+     C*
+     C                     Z-ADD0         PRTOT
+     C*
+      ** Accumulate Total Commission amounts into detail line and test
+      ** total fields if the amount is negative
+     C*
+     C           TOCM      IFLT 0
+     C           PRTOT     SUB  TOCM      PRTOT  150
+     C           TSTOTL    SUB  TOCM      TSTOTL
+     C                     END
+     C*
+      ** Accumulate Total Charge amounts into detail line and test
+      ** total fields if the amount is negative
+     C*
+     C           TOCG      IFLT 0
+     C           PRTOT     SUB  TOCG      PRTOT
+     C           TSTOTL    SUB  TOCG      TSTOTL
+     C                     END
+     C*
+      ** Accumulate Total Pay/Rec amounts into detail line and test
+      ** total fields if the amount is negative
+     C*
+     C           TOPR      IFLT 0
+     C           PRTOT     SUB  TOPR      PRTOT
+     C           TSTOTL    SUB  TOPR      TSTOTL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*******************************************************************
+     C*
+     C*  S/R RECTEL TO PROCESS RECIEVE TELEX RECORDS
+     C*
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C*******************************************************************
+     C*
+     C           RECTEL    BEGSR
+     C*
+     C**  Zeroise Pay/Receive charges total field
+     C*
+     C                     Z-ADD0         PRTOT
+     C*
+      ** Accumulate Total Commission amounts into detail line and test
+      ** total fields if the amount is positive
+     C*
+     C           TOCM      IFGT 0
+     C           TOCM      ADD  PRTOT     PRTOT
+     C           TOCM      ADD  TSTOTL    TSTOTL
+     C                     END
+     C*
+      ** Accumulate Total Charges amounts into detail line and test
+      ** total fields if the amount is positive
+     C*
+     C           TOCG      IFGT 0
+     C           TOCG      ADD  PRTOT     PRTOT
+     C           TOCG      ADD  TSTOTL    TSTOTL
+     C                     END
+     C*
+      ** Accumulate Total Pay/Rec amounts into detail line and test
+      ** total fields if the amount is positive
+     C*
+     C           TOPR      IFGT 0
+     C           TOPR      ADD  PRTOT     PRTOT
+     C           TOPR      ADD  TSTOTL    TSTOTL
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      **     L4TOT S/R TO PERFOTM TOTAL TIME PROCESSING AT LR
+      **     CALLED FROM MAIN PROCESSING
+      **
+     C********************************************************************
+     C*
+     C           L4TOT     BEGSR
+     C*
+     C           *LIKE     DEFN ZFLD15    TSTOTL
+     C                     Z-ADDTSTOTL    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   TSTOTF
+     C                     MOVE ZOUT22    TSTOTF
+     C                     Z-ADD0         TSTOTL
+     C*
+      ** Write out total
+     C*
+     C           LINE      IFGT 58
+     C*
+     C           PRPRM     IFEQ 'P'
+     C                     WRITEFMTP10P
+     C                     ELSE
+     C                     WRITEFMTP10R
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     WRITEFMTP103
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      **     L7REP S/R TO PERFROM CHANGE OF SETTLEMENT BRANCH ID          S01117
+      **               PROCESSING                                         S01117
+      **     CALLED FROM MAIN LINE                                        S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           L7REP     BEGSR                                          S01117
+     C*                                                                   S01117
+     C           *IN15     IFEQ '1'                                       S01117
+     C           LINE      IFGT 58                                        S01117
+     C*                                                                   S01117
+     C           PRPRM     IFEQ 'P'                                       S01117
+     C                     WRITEFMTP10P                                   S01117
+     C                     ELSE                                           S01117
+     C                     WRITEFMTP10R                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     WRITEFMTP104                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETOF                     15                   S01117
+     C                     CLOSEFF0592P1                                  S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C********************************************************************
+      **
+      **     LASTR S/R TO PERFROM LAST RECORD PROCESSING
+      **     CALLED FROM MAIN LINE
+      **
+     C********************************************************************
+     C*
+     C           LASTR     BEGSR
+     C*
+      ** If first cycle indicator is not on, no details to report
+     C*
+     C           *IN17     IFEQ '0'
+     C                     EXSR INITSR
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     EXSR WRITAU                                    S01117
+     C*
+     C***********PRPRM     IFEQ 'P'                                       S01117
+     C***********          WRITEFMTP10P                                   S01117
+     C***********          ELSE                                           S01117
+     C***********          WRITEFMTP10R                                   S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C***********          WRITEFMTP101                                   S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+      ****Records*on*file,**print*"End*of*Report"*message*****************S01117
+     C***********                                                         S01117
+     C***********          WRITEFMTP104                                   S01117
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** WRITAU - SUBROUTINE TO OUTPUT AU REPORT                          S01117
+      ** CALLED FROM: LASTR, DBERR                                        S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           WRITAU    BEGSR                           ** WRITAU **   S01117
+     C*                                                                   S01117
+      ** ENSURE TOTAL SPOOL FILE RECORDED BY RCF                          S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANKS   SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** OUTPUT AUDIT REPORT HEADING                                      S01117
+     C*                                                                   S01117
+     C           PRPRM     IFEQ 'P'                                       S01117
+     C                     WRITEFMTAU1P                                   S01117
+     C                     ELSE                                           S01117
+     C                     WRITEFMTAU1R                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** OUTPUT RUN CONTROLS TOTAL TO AUDIT REPORT                        S01117
+     C*                                                                   S01117
+     C           PRPRM     IFEQ 'P'                                       S01117
+     C                     WRITEFMTAU2P                                   S01117
+     C                     ELSE                                           S01117
+     C                     WRITEFMTAU2R                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** IF NO DETAIL TO REPORT, OUTPUT TO AUDIT REPORT                   S01117
+     C*                                                                   S01117
+     C           *IN17     IFEQ '0'                                       S01117
+     C           *INU7     ANDEQ'0'                                       S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+      ** IF DATABASE ERROR, OUTPUT TO AUDIT REPORT                        S01117
+     C*                                                                   S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     WRITEFMTAU04                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C********************************************************************
+      **
+      **     DBERR S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+      **     CALLED IN ALL S/RS
+      **
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C           *IN15     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C           PRPRM     IFEQ 'P'
+     C                     WRITEFMTP10P
+     C                     ELSE
+     C                     WRITEFMTP10R
+     C                     END
+     C*
+     C                     WRITEFMTP105
+     C                     WRITEFMTP104                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     EXSR WRITAU                                    S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+      /COPY ZSRSRC,ZDATE2Z3
+**  MNOS
+INCOMPLETE NOSTRO
+SETTLEMENT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,532 @@
+     H        1   Y
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                    AR1097376
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Lending Module                                      *
+      *                                                               *
+      *  LER252 - RE/GL Profitability Extract Copy Data               *
+      *                                                               *
+      *  Function:  This program will copy a block of records from    *
+      *             the old driver physical file ACCNTAB via ACCNT    *
+      *             to a member in the new driver physical LEEXPRPD.  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. AR1097376 *REDUNDANT Date 03Apr13             *
+      *  Prev Amend No. CLE075AC           Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP035             Date 07May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB003 *Create     Date 31Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1097376 - LERC25 task splits failed due to slow            *
+      *              processing  of TS server.                        *
+      *  CLE075AC - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines                                        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *         - A default timestamp string is required for write to *
+      *           files LEEXPIPD/LEEXPRPD.                            *
+      *  CAP035 - Conversion of Midas inputs to modular API           *
+      *           structure - Recompiled.                             *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Copy records from old driver to new driver file.    *
+      *                                                               *
+      *****************************************************************
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+     F***LEEXPRPDUF  E                    DISK         KINFSR *PSSR A                       CLE075AC
+     FLEEXPRPDUF  E                    DISK         KINFSR *PSSR A    UC                    CLE075AC
+     F**********  ACCNTABF                          KRENAMELEFIXX                           CLE075AC
+     F            LEEXPRD0                          KRENAMELEFIXX                           CLE075AC
+     F                                              KCOMIT
+      *
+     FLEEXPIPDUF  E                    DISK         KINFSR *PSSR A
+     F**********  ACCNTABF                          KRENAMEFXCIAF                           CLE075AC
+     F            LEEXPRD0                          KRENAMEFXCIAF                           CLE075AC
+     F                                              KCOMIT
+      *
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     50 - Indicator for dummy read of LEEXPRPD                 *
+      *     80 - CHAIN indicator for LEEXPIPD                         *
+      *     81 - CHAIN indicator for ACCNT                            *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     E**********          STAMP   1   1 26                                           CPK015 CLE075AC
+      ***Array*containing*dummy*timestamp******************************              CPK015 CLE075AC
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+      ** Rename fields for LEEXPIPD
+     IFXCIAF
+     I**********    RECI                            WRECI                                   CLE075AC
+     I              RECID                           WRECID                                  CLE075AC
+     I              CNUM                            WCNUM
+     I              CCY                             WCCY
+     I              ACOD                            WACOD
+     I              ACSQ                            WACSQ
+     I**********    ZZ006                           WZZ006                                  CLE075AC
+     I              BRCA                            WBRCA
+     I              PROT                            WPROT                                   CLE075AC
+     I**********    ATYP                            WATYP                                   CLE075AC
+     I**********    STYP                            WSTYP                                   CLE075AC
+     I**********    MFFQ                            WMFFQ                                   CLE075AC
+     I**********    ACST                            WACST                                   CLE075AC
+     I**********    DACO                            WDACO                                   CLE075AC
+     I**********    DACC                            WDACC                                   CLE075AC
+     I**********    ANAM                            WANAM                                   CLE075AC
+     I**********    LDBL                            WLDBL                                   CLE075AC
+     I**********    CLBL                            WCLBL                                   CLE075AC
+     I**********    STFQ                            WSTFQ                                   CLE075AC
+     I**********    STDY                            WSTDY                                   CLE075AC
+     I**********    LSTD                            WLSTD                                   CLE075AC
+     I**********    NSTD                            WNSTD                                   CLE075AC
+     I**********    LSTP                            WLSTP                                   CLE075AC
+     I**********    CFSB                            WCFSB                                   CLE075AC
+     I**********    LMVD                            WLMVD                                   CLE075AC
+     I**********    EPLB                            WEPLB                                   CLE075AC
+     I**********    EPCB                            WEPCB                                   CLE075AC
+     I**********    YTDB                            WYTDB                                   CLE075AC
+     I**********    GLBT                            WGLBT                                   CLE075AC
+     I**********    ADREF1                          WDREF1                                  CLE075AC
+     I**********    PRFC                            WPRFC                                   CLE075AC
+     I**********    ZZ004                           WZZ004                                  CLE075AC
+     I**********    ORED                            WORED                                   CLE075AC
+     I**********    DLIM                            WDLIM                                   CLE075AC
+     I**********    LRCR                            WLRCR                                   CLE075AC
+     I**********    RTCB                            WRTCB                                   CLE075AC
+     I**********    RTLB                            WRTLB                                   CLE075AC
+     I**********    DITM                            WDITM                                   CLE075AC
+     I**********    CITM                            WCITM                                   CLE075AC
+     I**********    ADREF2                          WDREF2                                  CLE075AC
+     I**********    ZZ002                           WZZ002                                  CLE075AC
+     I**********    CDIR                            WCDIR                                   CLE075AC
+     I**********    CCIR                            WCCIR                                   CLE075AC
+     I**********    ACNO                            WACNO                                   CLE075AC
+     I**********    RETB                            WRETB                                   CLE075AC
+     I**********    ODSC                            WODSC                                   CLE075AC
+     I**********    ODLN                            WODLN                                   CLE075AC
+     I**********    ODED                            WODED                                   CLE075AC
+     I**********    DIOD                            WDIOD                                   CLE075AC
+     I**********    FACT                            WFACT                                   CLE075AC
+     I**********    FCNO                            WFCNO                                   CLE075AC
+     I**********    EFAC                            WEFAC                                   CLE075AC
+     I**********    HELD                            WHELD                                   CLE075AC
+     I**********    MINB                            WMINB                                   CLE075AC
+     I**********    LACD                            WLACD                                   CLE075AC
+     I**********    LISP                            WLISP                                   CLE075AC
+     I**********    RRNM                            WRRNM                                   CLE075AC
+     I**********    DRIB                            WDRIB                                   CLE075AC
+     I**********    DRIS                            WDRIS                                   CLE075AC
+     I**********    DRCD                            WDRCD                                   CLE075AC
+     I**********    DRIC                            WDRIC                                   CLE075AC
+     I**********    DRIF                            WDRIF                                   CLE075AC
+     I**********    DRDY                            WDRDY                                   CLE075AC
+     I**********    NDID                            WNDID                                   CLE075AC
+     I**********    LDID                            WLDID                                   CLE075AC
+     I**********    LDIA                            WLDIA                                   CLE075AC
+     I**********    SDAP                            WSDAP                                   CLE075AC
+     I**********    LPAR                            WLPAR                                   CLE075AC
+     I**********    DIIE                            WDIIE                                   CLE075AC
+     I**********    DAIC                            WDAIC                                   CLE075AC
+     I**********    MADI                            WMADI                                   CLE075AC
+     I**********    GADI                            WGADI                                   CLE075AC
+     I**********    DDIS                            WDDIS                                   CLE075AC
+     I**********    DDIA                            WDDIA                                   CLE075AC
+     I**********    OLDR                            WOLDR                                   CLE075AC
+     I**********    OLDB                            WOLDB                                   CLE075AC
+     I**********    OLDS                            WOLDS                                   CLE075AC
+     I**********    CRIB                            WCRIB                                   CLE075AC
+     I**********    CRIS                            WCRIS                                   CLE075AC
+     I**********    CRCD                            WCRCD                                   CLE075AC
+     I**********    CRIC                            WCRIC                                   CLE075AC
+     I**********    CRIF                            WCRIF                                   CLE075AC
+     I**********    CRDY                            WCRDY                                   CLE075AC
+     I**********    NCID                            WNCID                                   CLE075AC
+     I**********    LCID                            WLCID                                   CLE075AC
+     I**********    LCIA                            WLCIA                                   CLE075AC
+     I**********    SCAP                            WSCAP                                   CLE075AC
+     I**********    LPAP                            WLPAP                                   CLE075AC
+     I**********    CIIE                            WCIIE                                   CLE075AC
+     I**********    CAIC                            WCAIC                                   CLE075AC
+     I**********    MACI                            WMACI                                   CLE075AC
+     I**********    GACI                            WGACI                                   CLE075AC
+     I**********    CDIS                            WCDIS                                   CLE075AC
+     I**********    DCIA                            WDCIA                                   CLE075AC
+     I**********    OLCR                            WOLCR                                   CLE075AC
+     I**********    OLCB                            WOLCB                                   CLE075AC
+     I**********    OLCS                            WOLCS                                   CLE075AC
+     I**********    LCD                             WLCD                                    CLE075AC
+     I**********    CHTP                            WCHTP                                   CLE075AC
+     I**********    TNLU                            WTNLU                                   CLE075AC
+     I**********    BRTCA                           WBRTCA                                  CLE075AC
+     I**********    NACSG                           WNACSG                                  CLE075AC
+     I              TMST                            WTMST                                     CPK015
+     I**********    FCCU                            WFCCU                            CLE025 CLE075AC
+     I**********    COLF                            WCOLF                            CLE025 CLE075AC
+     I**********    BCOA                            WBCOA                            CLE025 CLE075AC
+     I**********    COLA                            WCOLA                            CLE025 CLE075AC
+     I**********    PFCU                            WPFCU                            CLE025 CLE075AC
+     I**********    PFTP                            WPFTP                            CLE025 CLE075AC
+     I**********    PFSQ                            WPFSQ                            CLE025 CLE075AC
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN PROCESSING                                               *
+      *                                                               *
+      * Calls: INIT, TSPLIT, END                                      *
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           RECTOT  70
+     C                     PARM           RTCODE  3
+      *                                                                                     CLE075AC
+     C                     OPEN LEEXPRPD                                                    CLE075AC
+      *
+      ** Initial processing
+     C           RUNONE    IFEQ ' '                                                         CLE075AC
+     C                     EXSR INIT
+     C                     MOVE 'Y'       RUNONE  1                                         CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *
+      ** Split records into new file
+     C                     EXSR TSPLIT
+      *
+      ** End processing
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * TSPLIT - Split records into new driver and index files        *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           TSPLIT    BEGSR
+      *
+     C                     Z-ADD0         TOT     70
+      *                                                                                     CLE075AC
+      ** SETLL to the index file.                                                           CLE075AC
+      *                                                                                     CLE075AC
+     C           1         SETLLLEEXPIPD                 80                                 CLE075AC
+      *
+      ** Check the Index file and set the file pointer to the next
+      ** driver record to be copies accordingly.
+      *
+     C                     READ LEEXPIPD                 80
+      *
+     C           *IN80     IFEQ '1'
+     C**         *LOVAL    SETLLACCNT
+     C                     ELSE
+     C                     MOVE WBRCA     KBRCA
+     C**********           Z-ADDWCNUM     KCNUM                                               CSD027
+     C                     MOVE WCNUM     KCNUM                                               CSD027
+     C                     MOVE WCCY      KCCY
+     C                     Z-ADDWACOD     KACOD
+     C                     Z-ADDWACSQ     KACSQ
+     C           KEY       SETGTACCNT
+     C                     ENDIF
+      *
+      ** Copy records to the new driver file until the limit
+      ** specified in the input parameter (RECTOT) is reached.
+      *
+     C           TOT       DOUEQRECTOT
+     C           *IN81     OREQ '1'
+     C                     READ ACCNT                    81
+     C           *IN81     IFEQ '0'
+      *                                                                                     CLE075AC
+      ** Write first record, if there is one.                                               CLE075AC
+      *                                                                                     CLE075AC
+     C           TOT       IFEQ 0                                                           CLE075AC
+     C                     MOVE 'A'       RECID                                             CLE075AC
+     C                     MOVE ' '       PROT                                              CLE075AC
+      *                                                                                     CLE075AC
+      ** Output Timestamp.                                                                  CLE075AC
+      *                                                                                     CLE075AC
+     C**********           MOVEASTAMP,1   TMST             Default Timestamp         CPK015 CLE075AC
+     C                     CALL 'ZAGENTS'                                                   CLE075AC
+     C                     PARM           TMST   26                                         CLE075AC
+     C                     WRITELEFIXX
+     C                     ENDIF                                                            CLE075AC
+      *                                                                                     CLE075AC
+     C                     ADD  1         TOT
+     C                     ENDIF
+     C                     ENDDO
+      *                                                                                     CLE075AC
+      ** Write last record, if there is one.                                                CLE075AC
+      *                                                                                     CLE075AC
+     C           TOT       IFGT 0                                                           CLE075AC
+     C                     MOVE 'Z'       RECID                                             CLE075AC
+     C                     MOVE ' '       PROT                                              CLE075AC
+      *                                                                                     CLE075AC
+      ** Output Timestamp.                                                                  CLE075AC
+      *                                                                                     CLE075AC
+     C                     CALL 'ZAGENTS'                                                   CLE075AC
+     C                     PARM           TMST                                              CLE075AC
+     C                     WRITELEFIXX                                                      CLE075AC
+     C                     ENDIF                                                            CLE075AC
+      *
+      ** Set up fields for Index file with data from last record
+      ** written to PF/LEEXPIPD.
+      *
+     C**********           MOVE RECI      WRECI                                             CLE075AC
+     C                     MOVE RECID     WRECID                                            CLE075AC
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE CCY       WCCY
+     C                     Z-ADDACOD      WACOD
+     C                     Z-ADDACSQ      WACSQ
+     C**********           MOVE ZZ006     WZZ006                                            CLE075AC
+     C                     MOVE BRCA      WBRCA
+     C                     MOVE PROT      WPROT                                             CLE075AC
+     C                     MOVE TMST      WTMST                                             CLE075AC
+     C**********           MOVE ATYP      WATYP                                             CLE075AC
+     C**********           MOVE STYP      WSTYP                                             CLE075AC
+     C**********           MOVE MFFQ      WMFFQ                                             CLE075AC
+     C**********           MOVE ACST      WACST                                             CLE075AC
+     C**********           Z-ADDDACO      WDACO                                             CLE075AC
+     C**********           Z-ADDDACC      WDACC                                             CLE075AC
+     C**********           MOVE ANAM      WANAM                                             CLE075AC
+     C**********           Z-ADDLDBL      WLDBL                                             CLE075AC
+     C**********           Z-ADDCLBL      WCLBL                                             CLE075AC
+     C**********           MOVE STFQ      WSTFQ                                             CLE075AC
+     C**********           Z-ADDSTDY      WSTDY                                             CLE075AC
+     C**********           Z-ADDLSTD      WLSTD                                             CLE075AC
+     C**********           Z-ADDNSTD      WNSTD                                             CLE075AC
+     C**********           Z-ADDLSTP      WLSTP                                             CLE075AC
+     C**********           Z-ADDCFSB      WCFSB                                             CLE075AC
+     C**********           Z-ADDLMVD      WLMVD                                             CLE075AC
+     C**********           Z-ADDEPLB      WEPLB                                             CLE075AC
+     C**********           Z-ADDEPCB      WEPCB                                             CLE075AC
+     C**********           Z-ADDYTDB      WYTDB                                             CLE075AC
+     C**********           MOVE GLBT      WGLBT                                             CLE075AC
+     C**********           MOVE ADREF1    WDREF1                                            CLE075AC
+     C**********           MOVE PRFC      WPRFC                                             CLE075AC
+     C**********           MOVE ZZ004     WZZ004                                            CLE075AC
+     C**********           Z-ADDORED      WORED                                             CLE075AC
+     C**********           Z-ADDDLIM      WDLIM                                             CLE075AC
+     C**********           Z-ADDLRCR      WLRCR                                             CLE075AC
+     C**********           Z-ADDRTCB      WRTCB                                             CLE075AC
+     C**********           Z-ADDRTLB      WRTLB                                             CLE075AC
+     C**********           Z-ADDDITM      WDITM                                             CLE075AC
+     C**********           Z-ADDCITM      WCITM                                             CLE075AC
+     C**********           MOVE ADREF2    WDREF2                                            CLE075AC
+     C**********           MOVE ZZ002     WZZ002                                            CLE075AC
+     C**********           Z-ADDCDIR      WCDIR                                             CLE075AC
+     C**********           Z-ADDCCIR      WCCIR                                             CLE075AC
+     C**********           Z-ADDACNO      WACNO                                             CLE075AC
+     C**********           MOVE RETB      WRETB                                             CLE075AC
+     C**********           MOVE ODSC      WODSC                                             CLE075AC
+     C**********           Z-ADDODLN      WODLN                                             CLE075AC
+     C**********           Z-ADDODED      WODED                                             CLE075AC
+     C**********           Z-ADDDIOD      WDIOD                                             CLE075AC
+     C**********           Z-ADDFACT      WFACT                                             CLE075AC
+     C**********           Z-ADDFCNO      WFCNO                                             CLE075AC
+     C**********           Z-ADDEFAC      WEFAC                                             CLE075AC
+     C**********           Z-ADDHELD      WHELD                                             CLE075AC
+     C**********           Z-ADDMINB      WMINB                                             CLE075AC
+     C**********           Z-ADDLACD      WLACD                                             CLE075AC
+     C**********           Z-ADDLISP      WLISP                                             CLE075AC
+     C**********           Z-ADDRRNM      WRRNM                                             CLE075AC
+     C**********           Z-ADDDRIB      WDRIB                                             CLE075AC
+     C**********           Z-ADDDRIS      WDRIS                                             CLE075AC
+     C**********           Z-ADDDRCD      WDRCD                                             CLE075AC
+     C**********           Z-ADDDRIC      WDRIC                                             CLE075AC
+     C**********           MOVE DRIF      WDRIF                                             CLE075AC
+     C**********           Z-ADDDRDY      WDRDY                                             CLE075AC
+     C**********           Z-ADDNDID      WNDID                                             CLE075AC
+     C**********           Z-ADDLDID      WLDID                                             CLE075AC
+     C**********           Z-ADDLDIA      WLDIA                                             CLE075AC
+     C**********           MOVE SDAP      WSDAP                                             CLE075AC
+     C**********           Z-ADDLPAR      WLPAR                                             CLE075AC
+     C**********           Z-ADDDIIE      WDIIE                                             CLE075AC
+     C**********           Z-ADDDAIC      WDAIC                                             CLE075AC
+     C**********           Z-ADDMADI      WMADI                                             CLE075AC
+     C**********           Z-ADDGADI      WGADI                                             CLE075AC
+     C**********           MOVE DDIS      WDDIS                                             CLE075AC
+     C**********           Z-ADDDDIA      WDDIA                                             CLE075AC
+     C**********           Z-ADDOLDR      WOLDR                                             CLE075AC
+     C**********           Z-ADDOLDB      WOLDB                                             CLE075AC
+     C**********           Z-ADDOLDS      WOLDS                                             CLE075AC
+     C**********           Z-ADDCRIB      WCRIB                                             CLE075AC
+     C**********           Z-ADDCRIS      WCRIS                                             CLE075AC
+     C**********           Z-ADDCRCD      WCRCD                                             CLE075AC
+     C**********           Z-ADDCRIC      WCRIC                                             CLE075AC
+     C**********           MOVE CRIF      WCRIF                                             CLE075AC
+     C**********           Z-ADDCRDY      WCRDY                                             CLE075AC
+     C**********           Z-ADDNCID      WNCID                                             CLE075AC
+     C**********           Z-ADDLCID      WLCID                                             CLE075AC
+     C**********           Z-ADDLCIA      WLCIA                                             CLE075AC
+     C**********           MOVE SCAP      WSCAP                                             CLE075AC
+     C**********           Z-ADDLPAP      WLPAP                                             CLE075AC
+     C**********           Z-ADDCIIE      WCIIE                                             CLE075AC
+     C**********           Z-ADDCAIC      WCAIC                                             CLE075AC
+     C**********           Z-ADDMACI      WMACI                                             CLE075AC
+     C**********           Z-ADDGACI      WGACI                                             CLE075AC
+     C**********           MOVE CDIS      WCDIS                                             CLE075AC
+     C**********           Z-ADDDCIA      WDCIA                                             CLE075AC
+     C**********           Z-ADDOLCR      WOLCR                                             CLE075AC
+     C**********           Z-ADDOLCB      WOLCB                                             CLE075AC
+     C**********           Z-ADDOLCS      WOLCS                                             CLE075AC
+     C**********           Z-ADDLCD       WLCD                                              CLE075AC
+     C**********           MOVE CHTP      WCHTP                                             CLE075AC
+     C**********           Z-ADDTNLU      WTNLU                                             CLE075AC
+     C**********           MOVE BRTCA     WBRTCA                                            CLE075AC
+     C**********           MOVE NACSG     WNACSG                                            CLE075AC
+     C**********           Z-ADDFCCU      WFCCU                                        CLE025 CSD027
+     C**********           MOVE FCCU      WFCCU                                      CSD027 CLE075AC
+     C**********           MOVE COLF      WCOLF                                      CLE025 CLE075AC
+     C**********           Z-ADDBCOA      WBCOA                                      CLE025 CLE075AC
+     C**********           Z-ADDCOLA      WCOLA                                      CLE025 CLE075AC
+     C**********           Z-ADDPFCU      WPFCU                                        CLE025 CSD027
+     C**********           MOVE PFCU      WPFCU                                      CSD027 CLE075AC
+     C**********           Z-ADDPFTP      WPFTP                                      CLE025 CLE075AC
+     C**********           Z-ADDPFSQ      WPFSQ                                      CLE025 CLE075AC
+      *
+      ** If Index file is empty write new record to it,else update
+      ** with details of last record written to LEEXPIPD.
+      *
+     C           *IN80     IFEQ '1'
+     C**********           MOVEASTAMP,1   WTMST            Default Timestamp         CPK015 CLE075AC
+     C                     WRITEFXCIAF
+     C                     ELSE
+     C                     UPDATFXCIAF
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * END - Exit program and return to calling program              *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+      ** If end of file on ACCNT set return code to notify server.
+      *
+     C           *IN81     IFEQ *ON
+     C           TOT       IFEQ 0                                                           CLE075AC
+     C                     MOVE 'NRF'     RTCODE                                            CLE075AC
+     C                     ELSE                                                             CLE075AC
+     C                     MOVE 'EOF'     RTCODE
+     C                     ENDIF                                                            CLE075AC
+     C                     ENDIF
+      *
+     C                     CLOSELEEXPRPD                                                    CLE075AC
+     C**********           SETON                     LR                                     CLE075AC
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT - Initial processing                                     *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** KLIST for setting file pointer to next record to be copied.
+      *
+     C           KEY       KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Dummy READ to LEEXPRPD for compilation purposes
+     C                     MOVE '0'       *IN50
+     C           *IN50     IFEQ '1'
+     C                     READ LEEXPRPD                 50
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR     - Program exception error routine                   *
+      *             Called automatically if a program error occurs,   *
+      *             or directly by the program code using EXSR.       *
+      *             this subroutine DUMPS the program just once.      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      **STAMP*-*Dummy*timestamp****************************************            CPK015 CLE075AC
+      **0001-01-01-00.00.00.000000                                                 CPK015 CLE075AC
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2001

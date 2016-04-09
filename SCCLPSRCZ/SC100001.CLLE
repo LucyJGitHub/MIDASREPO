@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC check if library exists')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SC100001 - Check if schema exists                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR866251 *CREATE   Date 28Nov11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR866251 - Back Up and Recovery>Schema and Libraries; No    */
+/*                  Error handling when adding non existing library  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBNAM &RETCDE)
+ 
+             DCL        VAR(&LIBNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETCDE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if schema exists */
+/** - if found &RETCDE = 'Y', else &RETCDE = 'N' */
+ 
+             CHKOBJ     OBJ(QSYS/&LIBNAM) OBJTYPE(*LIB) AUT(*NONE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOTFOUND))
+ 
+FOUND:
+             CHGVAR     VAR(&RETCDE) VALUE('Y')
+             GOTO       CMDLBL(ENDPGM)
+ 
+NOTFOUND:
+             CHGVAR VAR(&RETCDE) VALUE('N')
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program SC100001 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ENDPGM:
+             ENDPGM

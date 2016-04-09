@@ -1,0 +1,297 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Check if adjust. capitalized today')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3662A - FORCE SYSTEM TO CHECK IF ADJUSTMENTS ARE TO BE     *
+     F*            CAPITALIZED TODAY                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 094431             Date 05Jul95               *
+      *                 S01413 *CREATE     Date 13Apr93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  094431 - Recompiled over changed REHISSL.                    *  *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FREHISCB UF  E           K        DISK
+     F                                              KINFDS RECDS
+     F                                              KINFSR RECSR
+     FREHISSL IF  E           K        DISK
+     F                                              KINFDS RESDS
+     F                                              KINFSR RESSR
+     FRE3662AAO   E                    PRINTER
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       90       Read on REHISSL                                *
+     F*                                                               *
+     F*       LR       End of Program                                 *
+     F*       U7       Database Error                                 *
+     F*       U8       Database Error                                 *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   MAIN   - Main processing                                    *
+     F*   RECSR  - Rehiscb file exception/error handling              *
+     F*   RESSR  - Rehissl file exception/error handling              *
+     F*   DBSR   - Database error handling                            *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80               COPYRIGHT
+     I/EJECT
+     I*
+     IREHISPSF
+     I*
+     I** Rename REHISPSF format fields - REHISSL file
+     I*
+     I              RECI                            SRECI
+     I              BRCA                            SBRCA
+     I              CNUM                            SCNUM
+     I              CCY                             SCCY
+     I              ACOD                            SACOD
+     I              ACSQ                            SACSQ
+     I              HISD                            SHISD
+     I              HISB                            SHISB
+     I              MNBL                            SMNBL
+     I              TCHGAR                          SCHGAR
+     I              TCHGAN                          SCHGAN
+     I              DICT                            SDICT
+     I              DRCB                            SDRCB
+     I              DRIR                            SDRIR
+     I              DRCD                            SDRCD
+     I              TMADI                           SMADI
+     I              PDID                            SPDID
+     I              DMINT                           SDMINT
+     I              CICT                            SCICT
+     I              CRCB                            SCRCB
+     I              CRIR                            SCRIR
+     I              CRCD                            SCRCD
+     I              TMACI                           SMACI
+     I              PCID                            SPCID
+     I              CMINT                           SCMINT
+     I*
+     IRECDS       DS
+     I                                     *STATUS  STSREC
+     IRESDS       DS
+     I                                     *STATUS  STSRES
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local Data Structure for Database Error
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Data Structure for bank details
+     I*
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     C/EJECT
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*===============================================================
+     C** C O R E   P R O C E S S I N G
+     C*===============================================================
+     C*
+     C           REHKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Prepare LDA variables
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'RE3662A' DBPGM
+     C                     OUT  LDA
+     C*
+     C** Get bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Error in SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBSR
+     C                     END
+     C*
+     C                     Z-ADD002       DBASE
+     C                     READ REHISCB                  LR
+     C*
+     C           *INLR     DOWEQ'0'
+     C                     EXSR MAIN
+     C                     ADD  1         WNB
+     C                     Z-ADD003       DBASE
+     C                     READ REHISCB                  LR
+     C                     END
+     C*
+     C                     WRITEHEADAU
+     C*
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C**
+     C** MAIN Subroutine to perform main processing
+     C**
+     C**     Called by       CORE
+     C**     Calls           -
+     C**
+     C           MAIN      BEGSR
+     C*
+     C                     Z-ADD004       DBASE
+     C           REHKEY    SETLLREHISSL
+     C                     Z-ADD005       DBASE
+     C           REHKEY    READEREHISSL                  90
+     C*
+     C           *IN90     IFEQ '0'
+     C           SHISD     ANDLTVDTC
+     C                     ADD  1         WUB
+     C                     Z-ADDSHISD     VDTC
+     C*
+     C           ADTY      IFEQ ' '
+     C                     MOVE 'Y'       ADTY
+     C                     END
+     C*
+     C                     Z-ADD006       DBASE
+     C                     UPDATREHISPPF
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**
+     C** RECSR subroutine for REHISCB  file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           RECSR     BEGSR                           **RECSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'HISCB'   DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY            * STATUS ERR  *
+     C                     MOVELSTSREC    DBSTAT           ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **RECSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RESSR subroutine for REHISSL  file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           RESSR     BEGSR                           **RESSR BEGSR**
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'HISSL'   DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY            * STATUS ERR  *
+     C                     MOVELSTSRES    DBSTAT           ***************
+     C                     OUT  LDA
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **RESSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       RECSR, RESSR
+     C**     Calls           *PSSR
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEHEADAU
+     C                     WRITEERRAU
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** *PSSR subroutine for database error dumps
+     C**
+     C**     Called by       DBSR
+     C**     Calls           -
+     C**
+     C           *PSSR     BEGSR                           **PSSR BEGSR**
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **PSSR ENDSR**
+     C********************************************************************
+     C/EJECT
+** CPY@ OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

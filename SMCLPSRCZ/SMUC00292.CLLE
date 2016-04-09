@@ -1,0 +1,142 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMUC00292F) TOFILE(UPFFDSTPD)                   */                /*A1084804A*/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Migrate MMPTRMPD')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00292 - Migrate MMPTRMPD                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. A1084804A          Date 11Feb13              */
+/*       Prev Amend No. A1084804 *CREATE   Date 28Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1084804A- Allow to cope with the from field being alpha    */
+/*                  or numeric.                                      */
+/*       A1084804 - Add MMPTRMPD record to SMZNMGPD.                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+ 
+             DCLF       FILE(SMUC00292F)                                               /*A1084804A*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve system prefixes and set library name. */
+             CALL       PGM(AOSVALR0) PARM(' ' 'BrgOldZonePrefix' +
+                          &SVAL1 'BrgMidasSystemPrefix' &SVAL2 ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ')
+             IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             IF         COND(%SST(&SVAL2 1 4) *EQ '*NRF') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Depending on mode use one of the Ssytem Values. */
+             IF         COND(&MODE *EQ '*MIG') THEN(DO)
+/**********     CHGVAR     VAR(&FMLIB) VALUE(%SST(&SVAL1 1 2) *BCAT +               */ /*A1084804A*/
+/**********                  'DMLIB')                                               */ /*A1084804A*/
+                CHGVAR     VAR(&FMLIB) VALUE(%SST(&SVAL1 1 2) *TCAT +
+                             'DMLIB')                                                  /*A1084804A*/
+             ENDDO
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                CHGVAR     VAR(&FMLIB) VALUE('#.' *TCAT %SST(&SVAL2 1 +
+                             2) *TCAT 'DMLIB')
+             ENDDO
+ 
+/* Check whether from field is alpha or numeric. */                                    /*A1084804A*/
+             CALL       PGM(UTC000004) PARM('MMPTRMPD' &FMLIB +
+                          'SMUC00292F' '*FIRST' '*REPLACE')                            /*A1084804A*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*A1084804A*/
+                GOTO       CMDLBL(ERROR)                                               /*A1084804A*/
+             ENDDO                                                                     /*A1084804A*/
+ 
+CHKFLD:                                                                                /*A1084804A*/
+             RCVF                                                                      /*A1084804A*/
+             IF         COND(&WHFLDI *NE 'PTCNUM') THEN(DO)                            /*A1084804A*/
+                GOTO       CMDLBL(CHKFLD)                                              /*A1084804A*/
+             ENDDO                                                                     /*A1084804A*/
+ 
+/* Clear file in case of re-run. */
+             CLRPFM     FILE(MMPTRMPD)
+ 
+/* Insert records from old file. */
+             CHGVAR     VAR(&STM_STR) VALUE('insert into MMPTRMPD +
+                          (PTRECI, PTDLNO, PTCNUM, PTCCY, PTPCPL,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE('PTBRCA, PTORBR, PTSTYP, +
+                          PTBOOK, PTDDAT, PTVDAT, PTMDAT,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('PTPMDT, PTDEFR, PTPENR, +
+                          PTDLRT, PTICBS, PTFLID, PTRDFC,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('PTBRTT, PTINTA, PTPINT, +
+                          PTADJA, PTCHTP, PTLCT, PTUSRI,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('PTUSRX, PTCNMA) select')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('b.PTRECI, b.PTDLNO, 0, +
+                          b.PTCCY, b.PTPCPL,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('b.PTBRCA, b.PTORBR, +
+                          b.PTSTYP, b.PTBOOK, b.PTDDAT, b.PTVDAT, +
+                          b.PTMDAT,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('b.PTPMDT, b.PTDEFR, +
+                          b.PTPENR, b.PTDLRT, b.PTICBS, b.PTFLID, +
+                          b.PTRDFC,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE('b.PTBRTT, b.PTINTA, +
+                          b.PTPINT, b.PTADJA, b.PTCHTP, b.PTLCT, +
+                          b.PTUSRI,')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             IF         COND(&WHFLDT *EQ 'A') THEN(DO)                                 /*A1084804A*/
+                CHGVAR     VAR(&STM_STR) VALUE('b.PTUSRX, b.PTCNUM +
+                             from' *BCAT &FMLIB *TCAT '/MMPTRMPD b')                   /*A1084804A*/
+             ENDDO                                                                     /*A1084804A*/
+             ELSE       CMD(DO)                                                        /*A1084804A*/
+                CHGVAR     VAR(&STM_STR) VALUE('b.PTUSRX, +
+                             DIGITS(b.PTCNUM) from' *BCAT &FMLIB *TCAT +
+                             '/MMPTRMPD b')
+             ENDDO                                                                     /*A1084804A*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+/* Delete record from SMZNMGPD but only for '*MIG' mode. */
+             IF         COND(&MODE *EQ '*MIG') THEN(DO)
+                CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
+                             where ZNOBJ = ''MMPTRMPD''')
+                CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

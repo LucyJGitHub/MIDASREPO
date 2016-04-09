@@ -1,0 +1,467 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Calc. following interest rate change dat')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG98FREQ - Calculate New date                                *
+     F*                                                               *
+     F*  Function:  This program accepts 4 parameters                 *
+     F*             1)Event date (5,0)                                *
+     F*             2)Event frequency (1,A) M,T,Q,X,Y                 *
+     F*             3)Currency Code   (3,A)                           *
+     F*             3)Day of month    (2,0)                           *
+     F*             and calculates from the recieved event date       *
+     F*             the date at which the next event occurs.          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 22Nov94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     E**  Copyright array.
+     E                    CPY     1   1 80
+     E*
+     E                    ZFMD   12  12  2               ZFREQ SR. ARRAY  S01119
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E/COPY ZSRSRC,ZHOLE                                                  S01157
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM                          S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+     I* GENERAL LEDGER DETAILS ACCESSED VIA ACCESS PROGRAM                S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I/COPY ZSRSRC,ZHOLI                                                  S01157
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY
+     I*
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWAYNO  50       Event date
+     C                     PARM           WWREQ   1        Frequency
+     C                     PARM           WWCY    3        Event ccy
+     C                     PARM           WWDAY   20       Day of month
+     C*
+     C                     Z-ADDWWAYNO    ZDAYNO
+     C                     MOVELWWREQ     ZFREQ
+     C                     MOVELWWCY      ZCCY
+     C                     Z-ADDWWDAY     ZMDAY
+     C* CALL ACCESS PROG. FOR BANK DETAILS.                               S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C**   I.E. IND 98 ON IF DATE FORMAT IND = 'M'                        S01194
+     C           BJDFIN    COMP 'M'                      98               S01194
+     C                     EXSR ZFREQC                                    S01194
+      **  Copyright
+     C                     MOVEACPY       BIS    80
+      *
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+     C**   ZFREQB-SR. TO INCREMENT A DAY NUMBER DATE BY A                 S01119
+     C**             PERIOD VALUE DETERMINED BY A CODE.                   S01119
+     C**                                                                  S01119
+      *****************************************************************
+     C           ZFREQC    BEGSR                           *** ZFREQC *** S01195
+     C**                                                                  S01119
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.                           S01119
+     C                     MOVE ZFREQ     ZFREQ   1                       S01119
+     C                     Z-ADDZDAYNO    ZDAYNO  50                      S01119
+     C                     Z-ADDZMDAY     ZMDAY   20                      S01119
+     C                     MOVE ZCCY      ZCCY    3                       S01119
+     C*                                                                   S01119
+     C*            FIELDS USED FOR PERIOD CODES M,T,Q,X,Y                 S01119
+     C*                                                                   S01119
+     C                     MOVE '  '      ZINDE   2                       S01119
+     C                     Z-ADD0         ZINTO   20                      S01119
+     C**                                                                  S01119
+     C**   CONVERT DAY NUMBER TO DATE.                                    S01119
+     C                     EXSR ZDATE2                                    S01119
+     C                     SETOF                     90                   S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE D-DAILY-WORKING DAY.          S01119
+     C           ZFREQ     COMP 'D'                      91               S01119
+     C   91      ZDAYNO    ADD  1         ZDAYNO                          S01119
+     C   91                GOTO ZFHCHK                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE W-WEEKLY.                     S01119
+     C           ZFREQ     COMP 'W'                      91               S01119
+     C   91      ZDAYNO    ADD  7         ZDAYNO                          S01119
+     C   91                GOTO ZFEND                                     S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE F-FORTNIGHTLY.                S01119
+     C           ZFREQ     COMP 'F'                      91               S01119
+     C   91      ZDAYNO    ADD  14        ZDAYNO                          S01119
+     C   91                GOTO ZFEND                                     S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE S-SEMI-MONTHLY.               S01119
+     C           ZFREQ     COMP 'S'                      91               S01119
+     C   91      ZDAY      COMP 15                   939292               S01119
+     C   91 92             Z-ADD31        ZDAY                            S01119
+     C   91 93             Z-ADD15        ZDAY                            S01119
+     C   91 93   ZMTH      ADD  1         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE M-MONTHLY.                    S01119
+     C           ZFREQ     COMP 'M'                      91               S01119
+     C   91                MOVE 'IN'      ZINDE                           S01119
+     C   91                Z-ADDZMDAY     ZDAY                            S01119
+     C   91      ZMTH      ADD  1         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE R-SIX DAYS BEFORE END OF MONTHS01119
+     C           ZFREQ     COMP 'R'                      91               S01119
+     C   91                Z-ADD31        ZDAY                            S01119
+     C   91      ZMTH      ADD  1         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE T-BIMONTHLY.                  S01119
+     C           ZFREQ     COMP 'T'                      91               S01119
+     C   91                MOVE 'IN'      ZINDE                           S01119
+     C   91                Z-ADDZMDAY     ZDAY                            S01119
+     C   91      ZMTH      ADD  2         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE Q-QUARTERLY.                  S01119
+     C           ZFREQ     COMP 'Q'                      91               S01119
+     C   91                MOVE 'IN'      ZINDE                           S01119
+     C   91                Z-ADDZMDAY     ZDAY                            S01119
+     C   91      ZMTH      ADD  3         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE X-SIX MONTHLY.                S01119
+     C           ZFREQ     COMP 'X'                      91               S01119
+     C   91                MOVE 'IN'      ZINDE                           S01119
+     C   91                Z-ADDZMDAY     ZDAY                            S01119
+     C   91      ZMTH      ADD  6         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.                     S01119
+     C           ZFREQ     COMP 'Y'                      91               S01119
+     C   91                MOVE 'IN'      ZINDE                           S01119
+     C   91                Z-ADDZMDAY     ZDAY                            S01119
+     C   91      ZYEAR     ADD  1         ZYEAR                           S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE L-LAST CALENDAR DAY OF MONTH. S01119
+     C           ZFREQ     COMP 'L'                      91               S01119
+     C   91                Z-ADD31        ZDAY                            S01119
+     C   91      ZMTH      ADD  1         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE B-LAST WORKING DAY OF MONTH.  S01119
+     C           ZFREQ     COMP 'B'                      91               S01119
+     C   91                Z-ADD31        ZDAY                            S01119
+     C   91      ZMTH      ADD  1         ZMTH                            S01119
+     C   91                GOTO ZFDATE                                    S01119
+     C**                                                                  S01119
+     C**   CHECK FOR AND INCREMENT FOR CODE A-MONTHLY ACCRUAL/PROFIT DATE.S01119
+     C           ZFREQ     COMP 'A'                      91               S01119
+     C* CALL ACCESS PROG. FOR GENERAL LEDGER DETAILS.                     S01194
+     C           *IN91     IFEQ '0'                                       S01194
+     C**********           CALL 'AOGELRR0'                                S01194              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     SETON                     99                   S01194
+     C                     END                                            S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C   91N99             Z-ADDBKAPDT    ZDAYNO                          S01194
+     C**                                                                  S01119
+     C**   BYPASS IF ZFREQ IS 'A' OR ANY OTHER VALUE                      S01119
+     C                     GOTO ZFEND                                     S01119
+     C**                                                                  S01119
+     C**                                                                  S01119
+     C**   REFORMAT DATE AND ENSURE VALID.                                S01119
+     C           ZFDATE    TAG                             ** ZFDATE TAG* S01119
+     C**                                                                  S01119
+     C**   VALIDATE MONTH.                                                S01119
+     C           ZMTH      COMP 12                   91                   S01119
+     C   91      ZMTH      SUB  12        ZMTH                            S01119
+     C   91      ZYEAR     ADD  1         ZYEAR                           S01119
+     C**                                                                  S01119
+     C**   CHECK FOR LEAP YEAR.                                           S01119
+     C           ZYEAR     DIV  4         ZLYR    20                      S01119
+     C                     MVR            ZLY     10     92LEAP YEAR-92 ONS01119
+     C**                                                                  S01119
+     C**   VALIDATE DAY NUMBER.                                           S01119
+     C                     MOVE ZFMD,ZMTH ZWRK2   20                      S01119
+     C           ZMTH      COMP 2                        93               S01119
+     C   92 93             Z-ADD29        ZWRK2                           S01119
+     C**                                                                  S01119
+     C           ZDAY      COMP ZWRK2                94                   S01119
+     C   94                Z-ADDZWRK2     ZDAY                            S01119
+     C**                                                                  S01119
+     C**   CHECK IF CODE R, TO SUBTRACT 6 DAYS.                           S01119
+     C           ZFREQ     COMP 'R'                      91               S01119
+     C   91      ZDAY      SUB  6         ZDAY                            S01119
+     C**                                                                  S01119
+     C**   REFORMAT DATE, DDMMYY OR MMDDYY, AND CONVERT TO DAY NUMBER.    S01119
+     C                     MOVELZDAY      ZWRK4   40                      S01119
+     C                     MOVE ZMTH      ZWRK4                           S01119
+     C   98                MOVELZMTH      ZWRK4                           S01119
+     C   98                MOVE ZDAY      ZWRK4                           S01119
+     C                     MOVELZWRK4     ZDATE                           S01119
+     C                     MOVE ZYEAR     ZDATE                           S01119
+     C                     EXSR ZDATE1                                    S01119
+     C**                                                                  S01119
+     C**   CHECK IF CODE B, OR M,T,Q,X,Y TO BE CHECKED FOR HOLIDAY.       S01119
+     C           ZFREQ     COMP 'B'                      91               S01119
+     C           ZINDE     COMP 'IN'                     92               S01119
+     C   92N99                                                            S01119
+     COR 91N99             GOTO ZFHCHK                                    S01119
+     C**                                                                  S01119
+     C                     GOTO ZFEND                                     S01119
+     C**                                                                  S01119
+     C**   CHECK IF DAY NUMBER IS A HOLIDAY.                              S01119
+     C**                                                                  S01119
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *S01119
+     C                     SETOF                     94                   S01119
+     C           ZFREQ     COMP 'D'                      91               S01119
+     C           ZFREQ     COMP 'B'                      92               S01119
+     C   91                                                               S01119
+     COR 92                GOTO ZSETK                                     S01119
+     C*                                                                   S01119
+     C*   FOR CODES M,T,Q,X,Y, CHECK ZINDE - 'IN' TO INCREMENT,           S01119
+     C*                                    - 'DE' TO DECREMENT            S01119
+     C*                                                                   S01119
+     C           ZINDE     COMP 'IN'                     90               S01119
+     C           ZINDE     COMP 'IN'                     91               S01119
+     C           ZINDE     COMP 'DE'                     92               S01119
+     C           ZSETK     TAG                             ** ZSETK TAG **
+     C                     EXSR ZCHKH                                     S01195
+     C*                                                                   S01195
+     C*    CHECK IF CURRENCY ON HOLIDAY.                                  S01195
+     C*                                                                   S01195
+     C           ZIND      CABEQ'W'       ZFEND                           S01195
+     C**
+     C**   BYPASS IF NOT HOLIDAY FOR CURRENCY.
+     C**                                                                  S01119
+     C**                                                                  S01119
+     C   92                GOTO ZDECR                                     S01119
+     C*                                                                   S01119
+     C**   INCREMENT OR DECREMENT DAY NUMBER AS REQUIRED.                 S01119
+     C   91      ZDAYNO    ADD  1         ZDAYNO                          S01119
+     C*                                                                   S01119
+     C*    ONLY FOR PERIOD CODE = M,T,Q,X OR Y, IF INCREMENTATION         S01119
+     C*    TAKES THE OUTPUT DATE INTO THE FOLLOWING MONTH, RETURN TO      S01119
+     C*    THE INPUT DATE AND DECREMENT - 92 ON.                          S01119
+     C*                                                                   S01119
+     C   90 91   ZINTO     ADD  1         ZINTO                           S01119
+     C   90 91   ZINTO     ADD  ZDAY      ZINTOT  20                      S01119
+     C   90 91             MOVE ZINTOT    ZINTOA  2                       S01119
+     C                     SETOF                     93                   S01119
+     C   90 91   ZYEAR     DIV  4         ZLYR                            S01119
+     C   90 91             MVR            ZLY            92               S01119
+     C   90 91 92ZMTH      COMP 2                        93               S01119
+     C   93      ZINTOA    COMP '29'                 92                   S01119
+     C   90 91N93ZINTOA    COMP ZFMD,ZMTH            92                   S01119
+     C   90 91 92ZDAYNO    SUB  ZINTO     ZDAYNO                          S01119
+     C   90 91 92          MOVE 'DE'      ZINDE                           S01119
+     C**                                                                  S01119
+     C           ZDECR     TAG                             ** ZDECR TAG **S01119
+     C   92      ZDAYNO    SUB  1         ZDAYNO           INCLUDE FOUND  E27370
+     C                     GOTO ZFHCHK                                    S01119
+     C**                                                                  S01119
+     C**                                                                  S01119
+     C           ZFEND     ENDSR                           * ZFEND ENDSR *S01119
+     C**                                                                  S01119
+     C/COPY ZSRSRC,ZCHKH                                                  S01157
+     C/COPY ZSRSRC,ZACCH                                                  S01157
+      *****************************************************************   S01119
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+      *****************************************************************
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**                                                                  S01119
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                     S01119
+     C**              CONVERT TO A NUMBER OF DAYS.                        S01119
+      *****************************************************************
+     C**                                                                  S01119
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         S01119
+     C**                                                                  S01119
+      *****************************************************************
+     C           ZDATE1    BEGSR                           *** ZDATE1 *** S01119
+     C**                                                                  S01119
+     C**   CLEAR DAY NUMBER.                                              S01119
+     C                     Z-ADD0         ZDAYNO  50                      S01119
+     C**                                                                  S01119
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.                        S01119
+     C                     Z-ADDZDATE     ZDATE   60                      S01119
+     C**                                                                  S01119
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.                     S01119
+     C                     MOVE ZDATE     ZYEAR   20                      S01119
+     C  N98                MOVELZDATE     ZDAY    20                      S01119
+     C   98                MOVELZDATE     ZMTH    20                      S01119
+     C                     MOVE ZDATE     ZWRK4   40                      S01119
+     C  N98                MOVELZWRK4     ZMTH                            S01119
+     C   98                MOVELZWRK4     ZDAY                            S01119
+     C**                                                                  S01119
+     C**   ENSURE MONTH IS VALID.                                         S01119
+     C           ZMTH      COMP 0                      9999               S01119
+     C  N99      ZMTH      COMP 12                   99                   S01119
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORS01119
+     C**                                                                  S01119
+     C**   CHECK FOR 30 DAY MONTHS.                                       S01119
+     C           ZMTH      COMP 4                        90IF 90 ON, 30   S01119
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.     S01119
+     C  N90      ZMTH      COMP 9                        90               S01119
+     C  N90      ZMTH      COMP 11                       90               S01119
+     C**                                                                  S01119
+     C**   ENSURE DAY IS VALID.                                           S01119
+     C           ZDAY      COMP 0                      9999               S01119
+     C   90N99   ZDAY      COMP 30                   99                   S01119
+     C  N90N99   ZDAY      COMP 31                   99                   S01119
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORS01119
+     C**                                                                  S01119
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.                              S01119
+     C           ZYEAR     ADD  28        ZYEAR                           S01119
+     C           ZYEAR     DIV  4         ZLYR    20                      S01119
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON S01119
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON    S01119
+     C**                                                   PAST FEB, 93 ONS01119
+     C**   IF FEBUARY FURTHER VALIDATE DAY.                               S01119
+     C  N91 92   ZDAY      COMP 28                   99                   S01119
+     C   91 92   ZDAY      COMP 29                   99                   S01119
+     C   99                GOTO ZDEND1                     BYPASS IF ERRORS01119
+     C**                                                                  S01119
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANSS01119
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.S01119
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRS01119
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.S01119
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR S01119
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHS01119
+     C**                                                                  S01119
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*S01119
+     C**                                                                  S01119
+     C**                                                                  S01119
+     C********************************************************************S01119
+** CPY    **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                 S01119
+312831303130313130313031                                                  S01119
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

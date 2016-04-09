@@ -1,0 +1,550 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Prod'n init'n interface-shtname pmt')
+0002 F*****************************************************************
+0004 F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+0004 F*                                                               *
+0005 F*    MQ0030 - PRODUCTION INITIATION INTERFACE PROGRAM           *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01179             Date 03NOV97               *
+     F*                 CMQ001             Date 03NOV97               *
+     F*                    071986            DATE  09JUN94            *
+     F*                    S01266            DATE  03MAY90            *
+     F*                    S01223            DATE  11/09/89           *
+     F*                    E13250            DATE  14/07/88           *
+     F*                    E11812            DATE  18/11/87           *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*    S01179 - AS400 CONVERSION. KEYWORD RTGAID IS NOT SUPPORTED *
+     F*             ON AS400. DISPLAY FILE AMENDED SO THAT FUNCTION   *
+     F*             KEYS F1-F24 SET ON INDICATORS 31-54 RESPECTIVELY  *
+     F*             WHEN PRESSED. THESE ARE THEN CHECKED AGAINST THE  *
+     F*             KEYS DEFINED IN MIDASQ FOR EXIT, BYPASS & CHANGE. *
+     F*    CMQ001 - MidasQ rationalisation - Remove SC#071986.        *
+     F*    071986 - CONVERT TO NATIVE AS400                           *
+     F*    S01266 - TO ALLOW PARTIAL SHORTNAME SELECTION.             *
+     F*    S01223 - BRING IN SYSTEM DEFINITION BLOCK USING /COPY.     *
+     F*    E13250 - CUSTOMER SHORTNAME SELECTION NOT STANDARD.        *
+     F*    E11812 - CUSTOMER SHORTNAME SELECTION NOT WORKING.         *
+0010 F*                                                               *
+0011 F*****************************************************************
+     F* Description    :
+     F* ~~~~~~~~~~~
+     F* This program is a production initiation interface used in
+     F* conjunction with MIDAS subsets.  It is invoked by MIDAS/Q
+     F* just prior to "initiating" the production of any report defined
+     F* on MIDAS subsets .
+     F*
+     F* When invoked, it checks the content of the 200 byte permanent
+     F* report storage area to determine whether the run-time enquiry
+     F* is to be available for this report.  If so, it prompts the
+     F* user to enter the key-value to be used for this production
+     F* run.
+     F*
+     F* This information is mapped into the 500 byte production run
+     F* user interface area (known in this program as P17#UR), and
+     F* control returns to the calling MIDAS/Q program.
+     F*
+     F* Refer to the MIDAS/Q Technical Guide for further information
+     F* on the use and operation of "Production initiation" interface
+     F* programs.
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F* Parameter List
+     F* ~~~~~~~~~~~~~~
+     F* This parameter list is the standard type used by a "production
+     F* initiation interface" program.  It is described in more detail
+     F* in the MIDAS/Q Technical Guide.
+     F*
+     F* Symbolic
+     F*  Name    Type   Length   Description
+     F* ~~~~~~   ~~~~   ~~~~~~   ~~~~~~~~~~~
+     F* TIF#RC   Char      1     Return code
+     F* TIF#RN   Packed  7,0     Run number assigned to production run
+     F* TIF#NM   Char     10     Report name
+     F* TIF#RD   Char     40     Report description
+     F* P17#IA   Char    200     Temp copy of 200 byte permanent area
+     F* P17#UR   Char    500     Temp 500 byte storage area
+     F* TIF#NP   Packed  7,0     Number of user parameters passed
+     F* UPRM01   data    n/a     User parameter 1
+     F* UPLN01   Packed 15,5     Length of user parameter 1
+     F* UPRM02   data    n/a     User parameter 2
+     F* UPLN02   Packed 15,5     Length of user parameter 2
+     F* UPRM03   data    n/a     User parameter 3
+     F* UPLN03   Packed 15,5     Length of user parameter 3
+     F* UPRM04   data    n/a     User parameter 4
+     F* UPLN04   Packed 15,5     Length of user parameter 4
+     F* UPRM05   data    n/a     User parameter 5
+     F* UPLN05   Packed 15,5     Length of user parameter 5
+     F/EJECT
+     F* File declarations
+     F* ~~~~~~~~~~~~~~~~~
+     FMQ0030DFCF  E                    WORKSTN                        UC
+     F***********                                   KINFDS DINFDS         S01179
+     FSNAME   IF  E           K        DISK                           UC  S01266
+     F/EJECT
+     E                    CPY@    1   1 80
+     E* Array declarations
+     E* ~~~~~~~~~~~~~~~~~~
+     E                    KEYA       10  1
+     E                    KEYF       10  1               CSNM from SNAME  S01266
+     E                    KEYS       10  1               Stored "KEYVAL"  S01266
+     E/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Data structure specifications
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I*
+     I* P17#UR - 500 byte temporary report storage area
+     I*
+     IP17#UR      DS                            500
+     I                                        1  10 KEYVAL
+     I***************************************11  11 PAR            E11812 E13250
+     I*
+     I**File*information data structure - display file                    S01179
+     I*
+     I*DINFDS*****DS                                                      S01179
+     I**************************************287 288 CMDKEY                071986
+     I***********                           369 369 KEY            071986 CMQ001
+     I*
+     I* System definition data area - O#XA01
+     I*
+     IO#XA01      DS                           1000
+     I*
+     I*******************************************                         S01223
+     I**SYSTEM*DEF********BLOCK*-*PACKAGE*VERSION                         S01223
+     I*******************************************                         S01223
+     I*#SDBK      DS                           1000                       S01223
+     I*************************************** 1  10 O#SPLB                S01223
+     I***************************************11  20 O#SDLB                S01223
+     I***************************************21  30 O#SMLB                S01223
+     I***************************************31  331O#SRLS                S01223
+     I***************************************34  53 O#SSIT                S01223
+     I***************************************54  63 O#SCPU                S01223
+     I***************************************64  73 O#SSOF                S01223
+     I***************************************74  90 O#SACS                S01223
+     I**************************************                              S01223
+     I**************************************100 101 O#SCEX                S01223
+     I**************************************100 1010CEX                   S01223
+     I**************************************102 103 O#SCBY                S01223
+     I**************************************102 1030CBY                   S01223
+     I**************************************104 105 O#SCAD                S01223
+     I**************************************104 1050CAD                   S01223
+     I**************************************106 107 O#SCCH                S01223
+     I**************************************106 1070CCH                   S01223
+     I**************************************108 109 O#SCDL                S01223
+     I**************************************108 1090CDL                   S01223
+     I**************************************                              S01223
+     I**************************************200 200 O#SU1E                S01223
+     I**************************************201 202 O#SCU1                S01223
+     I**************************************201 2020CU1                   S01223
+     I**************************************203 299 O#SU1R                S01223
+     I**************************************300 305 O#SDU1                S01223
+     I**************************************                              S01223
+     I**************************************500 500 O#SINT                S01223
+     I**************************************501 501 O#SBCH                S01223
+     I**************************************502 502 O#SNGT                S01223
+     I**************************************                              S01223
+     I**************************************503 503 O#SDV1                S01223
+     I**************************************504 504 O#SDV2                S01223
+     I**************************************505 505 O#SDV3                S01223
+     I**************************************506 506 O#SDV4                S01223
+     I**************************************507 507 O#SDV5                S01223
+     I**************************************                              S01223
+     I**************************************508 517 O#SDV6                S01223
+     I**************************************518 527 O#SDV7                S01223
+     I**************************************528 530 O#SDV8                S01223
+     I**************************************531 533 O#SDV9                S01223
+     I**************************************534 536 O#SDV0                S01223
+     I**************************************537 539 O#SDVA                S01223
+     I**************************************540 542 O#SDVB                S01223
+     I**************************************543 543 O#SDVC                S01223
+     I**************************************544 544 O#SDVD                S01223
+     I**************************************                              S01223
+     I**************************************546 555 O#SDVF                S01223
+     I**************************************556 565 O#SDVG                S01223
+     I**************************************566 575 O#SDVH                S01223
+     I**************************************576 576 O#SDVI                S01223
+     I**************************************577 580 O#SDVJ                S01223
+     I**************************************                              S01223
+     I**************************************581 583 O#SDVE                S01223
+     I**************************************                              S01223
+     I**************************************584 590 O#SP#N                S01223
+     I**************************************591 600 O#SP#O                S01223
+     I**************************************                              S01223
+     I**************************************601 601 O#SDVK                S01223
+      *                                                                   S01223
+      ** Bring in the system definition block                             S01223
+      /COPY O#XP04,O#SDBLOCKP                                             S01223
+      *                                                                   S01223
+      *****Define*returned command key as named constant           071986 CMQ001
+      ***********                                                  071986 CMQ001
+     I***********   X'31'                 C         F01            071986 CMQ001
+     I***********   X'32'                 C         F02            071986 CMQ001
+     I***********   X'33'                 C         F03            071986 CMQ001
+     I***********   X'34'                 C         F04            071986 CMQ001
+     I***********   X'35'                 C         F05            071986 CMQ001
+     I***********   X'36'                 C         F06            071986 CMQ001
+     I***********   X'37'                 C         F07            071986 CMQ001
+     I***********   X'38'                 C         F08            071986 CMQ001
+     I***********   X'39'                 C         F09            071986 CMQ001
+     I***********   X'3A'                 C         F10            071986 CMQ001
+     I***********   X'3B'                 C         F11            071986 CMQ001
+     I***********   X'3C'                 C         F12            071986 CMQ001
+     I***********   X'B1'                 C         F13            071986 CMQ001
+     I***********   X'B2'                 C         F14            071986 CMQ001
+     I***********   X'B3'                 C         F15            071986 CMQ001
+     I***********   X'B4'                 C         F16            071986 CMQ001
+     I***********   X'B5'                 C         F17            071986 CMQ001
+     I***********   X'B6'                 C         F18            071986 CMQ001
+     I***********   X'B7'                 C         F19            071986 CMQ001
+     I***********   X'B8'                 C         F20            071986 CMQ001
+     I***********   X'B9'                 C         F21            071986 CMQ001
+     I***********   X'BA'                 C         F22            071986 CMQ001
+     I***********   X'BB'                 C         F23            071986 CMQ001
+     I***********   X'BC'                 C         F24            071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C/EJECT
+     C* Parameter list declaration
+     C* ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TIF#RC  1        Return code
+     C                     PARM           TIF#RN  70       Run number
+     C                     PARM           TIF#NM 10        Report name
+     C                     PARM           TIF#RD 40        Report title
+     C                     PARM           P17#IA200        200 byte area
+     C                     PARM           P17#UR           500 byte area
+     C                     PARM           TIF#NP  70       No.user params
+     C                     PARM           UPRM01  1        User param 1
+     C                     PARM           UPLN01 155       Length param 1
+     C                     PARM           UPRM02  1        User param2
+     C                     PARM           UPLN02 155       Length param 2
+     C                     PARM           UPRM03  1        User param 3
+     C                     PARM           UPLN03 155       Length param 3
+     C                     PARM           UPRM04  1        User param 4
+     C                     PARM           UPLN04 155       Length param 4
+     C                     PARM           UPRM05  1        User param 5
+     C                     PARM           UPLN05 155       Length param 5
+     C/EJECT
+     C* Program mainline
+     C* ~~~~~~~~~~~~~~~~
+      *
+      * If run-time enquiry not permitted, do nothing...
+      *
+     C                     MOVE 'P'       TIF#RC
+     C                     MOVELP17#IA    ENQUIR  3
+     C           ENQUIR    IFEQ 'YES'
+      *
+      * Open display file (if error, then must be batch job so
+      * ignore request)...
+      *
+     C                     OPEN MQ0030DF               99
+     C           *IN99     IFNE '1'
+      *
+      * Retrieve MIDAS/Q system definition block...
+      *
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      *
+      * Enable installation defined command keys required in this pgm..
+      *
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+      *                                                                   S01266
+      ** Set up Subfile Programme Message Queue.                          S01266
+     C                     MOVEL'*'       MQPGMQ                          S01266
+      *                                                                   S01266
+      **  Set on Message Subfile end indicator.                           S01266
+     C                     MOVE '1'       *IN31                           S01266
+      *                                                                   S01266
+      * Initialise field showing whether file SNAME has been opened.      S01266
+     C                     MOVE 'N'       OPENF   1                       S01266
+      *
+      * Prompt for key value to be used for this production run....
+      *
+     C           *IN50     DOUEQ'0'                                       S01266
+     C           *IN26     OREQ '1'                                       S01266
+      *                                                                   S01266
+     C           PROMPT    TAG
+      *                                                                   S01266
+      ** Write the error message subfile.                                 S01266
+     C                     WRITEMQ0030C0                                  S01266
+      *                                                                   S01266
+      ** Display the prompt format.                                       S01266
+     C                     EXFMTMQ0030F1
+      *                                                                   S01266
+      ** Clear Programme Message Queue.                                   S01266
+     C           *IN50     IFEQ '1'                                       S01266
+     C                     CALL 'ZA0250'                                  S01266
+     C                     END                                            S01266
+      *
+      * ...if exit or bypass command keys used, set return code...
+      *
+     C           *IN26     IFEQ '1'
+      *                                                                   S01179
+      * ...set up CMDKEY to search through indicators 31-54 (these are    S01179
+      * set on when function keys F1-F24 respectively are pressed)...     S01179
+      *                                                                   S01179
+     C                     Z-ADD31        CMDKEY  20                      S01179
+      *                                                                   S01179
+      * ...Find out which function key was pressed...                     S01179
+      *                                                                   S01179
+     C           '1'       LOKUP*IN,CMDKEY               25               S01179
+      *                                                                   S01179
+      * ...Subtract 30 from the number of the indicator to get the        S01179
+      * number of the function key which was pressed...                   S01179
+      *                                                                   S01179
+     C                     SUB  30        CMDKEY  20                      S01179
+     C*                                                                   S01179
+     C***********CMDKEY    IFEQ O#SCEX                                    S01179
+     C           CMDKEY    IFEQ CEX                                       S01179
+     C***********          EXSR DETKEY                             071986 CMQ001
+     C                     MOVE 'E'       TIF#RC
+     C                     ELSE
+     C***********CMDKEY    IFEQ O#SCBY                                    S01179
+     C           CMDKEY    IFEQ CBY                                       S01179
+     C                     MOVE 'B'       TIF#RC
+     C                     END
+     C                     END
+      *
+      * ...otherwise check whether the Customer Shortname enquiry
+      *    has been requested ( ? in input field )
+      *
+     C                     ELSE
+      *                                                                   S01266
+      ** Switch off field error indicators and validate entries.          S01266
+     C                     MOVE '0'       *IN50                           S01266
+     C                     MOVE '0'       *IN51                           S01266
+     C                     MOVE '0'       *IN90                           S01266
+     C                     MOVE '0'       *IN91                           S01266
+      *                                                                   S01266
+     C           KEYVAL    IFNE *BLANKS
+     C                     MOVEAKEYVAL    KEYA
+     C                     MOVEAKEYVAL    KEYS                            S01266
+     C                     Z-ADD1         X       20
+     C           *IN90     DOUEQ'1'
+      *
+      * Call shortname enquiry
+      *
+     C           KEYA,X    IFEQ '?'
+     C                     MOVEA*BLANKS   KEYA,X
+     C                     MOVEAKEYA      KEYVAL
+     C                     CALL 'MQ0040'
+     C                     PARM           KEYVAL
+      *
+      * Redisplay screen with selected shortname
+      *
+     C                     GOTO PROMPT
+     C                     END
+      *
+     C                     ADD  1         X
+     C           X         IFGT 10
+     C                     MOVE '1'       *IN90
+     C                     END
+      *                                                                   S01266
+      ** Ensure shortname entry is valid.                                 S01266
+      ** a) Check Partial Name will find a Customer.                      S01266
+     C           *IN90     IFEQ '1'                                       S01266
+     C                     Z-ADD1         X                               S01266
+     C                     MOVE 'N'       ASTER   1                       S01266
+     C                     MOVE 'N'       BLANK   1                       S01266
+      *                                                                   S01266
+     C           *IN91     DOWEQ'0'                                       S01266
+     C           ASTER     ANDNE'Y'                                       S01266
+      *                                                                   S01266
+     C           KEYA,X    IFEQ ' '                                       S01266
+     C                     MOVE 'Y'       BLANK                           S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C           KEYA,X    IFEQ '*'                                       S01266
+     C                     MOVEA*BLANKS   KEYA,X                          S01266
+     C                     MOVEAKEYA      KEYVAL                          S01266
+     C                     MOVE 'Y'       ASTER                           S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C                     ADD  1         X                               S01266
+     C           X         IFGT 10                                        S01266
+     C                     MOVE '1'       *IN91                           S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C           ASTER     IFEQ 'Y'                                       S01266
+      *                                                                   S01266
+     C           BLANK     IFEQ 'N'                                       S01266
+      *                                                                   S01266
+     C           OPENF     IFNE 'Y'                                       S01266
+     C                     MOVE 'Y'       OPENF                           S01266
+     C                     OPEN SNAME                                     S01266
+     C                     END                                            S01266
+     C           KEYVAL    SETLLSNAME                                     S01266
+     C                     READ SNAME                    80               S01266
+     C                     MOVEACSNM      KEYF                            S01266
+      *                                                                   S01266
+      ** Ensure Partial Short Name will find a client.                    S01266
+     C                     Z-ADD1         X                               S01266
+     C           KEYA,X    DOWNE' '                                       S01266
+     C           KEYA,X    ANDEQKEYF,X                                    S01266
+     C                     ADD  1         X                               S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C           KEYA,X    IFEQ ' '                                       S01266
+     C                     SUB  1         X                               S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C           KEYA,X    IFNE KEYF,X                                    S01266
+      *                                                                   S01266
+      ** Redisplay asterisk to denote partial name.                       S01266
+     C                     MOVEAKEYS      KEYVAL                          S01266
+     C                     MOVE '1'       *IN50                           S01266
+     C                     MOVE '1'       *IN51                           S01266
+      *                                                                   S01266
+      **  Set up error output for screen.                                 S01266
+     C                     MOVEL*BLANKS   @MSDTA 50                       S01266
+     C                     MOVEAKEYA      @MSDTA                          S01266
+     C                     CALL 'MQC0060'                                 S01266
+     C                     PARM 'MQ03002' @MSGID 10                       S01266
+     C                     PARM           @MSDTA                          S01266
+      *                                                                   S01266
+     C                     ELSE                                           S01266
+      *                                                                   S01266
+      ** Re-insert asterisk to denote partial name.                       S01266
+     C                     MOVEAKEYS      KEYVAL                          S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C                     ELSE                                           S01266
+     C                     MOVE '1'       *IN50                           S01266
+     C                     MOVE '1'       *IN51                           S01266
+      *                                                                   S01266
+      **  Set up error output for screen.                                 S01266
+     C                     MOVEL*BLANKS   @MSDTA                          S01266
+     C                     MOVEAKEYA      @MSDTA                          S01266
+     C                     CALL 'MQC0060'                                 S01266
+     C                     PARM 'MQ03001' @MSGID                          S01266
+     C                     PARM           @MSDTA                          S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+      ** ASTER *EQ 'Y'                                                    S01266
+     C                     ELSE                                           S01266
+      *                                                                   S01266
+      ** b) or a specific Short Name                                      S01266
+     C           OPENF     IFNE 'Y'                                       S01266
+     C                     MOVE 'Y'       OPENF                           S01266
+     C                     OPEN SNAME                                     S01266
+     C                     END                                            S01266
+     C           KEYVAL    CHAINSNAME                80                   S01266
+      *                                                                   S01266
+     C           *IN80     IFEQ '1'                                       S01266
+     C                     MOVE '1'       *IN50                           S01266
+     C                     MOVE '1'       *IN51                           S01266
+      *                                                                   S01266
+      **  Set up error output for screen.                                 S01266
+     C                     MOVEL*BLANKS   @MSDTA                          S01266
+     C                     MOVEAKEYA      @MSDTA                          S01266
+     C                     CALL 'MQC0060'                                 S01266
+     C                     PARM 'MQ03003' @MSGID                          S01266
+     C                     PARM           @MSDTA                          S01266
+     C                     END                                            S01266
+      **  *IN91 *EQ '1'                                                   S01266
+     C                     END                                            S01266
+      **  *IN90 *EQ '1'                                                   S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C                     END
+     C                     END
+      *
+      * Pass value entered (which may be blank) to report module
+      *
+     C                     MOVE 'P'       TIF#RC
+     C                     END
+      ** *IN50 DOUEQ '0'                                                  S01266
+     C                     END                                            S01266
+      *                                                                   S01266
+     C                     END
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+      ************************************************************ 071986 CMQ001
+      ***********                                                  071986 CMQ001
+      *****DETKEY SR - To determine command key pressed and set up 071986 CMQ001
+      ***********      for comparison against system definition blo071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********DETKEY    BEGSR                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********          SELEC                                   071986 CMQ001
+     C***********KEY       WHEQ F01                                071986 CMQ001
+     C***********          MOVE '01'      CMDKEY  2                071986 CMQ001
+     C***********KEY       WHEQ F02                                071986 CMQ001
+     C***********          MOVE '02'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F03                                071986 CMQ001
+     C***********          MOVE '03'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F04                                071986 CMQ001
+     C***********          MOVE '04'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F05                                071986 CMQ001
+     C***********          MOVE '05'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F06                                071986 CMQ001
+     C***********          MOVE '06'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F07                                071986 CMQ001
+     C***********          MOVE '07'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F08                                071986 CMQ001
+     C***********          MOVE '08'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F09                                071986 CMQ001
+     C***********          MOVE '09'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F10                                071986 CMQ001
+     C***********          MOVE '10'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F11                                071986 CMQ001
+     C***********          MOVE '11'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F12                                071986 CMQ001
+     C***********          MOVE '12'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F13                                071986 CMQ001
+     C***********          MOVE '13'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F14                                071986 CMQ001
+     C***********          MOVE '14'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F15                                071986 CMQ001
+     C***********          MOVE '15'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F16                                071986 CMQ001
+     C***********          MOVE '16'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F17                                071986 CMQ001
+     C***********          MOVE '17'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F18                                071986 CMQ001
+     C***********          MOVE '18'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F19                                071986 CMQ001
+     C***********          MOVE '19'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F20                                071986 CMQ001
+     C***********          MOVE '20'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F21                                071986 CMQ001
+     C***********          MOVE '21'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F22                                071986 CMQ001
+     C***********          MOVE '22'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F23                                071986 CMQ001
+     C***********          MOVE '23'      CMDKEY                   071986 CMQ001
+     C***********KEY       WHEQ F24                                071986 CMQ001
+     C***********          MOVE '24'      CMDKEY                   071986 CMQ001
+     C***********          ENDSL                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+     C***********          ENDSR                                   071986 CMQ001
+      ***********                                                  071986 CMQ001
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

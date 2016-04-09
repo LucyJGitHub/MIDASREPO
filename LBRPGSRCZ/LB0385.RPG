@@ -1,0 +1,811 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Portfolio Lending Group/Instru Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0385 - Portfolio Lending Instruments/Groups Report         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01498             Date 11AUG94               *
+     F*                 B9997  ADIF        Date 01OCT91               *
+     F*                 SA9018             DATE 13DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  B9997  - SUPPRESSION OF CORRECTION B4586 IN FILE SDPLINL2    *SA9018
+     F*         - CHANGE THIS FILE WITH SDPLINL3                      *
+     F*  SA9018 - REMOVE ATTACHED LIMIT                               *SA9018
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F********************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS.*PREFIX*-*BJ***********************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F**   INSTRUMENTS TYPE FILE. PREFIX - PD
+     F*******SDPLINL2IF  E           K        DISK         KINFSR *PSSR   B9997
+     FSDPLINL3IF  E           K        DISK         KINFSR *PSSR          B9997
+     F*
+     F*****REPORT*SELECTION*FILE.*NO*PREFIX.***************************   S01498
+     F***QINLINE**F  F      96            DISK         KINFSR *PSSR       S01498
+     F*
+     F**   PORTFOLIO LENDING AUDIT LIST FILE CONTROLS
+     FLB0385AUO   E             60     PRINTER      KINFDS OVRFL2
+     F                                              KINFSR *PSSR
+     F*
+     F**   PORTFOLIO LENDING TRAILER. PREFIX - TR
+     FLBTRAIPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   PORTFOLIO LENDING AUDIT LIST
+     F***LB0385P1O***E             61     PRINTER      KINFDS OVRFL1      S01498
+     FLB0385P1O   E             61     PRINTER      KINFDS OVRFL1     UC  S01498
+     F                                              KINFSR *PSSR
+     F*
+     F*****PORTFOLIO*LENDING*GROUPS*LOGICAL*1.*PREFIX*-*GP*************   S01498
+     F***LBGROUL1IF**E           K        DISK         KINFSR *PSSR       S01498
+     F************LBGROUD0                          KRENAME@LBGROUL       S01498
+     F*
+     F**   PORTFOLIO LENDING GROUPS LOGICAL 3. PREFIX - GP
+     FLBGROUL3IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F** 45 - SELECTIONS REQUESTED INDICATOR (NAME)                      *
+     F** 46 - SELECTIONS REQUESTED INDICATOR (GROUP)                     *
+     F***50*-*FILE*INDICATOR*ON*SDBANKPD*******************************  *S01498
+     F** 51 - FILE INDICATOR ON LBGROUL3                                 *
+     F** 52 - FILE INDICATOR ON LBTRAIPD                                 *
+     F***53*-*FILE*INDICATOR*ON*SDPLINL2                                 *B9997
+     F** 53 - FILE INDICATOR ON SDPLINL3                                 *B9997
+     F***54*-*FILE*INDICATOR*ON*QINLINE********************************  *S01498
+     F***55*-*FILE*INDICATOR*ON*LBGROUL1*******************************  *S01498
+     F** 56 - INSERT INDICATOR                                           *
+     F** 57 - AMEND INDICATOR                                            *
+     F** 59 - *** DIFFERENCE *** INDICATOR ON RUN CONTROLS REPORT        *
+     F**    60 - OVERFLOW INDICATOR ON LB0385AU                          *
+     F**    61 - OVERFLOW INDICATOR ON LB0385P1                          *
+     F**    62 - LBGROUL1 INDICATOR                                      *
+     F**    63 - LBGROUL3 INDICATOR                                      *
+     F**    66 - CASH INSTRUMENT INDICATOR                               *
+     F**    67 - INSTRUMENT LITERAL ALREADY DISPLAYED                    *
+     F**       98 - USED BY ZDATE2                                       *
+     F**          U7, U8 - DATABASE ERROR HANDLING                       *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+     I*
+     I*****INTERNALLY*DEFINE*QINLINE***********************************   S01498
+     I***QINLINE*NS                                                       S01498
+     I***********                             1   4 WWLCGR                S01498
+     I*
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     IPSDS       SDS
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     IOVRFL1      DS
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     I*
+     I**   FOR OVERFLOW
+     I                                    B 188 1890WWOFL1
+     I                                    B 367 3680WWPTL1
+     I*
+     IOVRFL2      DS
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I*
+     I**   FOR OVERFLOW
+     I                                    B 188 1890WWOFL2
+     I                                    B 367 3680WWPTL2
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I*
+     I**   LOCAL DATA AREA
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     IRUNDAT    E DS                                                      S01498
+     I**  Standard Data Area Layout for System flags and Run Date         S01498
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     ILBGROU    E DSLBGROUPD                                              S01498
+     I**  Data structure for group type details                           S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*                                                                   S01498
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** PARAMETER LIST DECLARATIONS
+     C** ---------------------------
+     C**
+     C**==================================================================
+     C**   Note: this program cannot be called from EOD as QINLINE is
+     C**   not under user control. The parameter is only included
+     C**   for consistency with other programs.
+     C**==================================================================
+     C**
+     C** WWICFG - INPUT CYCLE FLAG - 1 = CALLED FROM INPUT CYCLE
+     C**                           - 0 = CALLED FROM END OF DAY
+     C           *ENTRY    PLIST
+     C                     PARM           WWICFG  1
+     C                     PARM           WWLCGR  4                       S01498
+     C                     PARM           @RSEQ   5                       S01498
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*                                                                   S01498
+     C           P1OPN     IFEQ 'Y'                                       S01498
+     C                     CLOSELB0385P1                                  S01498
+     C                     END                                            S01498
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**          INDEX TO SUBROUTINES                                   *
+     C**         ----------------------                                  *
+     C**                                                                 *
+     C**   1.  #B     - MAIN REPORT PROCESSING                           *
+     C**   2.  #BA    - INPUT CYCLE PROCESSING                           *
+     C**   3.  #BAA   - END OF DAY PROCESSING                            *
+     C**   4.  #ZA    - INPUT CYCLE PROCESSING                           *
+     C**   5.  #ZB    - INSTRUMENT RECORD PROCESSING                     *
+     C**   6.  #A     - ACCESSES SDBANKPD AND INITIALISES WORK FIELDS    *
+     C**   7.  #C     - TERMINATION PROCESSING                           *
+     C**   8.  #ZZZ   - DATABASE ERROR PRINT HANDLING (RUN CONTROLS)     *
+     C**   9.  #PSSR  - ERROR HANDLING SUBROUTINE                        *
+     C**  10.  ZDATE2 - CONVERT A 5-FIGURE DAY NUMBER INTO DATE FORMAT   *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B        - THIS SUBROUTINE PERFORMS MAIN PROCESSING            *
+     C**                                                                 *
+     C** CALLS     - #BA, #ZA                                            *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C**   CHECK INPUT CYCLE/EOD FLAG
+     C**   1 - INPUT CYCLE , 0 - END OF DAY
+     C           WWICFG    IFEQ '1'
+     C*
+     C                     EXSR #BA
+     C*
+     C                     ELSE
+     C*
+     C           WWICFG    IFEQ '0'
+     C*
+     C                     EXSR #ZA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA       - THIS SUBROUTINE PERFORMS INPUT CYCLE PROCESSING     *
+     C**                                                                 *
+     C** CALLS     - #BAA, #ZA, #C                                       *
+     C**                                                                 *
+     C** CALLED BY - #B                                                  *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C*****READ*INPUT*FROM*QINLINE*************************************   S01498
+     C***********          READ QINLINE                  54               S01498
+     C*
+     C                     MOVE '1'       *IN45
+     C***********
+     C*****DO*WHILE*NOT*EOF*AND*NOT*END********************************   S01498
+     C************IN54     DOWEQ'0'                                       S01498
+     C***********WWEND     ANDEQ'N'                                       S01498
+     C*
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+     C*
+     C*****WRITE*MAIN*HEADINGS*****************************************   S01498
+     C***********          WRITEHEADER1                                   S01498
+     C***********          WRITEHEADER2                                   S01498
+     C                     MOVEA'00'      *IN,62
+     C                     Z-ADD0         WWCNTR
+     C*
+     C**   IF *ALL SELECTED PERFORM FULL FILE PRINT
+     C           WWLCGR    IFEQ '*ALL'
+     C                     MOVE '0'       *IN46
+     C                     MOVE '*ALL'    RRGROU
+     C                     EXSR #ZA
+     C                     ELSE
+     C*
+     C**   IF PORTFOLIO LENDING GROUP FIELD IS NOT BLANK PERFORM
+     C**   PORTFOLIO LENDING GROUP PROCESSING
+     C           WWLCGR    IFNE *BLANKS
+     C                     EXSR #BAA
+     C                     MOVE '1'       *IN46
+     C                     MOVE *BLANKS   RRGROU
+     C                     MOVE GPLCGR    RRGROU
+     C                     MOVE GPLCGN    RRNAME
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   EXECUTE TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C*****IF*FILE*CONTROLS*OUT*OF*BALANCE*PUT*'Y'*INTO*END*FLAG*******   S01498
+     C*****ELSE*READ*NEXT*QINLINE*RECORD*******************************   S01498
+     C************INU8     IFEQ '1'                                       S01498
+     C***********          MOVE 'Y'       WWEND                           S01498
+     C***********          ELSE                                           S01498
+     C***********          READ QINLINE                  54               S01498
+     C*
+     C***********          END                                            S01498
+     C*
+     C***********          END                                            S01498
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BAA      - THIS SUBROUTINE PERFORMS PORTFOLIO LENDING GROUP    *
+     C**             PROCESSING                                          *
+     C**                                                                 *
+     C** CALLS     - #ZB, ZDATE2                                         *
+     C**                                                                 *
+     C** CALLED BY - #BA                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BAA      BEGSR
+     C*
+     C**   READ LBGROUL1 FOR PORTFOLIO LENDING GROUPS
+     C                     MOVELWWLCGR    WWLCG1
+     C***********WWLCG1    CHAINLBGROUL1             55                   S01498
+     C*                                                                   S01498
+     C                     CALL 'AOGROUR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM WWLCG1    P@LCGR  3                       S01498
+     C           LBGROU    PARM LBGROU    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFEQ *BLANKS                                   S01498
+     C*
+     C************IN55     IFEQ '0'                                       S01498
+     C***********GPRECI    ANDEQ'D'                                       S01498
+     C*
+     C**   WHILE NOT END OF FILE, INITIALISE INSERT/AMEND INDICATORS
+     C**   ADD 1 TO COUNTER
+     C                     ADD  1         WWCNTR
+     C                     MOVEA'00'      *IN,56
+     C*
+     C**   MOVE FILE FIELDS TO REPORT FIELDS
+     C                     MOVELGPLCGR    WWLCG1
+     C                     MOVELGPLCGR    RRLCGR
+     C                     MOVELGPLCGN    RRLCGN
+     C                     Z-ADDGPLCGS    RRLCGS
+     C*****                MOVELGPATTI    RRATTI                          SA9018
+     C*
+     C**   IF CHANGE TYPE = I SETON INSERT INDICATOR
+     C**   IF CHANGE TYPE = A SETON AMEND INDICATOR
+     C           GPCHTP    IFEQ 'I'
+     C                     MOVE '1'       *IN56
+     C                     ELSE
+     C*
+     C           GPCHTP    IFEQ 'A'
+     C                     MOVE '1'       *IN57
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     Z-ADDGPTLUP    RRLCT
+     C                     Z-ADDGPLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCD
+     C*
+     C                     EXSR #ZB
+     C                     ELSE
+     C*
+     C**   WRITE NO CREDIT GROUP DETAILS
+     C                     MOVEL'1'       *IN65
+     C                     EXSR #ZB
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZA       - THIS SUBROUTINE PERFORMS FULL FILE PRINT PROCESS    *
+     C**                                                                 *
+     C** CALLS     - ZDATE2, #ZB                                         *
+     C**                                                                 *
+     C** CALLED BY - #BA                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZA       BEGSR
+     C*
+     C**   READ LBGROUL3 FOR PORTFOLIO LENDING GROUPS
+     C           *LOVAL    SETLLLBGROUL3
+     C                     READ LBGROUL3                 51
+     C*
+     C**   WHILE NOT END OF FILE, INITIALISE INSERT/AMEND INDICATORS
+     C**   ADD 1 TO COUNTER
+     C           *IN51     DOWEQ'0'
+     C*
+     C                     ADD  1         WWCNTR
+     C                     MOVEA'00'      *IN,56
+     C*
+     C**   MOVE FILE FIELDS TO REPORT FIELDS
+     C                     MOVELGPLCGR    WWLCG1  3
+     C                     MOVELGPLCGR    RRLCGR
+     C                     MOVELGPLCGN    RRLCGN
+     C                     Z-ADDGPLCGS    RRLCGS
+     C*****                MOVELGPATTI    RRATTI                          SA9018
+     C*
+     C**   IF CHANGE TYPE = I SETON INSERT INDICATOR
+     C**   IF CHANGE TYPE = A SETON AMEND INDICATOR
+     C           GPCHTP    IFEQ 'I'
+     C                     MOVE '1'       *IN56
+     C                     ELSE
+     C*
+     C           GPCHTP    IFEQ 'A'
+     C                     MOVE '1'       *IN57
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDGPTLUP    RRLCT
+     C*
+     C                     Z-ADDGPLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCD
+     C*
+     C**   DO INSTRUMENT PROCESSING
+     C                     EXSR #ZB
+     C*
+     C                     READ LBGROUL3                 51
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZB       - THIS SUBROUTINE PERFORMS INSTRUMENT RECORD          *
+     C**             PROCESSING                                          *
+     C**                                                                 *
+     C** CALLS     - ZDATE2                                              *
+     C**                                                                 *
+     C** CALLED BY - #BAA, #ZA                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZB       BEGSR
+     C*                                                                   S01498
+     C** Open printer file P1                                             S01498
+     C*                                                                   S01498
+     C           P1OPN     IFNE 'Y'                                       S01498
+     C                     OPEN LB0385P1                                  S01498
+     C                     MOVE 'Y'       P1OPN   1                       S01498
+     C*                                                                   S01498
+     C** Call ZSFILE for P1 file                                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ                           S01498
+     C                     PARM *BLANKS   @PARM   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM                           S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *INU7                           S01498
+     C                     MOVE '1'       *INU8                           S01498
+     C                     MOVE '1'       *INLR                           S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C** Output headings                                                  S01498
+     C*                                                                   S01498
+     C                     WRITEHEADER1                                   S01498
+     C                     WRITEHEADER2                                   S01498
+     C                     END                                            S01498
+     C*
+     C**   IF NECESSARY WRITE '... DOES NOT EXIST' FORMAT
+     C           *IN65     IFEQ '1'
+     C                     MOVELWWLCG1    RRLCGR
+     C                     WRITENOLOMBGR
+     C                     ELSE
+     C*
+     C                     MOVEL'Y'       WWDETR
+     C*
+     C**   CHECK FOR OVERFLOW AND IF NECESSARY OUTPUT HEADINGS
+     C           WWOFL1    SUB  WWPTL1    WWLINE  20
+     C           WWLINE    IFLE 2
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C                     WRITEDETAIL1
+     C*
+     C**   READ SDPLINL2 AND PROCESS INSTRUMENT RECORDS
+     C***********WWLCG1    SETLLSDPLINL2                                  B9997
+     C***********WWLCG1    READESDPLINL2                 53               B9997
+     C           WWLCG1    SETLLSDPLINL3                                  B9997
+     C           WWLCG1    READESDPLINL3                 53               B9997
+     C*
+     C                     MOVEA'00'      *IN,66
+     C*
+     C           *IN53     IFEQ '1'
+     C                     MOVELWWLCG1    RRLCGR
+     C                     WRITENOINSTR
+     C                     END
+     C*
+     C           *IN53     DOWEQ'0'
+     C*
+     C                     MOVEA'00'      *IN,56
+     C*
+     C**   IF CASH INSTRUMENT FLAG = 'YES' ALLOW PRINTING OF LITERALS
+     C           PDCSHI    IFEQ 'Y'
+     C                     MOVEL'1'       *IN66
+     C                     ELSE
+     C                     MOVEL'0'       *IN66
+     C                     END
+     C*
+     C                     MOVELPDINNR    RRINNR
+     C                     MOVELPDISTN    RRISTN
+     C*
+     C**   CHANGE TYPE
+     C           PDCHTP    IFEQ 'I'
+     C                     MOVE '1'       *IN56
+     C                     ELSE
+     C*
+     C           PDCHTP    IFEQ 'A'
+     C                     MOVE '1'       *IN57
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDPDTLUP    RRLCT
+     C*
+     C                     Z-ADDPDLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCD
+     C*
+     C**   CHECK FOR OVERFLOW AND IF NECESSARY OUTPUT HEADINGS
+     C           WWOFL1    SUB  WWPTL1    WWLINE
+     C           WWLINE    IFLE 2
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C                     WRITEDETAIL2
+     C*
+     C           *IN67     IFEQ '0'
+     C                     MOVEL'1'       *IN67
+     C                     END
+     C*
+     C***********WWLCG1    READESDPLINL2                 53               B9997
+     C           WWLCG1    READESDPLINL3                 53               B9997
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A        - THIS SUBROUTINE ACCESSES THE SDBANKPD FILE &        *
+     C**             INITIALISES WORK FIELDS                             *
+     C**                                                                 *
+     C** CALLS     - #ZZZ                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN39                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C                     Z-ADD*ZERO     WWCNTR  50
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'LB0385'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C                     MOVEL'LBGROUPD'WWFILE  8
+     C                     MOVEL*BLANKS   WWDETR  1
+     C                     MOVE 'N'       WWEND   1
+     C*
+     C**   SET OFF ALL INDIC1TORS
+     C                     MOVEA'0000000' *IN,50
+     C                     MOVEA'0000000' *IN,58
+     C                     MOVE '0'       *IN98
+     C*
+     C*****ACCESS*ICD*RECORD*1*****************************************   S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 50               S01498
+     C***********                                                         S01498
+     C*****IF*ICD*1*NOT*FOUND*THEN*DB*ERROR****************************   S01498
+     C************IN50     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C*
+     C**  Get title and date using access object                          S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANK                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE '001'     DBASE
+     C                     MOVE *BLANKS   DBFILE           ****************
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001*S01498
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001*S01498
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZZZ
+     C                     ELSE
+     C*
+     C************IN50     IFEQ '0'                                       S01498
+     C           P@RTCD    IFEQ *BLANK                                    S01498
+     C*
+     C**   SET DATE INDICATOR AS NECESSARY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01498
+     C** Call ZSFILE for AU file                                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM   60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ                           S01498
+     C                     PARM *BLANKS   @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM                           S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *INU7                           S01498
+     C                     MOVE '1'       *INU8                           S01498
+     C                     MOVE '1'       *INLR                           S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #C        - THIS SUBROUTINE PERFORMS TERMINATION PROCESSING     *
+     C**                                                                 *
+     C** CALLS     - #ZZZ                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #C        BEGSR
+     C*
+     C*****OUTPUT*'NO*DATA*TO*REPORT'*IF*NECESSARY*********************   S01498
+     C***********WWDETR    IFNE 'Y'                                       S01498
+     C***********          WRITENODETAIL                                  S01498
+     C***********          END                                            S01498
+     C*                                                                   S01498
+     C           P1OPN     IFEQ 'Y'                                       S01498
+     C*
+     C** CHECK FOR OVERFLOW AND IF NECESSARY OUTPUT HEADINGS
+     C           WWOFL1    SUB  WWPTL1    WWLINE
+     C           WWLINE    IFLE 4
+     C                     WRITEHEADER1
+     C                     END
+     C*
+     C**   OUTPUT 'END OF REPORT'
+     C                     WRITETRAILER
+     C                     END                                            S01498
+     C*
+     C**   OUTPUT RUN CONTROLS AS NECESSARY
+     C           WWFILE    CHAINLBTRAIPD             52
+     C*
+     C           *IN52     IFEQ '1'
+     C           TRRECI    OREQ '*'
+     C*
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE '002'     DBASE
+     C                     MOVE *BLANKS   DBFILE           ****************
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR  002*S01498
+     C                     MOVE 'LBTRAIPD'DBFILE           * DBERROR  002*S01498
+     C                     MOVEL*BLANKS   DBKEY            ****************
+     C                     MOVELWWFILE    DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZZZ
+     C                     ELSE
+     C*
+     C           *IN52     IFEQ '0'
+     C           TRRECI    ANDEQ'T'
+     C*
+     C           WWLCGR    IFEQ '*ALL'
+     C                     MOVE '1'       *IN63
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN62
+     C                     END
+     C*
+     C                     Z-ADDWWCNTR    RRLIVE
+     C*
+     C           WWLCGR    IFEQ '*ALL'
+     C*
+     C           RRLIVE    IFNE TRLIVE
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *INU8
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     WRITEFCHEADER
+     C                     WRITEFCDETAIL
+     C*                                                                   S01498
+     C** Output 'NO DETAILS TO REPORT' if necessary                       S01498
+     C*                                                                   S01498
+     C           WWDETR    IFNE 'Y'                                       S01498
+     C                     WRITENODTLS                                    S01498
+     C                     END                                            S01498
+     C***********          WRITEFCTRAILR                                  S01498
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZZZ      - THIS SUBROUTINE PERFORMS DATABASE ERROR PRINT       *
+     C**             HANDLING (RUN CONTROLS)                             *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #A, #C                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZZZ      BEGSR
+     C*                                                                   S01498
+     C           P1OPN     IFEQ 'Y'                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     CLOSELB0385P1                                  S01498
+     C                     END                                            S01498
+     C*
+     C**   OUTPUT HEADER, DATABASE ERROR FORMAT & 'END OF REPORT'
+     C                     WRITEFCHEADER
+     C                     WRITEFCDBERR
+     C***********          WRITEFCTRAILR                                  S01498
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A 5-FIGURE DAY NUMBER INTO DATE FORMAT
+     C**
+     C/COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+     C/EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

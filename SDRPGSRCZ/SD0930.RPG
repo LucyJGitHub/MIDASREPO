@@ -1,0 +1,533 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Account keys enquiry')                           *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  Standing Data Module
+     F*                                                                  *
+     F*     SD0930 - ACCOUNT KEYS ENQUIRY                                *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 251436             Date 20Nov07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11906R          Date 18Aug06               *
+      *                 BUG11906           Date 16Aug06               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 092714             Date 06Sep95               *  *
+      *                 047369             Date 10Jan94               *  *
+     F*                    S01314             DATE 23APR91               *
+     F*                    E22547             DATE 22JUN90               *
+     F*                    S01253             DATE 17APR90               *
+     F*                    E14291             DATE 20/07/88              *
+     F*                    E11836             DATE 05/11/87              *
+     F*                    S01125             DATE 04/11/86              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CER049 - Stamp Tax                                              *
+      *  251436 - Condition new screen heading for collateral ac key     *
+      *           enquiry. (*in40)                                       *
+      *           Condition new error msg when collateral ac key not     *
+      *           accessible.  (*in40)                                   *
+      *  BUG11906R - Reversal of BUG11906 (Recompile)                    *
+      *  BUG11906 - Account key entered in filter text box is not        *
+      *             displayed in the list view screen (Recompile)        *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     092714 - A/C KEYS ENQUIRY FALLS OVER WHEN A/C GENERATOR      *
+     F*              IS IN USE AND LOCKING ACKEY; AMENDED TO DISPLAY     *
+     F*              MESSAGE INSTEAD.                                    *
+     F*     047369 - NARRATIVE CODES ARE NOW ALPHA - PGM DOESNT HAVE TO  *
+     F*              CHECK FOR ZEROS AND OUTPUT BLANKS IF NO NARRATIVE   *
+     F*              CODE DEFINED.                                       *
+     F*     S01314 - Changes made during PTF incorporation.              *
+     F*              Multilanguage tag changed.                          *
+     F*     E22547 - NO VALUE MOVED INTO PARAMETER PRIOR TO CALL TO
+     F*              SDRTVTXT
+     F*     S01253 - CHANGED FOR MULTILANGUAGE SCREENS
+     F*     E14291 - IF ALL ACCOUNT KEY DETAIL RECORDS HAVE BEEN         *E14291
+     F*              DELETED ENQUIRY GENERATES INPUT/OUTPUT ERROR        *E14291
+     F*              WHEN WRITING TO DISPLAY FILE SD0930FM.              *E14291
+     F*     E11836 - TO PREVENT DELETED A/C KEYS BEING DISPLAYED.        *E11836
+     F*     S01125 - REMOVE LDA.                                         *S01125
+     F*                                                                  *
+     F********************************************************************
+     F* INDICATOR USAGE
+     F* 01             CMD/3 OR ERROR ON TABTB10 READ OR OPEN OF SD0930FM
+     F* 02             CLEAR SUBFILE
+     F* 03             NO DETAILS TO DISPLAY INDICATOR AND SFLDSP
+     F* 11             ROLL FORWARD INDICATOR
+     F* 12             ROLL BACKWARD INDICATOR
+     F* 13             SUPRESS ROLL FORWARD KEYS AND SFLEND INDICATOR
+     F* 14             SUPRESS ROLL BACKWARD KEYS
+     F* 40             COLLATERAL ACCOUNT KEYS ENQUIRY                                        251436
+     F* 87             END OF FILE ON ACKEY (SR ROLBAK)
+     F**88*******      END OF FILE ON ACKEY (SR ROLFWD) ON FIRST READ     E14291
+     F* 88             END OF FILE ON ACKEY (SR ROLFWD) ON FIRST          E14291
+     F*                ATTEMPT TO READ A DETAIL RECORD                    E14291
+     F* 89             END OF FILE ON ACKEY (SR ROLFWD)
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSD0930FMCF  E                    WORKSTN                        UC
+     F                                        X     KSFILE SD0900SF
+     F/COPY WNCPYSRC,SD0930F001
+     FTABTB10 IF  E                    DISK
+     F*CKEY***IF**E           K        DISK                               092714
+     FACKEY   IF  E           K        DISK                           UC  092714
+     F            ACKEYAKF                          KIGNORE
+     F/COPY WNCPYSRC,SD0930F002
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     IACKEYALF
+     I              RECI                            RECIAK
+     I*
+     IDSPF        DS
+     I* USED FOR CLEARING SCREEN BUFFER OF SUBFILE IN SR FORMAT
+     I**********                              1   4 SACD1                                     CGL029
+     I**********                              5   8 SACD2                                     CGL029
+     I**********                              9  12 SACD3                                     CGL029
+     I**********                             13  16 SACD4                                     CGL029
+     I**********                             17  20 SACD5                                     CGL029
+     I**********                             21  24 SACD6                                     CGL029
+     I**********                             25  26 SNCD1                                     CGL029
+     I**********                             27  28 SNCD2                                     CGL029
+     I**********                             29  30 SNCD3                                     CGL029
+     I**********                             31  32 SNCD4                                     CGL029
+     I**********                             33  34 SNCD5                                     CGL029
+     I**********                             35  36 SNCD6                                     CGL029
+     I**********                             37  37 SPRF1                                     CGL029
+     I**********                             38  38 SPRF2                                     CGL029
+     I**********                             39  39 SPRF3                                     CGL029
+     I**********                             40  40 SPRF4                                     CGL029
+     I**********                             41  41 SPRF5                                     CGL029
+     I**********                             42  42 SPRF6                                     CGL029
+     I                                        1  10 SACD1                                     CGL029
+     I                                       11  20 SACD2                                     CGL029
+     I                                       21  30 SACD3                                     CGL029
+     I                                       31  40 SACD4                                     CGL029
+     I                                       41  50 SACD5                                     CGL029
+     I                                       51  60 SACD6                                     CGL029
+     I                                       61  62 SNCD1                                     CGL029
+     I                                       63  64 SNCD2                                     CGL029
+     I                                       65  66 SNCD3                                     CGL029
+     I                                       67  68 SNCD4                                     CGL029
+     I                                       69  70 SNCD5                                     CGL029
+     I                                       71  72 SNCD6                                     CGL029
+     I                                       73  73 SPRF1                                     CGL029
+     I                                       74  74 SPRF2                                     CGL029
+     I                                       75  75 SPRF3                                     CGL029
+     I                                       76  76 SPRF4                                     CGL029
+     I                                       77  77 SPRF5                                     CGL029
+     I                                       78  78 SPRF6                                     CGL029
+     I                                       79  80 SASQ1                                     CER049
+     I                                       81  82 SASQ2                                     CER049
+     I                                       83  84 SASQ3                                     CER049
+     I                                       85  86 SASQ4                                     CER049
+     I                                       87  88 SASQ5                                     CER049
+     I                                       89  90 SASQ6                                     CER049
+     I/COPY WNCPYSRC,SD0930I001
+     I*
+     I*DA        UDS                            256                       S01125
+     I**
+     I**     Local data area.
+     I**
+     I*                                     134 138 DBFILE                S01125
+     I*                                     139 167 DBKEY                 S01125
+     I*                                     168 175 DBPGM                 S01125
+     I*                                     176 1770DBASE                 S01125
+     IPSDS       SDS
+     I                                        1  10 PROGRM
+     I                                      244 253 WKSTN
+     I                                      254 263 WKUSER
+     C                     MOVEACPY@      BIS@   80
+     C********************************************************************S01253
+     C/COPY WNCPYSRC,SD0930C001
+      *                                                                                       251436
+     C           *ENTRY    PLIST                                                              251436
+     C                     PARM           PCOENQ  7                                           251436
+      *                                                                                       CER049
+      ** Check if CER049 is installed                                                         CER049
+      *                                                                                       CER049
+     C                     MOVE *OFF      *IN15                                               CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM *BLANKS   PRTCD   7                                           CER049
+     C                     PARM '*VERIFY' POPTN   7                                           CER049
+     C                     PARM 'CER049'  PSARD   6                                           CER049
+      *                                                                                       CER049
+     C           PRTCD     IFEQ *BLANKS                                                       CER049
+     C                     MOVE *ON       *IN15                                               CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       251436
+      * If this is for collateral account keys enquiry, set on indicator                      251436
+      * for appropriate screen heading and error msg.                                         251436
+     C           PCOENQ    IFEQ 'Y'                                                           251436
+     C                     SETON                     40                                       251436
+     C                     END                                                                251436
+      *                                                                   S01253
+      * Call SDRTVTXT pgm to access appropriate text                      S01253
+      *  for a field used in a SFL                                        S01253
+      *                                                                   S01253
+     C                     MOVEL'ZZGBMSGF'MSGNM                           E22547
+     C***********          MOVEL'ZZM4399' MSGDNB                    S01253S01314
+     C                     MOVEL'ZZM2358' MSGDNB                          S01314
+     C                     CALL 'SDRTVTXT'                                S01253
+     C                     PARM           MSGDNB  7                       S01253
+     C                     PARM           MSGNM  10                       S01253
+     C                     PARM           MSGTXT 80                       S01253
+     C                     MOVELMSGTXT    ZZM002                          S01253
+     C           *BLANK    IFEQ *BLANK                                    CDL038
+     C                     MOVEL'Dr'      ZZM002                          CDL038
+     C                     ENDIF                                          CDL038
+      *                                                                   S01253
+     C***********          MOVEL'ZZM0941' MSGDNB                    S01253S01314
+     C                     MOVEL'ZZM0942' MSGDNB                    S01253S01314
+     C                     CALL 'SDRTVTXT'                                S01253
+     C                     PARM           MSGDNB  7                       S01253
+     C                     PARM           MSGNM  10                       S01253
+     C                     PARM           MSGTXT 80                       S01253
+     C                     MOVELMSGTXT    ZZM003                          S01253
+     C           *BLANK    IFEQ *BLANK                                    CDL038
+     C                     MOVEL'Cr'      ZZM003                          CDL038
+     C                     ENDIF                                          CDL038
+      *                                                                   S01253
+     C                     OPEN SD0930FM               01
+     C* SCREEN OPEN
+     C*
+     C* FIELD 'FIRST' CONTAINS THE AKEY FOR THE TOP RECORD ON THE SCREEN.
+     C* FIELD 'LAST'  CONTAINS THE AKEY FOR THE FIRST RECORD OF THE
+     C*               NEXT SCREEN IF ROLL FORWARD IS PRESSED.
+     C* FIELD 'LOWVAL' CONTAINS THE AKEY OF FIRST RECORD IN FILE ACKEYALF.
+     C           *LIKE     DEFN AKEY      LAST
+     C           *LIKE     DEFN AKEY      FIRST
+     C           *LIKE     DEFN AKEY      LOWVAL
+     C*
+     C*****  FIRST PROCESSING CYCLE ONLY
+     C*
+     C* READ INSTALLATION CONTROL (ERROR EXIT IN SR)
+     C                     EXSR ICDR
+     C* FILL FIRST SCREEN
+     C                     MOVE *BLANKS   LAST
+     C                     EXSR ROLFWD
+     C* SETON 'NO DETAILS TO DISPLAY INDICATOR'  AND PREVENT 'ROLL BACK'
+     C                     SETON                     14     SUPRESS ROLBAK
+     C      88             SETON                       03   NO DETAILS
+     C*
+     C                     WRITESD0900TP
+     C/COPY WNCPYSRC,SD0930C002
+     C                     EXFMTSD0900SC
+     C/COPY WNCPYSRC,SD0930C003
+     C* IF THERE ARE 'NO DETAILS' THEN EXIT REGARDLESS OF OPTIONS
+     C      88             SETON                       01
+     C* SAVE FIRST AKEY IN FILE ACKEYALF
+     C     N88             MOVE FIRST     LOWVAL
+     C*
+     C*****  DETAIL PROCESSING CYCLE
+     C*
+     C           *IN01     DOWEQ'0'                        B-01 NOT ON
+     C*
+     C*
+     C      11             EXSR ROLFWD
+     C      12             EXSR ROLBAK
+     C*
+     C     N11N12          EXSR SERCH
+     C*
+     C                     WRITESD0900TP
+     C/COPY WNCPYSRC,SD0930C004
+     C                     EXFMTSD0900SC
+     C/COPY WNCPYSRC,SD0930C005
+     C*
+     C                     END                             E-01 NOT ON
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C********************************************************************
+     C/SPACE 3
+     C*********************************************************************
+     C           FORMAT    BEGSR
+     C*
+     C***** FORMAT DATA READ FROM ACKEYALF FOR SUBFILE
+     C*
+     C* CALLED FROM - SR ROLFWD,ROLBAK
+     C* CALLS TO - *NONE
+     C                     MOVE *BLANK    DSPF             DATA STRUCTURE
+     C*
+     C           ACD1      IFGT 0
+     C                     MOVE ACD1      SACD1
+     C                     END
+     C           ASQ1      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ1      SASQ1                                               CER049
+     C                     END                                                                CER049
+     C***********NCD1      IFGT 0                                         047369
+     C                     MOVE NCD1      SNCD1
+     C***********          END                                            047369
+     C           PRF1      IFGT 0
+     C                     MOVE PRF1      SPRF1
+     C                     END
+     C           ACD2      IFGT 0
+     C                     MOVE ACD2      SACD2
+     C                     END
+     C           ASQ2      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ2      SASQ2                                               CER049
+     C                     END                                                                CER049
+     C***********NCD2      IFGT 0                                         047369
+     C                     MOVE NCD2      SNCD2
+     C***********          END                                            047369
+     C           PRF2      IFGT 0
+     C                     MOVE PRF2      SPRF2
+     C                     END
+     C           ACD3      IFGT 0
+     C                     MOVE ACD3      SACD3
+     C                     END
+     C           ASQ3      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ3      SASQ3                                               CER049
+     C                     END                                                                CER049
+     C***********NCD3      IFGT 0                                         047369
+     C                     MOVE NCD3      SNCD3
+     C***********          END                                            047369
+     C           PRF3      IFGT 0
+     C                     MOVE PRF3      SPRF3
+     C                     END
+     C           ACD4      IFGT 0
+     C                     MOVE ACD4      SACD4
+     C                     END
+     C           ASQ4      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ4      SASQ4                                               CER049
+     C                     END                                                                CER049
+     C***********NCD4      IFGT 0                                         047369
+     C                     MOVE NCD4      SNCD4
+     C***********          END                                            047369
+     C           PRF4      IFGT 0
+     C                     MOVE PRF4      SPRF4
+     C                     END
+     C           ACD5      IFGT 0
+     C                     MOVE ACD5      SACD5
+     C                     END
+     C           ASQ5      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ5      SASQ5                                               CER049
+     C                     END                                                                CER049
+     C***********NCD5      IFGT 0                                         047369
+     C                     MOVE NCD5      SNCD5
+     C***********          END                                            047369
+     C           PRF5      IFGT 0
+     C                     MOVE PRF5      SPRF5
+     C                     END
+     C           ACD6      IFGT 0
+     C                     MOVE ACD6      SACD6
+     C                     END
+     C           ASQ6      IFNE *BLANKS                                                       CER049
+     C                     MOVE ASQ6      SASQ6                                               CER049
+     C                     END                                                                CER049
+     C***********NCD6      IFGT 0                                         047369
+     C                     MOVE NCD6      SNCD6
+     C***********          END                                            047369
+     C           PRF6      IFGT 0
+     C                     MOVE PRF6      SPRF6
+     C                     END
+     C/COPY WNCPYSRC,SD0930C006
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 1
+     C********************************************************************
+     C           ROLFWD    BEGSR
+     C*
+     C* PROCESS TO ROLL THE SCREEN FORWARD
+     C*
+     C* CALLED FROM - SR ROLBAK,SERCH,MAINLINE CODE
+     C* CALLS TO - SR FORMAT
+     C*
+     C* INITIALISE INDICATORS
+     C                     SETOF                     1314
+     C                     SETOF                     8889
+     C*                                                                   092714
+     C           *IN11     IFNE *ON                                       092714
+     C           *IN12     ANDNE*ON                                       092714
+     C           SEARCH    ANDEQ*BLANKS                                   092714
+     C                     OPEN ACKEY                  95                 092714
+     C/COPY WNCPYSRC,SD0930C025
+     C                     ENDIF                                          092714
+     C           *IN95     IFEQ *ON                                       092714
+     C                     SETON                     13  88               092714
+     C                     ELSE                                           092714
+     C/COPY WNCPYSRC,SD0930C007
+     C                     Z-ADD1         X
+     C/COPY WNCPYSRC,SD0930C008
+     C           LAST      SETLLACKEYALF
+     C           ACTAG1    TAG                                            E14291
+     C                     READ ACKEYALF                 89
+     C           *IN89     IFEQ '0'                                       E14291
+     C           RECIAK    ANDEQ'*'                                       E14291
+     C                     GOTO ACTAG1                                    E14291
+     C                     END                                            E14291
+     C**END*OF*FILE*ON*FIRST*READ                                         E14291
+     C* END OF FILE WITHOUT ENCOUNTERING ANY LIVE RECORDS                 E14291
+     C           *IN89     IFEQ '1'                        B-*IN89 '1'
+     C* END OF FILE - DISABLE 'ROLL FWD' AND SET EOF INDICATOR
+     C                     SETON                     13  88
+     C                     ELSE                            X-*IN89 '1'
+     C* THERE ARE DETAILS TO DISPLAY
+     C                     MOVE AKEY      FIRST
+     C* DELETE EXISTING SUBFILE IF DETAILS FOUND FOR DISPLAY
+     C                     SETON                       02
+     C/COPY WNCPYSRC,SD0930C009
+     C                     WRITESD0900SC
+     C/COPY WNCPYSRC,SD0930C010
+     C                     SETOF                       02
+     C**FILL*SUBFILE*WITH*UPTO*EIGHT*RECORDS                              E14291
+     C* FILL SUBFILE WITH UP TO EIGHT ACTIVE RECORDS                      E14291
+     C/COPY WNCPYSRC,SD0930C011
+     C           X         DOWLE8                          B-X DOWLE 8
+     C/COPY WNCPYSRC,SD0930C012
+     C           RECIAK    IFNE '*'                                       E11836
+     C                     EXSR FORMAT
+     C/COPY WNCPYSRC,SD0930C013
+     C                     WRITESD0900SF
+     C                     ADD  1         X
+     C/COPY WNCPYSRC,SD0930C014
+     C                     END                                            E11836
+     C           ACTAG2    TAG                                            E14291
+     C                     READ ACKEYALF                 89EOF
+     C           *IN89     IFEQ '1'                        B-EOF
+     C                     SETON                         13DISABLE ROLLFWD
+     C                     GOTO ENDFWD                     EXIT
+     C                     ELSE                                           E14291
+     C           RECIAK    IFEQ '*'                                       E14291
+     C                     GOTO ACTAG2                                    E14291
+     C                     END                                            E14291
+     C                     END                             E-EOF
+     C*
+     C                     END                             E-X DOWLE 8
+     C                     MOVE AKEY      LAST
+     C* SAVE KEY OF LAST DETAILS ON SCREEN
+     C                     END                             E-*IN89 '1'
+     C                     ENDIF                           E-*IN95 '1'    092714
+     C*
+     C           ENDFWD    ENDSR
+     C********************************************************************
+     C/SPACE 1
+     C********************************************************************
+     C           ROLBAK    BEGSR
+     C*
+     C***** PROCESS TO ROLL THE SCREEN BACKWARD
+     C*
+     C* CALLED FROM - SR SERCH,MAINLINE CODE
+     C* CALLS TO - SR FORMAT,ROLFWD
+     C*
+     C* INITIALISE INDICATORS
+     C                     SETOF                     1314
+     C                     SETOF                     8788
+     C/COPY WNCPYSRC,SD0930C015
+     C                     Z-ADD8         X
+     C/COPY WNCPYSRC,SD0930C016
+     C           FIRST     SETLLACKEYALF
+     C           ACTAG3    TAG                                            E14291
+     C                     READPACKEYALF                 87
+     C           *IN87     IFEQ '0'                                       E14291
+     C           RECIAK    ANDEQ'*'                                       E14291
+     C                     GOTO ACTAG3                                    E14291
+     C                     END                                            E14291
+     C           *IN87     IFEQ '1'                         B-*IN87 '1'
+     C* END OF FILE - DISABLE ROLL FORWARD AND END LOOP
+     C                     SETON                         14
+     C                     ELSE                             X-*IN87 '1'
+     C                     MOVE FIRST     LAST
+     C* FILL SUBFILE WITH ROLL BACK DETAILS
+     C                     SETON                       02
+     C/COPY WNCPYSRC,SD0930C017
+     C                     WRITESD0900SC
+     C/COPY WNCPYSRC,SD0930C018
+     C                     SETOF                       02
+     C* FILL SUBFILE WITH UPTO EIGHT RECORDS
+     C/COPY WNCPYSRC,SD0930C019
+     C           X         DOWGE1                          B-X DOWGE 1
+     C/COPY WNCPYSRC,SD0930C020
+     C           RECIAK    IFNE '*'                                       E11836
+     C                     EXSR FORMAT
+     C/COPY WNCPYSRC,SD0930C021
+     C                     WRITESD0900SF
+     C/COPY WNCPYSRC,SD0930C022
+     C                     MOVE AKEY      FIRST
+     C/COPY WNCPYSRC,SD0930C023
+     C                     SUB  1         X       20
+     C/COPY WNCPYSRC,SD0930C024
+     C                     END                                            E11836
+     C           ACTAG4    TAG                                            E14291
+     C                     READPACKEYALF                 87
+     C           *IN87     IFEQ '1'                        B-EOF
+     C* BEGINNING OF FILE FOUND-PUT FIRST RECORD AT TOP OF SCREEN
+     C                     MOVE *BLANKS   LAST
+     C                     EXSR ROLFWD
+     C                     SETON                         14SUPRESS ROLLBACK
+     C                     GOTO ENDBAK
+     C                     ELSE                                           E14291
+     C           RECIAK    IFEQ '*'                                       E14291
+     C                     GOTO ACTAG4                                    E14291
+     C                     END                                            E14291
+     C                     END                             E-EOF
+     C*
+     C                     END                             E-X DOWGE 1
+     C                     END                             E-*IN87 '1'
+     C*
+     C           ENDBAK    ENDSR
+     C********************************************************************
+     C/SPACE 1
+     C********************************************************************
+     C           SERCH     BEGSR
+     C*
+     C***** DISPLAY DETAILS OF AKEY IF SEARCH DETAILS ENTERED ON SCREEN
+     C*
+     C* CALLED FROM - MAINLINE CODE
+     C* CALLS TO - SR ROLBAK,ROLFWD
+     C*
+     C           SEARCH    IFNE *BLANK                     B-SEARCH ENTERED
+     C                     MOVE SEARCH    LAST
+     C                     EXSR ROLFWD
+     C           *IN88     IFEQ '1'                        B-EOF ON 1 READ
+     C* IF SEARCH IS BEYOND EOF THEN DISPLAY LAST RECORDS IN ACKEYALF
+     C                     MOVE SEARCH    FIRST
+     C                     EXSR ROLBAK
+     C                     SETON                     13     SUPRESS ROLFWD
+     C                     ELSE                             X-EOF ON 1 READ
+     C           SEARCH    IFLE LOWVAL                      B-BEFORE BOF
+     C* IF SEARCH BEFORE BEGINNING OF FILE THEN SUPRESS ROLLBACK
+     C                     SETON                     14     SUPRESS ROLBAK
+     C                     END                              E-BEFORE BOF
+     C                     END                              E-EOF ON 1 READ
+     C                     END                              E-SEARCH ENTERED
+     C                     ENDSR
+     C*
+     C*********************************************************************
+     C/SPACE 1
+     C********************************************************************
+     C           ICDR      BEGSR
+     C*
+     C***** READ INSTALLATION CONTROL
+     C*
+     C* CALLED FROM - MAINLINE CODE
+     C* CALLS TO - *NONE
+     C*
+     C                     READ TABTB10                  01
+     C           *IN01     IFEQ '1'                        DATABASE ERROR
+     C* DATABASE ERROR
+     C*                    MOVELPROGRM    DBPGM                           S01125
+     C*                    MOVEL'ICDR1'   DBKEY                           S01125
+     C*                    MOVE 'TABLE'   DBFILE                          S01125
+     C*                    Z-ADD01        DBASE                           S01125
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

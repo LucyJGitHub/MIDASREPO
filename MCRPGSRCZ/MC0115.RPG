@@ -1,0 +1,1232 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Period Details Maint. - insert')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0115 - PERIOD DETAILS MAINTENANCE - INSERT                 *
+     F*                                                               *
+     F*  Function: This program will allow the insertion of period    *
+     F*  I/C Int   details for a given period set.                    *
+     F*                                                               *
+     F*  Called By: MC0100                                            *
+     F*                                                               *
+     F*  Calls:     MC0118                                            *
+     F*             MC0119                                            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 109305             DATE 17OCT96               *
+     F*  PREV AMEND NO. CMC001             DATE 18MAR96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  109305 - On insert, set closure date to zero.                *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Recompile due to change of PF/GLPERDPD              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FMC0115DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SFLRCD
+     F                                              KINFDS INFDS
+     FGLPERSL1IF  E           K        DISK
+     FGLPERDL0UF  E           K        DISK         KCOMIT
+     F                                              KINFDS DSPERD
+     F                                              KINFSR INFSR
+     FGLPERDPDO   E                    DISK         KCOMIT
+     F                                              KINFDS DSPERO
+     F                                              KINFSR INFSR
+     FGLFCTLL0UF  E           K        DISK         KCOMIT
+      /EJECT
+     F*****************************************************************
+     F* F U N C T I O N  O F  I N D I C A T O R S                     *
+     F*                                                               *
+     F*  11 - Read of GLPERSL1 failed.                                *
+     F*  12 - No record for GLPERDL0.                                 *
+     F*  13 - No record for GLPERDL0.                                 *
+     F*  14 - Previous years display control.                         *
+     F*  15 - No record for GLPERDL0.                                 *
+     F*  16 - Chain to GLFCTLL0 failed.                               *
+     F*  21 - Processing termination indicator.                       *
+     F*  31 - Read SFLRCD failure.                                    *
+     F*  41 - Look up of table failure.                               *
+     F*  60 - SFLEND Indicator                                        *
+     F*  71 - Control warning message.                                *
+     F*  72 - Indicator to stop insert and processing being done in   *
+     F*       same loop.                                              *
+     F*  81 - Subfile display control - record and control.           *
+     F*  83 - Non-display of Term 1 data                              *
+     F*  84 - Non-display of Term 2 data                              *
+     F*  85 - Validation error.                                       *
+     F*  86 - No more periods may be inserted.                        *
+     F*  87 - The final period has been reached.                      *
+     F*  91 - Frequency Code is 'B'                                   *
+     F* 98-99 Indicators used in standard subroutines                 *
+     F* U7-U8 - Database Error.                                       *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  F3F12     - Processing for F3 and F12.                       *
+     F*  F19       - Processing for F19.                              *
+     F*  ENTI      - Processing for insertion when Enter is pressed.  *
+     F*  ENTA      - Processing for amendment when Enter is pressed.  *
+     F*  INSRT     - Write records to subfile.                        *
+     F*  VLD       - Validate subfile records.                        *
+     F*  WRITE     - Write records to GLPERDPD.                       *
+     F*  UPDAT     - Update records in GLPERDL0.                      *
+     F*  DSPF      - Convert data from display file layout to data    *
+     F*              base layout.                                     *
+     F*  PREV      - Bringing in records from previous year.          *
+     F*  ZASNMS    - Send message to program message queue.           *
+     F*  EOPDT     - Calculate new End of Period Date.                *
+     F*  INFSR     - File Exception/Error handling                    *
+     F*  *PSSR     - Error handling subroutine                        *
+     F*  ZDATE1    - Convert date to day number                       *
+     F*  ZDATE2    - Convert day number to DDMMMYY                    *
+     F*  ZCHKH     - Check for holidays                               *
+     F*  ZACCH     - Check for holidays                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *  Copyright array
+     E                    TAB1    1  12  3   TAB2    2
+      *  Tables to match month shortnames and numbers
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    ZFMD   12  12  2
+      *  End of Period Date Calculation
+     E/COPY ZSRSRC,ZHOLE
+      /SPACE 3
+     IRUNDAT    E DSRUNDAT
+      *  Data structure for run date using RUNDAT
+      *
+     ILDA       E DSLDA
+      *  Local Data Area
+      *
+     IPSDS       SDS
+      * Program Status Data Structure
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IINFDS       DS
+      *
+      **  INFDS Data Structure
+      *
+     I                                     *STATUS  STATUS
+     IDSPERD      DS
+      *
+      **  GLPERDL0 Data Structure
+      *
+     I                                     *STATUS  STPERD
+     IDSPERO      DS
+      *
+      **  GLPERDPD Data Structure
+      *
+     I                                     *STATUS  STPERO
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I            DS
+      * Data Structure for shortname date (from screen EOP date)
+     I                                        1   7 SEOPDT
+     I                                        1   2 SDAY
+     I                                        3   5 SMON
+     I                                        6   7 SYR
+     I            DS
+      * Data Structure for UK date used in conversion
+     I                                        1   6 UKDAT
+     I                                        1   2 UKDAY
+     I                                        1   1 UKD1
+     I                                        3   4 UKMON
+     I                                        5   6 UKYR
+     I            DS
+      * Data Structure for Screen Period Year
+     I                                        1   40SPDYR
+     I                                        1   2 ACY
+     I                                        3   4 AYR
+     I            DS
+      * Data Structure for key for GLPERDL0
+     I                                        1   7 DTKEY
+     I                                        1   1 STPSTC
+     I                                        2   3 CY
+     I                                        4   5 YR
+     I                                        6   7 PDNO
+      ********************************************************************
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define work fields
+     C                     MOVE 'Y'       RUN1    1
+     C           *LIKE     DEFN AGRDNB    DATE
+     C           *LIKE     DEFN DTEPDD    WKEOPD
+     C           *LIKE     DEFN DTEPDD    PEOPDT
+     C           *LIKE     DEFN DTEPDD    SVEPDD
+     C           *LIKE     DEFN DTEPDD    LTEPDD
+     C           *LIKE     DEFN DTST1D    SVTM1
+     C           *LIKE     DEFN DTST2D    SVTM2
+     C           *LIKE     DEFN DTPSTC    SVPSTC
+     C           *LIKE     DEFN DTPDYR    SVPDYR
+      *
+     C                     SETOF                     98
+      *
+      * Parameters from MC0100 - Period Set Code, Action & Start Date.
+     C           *ENTRY    PLIST
+     C                     PARM           SETCOD  1
+     C                     PARM           ACTION  1
+     C                     PARM           STDATE  50
+      *
+      * Key list for accessing GLPERDL0.
+     C           KEY       KLIST
+     C                     KFLD           STPSTC
+     C                     KFLD           CY
+     C                     KFLD           YR
+     C                     KFLD           PDNO
+      *
+      * Clear all fields to send messages to message queue.
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0115'  SPGMQ
+      *
+      ** Obtain bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD004       DBASE
+     C                     MOVELPOPTN     DBKEY            ***************
+     C                     MOVEL'MC0115'  DBPGM            * DB ERROR 04 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Get current day number and date from RUNDAT.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     Z-ADDAGRDNB    DATE
+     C                     MOVE AGMRDT    SMRDT
+      *
+      * Set lower limits on GLPERSL1 to find Set Code information.
+     C           SETCOD    SETLLGLPERSL1                 11
+     C           *IN11     IFEQ '1'
+     C                     READEGLPERSL1                 11
+      *
+      * Database error handling.
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0115'  DBPGM
+     C                     MOVELSETCOD    DBKEY
+     C                     MOVEL'GLPERSPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * If terms are not applicable for this Set Code then set on
+      * indicators for non-display.
+     C           STPTM1    IFEQ 0
+     C                     SETON                     83
+     C                     END
+     C           STPTM2    IFEQ 0
+     C                     SETON                     84
+     C                     END
+      *
+      * Set up fields for insert processing.
+     C                     Z-ADDSTFPYR    SPDYR
+     C           STDATE    SUB  1         WKEOPD
+     C           STDATE    SUB  1         START   50
+     C                     Z-ADDSTDATE    START2  50
+     C                     MOVE STPSTC    SPSTC
+      *
+      * Write to screen.
+     C                     WRITEHEADING
+     C                     WRITESETDTL
+     C                     WRITEFOOTER
+      *
+      * Perform insert processing.
+     C                     MOVE 'I'       WRKIN   1
+     C                     EXSR INSRT
+      *
+     C                     SETOF                     81
+     C                     EXFMTSFLCTLR
+      *
+      * Clear program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      * Do while processing is continuing.
+     C           *IN21     DOWEQ'0'
+      *
+      * If F12 or F3 then begin process termination.
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     EXSR F3F12
+     C                     ELSE
+     C                     SETOF                     71
+     C                     END
+      *
+      * If F19 is pressed then process previous year's periods.
+     C           *INKT     IFEQ '1'
+     C                     EXSR F19
+     C                     END
+      *
+      * If Enter is pressed and the work indicator = I (ie; new records
+      * are to be inserted).
+     C           WRKIN     IFEQ 'I'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *INKT     ANDEQ'0'
+     C                     EXSR ENTI
+     C                     END
+      *
+      * If Enter is pressed and the work indicator = A (ie; records
+      * are to be amended).
+     C           WRKIN     IFEQ 'A'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *INKT     ANDEQ'0'
+     C           *IN72     ANDEQ'0'
+     C                     EXSR ENTA
+     C                     END
+      *
+      * If processing not terminated then display screen.
+     C           *IN21     IFEQ '0'
+     C                     SETOF                     81
+     C                     WRITESETDTL
+     C                     WRITESFLCTLM
+     C                     EXFMTSFLCTLR
+      *
+      * Clear program message queue and set off validation indicator.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     SETOF                     8572
+     C                     END
+      *
+     C                     END
+      *
+      * If less than one year's worth of periods generated then
+      * perform ROLLBACK.
+     C           LTEPDD    IFLE YR1
+     C                     ROLBK
+     C                     MOVE 'X'       ACTION
+     C                     END
+      *
+      * Update audit file.
+     C           ACTION    IFEQ 'I'
+     C                     MOVEL'GLPERSPD'FILE   10
+     C           FILE      CHAINGLFCTLL0             16
+      *
+      * If chain fails then perform error handling.
+     C           *IN16     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0115'  DBPGM
+     C                     MOVELFILE      DBKEY
+     C                     MOVEL'GLFCTLPA'DBFILE           ***************
+     C                     Z-ADD005       DBASE            * DBERROR 005 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Update fields on file.
+     C                     ADD  1         GFNORC
+     C                     ADD  1         GFNOIN
+     C                     UPDAT@AHREAU
+      *
+      * If the start date is greater than the run date then call
+      * program to set relative period numbers to dummy values.
+     C           START2    IFGT AGRDNB
+     C                     CALL 'MC0118'
+     C                     PARM           SETCOD
+     C                     COMIT
+      *
+      * Call program to set relative period numbers to correct values.
+     C                     ELSE
+     C                     CALL 'MC0119'
+     C                     PARM           SETCOD
+     C                     COMIT
+     C                     END
+     C                     END
+      *
+      * If F3 pressed, end processing.
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'T'       ACTION
+     C                     END
+      *
+     C                     SETON                     LR
+      /EJECT
+      ********************************************************************
+      *
+      *  F3F12 Subroutine for processing when F3 or F12 is pressed.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/ZASNMS
+      *
+     C           F3F12     BEGSR
+      *
+      * Check at least one year's worth of periods have been input.
+     C           365       ADD  DATE      YR1     50
+      *
+      * Send warning message if more periods need to be input
+     C           DTEPDD    IFLT YR1
+     C           *IN71     IFEQ '0'
+     C                     SETON                     71
+     C                     MOVE 'GLX0346' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      * End process if warning message sent already.
+     C                     ELSE
+     C                     SETON                     21
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     21
+     C                     END
+      *
+     C           F3F12E    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  F19   Subroutine for processing when F19 is pressed.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/ZASNMS
+      *
+     C           F19       BEGSR
+      *
+      * Set off indicator for 'no more periods to be inserted'.
+     C                     SETOF                     86
+      *
+      * Set key for previous year.
+     C           SPDYR     SUB  1         SPDYR
+     C                     MOVE '01'      PDNO
+     C                     MOVE ACY       CY
+     C                     MOVE AYR       YR
+      *
+     C           KEY       SETLLGLPERDL0                 12
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'A'       WRKIN
+      *
+      * Clear subfile.
+     C                     SETON                     81
+     C                     WRITESFLCTLR
+      *
+      * Perform processing for previous year's periods.
+     C                     SETOF                     14
+     C                     EXSR PREV
+      *
+      * If previous year's worth of periods is not found, reset
+      * Period Year and send message to screen.
+     C                     ELSE
+     C                     MOVELSTPSTC    ZAMSDA
+     C                     ADD  1         SPDYR
+     C                     MOVE 'GLX0336' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C           F19E      ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ENTI  Subroutine for processing when Enter is pressed and new
+      *        records are to be inserted.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/VLD
+      *                SR/WRITE
+      *                SR/INSRT
+      *
+     C           ENTI      BEGSR
+      *
+      * Validate subfile.
+     C                     EXSR VLD
+      *
+      * If no error message sent and 'End of Periods' indicator is off,
+      * write records to Period Details file.
+     C           *IN85     IFEQ '0'
+     C           *IN87     ANDEQ'0'
+     C                     EXSR WRITE
+      *
+      * If 'No more periods can be generated' indicator is on then skip
+      * further processing in this routine.
+     C           *IN86     IFEQ '0'
+      *
+      * Save last End of Period Date to get new start date for next yr.
+     C           WKEOPD    ADD  1         STDATE
+     C                     Z-ADDWKEOPD    START
+      *
+      * Clear subfile.
+     C                     SETON                     81
+     C                     WRITESFLCTLR
+      *
+      * Insert next year's worth of periods.
+     C           SPDYR     ADD  1         SPDYR
+     C                     EXSR INSRT
+      *
+      * Set on 'last period reached' indicator and set the work
+      * indicator to 'A' as all future validation will be amends.
+     C                     ELSE
+     C                     SETON                     8772
+     C                     MOVE 'A'       WRKIN
+     C                     Z-ADDLTEPDD    SVEPDD
+     C                     END
+      *
+     C                     END
+      *
+     C           ENTIE     ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  ENTA  Subroutine for processing when Enter is pressed and
+      *        existing records are to be amended.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/VLD
+      *                SR/UPDAT
+      *                SR/PREV
+      *                SR/INSRT
+      *
+     C           ENTA      BEGSR
+      *
+      * Validate subfile.
+     C                     EXSR VLD
+      *
+      * If no invalid message sent update Period Details file.
+     C           *IN85     IFEQ '0'
+     C                     EXSR UPDAT
+      *
+      * If 'No more periods can be generated' indicator is on then skip
+      * further processing in this routine.
+     C           *IN86     IFEQ '0'
+      *
+      * Clear subfile.
+     C                     SETON                     81
+     C                     WRITESFLCTLR
+      *
+      * Save last End of Period Date for next validation.
+     C           WKEOPD    ADD  1         START
+      *
+      * Add one year and set key.
+     C           SPDYR     ADD  1         SPDYR
+     C                     MOVE '01'      PDNO
+     C                     MOVE ACY       CY
+     C                     MOVE AYR       YR
+     C           KEY       SETLLGLPERDL0                 13
+      *
+      * Perform processing for previously entered next years periods.
+     C           *IN13     IFEQ '1'
+     C                     SETOF                     14
+     C                     EXSR PREV
+      *
+      * Otherwise insert new year's worth of periods.
+      * Clear subfile.
+     C                     ELSE
+     C                     SETON                     81
+     C                     WRITESFLCTLR
+     C                     MOVE 'I'       WRKIN
+     C                     EXSR INSRT
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C           ENTAE     ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  INSRT Subroutine for Insert processing
+      *
+      *    CALLED BY : Main Processing
+      *                SR/ENTI
+      *                SR/ENTA
+      *
+      *    CALLS     : SR/EOPDT
+      *                SR/ZDATE2
+      *
+     C           INSRT     BEGSR
+      *
+      * If Terms are applicable initialise term counts.
+     C           *IN83     IFEQ '0'
+     C                     Z-ADD0         TMCNT1  20
+     C                     END
+     C           *IN84     IFEQ '0'
+     C                     Z-ADD0         TMCNT2  20
+     C                     END
+      *
+      * Initialise RRN.
+     C                     Z-ADD1         RRN     20
+     C                     DO   STPPAN
+     C                     MOVE *BLANKS   SPDNM
+     C                     MOVE RRN       SPDNY
+      *
+      * Calculate End of Period Date.  This can only be done if a
+      * Frequency Code exists.
+     C           STPFCD    IFNE *BLANKS
+     C                     Z-ADDWKEOPD    ZDAYNO
+     C                     Z-ADDSTPFBD    ZMDAY
+     C                     MOVE STPFCD    ZFREQ
+     C                     MOVE BJLCCY    ZCCY
+     C                     EXSR EOPDT
+     C                     Z-ADDZDAYNO    WKEOPD
+      *
+      * Convert date to format 00XXX00.
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SEOPDT
+     C                     ELSE
+     C                     MOVE *BLANKS   SEOPDT
+     C                     END
+      *
+      * If Terms are applicable then calculate if this is Start of Term.
+     C           *IN83     IFEQ '0'
+     C           TMCNT1    MULT STPTM1    WKTERM  20
+     C                     ADD  1         WKTERM
+     C           RRN       IFEQ WKTERM
+     C                     MOVE 'Y'       SSOT1
+     C                     ADD  1         TMCNT1
+     C                     ELSE
+     C                     MOVE *BLANKS   SSOT1
+     C                     END
+     C                     END
+      *
+     C           *IN84     IFEQ '0'
+     C           TMCNT2    MULT STPTM2    WKTERM
+     C                     ADD  1         WKTERM
+     C           RRN       IFEQ WKTERM
+     C                     MOVE 'Y'       SSOT2
+     C                     ADD  1         TMCNT2
+     C                     ELSE
+     C                     MOVE *BLANKS   SSOT2
+     C                     END
+     C                     END
+      *
+      * Write a record to the subfile.
+     C                     WRITESFLRCD
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           INSRTE    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  VLD   Subroutine to validate subfile
+      *
+      *    CALLED BY : SR/ENTI
+      *                SR/ENTA
+      *
+      *    CALLS     : SR/ZDATE1
+      *                SR/ZASNMS
+      *
+     C           VLD       BEGSR
+      *
+      * Initialise RRN and check End of Period Date.
+     C                     Z-ADD1         RRN
+     C                     DO   STPPAN
+     C           RRN       CHAINSFLRCD               31
+      *
+      * Convert DDMMMYY format to DDMMYY.
+     C           SMON      LOKUPTAB1      TAB2           41
+     C           *IN41     IFEQ '1'
+     C                     MOVE TAB2      UKMON
+     C                     MOVE SDAY      UKDAY
+     C           UKD1      IFEQ ' '
+     C                     MOVE '0'       UKD1
+     C                     END
+     C                     MOVE SYR       UKYR
+     C                     MOVE UKDAT     ZDATE
+     C                     MOVELUKDAT     ZDATE7  7
+     C                     MOVE '0'       ZDATE7
+     C                     TESTN          ZDATE7     41
+     C   41                EXSR ZDATE1
+     C                     END
+      *
+      * If date is invalid then send message and skip further
+      * validation.
+     C           *IN99     IFEQ '1'
+     C           *IN41     OREQ '0'
+     C                     MOVELSEOPDT    ZAMSDA
+     C                     MOVE 'GLX0341' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     85
+     C                     ELSE
+      *
+      * If first record has invalid date then send message.
+     C           RRN       IFEQ 1
+     C                     Z-ADDZDAYNO    PEOPDT
+     C           365       ADD  START     WKFLD   50
+      *
+     C           ZDAYNO    IFLT START
+     C           ZDAYNO    ORGT WKFLD
+     C                     MOVE 'GLX0342' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     85
+     C                     END
+     C                     END
+      *
+      * If subsequent period has an End of Period Date less than or
+      * equal to previous then send message.
+     C           RRN       IFGT 1
+     C           ZDAYNO    IFLE PEOPDT
+     C                     MOVELSEOPDT    ZAMSDA
+     C                     MOVE 'GLX0343' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     85
+     C                     END
+     C                     Z-ADDZDAYNO    PEOPDT
+     C                     END
+      *
+      * If this is previous processing then check End of Period Date
+      * for last period has not changed.
+     C           RRN       IFEQ STPPAN
+     C           WRKIN     IFEQ 'A'
+     C           ZDAYNO    ANDNESVEPDD
+     C                     MOVE 'GLX0344' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     85
+     C                     END
+      *
+      * If last End of Period Date is more than 5 years in the future
+      * then do not allow any more insert and reset screen year.
+     C           1825      ADD  DATE      YR5     50
+     C           ZDAYNO    IFGT YR5
+     C                     MOVELSTPSTC    ZAMSDA
+     C                     MOVE 'GLX0340' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     86
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           VLDE      ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  WRITE Subroutine to write records to GLPERDPD.
+      *
+      *    CALLED BY : SR/ENTI
+      *
+      *    CALLS     : SR/DSPF
+      *
+     C           WRITE     BEGSR
+      *
+      * Initialise RRN and set constant fields for year.
+     C                     Z-ADD1         RRN
+     C                     MOVE RRN       DTPDNY
+     C                     MOVE SETCOD    DTPSTC
+     C                     MOVE ACY       DTPDCT
+     C                     MOVE AYR       DTPDYR
+     C                     Z-ADD0         DTRPDN
+      *
+      * Initialise 'Closure Date'                                         109305
+      *                                                                   109305
+     C                     Z-ADD0         DTCLSD                          109305
+      *                                                                   109305
+      * Use the set up start date for the start of year date.
+     C                     Z-ADDSTDATE    DTSOYD
+      *
+     C                     DO   STPPAN
+     C           RRN       CHAINSFLRCD               31
+     C                     MOVE RRN       DTPDNY
+      *
+      * Execute subroutine to pick up data from display.
+     C                     EXSR DSPF
+     C                     WRITEGLPERDD0
+     C                     ADD  1         RRN
+     C                     Z-ADDDTEPDD    LTEPDD
+     C                     END
+      *
+     C           WRITEE    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  UPDAT Subroutine to update GLPERDL0.
+      *
+      *    CALLED BY : SR/ENTA
+      *
+      *    CALLS     : SR/DSPF
+      *                SR/*PSSR
+      *
+     C           UPDAT     BEGSR
+      *
+      * Initialise RRN and set up key fields
+     C                     Z-ADD1         RRN
+     C                     MOVE RRN       PDNO    2
+     C                     MOVE ACY       CY      2
+     C                     MOVE AYR       YR      2
+      *
+     C           KEY       CHAINGLPERDL0             15
+      *
+      * Database error handling.
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0115'  DBPGM
+     C                     MOVELDTKEY     DBKEY
+     C                     MOVEL'GLPERDPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     DO   STPPAN
+     C           RRN       CHAINSFLRCD               31
+      *
+      * Execute subroutine to pick up data from display.
+     C                     EXSR DSPF
+     C                     UPDAT@BLREDR
+      *
+      * If at the end of the loop avoid last read.
+     C           RRN       IFLT STPPAN
+     C                     READ GLPERDL0                 15
+      *
+      * Database error handling.
+     C           *IN15     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0115'  DBPGM
+     C                     MOVELDTKEY     DBKEY
+     C                     MOVEL'GLPERDPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DBERROR 003 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+     C                     ADD  1         RRN
+     C                     MOVE RRN       PDNO
+     C                     END
+      *
+     C           UPDATE    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  DSPF  Subroutine to pick up data from display file to
+      *        write or update records on period details file.
+      *
+      *    CALLED BY : SR/WRITE
+      *                SR/UPDAT
+      *
+      *    CALLS     : SR/ZDATE1
+      *
+     C           DSPF      BEGSR
+      *
+      * Convert DDMMMYY format to DDMMYY for end of period date.
+     C           SMON      LOKUPTAB1      TAB2           41
+     C                     MOVE TAB2      UKMON
+     C                     MOVE SDAY      UKDAY
+     C                     MOVE SYR       UKYR
+     C                     MOVE UKDAT     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    DTEPDD
+      *
+      * If this is the first record then use start of year date else
+      * add 1 to previous End of Period Date.
+     C           RRN       IFEQ 1
+     C                     Z-ADDDTSOYD    DTSPDD
+     C                     ELSE
+     C           WKEOPD    ADD  1         DTSPDD
+     C                     END
+     C                     Z-ADDDTEPDD    WKEOPD
+      *
+      * If Terms are applicable then check if period is a start of
+      * term and move appropriate date.
+     C           *IN83     IFEQ '0'
+     C           SSOT1     IFEQ 'Y'
+     C                     Z-ADDDTSPDD    DTST1D
+     C                     Z-ADDDTST1D    SVTM1
+     C                     ELSE
+     C                     Z-ADDSVTM1     DTST1D
+     C                     END
+     C                     ELSE
+     C                     Z-ADD0         DTST1D
+     C                     END
+      *
+     C           *IN84     IFEQ '0'
+     C           SSOT2     IFEQ 'Y'
+     C                     Z-ADDDTSPDD    DTST2D
+     C                     Z-ADDDTST2D    SVTM2
+     C                     ELSE
+     C                     Z-ADDSVTM2     DTST2D
+     C                     END
+     C                     ELSE
+     C                     Z-ADD0         DTST2D
+     C                     END
+      *
+     C                     MOVE SPDNM     DTPDNM
+      *
+     C           DSPFE     ENDSR
+      /EJECT
+     C********************************************************************
+      *
+      *  PREV  Subroutine to process previous year's periods.
+      *
+      *    CALLED BY : SR/F19
+      *                SR/ENTA
+      *
+      *    CALLS     : SR/ZDATE2
+      *
+     C           PREV      BEGSR
+      *
+      * Read equal a record from GLPERDL0.
+     C                     READEGLPERDL0                 14
+     C                     Z-ADD1         RRN
+     C                     MOVE RRN       SPDNY
+      *
+      * Save the Start of Year date.
+     C                     Z-ADDDTSOYD    START
+      *
+     C           *IN14     DOWEQ'0'
+     C                     MOVE DTPSTC    SVPSTC
+     C                     MOVE DTPDYR    SVPDYR
+     C                     MOVE DTPDNM    SPDNM
+     C                     Z-ADDDTEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SEOPDT
+      *
+      * If Start of Term 1/2 matches Start of Period then move 'Y'
+      * into display field.
+     C           DTSPDD    IFEQ DTST1D
+     C                     MOVE 'Y'       SSOT1
+     C                     ELSE
+     C                     MOVE *BLANKS   SSOT1
+     C                     END
+     C           DTSPDD    IFEQ DTST2D
+     C                     MOVE 'Y'       SSOT2
+     C                     ELSE
+     C                     MOVE *BLANKS   SSOT2
+     C                     END
+      *
+     C                     WRITESFLRCD
+      *
+      * If this is the last subfile record then save the End of Period
+      * Date for later validation.
+     C           RRN       IFEQ STPPAN
+     C                     MOVE DTEPDD    SVEPDD
+     C                     END
+      *
+     C                     ADD  1         RRN
+     C                     MOVE RRN       SPDNY
+     C                     READ GLPERDL0                 14
+      *
+      * If Set Code or year changes then end loop.
+     C           *IN14     IFEQ '0'
+     C           DTPSTC    IFNE SVPSTC
+     C           DTPDYR    ORNE SVPDYR
+     C                     SETON                         14
+      *
+      * Perform EXCPT to unlock last record read.
+     C                     EXCPTUNLOCK
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           PREVE     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZASNMS:     Send message to program message queue                *
+      *                                                                  *
+      * CALLED BY:  SR/F3F12                                             *
+      *             SR/F19                                               *
+      *             SR/VLD                                               *
+      *                                                                  *
+      * CALLS:      PGM/Y2SNMGC                                          *
+      *                                                                  *
+     C           ZASNMS    BEGSR
+      *
+      ** Declare message file name
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C********************************************************************
+      *
+      *  EOPDT Subroutine to calculate new period date
+      *        (This is a changed version of standard subroutine
+      *         ZFREQB.)
+      *
+      *    CALLED BY : INSRT
+      *
+      *    CALLS     : ZDATE1
+      *                ZDATE2
+      *                ZCHKH
+      *
+     C           EOPDT     BEGSR
+      *
+      * Set up work fields.
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+      *
+      * Convert day number to date.
+     C                     EXSR ZDATE2
+      *
+      * If the day number input (zmday ) is zero set it equal to the
+      * day number of the start date.
+     C           ZMDAY     IFEQ 0
+     C                     MOVELZADATE    ZZWRK2  2
+     C                     MOVE ZZWRK2    ZMDAY
+     C                     END
+      *
+      * Check for and increment for code 1,2,3,4,5,6,7 = Weekly.
+     C           ZFREQ     IFEQ '1'
+     C           ZFREQ     OREQ '2'
+     C           ZFREQ     OREQ '3'
+     C           ZFREQ     OREQ '4'
+     C           ZFREQ     OREQ '5'
+     C           ZFREQ     OREQ '6'
+     C           ZFREQ     OREQ '7'
+      *
+     C                     MOVE ZFREQ     ZFRQA   10
+     C                     ADD  2         ZFRQA
+     C           ZFRQA     IFGE 7
+     C                     SUB  7         ZFRQA
+     C                     END
+      *
+     C           ZDAYNO    ADD  7         ZDAYNO
+     C           ZDAYNO    DIV  7         WORK5   50
+     C                     MVR            WORK5
+     C           WORK5     DOWNEZFRQA
+     C                     SUB  1         ZDAYNO
+     C           ZDAYNO    DIV  7         WORK5
+     C                     MVR            WORK5
+     C                     END
+      *
+     C                     GOTO ZFEND
+     C                     END
+      *
+      * Check for and increment for code F = Fortnightly.
+     C           ZFREQ     IFEQ 'F'
+     C           ZDAYNO    ADD  14        ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+      *
+      * Check for and increment for code S = Semi-monthly.
+     C           ZFREQ     IFEQ 'S'
+     C           ZDAY      IFLE 15
+     C                     Z-ADD31        ZDAY
+     C                     ELSE
+     C                     Z-ADD15        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C                     END
+      *
+      * Check for and increment for code M = Monthly.
+     C           ZFREQ     IFEQ 'M'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code R = 6 days before end of month.
+     C           ZFREQ     IFEQ 'R'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code T = Bi-monthly.
+     C           ZFREQ     IFEQ 'T'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  2         ZMTH
+     C                     END
+      *
+      * Check for and increment for code Q = Quarterly.
+     C           ZFREQ     IFEQ 'Q'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+      *
+      * Check for and increment for code X = Semi-annually.
+     C           ZFREQ     IFEQ 'X'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+      *
+      * Check for and increment for code Y = Annually.
+     C           ZFREQ     IFEQ 'Y'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+      *
+      * Check for and increment for code L = Last Calendar Day of Month.
+     C           ZFREQ     IFEQ 'L'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code B = Last Working Day of Month.
+     C           ZFREQ     IFEQ 'B'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Reformat date and validate.
+      * MONTH
+     C           ZMTH      IFGT 12
+     C           ZMTH      SUB  12        ZMTH
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+      *
+      * Check for leap year.
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+      * DAY NUMBER
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      IFEQ 2
+     C           ZLY       ANDEQ0
+     C                     Z-ADD29        ZWRK2
+     C                     END
+      *
+     C           ZDAY      IFGT ZWRK2
+     C                     Z-ADDZWRK2     ZDAY
+     C                     END
+      *
+      * Check if code R, to subtract 6 days.
+     C           ZFREQ     IFEQ 'R'
+     C           ZDAY      SUB  6         ZDAY
+     C                     END
+      *
+      * Reformat date, DDMMYY OR MMDDYY, and convert to day number.
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+      *
+      * Check if code B to be checked for holiday.
+     C           ZFREQ     COMP 'B'                      91
+     C   91N99             GOTO ZFHCHK
+      *
+     C                     GOTO ZFEND
+      *
+      * Check if day number is holiday.
+     C**
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *
+      *
+      * Check if currency on holiday.
+     C                     EXSR ZCHKH
+     C           ZIND      CABEQ'W'       ZFEND
+      *
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     GOTO ZFHCHK
+      *
+     C           ZFEND     ENDSR                           * ZFEND ENDSR *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INFSR - SR FOR FILE EXCEPTION/ERROR HANDLING                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      **  ROLL BACK CHANGES AND CANCEL PROGRAM
+      *
+     C                     ROLBK
+     C                     MOVE '*CANCL'  EXTTAG  6
+      *
+     C                     ENDSREXTTAG
+      *
+     C/EJECT
+      ********************************************************************
+      *
+      *  *PSSR Subroutine to handle program error
+      *
+      *    CALLED BY : Main Processing
+      *                SR/UPDAT
+      *
+      *    CALLS     : PGM/DBERRCTL
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+     C                     DUMP
+     C                     END
+      *
+      * Call DBERRCTL to control the program termination
+     C                     CALL 'DBERRCTL'
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     O@BLREDR E                UNLOCK
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** TAB1    TAB2
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

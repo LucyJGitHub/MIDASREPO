@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO Work in Progress Housekeeping')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC000110 - Midas GO Work In Progress Housekeeping          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CSF011  *CREATE    Date 12Sep11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSF011 - Customer Name on Inputs                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&EMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZOZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZODNWD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZOBCCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB) TYPE(*DEC) LEN(1 0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('GOC000110 - Work In Progress Housekeeping') +
+                        TOMSGQ(MRUNQ MOPERQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                        &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY &ZONJOB)
+ 
+             IF         COND(&RTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/** Call Housekeeping Program */
+ 
+             CALL       PGM(GP000110) PARM(&ZOZONE)
+ 
+/** Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&EMSG)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&EMSG) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Reorganise WIP Detail and History File */
+ 
+             CALL       PGM(SCC000060) PARM('T_MSWIP' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CALL       PGM(SCC000060) PARM('T_MSWIP_H' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program GOC000110 -
+                            ended abnormally - see joblog')  +
+                            TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

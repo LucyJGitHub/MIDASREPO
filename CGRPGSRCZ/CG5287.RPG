@@ -1,0 +1,404 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Move requests to new member')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG5287 - Move records to new member                          *
+     F*                                                               *
+     F*  Function:  This program move records to split up             *
+     F*             bulk request                                      *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. 190022             Date 25Jan99               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCG003             Date 19Jun95               *
+      *                 CCG002             Date 19Jun95               *
+     F*                 S01522             DATE 03NOV95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  190022 - Recompiled due to increased size of OVRPRTF string  *
+      *           in PF/CGPRTPPD and PF/CGPGENPD files.               *
+     F*  CCG003 - Bulk Printing by Printer Profile                    *
+     F*  CCG002 - Bulk Printing by Correspondent Type                 *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FCGPGENL2UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      * RTV : Print Generator           By Layout
+      *
+     FCGPGENL3UF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      * RTV : Print Generator           By Correspondent
+      *
+     FCGPGENPDO   E                    DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      * RTV : Print Generator           Physical File
+      *
+     F/COPY WNCPYSRC,CG5287F001
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E/COPY CGCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY CGCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     ICGDTA     E DSCGDTA
+      *
+      *  Definition of CGDTA
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISCSARD    E DSSCSARDPD                                              CCG003
+      **  Sar Text details                                                CCG003
+      *                                                                   CCG003
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0PATH 10
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0PATH    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * Read records in CGPGEN* File
+      *
+     C           W0PATH    IFEQ 'CGPGENL2'
+     C                     READ CGPGENL2                 90
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5287C001
+     C                     READ CGPGENL3                 90
+     C/COPY WNCPYSRC,CG5287C002
+     C                     ENDIF
+      *                                                                   CCG002
+      *  Save first Correspondent Type                                    CCG002
+      *                                                                   CCG002
+     C           *LIKE     DEFN B2CTYP    ##CTYP                          CCG002
+     C                     MOVELB2CTYP    ##CTYP                          CCG002
+      *                                                                   CCG003
+      *  Save first Printer Profile                                       CCG003
+      *                                                                   CCG003
+     C           *LIKE     DEFN B2PRTF    ##PRTF                          CCG003
+     C                     MOVELB2PRTF    ##PRTF                          CCG003
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      * Leave if number greater than that on CGDTA
+      *
+     C           ##BULK    IFEQ *BLANKS                                   CCG003
+     C                     ADD  1         ##CNT
+     C           ##CNT     IFGT DABLKS
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF                                          CCG003
+      *
+      * Move records
+      *
+     C           W0PATH    IFEQ 'CGPGENL2'
+      *                                                                   CCG002
+      * Place record depending on feature                                 CCG002
+      *                                                                   CCG002
+     C                     SELEC                                          CCG002
+     C           ##CTYP    WHNE B2CTYP                                    CCG002
+     C           ##BULK    ANDEQ'COR TYPE'                                CCG002
+      * No action different correspondent type                            CCG002
+     C           ##PRTF    WHNE B2PRTF                                    CCG003
+     C           ##BULK    ANDEQ'PRT PROF'                                CCG003
+      * No action different printer profile                               CCG003
+     C                     OTHER                                          CCG002
+     C                     WRITE@PGENPD
+     C                     DELET@PGENL2
+     C                     ENDSL                                          CCG002
+     C                     ELSE
+      *                                                                   CCG002
+      * Place record depending on feature                                 CCG002
+      *                                                                   CCG002
+     C                     SELEC                                          CCG002
+     C           ##CTYP    WHNE B2CTYP                                    CCG002
+     C           ##BULK    ANDEQ'COR TYPE'                                CCG002
+      * No action different correspondent type                            CCG002
+     C           ##PRTF    WHNE B2PRTF                                    CCG003
+     C           ##BULK    ANDEQ'PRT PROF'                                CCG003
+      * No action different printer profile                               CCG003
+     C                     OTHER                                          CCG002
+     C                     WRITE@PGENPD
+     C/COPY WNCPYSRC,CG5287C003
+     C                     DELET@PGENL3
+     C/COPY WNCPYSRC,CG5287C004
+     C                     ENDSL                                          CCG002
+     C                     ENDIF
+      *
+      * Read records in CGPGEN* File
+      *
+     C           W0PATH    IFEQ 'CGPGENL2'
+     C                     READ CGPGENL2                 90
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5287C005
+     C                     READ CGPGENL3                 90
+     C/COPY WNCPYSRC,CG5287C006
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *  Commit changes
+      *
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+     C                     Z-ADD0         ##CNT   50
+      *
+      *  Open files
+      *
+     C           W0PATH    IFEQ 'CGPGENL2'
+     C                     OPEN CGPGENL2
+     C                     ELSE
+     C/COPY WNCPYSRC,CG5287C007
+     C                     OPEN CGPGENL3
+     C/COPY WNCPYSRC,CG5287C008
+     C                     ENDIF
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Get CGDTA set up
+      *
+     C           *NAMVAR   DEFN           CGDTA
+     C                     IN   CGDTA
+      *                                                                   CCG002
+      **  Determine which SARs are in effect ...                          CCG002
+      **  ... CCG002 - Bulk Printing by Correspondent Type                CCG002
+     C                     CALL 'AOSARDR0'             91                 CCG002
+     C                     PARM '       ' ##RTCD  7                       CCG002
+     C                     PARM '*VERIFY' ##OPTN  7                       CCG002
+     C                     PARM 'CCG002'  ##SARD  6                       CCG002
+     C           SCSARD    PARM *BLANKS   DSSDY                           CCG002
+      *                                                                   CCG002
+      **  If the Access Object returns an error code, process a           CCG002
+      **  database error.                                                 CCG002
+     C           ##RTCD    IFNE *BLANK                                    CCG002
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG002
+     C           *IN91     OREQ *ON                                       CCG002
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG002
+     C                     MOVEL'CCG002'  W0KEY            * DB ERROR 01 *CCG002
+     C                     Z-ADD01        W0ERNB           ***************CCG002
+     C                     MOVEL'MEM5003' W0MSGD                          CCG002
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG002
+     C                     EXSR SRERR                                     CCG002
+     C                     END                                            CCG002
+      *                                                                   CCG002
+     C           ##RTCD    IFEQ *BLANK                                    CCG002
+     C                     MOVEL'COR TYPE'##BULK                          CCG002
+     C                     END                                            CCG002
+      *                                                                   CCG003
+      **  Determine which SARs are in effect ...                          CCG003
+      **  ... CCG003 - Bulk Printing by Printer Profile                   CCG003
+     C                     CALL 'AOSARDR0'             91                 CCG003
+     C                     PARM '       ' ##RTCD                          CCG003
+     C                     PARM '*VERIFY' ##OPTN                          CCG003
+     C                     PARM 'CCG003'  ##SARD                          CCG003
+     C           SCSARD    PARM *BLANKS   DSSDY                           CCG003
+      *                                                                   CCG003
+      **  If the Access Object returns an error code, process a           CCG003
+      **  database error.                                                 CCG003
+     C           ##RTCD    IFNE *BLANK                                    CCG003
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG003
+     C           *IN91     OREQ *ON                                       CCG003
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG003
+     C                     MOVEL'CCG003'  W0KEY            * DB ERROR 02 *CCG003
+     C                     Z-ADD02        W0ERNB           ***************CCG003
+     C                     MOVEL'MEM5003' W0MSGD                          CCG003
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG003
+     C                     EXSR SRERR                                     CCG003
+     C                     END                                            CCG003
+      *                                                                   CCG003
+     C           ##RTCD    IFEQ *BLANK                                    CCG003
+     C                     MOVEL'PRT PROF'##BULK  8                       CCG003
+     C                     END                                            CCG003
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY' P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMTJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD3         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      ** For copysource SRERRC                                                                CSC022
+     C                     MOVE WCMTSK    WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+     C/COPY WNCPYSRC,CG5287C009
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

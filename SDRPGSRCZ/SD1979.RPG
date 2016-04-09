@@ -1,0 +1,482 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD VAT Codes Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1979 - VAT Codes Report                                    *
+      *                                                               *
+      *  Function:  This Program produces print VAT Code on           *
+      *  (COB)      Full or Audit List. It will be produced           *
+      *  (I/C)      on Request during I/C (*FULL) or                  *
+      *             every day during Close of Business (*AUDIT)       *
+      *                                                               *
+      *  Called By: SDC1979 - VAT Codes Audit Control                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FSDVATCL0IF  E           K        DISK         KINFSR *PSSR
+      ** VAT Code - File
+      *
+     FSDFCTLL1UF  E           K        DISK         KINFSR *PSSR
+      ** Control file retrieval index
+      *
+     FSD1979AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** VAT Code - Audit
+      *
+     FSD1979P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+      ** VAT Code - Report
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - Full Mode                                             *
+      *   89  - End of File SDVATCL0                                  *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRRPRT - Process Report Lines                                *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  SRRCFP - RCF Processing for P1 Report                        *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *  *INZSR - Initial Processing                                  *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZEDIT  - Edit an Amount                                      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS For Access Programs, Short Data Structure
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for SD1979P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SD1979AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      /EJECT
+      *****************************************************************
+      *                      M A I N L I N E S                        *
+      *****************************************************************
+      *
+      ** read file for record
+      *
+     C                     READ SDVATCL0                 89
+      *
+      ** If End of Records, (*IN89), Perform: Audit Reporting (No
+      ** Records).
+      *
+     C           *IN89     IFEQ *OFF
+      *
+     C                     EXSR SRRCFP
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ** If FULL Mode or Last Change Date = Run date
+      ** Process Report Lines
+      *
+     C           PMODE     IFEQ '*FULL'
+     C           F9LCD     OREQ BJRDNB
+     C                     EXSR SRRPRT
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ SDVATCL0                 89
+      *
+     C                     ENDDO
+      *
+      ** If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDIF
+      *
+      ** Close Output file
+      *
+     C                     CLOSESD1979P1
+      *
+     C                     ENDIF
+      *
+      ** Check control details.
+      *
+     C                     MOVE *BLANKS   WFNAME 10
+     C                     MOVEL'SDVATCPD'WFNAME
+      *
+     C           WFNAME    CHAINSDFCTLL1             87
+      *
+      ** Database error.
+      *
+     C           *IN87     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SDFCTLPA'DBFILE    P
+     C                     MOVELWFNAME    DBKEY     P
+     C                     MOVEL'SD1970'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDAHNOIN    RINSER
+     C                     Z-ADDAHNOAM    RAMEND
+     C                     Z-ADDAHNODL    RDELET
+     C                     Z-ADDAHNORC    RAUDIT
+      *
+     C           RCOUNT    IFNE RAUDIT
+     C                     MOVE *ON       *IN21
+     C                     ELSE
+     C                     MOVE *OFF      *IN21
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZERO     AHNOIN
+     C                     Z-ADD*ZERO     AHNOAM
+     C                     Z-ADD*ZERO     AHNODL
+     C                     UPDAT@AHREAV
+      *
+      ** Perform audit report
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      *                E N D   O F  M A I N L I N E S                 *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRRPRT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     :                                                  *
+      *  ZEDIT  - Edit an Amount                                      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Report Details
+      *
+     C                     MOVE F9VATC    RVATC     P
+     C                     MOVE F9NARR    RNARR     P
+     C           F9RATE    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F9RATE    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRATE     P
+     C                     ELSE
+     C                     MOVE *BLANKS   RRATE
+     C                     ENDIF
+      *
+      ** Report last activity
+      *
+     C                     MOVE F9LCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD
+     C                     MOVE F9LCTM    RTIME
+     C                     MOVE *BLANKS   RLCTY
+      *
+      ** If Type = 'I' move 'INSERT', Type = A  move 'AMEND'
+      ** If Type = 'D' move 'DELETE'
+      *
+     C                     MOVEL'INSERT'  RLCTY
+     C           F9CHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RLCTY
+     C                     ENDIF
+     C           F9CHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RLCTY
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *                                                               *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None.                                            *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ** Normal audit  exit
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called By : Main Processing,                                 *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Open Report file
+      *
+     C                     CLOSESD1979P1
+     C                     OPEN SD1979P1
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    PSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM           PENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PEROR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PEROR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *  Called By : *INZSR                                           *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    PSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PENTY
+     C                     PARM           SFILEU
+     C                     PARM           PSNUMU
+     C                     PARM *BLANK    PEROR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PEROR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial Processing                                  *
+      *                                                               *
+      *  Called by : Main processing                                  *
+      *  Calls     :                                                  *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   6
+     C                     PARM           PSEQ    5
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *
+      ** If Audit Mode, set indicator for Change Type and Change Time
+      *
+     C           PMODE     IFEQ '*FULL '
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'SD1979'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  Called by : SRRCFP, SRRCFA, *INZSR                           *
+      *  Calls     :                                                  *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,1404 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Unused customers report')                     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Standing Data Module                                   *
+     F*                                                               *
+     F*    SD0750 - UNUSED CUSTOMERS REPORT                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 15Feb17               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27243           Date 18Mar10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CPK024             Date 13Feb06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CDL031             Date 05Dec04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 20Jul95               *
+      *                 S01453             Date 14Dec93               *
+     F*                   E26755             DATE 10JAN92             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG27243-Applied CPK029 fix - Customer field fix             *
+      *  CPK029 - Customer fields should be 6A.                       *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK024 - Rename field COLC for file GTEESGT                  *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*    S01408 - Addition of core hook SD0750FFPG                  *
+     F*             Addition of core hook SD0750CSDE                  *
+     F*    S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY  *
+     F*             POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)   *
+     F*    E26755 - New program created as part of the client         *
+     F*             deletion changes.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FDEALSDB IF  E                    DISK
+     FDEALSDC IF  E                    DISK
+     FDEALSDD IF  E                    DISK
+     FDEALSDE IF  E                    DISK
+     FDEALSDG IF  E                    DISK
+     FCLOANCL IF  E                    DISK
+     FFCLTYFN IF  E                    DISK
+     FGTEESGT IF  E                    DISK
+     FLOAMSDK IF  E                    DISK
+     FACCNTAB IF  E                    DISK
+     FSDCLLMPDIF  E                    DISK
+     F/COPY WNCPYSRC,SDH00245
+     FSDEXSTPDIF  E                    DISK
+     F/COPY WNCPYSRC,SD0750F001
+     FSDCUSTL1IF  E                    DISK
+     F/COPY WNCPYSRC,SD0750F002
+     FCLIENTS UF  E           K        DISK                      A
+     FSD0750P1O   F     132     OF     PRINTER      KINFDS SPOOL
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SD0750FFPG                                           S01408
+     F*                                                                   S01408
+     F*
+     F********************************************************************
+     F*                                                                  *
+     F*    FUNCTION OF INDICATORS                                        *
+     F*                                                                  *
+     F*    10       READ REACHES END OF FILE                             *
+     F*    15       SDCUSTL1 - END OF FILE                               *
+     F*    20       CHAIN FAIL                                           *
+     F*    25       SDBANKPD - NO RECORD FOUND                           *
+     F*    U7U8     DATABASE ERROR                                       *
+     F********************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    ARR        10  1
+     E*
+     E*****************************************************************
+     E/EJECT
+      *                                                                         CPK024
+     IGTEESGTF                                                                  CPK024
+     I              COLC                            COLCX                       CPK024
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** LOCAL DATA AREA - FOR DATABASE ERROR
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I/EJECT
+     C*****************************************************************
+     C*
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C*    M A I N   P R O C E S S I N G
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+      *
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'SD0750'  DBPGM
+     C                     MOVEL'001'     DBASE
+     C                     EXCPTERROR
+     C                     SETON                     U7U8
+     C                     GOTO END
+     C                     END
+     C/COPY WNCPYSRC,SD0750C001
+     C*
+     C**   READ AND PROCESS FILES ACCORDING TO MODULE
+     C*
+     C                     EXSR DLCNUM
+     C                     EXSR LECNUM
+     C                     EXSR GLCNUM
+     C                     EXSR SDCNUM
+     C*
+     C**   COMPARE WORK FILE CLIENTS WITH SDCUSTL1 AND PRINT UNUSED
+     C**   CUSTOMER NUMBERS
+     C*
+     C                     EXSR REPORT
+     C*
+     C           END       TAG
+     C/COPY WNCPYSRC,SD0750C002
+     C                     SETON                     LR
+     C*
+     C           *INLR     IFEQ '1'
+     C                     RETRN
+     C                     END
+     C*****************************************************************
+     C*
+     C*   DLCNUM SUBROUTINE - TO READ THE DEALS FILES AND OUTPUT ALL
+     C*                       CUSTOMER NUMBERS USED TO PF/CLIENTS
+     C*
+     C*   CALLED FROM:  MAIN PROCESSING
+     C*
+     C           DLCNUM    BEGSR
+     C*
+     C**   PROCESS PF/DEALSDB
+     C*
+     C                     READ DEALSDB                  10
+     C           *IN10     DOWNE'1'
+     C**********           MOVE CNUM      CUST    60                                          CSD027
+     C                     MOVE CNUM      CUST                                                CSD027
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE AWBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELAWBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BENN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBENN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OPCA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOPCA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSCA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSCA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RCRN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRCRN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RVNO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRVNO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TPCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTPCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ DEALSDB                  10
+     C                     END
+     C*
+     C**   PROCESS PF/DEALSDC
+     C*
+     C                     READ DEALSDC                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE AWBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELAWBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BENN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBENN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE CHNA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELCHNA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OMDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOMDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RCRN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRCRN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RVNO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRVNO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TMAN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTMAN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSTN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSTN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ DEALSDC                  10
+     C                     END
+     C*
+     C**   PROCESS PF/DEALSDD
+     C*
+     C                     READ DEALSDD                  10
+     C           *IN10     DOWNE'1'
+     C*
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE AWBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELAWBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BDID      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBDID      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BENN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBENN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ISCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELISCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OMDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOMDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RCRN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRCRN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RVNO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRVNO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TMAN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTMAN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSTN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSTN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ DEALSDD                  10
+     C                     END
+     C*
+     C**   PROCESS PF/DEALSDE
+     C*
+     C                     READ DEALSDE                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE SCUS      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE AWBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELAWBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BENN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBENN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ISCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELISCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSAC      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSAC      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE POCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPOCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE PONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELPONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RCRN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRCRN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RIBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRIBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROBN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROBN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE ROCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELROCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RONS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRONS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE RVNO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELRVNO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSEN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSEN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ DEALSDE                  10
+     C                     END
+     C*
+     C**   PROCESS PF/DEALSDG
+     C*
+     C                     READ DEALSDG                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE CPPBK     ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELCPPBK     CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE CPRBK     ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELCPRBK     CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE UPACC     ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELUPACC     CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE URACC     ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELURACC     CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ DEALSDG                  10
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*   LECNUM SUBROUTINE - TO READ THE CUSTOMER LENDING FILES AND
+     C*                       OUTPUT ALL CUSTOMER NUMBERS USED TO
+     C*                       PF/CLIENTS
+     C*
+     C*   CALLED FROM:  MAIN PROCESSING
+     C*
+     C           LECNUM    BEGSR
+     C*
+     C**   PROCESS PF/CLOANCL
+     C*
+     C                     READ CLOANCL                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FCUS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFCUS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OMDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOMDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSDA      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSDA      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TMAN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTMAN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSTN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSTN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ CLOANCL                  10
+     C                     END
+     C*
+     C**   PROCESS PF/FCLTYFN
+     C*
+     C                     READ FCLTYFN                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OBAC      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOBAC      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TNAC      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTNAC      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ FCLTYFN                  10
+     C                     END
+     C*
+     C**   PROCESS PF/GTEESGT
+     C*
+     C                     READ GTEESGT                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE GBCN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELGBCN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ GTEESGT                  10
+     C                     END
+     C*
+     C**   PROCESS PF/LOAMSDK
+     C*
+     C                     READ LOAMSDK                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FACO      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFACO      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE FCUS      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELFCUS      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE OSAC      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELOSAC      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE TSEN      ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELTSEN      CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     READ LOAMSDK                  10
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*   GLCNUM SUBROUTINE - TO READ THE ACCOUNTS MASTER FILE AND
+     C*                       OUTPUT ALL CUSTOMER NUMBERS USED TO
+     C*                       PF/CLIENTS
+     C*
+     C*   CALLED FROM:  MAIN PROCESSING
+     C*
+     C           GLCNUM    BEGSR
+     C*
+     C**   PROCESS PF/ACCNTAB
+     C*
+     C                     READ ACCNTAB                  10
+     C           *IN10     DOWNE'1'
+     C                     MOVE CNUM      CUST
+     C                     WRITECLIENTSF
+     C                     READ ACCNTAB                  10
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*   SDCNUM SUBROUTINE - TO READ STANDING DATA FILES AND
+     C*                       OUTPUT ALL CUSTOMER NUMBERS USED TO
+     C*                       PF/CLIENTS
+     C*
+     C*   CALLED FROM:  MAIN PROCESSING
+     C*
+     C           SDCNUM    BEGSR
+     C*
+     C**   PROCESS PF/SDCLLMPD
+     C*
+     C                     READ SDCLLMPD                 10
+     C           *IN10     DOWNE'1'
+     C                     MOVE DZCUST    CUST
+     C                     WRITECLIENTSF
+     C                     READ SDCLLMPD                 10
+     C                     END
+     C*
+     C**   PROCESS PF/SDEXSTPD
+     C*
+     C/COPY WNCPYSRC,SDH00246
+     C                     READ SDEXSTPD                 10
+     C/COPY WNCPYSRC,SDH00247
+     C           *IN10     DOWNE'1'
+     C                     MOVE BYCUST    CUST
+     C                     WRITECLIENTSF
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYRONO    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYRONO    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYROBN    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYROBN    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYROCS    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYROCS    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYRIBN    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYRIBN    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYPONO    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYPONO    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYPOBN    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYPOBN    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYPOCS    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYPOCS    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYPIBN    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYPIBN    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYRCNO    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYRCNO    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYRCNB    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYRCNB    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYACBN    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYACBN    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ARR
+     C                     MOVE BYBYNB    ARR
+     C           ARR,1     IFGE '0'
+     C           ARR,1     IFLE '9'
+     C                     MOVELBYBYNB    CUST
+     C                     WRITECLIENTSF
+     C                     END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,SDH00248
+     C                     READ SDEXSTPD                 10
+     C/COPY WNCPYSRC,SDH00249
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0750CSDE                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C*   REPORT SUBROUTINE - TO COMPARE CLIENTS WITH SDCUSTL1 AND
+     C*                     PRINT THE UNUSED CUSTOMER NUMBERS
+     C*
+     C*   CALLED FROM:  MAIN PROCESSING
+     C*
+     C           REPORT    BEGSR
+      *
+      ** Ensure report spool file recorded by RCF.
+      *
+     C                     OUT  LDA
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** If error during ZSFILE processing, return to calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     EXCPTHEAD1
+     C                     EXCPTHEAD2
+     C                     EXCPTHEAD3
+     C                     EXCPTHEAD4
+     C*
+     C**   READ SDCUSTL1 AND, USING THE
+     C**   CUSTOMER NUMBER, CHAIN TO CLIENT
+     C*
+     C/COPY WNCPYSRC,SD0750C003
+     C           1         SETLLSDCUSTL1
+     C/COPY WNCPYSRC,SD0750C004
+     C                     READ SDCUSTL1                 15
+     C           *IN15     DOWNE'1'
+     C/COPY WNCPYSRC,SD0750C005
+     C**********           MOVE BBCUST    BBCUSN  60                                          CSD027
+     C           BBTYLC    IFNE 'D'
+     C********** BBCUSN    CHAINCLIENTS              20                                       CSD027
+     C           BBCUST    CHAINCLIENTS              20                                       CSD027
+     C*
+     C**   IF NOT FOUND, PRINT ON REPORT
+     C*
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'Y'       UNUSED  1
+     C**********           MOVE BBCUST    OCUST   60     10                                   CPK029
+     C                     MOVE BBCUST    OCUST   6      10                                   CPK029
+     C                     MOVE BBCRNM    ONAME  20
+     C                     MOVE BBCRTN    OTOWN  10
+     C           BBPAIN    IFEQ 'P'
+     C                     MOVE 'Y'       OPARI   1
+     C                     MOVE BBPCNB    OPARN   6
+     C                     ELSE
+     C                     MOVE ' '       OPARI
+     C                     MOVE BBPCNB    OPARN
+     C                     END
+     C           *INOF     IFEQ '1'
+     C                     EXCPTHEAD1
+     C                     EXCPTHEAD2
+     C                     EXCPTHEAD3
+     C                     EXCPTHEAD4
+     C                     SETOF                     OF
+     C                     END
+     C                     EXCPTDETAIL
+     C                     END
+     C                     END
+     C                     READ SDCUSTL1                 15
+     C                     END
+     C*
+     C           *IN15     IFEQ '1'
+     C           UNUSED    IFEQ 'Y'
+     C                     EXCPTRPTEND
+     C                     ELSE
+     C                     EXCPTNODET
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     O*
+     OSD0750P1E   0305         HEAD1
+     O                                   13 'REF SD0750'
+     O                         BJURPT    88
+     O                                   93 'DATE'
+     O                         BJMRDT   104
+     O                                  116 'PAGE'
+     O                         PAGE  Z  121
+     O*
+     O        E  1             HEAD2
+     O                                   77 'UNUSED CUSTOMERS REPORT'
+     O*
+     O        E  2             HEAD3
+     O                                   77 '-----------------------'
+     O*
+     O        E  2             HEAD4
+     O                                   29 'CUSTOMER NUMBER'
+     O                                   51 'REPORT NAME'
+     O                                   75 'REPORT TOWN'
+     O                                   94 'PARENT NO'
+     O                                  112 'PARENT IND'
+     O*
+     O        E  2             DETAIL
+     O                         OCUST     24
+     O                         ONAME     56
+     O                         OTOWN     74
+     O                         OPARN     92
+     O                         OPARI    107
+     O*
+     O        E 2              RPTEND
+     O                                   76 '*** END OF REPORT ***'
+     O*
+     O        E 2              NODET
+     O                                   65 '*** NO DETAILS'
+     O                                   79 ' TO REPORT ***'
+     O*
+     O        E   40           ERROR
+     O                                   42 '*** REFERENCE'
+     O                         DBPGM     51
+     O                                   71 '-DATABASE ERROR AT'
+     O                         DBASE     75
+     O                                   85 'FILE NAME'
+     O                         DBFILE    94
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,207 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas DL Purge CLS Pay-in schedule files')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC6317 - Purge Pay-In Schedule Files                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. 228542             Date 05Aug04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/*       Prev Amend No. 187783             Date 18Dec00              */
+/*                      CDL008  *CREATE    Date 02May00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       228542 - RGZPFM has changed at R5V3                         */
+/*       187783 - Files journalled to JDLC6317 not being ended       */
+/*       CDL008 - Continuous Linked Settlement                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/*/COPY WNCPYSRC,DLC6317INT                                          */
+ 
+             DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)    TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID)   TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&GROUP)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER)    TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL)  TYPE(*DEC)  LEN(4)
+             DCL        VAR(&TIMEO)   TYPE(*DEC)  LEN(5)
+             DCL        VAR(&ERRORC)  TYPE(*DEC)  LEN(1)   VALUE(0)
+             DCL        VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULT)    TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGJOB     SWS(00000000)
+ 
+/* Multiple language support                                         */
+ 
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+ 
+             IF         COND(&MULT = '  ') THEN(DO)
+               CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+ 
+/* Build multiple language support object name                       */
+ 
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+ 
+/* Apply multiple language support overrides                         */
+ 
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+ 
+/*/COPY WNCPYSRC,DLC6317MPS                                          */
+ 
+/* Send program message to MRUNQ that this component is running */
+ 
+             SNDPGMMSG  MSG('DLC6317 - Pay-In Schedule File Purge') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Retrieve System ID */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
+ 
+/* Journal FXCLSPSH, FXCLSPSD and FXSEQNPD */
+ 
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+             ENDJRNAP   FILE(*ALL) JRN(&JLIB/JDLC6317)
+             MONMSG     MSGID(CPF0000)
+             ENDJRNPF   FILE(*ALL) JRN(&JLIB/JDLC6317)
+             MONMSG     MSGID(CPF0000)
+             DLTJRN     JRN(&JLIB/JDLC6317)
+             MONMSG     MSGID(CPF2105)
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(&JLIB/JRDLC6317)
+             MONMSG     MSGID(CPF2105)
+             CHGJOB     INQMSGRPY(*RQD)
+ 
+             CRTJRNRCV  JRNRCV(&JLIB/JRDLC6317) TEXT('Journal +
+                          Receiver for DL6317 backup journalling')
+             MONMSG     MSGID(CPF0000)
+             CRTJRN     JRN(&JLIB/JDLC6317) JRNRCV(&JLIB/JRDLC6317) +
+                          TEXT('Journal file for DL6317 backup +
+                          journalling')
+             MONMSG     MSGID(CPF0000)
+             STRJRNPF   FILE(FXCLSPSH FXCLSPSD FXSEQNPD) +
+                          JRN(&JLIB/JDLC6317) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Call DL6317 */
+ 
+             CALL       PGM(DL6317)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                ROLLBACK
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+ 
+                ENDCMTCTL
+                MONMSG     MSGID(CPF8350)
+                ENDJRNAP   FILE(*ALL) JRN(&JLIB/JDLC6317)
+                MONMSG     MSGID(CPF0000)
+                ENDJRNPF   FILE(*ALL) JRN(&JLIB/JDLC6317)
+                MONMSG     MSGID(CPF0000)
+ 
+                DLTJRN     JRN(&JLIB/JDLC6317)
+                MONMSG     MSGID(CPF0000)
+                CHGJOB     INQMSGRPY(*DFT)
+                DLTJRNRCV  JRNRCV(&JLIB/JRDLC6317)
+                MONMSG     MSGID(CPF0000)
+                CHGJOB     INQMSGRPY(*RQD)
+ 
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* No Database Error */
+ 
+             COMMIT
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+ 
+             SNDPGMMSG  MSG('DLC6317 - Pay-In Schedule File +
+                          Purge Completed Normally') TOMSGQ(MRUNQ)
+ 
+             ENDJRNAP   FILE(*ALL) JRN(&JLIB/JDLC6317)
+             MONMSG     MSGID(CPF0000)
+/*********** ENDJRNPF   FILE(*ALL) JRN(&JLIB/JGLC6317) */             /*187783*/
+             ENDJRNPF   FILE(*ALL) JRN(&JLIB/JDLC6317)                /*187783*/
+             MONMSG     MSGID(CPF0000)
+             DLTJRN     JRN(&JLIB/JDLC6317)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(&JLIB/JRDLC6317)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     INQMSGRPY(*RQD)
+ 
+/**********  RGZPFM     FILE(FXCLSPSH)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
+             CALL       PGM(SCC000060) PARM('FXCLSPSH' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+                                                                                          /*228542*/
+/**********  RGZPFM     FILE(FXCLSPSD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
+             CALL       PGM(SCC000060) PARM('FXCLSPSD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+                                                                                          /*228542*/
+/**********  RGZPFM     FILE(FXSEQNPD)                                                    /*228542*/
+/**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
+             CALL       PGM(SCC000060) PARM('FXSEQNPD' '*FIRST')                          /*228542*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*228542*/
+ 
+/*/COPY WNCPYSRC,DLC6317MPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,DLC6317ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          DLC6317 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,DLC6317END                                          */
+ 
+             ENDPGM

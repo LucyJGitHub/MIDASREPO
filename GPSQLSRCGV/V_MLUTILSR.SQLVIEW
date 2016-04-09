@@ -1,0 +1,132 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_MLTUTILSR - Midas GP Management Limits Utilisers                    */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Last Amend No. BG18886            Date 02Jun08                        */
+/*       Prev Amend No. BUG17953           Date 10Apr08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSW037A            Date 02May05                        */
+/*                      CSD025             Date 11Jan05                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG5198            Date 16Dec04                        */
+/*                      BUG4521            Date 17Nov04                        */
+/*                      BUG3860            Date 11Aug04                        */
+/*                      BUG2703            Date 01Jul04                        */
+/*                      BUG3094            Date 08Jun04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG2643            Date 20May04                        */
+/*                      BUG2221            Date 06May04                        */
+/*                      BG2225             Date 01Apr04                        */
+/*                      BUG1741            Date 08Apr04                        */
+/*                      CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       BUG17953 - CC-S-ID of tables cannot be changed (Recompile)            */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       CSD025 - Customer De-Activation                                       */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG5198 - Performance Enhancement                                     */
+/*       BUG4521 - Predeal Check Performance Enhancement (Recompiled)          */
+/*       BUG3860 - (recompile)                                                 */
+/*       BUG2703- Additional changes for deletion handling.                    */
+/*       BUG3094 - Correct typo (Recompile)                                    */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG2643- Recompile over changed V_MLCUST                              */
+/*       BUG2221- Select from V_MLCUST instead of V_GPGLCUST                   */
+/*       BG2225 - Increase size of LVXML, add primary key constraint to LVID   */
+/*       BUG1741- Ad Hoc customer group shown as invalid utiliser in error     */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (UTSRTYPE,                                                                    :
+   UTSRCODE,                                                                    :
+   UTSRNAME)                                                                    :
+  AS                                                                            :
+  SELECT                                                                        :
+******1 AS UTSRTYPE, CUSGLOB AS UTSTRCODE,                                      :BUG5198
+******CASE CUSACTIVE                                                            :BUG2703 BUG5198
+*********WHEN 'D' THEN CUSRNM ** ', ' ** CUSRTN ** '  (Deleted)'                :BUG2703 BUG5198
+*********ELSE CUSRNM ** ' ' ** CUSRTN                                           :BUG2703 BUG5198
+  UTSRTYPE,UTSRCODE,                                                            :BUG5198
+**CASE*UTSRACTIVE*WHEN*'N'*THEN*UTSRNAME****'  (Deleted)'***********************:BUG5198 BG18886
+  CASE UTSRACTIVE WHEN 'N' THEN UTSRNAME CONCAT '  (Deleted)'                   :BUG5198 BG18886
+  ELSE UTSRNAME                                                                 :BUG5198
+      END AS UTSRNAME                                                           :BUG2703
+  FROM T_GPUTILSR ;                                                             :BUG5198
+******CUSRNM ** ' ' ** CUSRTN  AS UTSRNAME**************************************:BUG2703 BUG5198
+**********FROM V_GPGLCUST*******************************************************:/*BUG221*/ BUG5198
+**FROM*V_MLCUST*****************************************************************:/*BUG221*/ BUG5198
+**UNION*ALL*********************************************************************:BUG5198
+**SELECT************************************************************************:BUG5198
+******2 AS UTSRTYPE,  (CAST(CGID AS CHAR(10))) AS UTSRCODE, CGNAME AS UTSRNAME**:BUG2703 BUG5198
+******2 AS UTSRTYPE,************************************************************:BUG2703 BUG5198
+******(CAST(CGID AS CHAR(10))) AS UTSRCODE,*************************************:BUG2703 BUG5198
+******CASE CGDELETED************************************************************:BUG2703 BUG5198
+*********WHEN 'Y' THEN CGNAME ** '  (Deleted)'**********************************:BUG2703 BUG5198
+*********ELSE CGNAME************************************************************:BUG2703 BUG5198
+*********END AS UTSRNAME********************************************************:BUG5198
+**FROM V_GRCUSTG****************************************************************:BUG5198
+**UNION ALL*********************************************************************:BUG5198
+**SELECT************************************************************************:BUG5198
+******3 AS UTSRTYPE, A4CNCD AS UTSRCODE, A4CNNM AS UTSRNAME*********************:BUG2703
+******3 AS UTSRTYPE, A4CNCD AS UTSRCODE,****************************************:BUG2703
+******CASE A4CHTP***************************************************************:BUG2703
+**********WHEN 'D' THEN A4CNNM ** '  (Deleted)'*********************************:BUG2703
+**********ELSE A4CNNM***********************************************************:BUG2703
+******END AS UTSRNAME***********************************************************:BUG2703
+**FROM V_GPCTRYPD***************************************************************:BUG5198
+**UNION ALL*********************************************************************:BUG5198
+**SELECT************************************************************************:BUG5198
+******4 AS UTSRTYPE,************************************************************:BUG5198
+******CAST(RGID AS CHAR(10)) AS UTSRCODE,***************************************:BUG5198
+******CASE RGDELETED************************************************************:BUG2703 BUG5198
+*********WHEN 'Y' THEN RGNAME ** '  (Deleted)'**********************************:BUG2703 BUG5198
+*********ELSE RGNAME************************************************************:BUG2703 BUG5198
+******END AS UTSRNAME***********************************************************:BUG2703 BUG5198
+******RGNAME AS UTSRNAME                                                        :BUG2703
+**FROM V_GRCTRYG****************************************************************:BUG5198
+**UNION ALL*********************************************************************:BUG5198
+**SELECT************************************************************************:BUG5198
+******5 AS UTSRTYPE, IDGIND AS UTSRCODE, IDDESC AS UTSRNAME                     :BUG2703
+******5 AS UTSRTYPE, IDGIND AS UTSRCODE,****************************************:BUG2703 BUG5198
+******CASE IDCHTP***************************************************************:BUG2703 BUG5198
+*********WHEN 'D' THEN IDDESC ** '  (Deleted)'**********************************:BUG2703 BUG5198
+*********ELSE IDDESC************************************************************:BUG2703 BUG5198
+******END AS UTSRNAME***********************************************************:BUG2703 BUG5198
+**FROM V_GPINDSPD***************************************************************:BUG5198
+**UNION ALL*********************************************************************:BUG5198
+                                                                                :
+**SELECT************************************************************************:BUG5198
+******6 AS UTSRTYPE,************************************************************:BUG5198
+******CAST(IGID AS CHAR(10)) AS UTSRCODE,***************************************:BUG5198
+******CASE IGDELETED************************************************************:BUG2703 BUG5198
+*********WHEN 'Y' THEN IGNAME ** '  (Deleted)'**********************************:BUG2703 BUG5198
+*********ELSE IGNAME************************************************************:BUG2703 BUG5198
+******END AS UTSRNAME***********************************************************:BUG2703 BUG5198
+******IGNAME AS UTSRNAME                                                        :BUG2703
+**FROM*V_GRINDSG;***************************************************************:BUG1741 BUG5198
+**FROM V_GRINDSG****************************************************************:BUG1741 BUG5198
+**UNION ALL*********************************************************************:BUG1741 BUG5198
+**SELECT 7 AS UTSRTYPE,*********************************************************:BUG1741 BUG5198
+***CAST(LVID AS CHAR(10) ) AS UTSRCODE,*****************************************:BUG1741 BUG5198
+***LVNAME AS UTSRNAME***********************************************************:BUG1741 BUG5198
+**FROM*T_LVCONFIG*WHERE*( ((T_LVCONFIG.LVTYPE='Adhoc Customer Group'))) ;*******:BUG1741 BUG5198
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Management Limits Utilisers              ';                     :
+                                                                                :

@@ -1,0 +1,1998 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update customer average prices')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2410  - UPDATE CUSTOMER AVERAGE PRICES                     *
+     F*                                                               *
+     F*  Function: PF/CAPRHD records are read.  For each customer     *
+     F*   (COB)    position, the nominal and average price from the   *
+     F*            position record on PF/CPOSND with a position date  *
+     F*            immediately prior to the earliest PF/CAPRHD record *
+     F*            for re-actioning are recovered to be used as       *
+     F*            starting point for all average price calculations. *
+     F*            As the PF/CAPRHD records are read in, the          *
+     F*            average price on each position date is determined. *
+     F*            This average price is then put onto the appropriate*
+     F*            position record on PF/CPOSND. (The average price   *
+     F*            numerator for trade and value date basis is        *
+     F*            written to PF/CPOSND.)                             *
+     F*            Once each record on PF/CAPRHD has been dealt with  *
+     F*            the record ID is set to 'H'.  PF/CAPRHD is a       *
+     F*            permanent file.                                    *
+     F*                                                               *
+     F*  Called by: SEC0606H - Update Customer Average Prices         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG13389           Date 19Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 207777             Date 13Oct06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 234440             Date 26Jun05               *
+      *                 233705             Date 25May05               *
+      *                 233615             Date 16May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 186555             Date 15May01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+     F*                 CPB001             DATE 12Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01486 RS          DATE 28OCT94               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E36711             DATE 04MAR92               *
+     F*                 E36685             DATE 04MAR92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E24337             DATE 01OCT91               *
+     F*                 S01220             DATE 12NOV90               *
+     F*                 S01117             DATE 02NOV90               *
+     F*                 S01271             DATE 19OCT90               *
+     F*                 E20651             DATE 30JAN90               *
+     F*                 E16849             DATE 08/02/89              *
+     F*                 E15996             DATE 03/11/88              *
+     F*                 E14838             DATE 02/11/88              *
+     F*                 E15509             DATE 06/10/88              *
+     F*                 E15508             DATE 05/10/88              *
+     F*                 E14010             DATE 22/09/88              *
+     F*                 E13561             DATE 21/06/88              *
+     F*                 S01158             DATE 18/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  BUG13389 - File controls imbalance. AppliEd fix for 235134.  *
+      *  207777 - Records changed with RECI ='C' are not considered.  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  234440 - Purchase Interest management in real time           *
+      *  233705 - Update of RECI on CAPRHD                            *
+      *  233615 - Takeon programs for CGL031 (Recompile)              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  186555   Incorrect rounding of countervalue during a Name    *
+      *           Change of Security. Average Price computed without  *
+      *           half adjust. Add H for half adjust in computation.  *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  S01486 - PORTFOLIO MANAGEMENT ENHANCEMENT                    *  *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E36771 - Value date average price is 100 times too much      *
+     F*  E36685 - Average price is zero due to change of value date of*
+     F*           a trade newly entered today on a new position.      *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E24337 - Set average price to zero if nominal positon is zero*
+     F*  S01220 - STRATEGIC RISK MANAGEMENT                           *
+     F*           Recompiled over changed PF/SECTYD, PF/SEDEVD        *
+     F*  S01117 - Multi-Branching                                     *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
+     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
+     F*           DB ERROR 02 -> 09                                   *   E20651
+     F*           DB ERROR 02 -> 10                                   *   E20651
+     F*  E16849 - Process Cancellations/Reversals and always update   *   E16849
+     F*           CPOSH record.                                       *   E16849
+     F*  E15996 - Design Omissions - various Julius Baer fixes        *   E15596
+     F*           1.  Average Price Numerator must be calculated      *   E15596
+     F*           in absolute value and no longer any need to         *   E15596
+     F*           multiply by 100 and then divide by 100 for Price    *   E15596
+     F*           Basis = 'P' because of loss of figures.             *   E15596
+     F*           2.  Remove Price File access.                       *   E14838
+     F*  E14838 - Average Price = 0 problem - check for Depot         *   E14838
+     F*           Movements as 'CI/CO'.                               *   E14838
+     F*  E15509 - Do not zero average price if no previous CPOSH      *   E15509
+     F*           record found, use date in key to fetch CPOSH        *   E15509
+     F*           record, and use new nominal to calculate APNUM      *   E15509
+     F*           for CT/CV price instead of previous nominal         *   E15509
+     F*  E15508 - Write out new CPOSND record if a price action is    *   E15508
+     F*           read in for a new date.                             *   E15508
+     F*  E14010 - Read only new and re-actioned Customer average      *   E14010
+     F*           price records.                                      *   E14010
+     F*  E13561 - CALCULATE AP NUMERATOR CORRECTLY & UPDATE AP        *   E13561
+     F*           NUMERATORS IF ANY ACTION RECORD READ.               *   E13561
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIXES INCLUDING      *
+     F*         -  Allow for Nominal/Nominal Currency decimal places  *.
+     F*            Calculate price for every record.                  *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCAPRHA  IF  E                    DISK         KINFDS CAPRDS
+     F                                              KINFSR CAPRSR
+     F***CPOSNA  IF  E                    DISK                            E15508
+     FCPOSNA  UF  E                    DISK                               E15508
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* CCY       TABTG10F                          KIGNORE               S01158
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSE2410AUO   E                    PRINTER
+     FSEDEV   IF  E           K        DISK
+     FTRADS   IF  E           K        DISK
+     FDPTMV   IF  E           K        DISK
+     F***PRICE   IF  E           K        DISK                            E15996
+     FSECTY   IF  E           K        DISK                               S01158
+     F*****CAPRH   UF  E           K        DISK         KINFDS CAPHDS    E14010
+     FCAPRA   UF  E           K        DISK         KINFDS CAPHDS         E14010
+     F                                              KINFSR CAPHSR
+     F***CPOSH   UF  E           K        DISK         KINFDS CPOSDS      E15508
+     FCPOSH   UF  E           K        DISK         KINFDS CPOSDSA        E15508
+     F                                              KINFSR CPOSSR
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   21 - NOMINAL CURRENCY DEC. PLACES 0                         *   S01158
+     F*   22 - NOMINAL CURRENCY DEC. PLACES 1                         *   S01158
+     F*   23 - NOMINAL CURRENCY DEC. PLACES 2                         *   S01158
+     F*   24 - NOMINAL CURRENCY DEC. PLACES 3                         *   S01158
+     F*   33 - GENERAL WORK INDICATOR                                 *   S01158
+     F*   77 - A/P NUMERATOT TO BE WRITTEN TO FILE IS NEGATIVE (RVRS  *
+     F*   79 - END OF CUSTOMER DEPOT POSITIONS FOR THIS SECURITY      *
+     F*   89 - END OF AVERAGE PRICE FILE - STD REPORT AND END         *
+     F*   87 - EXCEPTION ERROR ON UPDATED FILE - PRINTS STATUS/AUDIT  *
+     F*   29 - DIFFERENCE MESSAGE IS PRINTED                          *
+     F*90-99 - USED IN Z SUBROUTINES                                  *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  FIRST  - ACCESSES ICD INFORMATION                            *
+     F*  CALL   - UPDATE AVERAGE PRICE NUMERATOR FOR                  *
+     F*           A CALL ON A PARTLY PAID SECURITY                    *
+     F*  TRADE  - UPDATE AVERAGE PRICE NUMERATOR FOR                  *
+     F*           A TRADE ACTION                                      *
+     F*  DMVT   - UPDATE AVERAGE PRICE NUMERATOR FOR                  *
+     F*           A DEPOT MOVEMENT                                    *
+     F*  PRICEU - UPDATE AVERAGE PRICE NUMERATOR FOR                  *
+     F*           A PRICE ACTION                                      *
+     F*  CH01   - CHANGE OF POSITION OR DATE WITHIN A POSITION -      *
+     F*           UPDATE POSITION FOR LAST DATE ACTION                *
+     F***ZSYSTM*-*GET*TABTB10*ICD*****************************************S01117
+     F*  AUDIT  - OUTPUTS AUDIT RECORD UDEPPA AND CONTROL REPORT      *
+     F*  CAPRSR - ERROR HANDLING FOR CAPRHA                           *
+     F***CAPHSR - ERROR HANDLING FOR CAPRH*****************           *   E14010
+     F*  CAPHSR - ERROR HANDLING FOR CAPRA                            *   E14010
+     F*  CPOSSR - ERROR HANDLING FOR CPOSH                            *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E**    TABLES AND ARRAYS    **
+     E/COPY ZSRSRC,ZPOWER8Z1                                              S01158
+     E                    CPY@    1   1 80
+     E*
+      /EJECT
+     I*
+     ICAPRHDF
+     I              CSCN                            CACN
+     I************  CSBR                            CABR                  S01117
+     I              CSBA                            CABR                  S01117
+     I              CSSC                            CASC
+     I              CSDA                            CADA
+     I*
+     ITABLKY      DS
+     I*
+     I*  TABTB11 TABLE KEY FIELD DATA STRUCTURE FOR DB ERROR
+     I*
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     ICPOSDS      DS                            366
+     I*
+     I*  CUSTOMER POSITIONS FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     I                                     *STATUS  STSPOS
+     I*
+     ICAPHDS      DS                            366
+     I*
+     I*  CUSTOMER AVERAGE PRICE ACTIONS ERROR EXCEPTION  DATA STRUCT.
+     I*
+     I                                     *STATUS  STSCAP
+     I*
+     ICAPRDS      DS                            366
+     I*
+     I*  CUST.AVG. PRICE AUDIT FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     I                                     *STATUS  STSCPR
+     IWPRVKY      DS
+     I*
+     I* PREVIOUS POSITION KEYS - CUSTOMER/BRANCH/SECURITY
+     I*
+     I**********                              1   60WPCST                                     CSD027
+     I                                        1   6 WPCST                                     CSD027
+     I***********                             7   90WPBR                  S01117
+     I                                        7   9 WPBR                  S01117
+     I                                       10  19 WPSEC
+     I                                        1  19 CPKEYD
+     I                                       20  240WPCSDA
+     I*
+     IWCURKY      DS
+     I*
+     I* CURRENT POSITION KEYS - CUSTOMER/BRANCH/SECURITY
+     I*
+     I**********                              1   60CACN                                      CSD027
+     I                                        1   6 CACN                                      CSD027
+     I***********                             7   90CABR                  S01117
+     I                                        7   9 CABR                  S01117
+     I                                       10  19 CASC
+     I                                        1  19 CURKEY
+     I                                       20  240CADA
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      ** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I** Data structure for module details                                S01486
+      *****************************************************************                233705 234440
+     I****SCSARD*    E DSSCSARDPD                                                      233705 234440
+      ***External*Data*Structure*for*SAR*Details***********************                233705 234440
+     I*                                                                   S01486
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* CUSTOMER DEPOT POSITIONS - RETRIEVE EARLIER DATE  LF/CPOSH
+     C*
+     C           CPKEY     KLIST
+     C                     KFLD           WPBR
+     C                     KFLD           WPSEC
+     C                     KFLD           WPCST
+     C                     KFLD           WPCSDA
+     C*                                                                   E15996
+     C           CPKEY2    KLIST                                          E15996
+     C                     KFLD           WPBR                            E15996
+     C                     KFLD           WPSEC                           E15996
+     C                     KFLD           WPCST                           E15996
+     C*
+     C* SECURITY EVENTS - LF/SEDEV
+     C*
+     C           SECDKY    KLIST
+     C                     KFLD           CASC
+     C                     KFLD           CADA
+     C                     KFLD           SDET
+     C*
+     C* TRADE ACTIONS   - LF/TRADE
+     C*
+     C           TRADKY    KLIST
+     C                     KFLD           CSRF
+     C*
+     C* DEPOT MOVEMENTS - LF/DPTMV
+     C*
+     C           DEPTKY    KLIST
+     C                     KFLD           CASC
+     C                     KFLD           CSRF
+     C*
+     C* PRICE ACTIONS   - LF/PRICE
+     C*
+     C***********PRICEK    KLIST                                          E15996
+     C***********          KFLD           CASC                            E15996
+     C***********          KFLD           CACN                            E15996
+     C***********          KFLD           WMKT    1                       E15996
+     C***********          KFLD           CABR                            E15996
+     C***********          KFLD           WBOOK   2                       E15996
+     C***********          KFLD           WPPRT   2                       E15996
+     C*
+     C**ACCESS*ICD*INFORMATION*IN*SUBROUTINE*FIRST************************S01117
+     C*
+      **  PREPARE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     Z-ADD0         DBASE
+     C                     MOVE 'SE2410  'DBPGM
+     C***********          EXSR FIRST                                     S01117
+     C                     OUT  LDA                                       S01117
+     C**                                                                  S01117
+     C** IN THE DATA AREA RUNDAT                                          S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 011 *S01117
+     C                     Z-ADD11        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U889               S01117
+     C                     GOTO EAUDIT                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01486
+     C**  Get module details using access object                          S01486
+     C*                                                                   S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*FIRST'  @OPTN                           S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD15        DBASE            ***************S01486
+     C                     MOVE 'SDMMODPD'DBFILE           * DB ERROR 15 *S01486
+     C                     MOVEL@OPTN     DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     SETON                     U7U889               S01486
+     C                     GOTO EAUDIT                                    S01486
+     C                     END                                            S01486
+      *****************************************************************                233705 234440
+      ****Access*SAR*details*file*to*see*if*CGL031*is*installed.*******                233705 234440
+      *****************************************************************                233705 234440
+     C**********           CALL 'AOSARDR0'                                             233705 234440
+     C**********           PARM *BLANKS   PRTCD   7                                    233705 234440
+     C**********           PARM '*VERIFY' POPTN   7                                    233705 234440
+     C**********           PARM 'CGL031'  PSARD   6                                    233705 234440
+     C********** SCSARD    PARM SCSARD    DSFDY                                        233705 234440
+      *****************************************************************                233705 234440
+     C********** PRTCD     IFNE *BLANKS                                                233705 234440
+     C********** PRTCD     ANDNE'*NRF    '                                             233705 234440
+     C********** *LOCK     IN   LDA                                                    233705 234440
+     C**********           MOVE 'SCSARDPD'DBFILE                                       233705 234440
+     C**********           Z-ADD16        DBASE                                        233705 234440
+     C**********           MOVEL'CGL031'  DBKEY                                        233705 234440
+     C**********           MOVE *ON       *IN89                                        233705 234440
+     C**********           MOVE *ON       *INU7                                        233705 234440
+     C**********           MOVE *ON       *INU8                                        233705 234440
+     C**********           OUT  LDA                                                    233705 234440
+     C**********           EXSR *PSSR                                                  233705 234440
+     C**********           ENDIF                                                       233705 234440
+      *****************************************************************                233705 234440
+     C********** PRTCD     IFEQ *BLANKS                                                233705 234440
+     C**********           MOVE 'Y'       CGL031  1                                    233705 234440
+     C**********           ELSE                                                        233705 234440
+     C**********           MOVE 'N'       CGL031                                       233705 234440
+     C**********           ENDIF                                                       233705 234440
+     C*                                                                   S01486
+     C**CHECK*FOR*DATABASE*ERRORS*****************************************S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          GOTO EAUDIT                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* DEFINE AND CLEAR WORK FIELDS
+     C*
+     C           *LIKE     DEFN CSCP      WNAPT
+     C           *LIKE     DEFN CSCP      WNAPV
+     C           *LIKE     DEFN CSPT      WAPNMT
+     C           *LIKE     DEFN CSPV      WAPNMV
+     C           *LIKE     DEFN CSNV      WPCSNV
+     C           *LIKE     DEFN CSNT      WPCSNT
+     C           *LIKE     DEFN CSNV      WNCSNV
+     C           *LIKE     DEFN CSNT      WNCSNT
+     C           *LIKE     DEFN CSAP      WCAPT
+     C           *LIKE     DEFN CSAP      WCAPV
+     C           *LIKE     DEFN CSOA      WPCSOA
+     C           *LIKE     DEFN CSSE      WPCSSE                          E13561
+     C***********          MOVE '  '      WBOOK                           E15996
+     C           *LIKE     DEFN CSNS      WPCSNS                          E15508
+     C           *LIKE     DEFN CSEX      WPCSEX                          E15508
+     C           *LIKE     DEFN CSCT      WPCSCT                          E15508
+     C           *LIKE     DEFN CSCV      WPCSCV                          E15508
+     C************LIKE     DEFN CSBR      WPCSBR                   E15508 S01117
+     C           *LIKE     DEFN CSBA      WPCSBR                          S01117
+     C           *LIKE     DEFN CSCN      WPCSCN                          E15508
+     C           *LIKE     DEFN CSSC      WPCSSC                          E15508
+     C*
+     C**LOOP*ROUND*PROCESSING*FOR*EACH*ACTION*RECORD*READ*LF/CAPRH****    E14010
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/CAPRA        E14010
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C* READ ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS
+     C*
+     C***********          READ CAPRH                    89               E14101
+     C                     READ CAPRA                    89               E14101
+     C*
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION
+     C*
+     C  N89      RECI      CABEQ'*'       ENDLP
+     C*
+     C* AT END OF FILE -
+     C*
+     C           *IN89     CABEQ'1'       ENDLP
+     C*
+     C                     MOVE RECI      WREC    1
+     C*
+     C** ADD TO COUNTER FOR EACH RECORD READ FOR TYPE A AND TYPE D
+     C*
+     C           WREC      IFEQ 'A'
+     C********** WREC      OREQ 'C'                                                  207777 BUG13389
+     C                     ADD  1         WTYPEA  50
+     C                     END
+     C           WREC      IFEQ 'D'
+     C                     ADD  1         WTYPED  50
+     C                     END
+     C*
+     C** FOR A REVERSAL, SET SORT SEQUENCE TO 0.                          E16849
+     C*                                                                   E16849
+     C           WREC      IFEQ 'C'                                       E16849
+     C                     MOVE '0'       CSSE                            E16849
+     C                     END                                            E16849
+     C*                                                                   S01486
+     C**  If Portfolio Management is present                              S01486
+     C**  Or Private Banking is present                                   CPB001
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C** IF ACTION IS A PORTFOLIO POSITION PRICE CHANGE SET RECORD ID     S01486
+     C** TO 'H' AND TERMINATE LOOP                                        S01486
+     C*                                                                   S01486
+     C           CSOA      IFEQ 'XT'                                      S01486
+     C           CSOA      OREQ 'XV'                                      S01486
+     C                     MOVE 'H'       RECI                            S01486
+     C                     GOTO ENTAG                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   E16849
+     C** ACTION IS FOR A NEW POSITION
+     C*
+     C           CPKEYD    IFNE CURKEY
+     C*
+     C** NEW POSITION - UPDATE LAST ONE IF NOT FIRST TIME
+     C*
+     C           WPSEC     IFNE *BLANK
+     C                     EXSR CH01
+     C                     END
+     C*                                                                   S01158
+     C* Fetch new position details                                        S01158
+     C*                                                                   S01158
+     C           CASC      CHAINSECTYDF              33                   S01158
+     C           *IN33     IFEQ '1'                                       S01158
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE                          S01158
+     C                     MOVELCACN      DBKEY                           S01158
+     C                     Z-ADD07        DBASE                           S01158
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U889               S01158
+     C                     GOTO ENDLP                                     S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C                     MOVEL'20      'TKEY   12                       S01158
+     C                     MOVELNMCY      ZWK4    4                       S01158
+     C                     MOVE 1         ZWK4                            S01158
+     C                     MOVE ZWK4      TKEY                            S01158
+     C           TKEY      CHAINTABTG10F             33                   S01158
+     C  N33      RECI      COMP '*'                      33               S01158
+     C           *IN33     IFEQ '1'                                       S01158
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE                          S01158
+     C                     MOVELTKEY      DBKEY                           S01158
+     C                     Z-ADD08        DBASE                           S01158
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U889               S01158
+     C                     GOTO ENDLP                                     S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C                     MOVEA'0000'    *IN,21                          S01158
+     C********** 21        ADD  CDP       J       10                      E13561
+     C           21        ADD  CDP       J       20                      E13561
+     C                     MOVEA'1'       *IN,J                           S01158
+     C*
+     C** GET LATEST EARLIER POSITION FROM LF/CPOSH
+     C*
+     C                     MOVE WCURKY    WPRVKY
+     C                     MOVE CSOA      WPCSOA
+     C                     MOVE CADA      WPCSDA                          E15509
+     C*
+     C           CPKEY     SETLLCPOSH                    77
+     C                     READPCPOSH                    79
+     C           *IN79     IFEQ '1'
+     C***********CSBR      ORNE CABR                                      S01117
+     C           CSBA      ORNE CABR                                      S01117
+     C           CSCN      ORNE CACN
+     C           CSSC      ORNE CASC
+     C**********           MOVE *LOVAL    WPCSDA
+     C                     Z-ADD0         CSNT
+     C                     Z-ADD0         CSNV
+     C**********           Z-ADD0         CSAP                            E15509
+     C                     Z-ADD0         CSPT
+     C                     Z-ADD0         CSPV
+     C                     Z-ADD0         WNCSNT
+     C                     Z-ADD0         WPCSNT
+     C                     Z-ADD0         WNCSNV
+     C                     Z-ADD0         WPCSNV
+     C                     Z-ADD0         WPCSNS                          E15508
+     C                     Z-ADD0         WPCSEX                          E15508
+     C                     Z-ADD0         WPCSCT                          E15508
+     C                     Z-ADD0         WPCSCV                          E15508
+     C                     END
+     C*
+     C** SAVE NOMINAL POSITIONS INTO 'PREVIOUS' & 'NEW' VALUE FIELDS
+     C*
+     C                     Z-ADDCSNT      WPCSNT
+     C                     Z-ADDCSNV      WPCSNV
+     C                     Z-ADDCSNT      WNCSNT
+     C                     Z-ADDCSNV      WNCSNV
+     C                     Z-ADDCSPT      WAPNMT
+     C                     Z-ADDCSPV      WAPNMV
+     C                     Z-ADDCSNS      WPCSNS                          E15508
+     C                     Z-ADDCSEX      WPCSEX                          E15508
+     C                     Z-ADDCSCT      WPCSCT                          E15508
+     C                     Z-ADDCSCV      WPCSCV                          E15508
+     C*
+     C** CHECK IF A CALL IS DUE FOR SECURITY
+     C*
+     C                     MOVE 'PP'      SDET
+     C           SECDKY    CHAINSEDEV                79
+     C           *IN79     IFNE '1'
+     C                     EXSR CALL
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** ELSE... NOT CHG OF POSITION, BUT CHANGE OF DATE FOR THIS POSN.
+     C*
+     C           WPCSDA    IFNE CADA
+     C*
+     C** NEW POSITION - UPDATE LAST
+     C*
+     C                     EXSR CH01
+     C                     MOVE CADA      WPCSDA
+     C*
+     C** GET LATEST EARLIER POSITION FROM LF/CPOSH
+     C*
+     C                     MOVE CSOA      WPCSOA
+     C*
+     C           CPKEY     SETLLCPOSH                    77
+     C                     READPCPOSH                    79
+     C           *IN79     IFEQ '1'
+     C***********CSBR      ORNE CABR                                      S01117
+     C           CSBA      ORNE CABR                                      S01117
+     C           CSCN      ORNE CACN
+     C           CSSC      ORNE CASC
+     C**********           MOVE *LOVAL    WPCSDA
+     C                     Z-ADD0         CSNT
+     C                     Z-ADD0         CSNV
+     C**********           Z-ADD0         CSAP                            E15509
+     C                     Z-ADD0         CSPT
+     C                     Z-ADD0         CSPV
+     C                     Z-ADD0         WNCSNT
+     C                     Z-ADD0         WPCSNT
+     C                     Z-ADD0         WNCSNV
+     C                     Z-ADD0         WPCSNV
+     C                     END
+     C*
+     C** SAVE NOMINAL POSITIONS INTO 'PREVIOUS' & 'NEW' VALUE FIELDS
+     C*
+     C                     Z-ADDCSNT      WPCSNT
+     C                     Z-ADDCSNV      WPCSNV
+     C                     Z-ADDCSNT      WNCSNT
+     C                     Z-ADDCSNV      WNCSNV
+     C                     Z-ADDCSPT      WAPNMT
+     C                     Z-ADDCSPV      WAPNMV
+     C                     Z-ADDCSNS      WPCSNS                          E15508
+     C                     Z-ADDCSEX      WPCSEX                          E15508
+     C                     Z-ADDCSCT      WPCSCT                          E15508
+     C                     Z-ADDCSCV      WPCSCV                          E15508
+     C*
+     C** CHECK IF A CALL IS DUE FOR SECURITY
+     C*
+     C                     MOVE 'PP'      SDET
+     C           SECDKY    CHAINSEDEV                79
+     C           *IN79     IFNE '1'
+     C                     EXSR CALL
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF TRADE ACTION, IF TYPE 'A' ACCESS LF/TRADS AND IF FOUND OR
+     C*                  IF TYPE 'D' EXECUTE P/TRADE
+     C*
+     C           CSOA      IFEQ 'TP'
+     C           CSOA      OREQ 'TS'
+     C           WREC      IFEQ 'D'
+     C                     EXSR TRADE
+     C                     ELSE
+     C           WREC      IFEQ 'A'
+     C           TRADKY    CHAINTRADS                79
+     C  N79                EXSR TRADE
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF DEPOT MVMNT, IF TYPE 'A' ACCESS LF/DPTMV AND IF FOUND OR
+     C*                 IF TYPE 'D' EXECUTE P/DMVT
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C***********CSOA      OREQ 'WO'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           CSOA      OREQ 'CO'                                      E14838
+     C           WREC      IFEQ 'D'
+     C                     EXSR DMVT
+     C                     ELSE
+     C           WREC      IFEQ 'A'
+     C           DEPTKY    CHAINDPTMV                79
+     C  N79                EXSR DMVT
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE CSSE      WPCSSE                          E13561
+     C*
+     C*****IF*PRICE*ACTION,IF*TYPE*'A'*ACCESS*LF/PRICE*AND*IF*FOUND*OR    E15996
+     C*******************IF*TYPE*'D'*EXECUTE*P/PRICEU********             E15996
+     C*******************                                                 E15996
+     C*  IF PRICE ACTION,EXECUTE P/PRICEU                                 E15996
+     C*
+     C           CSOA      IFEQ 'CT'
+     C           CSOA      OREQ 'CV'
+     C           WREC      IFEQ 'D'
+     C           WREC      OREQ 'A'                                       E15996
+     C                     EXSR PRICEU
+     C                     END
+     C***********WREC      IFEQ 'A'                                       E15996
+     C***********          MOVE 'S'       WMKT                            E15996
+     C***********          MOVE CSOA      WPPRT                           E15996
+     C***********PRICEK    CHAINPRICE                79                   E15996
+     C************IN79     IFEQ '1'                                       E15996
+     C***********RECI      OREQ '*'                                       E15996
+     C***********          MOVE 'P'       WMKT                            E15996
+     C***********PRICEK    CHAINPRICE                79                   E15996
+     C************IN79     IFEQ '1'                              E15996   E15996
+     C***********RECI      OREQ '*'                              E15996   E15996
+     C***********          MOVE 'G'       WMKT                            E15996
+     C***********PRICEK    CHAINPRICE                79                   E15996
+     C************IN79     IFEQ '1'                              E15509   E15996
+     C***********RECI      OREQ '*'                              E15509   E15996
+     C***********          MOVE ' '       WMKT                   E15509   E15996
+     C***********PRICEK    CHAINPRICE                79          E15509   E15996
+     C***********          END                                            E15996
+     C***********          END                                            E15996
+     C***********          END                                   E15509   E15996
+     C************IN79     IFNE '1'                                       E15996
+     C***********RECI      ANDNE'*'                                       E15996
+     C***********          EXSR PRICEU                                    E15996
+     C***********          END                                            E15996
+     C***********          END                                            E15996
+     C                     END
+     C*
+     C***PDATE*RECORD*ID*TO*H*FOR*ALL*TYPES*********                      E16849
+     C* UPDATE RECORD ID TO H FOR ACTIONED OR * FOR DELETED               E16849
+      ***only*when*CGL031*is*off,*otherwise*the*RECI*is*updated*in*SE2410A             233705 234440
+     C*
+     C********** CGL031    IFEQ 'N'                                                    233705 234440
+     C           WREC      IFEQ 'C'                                       E16849
+     C                     MOVE '*'       RECI                            E16849
+     C                     ELSE                                           E16849
+     C                     MOVE 'H'       RECI
+     C                     END                                            E16849
+     C***********          ENDIF                                                       233705 234440
+     C*********************UPDATCAPRHDF                                   E15996
+     C           ENTAG     TAG                             ** ENTAG **    S01486
+     C                     EXCPTCAPRID                                    E15996
+     C*
+     C           ENDLP     TAG                             ** ENDLP **
+     C*
+     C                     END
+     C*
+     C** END OF ACTIONS - UPDATE LAST GROUP IF NOT FIRST TIME
+     C*
+     C           WPSEC     IFNE *BLANK
+     C                     EXSR CH01
+     C                     END
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CH01     - CHANGE OF POSITION OR DATE - UPDATE CHANGES FOR    *
+     C*            LAST POSITION/DATE READ IN.                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CH01      BEGSR                           ** CH01   **
+     C*
+     C***DO*NOT*UPDATE*NUMERATOR*IF*UNCHANGED*SO*CHECK*FOR*A*CHANGE***    E16849
+     C***BEFORE*ACCESING*THIS*DATES*POSITION*RECORD*******                E16849
+     C*
+     C********** CSPT      IFEQ WAPNMT                                    E16849
+     C**********           MOVE '1'       TSAME   1                       E16849
+     C**********           ELSE                                           E16849
+     C**********           MOVE '0'       TSAME                           E16849
+     C**********           END                                            E16849
+     C********** CSPV      IFEQ WAPNMV                                    E16849
+     C**********           MOVE '1'       VSAME   1                       E16849
+     C**********           ELSE                                           E16849
+     C**********           MOVE '0'       VSAME                           E16849
+     C**********           END                                            E16849
+     C*
+     C           CPKEY     CHAINCPOSH                79
+     C           *IN79     IFEQ '0'
+     C********** TSAME     IFNE '1'                                       S01158
+     C********** TSAME     IFNE '1'                                 E13561E16849
+     C********** VSAME     ORNE '1'                                 E13561E16849
+     C********** WPCSSE    OREQ '0'                                 E13561E16849
+     C                     Z-ADDWAPNMT    CSPT         77
+     C   77                Z-SUBCSPT      CSPT
+     C**********           END                                            S01158
+     C********** VSAME     IFNE '1'                                       S01158
+     C                     Z-ADDWAPNMV    CSPV         77
+     C   77                Z-SUBCSPV      CSPV
+     C**********           END                                            S01158
+     C**********           END                                      E13561E16849
+     C*
+     C**  Update Customer Positions
+     C*
+     C                     UPDATCPOSNDF
+     C*
+     C* INCREMENT COUNT FOR AUDIT REPORT
+     C***UT*ONLY*IF*AN*ACTUAL*CHANGE*WAS*MADE*******                      E16849
+     C*
+     C********** TSAME     IFNE '1'                                       E16849
+     C********** VSAME     ORNE '1'                                       E16849
+     C                     ADD  1         WCUPDT  50
+     C**********           END                                            E16849
+     C*                                                                   E36685
+     C* If change of position check if there is future date position rec. E36685
+     C* and update ap numerators.  This is only for v. odd circumstances  E36685
+     C* (See header box)                                                  E36685
+     C*                                                                   E36685
+     C           CPKEYD    IFNE CURKEY                                    E36685
+     C           RECI      ANDEQ'H'                                       E36685
+     C           CPKEY2    READECPOSH                    79               E36685
+     C           *IN79     IFEQ '0'                                       E36685
+     C                     Z-ADDWAPNMT    CSPT         77                 E36685
+     C   77                Z-SUBCSPT      CSPT                            E36685
+     C                     Z-ADDWAPNMV    CSPV         77                 E36685
+     C   77                Z-SUBCSPV      CSPV                            E36685
+     C                     UPDATCPOSNDF                                   E36685
+     C                     ADD  1         WCUPDT  50                      E36685
+     C                     END                                            E36685
+     C                     END                                            E36685
+     C*
+     C                     ELSE
+     C*
+     C** Else *IN79 is on but if action is price record, write out        E15508
+     C** new customer Position record                                     E15508
+     C*
+     C           WPCSOA    IFEQ 'CT'                                      E15508
+     C           WPCSOA    OREQ 'CV'                                      E15508
+     C*                                                                   E15508
+     C***********          Z-ADDCSBR      WPCSBR                    E15508S01117
+     C                     MOVELCSBA      WPCSBR                          S01117
+     C**********           Z-ADDCSCN      WPCSCN                          E15508       E15508 CSD027
+     C                     MOVE CSCN      WPCSCN                                              CSD027
+     C                     MOVE CSSC      WPCSSC                          E15508
+     C           CPKEY     SETGTCPOSNDF                                   E15508
+     C                     READPCPOSNDF                  79               E15508
+     C           *IN79     IFEQ '0'                                       E15508
+     C***********CSBR      ANDEQWPCSBR                              E15508S01117
+     C           CSBA      ANDEQWPCSBR                                    S01117
+     C           CSCN      ANDEQWPCSCN                                    E15508
+     C           CSSC      ANDEQWPCSSC                                    E15508
+     C                     MOVE 'H'       RECI                            E15508
+     C                     EXCPTCPRECI                                    E15508
+     C                     END                                            E15508
+     C*                                                                   E15508
+     C           CPKEY2    READECPOSNDF                  78               E15996
+     C           *IN78     IFEQ '1'                                       E15996
+     C                     MOVE 'D'       RECI                            E15508
+     C                     ELSE                                           E15996
+     C                     MOVE 'H'       RECI                            E15996
+     C                     END                                            E15996
+     C                     Z-ADDWPCSNT    CSNT                            E15508
+     C                     Z-ADDWPCSNV    CSNV                            E15508
+     C                     Z-ADDWPCSNS    CSNS                            E15508
+     C                     Z-ADDWPCSEX    CSEX                            E15508
+     C                     Z-ADDWPCSDA    CSDA                            E15508
+     C                     Z-ADDWAPNMT    CSPT                            E15508
+     C                     Z-ADDWAPNMV    CSPV                            E15508
+     C                     Z-ADDWPCSCT    CSCT                            E15508
+     C                     Z-ADDWPCSCV    CSCV                            E15508
+     C                     Z-ADD*ZEROS    CSPI                                                233705
+     C                     Z-ADD*ZEROS    CSAT                                                233705
+     C                     Z-ADD*ZEROS    CSAV                                                233705
+     C                     Z-ADD*ZEROS    AVFP                                                234440
+     C                     Z-ADD*ZEROS    APDT                                                234440
+     C                     WRITECPOSNDF                                   E15508
+     C*                                                                   E15508
+     C                     ADD  1         ADDREC  50                      E15508
+     C                     ELSE                                           E15508
+     C*                                                                   E15508
+     C** No matching date to transaction, so db error
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CPOSH  ' DBFILE
+     C                     MOVELWPRVKY    DBKEY            ***************E20651
+     C***********          Z-ADD2         DBASE            * DB ERROR 09 *E20651
+     C                     Z-ADD09        DBASE            ***************E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO EAUDIT
+     C                     END
+     C                     END                                            E15508
+     C*
+     C                     Z-ADD0         WAPNMT
+     C                     Z-ADD0         WAPNMV
+     C           ENDCH1    ENDSR                            **ENDCH1**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CALL  - CALCULATE CHANGE TO AVERAGE PRICE NUMERATOR ATR A CALL*
+     C*         FOR EACH CALL DUE AFTER A CHANGE IN PRICE             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           CALL      BEGSR                           ** CALL   **
+     C*
+     C                     Z-ADD*ZEROS    WAPNM0 150                      S01158
+     C                     Z-ADD*ZEROS    WAPNM1 151                      S01158
+     C                     Z-ADD*ZEROS    WAPNM2 152                      S01158
+     C                     Z-ADD*ZEROS    WAPNM3 153                      S01158
+     C*
+     C** CALCULATE VALUES FOR A CALL PERCENTAGE I.E. NOT AN AMOUNT
+     C*
+     C           SDPC      IFNE 0
+     C*
+     C** CALCULATE AVERAGE PRICE PRIOR TO THE CALL
+     C*
+     C           CSPT      IFNE *ZEROS
+     C           CSNT      ANDNE*ZEROS                                    E24337
+     C           CSPT      DIV  CSNT      WNAPTT 158H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPTT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     MULT 100       WNAPTT                          S01158
+     C                     END                                            S01158
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPTT
+     C                     END
+     C*
+     C           CSPV      IFNE *ZEROS
+     C           CSNV      ANDNE*ZEROS                                    E24337
+     C           CSPV      DIV  CSNV      WNAPVV 158H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPVV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     MULT 100       WNAPVV                          S01158
+     C                     END                                            S01158
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPVV
+     C                     END
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AFTER THE CALL
+     C*
+     C           WNAPTT    MULT SDPC      WNAPT
+     C           WNAPVV    MULT SDPC      WNAPV
+     C           WNAPT     DIV  100       WNAPT     H
+     C           WNAPV     DIV  100       WNAPV     H
+     C           WNAPV     ADD  WNAPVV    WNAPV
+     C           WNAPT     ADD  WNAPTT    WNAPT
+     C*
+     C** CALCULATE NEW AP NUMERATOR
+     C*
+     C********** CSNT      MULT WNAPT     WAPNMT                          S01158
+     C********** CSNV      MULT WNAPV     WAPNMV                          S01158
+     C   21      CSNT      MULT WNAPT     WAPNM0                          S01158
+     C   22      CSNT      MULT WNAPT     WAPNM1                          S01158
+     C   23      CSNT      MULT WNAPT     WAPNM2                          S01158
+     C   24      CSNT      MULT WNAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C   21      CSNV      MULT WNAPV     WAPNM0                          S01158
+     C   22      CSNV      MULT WNAPV     WAPNM1                          S01158
+     C   23      CSNV      MULT WNAPV     WAPNM2                          S01158
+     C   24      CSNV      MULT WNAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     DIV  100       WAPNMT                          S01158
+     C                     DIV  100       WAPNMV                          S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C*
+     C                     END
+     C*
+     C** CALCULATE VALUES FOR CALL AMOUNT I.E. NOT A PERCENTAGE
+     C*
+     C           SDPP      IFNE 0
+     C*
+     C** CALCULATE AVERAGE PRICE PRIOR TO THE CALL
+     C*
+     C           CSPT      IFNE *ZEROS
+     C           CSNT      ANDNE*ZEROS                                    E24337
+     C           CSPT      DIV  CSNT      WNAPT     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPT                           S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     MULT 100       WNAPT                           S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPT
+     C                     END
+     C*
+     C           CSPV      IFNE *ZEROS
+     C           CSNV      ANDNE*ZEROS                                    E24337
+     C           CSPV      DIV  CSNV      WNAPV     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPV                           S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     MULT 100       WNAPV                           S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPV
+     C                     END
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AFTER THE CALL FOR CALL AMOUNT
+     C*
+     C           WNAPT     ADD  SDPP      WNAPT
+     C           WNAPV     ADD  SDPP      WNAPV
+     C*
+     C** CALCULATE NEW AP NUMERATOR
+     C*
+     C********** CSNT      MULT WNAPT     WAPNMT                          S01158
+     C********** CSNV      MULT WNAPV     WAPNMV                          S01158
+     C   21      CSNT      MULT WNAPT     WAPNM0                          S01158
+     C   22      CSNT      MULT WNAPT     WAPNM1                          S01158
+     C   23      CSNT      MULT WNAPT     WAPNM2                          S01158
+     C   24      CSNT      MULT WNAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C   21      CSNV      MULT WNAPV     WAPNM0                          S01158
+     C   22      CSNV      MULT WNAPV     WAPNM1                          S01158
+     C   23      CSNV      MULT WNAPV     WAPNM2                          S01158
+     C   24      CSNV      MULT WNAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C                     DIV  100       WAPNMT                          S01158
+     C                     DIV  100       WAPNMV                          S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C*                                                                   S01158
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* TRADE -CALCULATE NEW AVERAGE PRICE NUMERATOR FOR A TRADE      *
+     C*        ACTION FOR EACH ACTION ON A CUSTOMER POSITION          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           TRADE     BEGSR                           ** TRADE  **
+     C*
+     C**  CALCULATE NOMINAL AFTER TRADE ACTION
+     C*
+     C           CSTB      IFNE 0
+     C           WREC      ANDNE'C'                                       E16849
+     C*
+     C* TRADE ACTION IS TRADE DATE BASIS IF CSTB IS NOT 0
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNT    ADD  CSNL      WNCSNT
+     C                     END
+     C           CSOA      IFEQ 'TP'
+     C           WNCSNT    SUB  CSNL      WNCSNT
+     C                     END
+     C*
+     C** IF SALE AND NOW LONG, OR PURCHASE AND NOW SHORT
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNT    ANDGT0
+     C           CSOA      OREQ 'TP'
+     C           WNCSNT    ANDLT0
+     C*
+     C** IF POSITION HAS CHANGED FROM LONG TO SHORT OR SHORT TO LONG
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WPCSNT    ANDLT0
+     C           CSOA      OREQ 'TP'
+     C           WPCSNT    ANDGT0
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AS CONTRACT PRICE
+     C** AND NEW AP NUMERATOR AS CONTRACT PRICE TIMES NEW NOMINAL
+     C*
+     C                     Z-ADDCSCP      WNAPT
+     C           SPBS      IFEQ 'P'                                       E15996
+     C                     DIV  100       WNAPT                           E15996
+     C                     END                                            E15996
+     C********** WNAPT     MULT WNCSNT    WAPNMT                          S01158
+     C   21      WNCSNT    MULT WNAPT     WAPNM0                          S01158
+     C   22      WNCSNT    MULT WNAPT     WAPNM1                          S01158
+     C   23      WNCSNT    MULT WNAPT     WAPNM2                          S01158
+     C   24      WNCSNT    MULT WNAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMT                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C*                                                                   S01158
+     C                     ELSE
+     C*
+     C**I.E. ELSE IT IS NOT CHANGE FROM SHORT TO LONG NOR LONG TO SHORT
+     C* SO CALCULATE NEW AP NUMERATOR AS CURRENT VALUE PLUS CHANGE VALU
+     C*
+     C           CSTB      IFLT *ZEROS                                    E15996
+     C           WAPNMT    SUB  CSTB      WAPNMT                          E15996
+     C                     ELSE                                           E15996
+     C           WAPNMT    ADD  CSTB      WAPNMT
+     C                     END                                            E15996
+     C*                                                                   E15996
+     C                     END
+     C*
+     C**  ELSE ... NOT (TS AND NOW LONG) NOR (TP AND NOW SHORT)
+     C*
+     C                     ELSE
+     C*
+     C** CALCULATE CURRENT AP AP NUMERATOR/PREVIOUS NOMINAL
+     C*
+     C           WAPNMT    IFNE *ZERO                                     E24337
+     C           WPCSNT    ANDNE*ZERO                                     E24337
+     C           WAPNMT    DIV  WPCSNT    WCAPT     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWCAPT                           S01158
+      *                                                                   E24337
+     C                     ELSE                                           E24337
+     C                     Z-ADD*ZEROS    WCAPT                           E24337
+     C                     END                                            E24337
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WCAPT                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*
+     C**  AND CALCULATE NEW AP NUMERATOR AS CURRENT AP TIMES NEW NOMNL.
+     C*
+     C********** WCAPT     MULT WNCSNT    WAPNMT                          S01158
+     C   21      WNCSNT    MULT WCAPT     WAPNM0                          S01158
+     C   22      WNCSNT    MULT WCAPT     WAPNM1                          S01158
+     C   23      WNCSNT    MULT WCAPT     WAPNM2                          S01158
+     C   24      WNCSNT    MULT WCAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMT                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C*                                                                   S01158
+     C                     END
+     C                     Z-ADDWNCSNT    WPCSNT
+     C*
+     C                     END
+     C*
+     C           CSVB      IFNE 0
+     C           WREC      ANDNE'C'                                       E16849
+     C*
+     C* TRADE ACTION IS VALUE DATE BASIS IF CSVB IS NOT 0
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNV    ADD  CSNL      WNCSNV
+     C                     END
+     C           CSOA      IFEQ 'TP'
+     C           WNCSNV    SUB  CSNL      WNCSNV
+     C                     END
+     C*
+     C** IF SALE AND NOW LONG, OR PURCHASE AND NOW SHORT
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNV    ANDGT0
+     C           CSOA      OREQ 'TP'
+     C           WNCSNV    ANDLT0
+     C*
+     C** IF POSITION HAS CHANGED FROM LONG TO SHORT OR SHORT TO LONG
+     C*
+     C           CSOA      IFEQ 'TS'
+     C           WPCSNV    ANDLT0
+     C           CSOA      OREQ 'TP'
+     C           WPCSNV    ANDGT0
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AS CONTRACT PRICE
+     C** AND NEW AP NUMERATOR AS CONTRACT PRICE TIMES NEW NOMINAL
+     C*
+     C                     Z-ADDCSCP      WNAPV
+     C*                                                                   S01158
+     C* Price basis security                                     S01158   E15996
+     C*                                                          S01158   E15996
+     C           SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMV                   E15996 E36711
+     C                     DIV  100       WNAPV                           E36711
+     C                     END                                   S01158   E15996
+     C********** WNAPV     MULT WNCSNV    WAPNMV                          S01158
+     C   21      WNCSNV    MULT WNAPV     WAPNM0                          S01158
+     C   22      WNCSNV    MULT WNAPV     WAPNM1                          S01158
+     C   23      WNCSNV    MULT WNAPV     WAPNM2                          S01158
+     C   24      WNCSNV    MULT WNAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMV                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C*                                                                   S01158
+     C                     ELSE
+     C*
+     C**I.E. ELSE IT IS NOT CHANGE FROM SHORT TO LONG NOR LONG TO SHORT
+     C* SO CALCULATE NEW AP NUMERATOR AS CURRENT VALUE PLUS CHANGE VALU
+     C*
+     C           CSVB      IFLT *ZEROS                                    E15996
+     C           WAPNMV    SUB  CSVB      WAPNMV                          E15996
+     C                     ELSE                                           E15996
+     C           WAPNMV    ADD  CSVB      WAPNMV
+     C                     END                                            E15996
+     C*                                                                   E15996
+     C                     END
+     C*
+     C**  ELSE ... NOT (TS AND NOW LONG) NOR (TP AND NOW SHORT)
+     C*
+     C                     ELSE
+     C*
+     C** CALCULATE CURRENT AP AP NUMERATOR/PREVIOUS NOMINAL
+     C*
+     C           WAPNMV    DIV  WPCSNV    WCAPV     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWCAPV                           S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WCAPV                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*
+     C**  AND CALCULATE NEW AP NUMERATOR AS CURRENT AP TIMES NEW NOMNL.
+     C*
+     C********** WCAPV     MULT WNCSNV    WAPNMV                          S01158
+     C   21      WNCSNV    MULT WCAPV     WAPNM0                          S01158
+     C   22      WNCSNV    MULT WCAPV     WAPNM1                          S01158
+     C   23      WNCSNV    MULT WCAPV     WAPNM2                          S01158
+     C   24      WNCSNV    MULT WCAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                                S01158 E15996
+     C***********          DIV  100       WAPNMV                   S01158 E15996
+     C***********          END                                     S01158 E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C*                                                                   S01158
+     C                     END
+     C*
+     C                     Z-ADDWNCSNV    WPCSNV
+     C                     END
+     C*                                                                   E15996
+     C           WAPNMT    IFLT *ZEROS                                    E15996
+     C                     Z-SUBWAPNMT    WAPNMT                          E15996
+     C                     END                                            E15996
+     C*                                                                   E15996
+     C           WAPNMV    IFLT *ZEROS                                    E15996
+     C                     Z-SUBWAPNMV    WAPNMV                          E15996
+     C                     END                                            E15996
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CALL  - CALCULATE NEW AV. PRICE NUMERATOR FOR A DEPOT MOVT.   *
+     C*         FOR EACH PORTFOLIO CUSTOMER WALK-IN / WALK-OUT.       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           DMVT      BEGSR                           ** DMVT   **
+     C*
+     C**  CALCULATE NOMINAL AFTER DEPOT MOVEMENT
+     C*
+     C           CSVB      IFNE 0
+     C           WREC      ANDNE'C'                                       E16849
+     C*
+     C* DEPOT MOVT. IS VALUE DATE BASIS IF IF CSVB IS NOT 0
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WNCSNV    ADD  CSNL      WNCSNV
+     C                     END
+     C***********CSOA      IFEQ 'WO'                                      E14838
+     C           CSOA      IFEQ 'CO'                                      E14838
+     C           WNCSNV    SUB  CSNL      WNCSNV
+     C                     END
+     C*
+     C** IF SALE AND NOW LONG, OR PURCHASE AND NOW SHORT
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WNCSNV    ANDGT0
+     C***********CSOA      OREQ 'WO'                                      E14838
+     C           CSOA      OREQ 'CO'                                      E14838
+     C           WNCSNV    ANDLT0
+     C*
+     C** IF POSITION HAS CHANGED FROM LONG TO SHORT OR SHORT TO LONG
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WPCSNV    ANDLT0
+     C***********CSOA      OREQ 'WO'                                      E14838
+     C           CSOA      OREQ 'CO'                                      E14838
+     C           WPCSNV    ANDGT0
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AS MARKET PRICE
+     C** AND NEW AP NUMERATOR AS MARKET PRICE TIMES NEW NOMINAL
+     C*
+     C* MARKET PRICE IS CHANGE TO AP NUM (VALUE) DIV. BY ACTION NOMINAL
+     C*
+     C           CSVB      IFNE *ZEROS                                    E24337
+     C           CSNL      ANDNE*ZEROS                                    E24337
+     C           CSVB      DIV  CSNL      WNAPV     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPV                           S01158
+      *                                                                   E24337
+     C                     ELSE                                           E24337
+     C                     Z-ADD*ZEROS    WNAPV                           E24337
+     C                     END                                            E24337
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WNAPV                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C********** WNAPV     MULT WNCSNV    WAPNMV                          S01158
+     C   21      WNCSNV    MULT WNAPV     WAPNM0                          S01158
+     C   22      WNCSNV    MULT WNAPV     WAPNM1                          S01158
+     C   23      WNCSNV    MULT WNAPV     WAPNM2                          S01158
+     C   24      WNCSNV    MULT WNAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMV                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C                     ELSE
+     C*
+     C**I.E. ELSE IT IS NOT CHANGE FROM SHORT TO LONG NOR LONG TO SHORT
+     C* SO CALCULATE NEW AP NUMERATOR AS CURRENT VALUE PLUS CHANGE VALU
+     C*
+     C           CSVB      IFLT *ZEROS                                    E15996
+     C           WAPNMV    SUB  CSVB      WAPNMV                          E15996
+     C                     ELSE                                           E15996
+     C           WAPNMV    ADD  CSVB      WAPNMV
+     C                     END                                            E15996
+     C                     END
+     C*
+     C**  ELSE ... NOT (TS AND NOW LONG) NOR (TP AND NOW SHORT)
+     C*
+     C                     ELSE
+     C*
+     C** CALCULATE CURRENT AP AS AP NUMERATOR/PREVIOUS NOMINAL
+     C*
+     C           WAPNMV    IFNE *ZEROS                                    E24337
+     C           WPCSNV    ANDNE*ZEROS                                    E24337
+     C           WAPNMV    DIV  WPCSNV    WCAPV     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWCAPV                           S01158
+      *                                                                   E24337
+     C                     ELSE                                           E24337
+     C                     Z-ADD*ZEROS    WCAPV                           E24337
+     C                     END                                            E24337
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WCAPV                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*
+     C**  AND CALCULATE NEW AP NUMERATOR AS CURRENT AP TIMES NEW NOMNL.
+     C*
+     C********** WCAPV     MULT WNCSNV    WAPNMV                          S01158
+     C   21      WNCSNV    MULT WCAPV     WAPNM0                          S01158
+     C   22      WNCSNV    MULT WCAPV     WAPNM1                          S01158
+     C   23      WNCSNV    MULT WCAPV     WAPNM2                          S01158
+     C   24      WNCSNV    MULT WCAPV     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMV                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMV                          S01158
+     C                     END
+     C*
+     C                     Z-ADDWNCSNV    WPCSNV
+     C                     END
+     C*
+     C           CSTB      IFNE 0
+     C           WREC      ANDNE'C'                                       E16849
+     C*
+     C* DEPOT MOVT. IS TRADE DATE BASIS IF CSTB IS NOT 0
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WNCSNT    ADD  CSNL      WNCSNT
+     C                     END
+     C***********CSOA      IFEQ 'WO'                                      E14838
+     C           CSOA      IFEQ 'CO'                                      E14838
+     C           WNCSNT    SUB  CSNL      WNCSNT
+     C                     END
+     C*
+     C** IF SALE AND NOW LONG, OR PURCHASE AND NOW SHORT
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WNCSNT    ANDGT0
+     C***********CSOA      OREQ 'WO'                                      E14838
+     C           CSOA      OREQ 'CO'                                      E14838
+     C           WNCSNT    ANDLT0
+     C*
+     C** IF POSITION HAS CHANGED FROM LONG TO SHORT OR SHORT TO LONG
+     C*
+     C***********CSOA      IFEQ 'WI'                                      E14838
+     C           CSOA      IFEQ 'CI'                                      E14838
+     C           WPCSNT    ANDLT0
+     C***********CSOA      OREQ 'WO'                                      E14838
+     C           CSOA      OREQ 'CO'                                      E14838
+     C           WPCSNT    ANDGT0
+     C*
+     C** CALCULATE NEW AVERAGE PRICE AS MARKET PRICE
+     C** AND NEW AP NUMERATOR AS MARKET PRICE TIMES NEW NOMINAL
+     C*
+     C* MARKET PRICE IS CHANGE TO AP NUM (TRADE) DIV. BY ACTION NOMINAL
+     C*
+     C           CSTB      IFNE *ZEROS                                    E24337
+     C           CSNL      ANDNE*ZEROS                                    E24337
+     C           CSTB      DIV  CSNL      WNAPT     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWNAPT                           S01158
+      *                                                                   E24337
+     C                     ELSE                                           E24337
+     C                     Z-ADD*ZEROS    WNAPT                           E24337
+     C                     END                                            E24337
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WNAPT                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C********** WNAPT     MULT WNCSNT    WAPNMT                          S01158
+     C   21      WNCSNT    MULT WNAPT     WAPNM0                          S01158
+     C   22      WNCSNT    MULT WNAPT     WAPNM1                          S01158
+     C   23      WNCSNT    MULT WNAPT     WAPNM2                          S01158
+     C   24      WNCSNT    MULT WNAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMT                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C                     ELSE
+     C*
+     C**I.E. ELSE IT IS NOT CHANGE FROM SHORT TO LONG NOR LONG TO SHORT
+     C* SO CALCULATE NEW AP NUMERATOR AS CURRENT VALUE PLUS CHANGE VALU
+     C*
+     C           CSTB      IFLT *ZEROS                                    E15996
+     C           WAPNMT    SUB  CSTB      WAPNMT                          E15996
+     C                     ELSE                                           E15996
+     C           WAPNMT    ADD  CSTB      WAPNMT
+     C                     END                                            E15996
+     C                     END
+     C*
+     C**  ELSE ... NOT (TS AND NOW LONG) NOR (TP AND NOW SHORT)
+     C*
+     C                     ELSE
+     C*
+     C** CALCULATE CURRENT AP AS AP NUMERATOR/PREVIOUS NOMINAL
+     C*
+     C           WAPNMT    IFNE *ZEROS                                    E24337
+     C           WPCSNT    ANDNE*ZEROS                                    E24337
+     C           WAPNMT    DIV  WPCSNT    WCAPT     H
+     C*                                                                   S01158
+     C* Allow for nominal and nominal currency decimal places             S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC     10                      S01158
+     C                     ADD  CDP       DEC                             S01158
+     C                     DIV  POWER8,DECWCAPT                           S01158
+      *                                                                   E24337
+     C                     ELSE                                           E24337
+     C                     Z-ADD*ZEROS    WCAPT                           E24337
+     C                     END                                            E24337
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          MULT 100       WCAPT                  S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*
+     C**  AND CALCULATE NEW AP NUMERATOR AS CURRENT AP TIMES NEW NOMNL.
+     C*
+     C********** WCAPT     MULT WNCSNT    WAPNMT                          S01158
+     C   21      WNCSNT    MULT WCAPT     WAPNM0                          S01158
+     C   22      WNCSNT    MULT WCAPT     WAPNM1                          S01158
+     C   23      WNCSNT    MULT WCAPT     WAPNM2                          S01158
+     C   24      WNCSNT    MULT WCAPT     WAPNM3                          S01158
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C***********SPBS      IFEQ 'P'                              S01158   E15996
+     C***********          DIV  100       WAPNMT                 S01158   E15996
+     C***********          END                                   S01158   E15996
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C                     MULT POWER8,DECWAPNMT                          S01158
+     C                     END
+     C*
+     C                     Z-ADDWNCSNT    WPCSNT
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CALL - CALCULATE NEW AV. PRICE NUMERATOR FOR A PRICE CHANGE   *
+     C*         FOR EACH CUSTOMER AVERAGE PRICE CHANGE INPUT          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           PRICEU    BEGSR                           ** PRICEU **
+     C*
+     C** SET NEW AP NUMERATOR TO NEW AVERAGE PRICE TIMES NOMINAL POSN
+     C*  CALCULATE ON EITHER TRADE AND VALUE DATE BASIS.
+     C*
+     C           CSOA      IFEQ 'CT'
+     C********** CSAP      MULT WPCSNT    WAPNMT                          S01158
+     C***21***** WPCSNT    MULT CSAP      WAPNM0                    E15509S01158
+     C***22***** WPCSNT    MULT CSAP      WAPNM1                    E15509S01158
+     C***23***** WPCSNT    MULT CSAP      WAPNM2                    E15509S01158
+     C***24***** WPCSNT    MULT CSAP      WAPNM3                    E15509S01158
+     C   21      WNCSNT    MULT CSAP      WAPNM0                          E15509
+     C   22      WNCSNT    MULT CSAP      WAPNM1                          E15509
+     C   23      WNCSNT    MULT CSAP      WAPNM2                          E15509
+     C   24      WNCSNT    MULT CSAP      WAPNM3                          E15509
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMT                          S01158
+     C   22                MOVE WAPNM1    WAPNMT                          S01158
+     C   23                MOVE WAPNM2    WAPNMT                          S01158
+     C   24                MOVE WAPNM3    WAPNMT                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C**********           DIV  100       WAPNMT                   S01158 186555
+     C                     DIV  100       WAPNMT    H                     186555
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C**********           MULT POWER8,DECWAPNMT                   S01158 186555
+     C                     MULT POWER8,DECWAPNMT    H                     186555
+     C                     END
+     C*
+     C           CSOA      IFEQ 'CV'
+     C********** CSAP      MULT WPCSNV    WAPNMV                          S01158
+     C***21***** WPCSNV    MULT CSAP      WAPNM0                    S01158E15509
+     C***22***** WPCSNV    MULT CSAP      WAPNM1                    S01158E15509
+     C***23***** WPCSNV    MULT CSAP      WAPNM2                    S01158E15509
+     C***24***** WPCSNV    MULT CSAP      WAPNM3                    S01158E15509
+     C   21      WNCSNV    MULT CSAP      WAPNM0                          E15509
+     C   22      WNCSNV    MULT CSAP      WAPNM1                          E15509
+     C   23      WNCSNV    MULT CSAP      WAPNM2                          E15509
+     C   24      WNCSNV    MULT CSAP      WAPNM3                          E15509
+     C*                                                                   S01158
+     C   21                MOVE WAPNM0    WAPNMV                          S01158
+     C   22                MOVE WAPNM1    WAPNMV                          S01158
+     C   23                MOVE WAPNM2    WAPNMV                          S01158
+     C   24                MOVE WAPNM3    WAPNMV                          S01158
+     C*                                                                   S01158
+     C* Price basis security                                              S01158
+     C*                                                                   S01158
+     C           SPBS      IFEQ 'P'                                       S01158
+     C**********           DIV  100       WAPNMV                   S01158 186555
+     C                     DIV  100       WAPNMV    H                     186555
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C* Allow for nominal decimal places                                  S01158
+     C*                                                                   S01158
+     C           5         SUB  NMDP      DEC                             S01158
+     C**********           MULT POWER8,DECWAPNMV                   S01158 186555
+     C                     MULT POWER8,DECWAPNMV    H                     186555
+     C                     END
+     C*
+     C                     Z-ADDWNCSNT    WPCSNT
+     C                     Z-ADDWNCSNV    WPCSNV
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AUDIT                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C** COMPARE COUNT OF ACTIONS TO AUDIT FILE ACTIONS
+     C*
+     C           *INU8     IFNE '1'
+     C                     READ CAPRHA                   79
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CAPRHA'  DBFILE           *****************
+     C***********          MOVEL'AUDIT'   DBKEY            ***DB*ERROR*02*E20651
+     C***********          Z-ADD2         DBASE            ***************E20651
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 10 E20651
+     C                     Z-ADD10        DBASE            ***************E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C                     Z-ADDNORE      SANORE  50
+     C                     Z-ADDSINS      SSINS
+     C                     Z-ADDSAMD      SSAMD
+     C                     END
+     C*
+     C** READ CPOSNA AUDIT RECORD
+     C*
+     C           *INU8     IFNE '1'
+     C                     READ CPOSNA                   79
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CPOSNA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD03        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C           ADDREC    IFGT 0                                         E15508
+     C                     ADD  ADDREC    NORE                            E15508
+     C                     UPDATCPOSNAF                                   E15508
+     C                     END                                            E15508
+     C                     Z-ADDNORE      CPNORE  50
+     C                     END
+     C                     END
+     C*
+     C           *INU8     IFNE '1'
+     C*
+     C           SSINS     IFNE WTYPED
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN29
+     C                     END
+     C*
+     C           *INU8     IFEQ '0'
+     C           SSAMD     IFNE WTYPEA
+     C                     SETON                     U830
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C***********WTYPEA    IFEQ 0                                         S01117
+     C***********WTYPED    ANDEQ0                                         S01117
+     C************INU8     ANDEQ'0'                                       S01117
+     C***********          WRITENONE                                      S01117
+     C***********          ELSE                                           S01117
+     C                     WRITECONTROL
+     C*
+     C***********          END                                            S01117
+     C                     END
+     C*
+     C***********          WRITETRAILAU                                   S01117
+     C*
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     OREQ '1'                                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C********R**-*SUBROUTINE*FOR*ERROR*HANDLING*OF*LF/CAPRH****      *   E14010
+     C*  CAPHSR  - SUBROUTINE FOR ERROR HANDLING OF LF/CAPRA          *   E14010
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CAPHSR    BEGSR                            ** CAPHSR **
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'CAPRH '  DBFILE           ***************E14010
+     C                     MOVEL'CAPRA '  DBFILE           ***************E14010
+     C                     MOVELWCURKY    DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD004       DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSCAP    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  CAPRSR  - SUBROUTINE FOR ERROR HANDLING OF PF/CAPRHA AUDIT   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CAPRSR    BEGSR                            **CAPRSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CAPRHA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD005       DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSCPR    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  CPOSSR  - SUBROUTINE FOR ERROR HANDLING OF LF/CPOSH          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CPOSSR    BEGSR                              **CPOSSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CPOSH '  DBFILE           *****************
+     C                     MOVELCPKEYD    DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD06        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSPOS    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C***********                                                         S01117
+     C**FIRST*-*SUBROUTINE*TO*ACCESS*ICD*INFORMATION**********************S01117
+     C***********                                                         S01117
+     C*****************************************************************
+     C***********                                                         S01117
+     C***********FIRST     BEGSR                           ** FIRST **    S01117
+     C***********                                                         S01117
+     C***********                                                         S01117
+     C**ACCESS*ICD****TABTB10                                             S01117
+     C***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY            ** DB ERROR 01 S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C***********          ENDSR                                          S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C*COPY*ZSRSRC*ZSYSTMZ1**                                             S01117
+     O/EJECT
+     OCPOSNDF E                CPRECI                                     E15508
+     O                         RECI                                       E15508
+     OCAPRHDF E                CAPRID                                     E15996
+     O                         RECI                                       E15996
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION                      S01158
+00000001                                                                  S01158
+00000010                                                                  S01158
+00000100                                                                  S01158
+00001000                                                                  S01158
+00010000                                                                  S01158
+00100000                                                                  S01158
+01000000                                                                  S01158
+10000000                                                                  S01158
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,452 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Daily Journal Average Balance')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008141 - Stamp Tax Daily Journal                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR864045           Date 20Nov11              */
+/*       Prev Amend No. AR820961           Date 26Aug11              */
+/*                      CER049  *Create    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR820961 - Component GLC008140 00001 failed                 */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ &RTYP)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. 2010')
+ 
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RTYP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MMOD)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
+ 
+/** Declare variable CCB009 - flag for switchable feature  */
+ 
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+ 
+/** Declare job name, user and number for remove journal changes */
+ 
+             DCL        VAR(&CCB009JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CB0180DA) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC008141 - Spot Date Daily Journal') +
+                          TOMSGQ(MRUNQ)
+ 
+/** Check for Switchable feature CCB009. */
+ 
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)
+ 
+/** If Feature CCB009 is 'on' (close of business journaling) */
+ 
+             IF         COND(&CCB009 *EQ '       ') THEN(DO)
+ 
+/** Retrieve current job attributes. */
+ 
+             RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
+                          NBR(&CCB009NBR)
+             ENDDO
+ 
+/** Reset GL balance report indicator to force GL balance extract */
+/** (GLC50) to be run prior to any on request reporting */
+ 
+             CHGDTAARA  DTAARA(GLSTAT (41 1)) VALUE('N')
+ 
+/** Get system id */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+/** Get status flag */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/** If restart, remove journalled changes */
+ 
+             IF         COND((&STAT *EQ 'P') *OR (&STAT *EQ 'Q')) +
+                          THEN(DO)
+ 
+/** If Feature CCB009 is 'on' (close of business journaling), */
+ 
+             IF         COND(&CCB009 *EQ '       ') THEN(DO)
+ 
+/** Retrieve data area CB0180DA from QTEMP.  */
+             RTVDTAARA  DTAARA(QTEMP/CB0180DA) RTNVAR(&CB0180DA)
+ 
+/** If data area is not blank, calculate the job name, user and number */
+/** of the previous run of this component. */
+ 
+             IF         COND(&CB0180DA *NE ' ') THEN(DO)
+ 
+             CHGVAR     VAR(&CCB009USR) VALUE(%SST(&CB0180DA 11 10))
+             CHGVAR     VAR(&CCB009NBR) VALUE(%SST(&CB0180DA 21 6))
+ 
+/** Retrieve the most recent journal entry sequence number */
+/** for the specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&START)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/**  Retrieve the first journal entry sequence number */
+/**  for the specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*FIRST) +
+                          TOENT(*LAST) SEARCH(*ASCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&FINISH)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&FINISH) VALUE(0)
+             ENDDO
+ 
+/** Remove journaled changes. */
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+             RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC)) FROMENT(&START) TOENT(&FINISH) +
+                          CMTBDY(*NO)
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
+ 
+             ENDDO
+             ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+             CHKOBJ     OBJ(JRGLC32S) OBJTYPE(*JRNRCV)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRNRCV))
+             CHKOBJ     OBJ(JGLC32S) OBJTYPE(*JRN)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOJRN))
+             RMVM       FILE(ACCNT) MBR(ACCNT)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACNUM) MBR(ACNUM)
+             MONMSG     MSGID(CPF0000)
+             RMVJRNCHG  JRN(JGLC32S) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC))
+             MONMSG     MSGID(CPF7042 CPF7049)
+             ENDJRNPF   FILE(*ALL) JRN(JGLC32S)
+             MONMSG     MSGID(CPF7032)
+             DLTJRN     JRN(JGLC32S)
+             ADDLFM     FILE(ACCNT) MBR(ACCNT) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(ACNUM) MBR(ACNUM) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+ NOJRN:      CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(JRGLC32S)
+             CHGJOB     INQMSGRPY(*RQD)
+             ENDDO
+ NOJRNRCV:   IF         COND(&STAT *EQ 'P') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('N'))
+                ELSE       CMD(CHGVAR VAR(&STAT) VALUE('O'))
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             ENDDO
+ 
+             IF         COND(&STAT *EQ 'N') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('P'))
+             IF         COND(&STAT *EQ 'O') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('Q'))
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/** Create journal environment */
+/** System pre-fix */
+ 
+             CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
+ 
+/** If Feature CCB009 is NOT 'on' (close of business journaling), */
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+             CRTJRNRCV  JRNRCV(&JLIB/JRGLC32S)
+             CRTJRN     JRN(&JLIB/JGLC32S) JRNRCV(&JLIB/JRGLC32S)
+             STRJRNPF   FILE(ACCNTAB ACCNTAA ACCNTAC) JRN(JGLC32S) +
+                          IMAGES(*BOTH)
+             MONMSG     MSGID(CPF7030)
+             ENDDO
+ 
+             RMVM       FILE(SACBL) MBR(SACBL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLRPFM     FILE(ABEXHH)
+             CLRPFM     FILE(ABEXAG)
+             CLRPFM     FILE(ABEXZY)
+ 
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+             CHGJOB     SWS(00000000)
+ 
+             OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)
+             OVRDBF     FILE(ACBRC) SEQONLY(*YES 100)
+             OVRDBF     FILE(ABEXAG) SEQONLY(*YES 100)
+ 
+/** Account balances extract */
+ 
+             CALL       PGM(GL3320) PARM(&POSTNUM)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             DLTOVR     FILE(ABEXAG)
+ 
+/** Successful completion of job */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/** If Feature CCB009 is NOT 'on' (close of business journaling), */
+ 
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+             ENDJRNPF   FILE(*ALL) JRN(JGLC32S)
+             DLTJRN     JRN(JGLC32S)
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(JRGLC32S)
+             CHGJOB     INQMSGRPY(*RQD)
+             ENDDO
+             IF         COND(&STAT *EQ 'P') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('N'))
+             IF         COND(&STAT *EQ 'Q') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('O'))
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             ENDDO
+ 
+/** Unsuccessful completion - remove journalled changes U7 */
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
+ 
+/** If Feature CCB009 is 'on' (close of business journaling), */
+             IF         COND(&CCB009 *EQ '       ') THEN(DO)
+ 
+/**  Retrieve attributes of current job. */
+             RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
+                          NBR(&CCB009NBR)
+ 
+/** Retrieve the most recent journal entry sequence number */
+/** for the specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&START)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/** Retrieve the first journal entry sequence number */
+/** for the specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*FIRST) +
+                          TOENT(*LAST) SEARCH(*ASCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&FINISH)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&FINISH) VALUE(0)
+             ENDDO
+ 
+/** Remove journaled changes. */
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+             RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC)) FROMENT(&START) TOENT(&FINISH) +
+                          CMTBDY(*NO)
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
+ 
+             ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+             RMVM       FILE(ACCNT) MBR(ACCNT)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACBRC) MBR(ACBRC)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACNUM) MBR(ACNUM)
+             MONMSG     MSGID(CPF0000)
+             RMVJRNCHG  JRN(JGLC32S) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC))
+             MONMSG     MSGID(CPF7049)
+             ADDLFM     FILE(ACCNT) MBR(ACCNT) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(ACBRC) MBR(ACBRC) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(ACNUM) MBR(ACNUM) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(SACBL) MBR(SACBL) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             ENDJRNPF   FILE(*ALL) JRN(JGLC32S)
+             DLTJRN     JRN(JGLC32S)
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(JRGLC32S)
+             CHGJOB     INQMSGRPY(*RQD)
+             ENDDO
+             IF         COND(&STAT *EQ 'P') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('N'))
+             IF         COND(&STAT *EQ 'Q') THEN(CHGVAR VAR(&STAT) +
+                          VALUE('O'))
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +
+                          TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/** Unsuccessful completion - U8 */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             SNDPGMMSG  MSG('Stamp Tax Daily Journal - FCOOB ACCNT') +
+                          TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ADDLFM     FILE(SACBL) MBR(SACBL) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+/**********  OVRDBF     FILE(ACJND) TOFILE(GLGESTL0)                                    /*AR864045*/
+             OVRDBF     FILE(ACJND) TOFILE(GLSTDTL0)                                    /*AR864045*/
+             OVRDBF     FILE(ACJNT) TOFILE(GLSTTRL1)
+             OVRDBF     FILE(ACBL) TOFILE(SACBL) SEQONLY(*YES 100)
+ 
+/** Daily journal */
+ 
+/**********  CALL       PGM(GL0340) PARM(&RTYP) */                                    /* AR820961 */
+             CALL       PGM(GL0340) PARM(&RTYP '1')                                   /* AR820961 */
+ 
+             DLTOVR     FILE(ACBL ACJND ACJNT)
+ 
+/** Successful completion */
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                   CLRPFM     FILE(ABEXHH)
+                   CLRPFM     FILE(ABEXAG)
+                   CLRPFM     FILE(ABEXZY)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/** Database Error */
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                        RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                        CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                        SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                                        MSGDTA(&MEM) TOMSGQ(MOPERQ +
+                                        MRUNQ)
+                   ENDDO
+ 
+                   ELSE       CMD(DO)
+ 
+/** Standardizaton of DB Error Switches */
+ 
+                 IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
+ 
+                 SNDPGMMSG  MSG('Stamp Tax Daily Journal does not +
+                                 balance') TOMSGQ(MRUNQ MOPERQ)
+ 
+                 ENDDO
+ 
+                 ELSE       CMD(DO)
+ 
+                      CHGJOB     SWS(XXXXXX01)
+ 
+                      SNDPGMMSG  MSG('Stamp Tax Daily Journal FCOOB +
+                                     GLSTDTPD/ZZ') TOMSGQ(MRUNQ MOPERQ)
+ 
+                   ENDDO
+ 
+                   ENDDO
+             ENDDO
+ 
+/** Global error processing */
+ ABNOR:      IF         COND((&STAT *EQ 'P') *OR (&STAT *EQ 'Q')) +
+                          THEN(DO)
+ 
+/** If Feature CCB009 is 'on' (Close of Business Journaling),  */
+             IF         COND(&CCB009 *EQ '       ') THEN(DO)
+ 
+/**  Retrieve attributes of current job. */
+             RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
+                          NBR(&CCB009NBR)
+ 
+/** Retrieve the most recent journal entry sequence number */
+/** for the specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&START)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/** Retrieve the first journal entry sequence number */
+/** for the specific job.  */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*FIRST) +
+                          TOENT(*LAST) SEARCH(*ASCEND) +
+                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                          RTNSEQNBR(&FINISH)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+             CHGVAR     VAR(&FINISH) VALUE(0)
+             ENDDO
+ 
+/** Remove journaled changes. */
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+             RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC)) FROMENT(&START) TOENT(&FINISH) +
+                          CMTBDY(*NO)
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) +
+ 
+             ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+             RMVM       FILE(ACCNT) MBR(ACCNT)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACBRC) MBR(ACBRC)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(ACNUM) MBR(ACNUM)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(SACBL) MBR(SACBL) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             RMVJRNCHG  JRN(JGLC32S) FILE((ACCNTAB) (ACCNTAA) +
+                          (ACCNTAC))
+             MONMSG     MSGID(CPF7042 CPF7049)
+             ENDJRNPF   FILE(*ALL) JRN(JGLC32S)
+             MONMSG     MSGID(CPF7032)
+             DLTJRN     JRN(JGLC32S)
+                ADDLFM     FILE(ACCNT) MBR(ACCNT) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+                ADDLFM     FILE(ACBRC) MBR(ACBRC) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+                ADDLFM     FILE(ACNUM) MBR(ACNUM) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     INQMSGRPY(*DFT)
+             DLTJRNRCV  JRNRCV(JRGLC32S)
+             CHGJOB     INQMSGRPY(*RQD)
+             ENDDO
+              IF        COND(&STAT *EQ 'P') THEN(CHGVAR VAR(&STAT) +
+                            VALUE('N'))
+              ELSE      CMD(CHGVAR VAR(&STAT) VALUE('O'))
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+                CHGJOB SWS(XXXXXX11)
+             ENDDO
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

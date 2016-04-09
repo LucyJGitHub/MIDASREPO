@@ -1,0 +1,172 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Update status parameter')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB0160 - UPDATE STATUS PARAMETER .                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*  LAST AMEND NO. CCB009             DATE 01Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*  CCB009 - Journal files throughout close of business.         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     FCBCOMSL0IF  E           K        DISK
+     F                                              KINFSR COMSSR
+      *  COB components by name and sequence number.
+      *  -------------------------------------------
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *           FUNCTION OF INDICATORS                              *
+      *           ----------------------                              *
+      *  10       Record not found on LF/CBCOMSL0.                    *
+      *  20       Loop prevention indicator for LF/CBCOMSL0.          *
+      *  U7       DB error.                                           *
+      *  U8       DB error.                                           *
+      *  LR       Last record indicator.                              *
+      *                                                               *
+      *---------------------------------------------------------------*
+     E                    CPY@    1   1 80
+      /EJECT
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Local data area.
+      *
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Main process -  Updates status with restart indicator on the *
+      *                  relevent COB component record.               *
+      *                                                               *
+      *---------------------------------------------------------------*
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Entry parameter list and key list to access components file.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@CNAM 10
+     C                     PARM           P@CSEQ  50
+     C                     PARM           P@STAT  1
+      *
+     C           CMSKEY    KLIST
+     C                     KFLD           P@CNAM
+     C                     KFLD           PACSEQ
+      *
+     C                     MOVE P@CSEQ    PACSEQ  5
+      *
+      ** Read record.
+      *
+     C           CMSKEY    CHAINCBCOMSL0             10
+      *
+     C           *IN10     IFEQ '0'
+      *
+      ** Update.
+      *
+     C                     MOVE DHCRES    P@STAT
+      *
+      ** Call program CBC0180 to place previous job attributes            CCB009
+      ** in data area CB0180DA in library QTEMP.                          CCB009
+      *                                                                   CCB009
+     C                     CALL 'CBC0180'                                 CCB009
+     C                     PARM           P@CNAM                          CCB009
+     C                     PARM           PACSEQ                          CCB009
+      *                                                                   CCB009
+     C                     ELSE
+      *
+      ** DB error.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CMPL0'   DBFILE
+     C                     MOVELP@CNAM    KEY    15
+     C                     MOVE PACSEQ    KEY
+     C                     MOVELKEY       DBKEY            ***************
+     C                     MOVE 'CB0160'  DBPGM            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *---------------------------------------------------------------*
+      *  Index to subroutines.                                        *
+      *                                                               *
+      *  COMSSR - file exception/error subroutine.                    *
+      *  *PSSR  - program exception/error subroutine.                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /SPACE 3
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  COMSSR subroutine - in the event of a file exception error , *
+      *                      for LF/CBCOMSL0 , this subroutine will   *
+      *                      produce a dump.                          *
+      *                                                               *
+      *  Calls subroutine : *PSSR                                     *
+      *  Called from : main process                                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           COMSSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CMPL0'   DBFILE
+     C                     MOVELP@CNAM    KEY
+     C                     MOVE PACSEQ    KEY
+     C                     MOVE KEY       DBKEY            ***************
+     C                     MOVE 'CB0160'  DBPGM            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  *PSSR subroutine - in the event of a programme exception/    *
+      *                     error , this subroutine will produce a    *
+      *                     dump and return to caller.                *
+      *                                                               *
+      *  Called from : COMSSR                                         *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN20
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,895 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business batch monitor')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CBMONB - Batch Monitoring                                    *
+      *                                                               *
+      *  Function:  This program monitors the jobs                    *
+      *             submitted during COB                              *
+      *                                                               *
+      *  Called By: CBCMONB - Batch Monitoring                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1096237          Date 20Mar13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 242789             Date 09Oct06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BG1726 (Reopen)    Date 29Jul04               *
+      *                 CLE024             Date 17May04               *
+      *                 CGL014             Date 17May04               *
+      *                 CCB012             Date 20May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 201616             Date 02Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 25Oct01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK008             DATE 01JUL97               *
+      *                 CCB003             DATE 14JAN97               *
+      *                 S01420             Date 12APR95               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1096237 - Issues upon halt in Secondary COB                *
+      *  242789 - Remove call to AOSARDR0 since it has no use.        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BG1726 - Removal of CALCMGR processing after implementation  *
+      *           of BUG3656 (reopen).                                *
+      *  CLE024 - Addition of CALCMGR processing for CLE024.          *
+      *  CGL014 - Addition of CALCMGR processing for CGL014.          *
+      *  CCB012 - Use 70 job streams.                                 *
+      *  201616 - If CBMONB fails to lock in CBTRAN, it crashes when  *
+      *           trying to update it.                                *
+      *  CPK014 - Release 4 Packaging                                 *
+      *         - Remove all 'DBA' references                         *
+      *  CPK008 - DBA R2 Packaging                                    *
+      *           - Recompile over DS/CBTRAN                          *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Prevent Task Split Jobs appearing on COB monitor.   *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBMESGPDO   E                    DISK                           UC
+      *
+      /SPACE 2
+      *****************************************************************
+      *                                                               *
+      *     C  L   FUNCTION OF INDICATORS                             *
+      *                                                               *
+      *    01      DISPLAY STREAM 01 INFO                             *
+      *    02      DISPLAY STREAM 02 INFO                             *
+      *    03      DISPLAY STREAM 03 INFO                             *
+      *    04      DISPLAY STREAM 04 INFO                             *
+      *    05      DISPLAY STREAM 05 INFO                             *
+      *    06      DISPLAY STREAM 06 INFO                             *
+      *    07      DISPLAY STREAM 07 INFO                             *
+      *    08      DISPLAY STREAM 08 INFO                             *
+      *    09      DISPLAY STREAM 09 INFO                             *
+      *    20      ERROR ON WRITE TO WORKSTATION                      *
+      *    21      EOF ON DSPF/CBMONDF                                *
+      *    50      DISPLAY NUMBER OF FAILED COMPONENTS                *
+      *    70      RE-TRY LOCK OF DATA AREA                           *
+      *                                                               *
+      *    LR   LAST RECORD INDICATOR                                 *
+      *                                                               *
+      *     U7&U8  DATABASE ERROR                                     *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+      *****************************************************************
+      *
+     E**********          ST         10  1                                                    CCB012
+     E                    ST         70  1                                                    CCB012
+      ** SR. FOR SETTING ON CORRECT NUMBER OF STREAM INDICATORS
+      *
+     E                    CPY@    1   1 80
+      ** COPYRIGHT ARRAY
+      *
+     E***************     TITL    1   1 45                                                    CPK014
+     C***SCREEN*TITLE SET UP ARRAY                                                            CPK014
+      *
+      *****************************************************************
+     E/EJECT
+      *****************************************************************
+      *
+     INICTIM      DS
+     I                                        1   2 NICHR
+     I                                        1   20NICHRP
+     I                                        3   3 COLON1
+     I                                        4   5 NICMI
+     I                                        4   50NICMIP
+     I                                        6   6 COLON2
+     I                                        7   8 NICSE
+     I                                        7   80NICSEP
+      **  CONVERT TIME INTO 'NICE' DISPLAY (HH:MM:SS)
+      *
+     IDQMSG       DS
+     I                                        1  10 CCOT
+     I                                       11  70 CTXT
+     I                                       71  78 CBSM
+     I                                       79  86 STREAM
+     I                                       85  860STRNO
+     I                                       85  86 STRNOA                CCB003
+     I                                        1  70 SCINFO
+      ** SPLIT MESSAGE FROM DTAQ/CBDTQD INTO SEPERATE FIELDS
+      *
+     ICURFLD      DS
+     I                                        1   20CURHR
+     I                                        3   40CURMI
+     I                                        5   60CURSE
+      **  DATA STRUCTURE TO SPLIT CURRENT TIME INTO HOURS, MINUTES
+      **  AND SECONDS
+     ICOBFLD      DS
+     I                                        1   20COBHR
+     I                                        3   40COBMI
+     I                                        5   60COBSE
+      **  DATA STRUCTURE TO HOLD COMPONENTS ALREADY RAN & TOTAL TO RUN
+     ICBRUN       DS                              6
+     I                                    P   1   30TOTAL
+     I                                    P   4   60RUN
+      **  DATA STRUCTURE TO SPLIT COB START TIME INTO HOURS, MINUTES
+      **  AND SECONDS
+     ICBSTAT      DS                             50
+     I***************                         1   4 CBRELS                                    CPK014
+     I                                       14  160CBFAIL
+     I                                       17  17 CBSCHS
+     I                                       18  190CBCURA
+     I                                       20  20 CBHALT
+     I                                       33  370CBSTDT
+     I                                       38  430CBSTTI
+      ** READ REQUIRED FIELDS OFF OF DTAARA/CBSTAT
+      *
+     I*SCREEN******DS                                                                         CPK014
+     I***************                         1  45 TITL                                      CPK014
+     I***************                        15  18 SCRELS                                    CPK014
+     C***SET*UP*OF*RELEASE LEVEL FIELD FOR DISPLAY OF SCREEN TITLE                            CPK014
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      ** LOCAL DATA AREA
+      *
+     ICURDAT      DS                             13
+     I                                        1   7 AGMRDT
+      ** DATA STRUCTURE TO GET DATE FROM RUNDAT DATA AREA
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **      DATA STRUCTURE FOR WORKSTATION ID FOR SCREEN OUTPUT
+      *
+     ICBTRAN    E DS
+      *****************************************************************
+     I/EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SCWSID 10
+     C                     PARM           DQMSG  86
+     C                     PARM           MAXA    2
+      *
+      **   DECLARE DATAAREAS USED IN PROGRAM.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           CBSTAT
+     C           *NAMVAR   DEFN           CBRUN
+      *
+      **  DEFINE TRANSFERT DATA AREA
+      *
+     C           *NAMVAR   DEFN           CBTRAN
+      *
+      **  GET RUN DATE FROM DATA AREA RUNDAT
+      *
+     C************LOCK     IN   CBTRAN                 99                                     201616
+     C           *LOCK     IN   CBTRAN                 71                                     201616
+     C           *NAMVAR   DEFN RUNDAT    CURDAT
+     C                     IN   CURDAT                 99
+     C                     MOVE AGMRDT    TNRUND
+     C                     MOVELUSRID     TNUSER
+     C                     MOVELWSID      TNWSID
+      *
+      * Check if CGL014 is switched on                                                        CGL014
+      *                                                                                       CGL014
+     C**********           MOVE 'N'       CGL014  1                                    CGL014 242789
+      *                                                                                       CGL014
+     C**********           CALL 'AOSARDR0'                                             CGL014 242789
+     C**********           PARM '       ' @RTCD   7                                    CGL014 242789
+     C**********           PARM '*VERIFY' @OPTN   7                                    CGL014 242789
+     C**********           PARM 'CGL014 ' @SARD   6                                    CGL014 242789
+      *                                                                                       CGL014
+     C********** @RTCD     IFEQ *BLANKS                                                CGL014 242789
+     C**********           MOVE 'Y'       CGL014                                       CGL014 242789
+     C**********           END                                                         CGL014 242789
+      *                                                                                       CGL014
+      * Check if CLE024 is switched on                                                        CLE024
+      *                                                                                       CLE024
+     C**********           MOVE 'N'       CLE024  1                                    CLE024 242789
+      *                                                                                       CLE024
+     C**********           CALL 'AOSARDR0'                                             CLE024 242789
+     C**********           PARM '       ' @RTCD   7                                    CLE024 242789
+     C**********           PARM '*VERIFY' @OPTN   7                                    CLE024 242789
+     C**********           PARM 'CLE024 ' @SARD   6                                    CLE024 242789
+      *                                                                                       CLE024
+     C********** @RTCD     IFEQ *BLANKS                                                CLE024 242789
+     C**********           MOVE 'Y'       CLE024                                       CLE024 242789
+     C**********           END                                                         CLE024 242789
+      **********                                                                       CLE024 BG1726
+      **If*CGL014 is switched on then submit the calculation manager                   CGL014 BG1726
+      **********                                                                       CGL014 BG1726
+     C********** CGL014    IFEQ 'Y'                                                    CGL014 BG1726
+     C********** CLE024    OREQ 'Y'                                                    CLE024 BG1726
+     C**********           MOVEL'GLC00500'PGM    10                                    CGL014 BG1726
+     C**********           MOVE '0 '      PGM                                          CGL014 BG1726
+     C**********           CALL PGM                                                    CGL014 BG1726
+     C**********           ENDIF                                                       CGL014 BG1726
+      **********                                                                       CGL014 BG1726
+      **   INITIALISE WORK FIELDS FOR SCREEN DISPLAY
+      *
+     C                     MOVE ':'       COLON1
+     C                     MOVE ':'       COLON2
+      *
+      ** INITIALISE WORK FLAG
+      *
+     C                     MOVEL*BLANK    WWFLAG  1
+      *
+      **   WRITE POSITIONS 1-78 OF DQMSG TO PF/CBMESGPD.
+      *
+     C           CBSM      IFNE 'REFRESH '
+     C                     OPEN CBMESGPD
+     C                     WRITECBMESGP0
+     C                     CLOSECBMESGPD
+     C                     END
+      *
+      **   CHECK THE STATUS TYPE OF THE MESSAGE.
+      *
+     C           CBSM      IFEQ 'STARTED '
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C                     ADD  1         CBCURA
+     C                     END                                            CCB003
+     C                     OUT  CBSTAT
+     C                     END
+      *
+     C           CBSM      IFEQ 'COMPLETE'
+     C                     MOVE *BLANKS   CTXT
+     C                     MOVE *BLANKS   CCOT
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C           CBCURA    ANDNE0                                                          AR1096237
+     C                     SUB  1         CBCURA
+     C                     END                                            CCB003
+     C                     OUT  CBSTAT
+     C           *LOCK     IN   CBRUN
+     C                     ADD  1         RUN
+     C                     OUT  CBRUN
+     C                     END
+      *
+     C           CBSM      IFEQ 'FAILED  '
+     C                     MOVE *BLANKS   CTXT
+     C                     MOVE *BLANKS   CCOT
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C*                                                                   CCB003
+     C**   TASK SPLIT JOBS NOT SHOWN ON THE SCREEN. THEREFORE DO NOT      CCB003
+     C**   UPDATE CURRENT NO. OF ACTIVE STREAM JOBS SCREEN FIELD          CCB003
+     C*                                                                   CCB003
+     C           STRNOA    IFNE 'XX'                                      CCB003
+     C                     SUB  1         CBCURA
+     C                     END                                            CCB003
+     C                     ADD  1         CBFAIL
+     C                     OUT  CBSTAT
+     C                     END
+      *
+     C           CBSM      IFEQ 'END     '
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C                     MOVE 'N'       CBSCHS
+     C                     OUT  CBSTAT
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** IF RESTART RESET FLAG
+      *
+     C           CBSM      IFEQ 'RESTART '
+     C                     MOVEL*BLANK    WWFLAG
+     C                     END
+      *
+      **  IF HALTED OR RESTARTED ACCESS CBSTAT
+      **  TO OBTAIN RELEASE LEVEL FOR LATER USE
+      *
+     C           CBSM      IFEQ 'HALTED  '
+     C           CBSM      OREQ 'RESTART '
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C                     OUT  CBSTAT
+     C                     END
+      *
+     C           CBSM      IFEQ 'ERROR   '
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END
+      *
+      **   IF STATUS NOT RECOGNISED THEN DATABASE ERROR.
+      *
+     C           CBSM      IFNE 'STARTED '
+     C           CBSM      ANDNE'COMPLETE'
+     C           CBSM      ANDNE'FAILED  '
+     C           CBSM      ANDNE'HALTED  '
+     C           CBSM      ANDNE'RESTART '
+     C           CBSM      ANDNE'END     '
+     C           CBSM      ANDNE'REFRESH '
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DTQD '   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELCBSM      DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+      **   USE MAXAS FIELD TO DETERMINE HOW MANY STREAMS TO SHOW
+      **   WHEN DISPLAYING THE MONITOR.
+      *
+     C                     Z-ADD1         CNT     20
+     C                     MOVE MAXA      TNMAXA
+     C                     SUB  1         TNMAXA
+     C           CNT       DOWLETNMAXA
+     C                     MOVE '1'       ST,CNT
+     C                     ADD  1         CNT
+     C                     END
+     C                     ADD  1         TNMAXA
+     C***************                                                                         CPK014
+     C*****SET*UP*TITLE FIELD FOR DISPLAY FILE                                                CPK014
+     C***************                                                                         CPK014
+     C***************      MOVE CBRELS    SCRELS                                              CPK014
+     C***************      MOVEATITL      TNTITL                                              CPK014
+      *
+      **   SET ON THE APPROPRIATE DISPLAY FILE INDICATORS.
+      *
+     C**********           MOVEAST        *IN,01                                              CCB012
+      *
+      **   ACCESS CURRENT DATE/TIME AND CONVERT DATE INTO MIDAS DAY
+      **   NUMBER.
+      ** ACCESS DATE, TIME AND DATE FORMAT USING PROGRAM CBTIME
+      *
+     C                     CALL 'CBTIME'
+     C                     PARM           DAYNOA  5
+     C                     PARM           STIME   6
+     C                     PARM           DFMT    1
+      *
+      ** SET CURRENT DATE AND TIME FIELDS
+      ** WITH VALUES FROM CBTIME
+      *
+     C                     MOVE DAYNOA    CURRDT  50
+     C                     MOVE STIME     CURFLD
+      *
+      **   MOVE REQUIRED FIELDS FROM DTAARA/CBSTAT INTO WORK FIELDS.
+      *
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C                     Z-ADDCBSTDT    STDT    50
+     C                     Z-ADDCBSTTI    STTI    60
+     C                     Z-ADDCBFAIL    TNFAIL
+     C                     Z-ADDCBCURA    TNCURA
+     C                     OUT  CBSTAT
+      *
+      **   IMPROVE DISPLAY OF CURRENT TIME.
+      *
+     C                     MOVE CURHR     NICHR
+     C                     MOVE CURMI     NICMI
+     C                     MOVE CURSE     NICSE
+     C                     MOVE NICTIM    TNCURT
+      *
+      **   IMPROVE DISPLAY OF COB START TIME.
+      *
+     C                     MOVE STTI      COBFLD
+     C                     MOVE COBHR     NICHR
+     C                     MOVE COBMI     NICMI
+     C                     MOVE COBSE     NICSE
+     C                     MOVE NICTIM    TNSTTI
+      *
+      **   EVALUATE ELAPSED TIME BETWEEN START OF COB AND CURRENT TIME.
+      *
+     C                     EXSR TIMCAL
+     C                     MOVE NICTIM    TNELTI
+      *
+      **   IF ALL FAILED COMPONENTS HAVE BEEN RESTARTED THEN DO
+      **   NOT DISPLAY THE CORRESPONDING LINE ON THE DISPLAY FILE.
+      *
+     C           TNFAIL    IFLE 0
+     C                     SETON                     50
+     C                     ELSE
+     C                     SETOF                     50
+     C                     END
+      *
+      **   UPDATE THE INFO ON THE STREAM LINE REFERED TO BY
+      **   THE MESSAGE.
+     C**   DO NOT UPDATE IF THIS IS A TASK SPLIT JOB. THESE JOBS          CCB003
+     C**   ARE NOT SHOWN ON THE MONITOR.                                  CCB003
+      *
+     C           STREAM    IFNE *BLANKS
+     C           STRNOA    ANDNE'XX'                                      CCB003
+      *
+     C           STRNO     IFEQ 0
+     C**********           MOVE SCINFO    TNSTR0                                              CCB012
+     C                     MOVELSCINFO    TNST00                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 1
+     C**********           MOVE SCINFO    TNSTR1                                              CCB012
+     C                     MOVELSCINFO    TNST01                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 2
+     C**********           MOVE SCINFO    TNSTR2                                              CCB012
+     C                     MOVELSCINFO    TNST02                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 3
+     C**********           MOVE SCINFO    TNSTR3                                              CCB012
+     C                     MOVELSCINFO    TNST03                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 4
+     C**********           MOVE SCINFO    TNSTR4                                              CCB012
+     C                     MOVELSCINFO    TNST04                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 5
+     C**********           MOVE SCINFO    TNSTR5                                              CCB012
+     C                     MOVELSCINFO    TNST05                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 6
+     C**********           MOVE SCINFO    TNSTR6                                              CCB012
+     C                     MOVELSCINFO    TNST06                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 7
+     C**********           MOVE SCINFO    TNSTR7                                              CCB012
+     C                     MOVELSCINFO    TNST07                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 8
+     C**********           MOVE SCINFO    TNSTR8                                              CCB012
+     C                     MOVELSCINFO    TNST08                                              CCB012
+     C                     END
+      *
+     C           STRNO     IFEQ 9
+     C**********           MOVE SCINFO    TNSTR9                                              CCB012
+     C                     MOVELSCINFO    TNST09                                              CCB012
+     C                     END
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 10                                                            CCB012
+     C                     MOVELSCINFO    TNST10                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 11                                                            CCB012
+     C                     MOVELSCINFO    TNST11                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 12                                                            CCB012
+     C                     MOVELSCINFO    TNST12                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 13                                                            CCB012
+     C                     MOVELSCINFO    TNST13                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 14                                                            CCB012
+     C                     MOVELSCINFO    TNST14                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 15                                                            CCB012
+     C                     MOVELSCINFO    TNST15                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 16                                                            CCB012
+     C                     MOVELSCINFO    TNST16                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 17                                                            CCB012
+     C                     MOVELSCINFO    TNST17                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 18                                                            CCB012
+     C                     MOVELSCINFO    TNST18                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 19                                                            CCB012
+     C                     MOVELSCINFO    TNST19                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 20                                                            CCB012
+     C                     MOVELSCINFO    TNST20                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 21                                                            CCB012
+     C                     MOVELSCINFO    TNST21                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 22                                                            CCB012
+     C                     MOVELSCINFO    TNST22                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 23                                                            CCB012
+     C                     MOVELSCINFO    TNST23                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 24                                                            CCB012
+     C                     MOVELSCINFO    TNST24                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 25                                                            CCB012
+     C                     MOVELSCINFO    TNST25                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 26                                                            CCB012
+     C                     MOVELSCINFO    TNST26                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 27                                                            CCB012
+     C                     MOVELSCINFO    TNST27                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 28                                                            CCB012
+     C                     MOVELSCINFO    TNST28                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 29                                                            CCB012
+     C                     MOVELSCINFO    TNST29                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 30                                                            CCB012
+     C                     MOVELSCINFO    TNST30                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 31                                                            CCB012
+     C                     MOVELSCINFO    TNST31                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 32                                                            CCB012
+     C                     MOVELSCINFO    TNST32                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 33                                                            CCB012
+     C                     MOVELSCINFO    TNST33                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 34                                                            CCB012
+     C                     MOVELSCINFO    TNST34                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 35                                                            CCB012
+     C                     MOVELSCINFO    TNST35                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 36                                                            CCB012
+     C                     MOVELSCINFO    TNST36                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 37                                                            CCB012
+     C                     MOVELSCINFO    TNST37                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 38                                                            CCB012
+     C                     MOVELSCINFO    TNST38                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 39                                                            CCB012
+     C                     MOVELSCINFO    TNST39                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 40                                                            CCB012
+     C                     MOVELSCINFO    TNST40                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 41                                                            CCB012
+     C                     MOVELSCINFO    TNST41                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 42                                                            CCB012
+     C                     MOVELSCINFO    TNST42                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 43                                                            CCB012
+     C                     MOVELSCINFO    TNST43                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 44                                                            CCB012
+     C                     MOVELSCINFO    TNST44                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 45                                                            CCB012
+     C                     MOVELSCINFO    TNST45                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 46                                                            CCB012
+     C                     MOVELSCINFO    TNST46                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 47                                                            CCB012
+     C                     MOVELSCINFO    TNST47                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 48                                                            CCB012
+     C                     MOVELSCINFO    TNST48                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 49                                                            CCB012
+     C                     MOVELSCINFO    TNST49                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 50                                                            CCB012
+     C                     MOVELSCINFO    TNST50                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 51                                                            CCB012
+     C                     MOVELSCINFO    TNST51                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 52                                                            CCB012
+     C                     MOVELSCINFO    TNST52                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 53                                                            CCB012
+     C                     MOVELSCINFO    TNST53                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 54                                                            CCB012
+     C                     MOVELSCINFO    TNST54                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 55                                                            CCB012
+     C                     MOVELSCINFO    TNST55                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 56                                                            CCB012
+     C                     MOVELSCINFO    TNST56                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 57                                                            CCB012
+     C                     MOVELSCINFO    TNST57                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 58                                                            CCB012
+     C                     MOVELSCINFO    TNST58                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 59                                                            CCB012
+     C                     MOVELSCINFO    TNST59                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 60                                                            CCB012
+     C                     MOVELSCINFO    TNST60                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 61                                                            CCB012
+     C                     MOVELSCINFO    TNST61                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 62                                                            CCB012
+     C                     MOVELSCINFO    TNST62                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 63                                                            CCB012
+     C                     MOVELSCINFO    TNST63                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 64                                                            CCB012
+     C                     MOVELSCINFO    TNST64                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 65                                                            CCB012
+     C                     MOVELSCINFO    TNST65                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 66                                                            CCB012
+     C                     MOVELSCINFO    TNST66                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 67                                                            CCB012
+     C                     MOVELSCINFO    TNST67                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 68                                                            CCB012
+     C                     MOVELSCINFO    TNST68                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           STRNO     IFEQ 69                                                            CCB012
+     C                     MOVELSCINFO    TNST69                                              CCB012
+     C                     END                                                                CCB012
+      *
+      **   IF NO STREAM UPDATE TAKES PLACE - DATABASE ERROR.
+      *
+     C           STRNO     IFLT 0
+     C           STRNO     ORGT TNMAXA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DTQD '   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELSTRNO     DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *
+     C                     END
+      *
+     C                     IN   CBRUN
+      *
+     C                     MOVE RUN       TNRANA
+     C           RUN       SUB  TOTAL     TNRUNA
+      *
+     C           *IN70     DOUEQ'0'
+     C           *LOCK     IN   CBSTAT                 70
+     C                     END
+     C           CBHALT    IFEQ 'Y'
+      *
+     C           COUNTR    IFGT 8
+     C           WWFLAG    OREQ *BLANK
+     C                     MOVEL'Y'       WWFLAG
+     C                     Z-ADD1         COUNTR  10
+     C                     CALL 'CBC0514'
+     C                     ELSE
+     C                     ADD  1         COUNTR
+     C                     END
+     C                     END
+     C                     OUT  CBSTAT
+      *
+     C           *IN71     IFEQ *OFF                                                          201616
+     C                     OUT  CBTRAN
+     C                     ENDIF                                                              201616
+      *
+      **   RETURN FROM PROGRAM WITHOUT SETTING ON LR.
+      *
+     C                     RETRN
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      **
+      ** INDEX OF SUBROUTINES
+      **
+     C/EJECT
+      ********************************************************************
+      *
+      ** SUBROUTINE TO CALCULATE THE ELAPSED TIME OF COB SO FAR.
+      *
+      ** CALLED FROM MAIN PROCESSING
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           TIMCAL    BEGSR
+      *
+      ** SUBTRACT COB START DATE FROM CURRENT DATE
+      ** TO GIVE NUMBER OF DAYS SO FAR TAKEN BY COB.
+      *
+     C           CURRDT    SUB  STDT      DAYS    20
+      *
+      ** CONVERT DAYS TAKEN INTO HOURS TAKEN.
+      *
+     C           DAYS      MULT 24        HOURS   20
+      *
+      ** ADD HOURS TAKEN TO CURRENT NUMBER OF HOURS
+      ** TO GIVE TOTAL END HOURS FIELD.
+      *
+     C           HOURS     ADD  CURHR     TOTHRS  20
+      *
+      ** MOVE COB NUMBER OF SECONDS INTO TOTAL SECONDS FIELD.
+      *
+     C                     Z-ADDCOBSE     TOTSEC  60
+      *
+      ** CONVERT COB START NUMBER OF MINUTES INTO SECONDS
+      ** AND ADD TO TOTAL SECONDS FIELD.
+      *
+     C           COBMI     MULT 60        SECS    60
+      *
+     C                     ADD  SECS      TOTSEC
+      *
+      ** CONVERT COB START NUMBER OF HOURS INTO SECONDS
+      ** AND ADD TO TOTAL SECONDS FIELD.
+      *
+     C           COBHR     MULT 3600      SECS
+      *
+     C                     ADD  SECS      TOTSEC
+      *
+      ** MOVE CURRENT NUMBER OF SECONDS INTO TOTAL END SECONDS
+      ** WORK FIELD.
+      *
+     C                     Z-ADDCURSE     ENDSEC  60
+      *
+      ** CONVERT CURRENT NUMBER OF MINUTES INTO SECONDS
+      ** AND ADD TO TOTAL END SECONDS FIELD.
+      *
+     C           CURMI     MULT 60        ESECS   60
+      *
+     C                     ADD  ESECS     ENDSEC
+      *
+      ** CONVERT TOTAL NUMBER OF HOURS INTO SECONDS
+      ** AND ADD TO TOTAL END SECONDS FIELD.
+      *
+     C           TOTHRS    MULT 3600      ESECS   60
+      *
+     C                     ADD  ESECS     ENDSEC
+      *
+      ** SUBTRACT TOTAL COB START SECONDS FROM TOTAL
+      ** END SECONDS TO OBTAIN RUN TIME IN SECONDS.
+      *
+     C           ENDSEC    SUB  TOTSEC    DIFSEC  60
+      *
+      ** CONVERT RUN TIME INTO HOURS, MINUTES
+      ** AND SECONDS FIELDS FOR REPORT.
+      *
+     C           DIFSEC    DIV  3600      NICHRP
+      *
+     C                     MVR            MINREM  40
+      *
+     C           MINREM    DIV  60        NICMIP
+      *
+     C                     MVR            NICSEP
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *
+      ** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+      ** EXIT FROM PROGRAM
+      *
+      ** CALLED FROM MAIN PROCESSING
+      *
+      ** CALLS NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM.
+      *
+     C                     MOVEL'CBMONB  'DBPGM
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

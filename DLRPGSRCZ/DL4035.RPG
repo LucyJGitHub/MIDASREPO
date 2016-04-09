@@ -1,0 +1,575 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Initialisation of CSW005')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Moudle                                       *
+      *                                                               *
+      *  DL4035 - Initialisation of CSW005                            *
+      *                                                               *
+      *  Function:  This program will be used to initialise           *
+      *             new fields introduced to file DEALSDG             *
+      *             when switchable feature CSW005 is on.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS008             Date 16Jun04               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 217684             Date 12May03               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR005             Date 21Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             Date 02Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW005   *CREATE   Date 01Aug96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  CIR005 - FRA/IRS Business Day Conventions to DEALSDG         *
+      *           (recompile)                                         *
+      *  CSW097 - MT340s and MT360s message generation.               *
+      *  CSW005 - FRA/IRS MG34n and MG36n Message Generation.         *
+      *                                                               *
+      *****************************************************************
+     FDEALSDG UF  E                    DISK
+     FDL4035AUO   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+     F/TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      * Function of Indicators                                        *
+      * ----------------------                                        *
+      *                                                               *
+      *    75 - EOF DEALSDG                                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      /TITLE Subroutine Index
+      *****************************************************************
+      * Index to subroutines                                          *
+      * --------------------                                          *
+      *                                                               *
+      *    SRINIT - Initialisation process                            *
+      *    SRINTF - Initialise new fields                             *
+      *    SRREPT - Generate report                                   *
+      *    SRPRNT - Print report                                      *
+      *    *PSSR  - Program exception error routine                   *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    WRK@       10  6
+     E                    @CMD    1   1 50                                CSW097
+      *
+      ** Work array
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOL1      DS
+      *
+      **   File Information Data Structure for DL1924P1.
+      *
+     I                                    B 367 3680PRTLN1
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** SD Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** SD Customer Details
+      *                                                                   CSW097
+     ISCSARD    E DSSCSARDPD                                              CSW097
+      *                                                                   CSW097
+      ** SC Switchable Features Details                                   CSW097
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure (1 - 200 char)
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure  (201 - up char)
+      *
+      /EJECT
+      *****************************************************************
+      *   Main - Main Process                                         *
+      *   Called by - NONE                                            *
+      *   Calls -     NONE                                            *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Perform Initialisation Process
+      *
+     C                     EXSR SRINIT
+      *
+      ** Do while not EOF DEALSDG
+      *
+     C                     READ DEALSDG                  75
+     C           *IN75     DOWEQ'0'
+      *
+      ** Initialise new fields
+      *
+     C                     EXSR SRINTF
+      *
+      ** Generate report
+      *
+     C                     EXSR SRREPT
+      *
+      ** Read next record
+      *
+     C                     READ DEALSDG                  75
+      *
+     C                     ENDDO
+      *
+      ** Write last record(s)
+      *
+     C           Z         IFGT 1
+     C                     EXSR SRPRNT
+     C                     ENDIF
+      *
+      ** Write End of Report
+      *
+     C           P1OPEN    IFEQ 'Y'
+     C                     WRITEEOREPT
+     C                     ENDIF
+      *
+      ** End program
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      *   SRINIT - Initialisation Process                             *
+      *   Called by - Main Process                                    *
+      *   Calls -  AOBANKR0 - Access object for bank details          *
+      *            *PSSR  - Program exception error routine           *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Accept values from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTNCD  7
+     C                     PARM           PIMODE  1
+      *
+      ** Initialise parameter return code
+      *
+     C                     MOVE *BLANKS   PRTNCD
+      *
+      ** If parameter mode is '3' then return to calling program
+      *
+     C           PIMODE    IFEQ '3'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Set up Local Data Area (LDA)
+      *
+     C                     MOVEA@CMD      WCMD   50                       CSW097
+     C                     CALL 'QCMDEXC'              70                 CSW097
+     C                     PARM           WCMD                            CSW097
+     C                     PARM 50        WLEN   155                      CSW097
+      *                                                                   CSW097
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'DL4035'  DBPGM     P
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Access Bank Details to get Midas Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CSW097
+     C                     MOVE 'N'       CAP123  1                       CSW097
+     C                     CALL 'AOSARDR0'                                CSW097
+     C                     PARM *BLANKS   @RTCD   7                       CSW097
+     C                     PARM '*VERIFY '@OPTN   7                       CSW097
+     C                     PARM 'CAP123'  @SRAD   6                       CSW097
+     C           SCSARD    PARM SCSARD    DSFDY                           CSW097
+      *                                                                   CSW097
+     C           @RTCD     IFNE *BLANK                                    CSW097
+     C           @RTCD     ANDNE'*NRF'                                    CSW097
+     C           *LOCK     IN   LDA                                       CSW097
+     C                     Z-ADD005       DBASE            ***************CSW097
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 005 *CSW097
+     C                     MOVEL'*FIRST  'DBKEY            ***************CSW097
+     C                     OUT  LDA                                       CSW097
+     C                     EXSR *PSSR                                     CSW097
+     C                     ELSE                                           CSW097
+     C           @RTCD     IFEQ *BLANK                                    CSW097
+     C                     MOVE 'Y'       CAP123                          CSW097
+     C                     ENDIF                                          CSW097
+     C                     ENDIF                                          CSW097
+      *
+      ** Initialise work array (WRK@) and array index (z)
+      *
+     C                     MOVEA*BLANKS   WRK@
+     C                     Z-ADD1         Z       20
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * SRINTF - Initialise new fields                                *
+      *                                                               *
+      * Called by: Main Process                                       *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINTF    BEGSR
+      *                                                                   CSW097
+     C           CAP123    IFNE 'Y'                                       CSW097
+     C*                                                                   CSW097
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RX'
+      *
+      **  Our and Their original principal amount
+     C                     Z-ADDUPAMT     UOPAM
+     C                     Z-ADDTPAMT     TOPAM
+      *
+      **  Our and Their original base rate code
+     C           UEINR     IFNE *ZEROS
+     C                     SELEC
+     C           USPIN     WHEQ 'A'
+     C           UEINR     SUB  URTSP     UOBRT
+      *
+     C           USPIN     WHEQ ' '
+     C                     Z-ADDUEINR     UOBRT
+      *
+     C           USPIN     WHEQ 'S'
+     C           UEINR     ADD  URTSP     UOBRT
+      *
+     C           USPIN     WHEQ 'P'
+     C           100       MULT UEINR     NA117  117H
+     C           URTSP     ADD  100       NB117  117
+     C           NA117     DIV  NB117     UOBRT     H
+     C                     ENDSL
+     C                     ELSE
+     C                     Z-ADD*ZEROS    UOBRT
+     C                     ENDIF
+      *
+     C           TEINR     IFNE *ZEROS
+     C                     SELEC
+     C           TSPIN     WHEQ 'A'
+     C           TEINR     SUB  TRTSP     TOBRT
+      *
+     C           TSPIN     WHEQ ' '
+     C                     Z-ADDTEINR     TOBRT
+      *
+     C           TSPIN     WHEQ 'S'
+     C           TEINR     ADD  TRTSP     TOBRT
+      *
+     C           TSPIN     WHEQ 'P'
+     C           100       MULT TEINR     NA117  117H
+     C           TRTSP     ADD  100       NB117  117
+     C           NA117     DIV  NB117     TOBRT     H
+     C                     ENDSL
+     C                     ELSE
+     C                     Z-ADD*ZEROS    TOBRT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD*ZEROS    UOPAM
+     C                     Z-ADD*ZEROS    TOPAM
+     C                     Z-ADD*ZEROS    UOBRT
+     C                     Z-ADD*ZEROS    TOBRT
+      *
+     C                     ENDIF
+     C                     ENDIF                                          CSW097
+      *
+      ** Rate Fixing indicators
+     C           BJDNWD    SUB  1         WDNWD   50
+     C           UINFD     IFLE WDNWD
+     C           UINFD     ANDNE*ZEROS
+     C           UNICD     ANDGTWDNWD
+     C                     MOVEL'X'       URFIN
+     C                     ENDIF
+     C           TINFD     IFLE WDNWD
+     C           TINFD     ANDNE*ZEROS
+     C           TNICD     ANDGTWDNWD
+     C                     MOVEL'X'       TRFIN
+     C                     ENDIF
+      *
+      **  Settlement fields
+      *
+     C           CAP123    IFNE 'Y'                                       CSW097
+     C*                                                                   CSW097
+     C                     Z-ADDRSETM     RSTM
+     C                     Z-ADDPSETM     PSTM
+     C                     MOVELURACC     RONS
+     C                     MOVELUPACC     PONS
+     C**********           Z-ADD0         ROBN                                         CSW097 CSD027
+     C**********           Z-ADD0         ROCN                                         CSW097 CSD027
+     C**********           Z-ADD0         POBN                                         CSW097 CSD027
+     C**********           Z-ADD0         POCN                                         CSW097 CSD027
+     C                     MOVE *BLANKS   ROBN                                                CSD027
+     C                     MOVE *BLANKS   ROCN                                                CSD027
+     C                     MOVE *BLANKS   POBN                                                CSD027
+     C                     MOVE *BLANKS   POCN                                                CSD027
+      *
+     C           2         SUBSTCPPBK:9   LST2    2
+     C           LST2      IFEQ *BLANK
+     C***********          MOVELCPPBK     AWBN                            CSW097
+      *                                                                   CSW097
+      ** Move Counterparty Paying Bank to Recipients Correspondent        CSW097
+     C                     MOVELCPPBK     RCRN                            CSW097
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM CPPBK     @KEY   10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 002 *
+     C                     MOVELCPPBK     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C***********          MOVELCNUM      AWBN                            CSW097
+     C                     MOVELCNUM      RCRN                            CSW097
+     C                     ENDIF
+      *
+     C           2         SUBSTCPRBK:9   LST2    2
+     C           LST2      IFEQ *BLANK
+     C***********          MOVELCPRBK     RIBN                            CSW097
+      *                                                                   CSW097
+      ** Move Counterparty Receiving Bank to A/C with Bank                CSW097
+     C                     MOVELCPRBK     AWBN                            CSW097
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM CPRBK     @KEY   10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 003 *
+     C                     MOVELCPRBK     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C***********          MOVELCNUM      RIBN                            CSW097
+     C                     MOVELCNUM      AWBN                            CSW097
+     C                     ENDIF
+      *
+     C           2         SUBSTFACO:9    LST2    2
+     C           LST2      IFEQ *BLANK
+     C                     MOVELFACO      BENN
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM FACO      @KEY   10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 004 *
+     C                     MOVELFACO      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELCNUM      BENN
+     C                     ENDIF
+      *
+     C                     MOVELSPI       BTB1
+      *
+      * Zeroise numeric ISDA fields                                       CSW097
+      *                                                                   CSW097
+     C                     Z-ADD0         ISDA                            CSW097
+     C                     Z-ADD0         AGDT                            CSW097
+     C                     Z-ADD0         AGVV                            CSW097
+     C                     Z-ADD0         AGVC                            CSW097
+     C                     ENDIF                                          CSW097
+      *
+     C                     UPDATDEALSDGF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * SRREPT - Generate report                                      *
+      *                                                               *
+      * Called by: Main Process                                       *
+      *                                                               *
+      * Calls: SRPRNT - Print report                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+      ** Open and write page heading to printer file
+      *
+     C           Z         IFGT 1
+     C           P1OPEN    ANDNE'Y'
+     C                     OPEN DL4035AU
+     C                     WRITERHEAD
+     C                     MOVE 'Y'       P1OPEN  1
+     C                     ENDIF
+      *
+      ** If Record Id is 'D' then move Deal Number to work array
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVE DLNO      WRK@,Z
+     C                     ADD  1         Z
+     C                     ENDIF
+      *
+      ** If array is full then print its content
+      *
+     C           Z         IFGT 10
+     C                     EXSR SRPRNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * SRPRNT - Print Report                                         *
+      *                                                               *
+      * Called by: SRREPT - Generate report                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** Move array to printer file fields
+      *
+     C                     MOVE WRK@,1    DLNO1
+     C                     MOVE WRK@,2    DLNO2
+     C                     MOVE WRK@,3    DLNO3
+     C                     MOVE WRK@,4    DLNO4
+     C                     MOVE WRK@,5    DLNO5
+     C                     MOVE WRK@,6    DLNO6
+     C                     MOVE WRK@,7    DLNO7
+     C                     MOVE WRK@,8    DLNO8
+     C                     MOVE WRK@,9    DLNO9
+     C                     MOVE WRK@,10   DLNO10
+      *
+      ** Initialise work array and array index
+      *
+     C                     MOVEA*BLANKS   WRK@
+     C                     Z-ADD1         Z
+      *
+      ** If report line is greater than 55 write page heading
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITERHEAD
+     C                     ENDIF
+      *
+      ** Write report detail
+      *
+     C                     WRITERDTL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C                     MOVE '*ERR   ' PRTNCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  @CMD
+CRTDTAARA DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)

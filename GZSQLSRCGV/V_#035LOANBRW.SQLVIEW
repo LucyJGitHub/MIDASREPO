@@ -1,0 +1,208 @@
+/*******************************************************************************
+/*                                                                             *
+/*       Midas - Global Processing Module                                      *
+/*                                                                             *
+/*       V_#LOANBRW - Loan Amendments                                          *
+/*                                                                             *
+/*       (c) Misys International Banking Systems Ltd. 2008                     *
+/*                                                                             *
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        *
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      257127  *CREATE    Date 17Oct08                        */
+/*                                                                             *
+/*-----------------------------------------------------------------------------*
+/*                                                                             *
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         *
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding                                       *
+/*       CLE143 - Original Loan Contract Date & Effective Interest             *
+/*                Rate (Recompile)                                             *
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi (Recompile)                  */
+/*       257127 - Global processing. Patterned from V_#LOANAMD.                *
+/*                                                                             *
+/*******************************************************************************
+  CREATE VIEW
+  **********/**********
+  AS
+  SELECT
+   L.RECI, L.LNRF, L.LASN, L.VDAT, L.LTYP, L.SUTP, L.CLAS, L.PTYP, L.AMTP,
+   L.PRSQ, L.BRTT, L.RTSP, L.CCY, L.BRCA, L.CNUM, L.REPT, L.AUTO, L.STAI,
+   L.OSAC, L.TSEN, L.FACO, L.SPI1, L.SPI2, L.SPI3, L.LAIN,
+   L.BRTE, L.SPIN, L.CALC, L.WTIN, L.LLAG, L.LWOI, L.XASQ,
+   L.FCUS, L.FTYP, L.FSEQ, L.RLON, L.PONI, L.ACTI, L.CNFY,
+   L.TLXY, L.CBLY, L.INTC, L.NACD, L.ACBI, L.ZZ001, L.LSWCC, L.LSWSC,
+   L.OSBR, L.FCLB, L.ZZ034, L.CHTP, L.TNLU, L.RONS, L.RIBN, L.RIBA,
+   L.ROBN, L.ROCN, L.PONS, L.PIBN, L.PIBA, L.POBN, L.POCN, L.RCRN,
+   L.RCRA, L.RVNO, L.AWBN, L.AWBA, L.BENN, L.BENA, L.DTP1, L.DTP2,
+   L.DTP3, L.DTP4, L.DCHG, L.BTB1, L.BTB2, L.BTB3, L.BTB4, L.BTB5,
+   L.BTB6, L.CVMR, L.FSRP, L.FSGN, L.FPRC, L.IRCF, L.FRCF, L.DFTP,
+   L.DFST, L.DFCL, L.MNSG, L.GASS, L.GPRT, L.NRLI, L.ROLN, L.ROSN, L.ROBR,
+   L.RORC, L.PDGN, L.GRIN, L.RLCY, L.PAST, L.ASTS, L.IUSR, L.AUSR,
+   L.XUSR, L.PCRF, L.PCOB, L.MTPD, L.PDDI, L.PTDI, L.SCCY, L.ICCY,
+   L.ECIN, L.REPI, L.REXR, L.REXI, L.PSCY, L.PEXR, L.PEXI, L.FRNT,
+   L.SLTP, L.SLST, L.SLCL, L.BASR,
+   C.CNSP, C.CNSG, C.RDMT, C.RDFD, C.NNSP, C.NNSG, C.NDMT, C.NDFD,                            CRE073
+   L.AFRT, L.REPA, L.TMST, C.PCRF AS OPCRF, C.ACOF, F.LAID,
+   CASE WHEN ((C.PTFC = '' AND C.PTFT = 0 AND C.PTFN = 0) OR
+   (C.PTFC = '000000' AND C.PTFT = 0 AND C.PTFN = 0)) THEN F.SYIN
+   ELSE Z.SYIN END AS SYIN
+   ,CASE WHEN ((C.PTFC = '' AND C.PTFT = 0 AND C.PTFN = 0) OR
+   (C.PTFC = '000000' AND C.PTFT = 0 AND C.PTFN = 0)) THEN F.PRTR
+   ELSE Z.PRTR END AS PRTR,
+   L.FCUS  AS PADFCUS,
+   CASE WHEN C.PTYP IN (64,65,68,71) AND C.OLNO IS NOT NULL THEN
+   C.OLNO ELSE L.CNUM END AS PADCNUM,
+   DIGITS(L.FTYP) AS PADFTYP, DIGITS(LASN) AS PADLASN,
+***DIGITS(L.FSEQ)*AS*PADFSEQ,*DIGITS(L.LNRF)*AS*PADLNRF,**************                        CLE148
+   DIGITS(L.FSEQ) AS PADFSEQ,        L.LNRF  AS PADLNRF,                                      CLE148
+   DIGITS(SETP) AS PADSETP, DIGITS(L.RSTM) AS PADRSTM,
+   DIGITS(L.PSTM) AS PADPSTM,
+   CASE WHEN L.VDAT=0 THEN NULL ELSE DATE(L.VDAT+719892) END AS FVDAT,
+   CASE WHEN LSMD=0 THEN NULL ELSE DATE(LSMD+719892) END AS FLSMD,
+   CASE WHEN L.ORED=0 THEN NULL ELSE DATE(L.ORED+719892) END AS FORED,
+   CASE WHEN L.LCD=0 THEN NULL ELSE DATE(L.LCD+719892) END AS FLCD,
+   CASE WHEN XAVD=0 THEN NULL ELSE DATE(XAVD+719892) END AS FXAVD,
+   PRAM AS SPRAM,
+   INTA AS SINTA,
+   WTXA AS SWTXA,
+   TAMT AS STAMT,
+   REBT AS SREBT,
+   COFA AS SCOFA,
+   PNAM AS SPNAM,
+   CASE WHEN LAND(X'80',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB7,
+   CASE WHEN LAND(X'40',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB6,
+   CASE WHEN LAND(X'20',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB5,
+   CASE WHEN LAND(X'10',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB4,
+   CASE WHEN LAND(X'08',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB3,
+   CASE WHEN LAND(X'04',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB2,
+   CASE WHEN LAND(X'02',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB1,
+   CASE WHEN LAND(X'01',L.PONI) <> X'00' THEN 'Y' ELSE 'N' END AS PONIB0,
+   CASE WHEN LAND(X'80',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB7,
+   CASE WHEN LAND(X'40',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB6,
+   CASE WHEN LAND(X'20',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB5,
+   CASE WHEN LAND(X'10',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB4,
+   CASE WHEN LAND(X'08',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB3,
+   CASE WHEN LAND(X'04',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB2,
+   CASE WHEN LAND(X'02',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB1,
+   CASE WHEN LAND(X'01',L.LAIN) <> X'00' THEN 'Y' ELSE 'N' END AS LAINB0,
+   CASE WHEN LAND(X'80',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB7,
+   CASE WHEN LAND(X'40',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB6,
+   CASE WHEN LAND(X'20',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB5,
+   CASE WHEN LAND(X'10',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB4,
+   CASE WHEN LAND(X'08',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB3,
+   CASE WHEN LAND(X'04',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB2,
+   CASE WHEN LAND(X'02',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB1,
+   CASE WHEN LAND(X'01',L.TLXY) <> X'00' THEN 'Y' ELSE 'N' END AS TLXYB0,
+   A8ZONE AS CUSTZONE,
+   CASE WHEN C.PTYP IN (64,65,68,71) AND C.OLNO IS NOT NULL THEN
+   (select CGGLOB from GPGLCUSL where CGCNUM = C.OLNO and
+   CGZONE = GZSDBRCHPD.A8ZONE) ELSE GPGLCUSL.CGGLOB END AS CGGLOB,
+   GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,
+   GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,
+   GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE
+   ,GZCLOAMSQD.AMCNSP,GZCLOAMSQD.AMCNSG,GZCLOAMSQD.AMRDMT,                                    CRE073
+   GZCLOAMSQD.AMRDFD                                                                          CRE073
+  FROM GZLOAMSDK AS L
+  LEFT JOIN GZCLOANCL C ON (C.LNRF = L.LNRF AND C.BRCA = L.BRCA)
+  LEFT JOIN GZFCLTYFM F ON (F.BRCA = L.BRCA AND F.CNUM = L.FCUS AND
+  F.FACT = L.FTYP AND F.FCNO = L.FSEQ)
+  LEFT JOIN GZSDBRCHPD ON L.BRCA = A8BRCD
+  LEFT JOIN GPGLCUSL GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = L.CNUM
+  LEFT JOIN GZCLOAMSQD ON AMLNRF = L.LNRF AND AMVDAT = L.VDAT AND                             CRE073
+  AMLASN = L.LASN                                                                             CRE073
+  LEFT OUTER JOIN GZFCLTYFM Z
+  ON  Z.BRCA = C.BRCA AND Z.CNUM = C.PTFC
+  AND Z.FACT = C.PTFT AND Z.FCNO = C.PTFN;
+ 
+   LABEL ON COLUMN **********/**********
+    (PONIB7 IS '8th Past            Due Notice          Sent',
+     PONIB6 IS '7th Past            Due Notice          Sent',
+     PONIB5 IS '6th Past            Due Notice          Sent',
+     PONIB4 IS '5th Past            Due Notice          Sent',
+     PONIB3 IS '4th Past            Due Notice          Sent',
+     PONIB2 IS '3rd Past            Due Notice          Sent',
+     PONIB1 IS '2nd Past            Due Notice          Sent',
+     PONIB0 IS '1st Past            Due Notice          Sent',
+     LAINB7 IS 'Confirmation        Control             Indicator',
+     LAINB6 IS 'LAIN                Spare',
+     LAINB5 IS 'Cust Bill           to be               Re-sent',
+     LAINB4 IS 'Cust Bill           to be               Sent',
+     LAINB3 IS 'LAIN                Spare',
+     LAINB2 IS 'Confirmation        Sent',
+     LAINB1 IS 'Telex               Sent',
+     LAINB0 IS 'Amendment           Actioned',
+     TLXYB7 IS 'TLXY                Spare',
+     TLXYB6 IS 'TLXY                Spare',
+     TLXYB5 IS 'TLXY                Spare',
+     TLXYB4 IS 'TLXY                Spare',
+     TLXYB3 IS 'Telex Prod          on Repay            Date',
+     TLXYB2 IS 'Telex Prod          on Int              Date',
+     TLXYB1 IS 'Telex Prod          on Mat              Date',
+     TLXYB0 IS 'Telex Prod          on Start            Date');
+ 
+   LABEL ON COLUMN **********/**********
+    (PONIB7 TEXT IS '8th Past Due Notice Sent',
+     PONIB6 TEXT IS '7th Past Due Notice Sent',
+     PONIB5 TEXT IS '6th Past Due Notice Sent',
+     PONIB4 TEXT IS '5th Past Due Notice Sent',
+     PONIB3 TEXT IS '4th Past Due Notice Sent',
+     PONIB2 TEXT IS '3rd Past Due Notice Sent',
+     PONIB1 TEXT IS '2nd Past Due Notice Sent',
+     PONIB0 TEXT IS '1st Past Due Notice Sent',
+     LAINB7 TEXT IS 'Confirmation Control Indicator',
+     LAINB6 TEXT IS 'LAIN Spare',
+     LAINB5 TEXT IS 'Cust Bill to be Re-sent',
+     LAINB4 TEXT IS 'Cust Bill to be Sent',
+     LAINB3 TEXT IS 'LAIN Spare',
+     LAINB2 TEXT IS 'Confirmation Sent',
+     LAINB1 TEXT IS 'Telex Sent',
+     LAINB0 TEXT IS 'Amendment Actioned',
+     TLXYB7 TEXT IS 'TLXY Spare',
+     TLXYB6 TEXT IS 'TLXY Spare',
+     TLXYB5 TEXT IS 'TLXY Spare',
+     TLXYB4 TEXT IS 'TLXY Spare',
+     TLXYB3 TEXT IS 'Telex Prod on Repay Date',
+     TLXYB2 TEXT IS 'Telex Prod on Interest Date',
+     TLXYB1 TEXT IS 'Telex Prod on Maturity Date',
+     TLXYB0 TEXT IS 'Telex Prod on Start Date');
+ 
+ * DESCRIBESTART
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZLOAMSDK
+ * DESCRIBEFIELD PADFTYP    AS FTYP       USING GZLOAMSDK
+ * DESCRIBEFIELD PADFSEQ    AS FSEQ       USING GZLOAMSDK
+ * DESCRIBEFIELD PADFCUS    AS FCUS       USING GZLOAMSDK
+ * DESCRIBEFIELD PADLASN    AS LASN       USING GZLOAMSDK
+ * DESCRIBEFIELD PADLNRF    AS LNRF       USING GZLOAMSDK
+ * DESCRIBEFIELD PADSETP    AS SETP       USING GZLOAMSDK
+ * DESCRIBEFIELD PADRSTM    AS RSTM       USING GZLOAMSDK
+ * DESCRIBEFIELD PADPSTM    AS PSTM       USING GZLOAMSDK
+ * DESCRIBEFIELD FVDAT      AS VDAT       USING GZLOAMSDK
+ * DESCRIBEFIELD FLSMD      AS LSMD       USING GZLOAMSDK
+ * DESCRIBEFIELD FORED      AS ORED       USING GZLOAMSDK
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZLOAMSDK
+ * DESCRIBEFIELD FXAVD      AS XAVD       USING GZLOAMSDK
+ * DESCRIBEFIELD SPRAM      AS PRAM       USING GZLOAMSDK
+ * DESCRIBEFIELD SINTA      AS INTA       USING GZLOAMSDK
+ * DESCRIBEFIELD SWTXA      AS WTXA       USING GZLOAMSDK
+ * DESCRIBEFIELD STAMT      AS TAMT       USING GZLOAMSDK
+ * DESCRIBEFIELD SREBT      AS REBT       USING GZLOAMSDK
+ * DESCRIBEFIELD SCOFA      AS COFA       USING GZLOAMSDK
+ * DESCRIBEFIELD SPNAM      AS PNAM       USING GZLOAMSDK
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD
+ * DESCRIBEFIELD OPCRF      AS PCRF       USING GZCLOANCL
+ * DESCRIBEEND
+ 
+/*******************************************************************************
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Loan amendments - GZLOAMSDK              ';                     :
+                                                                                :

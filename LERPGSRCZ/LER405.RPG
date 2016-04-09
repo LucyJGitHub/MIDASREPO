@@ -1,0 +1,110 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Look up LE Profitability Authorities')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER405  - Look up User Defined Auhorities for Customer       *
+     F*            Profitability Reports and Enquiries.               *
+     F*                                                               *
+     F*  Function: Program verifies that user is an authorised        *
+     F*            Account Officer. Values returned are the Account   *
+     F*            Officer code assigned to the user and the level of *
+     F*            access to Profitability information.               *
+     F*                                                               *
+     F*  Called By: LERC47R - Prompt program as specified on RCF      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. MOF60              DATE 03FEB92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MOF60  - Customer Profitability and Fees Processing.         *
+     F*****************************************************************
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F********************************************************************
+     FLEUSERL1IF  E           K        DISK
+      * RTV: FS LE User Defined Authorities index
+      *
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   90  - Record not found on access to LEUSERL1.               *
+     F*   91  - CHAIN operation on file LEUSERL1 failed.              *
+     F*                                                               *
+     F*   LR  - Last record indicator.                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR   - Error processing routine - DUMPs and ends          *
+     F*             (This is called automatically if an unexpected    *
+     F*             error occurs).                                    *
+     F*                                                               *
+     F*****************************************************************
+     I/EJECT
+     I*
+     IPSDS       SDS
+     I*
+     I** Program status
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     C/EJECT
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C                     PARM           USERID 10        User
+     C                     PARM           ACOF    2        Account Officer
+     C                     PARM           ACLV    1        Access Level
+      *****************************************************************
+     C           USERID    CHAIN@USERDF              9091
+     C           *IN90     IFEQ '0'
+     C           *IN91     ANDEQ'0'
+     C                     MOVELFSACOF    ACOF
+     C                     MOVELFSACLV    ACLV
+     C                     MOVEL*BLANK    P0RTN
+     C                     ELSE
+     C                     MOVEL'*UNAUT'  P0RTN
+     C                     END
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- Subroutine to handle abnormal error conditions     *
+      *                                                               *
+      *  CALLED FROM: After abnormal operation coccurs                *
+      *  CALLS: DBERRCTL                                              *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C** Ensure dump is executed only once
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C** Call database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     ENDSR
+     C*

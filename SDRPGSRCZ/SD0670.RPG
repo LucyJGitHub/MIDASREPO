@@ -1,0 +1,505 @@
+0001 H        1                                                           S01194
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Upd of exch rate to limit ccy fld')           *
+0001 H************                                                        S01194
+0002 F*****************************************************************
+     F*                                                               *
+     F*  Midas  Standing Data Module
+0004 F*                                                               *
+0005 F*  SD0670 - UPDATE OF EXCHANGE RATES TO LIMIT CURRENCY.         *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                               *
+      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Prev Amend No. MD024930           Date 11May14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 103382             DATE 04JUN96               *
+     F*                 048284             DATE 19APR93               *
+     F*                 E26139             DATE 20MAR91               *
+     F*                 LN0662             DATE 29JAN91               *
+     F*                 S01251             DATE 03FEB90               *
+     F*                 S01168             DATE 13APR89               *
+     F*                 S01125             DATE 20OCT86               *
+     F*                 S01117             DATE 17APR90               *
+     F*                 S01194             DATE 22JAN90               *
+     F*                 E10746             DATE 23APR87               *
+     F*                 S01092             DATE 23SEP86               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  MD024930 - DLC0607 00001 failed due to divide by zero        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  204923 - Rate Fix Days Adjustment (OIS) - (Recompile)        *
+      *  CIR007 - Overnight Index Swaps                               *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CSD006 - Market Data Feed (recompile SDCURRPD)               *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCURRPD)   *
+     F*  103382 - Use base currency details of dealing limit ccy      *
+     F*           if dealing not installed.                           *
+     F*  048284 - Add Header to Audit report                          *
+     F*         - DUMP Program if error occurs                        *
+     F*         - Set up DB Error 1 correctly (was output as 010)     *
+     F*  E26139 - E10746 Prevents the reporting of database           *
+     F*           Error                                               *
+     F*  LN0662 - SDCURRL0 record format name has changed.            *
+     F*  S01251 - This has been superceded by S01194                  *
+     F*           (SYNON Field/Program name changes)                  *
+     F*  S01168 - This has been superceded by S01194                  *
+     F*           (to update currency file as well as old TABLE File) *
+     F*  S01125 - This has been superceded by S01117                  *
+     F*           (F-SPEC Referenced printer file SD0670. should      *
+     F*           be SD0670P1 )                                       *
+     F*  S01194 - New STANDING DATA                                   *
+     F*  E10746 - To Bypass processing using BCYL if DL is not        *
+     F*           on the system.                                      *
+     F*  S01092 - Output new file to load P.E. array for              *
+     F*           various EOD programs.                               *
+0010 F*                                                               *
+0011 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/****F*:*OVRDBF*TABLE*TABSDU*                                       : *
+     F*                                                               *
+     F*****************************************************************
+0013 FPHASD   IP  F      32            DISK                               SD0670
+0014 F*ABLE***UF**F******96*12AI*****2*DISK                               S01092
+     F*TABLE***IF  F      96 12AI     2 DISK                        S01092S01194
+     FTABCY   UF  E           K        DISK                               S01092
+     FTABTG30 O   E           K        DISK                      A        S01092
+     FSDCURRL0UF  E           K        DISK                               S01194
+0016 F***670  O   F     132            PRINTER                            S01117
+0016 FSD0670AUO   F     132            PRINTER                            S01117
+     F/COPY WNCPYSRC,SD0670F001
+0015 F*                                                                   SD0670
+0016 F* ID F  C  H  L    FUNCTION OF INDICATORS                           SD0670
+0017 F* 01            PHASE FILE.                                         SD0670
+0018 F**02*****       TABLE - INSTALLATION CONTROL DATA RECORD 2.         S01194
+0019 F* 03                  - CURRENCIES DETAIL RECORD TYPE '1'.          SD0670
+0020 F* 04******************- NON-CURRENCY HEADER RECORD.**************   S01092
+0021 F* 05******************- CATCHALL.********************************   S01092
+     F* 04            TABCY - CURRENCIES RECORD TYPE '1'                  S01092
+0022 F*       20      TABLE FILE - END OF FILE INDICATOR ON READ.         SD0670
+0023 F*       21      CURRENCY IS DEALING CURRENCY.                       SD0670
+0024 F*       22      CCY TO LIMIT RATE IS A DIVIDE                       SD0670
+0025 F*       23      BASE CURRENCY WAS FOUND, CONDITIONS DIVIDE OPERATIONSD0670
+0026 F*       24      LIMIT BASE RATE IS A DIVIDE                         SD0670
+0027 F*       30      OUTPUT TO TABLE FILE.                               SD0670
+     F*
+     F*       40      CHAIN FAIL
+     F*
+     F*       U1      DEALING MODULE INSTALLED                            E10746
+     F*       U7+U8   DATA BASE ERROR
+     F*
+0028 F*            LR SET ON IN CALCULATIONS TO END PROGRAM.              SD0670
+0029 F*                                                                   SD0670
+     E                    CPY@    1   1 80
+0030 I*    PHASE FILE.                                                    SD0670
+0031 I*                                                                   SD0670
+0032 IPHASD   NS  01                                                      SD0670
+0033 I*                                                                   SD0670
+0034 I*                                                                   SD0670
+0035 I*****TABLE*FILE***INSTALLATION*CONTROL*DATA*RECORD*2.               S01194
+0036 I**********                                                          S01194
+0037 I*TABLE***NS  02   1 CD   2 C0   3 C1                                S01194
+0038 I*******AND      12 C1  13 C1                                        S01194
+0039 I**********                              1   1 RECI                  S01194
+0040 I**********                              2   30RECT                  S01194
+0041 I**********                             12  130RCDE                  S01194
+0042 I**********                             14  16 BCCY                  S01194
+0043 I**********                             17  19 BCYL                  S01194
+0044 I**********                             20  22 HOCY                  S01194
+0045 I**********                             23  280HEAD                  S01194
+0046 I**********                          P  29  310APDA                  S01194
+0047 I**********                             35  35 APFQ                  S01194
+0048 I**********                          P  36  380LOGS                  S01194
+0049 I**********                             39  40 CUZR                  S01194
+0050 I**********                          P  41  430DNWD                  S01194
+0051 I**********                             44  460BVLP                  S01194
+0052 I**********                             47  49 LOCY                  S01194
+0053 I**********                             50  510FDAY                  S01194
+0054 I**********                             86  86 ISAV                  S01194
+0055 I**********                          P  87  890LLOG                  S01194
+0056 I**********                          P  90  920LCD                   S01194
+0057 I**********                             93  93 CHTP                  S01194
+0058 I**********                          P  94  960TNLU                  S01194
+0059 I*                                                                   SD0670
+0060 I*                                                                   SD0670
+0061 I*****TABLE*FILE***CURRENCIES*RECORD*1.                              S01194
+0062 I**********                                                          S01194
+0063 I********NS  03   1 CD   2 C2   3 C0                                 S01194
+0064 I*******AND      13 C1                                               S01194
+0065 I**********                              1   1 RECI                  S01194
+0066 I**********                              2   30RECT                  S01194
+0067 I**********                             10  12 CCY                   S01194
+0068 I**********                             13  130SREC                  S01194
+0069 I**********                             14  27 CCNM                  S01194
+0070 I**********                          P  28  348SPOT                  S01194
+0071 I**********                             35  37 CCYS                  S01194
+0072 I**********                             38  380CDP                   S01194
+0073 I**********                             39  390TNOT                  S01194
+0074 I**********                             40  40 DCCY                  S01194
+0075 I**********                             41  44 SRC1                  S01194
+0076 I**********                             45  48 SRC2                  S01194
+0077 I**********                             49  520TACC                  S01194
+0078 I**********                             53  560TEQV                  S01194
+0079 I**********                             57  600SWQV                  S01194
+0080 I**********                             61  640TAC4                  S01194
+0081 I**********                             65  680TAC5                  S01194
+0082 I**********                             69  69 HIND                  S01194
+0083 I**********                          P  70  768PART                  S01194
+0084 I**********                             77  780SSNO                  S01194
+0085 I**********                          P  79  858ERLC                  S01194
+0086 I**********                             86  860MDIN            22    S01194
+0087 I**********                          P  90  920LCD                   S01194
+0088 I**********                             93  93 CHTP                  S01194
+0089 I**********                          P  94  960TNLU                  S01194
+     I/COPY WNCPYSRC,SD0670I001
+     ITABTG10F    04                                                      S01194
+     I/COPY WNCPYSRC,SD0670I002
+     I              ERLC                            SERLC                 S01194
+0086 I                                              MDIN            22    S01194
+     I*
+0090 I*****************************************************************   S01092
+0091 I***                                 *****************************   S01092
+0092 I***  NEXT HEADER RECORD.            *****************************   S01092
+0093 I***     NS  04   1 CH   2NC2   3NC0 *****************************   S01092
+0094 I***                                 *****************************   S01092
+0095 I***                                 *****************************   S01092
+0096 I***  CATCHALL.                      *****************************   S01092
+0097 I********NS**05***************************************************   S01092
+0098 I*                                                                   SD0670
+0099 I*                                                                   SD0670
+     I*  DATA STRUCTURE FOR DATA BASE ERRORS
+     ILDA        UDS                            256
+     I**********                            134 138 DBFILE                S01117
+     I**********                            139 167 DBKEY                 S01117
+     I**********                            168 175 DBPGM                 S01117
+     I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ISDDEAL    E DSSDDEALPD                                              S01194
+      * EXTERNAL DATA STRUCTURE FOR DEALING                               S01194
+      **                                                                  S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+      * EXTERNAL DATA STRUCTURE FOR CURRENCY DETAILS                      S01194
+      **                                                                  S01194
+     ISDBANK    E DSSDBANKPD                                              048284
+     I*                                                                   048284
+     I** External Data Structure for Bank Details                         048284
+     I*                                                                   048284
+     ISDMMOD    E DSSDMMODPD                                              103382
+     I*                                                                   103382
+     I** External Data Structure for module details                       103382
+     I*                                                                   103382
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     C**                                                                  S01194
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   S01092
+     C*  DEFINE KEY LIST FOR CHAIN TO TABCY                               S01092
+     C           TABCKY    KLIST                                          S01092
+     C                     KFLD           SSNO    20                      S01092
+     C**                   KFLD           TABKEY 12                       S01092
+     C                     KFLD           CCYKEY  3                       S01092
+     C*                                                                   S01092
+     C*  INITIALISE LDA
+     C                     MOVEL'SD0670'  DBPGM
+0100 C*    SET ON LR WHEN PHASE FILE READ.                                SD0670
+0101 C   01                SETON                     LR                   SD0670
+0102 C*                                                                   SD0670
+     C**  Access SDBANKPD by Access Program                               048284
+     C*                                                                   048284
+     CLR                   CALL 'AOBANKR0'                                048284
+     CLR                   PARM '*MSG    'RTCD    7                       048284
+     CLR                   PARM '*FIRST  'OPTN    7                       048284
+     CLR         SDBANK    PARM SDBANK    DSFDY                           048284
+     C*                                                                   048284
+     CLR         RTCD      IFNE *BLANKS                                   048284
+     CLR                   MOVEL'SDBANKPD'DBFILE           ***************048284
+     CLR                   Z-ADD3         DBASE            *  DBERR 03   *048284
+     CLR                   MOVEL'*FIRST  'DBKEY            ***************048284
+     CLR                   SETON                     U7U8                 048284
+     CLR                   DUMP                                           048284
+     CLR                   GOTO END2                                      048284
+     CLR                   END                                            048284
+     C*                                                                   048284
+     C**  Access SDMMODPD by Access Program                               103382
+     C*                                                                   103382
+     CLR                   CALL 'AOMMODR0'                                103382
+     CLR                   PARM '*MSG    'RTCD    7                       103382
+     CLR                   PARM '*FIRST  'OPTN    7                       103382
+     CLR         SDMMOD    PARM SDMMOD    DSFDY                           103382
+     C*                                                                   103382
+     CLR         RTCD      IFNE *BLANKS                                   103382
+     CLR                   MOVEL'SDMMODPD'DBFILE           ***************103382
+     CLR                   Z-ADD4         DBASE            *  DBERR 04   *103382
+     CLR                   MOVEL'*FIRST  'DBKEY            ***************103382
+     CLR                   SETON                     U7U8                 103382
+     CLR                   DUMP                                           103382
+     CLR                   GOTO END2                                      103382
+     CLR                   END                                            103382
+     C*                                                                   103382
+0103 C*    ACCESS SDDEALPD BY ACCESS PROGRAM                              S01194
+0104 C*LR*******            MOVEL'01      'TABKEY 12                      S01194
+0105 C*LR*******            MOVE '11'      TABKEY                         S01194
+0106 C*LR*******  TABKEY    SETLLTABLE                                    S01194
+0107 C*LR*******            READ TABLE                    20              S01194
+     CLR         BGDLFX    IFEQ 'Y'                                       103382
+     CLR         BGDLMM    OREQ 'Y'                                       103382
+     C**LR******           CALL 'AODEALR0'                                             S01194 CGL029
+     CLR                   CALL 'AODEALR1'                                                    CGL029
+     CLR                   PARM '*MSG    'RTCD    7                       S01194
+     CLR                   PARM '*FIRST  'OPTN    7                       S01194
+     C**LR****** SDDEAL    PARM SDDEAL    DSFDY                                        S01194 CGL029
+     CLR         SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*                                                                   S01194
+     CLR         RTCD      IFNE *BLANKS                                   S01194
+     CLR                   MOVEL'SDDEALPD'DBFILE           ***************S01194
+     CLR                   Z-ADD2         DBASE            ** DBERR 02  **S01194
+     CLR                   SETON                     U7U8  ***************S01194
+     CLR                   GOTO END2                                      S01194
+     CLR                   END                                            S01194
+     C*                                                                   103382
+     C*   If dealing not installed, use base currency instead             103382
+     C*                                                                   103382
+     CLR                   ELSE                                           103382
+     CLR                   MOVELBJCYCD    BNCYCD                          103382
+     CLR                   ENDIF                                          103382
+0108 C*                                                                   SD0670
+0109 C*    ACCESS BASE CURRENCY FOR LIMITS.                               SD0670
+0110 C*LR*******            MOVEL'20'      TABKEY                         S01194
+0111 C*LR*******            MOVELBCYL      CCYK1   4                      S01194
+0112 C*LR*******            MOVE '1'       CCYK1                          S01194
+0113 C*LR*******            MOVE CCYK1     TABKEY                         S01194
+     C*LR*******  TABKEY    CHAINTABLE                40                  S01194
+     CLR                   CALL 'AOCURRR0'                                S01194
+     CLR                   PARM '*MSG    'RTCD                            S01194
+     CLR                   PARM '*KEY    'OPTN                            S01194
+     CLR                   PARM BNCYCD    CURKEY  3                       S01194
+     CLR         SDCURR    PARM SDCURR    DSSDY                           S01194
+     CLR         RTCD      IFNE *BLANKS                                   S01194
+     C*LR*******  *IN40     IFEQ '1'                        ** B001       S01194
+     C*LR**********INU1     ANDEQ'1'                                E10746E26139
+     CLR                   SETON                     U7U8
+     C*LR*******            MOVEL'TABLE'   DBFILE          ***************S01194
+     C*LR*******            MOVELTABKEY    DBKEY           * DB ERROR 01 *S01194
+     CLR                   MOVEL'SDCURRPD'DBFILE           ***************S01194
+     CLR                   MOVELCURKEY    DBKEY            * DB ERROR 01 *S01194
+     C*LR********          MOVEL'01'      DBASE            *********S01194048284
+     CLR                   Z-ADD1         DBASE                           048284
+     CLR                   MOVELBNCYCD    DBKEY                           048284
+     C*LR********          GOTO END                                       S01194
+     CLR                   DUMP                                           048284
+     CLR                   GOTO END2                                      S01194
+     CLR                   END                             ** E001        S01194
+     C**                                                                  S01194
+     CLR         A6MDIN    IFEQ 'D'                                       S01194
+     CLR                   SETON                         22               S01194
+     CLR                   END                                            S01194
+     C/COPY WNCPYSRC,SD0670C004
+     C**                                                                  S01194
+0116 C*                                                                   SD0670
+0117 C*    STORE SPOT RATE.                                               SD0670
+0118 C*LR*03****            SETON                     23                  S01194
+0118 CLR                   SETON                     23                   S01194
+0119 CLR                   Z-ADD0         SSPOT  138                      SD0670
+0120 C*LR*23****            Z-ADDSPOT      SSPOT                          S01194
+     C/COPY WNCPYSRC,SD0670C005
+0120 CLR 23                Z-ADDA6SPRT    SSPOT                           S01194
+     C/COPY WNCPYSRC,SD0670C006
+0121 CLR 22                SETON                     24                   SD0670
+     C/COPY WNCPYSRC,SD0670C001
+0122 C*                                                                   SD0670
+0123 C*    READ CURRENCIES TABLE.                                         SD0670
+0124 C*R                   MOVE '    '    TABKEY                          SD0670
+     C*R                   MOVEL'      '  TABKEY                          S01092
+0124 CLR                   MOVE '   '     CCYKEY                          SD0670
+     CLR                   Z-ADD0         SSNO                            S01092
+0125 C*R*********TABKEY****SETLLTABLE**********************************   S01092
+     CLR         TABCKY    SETLLTABCY                                     S01092
+     C/COPY WNCPYSRC,SD0670C007
+0126 CLR         READ      TAG                             ** READ TAG ***SD0670
+0127 C*R*******************SETOF*********************030405************   S01092
+0128 C*R*******************READ TABLE********************20************   S01092
+     CLR                   SETOF                     04                   S01092
+     CLR                   READ TABCY                    20               S01092
+     C/COPY WNCPYSRC,SD0670C008
+0129 C*                                                                   SD0670
+0130 C*****END IF END OF FILE OR NEXT HEADER RECORD.*******************   S01092
+     C*    END IF END OF FILE                                             S01092
+0131 C*R 20************************************************************   S01092
+0132 C*R 04****************GOTO END************************************   S01092
+     CLR         *IN20     CABEQ'1'       END                             S01092
+0133 C*                                                                   SD0670
+0134 C*    READ AGAIN IF CURRENCIES HEADER OR DELETED RECORD.             SD0670
+0135 C*R 05****************GOTO READ***********************************   S01092
+     CLR         RECI      CABNE'D'       READ                            S01092
+0136 C*                                                                   SD0670
+0137 C*    CALCULATE NEW EXCHANGE RATE TO LIMIT CURRENCY.                 SD0670
+     CLR                   CALL 'AOCURRR0'                                                  MD024930
+     CLR                   PARM '*MSG    'RTCD                                              MD024930
+     CLR                   PARM '*KEY    'OPTN                                              MD024930
+     CLR                   PARM CCY       W#CURR  3                                         MD024930
+     CLR         SDCURR    PARM SDCURR    DSSDY                                             MD024930
+     CLR         RTCD      IFNE *BLANKS                                                     MD024930
+     CLR                   SETON                     U7U8                                   MD024930
+     CLR                   MOVEL'SDCURRPD'DBFILE                                            MD024930
+     CLR                   MOVELW#CURR    DBKEY                                             MD024930
+     CLR                   Z-ADD5         DBASE                                             MD024930
+     CLR                   DUMP                                                             MD024930
+     CLR                   GOTO END2                                                        MD024930
+     CLR                   ENDIF                                                            MD024930
+0138 CLR         DCCY      COMP 'Y'                      21               SD0670
+     CLRN21      A6DLCI    COMP 'Y'                      21                                 MD024930
+     CLR         A6DLCI    IFNE DCCY                                                        MD024930
+     CLR                   MOVELA6DLCI    DCCY                                              MD024930
+     CLR                   ENDIF                                                            MD024930
+0139 CLR                   Z-ADD0         SERLC  138                      SD0670
+0140 CLR 21 22 23                                                         SD0670
+0141 CAN 24                                                               SD0670
+0142 COR 21 23N22                                                         SD0670
+     C/COPY WNCPYSRC,SD0670C009
+0143 CANN24      SPOT      DIV  SSPOT     SERLC  138                      SD0670
+     C/COPY WNCPYSRC,SD0670C010
+0144 CLR 21 23 22                                                         SD0670
+0145 CANN24                                                               SD0670
+0146 COR 21 23N22                                                         SD0670
+     C/COPY WNCPYSRC,SD0670C011
+0147 CAN 24      SPOT      MULT SSPOT     SERLC                           SD0670
+     C/COPY WNCPYSRC,SD0670C002
+     CLR                   Z-ADDSERLC     ERLC                            S01092
+     C*                                                                   S01092
+     C*R                   MOVE KEY       CCY1    4                       S01092
+     C*R                   MOVELCCY1      CCY                             S01092
+0148 CLR                   SETON                     30                   SD0670
+0149 CLR                   EXCPT                                          SD0670
+     C/COPY WNCPYSRC,SD0670C012
+0150 CLR                   SETOF                     30                   SD0670
+0151 CLR                   GOTO READ                                      SD0670
+0152 C*                                                                   SD0670
+0153 CLR         END       TAG                             ** END TAG ****SD0670
+0154 C*                                                                   SD0670
+     C/COPY WNCPYSRC,SD0670C013
+     CLR                   MOVE *BLANKS   CRKY    3                       S01194
+     CLR         CRKY      SETLLSDCURRL0                                  S01194
+     CLR         READ2     TAG                             ** READ2 TAG***S01194
+     CLR                   SETOF                         2221             S01194
+     CLR                   READ SDCURRL0                 20               S01194
+     C*                                                                   S01194
+     C*    END IF END OF FILE                                             S01194
+     CLR         *IN20     IFEQ '1'                                       S01194
+     CLR                   GOTO END2                                      S01194
+     CLR                   END                                            S01194
+     C*    CALCULATE NEW EXCHANGE RATE TO LIMIT CURRENCY.                 S01194
+     CLR         A6DLCI    IFEQ 'Y'                                       S01194
+     CLR                   SETON                         21               S01194
+     CLR                   END                                            S01194
+     C**                                                                  S01194
+     CLR         A6MDIN    IFEQ 'D'                                       S01194
+     CLR                   SETON                         22               S01194
+     CLR                   END                                            S01194
+     C**                                                                  S01194
+     CLR                   Z-ADD0         SERLC                           S01194
+     CLR 21 22 23                                                         S01194
+     CAN 24                                                               S01194
+     COR 21 23N22                                                         S01194
+     CANN24      A6SPRT    DIV  SSPOT     SERLC                           S01194
+     CLR 21 23 22                                                         S01194
+     CANN24                                                               S01194
+     COR 21 23N22                                                         S01194
+     CAN 24      A6SPRT    MULT SSPOT     SERLC                           S01194
+     C/COPY WNCPYSRC,SD0670C003
+     CLR                   Z-ADDSERLC     A6ERLC                          S01194
+     C*                                                                   S01194
+     CLR                   SETON                     31                   S01194
+     CLR                   EXCPTSDCPD                                     S01194
+     CLR                   SETOF                     31                   S01194
+     CLR                   GOTO READ2                                     S01194
+     C*                                                                   S01194
+     CLR         END2      TAG                             ** END2 TAG ***S01194
+     C/COPY WNCPYSRC,SD0670C014
+0155 O*ABLE***E********30                                                 S01092
+     OTABTG10FE        30                                                 S01092
+0156 O*************************SERLC*****85P                              S01092
+     O                         SERLC                                      S01092
+     O                         DCCY                                                         MD024930
+     O*                                                                   S01092
+     O*@A6REA3*E*******31******SDCPD                                S01194LN0662
+     O@A6REA4 E        31      SDCPD                                      LN0662
+     O                         A6ERLC                                     S01194
+     O*                                                                   S01194
+     OTABTG30FEADD     30 04                                              S01092
+     O                         *ALL                                       S01092
+     O*                                                                   S01092
+1023 O*SD0670P1T*130***U7*U8*                                             S01117
+1023 O*D0670AUT**130***U7*U8***                                     S01117048284
+1024 O************                       42 '*** REFERENCE'               S01117
+1024 O*************************          38 '*** REFERENCE'         S01117048284
+1025 O*************************DBPGM     51                               048284
+1026 O*************************          71 '-DATABASE ERROR AT'          048284
+     O************             DBASE     74                               S01117
+     O*************************DBASE     76                         S01117048284
+     O********T**1*****U7*U8***                                           048284
+     O************                       37 'FILE NAME'                   S01117
+     O*************************          33 'FILE NAME'             S01117048284
+     O*************************DBFILE    43                               048284
+     O*************************          48 'KEY'                         048284
+     O*************************DBKEY     78                               048284
+     OSD0670AUT  1 6   U7 U8                                              048284
+     O                                   24 'REFERENCE SD0670AU'          048284
+     O                         BJURPT    90                               048284
+     O                                  104 'DATE'                        048284
+     O                         BJMRDT   112                               048284
+     O                                  122 'PAGE'                        048284
+     O                         PAGE1    127                               048284
+     O        T 20     U7 U8                                              048284
+     O                                   60 'UPDATE OF EXCHANGE RATES'    048284
+     O                                   78 ' TO LIMIT CURRENCY'          048284
+     O        T 13     U7 U8                                              048284
+     O                                   60 '------------------------'    048284
+     O                                   78 '------------------'          048284
+     O        T 32     U7 U8                                              048284
+     O                                   71 '** PROGRAM TERMINATED **'    048284
+     O        T 2      U7 U8                                              048284
+     O                                   53 'DATABASE ERROR'              048284
+     O                         DBASE     57                               048284
+     O                                   68 'IN PROGRAM'                  048284
+     O                         DBPGM     79                               048284
+     O        T 23     U7 U8                                              048284
+     O                                   52 'DATABASE FILE'               048284
+     O                         DBFILE    61                               048284
+     O                                   66 'KEY'                         048284
+     O                         DBKEY     96                               048284
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

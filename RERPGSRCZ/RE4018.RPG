@@ -1,0 +1,696 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - Account code check')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RPG/RE4018  - Retail Term and Notice Account Code Check      *
+      *                                                               *
+      *  Function:  This program reads through SDACD1PD to find out   *
+      *  (COB)      which account codes are Term & Notice account     *
+      *             codes. In the process it checks the Period and    *
+      *             Penalty Details file REPRPNPD to see if there are *
+      *             accounts there which should not be (on account of *
+      *             account code) or accounts which need to be        *
+      *             created.                                          *
+      *             This component runs in one of four modes:         *
+      *                 *CRTDLT, *CREATE, *DELETE, *AUDIT             *
+      *             In *CREATE and *CRTDLT modes it will create any   *
+      *             missing period and penalty details on REPRPNPD.   *
+      *             In *DELETE and *CRTDLT modes it will delete any   *
+      *             period and penalty details if it finds that the   *
+      *             account code is not term and notice. In audit     *
+      *             mode it will simply report without making the     *
+      *             changes. The report is output to RE4018P1.        *
+      *                                                               *
+      *  Called By: REC4018 - Midas RE T&N Accounts - Account code    *
+      *             check                                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 139279             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  139279 - Unable to remove existing T & N default entry       *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDACD1PDIF  E           K        DISK         KINFSR *PSSR
+      *
+     FAUACNTV1UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+     FREPRPNPDUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+     FREPRPNL1UF  E           K        DISK         KINFSR *PSSR
+     F            REPRPND0                          KRENAMEREPRPL0
+     F                                              KCOMIT
+      *
+     FRE4018P1O   E             89     PRINTER      KINFDS SPOOL1
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      *
+      ** Convert counter to (binary) bit settings
+      *
+     IDSCVT       DS
+     I                                    B   1   20WEIGHT
+     I                                        2   2 BYTE
+      *
+      ** File information data structure - P1
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ** Account details
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Period and Penalty details
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     I              'Create'              C         CCREA
+     I              'Delete'              C         CDELT
+     I              '0000000000'          C         CZEROS
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+     C           MODE      IFEQ *BLANKS
+     C                     MOVEL'*AUDIT'  MODE
+     C                     ENDIF
+      *
+      ** Bank details
+      *
+     C           BKFMT     IFEQ *BLANKS
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+     C                     END
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Print header of printer file
+      *
+     C                     SETON                     89
+      *
+     C           PLIST1    PLIST
+     C                     PARM           PMODE   7
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  10
+     C                     PARM           PACSQ   2
+     C                     PARM           PDATE   50
+      *
+     C                     PARM           PEVNT   1
+     C                     PARM           PITEM   50
+     C                     PARM           PVDAT   50
+     C                     PARM           PMDAT   50
+     C                     PARM           PCEDE   50
+     C                     PARM           PFREQ   1
+     C                     PARM           PNDPD   30
+     C                     PARM           PNMPD   20
+     C                     PARM           PIRLI   1
+     C                     PARM           PTPRD   1
+      *
+     C                     PARM           PDRIB   2
+     C                     PARM           PDRIS  117
+     C                     PARM           PDICT   2
+     C                     PARM           PDCST   50
+     C                     PARM           PDRIC   10
+     C                     PARM           PDNIR   1
+     C                     PARM           PDRIF   1
+     C                     PARM           PDACP  24
+     C                     PARM           PNDID   50
+     C                     PARM           PDRDY   40
+      *
+     C                     PARM           PCRIB   2
+     C                     PARM           PCRIS  117
+     C                     PARM           PCICT   2
+     C                     PARM           PCCST   50
+     C                     PARM           PCRIC   10
+     C                     PARM           PCNIR   1
+     C                     PARM           PCRIF   1
+     C                     PARM           PCACP  24
+     C                     PARM           PNCID   50
+     C                     PARM           PCRDY   40
+      *
+     C                     PARM           PRTTD   5
+     C                     PARM           PDYBD   1
+     C                     PARM           PDRST   1
+     C                     PARM           PRTTC   5
+     C                     PARM           PDYBC   1
+     C                     PARM           PCRST   1
+     C                     PARM           PDAYM   20
+     C                     PARM           PKEY1  24
+     C                     PARM           PBALN  150
+      *
+     C                     PARM           PRTCD   7
+      *
+     C                     PARM           PSTAT   1
+     C                     PARM           MAINT   7
+      *
+     C                     MOVE '999999'  PVCNUM  6
+     C                     MOVE 'XYZ'     PVCCY   3
+     C                     Z-ADD9999999999PVACOD 100
+     C                     Z-ADD99        PVACSQ  20
+     C                     MOVE 'ZXY'     PVBRCA  3
+     C                     MOVE 'X'       PVEVNT  1
+      *
+     C           *LOVAL    SETLLSDACD1PD
+     C                     READ SDACD1PD                 90
+     C           *IN90     DOWEQ'0'
+      *
+      ** If not a Term and Notice account code then delete any records from
+      ** REPRPNPD with this account code (f delete mode is on)
+      *
+     C           A5ATTY    IFNE 'P'
+      *
+     C                     MOVEL' '       WSTOP   1
+     C                     MOVE A5ACCD    KACOD  100
+     C           KACOD     CHAINREPRPNL1             92
+     C           *IN92     IFEQ '0'
+     C           KACOD     SETLLREPRPNL1
+     C           WSTOP     DOUEQ'Y'
+     C                     READ REPRPNL1                 92
+     C           KACOD     IFEQ E2ACOD
+     C           *IN92     ANDEQ'0'
+      *
+      ** Don't delete default records
+      *
+     C           E2BRCA    IFNE *BLANKS
+     C           E2CNUM    ANDNE*BLANKS
+     C           E2CCY     ANDNE*BLANKS
+     C           E2ACOD    ANDNE0
+     C           E2ACSQ    ANDNE0
+      *
+     C           MODE      IFEQ '*CRTDLT'
+     C           MODE      OREQ '*DELETE'
+     C                     DELETREPRPL0
+     C                     ENDIF
+     C                     MOVELCDELT     ACTION
+     C                     MOVELE2BRCA    RBRCA
+     C                     MOVELE2CNUM    RCNUM
+     C                     MOVELE2CCY     RCCY
+     C                     MOVELE2ACOD    RACOD
+     C                     MOVELE2ACSQ    RACSQ
+     C                     MOVELE2KEY1    RACNO
+     C                     EXSR PRINT
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVEL'Y'       WSTOP
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Else if a Term and Notice account code, check accounts file
+      *
+     C                     ELSE
+      *
+      ** Read through all accounts for which the account code is the same
+      *
+     C                     MOVE A5ACCD    AACOD  100
+     C           AACOD     SETLLAUACNTV1
+     C                     READ AUACNTV1                 91
+     C           *IN91     DOWEQ'0'
+     C           AACOD     ANDEQACOD
+      *
+      ** Only do open accounts
+      *
+     C           ACST      IFNE 'C'
+      *
+      ** Check if term and notice period and penalties record exists
+      ** and if not create it, if it has a term and notice account code
+      ** (assuming create mode is switched on)
+      *
+     C                     EXSR CHKREP
+      *
+      ** End of closed account condition
+      *
+     C                     ENDIF
+      *
+     C                     READ AUACNTV1                 90
+     C                     ENDDO
+      *
+      ** End of Term and Notice account code condition
+      *
+     C                     ENDIF
+      *
+     C                     READ SDACD1PD                 90
+     C                     ENDDO
+      *
+     C           ENDHRE    TAG
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHKREP - Check if account exists on term and notice file     *
+      *                                                               *
+      *****************************************************************
+     C           CHKREP    BEGSR
+      *
+      ** Check if account exists on term and notice file
+      *
+     C                     MOVE BRCA      E2BRCA
+     C                     MOVE CNUM      E2CNUM
+     C                     MOVELCCY       E2CCY
+     C                     Z-ADDACOD      E2ACOD
+     C                     Z-ADDACSQ      E2ACSQ
+     C                     MOVE 'A'       E2EVNT
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN1    SETLLREPRPNPD
+     C                     READ REPRPNPD                 90
+      *
+     C           *IN90     IFEQ '0'
+     C           E2BRCA    ANDEQBRCA
+     C           E2CNUM    ANDEQCNUM
+     C           E2CCY     ANDEQCCY
+     C           E2ACOD    ANDEQACOD
+     C           E2ACSQ    ANDEQACSQ
+     C                     MOVE 'Y'       REPFND  1
+     C                     ELSE
+      *
+      ** If not found on term and notice account but it is a
+      ** term and notice account code, create record using defaults
+      ** (if create mode is switched on)
+      *
+     C           MODE      IFEQ '*CRTDLT'
+     C           MODE      OREQ '*CREATE'
+     C                     MOVE 'N'       REPFND
+     C                     MOVE BRCA      PBRCA   3
+     C                     MOVE CNUM      PCNUM   6
+     C                     MOVE CCY       PCCY    3
+     C                     MOVE ACOD      PACOD  10
+     C                     MOVE ACSQ      PACSQ   2
+     C                     MOVE 'A'       PEVNT   1
+     C                     MOVE ' '       PSTAT   1
+     C                     MOVEL'*ENQ'    PMODE
+     C                     CALL 'RE4010E' PLIST1       99
+     C                     MOVEL'*UPD'    PMODE
+     C                     MOVELACNO      PKEY1
+     C                     CALL 'RE4010U' PLIST1       99
+     C                     MOVEL'Z'       PEVNT
+     C                     CALL 'RE4010U' PLIST1       99
+     C                     MOVE 'Y'       REPFND
+      *
+      ** Update next capitalisation dates on ACCNTAB
+      *
+     C                     EXSR DOCAP
+      *
+     C                     ENDIF
+      *
+     C                     MOVELCCREA     ACTION
+     C                     MOVELBRCA      RBRCA
+     C                     MOVELCNUM      RCNUM
+     C                     MOVELCCY       RCCY
+     C                     MOVELACOD      RACOD
+     C                     MOVELACSQ      RACSQ
+     C                     MOVELACNO      RACNO
+     C                     EXSR PRINT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DEFAUL - Default Processing                                  *
+      *                                                               *
+      *****************************************************************
+     C           DEFAUL    BEGSR
+      *
+      ** Find period details according to weight
+      **   1. ACSQ
+      **   2. CNUM
+      **   4. BRCA
+      **   8. CCY
+      **  16. ACOD
+      *
+     C                     MOVEL*BLANKS   FOUND   1
+     C                     Z-ADD0         TRIES   30
+     C                     Z-ADD31        WEIGHT
+     C           FOUND     DOUEQ'Y'
+      *
+      ** From right to left, bit setting relates to field
+      **  (on=select field)
+      *
+     C                     Z-ADD0         E2ACSQ
+     C                     TESTB'7'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PACSQ     E2ACSQ
+     C                     END
+      *
+     C                     MOVE *BLANKS   E2CNUM
+     C                     TESTB'6'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PCNUM     E2CNUM
+     C                     END
+      *
+     C                     MOVEL*BLANKS   E2BRCA
+     C                     TESTB'5'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVELPBRCA     E2BRCA
+     C                     END
+      *
+     C                     MOVEL*BLANKS   E2CCY
+     C                     TESTB'4'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVELPCCY      E2CCY
+     C                     END
+      *
+     C                     Z-ADD0         E2ACOD
+     C                     TESTB'3'       BYTE           81
+     C           *IN81     IFEQ '1'
+     C                     MOVE PACOD     E2ACOD
+     C                     END
+      *
+     C           PEVNT     IFEQ ' '
+     C           PEVNT     OREQ 'A'
+     C                     MOVEL'A'       E2EVNT
+     C                     ELSE
+     C                     MOVELPEVNT     E2EVNT
+     C                     END
+      *
+     C                     Z-ADD0         E2ITEM
+      *
+     C                     ADD  1         TRIES
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD            N    81
+      *
+     C           *IN81     IFEQ '0'
+     C                     MOVEL'Y'       FOUND
+     C                     END
+     C           *IN81     IFEQ '1'
+     C                     SUB  1         WEIGHT
+     C           WEIGHT    IFLT 0
+      *
+      **  Active
+      *
+     C                     MOVEL'A'       E2EVNT
+     C                     Z-ADD1         E2ITEM
+     C                     Z-ADD0         E2VDAT
+     C                     Z-ADD364       E2MDAT
+     C                     Z-ADD1         E2CEDE
+     C                     Z-ADD365       E2NDPD
+     C                     MOVEL*BLANKS   E2FREQ
+     C                     MOVEL'F'       E2IRLI
+     C                     MOVEL'T'       E2TPRD
+     C                     MOVEL*ZEROS    E2DRIB
+     C                     MOVEL*ZEROS    E2DRIS
+     C                     MOVEL*ZEROS    E2DICT
+     C                     MOVEL*ZEROS    E2DCST
+     C                     MOVEL'1'       E2DRIC
+     C                     MOVEL'D'       E2DNIR
+     C                     MOVEL'Z'       E2DRIF
+     C                     MOVEL*BLANKS   E2DRBR
+     C                     MOVEL*BLANKS   E2DACP
+     C                     MOVEL*ZEROS    E2CRIB
+     C                     MOVEL*ZEROS    E2CRIS
+     C                     MOVEL*ZEROS    E2CICT
+     C                     MOVEL*ZEROS    E2CCST
+     C                     MOVEL'1'       E2CRIC
+     C                     MOVEL'D'       E2CNIR
+     C                     MOVEL'Z'       E2CRIF
+     C                     MOVEL*BLANKS   E2CRBR
+     C                     MOVEL*BLANKS   E2CACP
+     C                     MOVEL*BLANKS   E2RTTD
+     C                     MOVEL' '       E2DYBD
+     C                     MOVEL' '       E2DRST
+     C                     MOVEL*BLANKS   E2RTTC
+     C                     MOVEL' '       E2DYBC
+     C                     MOVEL' '       E2CRST
+     C                     Z-ADD0         E2DAYM
+     C                     Z-ADD0         E2DTWD
+     C                     Z-ADD26664     E2NDID
+     C                     Z-ADD0         E2DRDY
+     C                     Z-ADD26664     E2NCID
+     C                     Z-ADD0         E2CRDY
+     C                     MOVEL*BLANKS   E2KEY1
+     C                     WRITEREPRPND0
+      *
+      **  Termination
+      *
+     C                     MOVEL'Z'       E2EVNT
+     C                     Z-ADD1         E2ITEM
+     C                     Z-ADD25204     E2VDAT
+     C                     Z-ADD26664     E2MDAT
+     C                     Z-ADD26664     E2CEDE
+     C                     Z-ADD0         E2NDPD
+     C                     MOVEL*BLANKS   E2FREQ
+     C                     MOVEL'F'       E2IRLI
+     C                     MOVEL'T'       E2TPRD
+     C                     MOVEL*ZEROS    E2DRIB
+     C                     MOVEL*ZEROS    E2DRIS
+     C                     MOVEL*ZEROS    E2DICT
+     C                     MOVEL*ZEROS    E2DCST
+     C                     MOVEL'1'       E2DRIC
+     C                     MOVEL'D'       E2DNIR
+     C                     MOVEL'M'       E2DRIF
+     C                     MOVEL*BLANKS   E2DRBR
+     C                     MOVEL*BLANKS   E2DACP
+     C                     MOVEL*ZEROS    E2CRIB
+     C                     MOVEL*ZEROS    E2CRIS
+     C                     MOVEL*ZEROS    E2CICT
+     C                     MOVEL*ZEROS    E2CCST
+     C                     MOVEL'1'       E2CRIC
+     C                     MOVEL'D'       E2CNIR
+     C                     MOVEL'M'       E2CRIF
+     C                     MOVEL*BLANKS   E2CRBR
+     C                     MOVEL*BLANKS   E2CACP
+     C                     MOVEL*BLANKS   E2RTTD
+     C                     MOVEL' '       E2DYBD
+     C                     MOVEL' '       E2DRST
+     C                     MOVEL*BLANKS   E2RTTC
+     C                     MOVEL' '       E2DYBC
+     C                     MOVEL' '       E2CRST
+     C                     Z-ADD0         E2DAYM
+     C                     Z-ADD0         E2DTWD
+     C                     Z-ADD26664     E2NDID
+     C                     Z-ADD3101      E2DRDY
+     C                     Z-ADD26664     E2NCID
+     C                     Z-ADD3101      E2CRDY
+     C                     MOVEL*BLANKS   E2KEY1
+     C                     WRITEREPRPND0
+      *
+      ** Reposition to active record
+      *
+     C           KPRPN3    CHAINREPRPNPD            N81
+     C                     MOVEL'Y'       FOUND
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Existing or new account, or default
+      *
+     C           PBRCA     IFNE *BLANKS
+     C           PCNUM     ANDNE*BLANKS
+     C           PCCY      ANDNE*BLANKS
+     C           PACOD     ANDGTCZEROS
+     C           PACSQ     ANDGT'00'
+     C           TRIES     IFEQ 1
+     C                     MOVEL'*EXIST ' MAINT   7
+     C                     ELSE
+     C                     MOVEL'*NEW   ' MAINT
+     C                     END
+     C                     ELSE
+     C                     MOVEL'*DFT   ' MAINT
+     C                     MOVEL' '       PSTAT                                               139279
+     C           TRIES     IFNE 1                                                             139279
+     C                     MOVEL'N'       PSTAT                                               139279
+     C                     END                                                                139279
+     C                     END
+      *
+      ** First rcd found is greater than search, so change search
+      *
+     C           E2EVNT    IFGT PEVNT
+     C                     MOVELE2EVNT    PEVNT
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CALDAT - Date Calculations Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           CALDAT    BEGSR
+      *
+     C                     MOVE BJRDNB    RUNCHG
+     C                     CALL 'RETNDAT1'
+     C                     PARM           REPFMT
+     C                     PARM           MAINT
+     C                     PARM           RUNCHG  5
+     C                     PARM           PDATE   50
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL'RETNDAT1'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DOCAP  - Capitalization Processing                           *
+      *                                                               *
+      *****************************************************************
+     C           DOCAP     BEGSR
+      *
+      * Ensure that next cap dates have been set
+      *
+     C           NCID      IFNE E2NCID
+     C                     Z-ADDE2NCID    NCID
+     C                     MOVE 'Y'       UPDATE  1
+     C                     ENDIF
+      *
+     C           NDID      IFNE E2NDID
+     C                     Z-ADDE2NDID    NDID
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+      *
+     C           UPDATE    IFEQ 'Y'
+     C                     UPDATACCNTABF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRINT - Subroutine to print out audit details                *
+      *                                                               *
+      *  Called from: MAIN, CHKREP                                    *
+      *                                                               *
+      *  Calls: nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C           PRINT     BEGSR
+      *
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, execute *PSSR
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         W0NBRU  80
+      *
+      ** Write to spool file
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVEL*OFF      *IN89
+     C                     ADD  1         PAGNBR  50
+     C                     WRITEAUHEAD
+     C                     ENDIF
+      *
+     C                     WRITEAUDETS
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *                                                               *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE '*ERROR'  P@RTCD  7
+     C                     SETON                     U7U8LR
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+** CPY@: Object Copyright
+(C) Copyright Misys International Banking Sustems Ltd. 2009

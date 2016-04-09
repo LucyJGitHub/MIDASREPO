@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Payment Charge Definitions Update Control')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Funds Transfer Module                               */
+/*                                                                   */
+/*       FTC000020 - Midas FT Payment Charge Definitions Update      */
+/*                   Control                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. CFT147  *CREATE    Date 14Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CFT147 - Automatic update of payment charges definitions    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&WCCY &WSPTTIM)
+ 
+ /** Declare a variable  */
+ 
+             DCL        VAR(&WCCY)    TYPE(*CHAR) LEN(3)
+             DCL        VAR(&WSPTTIM) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(C) Misys International Banking Systems +
+                        Ltd. 2013')
+ 
+ /* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ /** Create data area LDA if it does not exist */
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             MONMSG     MSGID(CPF1015) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          AUT(*ALL))
+ 
+ /** Reset Job Switches  */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+ /** Allocate data area  */
+ 
+             ALCOBJ     OBJ((FTPCHGLCK *DTAARA *EXCL)) WAIT(600) +
+                          SCOPE(*JOB)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+               SNDPGMMSG  MSG('Cannot allocate dataarea FTPCHGLCK for +
+                            currency' *CAT &WCCY *CAT '. Try later.') +
+                            TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+ /** Delay program for updating FT Payment Charge Definition */
+ 
+             DLYJOB     DLY(30)
+ 
+ /** Override file FTPCHGW0 for Job Scope and Share No */
+ 
+             OVRDBF     FILE(FTPCHGW0) OVRSCOPE(*JOB) SHARE(*NO)
+ 
+ /** Call program for updating FT Payment Charge Definition */
+ 
+             CALL       PGM(SDSPTRUPF1) PARM(&WCCY &WSPTTIM)
+ 
+ /** Send error message if switch F7 and F8 are ON */
+ 
+             IF         COND(%SWITCH(00000011)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+ 
+               IF         COND(&MEM *EQ ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MRUNQ MOPERQ)
+             ENDDO
+ 
+ /** Exit the program */
+ 
+             GOTO       CMDLBL(END)
+ 
+ /**  Report database errors trapped by program  **/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Job FTC000020 terminated abnormally for +
+                          Currency ' *CAT &WCCY) TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+ /** End of program */
+ 
+ END:
+             ENDPGM

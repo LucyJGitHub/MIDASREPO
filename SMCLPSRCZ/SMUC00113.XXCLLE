@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                   AR1092128B
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00113 - Migrate SDLENOPD                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1092128B *REDUNDANT Date 01Mar13           */
+/*       Prev Amend No. AR1092128*CREATE      Date 27Feb13           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1092128B- Replaced by SMUC00115.                          */
+/*       AR1092128 - Migrate SDLENOPD from numeric to alpha.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+ 
+             DCLF       FILE(SMLENOPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2013')
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrieve library prefix. */
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFX)
+                CHGVAR     VAR(&LIB) VALUE('#.' *TCAT &PFX *TCAT 'DMLIB')
+             ENDDO
+             IF         COND(&MODE *EQ '*MIG') THEN(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+                CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DMLIB')
+             ENDDO
+ 
+/** Copy old version of SDLENOPD to template file SMLENOPD */
+ 
+             CPYF       FROMFILE(&LIB/SDLENOPD) TOFILE(SMLENOPD) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Call SMU00113 to migrate to new version */
+             CALL       PGM(SMU00113)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Remove record from SMZNMGPD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SMZNMGPD +
+                          where ZNOBJ = ''SDLENOPD''')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

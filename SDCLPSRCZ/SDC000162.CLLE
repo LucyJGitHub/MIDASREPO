@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD File Locking Check')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDC000162 - Midas SD File Locking Check                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. CGL132  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &IFILE &MODE)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&IFILE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IDX) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(5)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGVAR     VAR(&IDX) VALUE(1)
+ 
+ RNEXT:
+             CHGVAR     VAR(&FILE) VALUE(%SST(&IFILE &IDX 10))
+ 
+             IF         COND(&FILE = ' ') THEN(GOTO CMDLBL(END))
+ 
+             CHKOBJ     OBJ(&FILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+ 
+ /* Mode Condition */
+             IF         COND(&MODE = '*LOCK') THEN(DO)
+             ALCOBJ     OBJ((&FILE *FILE *EXCL *FIRST)) WAIT(1)
+             MONMSG     MSGID(CPF1002 CPF1040 CPF1085) EXEC(DO)
+             CHGVAR     VAR(&RTCD) VALUE('*LOCK')
+             DLCOBJ     OBJ((&FILE *FILE *EXCLRD))
+             GOTO       CMDLBL(END)
+             ENDDO
+             ENDDO
+ 
+             ELSE       (DO)
+             DLCOBJ     OBJ((&FILE *FILE *EXCL))
+             ENDDO
+ 
+             CHGVAR     VAR(&IDX) VALUE(&IDX + 10)
+ 
+             IF         COND(&IDX > 41) THEN(GOTO CMDLBL(END))
+ 
+             GOTO       CMDLBL(RNEXT)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program SDC000162 ended abnormally') +
+                          TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,200 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Cash Management Retail Accrual Entry Updt')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC103666 - Cash Management Retail Accrual Entry Update     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/*       Last Amend No. CRE083AC             Date 06Aug12            */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRE083AC - COB Restructure - RE COB Optimisation Phase 1    */
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &ACSM)
+ 
+             DCL        VAR(&MODE)   TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ACSM)   TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+                                                                                        /*CRE083AC*/
+/* Variables for checking if CRE008 is installed. */                                    /*CRE083AC*/
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)                                 /*CRE083AC*/
+             DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)                                 /*CRE083AC*/
+             DCL        VAR(&SAR)    TYPE(*CHAR) LEN(6)                                 /*CRE083AC*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                               /*CRE083AC*/
+             DCL        VAR(&CRE008) TYPE(*CHAR) LEN(1)  VALUE('N')                     /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                  /*CRE083AC*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                  /*CRE083AC*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)                                 /*CRE083AC*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                /*CRE083AC*/
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) +
+                           VALUE('REC103666')                                           /*CRE083AC*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*CRE083AC*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                   /*CRE083AC*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                    /*CRE083AC*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                                /*CRE083AC*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                               /*CRE083AC*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083AC*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083AC*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+                                                                                        /*CRE083AC*/
+             DCLF       FILE(TABTBRE)                                                   /*CRE083AC*/
+             RCVF       RCDFMT(TABTBREF)                                                /*CRE083AC*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start Journalling */                                                                 /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             IF         COND(&MODE *EQ 'ONE') +
+                  THEN(CHGVAR VAR(&CSEQ) VALUE(00001))                                  /*CRE083AC*/
+             IF         COND(&MODE *EQ 'TWO') +
+                  THEN(CHGVAR VAR(&CSEQ) VALUE(00002))                                  /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                        /*CRE083AC*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                           *CAT &CSEQA)                                                 /*CRE083AC*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                          /*CRE083AC*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('S') TEXT(&STEXT)                                       /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             CHGJOB     SWS(00000000)
+ 
+/* Check if cash management is installed */                                             /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                     /*CRE083AC*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*CRE083AC*/
+             CHGVAR     VAR(&SAR)  VALUE('CRE008')                                      /*CRE083AC*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                    /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             IF         COND(&RTCD = '       ') +
+                 THEN(CHGVAR VAR(&CRE008) VALUE('Y'))                                   /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+/* Check if this component must run */                                                  /*CRE083AC*/
+             IF         COND(&CRE008 = 'Y') THEN(DO)                                    /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             SNDPGMMSG  MSG('REC103666 - Cash Management Retail +
+                          Accrual Entry Update') TOMSGQ(MRUNQ)
+ 
+/* Overrides */
+             IF         COND(&MODE *EQ 'ONE') THEN(DO)
+                IF         COND(&ACSM *EQ 'Y') THEN(DO)
+                   OVRDBF     FILE(GEICL0) TOFILE(GEIER0L0)
+                ENDDO
+                IF         COND(&ACSM *NE 'Y') THEN(DO)
+                   OVRDBF     FILE(GEICL0) TOFILE(GEIERL0)
+                ENDDO
+                OVRDBF     FILE(GEICZZ) TOFILE(GEIERZZ)
+             ENDDO
+ 
+             IF         COND(&MODE *EQ 'TWO') THEN(DO)
+                IF         COND(&ACSM *EQ 'Y') THEN(DO)
+                   OVRDBF     FILE(GEICL0) TOFILE(GEIER02L0)
+                ENDDO
+                IF         COND(&ACSM *NE 'Y') THEN(DO)
+                   OVRDBF     FILE(GEICL0) TOFILE(GEIER2L0)
+                ENDDO
+                OVRDBF     FILE(GEICZZ) TOFILE(GEIER2ZZ)
+             ENDDO
+ 
+/* Cash Management Retail Entries Update */
+/* ===================================== */
+ 
+             CALL       PGM(RE100717)
+ 
+/* Close do of check if this component must run. */                                     /*CRE083AC*/
+             ENDDO                                                                      /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/* Retrieve attributes of current job */                                                /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                  /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+/* Retrieve the most recent journal entry sequence number for the */                    /*CRE083AC*/
+/* specific job. */                                                                     /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                           TOENT(*FIRST) SEARCH(*DESCEND) +
+                           JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                           RTNRCV(&SJRNRCVR)                                            /*CRE083AC*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                 /*CRE083AC*/
+                  CHGVAR     VAR(&START) VALUE(0)                                       /*CRE083AC*/
+             ENDDO                                                                      /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+/* Determine starting journal sequence number of current job. */                        /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)                                                 /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+/* Remove journal changes. */                                                           /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                           THEN(DO)                                                     /*CRE083AC*/
+                  IF         COND(&MODE *EQ 'ONE') THEN(DO)                             /*CRE083AC*/
+                       RMVJRNCHG  JRN(ICJRN) FILE((GEIERPD0) +
+                                    (GEIERPD) (GEIERZZ) (GEICPD) +
+                                    (GEICZZ)) +
+                                    FROMENT(&START) TOENT(&FINISH) +
+                                    RCVRNG(&SJRNRCVR &FJRNRCVR)                         /*CRE083AC*/
+                       MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                /*CRE083AC*/
+                  ENDDO                                                                 /*CRE083AC*/
+                  IF         COND(&MODE *EQ 'TWO') THEN(DO)                             /*CRE083AC*/
+                       RMVJRNCHG  JRN(ICJRN) FILE((GEIER2PD0) +
+                                    (GEIER2PD) (GEIER2ZZ)  +
+                                    (GEICPD) (GEICZZ)) +
+                                    FROMENT(&START) TOENT(&FINISH) +
+                                    RCVRNG(&SJRNRCVR &FJRNRCVR)                         /*CRE083AC*/
+                       MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                /*CRE083AC*/
+                  ENDDO                                                                 /*CRE083AC*/
+             ENDDO                                                                      /*CRE083AC*/
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('REC103666 - Cash Management +
+                          Retail Accrual Entry Update FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/**********ENDPGM:     ENDPGM */                                                        /*CRE083AC*/
+ENDPGM:                                                                                 /*CRE083AC*/
+/* Write current journal sequence number to file SCJSEQPD */                            /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             CHGVAR     VAR(&STEXT) VALUE(' ')                                          /*CRE083AC*/
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                  /*CRE083AC*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('E') TEXT(&STEXT)                                       /*CRE083AC*/
+                                                                                        /*CRE083AC*/
+             ENDPGM                                                                     /*CRE083AC*/

@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GOC011102)                            */
+/*EXI    TEXT('Midas GO Bulk Sync GZGLACNTQD - Deletions')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC011102 - Midas GO Bulk Sync GZGLACNTQD - Task Split      */
+/*                   Deletions                                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGP017  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGP017 - Global Layer - GOC0100 Task Split                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+ 
+             DCL        VAR(&GPF) TYPE(*CHAR) LEN(10) VALUE(GZGLACNTQD)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC011102 - Bulk Synchronisation of +
+                          Global Layer, Task Split Deletions:' *CAT +
+                          &GPF) TOMSGQ(MRUNQ)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             CHGJOB SWS(00000000)
+ 
+/* Get zone */
+ 
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+ 
+/* Error */
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+/* Bulk synchronisation program */
+ 
+             CALL       PGM(GO011102) PARM(&ZOZONE)
+ 
+/* Error */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GOC011102 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GOC011102 ended abnormally - see job log') +
+                          TOPGMQ(*EXT)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

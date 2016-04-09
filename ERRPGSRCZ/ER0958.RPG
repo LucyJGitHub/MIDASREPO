@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER Facilities Exposure Calculation Updat')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ER0958 - ER Facilities Exposure Calculation Update           *
+      *                                                               *
+      *  Function: This program will calculate the facility exposure  *
+      *            used by calculating the degree of coverage for all *
+      *            loans taken out against the facility.              *
+      *                                                               *
+      *  Called By: CLP/ERC0958                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 147342     PT      Date 16Dec98               *
+      *                 ULX004     IS      Date 26Mar97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  147342 - Exposure amount was not reinitialised               *
+      *  ULX004 - Capital Adequacy                                    *
+      *         - IML Circular 97/138                                 *
+      *           Recompile only                                      *
+      *                                                               *
+      *****************************************************************
+      *
+      *            Facilities Extension LF
+     F***FCLTYMY6UF  E           K        DISK         KINFSR *PSSR                           CER001
+     FLEFCX2L0UF  E           K        DISK         KINFSR *PSSR                              CER001
+      *
+      *            Loans
+     FCLOANF  IF  E           K        DISK
+      *
+      *           Audit Report
+     FER0958AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      * 60       - At least 1 record to update                        *
+      * 71       - Chain failed & work indicator CLOANF file          *
+      * 89       - Chain failed & work indicator FCLTYMY6 file        *
+      * 90-99    - Standard SR                                        *
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    TNDM   12  12  2 0             * Number/Day/Month
+     E                    POWER   1   7  7 3             * Power for ZCCYCN
+      *
+      **  Array for copyright, fields validations
+      *
+     E                    CPY@    1   1 80               * Copyright
+      *
+      **  Local data area for database error details
+      *
+     ILDA         DS                            256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     IDBERR       DS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DFILL
+      *
+      **  File Information Data Structure for MMNNNNAU.
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      **  Program data structure.
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      **  DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  External DS for CCY Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Copyright array
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+      ** Midas Run Date
+      *
+     I            DS
+     I                                        1   7 WWMRDT
+     I                                        1   20WWBJD
+     I                                        3   5 WWBJM
+     I                                        6   70WWBJY
+      *
+      **  Redefine a date
+      *
+     I            DS
+     I                                        1   60WWDATE
+     I                                        1   20WWD
+     I                                        3   40WWM
+     I                                        5   60WWY
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          P R O G R A M   E N T R Y                            *
+      *                                                               *
+      *===============================================================*
+      *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *          #INIT  - INITIALISATION PROCESSING                   *
+      *          #MAIN  - MAIN PROCESSING                             *
+      *          #TERM  - TERMINATION PROCESSING                      *
+      *          #DATE  - DATE PROCESSING                             *
+      *          #EOMD  - END-OF-MONTH CALCULATION                    *
+      *          #AUDIT - AUDIT REPORT OUTPUT                         *
+      *          #RCFAU - RCF PRINTER REGISTRATION                    *
+      *          *PSSR  - DATABASE ERROR PROCESSING                   *
+      *                                                               *
+      *****************************************************************
+      *
+      **  KLIST to access on CLOANF
+      *
+     C           $CLOAN    KLIST
+     C                     KFLD           KKFCUS           * Customer Num.
+     C                     KFLD           KKFTYP           * Facility Type
+     C                     KFLD           KKFSEQ           * Facility No.
+      *
+     C           *LIKE     DEFN FCUS      KKFCUS           * Customer Num.
+     C           *LIKE     DEFN FTYP      KKFTYP           * Facility Type
+     C           *LIKE     DEFN FSEQ      KKFSEQ           * Facility No.
+     C           *LIKE     DEFN VNEXPO    @@EXPO           * Facility Exp.
+      *
+     C                     MOVE *BLANKS   @RTCD   7        * AO Parameter
+     C                     MOVE *BLANKS   @OPTN   7        * AO Paramrter
+     C                     MOVE *BLANKS   @DSNB   3        * AO Parameter
+     C                     MOVE *BLANKS   @KEY1   3        * AO Parameter
+      *
+     C                     Z-ADD0         X       20       * Work Index
+      *
+      *===============================================================*
+      *
+      ** Perform Initialisation routine
+      *
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #TERM
+      *
+     C                     RETRN
+      *
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #INIT  - INITIALISATION PROCESSING                   *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #INIT     BEGSR
+      *
+     C                     MOVEL'ER0965'  WBPGM
+      *
+      **  Get Installation Control Data Record 1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS                    *----------1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           *----------1
+      *
+      ** Set indicator *IN98 to indicate which date format to use
+      *
+     C           BJDFIN    IFEQ 'M'                        *----------1
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           *----------1
+      *
+      **  Retrieve Default User Branch
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR #RCFAU
+      *
+      **  Determine if program is being run at End-Of-Month
+      **    if so, then determine last calendar date
+      *
+     C                     CALL 'SD2000'
+     C                     PARM 'N'       @EOM    1
+     C                     PARM 'N'       @EOY    1
+      *
+     C           @EOM      IFEQ 'Y'                        *----------1
+     C                     MOVE BJMRDT    WWMRDT
+     C                     EXSR #DATE
+     C                     EXSR #EOMD
+     C                     Z-ADDZDAYNO    @@CTLD  50       * End Of Month
+      *
+     C                     ELSE                            X----------1
+     C                     Z-ADDBJRDNB    @@CTLD           * Run Date
+     C                     ENDIF                           *----------1
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #MAIN  - MAIN PROCESSING                             *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #MAIN     BEGSR
+      *
+     C**********           READ FCLTYMY6                 89                                   CER001
+     C                     READ LEFCX2L0                 89                                   CER001
+      *
+     C           *IN89     DOWEQ*OFF                       *----------1
+     C                     Z-ADD0         @@EXPO                          147342
+      *
+      **  Access to Loan file with Facility
+      *
+     C                     MOVE VNCNUM    KKFCUS           * Customer Num.
+     C                     MOVE VNFACT    KKFTYP           * Facility Type
+     C                     MOVE VNFCNO    KKFSEQ           * Facility No.
+     C           $CLOAN    SETLLCLOANF
+     C           $CLOAN    READECLOANF                   71
+      *
+      ** Retrieve Facility Currency details
+      *
+     C           *IN71     IFEQ *OFF                       *---------2
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM FCCY      @KEY1
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELFCCY      DBKEY     P      * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Store details for SR/ZCCYCN conversion
+      *
+     C                     MOVELA6CYCD    ZCCYT            * Currency code
+     C                     Z-ADDA6SPRT    ZRATET           * Spot rate
+     C                     MOVELA6MDIN    ZMDINT           * Mult/div ind
+     C                     Z-ADDA6NBDP    ZCDPT            * NBr. dec
+      *
+     C                     ENDIF                           *---------2
+      *
+     C           *IN71     DOWEQ*OFF                       *---------2
+      *
+      ** Loan must be Live, have a Current Principal Amount and a
+      **   Value date prior to End of Month Calendar Date
+      *
+     C           RECI      IFEQ 'D'                        *--------3
+     C********** CPAM      ANDNE0
+     C           VDAT      ANDLE@@CTLD
+      *
+      ** If necessary, convert Current Principal Amount from
+      **   Loan Currency to Facility Currency
+      *
+     C           CCY       IFNE FCCY                       *-------4
+      *
+      ** Retrieve Loan Currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM CCY       @KEY1
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELCCY       DBKEY     P      * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDCPAM      ZAMTF            * Loan Amt
+     C                     MOVELA6CYCD    ZCCYF            * Currency code
+     C                     Z-ADDA6SPRT    ZRATEF           * Spot rate
+     C                     MOVELA6MDIN    ZMDINF           * Mult/div ind
+     C                     Z-ADDA6NBDP    ZCDPF            * NBr. dec
+     C                     EXSR ZCCYCN
+      *
+     C                     ELSE                            X-------4
+     C                     Z-ADDCPAM      ZAMTT            * Loan Amount
+     C                     ENDIF                           *-------4
+      *
+      ** Accumulate or subtract Loan amount (converted to Facility Ccy)
+      *
+     C           PTYP      IFEQ 66                         *-------4
+     C           PTYP      OREQ 67
+     C                     SUB  ZAMTT     @@EXPO
+     C                     ELSE                            X-------4
+     C                     ADD  ZAMTT     @@EXPO
+     C                     ENDIF                           *-------4
+      *
+     C*********************MOVE *ON       *IN60                           147342
+      *
+     C                     ENDIF                           *--------3
+      *
+     C           $CLOAN    READECLOANF                   71
+      *
+     C                     ENDDO                           *---------2
+      *
+      ***  Update Facility Exposure Amount
+      *
+     C***********@@EXPO    IFNE VNEXPO                     *---------2    147342
+     C********** *IN60     ANDEQ*ON                                       147342
+     C                     Z-ADD@@EXPO    VNEXPO
+     C                     UPDATFCLTYMF6
+     C                     ADD  1         RCOUNT
+     C*********************ENDIF                           *---------2    147342
+      *
+     C*********************Z-ADD0         @@EXPO
+     C*********************MOVE *OFF      *IN60                           147342
+      *
+      ** Read next record
+      *
+     C**********           READ FCLTYMY6                 89                                   CER001
+     C                     READ LEFCX2L0                 89                                   CER001
+      *
+     C                     ENDDO                           *----------1
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #TERM  - TERMINATION PROCESSING                      *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #TERM     BEGSR
+      *
+     C                     EXSR #AUDIT
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #DATE  - DATE PROCESSING                             *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #DATE     BEGSR
+      *
+      ** Store DDmmYY date from DDaaaYY format
+      *
+      ** DAY
+     C                     Z-ADDWWBJD     @@DADD  20       * Day
+      ** MONTH
+     C                     Z-ADD1         X                * X : INDEX
+     C           WWBJM     LOKUPZMNM,X                   26* 26 : EQUAL
+     C           *IN26     IFEQ '1'
+     C                     Z-ADDX         @@DAMM  20       * Month
+     C                     END
+      ** YEAR
+     C                     Z-ADDWWBJY     @@DAYY  20       * Year
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #EOMD  - END-OF-MONTH CALCULATION                    *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #EOMD     BEGSR
+      *
+     C                     Z-ADD@@DAYY    WWY              * Year
+     C                     Z-ADD@@DAMM    WWM              * Month
+     C                     Z-ADDTNDM,WWM  WWD              * Day
+      *
+     C           *IN99     DOUEQ'0'
+     C                     Z-ADDWWDATE    ZDATE
+     C                     EXSR ZDATE1
+     C                     SUB  1         WWD
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #AUDIT - AUDIT REPORT OUTPUT                         *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #AUDIT    BEGSR
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #RCFAU - RCF PRINTER REGISTRATION                    *
+      *                                                               *
+      *===============================================================*
+      *
+     C           #RCFAU    BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          *PSSR  - DATABASE ERROR PROCESSING                   *
+      *                                                               *
+      *===============================================================*
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVE DBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR #AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *===============================================================*
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z3
+**   TNDM - NUMBER OF DAYS PER MONTH
+312931303130313130313031
+**  POWER  (7,3)  For ZCCYCN subroutine
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

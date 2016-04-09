@@ -1,0 +1,492 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check values in a string')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0811 - Check values in a string.                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. S01449             DATE 12OCT93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S01449 - Created for Automatic Reconciliations 2 Development.*
+      *                                                               *
+      *****************************************************************
+      *  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Standard sub-routines                                         *
+      *                                                               *
+      *   ANBLNK -  Allow Alphanumerics and blasnk.                   *
+      *   ANONLY -  Allow alphanumerics only.                         *
+      *   ANBLSP -  Allow alphanumerics, blanks and special characters*
+      *   ANSPON -  Allow alphanumerics and special characters.       *
+      *   ANSP01 -  Allow alphanumerics, blanks and (. and -).        *
+      *   ALPHA  -  Allow alpha characters only.                      *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      * Function of indicators                                        *
+      *                                                               *
+      *  90       LOKUP operation successful.                         *
+      *  91       Reject further blanks.                              *
+      *  LR       Last Record - End of Program                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Copyright notice.
+      *
+     E                    CPY@    1   1 80               Copyright     arr
+      *
+      ** Array to break down incoming string.
+      *
+     E                    ARR       256  1
+      *
+      ** Valid values lists.
+      *
+     E                    VAL01  37  37  1
+      *
+     E                    VAL02  36  36  1
+      *
+     E                    VAL03  42  42  1
+      *
+     E                    VAL04  41  41  1
+      *
+     E                    VAL05  39  39  1
+      *
+     E                    VAL06  26  26  1
+      *
+      ** Copyright array.
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+      ** Define entry parameter list.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           STRING256        Field
+     C                     PARM           LENGTH  30       Field length
+     C                     PARM           RTNCD   5        Retern code
+     C                     PARM           EMBED   1        Allow embedded blanks
+     C                     PARM           VTYPE   6        Validation type
+      *
+      ** Initialise array and fields.
+      *
+     C                     MOVEASTRING    ARR
+     C                     Z-ADDLENGTH    X       30
+      *
+      ** Execute required subroutine:
+      *
+      ** ANBLNK - Allow alphanumerics and blanks.
+      *
+     C           VTYPE     IFEQ 'ANBLNK'
+     C                     EXSR ANBLNK
+     C                     END
+      *
+      ** ANONLY - Allow alphanumerics only.
+      *
+     C           VTYPE     IFEQ 'ANONLY'
+     C                     EXSR ANONLY
+     C                     END
+      *
+      ** ANBLSP - Allow alphanumerics, blanks and special characters.
+      *
+     C           VTYPE     IFEQ 'ANBLSP'
+     C                     EXSR ANBLSP
+     C                     END
+      *
+      ** ANSPON - Allow alphanumerics and special characters.
+      *
+     C           VTYPE     IFEQ 'ANSPON'
+     C                     EXSR ANSPON
+     C                     END
+      *
+      ** ANSP01 - Allow alphanumerics, blank and
+      **          special characters (. and -)
+      *
+     C           VTYPE     IFEQ 'ANSP01'
+     C                     EXSR ANSP01
+     C                     END
+      *
+      ** ALPHA  - Allow alpha values only.
+      *
+     C           VTYPE     IFEQ 'ALPHA '
+     C                     EXSR ALPHA
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ANBLNK - Alpha-numeric and blank allowed.                     *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z, 0-9 and      *
+      *          blank. Embedded blanks may be allowed or rejected.   *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ANBLNK    BEGSR                           ** ANBLNK SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag (if embedded blanks are not allowed).
+      *
+     C           EMBED     IFEQ 'N'                        B002
+     C           ARR,X     ANDNE' '
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL01                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ANONLY - Alpha-numeric characters only allowed.               *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z, 0-9.         *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ANONLY    BEGSR                           ** ANONLY SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag.
+      *
+     C           ARR,X     IFNE ' '                        B002
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL02                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ANBLSP - Alpha-numerics, blank and special chars allowed.     *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z, 0-9 and      *
+      *          blank. Embedded blanks may be allowed or rejected.   *
+      *          The following characters are also allowed: ¢#._@     *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ANBLSP    BEGSR                           ** ANBLSP SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag (if embedded blanks are not allowed).
+      *
+     C           EMBED     IFEQ 'N'                        B002
+     C           ARR,X     ANDNE' '
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL03                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ANSPON - Alpha-numerics and special characters allowed.       *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z, 0-9 or       *
+      *          ¢#._@                                                *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ANSPON    BEGSR                           ** ANSPON SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag.
+      *
+     C           ARR,X     IFNE ' '                        B002
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL04                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ANSP01 - Alpha-numerics and special characters allowed.       *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z, 0-9 or .     *
+      *          or -                                                 *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ANSP01    BEGSR                           ** ANSP01 SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag (if embedded blanks are not allowed).
+      *
+     C           EMBED     IFEQ 'N'                        B002
+     C           ARR,X     ANDNE' '
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL05                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ALPHA  - Alpha values only allowed.                           *
+      *                                                               *
+      *          This subroutine processes for strings that should    *
+      *          allow characters in a string to be A-Z only.         *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ALPHA     BEGSR                           ** ALPHA SR **
+      *
+      ** Process string passed as a parameter.
+      *
+     C           X         DOUEQ0                          B001
+      *
+      ** If a non-blank character has been found then set on the reject
+      ** further blanks flag (if embedded blanks are not allowed).
+      *
+     C           EMBED     IFEQ 'N'                        B002
+     C           ARR,X     ANDNE' '
+     C                     SETON                     91
+     C                     END                             E002
+      *
+      ** Check for embedded blanks.
+      *
+     C           ARR,X     IFEQ ' '                        B002
+     C           *IN91     ANDEQ'1'
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+     C           ARR,X     LOKUPVAL06                    90
+      *
+      ** If the character in the string is not on the valid values
+      ** list then the string fails validation.
+      *
+     C           *IN90     IFEQ '0'                        B002
+     C                     MOVE 'INVAL'   RTNCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             E002
+      *
+      ** Increment postion on string to be checked.
+      *
+     C                     SUB  1         X
+      *
+     C                     END                             E001
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@     : Copyright notice
+(c) Misys International Banking Systems Ltd. 2001
+** VAL01 - Valid values (blank is valid)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890
+** VAL02 - Valid values (blank not valid)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890
+** VAL03 - Valid values (blank and @, # , ¢, . and _ are valid)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890@#_.¢
+** VAL04 - Valid values (@, # , ¢, . and _ are valid)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#_.¢
+** VAL05 - Valid values (blank and . and , are valid)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890.-
+** VAL06 - Valid values (alpha values only)
+ABCDEFGHIJKLMNOPQRSTUVWXYZ

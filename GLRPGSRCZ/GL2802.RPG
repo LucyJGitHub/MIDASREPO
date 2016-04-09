@@ -1,0 +1,811 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Fontis file re-send function')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas-Fontis Interface                               *
+     F*                                                               *
+     F*  GL2802 - Fontis File Re-send Function                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+     F*  Last Amend No. 165719             Date 11Aug99               *
+     F*  Prev Amend No. 165848             Date 11Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CGL004 *CREATE     Date 05FEB97               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  165719 - For intra-day statement MT942, use todays date      *
+     F*           rather than the date of last download of MT940      *
+     F*           message when assigning an identifier.               *
+     F*  165848 - Not a database error if FONTIS942 is the only       *
+     F*           member in GLFREFPD.                                 *
+     F*  CGL004 - Midas-Fontis Interface                              *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FGL2802DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F*
+     FGLFREFL1UF  E           K        DISK
+     F                                              KCOMIT
+     F*
+     F*
+     F*****************************************************************
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  03 - Exit                                                    *
+     F*  05 - Refresh                                                 *
+     F*  08 - Request transfer                                        *
+     F*  09 - Restart Background Job                                  *
+     F*  10 - Stop Background Job                                     *
+     F*                                                               *
+     F*  40 - Error on call to QUSRJOBI                               *
+     F*                                                               *
+     F*  50 - SFLRCD empty                                            *
+     F*                                                               *
+     F*  80 - SFLCLR                                                  *
+     F*  81 - SFLDSP                                                  *
+     F*  82 - SFLDSPCTL
+     F*  83 - Chain of GLFREFL1 unsuccessful                          *
+     F*  84 - SFLNXTCHG                                               *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  CLOSE - Closedown Processing                                 *
+     F*  DETL  - Detail Processing                                    *
+     F*  DWNLD - Download Processing                                  *
+     F*  FORMAT- Format fields for output                             *
+     F*  INIT  - Initial Processing                                   *
+     F*  RESET - Refresh Screen                                       *
+     F*  SCREEN- Detail Screen Processing                             *
+     F*  SFINIT- Subfile Initialisation                               *
+     F*  SFLD  - Load Subfile                                         *
+     F*  SNDMSG- Send Message to display file                         *
+     F*  START - Re-submit Background job                             *
+     F*  STOP  - End Background Job                                   *
+     F*  UPDAT - Update Processing                                    *
+     F*  ZZINIT- Initialise Screen fields
+     F*  ZDATE2-                                                      *
+     F*  *PSSR -                                                      *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE SR. ARRAY
+      *
+     I              'FONTIS942'           C         FONT
+      *
+     I*
+     IA@CPY       DS
+     I** Copyright Array
+     I                                        1  80 CPY@
+      *
+     I            DS
+      ** Data stucture for member name
+     I                                        1  10 F3MBRN
+     I                                        1   1 ##SS
+     I                                        2   3 ##YY
+     I                                        4   5 ##MM
+     I                                        6   7 ##DD
+      *
+     I            DS
+      ** Data structure for file name
+     I                                        1  10 #MBRN
+     I                                        1   2 #DAY
+     I                                        3   4 #MTH
+     I                                        5   6 #YR
+      *
+     I            DS
+      ** Data Structure for job status
+     I                                        1 200 RTRN
+     I                                       51  58 #JSTS
+     I            DS
+     I                                    B   1   40LENG
+      *
+     IRUNDAT      DS                                                      165719
+      ** Run Date Data Area                                               165719
+     I                                        1   7 RUNA                  165719
+     I                                    P   8  100RUND                  165719
+     I                                       11  11 SSF                   165719
+     I                                       12  12 DATF                  165719
+     I                                       13  13 MBIN                  165719
+      *                                                                   165719
+     ILDA         DS
+      ** Local data area for database error details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      ** Fontis Data Area Data Structure
+      *
+     IGLFONT    E DSGLFONTDA                    256
+      *
+      ** External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Fontis Details
+      *
+     ISDFONT    E DSSDFONTPD
+      *
+      ** First DS for Access programs, Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C           *IN03     DOUEQ'1'
+     C                     EXSR DETL
+     C                     ENDDO
+      *
+     C                     EXSR CLOSE
+      *
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      *   CLOSE - Subroutine to do Closedown Processing               *
+      *                                                               *
+      *   Called by : Main Processing                                 *
+      *               DETL                                            *
+      *                                                               *
+      *   Calls :  NONE                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+     C                     SETON                         LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DETL
+      *****************************************************************
+      *                                                               *
+      *   DETL - Subroutine to do detail processing                   *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   CLOSE                                                       *
+      *   RESET                                                       *
+      *   START                                                       *
+      *   STOP                                                        *
+      *   DWNLD                                                       *
+      *   SCREEN                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      ** Display screen.
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#HDR
+     C                     EXFMT#SFLCTL
+      *
+      ** Clear messages from program message queue.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Reset first message only flag.
+      *
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+      *
+      ** Process Responses
+      *
+      * Exit Request
+     C           *IN03     CASEQ'1'       CLOSE
+      * Refresh Screen
+     C           *IN05     CASEQ'1'       RESET
+      * File Transfer Request
+     C           *IN08     CASEQ'1'       DWNLD
+      * Re-submit of Background Job(START)
+     C           *IN09     CASEQ'1'       START
+      * Re-submit of Background Job(STOP)
+     C           *IN10     CASEQ'1'       STOP
+      * Process Screen input.
+     C                     CAS            SCREEN
+     C                     ENDCS
+      *
+     C                     EXSR SFINIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DWNLD
+      *****************************************************************
+      *                                                               *
+      *   DWNLD - Subroutine to do Download Processing                *
+      *                                                               *
+      *   Called by : DETL                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   QSNNDTA                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DWNLD     BEGSR
+      *
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'GLFONTA' DTAQ   10
+     C                     PARM '*LIBL'   LIBR   10
+     C                     PARM 1         LTH     50
+     C                     PARM 'C'       VAL     1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FORMAT
+      *****************************************************************
+      *                                                               *
+      *   FORMAT - Subroutine to format fields for output             *
+      *                                                               *
+      *   Called by : SFINIT                                          *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FORMAT    BEGSR
+      *
+     C                     TIME           ##TME            Screen time.
+     C                     MOVE ' '       #RSET
+      *
+     C           F3MBRN    IFEQ FONT
+     C                     MOVE *BLANK    #MBRN
+     C                     MOVEL'INTERIM' #MBRN
+     C                     ELSE
+     C                     MOVE *BLANK    #MBRN
+     C                     EXSR ZCHG
+     C                     ENDIF
+      *
+     C                     MOVE F3DNLS    #DNLS
+      *
+     C           F3MBRN    IFEQ FONT                                      165719
+     C                     MOVE RUND      ZDAYNO                          165719
+     C                     EXSR ZDATE2                                    165719
+     C                     MOVE ZDATE     #DLDL                           165719
+     C                     ELSE                                           165719
+     C                     MOVE F3DLDL    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     #DLDL
+     C                     END                                            165719
+      *
+     C                     MOVE F3TDNL    #TDNL
+     C                     MOVE F3RSTN    #RSTN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *   INIT - Subroutine to perform Initial processing             *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   AOBANKR0 - Access program                                   *
+      *   SFINIT                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     EXSR ZZINIT
+      *
+      ** Call Access Program to obtain Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+      *
+     C                     MOVE BJMRDT    ##MRDT
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Call Access Program to obtain Fontis Details
+      *
+     C                     CALL 'AOFONTR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDFONT    PARM SDFONT    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDFONTPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD002       DBASE             * DBERR 002*
+     C                     EXSR *PSSR                       ************
+     C                     ENDIF
+      *
+     C                     EXSR SFINIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RESET
+      *****************************************************************
+      *                                                               *
+      *   RESET - Subroutine to Refresh Screen                        *
+      *                                                               *
+      *   Called by : DETL                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   GLC2808                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RESET     BEGSR
+      *
+     C                     CALL 'GLC2808'
+     C                     PARM F8HOST    HOST   30
+     C                     PARM F8RTRY    MTRY    10
+     C                     PARM *BLANKS   @RTCD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SCREEN
+      *****************************************************************
+      *                                                               *
+      *   SCREEN - Subroutine to do Detail Screen processing          *
+      *                                                               *
+      *   Called by : DETL                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SCREEN    BEGSR
+      *
+      ** Read first changed record.
+      *
+     C                     READC#SFLRCD                  50
+      *
+     C           *IN50     DOWEQ'0'
+     C           #RSET     IFNE *BLANKS                    B001
+      *
+     C           #RSET     IFEQ 'R'                        B002
+     C           #MBRN     IFNE 'INTERIM'                  B003
+     C                     MOVE *BLANKS   F3MBRN
+     C                     MOVE 'S'       ##SS
+     C                     MOVE #DAY      ##DD
+     C                     MOVE #MTH      ##MM
+     C                     MOVE #YR       ##YY
+     C                     ELSE                            X003
+     C                     MOVELFONT      F3MBRN
+     C                     ENDIF                           E003
+      *
+     C           F3MBRN    CHAINGLFREFL1             83
+     C           #DNLS     IFEQ 'N'                        B003
+     C           #DNLS     OREQ 'A'
+     C                     EXSR UPDAT
+     C                     MOVE ' '       #RSET
+     C                     ELSE                            X003
+     C                     MOVEL'USR0914' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E003
+      *
+     C                     ELSE                            X002
+     C           #RSET     IFNE *BLANKS                    B003
+     C                     MOVEL'USR0915' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF                           E003
+      *
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+     C                     READC#SFLRCD                  50
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SFINIT
+      *****************************************************************
+      *                                                               *
+      *   SFINIT - Subroutine to initialise Subfile                   *
+      *                                                               *
+      *   Called by : INIT                                            *
+      *               DETL                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   FORMAT                                                      *
+      *   SFLD                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFINIT    BEGSR
+      *
+      ** Clear Subfile.
+      *
+     C                     MOVE '1'       *IN80
+     C                     WRITE#SFLCTL
+     C                     MOVE '0'       *IN80
+      *
+      ** Reset no. of records in Subfile.
+      *
+     C                     Z-ADD0         RRN     50
+      *
+      ** Access 'FONTIS942' Record first, then position to beginning
+      ** of file.
+      *
+     C***********          MOVELFONT      #MBRN                           165848
+     C***********#MBRN     CHAINGLFREFL1             83                   165848
+      ***********                                                         165848
+     C************IN83     IFEQ '1'                                       165848
+     C***********          MOVEL'GLFREFL1'DBFILE                          165848
+     C***********          MOVELF3MBRN    DBKEY             ************  165848
+     C***********          Z-ADD003       DBASE             * DBERR 003*  165848
+     C***********          EXSR *PSSR                       ************  165848
+     C***********          ENDIF                                          165848
+      *
+      ** Position to Beginning of file.
+      *
+     C           *HIVAL    SETLLGLFREFL1             83
+      *
+      ** Format fields for screen, and load Subfile.
+      *
+     C           RRN       DOWNE50
+     C           *IN83     ANDEQ'0'
+     C                     EXSR FORMAT
+     C                     EXSR SFLD
+     C                     READ GLFREFL1                 83
+      *
+      ** Skip Fontis942 record, which has already been processed.
+      *
+     C  N83      F3MBRN    IFEQ FONT
+     C                     READ GLFREFL1                 83
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** If no subfile records send message.
+      *
+     C           RRN       IFEQ 0
+     C                     MOVE 'USR0917' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+      ** If subfile limit reached, send message.
+      *
+     C           RRN       IFEQ 50
+     C                     MOVE 'USR0918' ZAMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+      ** Set up fields for Job Status screen.
+      ** Lock in Data-area to retrieve Background job.
+      *
+     C           *NAMVAR   DEFN GLFONTDA  GLFONT
+      *
+     C           *LOCK     IN   GLFONT
+     C                     MOVE F6BKGJ    #GLFON
+     C                     OUT  GLFONT
+      *
+      ** Call program to obtain job status, if job active.
+      *
+     C           #GLFON    IFNE *BLANKS                    B01
+     C                     CALL 'QUSRJOBI'             40
+     C                     PARM           RTRN
+     C                     PARM 104       LENG
+     C                     PARM 'JOBI0200'INPT    8
+     C                     PARM #GLFON    QUAL   26
+     C                     PARM *BLANKS   INTR   16
+      *
+      ** If job status not found, blank out status.
+      *
+     C           *IN40     IFEQ '1'                        B02
+     C                     MOVEL*BLANKS   RTRN
+     C                     ENDIF                           E02
+      *
+      ** Job not active, blank out status.
+      *
+     C                     ELSE                            X01
+     C                     MOVEL*BLANKS   RTRN
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SFLD
+      *****************************************************************
+      *                                                               *
+      *   SFLD - Subroutine to load the subfile                       *
+      *                                                               *
+      *   Called by : SFINIT                                          *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFLD      BEGSR
+      *
+     C                     MOVE '0'       *IN84
+     C                     MOVEA'11'      *IN,81
+      *
+     C                     ADD  1         RRN
+     C                     WRITE#SFLRCD
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /TITLE SR/SNDMSG
+      *****************************************************************
+      *                                                               *
+      *  SNDMSG- Subroutine to Send error messages                    *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2SNMGC                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNDMSG    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/START
+      *****************************************************************
+      *                                                               *
+      *   START - Subroutine to resubmit background process           *
+      *                                                               *
+      *   Called by : DETL                                            *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   GLC2817                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           START     BEGSR
+      *
+     C                     CALL 'GLC2817'
+     C                     PARM 'GLC2817' CPNM   10
+     C                     PARM 10001     CPSEQ   50
+     C                     PARM '*START'  OPER    7
+     C                     PARM '       ' MODE    7
+     C                     PARM *BLANKS   @RTCD   7
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'USR0913' ZAMSID  7
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/STOP
+      *****************************************************************
+      *                                                               *
+      *   STOP - Subroutine to stop background process                *
+      *                                                               *
+      *   Called by: DETL                                             *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *   GLC2817                                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           STOP      BEGSR
+      *
+     C                     CALL 'GLC2817'
+     C                     PARM 'GLC2817' CPNM   10
+     C                     PARM 10001     CPSEQ   50
+     C                     PARM '*END  '  OPER    7
+     C                     PARM '       ' MODE    7
+     C                     PARM *BLANKS   @RTCD   7
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'USR0916' ZAMSID  7
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/UPDAT
+      *****************************************************************
+      *                                                               *
+      *   UPDAT - Subroutine to do Update processing                  *
+      *                                                               *
+      *   Called by : SCREEN                                          *
+      *                                                               *
+      *   Calls :                                                     *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+      ** Update LF/GLFREFL1
+      *
+     C                     MOVE 'R'       F3DNLS
+     C                     ADD  1         #RSTN
+     C                     Z-ADD#RSTN     F3RSTN
+     C                     MOVE USER      F3RSTU
+     C                     MOVE BJRDNB    F3RSTD
+     C                     TIME           F3RTIM
+      *
+     C                     UPDATGLFREFD0
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZZINIT
+      *****************************************************************
+      *                                                               *
+      *  ZZINIT - Subroutine to initialise display fields             *
+      *                                                               *
+      *  Called by: INIT                                              *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZZINIT    BEGSR
+      *
+      ** Set up Copyright Parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field
+      *
+     C                     MOVEL'GL2802'  DBPGM
+      *
+      ** Set up Title fields (i.e. Time, Date etc.)
+      *
+     C                     TIME           ##TME            Screen time.
+     C                     MOVE USER      ##USR
+     C                     MOVELWSID      ##JOB
+      *
+     C           *NAMVAR   DEFN           RUNDAT                          165719
+     C                     IN   RUNDAT                                    165719
+      *                                                                   165719
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZCHG
+      *****************************************************************
+      *                                                               *
+      *  ZCHG - Subroutine to                                         *
+      *                                                               *
+      *  Called by: FORMAT                                            *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZCHG      BEGSR
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL##MM      ##DTE   4
+     C                     MOVE ##DD      ##DTE
+      *
+     C                     ELSE
+     C                     MOVEL##DD      ##DTE
+     C                     MOVE ##MM      ##DTE
+     C                     ENDIF
+      *
+     C           ##DTE     CAT  ##YY      #MBRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - Years in Days Cumulative. Four Year Span
+0366073110961461
+**  ZMDY - Months in Days Cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

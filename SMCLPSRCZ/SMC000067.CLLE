@@ -1,0 +1,141 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Shell for reconciliation utilities')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000067 - Shell for reconciliation utilities              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27788  *CREATE    Date 26May10            */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27788 - Postings reconciliation utility                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &OPFXSVAL &ORLVLSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ORLVLSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDRLVL) TYPE(*CHAR) LEN(22)
+             DCL        VAR(&FMDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TODPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACODCVT) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RUNDATE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Check that System Values have an entry. */
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &ORLVLSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDRLVL) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000067' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up library list for 'to' system. */
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/* Set up variable names. */
+             CHGVAR     VAR(&FMDPLIB) VALUE(&OLDSBSID *TCAT 'DPLIB')
+             CHGVAR     VAR(&TODPLIB) VALUE(&SBSID *TCAT 'DPLIB')
+ 
+/* Check 'from' system release level. */
+             IF         COND(%SST(&OLDRLVL 1 10) *EQ 'Midas     ') +
+                          THEN(DO)
+                CHGVAR     VAR(&ACODCVT) VALUE('*YES')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&ACODCVT) VALUE('*NO ')
+             ENDDO
+RUNDATE:
+/* Retrieve run date from data area RUNDAT ('from' system). */
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&RUNDATE)
+ 
+/* Call program to reconcile postings from EODPOPD. */
+             CALL       PGM(UPC000011) PARM(&FMDPLIB &TODPLIB +
+                          &ACODCVT &RUNDATE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set up messages for Midas Information Screen. */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000067') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000067' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,836 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Set Purch/Sale Seq for Trade Actn')
+/*OVRF*: OVRDBF FILE(DPOSHI) TOFILE(DPOSH) SHARE(*NO)               : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2250  - SET PURCHASE/SALE SEQUENCE FOR TRADE ACTIONS       *
+     F*            ON BOOK POSITIONS                                  *
+     F*                                                               *
+     F*  Function: This program calculated the start of business      *
+     F*            Nominal Position for each position and date, and   *
+     F*            sets the sequence field to 1 or 2 according to the *
+     F*            sign of the position and whether the action is for *
+     F*            a purchase or a sale.  This occurs after the       *
+     F*            historic actions have been flagged for re-actioning*
+     F*            if necessary, so that all trade actions to be      *
+     F*            applied in the forward mode of SE2220 are read here*
+     F*            in the correct sequence.                           *
+     F*            If the ICD parameter 'Summarise Daily Trades' is   *
+     F*            set to Y, the sequence for handling trade actions  *
+     F*            in SE2220 is:                                      *
+     F*              if the Nominal Position for a book position/date *
+     F*              at the start of business nominal position is flat*
+     F*              or short, sequence is purchases then sales       *
+     F*              else, for a long starting position, the sequence *
+     F*              is sales then purchases.                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CEU017             Date 02Apr98               *
+     F*                 CSE007             Date 18Mar98               *
+     F*                 S01408             DATE 05MAR96               *
+     F*                 054257             DATE 10JAN94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 E29170             DATE 22NOV91               *
+     F*                 E29269             DATE 08OCT91                  *
+     F*                 E29207             DATE 08OCT91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 S01269             DATE 31JUL90               *
+     F*                 E19291             DATE 20/10/89              *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E15471             DATE 04/11/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  S01408 - Addition of core hook SE2250FFP1
+     F*           Addition of core hook SE2250IIP1
+     F*           Addition of core hook SE2250CCP1
+     F*           Addition of core hook SE2250CCP2
+     F*           Addition of core hook SE2250CCP3
+     F*           Addition of core hook SE2250OOP1
+     F*  054257 - RECOMPILED as PREV CURRENT FACTOR amended from 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E29269 - Trades processed in wrong sequence for 'SUMMARIZE      *
+     F*              DAILY TRADES' ICD option                            *
+     F*  E29207 - Discount amortization                               *
+     F*           - Amortization wrong if back-valuation done prior   *
+     F*             to LATD but after LPCD. (No records are read into *
+     F*             the reversal run of SE2220 as there are no actions*
+     F*             to reaction.Solved by generating dummy actions).  *
+     F*           - Amortization wrong if first day accruals          *
+     F*           - Amortization wrong if trade deleted.              *
+     F*           - Trading again on a flat position causes           *
+     F*             discount amortization to be wrong.                *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - TRADE AUTHORISATION: Recompiled for change to       *
+     F*           file TABSE                                          *
+     F*  E19291 - Action Sequence value '10' now '40'. Also Record Id *   E19291
+     F*           on Historic Actions set from H to D.                *   E19291
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *   E16772
+     F*           changes.                                            *   E16772
+     F*  E15471 - NEW PROGRAM TO CALCULATE AVERAGE PRICE IF           *   E15471
+     F*           SUMMARISING DAILY TRADES.                           *   E15471
+     F*                                                               *
+     F*****************************************************************
+     FBPACTR  UF  E           K        DISK                           UC
+     FBKPOS   IF  E           K        DISK
+     FBPACHA  IF  E                    DISK
+     FBPACCA  IF  E                    DISK
+     FBPACBA  IF  E                    DISK
+     FTABSE   IF  E           K        DISK
+     F*
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F*
+     FSE2250AUO   E                    PRINTER                        UC
+     F*
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE2250FFP1                                           S01408
+     F*                                                                   S01408
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - INPUT BPACHD RECORD                                   *
+     F*   02  - INPUT BPACCD RECORD                                   *
+     F*   03  - INPUT BPACBD RECORD                                   *
+     F*                                                               *
+     F*   90  - EOF BPACTR                                            *
+     F*   91  - ERROR ON SETGT OPERATION IN BKPOS                     *
+     F*   92  - BOF REACHED ON BKPOS                                  *
+     F*   93  - EOF BPACHA                                            *
+     F*   94  - EOF BPACCA                                            *
+     F*   95  - EOF BPACBA                                            *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Validate discount entries on second screen          *
+     F*  FIRST  - Validate interest entries on second screen          *
+     F*  ACTION - Validate entries on initial screen                  *
+     F*  AUDIT  - Validate Partly paid entries on second screen       *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZICDSE - ACCESS ICD RECORD FROM TABTB36                      *
+     F*  ZSYSTM - ACCESS ICD RECORD                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IBPACHDF     01
+     I              BCCOAF                          COAF                  CSE007
+      *
+     IBPACCDF     02
+     I              BCCOAF                          COAF                  CSE007
+      *
+     IBPACBDF     03
+     I              BBCOAF                          COAF                  CSE007
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,SE2250IIP1                                           S01408
+     I*                                                                   S01408
+     ISCSARD    E DSSCSARDPD                                              CSE007
+     I** SAR file                                                         CSE007
+     I*                                                                   CSE007
+     IDSFDY     E DSDSFDY                                                 CSE007
+     I** Short data structure for access programs                         CSE007
+     I*                                                                   CSE007
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      * KEY TO CHAIN ONTO BKPOS FILE
+      *
+     C           BKPKEY    KLIST
+     C                     KFLD           BCSS
+     C***********          KFLD           BCBR                            S01117
+     C                     KFLD           BCBA                            S01117
+     C                     KFLD           BCBO
+     C                     KFLD           BCMK
+     C                     KFLD           BCTV
+     C                     KFLD           BCPD    50
+      *                                                                   E29269
+      * PARTIAL KEY FOR READ OF BKPOS                                     E29269
+      *                                                                   E29269
+     C           BKPKYP    KLIST                                          E29269
+     C                     KFLD           BCSS                            E29269
+     C                     KFLD           BCBA                            E29269
+     C                     KFLD           BCBO                            E29269
+     C                     KFLD           BCMK                            E29269
+     C                     KFLD           BCTV                            E29269
+      *
+      * PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE2250'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2250CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      ***  OPEN FILES
+      *
+     C                     OPEN BPACTR
+     C                     OPEN SE2250AU
+      *
+     C                     EXSR FIRST
+      *
+      * CHECK TO SEE IF SUMMARISE DAILY TRADES IS EQ TO Y
+      *
+     C           SMDT      IFEQ 'Y'
+     C           SMDT      OREQ 'N'                                       CSE007
+     C           CSE007    ANDEQ'Y'                                       CSE007
+     C           SMDT      OREQ 'N'                                       CEU017
+     C           CEU017    ANDEQ'Y'                                       CEU017
+      *
+      * READ RECORDS ON BPACTR UNTIL EOF
+      *
+     C           *IN90     DOUEQ'1'
+      *
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN03
+      *
+     C                     READ BPACTR                   90
+      *
+     C   01                ADD  1         CNTCHD  50
+     C***02                ADD  1         CNTCCD  50                      E29207
+     C*                                                                   E29207
+     C* BPACCD may include 'DUMMY' actions (BCAS=00) generated by SE2230  E29207
+     C* These are omitted from the file control check                     E29207
+     C*                                                                   E29207
+     C   02                DO                                             E29207
+     C           BCAS      IFEQ '00'                                      E29207
+     C                     ADD  1         CNTCXD  50                      E29207
+     C                     ELSE                                           E29207
+     C                     ADD  1         CNTCCD  50                      E29207
+     C                     END                                            E29207
+     C                     END                                            E29207
+     C   03                ADD  1         CNTCBD  50
+      *
+     C           *IN03     IFEQ '1'
+      *
+     C                     MOVE BBSS      BCSS
+     C***********          MOVE BBBR      BCBR                            S01117
+     C                     MOVE BBBA      BCBA                            S01117
+     C                     MOVE BBBK      BCBO
+     C                     MOVE BBMK      BCMK
+     C                     MOVE BBTV      BCTV
+     C                     Z-ADDBBAD      BCAD
+     C                     MOVE BBPS      BCPS
+     C                     MOVE BBAS      BCAS                            E19291
+     C                     MOVE BBRI      BCRV                            E29269
+      *
+     C                     END
+      *                                                                   E29269
+     C*  OMIT REVERSED ACTIONS                                            E29269
+      *
+     C           BCAS      IFEQ '40'                                      E19291
+     C           BCRV      ANDNE'Y'                                       E29269
+     C***********BCAS      IFEQ '10'                                      E19291
+     C***********BBAS      OREQ '10'                                      E19291
+      *
+     C                     EXSR ACTION
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ELSE
+      *
+      * IF SUMMARISE DAILY TRADES IS "N" WRITE REPORT
+      *
+     C                     WRITEHEADAU
+     C                     WRITENONE
+     C***********          WRITETRAILAU                                   E29170
+      *
+     C           ENDPGM    TAG                             ** ENDPGM TAG**
+     C                     END
+      *
+      * CLOSE FILES ,SETON LAST RECORD INDICATOR
+      *
+     C                     CLOSESE2250AU
+     C                     CLOSEBPACTR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+      * FIRST -  S/R for First Time Processing                        *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           FIRST     BEGSR
+      *
+      * INITIALISE COUNTS FOR ALL FILES
+      *
+     C                     Z-ADD0         CNTCHD  50
+     C                     Z-ADD0         CNTCCD  50
+     C                     Z-ADD0         CNTCXD  50                      E29207
+     C                     Z-ADD0         CNTCBD  50
+      *
+      * INITIALISE KEY FIELDS FOR KLIST (BKPKEY)
+      *
+     C                     MOVE *BLANKS   ZWCSS  10
+     C***********          Z-ADD0         ZWCBR   30                      S01117
+     C                     MOVE *BLANKS   ZWCBA   3                       S01117
+     C                     MOVE *BLANKS   ZWCBO   2
+     C                     MOVE *BLANK    ZWCMK   1
+     C                     MOVE *BLANK    ZWCTV   1
+     C                     Z-ADD0         ZWDTE   50
+     C                     Z-ADD0         ZWNML  110
+      *
+      * GET INSTALLATION CONTROL DATA RECORD 1
+      *
+     C                     EXSR ZSYSTM
+      *
+      * ERROR IN ZSYSTM
+      *
+     C           *IN,99    IFEQ '1'
+      *
+     C                     MOVEL'1'       *INU8
+     C                     MOVEL'1'       *INU7
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 01 *
+     C                     MOVELZTABKY    DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     GOTO ENDPGM
+      *
+     C                     END
+      *
+      * GET INSTALLATION CONTROL DATA RECORD TABTB36
+      *
+     C                     EXSR ZICDSE
+      *
+      * ERROR IN ZICDSE
+      *
+     C           *IN,99    IFEQ '1'
+     C                     MOVEL'1'       *INU8
+     C                     MOVEL'1'       *INU7
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 02 *
+     C                     MOVELZTABKY    DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     GOTO ENDPGM
+     C*
+     C                     END
+     C*                                                                   CSE007
+     C** Check if CSE007 (Corporate Action) is active                     CSE007
+     C*                                                                   CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM *BLANKS   @RTCD   7                       CSE007
+     C                     PARM '*VERIFY' @OPTN   7                       CSE007
+     C                     PARM 'CSE007'  @SARD   6                       CSE007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE007
+     C*                                                                   CSE007
+     C           @RTCD     IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007  1                       CSE007
+     C                     ELSE                                           CSE007
+     C                     MOVE 'N'       CSE007                          CSE007
+     C*                                                                   CSE007
+     C** database error (return code other than *NRF)                     CSE007
+     C*                                                                   CSE007
+     C           @RTCD     IFNE '*NRF   '                                 CSE007
+     C                     MOVEL'1'       *INU8                           CSE007
+     C                     MOVEL'1'       *INU7                           CSE007
+     C           *LOCK     IN   LDA                                       CSE007
+     C                     Z-ADD3         DBASE            ***************CSE007
+     C                     MOVEL'SCSARDPD'DBFILE           * DB ERROR 03 *CSE007
+     C                     MOVEL'*VERIFY' DBKEY            ***************CSE007
+     C                     OUT  LDA                                       CSE007
+     C                     EXSR *PSSR                                     CSE007
+     C                     WRITEHEADAU                                    CSE007
+     C                     WRITEERROR                                     CSE007
+     C                     GOTO ENDPGM                                    CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C*                                                                   CEU017
+     C** Check if CEU017 (Securities Redenomination) is active            CEU017
+     C*                                                                   CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM *BLANKS   @RTCD   7                       CEU017
+     C                     PARM '*VERIFY' @OPTN   7                       CEU017
+     C                     PARM 'CEU017'  @SARD   6                       CEU017
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU017
+     C*                                                                   CEU017
+     C           @RTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017  1                       CEU017
+     C                     ELSE                                           CEU017
+     C                     MOVE 'N'       CEU017                          CEU017
+     C*                                                                   CEU017
+     C** database error (return code other than *NRF)                     CEU017
+     C*                                                                   CEU017
+     C           @RTCD     IFNE '*NRF   '                                 CEU017
+     C                     MOVEL'1'       *INU8                           CEU017
+     C                     MOVEL'1'       *INU7                           CEU017
+     C           *LOCK     IN   LDA                                       CEU017
+     C                     Z-ADD4         DBASE            ***************CEU017
+     C                     MOVEL'SCSARDPD'DBFILE           * DB ERROR 04 *CEU017
+     C                     MOVEL'*VERIFY' DBKEY            ***************CEU017
+     C                     OUT  LDA                                       CEU017
+     C                     EXSR *PSSR                                     CEU017
+     C                     WRITEHEADAU                                    CEU017
+     C                     WRITEERROR                                     CEU017
+     C                     GOTO ENDPGM                                    CEU017
+     C                     ENDIF                                          CEU017
+     C                     ENDIF                                          CEU017
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    SUBROUTINE   -    ACTION                                   *
+     C*    CALLED FROM  -    MAIN                                     *
+     C*                                                               *
+     C*    TEXT         -    Process Trade Action when                *
+     C***********************Action*Sequence*=*10****                 *   E19291
+     C*                      Action Sequence = 40                     *   E19291
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           ACTION    BEGSR
+      *
+      * IF TRADE ACTION IS FOR A NEW POSITION
+      *
+     C           BCSS      IFNE ZWCSS
+     C***********BCBR      ORNE ZWCBR                                     S01117
+     C           BCBA      ORNE ZWCBA                                     S01117
+     C           BCBO      ORNE ZWCBO
+     C           BCMK      ORNE ZWCMK
+     C           BCTV      ORNE ZWCTV
+      *
+     C                     Z-ADDBCAD      BCPD
+      *
+      * MOVE FIELDS INTO WORK FIELDS
+      *
+     C                     MOVE BCSS      ZWCSS
+     C***********          Z-ADDBCBR      ZWCBR                           S01117
+     C                     MOVE BCBA      ZWCBA                           S01117
+     C                     MOVE BCBO      ZWCBO
+     C                     MOVE BCMK      ZWCMK
+     C                     MOVE BCTV      ZWCTV
+     C                     Z-ADDBCAD      ZWDTE
+     C                     Z-ADD*ZERO     ZWNML                           E29269
+      *
+      **CHAIN*ONTO*BKPOS*TO*OBTAIN*LATEST*NOMINAL*POSITION***********     E29269
+     C***********                                                         E29269
+     C***********BKPKEY    SETGTBKPOSDF              91                   E29269
+     C***********                                                         E29269
+     C************IN91     IFEQ '0'                                       E29269
+     C***********                                                         E29269
+     C***********          READPBKPOS                    92               E29269
+     C***********                                                         E29269
+     C***IF*RECORD*FOUND CHECK IF KEY IS SAME AS BPACTR                   E29269
+     C***********                                                         E29269
+     C************IN92     IFEQ '0'                                       E29269
+     C***********                                                         E29269
+     C***********BCSS      IFEQ BPSC                                      E29269
+     C***********BCBR      ANDEQBPBR                                      E29269
+     C***********BCBO      ANDEQBPBK                                      E29269
+     C***********BCMK      ANDEQBPMK                                      E29269
+     C***********BCTV      ANDEQBPTV                                      E29269
+     C***********                                                         E29269
+     C***********          Z-ADDNPSN      SOBNOM 150                      E29269
+      ***********                                                         E29269
+     C***********          ELSE                                           E29269
+      ***********                                                         E29269
+      **KEY*NOT*SAME*AS*BPACTR*****************************************   E29269
+      ***********                                                         E29269
+     C***********          Z-ADD0         SOBNOM                          E29269
+     C*********************END                                            E29269
+      ***********                                                         E29269
+     C*********************ELSE                                           E29269
+      ***********                                                         E29269
+      **RECORD*NOT*FOUND*ON*BKPOS**************************************   E29269
+      ***********                                                         E29269
+     C*********************Z-ADD0         SOBNOM                          E29269
+     C*********************END                                            E29269
+      ***********                                                         E29269
+     C*********************END                                            E29269
+      *                                                                   E29269
+      * GET POSITION PRIOR TO FIRST ACTION PROCESSED                      E29269
+     C*                                                                   E29269
+     C                     Z-ADD0         SOBNOM                          E29269
+     C           BKPKEY    SETLLBKPOSDF                                   E29269
+     C           BKPKYP    REDPEBKPOSDF                  92               E29269
+     C           *IN92     IFEQ '0'                                       E29269
+     C                     Z-ADDNPSN      SOBNOM 150                      E29269
+     C                     END                                            E29269
+      *
+      *  IF TRADE ACTION IS FOR SAME POSITION
+      *
+     C                     ELSE
+      *
+      *  IS IT A NEW DATE
+      *
+     C           BCAD      IFNE ZWDTE
+      *
+      *  IF NEW DATE INITIALISE WORK FIELDS ADD ACCUMULATED NOMINALS
+      *  FOR PREVIOUS DAYS ACTIONS TO PREVIOUS SOB NOMINAL POSITION
+      *
+     C                     Z-ADDBCAD      ZWDTE
+     C                     ADD  ZWNML     SOBNOM
+     C                     Z-ADD0         ZWNML
+     C                     END                             BCD/=ZWDTE     E29269
+     C                     END                             BCSS/=ZWCSS    E29269
+      *                                                                   E29269
+      ** ACCUMULATE NOMINALS FOR THIS POSITION                            E29269
+      *                                                                   E29269
+     C           BCPS      IFEQ 'P'                                       E29269
+     C   01                                                               E29269
+     COR 02                ADD  BCNL      ZWNML                           E29269
+     C   03                ADD  BBNM      ZWNML                           E29269
+     C                     END                                            E29269
+      *                                                                   E29269
+     C           BCPS      IFEQ 'S'                                       E29269
+     C   01                                                               E29269
+     COR 02                SUB  BCNL      ZWNML                           E29269
+     C   03                SUB  BBNM      ZWNML                           E29269
+     C                     END                                            E29269
+      *
+      ***IF*DATE*IS*SAME*ACCUMULATE*NOMINALS*FOR*THIS*POSITION*********   E29269
+      ***********                                                         E29269
+     C***********          ELSE                                           E29269
+      ************                                                        E29269
+     C***********BCPS      IFEQ 'P'                                       E29269
+     C***01******                                                         E29269
+     C*R*02******          ADD  BCNL      ZWNML                           E29269
+     C***03******          ADD  BBNM      ZWNML                           E29269
+      ***********                                                         E29269
+     C***********          ELSE                                           E29269
+      ***********                                                         E29269
+     C***********BCPS      IFEQ 'S'                                       E29269
+     C***01******                                                         E29269
+     C*R*02******          SUB  BCNL      ZWNML                           E29269
+     C***03******          SUB  BBNM      ZWNML                           E29269
+      ***********                                                         E29269
+     C***********          END                                            E29269
+      ***********                                                         E29269
+     C***********          END                                            E29269
+      ***********                                                         E29269
+     C***********          END                                            E29269
+      ***********                                                         E29269
+     C***********          END                                            E29269
+      *                                                                   CSE007
+      *  IF 'SUMMARISE DAILY TRADES' IS 'Y'                               CSE007
+      *                                                                   CSE007
+     C           SMDT      IFEQ 'Y'                                       CSE007
+      *                                                                   CSE007
+      *  IF 'CORPORATE ACTION FLAG' IS 'N'                                CSE007
+      *                                                                   CSE007
+     C           COAF      IFNE 'Y'                                       CSE007
+      *
+      *  IF THIS DAYS SOB NOMINAL POSITION IS  GE ZERO
+      *                (LONG OR FLAT)
+      *
+     C           SOBNOM    IFGE *ZERO
+      *
+      *  IF PURCHASE/SALE (ON ACTION RECORD) IS "P"
+      *
+     C           BCPS      IFEQ 'P'
+     C   01
+     COR 02                MOVE '1'       BCTS
+     C   03                MOVE '1'       BBTS
+      *
+     C                     ELSE
+     C   01
+     COR 02                MOVE '2'       BCTS
+     C   03                MOVE '2'       BBTS
+      *
+     C                     END
+      *
+      *  SOB NOMINAL POSITION IS SHORT
+      *
+     C                     ELSE
+      *
+     C           BCPS      IFEQ 'P'
+     C   01
+     COR 02                MOVE '2'       BCTS
+     C   03                MOVE '2'       BBTS
+      *
+     C                     ELSE
+     C   01
+     COR 02                MOVE '1'       BCTS
+     C   03                MOVE '1'       BBTS
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   CSE007
+      *  IF 'CORPORATE ACTION FLAG' IS 'Y'                                CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+      *  IF THIS DAYS SOB NOMINAL POSITION IS  GE ZERO                    CSE007
+      *                (LONG OR FLAT)                                     CSE007
+      *                                                                   CSE007
+     C           SOBNOM    IFGE *ZERO                                     CSE007
+      *                                                                   CSE007
+      *  IF PURCHASE/SALE (ON ACTION RECORD) IS "P"                       CSE007
+      *                                                                   CSE007
+     C           BCPS      IFEQ 'P'                                       CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '4'       BCTS                            CSE007
+     C   03                MOVE '4'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '3'       BCTS                            CSE007
+     C   03                MOVE '3'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      *  SOB NOMINAL POSITION IS SHORT                                    CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+     C           BCPS      IFEQ 'P'                                       CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '3'       BCTS                            CSE007
+     C   03                MOVE '3'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '4'       BCTS                            CSE007
+     C   03                MOVE '4'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      *  IF 'SUMMARISE DAILY TRADES' IS 'N'                               CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+      *  IF 'CORPORATE ACTION FLAG' IS 'N'                                CSE007
+      *                                                                   CSE007
+     C           COAF      IFNE 'Y'                                       CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '1'       BCTS                            CSE007
+     C   03                MOVE '1'       BBTS                            CSE007
+      *                                                                   CSE007
+      *  IF 'CORPORATE ACTION FLAG' IS 'Y'                                CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+      *  IF THIS DAYS SOB NOMINAL POSITION IS  GE ZERO                    CSE007
+      *                (LONG OR FLAT)                                     CSE007
+      *                                                                   CSE007
+     C           SOBNOM    IFGE *ZERO                                     CSE007
+      *                                                                   CSE007
+      *  IF PURCHASE/SALE (ON ACTION RECORD) IS "P"                       CSE007
+      *                                                                   CSE007
+     C           BCPS      IFEQ 'P'                                       CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '3'       BCTS                            CSE007
+     C   03                MOVE '3'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '2'       BCTS                            CSE007
+     C   03                MOVE '2'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+      *  SOB NOMINAL POSITION IS SHORT                                    CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+      *                                                                   CSE007
+     C           BCPS      IFEQ 'P'                                       CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '2'       BCTS                            CSE007
+     C   03                MOVE '2'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ELSE                                           CSE007
+     C   01                                                               CSE007
+     COR 02                MOVE '3'       BCTS                            CSE007
+     C   03                MOVE '3'       BBTS                            CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *
+      *  UPDATE TRADE ACTION SORT SEQUENCE ON THIS RECORD
+      *
+     C***01*****           UPDATBPACHDF                                   E19291
+     C***02*****           UPDATBPACCDF                                   E19291
+     C***03*****           UPDATBPACBDF                                   E19291
+     C   01                EXCPTBPACHU                                    E19291
+     C   02                EXCPTBPACCU                                    E19291
+     C   03                EXCPTBPACBU                                    E19291
+      *
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2250CCP2                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE2250CCP3                                           S01408
+     C*                                                                   S01408
+      *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    AUDIT - S/R for Audit Processing                           *
+     C*    CALLED FROM  -    MAIN                                     *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      *    WRITE HEADING AND READ BPACBA TO COMPARE COUNT
+      *
+     C                     WRITEHEADAU
+     C                     READ BPACBA                   95
+     C                     Z-ADDNORE      CNTCBA  50
+     C           CNTCBD    COMP CNTCBA               5252
+      *
+     C                     WRITECONTROL1
+      *
+      *    READ BPACCA TO COMPARE COUNT AND WRITE CONTROL LINE
+      *
+     C                     READ BPACCA                   94
+     C                     Z-ADDNORE      CNTCCA  50
+     C                     ADD  CNTCXD    CNTCCD                          E29207
+     C                     ADD  CNTCXD    CNTCCA                          E29207
+     C           CNTCCD    COMP CNTCCA               5151
+     C                     WRITECONTROL2
+      *
+      *    READ BPACHA TO COMPARE COUNT AND WRITE CONTROL LINE
+      *
+     C                     READ BPACHA                   93
+     C                     Z-ADDNORE      CNTCHA  50
+     C           CNTCHD    COMP CNTCHA               5050
+     C                     WRITECONTROL3
+      *
+      *  IF FILE CONTROLS OUT OF BALANCE SETON U8
+      *
+     C   50
+     COR 51
+     COR 52                SETON                     U8
+      *
+     C***********          WRITETRAILAU                                   E29170
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     O/EJECT
+     OBPACHDF E                BPACHU                                     E19291
+     O                         BCTS                                       E19291
+     OBPACCDF E                BPACCU                                     E19291
+     O                         BCTS                                       E19291
+     OBPACBDF E                BPACBU                                     E19291
+     O                         BBTS                                       E19291
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,SE2250OOP1                                           S01408
+     O*                                                                   S01408
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

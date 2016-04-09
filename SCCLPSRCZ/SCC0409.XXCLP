@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SCC0409 - End Citydealer Background Jobs                    */
+/*                                                                   */
+/*       Function: This program will be called during Input Cycle    */
+/*                 Termination.  It may only run after ICTSTART has  */
+/*                 completed and before CBC9999 sequence 00001.      */
+/*                 It will end the Citydealer background jobs and    */
+/*                 access the Citydealer DLCDSTAT data area for the  */
+/*                 Citydealer extract process.                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CCB023  *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CCM002 *CREATE     DATE 04SEP95              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CCM002 - Midas/Citydealer Interface (Phases V and VI)       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*/COPY WNCPYSRC,SCC0409001                                          */
+             DCL        VAR(&CDSTAT) TYPE(*CHAR) LEN(27)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(5) VALUE(32)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(32) +
+                          VALUE('END     0000000000000000000000NY')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+             SNDPGMMSG  MSG('SCC0409 - End Citydealer Background +
+                          Jobs') TOMSGQ(MRUNQ)
+/**/
+/*    Retrieve the values in data area DLCDSTAT.                     */
+/**/
+             RTVDTAARA  DTAARA(DLCDSTAT) RTNVAR(&CDSTAT)
+/**/
+/*    If &CDSTAT is set to 'Y', send the message to the data queue   */
+/*    and end the job specified in DLCDSTAT.                         */
+/**/
+             IF         COND(%SST(&CDSTAT 1 1) *EQ 'Y') THEN(DO)
+               CALL       PGM(QSNDDTAQ) PARM('DLCDDTAQ' '*LIBL' +
+                            &LENGTH &MESSAGE)
+               CHGVAR     VAR(&JOBNAME) VALUE(%SST(&CDSTAT 2 10))
+               CHGVAR     VAR(&USER) VALUE(%SST(&CDSTAT 12 10))
+               CHGVAR     VAR(&JOBNUM) VALUE(%SST(&CDSTAT 22 6))
+               ENDJOB     JOB(&JOBNUM/&USER/&JOBNAME) SPLFILE(*YES)
+               MONMSG     MSGID(CPF0001 CPF1321 CPF1362)
+               CHGDTAARA  DTAARA(DLCDSTAT (1 1)) VALUE('N')
+             ENDDO
+/*/COPY WNCPYSRC,SCC0409002                                          */
+/**/
+             GOTO       CMDLBL(END)
+/**/
+/*    Abnormal termination - batch job                               */
+/**/
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC0409 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

@@ -1,0 +1,2645 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Savings a/c passbook updt print')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4032 - Savings A/C Passbook Update Print                   *
+     F*                                                               *
+     F*  Function:  This program, upon request, retrieves all         *
+     F*    (I/C)    financial transactions across the account which   *
+     F*             have not yet been printed.  This includes all     *
+     F*             teller transactions entered today.  The request   *
+     F*             to update the passbook does not interrupt the     *
+     F*             normal statement production.                      *
+     F*                                                               *
+     F*  Called By: REC4032 - Savings A/C Passbook Print/Update       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CAP205             Date 16Mar10               *
+      *  Prev Amend No. CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG17966           Date 25Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 236948             Date 21Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 02Aug06               *
+      *                 BUG9249            Date 05Jun06               *
+      *                 BUG4077            Date 24Aug04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 106661             Date 17Sep97               *
+      *                 113814             Date 04Sep97               *
+     F*                 CRT002             DATE 01DEC95               *
+     F*                 S01408             Date 20JUN96               *
+     F*                 S01408             DATE 22MAY96               *
+     F*                 S01408             DATE 17APR96               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *           (Recompile)                                         *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
+      *  BUG17966 - Screen looks as if text is overwritten            *
+      *             (Recompile)                                       *
+      *  236948 - Validate negative input.                            *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  BUG9249 - System generated entries should not have a         *
+      *            teller id when printed on the passbook.            *
+      *  BUG4077 - Return Account to Cashier for multiple update,     *
+      *            as Cashier doesn't re-populate. Pad CF balance with*
+      *            zeros on return to Cashier.                        *
+      *            Also applied GEMS fixes 222844 and 222798.         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+      *  CGL007 - Account Postings Enquiry.  Recompile.               *
+     F*  106661 - Don't update Balance without explanation for        *
+     F*           Closing Interest.  Use shadow postings created by   *
+     F*           Input programs instead.                             *
+     F*           WARNING - Changing this program to allow Passbooks  *
+     F*           of Closed (as opposed to Closing) Accounts will     *
+     F*           result in duplicated Closing Interest postings.     *
+     F*  113814 - If PBTT is blank and TRAT is not present in Retail  *
+     F*           Transaction Types PF, move PBTT to OPBTYP instead   *
+     F*           of outputting a database error.                     *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  S01408 - Addition of core hook RE4032CP17                    *
+     F*  S01408 - Addition of core hook RE4032FFP1                    *
+     F*           Addition of core hook RE4032CP16                    *
+     F*           Addition of core hook RE4032CP15                    *
+     F*           Addition of core hook RE4032CP14                    *
+     F*           Addition of core hook RE4032CP13                    *
+     F*           Addition of core hook RE4032CP12                    *
+     F*           Addition of core hook RE4032CP11                    *
+     F*           Addition of core hook RE4032CP10                    *
+     F*           Addition of core hook RE4032CCP9                    *
+     F*           Addition of core hook RE4032CCP8                    *
+     F*           Addition of core hook RE4032CCP7                    *
+     F*           Addition of core hook RE4032CCP6                    *
+     F*           Addition of core hook RE4032CCP5                    *
+     F*           Addition of core hook RE4032CCP4                    *
+     F*           Addition of core hook RE4032CCP3                    *
+     F*  S01408 - Addition of core hook RE4032CCP2                    *
+     F*           Addition of core hook RE4032CCP1                    *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N   P A R A M E T E R S                        *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,RE4032FFP1                                           S01408
+     F*                                                                   S01408
+     FACNUM   IF  E           K        DISK
+      ** A/C details - retail a/c sequence
+      *
+     F*REACR**IF**E**         K        DISK                               106661
+      ***Retail*Accrued Interest File                                     106661
+      *
+     F/COPY WNCPYSRC,RE4032F003
+     FAPOST   UF  E           K        DISK         KINFSR *PSSR
+      ** GL A/C Postings
+     F                                              KCOMIT
+     F            APOSTRAF                          KIGNORE
+     F/COPY WNCPYSRC,RE4032F004
+      *
+     FTTACMTL2UF  E           K        DISK         KINFSR *PSSR
+      ** Teller trans shadow postings file
+     F                                              KCOMIT
+      *
+     FPBUDCPD UF  E           K        DISK         KINFSR *PSSR A
+      ** Passbok update control details
+     F                                              KCOMIT
+      *
+     FPBUDCPH UF  E                    DISK         KINFSR *PSSR
+      ** Passbok update control header
+     F                                              KCOMIT
+      *
+     FREIAC   IF  E           K        DISK
+     F** Retail Interest and Charges File
+     F/COPY WNCPYSRC,RE4032F001
+     F*
+     FRE4032P1O   E                    PRINTER                        UC
+      ** Passbook printer file
+     F/COPY WNCPYSRC,RE4032F002
+      *
+     F***RE4032DFCF  E                    WORKSTN      KINFSR *PSSR       CRT002
+     FRE4032DFCF  E                    WORKSTN      KINFSR *PSSR      UC  CRT002
+      ** Display file - Savings a/c passbook update print
+      *
+      /COPY ZSRSRC,RBWLOGF1                                               CRT002
+      *                                                                   CRT002
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*   KA  - Accept details                                        *
+     F*   KC  - Exit Program                                          *
+     F*   KE  - Refresh Screen                                        *
+     F*   KF  - Accept details                                        *
+     F*   KL  - Previous screen                                       *
+     F*                                                               *
+     F*   10  - Message Subfile End Indicator (SFLEND)                *
+     F*                                                               *
+     F*   11  - Error in SRACNO- Retail a/c number                    *
+     F*   12  - Error in SLINO - Line number                          *
+     F*   13  - Error in SBFBAL- B/F passbook balance                 *
+     F*   14  - Do not display "F12=Previous" message                 *
+     F*   15  - More than one page entries to be print                *
+     F*   16  - F3 was taken to exit                                  *
+     F*                                                               *
+     F****20**-*C/F*balance*is*DR*(positive)**                        *   CRT002
+     F*   20  - C/F balance is CR (negative)                          *   CRT002
+     F*   21  - Posting amount is debit                               *
+      *   30  - Posting is from APOSTPD                               *                      BUG9249
+     F*                                                               *
+     F*   50  - Invalid input indicator                               *
+     F*   51  - Control indicator                                     *
+     F*   60  - Pad routine indicator                                 *                      BUG4077
+     F*   61  - Test bit indicator                                    *
+     F*   62  - Printed indicator for LF/TTACMTL2                     *   CRT002
+     F*   69  - General error indicator                               *
+     F*                                                               *
+     F*   70  - General Indicator Used For CHAIN                      *
+     F*   79  - End of file indicator                                 *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F* U7-U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ACCINP - Accept Input Process                                *
+     F*  DBERR  - Database Error Handling                             *
+     F*  FIRST  - Initial Processing                                  *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*  INT01  - Initialise error indicators                         *
+     F*  LAST   - Final processing - terminate pgm.                   *
+     F*  MAIN   - Control Process                                     *
+     F*  PAD    - Pad field with leading zeros                        *                      BUG4077
+     F*  PALIGN - Align printer to start print line                   *
+     F*  PCMTXT - Prepare comit text                                  *
+     F*  PRTDET - Print detail record & update                        *
+     F*  PRTPST - Print Today's Postings                              *
+     F*  PRTUPB - Print & Update Passbook                             *
+     F*  PRUPST - Print Updated Postings                              *
+     F*  RFRESH - Refresh screen                                      *
+     F*  SCRINP - Detail screen input                                 *
+     F*  SETDSP - Set indicators for display                          *
+     F*  SNDMSG - Send program message parameters                     *
+     F*  UPDRTN - Control rtn. for updates                            *
+     F*  VALAMT - Validate amount                                     *
+     F*  VALDET - Validate Details                                    *
+     F*  WRPBUD - Write passbook control details                      *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Standard RTS Subroutines                                     *
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZALIGN - Validate amount fields                              *
+     F*  ZDATE2 - Convert daynumber to date format                    *
+     F*  ZFRPED - Format and edit amount field                        *
+     F*  ZTNLU1 - Access dataarea for next transaction no.            *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250- Clear Message Queue                                 *
+     F*  SCC0240- Send Message to program queue                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *                                                                                      BUG4077
+      ** Array for padding with zeros                                                        BUG4077
+     E                    RTE        16  1  A            Padding                             BUG4077
+      /COPY ZSRSRC,ZALIGNZ1
+      ** Array for both SR.ZALIGN AND SR.ZEDIT
+      *
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      ** Array for SR.ZDATE2
+     E/COPY WNCPYSRC,RE4032E001
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY WNCPYSRC,RE4032E002
+     IAPOSTPDF
+      ** Renamed fields in LF/APOST
+     I              ACNO                            SPACNO
+     I/COPY WNCPYSRC,RE4032I005
+      *
+     IPBUDCPDF
+      ** Renamed fields in PF/PBUDCPD
+     I              PSTD                            PBPSTD
+      *
+     IRSACMTPO
+      ** Renamed fields in LF/TTACMTL2
+     I              BRCA                            BRCAX
+      *
+     I@AMTDS      DS                             16
+      ** Data structure to hold amount returned by zfrped
+     I                                        1  14 @SBFBL
+     I/COPY WNCPYSRC,RE4032I002
+      *
+     I@ODAMT      DS                             19
+      ** Data structure to hold debit amount for print
+     I                                        1  17 ODAMT
+      *
+     I@OCAMT      DS                             19
+      ** Data structure to hold credit amount for print
+     I                                        1  17 OCAMT
+      *
+     I@OCFBL      DS                             19
+      ** Data structure to hold c/f balance for print
+     I                                        1  17 OCFBAL
+     I/COPY WNCPYSRC,RE4032I001
+      *
+     I            DS
+      ** Data structure to define keyfield
+     I                                    P   1   30K1PDT
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 @USER
+      **  Field Containing User ID
+      *
+      *                                                                   CRT002
+     ITTIME       DS                             12                       CRT002
+      *                                                                   CRT002
+     I                                        1   2 WTHR                  CRT002
+     I                                        3   4 WTMN                  CRT002
+     I                                        5   6 WTSS                  CRT002
+     I                                        1   60WTIME                 CRT002
+      *                                                                   CRT002
+     I                                        7   8 WDT1                  CRT002
+     I                                        9  10 WDT2                  CRT002
+     I                                       11  12 WDT3                  CRT002
+     I                                        7  120WDATE                 CRT002
+      *                                                                   CRT002
+     I                                        1  120WTMDS                 CRT002
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      *
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+      *
+      /COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure to update last transaction number
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *
+     ICMTTXT      DS                             61
+      *
+      **  COMIT TEXT
+     I                                        1   50@NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  34 USRIDX
+     I                                       35  44 SRACNO
+     I                                       45  470SLINO
+     I                                       48  61 SBFBAL
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to hold key fields of LF/TTACMTL2
+     I**********                              1  18 @KACMT                                    CGL029
+     I                                        1  24 @KACMT                                    CGL029
+     I**********                              1   60K2CUS                                    CSD027A
+     I                                        1   6 K2CUS                                    CSD027A
+     I                                        7   9 K2CCY
+     I**********                             10  130K2ACD                                     CGL029
+     I**********                             14  150K2ASQ                                     CGL029
+     I**********                             16  18 K2BRC                                     CGL029
+     I                                       10  190K2ACD                                     CGL029
+     I                                       20  210K2ASQ                                     CGL029
+     I                                       22  24 K2BRC                                     CGL029
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to redefine account no. of lf/ttacmtl2
+     I                                        1  24 @ACKEY                                    CGL029
+     I**********                              1   60CUSN                                     CSD027A
+     I                                        1   6 CUSN                                     CSD027A
+     I                                        7   9 CCYD
+     I**********                             10  130ACDE                                      CGL029
+     I**********                             14  150ASNC                                      CGL029
+     I**********                             16  18 BRCAX                                     CGL029
+     I                                       10  190ACDE                                      CGL029
+     I                                       20  210ASNC                                      CGL029
+     I                                       22  24 BRCAX                                     CGL029
+      *
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to hold account no.of key of LF/APOST
+     I**********                              1  18 @KPOST                                    CGL029
+     I                                        1  24 @KPOST                                    CGL029
+     I                                        1   3 K1BRC
+     I**********                              4   90K1CUS                                    CSD027A
+     I                                        4   9 K1CUS                                    CSD027A
+     I                                       10  12 K1CCY
+     I**********                             13  160K1ACD                                     CGL029
+     I**********                             17  180K1ASQ                                     CGL029
+     I                                       13  220K1ACD                                     CGL029
+     I                                       23  240K1ASQ                                     CGL029
+      *
+     I/COPY WNCPYSRC,RE4032I004
+     I**********  DS                             18                                           CGL029
+     I            DS                             24                                           CGL029
+      ** Data structure to redefine account no. of LF/APOST
+     I**********                              1  18 @SPKEY                                    CGL029
+     I                                        1  24 @SPKEY                                    CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                     CSD027A
+     I                                        4   9 CNUM
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I/COPY WNCPYSRC,RE4032I006
+     I*                                                                   CRT002
+     I/COPY ZSRSRC,RBPBLNI1                                               CRT002
+     I*                                                                   CRT002
+     I/COPY ZSRSRC,RBWLOGI1                                               CRT002
+     I*                                                                   CRT002
+     I/COPY WNCPYSRC,RE4032I003
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency file Details
+     I*
+     ISDRETR    E DSSDRETRPD
+     I** Retail Transaction Types Details
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, Long data structure
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Process                           *
+      *                                                               *
+      * CALLS      FIRST  - Initial Processing                        *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            RFRESH - Refresh screen                            *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C*
+     C** Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+      ** Initial processing
+     C                     EXSR FIRST
+      *
+      ** Do while cmd/3 is not pressed
+     C           *INKC     DOWEQ'0'
+      *
+      ** Initialise fields and indicators
+     C                     EXSR RFRESH
+      *
+      ** Perform screen input process
+     C                     EXSR SCRINP
+      *
+     C                     END
+      *
+      **  Final Processing
+     C                     EXSR LAST
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLS             -                                           *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            RFRESH - Refresh screen                            *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           SCRINP    BEGSR                           ** SCRINP **
+      *
+      ** Do while input not valid
+     C           *IN50     DOWEQ'1'
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'I'                                       CRT002
+      *
+      ** Display message subfile control record
+     C                     WRITERE4032C0
+      *
+      ** Display & accept screen format
+     C                     EXFMTRE4032F0
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'P'                                       CRT002
+      *                                                                   CRT002
+     C                     EXSR RFRESH                                    CRT002
+     C                     MOVEL*BLANKS   REPPUI                          CRT002
+     C                     MOVEL*BLANKS   WBFBAL 11                       CRT002
+      *                                                                   CRT002
+     C                     EXSR RDQMS                                     CRT002
+     C                     EXSR DQERR                                     CRT002
+      *                                                                   CRT002
+     C                     MOVELP@QDR     REPPUI                          CRT002
+      *                                                                   CRT002
+     C           RLMSTY    IFNE '*END'                                    CRT002
+      *                                                                   CRT002
+     C                     MOVE WAACN     SRACNO                          CRT002
+     C                     MOVELRLAAFM    WAAFM                                              BUG4077
+     C                     MOVELRLAFAN    WAFAN                                              BUG4077
+     C                     MOVE RLLPBB    WBFBAL                          CRT002
+     C                     MOVE RLLPBS    WSIGN   1                       CRT002
+     C                     MOVE RLLPBL    SLINO                           CRT002
+      *                                                                   CRT002
+      ** Initilise screen passbook balance.                               CRT002
+      *                                                                   CRT002
+     C           WSIGN     IFEQ 'N'                                       CRT002
+     C                     MOVEL'-'       SBFBAL                          CRT002
+     C                     END                                            CRT002
+     C                     MOVE WBFBAL    SBFBAL                          CRT002
+      *                                                                   CRT002
+      ** Update Log File                                                  CRT002
+      *                                                                   CRT002
+     C                     CLEARLOGDS                                     CRT002
+     C                     CLEARWCMSG                                     CRT002
+     C                     MOVE RLCMSQ    WCMSQ                           CRT002
+     C                     MOVELRLBRCA    WBRCA                           CRT002
+     C                     MOVELRLUSID    WUSID                           CRT002
+     C                     MOVE 'N'       WSUCM                           CRT002
+     C                     MOVE 'DR'      WSTAT                           CRT002
+     C                     TIME           WTMDS  120                      CRT002
+     C           WTHR      CAT  ':'       WA      3                       CRT002
+     C           WTMN      CAT  ':'       WB      3                       CRT002
+     C           WA        CAT  WB        WC      6                       CRT002
+     C           WC        CAT  WTSS      WSTTM                           CRT002
+     C                     MOVELWSTTM     WRCTM   8                       CRT002
+     C           WDT1      CAT  '/'       WA      3                       CRT002
+     C           WDT2      CAT  '/'       WB      3                       CRT002
+     C           WA        CAT  WB        WC      6                       CRT002
+     C           WC        CAT  WDT3      WRCDT   8                       CRT002
+     C                     MOVELP@QDR     WCMSG                           CRT002
+     C                     EXSR WRLOG                                     CRT002
+     C                     EXSR PCMTXT                                    CRT002
+      *                                                                   CRT002
+     C           CMTTXT    COMIT                                          CRT002
+      *                                                                   CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                   CRT002
+      ** '*END' message received for program                              CRT002
+      *                                                                   CRT002
+     C                     MOVE '1'       *INKC                           CRT002
+      *                                                                   CRT002
+     C                     EXSR PCMTXT                                    CRT002
+     C           CMTTXT    COMIT                                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+      ** Process the input depending on the key pressed
+      *
+      ** If Help key is pressed, perform help processing
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/5 is pressed - refresh the screen & redisplay appr.scrn
+     C           *INKE     CASEQ'1'       RFRESH
+      *
+      ** If enter key is pressed - validate the screen input
+     C                     CAS            VALDET
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize screen/work fields             *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           RFRESH    BEGSR                           ** RFRESH **
+      *
+      ** Initialize all indicators
+     C                     EXSR INT01
+      *
+      ** Initialize screen/work fields
+     C                     EXSR IFLDS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  RFRESH - Refresh screen                            *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+      ** Setof screen conditioning & error indicators
+     C                     SETOF                     111213
+     C                     SETOF                     16
+      *
+      ** Seton indicator for invalid input
+     C                     SETON                     50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      * CALLS      ACCINP - Accept Input Process                      *
+      *            INT01  - Initialise error indicators               *
+      *            SNDMSG - Send program message parameters           *
+      *            VALAMT - Validate amount                           *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           VALDET    BEGSR                           ** VALDET **
+      *
+      ** Intialise error indicators
+     C                     EXSR INT01
+      *
+      ** Setof indicator for invalid input
+     C                     SETOF                     50
+     C                     SETOF                     70
+      *
+      ** Initialise workfields.                                                               236948
+      *                                                                                       236948
+     C                     MOVE *BLANKS   SSIGN                                               236948
+      *                                                                                       236948
+     C                     MOVE *BLANKS   TACNO  10
+     C                     MOVELSRACNO    @ACNO  100
+     C                     MOVEL@ACNO     TACNO
+      *
+     C           SRACNO    IFNE TACNO
+     C           @ACNO     ORLT 0
+     C                     SETON                     70
+     C                     END
+      *
+      ** Access lf/acnum
+     C           *IN70     IFEQ '0'
+     C           @ACNO     CHAINACCNTABF             70
+     C                     END
+      *
+      ** If record not found
+     C           *IN70     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     1150
+     C                     MOVEL'USR0050' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Check account status (must not be closed)
+     C           RECI      IFEQ 'C'
+     C                     SETON                     1150
+     C                     MOVEL'USR0051' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+      *
+      ** Check account sub type (must be savings a/c)
+     C           STYP      IFNE 'S'
+     C                     SETON                     1150
+     C                     MOVEL'USR0119' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+     C*
+     C** Check if passbook is used on this account
+     C*
+     C           KLREIA    CHAINREIAC                70
+     C*
+     C           *IN70     IFEQ '1'
+     C                     Z-ADD03        DBASE            ***************
+     C                     MOVEL'REIACD  'DBFILE           ** DBERR 003 **
+     C                     MOVEL@SPKEY    DBKEY            ***************CRT002
+     C***********          MOVEL@KPOST    DBKEY                           CRT002
+     C                     EXSR DBERR
+     C                     ELSE
+     C           PBKU      IFEQ 'N'
+     C                     SETON                     1150
+     C                     MOVEL'USR1220' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,RE4032C007
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+      *
+      ** Store a/c ccy and name & no.
+     C                     MOVELCCY       SCCY
+     C                     MOVELANAM      SANAM
+     C                     MOVELSRACNO    SACNO
+      *
+      ** Access lf/sdcurrl0 for no. of decimal places of a/c ccy
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCCY      @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     70
+     C                     END
+      *
+      ** If record not found - initialise no. of decimal places to 0
+     C           *IN70     IFEQ '1'
+     C                     Z-ADD0         A6NBDP
+     C                     END
+      *
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+      *
+      ** Validate line number if entered
+     C           SLINO     IFNE *ZEROS
+     C           SLINO     IFLT 1
+     C           SLINO     ORGT @MAXLN
+     C                     SETON                     1250
+     C                     MOVEL'USR0120' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE                                           CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVE SLINO     @CULIN                          CRT002
+     C                     ENDIF                                          CRT002
+     C                     END
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+     C/COPY WNCPYSRC,RE4032C038
+      *
+      ** Check whether passbook has been updated for account number
+      ** i.e. record must exist in pf/pbudcpd
+     C           @ACNO     CHAINPBUDCPDF             70
+      *
+      ** If no record exists
+     C           *IN70     IFEQ '1'
+      *
+      ** Set not updated flag
+     C                     MOVEL'N'       @UPDFL  1
+      *
+     C                     ELSE
+      *
+     C/COPY WNCPYSRC,RE4032C037
+      ** Initialise not updated flag
+     C                     MOVEL' '       @UPDFL
+      *
+     C                     END
+      *
+      ** Check if B/F amount entry is mandatory
+     C           PAUTH     IFNE 'Y'
+     C                     EXSR VALAMT
+      *
+     C                     ELSE
+      *
+      ** If passbook not updated and bf/balance entered
+     C           *IN70     IFEQ '1'
+     C           SBFBAL    ANDNE*BLANKS
+     C           SBFBAL    ANDNE*ZEROS
+     C                     SETON                     1350
+     C                     MOVEL'USR0121' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Validate balance if entered
+     C           *IN70     IFEQ '0'
+     C           SBFBAL    ANDNE*BLANKS
+     C           SBFBAL    ANDNE*ZEROS
+     C                     EXSR VALAMT
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD0         @BFBAL
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALDE9                                    CRT002
+     C                     END                                            CRT002
+      *
+      ** If passbook not updated - initialise variables req.for print
+     C           @UPDFL    IFEQ 'N'
+     C                     Z-ADD0         SPBL
+     C                     Z-ADD0         CFPB
+     C                     Z-ADD0         PBPSTD
+     C                     END
+      *
+      ** If there are no errors in validation
+     C           *IN50     IFEQ '0'
+     C*
+     C** Take abs. value of the balance for comparsion
+     C           CFPB      IFLT 0
+     C           CFPB      MULT -1        TCFPB  150
+     C                     ELSE
+     C                     Z-ADDCFPB      TCFPB
+     C                     END
+      *
+      ** If balance is entered and not same as file bal. - Warning
+     C           PAUTH     IFEQ 'Y'
+     C           @BFBAL    ANDGT0
+     C           @BFBAL    ANDNETCFPB
+     C           PAUTH     ORNE 'Y'
+     C           @BFBAL    ANDNETCFPB
+      *
+      ** Check if authorised to override difference
+     C           PAUTH     IFNE 'Y'
+     C                     SETON                     1350
+     C                     END
+     C                     MOVEL'USR0122' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+     C/COPY WNCPYSRC,RE4032C002
+      ** If there are no errors in validation
+     C           *IN50     IFEQ '0'
+      *
+      ** Perform accept input
+     C                     EXSR ACCINP
+      *
+     C                     END
+      *                                                                   CRT002
+     C           VALDE9    TAG                                            CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+      *                                                                   CRT002
+     C                     CLEARLOGDS                                     CRT002
+     C                     CLEARWCMSG                                     CRT002
+      *                                                                   CRT002
+     C                     MOVELRLMSTY    RMMSTY                          CRT002
+     C                     MOVE @MSGID    RMHMSI                          CRT002
+     C                     MOVE 'E'       RMHMSS                          CRT002
+      *                                                                   CRT002
+     C                     MOVEL*BLANKS   @MSGDT                          CRT002
+     C                     EXSR RTVMSG                                    CRT002
+     C                     MOVEL@MSGTX    RMHSMS                          CRT002
+      *                                                                   CRT002
+      ** Send error message to data queue                                 CRT002
+      *                                                                   CRT002
+     C                     MOVELREPPUO    P@QDS                           CRT002
+     C                     MOVELP@QDS     WCMSG                           CRT002
+     C                     EXSR SDQMS                                     CRT002
+     C                     EXSR DQERR                                     CRT002
+     C*                                                                   CRT002
+     C                     MOVEL*BLANKS   REPPUO                          CRT002
+      *                                                                   CRT002
+      ** Update Log File                                                  CRT002
+      *                                                                   CRT002
+     C                     MOVE RLCMSQ    WCMSQ                           CRT002
+     C                     MOVELRLBRCA    WBRCA                           CRT002
+     C                     MOVELRLUSID    WUSID                           CRT002
+     C                     MOVEL'N'       WSUCM                           CRT002
+     C                     MOVE 'DS'      WSTAT                           CRT002
+     C                     TIME           WTMDS                           CRT002
+     C           WTHR      CAT  ':'       WA                              CRT002
+     C           WTMN      CAT  ':'       WB                              CRT002
+     C           WA        CAT  WB        WC                              CRT002
+     C           WC        CAT  WTSS      WSTTM                           CRT002
+     C                     EXSR WRLOG                                     CRT002
+      *                                                                   CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     EXSR PCMTXT                                    CRT002
+     C           CMTTXT    COMIT                                          CRT002
+     C                     END                                            CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALAMT - Validate amount                           *
+      *                                                               *
+      * CALLS      SNDMSG - Send program message parameters           *
+      *            ZALIGN - Validate amount fields                    *
+      *            ZFRPED - Format and edit amount field              *
+      *            PAD    - Pad Balance with zeros for Cashier.       *                      BUG4077
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           VALAMT    BEGSR                           ** VALAMT **
+      *
+      ** B/F Passbook balance amount entry is mandatory
+     C           SBFBAL    IFEQ *BLANKS
+     C                     SETON                     1350
+     C                     MOVEL'USR0503' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           *IN50     ANDEQ'1'                                       CRT002
+     C                     GOTO VALAM9                                    CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVEL*BLANKS   W@BFBL 13                       CRT002
+     C                     MOVE SBFBAL    W@BFBL                          CRT002
+     C                     MOVEL*BLANK    W@SIGN  1                       CRT002
+     C                     MOVELSBFBAL    W@SIGN                          CRT002
+     C                     MOVEL*BLANKS   ZFIELD                          CRT002
+     C                     MOVE W@BFBL    ZFIELD                          CRT002
+     C                     Z-ADDA6NBDP    ZADEC                           CRT002
+     C                     EXSR ZEDIT                                     CRT002
+     C                     MOVE ZFIELD    SBFBAL                          CRT002
+     C                     MOVELW@SIGN    SBFBAL                          CRT002
+     C                     ENDIF                                          CRT002
+      *
+      ** Set up decimal values
+     C                     Z-ADDA6NBDP    ZADEC
+     C           13        SUB  A6NBDP    ZADIG
+      *
+      ** Align amount - and move it to numeric field
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SBFBAL    ZFIELD
+     C                     Z-ADD1         ZX
+     C*
+     C**   Move input field to array  ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**   Check if the first non-blank element of the array to be
+     C**   '-', if yes initialise the array element before sending
+     C**   to ZALIGN for validation
+     C           ZX        DOWLE15
+     C           ZA1,ZX    IFEQ '-'
+     C                     MOVEL*BLANKS   ZA1,ZX
+     C                     MOVEL'-'       SSIGN
+     C                     Z-ADD16        ZX
+     C                     MOVEAZA1       ZFIELD
+     C                     ELSE
+     C           ZA1,ZX    IFNE *BLANKS
+     C           ZA1,ZX    ANDNE'-'
+     C                     Z-ADD16        ZX
+     C                     ELSE
+     C                     ADD  1         ZX
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    @BFBAL 130
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C                     SETON                     1350
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** If there are no errors - edit the amount field - insert dec.pt
+     C           *IN13     IFEQ '0'
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE @BFBAL    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   @AMTDS
+     C                     MOVE *BLANKS   SBFBAL
+     C                     MOVE ZOUT22    @AMTDS
+     C                     MOVEL@SBFBL    SBFBAL
+     C           SSIGN     IFEQ '-'
+     C                     MOVEL'-'       SBFBAL
+     C                     END
+     C                     END
+      *                                                                   CRT002
+     C           VALAM9    TAG                                            CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ACCINP - Accept Input Process                      *
+      *                                                               *
+      * CALLS      LAST   - Final processing - terminate pgm.         *
+      *            PRTUPB - Print & Update Passbook                   *
+      *            SETDSP - Set indicators for display                *
+      *                                                               *
+      * CALLED BY  VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           ACCINP    BEGSR                           ** ACCINP **
+      *
+     C                     SETOF                     51
+     C                     SETOF                     14
+      *
+      ** Format file c/f balance for screen display - Last Passbook Bal.
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CFPB      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   SCFBAL
+     C                     MOVE ZOUT22    SCFBAL
+     C           CFPB      IFLT *ZERO
+     C                     MOVEL'-'       SCFBAL
+     C                     END
+      *
+      ** Format previous line number for screen display
+     C           SPBL      IFEQ 1
+     C                     MOVE @MAXLN    SLLPR
+     C                     END
+      *
+     C           SPBL      IFLT 1
+     C                     MOVE SPBL      SLLPR
+     C                     END
+      *
+     C           SPBL      IFGT 1
+     C                     Z-ADD0         @SLLPR  20
+     C           SPBL      SUB  1         @SLLPR
+     C                     MOVE @SLLPR    SLLPR
+     C                     END
+      *
+      *
+      ** Format file c/f balance for screen display
+     C           SBFBAL    IFEQ *BLANKS
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CFPB      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   SBFBAL
+     C                     MOVE ZOUT22    @AMTDS
+     C                     MOVEL@SBFBL    SBFBAL
+     C           CFPB      IFLT *ZERO
+     C                     MOVEL'-'       SBFBAL
+     C                     END
+      *
+     C                     END
+      *
+     C           SLINO     IFEQ *ZERO
+     C                     MOVE SPBL      SLINO
+     C                     END
+     C/COPY WNCPYSRC,RE4032C029
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'I'                                       CRT002
+      *
+     C/COPY WNCPYSRC,RE4032C003
+      ** Do until cmd/1 is pressed (i.e. 51 is on)
+     C           *IN51     DOUEQ'1'
+      *
+      ** Display message subfile control record
+     C                     WRITERE4032C0
+      *
+      ** Display override screen format
+     C                     EXFMTRE4032F1
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+      ** Process the input depending on the key pressed
+      *
+      ** If Help key is pressed, perform help processing
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/1 is pressed - print & update passbook
+     C           *INKA     CASEQ'1'       PRTUPB
+      *
+      ** If cmd/12 or enter key is pressed - Set indicators for dsplay
+     C                     CAS            SETDSP
+      *
+     C                     END
+      *
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'P'                                       CRT002
+      *                                                                   CRT002
+     C                     CLEARLOGDS                                     CRT002
+     C                     MOVE RLCMSQ    WCMSQ                           CRT002
+     C                     MOVELRLBRCA    WBRCA                           CRT002
+     C                     MOVELRLUSID    WUSID                           CRT002
+      *                                                                   CRT002
+     C                     EXSR PRTUPB                                    CRT002
+      *                                                                   CRT002
+      ** Update Log File                                                  CRT002
+      *                                                                   CRT002
+     C                     MOVEL'Y'       WSUCM                           CRT002
+     C                     MOVE 'DS'      WSTAT                           CRT002
+     C                     TIME           WTMDS                           CRT002
+     C           WTHR      CAT  ':'       WA                              CRT002
+     C           WTMN      CAT  ':'       WB                              CRT002
+     C           WA        CAT  WB        WC                              CRT002
+     C           WC        CAT  WTSS      WSTTM                           CRT002
+     C                     MOVELWSTTM     WCMTM                           CRT002
+     C                     EXSR WRLOG                                     CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,RE4032C004
+      *****************************************************************
+     C/COPY WNCPYSRC,RE4032C005
+      /EJECT
+     C/COPY WNCPYSRC,RE4032C006
+      *****************************************************************
+      *                                                               *
+      *            PRTUPB - Print & Update Passbook                   *
+      *                                                               *
+      * CALLS      PALIGN - Align printer to start print line         *
+      *            PRTPST - Print Today's Postings                    *
+      *            PRUPST - Print Updated Postings                    *
+      *            UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      * CALLED BY  ACCINP - Accept Input Process                      *
+      *                                                               *
+      *****************************************************************
+     C           PRTUPB    BEGSR                           ** PRTUPB **
+      *
+      ** Seton 51 to come out of loop
+     C                     SETON                     51
+      *
+      ** Set start line number for printing
+     C           SLINO     IFNE *ZEROS
+     C                     Z-ADDSLINO     @STLIN
+     C                     ELSE
+     C                     Z-ADDSPBL      @STLIN
+     C                     END
+      *
+      ** If start line number is 0 set it to 1
+     C           @STLIN    IFEQ *ZEROS
+     C                     Z-ADD1         @STLIN
+     C                     END
+      *
+      ** Setup c/f balance
+     C           @BFBAL    IFNE *ZEROS
+     C           CFPB      ANDGT0
+      *
+      ** Check for debit balance and set accordingly
+     C           SSIGN     IFEQ '-'
+     C                     Z-SUB@BFBAL    @BFBAL
+     C                     END
+     C                     Z-ADD@BFBAL    @CFBAL
+     C                     ELSE
+     C                     Z-ADDCFPB      @CFBAL
+     C                     END
+      *
+      ** Shadow Postings for Closing now produced by Teller.              106661
+      ***Check*if*A/C*status*is*closed.**If it is, set the key for        106661
+      ***lf/reacr*and*check*if*there*are*interest records not yet         106661
+      ***posted*(i.e.*those*that*have*not*been accounted for).            106661
+     C********** ACST      IFEQ 'C'                                       106661
+     C********** @KREAC    KLIST                                          106661
+     C**********           KFLD           CNUM                            106661
+     C**********           KFLD           CCY                             106661
+     C**********           KFLD           ACOD                            106661
+     C**********           KFLD           ACSQ                            106661
+     C**********           KFLD           BRCA                            106661
+     C********** @KREAC    CHAINREACR                70                   106661
+     C**N70*****           ADD  DAIC1     @CFBAL                          106661
+     C**N70*****           ADD  MADI      @CFBAL                          106661
+     C**N70*****           ADD  GADI      @CFBAL                          106661
+     C**N70*****           SUB  CAIC1     @CFBAL                          106661
+     C**N70*****           SUB  MACI      @CFBAL                          106661
+     C**N70*****           SUB  GACI      @CFBAL                          106661
+     C**********           END                                            106661
+      *
+      ** Set printer to start passbook print line
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C                     EXSR PALIGN
+     C                     END                                            CRT002
+     C/COPY WNCPYSRC,RE4032C039
+      *
+      ** Print updated postings from lf/APOST
+     C                     MOVE *ON       *IN30                                              BUG9249
+     C                     EXSR PRUPST
+     C                     MOVE *OFF      *IN30                                              BUG9249
+      *
+      ** Print today's postings from lf/ttacmtl2
+      ** For Mode P, perform printing of records from LF/TTACMTL2         CRT002
+      ** only when there are no more LF/APOST records to print.           CRT002
+      ** (*IN79 is on.)                                                   CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C           PMODE     OREQ 'P'                                       CRT002
+     C           *IN79     ANDEQ'1'                                       CRT002
+     C                     EXSR PRTPST
+     C                     ENDIF                                          CRT002
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C/COPY WNCPYSRC,RE4032C030
+     C           PMODE     ANDEQ'I'                                       CRT002
+     C/COPY WNCPYSRC,RE4032C008
+     C                     CLOSERE4032P1
+     C/COPY WNCPYSRC,RE4032C009
+     C                     MOVE 'N'       WOPEN   1
+     C                     END
+      *
+      ** Update control file if atleast one record is printed
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C           @RECNT    IFGT 0
+     C           @RCNT2    ORGT 0
+     C                     EXSR UPDRTN
+     C                     Z-ADD0         @RECNT
+     C                     Z-ADD0         @RCNT2
+     C                     END
+     C                     ENDIF                                          CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETDSP - Set indicators for display                *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  ACCINP - Accept Input Process                      *
+      *                                                               *
+      *****************************************************************
+     C           SETDSP    BEGSR                           ** SETDSP **
+      *
+      ** If cmd/12 is pressed - display prev.screen
+     C           *INKL     IFEQ '1'
+      *
+      ** Seton 51 to come out override screen loop
+     C                     SETON                     51
+      *
+      ** Seton indicator to loop to display previous screen
+     C                     SETON                     50
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PALIGN - Align printer to start print line         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  PRTUPB - Print & Update Passbook                   *
+      *                                                               *
+      *****************************************************************
+     C           PALIGN    BEGSR                           ** PALIGN **
+      *
+     C/COPY WNCPYSRC,RE4032C010
+     C                     OPEN RE4032P1
+     C                     MOVE 'Y'       WOPEN
+     C/COPY WNCPYSRC,RE4032C011
+      *
+      ** Set to first line of page
+     C                     WRITEHEADER
+     C/COPY WNCPYSRC,RE4032C012
+      *
+      ** Set current line number to 1
+     C                     Z-ADD1         @CULIN
+      *
+      ** Do while current line number not equal to start line number
+     C           @CULIN    DOWNE@STLIN
+     C/COPY WNCPYSRC,RE4032C013
+      *
+      ** Output blank line to printer
+     C                     WRITEBLNKLN
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP4                                           S01408
+     C*                                                                   S01408
+     C           @CULIN    IFEQ 13
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP5                                           S01408
+     C*                                                                   S01408
+     C                     WRITEBLNKLN
+     C/COPY WNCPYSRC,RE4032C014
+     C                     END
+     C/COPY WNCPYSRC,RE4032C034
+     C                     ADD  1         @CULIN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRUPST - Print Updated Postings                    *
+      *                                                               *
+      * CALLS      PRTDET - Print detail record & update              *
+      *                                                               *
+      * CALLED BY  PRTUPB - Print & Update Passbook                   *
+      *                                                               *
+      *****************************************************************
+     C           PRUPST    BEGSR                           ** PRUPST **
+      *
+      ** Setof end of file indicator
+     C                     SETOF                     79
+      *
+      ** Initialise work fields
+     C                     Z-ADD0         @RECNT
+     C                     Z-ADD0         @PSTD   50
+      *
+      ** Setup key to start file lf/APOST & lf/ttacmtl2
+     C**********           Z-ADDCNUM      K1CUS                                              CSD027A
+     C                     MOVE CNUM      K1CUS                                              CSD027A
+     C**********           Z-ADDCNUM      K2CUS                                              CSD027A
+     C                     MOVE CNUM      K2CUS                                              CSD027A
+     C                     MOVELCCY       K1CCY
+     C                     MOVELCCY       K2CCY
+     C                     Z-ADDACOD      K1ACD
+     C                     Z-ADDACOD      K2ACD
+     C                     Z-ADDACSQ      K1ASQ
+     C                     Z-ADDACSQ      K2ASQ
+     C                     MOVE BRCA      K1BRC
+     C                     MOVE BRCA      K2BRC
+     C                     Z-ADDPBPSTD    K1PDT
+      *
+      ** Set lower limit to lf/APOST
+     C/COPY WNCPYSRC,RE4032C015
+     C           KLPOST    SETLLAPOST
+      *
+     C                     READ APOST                    79
+      *
+      ** If not eof a/c no is not the same - release rec & set eof ind.
+     C           *IN79     IFEQ '0'
+     C           @SPKEY    IFNE @KPOST
+     C                     EXCPT@RLSPO
+     C                     SETON                     79
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,RE4032C016
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+      ** For Mode I, all posting lines are sent at once.  Whereas for     CRT002
+      ** Mode P, one line is sent at a time for each read from dtaq.      CRT002
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'I'                                       CRT002
+      *
+      ** Do while not eof or account number same
+     C           *IN79     DOWEQ'0'
+      *
+      ** If passbook rec. not printed - ie bit 3 of posting ind.is off
+     C                     TESTB'3'       PRIN       61
+     C           *IN61     IFEQ '1'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP10                                           S01408
+     C*                                                                   S01408
+      *
+      ** Print the record
+     C                     EXSR PRTDET
+      *
+      ** Store posting date for updating pf/pbudcpd
+     C                     Z-ADDPSTD      @PSTD   50
+      *
+      ** Add 1 to no. of records printed
+     C                     ADD  1         @RECNT
+      *
+      ** Update flag for passbook printed
+     C                     BITON'3'       PRIN
+     C                     UPDATAPOSTPDF
+     C/COPY WNCPYSRC,RE4032C017
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,RE4032C018
+      *
+     C                     EXCPT@RLSPO
+      *
+     C                     END
+      *
+     C                     READ APOST                    79
+      *
+      ** If a/c number is not the same - release rec & set eof ind.
+     C           *IN79     IFEQ '0'
+     C           @SPKEY    IFNE @KPOST
+     C                     EXCPT@RLSPO
+     C/COPY WNCPYSRC,RE4032C019
+     C                     SETON                     79
+     C                     END
+     C                     END
+      *
+     C                     END
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'P'                                       CRT002
+      *                                                                   CRT002
+     C                     MOVEL'0'       *IN61                           CRT002
+      *                                                                   CRT002
+      ** Leave loop when EOF or a valid record to be printed is found.    CRT002
+      *                                                                   CRT002
+     C           *IN79     DOWEQ'0'                                       CRT002
+     C           *IN61     ANDEQ'0'                                       CRT002
+      *                                                                   CRT002
+      ** If passbook rec. not printed - ie bit 3 of posting ind.is off    CRT002
+      *                                                                   CRT002
+     C                     TESTB'3'       PRIN       61                   CRT002
+     C           *IN61     IFEQ '1'                                       CRT002
+      *                                                                   CRT002
+     C                     MOVELPNAR      RMTRCN                          CRT002
+     C                     MOVE 'N'       WTODP   1                       CRT002
+      *                                                                   CRT002
+     C                     EXSR PRTDET                                    CRT002
+      *                                                                   CRT002
+      ** Store posting date for updating pf/pbudcpd                       CRT002
+      *                                                                   CRT002
+     C                     Z-ADDPSTD      @PSTD   50                      CRT002
+      *                                                                   CRT002
+      ** Add 1 to no. of records printed                                  CRT002
+      *                                                                   CRT002
+     C                     ADD  1         @RECNT                          CRT002
+      *                                                                   CRT002
+      ** Update flag for passbook printed                                 CRT002
+      *                                                                   CRT002
+     C                     BITON'3'       PRIN                            CRT002
+     C                     UPDATAPOSTPDF                                  CRT002
+      *                                                                   CRT002
+      ** Check whether passbook has been updated for account number       CRT002
+      ** i.e. record must exist in pf/pbudcpd                             CRT002
+      *                                                                   CRT002
+     C           @ACNO     CHAINPBUDCPDF             70                   CRT002
+      *                                                                   CRT002
+      ** If no record exists                                              CRT002
+      *                                                                   CRT002
+     C           *IN70     IFEQ '1'                                       CRT002
+      *                                                                   CRT002
+      ** Set not updated flag                                             CRT002
+      *                                                                   CRT002
+     C                     MOVEL'N'       @UPDFL  1                       CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                   CRT002
+      ** Initialise not updated flag                                      CRT002
+      *                                                                   CRT002
+     C                     MOVEL' '       @UPDFL                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+      ** Update balance in PF/PBUDCPD for every line printed so that      CRT002
+      ** further balances tally in SR/VALDET.                             CRT002
+      *                                                                   CRT002
+     C           @RECNT    IFGT 0                                         CRT002
+     C           @RCNT2    ORGT 0                                         CRT002
+     C                     EXSR UPDRTN                                    CRT002
+     C                     Z-ADD0         @RECNT                          CRT002
+     C                     Z-ADD0         @RCNT2                          CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                   CRT002
+     C                     EXCPT@RLSPO                                    CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+      ** Seach for the next record not yet printed only when a valid      CRT002
+      ** record to be printed has not been found.                         CRT002
+      *                                                                   CRT002
+     C           *IN61     IFEQ '0'                                       CRT002
+      *                                                                   CRT002
+     C                     READ APOST                    79               CRT002
+      *                                                                   CRT002
+      ** If a/c number is not the same - release rec & set eof ind.       CRT002
+      *                                                                   CRT002
+     C           *IN79     IFEQ '0'                                       CRT002
+     C           @SPKEY    IFNE @KPOST                                    CRT002
+     C                     EXCPT@RLSPO                                    CRT002
+     C                     SETON                     79                   CRT002
+     C                     ENDIF                                          CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDDO                                          CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTPST - Print Today's Postings                    *
+      *                                                               *
+      * CALLS      PRTDET - Print detail record & update              *
+      *                                                               *
+      * CALLED BY  PRTUPB - Print & Update Passbook                   *
+      *                                                               *
+      *****************************************************************
+     C           PRTPST    BEGSR                           ** PRTPST **
+      *
+      ** Setof end of file indicator
+     C                     SETOF                     79
+      *
+      ** Initialise work fields
+     C                     Z-ADD0         @RCNT2
+     C/COPY WNCPYSRC,RE4032C036
+      *
+      ** Set lower limit to lf/ttacmtl2
+     C           KLACMT    SETLLTTACMTL2
+      *
+     C                     READ TTACMTL2                 79
+      *
+      ** If not eof & a/c no is not the same - release rec & set eof
+     C           *IN79     IFEQ '0'
+     C           @KACMT    IFNE @ACKEY
+     C                     EXCPT@RLSAC
+     C                     SETON                     79
+     C                     END
+     C                     END
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+      ** For Mode I, all posting lines are sent at once.  Whereas for     CRT002
+      ** Mode P, one line is sent at a time for each read from dtaq.      CRT002
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'I'                                       CRT002
+      *
+      ** Do while not eof or account number same
+     C           *IN79     DOWEQ'0'
+      *
+      ** If passbook rec. not printed -
+     C           APBI      IFNE 'Y'
+     C           TBID      ANDNE*BLANKS
+      *
+      ** Print the record
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP1                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDPTDT      PSTD
+     C                     MOVELPASS      PBTT
+     C                     Z-ADDDORC      DRCR
+     C                     Z-ADDMVAM      PSTA
+     C                     EXSR PRTDET
+      *
+      ** Store posting date for updating pf/pbudcpd
+     C                     Z-ADDPSTD      @PSTD   50
+      *
+      ** Add 1 to no. of records printed from lf/ttacmtl2
+     C                     ADD  1         @RCNT2
+      *
+      ** Update flag for passbook printed
+     C                     MOVEL'Y'       APBI
+     C                     UPDATRSACMTPO
+      *
+     C                     ELSE
+      *
+     C                     EXCPT@RLSAC
+      *
+     C                     END
+      *
+     C                     READ TTACMTL2                 79
+      *
+      ** If a/c number is not the same - release rec & set eof ind.
+     C           *IN79     IFEQ '0'
+     C           @KACMT    IFNE @ACKEY
+     C                     EXCPT@RLSAC
+     C                     SETON                     79
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           PMODE     WHEQ 'P'                                       CRT002
+      *                                                                   CRT002
+     C                     MOVEL'0'       *IN62                           CRT002
+      *                                                                   CRT002
+      ** Leave loop when EOF or a valid record to be printed is found.    CRT002
+      *                                                                   CRT002
+     C           *IN79     DOWEQ'0'                                       CRT002
+     C           *IN62     ANDEQ'0'                                       CRT002
+      *                                                                   CRT002
+      ** If passbook rec. not printed -                                   CRT002
+      *                                                                   CRT002
+     C           APBI      IFNE 'Y'                                       CRT002
+     C           TBID      ANDNE*BLANKS                                   CRT002
+      *                                                                   CRT002
+      ** Print the record                                                 CRT002
+      *                                                                   CRT002
+     C                     MOVEL'1'       *IN62                           CRT002
+      *                                                                   CRT002
+     C                     Z-ADDPTDT      PSTD                            CRT002
+     C                     MOVELPASS      PBTT                            CRT002
+     C                     Z-ADDDORC      DRCR                            CRT002
+     C                     Z-ADDMVAM      PSTA                            CRT002
+      *                                                                   CRT002
+     C                     MOVELNRTD      RMTRCN                          CRT002
+     C                     MOVE 'Y'       WTODP                           CRT002
+      *                                                                   CRT002
+     C                     EXSR PRTDET                                    CRT002
+      *                                                                   CRT002
+      ** Store posting date for updating pf/pbudcpd                       CRT002
+      *                                                                   CRT002
+     C                     Z-ADDPSTD      @PSTD   50                      CRT002
+      *                                                                   CRT002
+      ** Add 1 to no. of records printed from lf/ttacmtl2                 CRT002
+      *                                                                   CRT002
+     C                     ADD  1         @RCNT2                          CRT002
+      *                                                                   CRT002
+      ** Update flag for passbook printed                                 CRT002
+      *                                                                   CRT002
+     C                     MOVEL'Y'       APBI                            CRT002
+     C                     UPDATRSACMTPO                                  CRT002
+      *                                                                   CRT002
+      ** Check whether passbook has been updated for account number       CRT002
+      ** i.e. record must exist in pf/pbudcpd                             CRT002
+      *                                                                   CRT002
+     C           @ACNO     CHAINPBUDCPDF             70                   CRT002
+      *                                                                   CRT002
+      ** If no record exists                                              CRT002
+      *                                                                   CRT002
+     C           *IN70     IFEQ '1'                                       CRT002
+      *                                                                   CRT002
+      ** Set not updated flag                                             CRT002
+      *                                                                   CRT002
+     C                     MOVEL'N'       @UPDFL  1                       CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                   CRT002
+      ** Initialise not updated flag                                      CRT002
+      *                                                                   CRT002
+     C                     MOVEL' '       @UPDFL                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+      ** Update balance in PF/PBUDCPD for every line printed so that      CRT002
+      ** further balances tally in SR/VALDET.                             CRT002
+      *                                                                   CRT002
+     C           @RECNT    IFGT 0                                         CRT002
+     C           @RCNT2    ORGT 0                                         CRT002
+     C                     EXSR UPDRTN                                    CRT002
+     C                     Z-ADD0         @RECNT                          CRT002
+     C                     Z-ADD0         @RCNT2                          CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                   CRT002
+     C                     EXCPT@RLSAC                                    CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+      **  Fetch next record only when no record has been printed.         CRT002
+      **  Otherwise, if passbook was updated and no more lines to         CRT002
+      **  follow, 2318 msg will be sent with the last line to print.      CRT002
+      *                                                                   CRT002
+     C           *IN62     IFEQ '0'                                       CRT002
+      *                                                                   CRT002
+     C                     READ TTACMTL2                 79               CRT002
+      *                                                                   CRT002
+      ** If a/c number is not the same - release rec & set eof ind.       CRT002
+      *                                                                   CRT002
+     C           *IN79     IFEQ '0'                                       CRT002
+     C           @KACMT    IFNE @ACKEY                                    CRT002
+     C                     EXCPT@RLSAC                                    CRT002
+     C                     SETON                     79                   CRT002
+     C                     ENDIF                                          CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDDO                                          CRT002
+      *                                                                   CRT002
+      ** Send no more passbook lines to print msg.                        CRT002
+      *                                                                   CRT002
+     C           *IN79     IFEQ '1'                                       CRT002
+      *                                                                   CRT002
+     C                     MOVEL'USR2318' @MSGID                          CRT002
+      *                                                                   CRT002
+     C                     MOVELRLMSTY    RMMSTY                          CRT002
+     C                     MOVE @MSGID    RMHMSI                          CRT002
+     C                     MOVE 'W'       RMHMSS                          CRT002
+      *                                                                   CRT002
+     C                     MOVEL*BLANKS   @MSGDT                          CRT002
+     C                     EXSR RTVMSG                                    CRT002
+     C                     MOVEL@MSGTX    RMHSMS                          CRT002
+      *                                                                   CRT002
+     C                     CLEARWCMSG                                     CRT002
+      *                                                                   CRT002
+      ** Send all relevant data to data queue                             CRT002
+      *                                                                   CRT002
+     C                     MOVELREPPUO    P@QDS                           CRT002
+     C                     MOVELP@QDS     WCMSG                           CRT002
+     C                     EXSR SDQMS                                     CRT002
+     C                     EXSR DQERR                                     CRT002
+      *                                                                   CRT002
+     C                     MOVEL*BLANKS   REPPUO                          CRT002
+      *                                                                   CRT002
+      ** Update Log File                                                  CRT002
+      *                                                                   CRT002
+     C                     MOVEL'N'       WSUCM                           CRT002
+     C                     MOVE 'DS'      WSTAT                           CRT002
+     C                     TIME           WTIME                           CRT002
+     C                     MOVELWTIME     WSTTM                           CRT002
+     C                     EXSR WRLOG                                     CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRTDET - Print detail record & update              *
+      *                                                               *
+      * CALLS      ZDATE2 - Convert daynumber to date format          *
+      *            ZFRPED - Format and edit amount field              *
+      *                                                               *
+      * CALLED BY  PRTPST - Print Today's Postings                    *
+      *            PRUPST - Print Updated Postings                    *
+      *                                                               *
+      *****************************************************************
+     C           PRTDET    BEGSR                           ** PRTDET **
+      *
+     C                     Z-ADD0         @PRVBL 130
+     C                     Z-ADD@CFBAL    @PRVBL
+     C*
+      ** Cumulate cf/bal. & format amt.depending on dr/cr indicator
+     C           DRCR      IFEQ 0
+      *
+      ** Seton indicator for printing debit amount (WITHDRAWALS)
+     C                     SETON                     21
+      *
+     C                     SUB  PSTA      @CFBAL
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVE 'L'       ZECODE                          CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'J'       ZECODE
+     C                     END                                            CRT002
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDPSTA      @TEMP  130
+     C                     MOVE @TEMP     ZFLD15
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP11                                           S01408
+     C*                                                                   S01408
+     C                     EXSR ZFRPED
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP12                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANKS   @ODAMT
+     C                     MOVE ZOUT22    @ODAMT
+      *
+     C                     END
+      *
+     C           DRCR      IFEQ 1
+      *
+      ** Setof indicator - not to print debit amt.(print credit amt)
+      ** (DEPOSITS)
+     C                     SETOF                     21
+      *
+     C                     ADD  PSTA      @CFBAL
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVE 'L'       ZECODE                          CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'J'       ZECODE
+     C                     END                                            CRT002
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDPSTA      @TEMP  130
+     C                     MOVE @TEMP     ZFLD15
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP13                                           S01408
+     C*                                                                   S01408
+     C                     EXSR ZFRPED
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP14                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANKS   @OCAMT
+     C                     MOVE ZOUT22    @OCAMT
+      *
+     C                     END
+      *
+      ** Set indicator for cf/bal (dr or cr)
+     C           @CFBAL    IFLT *ZEROS
+     C                     SETON                     20
+     C                     ELSE
+     C                     SETOF                     20
+     C                     END
+      *
+      ** Format posting date
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    OPSTD
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVELZDATE     RMTRPD                          CRT002
+     C                     END                                            CRT002
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP2                                           S01408
+     C*                                                                   S01408
+      *
+      ** Move passbook print type
+     C           PBTT      IFEQ *BLANKS
+     C                     MOVE TRAT      WTTYP1  5
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           WTTYP1
+     C           SDRETR    PARM SDRETR    DSFDY
+      ***********                                                         113814
+      ***If*record*does*not*exist*-                                       113814
+      ***********                                                         113814
+      *                                                                   113814
+      **  If record does not exist, output PBTT to OBPTYP                 113814
+      *                                                                   113814
+     C           @RTCD     IFNE *BLANK
+     C************LOCK     IN   LDA                                       113814
+     C***********          MOVEL'SDRETRPD'DBFILE           ************   113814
+     C***********          Z-ADD4         DBASE            * DBERR 04 *   113814
+     C***********          MOVELWTTYP1    DBKEY            ************   113814
+     C***********          EXSR DBERR                                     113814
+     C                     MOVELPBTT      OPBTYP                          113814
+      *
+     C                     ELSE
+      *
+     C                     MOVELA1PASB    OPBTYP
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C                     MOVELPBTT      OPBTYP
+     C                     ENDIF
+      *                                                                                      BUG9249
+      ** If posting is from APOSTPD check the Teller ID indicator.                           BUG9249
+      ** And if it is blank then Teller/Batch ID should also be blank.                       BUG9249
+      *                                                                                      BUG9249
+     C           *IN30     IFEQ *ON                                                          BUG9249
+     C           TLIN      ANDNE'Y'                                                          BUG9249
+     C                     MOVEL*BLANKS   OTBID                                              BUG9249
+     C                     ELSE                                                              BUG9249
+      *
+      ** Move teller id or batch number
+     C                     MOVELTBID      OTBID   3
+     C                     ENDIF                                                             BUG9249
+      *
+      ** Format cf/balance
+     C                     Z-ADDA6NBDP    ZDECS
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C                     MOVE 'L'       ZECODE                          CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'J'       ZECODE
+     C                     END                                            CRT002
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE @CFBAL    ZFLD15
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP15                                           S01408
+     C*                                                                   S01408
+     C                     EXSR ZFRPED
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CP16                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANKS   @OCFBL
+     C                     MOVE ZOUT22    @OCFBL
+     C/COPY WNCPYSRC,RE4032C020
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'I'                                       CRT002
+      *
+      ** Print the record
+     C           @CULIN    IFEQ 1
+     C                     WRITEHEADER
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP8                                           S01408
+     C*                                                                   S01408
+      *
+      ** If line being printed is the 13th write a blank line
+     C           @CULIN    IFEQ 13
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP9                                           S01408
+     C*                                                                   S01408
+     C                     WRITEBLNKLN
+     C/COPY WNCPYSRC,RE4032C021
+     C                     END
+     C/COPY WNCPYSRC,RE4032C035
+      *
+      ** If current line is greater than max.lines - send message to
+      ** inform teller to turn page and press CMD 1
+     C           @CULIN    IFGT @MAXLN
+     C/COPY WNCPYSRC,RE4032C022
+     C                     CLOSERE4032P1
+     C/COPY WNCPYSRC,RE4032C023
+     C                     MOVE 'N'       WOPEN
+     C                     MOVEL'USR0144' @MSGID
+     C                     EXSR SNDMSG
+     C                     SETON                     15
+      *
+      ** Do until cmd/1 is pressed
+     C           *INKF     DOUEQ'1'
+      *
+      ** Display message subfile control record
+     C                     WRITERE4032C0
+      *
+      ** Display & accept screen format
+     C                     SETON                     14
+     C                     EXFMTRE4032F1
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+      ** Process the input depending on the key pressed
+      *
+      ** If Help key is pressed, perform help processing
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/1 is pressed - continue printing passbook
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     SETOF                     15
+     C                     MOVE '0'       *INKF
+     C/COPY WNCPYSRC,RE4032C024
+     C                     OPEN RE4032P1
+     C                     MOVE 'Y'       WOPEN
+     C/COPY WNCPYSRC,RE4032C025
+     C*
+     C                     WRITEHEADER
+     C/COPY WNCPYSRC,RE4032C031
+     C                     Z-ADD1         @CULIN
+     C/COPY WNCPYSRC,RE4032C001
+     C                     END
+      *
+      ** Write detail line
+     C/COPY WNCPYSRC,RE4032C026
+     C                     WRITEDETAIL
+     C/COPY WNCPYSRC,RE4032C027
+      *                                                                   CRT002
+     C           PMODE     WHEQ 'P'                                       CRT002
+      *                                                                   CRT002
+      ** If source of posting = '  GE-IC' and not today's updated         CRT002
+      ** posting (WTODP <> 'Y').                                          CRT002
+      *                                                                   CRT002
+     C           SPOS      IFEQ '  GE-IC'                                 CRT002
+     C           WTODP     ANDNE'Y'                                       CRT002
+      *                                                                   CRT002
+      ** Format posting amount to contain decimal point                   CRT002
+     C                     Z-ADDA6NBDP    ZDECS                           CRT002
+     C                     MOVE 'L'       ZECODE                          CRT002
+     C                     MOVE *BLANKS   ZFLD15                          CRT002
+     C                     MOVE PSTA      ZFLD15                          CRT002
+     C                     EXSR ZFRPED                                    CRT002
+     C                     MOVEL*BLANKS   WAMT20 20                       CRT002
+     C           DRCR      IFEQ 0                          - debit        CRT002
+     C                     MOVE 'N'       RMINSN                          CRT002
+     C                     ELSE                            - credit       CRT002
+     C                     MOVE 'Y'       RMINSN                          CRT002
+     C                     END                                            CRT002
+     C                     MOVELZOUT22    WAMT20                          CRT002
+     C                     MOVE WAMT20    RMINAM                          CRT002
+      *                                                                   CRT002
+     C                     ELSE                                           CRT002
+      *                                                                                      BUG4077
+      ** Initialise Interest Amount for Cashier...                                           BUG4077
+     C                     Z-ADDA6NBDP    ZDECS                                              BUG4077
+     C                     MOVE 'L'       ZECODE                                             BUG4077
+     C                     MOVE *BLANKS   ZFLD15                                             BUG4077
+     C                     MOVE 0         ZFLD15                                             BUG4077
+     C                     EXSR ZFRPED                                                       BUG4077
+     C                     MOVEL*BLANKS   WAMT20 20                                          BUG4077
+     C                     MOVE ' '       RMINSN                                             BUG4077
+     C                     MOVELZOUT22    WAMT20                                             BUG4077
+     C                     MOVE WAMT20    RMINAM                                             BUG4077
+      *                                                                                      BUG4077
+      * Move Debit amount to Withdrawal amount                            CRT002
+     C           *IN21     IFEQ '1'                        - debit        CRT002
+     C                     MOVE ODAMT     RMWDAM                          CRT002
+     C                     ELSE                            - credit       CRT002
+      * Move Credit amount to Deposit amount                              CRT002
+     C                     MOVE OCAMT     RMDPAM                          CRT002
+     C                     END                                            CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+      ** Move C/F Balance to balance amount                               CRT002
+     C**********           MOVE OCFBAL    RMBALN                                      CRT002 BUG4077
+     C                     MOVE *BLANKS   WFIELD 16                                          BUG4077
+     C                     MOVE OCFBAL    WFIELD                                             BUG4077
+     C                     EXSR PAD                                                          BUG4077
+     C                     MOVEARTE       RMBALN                                             BUG4077
+     C                     MOVEA*BLANKS   RTE                                                BUG4077
+     C********** *IN20     IFEQ '0'                        - debit                    CRT002 BUG4077
+     C           *IN20     IFEQ '1'                        - debit                           BUG4077
+     C                     MOVE 'N'       RMBLSN                          CRT002
+     C                     ELSE                            - credit       CRT002
+     C                     MOVE 'Y'       RMBLSN                          CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+     C                     ADD  1         @CULIN
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+      *                                                                   CRT002
+      ** Move @CULIN to passbook line number                              CRT002
+      *                                                                   CRT002
+     C           @CULIN    IFGT @MAXLN                                    CRT002
+     C                     Z-ADD1         @CULIN                          CRT002
+     C                     ENDIF                                          CRT002
+     C                     Z-ADD@CULIN    RMPLNO                          CRT002
+      *                                                                   CRT002
+     C                     MOVELRLMSTY    RMMSTY                          CRT002
+     C                     MOVE 'C'       RMHMSS                          CRT002
+      *                                                                   CRT002
+     C                     CLEARWCMSG                                     CRT002
+      *                                                                   CRT002
+      ** Send all relevant data to data queue                             CRT002
+      *                                                                   CRT002
+     C                     MOVELREPPUO    P@QDS                           CRT002
+     C                     MOVELP@QDS     WCMSG                           CRT002
+     C                     EXSR SDQMS                                     CRT002
+     C                     EXSR DQERR                                     CRT002
+     C*                                                                   CRT002
+     C                     MOVEL*BLANKS   REPPUO                          CRT002
+      *                                                                   CRT002
+      ** Update Log File                                                  CRT002
+      *                                                                   CRT002
+     C                     MOVEL'N'       WSUCM                           CRT002
+     C                     MOVE 'DS'      WSTAT                           CRT002
+     C                     TIME           WTIME                           CRT002
+     C                     MOVELWTIME     WSTTM                           CRT002
+     C                     EXSR WRLOG                                     CRT002
+      *                                                                   CRT002
+     C                     END                                            CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY WNCPYSRC,RE4032C028
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *            PCMTXT - Prepare comit text                        *
+      *            WRPBUD - Write passbook control details            *
+      *            ZTNLU1 - Access dataarea for next transaction no.  *
+      *                                                               *
+      * CALLED BY  PRTUPB - Print & Update Passbook                   *
+      *                                                               *
+      *****************************************************************
+     C           UPDRTN    BEGSR                           ** UPDRTN **
+      *
+      ** Update next available transaction number
+     C                     EXSR ZTNLU1
+      *
+      ** Prepare commmitment control text
+     C                     EXSR PCMTXT
+      *
+      ** If no record on pf/pbudcpd (first time passbook print)
+     C           @UPDFL    IFEQ 'N'
+      *
+     C                     EXSR WRPBUD
+      *
+      ** Access control file header pf/pbudcph
+     C           1         CHAINPBUDCPHF             70
+      *
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVE 'PBUDCPH' DBFILE           ***************
+     C                     MOVEL@ACNO     DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Add number of records printed to no of records on file
+      *
+      ** Increment the no of records counter by 1
+     C                     ADD  1         NORE
+     C                     UPDATPBUDCPHF
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** Update pf/pbudcpd
+     C                     MOVEL'D'       RECI
+     C                     MOVE SRACNO    ACNO
+     C*
+     C           @CULIN    IFGT @MAXLN
+     C                     Z-ADD1         SPBL
+     C                     ELSE
+     C                     Z-ADD@CULIN    SPBL
+     C                     END
+     C*
+     C           *IN16     IFEQ '1'
+     C                     Z-ADD@PRVBL    CFPB
+     C                     ELSE
+     C                     Z-ADD@CFBAL    CFPB
+     C                     END
+     C                     Z-ADD@PSTD     PBPSTD
+     C                     UPDATPBUDCPDF
+      *
+     C                     END
+      *
+      ** End of commitment cycle
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C           CMTTXT    COMIT
+     C                     END                                            CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRPBUD - Write passbook control details            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           WRPBUD    BEGSR                           ** WRPBUD **
+      *
+     C                     MOVEL'D'       RECI
+     C                     MOVE SRACNO    ACNO
+     C*
+     C           @CULIN    IFGT @MAXLN
+     C                     Z-ADD1         SPBL
+     C                     ELSE
+     C                     Z-ADD@CULIN    SPBL
+     C                     END
+     C*
+     C                     Z-ADD@CFBAL    CFPB
+     C                     Z-ADD@PSTD     PBPSTD
+     C                     WRITEPBUDCPDF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                                                 BUG4077
+      *****************************************************************                      BUG4077
+      *                                                               *                      BUG4077
+      *            PAD    - Pad field with leading zeros.             *                      BUG4077
+      *                                                               *                      BUG4077
+      * CALLS             -                                           *                      BUG4077
+      *                                                               *                      BUG4077
+      * CALLED BY  PRTDET - Print line details                        *                      BUG4077
+      *                                                               *                      BUG4077
+      * FLDS USED         -                                           *                      BUG4077
+      *                                                               *                      BUG4077
+      *****************************************************************                      BUG4077
+     C           PAD       BEGSR                                                             BUG4077
+      *                                                                                      BUG4077
+      **  Pad field with zeros to coincide with Cashier format.                              BUG4077
+      *                                                                                      BUG4077
+     C                     Z-ADD1         L       20                                         BUG4077
+     C                     Z-ADD0         WEND    20                                         BUG4077
+     C           ' '       CHECKWFIELD    WEND                                               BUG4077
+     C                     MOVEA*BLANKS   RTE,1                                              BUG4077
+     C                     MOVEAWFIELD    RTE,1                                              BUG4077
+      *                                                                                      BUG4077
+     C           L         DOWLTWEND                                                         BUG4077
+     C                     MOVEL'0'       RTE,L                                              BUG4077
+     C                     ADD  1         L                                                  BUG4077
+     C                     ENDDO                                                             BUG4077
+      *                                                                                      BUG4077
+      **  Replace any commas caused by County-specific character sets                        BUG4077
+      **  by decimal points to ensure Cashier compatibility.                                 BUG4077
+      *                                                                                      BUG4077
+     C                     Z-ADD1         X       20                                         BUG4077
+     C                     MOVE '0'       *IN60                                              BUG4077
+      *                                                                                      BUG4077
+     C           ','       LOKUPRTE,X                  60                                    BUG4077
+     C           *IN60     IFEQ *ON                                                          BUG4077
+     C                     MOVEL'.'       RTE,X                                              BUG4077
+     C                     ENDIF                                                             BUG4077
+      *                                                                                      BUG4077
+     C                     ENDSR                                                             BUG4077
+      *                                                                                      BUG4077
+      *****************************************************************                      BUG4077
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PCMTXT - Prepare comit text                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           PCMTXT    BEGSR                           ** PCMTXT **
+      *
+      ** Prepare the comit text CMTTXT
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL@PGM      PGMN
+     C                     MOVE SWID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE @USER     USRIDX
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LAST   - Final processing - terminate pgm.         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  ACCINP - Accept Input Process                      *
+      *            MAIN   - Control Process                           *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+      *
+     C           @RECNT    IFGT 0
+     C           @RCNT2    ORGT 0
+     C                     SETON                     16
+     C           @CULIN    IFGT @MAXLN
+     C                     Z-ADD1         @CULIN
+     C                     END
+     C                     EXSR UPDRTN
+     C                     END
+      *                                                                   CRT002
+      ** If PMODE = 'I', close display file RE4032DF                      CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C                     CLOSERE4032DF                                  CRT002
+     C                     END                                            CRT002
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C                     CALL 'DBERRCTL'
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'P'                                       CRT002
+     C           @FIRST    ANDEQ'0'                                       CRT002
+      *                                                                   CRT002
+     C                     ROLBK                                          CRT002
+      *                                                                   CRT002
+     C                     MOVELRLMSTY    RMMSTY                          CRT002
+     C                     MOVELDBLOT     RMHSMS                          CRT002
+     C                     MOVEL'DBER'    RMHMSI                          CRT002
+     C                     MOVEL'E'       RMHMSS                          CRT002
+      *                                                                   CRT002
+     C                     CLEARLOGDS                                     CRT002
+      *                                                                   CRT002
+     C                     MOVEL'USR0010' @MSGID                          CRT002
+     C                     MOVELDBLOT     @MSGDT                          CRT002
+     C                     EXSR RTVMSG                                    CRT002
+     C                     MOVEL@MSGTX    RMHSMS                          CRT002
+      *                                                                   CRT002
+     C                     MOVE RLCMSQ    WCMSQ                           CRT002
+     C                     MOVELRLBRCA    WBRCA                           CRT002
+     C                     MOVELRLUSID    WUSID                           CRT002
+     C                     MOVE 'DS'      WSTAT                           CRT002
+     C                     MOVE 'N'       WSUCM                           CRT002
+     C                     TIME           WTMDS                           CRT002
+     C           WTHR      CAT  ':'       WA                              CRT002
+     C           WTMN      CAT  ':'       WB                              CRT002
+     C           WA        CAT  WB        WC                              CRT002
+     C           WC        CAT  WTSS      WSTTM                           CRT002
+      *                                                                   CRT002
+     C                     MOVELREPPUO    P@QDS                           CRT002
+     C                     CLEARWCMSG                                     CRT002
+     C                     MOVELP@QDS     WCMSG                           CRT002
+     C                     EXSR SDQMS                                     CRT002
+     C                     EXSR DQERR                                     CRT002
+     C*                                                                   CRT002
+     C                     MOVEL*BLANKS   REPPUO                          CRT002
+     C                     EXSR WRLOG                                     CRT002
+      *                                                                   CRT002
+     C                     EXSR PCMTXT                                    CRT002
+     C           CMTTXT    COMIT                                          CRT002
+      *                                                                   CRT002
+     C                     ENDIF                                          CRT002
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      ZA0150 - Get Midas Rundate & Setup Indicator       *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+      ** Depending on PAUTH user will be allowed to override difference
+      ** in entered balance and passbook balance
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           PAUTH   1        Option(Y/N/ )
+     C                     PARM           PMODE   1        Processing ModeCRT002
+      *
+      ** Define Keylist(s)
+      *
+      ** Key for lf/APOST - savings postings file
+     C           KLPOST    KLIST
+     C                     KFLD           K1BRC   3
+     C**********           KFLD           K1CUS   60                                         CSD027A
+     C                     KFLD           K1CUS   6
+     C                     KFLD           K1CCY   3
+     C**********           KFLD           K1ACD   40                                          CGL029
+     C                     KFLD           K1ACD  100                                          CGL029
+     C                     KFLD           K1ASQ   20
+     C                     KFLD           K1PDT
+      *
+      ** Key for LF/REIAC
+     C           KLREIA    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+      ** Key for lf/ttacmtl2 - shadow postings file
+     C           KLACMT    KLIST
+     C**********           KFLD           K2CUS   60                                         CSD027A
+     C                     KFLD           K2CUS   6                                          CSD027A
+     C                     KFLD           K2CCY   3
+     C**********           KFLD           K2ACD   40                                          CGL029
+     C                     KFLD           K2ACD  100                                          CGL029
+     C                     KFLD           K2ASQ   20
+     C                     KFLD           K2BRC   3
+      *
+      ** Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+      *                                                                   CRT002
+      ** If PMODE = 'I', open display file RE4032DF                       CRT002
+      *                                                                   CRT002
+     C           PMODE     IFEQ 'I'                                       CRT002
+     C                     OPEN RE4032DF                                  CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+      ** Initialise MSG text and MSG return code                          CRT002
+      *                                                                   CRT002
+     C                     MOVE *BLANKS   @MSGTX                          CRT002
+     C                     MOVEL*BLANKS   @MSGID                          CRT002
+     C                     MOVEL'RTSMSGF' @MSGF                           CRT002
+      *                                                                   CRT002
+     C                     MOVE '1'       @FIRST  1                       CRT002
+     C                     MOVEL'RE4032'  P@QRC                           CRT002
+     C                     MOVE '00B '    P@QRC                           CRT002
+      *
+      ** initialize parameters for SCC0240- build program message queue
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+      *
+      ** Initialize screen message queue
+     C                     MOVEL@PGM      SPGMQ
+      *
+      ** Seton  message subfile end indicator
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVE *BLANKS   SMRDT   7
+      *
+      ** Call subroutine to access sdbankl1 for Midas Run Date.
+     C                     EXSR ZA0150
+      *
+      ** Move midas run date to screen field
+     C                     MOVELBJMRDT    SMRDT
+     C                     MOVEL@USER     SUSER
+     C                     MOVEL@JOB      SWSID
+      *
+      ** Determine date format - 98 is seton if MMDDYY format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** SIMULATED VARIABLE
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP6                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADD24        @MAXLN  30
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4032CCP7                                           S01408
+     C*                                                                   S01408
+      *
+      ** Define work fields
+     C                     Z-ADD0         @RECNT  50
+     C                     Z-ADD0         @RCNT2  50
+      *                                                                   CRT002
+     C                     MOVE '0'       @FIRST                          CRT002
+      *                                                                   CRT002
+     C/COPY ZSRSRC,RBPBLNC1                                               CRT002
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize screen/work fields             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  RFRESH - Refresh screen                            *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SRACNO
+     C                     Z-ADD0         SLINO
+     C                     MOVE *BLANKS   SBFBAL
+     C                     MOVEL*BLANKS   SSIGN   1
+      *
+      ** Initialise work fields
+     C                     MOVE *BLANKS   SACNO
+     C                     MOVE *BLANKS   SANAM
+     C                     MOVE *BLANKS   SCCY
+     C                     Z-ADD0         @STLIN  30
+     C                     Z-ADD0         @CULIN  30
+     C                     Z-ADD0         @CFBAL 130
+     C                     Z-ADD0         @RECNT
+     C                     Z-ADD0         @RCNT2
+     C                     Z-ADD0         @PSTD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZA0150 - Get Midas Rundate & Setup Indicator       *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *                                                               *
+      *****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+      *
+     C                     MOVE *BLANKS   @SDKEY 10
+     C                     MOVEL'BANK'    @SDKEY
+     C*
+     C** Access bank details for midas-run-date
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     70
+     C                     END
+      *
+      ** If record does not exist
+     C           *IN70     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL@SDKEY    DBKEY            **************
+     C                     MOVEL'RE4032'  DBPGM                        ***
+     C                     EXSR DBERR
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SNDMSG - Send program message parameters           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  VALAMT - Validate amount                           *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *            ZA0150 - Get Midas Rundate & Setup Indicator       *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZALIGN subroutine
+      /COPY ZSRSRC,ZALIGNZ2
+      *
+      *****************************************************************
+      /EJECT                                                              CRT002
+      ** SR.ZEDIT subroutine                                              CRT002
+      /COPY ZSRSRC,ZEDITZ2                                                CRT002
+      *                                                                   CRT002
+      *****************************************************************   CRT002
+      /EJECT
+      ** SR.ZTNLU1 subroutine
+      /COPY ZSRSRC,ZTNLU1Z2
+      *
+      *****************************************************************
+      /EJECT
+      *                                                                   S01408
+      /COPY WNCPYSRC,RE4032CP17                                           S01408
+      *                                                                   S01408
+      ** SR.ZFRPED Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      *                                                                   S01408
+      /COPY WNCPYSRC,RE4032CCP3                                           S01408
+      *                                                                   S01408
+      *****************************************************************
+      /EJECT
+      ** SR.ZDATE2 Subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+      /EJECT                                                              CRT002
+      /COPY ZSRSRC,RBSDQMS                                                CRT002
+      *                                                                   CRT002
+      /EJECT                                                              CRT002
+      /COPY ZSRSRC,RBRDQMS                                                CRT002
+      *                                                                   CRT002
+      /EJECT                                                              CRT002
+      /COPY ZSRSRC,RBDQERR                                                CRT002
+      *                                                                   CRT002
+      /EJECT                                                              CRT002
+      /COPY ZSRSRC,RBRMSGC1                                               CRT002
+      *                                                                   CRT002
+      /EJECT                                                              CRT002
+      /COPY ZSRSRC,RBWLOGC1                                               CRT002
+      *                                                                   CRT002
+      *****************************************************************
+      /EJECT
+      *
+      ** Savings postings file
+     OAPOSTPDFE                @RLSPO
+     O/COPY WNCPYSRC,RE4032O001
+      *
+      ** Teller transactions shadow postings file
+     ORSACMTPOE                @RLSAC
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

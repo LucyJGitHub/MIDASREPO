@@ -1,0 +1,2774 @@
+     H
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(PMCGCDXX) TOFILE(PMCGCDPD) SHARE(*NO)          : *   S01486
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Charge Codes Maintenance')
+     F********************************************************************
+     F**                                                                 *
+     F*    Midas PORTFOLIO MANAGEMENT                                *
+     F*                                                                  *
+     F*    PM0100  - CHARGE CODES MAINTENANCE                            *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                                    Date                       *
+     F*                 S01486             DATE 29JUL94                  *S01486
+     F*                 066235             DATE 27JAN93                  *S01486
+     F*                 R00300             DATE 14AUG90                  *S01486
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  S01486  -  Portfolio Management Upgrade to R10                  *S01486
+     F*  066235  -  Recompile program due to changes in DSPF             *
+     F*  R00300  -  Message file changes.                             *  *
+     F*                                                               *  *
+     F********************************************************************
+     F**PM0100DDCF  E                    WORKSTN                          S01486
+     FPM0100DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM0100S0
+     F*
+     F**  CHARGE CODES PREFIX IS P5
+     F**PMCGCDPPUF  E           K        DISK         KCOMIT       A      S01486
+     FPMCGCDPDUF  E           K        DISK         KCOMIT       A        S01486
+     F* PREFIX P5
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+     F**PMCGCDZZUF  E                    DISK         KCOMIT              S01486
+     FPMCGCDPAUF  E                    DISK         KCOMIT                S01486
+     F* PREFIX P5
+     F                                              KINFSR *PSSR
+     FPMCGCDXXIF  E           K        DISK
+     F* PREFIX P5
+     F            PMCGCDP0                          KRENAMEPMCGCDPX
+     F                                              KINFSR *PSSR
+     F**SDBANKPDIF  E                    DISK                             S01486
+     F**PREFIX BJ                                                         S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F**SDCURRL0IF  E           K        DISK                             S01486
+     F**PREFIX A6                                                         S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F**SDACODL0IF  E           K        DISK                             S01486
+     F**PREFIX A5                                                         S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         SFLDSP  PM0100S0
+     F*       02         SFLDSPCTL PM0100C0
+     F*       03         SFLEND    PM0100S0
+     F*       04         NO RECORD ON SUBFILE PM0100S0
+     F*       05         PROTECT/NON-DISPLAY ON LOCATION
+     F*       06         PROTECT FIELDS
+     F*       09         SFLDLT    PM0100S0
+     F*
+     F*       10         START  SCREEN
+     F*       11         REVIEW SCREEN
+     F*       12         UPDATE SCREEN
+     F*
+     F*       15         INDICATOR USED ON WRITE/UPDATE OPS TO CONDITION
+     F*                                    CALL OF *PSSR
+     F*
+     F*       21         ERROR-DDACTN
+     F*       22         ERROR-DDCCY
+     F*       23         ERROR-DDCGCM
+     F*       24         ERROR-DDPCCY
+     F*
+     F*       25         ROLLUP
+     F*       26         ROLLDOWN
+     F*       27         WORK INDICATOR
+     F*
+     F*       31         ERROR-DDCHGB
+     F*
+     F*       31         ERROR DDCHGB-CHARGE BASIS INVALID
+     F*       32         ERROR DDCGMT-CHARGING METHOD NOT VALID
+     F*       33         ERROR DDMINC-MINIMUM CHARGE AMOUNT NOT VALID
+     F*       34         ERROR DDCHNR-POSITION CURSOR ON NARRATIVE
+     F*       86         ERROR DDINCA-INCOME A/C
+     F*       36         ERROR DDACAC-ACCRUAL A/C
+     F*       37         ERROR DDUR1 -UPPER RANGE LIMIT (1)
+     F*       38         S/PM0100F0  UPPER RANGE LIMIT (2) INVALID
+     F*       39         S/PM0100F0  UPPER RANGE LIMIT (3) INVALID
+     F*       40         S/PM0100F0  UPPER RANGE LIMIT (4) INVALID
+     F*       41         S/PM0100F0  UPPER RANGE LIMIT (5) INVALID
+     F*       42         S/PM0100F0  UPPER RANGE LIMIT (6) INVALID
+     F*       43         S/PM0100F0  UPPER RANGE LIMIT (7) INVALID
+     F*       44         S/PM0100F0  UPPER RANGE LIMIT (8) INVALID
+     F*       45         S/PM0100F0  UPPER RANGE LIMIT (9) INVALID
+     F*       46         S/PM0100F0  UPPER RANGE LIMIT (10) INVALID
+     F*       47         S/PM0100F0  UPPER RANGE LIMIT (11) INVALID
+     F*       48         S/PM0100F0  UPPER RANGE LIMIT (12) INVALID
+     F*       49         S/PM0100F0  UPPER RANGE LIMIT (13) INVALID
+     F*       50         S/PM0100F0  UPPER RANGE LIMIT (14) INVALID
+     F*       51         ERROR DDPE1-PERCENTAGE (1)
+     F*       52         S/PM0100F0  PERCENTAGE (2) INVALID
+     F*       53         S/PM0100F0  PERCENTAGE (3) INVALID
+     F*       54         S/PM0100F0  PERCENTAGE (4) INVALID
+     F*       55         S/PM0100F0  PERCENTAGE (5) INVALID
+     F*       56         S/PM0100F0  PERCENTAGE (6) INVALID
+     F*       57         S/PM0100F0  PERCENTAGE (7) INVALID
+     F*       58         S/PM0100F0  PERCENTAGE (8) INVALID
+     F*       59         S/PM0100F0  PERCENTAGE (9) INVALID
+     F*       60         S/PM0100F0  PERCENTAGE (10) INVALID
+     F*       61         S/PM0100F0  PERCENTAGE (11) INVALID
+     F*       62         S/PM0100F0  PERCENTAGE (12) INVALID
+     F*       63         S/PM0100F0  PERCENTAGE (13) INVALID
+     F*       64         S/PM0100F0  PERCENTAGE (14) INVALID
+     F*       65         S/PM0100F0  PERCENTAGE (15) INVALID
+     F*       66         ERROR DDFC1-FLAT CHARGE(1) INVALID
+     F*       67         S/PM0100F0  FLAT CHARGE(2) INVALID
+     F*       68         S/PM0100F0  FLAT CHARGE(3) INVALID
+     F*       69         S/PM0100F0  FLAT CHARGE(4) INVALID
+     F*       70         S/PM0100F0  FLAT CHARGE(5) INVALID
+     F*       71         S/PM0100F0  FLAT CHARGE(6) INVALID
+     F*       72         S/PM0100F0  FLAT CHARGE(7) INVALID
+     F*       73         S/PM0100F0  FLAT CHARGE(8) INVALID
+     F*       74         S/PM0100F0  FLAT CHARGE(9) INVALID
+     F*       75         S/PM0100F0  FLAT CHARGE(10) INVALID
+     F*       76         S/PM0100F0  FLAT CHARGE(11) INVALID
+     F*       77         S/PM0100F0  FLAT CHARGE(12) INVALID
+     F*       78         S/PM0100F0  FLAT CHARGE(13) INVALID
+     F*       79         S/PM0100F0  FLAT CHARGE(14) INVALID
+     F*       80         S/PM0100F0  FLAT CHARGE(15) INVALID
+     F*
+     F*       83         ADD RECORD
+     F*       89         READ CHANGE ON SUBFILE
+     F*                  WORK INDICATOR
+     F*
+     F*       99         WORK
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'AID' VALUES USED
+     F*
+     F*       03         CA3
+     F*       10         CA10
+     F*       12         CA12
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY FOR ZEDIT
+      /COPY ZSRSRC,ZEDITZ1
+     E*
+     E** input array for za0840
+     E                    @F         16  1
+     E** output array for za0840
+     E                    @G         16  1
+     E** array of powers of ten
+     E                    @H      1  15 15 0
+     E*
+     E** UPPER RANGE LIMIT ARRAY DERIVED FROM SCREEN
+     E                    UPL        14 16
+     E*
+     E** PERCENTAGE ARRAY  DERIVED FROM SCREEN
+     E                    PER        15 12
+     E*
+     E** FLAT CHARGE ARRAY DERIVED FROM SCREEN
+     E                    FLC        15 16
+     E*
+     E** UPPER RANGE LIMIT ARRAY USED TO INPUT INTO FILE
+     E                    FUL        14 15 0
+     E*
+     E** PERCENTAGE ARRAY  USED TO INPUT INTO FILE
+     E                    FPR        15 11 0
+     E*
+     E** FLAT CHARGE ARRAY USED TO INPUT INTO FILE
+     E                    FFC        15 15 0
+     E*
+     E** ALPHA TO NUMERIC LOSING DEC PTS WORK FIELDS
+     E                    INA        17  1
+     E*
+     E                    OTA        15  1
+     E*
+     E** ARRAY FOR CHARGE CODE VALIDATION
+     E                    CHA    36  36  1
+     I*****************************************************************
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I*
+     I** KEY FIELDS (TAKEN FROM 'KEY' PORTION OF SCREEN)
+     ISCRCTL      DS
+     I                                        1   1 REVW
+     I                                        2   2 DDACTN
+     I                                        3   7 INPK
+     I                                        3   5 DDCCY
+     I                                        6   7 DDCGCM
+     I                                        6   6 DDCG1
+     I                                        7   7 DDCG2
+     I                                        8  12 PAGK
+     I                                        8  10 DDPCCY
+     I                                       11  12 DDGCMA
+     I*
+     I**  DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+     I            DS
+     I                                        1 210 FULA
+     I                                        1 210 FUL
+     I*
+     I**  DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+     I            DS
+     I                                        1 165 FPRA
+     I                                        1 165 FPR
+     I*
+     I**  DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+     I            DS
+     I                                        1 225 FFCA
+     I                                        1 225 FFC
+     I*
+     I**   INPUT LAYOUT CHARGE RANGE UPPER LIMIT FOR SCREEN
+     IURLTAB      DS                            224
+     I                                        1  16 DDUR1
+     I                                       17  32 DDUR2
+     I                                       33  48 DDUR3
+     I                                       49  64 DDUR4
+     I                                       65  80 DDUR5
+     I                                       81  96 DDUR6
+     I                                       97 112 DDUR7
+     I                                      113 128 DDUR8
+     I                                      129 144 DDUR9
+     I                                      145 160 DDUR10
+     I                                      161 176 DDUR11
+     I                                      177 192 DDUR12
+     I                                      193 208 DDUR13
+     I                                      209 224 DDUR14
+     I*
+     I**  INPUT LAYOUT FOR  PERCENTAGE LEVELS FOR SCREEN
+     IPERTAB      DS                            180
+     I                                        1  12 DDPE1
+     I                                       13  24 DDPE2
+     I                                       25  36 DDPE3
+     I                                       37  48 DDPE4
+     I                                       49  60 DDPE5
+     I                                       61  72 DDPE6
+     I                                       73  84 DDPE7
+     I                                       85  96 DDPE8
+     I                                       97 108 DDPE9
+     I                                      109 120 DDPE10
+     I                                      121 132 DDPE11
+     I                                      133 144 DDPE12
+     I                                      145 156 DDPE13
+     I                                      157 168 DDPE14
+     I                                      169 180 DDPE15
+     I*
+     I**   INPUT LAYOUT FOR FLAT CHARGES FOR SCREEN
+     IFCHTAB      DS                            240
+     I                                        1  16 DDFC1
+     I                                       17  32 DDFC2
+     I                                       33  48 DDFC3
+     I                                       49  64 DDFC4
+     I                                       65  80 DDFC5
+     I                                       81  96 DDFC6
+     I                                       97 112 DDFC7
+     I                                      113 128 DDFC8
+     I                                      129 144 DDFC9
+     I                                      145 160 DDFC10
+     I                                      161 176 DDFC11
+     I                                      177 192 DDFC12
+     I                                      193 208 DDFC13
+     I                                      209 224 DDFC14
+     I                                      225 240 DDFC15
+     I*
+     I**   OUTPUT LAYOUT CHARGE RANGE UPPER LIMIT
+     ISTUTAB      DS                            210
+     I                                        1  150P5CRU1
+     I                                       16  300P5CRU2
+     I                                       31  450P5CRU3
+     I                                       46  600P5CRU4
+     I                                       61  750P5CRU5
+     I                                       76  900P5CRU6
+     I                                       91 1050P5CRU7
+     I                                      106 1200P5CRU8
+     I                                      121 1350P5CRU9
+     I                                      136 1500P5CR10
+     I                                      151 1650P5CR11
+     I                                      166 1800P5CR12
+     I                                      181 1950P5CR13
+     I                                      196 2100P5CR14
+     I*
+     I**  OUTPUT LAYOUT FOR  PERCENTAGE LEVELS
+     IPLCTAB      DS                            165
+     I                                        1  117P5PCL1
+     I                                       12  227P5PCL2
+     I                                       23  337P5PCL3
+     I                                       34  447P5PCL4
+     I                                       45  557P5PCL5
+     I                                       56  667P5PCL6
+     I                                       67  777P5PCL7
+     I                                       78  887P5PCL8
+     I                                       89  997P5PCL9
+     I                                      100 1107P5PC10
+     I                                      111 1217P5PC11
+     I                                      122 1327P5PC12
+     I                                      133 1437P5PC13
+     I                                      144 1547P5PC14
+     I                                      155 1657P5PC15
+     I*
+     I**   OUTPUT LAYOUT FOR FLAT CHARGES
+     IFCLTAB      DS                            225
+     I                                        1  150P5FLC1
+     I                                       16  300P5FLC2
+     I                                       31  450P5FLC3
+     I                                       46  600P5FLC4
+     I                                       61  750P5FLC5
+     I                                       76  900P5FLC6
+     I                                       91 1050P5FLC7
+     I                                      106 1200P5FLC8
+     I                                      121 1350P5FLC9
+     I                                      136 1500P5FL10
+     I                                      151 1650P5FL11
+     I                                      166 1800P5FL12
+     I                                      181 1950P5FL13
+     I                                      196 2100P5FL14
+     I                                      211 2250P5FL15
+     I*
+     I** DS TO UPDATE DATE OF LAST UPDATE
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I*
+     I********DATA STRUCTURE FOR ERROR MESSAGES TO SCREEN                 R00300
+     I********SCRMSG      DS                          1  10               R00300
+     I********                                1  10 ZMSGID                R00300
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I**LDA        UDS                            256                     S01486
+     I*********                             132 183 DBLOT                 S01486
+     I*********                             132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I**   MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA STRUCTURE FOR SETUP OF COMMIT TEXT
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I*************                         254 263 USIDXX                S01486
+     I                                      254 263 USID                  S01486
+     I**                                                                  S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDACOD    E DSSDACODPD                                              S01486
+     I** EXTERNAL DS FOR ACCOUNT OFFICER DETAILS                          S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                S01486
+     IRUNDT       DS                                                      S01486
+      **  DATA AREA RUNDAT                                                S01486
+     I                                        1   7 RUNA                  S01486
+     I                                    P   8  100RUND                  S01486
+     I                                       11  11 SSF                   S01486
+     I                                       12  12 DATF                  S01486
+     I                                       13  13 MBIN                  S01486
+     IZMUSER      DS                             17                       S01486
+     I** DATA AREA OF MENU USER                                           S01486
+     I                                       11  13 USRBCH                S01486
+     C*****************************************************************
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*****************************************************************
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO SECGT FILE
+     C           PMCGCK    KLIST
+     C                     KFLD           DDCCY
+     C                     KFLD           DDCGCM
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  P R O G R A M     S T A R T
+     C*****************************************************************
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR INIT
+     C*
+     C** D O    U N T I L   F 3   O R   E R R O R        -  S T A R T
+     C*
+     C           AID       DOUEQ'03'
+     C*
+     C           *IN10     CASEQ'1'       START
+     C*
+     C           *IN11     CASEQ'1'       REVIEW
+     C*
+     C           *IN12     CASEQ'1'       UPDATE
+     C                     END
+     C*
+     C                     END
+     C*
+     C** D O    U N T I L   F 3   O R   E R R O R        -  E N D
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*****************************************************************
+     C*  P R O G R A M     E N D
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** INIT              INITIALISATION OF STANDARD FIELDS,
+      **                   ACCESS OF STANDING DATA
+      **
+      ** START             OUTPUT AND PROCESS KEY FIELDS SCREEN
+      **
+      ** REVIEW            PROCESS SUBFILE SELECTION SCREEN
+      **
+      ** ZSETOF            SETOF ERROR INDICATORS
+      **
+      ** UPDATE            PROCESS DETAIL SCREEN AND UPDATE FILE
+      **
+      ** ASCHGS            DETERMINE 'AID' VALUE
+      **
+      ** VALIDK            VALIDATE KEY FIELDS
+      **
+      ** VALIDD            VALIDATE DETAIL SCREEN
+      **
+      ** INITRC            INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+      **
+      ** TRSFS             FORMAT RECORD FIELDS FOR SCREEN
+      **
+      ** UPDFLS            UPDATE FILE RECORDS
+      **
+      ** UPDOWS            PROCESS UPDATE BY ANOTHER WORKSTATION
+      **
+      ** ZTNLU1            ACCESS DATAAREA FOR NEXT TRANSACTION NO.
+      **
+      ** ZASNMS            SENDS MESSAGE TO PROGRAM MESSAGE QUEUE.
+      **
+      ** *PSSR             FILE ERROR HANDLING S/R
+      **
+      ** INTAB             SET-UP SCREEN TABLES WITH EDITED VALUES
+      **
+      ** FLDCHK            SUBROUTINE TO VALIDATE REPEATED FIELDS
+      **
+      ** UPLCHK            CHECK UPPER RANGE LIMIT
+      **
+      ** PERCHK            VALIDATE PERCENTAGES FIELDS
+      **
+      ** FLCCHK            VALIDATE FLAT RATE CHARGES
+      **
+      ** ZMOV              SUBROUTINE TO UPDATE FILE FIELDS
+      **
+      ** ZA0840            CHECK VALUES ARE NUMERIC OR HAVE CORRECT
+      **                   NUMBER OF DECIMAL PLACES
+      **
+      ** ZEDIT             EDIT NUMERIC FIELDS INTO ALPHA FIELDS WITH
+      **                   CORRECT NUMBER OF DECIMAL PLACES
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** INIT S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+     C** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+     C** CALLS NO OTHER ROUTINES
+     C**
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*
+     C*  SFLEND (MSG SUBFILE)
+     C                     MOVE '1'       *IN13
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C**                                                                  S01486
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01486
+     C                     IN   RUNDT                                     S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0100'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'PM'      MDID
+     C                     MOVEL'PM0100'  PGMN
+     C                     MOVELWSID      WSIDX
+     C************         MOVELUSIDXX    USIDX                           S01486
+     C                     MOVELUSID      USIDX                           S01486
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C***********          MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*
+     C** HELP PROGRAM PARAMETER
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C***********          READ SDBANKPD                 89               S01486
+     C************IN89     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDBANKPD'DBFILE                 *********S01486
+     C                     MOVE 'SDBANKPD'DBFILE                 *********S01486
+     C                     Z-ADD1         DBASE                  * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY                  ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** SELECT THE PROGRAM MSGQ FOR ERROR MSG.
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'*'       TOPQ                            R00300
+     C                     MOVEL'*PRV'    TOPRQ                           R00300
+     C************         MOVELBJMRDT    DDRUNA                          S01486
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*
+     C** PROCEED TO START SCREEN UNLESS DATABASE ERROR
+     C           *INU7     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     ELSE
+     C                     MOVEL'03'      AID
+     C                     END
+     C*
+     C           XTINIT    ENDSR                           ** XTINIT ESR**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** START S/R TO OUTPUT AND PROCESS KEY FIELDS SCREEN
+     C** CALLED FROM MAIN PROCESSING
+     C** CALLS: VALIDK TO VALIDATE KEY FIELDS IF ENTERED
+     C**
+     C*****************************************************************
+     C*
+     C           START     BEGSR                           ** START BSR **
+     C*
+     C** INITIALISE SCREEN DATA
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVEL*BLANK    SCRCTL
+     C                     MOVE *BLANKS   DDDELT
+     C                     MOVEL'PM90001' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    INFMSG
+     C*
+     C** CLEAR WHOLE SCREEN
+     C                     WRITEPM0100F3
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  S T A R T
+     C                     WRITEPM0100F2
+     C                     EXFMTPM0100F1
+     C*********************MOVEL*BLANK    ZMSGID 10                       R00300
+     C*********************MOVEL*BLANK    SCRMSG                          R00300
+     C                     MOVEL*BLANK    ZAMSID                          R00300
+     C**  Initialise screen input MSGQ.
+     C*********************CALL 'ZA0250'                                  R00300
+     C*                                                                   R00300
+     C**  Clear program message queue.                                    R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ   10                       R00300
+     C                     PARM           TOPRQ   5                       R00300
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  E N D
+     C*
+     C** F 3 , H E L P , O R  E N T E R   P R E S S E D  -  S T A R T
+     C*
+     C** F3 - TERMINATE
+     C*
+     C** Call S/R to move values into AID
+     C*
+     C                     EXSR ASCHGS
+     C*
+     C           AID       IFEQ '03'
+     C           AID       OREQ '12'
+     C                     MOVE '1'       *IN10
+     C                     MOVEL'03'      AID
+     C*
+     C** ENTER TAKEN VALIDATE KEY INPUT
+     C*
+     C                     ELSE
+     C                     EXSR VALIDK
+     C*
+     C** D E T E R M I N E    S C R E E N   C H A N G E    -  S T A R T
+     C*
+     C** IF NO ERRORS, DETERMINE NEXT SCREEN
+     C*
+     C***********ZMSGID    IFEQ *BLANK                                    R00300
+     C           ZAMSID    IFEQ *BLANK                                    R00300
+     C*
+     C**  - IF KEY FIELD IS BLANK, NEXT SCREEN IS REVIEW SCREEN
+     C*
+     C           DDCCY     IFEQ *BLANK
+     C                     MOVE '1'       *IN11
+     C*
+     C**  - OTHERWISE, DISPLAY REQUESTED DETAIL SCREEN AS PER KEY INPUT
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C                     END
+     C*
+     C** D E T E R M I N E    S C R E E N   C H A N G E    -  E N D
+     C*
+     C                     END
+     C                     END
+     C*
+     C** F 3  O R  E N T E R   P R E S S E D  -  E N D
+     C*
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  E N D
+     C*
+     C           XTSTAR    ENDSR                           ** XTSTAR ESR**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** REVIEW S/R TO PROCESS SUBFILE SELECTION SCREEN
+     C** CALLED FROM MAIN PROCESSING
+     C** CALLS: VALIDK TO VALIDATE KEY FIELDS IF SUBFILE RECORD SELECTED
+     C**
+     C*****************************************************************
+     C*
+     C           REVIEW    BEGSR                           ** REVIEW BSR**
+     C*
+     C*********************MOVEL*BLANKS   ZMSGID                          R00300
+     C                     MOVEL*BLANKS   ZAMSID                          R00300
+     C                     MOVE '0'       *IN11
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** I F  R O L L   U P / D O W N   O R   E N T E R   P R E S S E D
+     C*
+     C** R E B U I L D   S U B F I L E                     -  S T A R T
+     C                     MOVEL'PM90002' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    INFMSG
+     C           AID       IFEQ 'DN'
+     C           AID       OREQ 'UP'
+     C           AID       OREQ 'RA'
+     C*
+     C***********ZMSGID    IFEQ *BLANKS                                   R00300
+     C           ZAMSID    IFEQ *BLANKS                                   R00300
+     C** NO ERROR ON SUBFILE
+     C*
+     C** WRITE CONTROL RECORD
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN03
+     C                     MOVE '1'       *IN09
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD*ZERO     ROW
+     C                     Z-ADD*ZERO     COL
+     C*
+     C** CLEAR WHOLE SCREEN
+     C                     WRITEPM0100F3
+     C                     WRITEPM0100C0
+     C                     MOVE '1'       *IN04
+     C                     MOVE '0'       *IN09
+     C*
+     C** SET FILE POINTER - PAGE BACK
+     C           AID       IFEQ 'DN'
+     C                     MOVEL*BLANK    DDCCY
+     C                     MOVEL*BLANK    DDCGCM
+     C                     MOVEL'     '   PPAGK   5
+     C           PMCGCK    SETLLPMCGCDXX
+     C*
+     C** OTHERWISE        - PAGE FORWARD
+     C                     ELSE
+     C*
+     C                     MOVELDDPCCY    DDCCY
+     C                     MOVELDDGCMA    DDCGCM
+     C                     MOVELPAGK      PPAGK
+     C           PMCGCK    SETLLPMCGCDXX
+     C                     END
+     C*
+     C** READ IN DETAILS-FILL UP SUBFILE
+     C           RRN       DOUEQ12
+     C           *IN03     OREQ '1'
+     C*
+     C** READ DETAILS UNTIL SUBFILE PAGE IS FULL
+     C** OR CCY CHANGES FROM THAT OF 1ST READ
+     C                     READ PMCGCDXX                 03
+     C           *IN03     IFEQ '0'
+     C*
+     C** IF RECORD IS DELETED, FLAG IT AS SO ON SCREEN
+     C           P5RECI    IFEQ '*'
+     C                     MOVEL'D'       DDSTAT  1
+     C                     ELSE
+     C                     MOVEL*BLANK    DDSTAT
+     C                     END
+     C*
+     C** OUTPUT TO SUBFILE
+     C                     ADD  1         RRN     40
+     C*
+     C                     MOVE '0'       *IN04
+     C                     WRITEPM0100S0
+     C*
+     C** RECORD NOW WRITTEN TO SUBFILE
+     C                     END
+     C*
+     C** PAGE NOW FULL (OR EOF)
+     C                     END
+     C*
+     C** READ ONE MORE RECORD FOR NEXT SCREEN
+     C           *IN03     IFEQ '0'
+     C                     READ PMCGCDXX                 03
+     C           *IN03     IFEQ '0'
+     C                     MOVELP5CGCO    DDGCMA
+     C                     MOVELP5CCY     DDPCCY
+     C                     END
+     C                     END
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C** IF EOF SET NEXT 'REVIEW FROM' KEY TO BLANK
+     C                     MOVEL'     '   PAGK
+     C                     END
+     C*
+     C** FOR SUBFILE CONTROL
+     C           *IN04     IFEQ '1'
+     C                     MOVE '0'       *IN01
+     C                     MOVE '1'       *IN02
+     C                     MOVE '0'       *IN03
+     C*********************MOVEL'PM10303' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10303' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE
+     C                     MOVE '1'       *IN01
+     C                     MOVE '1'       *IN02
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** R E V I E W   S C R E E N     O U T P U T         -  S T A R T
+     C                     WRITEPM0100F2
+     C                     EXFMTPM0100C0
+     C*********************MOVEL*BLANK    SCRMSG                          R00300
+     C                     MOVEL*BLANK    REVW
+     C*********************MOVEL*BLANK    ZMSGID                          R00300
+     C                     MOVEL*BLANK    ZAMSID                          R00300
+     C*
+     C**  Initialise screen input MSGQ.
+     C*********************CALL 'ZA0250'                                  R00300
+     C*                                                                   R00300
+     C**   Clear program message queue                                    R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C** R E V I E W   S C R E E N     O U T P U T         -  E N D
+     C*
+     C** F 3 , F 12 , H E L P , R E C O R D  S E L E C T-  S T A R T
+     C*
+     C** Call S/R to move values into AID
+     C                     EXSR ASCHGS
+     C*
+     C** F3 - TERMINATE
+     C           AID       IFEQ '03'
+     C                     MOVE '1'       *IN11
+     C*
+     C** F12 - INITIAL SCREEN
+     C                     ELSE
+     C           AID       IFEQ '12'
+     C                     MOVE '1'       *IN10
+     C*
+     C** ENTER PRESSED -  PROCESS RECORD SELECTION
+     C                     ELSE
+     C           AID       IFEQ 'UP'
+     C                     MOVE '1'       *IN11
+     C*
+     C** ROLLUP
+     C                     ELSE
+     C                     MOVE '1'       *IN89
+     C           *IN04     IFEQ '0'
+     C                     READCPM0100S0                 89
+     C                     END
+     C*          *IN89     IFEQ '0'
+     C*          DDACTN    ANDEQ*BLANKS
+     C*
+     C** MUST DO THIS TEST OTHERWISE SEND A MESSAGE WHEN YOU CLEAR
+     C** ONE ACTION CODE ON SUBFILE WHICH WAS PREVIOUSLY IN ERROR
+     C*                    MOVE '1'       *IN89
+     C*                    END
+     C*
+     C** R E C O R D   S E L E C T   V A L I D A T I O N   -  S T A R T
+     C           *IN89     IFEQ '0'
+     C                     MOVELP5CGCO    DDCGCM
+     C                     MOVELP5CCY     DDCCY
+     C*
+     C** MOVE '1' IN *IN27 TO AVOID A TEST IN SR/VALIDK
+     C                     MOVE '1'       *IN27
+     C                     EXSR VALIDK
+     C                     MOVE '0'       *IN27
+     C*
+     C** NO ERRORS, UPDATE SCREEN CAN BE PROCESSED NEXT
+     C***********SCRMSG    IFEQ *BLANK                                    R00300
+     C           ZAMSID    IFEQ *BLANK                                    R00300
+     C                     MOVE '1'       *IN12
+     C                     MOVEL'Y'       REVW
+     C                     ELSE
+     C*
+     C** POSITION THE CURSOR ON ERROR FIELD
+     C           RRN       DIV  12        WWDIV   30
+     C                     MVR            WWREM   30
+     C           WWREM     IFEQ 0
+     C                     Z-ADD12        WWREM
+     C                     END
+     C*
+     C           WWREM     ADD  8         ROW
+     C                     Z-ADD2         COL
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** R E C O R D   S E L E C T   V A L I D A T I O N   -  E N D
+     C                     END
+     C                     END
+     C*
+     C** F 3 , F 12 , R E C O R D  S E L E C T - E N D
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N   - S T A R T
+     C           XTREVI    ENDSR                           ** XTREVI ESR**
+     C*****************************************************************===
+      /EJECT
+     C*****************************************************************===
+     C**
+     C** ZSETOF S/R TO SET OF ALL ERROR INDICATORS
+     C** CALLED FROM S/R  UPDATE
+     C**             S/R  VALIDD
+     C**
+     C*****************************************************************===
+     C*
+     C           ZSETOF    BEGSR                           ** UPDATE BSR**
+     C*
+     C                     MOVE '0'       *IN12
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C                     MOVE '0'       *IN45
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C                     MOVE '0'       *IN48
+     C                     MOVE '0'       *IN49
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN54
+     C                     MOVE '0'       *IN55
+     C                     MOVE '0'       *IN56
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN59
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN66
+     C                     MOVE '0'       *IN67
+     C                     MOVE '0'       *IN68
+     C                     MOVE '0'       *IN69
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+     C                     MOVE '0'       *IN75
+     C                     MOVE '0'       *IN76
+     C                     MOVE '0'       *IN77
+     C                     MOVE '0'       *IN78
+     C                     MOVE '0'       *IN79
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     MOVE '0'       *IN86
+     C                     ENDSR
+     C*****************************************************************
+     C**
+     C** UPDATE S/R TO PROCESS DETAIL SCREEN AND UPDATE FILE
+     C** CALLED FROM MAIN PROCESSING
+     C** CALLS: VALIDD, UPDFLS, INITRC, TRSFS.
+     C**
+     C*****************************************************************
+     C*
+     C           UPDATE    BEGSR                           ** UPDATE BSR**
+     C*
+     C** SET SCREEN INDICATORS - PROTECT KEY, SET OFF ERROR INDS,
+     C                     EXSR ZSETOF
+     C                     MOVE '1'       *IN05
+     C*
+     C** CLEAR WHOLE SCREEN
+     C                     WRITEPM0100F3
+     C*
+     C** ACCESS FILE RECORD FOR OLD TNLU TO CHECK AT UPDATE TIME
+     C** IF NO RECORD PRESENTLY ON FILE, ZEROISE STORED TNLU
+     C                     Z-ADD*ZERO     STNLU   50
+     C           PMCGCK    CHAINPMCGCDXX             99
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDP5TNLU    STNLU
+     C*
+     C** IF DELETED RECORD REPLACE ACTION 'A' OR 'D' BY 'E' (ACTION 'I'
+     C** AUTHORIZED ON A DELETED RECORD)
+     C           P5RECI    IFEQ '*'
+     C                     MOVEL'DELETED' DDDELT  7
+     C                     ELSE
+     C                     MOVEL*BLANK    DDDELT
+     C                     END
+     C*
+     C** GET CURRENCY NAME TO DISPLAY ON SCREEN (AND FOR DEC PLACES)
+     C***********P5CCY     CHAINSDCURRL0             89                   S01486
+     C************IN89     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM P5CCY     WWKEY2  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCURRL0'DBFILE                 *********S01486
+     C                     MOVE 'SDCURRPD'DBFILE                 *********S01486
+     C                     Z-ADD2         DBASE                  * DB ERROR 02 *
+     C                     MOVELP5CCY     DBKEY                  ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** FOR ROLLUP/ROLLDOWN UPDATE CURRENT CHARGE/COMMISSION CODE
+     C                     MOVELP5CGCO    DDCGCM
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C                     EXSR TRSFS
+     C                     END
+     C*
+     C** IF INSERT (NEW OR OVER DELETED RECORD)
+     C** INITIALIZE ALL FIELDS ON THE RECORD (IE ZEROIZE/BLANK OUT)
+     C           DDACTN    IFEQ 'I'
+     C                     EXSR INITRC
+     C                     MOVEL*BLANKS   DDCHGB
+     C                     MOVEL*BLANKS   DDCGMT
+     C                     MOVEL*BLANKS   DDMINC
+     C                     MOVEL*BLANKS   DDCHNR
+     C                     MOVEL*BLANKS   DDDELT
+     C                     MOVEL*BLANKS   DDINCA
+     C                     MOVEL*BLANKS   DDACAC
+     C                     MOVEL*BLANKS   URLTAB
+     C                     MOVEL*BLANKS   PERTAB
+     C                     MOVEL*BLANKS   FCHTAB
+     C                     END
+     C*
+     C** SET UP DEFAULTS (DONE ON BLANK FIELDS)
+     C** IF DELETE/ENQUIRY PROTECT FIELD INPUT ON S/PM0100F0
+     C           DDACTN    IFEQ 'D'
+     C           DDACTN    OREQ 'E'
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C           *IN10     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** L O A D    U  P    I N F O M E S S A G E S        -  S T A R T
+     C           DDACTN    IFEQ 'D'
+     C                     MOVEL'PM90004' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    INFMSG
+     C                     ELSE
+     C                     MOVEL'PM90003' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    INFMSG
+     C                     END
+     C*
+     C** L O A D    U  P    I N F O M E S S A G E S        -  E N D
+     C** D E T A I L   S C R E E N     O U T P U T         -  S T A R T
+     C                     WRITEPM0100F2
+     C                     WRITEPM0100F1
+     C                     EXFMTPM0100F0
+     C*********************MOVEL*BLANK    SCRMSG                          R00300
+     C*********************MOVEL*BLANK    ZMSGID                          R00300
+     C                     MOVEL*BLANK    ZAMSID                          R00300
+     C*
+     C**  Initialise screen input MSGQ.
+     C*********************CALL 'ZA0250'                                  R00300
+     C*                                                                   R00300
+     C**   Clear program message queue                                    R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C** D E T A I L   S C R E E N     O U T P U T         -  E N D
+     C** Call S/R to move values into AID
+     C                     EXSR ASCHGS
+     C*
+     C** F 3 , F 12 , H E L P ,  S T A R T
+     C** F3 - TERMINATE
+     C           AID       IFEQ '03'
+     C                     MOVE '1'       *IN12
+     C*
+     C** F12 - INITIAL SCREEN
+     C                     ELSE
+     C           AID       IFEQ '12'
+     C                     MOVE '1'       *IN10
+     C*
+     C** NOT F3,F12
+     C                     ELSE
+     C*
+     C** V A L I D A T E   D E T A I L   S C R E E N   I N P U T
+     C                     EXSR VALIDD
+     C*
+     C** N O    D E T A I L   S C R E E N    E R R O R S   -  S T A R T
+     C***********SCRMSG    IFEQ *BLANK                                    R00300
+     C           ZAMSID    IFEQ *BLANK                                    R00300
+     C           AID       ANDEQ'RA'
+     C*
+     C**FOR REC.ADVANCE DETERMINE WHAT SCREEN TO RETURN TO -  S T A R T
+     C           REVW      IFEQ 'Y'
+     C                     MOVELPPAGK     PAGK
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C**FOR REC.ADVANCE DETERMINE WHAT SCREEN TO RETURN TO -  E N D
+     C**     U  P  D  A  T  E      F  I  L  E  S
+     C           DDACTN    IFEQ 'I'
+     C           DDACTN    OREQ 'A'
+     C           DDACTN    OREQ 'D'
+     C                     EXSR UPDFLS
+     C                     END
+     C*
+     C** N O    D E T A I L   S C R E E N    E R R O R S   -  E N D
+     C                     END
+     C*
+     C** F 3 , F 12 ,  -  E N D
+     C                     END
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  E N D
+     C                     END
+     C*
+     C** RESET PROTECT/NON-DISPLAY INDS
+     C                     MOVE '0'       *IN05
+     C                     MOVE '0'       *IN06
+     C           XTUPDT    ENDSR                           ** XTUPDA ESR**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** ASCHGS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD AID,
+     C** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.
+     C** CALLED FROM UPDATE
+     C**
+     C*****************************************************************
+     C*
+     C           ASCHGS    BEGSR
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C           *IN20     IFEQ '0'
+     C                     MOVE 'RA'      AID     2
+     C                     END
+     C*
+     C** If F3
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      AID
+     C                     MOVE '0'       *INKC
+     C                     END
+     C*
+     C** If F10
+     C           *INKJ     IFEQ '1'
+     C                     MOVE '10'      AID
+     C                     MOVE '0'       *INKJ
+     C                     END
+     C*
+     C** If F12
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      AID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C*
+     C** If ROLLUP pressed
+     C           *IN25     IFEQ '1'
+     C                     MOVE 'UP'      AID
+     C                     MOVE '0'       *IN25
+     C                     END
+     C*
+     C** If ROLLDOWN pressed
+     C           *IN26     IFEQ '1'
+     C                     MOVE 'DN'      AID
+     C                     MOVE '0'       *IN26
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** VALIDK S/R TO VALIDATE KEY FIELDS
+     C** CALLED FROM S/R START, REVIEW
+     C** CALLS NO OTHER S/R'S
+     C**
+     C*****************************************************************
+     C*
+     C           VALIDK    BEGSR                           ** VALIDK BSR**
+     C*
+     C** RESET ERROR INDICATORS
+     C** SET ERROR ARRAY COUNTER TO ZERO
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C*
+     C** A C T I O N    C O D E    I N P U T - MUST BE BLANK,I,A,E,D
+     C           DDACTN    IFNE *BLANK
+     C           DDACTN    ANDNE'I'
+     C           DDACTN    ANDNE'A'
+     C           DDACTN    ANDNE'E'
+     C           DDACTN    ANDNE'D'
+     C                     MOVE '1'       *IN21
+     C*********************MOVEL'PM10100' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10100' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** A C T I O N    C O D E    I N P U T - CANT BE D IF BJAUST IS ON
+     C           DDACTN    IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C*********************MOVEL'PM10102' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10102' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** A C T I O N    C O D E    I N P U T - CHECK KEY FIELDS
+     C           DDACTN    IFNE *BLANK
+     C** USER SHOULD BE AUTHORISED TO ACTION CODE                         S01486
+     C*                                                                   S01486
+     C** WHEN SINGLE BRANCH                                               S01486
+     C           MBIN      IFNE 'Y'                                       S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM           @ERR    10                      S01486
+     C           @ERR      IFNE *ZERO                                     S01486
+     C                     MOVEL'PM02000' ZAMSID                          S01486
+     C                     EXSR ZASNMS                                    S01486
+     C                     MOVE '1'       *IN21                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C** WHEN MULTI-BRANCH                                                S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM USRBCH    @ZBR    3                       S01486
+     C                     PARM           @ERR    10                      S01486
+     C           @ERR      IFNE *ZERO                                     S01486
+     C                     MOVEL'PM02000' ZAMSID                          S01486
+     C                     EXSR ZASNMS                                    S01486
+     C                     MOVE '1'       *IN21                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C*
+     C** BOTH CURRENCY & CHARGE CODE MUST BE ENTERED
+     C           DDCCY     IFEQ *BLANKS
+     C           DDCGCM    OREQ *BLANKS
+     C                     MOVE '1'       *IN22
+     C*********************MOVEL'PM10108' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10108' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** CHECK CURRENCY CODE EXISTS ON SDCURRL0
+     C***********DDCCY     CHAINSDCURRL0             89                   S01486
+     C************IN89     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM DDCCY     WWKEY2  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C                     MOVE '1'       *IN22
+     C*********************MOVEL'PM10106' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10106' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE                                           S01486
+     C                     MOVELA6CYCD    DDCCY                           S01486
+     C                     END
+     C*
+     C** IF ENTERED, THE CHARGE CODE MUST CONSIST OF 2 CHARACTERS
+     C** IN THE RANGES 0 TO 9 OR A TO Z
+     C                     Z-ADD1         X
+     C                     MOVE '0'       *IN89
+     C*
+     C           DDCG1     LOKUPCHA,X                    89
+     C           *IN89     IFEQ '1'
+     C                     MOVELDDCG1     P5CGCO
+     C                     ELSE
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10107' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10107' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C                     Z-ADD1         X
+     C                     MOVE '0'       *IN89
+     C*
+     C           DDCG2     LOKUPCHA,X                    89
+     C           *IN89     IFEQ '1'
+     C                     MOVE DDCG2     P5CGCO
+     C                     ELSE
+     C           *IN23     IFNE '1'
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10107' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10107' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** ACTION CODE BLANK BUT KEY INPUT
+     C           DDACTN    IFEQ *BLANK
+     C*
+     C           DDCCY     IFNE *BLANK
+     C           DDCGCM    ORNE *BLANK
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10109' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10109' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** A C T I O N    C O D E    I
+     C           DDACTN    IFEQ 'I'
+     C           PMCGCK    CHAINPMCGCDXX             89
+     C           *IN89     IFEQ '0'
+     C           P5RECI    ANDEQ'D'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10103' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10103' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** A C T I O N    C O D E    A , D
+     C           DDACTN    IFEQ 'A'
+     C           DDACTN    OREQ 'D'
+     C           PMCGCK    CHAINPMCGCDXX             89
+     C           *IN89     IFEQ '1'
+     C           P5RECI    OREQ '*'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10104' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10104' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** A C T I O N    C O D E    E
+     C           DDACTN    IFEQ 'E'
+     C           PMCGCK    CHAINPMCGCDXX             89
+     C           *IN89     IFEQ '1'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C*********************MOVEL'PM10105' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10105' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** DDACTN IF NE *BLANK, REVIEW FIELDS MUST BE BLANK
+     C***********ZMSGID    IFEQ *BLANKS                                   R00300
+     C           ZAMSID    IFEQ *BLANKS                                   R00300
+     C           DDACTN    ANDNE*BLANK
+     C           *IN27     ANDEQ'0'
+     C           DDPCCY    IFNE *BLANK
+     C           DDGCMA    ORNE *BLANK
+     C                     MOVE '1'       *IN24
+     C*********************MOVEL'PM10110' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10110' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** VALIDD S/R - TO VALIDATE DETAIL SCREEN
+     C** CALLED FROM UPDATE S/R
+     C** CALLS: ZSETOF; ZA0840
+     C**
+     C*****************************************************************
+     C*
+     C           VALIDD    BEGSR                           ** VALIDD BSR**
+     C*
+     C** RESET SCREEN ERROR INDICATORS
+     C                     EXSR ZSETOF
+     C*
+     C** ENTER KEY PRESSSED
+     C           AID       IFEQ 'RA'
+     C*
+     C** ACTION = I OR A
+     C           DDACTN    IFEQ 'I'
+     C           DDACTN    OREQ 'A'
+     C*
+     C** DO DEFAULTS
+     C** VALIDATION OF FIELDS FOR INSERT/AMEND
+     C**    VALIDATE CHARGE BASIS INDICATOR
+     C           DDCHGB    IFNE 'F'
+     C           DDCHGB    ANDNE'P'
+     C                     MOVE '1'       *IN31
+     C*********************MOVEL'PM10201' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10201' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** VALIDATE CHARGING METHOD
+     C           DDCGMT    IFNE 'T'
+     C           DDCGMT    ANDNE'X'
+     C                     MOVE '1'       *IN32
+     C*********************MOVEL'PM10202' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10202' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** CHARGING METHOD MUST BE 'T' IF CHARGING BASIS F
+     C           DDCHGB    IFEQ 'F'
+     C           DDCGMT    ANDNE'T'
+     C                     MOVE '1'       *IN32
+     C*********************MOVEL'PM10222' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10222' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** VALIDATE MINIMUM CHARGE AMOUNT
+     C                     Z-ADD*ZEROS    WWMINC
+     C*
+     C**   MUST BE BLANK FOR CHARGE BASIS 'F'
+     C           DDCHGB    IFEQ 'F'
+     C           DDMINC    ANDNE*BLANKS
+     C                     MOVE '1'       *IN33
+     C*********************MOVEL'PM10223' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10223' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C**   MUST BE A VALID AMOUNT IN BANK CHARGING CURRENCY
+     C           DDCHGB    IFEQ 'P'
+     C           DDMINC    ANDNE*BLANKS
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVELDDMINC    @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           15        SUB  @@IDP     @@IINT
+     C                     EXSR ZA0840
+     C*
+     C           @@13WN    IFNE 0
+     C                     MOVE '1'       *IN33
+     C*********************MOVEL'PM10224' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10224' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE
+     C                     MOVE @@ALPH    DDMINC
+     C                     MOVE @@AMT     WWMINC 150
+     C                     END
+     C                     END
+     C*
+     C** NARRATIVE MUST BE INPUT
+     C           DDCHNR    IFEQ *BLANK
+     C                     MOVE '1'       *IN34
+     C*********************MOVEL'PM10203' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10203' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** VALIDATE INCOME ACCOUNT CODE
+     C**********           MOVE DDINCA    INCA    4                                           CGL029
+     C                     MOVE DDINCA    INCA   10                                           CGL029
+     C***********INCA      CHAINSDACODL0             89                   S01486
+     C************IN89     IFEQ '1'                                       S01486
+     C                     CALL 'AOACODR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C**********           PARM DDINCA    WWKEY   4                                    S01486 CGL029
+     C                     PARM DDINCA    WWKEY  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C                     MOVE '1'       *IN86
+     C*********************MOVEL'PM10204' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10204' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE                                           S01486
+     C                     MOVELA5ACCD    DDINCA                          S01486
+     C                     END
+     C*
+     C** VALIDATE ACCRUAL ACCOUNT CODE
+     C**********           MOVE DDACAC    ACAC    4                                           CGL029
+     C                     MOVE DDACAC    ACAC   10                                           CGL029
+     C***********ACAC      CHAINSDACODL0             99                   S01486
+     C************IN99     IFEQ '1'                                       S01486
+     C                     CALL 'AOACODR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C**********           PARM DDACAC    WWKEY   4                                    S01486 CGL029
+     C                     PARM DDACAC    WWKEY  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C                     MOVE '1'       *IN36
+     C*********************MOVEL'PM10205' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10205' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE                                           S01486
+     C                     MOVELA5ACCD    DDACAC                          S01486
+     C                     END
+     C*
+     C***********ZMSGID    IFEQ *BLANKS                                   R00300
+     C           ZAMSID    IFEQ *BLANKS                                   R00300
+     C*
+     C**  EXECUTE FIELD CHECK 16 TIMES VALIDATING THE RANGE UPPER LIMIT
+     C**    PERCENTAGE LEVEL AND FLAT CHARGE LEVEL
+     C**         Z - IS THE SUM OF FIELDS CURRENTLY BEING VALIDATED
+     C**         U - IS THE SUM OF Z + 1
+     C**         V - IS THE SUM OF Z - 1
+     C**        BS - IS THE SUM OF THE 1ST SET OF FIELD TO BE BLANK
+     C                     Z-ADD2         U       30
+     C                     Z-ADD0         V       30
+     C                     Z-ADD1         Z       30
+     C                     Z-ADD0         BS      30
+     C*
+     C**      MOVE INPUT SCREEN DETS TO ARRAYS
+     C                     MOVEAURLTAB    UPL
+     C                     MOVEAPERTAB    PER
+     C                     MOVEAFCHTAB    FLC
+     C           Z         DOWLT16
+     C                     Z-ADD36        R       30
+     C                     Z-ADD50        P       30
+     C                     Z-ADD65        F       30
+     C                     EXSR FLDCHK
+     C                     ADD  1         U
+     C                     ADD  1         V
+     C                     ADD  1         Z
+     C                     END
+     C*
+     C**      MOVE ARRAYS TO OUTPUT SCREEN DETS
+     C                     MOVEAUPL       URLTAB
+     C                     MOVEAPER       PERTAB
+     C                     MOVEAFLC       FCHTAB
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** IF ACTION=D WITH ENTER PRESSED THEN ERROR
+     C           DDACTN    IFEQ 'D'
+     C           AID       ANDNE'10'
+     C*********************MOVEL'PM10301' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10301' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C           DDACTN    IFEQ 'D'
+     C           AID       ANDEQ'10'
+     C*
+     C**  MANDATORY MOVE TO PERMIT THE UPDATE OF FILE
+     C                     MOVE 'RA'      AID
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** INITRC S/R TO INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+     C** CALLED FROM UPDATE; UPDFLS
+     C** CALLS NO OTHER S/R'S
+     C**
+     C*****************************************************************
+     C*
+     C           INITRC    BEGSR                           ** INITRC BSR**
+     C*
+     C** INITIALIZE ALL DATA ON RECORD DEFINED DATA STRUCTURES
+     C                     MOVEL*ZEROS    STUTAB
+     C                     MOVEL*ZEROS    PLCTAB
+     C                     MOVEL*ZEROS    FCLTAB
+     C                     Z-ADD*ZERO     P5LCD
+     C                     Z-ADD*ZERO     P5TNLU
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** TRSFS S/R TO FORMAT RECORD FIELDS FOR SCREEN
+     C** CALLED FROM UPDATE
+     C** CALLS ZEDT;
+     C**
+     C*****************************************************************
+     C*
+     C           TRSFS     BEGSR                           ** TRSFS BSR **
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C** TRANSLATE P5CNAR
+     C                     MOVELP5CNAR    DDCHNR
+     C                     MOVELP5CGBS    DDCHGB
+     C                     MOVELP5CGMT    DDCGMT
+     C                     MOVELP5INCA    DDINCA
+     C                     MOVELP5ACAC    DDACAC
+     C*
+     C** TRANSFER MINIMUM CHARGE AMOUNT USING SR/ZEDIT
+     C           P5MINC    IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE P5MINC    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C           16        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    DDMINC
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDMINC
+     C                     END
+     C*
+     C                     Z-ADD1         Z
+     C                     MOVELSTUTAB    FULA
+     C                     MOVELPLCTAB    FPRA
+     C                     MOVELFCLTAB    FFCA
+     C*
+     C** GET HIGHEST UPPER LIMIT
+     C                     Z-ADD1         XU      20
+     C           *ZERO     LOKUPFUL,XU                   99
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD15        XU
+     C                     END
+     C*
+     C           Z         DOWLT16
+     C                     EXSR INTAB
+     C                     ADD  1         Z
+     C                     END
+     C*
+     C                     MOVEAUPL       URLTAB
+     C                     MOVEAPER       PERTAB
+     C                     MOVEAFLC       FCHTAB
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** UPDFLS S/R TO UPDATE FILE RECORDS
+     C** CALLED FROM UPDATE
+     C** CALLS INITRC; ZTNLU1; *PSSR
+     C**
+     C*****************************************************************
+     C           UPDFLS    BEGSR                           ** UPDFLS BSR**
+     C*
+     C** U P D A T E   F I L E S
+     C** INITIALIZE ALL FIELDS ON THE RECORD (IE ZEROIZE/BLANK OUT)
+     C                     EXSR INITRC
+     C*
+     C** RETRIEVE NEXT TRANSACTION NUMBER
+     C                     EXSR ZTNLU1
+     C*
+     C**               I  N  S  E  R  T  S                 -  S T A R T
+     C           DDACTN    IFEQ 'I'
+     C***********PMCGCK    CHAINPMCGCDPP             83                   S01486
+     C           PMCGCK    CHAINPMCGCDPD             83                   S01486
+     C           *IN83     IFEQ '0'
+     C           P5TNLU    IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C                     GOTO XTUPDF
+     C                     END
+     C                     END
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C                     MOVEL'D'       P5RECI
+     C                     Z-ADDBJRDNB    P5LCD
+     C                     MOVEL'I'       P5CHTP
+     C                     MOVELNATN      P5TNLU
+     C                     EXSR ZMOV
+     C*
+     C           *IN83     IFEQ '1'
+     C                     WRITEPMCGCDP0               15
+     C*
+     C** TEST FOR UPDATE BY ANOTHER W/S, OR A TERMINAL ERROR
+     C           *IN15     IFEQ '1'
+     C           STATUS    ANDEQ01021
+     C           PMCGCK    CHAINPMCGCDXX             15
+     C           *IN15     IFEQ '0'
+     C                     EXSR UPDOWS
+     C                     GOTO XTUPDF
+     C                     END
+     C                     END
+     C           *IN15     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ELSE
+     C                     UPDATPMCGCDP0
+     C                     END
+     C                     END
+     C*
+     C**               A  M  E  N  D  S                    -  S T A R T
+     C           DDACTN    IFEQ 'A'
+     C***********PMCGCK    CHAINPMCGCDPP             83                   S01486
+     C           PMCGCK    CHAINPMCGCDPD             83                   S01486
+     C           *IN83     IFEQ '0'
+     C           P5TNLU    IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C                     GOTO XTUPDF
+     C                     END
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C** IF THE RECORD INSERT HAS BEEN DONE TODAY NO UPDATE OF ACTION
+     C** CODE
+     C           P5CHTP    IFNE 'I'
+     C           P5LCD     ORNE BJRDNB
+     C                     MOVEL'A'       P5CHTP
+     C                     END
+     C                     Z-ADDBJRDNB    P5LCD
+     C                     MOVELNATN      P5TNLU
+     C                     EXSR ZMOV
+     C                     UPDATPMCGCDP0
+     C                     END
+     C                     END
+     C*
+     C**               D  E  L  E  T  E  S                 -  S T A R T
+     C           DDACTN    IFEQ 'D'
+     C***********PMCGCK    CHAINPMCGCDPP             83                   S01486
+     C           PMCGCK    CHAINPMCGCDPD             83                   S01486
+     C           *IN83     IFEQ '0'
+     C           P5TNLU    IFNE STNLU
+     C                     EXSR UPDOWS
+     C*
+     C** IF NO PROCESSING OCCURRED EXIT TO SUPPRESS AUDIT UPDATE
+     C                     GOTO XTUPDF
+     C                     END
+     C                     MOVEL'*'       P5RECI
+     C                     Z-ADDBJRDNB    P5LCD
+     C                     MOVEL'D'       P5CHTP
+     C                     MOVELNATN      P5TNLU
+     C                     TIME           P5TLUP
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    P5DLUP
+     C                     MOVE WWMLUP    P5MLUP
+     C                     Z-ADDWWYLUP    P5YLUP
+     C                     UPDATPMCGCDP0
+     C                     END
+     C                     END
+     C*
+     C** GET AUDIT RECORD
+     C***********1         CHAINPMCGCDZZ             99                   S01486
+     C           1         CHAINPMCGCDPA             99                   S01486
+     C*
+     C** UPDATE AUDIT RECORD IF FOUND
+     C           *IN99     IFEQ '0'
+     C*
+     C** FOR INSERT, UPDATE LIVE RECORDS INSERTED TODAY, AND NO. OF LIVE
+     C** RECORDS
+     C           DDACTN    IFEQ 'I'
+     C                     ADD  1         P5NORE
+     C                     END
+     C*
+     C** FOR DELETIONS, UPDATE NO. DELETIONS TODAY, AND NO. OF LIVE RECS
+     C           DDACTN    IFEQ 'D'
+     C                     SUB  1         P5NORE
+     C                     END
+     C*
+     C** FORMAT COMIT TEXT
+     C                     TIME           MTIME
+     C                     MOVELDDACTN    ACTNX
+     C*
+     C** UPDATE AUDIT RECORD
+     C                     UPDATPMCGCDZ0
+     C*
+     C** C  O  M  I  T
+     C           CMTTXT    COMIT
+     C*
+     C** AUDIT RECORD NOT FOUND
+     C                     ELSE
+     C           *LOCK     IN   LDA                                       S01486
+     C************         MOVEL'PMCGCDZ0'DBFILE                 *********S01486
+     C                     MOVEL'PMCGCDPA'DBFILE                 *********S01486
+     C                     Z-ADD3         DBASE                  * DB ERROR 03 *
+     C                     MOVE *BLANKS   DBKEY                  ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           XTUPDF    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**
+     C** UPDOWS S/R TO PROCESS UPDATE BY ANOTHER WORKSTATION
+     C** CALLED FROM UPDFLS
+     C** CALLS NO OTHER S/R'S
+     C**
+     C*****************************************************************
+     C           UPDOWS    BEGSR                           ** UPDOWS BSR**
+     C*
+     C                     ROLBK
+     C**   SET UP NEXT SCREEN TO BE DISPLAYED:
+     C**   SET SCREEN PROCESSOR TO UPDATE AND MOVE UPDATE MESSAGE TO ERROR
+     C                     MOVE '1'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C*********************MOVEL'PM10302' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10302' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**  ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA,      *
+     C**               ACCESS THE NEXT AVAILABLE TRANSACTION NUMBER,  *
+     C**               THEN UPDATE AND RELEASE THE DATA AREA.         *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************   R00300
+     C*                                                               *   R00300
+     C* ZASNMS   - Send message to program message queue              *   R00300
+     C*                                                               *   R00300
+     C* CALLS    Y2SNMSGC                                             *   R00300
+     C*                                                               *   R00300
+     C* CALLED BY  REVIEW - Process subfile selection.                *   R00300
+     C*            VALIDK - Validate key fields.                      *   R00300
+     C*            VALIDD - Validate detail screen.                   *   R00300
+     C*            UPDOWS - Processes update by another workstation.  *   R00300
+     C*                                                               *   R00300
+     C*****************************************************************   R00300
+     C           ZASNMS    BEGSR                                          R00300
+     C*                                                                   R00300
+     C                     CALL 'Y2SNMGC'                                 R00300
+     C                     PARM           ZAPGM            Program queue  R00300
+     C                     PARM           ZAPGRL           Rel queue      R00300
+     C                     PARM           ZAMSID           Message Id.    R00300
+     C                     PARM           ZAMSGF           Message file.  R00300
+     C                     PARM           ZAMSDA           Message data.  R00300
+     C                     PARM           ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C** Clear all fields for default mechanism next time.                R00300
+     C                     MOVEL*BLANK    ZAPGM            Message queue  R00300
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C           ZASNM9    ENDSR                           ZASNM9 TAG     R00300
+     C*                                                                   R00300
+     C*****************************************************************   R00300
+      /EJECT
+     C****************************************************************
+     C**
+     C**   S/R  *PSSR FILE EXEPTION/ERROR HANDLING SUBROUTINE
+     C**
+     C****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     SETON                     U7U8LR
+     C*
+     C** ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C                     ROLBK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C****************************************************************
+     C**
+     C**     PROCEDURE : INTAB
+     C**        SETS UP THE SCREEN TABLES WITH THE EDITED VALUES  OF
+     C**     THE UPPER RANGE LIMIT ,PERCENTAGE AND FLAT CHARGES USING
+     C**     THE ROUTINE ZSEDIT.
+     C**
+     C**     INPUT FIELDS:
+     C**                     Z       2/0
+     C**                     FUL,Z   9/15/0
+     C**                     FPR,Z   10/7/0
+     C**                     FFC,Z   10/15/0
+     C**
+     C**
+     C**     ARRAYS:
+     C**                     FUL     9/15/0
+     C**                     FPR     10/7/0
+     C**                     FFC     10/15/0
+     C**                     UPL     9/17/
+     C**                     PER     10/8/
+     C**                     FLC     10/17/
+     C**
+     C**     OUTPUT FIELDS:
+     C**                     UPL,Z   9/17/
+     C**                     PER,Z   10/8/
+     C**                     FLC,Z   10/17/
+     C**
+     C**     CALLED BY        TRSFS
+     C**     CALLS            ZSEDIT
+     C**
+     C****************************************************************
+     C           INTAB     BEGSR
+     C*
+     C           Z         IFNE 15
+     C           FUL,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FUL,Z     ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C           16        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    UPL,Z
+     C                     ELSE
+     C                     MOVEL*BLANKS   UPL,Z
+     C                     END
+     C                     END
+     C*
+     C           Z         IFLE XU
+     C           P5CGBS    ANDEQ'P'
+     C           DDACTN    ANDNE'I'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FPR,Z     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           16        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    PER,Z
+     C                     ELSE
+     C           FPR,Z     IFEQ 0
+     C                     MOVEL*BLANKS   PER,Z
+     C                     END
+     C                     END
+     C*
+     C           Z         IFLE XU
+     C           P5CGBS    ANDEQ'F'
+     C           DDACTN    ANDNE'I'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FFC,Z     ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C           16        SUB  ZADEC     ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    FLC,Z
+     C                     ELSE
+     C           FFC,Z     IFEQ 0
+     C                     MOVEL*BLANKS   FLC,Z
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C**
+     C**      SR/FLDCHK
+     C**      EXPLANATION OF SUBS
+     C**         Q - IS THE INDEX FOR THE ERROR ARRAY ER1 AND ER2
+     C**         Z - IS THE SUB OF FIELDS CURRENTLY BEING VALIDATED
+     C**         U - IS THE SUB OF Z + 1
+     C**         V - IS THE SUB OF Z - 1
+     C**        BS - IS THE SUB OF THE 1ST SET OF FIELD TO BE BLANK
+     C**
+     C**     INDICATORS USED:
+     C**                     *IN99 - GENERAL ERROR CONDITION
+     C**
+     C**     INPUT FIELDS:
+     C**                     Q       2/0
+     C**                     Z       3/0
+     C**                     U       3/0
+     C**                     V       3/0
+     C**                     BS      2/0
+     C**                     UPL     9/17/
+     C**                     PER     10/8/
+     C**                     FLC     10/17/
+     C**                     DDCHGB
+     C**
+     C**     ARRAYS:
+     C**                     UPL     9/17/
+     C**                     PER     10/8/
+     C**                     FLC     10/17/
+     C**
+     C**     OUTPUT FIELDS:
+     C**
+     C**     CALLED BY       VALIDD
+     C**     CALLS           UPLCHK
+     C**                     PERCHK
+     C**                     FLCCHK
+     C**
+     C****************************************************************
+     C*
+     C           FLDCHK    BEGSR
+     C*
+     C**    SET UP BS SUB IF UPPER RANGE LIMIT = BLANKS FOR 1ST TIME
+     C           Z         IFLT 15
+     C           BS        IFEQ 0
+     C           UPL,Z     ANDEQ*BLANKS
+     C                     Z-ADDZ         BS
+     C                     END
+     C                     END
+     C*
+     C** IF ALL 14 LIMITS ENTERED THE 15TH POSN SHOULD HAVE % OR FLAT
+     C** VALUE ENTERED. TO CHECK THIS LATER THE FIELD BS IS SET TO 15
+     C           Z         IFEQ 14
+     C           BS        ANDEQ0
+     C                     Z-ADD15        BS
+     C                     END
+     C*
+     C                     ADD  Z         R
+     C                     ADD  Z         P
+     C                     ADD  Z         F
+     C*
+     C**    VALIDATE ENTRY FOR NUMERIC, CURRENCY AND RANGE TESTS
+     C           Z         IFLT 15
+     C                     EXSR UPLCHK
+     C                     END
+     C*
+     C**    CHECKS THAT IF THE CURRENT UPL IS BLANK THAT ALL THE NEXT
+     C**     ONE ARE BLANK AS WELL
+     C           Z         IFLT 14
+     C           UPL,Z     ANDNE*BLANKS
+     C*
+     C                     Z-ADD1         X       30
+     C           *BLANKS   LOKUPUPL,X                    81
+     C           *IN81     IFEQ '1'
+     C*
+     C** THE FIRST BLANK IN UPPER RANGE LIMIT TABLE IS FOUND
+     C** IF INDICE Z (OF TESTED FIELD) IS GREATER THAN INDICE X
+     C** ==> IT'S AN ERROR
+     C           Z         IFGT X
+     C                     MOVE '1'       *IN,R
+     C*********************MOVEL'PM10208' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10208' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C           Z         IFGT 1
+     C           Z         ANDLT15
+     C           UPL,Z     ANDNE*BLANKS
+     C           @@13WN    ANDEQ0
+     C           UPL,Z     ANDLEUPL,V
+     C                     MOVE '1'       *IN,R
+     C*********************MOVEL'PM10209' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10209' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C**    PERCENTAGE CHECK
+     C           Z         IFLT 15
+     C           UPL,Z     IFNE *BLANKS
+     C           PER,Z     ANDEQ*BLANKS
+     C           DDCHGB    ANDEQ'P'
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10210' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10210' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C**    PERCENTAGE CHECK FOR POSITION 15 ONLY
+     C           Z         IFEQ 15
+     C           UPL,14    IFNE *BLANKS
+     C           PER,Z     ANDEQ*BLANKS
+     C           DDCHGB    ANDEQ'P'
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10210' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10210' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C**    VALIDATE ENTRY FOR NUMERIC, CURRENCY AND RANGE TESTS
+     C                     EXSR PERCHK
+     C*
+     C           Z         IFLT 15
+     C           PER,Z     IFNE *BLANKS
+     C           UPL,Z     ANDEQ*BLANKS
+     C           BS        ANDNEZ
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10213' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10213' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** ENTRY IS PROHIBITED IF CHARGE BASIS IS 'F'
+     C           Z         IFLT 16
+     C           PER,Z     IFNE *BLANKS
+     C           DDCHGB    ANDEQ'F'
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10214' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10214' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** CHECK LAST %
+     C           Z         IFEQ 15
+     C           DDCHGB    ANDEQ'P'
+     C           PER,15    ANDNE*BLANK
+     C           UPL,14    ANDEQ*BLANK
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10213' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10213' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C**     FLAT CHARGE
+     C**    VALIDATE ENTRY FOR NUMERIC, CURRENCY AND RANGE TESTS
+     C                     EXSR FLCCHK
+     C*
+     C           Z         IFLT 15
+     C           UPL,Z     IFNE *BLANKS
+     C           FLC,Z     ANDEQ*BLANKS
+     C           DDCHGB    ANDEQ'F'
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10216' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10216' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C           Z         IFLT 15
+     C           FLC,Z     IFNE *BLANKS
+     C           UPL,Z     ANDEQ*BLANKS
+     C           BS        ANDNEZ
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10219' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10219' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** ENTRY IS PROHIBITED IF CHARGE BASIS IS 'P'
+     C           Z         IFLT 16
+     C           FLC,Z     IFNE *BLANKS
+     C           DDCHGB    ANDEQ'P'
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10220' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10220' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C*
+     C** CHECK LAST FLAT CHARGE
+     C           Z         IFEQ 15
+     C           FLC,15    ANDNE*BLANK
+     C           UPL,14    ANDEQ*BLANK
+     C           DDCHGB    ANDEQ'F'
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10219' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10219' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C** FOR THE FIRST BLANK UPPER LIMIT A % OR FLAT VALUE IS REQUIRED
+     C*
+     C           BS        IFEQ Z
+     C           BS        OREQ 15
+     C           Z         ANDEQ15
+     C*
+     C** FIRST BLANK UPPER LIMIT
+     C           DDCHGB    IFEQ 'F'
+     C*
+     C** FLAT RATE IS REQUIRED IF TYPE IS F= FLAT
+     C           FLC,Z     IFEQ *BLANKS
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10221' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10221' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     ELSE
+     C*
+     C** IF NOT F=FLAT, PERCENTAGE RATE IS REQUIRED
+     C           PER,Z     IFEQ *BLANKS
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10215' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10215' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C**
+     C**     PROCEDURE : UPLCHK
+     C**   CHECKS TO SEE IF UPPER RANGE LIMIT(SUB) IS NUMERIC
+     C**   AND VALID FOR CURRENCY
+     C**
+     C**     INDICATORS USED:
+     C**                     *IN99 - GENERAL ERROR CONDITION
+     C**
+     C**     INPUT FIELDS:
+     C**                     UPL,Z   9/17/
+     C**                     Z       2/0
+     C**                     FUL,Z   9/15/0
+     C**
+     C**     ARRAYS:
+     C**                     UPL     9/17/
+     C**                     FLC     10/17/
+     C**
+     C**     OUTPUT FIELDS:
+     C**                     FUL,Z   9/15/0
+     C**                     UPL,Z   9/17/
+     C**
+     C**     CALLED BY       FLDCHK
+     C**     CALLS           ZA0840
+     C**
+     C****************************************************************
+     C*
+     C           UPLCHK    BEGSR
+     C           UPL,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVELUPL,Z     @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           15        SUB  @@IDP     @@IINT
+     C                     EXSR ZA0840
+     C*
+     C**   CHECK ENTRY IS FOUND TO BE NUMERIC
+     C           @@13WN    IFNE 0
+     C                     MOVE '1'       *IN,R
+     C*********************MOVEL'PM10206' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10206' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C**   CHECK ENTRY IS FOUND TO BE ZERO
+     C           @@AMT     IFEQ 0
+     C                     MOVE '1'       *IN,R
+     C*********************MOVEL'PM10207' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10207' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END
+     C*
+     C**   NO ERROR
+     C           @@13WN    IFEQ 0
+     C           @@AMT     ANDNE0
+     C                     MOVE @@ALPH    UPL,Z
+     C                     MOVE @@AMT     FUL,Z
+     C                     END
+     C                     END
+     C*
+     C           UPL,Z     IFEQ *BLANKS
+     C                     Z-ADD0         FUL,Z
+     C                     END
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+     C****************************************************************
+     C**
+     C**     PROCEDURE : PERCHK
+     C**   CHECKS TO SEE IF PERCENTAGE(SUB) IS NUMERIC
+     C**   AND VALID FOR CURRENCY
+     C**
+     C**     INPUT FIELDS:
+     C**                     PER,Z   10/8/
+     C**
+     C**
+     C**     ARRAYS:         PER     10/8/
+     C**                     FPR     10/7/0
+     C**
+     C**     OUTPUT FIELDS:
+     C**                     PER,Z   10/8/
+     C**                     FPR,Z   10/7/0
+     C**
+     C**
+     C**     CALLED BY       FLDCHK
+     C**
+     C**     CALLS           ZA0840
+     C**
+     C****************************************************************
+     C*
+     C           PERCHK    BEGSR
+     C           PER,Z     IFNE *BLANKS
+     C*
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVELPER,Z     @@ALPH
+     C                     Z-ADD7         @@IDP
+     C           11        SUB  @@IDP     @@IINT
+     C                     EXSR ZA0840
+     C*
+     C**   CHECK ENTRY IS FOUND TO BE NUMERIC
+     C           @@13WN    IFNE 0
+     C                     MOVE '1'       *IN,P
+     C*********************MOVEL'PM10211' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10211' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE
+     C                     MOVE @@ALPH    PER,Z
+     C                     MOVE @@AMT     FPR,Z
+     C                     END
+     C                     END
+     C*
+     C           PER,Z     IFEQ *BLANKS
+     C                     Z-ADD0         FPR,Z
+     C                     END
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+     C****************************************************************
+     C**
+     C**     PROCEDURE : FLCCHK
+     C**   CHECKS TO SEE IF FLAT CHARGE(SUB) IS NUMERIC
+     C**   AND VALID FOR CURRENCY
+     C**
+     C**     INDICATORS USED:
+     C**                     *IN99 - GENERAL ERROR CONDITION
+     C**
+     C**     INPUT FIELDS:
+     C*                      FLC,Z   10/17/
+     C*
+     C*      ARRAYS:
+     C*                      FLC     10/17/
+     C*                      FFC     10/15/0
+     C*
+     C*      OUTPUT FIELDS:
+     C*                      FLC,Z   10/17/
+     C*                      FFC,Z   10/15/0
+     C*
+     C*
+     C*      CALLED BY       FLDCHK
+     C*      CALLS           NUMCHK
+     C*
+     C****************************************************************
+     C*
+     C           FLCCHK    BEGSR
+     C           FLC,Z     IFNE *BLANKS
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVELFLC,Z     @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           15        SUB  @@IDP     @@IINT
+     C                     EXSR ZA0840
+     C*
+     C**   CHECK ENTRY IS FOUND TO BE NUMERIC
+     C           @@13WN    IFNE 0
+     C                     MOVE '1'       *IN,F
+     C*********************MOVEL'PM10217' ZMSGID                          R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           ZMSGID                          R00300
+     C                     MOVEL'PM10217' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     ELSE
+     C                     MOVE @@ALPH    FLC,Z
+     C                     MOVE @@AMT     FFC,Z
+     C                     END
+     C                     END
+     C*
+     C           FLC,Z     IFEQ *BLANKS
+     C                     Z-ADD0         FFC,Z
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** ZMOV   - UPDATE FILE FIELDS                                  *
+     C**                                                              *
+     C*****************************************************************
+     C           ZMOV      BEGSR
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    P5DLUP
+     C                     MOVE WWMLUP    P5MLUP
+     C                     Z-ADDWWYLUP    P5YLUP
+     C                     TIME           P5TLUP
+     C*
+     C                     MOVELDDCCY     P5CCY
+     C                     MOVELDDCGCM    P5CGCO
+     C                     MOVELDDCHGB    P5CGBS
+     C                     MOVELDDCGMT    P5CGMT
+     C                     MOVE WWMINC    P5MINC
+     C                     MOVELDDCHNR    P5CNAR
+     C                     MOVE DDINCA    P5INCA
+     C                     MOVE DDACAC    P5ACAC
+     C                     MOVELFULA      STUTAB
+     C                     MOVELFPRA      PLCTAB
+     C                     MOVELFFCA      FCLTAB
+     C                     ENDSR
+     C*
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZA0840 - VALIADTE AND REFORMAT AN INPUT AMOUNT               *
+      *                                                               *
+      *           This subroutine will take as input a 16A field      *
+      *           a 1N number of integers and a 1N number of decimal  *
+      *           places. Ignoring the leading and trailing blanks    *
+      *           it will ensure that the field contains only numeric *
+      *           characters and a decimal point, and that it has no  *
+      *           embedded blanks, or more than one decimal point.    *
+      *           It will also check that the number of figures before*
+      *           and after the decimal point do not exceed the input *
+      *           parameters. The subroutine will output the number as*
+      *           a 16A field and a 15N field, along with an error    *
+      *           code. The alpha field will be right aligned with    *
+      *           the leading zeros blanked, and trailing blanks zero *
+      *           filled. The number returned will be 15 long with 0  *
+      *           decimal places. The error code will contain 0 if    *
+      *           there was no error, 1 if there was a non-numeric    *
+      *           character found, and 2 if the number of decimal     *
+      *           places are wrong.                                   *
+      *                                                               *
+      *  Input  : @@ALPH - 16A field containing the field to validate *
+      *           @@IDP  - number of decimal places                   *
+      *           @@IINT - number of integers                         *
+      *                                                               *
+      *  Output : @@ALPH - 16A field for display                      *
+      *           @@AMT  - 15N field for calculation                  *
+      *           @@ERCD - 1N error code                              *
+      *                                                               *
+      *  Uses   : @F     - array of 16 elements 1 character long      *
+      *           @G     - array of 16 elements 1 character long      *
+      *           @@CADP - calculated number of decimal places        *
+      *           @@CINT - calculated number of integers              *
+      *           @@PIDP - position of dp in input array              *
+      *           @@PODP - position of dp in output array             *
+      *           @@C    - index for array @F                         *
+      *           @@D    - index for array @G                         *
+      *           @@WK7  - workfield used for converting array element*
+      *                    to a 1N number.                            *
+      *           @H     - array containing powers of 10              *
+      *           @@E    - index to array @H                          *
+      *           @@WK5  - work field                                 *
+      *           @@ALP1 - feild used to right align 0 decimal places *
+      *                                                              *
+      *     LAST AMEND NO. XXXXXX             DATE   XX/XX/XX        *
+      *                                                              *
+      *****************************************************************
+     C           ZA0840    BEGSR
+     C*
+     C** initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@13WN  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      ** define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@13WN           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@13WN           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@13WN           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@13WN           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@13WN           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@13WN           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+     C*
+     C                     MOVE '0'       *IN80
+     C           ZA0849    ENDSR                           ZA0849 TAG
+     C*
+     C*****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      /EJECT
+     C*****************************************************************
+     C*
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+** CHA
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789

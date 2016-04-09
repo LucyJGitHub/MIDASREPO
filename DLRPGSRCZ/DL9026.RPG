@@ -1,0 +1,113 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cheque number reconcilation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*  DL9026 - CHEQUE NUMBER RECONCILATION                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*  PROGRAM INFORMATION                                          *
+     F*                                                               *
+     F*  The purpose of this program is to update the cheque          *
+     F*  file with the current cheque number used, and update the     *
+     F*  cheque control file with the number of cheques printed.      *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 051380             Date 07JAN94               *
+     F*                 S01390             Date 10AUG92               *
+     F*                 AUS006             DATE 18DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  051380 - Set the right cheque number.                        *
+     F*  S01390 - Release 10 Changes for Australianisation            *
+     F*  AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FCHQNOZZ UF  E                    DISK
+     F*
+     F* UPDATE FILES
+     FCHQNOAA UF  E                    DISK
+     F*
+     E*
+     E                    CPY@    1   1 80                                S01390
+     C*
+     C                     EXSR INIT
+     C                     EXSR PROCES
+     C*
+     C* If record was found on CHQNOZZ in INIT then update the record
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDNCHQ      LCHQ
+     C                     UPDATCHQNOZZF
+     C                     END
+     C*
+     C* End program
+     C           #END      TAG
+     C                     MOVE '1'       *INLR
+      /TITLE INITIALISACTION ROUTINE
+     C           INIT      BEGSR
+      **---------------------------------------------------------INIT
+      **                                                           **
+      ** INIT - INITIALISATION ROUTINE.                            **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*
+     C           *LIKE     DEFN CQNO      COUNT1
+     C           *LIKE     DEFN CQNO      COUNT2
+     C           *LIKE     DEFN CQNO      STRNB
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           STRNO   6
+     C                     MOVE STRNO     STRNB
+     C* Read the cheque number control file
+     C                     READ CHQNOZZ                  99
+     C*
+     C                     ENDSR
+     C*
+      /TITLE
+     C           PROCES    BEGSR
+      **-------------------------------------------------------PROCES
+      **                                                           **
+      ** PROCES - Process valid information                        **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C*
+     C*
+     C                     SETOF                     18
+     C                     Z-ADD0         COUNT1
+     C                     Z-ADD0         COUNT2
+     C*
+     C***********STRNB     ADD  1         COUNT2                          051380
+     C                     Z-ADDSTRNB     COUNT2                          051380
+     C           LCHQ      ADD  1         COUNT1
+     C           COUNT1    CHAINCHQNOAA              18
+     C           *IN18     DOWEQ'0'
+     C                     Z-ADDCOUNT2    CQNO
+     C                     UPDATCHQNOAAF
+     C                     READ CHQNOAA                  18
+     C                     ADD  1         COUNT2
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

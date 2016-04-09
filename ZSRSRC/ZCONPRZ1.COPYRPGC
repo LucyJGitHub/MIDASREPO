@@ -1,0 +1,165 @@
+     C********************************************************************
+     C*                                                                  *
+     C*  ZCONPR- SUBROUTINE TO CALCULATE BANK'S CONTRACT PRICE           *
+     C*
+     C*  INPUT  - FROM TRADE FILE   NOML (11,0) NOMINAL
+     C*                             TCSR (15,0) CONSIDERATION
+     C*                             RALL (9,5)  REALLOWANCE
+     C************                  TCA1,TCA2,TCA3,TLTA,TOCA(13,0)CHARGES*S01176
+     C*                             TCA1,TCA2,TCA3,TCA4,TCA5 +           *S01176
+     C*                             TCA6,TCA7 (13,0) CHARGES             *S01176
+     C*                             TBCA,TCCA (13,0) COMMISSIONS
+     C*                             TAXA (13,0) TAX                      *S01176
+     C*                             TNMD (1,0)  NOM.CCY DEC.PLACES
+     C*                             PRIC (15,8)  TRADE PRICE
+     C************FROM*TABTB36****-*COBP*(1)*COMMISSION*TO*BE*INCLUDED****S01117
+     C******************************CBAP*(1)*CHARGES*TO*BE*INCLUDED*******S01117
+     C******************************RBAP*(1)*REALLOWANCE*TO*BE*INCLUDED***S01117
+     C************FROM TABTG10******CDP*(ZCDP)*(1,0)*NOM.CCY*DEC.PLS.*****S01117
+     C*           FROM SDSTRDPD   - BVCMBP (1) COMMISSION TO BE INCLUDED  S01117
+     C*                             BVCBAP (1) CHARGES TO BE INCLUDED     S01117
+     C*                             BVRBAP (1) REALLOWANCE TO BE INCLUDED S01117
+     C*           FROM SDCURRPD     A6NBDP (ZCDP) (1,0) NOM.CCY DEC.PLS.  S01117
+     C*           FROM SECTYD     - SPBS (1) PRICE BASIS
+     C*                             POWER8 ARRAY MUST BE INCLUDED IN
+     C*                             CALLING PROGRAM
+     C*
+     C*  OUTPUT - ZCONP  (15,8) CONTRACT PRICE FOR BANK
+     C*
+     C*  CALLS - NONE
+     C**                                                                 *
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     C*  Last Amend No. 161657             Date 20APR00                  *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. S01117             Date 21JAN91                  *
+     C*                 S01176             DATE 18AUG88                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  161657 - Depending on classification of the customer,           *
+     C*           ICD fields must be checked to add the charges and      *
+     C*           commissions in average price.                          *
+     C*  S01117 - SD new file changes (multibranching).                  *
+     C*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZCONPR    BEGSR                           **ZCONPR BEGSR
+     C*
+     C* Define fields
+     C*
+     C                     GOTO ZEDEF
+     C                     Z-ADDZCONP     ZCONP  158
+     C                     Z-ADDZCPTOT    ZCPTOT 152
+     C                     Z-ADDZWK158    ZWK158 158
+     C                     Z-ADDZWK152    ZWK152 152
+     C                     Z-ADDZWK150    ZWK150 150
+     C                     Z-ADDZNOML     ZNOML  152
+     C                     Z-ADDZCDP      ZCDP    10
+     C           ZEDEF     TAG                             ** ZEDEF **
+     C*
+     C* Put Nominal in ccy dec pls
+     C           ZCDP      SUB  TNMD      N       10
+     C                     ADD  5         N
+     C           NOML      MULT POWER8,N  ZNOML
+     C*
+     C* Add consideration to contract price total
+     C                     Z-ADDTCSR      ZCPTOT
+     C*
+     C*
+     C* If commission is to be included -
+     C*    add the two commission amounts to the contract price total
+     C***********COBP      IFEQ 'Y'                                       S01117
+     C           BVCMBP    IFEQ 'Y'                                       S01117
+     C           C1DI      ANDNE'S'                                       161657
+     C           C1DI      ANDNE'D'                                       161657
+     C           BVCMCP    OREQ 'Y'                                       161657
+     C           C1DI      ANDEQ'S'                                       161657
+     C           BVCMCP    OREQ 'Y'                                       161657
+     C           C1DI      ANDEQ'D'                                       161657
+     C                     ADD  TBCA      ZCPTOT
+     C                     ADD  TCCA      ZCPTOT
+     C                     END
+     C*
+     C*
+     C* If charges are to be included -
+     C*****add*the*five*charge*amounts*to*the*contract*price*total********S01176
+     C*    add the seven charge amounts to the contract price total       S01176
+     C***********CBAP      IFEQ 'Y'                                       S01117
+     C           BVCBAP    IFEQ 'Y'                                       S01117
+     C           C1DI      ANDNE'S'                                       161657
+     C           C1DI      ANDNE'D'                                       161657
+     C           BVCCAP    OREQ 'Y'                                       161657
+     C           C1DI      ANDEQ'S'                                       161657
+     C           BVCCAP    OREQ 'Y'                                       161657
+     C           C1DI      ANDEQ'D'                                       161657
+     C                     ADD  TCA1      ZCPTOT
+     C                     ADD  TCA2      ZCPTOT
+     C                     ADD  TCA3      ZCPTOT
+     C                     ADD  TCA4      ZCPTOT                          S01176
+     C                     ADD  TCA5      ZCPTOT                          S01176
+     C                     ADD  TCA6      ZCPTOT                          S01176
+     C                     ADD  TCA7      ZCPTOT                          S01176
+     C                     ADD  TAXA      ZCPTOT                          S01176
+     C***********          ADD  TLTA      ZCPTOT                          S01176
+     C***********          ADD  TOCA      ZCPTOT                          S01176
+     C                     END
+     C*
+     C*
+     C* If reallowance is to be included -
+     C*    Calculate the reallowance amount -
+     C*        = reallowance x nominal
+     C*     in nominal ccy decimal places
+     C*    If price basis is P divide by 100
+     C*    Add reallowance amount to contract price total
+     C*
+     C***********RBAP      IFEQ 'Y'                                       S01117
+     C           BVRBAP    IFEQ 'Y'                                       S01117
+     C* Adjust Reallowance for Price Basis
+     C           SPBS      IFEQ 'P'
+     C           RALL      DIV  100       RALLX  117H
+     C                     ELSE
+     C                     Z-ADDRALL      RALLX
+     C                     END
+     C* Mult Nom in ccy x Reallowance
+     C           ZNOML     MULT RALLX     ZWK152    H
+     C                     ADD  ZWK152    ZCPTOT
+     C                     END
+     C*
+     C*
+     C* Calculate the contract price -
+     C*    If nominal is zero - contract price is zero
+     C*    Contract price = Contract price total / nominal
+     C*     where nominal is with ccy decimal places, ZNOML calc above
+     C*    If price basis is P multiply contract price by 100
+     C           NOML      IFEQ 0
+     C                     Z-ADD0         ZCONP
+     C                     ELSE
+     C*
+     C* If contract total *EQ Consideration, use price from Trade record
+     C* to avoid rounding errors.
+     C*
+     C           TCSR      IFEQ ZCPTOT
+     C                     Z-ADDPRIC      ZCONP
+     C                     ELSE
+     C*
+     C           SPBS      IFEQ 'P'
+     C           100       MULT ZCPTOT    ZWK150
+     C           ZWK150    DIV  ZNOML     ZCONP     H
+     C                     ELSE
+     C           ZCPTOT    DIV  ZNOML     ZCONP     H
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR                           *** ENDSR    ***
+     C*
+     C*****************************************************************

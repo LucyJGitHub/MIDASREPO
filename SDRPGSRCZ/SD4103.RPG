@@ -1,0 +1,670 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BTS Process DEALSDB')                         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Standing Data module
+     F*                                                               *
+     F*  SD4103 - BTS Process DEALSDB                                 *
+     F*                                                               *
+     F*  Called By: SDC4100 - BTS COB Control Component               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 15Feb17               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD004             Date 09Mar99               *
+     F*                 S01411             Date 05May93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD004 - Report split by business entity                     *
+     F*  S01411 - New program for Business Transaction Statistics     *
+     F*           Switchable Feature.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F*   LIVE   -  Counts Number of Live records
+     F*   INS    -  Counts Number of Inserts
+     F*   Output -  Writes a record to PF/SDBTFXPD
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  01       End of file PF/DEALS
+     F*  U7 & U8  Standard Database error indicators
+     F*  LR       Last Record - End of Program
+     F**---------------------------------------------------------------
+      *
+      * Transaction file to be processed
+      *
+     F***********DEALS   IF  E           K        DISK                    CSD004
+     FDEALSL2 IF  E           K        DISK                               CSD004
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+      *
+      * Business Transaction Statistics temporary file
+      * for todays data
+      *
+     FSDBTFXPDO   E                    DISK
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      * Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     ISDBANK    E DSSDBANKPD
+      *                                                                   CSD004
+      * Define Access Object Branch detail                                CSD004
+      *                                                                   CSD004
+     ISDBRCH    E DSSDBRCHPD                                              CSD004
+      *
+      * Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Program Initiation Processing:                                *
+      *                                                               *
+      * Sets up the copyright statement.                              *
+      * Obtains rundate.                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Obtain rundate from SDBANKPD
+      *
+     C                     MOVEL'*FIRST ' BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           SDBANK    PARM SDBANK    @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4103'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Save today's date
+      *
+     C           *LIKE     DEFN BJRDNB    RUNDAT
+     C                     Z-ADDBJRDNB    RUNDAT
+      *
+      ** Initialise the live and inserted record counters
+      *
+     C           *LIKE     DEFN E0TTLV    FPTTLV
+     C           *LIKE     DEFN E0TTIN    FPTTIN
+     C           *LIKE     DEFN E0TTLV    FSTTLV
+     C           *LIKE     DEFN E0TTIN    FSTTIN
+     C           *LIKE     DEFN E0TTLV    PITTLV
+     C           *LIKE     DEFN E0TTIN    PITTIN
+     C           *LIKE     DEFN E0TTLV    SITTLV
+     C           *LIKE     DEFN E0TTIN    SITTIN
+     C           *LIKE     DEFN E0TTLV    CXTTLV
+     C           *LIKE     DEFN E0TTIN    CXTTIN
+     C           *LIKE     DEFN E0TTLV    SWTTLV
+     C           *LIKE     DEFN E0TTIN    SWTTIN
+     C           *LIKE     DEFN E0TTLV    OPTTLV
+     C           *LIKE     DEFN E0TTIN    OPTTIN
+     C           *LIKE     DEFN E0TTLV    OTTTLV
+     C           *LIKE     DEFN E0TTIN    OTTTIN
+     C           *LIKE     DEFN E0TTLV    PSTTLV
+     C           *LIKE     DEFN E0TTIN    PSTTIN
+     C           *LIKE     DEFN E0TTLV    NXTTLV
+     C           *LIKE     DEFN E0TTIN    NXTTIN
+     C           *LIKE     DEFN BRCA      UCBRCA                          CSD004
+     C                     MOVEL*HIVAL    UCBRCA                          CSD004
+      *
+      *****************************************************************
+      *                                                               *
+      * Program Main Processing:                                      *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Read Transaction File until EOF
+      ** DEALS contains live records only
+      *
+     C           *IN01     DOUEQ'1'
+     C***********          READ DEALS                  0101               CSD004
+     C                     READ DEALSL2                0101               CSD004
+      *
+      ** If record found
+      *
+     C           *IN01     IFEQ '0'
+      ** First time                                                       CSD004
+      *                                                                   CSD004
+     C           UCBRCA    IFEQ *HIVAL                                    CSD004
+     C                     MOVELBRCA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      *                                                                   CSD004
+      ** On each break down on branch - output totals to                  CSD004
+      ** SDBTFXPD                                                         CSD004
+     C           BRCA      IFNE UCBRCA                                    CSD004
+     C                     MOVE UCBRCA    @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     EXSR OUTPUT                                    CSD004
+     C                     MOVELBRCA      UCBRCA                          CSD004
+     C                     ENDIF                                          CSD004
+      *
+      ** If record id is 'D' include as Live
+      *
+     C           RECI      IFEQ 'D'
+     C                     EXSR LIVE
+      *
+      ** If the Original entry date is equal to to-days Rundate
+      ** include as Inserted
+      *
+     C           ORED      IFEQ RUNDAT
+     C                     EXSR INS
+      *
+     C                     END
+     C                     END
+      *
+      *
+      ** If record id is 'M' or 'E' & the Original entry date is equal
+      ** to to-days Rundate then it was inserted and matured to-day
+      ** include as Live and Inserted
+      *
+     C           RECI      IFEQ 'M'
+     C           RECI      OREQ 'E'
+      *
+     C           ORED      IFEQ RUNDAT
+      *
+     C                     EXSR LIVE
+     C                     EXSR INS
+      *
+     C                     END
+     C                     END
+      *                                                                   CSD004
+     C                     ELSE                                           CSD004
+      *                                                                   CSD004
+      ** End of the file / DEALSL2                                        CSD004
+      ** At least one record found                                        CSD004
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     MOVE BRCA      @DSNB                           CSD004
+     C                     EXSR RVBRCA                                    CSD004
+     C                     ENDIF                                          CSD004
+      *
+     C                     END
+     C                     END
+      *
+      ***When*all*records*have*been*processed*-*output*totals*to*******   CSD004
+      ***SDBTFXPD**********************************                       CSD004
+      *
+     C           UCBRCA    IFNE *HIVAL                                    CSD004
+     C                     EXSR OUTPUT
+     C                     ENDIF                                          CSD004
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LIVE   - Calculates Live Records                              *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LIVE      BEGSR
+      *
+      ** Transaction type 'FP' - Foreign Currency Purchase
+      *
+     C           DTYP      IFEQ 'FP'
+     C                     ADD  1         FPTTLV
+     C                     END
+      *
+      ** Transaction type 'FS' - Foreign Currency Sale
+      *
+     C           DTYP      IFEQ 'FS'
+     C                     ADD  1         FSTTLV
+     C                     END
+      *
+      ** Transaction type 'PI' - Foreign Currency Purchase to cover an
+      **                         interest commitment
+      *
+     C           DTYP      IFEQ 'PI'
+     C                     ADD  1         PITTLV
+     C                     END
+      *
+      ** Transaction types 'SI' - Foreign Currency Sale to cover an
+      **                          interest commitment
+      *
+     C           DTYP      IFEQ 'SI'
+     C                     ADD  1         SITTLV
+     C                     END
+      *
+      ** Transaction types 'CX' - Cross
+      *
+     C           DTYP      IFEQ 'CX'
+     C                     ADD  1         CXTTLV
+     C                     END
+      *
+      ** Transaction types 'SW' - Swap
+      *
+     C           DTYP      IFEQ 'SW'
+     C                     ADD  1         SWTTLV
+     C                     END
+      *
+      ** Transaction types 'OP' - Option
+      *
+     C           DTYP      IFEQ 'OP'
+     C                     ADD  1         OPTTLV
+     C                     END
+      *
+      ** Transaction types 'OT' - Option Takedown
+      *
+     C           DTYP      IFEQ 'OT'
+     C                     ADD  1         OTTTLV
+     C                     END
+      *
+      ** Transaction types 'PS' - Internal Contracts
+      *
+     C           DTYP      IFEQ 'PS'
+     C                     ADD  1         PSTTLV
+     C                     END
+      *
+      ** Transaction types 'NX' - Nostro Transfer
+      *
+     C           DTYP      IFEQ 'NX'
+     C                     ADD  1         NXTTLV
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INS    - Calculates Inserts to-day                            *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INS       BEGSR
+      *
+      ** Transaction type 'FP' - Foreign Currency Purchase
+      *
+     C           DTYP      IFEQ 'FP'
+     C                     ADD  1         FPTTIN
+     C                     END
+      *
+      ** Transaction type 'FS' - Foreign Currency Sale
+      *
+     C           DTYP      IFEQ 'FS'
+     C                     ADD  1         FSTTIN
+     C                     END
+      *
+      ** Transaction type 'PI' - Foreign Currency Purchase to cover an
+      **                         interest commitment
+      *
+     C           DTYP      IFEQ 'PI'
+     C                     ADD  1         PITTIN
+     C                     END
+      *
+      ** Transaction types 'SI' - Foreign Currency Sale to cover an
+      **                          interest commitment
+      *
+     C           DTYP      IFEQ 'SI'
+     C                     ADD  1         SITTIN
+     C                     END
+      *
+      ** Transaction types 'CX' - Cross
+      *
+     C           DTYP      IFEQ 'CX'
+     C                     ADD  1         CXTTIN
+     C                     END
+      *
+      ** Transaction types 'SW' - Swap
+      *
+     C           DTYP      IFEQ 'SW'
+     C                     ADD  1         SWTTIN
+     C                     END
+      *
+      ** Transaction types 'OP' - Option
+      *
+     C           DTYP      IFEQ 'OP'
+     C                     ADD  1         OPTTIN
+     C                     END
+      *
+      ** Transaction types 'OT' - Option Takedown
+      *
+     C           DTYP      IFEQ 'OT'
+     C                     ADD  1         OTTTIN
+     C                     END
+      *
+      ** Transaction types 'PS' - Internal Contracts
+      *
+     C           DTYP      IFEQ 'PS'
+     C                     ADD  1         PSTTIN
+     C                     END
+      *
+      ** Transaction types 'NX' - Nostro Transfer
+      *
+     C           DTYP      IFEQ 'NX'
+     C                     ADD  1         NXTTIN
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTPUT - Outputs today's totals to SDBTFXPD.                  *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      ** Move Transaction File name, Transaction File module
+      ** and Midas run date into SDBTFXPD fields ready for output
+      *
+     C                     MOVEL'DEALSDB' E0FNME
+     C                     MOVEL'FX'      E0MMOD
+     C                     Z-ADDBJRDNB    E0DATE
+      *
+      ** Move branch and company codes                                    CSD004
+      *                                                                   CSD004
+     C                     MOVE A8BRCD    E0BRCA                          CSD004
+     C                     MOVE A8CMCD    E0CMPY                          CSD004
+      *
+      ** Output processing for Deal Type 'FP' - Foreign Currency
+      *                                         Purchase
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'FP'      E0TNTY
+     C                     Z-ADDFPTTIN    E0TTIN
+     C                     Z-ADDFPTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'FS' - Foreign Currency Sale
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'FS'      E0TNTY
+     C                     Z-ADDFSTTIN    E0TTIN
+     C                     Z-ADDFSTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'PI' - Foreign Currency
+      *                                         Purchase to cover an
+      *                                         Interest Commitment
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'PI'      E0TNTY
+     C                     Z-ADDPITTIN    E0TTIN
+     C                     Z-ADDPITTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'SI' - Foreign Currency
+      *                                         Sale to cover an
+      *                                         Interest Commitment
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'SI'      E0TNTY
+     C                     Z-ADDSITTIN    E0TTIN
+     C                     Z-ADDSITTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'CX' - Cross
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'CX'      E0TNTY
+     C                     Z-ADDCXTTIN    E0TTIN
+     C                     Z-ADDCXTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'SW' - Swap
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'SW'      E0TNTY
+     C                     Z-ADDSWTTIN    E0TTIN
+     C                     Z-ADDSWTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'OP' - Option
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'OP'      E0TNTY
+     C                     Z-ADDOPTTIN    E0TTIN
+     C                     Z-ADDOPTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'OT' - Option Takedown
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'OT'      E0TNTY
+     C                     Z-ADDOTTTIN    E0TTIN
+     C                     Z-ADDOTTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'PS' - Internal Contracts
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'PS'      E0TNTY
+     C                     Z-ADDPSTTIN    E0TTIN
+     C                     Z-ADDPSTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ** Output processing for Deal Type 'NX' - Nostro Transfer
+      *
+      ** Move Deal Type, total inserts today and total
+      ** live records into SDBTFXPD fields ready for output
+      *
+     C                     MOVE *BLANKS   E0TNTY
+     C                     MOVE 'NX'      E0TNTY
+     C                     Z-ADDNXTTIN    E0TTIN
+     C                     Z-ADDNXTTLV    E0TTLV
+      *
+      ** Write a record to SDBTFXPD
+      *
+     C                     WRITESDBTSMD0
+      *
+      ***When*all*Deal*Type*records*have*been*written*to***************   CSD004
+      ***SDBTFXPD*-*end*program*normally****************                  CSD004
+      *
+      *  Reset the count variables for the next branch                    CSD004
+     C                     Z-ADD0         FPTTLV                          CSD004
+     C                     Z-ADD0         FPTTIN                          CSD004
+     C                     Z-ADD0         FSTTLV                          CSD004
+     C                     Z-ADD0         FSTTIN                          CSD004
+     C                     Z-ADD0         PITTLV                          CSD004
+     C                     Z-ADD0         PITTIN                          CSD004
+     C                     Z-ADD0         SITTLV                          CSD004
+     C                     Z-ADD0         SITTIN                          CSD004
+     C                     Z-ADD0         CXTTLV                          CSD004
+     C                     Z-ADD0         CXTTIN                          CSD004
+     C                     Z-ADD0         SWTTLV                          CSD004
+     C                     Z-ADD0         SWTTIN                          CSD004
+     C                     Z-ADD0         OPTTLV                          CSD004
+     C                     Z-ADD0         OPTTIN                          CSD004
+     C                     Z-ADD0         OTTTLV                          CSD004
+     C                     Z-ADD0         OTTTIN                          CSD004
+     C                     Z-ADD0         PSTTLV                          CSD004
+     C                     Z-ADD0         PSTTIN                          CSD004
+     C                     Z-ADD0         NXTTLV                          CSD004
+     C                     Z-ADD0         NXTTIN                          CSD004
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   CSD004
+      *                                                               *   CSD004
+      * RVBRCA - Retrieve Branch Details.                             *   CSD004
+      *                                                               *   CSD004
+      * Called by: Main processing                                    *   CSD004
+      *                                                               *   CSD004
+      *****************************************************************   CSD004
+      *                                                                   CSD004
+     C           RVBRCA    BEGSR                                          CSD004
+     C**********           CALL 'AOBRCHR0'                                             CSD004 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM           @RTCD   7                       CSD004
+     C                     PARM '*KEY   ' @OPTN   7                       CSD004
+     C                     PARM           @DSNB   3                       CSD004
+     C********** SDBRCH    PARM SDBRCH    @FMT                                         CSD004 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   CSD004
+     C           *LOCK     IN   LDA                                       CSD004
+     C                     Z-ADD002       DBASE                           CSD004
+     C                     MOVEL'SD4103'  DBPGM            ************** CSD004
+     C                     MOVEL'SDBRCHPD'DBFILE           *DB ERROR 002* CSD004
+     C                     MOVELBRCA      DBKEY            ************** CSD004
+     C                     OUT  LDA                                       CSD004
+     C                     EXSR *PSSR                                     CSD004
+     C                     END                                            CSD004
+     C                     ENDSR                                          CSD004
+      /EJECT                                                              CSD004
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,268 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Portfolio Management Module                         */
+/*                                                                   */
+/*       PMC0000 - PORTFOLIO MANAGEMENT INSTALLATION PROCEDURE       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. S01408             DATE 05MAY95              */
+/*                      087931             DATE 22MAY95              */
+/*                      S01486             DATE 17JUN94              */
+/*                      L1RAT              DATE 19DEC91              */
+/*                      S01318             DATE 28DEC90              */
+/*                      CF0000             DATE 10SEP90              */
+/*                      R00300             DATE 27AUG90              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       S01408 - Addition of core hook PMC0000MP1                   */
+/*       087931 - AOMMODR0 should be called with &OPTN(*FREE) in     */
+/*                order to retrieve the current value of MMOD.       */
+/*       S01486 - Private Banking Upgrade to Release 10              */
+/*       L1RAT  - L1BGIN rationalisation                             */
+/*       S01318 - PIS Interface                                      */
+/*       CF0000 - CREATE & INITIALISE DTAARA PMSTAT                  */
+/*       R00300 - Message file changes.                              */
+/*                                                                   */
+/*********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+/*>>L1RAT>>*/
+/************PGM*/
+/************PGM        PARM(&CODE)                                */ /*S01486*/
+/*<<L1RAT<<*/
+             PGM                                                      /*S01486*/
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+/*           DCL        VAR(&USER) TYPE(*CHAR) LEN(10)                   L1RAT*/
+/*           DCL        VAR(&LIBID) TYPE(*CHAR) LEN(2)                   L1RAT*/
+/*           DCL        VAR(&LIBL) TYPE(*CHAR) LEN(7)                    L1RAT*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)
+ 
+             DCL        VAR(&END) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1)
+/*CF0000*/
+             DCL        VAR(&MLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+/*CF0000*/
+ 
+/**/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+/*           DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)                  L1RAT*/
+/*>>L1RAT>>*/
+/*********** DCL        VAR(&TEXT) TYPE(*CHAR) LEN(160)            */ /*S01486*/
+/*********** DCL        VAR(&CODE) TYPE(*DEC) LEN(2 0)             */ /*S01486*/
+             DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)              /*S01486*/
+             DCL        VAR(&PM) TYPE(*CHAR) LEN(2)                   /*S01486*/
+/********DCL VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')/*S01486*/ /*087931*/
+             DCL       VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FREE  ') /*087931*/
+             DCL       VAR(&FMT) TYPE(*CHAR) LEN(800)                 /*S01486*/
+             DCL       VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ') /*S01486*/
+/*/COPY WNCPYSRC,PMC0000001                                          */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 CPI0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(FALSE))
+             SNDPGMMSG  MSG('PORTFOLIO MANAGEMENT FILE SET UP') +
+                TOMSGQ(MOPERQ)                                        /*S01486*/
+/************CHGDTAARA  DTAARA(ERRTXT (161 40)) VALUE('Portfolio + */ /*S01486*/
+/************             Management')                             */ /*S01486*/
+/************MONMSG     MSGID(CPF0000)                             */ /*S01486*/
+/*<<L1RAT<<*/
+/**/
+/*       IF THE SYSTEM PHASE IS NOT 'D' TERMINATE                   */
+/**/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+             IF         COND(%SST(&MPHAS 1 1) *NE 'D') THEN(DO)
+/*>>L1RAT>>*/
+/************SNDPGMMSG  MSG('System must be in phase ''D''') +
+                          TOPGMQ(*EXT)*/
+/****************GOTO       CMDLBL(TERM)*/
+/************CHGVAR     VAR(&TEXT) VALUE('Job can not be run now. +   /*S01486*/
+/************             MPHAS must be in phase ''D''.')          */ /*S01486*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW         */ /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Job can not b+
+                          e run now. MPHAS must be ''D''.')           /*S01486*/
+             CALL       PGM(SCC0010) PARM('PMC0000' 'ENTER' +
+                             &NOREPLY)                                /*S01486*/
+/************GOTO       CMDLBL(FALSE)                              */ /*S01486*/
+             GOTO       CMDLBL(ENDP)                                  /*S01486*/
+/*<<L1RAT<<*/
+             ENDDO
+/*  PM must be switched on before PM file setup can be run  */        /*S01486*/
+/* */                                                                 /*S01486*/
+/* Check Portfolio Management on                                      /*S01486*/
+/* */                                                                 /*S01486*/
+/*********** RTVDTAARA  DTAARA(MMOD (75 1)) RTNVAR(&PM)               /*S01486*/
+/*********** IF COND(&PM *NE 'Y') THEN(DO)                            /*S01486*/
+/* Call AOMMODR0 first with *FREE to retrieve current value.          /*087931*/
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)          /*S01486*/
+             CHGVAR     VAR(&OPTN) VALUE('*FIRST')                    /*087931*/
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)          /*087931*/
+             IF         COND(%SST(&FMT 65 1) *NE 'Y') THEN(DO)        /*S01486*/
+             DMPCLPGM                                                 /*087931*/
+             SNDPGMMSG  MSG('Switch on PM via Mode 1 Modules +
+                          Maintainance option before running +
+                          Portfolio Management File Setup program') +
+                          TOMSGQ(MOPERQ MRUNQ)                        /*S01486*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW    */      /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Switch on +
+                          PM via Mode 1 Modules Maintenance')         /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('before +
+                          running Portfolio Management File Setup')   /*S01486*/
+             CALL       PGM(SCC0010) PARM('PMC0000' 'ENTER' +
+                             &NOREPLY)                                /*S01486*/
+             GOTO       CMDLBL(ENDP)                                  /*S01486*/
+             ENDDO                                                    /*S01486*/
+/*CF0000*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&MLIB) VALUE(%SST(&SDSTAT 6 2) *CAT 'DMLIB')
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,PMC0000MP1                                          */
+                                                                      /*S01408*/
+/*CF0000*/
+/**/
+/*    CHECK TO SEE IF FILE SET UP HAS BEEN RUN BEFORE              */
+/**/
+             CALL PM0001 (&FAIL)
+             IF         COND(&FAIL *EQ 'Y') THEN(DO)
+/*>>L1RAT>>*/
+/*************NDUSRMSG  MSG('The Portflio Management file set up has +
+                          been run before, do you wish to continue? +
+                          (Y/N)') VALUES(Y N) DFT(N) TOMSGQ(*EXT) +
+                          MSGRPY(&END)  **********************/
+/************CHGVAR     VAR(&TEXT) VALUE('The Portflio Management +   /*S01486*/
+/************             file set up has been run before, do you +   /*S01486*/
+/************             wish to continue? (Y/N)')                */ /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('The PM file s+
+                          etup has been run before')                  /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('Do you wish +
+                          to continue ?')                             /*S01486*/
+             CALL       PGM(SCC0010) PARM('PMC0000' 'OPTION' +
+                             &END)                                    /*S01486*/
+/************CHGDTAARA  DTAARA(ERRTXT (1 160)) VALUE(&TEXT)        */ /*S01486*/
+/************CHGVAR     VAR(&END) VALUE('N')                       */ /*S01486*/
+/************CALL       PGM(SDBG15W0) PARM(&END)                   */ /*S01486*/
+/*<<L1RAT<<*/
+             IF         COND((&END *EQ ('N')) *OR (&END *EQ ('n'))) +
+                          THEN(GOTO CMDLBL(ENDP))                     /*S01486*/
+/************************ THEN(GOTO CMDLBL(TERM))                  */ /*S01486*/
+/*********** CLRPFM     FILE(PMBIPNZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMCGCDZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMDCOMZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMDOCCZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMDSPGZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPGHCZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPGHDZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPGHIZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPGHRZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPORTZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMPTFTZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMTRSFZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(PMVLGHZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(SDDTSTZZ)                             */ /*S01486*/
+/*********** CLRPFM     FILE(SDPLINZZ)                             */ /*S01486*/
+             CLRPFM     FILE(PMBIPNPA)                                /*S01486*/
+             CLRPFM     FILE(PMCGCDPA)                                /*S01486*/
+             CLRPFM     FILE(PMDCOMPA)                                /*S01486*/
+             CLRPFM     FILE(PMDOCCPA)                                /*S01486*/
+             CLRPFM     FILE(PMDSPGPA)                                /*S01486*/
+             CLRPFM     FILE(PMPGHCPA)                                /*S01486*/
+             CLRPFM     FILE(PMPGHDPA)                                /*S01486*/
+             CLRPFM     FILE(PMPGHIPA)                                /*S01486*/
+             CLRPFM     FILE(PMPGHRPA)                                /*S01486*/
+             CLRPFM     FILE(PMPORTPA)                                /*S01486*/
+             CLRPFM     FILE(PMPTFTPA)                                /*S01486*/
+             CLRPFM     FILE(PMTRSFPA)                                /*S01486*/
+             CLRPFM     FILE(PMVLGHPA)                                /*S01486*/
+             CLRPFM     FILE(PMCPOSPA)                                /*S01486*/
+             CLRPFM     FILE(PMPPTDPA)                                /*S01486*/
+/*/COPY WNCPYSRC,PMC0000002                                          */
+             ENDDO
+FIRST:
+/*CF0000*/
+             CRTDTAARA  DTAARA(&MLIB/PMSTAT) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Portfolio Management +
+                          Data Area')
+/*>>L1RAT>>*/
+/************MONMSG     MSGID(CPF0000 MCH0000 RPG0000)*/
+             MONMSG     MSGID(CPF1023)
+/*<<L1RAT<<*/
+/*S01318 BEGIN*/
+/*           CHGDTAARA  DTAARA(PMSTAT (1 19)) +                    */
+/*                        VALUE('000000000000000OLDN')             */
+             CHGDTAARA  DTAARA(PMSTAT (1 27)) +
+                          VALUE('000000000000000OLDNNN900000')
+/*S01318 END*/
+/*/COPY WNCPYSRC,PMC0000004                                          */
+/*CF0000*/
+/*********** CALL       PGM(PM0000) PARM(&FAIL)                    */ /*S01486*/
+             CALL       PGM(PM0000)                                   /*S01486*/
+/**/
+/*    DATABASE ERROR HANDLING                                      */
+/**/
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                  RTVDTAARA   DTAARA(LDA (132 52))   RTNVAR(&MEM)
+/*                                                                    /*R00300*/
+/*****************SNDPGMMSG  MSGID(PEM0001) MSGF(LXGBMSGF) MSGDTA(&MEM) +
+******************TOPGMQ(*EXT) TOMSGQ(MOPERQ)                        */
+ /*>>L1RAT>>*/
+/*****************SNDPGMMSG  MSGID(PEM0001) MSGF(CEUSRMSG) MSGDTA(&MEM) +
+                  TOPGMQ(*EXT) TOMSGQ(MOPERQ)*/
+/*                                                                    /*R00300*/
+/*****************GOTO       CMDLBL(TERM)*/
+/************CHGVAR     VAR(&TEXT) VALUE('Database error occurred +   /*S01486*/
+/*****************        in' *CAT &MEM *CAT 'during processing. +    /*S01486*/
+/*************            See job log.')                           */ /*S01486*/
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                               TOMSGQ(MOPERQ MRUNQ) TOPGMQ(*EXT)      /*S01486*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW    */      /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('Database +
+                          error in PM File Setup Program')            /*S01486*/
+             GOTO       CMDLBL(FALSE)
+ /*<<L1RAT<<*/
+             ENDDO
+/*/COPY WNCPYSRC,PMC0000003                                          */
+             GOTO       CMDLBL(ENDP)                                  /*S01486*/
+ /*>>L1RAT>>*/
+ /*RM:       ENDPGM*/
+ /**TERM:****   CHGDTAARA  DTAARA(PRCDTA (&CODE 1)) VALUE('C')     */ /*S01486*/
+ /***********GOTO       CMDLBL(ENDP)                               */ /*S01486*/
+ FALSE:
+ /***********IF         COND(&TEXT *EQ ' ') THEN(CHGVAR VAR(&TEXT) +  /*S01486*/
+ /***********             VALUE('General error has occured during +   /*S01486*/
+ /***********             process. Check joblog before trying your +  /*S01486*/
+ /***********             request again.'))                        */ /*S01486*/
+ /***********CHGDTAARA  DTAARA(PRCDTA (&CODE 1)) VALUE('F')        */ /*S01486*/
+ /***********CHGDTAARA  DTAARA(ERRTXT (1 160)) VALUE(&TEXT)        */ /*S01486*/
+/*  CALL SCC0010 TO INFORM USER THAT PGM CANNOT BE RUN NOW    */      /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE('General error +
+                          has occured during process')                /*S01486*/
+             CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE('Check Joblog  +
+                          before trying again')                       /*S01486*/
+             CALL       PGM(SCC0010) PARM('PMC0000' 'JOBLOG' +
+                             &NOREPLY)                                /*S01486*/
+ /*********ENDP:                                                      /*S01486*/
+ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/**/
+/*       END OF PROGRAM                                             */
+/**/
+ ENDPGM
+ /*<<L1RAT<<*/
+/**/

@@ -1,0 +1,91 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  SRERRPSSR  - Midas AO Standard *PSSR error subroutine.       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   Subroutine *PSSR handles program errors.                    *
+      *                                                               *
+      *   Note: this routine requires copy member SRERRI or           *
+      *         its equivalent in the input specifications.           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C                     DUMP
+     C                     MOVE CSC022    CSC022  1                                           CSC022
+     C                     MOVE WCMTSK    WCMTSK  1                                           CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ENDIF                                                              CSC022
+     C*
+     C* If second time through, halt:
+     C*
+     C           @@PSSR    IFNE *BLANK
+     C                     SETON                     H1  LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C* Flag routine as started; define action code:
+     C*
+     C                     MOVE 'Y'       @@PSSR  1
+     C                     MOVE W0ACT     W0ACT   8
+     C*___________________________________________________________________
+     C*
+     C* Any other mode or type of error.
+     C*
+     C* Set LDA values and format message for MOPERQ:
+     C*
+     C                     MOVE ##PGM     ERPGM
+     C                     MOVE ##RTVN    ERFILE
+     C           ##MSID    CAT  ##SQNO    ERKEY     P
+     C                     Z-ADD998       ERERNB
+     C                     MOVEL##MSWK    ERNARR
+     C*
+     C* Move data to the LDA data area:
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C*
+     C* Provide a fuller report:
+     C*
+     C                     MOVEA@STK      #@STK 100
+     C*
+     C                     CALL 'AOZERROR'             9090
+     C                     PARM           ##ERTN  7
+     C                     PARM           DSPGM
+     C                     PARM           ERDTA
+     C                     PARM           #@STK
+     C* End the program:
+     C                     SETON                     U7U8LR
+     C                     MOVE '*ERROR*' W0RTN   7
+     C                     RETRN
+     C*
+     C*
+     C                     ENDSR
+      *****************************************************************
+      * End of /COPY SRERRPSSR                                        *
+      *****************************************************************

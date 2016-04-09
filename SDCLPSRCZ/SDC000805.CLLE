@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Customer Segmentation Codes take-on Prog')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Midas Standing Data Module                          */
+/*                                                                   */
+/*       SDC000805 - Midas SD Customer Segmentation Codes Take-on    */
+/*                   Program                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CSD090  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD090 - Customer Segmentation                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/** Create LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+ /** Call the take-on program */
+ 
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+             CALL       PGM(SD000805)
+             ENDDO
+ 
+ /** If error occur */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+             GOTO       CMDLBL(ABNOR)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&PRTCD) VALUE('*ERROR')
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSG('Installation will not continue, +
+                   required System Values are not yet +
+                   defined.') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd')
+             ENDPGM

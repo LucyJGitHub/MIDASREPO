@@ -1,0 +1,1725 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retl ICD by CCY fixed a/c charges')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE0240WC  - ICD FIXED ACCOUNT CHARGES HANDLING               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR213428           Date 19May14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 211225             Date 09Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 077214             Date 04Oct94               *
+      *                 062528             Date 11Nov93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR213428 - While trying to create ICD currencywise, after    *
+      *             all the inputs, system throws database error.     *
+      *             If the record or currency is not found in the     *
+      *             extension file, insert the new record.            *
+      *             Fix was patterned after 137407.                   *
+      *           - Applied for MD-26962                              *
+      *  211225 - Processing of PF/RESTCHPD records are now processed *
+      *           in this program.  Programs REC5310 and RE5310 will  *
+      *           no longer be used to process RESTCHPD.              *
+      *           Apply fix 183776.                                   *
+     F*  077214 - Specify correct message file for window error msgs  *
+     F*           - these messages are now in WNMSGF
+     F*  062528 - Blanks is not an error on input fields              *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     FRECCYDY0IF  E           K        DISK         KCOMIT
+     F            RECCYDD0                          KRENAMERTVIDX
+     FRECCYDXCUF  E           K        DISK         KCOMIT       A
+     F            RECCYDD0                          KRENAMEUPDIDX
+     FRESTCHPDUF  E           K        DISK         KCOMIT       A                            211225
+     FRE0240#CCF  E                    WORKSTN
+     F            RE0240F1                          KRENAMESCREEN
+     F            RE0240F2                          KRENAMESCREEN1
+     F            RE0240F3                          KRENAMESCREEN2
+     FTABTBRE IF  E                    DISK
+      *                                Display file
+      /EJECT
+      *****************************************************************
+      *
+      *  Use of indicators:
+      *
+      *  (Screen field error indicators should start with 20 in
+      *   ascending order)
+      *
+      *  *IN10  -  On=Delete/Enquiry, Protect field.
+      *            Off=Insert/Amend, Underline field.
+      *  *IN11  -  On=Delete - Display 'F10=Confirm Delete'
+      *  *IN20  -  Error on field #1CHGC  - Fixed A/C Charges
+      *  *IN21  -  Error on field #1CHGD  - Fixed A/C Charges
+      *  *IN22  -  Error on field #1CHGW  - Fixed A/C Charges
+      *  *IN23  -  Error on field #1CHGF  - Fixed A/C Charges
+      *  *IN24  -  Error on field #1CHGS  - Fixed A/C Charges
+      *  *IN25  -  Error on field #1CHGM  - Fixed A/C Charges
+      *  *IN26  -  Error on field #1CHGT  - Fixed A/C Charges
+      *  *IN27  -  Error on field #1CHGB  - Fixed A/C Charges
+      *  *IN28  -  Error on field #1CHGL  - Fixed A/C Charges
+      *  *IN29  -  Error on field #1CHGA  - Fixed A/C Charges
+      *  *IN30  -  Error on field #1CHGQ  - Fixed A/C Charges
+      *  *IN31  -  Error on field #1CHGX  - Fixed A/C Charges
+      *  *IN32  -  Error on field #1CHGY  - Fixed A/C Charges
+      *  *IN33  -  Error on field #1ACCH  - Statement Charges
+      *  *IN70  -  Extension record not found via update index
+      *  *IN71  -  Unable to allocate record via update index
+      *  *IN72  -  Statement Charges processed
+      *  *IN73  -  Fixed A/C Charges processed
+      *  *IN75  -  General error indicator. Used to condition output
+      *            of error messages and redisplay screen.
+      *  *IN78  -  Error occured during DBF update
+      *  *IN80  -  Unable to allocate extension record
+      *  *IN81  -  Call to DBERRCTL ended in error
+      *  *IN89  -  Extension record not found via retrieval index
+      *  *INKJ  -  F10 pressed, enable delete
+      *  *INKL  -  F12 pressed, exit
+      *  *INLR  -  End processing
+      *****************************************************************
+      /EJECT
+      *-------------------------------------------------------------------------
+     E*  FOR COMPILATION  - COPYRIGHT INSERTION
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      *  TABLE FOR DIFFERENTS FIELDS OF THE FILE OR OF THE SCREEN
+     E                    TFI        13  7 0
+     E                    TFO        13  8
+     E*#                  TEC        13  7 0
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    @F         16  1               ZA0840 array
+      * input array for za0840
+     E                    @G         16  1               ZA0840 array
+      * output array for za0840
+     E                    @H      1  15 15 0             ZA0840 array
+      *                                                                                       211225
+      **   Tables to get an amount per each frequency - PF/RESTCHPD                           211225
+     E                    FRQ    13  13  1               frequency array                      211225
+     E                    TF2        13  7 0             amounts array                        211225
+     E                    TMP        13  7 0             temp amts. array                     211225
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * array of powers of ten
+     E                    ZA1        16  1               ZALIGN/ZEDIT ARRAY
+     E                    ZA2        16  1               ZALIGN/ZEDIT ARRAY
+      /EJECT
+      *-------------------------------------------------------------------------
+     I           SDS
+      * Get program name from PSDS
+     I                                     *PROGRAM WWPGM
+      /EJECT
+      *-------------------------------------------------------------------------
+     INWRCD     E DSRECCYDXC
+     INWRCD2    E DSRESTCHPD                 13                                               211225
+      *
+      * Current/previous master file fields
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     ISVRCD       DS                             61
+      * Stored master file fields
+      *
+     ISVRCD2      DS                         13   8                                           211225
+      * Stored file fields in PF/RESTCHPD                                                     211225
+      *                                                                                       211225
+     I*
+     I            DS
+     I                                        1 104 TFO
+     I                                        1   8 #1CHGC
+     I                                        9  16 #1CHGD
+     I                                       17  24 #1CHGW
+     I                                       25  32 #1CHGF
+     I                                       33  40 #1CHGS
+     I                                       41  48 #1CHGM
+     I                                       49  56 #1CHGT
+     I                                       57  64 #1CHGB
+     I                                       65  72 #1CHGL
+     I                                       73  80 #1CHGA
+     I                                       81  88 #1CHGQ
+     I                                       89  96 #1CHGX
+     I                                       97 104 #1CHGY
+      *                                                                                       211225
+      **   Data structure for amounts - PF/RESTCHPD                                           211225
+      *                                                                                       211225
+     I            DS                                                                          211225
+     I                                        1  91 TF2                                       211225
+     I                                        1   70#2CHGC                                    211225
+     I                                        8  140#2CHGD                                    211225
+     I                                       15  210#2CHGW                                    211225
+     I                                       22  280#2CHGF                                    211225
+     I                                       29  350#2CHGS                                    211225
+     I                                       36  420#2CHGM                                    211225
+     I                                       43  490#2CHGT                                    211225
+     I                                       50  560#2CHGB                                    211225
+     I                                       57  630#2CHGL                                    211225
+     I                                       64  700#2CHGA                                    211225
+     I                                       71  770#2CHGQ                                    211225
+     I                                       78  840#2CHGX                                    211225
+     I                                       85  910#2CHGY                                    211225
+     I            DS                                                                          211225
+     I                                        1  91 TMP                                       211225
+     I                                        1   70WRYCHC                                    211225
+     I                                        8  140WRYCHD                                    211225
+     I                                       15  210WRYCHW                                    211225
+     I                                       22  280WRYCHF                                    211225
+     I                                       29  350WRYCHS                                    211225
+     I                                       36  420WRYCHM                                    211225
+     I                                       43  490WRYCHT                                    211225
+     I                                       50  560WRYCHB                                    211225
+     I                                       57  630WRYCHL                                    211225
+     I                                       64  700WRYCHA                                    211225
+     I                                       71  770WRYCHQ                                    211225
+     I                                       78  840WRYCHX                                    211225
+     I                                       85  910WRYCHY                                    211225
+     I*
+      /EJECT
+      *-------------------------------------------------------------------------
+      *
+      * Get the data structure passed from calling program
+      *
+      /COPY QWINDSRC,RE0240DTA
+      /EJECT
+      *                                                                                       211225
+     C           RESTKY    KLIST                                                              211225
+     C                     KFLD           STCCYD                                              211225
+     C                     KFLD           STFREQ                                              211225
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+     C*
+     C**  Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Execute initial routine
+     C*
+     C           1         SETLLTABTBRE
+     C                     READ TABTBRE                  50
+     C           FACH      IFEQ 'Y'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C           TSTMC     IFEQ 'Y'
+     C                     MOVE '1'       *IN72
+     C                     END
+      *
+     C                     EXSR SRINIT
+      *
+      * Execute specific routine depending on action
+      *
+     C           ACTION    CASEQ'I'       SRINS
+     C           ACTION    CASEQ'A'       SRAMD
+     C           ACTION    CASEQ'E'       SRENQ
+     C           ACTION    CASEQ'D'       SRDEL
+     C                     END
+      *
+      * Execute routine to setup return code and exit program
+      *
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRINS - Routine to handle 'INSERT' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRINS     BEGSR
+      *
+      * Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      * If record found,
+      * set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '0'
+      *
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9995' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+      *
+      * Initialize fields with file values for display
+      *
+     C                     EXSR SRFTOS
+      *
+      * Protect fields for display
+      *
+     C                     MOVE '1'       *IN10
+      * Display screen
+     C                     EXSR SRSCRN
+      *
+      * Execute DB error routine
+      *
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      *
+      * Record not found, initialize fields
+      *
+     C                     EXSR SRINZ
+      *
+      * Display and handle screen until no more errors or F12
+      *
+     C           *IN75     DOUEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      * Bypass any further validation if previous DB error or F12
+      *
+     C           *IN88     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      * Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      * Validate input
+     C                     EXSR SRVAL
+      * No errors
+     C           *IN75     IFEQ '0'
+      *
+      * Move screen fields to file fields
+      *
+     C                     EXSR SRSTOF
+      * Write new record
+     C                     EXSR WRREST                                                        211225
+     C                     EXSR SRWRT
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRAMD - Routine to handle 'AMEND' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRAMD     BEGSR
+      *
+      * Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      * If record not found,
+      * set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *****************************************************************                     AR213428
+     C**********           MOVE '1'       *IN88                                             AR213428
+     C**********           MOVEL'WNE9999' ZAMSID                                            AR213428
+     C**********           MOVEL'WNMSGF  'ZAMSGF                                     077214 AR213428
+     C**********           EXSR SRSMSG                                                      AR213428
+      *****************************************************************                     AR213428
+      **Protect*fields*for*display*************************************                     AR213428
+      *****************************************************************                     AR213428
+     C**********           MOVE '1'       *IN10                                             AR213428
+      **Display*screen*************************************************                     AR213428
+     C**********           EXSR SRSCRN                                                      AR213428
+      *****************************************************************                     AR213428
+      **Execute*DB*error*routine***************************************                     AR213428
+      *****************************************************************                     AR213428
+     C**********           EXSR SRDBER                                                      AR213428
+      *****************************************************************                     AR213428
+      *                                                                                     AR213428
+      ** Record not found, initialize fields.                                               AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRINZ                                                       AR213428
+      *                                                                                     AR213428
+      ** Display and handle screen until no more errors or F12.                             AR213428
+      *                                                                                     AR213428
+     C           *IN75     DOUEQ'0'                                                         AR213428
+     C           *INKL     OREQ '1'                                                         AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRSCRN                                                      AR213428
+      *                                                                                     AR213428
+      ** Bypass any further validation if previous DB error or F12.                         AR213428
+      *                                                                                     AR213428
+     C           *IN88     IFEQ '0'                                                         AR213428
+     C           *INKL     ANDEQ'0'                                                         AR213428
+      *                                                                                     AR213428
+      ** Clear messages for redisplay.                                                      AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRCMSG                                                      AR213428
+      *                                                                                     AR213428
+      ** Validate input.                                                                    AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRVAL                                                       AR213428
+      *                                                                                     AR213428
+      ** No errors.                                                                         AR213428
+      *                                                                                     AR213428
+     C           *IN75     IFEQ '0'                                                         AR213428
+      *                                                                                     AR213428
+      ** Move screen fields to file fields.                                                 AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRSTOF                                                      AR213428
+     C                     EXSR WRREST                                                      AR213428
+      *                                                                                     AR213428
+      ** Write new record.                                                                  AR213428
+      *                                                                                     AR213428
+     C                     EXSR SRWRT                                                       AR213428
+      *                                                                                     AR213428
+     C                     ENDIF                                                            AR213428
+     C                     ENDIF                                                            AR213428
+     C                     ENDDO                                                            AR213428
+      *                                                                                     AR213428
+     C                     ELSE
+      *
+      * Record found,
+      * set file fields to screen fields and save before image
+      *
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+      *
+      * Display and handle screen until record can be allocated and
+      * record on file and no errors left or F12 pressed
+      *
+     C           *IN71     DOUEQ'0'
+     C           *IN70     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      * Bypass any further validation if previous DB error or F12
+      *
+     C           *IN88     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      * Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      * Validate input
+     C                     EXSR SRVAL
+      * No errors
+     C           *IN75     IFEQ '0'
+      *
+      * Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      * If record on file and allocated, compare record images,
+      * else, screen will be redisplayed
+      *
+     C           *IN70     IFEQ '0'
+     C           *IN71     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      * If images do not match, screen will be redisplayed with
+      * relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      * Images match, move screen values to file fields
+      *
+     C                     EXSR SRSTOF
+      *                                                                                       211225
+      * Update record(s) in PF/RESTCHPD                                                       211225
+      *                                                                                       211225
+     C                     EXSR AMREST                                                        211225
+      * Update record
+     C                     EXSR SRUPD
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDEL - Routine to handle 'DELETE' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRDEL     BEGSR
+      *
+      * Set indicators on for 'DELETE' mode to protect fields
+      *
+     C                     MOVE '1'       *IN10
+      *
+      * Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      * If record not found,
+      * set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9996' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+      * Disable F10 key
+     C                     MOVE '0'       *IN11
+      * Display screen
+     C                     EXSR SRSCRN
+      *
+      * Execute DB error routine
+      *
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      * Record found,
+      * set file fields to screen fields and save before image
+      *
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+      * Enable F10 key
+     C                     MOVE '1'       *IN11
+      *
+      * Display and handle screen until record can be allocated and
+      * record on file and F10 pressed or F12 pressed
+      *
+     C           *IN71     DOUEQ'0'
+     C           *IN70     ANDEQ'0'
+     C           *INKJ     ANDEQ'1'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      * F12 not pressed, F10 pressed                                   .
+      *
+     C           *INKL     IFEQ '0'
+     C           *INKJ     ANDEQ'1'
+      *
+      * Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      * If record on file and allocated, compare record images,
+      * else, screen will be redisplayed
+      *
+     C           *IN70     IFEQ '0'
+     C           *IN71     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      * If images do not match, screen will be redisplayed with
+      * relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      * Images match, delete record
+      *
+     C                     EXSR DLREST                                                        211225
+     C                     EXSR SRDELR
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRENQ - Routine to handle 'ENQUIRY' action
+      *-------------------------------------------------------------------------
+      *
+     C           SRENQ     BEGSR
+      *
+      * Set indicators on for 'ENQUIRY' mode to protect fields
+      *
+     C                     MOVE '1'       *IN10
+      *
+      * Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      * If record not found,
+      * set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN88
+     C                     MOVEL'WNE9994' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+      * Protect fields
+     C                     MOVE '1'       *IN10
+      * Display screen
+     C                     EXSR SRSCRN
+      *
+      * Execute DB error routine
+      *
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      *
+      * Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      * Display and handle screen
+      *
+     C                     EXSR SRSCRN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSMSG - Routine to send messages to message subfile.
+      *-------------------------------------------------------------------------
+      *
+     C           SRSMSG    BEGSR
+      *
+      * If message file not set up, use default
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVELWWDMSF    ZAMSGF
+     C                     END
+      *
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      * Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANKS   ZAPGRL           Rel queue
+     C                     MOVEL*BLANKS   ZAMSID           Message Id.
+     C                     MOVEL*BLANKS   ZAMSGF           Message file
+     C                     MOVEL*BLANKS   ZAMSDA           Message data.
+     C                     MOVEL*BLANKS   ZAMSTP           Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRCMSG - Routine to clear program's message queue.
+      *-------------------------------------------------------------------------
+      *
+     C           SRCMSG    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRREC - Routine to access file via retrieve index
+      *-------------------------------------------------------------------------
+      *
+     C           SRREC     BEGSR
+      *
+     C           CCYD      CHAINRTVIDX               89
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRALOC - Routine to access record via update index
+      *-------------------------------------------------------------------------
+      *
+     C           SRALOC    BEGSR
+      *
+     C           CCYD      CHAINUPDIDX               7071
+      *
+      * If record not on file, setup message 'Record deleted'
+      *
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'WNE9998' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C                     ELSE                                                               211225
+     C                     Z-ADDRYCHGC    TMP,1                                               211225
+     C                     Z-ADDRYCHGD    TMP,2                                               211225
+     C                     Z-ADDRYCHGW    TMP,3                                               211225
+     C                     Z-ADDRYCHGF    TMP,4                                               211225
+     C                     Z-ADDRYCHGS    TMP,5                                               211225
+     C                     Z-ADDRYCHGM    TMP,6                                               211225
+     C                     Z-ADDRYCHGT    TMP,7                                               211225
+     C                     Z-ADDRYCHGB    TMP,8                                               211225
+     C                     Z-ADDRYCHGL    TMP,9                                               211225
+     C                     Z-ADDRYCHGA    TMP,10                                              211225
+     C                     Z-ADDRYCHGQ    TMP,11                                              211225
+     C                     Z-ADDRYCHGX    TMP,12                                              211225
+     C                     Z-ADDRYCHGY    TMP,13                                              211225
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRUPD - Routine to update file.
+      *-------------------------------------------------------------------------
+      *
+     C           SRUPD     BEGSR
+      *
+     C                     UPDATUPDIDX                 78
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRWRT - Routine to write a new record to the file.
+      *-------------------------------------------------------------------------
+      *
+     C           SRWRT     BEGSR
+      *
+     C                     WRITEUPDIDX                 78
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDELR - Routine to delete a record
+      *-------------------------------------------------------------------------
+      *
+     C           SRDELR    BEGSR
+      *
+     C                     DELETUPDIDX                 78
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRCOMP - Routine to compare before/after image of records
+      *-------------------------------------------------------------------------
+      *
+     C           SRCOMP    BEGSR
+      *                                                                                       211225
+      ** Process checking of details for PF/RESTCHPD                                          211225
+      *                                                                                       211225
+     C                     MOVE 'Y'       WMTCH2  1                                           211225
+     C                     Z-ADD1         X       20                                          211225
+      *                                                                                       211225
+     C           X         DOWLT14                         *B1                                211225
+     C           X         OCUR NWRCD2                                                        211225
+     C           X         OCUR SVRCD2                                                        211225
+      *                                                                                       211225
+     C           NWRCD2    IFNE SVRCD2                     *B2                                211225
+     C                     MOVE 'N'       WMTCH2                                              211225
+     C                     ENDIF                           *E2                                211225
+      *                                                                                       211225
+     C                     ADD  1         X                                                   211225
+     C                     ENDDO                           *E1                                211225
+      *
+     C           SVRCD     IFEQ NWRCD
+     C           WMTCH2    ANDEQ'Y'                                                           211225
+     C                     MOVE 'Y'       WWMTCH  1
+     C                     ELSE
+     C                     MOVE 'N'       WWMTCH
+     C                     MOVEL'WNE9997' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+      *
+      * Use SETLL to release record lock
+      *
+     C           *LOVAL    SETLLUPDIDX
+      *
+      * Set condition to redisplay screen
+      *
+     C                     MOVE '1'       *IN70
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSAVE - Routine to save before image of record via DS
+      *-------------------------------------------------------------------------
+      *
+     C           SRSAVE    BEGSR
+      *
+     C                     MOVELNWRCD     SVRCD
+      *                                                                                       211225
+      ** Process save of details for PF/RESTCHPD                                              211225
+      *                                                                                       211225
+     C                     MOVE RYCCYD    STCCYD                                              211225
+     C                     Z-ADD1         X       20                                          211225
+      *                                                                                       211225
+     C           X         DOWLT14                         *B1                                211225
+      *                                                                                       211225
+     C           X         OCUR NWRCD2                                                        211225
+     C           X         OCUR SVRCD2                                                        211225
+     C                     MOVE RYCCYD    STCCYD                                              211225
+     C                     MOVE FRQ,X     STFREQ                                              211225
+     C           RESTKY    CHAINRESTCHD0             74                                       211225
+      *                                                                                       211225
+     C                     MOVE NWRCD2    SVRCD2                                              211225
+      *                                                                                       211225
+     C                     ADD  1         X                                                   211225
+     C                     ENDDO                           *E1                                211225
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRRTRN - Routine to set up return code for calling program
+      *-------------------------------------------------------------------------
+      *
+     C           SRRTRN    BEGSR
+      *
+      * DBF update error
+      *
+     C           *IN78     IFEQ '1'
+     C                     MOVE 'USR0563' WWRTRN
+     C                     ELSE
+      * Database error
+      *
+     C           *IN88     IFEQ '1'
+     C                     MOVE 'Y2U0004' WWRTRN
+     C                     ELSE
+      * F12 pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0790' WWRTRN
+     C                     ELSE
+      * No errors
+     C                     MOVE *BLANKS   WWRTRN
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      * Exit program
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRDBER - Routine to handle database errors
+      *-------------------------------------------------------------------------
+      *
+     C           SRDBER    BEGSR
+      *
+      * Dump program
+     C                     DUMP
+      *
+      * Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSCRN - Routine to handle screen and validation
+      *-------------------------------------------------------------------------
+      *
+     C           SRSCRN    BEGSR
+      *
+      * Display messages
+     C                     WRITE#MSGCTL
+      *
+      * Display main screen
+     C           *IN72     IFEQ '1'
+     C           *IN73     ANDEQ'1'
+     C                     EXFMTSCREEN
+     C                     ELSE
+     C**
+     C           *IN73     IFEQ '1'
+     C                     EXFMTSCREEN2
+     C                     ELSE
+     C           *IN72     IFEQ '1'
+     C                     EXFMTSCREEN1
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRVAL - Routine to control validation of each field.
+      *-------------------------------------------------------------------------
+      *
+     C           SRVAL     BEGSR
+      *
+      **   Initialize error condition indicators
+      *
+     C                     MOVE '0'       *IN75
+     C                     MOVEA'00000'   *IN,20
+     C                     MOVEA'00000'   *IN,25
+     C                     MOVEA'000'     *IN,30
+     C                     MOVEA'0'       *IN,33
+      *
+      * Validate each NEW screen field for Fixed A/C Charges
+      * WWZONI - zone input validation
+      * Incrementation to 1  the index of field
+      * Incrementation to 20 the index of indicator error
+      *
+     C           *IN72     IFEQ '1'
+     C                     Z-ADD1         X       20
+     C                     Z-ADD20        Y       20
+     C*
+     C           X         DOWLT14
+     C                     EXSR ZONETS
+     C                     ADD  1         X
+     C                     ADD  1         Y
+     C                     END
+     C                     END
+      *
+      * Validate screen field #1ACCH for Statement Charges
+      *
+     C           *IN73     IFEQ '1'
+     C                     EXSR ACCHTS
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      *                                                              *
+      * ZONETS - CHECK NEW FIELDS                                    *
+      *                                                              *
+      *                                                              *
+      ****************************************************************
+     C           ZONETS    BEGSR
+      *
+      * Validate field
+      ** If no value is entered, display message for mandatory field.
+      *
+     C                     Z-ADD0         TFI,X                                               211225
+     C           TFO,X     IFEQ *BLANKS                    B1
+      *
+     C********             MOVEL'LZW1503' ZAMSID                          062528
+     C********             MOVEL'SDUSRMSG'ZAMSGF                          062528
+     C********             MOVE '1'       *IN75                           062528
+     C********             MOVE '1'       *IN,Y                           062528
+     C********             EXSR SRSMSG                                    062528
+      *
+     C                     END                             E1
+      *
+      ** If the field is not equal to zero, validate and align it.
+      *
+     C           *IN,Y     IFEQ '0'                        B1
+      *
+      **   Using SR/ZA0840 subroutine to validate and align amount
+      *
+     C                     MOVE *BLANK    @@ALPH
+     C                     MOVE TFO,X     @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           7         SUB  A6NBDP    @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+      *
+      **   If the return code is equal to  1 or 2 the amount is
+      **   invalid in base currency : display message for invalid
+      **   field.
+     C           @@ERCD    IFEQ 1                          B2
+     C           @@ERCD    OREQ 2
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN,Y
+     C                     MOVEL'LZW1504' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E2
+     C                     END                             E1
+      *
+      **  If the amount entered is negative,
+      **  display message for the field must be positive.
+      *
+     C*
+     C           *IN,Y     IFEQ '0'                        B1
+     C           @@AMT     ANDLT*ZEROS
+     C*
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN,Y
+     C                     MOVEL'LZW1505' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E1
+      **   If the amount returned by the subroutine is valid
+      **   moving the amount in a work field
+     C           *IN,Y     IFEQ '0'                        B1
+     C                     MOVE @@ALPH    TFO,X
+     C                     MOVE @@AMT     TFI,X
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      *
+      ****************************************************************
+      *                                                              *
+      * ACCHTS - CHECK  ACCOUNT CHARGE AMOUNT FIELD                  *
+      *                                                              *
+      *                                                              *
+      ****************************************************************
+     C           ACCHTS    BEGSR
+      *
+      * Validate field
+      ** If no value is entered, display message for mandatory field.
+      *
+     C           #1ACCH    IFEQ *BLANKS                    B1
+      *
+     C********             MOVEL'LZW1609' ZAMSID                          062528
+     C********             MOVEL'SDUSRMSG'ZAMSGF                          062528
+     C********             MOVE '1'       *IN75                           062528
+     C********             MOVE '1'       *IN33                           062528
+     C********             EXSR SRSMSG                                    062528
+      *
+     C                     END                             E1
+      *
+      ** If the field is not equal to zero, validate and align it.
+      *
+     C           #1ACCH    IFNE *ZEROS                     B1
+      *
+      **   Using SR/ZA0840 subroutine to validate and align amount
+      *
+     C                     MOVE *BLANK    @@ALPH
+     C                     MOVE #1ACCH    @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           7         SUB  A6NBDP    @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+      *
+      **   If the return code is equal to  1 or 2 the amount is
+      **   invalid in base currency : display message for invalid
+      **   field.
+     C           @@ERCD    IFEQ 1                          B2
+     C           @@ERCD    OREQ 2
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN33
+     C                     MOVEL'LZW1610' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E2
+     C                     END                             E1
+      *
+      **  If the amount entered is negative,
+      **  display message for the field must be positive.
+      *
+     C*
+     C           *IN33     IFEQ '0'                        B1
+     C           @@AMT     ANDLT*ZEROS
+     C*
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN33
+     C                     MOVEL'LZW1611' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E1
+      **   If the amount returned by the subroutine is valid
+      **   moving the amount in a work field
+     C           *IN33     IFEQ '0'                        B1
+     C                     MOVE @@ALPH    #1ACCH
+     C                     MOVE @@AMT     WWACCH  70
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      /EJECT
+      * SRINZ - Routine to initialize screen fields with defaults
+      *-------------------------------------------------------------------------
+      *
+     C           SRINZ     BEGSR
+      *
+     C           *IN72     IFEQ '1'
+     C                     MOVE *BLANKS   TFO
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRFTOS - Routine to move file fields to screen fields, work
+      *          table
+      *-------------------------------------------------------------------------
+      *
+     C           SRFTOS    BEGSR
+      *
+      ** Move file fields(Fixed A/C Charges) to work table
+      *
+     C           *IN72     IFEQ '1'
+     C                     MOVE RYCHGC    TFI,1
+     C                     MOVE RYCHGD    TFI,2
+     C                     MOVE RYCHGW    TFI,3
+     C                     MOVE RYCHGF    TFI,4
+     C                     MOVE RYCHGS    TFI,5
+     C                     MOVE RYCHGM    TFI,6
+     C                     MOVE RYCHGT    TFI,7
+     C                     MOVE RYCHGB    TFI,8
+     C                     MOVE RYCHGL    TFI,9
+     C                     MOVE RYCHGA    TFI,10
+     C                     MOVE RYCHGQ    TFI,11
+     C                     MOVE RYCHGX    TFI,12
+     C                     MOVE RYCHGY    TFI,13
+      *
+     C                     Z-ADDRYNBDP    A6NBDP
+      *
+      ** Move file fields to screen fields Fixed A/C Charges
+      *
+     C                     Z-ADD1         X       20
+      *
+      ** Move each file field.
+      *
+     C           X         DOWLT14
+      *
+      **  Use the SR/ZEDIT to format the file amount
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE TFI,X     ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    TFO,X
+     C                     MOVE *BLANKS   ZFIELD
+     C                     ADD  1         X
+     C                     END
+     C                     END
+      *
+      **   Use the SR/ZEDIT to format the file amount
+     C           *IN73     IFEQ '1'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE RYACCH    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #1ACCH
+     C                     MOVE *BLANKS   ZFIELD
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSTOF - Routine to move screen fields to file fields
+      *-------------------------------------------------------------------------
+      *
+     C           SRSTOF    BEGSR
+      *
+      **   Move data fields to file fields  Statement Charges
+      *
+     C           *IN72     IFEQ '1'
+     C                     MOVE TFI,1     RYCHGC
+     C                     MOVE TFI,2     RYCHGD
+     C                     MOVE TFI,3     RYCHGW
+     C                     MOVE TFI,4     RYCHGF
+     C                     MOVE TFI,5     RYCHGS
+     C                     MOVE TFI,6     RYCHGM
+     C                     MOVE TFI,7     RYCHGT
+     C                     MOVE TFI,8     RYCHGB
+     C                     MOVE TFI,9     RYCHGL
+     C                     MOVE TFI,10    RYCHGA
+     C                     MOVE TFI,11    RYCHGQ
+     C                     MOVE TFI,12    RYCHGX
+     C                     MOVE TFI,13    RYCHGY
+     C                     END
+      *
+     C           *IN73     IFEQ '1'
+     C                     MOVE WWACCH    RYACCH
+     C                     END
+      *
+     C                     MOVE CCYD      RYCCYD
+     C                     Z-ADDA6NBDP    RYNBDP
+      *
+     C                     ENDSR
+      *-------------------------------------------------------------------------
+      * SRINIT - Routine to handle initial processing
+      *-------------------------------------------------------------------------
+      *
+     C           SRINIT    BEGSR
+      *
+      **   Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           DATA
+     C                     PARM           WWRTRN  7
+     C                     PARM           DUMMY1  30
+     C                     PARM           DUMMY2  30
+     C                     PARM           DUMMY3  30
+     C                     PARM           DUMMY4  30
+     C                     PARM           DUMMY5 10
+     C                     PARM           SPARE 256
+      *
+     C                     MOVE '0'       *IN50
+      *
+      **   Set up default message file
+      *
+     C                     MOVEL'REUSRMSG'WWDMSF 10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZA0840 - This subroutine will take as input a 16A field      *
+     C*           a 1N number of integers and a 1N number of decimal  *
+     C*           places. Ignoring the leading and trailing blanks    *
+     C*           it will ensure that the field contains only numeric *
+     C*           characters and a decimal point, and that it has no  *
+     C*           embedded blanks, or more than one decimal point.    *
+     C*           It will also check that the number of figures before*
+     C*           and after the decimal point do not exceed the input *
+     C*           parameters. The subroutine will output the number as*
+     C*           a 16A field and a 15N field, along with an error    *
+     C*           code. The alpha field will be right aligned with    *
+     C*           the leading zeros blanked, and trailing blanks zero *
+     C*           filled. The number returned will be 15 long with 0  *
+     C*           decimal places. The error code will contain 0 if    *
+     C*           there was no error, 1 if there was a non-numeric    *
+     C*           character found, and 2 if the number of decimal     *
+     C*           places are wrong.                                   *
+     C*                                                               *
+     C*  Input  : @@ALPH - 16A field containing the field to validate *
+     C*           @@IDP  - number of decimal places                   *
+     C*           @@IINT - number of integers                         *
+     C*                                                               *
+     C*  Output : @@ALPH - 16A field for display                      *
+     C*           @@AMT  - 15N field for calculation                  *
+     C*           @@ERCD - 1N error code                              *
+     C*                                                               *
+     C*  Uses   : @F     - array of 16 elements 1 character long      *
+     C*           @G     - array of 16 elements 1 character long      *
+     C*           @@CADP - calculated number of decimal places        *
+     C*           @@CINT - calculated number of integers              *
+     C*           @@PIDP - position of dp in input array              *
+     C*           @@PODP - position of dp in output array             *
+     C*           @@C    - index for array @F                         *
+     C*           @@D    - index for array @G                         *
+     C*           @@WK7  - workfield used for converting array element*
+     C*                    to a 1N number.                            *
+     C*           @H     - array containing powers of 10              *
+     C*           @@E    - index to array @H                          *
+     C*           @@WK5  - work field                                 *
+     C*           @@ALP1 - feild used to right align 0 decimal places *
+     C*****************************************************************
+      *
+     C           ZA0840    BEGSR
+      *
+      **   initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      **   define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+      *
+     C********************************************************************
+     C**                                                                 *
+     C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*
+     C**  AND TO BLANK OUT LEADING ZEROES.                               *
+     C**      INPUT FIELDS:   ZFIELD 16/                                 *
+     C*                       ZADEC                                      *
+     C*                       ZADIG - NOT ACTUALLY USED                  *
+     C*                                                                  *
+     C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *
+     C*                                                                  *
+     C*       OUTPUT FIELD   ZFIELD                                      *
+     C*                                                                  *
+     C           ZEDIT     BEGSR                           ***  ZEDIT  ***
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**                                                                 *
+     C*       SET UP WORK FIELDS                                         *
+     C*                                                                  *
+     C                     MOVEA' '       ZA1                            *
+     C                     MOVEA' '       ZA2                            *
+     C*                                                                  *
+     C                     Z-ADD16        Z1      20                     *
+     C                     Z-ADD16        Z2      20                     *
+     C*                                                                  *
+     C           16        SUB  ZADEC     ZADEC2  20                     *
+     C*                                                                  *
+     C*
+     C                     MOVEAZFIELD    ZA1                            *
+     C*                                                                  *
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *
+     C*                                                                  *
+     C           ZADEC     COMP 0                        91              *
+     C   91                GOTO ZT20                                     *
+     C**                                                                 *
+     C           ZT10      TAG                             ** ZT10 TAG ***
+     C**                                                                 *
+     C*                                                                  *
+     C*       SET UP DECIMALS                                            *
+     C*                                                                  *
+     C                     MOVE ZA1,Z1    ZA2,Z2                         *
+     C           Z1        SUB  1         Z1                             *
+     C           Z2        SUB  1         Z2                             *
+     C*                                                                  *
+     C           Z2        COMP 0                        90              *
+     C   90                GOTO ZT30                                     *
+     C*                                                                  *
+     C*       CHECK IF END OF DECIMALS                                   *
+     C**                                                                 *
+     C           Z2        COMP ZADEC2               90                  *
+     C   90                GOTO ZT10                                     *
+     C*                                                                  *
+     C**                                                                 *
+     C*       PUT IN DECIMAL PLACE                                       *
+     C*                                                                  *
+     C                     MOVE '.'       ZA2,Z2                         *
+     C           Z2        SUB  1         Z2                             *
+     C*                                                                  *
+     C           ZT20      TAG                             ** ZT20 TAG ***
+     C*                                                                  *
+     C*       SET UP INTEGERS                                            *
+     C*                                                                  *
+     C                     MOVE ZA1,Z1    ZA2,Z2                         *
+     C           Z1        SUB  1         Z1                             *
+     C           Z2        SUB  1         Z2                             *
+     C**                                                                 *
+     C           Z2        COMP 0                    90                  *
+     C   90                GOTO ZT20                                     *
+     C*                                                                  *
+     C*       PUT IN LEADING BLANKS                                      *
+     C*                                                                  *
+     C           ZT30      TAG                             ** ZT30 TAG ***
+     C**                                                                 *
+     C                     Z-ADD1         Z2                             *
+     C**                                                                 *
+     C           ZT40      TAG                             ** ZT40 TAG ***
+     C*                                                                  *
+     C           ZA2,Z2    COMP '0'                  9090                *
+     C   90      ZA2,Z2    COMP ' '                  9090                *
+     C*                                                                  *
+     C   90                GOTO ZT50                                     *
+     C*                                                                  *
+     C                     MOVE ' '       ZA2,Z2                         *
+     C           Z2        ADD  1         Z2                             *
+     C*                                                                  *
+     C           Z2        COMP 16                     90                *
+     C   90                GOTO ZT40                                     *
+     C*                                                                  *
+     C*       IF NO INTEGERS PUT IN LEADING ZERO                         *
+     C*                                                                  *
+     C           ZT50      TAG                             ** ZT50 TAG ***
+     C*                                                                  *
+     C                     Z-ADDZADEC2    Z2                             *
+     C  N91      Z2        SUB  1         Z2                             *
+     C           ZA2,Z2    COMP ' '                      90              *
+     C   90                MOVE '0'       ZA2,Z2                         *
+     C*                                                                  *
+     C*       SET UP OUTPUT FIELD                                        *
+     C*                                                                  *
+     C           ZT60      TAG                             ** ZT60 TAG ***
+     C*                                                                  *
+     C                     MOVEAZA2       ZFIELD 16                      *
+     C**                                                                 *
+     CSR         ZEND      ENDSR                           ** ZEND **    *
+     C*****************************************************************
+      * AMREST - Routine to update PF/RESTCHPD                                                211225
+      *------------------------------------------------------------------                     211225
+      *                                                                                       211225
+     C           AMREST    BEGSR                                                              211225
+      *                                                                                       211225
+      **   Charge currency is moved in output field                                           211225
+     C                     MOVE RYCCYD    STCCYD                                              211225
+      *                                                                                       211225
+      **   Initialisation and definition of the index                                         211225
+     C                     Z-ADD1         X       20                                          211225
+     C                     Z-ADDRYCHGC    TF2,1                                               211225
+     C                     Z-ADDRYCHGD    TF2,2                                               211225
+     C                     Z-ADDRYCHGW    TF2,3                                               211225
+     C                     Z-ADDRYCHGF    TF2,4                                               211225
+     C                     Z-ADDRYCHGS    TF2,5                                               211225
+     C                     Z-ADDRYCHGM    TF2,6                                               211225
+     C                     Z-ADDRYCHGT    TF2,7                                               211225
+     C                     Z-ADDRYCHGB    TF2,8                                               211225
+     C                     Z-ADDRYCHGL    TF2,9                                               211225
+     C                     Z-ADDRYCHGA    TF2,10                                              211225
+     C                     Z-ADDRYCHGQ    TF2,11                                              211225
+     C                     Z-ADDRYCHGX    TF2,12                                              211225
+     C                     Z-ADDRYCHGY    TF2,13                                              211225
+      *                                                                                       211225
+      **   13 amounts and frequencies must be processed by each                               211225
+      **   currency code                                                                      211225
+      *                                                                                       211225
+     C           X         DOWLT14                         *B1                                211225
+      *                                                                                       211225
+     C                     MOVE FRQ,X     STFREQ                                              211225
+     C           RESTKY    CHAINRESTCHD0             74                                       211225
+      *                                                                                       211225
+      **   Each amount must be different from zero to be written                              211225
+      *                                                                                       211225
+     C           TF2,X     IFNE 0                          *B2                                211225
+     C                     MOVE TF2,X     STFAMT                                              211225
+      *                                                                                       211225
+     C           *IN74     IFEQ '0'                        *B3                                211225
+     C                     UPDATRESTCHD0                                                      211225
+     C                     ELSE                                                               211225
+     C           TMP,X     IFEQ 0                                                             211225
+     C                     WRITERESTCHD0                                                      211225
+     C                     ELSE                                                               211225
+     C                     MOVEL'WNE0053' ZAMSID                                              211225
+     C                     MOVEL'WNMSGF  'ZAMSGF                                              211225
+     C                     EXSR SRSMSG                                                        211225
+      *                                                                                       211225
+      * Protect fields for display                                                            211225
+      *                                                                                       211225
+     C                     MOVE '1'       *IN10                                               211225
+      * Display screen                                                                        211225
+     C                     EXSR SRSCRN                                                        211225
+      *                                                                                       211225
+      * Execute DB error routine                                                              211225
+      *                                                                                       211225
+     C                     EXSR SRDBER                                                        211225
+      *                                                                                       211225
+     C                     ENDIF                                                              211225
+      *                                                                                       211225
+     C                     ENDIF                           *E3                                211225
+      *                                                                                       211225
+     C                     ELSE                                                               211225
+     C           TMP,X     IFNE 0                                                             211225
+     C                     DELETRESTCHD0                                                      211225
+     C                     ENDIF                                                              211225
+      *                                                                                       211225
+     C                     END                             *E2                                211225
+      *                                                                                       211225
+     C                     ADD  1         X                                                   211225
+      *                                                                                       211225
+     C                     END                             *E1                                211225
+      *                                                                                       211225
+     C                     ENDSR                                                              211225
+     C*****************************************************************                       211225
+      * WRREST - Routine to write records in PF/RESTCHPD                                      211225
+      *------------------------------------------------------------------                     211225
+      *                                                                                       211225
+     C           WRREST    BEGSR                                                              211225
+      *                                                                                       211225
+      **   Charge currency is moved in output field                                           211225
+     C                     MOVE RYCCYD    STCCYD                                              211225
+      *                                                                                       211225
+      **   Initialisation and definition of the index                                         211225
+     C                     Z-ADD1         X       20                                          211225
+     C                     Z-ADDRYCHGC    TF2,1                                               211225
+     C                     Z-ADDRYCHGD    TF2,2                                               211225
+     C                     Z-ADDRYCHGW    TF2,3                                               211225
+     C                     Z-ADDRYCHGF    TF2,4                                               211225
+     C                     Z-ADDRYCHGS    TF2,5                                               211225
+     C                     Z-ADDRYCHGM    TF2,6                                               211225
+     C                     Z-ADDRYCHGT    TF2,7                                               211225
+     C                     Z-ADDRYCHGB    TF2,8                                               211225
+     C                     Z-ADDRYCHGL    TF2,9                                               211225
+     C                     Z-ADDRYCHGA    TF2,10                                              211225
+     C                     Z-ADDRYCHGQ    TF2,11                                              211225
+     C                     Z-ADDRYCHGX    TF2,12                                              211225
+     C                     Z-ADDRYCHGY    TF2,13                                              211225
+      *                                                                                       211225
+      **   13 amounts and frequencies must be processed by each                               211225
+      **   currency code                                                                      211225
+      *                                                                                       211225
+     C           X         DOWLT14                         *B1                                211225
+      *                                                                                       211225
+     C                     MOVE FRQ,X     STFREQ                                              211225
+     C           RESTKY    CHAINRESTCHD0             74                                       211225
+      *                                                                                       211225
+      **   Each amount must be different from zero to be written                              211225
+      *                                                                                       211225
+     C           *IN74     IFEQ '1'                        *B2                                211225
+      *                                                                                       211225
+     C           TF2,X     IFNE 0                          *B3                                211225
+     C           TFO,X     ANDNE*BLANKS                                                       211225
+     C                     MOVE TF2,X     STFAMT                                              211225
+     C                     WRITERESTCHD0                                                      211225
+     C                     ENDIF                           *E3                                211225
+     C                     ELSE                                                               211225
+     C                     MOVEL'WNE0054' ZAMSID                                              211225
+     C                     MOVEL'WNMSGF  'ZAMSGF                                              211225
+     C                     EXSR SRSMSG                                                        211225
+      *                                                                                       211225
+      * Protect fields for display                                                            211225
+      *                                                                                       211225
+     C                     MOVE '1'       *IN10                                               211225
+      * Display screen                                                                        211225
+     C                     EXSR SRSCRN                                                        211225
+      *                                                                                       211225
+      * Execute DB error routine                                                              211225
+      *                                                                                       211225
+     C                     EXSR SRDBER                                                        211225
+      *                                                                                       211225
+     C                     ENDIF                           *E2                                211225
+      *                                                                                       211225
+     C                     ADD  1         X                                                   211225
+      *                                                                                       211225
+     C                     END                             *E1                                211225
+      *                                                                                       211225
+     C                     ENDSR                                                              211225
+     C*****************************************************************                       211225
+      * DLREST - Routine to write records in PF/RESTCHPD                                      211225
+      *------------------------------------------------------------------                     211225
+      *                                                                                       211225
+     C           DLREST    BEGSR                                                              211225
+      *                                                                                       211225
+      **   Charge currency is moved in output field                                           211225
+     C                     MOVE RYCCYD    STCCYD                                              211225
+      *                                                                                       211225
+      **   Initialisation and definition of the index                                         211225
+      *                                                                                       211225
+     C                     Z-ADD1         X       20                                          211225
+      *                                                                                       211225
+      **   13 amounts and frequencies must be processed by each                               211225
+      **   currency code                                                                      211225
+      *                                                                                       211225
+     C           X         DOWLT14                         *B1                                211225
+      *                                                                                       211225
+     C                     MOVE FRQ,X     STFREQ                                              211225
+     C           RESTKY    CHAINRESTCHD0             74                                       211225
+      *                                                                                       211225
+      **   Each amount must be different from zero to be written                              211225
+      *                                                                                       211225
+     C           *IN74     IFEQ '0'                        *B2                                211225
+     C                     DELETRESTCHD0                                                      211225
+     C                     END                             *E2                                211225
+      *                                                                                       211225
+     C                     ADD  1         X                                                   211225
+      *                                                                                       211225
+     C                     END                             *E1                                211225
+      *                                                                                       211225
+     C                     ENDSR                                                              211225
+     C*****************************************************************                       211225
+      /EJECT
+**  CPY  **     OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** array of powers of 10 from 0 to 8  @H
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+** array of frequencies  FRQ                                                                  211225
+ZDWFSMTBLAQXY                                                                                 211225

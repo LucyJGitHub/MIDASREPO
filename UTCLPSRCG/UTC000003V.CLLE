@@ -1,0 +1,351 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CMPF validity checker')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000003V - Validity checker for CMPF                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. A1076141           Date 11Jan13              */
+/*       Prev Amend No. BUG27790  *CREATE  Date 17Jun10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1076141 - Parameters rearranged to make entry mandatory.   */
+/*       BUG27790 - New utility                                      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&FILE1 &FILE2 &TFILE &MBROVR &KEYFLD +                  */ /*A1076141*/
+/**********               &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +                   */ /*A1076141*/
+/**********               &RPTFLDNO &KEYF &FLD &OFILE &OMBR)                         */ /*A1076141*/
+             PGM        PARM(&FILE1 &FILE2 &TFILE &KEYFLD &MBROVR +
+                          &MBR1 &MBR2 &IGNMTCH &DSPNODIF &OUTPUT +
+                          &RPTFLDNO &KEYF &FLD &OFILE &OMBR)                            /*A1076141*/
+ 
+             DCL        VAR(&FILE1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FILE2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TFILE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEYFLD) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MBR1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&IGNMTCH) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&DSPNODIF) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OUTPUT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RPTFLDNO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&KEYF) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&FLD) TYPE(*CHAR) LEN(122)
+             DCL        VAR(&OFILE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OMBR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&F1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&L1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&F2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&L2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FIELD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRFLD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&NBRFLDB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLDDTA) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&ACCPDTA) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check that first file / library / member combination exists. */
+             CHGVAR     VAR(&F1) VALUE(%SST(&FILE1 1 10))
+             CHGVAR     VAR(&L1) VALUE(%SST(&FILE1 11 10))
+             CHKOBJ     OBJ(&L1/&F1) OBJTYPE(*FILE) MBR(&MBR1) +
+                          AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &L1 *TCAT '/' *TCAT &F1 *BCAT +
+                             'member' *BCAT &MBR1 *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000User is not authorised to' +
+                             *BCAT &L1 *TCAT '/' *TCAT &F1 *BCAT +
+                             'member' *BCAT &MBR1 *TCAT '.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check that second file / library / member combination exists. */
+             CHGVAR     VAR(&F2) VALUE(%SST(&FILE2 1 10))
+             CHGVAR     VAR(&L2) VALUE(%SST(&FILE2 11 10))
+             CHKOBJ     OBJ(&L2/&F2) OBJTYPE(*FILE) +
+                          MBR(&MBR2) AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &L2 *TCAT '/' *TCAT &F2 *BCAT +
+                             'member' *BCAT &MBR2 *BCAT 'does not +
+                             exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000User is not authorised to' +
+                             *BCAT &L2 *TCAT '/' *TCAT &F2 *BCAT +
+                             'member' *BCAT &MBR2 *TCAT '.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check that share file / library combination exists. */
+             CHGVAR     VAR(&TF) VALUE(%SST(&TFILE 1 10))
+             CHGVAR     VAR(&TL) VALUE(%SST(&TFILE 11 10))
+             CHKOBJ     OBJ(&TL/&TF) OBJTYPE(*FILE) AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &TL *TCAT '/' *TCAT &TF *BCAT +
+                             'member *N does not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000User is not authorised to' +
+                             *BCAT &TL *TCAT '/' *TCAT &TF *BCAT +
+                             'member *N.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* If *FILE or *FIELD is selected then perform DSPFFD of the template file. */
+             IF         COND(&KEYFLD *EQ '*FILE' *OR &KEYFLD *EQ +
+                          '*FLD') THEN(DO)
+                CALL       PGM(UTC000004) PARM(&TF &TL 'UTC000003F' +
+                             '*FIRST' '*REPLACE')
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* Read first field record to get file format. */
+                OVRDBF     FILE(UPFFDSTPD) TOFILE(UTC000003F)
+/* Find format name of file. */
+                CALL       PGM(UTAOFFDS) PARM(&TF ' ' ' ' '*FIRST' +
+                             &RTNCODE &FLDDTA)
+                DLTOVR     FILE(UPFFDSTPD)
+                IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000There is a problem with the +
+                                template file.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                ELSE       CMD(DO)
+/* Check that template file is a physical. */
+                   IF         COND(%SST(&FLDDTA 28 1) *NE 'P') THEN(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000Template file' *BCAT &TF +
+                                   *BCAT 'is not a physical file.') +
+                                   MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&FMT) VALUE(%SST(&FLDDTA 47 10))
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/* If a keyed file is selected then ensure a value is put into the KEYF */
+/*  parameter . . .                                                     */
+             IF         COND(&KEYFLD *EQ '*FILE') THEN(DO)
+                CHGVAR     VAR(&KF) VALUE(%SST(&KEYF 1 10))
+                CHGVAR     VAR(&KL) VALUE(%SST(&KEYF 11 10))
+                IF         COND(&KF *EQ ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                parameter KEYFLD is "*FILE" then +
+                                parameter KEYF must have a value.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* . . . otherwise check that the keyed file exists. */
+                ELSE       CMD(DO)
+                   CHKOBJ     OBJ(&KL/&KF) OBJTYPE(*FILE) AUT(*USE)
+                   MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                                   *TCAT &KL *TCAT '/' *TCAT &KF *BCAT +
+                                   'member *N does not exist.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   MONMSG     MSGID(CPF9802) EXEC(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000User is not authorised to' +
+                                   *BCAT &KL *TCAT '/' *TCAT &KF *BCAT +
+                                   'member *N.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+/* If it exists then check that it is keyed. */
+                   DLTF       FILE(QTEMP/ACCP)
+                   MONMSG     MSGID(CPF0000)
+                   DLTF       FILE(QTEMP/UTC000003A)
+                   MONMSG     MSGID(CPF0000)
+                   CRTDUPOBJ  OBJ(UPACCPTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                                TOLIB(QTEMP) NEWOBJ(UTC000003A)
+                   DSPFD      FILE(&KL/&KF) TYPE(*ACCPTH) +
+                                OUTPUT(*OUTFILE) OUTFILE(QTEMP/ACCP)
+                   CPYF       FROMFILE(QTEMP/ACCP) +
+                                TOFILE(QTEMP/UTC000003A) MBROPT(*REPLACE) +
+                                FMTOPT(*MAP *DROP)
+                   OVRDBF     FILE(UPACCPTPD) TOFILE(UTC000003A)
+                   CALL       PGM(UTAOACCP) PARM(&KF &TF &FMT ' ' X'000F' +
+                                '*KEYCHK' &RTNCODE &ACCPDTA)
+                   DLTOVR     FILE(UPACCPTPD)
+                   IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +
+                                   selected keyed file / format does not +
+                                   have a key.') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/* If key field(s) is selected then ensure a value is put into the FLD */
+/*  parameter . . .                                                    */
+             IF         COND(&KEYFLD *EQ '*FLD') THEN(DO)
+                CHGVAR     VAR(&NBRFLDB) VALUE(%SST(&FLD 1 2))
+                CHGVAR     VAR(&NBRFLD) VALUE(%BIN(&NBRFLDB))
+                IF         COND(&NBRFLD *EQ 0) THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                parameter KEYFLD is "*FLD" then parameter +
+                                FLD must have a value.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                ELSE       CMD(DO)
+/* . . . otherwise check that fields exist. */
+                   CHGVAR     VAR(&STRPOS) VALUE(3)
+                   CHGVAR     VAR(&COUNT) VALUE(1)
+                   OVRDBF     FILE(UPFFDSTPD) TOFILE(UTC000003F)
+FIELDLOOP:
+                   CHGVAR     VAR(&FIELD) VALUE(%SST(&FLD &STRPOS 10))
+                   CALL       PGM(UTAOFFDS) PARM(&TF &FMT &FIELD '*RTV' +
+                                &RTNCODE &FLDDTA)
+/* A blank return code means that the field was found. */
+                   IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000There is a problem with one +
+                                   or more of the key fields entered.') +
+                                   MSGTYPE(*DIAG)
+                      DLTOVR     FILE(UPFFDSTPD)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                      IF         COND(&COUNT *LE &NBRFLD) THEN(DO)
+                         CHGVAR     VAR(&STRPOS) VALUE(&STRPOS + 10)
+                         GOTO       CMDLBL(FIELDLOOP)
+                      ENDDO
+                   ENDDO
+                ENDDO
+                DLTOVR     FILE(UPFFDSTPD)
+             ENDDO
+ 
+/* If 'outfile' requested then check if a file has been entered ... */
+             IF         COND(&OUTPUT *EQ '*OUTFILE') THEN(DO)
+                CHGVAR     VAR(&OF) VALUE(%SST(&OFILE 1 10))
+                CHGVAR     VAR(&OL) VALUE(%SST(&OFILE 11 10))
+                IF         COND(&OF *EQ ' ' *OR &OL *EQ ' ' *OR &OMBR +
+                             *EQ ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000If +
+                                *OUTFILE is specified then a file or +
+                                library must be entered.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... else check that the library exists and that the user has authority */
+/*  to change the library.                                                */
+                CHKOBJ     OBJ(&OL) OBJTYPE(*LIB) AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library specified for +
+                                *OUTFILE does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000User does not have enough +
+                                authority to *OUTFILE library.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... else check that user has authority to file / member if it exists. */
+                CHKOBJ     OBJ(&OL/&OF) OBJTYPE(*FILE) AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801)
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000User does not have enough +
+                                authority to *OUTFILE file.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

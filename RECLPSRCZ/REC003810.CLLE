@@ -1,0 +1,103 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE History reconciliation report')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC003810  - A/C Bal. & History Bal. Reconciliation report  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CRE083BG  *CREATE  Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRE083BG - COB Restructure - RE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTN) TYPE(*CHAR) LEN(7)
+             DCLF       FILE(SDRETLPD)
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set Switches */
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Get Record */
+ 
+             RCVF       RCDFMT(SDRETLD0)
+ 
+             OVRDBF     FILE(REACCNJL) TOFILE(REACRD) SHARE(*YES)
+ 
+             IF         COND(&BMCBAI *NE 'Y') +
+             THEN(DO)
+             OPNQRYF    FILE((REACRD) (ACCNTAB)) FORMAT(REACCNJL) +
+                          QRYSLT('REACRD/RECI *EQ "D"') +
+                          KEYFLD((ZBRCA) (ZCUST) (ZACCY) (ZACOD) +
+                          (ZASEQ)) JFLD((ACCNTAB/BRCA +
+                          *MAPFLD/ZBRCA) (ACCNTAB/CNUM +
+                          *MAPFLD/ZCUST) (ACCNTAB/CCY +
+                          *MAPFLD/ZACCY) (ACCNTAB/ACOD +
+                          *MAPFLD/ZACOD) (ACCNTAB/ACSQ +
+                          *MAPFLD/ZASEQ) (ACCNTAB/LDBL +
+                          *MAPFLD/ZLDBL) (ACCNTAB/ACODQQ +
+                          *MAPFLD/ZACOQQ)) JDFTVAL(*ONLYDFT) +
+                          MAPFLD((ZLDBL '1/HISB - 1/GADI + 1/GACI' +
+                          *DEC 15 0) (ZBRCA '1/BRCA') (ZCUST +
+                          '1/CUST') (ZACCY '1/ACCY') (ZACOD +
+                          '1/ACOD') (ZASEQ '1/ASEQ') (ZHISB +
+                          '1/HISB') (ZGADI '1/GADI') (ZGACI +
+                          '1/GACI') (ZACOQQ '1/ACODQQ')) +
+                          IGNDECERR(*YES)
+             ENDDO
+ 
+             IF         COND(&BMCBAI *EQ 'Y') +
+             THEN(DO)
+             OPNQRYF    FILE((REACRD) (ACCNTAB)) FORMAT(REACCNJL) +
+                          QRYSLT('REACRD/RECI *EQ "D"') +
+                          KEYFLD((ZBRCA) (ZCUST) (ZACCY) (ZACOD) +
+                          (ZASEQ)) JFLD((*MAPFLD/ZBRCA +
+                          ACCNTAB/BRCA) (*MAPFLD/ZCUST +
+                          ACCNTAB/CNUM) (*MAPFLD/ZACCY ACCNTAB/CCY) +
+                          (*MAPFLD/ZACOD ACCNTAB/ACOD) +
+                          (*MAPFLD/ZASEQ ACCNTAB/ACSQ) +
+                          (*MAPFLD/HSGA ACCNTAB/CLBL)  +
+                          (*MAPFLD/ZACOQQ ACCNTAB/ACODQQ)) +
+                          JDFTVAL(*YES) MAPFLD((HSGA '1/HISB - +
+                          1/GADI + 1/GACI' *DEC 15 0) (ZBRCA +
+                          '1/BRCA') (ZCUST '1/CUST') (ZACCY +
+                          '1/ACCY') (ZACOD '1/ACOD') (ZASEQ +
+                          '1/ASEQ') (ZHISB '1/HISB') (ZGADI +
+                          '1/GADI') (ZGACI '1/GACI') (ZACOQQ +
+                          '1/ACODQQ')) +
+                          IGNDECERR(*YES)
+             ENDDO
+ 
+/* Produce Report */
+ 
+             CALL       PGM(RE3810)
+             CLOF       OPNID(REACRD)
+             GOTO       CMDLBL(END)
+ 
+/** Abnornal */
+ 
+ ABNOR:
+             CHGJOB     SWS(00000011)
+             SNDPGMMSG  MSG('REC003810 - A/c Bal & History Bal +
+                          Reconciliation Report ended abnormally - +
+                          see joblog') TOPGMQ(*EXT) TOMSGQ(MOPERQ +
+                          MRUNQ)
+ 
+/** End program */
+ 
+ END:
+             ENDPGM

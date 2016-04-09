@@ -1,0 +1,994 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Counterparty Exposure Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1005 - COUNTERPARTY EXPOSURE REPORT                        *
+     F*                                                               *
+     F*  Function: To report, for each market client or parent of     *
+     F*   (COB)    market client, all purchase and sale limits        *
+     F*            and the outstanding trades against those limits    *
+     F*            between trade and value date.                      *
+     F*            Reporting  options available are:                  *
+     F*            - customer or parent limits                        *
+     F*            - system, company or branch level limits           *
+     F*            - Book or consolidated limits                      *
+     F*            - Full report or exceptions only                   *
+     F*                                                               *
+     F*  Input Parameters:                                            *
+     F*            Reporting Level        - S,C or B                  *
+     F*            Report by Book         - Y or N                    *
+     F*            Counterparty or Parent - C or P                    *
+     F*            Exception Indicator    - Y or N                    *
+     F*                                                               *
+     F*  Called by: SEC0705 - Counterparty Exposure Report            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. 258883             Date 13Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 257384             Date 23Oct08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10JAN94               *
+     F*                 E37908             Date 31MAR92               *
+     F*                 E36307             DATE 25FEB92               *
+     F*                 E35287             DATE 03FEB92               *
+     F*                 E35260             DATE 30JAN92               *
+     F*                 E34039             DATE  8JAN92               *
+     F*                 E33035             DATE 09DEC91               *
+     F*                 E29170             DATE 10OCT91               *
+     F*                 S01117             DATE 29MAY91               *
+     F*                 E21582             DATE 30MAR90               *
+     F*                 E18215             DATE 04JAN90               *
+     F*                 E19505             DATE 14NOV89               *
+     F*                 E19294             DATE 22AUG89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  258883 - Increased the length of some variables to prevent   *
+      *           COB failure.                                        *
+      *  257384 - Increased some variables to prevent COB failure.    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E37908 - I/O operation to closed file                        *
+     F*  E36307 - Should be able to produce specific entity reports   *
+     F*  E35287 - Trying to write to closed printer file.             *
+     F*  E35260 - DB error on chaining to company's file.             *
+     F*           No AU printed to report DB error                    *
+     F*  E34039 - Recompiled over changed printer file                *
+     F*  E33035 - Trying to write to closed P1 printer file           *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E21582 - Array Index Variable redefined larger.              *   E21582
+     F*  E18215 - Limit printed each time for the next Security.      *   E18215
+     F*  E19505 - Array Index Limits were too small for Book Codes    *   E19505
+     F*           and Book Details. Increased to 150.                 *   E19505
+     F*  E19294 - Amendment to cater for File CPLEXQF and/or various  *   E19294
+     F*           fields of CPLEX being empty.                        *   E19294
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FCPLEX   IF  E           K        DISK
+     FCPLEXQF IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     F***SE1005P1O***E                    PRINTER                         E29170
+     FSE1005P1O   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE1005AUO   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOLU         E29170
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F* COMPANY   TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - TOTALS REQUIRED                                       *
+     F*   20  - BOOK NOT FOUND IN ARRAY                               *
+     F*   30  - PRINT COMPANY DETAILS                                 *
+     F*   31  - PRINT BRANCH DETAILS                                  *
+     F*   32  - PRINT BOOK DETAILS                                    *
+     F*   50  - RELEVANT FIELDS OF RECORDS EMPTY                      *   E19294
+     F* 60-62 - USED ON PRINTFILE                                     *
+     F*   80  - ERROR ON TABLE FILE CHAIN                             *
+     F*   87  - EOF BOOKD                                             *
+     F*   88  - END OF RECORDS FOR KEY ON CPLEX                       *
+     F*   89  - END OF FILE ON CPLEX OR CPLEXQF                       *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO AND LOADS BOOK DETAILS INTO ARRAY  *
+     F*           AND TO CALCULATE REPORT CONTROL DATE                *
+     F*  DETAIL - ORGANIZE DETAILS FOR PRINTING                       *
+     F*  PR01   - PRINT DETAIL REPORT                                 *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  ZDATE2 - Dates                                               *
+     F*  ZEVCD  - CALCULATES EVENT CONTROL DATE (REPORT CONTROL)      *
+     F*  ZICD2  - CHAINS TO ICD TABTB11                               *
+     F*  ZSEDIT - EDIT NUMERIC FIELDS                                 *
+     F*  ZSYSTM - Obtains ICD1.                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E* ARRAYS TO HOLD BOOK CODES AND ASSOCIATED DETAILS
+     E********************BOK        50  2                                E19505
+     E********************BDSC       50 30                                E19505
+     E**********          BOK       150  2                                             E19505 257384
+     E**********          BDSC      150 30                                             E19505 257384
+     E                    BOK       999  2                                                    257384
+     E                    BDSC      999 30                                                    257384
+     E/COPY ZSRSRC,ZSEDITZ1
+0137 E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80                                S01117
+     E*/COPY*ZSRSRC,ZSEDITZ2***                                           S01117
+      /EJECT
+     I/COPY ZSRSRC,ZSEDITZ2                                               S01117
+     I            DS
+     I*
+     I* DATA STRUCTURES TO STORE KEYS
+     I*
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I            DS
+     I                                        1   3 KCLEN
+     I                                        4   5 KCLBK
+     I                                        6  13 KCLAS
+     I**********                             14  190KCLCU                                     CSD027
+     I                                       14  19 KCLCU                                     CSD027
+     I            DS
+     I                                        1  19 NEWKEY
+     I                                        1   3 CLEN
+     I                                        4   5 CLBK
+     I                                        6  13 CLAS
+     I**********                             14  190CLCU                                      CSD027
+     I                                       14  19 CLCU                                      CSD027
+     I            DS
+     I                                        1  19 OLDKEY
+     I                                        1   3 OCLEN
+     I                                        4   5 OCLBK
+     I                                        6  13 OCLAS
+     I**********                             14  190OCLCU                                     CSD027
+     I                                       14  19 OCLCU                                     CSD027
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* TABLE FILE
+     C*
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY   12
+     C*
+     C* COUNTERPARTY LIMITS FILE
+     C*
+     C           CPXKEY    KLIST
+     C                     KFLD           KCLEN
+     C                     KFLD           KCLBK
+     C                     KFLD           KCLAS
+     C                     KFLD           KCLCU
+     C*
+     C* INPUT PARAMETERS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PCUST   1
+     C                     PARM           PLEVEL  1
+     C                     PARM           PBYBOK  1
+     C                     PARM           PEXCPT  1
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1005  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     CABEQ'1'       ENDPGM
+     C*
+     C* CLEAR WORK FIELDS
+     C*
+     C           *LIKE     DEFN CETW      WCETW
+     C                     MOVE *BLANKS   OLDKEY
+     C**********           MOVE *ZEROS    OCLCU                                               CSD027
+     C                     MOVE *BLANKS   OCLCU                                               CSD027
+     C                     Z-ADD0         OLCLLI  10                      E18215
+     C                     Z-ADD0         OLCLLE  50                      E18215
+     C                     Z-ADD0         OLCLSL  90                      E18215
+     C                     Z-ADD0         OLCLPL  90                      E18215
+     C                     Z-ADD0         LCNT    20
+     C                     Z-ADD0         SLCNT   20
+     C*
+     C* DETERMINE WHETHER THIS IS AN EXCEPTION ONLY REPORT OF FULL REPORT
+     C*
+     C           PEXCPT    IFEQ 'Y'
+     C                     MOVE '1'       *IN60
+     C*
+     C*   - FOR EXCEPTION REPORT USE QUERY FILE
+     C*
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C                     READ CPLEXQF                  89
+     C*
+     C*   - FOR EACH RECORD READ FROM QUERY FILE, READ THROUGH ALL RECORDS
+     C*      WITH SAME KEY ON CPLEXF AND PROCESS
+     C*
+     C           *IN89     IFEQ '0'
+     C           ENT       IFEQ 'ALL'                                     E36307
+     C           ENT       OREQ '   '                                     E36307
+     C           ENT       OREQ CLEN                                      E36307
+     C                     MOVE CLEN      KCLEN
+     C                     MOVE CLBK      KCLBK
+     C                     MOVE CLAS      KCLAS
+     C                     MOVE CLCU      KCLCU
+     C           CPXKEY    SETLLCPLEX
+     C*
+     C                     MOVE '0'       *IN88
+     C           *IN88     DOUEQ'1'
+     C           CPXKEY    READECPLEX                    88
+     C           *IN88     IFEQ '0'
+     C                     EXSR DETAIL
+     C***********          MOVE NEWKEY    OLDKEY                          E19294
+     C  N50                MOVE NEWKEY    OLDKEY                          E19294
+     C   50                SETOF                         50               E19294
+     C                     Z-ADDCLLI      OLCLLI                          E18215
+     C                     Z-ADDCLLE      OLCLLE                          E18215
+     C                     Z-ADDCLSL      OLCLSL                          E18215
+     C                     Z-ADDCLPL      OLCLPL                          E18215
+     C                     MOVEA'00'      *IN,61
+     C                     END
+     C*
+     C                     END
+     C                     END                                            E36307
+     C*
+     C                     ELSE
+     C**********           MOVE *ZEROS    CLCU                                                CSD027
+     C                     MOVE *BLANKS   CLCU                                                CSD027
+     C                     EXSR DETAIL
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C* IF FULL REPORT REQUIRED, READ CPLEX LOGICAL FILE
+     C* AND PROCESS IF LEVEL CORRESPONDS                                  E19294
+     C*
+     C           *IN89     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C                     READ CPLEX                    89
+     C*
+     C           *IN89     IFEQ '0'
+     C           CLLV      ANDEQPLEVEL                                    E19294
+     C           ENT       IFEQ 'ALL'                                     E36307
+     C           ENT       OREQ '   '                                     E36307
+     C           ENT       OREQ CLEN                                      E36307
+     C                     EXSR DETAIL
+     C***********          MOVE NEWKEY    OLDKEY                          E19294
+     C  N50                MOVE NEWKEY    OLDKEY                          E19294
+     C   50                SETOF                         50               E19294
+     C                     Z-ADDCLLI      OLCLLI                          E18215
+     C                     Z-ADDCLLE      OLCLLE                          E18215
+     C                     Z-ADDCLSL      OLCLSL                          E18215
+     C                     Z-ADDCLPL      OLCLPL                          E18215
+     C                     MOVEA'00'      *IN,61
+     C                     END                                            E36307
+     C                     ELSE
+     C           *IN89     IFEQ '1'                                       E19294
+     C**********           MOVE *ZEROS    CLCU                                                CSD027
+     C                     MOVE *BLANKS   CLCU                                                CSD027
+     C                     EXSR DETAIL
+     C                     END                                            E19294
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDPGM    TAG
+     C*                                                                   E35260
+     C*  If DB error print details of it                                  E35260
+     C*                                                                   E35260
+     C           *INU7     IFEQ '1'                                       E35260
+     C                     OPEN SE1005AU                                  E35260
+     C                     EXSR RCFAU                                     E35260
+     C                     WRITEHEADAU                                    E35260
+     C                     WRITEERROR                                     E35260
+     C           OPENP1    IFEQ 'Y'                                       E35260
+     C                     WRITEERRORP1                                   E35260
+     C                     END                                            E35260
+     C                     END                                            E35260
+     C*
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to access ICD Information, load Book     *
+      *           Descriptions into an array and calculate the Reprt  *
+      *           Control Date.                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD2
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* CALCULATE REPORT CONTROL DATE
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C*
+     C* READ THROUGH ALL BOOK DETAIL RECORDS STORING CODES AND DETAILS IN
+     C*   ARRAYS IF REPORT IS BYBOOK
+     C*
+     C           PBYBOK    IFEQ 'Y'
+     C*
+     C***********          Z-ADD0         S       20                      E21582
+     C                     Z-ADD0         S       30                      E21582
+     C           *IN87     DOUEQ'1'
+     C                     READ BOOKD                    87
+     C           *IN87     IFEQ '0'
+     C                     ADD  1         S
+     C                     MOVE BOKC      BOK,S
+     C                     MOVE BOKD      BDSC,S
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DETAIL - Subroutine to set up Output Report details.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR                           ** DETAIL **
+     C*
+     C* IF FILE CPLEXQF IS EMPTY OR NO DETAILS TO REPORT                  E19294
+     C*                                                                   E19294
+     C********** OCLCU     IFEQ *ZEROS                                                 E19294 CSD027
+     C********** CLCU      ANDEQ*ZEROS                                                 E19294 CSD027
+     C           OCLCU     IFEQ *BLANKS                                                       CSD027
+     C           CLCU      ANDEQ*BLANKS                                                       CSD027
+     C                     EXSR PR01                                      E19294
+     C                     GOTO EDET                                      E19294
+     C                     END                                            E19294
+     C*                                                                   E19294
+     C* IF PARENT DETAIL IS BLANK                                         E19294
+     C*                                                                   E19294
+     C           CLCR      IFEQ *BLANKS                                   E19294
+     C                     MOVEL'  NONE'  CLCR                            E19294
+     C                     END                                            E19294
+     C*
+     C* IF THERE HAS BEEN A CHANGE IN CUSTOMER NUMBER, BOOK OR ENTITY
+     C*     PRINT TOTAL LINE FOR PREVIOUS CUSTOMER/BOOK/ENTITY
+     C*     BUT NO TOTALS FOR FIRST CYCLE (AND RELEVANT FIELDS            E19294
+     C*     NOT EMPTY)                                                    E19294
+     C*                                                                   E19294
+     C           CECR      IFNE *BLANKS                                   E19294
+     C********** CLCU      OREQ *ZEROS                                                 E19294 CSD027
+     C           CLCU      OREQ *BLANKS                                                       CSD027
+     C*
+     C           CLCU      IFNE OCLCU
+     C********** OCLCU     ANDNE*ZEROS                                                        CSD027
+     C           OCLCU     ANDNE*BLANKS                                                       CSD027
+     C           CLBK      ORNE OCLBK
+     C********** OCLCU     ANDNE*ZEROS                                                        CSD027
+     C           OCLCU     ANDNE*BLANKS                                                       CSD027
+     C           CLEN      ORNE OCLEN
+     C********** OCLCU     ANDNE*ZEROS                                                        CSD027
+     C           OCLCU     ANDNE*BLANKS                                                       CSD027
+     C                     MOVE '1'       *IN10
+     C                     EXSR PR01
+     C*
+     C*  CHECK FOR LAST CUSTOMER
+     C*
+     C********** CLCU      IFEQ *ZEROS                                                        CSD027
+     C           CLCU      IFEQ *BLANKS                                                       CSD027
+     C                     GOTO EDET
+     C                     END
+     C*
+     C                     MOVE '0'       *IN10
+     C                     END
+     C*                                                                   E19294
+     C                     ELSE                                           E19294
+     C                     EXSR PR01                                      E19294
+     C                     GOTO EDET                                      E19294
+     C                     END                                            E19294
+     C*
+     C* CLEAR HEADINGS
+     C*
+     C                     MOVE *BLANKS   HDCO
+     C                     MOVE *BLANKS   HDBR
+     C           PLEVEL    IFEQ 'C'
+     C                     MOVELCLEN      HDCO
+     C                     ELSE
+     C           PLEVEL    IFEQ 'B'
+     C                     MOVELCLEN      HDBR
+     C                     END
+     C                     END
+     C*
+     C* IF LEVEL PARM IS C AND CHANGE IN ENTITY ENCOUNTERED
+     C*
+     C           PLEVEL    IFEQ 'C'
+     C           CLEN      ANDNEOCLEN
+     C*
+     C*  -  OBTAIN COMPANY NAME FROM TABLET3
+     C*
+     C                     SETON                     30
+     C           CLEN      IFNE *BLANK
+     C                     MOVE *BLANKS   TKEY
+     C***********          MOVELCLEN      WK2     2                       E35260
+     C                     MOVELCLEN      WK2     3                       E35260
+     C                     MOVEL'11'      TKEY
+     C                     MOVE WK2       TKEY
+     C           TABKEY    CHAINTABLET3F             80
+     C           *IN80     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTKEY      DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD03        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO EDET
+     C                     END
+     C*
+     C                     MOVE CMNM      HDCMNM
+     C                     ELSE
+     C***********          MOVE 'NONE'    HDCMNM                          E19294
+     C                     MOVEL'NONE'    HDCMNM                          E19294
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF LEVEL PARM IS B, AND THERE IS A CHANGE IN ENTITY
+     C*
+     C           PLEVEL    IFEQ 'B'
+     C           CLEN      ANDNEOCLEN
+     C                     SETON                     31
+     C                     MOVE *BLANKS   TKEY
+     C                     MOVEL'10'      TKEY
+     C                     MOVE CLEN      TKEY
+     C           TABKEY    CHAINTABLETRF             80
+     C           *IN80     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO EDET
+     C                     END
+     C*
+     C                     MOVE BRNM      HDBRNM
+     C*
+     C                     END
+     C*
+     C* IF BY BOOK PARM IS Y AND THERE IS A CHANGE IN BOOK CODE
+     C*
+     C           PBYBOK    IFEQ 'Y'
+     C           CLBK      ANDNEOCLBK
+     C                     SETON                     32
+     C**********           Z-ADD1         A       20                                          258883
+     C                     Z-ADD1         A       30                                          258883
+     C           CLBK      LOKUPBOK,A                    20
+     C           *IN20     IFEQ '0'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BOOKD'   DBFILE           *****************
+     C                     MOVELCLBK      DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD05        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO EDET
+     C                     END
+     C*
+     C                     MOVE BDSC,A    HDBDSC
+     C*
+     C                     END
+     C*
+     C* CALCULATE PURCHASE EXPOSURE
+     C*
+     C           CEPE      IFEQ 1
+     C                     Z-ADDCECV      PEXP   110
+     C                     ADD  CECV      TPEXP  110
+     C                     END
+     C*
+     C* CALCULATE SALES EXPOSURE
+     C*
+     C           CESE      IFEQ 1
+     C                     Z-ADDCECV      SEXP   110
+     C                     ADD  CECV      TSEXP  110
+     C                     END
+     C*
+     C* PRINT DETAIL LINE
+     C*
+     C                     EXSR PR01
+     C*
+     C           EDET      ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PR01   - Subroutine to print detail report.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PR01      BEGSR                           ** PR01 **
+     C*
+     C*  CHECK FOR TOTAL LINE REQUIRED
+     C*
+     C           *IN10     IFEQ '1'
+     C*
+     C*   - CHECK THAT LIMIT CUSTOMER TOWN HAS BEEN PRINTED
+     C*
+     C           SLCNT     IFEQ 1
+     C                     MOVE WCETW     DTEXTW
+     C                     WRITEDETAIL2
+     C                     END
+     C*
+     C*   - CHECK FOR OVERFLOW
+     C*
+     C           LCNT      IFGT 39
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     END
+     C*
+     C*  - SET UP TOTAL DETAILS FOR PRINTING
+     C*
+     C***********CLLI      IFEQ 1                                         E18215
+     C           OLCLLI    IFEQ 1                                         E18215
+     C                     MOVE '1'       *IN61
+     C                     ELSE
+     C***********CLLE      IFLE ECD                                       E18215
+     C           OLCLLE    IFLE ECD                                       E18215
+     C                     MOVE '1'       *IN62
+     C                     END
+     C                     END
+     C*
+     C*  - TOTAL PURCHASE EXPOSURE
+     C*
+     C                     MOVE *BLANKS   DTPEXP
+     C           TPEXP     IFNE 0
+     C           TPEXP     DIV  1000      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPEXP
+     C                     END
+     C*
+     C*   - TOTAL SALES EXPOSURE
+     C*
+     C*   - PURCHASE LIMIT
+     C*
+     C                     MOVE *BLANKS   DTPLIM
+     C***********CLPL      IFNE 0                                         E18215
+     C***********          Z-ADDCLPL      ZFLD15                          E18215
+     C           OLCLPL    IFNE 0                                         E18215
+     C                     Z-ADDOLCLPL    ZFLD15                          E18215
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPLIM
+     C                     END
+     C*
+     C*  - TOTAL SALES EXPOSURE
+     C*
+     C                     MOVE *BLANKS   DTSEXP
+     C           TSEXP     IFNE 0
+     C           TSEXP     DIV  1000      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTSEXP
+     C                     END
+     C*
+     C*  - SALES LIMIT
+     C*
+     C                     MOVE *BLANKS   DTSLIM
+     C***********CLSL      IFNE 0                                         E18215
+     C***********          Z-ADDCLSL      ZFLD15                          E18215
+     C           OLCLSL    IFNE 0                                         E18215
+     C                     Z-ADDOLCLSL    ZFLD15                          E18215
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTSLIM
+     C                     END
+     C*
+     C* CHECK FOR TOTAL EXPOSURE (SALES OR PURCHASE) GREATER THAN LIMIT
+     C*
+     C***********TPEXP     IFGT CLPL                                      E18215
+     C***********TSEXP     ORGT CLSL                                      E18215
+     C           TPEXP     IFGT OLCLPL                                    E18215
+     C           TSEXP     ORGT OLCLSL                                    E18215
+     C                     MOVE '***'     DTLIM
+     C                     ELSE
+     C                     MOVE *BLANKS   DTLIM
+     C                     END
+     C*
+     C                     Z-ADD*ZEROS    TPEXP
+     C                     Z-ADD*ZEROS    TSEXP
+     C*
+     C                     WRITETOTALS
+     C*
+     C*   CHECK FOR LAST CUSTOMER
+     C*
+     C********** CLCU      IFEQ *ZEROS                                                        CSD027
+     C           CLCU      IFEQ *BLANKS                                                       CSD027
+     C                     WRITETRAIL
+     C                     CLOSESE1005P1
+     C                     END
+     C*
+     C                     GOTO EPR01
+     C                     END
+     C*
+     C* IF NOT FOR A TOTAL LINE
+     C*      IF FILE CPLEXQF IS EMPTY OR NO DETAILS TO REPORT             E19294
+     C*
+     C********** OCLCU     IFEQ *ZEROS                                                 E19294 CSD027
+     C********** CLCU      ANDEQ*ZEROS                                                 E19294 CSD027
+     C           OCLCU     IFEQ *BLANKS                                                       CSD027
+     C           CLCU      ANDEQ*BLANKS                                                       CSD027
+     C***********          WRITEHEAD1                               E19294E29170
+     C                     OPEN SE1005AU                            E19294E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITENONE                                      E19294
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C***********          WRITETRAIL                               E19294E29170
+     C                     CLOSESE1005P1                                  E19294
+     C                     GOTO EPR01                                     E19294
+     C                     END                                            E19294
+     C*                                                                   E19294
+     C* IF RECORD CONTAINS NO DETAILS TO REPORT                           E19294
+     C*                                                                   E19294
+     C           CECR      IFEQ *BLANKS                                   E19294
+     C                     SETON                         50               E19294
+     C                     GOTO EPR01                                     E19294
+     C                     END                                            E19294
+     C*                                                                   E19294
+     C*   CHECK FOR CHANGE IN MAIN KEY FIELDS AND/OR OVERFLOW
+     C*
+     C           CLEN      IFNE OCLEN
+     C           PLEVEL    OREQ 'S'                                       E35287
+     C           PLEVEL    OREQ ' '                                       E37908
+     C***********OCLCU     ANDNE*ZEROS                                    E35287
+     C***********PLEVEL    ANDEQ'B'                                       E33035
+     C***********PLEVEL    OREQ 'S'                                E33035 E35287
+     C           OPENP1    IFEQ 'Y'                                       E33035
+     C***********PLEVEL    ANDNE'S'                                E33035 E37908
+     C           PLEVEL    IFNE 'S'                                       E37908
+     C           PLEVEL    ANDNE' '                                       E37908
+     C                     WRITETRAIL
+     C                     CLOSESE1005P1
+     C                     MOVE *BLANKS   OPENP1                          E37908
+     C                     END                                            E33035
+     C                     END                                            E33035
+     C           PLEVEL    IFNE 'S'                                       E33035
+     C           PLEVEL    ANDNE' '                                       E37908
+     C           PLEVEL    OREQ 'S'                                       E33035
+     C           OPENP1    ANDNE'Y'                                       E33035
+     C           PLEVEL    OREQ ' '                                       E37908
+     C           OPENP1    ANDNE'Y'                                       E37908
+     C                     MOVE 'Y'       OPENP1  1                       E33035
+     C                     OPEN SE1005P1
+     C                     Z-ADD0         LCNT
+     C                     Z-ADD0         PAGE
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E33035
+     C                     END
+     C*
+     C* IF THERE HAS BEEN A CHANGE IN ANY KEY FIELD
+     C*
+     C           NEWKEY    IFNE OLDKEY
+     C           LCNT      ORGT 39
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     Z-ADD0         LCNT
+     C                     Z-ADD0         SLCNT
+     C                     END
+     C*
+     C* SET UP DETAIL LINE
+     C*
+     C                     ADD  1         SLCNT
+     C                     MOVE *BLANKS   DTEXNM
+     C           SLCNT     IFEQ 1
+     C                     MOVE CETW      WCETW
+     C                     MOVE CECR      DTEXNM
+     C                     ELSE
+     C           SLCNT     IFEQ 2
+     C                     MOVELCETW      DTEXNM
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADDCEVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTVLDT
+     C*
+     C           CETT      IFEQ 'TP'
+     C                     MOVEL'PUR '    DTPRSL
+     C                     ELSE
+     C                     MOVE 'SALE'    DTPRSL
+     C                     END
+     C*
+     C           CEII      IFEQ 'I'
+     C                     MOVEL'NO '     DTCOMP
+     C                     ELSE
+     C                     MOVE 'YES'     DTCOMP
+     C                     END
+     C*
+     C                     MOVE *BLANKS   DTCECV
+     C           CECV      IFNE 0
+     C           CECV      DIV  1000      WKAMT  110H
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTCECV
+     C                     END
+     C*
+     C                     MOVE *BLANKS   DTPREX
+     C           PEXP      IFNE 0
+     C           PEXP      DIV  1000      WKAMT     H
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPREX
+     C                     Z-ADD*ZEROS    PEXP
+     C                     END
+     C*
+     C                     MOVE *BLANKS   DTSLEX
+     C           SEXP      IFNE 0
+     C           SEXP      DIV  1000      WKAMT     H
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTSLEX
+     C                     Z-ADD*ZEROS    SEXP
+     C                     END
+     C*
+     C                     WRITEDETAIL1
+     C*
+     C                     ADD  1         LCNT
+     C*
+     C           EPR01     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ******************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C           *IN30     IFEQ '1'                                       E29170
+     C           *IN31     OREQ '1'                                       E29170
+     C                     MOVELCLEN      SENTY                           E29170
+     C                     ELSE                                           E29170
+     C                     MOVEL*BLANKS   SENTY                           E29170
+     C                     END                                            E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM           SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,114 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Remove redundant records from SPF files')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000081 - Remove redundant records from SPF files         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP003  *CREATE    Date 12Aug10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP003 - New utility to clear down SPF files                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000004')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Delete records from SFACAUPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFACAUPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.SFUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFRAAUPA where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFRAAUPA b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.MAUSR);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFUFAVPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFUFAVPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.UFUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFVAMUSPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFVAMUSPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.USUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFVBBRCPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFVBBRCPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.BBUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFVCOMPPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFVCOMPPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.CMUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+/* Delete records from SFVOBRCPD where the user ID is not on MUSERDD. */
+             CHGVAR     VAR(&STM_STR) VALUE('delete from SFVOBRCPD b +
+                          where not exists')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+             CHGVAR     VAR(&STM_STR) VALUE(' ')
+             CHGVAR     VAR(&STM_STR) VALUE('(select * from MUSERDD +
+                          a where a.USRP = b.OBUSRP);')
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')
+ 
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

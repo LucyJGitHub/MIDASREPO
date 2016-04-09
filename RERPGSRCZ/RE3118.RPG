@@ -1,0 +1,1327 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE  Retail History Update')                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3118 - RETAIL HISTORY UPDATE                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CLE025             Date 20Oct03               *
+      *                 TDA102             Date 30Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE008             Date 19Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 195058             Date 06Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+     F*                 172582             Date 06Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CCB003             Date 07FEB97               *
+     F*                 S01408             DATE 12SEP96               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  TDA102 - Invalid database error at 004 on file HISBL         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRE008 - Cash Management                                     *
+      *  195058  -  Record lock by 172582. Use READ without locking.  *
+     F*  172582  -  Ensure history balance is correct if a new        *
+     F*             REHISPD record is created, otherwise if the a/c   *
+     F*             is linked to a primary a/c the next day the       *
+     F*             initial link amount will be zero.                 *
+     F*  CCB003  -  COB Performance Enhancements - Task Split         *
+     F*             Set new Retail Activity indicator on REHPOSPP     *
+     F*  S01408  -  Addition of core hook RE3118IIP1                  *
+     F*          -  Addition of core hook RE3118CCP5                  *
+     F*          -  Addition of core hook RE3118CCP4                  *
+     F*          -  Addition of core hook RE3118CCP3                  *
+     F*          -  Addition of core hook RE3118CCP2                  *
+     F*          -  Addition of core hook RE3118CCP1                  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*                                                               *
+     F*****************************************************************
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FREDPOSL IF  E           K        DISK
+     F            MADJPFF                           KIGNORE
+     F            ICHGR1F                           KIGNORE
+     F            ICHGR2F                           KIGNORE
+     F            ICHGR3F                           KIGNORE
+     FREHISBL UF  E           K        DISK
+     F            REHISPPF                          KRENAMEREHISPBF
+     F                                              KINFDS REBDS
+     F                                              KINFSR REBSR
+     FREACR   UF  E           K        DISK
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     F                                              KINFDS RABDS
+     F                                              KINFSR RABSR
+     FREHISDL UF  E           K        DISK                      A
+     F                                              KINFDS REDDS
+     F                                              KINFSR REDSR
+     FREHPOSPPO   E           K        DISK
+     F                                              KINFDS REPDS
+     F                                              KINFSR REPSR
+     FRE3118P1O   E             90     PRINTER
+     FRE3118AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   41  -  POSTING RECORD                                       *
+     F*   50  -  END-OF-FILE INDICATOR                                *
+     F*   88  -  SHOW STATUS ON DB ERROR REPORT                       *
+     F*   89  -  COMPLETE REPORTS FOR DATABASE ERROR (EXCEPT TABTB10) *
+     F*   90  -  OVERFLOW INDICATOR ON RE3118P1                       *
+     F*   99  -  GENERAL ERROR AND CHAINING                           *
+     F*                                                               *
+     F*   U7  -  DATABASE ERROR                                       *
+     F*   U8  -  DATABASE ERROR                                       *
+     F*   LR  -  END OF PROGRAM                                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DBSR   - Database error handling                             *
+     F*  DETPR  - Detail processing                                   *
+     F*  FIRST  - First cycle                                         *
+     F*  MAIN   - Main processing                                     *
+     F*  POSIPR - Position records processing                         *
+     F*  POSTPR - Posting records processing                          *
+     F*  REBSR  - Rehisbl file exception/error handling               *
+     F*  REDSR  - Rehisdl file exception/error handling               *
+     F*  REPSR  - Rehpospp file exception/error handling              *
+     F*  RESET  - Initialize work fields to blank/zero                *
+     F*  TOTAC  - Total account processing                            *
+     F*  TOTAL  - End processing                                      *
+     F*  TRPR   - Trailer processing                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E                    CPY@    1   1 80
+     E/EJECT
+     IREACRDF
+     I              RECI                            RRECI
+     I              ACCY                            RCCY
+     I              ACOD                            RACOD
+     I              BRCA                            RBRCA
+     I*
+     IACCNTABF
+     I*
+     I** RENAME ACCNTABF FORMAT FIELDS - ACCNT FILE
+     I*
+     I              RECI                            ARECI
+     I              CNUM                            ACNUM
+     I              CCY                             ACCY
+     I              ACOD                            AACOD
+     I              ACSQ                            AACSQ
+     I              BRCA                            ABRCA
+     I              ATYP                            AATYP
+     I              STYP                            ASTYP
+     I              MFFQ                            AMFFQ
+     I              ACST                            AACST
+     I              DACO                            ADACO
+     I              DACC                            ADACC
+     I              ANAM                            AANAM
+     I              LDBL                            ALDBL
+     I              CLBL                            ACLBL
+     I              STFQ                            ASTFQ
+     I              STDY                            ASTDY
+     I              LSTD                            ALSTD
+     I              NSTD                            ANSTD
+     I              LSTP                            ALSTP
+     I              CFSB                            ACFSB
+     I              LMVD                            ALMVD
+     I              EPLB                            AEPLB
+     I              EPCB                            AEPCB
+     I              YTDB                            AYTDB
+     I              GLBT                            AGLBT
+     I              ADREF1                          AAREF1
+     I              ORED                            AORED
+     I              DLIM                            ADLIM
+     I              LRCR                            ALRCR
+     I              RTCB                            ARTCB
+     I              RTLB                            ARTLB
+     I              DITM                            ADITM
+     I              CITM                            ACITM
+     I              ADREF2                          AAREF2
+     I              CDIR                            ACDIR
+     I              CCIR                            ACCIR
+     I              ACNO                            AACNO
+     I              RETB                            ARETB
+     I              ODSC                            AODSC
+     I              ODLN                            AODLN
+     I              ODED                            AODED
+     I              DIOD                            ADIOD
+     I              FACT                            AFACT
+     I              FCNO                            AFCNO
+     I              EFAC                            AEFAC
+     I              HELD                            AHELD
+     I              MINB                            AMINB
+     I              LACD                            ALACD
+     I              LISP                            ALISP
+     I              RRNM                            ARRNM
+     I              DRIB                            ADRIB
+     I              DRIS                            ADRIS
+     I              DRCD                            ADRCD
+     I              DRIC                            ADRIC
+     I              DRIF                            ADRIF
+     I              DRDY                            ADRDY
+     I              NDID                            ANDID
+     I              LDID                            ALDID
+     I              LDIA                            ALDIA
+     I              SDAP                            ASDAP
+     I              LPAR                            ALPAR
+     I              DIIE                            ADIIE
+     I              DAIC                            ADAIC
+     I              MADI                            AMADI
+     I              GADI                            AGADI
+     I              DDIS                            ADDIS
+     I              DDIA                            ADDIA
+     I              OLDR                            AOLDR
+     I              OLDB                            AOLDB
+     I              OLDS                            AOLDS
+     I              CRIB                            ACRIB
+     I              CRIS                            ACRIS
+     I              CRCD                            ACRCD
+     I              CRIC                            ACRIC
+     I              CRIF                            ACRIF
+     I              CRDY                            ACRDY
+     I              NCID                            ANCID
+     I              LCID                            ALCID
+     I              LCIA                            ALCIA
+     I              SCAP                            ASCAP
+     I              LPAP                            ALPAP
+     I              CIIE                            ACIIE
+     I              CAIC                            ACAIC
+     I              MACI                            AMACI
+     I              GACI                            AGACI
+     I              CDIS                            ACDIS
+     I              DCIA                            ADCIA
+     I              OLCR                            AOLCR
+     I              OLCB                            AOLCB
+     I              OLCS                            AOLCS
+     I              LCD                             ALCD
+     I              CHTP                            ACHTP
+     I              TNLU                            ATNLU
+     I              ENOC                            AENOC
+     I              EPNO                            AEPNO
+     I              ECFB                            AECFB
+     I              LTAB                            ALTAB
+     I              LTAC                            ALTAC
+     I              LTAS                            ALTAS
+     I*
+     IREHISPBF
+     I*
+     I** RENAME REHISPBF FORMAT FIELDS - REHISBL FILE
+     I*
+     I              RECI                            BRECI
+     I              BRCA                            BBRCA
+     I              CNUM                            BCNUM
+     I              CCY                             BCCY
+     I              ACOD                            BACOD
+     I              ACSQ                            BACSQ
+     I              HISD                            BHISD
+     I              HISB                            BHISB
+     I              MNBL                            BMNBL
+     I              CHGAR                           BCHGAR
+     I              TCHGAR                          BTHGAR
+     I              CHGAN                           BCHGAN
+     I              TCHGAN                          BTHGAN
+     I              DMVT                            BDMVT
+     I              DICT                            BDICT
+     I              DRCB                            BDRCB
+     I              DRIR                            BDRIR
+     I              DRCD                            BDRCD
+     I              DAID                            BDAID
+     I              MADI                            BMADI
+     I              TMADI                           BTMADI
+     I              PDID                            BPDID
+     I              DMINT                           BDMINT
+     I              CMVT                            BCMVT
+     I              CICT                            BCICT
+     I              CRCB                            BCRCB
+     I              CRIR                            BCRIR
+     I              CRCD                            BCRCD
+     I              CAID                            BCAID
+     I              MACI                            BMACI
+     I              TMACI                           BTMACI
+     I              PCID                            BPCID
+     I              CMINT                           BCMINT
+     I              DICI                            BDICI
+     I              CICI                            BCICI
+     I              DRCI                            BDRCI
+     I              CRCI                            BCRCI
+     I              VDTC                            BVDTC
+     I              ADTY                            BADTY
+     I              ALTI                            BALTI
+     I              MNBCP                           BMNBCP
+     I              LGID                            BLGID
+     I              VALL                            BVALL
+     I              LINK                            BLINK
+     I*
+     IREHISPPF
+     I*
+     I** RENAME REHISPPF FORMAT FIELDS - REHISDL FILE
+     I*
+     I              RECI                            DRECI
+     I              BRCA                            DBRCA
+     I              CNUM                            DCNUM
+     I              CCY                             DCCY
+     I              ACOD                            DACOD
+     I              ACSQ                            DACSQ
+     I              HISD                            DHISD
+     I              VALL                            DVALL
+     I              LINK                            DLINK
+      *                                                                   S01408
+     I/COPY WNCPYSRC,RE3118IIP1                                           S01408
+      *                                                                   S01408
+     I*
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE FOR RPG ERROR HANDLING
+     I*
+     IREBDS       DS
+     I                                     *STATUS  STSREB
+     IRABDS       DS
+     I                                     *STATUS  STSRAB
+     IREDDS       DS
+     I                                     *STATUS  STSRED
+     IREPDS       DS
+     I                                     *STATUS  STSREP
+     I*
+     I** KEYS DATA STRUCTURE : BKEY TO COMPARE IF NEW ACCOUNT
+     I**                       RKEY TO FILL DBKEY IF ERROR
+     I*
+     I            DS
+     I****************************************1  18 BKEY
+     I                                        1  24 BKEY                                      TDA102
+     I**********                              1  25 RKEY                                      CGL029
+     I                                        1  31 RKEY                                      CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I**********                             19  230RHISD                                     CGL029
+     I**********                             24  240DRCR                                      CGL029
+     I**********                             25  25 RSEQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I                                       25  290RHISD                                     CGL029
+     I                                       30  300DRCR                                      CGL029
+     I                                       31  31 RSEQ                                      CGL029
+     I*
+     I** PREVIOUS KEYS DATA STRUCTURE TO CHAIN TO REHISBL AND REHISDL
+     I*
+     I            DS
+     I**********                              1  18 WPBKEY                                    CGL029
+     I**********                              1  23 WPDKEY                                    CGL029
+     I**********                              4  18 WPAKEY                                    CGL029
+     I                                        1  24 WPBKEY                                    CGL029
+     I                                        1  29 WPDKEY                                    CGL029
+     I                                        4  24 WPAKEY                                    CGL029
+     I                                        1   3 WPBRCA
+     I**********                              4   90WPCNUM                                    CSD027
+     I                                        4   9 WPCNUM                                    CSD027
+     I                                       10  12 WPCCY
+     I**********                             13  160WPACOD                                    CGL029
+     I**********                             17  180WPACSQ                                    CGL029
+     I**********                             19  230HISD                                      CGL029
+     I                                       13  220WPACOD                                    CGL029
+     I                                       23  240WPACSQ                                    CGL029
+     I                                       25  290HISD                                      CGL029
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** Retail Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     I              BJDNWD                          DNWD
+     I              BJURPT                          TITL
+     I              BJRDNB                          RUND
+     I              BJMRDT                          RUNA
+     ISDGELR    E DSSDGELRPD
+     I              BKAPDT                          APDA
+     I              QQACCD                          QQACC1                                    CGL029
+     I*
+     I** General Ledger Details
+     I/COPY WNCPYSRC,REH00158
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNO
+     I                                       11  11 SUCP
+     I                                       12  12 DTFF
+     I                                       13  13 MBIN
+     I*
+     I/EJECT
+     C/EJECT
+     C*
+     C** KEY LISTS
+     C*
+     C** KEY FIELD TO CHAIN TO ACCNT FILE
+     C*
+     C           AAKEY     KLIST
+     C                     KFLD           WPCNUM
+     C                     KFLD           WPCCY
+     C                     KFLD           WPACOD
+     C                     KFLD           WPACSQ
+     C                     KFLD           WPBRCA
+     C*
+     C** KEY FIELD TO CHAIN TO REHISBL FILE
+     C*
+     C           BBKEY     KLIST
+     C                     KFLD           WPBRCA
+     C                     KFLD           WPCNUM
+     C                     KFLD           WPCCY
+     C                     KFLD           WPACOD
+     C                     KFLD           WPACSQ
+     C*
+     C** KEY FIELD TO CHAIN TO REHISDL FILE
+     C*
+     C           DDKEY     KLIST
+     C                     KFLD           WPBRCA
+     C                     KFLD           WPCNUM
+     C                     KFLD           WPCCY
+     C                     KFLD           WPACOD
+     C                     KFLD           WPACSQ
+     C                     KFLD           HISD
+     C*
+     C           REKEY     KLIST
+     C                     KFLD           WPCNUM
+     C                     KFLD           WPCCY
+     C                     KFLD           WPACOD
+     C                     KFLD           WPACSQ
+     C                     KFLD           WPBRCA
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C                     MOVE *BLANKS   KEY    12
+     C           *LIKE     DEFN KEY       ERRDAT
+     C           *LIKE     DEFN RECI      WDRSEQ
+     C           *LIKE     DEFN RECI      WCRSEQ
+     C           *LIKE     DEFN RECI      WDRRCI
+     C           *LIKE     DEFN RECI      WCRRCI
+     C           *LIKE     DEFN ACSQ      WDITYP
+     C           *LIKE     DEFN ACSQ      WCITYP
+     C           *LIKE     DEFN RUND      WPVALD
+     C           *LIKE     DEFN RUND      WVALD
+     C           *LIKE     DEFN RUND      WDRLCD
+     C           *LIKE     DEFN RUND      WCRLCD
+     C           *LIKE     DEFN RUND      CTLDAT
+     C           *LIKE     DEFN DRCR      ZERROR
+     C           *LIKE     DEFN HISB      WDRTOT
+     C           *LIKE     DEFN HISB      WCRTOT
+     C           *LIKE     DEFN PSTA      WMADI
+     C           *LIKE     DEFN PSTA      WMACI
+     C           *LIKE     DEFN PSTA      WCHGAR
+     C           *LIKE     DEFN PSTA      WCHGAN
+     C           *LIKE     DEFN PSTA      WDINRT- 2
+     C           *LIKE     DEFN PSTA      WCINRT- 2
+     C*
+     C/EJECT
+     C*===================================================================
+     C** P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     READ REDPOSL                  LR
+     C*
+     C           *INLR     DOWEQ'0'                        - B1
+     C                     EXSR MAIN
+     C                     MOVEA'000'     *IN,41
+     C                     READ REDPOSL                  LR
+     C                     END                             - E1
+     C*
+     C** TOTAL PROCESSING
+     C*
+     C                     EXSR TOTAL
+     C*
+     C*===================================================================
+     C** P R O G R A M     E N D
+     C*===================================================================
+     C/EJECT
+     C*
+     C** FIRST subroutine to execute first cycle.
+     C**     Called by       S T A R T
+     C**     Calls           DBSR,RESET
+     C*
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** PREPARE DBPGM, DBKEY AND ERRDAT VARIABLES
+     C*
+     C                     MOVE 'RE3118  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ZERROR'  ERRDAT
+     C                     MOVE ' =    '  ERRDAT
+     C*
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** OUTPUT REPORT HEADER
+     C*
+     C                     WRITEHEADP1
+     C*
+     C** OUTPUT AUDIT HEADER
+     C*
+     C                     WRITEHEADAU
+     C*
+     C/COPY WNCPYSRC,RE3118C001
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C/COPY WNCPYSRC,RE3118C002
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETLPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 003 *
+     C                     Z-ADD005       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3118CCP1                                           S01408
+      *                                                                   S01408
+     C*
+     C*   ACCESS MIDAS RUNDATE AND DATE FORMAT FROM DATA AREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** INITIALISE WORK FIELDS TO BLANK/ZERO
+     C*
+     C                     MOVE *BLANKS   WPBKEY
+     C                     MOVE *BLANK    WDRSEQ
+     C                     MOVE *BLANK    WCRSEQ
+     C                     MOVE *BLANKS   ORDATE
+     C                     MOVE *BLANKS   UPDATE
+     C                     Z-ADD*ZEROS    WPVALD
+     C                     Z-ADD*ZEROS    WVALD
+     C                     Z-ADD*ZEROS    WNOREP
+     C                     Z-ADD*ZEROS    WNORER
+     C                     Z-ADD*ZEROS    WNOREM
+     C                     Z-ADD*ZEROS    RNORET
+     C                     Z-ADD*ZEROS    WPPOS
+     C                     Z-ADD*ZEROS    WFPOS
+     C                     MOVE '0'       *IN90
+     C                     EXSR RESET
+     C*
+     C** INITIALISE CONTROL DATE
+     C*
+     C                     SUB  1         DNWD
+     C           DNWD      IFLE APDA                       - B1
+     C                     Z-ADDDNWD      CTLDAT
+     C                     ELSE                            - X1
+     C                     Z-ADDAPDA      CTLDAT
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** MAIN subroutine to execute main processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           DBSR,DETPR,TOTAC
+     C**
+     C           MAIN      BEGSR                           **MAIN BEGSR**
+     C*
+     C** POSTINGS TOTAL COUNTER
+     C*
+     C           RECI      IFEQ 'P'                        - B1
+     C                     ADD  1         WNOREP
+     C                     END                             - E1
+     C*
+     C** SAME ACCOUNT ?
+     C*
+     C           WPBKEY    IFEQ BKEY                       - B1
+     C*
+     C** DETAIL PROCESSING
+     C*
+     C                     EXSR DETPR
+     C*
+     C** NEW ACCOUNT
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** NO PROCESSING IF FUTURE VALUE
+     C*
+     C           VALD      IFLE CTLDAT                     - B2
+     C*
+     C** TOTAL ACCOUNT PROCESSING
+     C*
+     C                     EXSR TOTAC
+     C*
+     C** RESET PREVIOUS ACCOUNT WITH NEW ACCOUNT
+     C*
+     C                     MOVE BKEY      WPBKEY
+     C*
+     C** ACCESS TO RETAIL HISTORY FILE - HEADER RECORDS
+     C*
+     C                     Z-ADD22        DBASE
+     C           BBKEY     CHAINREHISBL              99
+     C*
+     C** ERROR IN REHISBL
+     C*
+     C           *IN99     IFEQ '1'                        - B3
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'HISBL'   DBFILE           **DB ERROR 04**
+     C                     MOVELWPBKEY    DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E3
+     C*
+     C** INITIALIZE WORK FIELDS FOR NEW ACCOUNT
+     C*
+     C                     Z-ADDVALD      WPVALD
+     C                     Z-ADDVALD      WVALD
+     C                     MOVE 'Y'       BADTY
+     C           VALD      IFLT BHISD                      - B3
+     C                     Z-ADDBHISD     BVDTC
+     C                     ELSE                            - X3
+     C           VALD      IFGT CTLDAT                     - B4
+     C                     Z-ADDCTLDAT    BVDTC
+     C                     ELSE                            - X4
+     C           VALD      IFLT BVDTC                      - B5
+     C                     Z-ADDVALD      BVDTC
+     C                     END                             - E5
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C** DETAIL PROCESSING
+     C*
+     C                     EXSR DETPR
+     C*
+     C                     ELSE                            - X2
+     C*
+     C                     ADD  1         WFPOS
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **MAIN ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAL subroutine to execute end processing.
+     C**
+     C**     Called by       S T A R T
+     C**     Calls           TOTAC,TRPR
+     C**
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+     C*
+     C** TOTAL ACCOUNT PROCESSING
+     C*
+     C                     EXSR TOTAC
+     C*
+     C** OUTPUT AUDIT DETAIL
+     C*
+     C                     WRITETOTALS
+     C*
+     C** OUTPUT 'NO DETAILS'
+     C*
+     C           WNOREP    IFEQ 0                          - B1
+     C                     WRITENONE
+     C                     END                             - E1
+     C*
+     C** OUTPUT REPORT END
+     C*
+     C                     WRITEENDP1
+     C*
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** TOTAC subroutine for total account processing
+     C**
+     C**     Called by       MAIN,TOTAL
+     C**     Calls           POSIPR
+     C**
+     C           TOTAC     BEGSR                           **TOTAC BEGSR**
+     C*
+     C** AT LEAST ONE RECORD HAS BEEN READ FROM REHISBL
+     C*
+     C           BRECI     IFEQ 'B'                        - B1
+     C*
+     C** CHECK IF FUTURE VALUE
+     C*
+     C           WPVALD    IFLE CTLDAT                     - B2
+     C*
+     C** POSITION RECORDS PROCESSING
+     C*
+     C                     EXSR POSIPR
+     C*
+     C                     END                             - E2
+     C*
+     C** UPDATE HEADER RECORD (REHISBL)
+     C*
+     C                     Z-ADD5         DBASE
+     C                     UPDATREHISPBF
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **TOTAC ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DETPR subroutine to execute detail processing.
+     C**
+     C**     Called by       MAIN
+     C**     Calls           MADJPR,POSIPR,POSTPR,RATEPR
+     C**
+     C           DETPR     BEGSR                           **DETPR BEGSR**
+     C*
+     C* SET UP INDICATOR 98 BASED ON THE DATE FORMAT
+     C*
+     C           DTFF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C** COMPARE NEW VALUE DATE WITH HEADER HISTORY DATE
+     C*
+     C           VALD      IFGE BHISD                      - B1
+     C*
+     C                     Z-ADDVALD      WVALD
+     C*
+     C                     ELSE                            - X1
+     C*
+     C                     Z-ADDBHISD     WVALD
+     C*
+     C** CALCULATING ALPHA DATE FROM DAY NUMBER
+     C*
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B2
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE 'ZDATE2'  DBFILE           **DB ERROR 06**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C                     Z-ADDWVALD     ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B2
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVE 'ZDATE2'  DBFILE           **DB ERROR 07**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C** COMPARE PREVIOUS VALUE DATE WITH HEADER HISTORY DATE
+     C*
+     C           WPVALD    IFLT BHISD                      - B2
+     C                     Z-ADDBHISD     WPVALD
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** COMPARE PREVIOUS VALUE DATE WITH NEW VALUE DATE
+     C*
+     C           WPVALD    IFNE WVALD                      - B1
+     C*
+     C** CHECK IF FUTURE VALUE
+     C*
+     C           WPVALD    IFLE CTLDAT                     - B2
+     C*
+     C** POSITION RECORDS PROCESSING
+     C*
+     C                     EXSR POSIPR
+     C*
+     C                     Z-ADDWVALD     WPVALD
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** CHECK IF FUTURE VALUE
+     C*
+     C           WVALD     IFLE CTLDAT                     - B1
+     C*
+     C** POSTING, MANUAL ADJUSTMENT OR RATE CHANGE PROCESSING
+     C*
+     C           RECI      CASEQ'P'       POSTPR
+     C                     END
+     C*
+     C                     END                             - E1
+     C*
+     C** OUTPUT REPORT DETAIL IF THE BACK-VALUED POSTING HAS BEEN UPDATED
+     C*
+     C           VALD      IFLT BHISD                      - B1
+     C*
+     C                     Z-ADDVALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B2
+     C                     Z-ADD8         DBASE            ***************
+     C                     MOVE 'ZDATE2'  DBFILE           **DB ERROR 08**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C                     MOVELZADATE    ORDATE
+     C*
+     C                     Z-ADDBHISD     ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B2
+     C                     Z-ADD9         DBASE            ***************
+     C                     MOVE 'ZDATE2'  DBFILE           **DB ERROR 09**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E2
+     C*
+     C                     MOVELZADATE    UPDATE
+     C*
+     C                     EXSR OVERPR
+     C                     WRITEDETP1
+     C*
+     C                     MOVEA'000'     *IN,41
+     C                     MOVE *BLANKS   ORDATE
+     C                     MOVE *BLANKS   UPDATE
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **DETPR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** POSIPR subroutine for position record processing
+     C**
+     C**     Called by       TOTAC,DETPR
+     C**     Calls           RESET
+     C**
+     C           POSIPR    BEGSR                           **POSIPR BEGSR**
+     C*
+     C** ACCESS TO RETAIL HISTORY FILE POSITION RECORD ONLY IF NOT HEADER
+     C*
+     C           HISD      IFNE BHISD                      - B1
+     C*
+     C                     Z-ADD21        DBASE
+     C           DDKEY     CHAINREHISDL              99
+     C*
+     C** NOT FOUND, WRITE NEW RECORD
+     C** FOUND, UPDATE EXISTING RECORD
+     C*
+     C           *IN99     IFEQ '1'                        - B2
+      *                                                                   172582
+      ** Retrieve history balance from previous record                    172582
+     C           DDKEY     SETLLREHISDL                                   172582
+     C********** BBKEY     REDPEREHISDL                  99                            172582 195058
+     C           BBKEY     REDPEREHISDL             N    99                                   195058
+     C           *IN99     IFEQ '1'                        - B3           172582
+     C                     Z-ADD13        DBASE            ***************172582
+     C                     MOVE 'HISDL'   DBFILE           **DB ERROR 13**172582
+     C                     MOVELWPBKEY    DBKEY            ***************172582
+     C                     MOVEA'1'       *IN,89                          172582
+     C                     EXSR DBSR                                      172582
+     C                     END                                            172582
+     C*
+     C** ACCESS ACCNT TO GET INTEREST CALCULATION BASIS
+     C*
+     C           AAKEY     CHAINACCNT                51
+     C*
+     C           *IN51     IFEQ '1'                        - B3
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVE 'ACCNT'   DBFILE           **DB ERROR 10**
+     C                     MOVELWPAKEY    DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E3
+     C*                                                    *WRITE RECORD*
+     C                     MOVE 'D'       DRECI
+     C                     MOVE WPBRCA    DBRCA
+     C**********           Z-ADDWPCNUM    DCNUM                                               CSD027
+     C                     MOVE WPCNUM    DCNUM                                               CSD027
+     C                     MOVE WPCCY     DCCY
+     C                     Z-ADDWPACOD    DACOD
+     C                     Z-ADDWPACSQ    DACSQ
+     C                     Z-ADDHISD      DHISD
+     C**********           Z-ADD*ZEROS    HISB                            172582
+     C                     Z-ADD*ZEROS    MNBL
+     C                     Z-ADDWCHGAR    CHGAR
+     C                     Z-ADD*ZEROS    TCHGAR
+     C                     Z-ADDWCHGAN    CHGAN
+     C                     Z-ADD*ZEROS    TCHGAN
+     C                     Z-ADDWDRTOT    DMVT
+     C                     ADD  WDRTOT    HISB
+     C                     Z-ADDWDITYP    DICT
+     C                     Z-ADDADRIC     DRCB
+     C                     Z-ADDWDINRT    DRIR
+     C                     Z-ADDWDRLCD    DRCD
+     C                     Z-ADD*ZEROS    DAID
+     C                     Z-ADDWMADI     MADI
+     C                     Z-ADD*ZEROS    TMADI
+     C                     Z-ADD*ZEROS    PDID
+     C                     Z-ADD*ZEROS    DMINT
+     C                     Z-ADDWCRTOT    CMVT
+     C                     SUB  WCRTOT    HISB
+     C                     Z-ADDWCITYP    CICT
+     C                     Z-ADDACRIC     CRCB
+     C                     Z-ADDWCINRT    CRIR
+     C                     Z-ADDWCRLCD    CRCD
+     C                     Z-ADD*ZEROS    CAID
+     C                     Z-ADDWMACI     MACI
+     C                     Z-ADD*ZEROS    TMACI
+     C                     Z-ADD*ZEROS    PCID
+     C                     Z-ADD*ZEROS    CMINT
+     C                     MOVE *BLANK    DICI
+     C                     MOVE *BLANK    CICI
+     C           WDRRCI    IFEQ '1'
+     C                     MOVE 'Y'       DRCI
+     C                     ELSE
+     C                     MOVE *BLANK    DRCI
+     C                     END
+     C           WCRRCI    IFEQ '1'
+     C                     MOVE 'Y'       CRCI
+     C                     ELSE
+     C                     MOVE *BLANK    CRCI
+     C                     END
+     C                     Z-ADD0         VDTC
+     C                     MOVE *BLANK    ADTY
+     C                     MOVE *BLANK    ALTI
+     C                     Z-ADD*ZEROS    MNBCP
+     C*
+     C                     Z-ADD10        DBASE
+     C                     WRITEREHISPPF
+     C*
+     C                     ELSE                            - X2
+     C/COPY WNCPYSRC,REH00159
+     C*                                                    *UPDATE RECORD*
+     C** INCREMENT SUM OF MOVEMENT IN REHISDL FIELDS
+     C*
+     C                     ADD  WDRTOT    DMVT
+     C                     ADD  WDRTOT    HISB
+     C                     ADD  WCRTOT    CMVT
+     C                     SUB  WCRTOT    HISB
+     C                     ADD  WMADI     MADI
+     C                     ADD  WMACI     MACI
+     C                     ADD  WCHGAN    CHGAN
+     C                     ADD  WCHGAR    CHGAR
+     C*
+     C** OVERRIDE DEBIT RATE FIELDS
+     C*
+     C           WDRRCI    IFEQ '1'                        - B3
+     C                     MOVE 'Y'       DRCI
+     C                     Z-ADDWDINRT    DRIR
+     C                     Z-ADDWDITYP    DICT
+     C                     Z-ADDWDRLCD    DRCD
+     C                     END                             - E3
+     C*
+     C** OVERRIDE CREBIT RATE FIELDS
+     C*
+     C           WCRRCI    IFEQ '1'                        - B3
+     C                     MOVE 'Y'       CRCI
+     C                     Z-ADDWCINRT    CRIR
+     C                     Z-ADDWCITYP    CICT
+     C                     Z-ADDWCRLCD    CRCD
+     C                     END                             - E3
+     C*
+     C                     Z-ADD11        DBASE
+     C                     UPDATREHISPPF
+     C*
+     C/COPY WNCPYSRC,REH00160
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** UPDATE HEADER RECORD FIELDS (REHISBL)
+     C*
+     C                     ADD  WDRTOT    BHISB
+     C                     SUB  WCRTOT    BHISB
+     C*
+     C** CHECK ON INTEREST CALCULATION TYPE
+     C*
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3118CCP2                                           S01408
+      *                                                                   S01408
+     C           BDICT     IFGT 2                          - B2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3118CCP4                                           S01408
+      *                                                                   S01408
+     C           BCICT     ORGT 2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3118CCP5                                           S01408
+      *                                                                   S01408
+     C           BHISB     IFGT BMNBL                      - B3
+     C                     Z-ADDBHISB     BMNBL
+     C                     END                             - E3
+     C                     END                             - E2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3118CCP3                                           S01408
+      *                                                                   S01408
+     C*
+     C                     ADD  WCHGAR    BCHGAR
+     C                     ADD  WCHGAR    BTHGAR
+     C                     ADD  WCHGAN    BCHGAN
+     C                     ADD  WCHGAN    BTHGAN
+     C*
+     C                     ADD  WDRTOT    BDMVT
+     C                     ADD  WCRTOT    BCMVT
+     C*
+     C                     ADD  WMADI     BMADI
+     C                     ADD  WMADI     BTMADI
+     C                     ADD  WMACI     BMACI
+     C                     ADD  WMACI     BTMACI
+     C*
+     C           WDRRCI    IFEQ '1'                        - B2
+     C                     MOVE 'Y'       BDRCI
+     C                     Z-ADDWDINRT    BDRIR
+     C                     Z-ADDWDITYP    BDICT
+     C                     Z-ADDWDRLCD    BDRCD
+     C                     END                             - E2
+     C*
+     C           WCRRCI    IFEQ '1'                        - B2
+     C                     MOVE 'Y'       BCRCI
+     C                     Z-ADDWCINRT    BCRIR
+     C                     Z-ADDWCITYP    BCICT
+     C                     Z-ADDWCRLCD    BCRCD
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C/COPY WNCPYSRC,REH00161
+     C*
+     C** UPDATE REACR HISB TO AVOID DISREPENCIES
+     C*
+     C           REKEY     CHAINREACR                99
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD99        DBASE            ***************
+     C                     MOVE 'REACR'   DBFILE           **DB ERROR 10**
+     C                     MOVELWPAKEY    DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E3
+     C                     ADD  WDRTOT    HISB
+     C                     SUB  WCRTOT    HISB
+     C                     UPDATREACRDF
+     C*                                                                   CRE008
+     C** UPDATE ALL POSITIONS AFTER THIS MOVEMENT DATE                    CRE008
+     C** WITH THE MOVEMENT AMOUNT(S)                                      CRE008
+     C*                                                                   CRE008
+     C           DDKEY     SETGTREHISDL                                   CRE008
+     C           BBKEY     READEREHISDL                  99               CRE008
+     C           *IN99     DOWEQ'0'                                       CRE008
+     C                     ADD  WDRTOT    HISB                            CRE008
+     C                     SUB  WCRTOT    HISB                            CRE008
+     C                     UPDATREHISPPF                                  CRE008
+     C           BBKEY     READEREHISDL                  99               CRE008
+     C                     ENDDO                                          CRE008
+     C/COPY WNCPYSRC,REH00162
+     C*
+     C** RESET WORK FIELDS TO BLANK/ZERO
+     C*
+     C                     EXSR RESET
+     C*
+     C                     ENDSR                           **POSIPR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** POSTPR subroutine for posting records processing
+     C**
+     C**     Called by       DETPR
+     C**     Calls           -
+     C**
+     C           POSTPR    BEGSR                           **POSTPR BEGSR**
+     C*
+     C                     MOVE '1'       *IN41
+     C*
+     C** CHECK ON DEBIT/CREDIT INDICATOR
+     C*
+     C           DRCR      IFEQ 0                          - B1
+     C                     ADD  PSTA      WDRTOT
+     C                     ELSE                            - X1
+     C                     ADD  PSTA      WCRTOT
+     C                     END                             - E1
+     C*
+     C** WRITE NEW RECORD IN REHPOSPP FILE
+     C*
+     C                     Z-ADDWVALD     HISD
+     C*
+     C** CHARGES PROCESSING
+     C*
+     C           REBI      IFEQ 'Y'                        - B1
+     C                     ADD  CHGA      WCHGAR
+     C                     ELSE                            - X1
+     C                     ADD  CHGA      WCHGAN
+     C                     END                             - E1
+     C                     MOVE 'N'       REACT                           CCB003
+     C*
+     C** WRITE NEW RECORD IN REHPOSPP FILE
+     C*
+     C/COPY WNCPYSRC,REH00163
+     C                     Z-ADD12        DBASE
+     C                     WRITEREHPOSPF
+     C/COPY WNCPYSRC,REH00164
+     C*
+     C                     ADD  1         WPPOS
+     C*
+     C                     ENDSR                           **POSTPR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RESET subroutine for initialize work fields to blank/zero
+     C**
+     C**     Called by       FIRST,POSIPR
+     C**     Calls           -
+     C**
+     C           RESET     BEGSR                           **RESET BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    WDRTOT
+     C                     Z-ADD*ZEROS    WCRTOT
+     C                     Z-ADD*ZEROS    WMADI
+     C                     Z-ADD*ZEROS    WMACI
+     C                     Z-ADD*ZEROS    WCHGAR
+     C                     Z-ADD*ZEROS    WCHGAN
+     C                     Z-ADD*ZEROS    WDINRT
+     C                     Z-ADD*ZEROS    WCINRT
+     C                     Z-ADD*ZEROS    WDRLCD
+     C                     Z-ADD*ZEROS    WCRLCD
+     C                     Z-ADD*ZEROS    WDITYP
+     C                     Z-ADD*ZEROS    WCITYP
+     C                     MOVE *BLANK    WDRRCI
+     C                     MOVE *BLANK    WCRRCI
+     C*
+     C                     ENDSR                           **RESET ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DBSR subroutine for database error handling
+     C**
+     C**     Called by       FIRST,MAIN
+     C**     Calls           -
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C           *IN89     IFEQ '1'                        - B1
+     C                     WRITEERRP1
+     C                     END                             - E1
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** REBSR subroutine for REHISBL file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           REBSR     BEGSR                           **REBSR BEGSR**
+     C*
+     C                     MOVE 'HISBL'   DBFILE           ***************
+     C                     MOVELWPBKEY    DBKEY            **STATUS ERR **
+     C                     MOVELSTSREB    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RABSR subroutine for REACR   file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           RABSR     BEGSR                           **REBSR BEGSR**
+     C*
+     C                     MOVE 'REACR'   DBFILE           ***************
+     C                     MOVELWPBKEY    DBKEY            **STATUS ERR **
+     C                     MOVELSTSRAB    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REBSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** REDSR subroutine for REHISDL file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           REDSR     BEGSR                           **REDSR BEGSR**
+     C*
+     C                     MOVE 'HISDL'   DBFILE           ***************
+     C                     MOVELWPDKEY    DBKEY            **STATUS ERR **
+     C                     MOVELSTSRED    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REDSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** REPSR subroutine for REHPOSPP file exception/error handling
+     C**
+     C**     Called by       Input specifications
+     C**     Calls           DBSR
+     C**
+     C           REPSR     BEGSR                           **REPSR BEGSR**
+     C*
+     C                     MOVE 'POSPL'   DBFILE           ***************
+     C                     MOVE *BLANKS   DBKEY            **STATUS ERR **
+     C                     MOVELSTSREP    DBSTAT           ***************
+     C                     MOVEA'11'      *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REPSR ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** OVERPR subroutine for processing overflow on RE3661P1
+     C**
+     C**     Called by
+     C**
+     C**     Calls           -
+     C**
+     C           OVERPR    BEGSR                           **OVERPR BEGSR*
+     C*
+     C**  CHECK IF OVERFLOW ON RE3661P1
+     C*
+     C           *IN90     IFEQ '1'                        - B1
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN90
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **OVERPR ENDSR*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

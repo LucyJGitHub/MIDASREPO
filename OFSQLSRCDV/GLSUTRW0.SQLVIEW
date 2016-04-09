@@ -1,0 +1,45 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       GLSUTRW0 - Midas OF Suggested Transfers View                          */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2014                     */
+/*                                                                             */
+/*       Last Amend No. CGL176             Date 28Jul15                        */
+/*       Prev Amend No. MD033486           Date 27Feb15                        */
+/*                      CGL158   *Create   Date 20Aug14                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGL176 - Optimisation of Nostro Balances by Company (Recompile)       */
+/*       MD033486 - Add new Beneficiary Account field (Recompile)              */
+/*       CGL158 - Nostro Sweeping Rules Maintenance                            */
+/*                                                                             */
+/*******************************************************************************/
+                                                                                :
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT A.*, A.BPCCY CONCAT A.BPBNOC AS BPBASE,                                :
+  CASE WHEN C.ACNO = 0 THEN C.BRCA CONCAT C.CNUM CONCAT C.CCY CONCAT            :
+  DIGITS(C.ACOD) CONCAT DIGITS(C.ACSQ) ELSE DIGITS(C.ACNO)                      :
+  END AS BPBNAC, B.ANAM AS BPBNAM, CASE WHEN A.BPONOC =                         :
+  '' THEN '' ELSE A.BPCCY CONCAT A.BPONOC END   AS BPOTHR,                      :
+  CASE WHEN E.ACNO = 0 THEN E.BRCA CONCAT E.CNUM CONCAT E.CCY CONCAT            :
+  DIGITS(E.ACOD) CONCAT DIGITS(E.ACSQ) ELSE DIGITS(E.ACNO)                      :
+  END AS BPONAC, D.ANAM AS BPONAM FROM  GLSUTRTD A LEFT OUTER                   :
+  JOIN GZSDNOSTW0  B ON  A.BPBNOC= B. A7NONB  AND A.BPCCY = B.A7CYCD            :
+  AND A.BPBNBR = B.A7BRCD  LEFT OUTER JOIN GZACCNTAB C ON B.A7BRCD =            :
+  C.BRCA AND B. A7CUST =  C.CNUM AND B. A7CYCD = C.CCY and                      :
+  B.A7ACCD = DIGITS(C.ACOD) AND B.A7ACSN =  DIGITS(C.ACSQ) LEFT                 :
+  OUTER JOIN GZSDNOSTW0  D ON  A.BPONOC= D. A7NONB                              :
+  AND A.BPCCY = D.A7CYCD AND A.BPONBR = D.A7BRCD                                :
+  LEFT OUTER JOIN GZACCNTAB E ON D.A7BRCD = E.BRCA AND D. A7CUST =              :
+  E.CNUM AND D. A7CYCD = E.CCY and D.A7ACCD = DIGITS(E.ACOD)                    :
+  AND D.A7ACSN =  DIGITS(E.ACSQ)                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas OF Suggested Transfers View                 ';                     :
+                                                                                :

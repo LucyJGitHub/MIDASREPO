@@ -1,0 +1,718 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Market Centre')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Windows                                              *
+      *                                                               *
+      *  SE0011 - SE Market Centre - Maintenance                      *
+      *                                                               *
+      *  Function:  This program allows to maintain new fields        *
+      *             on SE Market Centre.                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001  *Create    Date 25Apr05               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * FUNCTION OF INDICATORS                                        *
+      *                                                               *
+      *       03      F3 PRESSED EXIT PROGRAM                         *
+      *       05      F5 PRESSED REDISPLAY THE SCREEN                 *
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN                *
+      *       20      PROTECT FIELDS IN ENQUIRE MODE                  *
+      *       30      REDISPLAY THE SCREEN                            *
+      *       35      ENABLE F5                                       *
+      *       40      ENABLE F10                                      *
+      *       50-52   AT LEAST ONE FIELD IN ERROR                     *
+      *       60      FEATURE INSTALLED - ULX008                      *
+      *       70      GEMERAL ERROR INDICATOR                         *
+      *       84      CHAIN TO SEMKX1PD FAILED - UPDIDX               *
+      *       85      CHAIN TO SEMKX1L0 FAILED - RTVIDX               *
+      *       86      CHAIN TO SDSECSL1                               *
+      *       99      WORKING INDICATOR                               *
+      *                                                               *
+      *****************************************************************
+     FSEMKX1PDUF  E           K        DISK                      A    UC
+      *
+      ** EXTENSION FILE (UNDER COMMITMENT CONTROL)
+      *
+     F            SEMKCDD6                          KRENAMEUPDIDX
+     F                                              KCOMIT
+     FSEMKX1L0IF  E           K        DISK
+      *
+      ** EXTENSION FILE FOR READ
+      *
+     F            SEMKCDD6                          KRENAMERTVIDX
+     FSE0011DFCF  E                    WORKSTN
+      *
+      ** DISPLAY FILE
+      *
+     F            SE0011F0                          KRENAMESCREEN
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZALIGNZ1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IA@CPY       DS
+      *
+      ** Copyright array
+      *
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA
+      *
+      ** Avoid problem with field SPARE from the calling progrram
+      *
+     I              SPARE                           W24
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** First DS for access programs, long data structure
+      *
+     ISDSECS    E DSSDSECSPD
+      *
+      ** External data structures for Securities Clients Details
+      *
+     INWRCD     E DSSEMKX1PD
+      *
+      ** Current/previous master file fields
+      *
+     ISVRCD       DS                             10
+      *
+      ** Stored master file fields
+      *
+     ISPARE       DS                            256
+     I                                      246 246 PRF12
+      *
+      ** DATA MEMBER FOR MAIN PROGRAM
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      ** Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           UFRTNC  7
+     C                     PARM           UFACTN  1
+     C                     PARM           #1MRKT  2
+     C                     PARM           W0RTN   7
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR #FINIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ*ON
+      *
+      ** If error write messages
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      *
+      ** Main format of the display file
+      *
+     C                     EXFMTSCREEN
+     C                     EXSR #FCLRM
+      *
+     C           *IN03     CASEQ*ON       #FEXIT
+     C           *IN05     CASEQ*ON       #FRSET
+     C           *IN10     CASEQ*ON       #FDELT
+     C           *IN12     CASEQ*ON       #FPREV
+     C                     CAS            #FVALD
+     C                     ENDCS
+     C                     ENDDO
+      *
+      ** Exit from program
+      *
+     C                     EXSR #FENDP
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           #FINIT    BEGSR
+      *
+      ** Only do first time through
+      *
+     C           WFIRST    IFEQ *BLANKS
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** OPEN MSG ERROR QUEUE WITH PGM
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses
+      *
+     C                     MOVE 'N'       ULX008  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'ULX008'  @SARD   6
+     C                     PARM           DSFDY
+      *
+      ** If feature is installed
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       ULX008
+     C                     OPEN SEMKX1PD
+      *
+      ** Otherwise, terminate the program normally
+      *
+     C                     ELSE
+      *
+      ** If the F12 has been actionned in the previous window,
+      ** perform an automatic command F12
+      *
+     C           PRF12     IFEQ 'R'
+     C                     MOVE *BLANKS   PRF12
+     C                     EXSR #FPREV
+     C                     ELSE
+     C                     EXSR #FENDP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   PRF12
+     C                     MOVE *BLANKS   UFRTNC
+      *
+      ** Protect input fields if enquiry and enable command keys
+      *
+     C                     SELEC
+     C           UFACTN    WHEQ 'E'
+     C                     MOVE *ON       *IN20
+     C           UFACTN    WHEQ 'I'
+     C           UFACTN    OREQ 'A'
+     C                     MOVE *ON       *IN35
+     C                     ENDSL
+      *
+      ** Set up KLIST and move in key from DATA
+      *
+     C           *LIKE     DEFN X8MRKT    K@MRKT
+     C           K@KEY     KLIST
+     C                     KFLD           K@MRKT
+     C                     MOVE #1MRKT    K@MRKT
+      *
+     C                     MOVE 'N'       WFIRST  1
+     C                     ENDIF
+      *
+      ** Access branch code extended information
+      *
+     C           K@KEY     CHAINRTVIDX               85
+      *
+      ** Load screen fields
+      *
+     C           *IN85     IFEQ *OFF
+      *
+     C                     MOVE X8MCIN    #8MCIN
+     C                     MOVE X8LMCN    #8LMCN
+     C                     MOVE X8ERMC    #8ERMC
+      *
+      ** Save record before modification
+      *
+     C                     MOVE NWRCD     SVRCD
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       #8MCIN
+     C                     MOVE *BLANKS   #8LMCN
+     C                     MOVE 'N'       #8ERMC
+      *
+      ** Save record before modification
+      *
+     C                     MOVE *BLANKS   SVRCD
+      *
+     C                     ENDIF
+      *
+     C           UFACTN    IFEQ 'D'
+     C                     MOVE *ON       *IN20
+     C                     EXSR #FDELT
+     C                     ENDIF
+      *
+      ** Only in Interfactif mode
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           #FVALD    BEGSR
+      *
+      ** IF THE ACTION CODE IS ENQUIRE THEN SIMPLY EXIT FROM PROGRAM
+      *
+     C           UFACTN    IFEQ 'E'
+     C                     EXSR #FENDP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN30
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+      *
+      ** #8MCIN validation : Luxembourg Market Centre
+      *
+     C                     EXSR #FMCIN
+      *
+      ** #8LMCN validation : Lu Market Centre Customer Number
+      *
+     C                     EXSR #FLMCN
+      *
+      ** #8ERCM validation : "EEE" Regulated Market Centre
+      *
+     C                     EXSR #FERMC
+      *
+      ** If no Errors update the extension file, update file
+      *
+     C           *IN30     IFEQ *ON
+     C                     EXSR #FUPDA
+     C                     ENDIF
+      *
+     C           VAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** #FMCIN - validation of 'Luxembourg Market Centre'
+      *****************************************************************
+      *
+     C           #FMCIN    BEGSR
+      *
+     C           #8MCIN    IFNE 'Y'
+     C           #8MCIN    ANDNE'N'
+     C           #8MCIN    ANDNE*BLANK
+     C                     MOVEL'ERL0801' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN50
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** #FLMCN - validation of 'LU Market Centre Customer Number'
+      *****************************************************************
+      *
+     C           #FLMCN    BEGSR
+      *
+     C           #8MCIN    IFEQ 'N'
+     C           #8LMCN    IFNE *BLANKS
+      *
+     C                     MOVEL'ERL0808' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN51
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Field mandatory if #8MCIN is equal to Y
+      *
+     C                     ELSE
+     C           #8LMCN    IFEQ *BLANKS
+      *
+     C                     MOVEL'ERL0802' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN51
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Acces AOSECS to valid Customer Number
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM #8LMCN    WCUST   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'ERL0804' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN51
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Did the user scan ??
+      *
+     C           '?'       SCAN #8LMCN    WRESUL  20     86
+     C           *IN86     IFEQ *ON
+     C                     MOVE *OFF      *IN30
+     C                     ENDIF
+      *
+     C                     MOVE BFCUST    #8LMCN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** #FERMC - validation of '"EEE" Regulated Market Centre'
+      *****************************************************************
+      *
+     C           #FERMC    BEGSR
+      *
+      ** Field mandatory
+      *
+     C           #8ERMC    IFEQ *BLANKS
+      *
+     C                     MOVEL'ERL0805' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN52
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+      *
+     C           #8ERMC    IFNE 'Y'
+     C           #8ERMC    ANDNE'N'
+     C                     MOVEL'ERL0806' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN52
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           #FUPDA    BEGSR
+      *
+      ** Insert Mode.
+      *
+     C           *IN85     IFEQ *ON
+      *
+     C           K@KEY     CHAINUPDIDX               8491
+      *
+      ** If record locked, display screen again, with information msg.
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'XXX9000' ZAMSID
+     C                     MOVEL'DRSMM'   ZAMSGF    P
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     GOTO E#FUPD
+     C                     ENDIF
+      *
+      ** If the record exists, the details has been modified by
+      ** another user.
+      *
+     C           *IN84     IFEQ *OFF
+      *
+     C                     MOVEL'ERL0807' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C           #8MCIN    IFEQ *BLANK
+     C                     MOVE 'N'       #8MCIN
+     C                     ELSE
+     C                     MOVE #8MCIN    X8MCIN
+     C                     ENDIF
+     C                     MOVE #1MRKT    X8MRKT
+     C                     MOVE #8LMCN    X8LMCN
+     C                     MOVE #8ERMC    X8ERMC
+      *
+     C                     WRITEUPDIDX
+      *
+     C                     ENDIF
+      *
+      ** Amend Mode.
+      *
+     C                     ELSE
+      *
+     C           K@KEY     CHAINUPDIDX               8491
+      *
+      ** If record locked, display screen again, with information msg.
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'XXX9000' ZAMSID
+     C                     MOVEL'DRSMM'   ZAMSGF    P
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     GOTO E#FUPD
+     C                     ENDIF
+      *
+      ** If the record does not exist, or has been modified by
+      ** another user.
+      *
+     C           *IN84     IFEQ *ON
+     C           *IN84     OREQ *OFF
+     C           NWRCD     ANDNESVRCD
+      *
+     C                     MOVEL'ERL0807' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C           #8MCIN    IFEQ *BLANK
+     C                     MOVE 'N'       #8MCIN
+     C                     ELSE
+     C                     MOVE #8MCIN    X8MCIN
+     C                     ENDIF
+     C                     MOVE #8LMCN    X8LMCN
+     C                     MOVE #8ERMC    X8ERMC
+      *
+     C                     UPDATUPDIDX
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           E#FUPD    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * DELETE RECORD
+      *****************************************************************
+     C           #FDELT    BEGSR
+      *
+      ** Delete record or logically delete record
+      *
+     C           K@KEY     CHAINUPDIDX               8491
+      *
+      **  If record locked, display screen again, with information msg.
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'XXX9000' ZAMSID
+     C                     MOVEL'DRSMM'   ZAMSGF    P
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+     C                     GOTO E#FDEL
+     C                     ENDIF
+      *
+      ** If the record does not exist, or has been modified by
+      ** another user.
+      *
+     C           *IN84     IFEQ *ON
+     C           *IN84     OREQ *OFF
+     C           NWRCD     ANDNESVRCD
+      *
+     C                     MOVEL'ERL0807' ZAMSID
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      ** Delet record
+      *
+     C                     EXSR #FENDP
+     C                     ENDIF
+      *
+     C           E#FDEL    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           #FCLRM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           #FENDP    BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *****************************************************************
+     C           #FPREV    BEGSR
+      *
+     C                     MOVE 'USR0790' UFRTNC
+     C                     EXSR #FENDP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           #FEXIT    BEGSR
+      *
+     C                     MOVE 'Y2U9999' UFRTNC
+     C                     EXSR #FENDP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           #FRSET    BEGSR
+      *
+      ** Clear the program message queue and call SR/INIT to retrieve
+      ** the last committed data from the extension file.
+      *
+     C                     EXSR #FCLRM
+     C                     WRITE#MSGCTL
+     C                     EXSR #FINIT
+      *
+      ** Reset all error indicators
+      *
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZALIGNZ2
+      /COPY ZSRSRC,ZEDITZ2
+** CPY@
+(c) Misys International Banking Systems Ltd. 2005

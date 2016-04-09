@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Start triggering')                           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000149 - Start triggering                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *REWRITE  Date 04Jun14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CPK021  *CREATE    Date 19Jan05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK021 - New Bridge option.                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LAYER &RTNFLAG)
+ 
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Use the CPPs rather than the actual commands to avoid compilation issues. */
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CALL       PGM(GPMNTTRIG) PARM('*ADDTRIG' '*ALL' +
+                             '*LIVETRIG')
+             ENDDO
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CALL       PGM(SCMNTTRIG) PARM('*ADDTRIG' '*ALL' +
+                             '*LIVETRIG')
+             ENDDO
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

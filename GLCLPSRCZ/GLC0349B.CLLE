@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Cleared Bal Upd For Acct Trans Posting')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0349B - Midas GL Cleared Balance Update for              */
+/*                  Account Transfer Posting                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD031836           Date 13Jan15              */
+/*       Prev Amend No. MD020021           Date 15Apr13              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD031836 - Rate changes not applied to accounts             */
+/*       MD020021 - Credit Account Transfer transaction was deducted */
+/*                  avail balance after COB on Customer Accnt Bal Scr*/
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM)
+ 
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+/* Global monitor message                                          */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC0349B - Midas GL Cleared Balance +
+                          Update for Account Transfer Posting')
+ 
+/* Start commitment control                                        */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+             OVRDBF     FILE(SACPO) TOFILE(GLACPOL0)
+ 
+             ADDPFM     FILE(GLCBUSPD) MBR(GLCBUSPD)
+             MONMSG     MSGID(CPF7306)
+ 
+             CALL       PGM(GL0349002B)
+ 
+             CALL       PGM(GLC0349A) PARM(&POSTNUM 'GLCBUSPD')
+ 
+/* Copy ACPO1 and GLACPOL0 to GLACPML0                             */
+ 
+/**********  CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +        */                 /*MD020021*/
+/**********               MBROPT(*ADD) RCDFMT(APOSTPDF)              */                 /*MD020021*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)               */                 /*MD020021*/
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTPDF)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +
+                          MBROPT(*ADD) RCDFMT(APOSTPDF)                                 /*MD020021*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD020021*/
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTRAF)                             /*MD031836*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD031836*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GLC0349B ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

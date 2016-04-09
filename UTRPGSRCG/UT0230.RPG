@@ -1,0 +1,248 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Convert OUTQ to DB - Called by UTC0230.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Utilities module                                     *
+      *                                                               *
+      *  UT0230 - Convert output queue                                *
+      *                                                               *
+      *  Function:  This program Converts entries on an out put queue *
+      *             to records on a database file.                    *
+      *                                                               *
+      *  Called By: UTC0230 - CPP for CVTOUTQ                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BG19128            Date 06Jun08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK022             Date 28Jul05               *
+      *                 CPK018  *MOVED     Date 25Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAA002 *CREATE     Date 31OCT95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BG19128 - Spool file number can be up to 6 long.             *
+      *  CPK022 - Should not use zone /COPYs.                         *
+      *  CPK018 - MidasPlus packaging.  Moved to global layer.        *
+      *  CAA002 - Development of utility to save, edit and restore    *
+      *           spooled files.                                      *
+      *                                                               *
+      *****************************************************************
+     FUTCVOQPDO   E                    DISK
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+     I* DS for the entry length
+     IDSLEN       DS
+     I                                    B   1   40ENTLN
+     I* DS for the start position
+     IDSSTR       DS
+     I                                    B   1   40STRPS
+     I* DS for Hex 00s
+     IDSHEX0      DS
+     I                                    B   1   40HEX00
+     I*
+     I** DS for the entry length of SPLFA DS
+     IDSSPLN      DS
+     I                                    B   1   40SPAB
+     I*
+     I** OSSPLF0100 cannot be used because same names exist in the
+     I** OPSPLA0100 data structure
+     IDSSPLF      DS
+     I                                       11  20 OUTQ
+     I                                       21  30 OUTQL
+     I                                       51  66 INTJID
+     I                                       67  82 INTFID
+     IERRSTS     SDS
+     I                                       40  46 MSGID
+     I*COPY*UTCPYSRC,OPSPLA0100*                                                              CPK022
+     I/COPY GPCPYSRCG,OPSPLA0100                                                              CPK022
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           *ENTRY    PLIST                           Parm list
+     C                     PARM           COUNT            Entries cvtd
+     C                     PARM           SPSYS            System name
+     C                     PARM           DSSTR            Start pos
+     C                     PARM           NBRENT  90       Nbr of entrs
+     C                     PARM           DSLEN            Entry length
+     C                     PARM           FULSPC 20        Full usr spc
+     C                     PARM           RTNCDE  8        Return code
+     C*
+     C** Initialization
+     C                     Z-ADD0         HEX00            Hex 00s
+     C                     Z-ADD750       SPAB             Len of SPLA
+     C*
+     C** Do for the number of entries received
+     C                     DO   NBRENT                     Do nbr of
+     C                     CALL 'QUSRTVUS'                 Call extract
+     C                     PARM           FULSPC           User space
+     C                     PARM           DSSTR            Start pos
+     C                     PARM           DSLEN            Entry length
+     C                     PARM           DSSPLF           Data struct
+     C*
+     C** For first time, extract OUTQ name and date/time converted
+     C           HDGSW     IFEQ *BLANK                     Heading sw
+     C                     TIME           FULTIM 120       Full time
+     C                     MOVELFULTIM    SPCVTT           Convert time
+     C                     MOVE FULTIM    SPCVTD           Convert date
+     C                     MOVE OUTQ      SPOUTQ           OUTQ name
+     C                     MOVE OUTQL     SPOQLB           OUTQ lib
+     C                     MOVE 'X'       HDGSW   1        Set hdg sw
+     C                     END                             Heading sw
+     C*
+     C** Call QUSRSPLA to get detail attributes of spooled file
+     C**  Inlz fields to be used for the retrieve
+     C                     MOVEL'*INT'    JOB    26        Job name
+     C                     MOVEL'*INT'    SPLFNM 10
+     C                     MOVE DSHEX0    SPLFNB  4
+     C                     CALL 'QUSRSPLA'             20
+     C                     PARM           RCVVAR           SPLFA DS
+     C                     PARM           DSSPLN  4        DS len
+     C                     PARM 'SPLA0100'FORMAT  8        DS rcv
+     C                     PARM           JOB              Job name
+     C                     PARM           INTJID           Job ID
+     C                     PARM           INTFID           SPLF ID
+     C                     PARM           SPLFNM           SPLF name
+     C                     PARM           SPLFNB           SPLF number
+     C*
+     C** Indicator 20 can occur if the spooled file no longer exists
+     C   20                DO                              If error
+     C*
+     C** Check status DS for specific message
+     C** Spooled file not in the system
+     C           MSGID     IFEQ 'CPF3344'                  No SPLF
+     C                     GOTO ENDSPF                     Branch
+     C                     ENDIF                           No SPLF
+     C*
+     C** Job not in the system
+     C           MSGID     IFEQ 'CPF3342'                  No job
+     C                     GOTO ENDSPF                     Branch
+     C                     ENDIF                           No job
+     C*
+     C** If some other message ID exists, set H5 and return
+     C                     SETON                     H5    Error indic
+     C                     RETRN                           Return
+     C                     ENDDO                           If error
+     C*
+     C** Move fields
+     C                     MOVE JOBNAM    SPJNAM           Job name
+     C                     MOVE USRNAM    SPUSER           User name
+     C                     MOVE JOBNUM    SPJNBR           Job number
+     C                     MOVE USRDTA    SPUDTA           User data
+     C                     MOVE FRMTYP    SPFTYP           Form type
+     C                     MOVE FILNAM    SPFILE           Spl file nam
+     C**********           Z-ADDFILNUM    DEC4    40       Spl file nbr                      BG19128
+     C**********           MOVE DEC4      SPFNBR           Spl file nbr                      BG19128
+     C                     Z-ADDFILNUM    DEC6    60       Spl file nbr                      BG19128
+     C                     MOVE DEC6      SPFNBR           Spl file nbr                      BG19128
+     C                     Z-ADDTOTCPY    SPCPY            Copies
+     C                     MOVE CPYLFT    SPCPYL           Copies left
+     C                     MOVE OUTPRI    SPPTY            Pritority
+     C                     MOVELFILAVL    SPSCHD           Schedule
+     C                     MOVELHLDF      SPHOLD           Hold
+     C                     MOVELFLDRCD    SPFOLD           Fold
+     C                     MOVELSAVF      SPSAVF           Save file
+     C                     MOVE DATFOP    SPDAT            Date opened
+     C                     MOVELDATFOP    SPCEN            Cent opened
+     C                     MOVE TIMFOP    SPTIM            Time opened
+     C                     MOVE ACCCOD    SPACGC           Acctg code
+     C                     MOVE PRTTXT    SPPRTX           Print text
+     C                     MOVE DEVFNA    SPDEV            Device
+     C                     MOVE DEVFLB    SPDEVL           Device lib
+     C                     MOVE PGMOPF    SPPGM            Pgm that opn
+     C                     MOVE PGMOPL    SPPGML             Pgm lib
+     C                     Z-ADDPAGLEN    SPPAGL           Page length
+     C                     Z-ADDPAGWID    SPPAGW           Page width
+     C                     Z-ADDTOTPAG    SPNPAG           Nbr of pages
+     C                     Z-ADDPAGWRT    SPWRTP           Page being w
+     C                     Z-ADDSTRPAG    SPSTRP           Start page
+     C                     Z-ADDENDPAG    SPENDP           End page
+     C                     Z-ADDLASPAG    SPLSTP           Last page
+     C                     Z-ADDRESPRT    SPRESP           Restart page
+     C                     Z-ADDLPI       DEC9    90       LPI
+     C                     MOVE DEC9      SPLPI            LPI
+     C                     Z-ADDCPI       DEC9             CPI
+     C                     MOVE DEC9      SPCPI            CPI
+     C                     Z-ADDNUMSEP    SPNSEP           Nbr of seps
+     C                     Z-ADDOVRLIN    SPOFLN           Overflow lin
+     C                     MOVE PRTFON    SPFONT           Print font
+     C                     Z-ADDPAGROT    SPPGRT           Page rotate
+     C                     MOVE PRTBOT    SPBOTH           Prt both sid
+     C                     Z-ADDJUSTIF    SPJUST           Justificatn
+     C                     MOVE ALGFRM    SPALGN           Alignment
+     C                     MOVE PRTQUA    SPPQTY           Prt quality
+     C                     MOVE PRTFID    SPPFID           Prt fidelity
+     C                     Z-ADDTOTRCD    SPNREC           Nbr of rcds
+     C                     Z-ADDRCDLEN    SPRLEN           Rcd length
+     C                     Z-ADDMAXRCD    SPMAXR           Max records
+     C                     Z-ADDSRCDRW    SPSRCD           Source drawr
+     C                     MOVE DEVCLS    SPDEVT           Device type
+     C                     MOVE PRTTYP    SPPRTT           Printer type
+     C                     MOVE DOCNAM    SPDOC            Doc name
+     C                     MOVE FLDNAM    SPFLDR           Folder name
+     C                     MOVE CODPAG    SPCDEP           Code page
+     C                     MOVE GRAPHI    SPGRST           Graphic set
+     C                     MOVE CTLCHR    SPCTLC           Control char
+     C                     MOVE FLDRCD    SPDUPX           Duplex
+     C*
+     C** Special handling cases
+     C** Status in DS contains values like *READY. Change to 3 char
+     C           STATUS    IFEQ '*READY  '                 Rdy
+     C                     MOVE 'RDY'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*OPEN   '                 Rdy
+     C                     MOVE 'OPN'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*CLOSED '                 Rdy
+     C                     MOVE 'CLO'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*HELD   '                 Rdy
+     C                     MOVE 'HLD'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*SAVED  '                 Rdy
+     C                     MOVE 'SAV'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*WRITING'                 Rdy
+     C                     MOVE 'WTR'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*PENDING'                 Rdy
+     C                     MOVE 'PNS'     SPSTS            Move sts
+     C                     END                             Rdy
+     C           STATUS    IFEQ '*PRINTER'                 Rdy
+     C                     MOVE 'PRT'     SPSTS            Move sts
+     C                     END                             Rdy
+     C*
+     C** Write output record
+     C                     WRITEUTCVOQD0                   Write rcd
+     C                     ADD  1         COUNT   50       Increment
+     C*
+     C** Bump for next start position
+     C           ENDSPF    TAG                             End of splf
+     C                     ADD  ENTLN     STRPS            Bump
+     C                     END                             Do nbr of
+     C*
+     C** At end of program, check count to set return code
+     C           COUNT     IFEQ 0                          Count of 0
+     C                     MOVE 'NONE    'RTNCDE           None cvtd
+     C                     ELSE                            Else
+     C                     MOVE 'GOOD    'RTNCDE           Good return
+     C                     END                             Count of 0
+     C                     SETON                     LR    Seton LR
+     C                     RETRN                           Return
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

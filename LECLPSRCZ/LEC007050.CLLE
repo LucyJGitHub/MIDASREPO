@@ -1,0 +1,223 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE PDCL Process - Update Trailers')             */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC007050 - PDCL Process - Update Trailers                */
+/*                  This function restores files                   */
+/*                  from savf LEC07001DP                           */
+/*                  LETLXDK ,LETLXZX, CONFSDK, CONFSZX, INTSTHN,   */
+/*                  INTSTHQ, INTSTHP, INTSTZX, CUTX1HP, CUTX1HN,   */
+/*                  CUTX1HQ, CUTX1ZX, MATLNMT, MATLNZX to QTEMP    */
+/*                  It copies records from the restored version    */
+/*                  in add mode and call LE07050 to update the     */
+/*                  Trailer                                        */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1091577          Date 26Feb13            */
+/*       Prev Amend No. AR580011           Date 01Aug12            */
+/*                      263800             Date 01Aug12            */
+/*                      CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1091577 - LEC007050 PDCL Update Trailers                */
+/*       AR580011 - Correct file name on STRJRNPF command          */
+/*                  (Child:AR580012)                               */
+/*       263800 - Add MATLNMT & MATLNZX to the files to be restored*/
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&CONAM &COSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
+                           VALUE('PDCL PROCESS - UPDATE TRAILERS')
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                           VALUE('*VERIFY')
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CONAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&PRE)  TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNRCV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVDP) TYPE(*CHAR) LEN(10) +
+                           VALUE('LEC07001DP')                                            /*263800*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/** Check if CCB009 is ON */
+ 
+             CHGVAR     VAR(&SARD)  VALUE('CCB009')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
+ 
+             IF         COND(&RTCD = '       ') +
+                           THEN(CHGVAR VAR(&CCB009) VALUE('Y'))
+ 
+/** If CCB009 is OFF, then set &JRNAM = ICJRN */
+ 
+             CHGVAR     VAR(&RTCD)  VALUE('       ')
+             IF         COND(&CCB009 *EQ 'Y') THEN(DO)
+               CHGVAR     VAR(&JRNAM) VALUE('ICJRN     ')
+             ENDDO
+ 
+/** If CCB009 is ON, then create JRN and receiver */
+ 
+             IF         COND(&CCB009 *NE 'Y') THEN(DO)
+ 
+               CHGVAR     VAR(&JRNAM) VALUE('LEC07050J ')
+               CHGVAR     VAR(&JRNRCV) VALUE('LEC07050R ')
+ 
+               CHKOBJ     OBJ(&JRNRCV) OBJTYPE(*JRNRCV)
+               MONMSG     MSGID(CPF9801) EXEC(DO)
+                 CRTJRNRCV  JRNRCV(&JLIB/&JRNRCV)
+               ENDDO
+ 
+               CHKOBJ     OBJ(&JRNAM) OBJTYPE(*JRN)
+               MONMSG     MSGID(CPF9801) EXEC(DO)
+                 CRTJRN     JRN(&JLIB/&JRNAM) JRNRCV(&JLIB/&JRNRCV)
+               ENDDO
+/**********  ENDDO                                            */                       /*AR1091577*/
+ 
+/** Start journal of files */
+ 
+             STRJRNPF   FILE(LETLXDK LETLXZX) JRN(&JRNAM) +
+                           IMAGES(*BOTH)
+             MONMSG     MSGID(CPF7030)
+             STRJRNPF   FILE(CONFSDK CONFSZX) JRN(&JRNAM) +
+                           IMAGES(*BOTH)
+             MONMSG     MSGID(CPF7030)
+/**********  STRJRNPF   FILE(CUTX1HN CUTX1XP CUTX1HQ CUTX1ZX) +
+                           JRN(&JRNAM) IMAGES(*BOTH) */                                 /*AR580011*/
+             STRJRNPF   FILE(CUTX1HN CUTX1HP CUTX1HQ CUTX1ZX) +
+                           JRN(&JRNAM) IMAGES(*BOTH)                                    /*AR580011*/
+             MONMSG     MSGID(CPF7030)
+             STRJRNPF   FILE(INTSTHN INTSTHP INTSTHQ INTSTZX) +
+                           JRN(&JRNAM) IMAGES(*BOTH)
+             MONMSG     MSGID(CPF7030)
+             STRJRNPF   FILE(MATLNMT MATLNZX) JRN(&JRNAM) +
+                           IMAGES(*BOTH)                                                  /*263800*/
+             MONMSG     MSGID(CPF7030)                                                    /*263800*/
+ 
+             ENDDO                                                                     /*AR1091577*/
+                                                                                       /*AR1091577*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CONAM &COSEQ &STAT)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&JLIB) VALUE(&PRE *TCAT 'JLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+/**********  RSTOBJ     OBJ(LETLXDK LETLXZX CONFSDK CONFSZX +
+                           INTSTHN INTSTHQ INTSTHP +
+                           INTSTZX CUTX1HN CUTX1HP +
+                           CUTX1HQ CUTX1ZX MKEYDP MKEYZZ) +
+                           SAVLIB(&DPLIB) DEV(*SAVF) SAVF(&SAVDP) +
+                           RSTLIB(QTEMP) */                                               /*263800*/
+ 
+             RSTOBJ     OBJ(LETLXDK LETLXZX CONFSDK CONFSZX +
+                           INTSTHN INTSTHQ INTSTHP +
+                           INTSTZX CUTX1HN CUTX1HP +
+                           CUTX1HQ CUTX1ZX MKEYDP MKEYZZ MATLNMT +
+                           MATLNZX) SAVLIB(&DPLIB) DEV(*SAVF) +
+                           SAVF(&SAVDP) RSTLIB(QTEMP)                                     /*263800*/
+ 
+             CPYF       FROMFILE(QTEMP/LETLXDK) TOFILE(LETLXDK) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/CONFSDK) TOFILE(CONFSDK) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/INTSTHN) TOFILE(INTSTHN) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/INTSTHP) TOFILE(INTSTHP) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/INTSTHQ) TOFILE(INTSTHQ) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/CUTX1HQ) TOFILE(CUTX1HQ) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/CUTX1HP) TOFILE(CUTX1HP) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/CUTX1HN) TOFILE(CUTX1HN) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/MKEYDP) TOFILE(MKEYDP) +
+                           MBROPT(*ADD)
+             MONMSG     MSGID(CPF2817 CPF2869)
+             CPYF       FROMFILE(QTEMP/MATLNMT) TOFILE(MATLNMT) +
+                           MBROPT(*ADD)                                                   /*263800*/
+             MONMSG     MSGID(CPF2817 CPF2869)                                            /*263800*/
+ 
+             OVRDBF     FILE(CUTX1ZX) TOFILE(QTEMP/CUTX1ZX)
+             OVRDBF     FILE(LETLXZX) TOFILE(QTEMP/LETLXZX)
+             OVRDBF     FILE(CONFSZX) TOFILE(QTEMP/CONFSZX)
+             OVRDBF     FILE(INTSTZX) TOFILE(QTEMP/INTSTZX)
+             OVRDBF     FILE(MKEYZZ ) TOFILE(QTEMP/MKEYZZ )
+             OVRDBF     FILE(MATLNZX) TOFILE(QTEMP/MATLNZX)                               /*263800*/
+ 
+             CALL       PGM(LE007050)
+ 
+             DLTOVR     FILE(*ALL)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               ROLLBACK
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CONAM &COSEQ &STAT)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Progra+
+                           m  LEC07050 Eended abnormally - see job +
+                           log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             IF         COND(&JRNAM *EQ 'LEC07050J') THEN(DO)
+               CHKOBJ     OBJ(&JRNAM) OBJTYPE(*JRN)
+               MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(RECEIVER))
+               ENDJRNPF   FILE(*ALL) JRN(&JRNAM)
+               MONMSG     MSGID(CPF9801)
+               DLTJRN     JRN(&JRNAM)
+               MONMSG     MSGID(CPF2105)
+RECEIVER:
+               CHKOBJ     OBJ(&JRNRCV) OBJTYPE(*JRNRCV)
+               MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ENDPGM))
+               DLTJRNRCV  JRNRCV(&JRNRCV)
+               MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

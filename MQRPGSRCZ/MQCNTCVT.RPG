@@ -1,0 +1,173 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Convert Midas day no into CCYYMMDD')
+      *****************************************************************
+     F*                                                               *
+     F*    Midas - Midas/Q Module                                     *
+     F*                                                               *
+     F*    MQCNTCVT  -  Routine to convert Midas Day Numbers to       *
+     F*                 CCYYMMDD date format.                         *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     Last Amend No.: CMQ001            Date: 03NOV97           *
+     F*     Prev Amend No.: 081532            Date: 13OCT97           *
+     F*                     101418            Date: 01AUG96           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*     CMQ001 - MidasQ rationalisation.                          *
+     F*     081532 - Error in subroutine CNTCVT cannot format dates   *
+     F*              after 1999.                                      *
+     F*     101418 - CORRECT THE CONVERSION FOR 21ST CENTURY DATES    *
+     F*                                                               *
+     F*****************************************************************
+     ** @Z1 - Years in Days  -  Cumulative in Four Year Span
+     E                    @Z1     4   4  5 0A
+     ** @Z2 - Months in Days  -  Cumulative Through Year
+     E                    @Z2    13  13  5 0A
+     ** U$A1 & U$A2 - General breakdown/substring work arrayS
+     E                    U$A1      100  1
+     E                    U$A2       50  1
+     E*****************************************************************
+      *
+      ** INPUTS  - Dayno                - DTXXIN
+      ** OUTPUTS - Date CCYYMMDD Format - DTXOUT
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           DTXXIN  50
+     C                     PARM           DTXOUT  80
+      *
+      * Clear output field.
+     C                     Z-ADD0         DTXOUT
+      *
+      ** Clear work field.
+     C                     MOVEA*BLANKS   U$A1
+     C                     MOVEL*BLANKS   ZCENT   2
+     C                     MOVEL*BLANKS   ZYEAR   2
+     C                     Z-ADD0         ZYEARN  30
+     C                     MOVEL*BLANKS   ZMTH    2
+     C                     Z-ADD0         ZMTHN   20
+     C                     MOVEL*BLANKS   ZDAY    2
+     C                     Z-ADD0         ZDAYN   20
+     C                     MOVEL*BLANKS   ZDATEA  8
+     C                     Z-ADD0         ZDATEN  80
+      *
+      ** Set the day already established flag.
+     C                     MOVEL'N'       DAYFLG  1
+      *
+      ** Ensure day number is not zero or negative.
+     C           DTXXIN    IFGT 0
+      *
+      ** Determine the year.
+      **   (a) Calculate the number of 4 year spans since 31/12/1971.
+     C           DTXXIN    DIV  1461      ZLYR    30
+     C                     MVR            DTXXIN  50
+      *
+      **   (b) Calculate the number of remaining years.
+     C                     Z-ADD1         P1      30
+     C           DTXXIN    LOKUP@Z1,P1               90  90
+     C                     SUB  1         P1             91
+      *
+     C           P1        IFGT *ZERO
+     C           DTXXIN    SUB  @Z1,P1    DTXXIN
+     C                     END
+      *
+      **   (c) Calculate the actual year.
+     C           ZLYR      MULT 4         ZYEARN
+     C                     ADD  72        ZYEARN
+     C                     ADD  P1        ZYEARN
+      *
+      ** Adjust for 31/12 in year preceeding leap year.
+     C           *IN91     IFEQ '1'
+     C           DTXXIN    ANDEQ*ZERO
+     C                     SUB  1         ZYEARN
+     C                     END
+      *
+     C                     MOVE ZYEARN    ZYEAR
+     C                     MOVEAZYEAR     U$A1,3
+      *
+      **   (d) Check for 20th. or 21st. century.
+     C***********ZYEARN    IFLT 72                                        081532
+     C           ZYEARN    IFGE 100                                       081532
+     C                     MOVEL'20'      ZCENT
+     C                     ELSE
+     C                     MOVEL'19'      ZCENT
+     C                     END
+     C                     MOVEAZCENT     U$A1,1
+      *
+      **   (e) If DTXXIN is zero, month/day is 12/31.
+     C           DTXXIN    IFEQ *ZERO
+     C                     MOVEL'12'      ZMTH
+     C                     MOVEL'31'      ZDAY
+     C                     MOVEAZMTH      U$A1,5
+     C                     MOVEAZDAY      U$A1,7
+     C                     MOVEL'Y'       DAYFLG
+     C                     END
+      *
+      ** Determine the month.
+     C           DAYFLG    IFNE 'Y'
+      **   (f) Adjust for Februry 29th.
+     C           *IN91     IFEQ '1'
+     C           DTXXIN    IFEQ 60
+     C                     MOVEL'02'      ZMTH
+     C                     MOVEL'29'      ZDAY
+     C                     MOVEAZMTH      U$A1,5
+     C                     MOVEAZDAY      U$A1,7
+     C                     MOVEL'Y'       DAYFLG
+     C                     END
+      *
+     C           DAYFLG    IFNE 'Y'
+     C           DTXXIN    IFGT 60
+     C                     SUB  1         DTXXIN
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      **   (g) Calculate the month and the day.
+     C           DAYFLG    IFNE 'Y'
+     C                     Z-ADD2         ZMTHN
+     C           DTXXIN    LOKUP@Z2,ZMTHN            90  90
+     C                     SUB  1         ZMTHN
+     C                     MOVELZMTHN     ZMTH
+     C                     MOVEAZMTH      U$A1,5
+     C           DTXXIN    SUB  @Z2,ZMTHN ZDAYN
+     C                     MOVELZDAYN     ZDAY
+     C                     MOVEAZDAY      U$A1,7
+     C                     END
+      *
+     C                     END
+     C                     MOVEAU$A1,1    ZDATEA
+      * Load output field.
+     C                     MOVE ZDAY      ZDAYN
+     C                     MOVE ZMTH      ZMTHN
+     C                     MOVE ZYEAR     ZYEARN
+     C                     MOVELZDATEA    ZDATEN
+     C                     Z-ADDZDATEN    DTXOUT
+     C*                                                                   101418
+     C* CHANGE DATES BEFORE 1972 TO 21ST CENTURY                          101418
+     C*                                                                   101418
+     C           DTXOUT    IFLT 19720101                                  101418
+     C                     ADD  1000000   DTXOUT                          101418
+     C                     ENDIF                                          101418
+     C*                                                                   101418
+     C                     END
+     C*                                                               *
+     C                     SETON                     LR
+     C*                                                               *
+     C*****************************************************************
+**   @Z1 - Years In Days  -  Cumulative in Four Year Span
+00366007310109601461
+**   @Z2 - Months in Days  -  Cumulative Through Year
+00000000310005900090001200015100181002120024300273003040033400365

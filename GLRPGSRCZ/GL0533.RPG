@@ -1,0 +1,543 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Future Value Dated JE Save on Posting Day')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0533 - Future Value Dated Journal Entry Save on            *
+      *           Posting Date                                        *
+      *                                                               *
+      *  Function: For all records from MANPOPD with value date in    *
+      *            the future, it:                                    *
+      *         1. Finds appropriate transitory a/c no.               *
+      *         2. Copies future value dated journal entry postings   *
+      *            from MANPOPD to new file GLVALPPD.                 *
+      *         3. Modifies the forward valued journal entry postings *
+      *            on MANPOPD to post to a transitory account with    *
+      *            posting date = run date.                           *
+      *                                                               *
+      *  Called By: GLC26 - Batch transaction file split              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG25260           Date 31Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247494             Date 05Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 223196             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG7281            Date 22May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196464             Date 11Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL010 *CREATE     Date 08Nov99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG25260 - Movements of retail account are not reflected     *
+      *  247494 - Initialise Old Account Code field to output correct *
+      *           data in GLVALPPD.                                   *
+      *  223196 - Ensure that postings already booked on transitory   *
+      *           accounts are not output to GLVALPPD.                *
+      *           Applied fix 204680.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7281- Due to file GLVALPPD no longer the same as MANPOPD, *
+      *           need to set up field for A/C Code and Transaitory   *
+      *           A/C code before output.                             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  196464 - Output the correct account section in MANPOPD       *
+      *  CGL010 - Future Value Dated Journal Entries for Non-Retail   *
+      *           Accounts.                                           *
+      *                                                               *
+      *****************************************************************
+     F*MANPOL1*UF**E***       K        DISK         KINFSR *PSSR                              223196
+     FMANPOL9 UF  E           K        DISK         KINFSR *PSSR                              223196
+     F                                              KCOMIT
+      ** Postings sorted by value date
+      *
+     FGLVALPPDO   E                    DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ** Future postings
+      *
+     F/COPY WNCPYSRC,GL0533F001
+     FGL0533AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ** Error log
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FUNCTION OF INDICATORS                                       *
+      *  ----------------------                                       *
+      *  10 -  EOF on MANPOL1                                         *
+      *  11 -  Error on write to GLVALPPD                             *
+      *  12 -  Error on update to MANPOL1                             *
+      *  U7 -  Database Error                                         *
+      *  U8 -  Database Error                                         *
+      *---------------------------------------------------------------*
+      *  INDEX OF SUBROUTINES                                         *
+      *  --------------------                                         *
+      *  SRINIT - Initialisation Processing                           *
+      *  SRMAIN - Main Processing                                     *
+      *  SRFIND - Find Appropriate Transitory A/C No.                 *
+      *  SRGENR - Generate GLVALPPD record                            *
+      *  SRUPDT - Update MANPOL1 record                               *
+      *  SRENDP - Termimation Processing                              *
+      *  *PSSR  - Error Handling Subroutine                           *
+      *  DBERR  - Database Error Handling                             *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for Branch Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** External data structures for General Ledger Details
+      *
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** External data structures for Account Code Details
+      *
+     IMANPO     E DSMANPOPD
+      **   Buffer for MANPOPD
+      *
+     I              ZZ019                           ZZZ19
+     IGLVAL     E DSGLVALPPD
+      **   Buffer for GLVALPPD
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN - Top level of program.                                 *
+      *                                                               *
+      *  CALLS:                                                       *
+      *   SRINIT - Initial processing.                                *
+      *   SRMAIN - Main processing.                                   *
+      *   SRENDP - Termination processing.                            *
+      *                                                               *
+      *****************************************************************
+      *
+      **   Initial processing.
+      *
+     C                     EXSR SRINIT
+      *
+      **   Main processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      **   Termination processing.
+      *
+     C                     EXSR SRENDP
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise Processing                               *
+      *                                                               *
+      *  CALLED BY Main Processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Copyright statement
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+     C           *LIKE     DEFN DBFILE    #DBFIL
+     C           *LIKE     DEFN DBKEY     #DBKEY
+     C           *LIKE     DEFN DBASE     #DBASE
+     C           *LIKE     DEFN DBPGM     #DBPGM
+     C                     MOVELPGM       #DBPGM
+     C/COPY WNCPYSRC,GL0533C001
+      *
+      **  Call Access Program for Bank Details - Title, Run Date and
+      **  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'#DBFIL
+     C                     Z-ADD001       #DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Call Access Program for General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'#DBFIL
+     C                     Z-ADD002       #DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Append GLVALPPD and change MANPOL1                  *
+      *                                                               *
+      *  CALLS:                                                       *
+      *   SRFIND - Find appropriate transitory A/C No.                *
+      *   SRGENR - Generate GLVALPPD record                           *
+      *   SRUPDT - Update MANPOL1 record                              *
+      *                                                               *
+      *  CALLED BY Main Processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      **  Position MANPOL1 after curr. date
+      *
+     C           BJRDNB    SETGTAPOSTPDF
+      *
+      **  For all future postings do ...
+      *
+     C                     READ APOSTPDF                 10
+      *
+     C           *IN10     DOWEQ*OFF
+      *
+      **    Find appropriate transitory a/c no.
+      *
+     C                     EXSR SRFIND
+      *
+      **    Generate GLVALPPD record
+      *
+     C                     EXSR SRGENR
+      *
+      **    Update MANPOL1 record
+      *
+     C                     EXSR SRUPDT
+      *
+     C                     READ APOSTPDF                 10
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFIND - FIND APPROPRIATE TRANSITORY A/C NO.                 *
+      *                                                               *
+      *  CALLED BY SRMAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFIND    BEGSR
+      *
+     C**********           MOVE ACOD      WACOD   4                                           CGL029
+     C                     MOVE ACOD      WACOD  10                                           CGL029
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WACOD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDACODPD'#DBFIL
+     C                     Z-ADD003       #DBASE
+     C                     MOVELACOD      #DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  If transitory a/c not entered in SDACODPD, take it from SDGELRPD
+      *
+     C           DRCR      IFEQ 1
+      *
+     C           A5TRCA    IFEQ 0
+     C                     SELEC
+     C           ATYP      WHEQ 'N'
+     C**********           Z-ADDBKTCAN    WWTRAC  40                                          CGL029
+     C                     Z-ADDBKTCAN    WWTRAC 100                                          CGL029
+     C           ATYP      WHEQ 'D'
+     C                     Z-ADDBKTCAD    WWTRAC
+     C           ATYP      WHEQ 'C'
+     C                     Z-ADDBKTCAC    WWTRAC
+     C           ATYP      WHEQ 'G'
+     C                     Z-ADDBKTCAG    WWTRAC
+     C/COPY WNCPYSRC,GL0533C004
+     C                     ENDSL
+     C                     ELSE
+     C                     Z-ADDA5TRCA    WWTRAC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           A5TRDA    IFEQ 0
+     C                     SELEC
+     C           ATYP      WHEQ 'N'
+     C                     Z-ADDBKTDAN    WWTRAC
+     C           ATYP      WHEQ 'D'
+     C                     Z-ADDBKTDAD    WWTRAC
+     C           ATYP      WHEQ 'C'
+     C                     Z-ADDBKTDAC    WWTRAC
+     C           ATYP      WHEQ 'G'
+     C                     Z-ADDBKTDAG    WWTRAC
+     C/COPY WNCPYSRC,GL0533C005
+     C                     ENDSL
+     C                     ELSE
+     C                     Z-ADDA5TRDA    WWTRAC
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,GL0533C006
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGENR - Generate GLVALPPD record                            *
+      *                                                               *
+      *  CALLED BY SRMAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRGENR    BEGSR
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BRCA      WKEY    3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBRCHPD'#DBFIL
+     C                     Z-ADD004       #DBASE
+     C                     MOVELBRCA      #DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Set up GLVAL buffer from MANPO buffer and changed fields
+      *
+     C                     MOVELMANPO     GLVAL
+     C                     MOVE A8BICN    V1BRCU
+     C                     MOVE WWTRAC    V1TRAC
+     C                     Z-ADD1         V1BRSQ
+     C                     MOVE ACOD      V1ACOD                                             BUG7281
+     C                     MOVE OTRF      V1OTRF                                             BUG7281
+     C                     Z-ADD99999     V1RRNM                                              223196
+     C                     Z-ADD*ZEROS    QQTRAC                                              247494
+     C/COPY WNCPYSRC,GL0533C002
+      *
+      **  Append to GLVALPPD
+      *
+     C                     WRITEGLVALPD0               11
+      *
+     C           *IN11     IFEQ *ON
+     C                     MOVE 'GLVALPPD'#DBFIL
+     C                     Z-ADD005       #DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT - Update MANPOL1 record                               *
+      *                                                               *
+      *  CALLED BY SRMAIN                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      **  Chain to SDACODL1 to find account type of transitory account code
+      **  Change MANPOPD fields
+      *
+     C                     MOVE V1TRAC    WACOD
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WACOD
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDACODPD'#DBFIL
+     C                     Z-ADD006       #DBASE
+     C                     MOVELV1TRAC    #DBKEY
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     MOVE A5ACTY    ATYP
+     C                     MOVELA5ACSC    ACSC                                                196464
+     C                     ENDIF
+      *
+     C**********           Z-ADDV1BRCU    CNUM                                                CSD027
+     C                     MOVE V1BRCU    CNUM                                                CSD027
+     C                     Z-ADDV1TRAC    ACOD
+     C                     Z-ADDV1BRSQ    ACSQ
+     C                     Z-ADDBJRDNB    VALD
+     C                     Z-ADD99999     RRNM                                                223196
+      *
+     C                     UPDATAPOSTPDF               12
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVE 'MANPOPD '#DBFIL
+     C                     Z-ADD007       #DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENDP - This terminates the program casuing all             *
+      *           the files to be closed by setting on *INLR.         *
+      *                                                               *
+      *  CALLED BY Main Processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENDP    BEGSR
+      *
+     C**********           COMIT                                                            BUG25260
+     C/COPY WNCPYSRC,GL0533C003
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - This subroutine is the error handling subroutine     *
+      *                                                               *
+      *  CALLED BY - This routine is called if there are any program  *
+      *              or file errors                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Rollback Changes, Print Dump and Cancel Program
+      *
+     C                     ROLBK
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR - Data Base Error Handling.                            *
+      *                                                               *
+      *  CALLED BY SRINIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      **   Write to Midas error data area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE #DBFIL    DBFILE
+     C                     MOVE #DBKEY    DBKEY
+     C                     MOVE #DBASE    DBASE
+     C                     MOVE #DBPGM    DBPGM
+     C                     OUT  LDA
+      *
+      **   Write to error log
+      *
+     C                     OPEN GL0533AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEGL0533AU
+      *
+      **   Stop program with U7,U8 on
+      *
+     C                     ROLBK
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,408 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Reconcile Portfolio Security Position')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM4040 - Reconcile PM / SE Positions                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 11Aug94               *
+      *                 058168             Date 20Jun93               *
+     F*                 046080             DATE 19OCT92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  058168 - CORRECT DETAILS OUTPUT ON REPORT                    *
+     F*  046080 - REWRITTEN FOR SUNDRY FIXES TO RECONCILIATION PGMS   *
+     F*                                                               *
+     F*****************************************************************
+     F*****************************************************************
+     F***SDBANKPDIF**E                    DISK                            S01486
+     F***SDPLCSLLIF**E           K        DISK                            S01486
+     FPMCPOSL0IF  E           K        DISK
+     FSECTY   IF  E           K        DISK                               058168
+     F***CPOSREC*IP**E           K        DISK                            S01486
+     FPMCPOSL3IP  E           K        DISK                               S01486
+     F***PM4040P1O***E                    PRINTER                         S01486
+     F*                                                                   S01486
+     F** Reconcile Portfolio Security Positions Audit                     S01486
+     FPM4040P1O   E             25     PRINTER      KINFDS SPOOL      UC  S01486
+     F*                                                                   S01486
+     F** Reconcile Portfolio Security Positions Run Controls              S01486
+     FPM4040AUO   E             26     PRINTER      KINFDS SPOOLU         S01486
+     F*
+     F*****************************************************************   S01486
+     F/EJECT                                                              S01486
+     E*****************************************************************   S01486
+     E*                                                                   S01486
+     E** Array for COPYRIGHT                                              S01486
+     E                    CPY@    1   1 80                                S01486
+     E**                                                                  058168
+      /COPY ZSRSRC,ZSEDITZ1                                               058168
+     E*****************************************************************   S01486
+     E/EJECT                                                              S01486
+     I**                                                                  058168
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT                             058168
+     I**                                                                  058168
+      /COPY ZSRSRC,ZSEDITZ2                                               058168
+     I*                                                                   S01486
+     I** Local data area for database error details                       S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT                 S01486
+     I                                      132 141 DBFILE                S01486
+     I                                      142 170 DBKEY                 S01486
+     I                                      171 180 DBPGM                 S01486
+     I                                      181 1830DBASE                 S01486
+     I*                                                                   S01486
+     I** Data structure for compilation - COPYRIGHT insertion             S01486
+     ICPYR@$      DS                                                      S01486
+     I                                        1  80 CPY@                  S01486
+     I                                        1  20 CPY@$$                S01486
+     I*                                                                   S01486
+     IRUNDAT    E DS                                                      S01486
+     I** Standard data area layout for system flags and run date          S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for Bank details                                 S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I**  Data structure for Portfolio Management customer details        S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 367 3680LINE                  S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I                                    B 367 3680LINE1                 S01486
+     I*                                                                   S01486
+     I*****************************************************************   S01486
+     I/EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*
+     C           PMKEY     KLIST
+     C                     KFLD           CSSC
+     C                     KFLD           CSCN
+     C                     KFLD           QATVDA
+     C                     KFLD           WWPTFR  4
+     C*
+     C           PMKE1     KLIST
+     C                     KFLD           CSSC
+     C                     KFLD           CSCN
+     C                     KFLD           QATVDA
+     C*
+     C*  FIRST CYCLE
+     C           *IN10     IFEQ '0'                        B1
+     C                     MOVE '1'       *IN10
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVEL'PM4040'  DBPGM                           S01486
+     C                     Z-ADD0         DBASE                           S01486
+     C                     OUT  LDA                                       S01486
+     C*                                                                   S01486
+     C** Initialise work fields                                           S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         SNORE                           S01486
+     C                     Z-ADD*ZEROS    LINE                            S01486
+     C                     Z-ADD*ZEROS    LINE1                           S01486
+     C                     MOVE 'N'       WRECF   1                       S01486
+     C                     MOVE '0'       *IN24                           S01486
+     C*                                                                   S01486
+     C** Access RUNDAT for multibranching indicator                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C           AGMBIN    IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *IN27                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Ensure Audit Spool File recorded by RCF                          S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANK    @PARM   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUM2                          S01486
+     C                     PARM           ZSERR                           S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*                                                                   S01486
+     C** If an error occurred during ZSFILE processing,                   S01486
+     C** Return to the calling program.                                   S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C***ACCESS*SDBANKPD*FOR*RUN*DATE**********************************   S01486
+     C***********          READ SDBANKPD                 89               S01486
+     C*                                                                   S01486
+     C** Get bank details using access object                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C** Check if an error occurred                                       S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001 S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR #LDBER                                    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C***********          WRITEHEADP                                     S01486
+     C**                                                                  058168
+     C                     MOVEL'J'       ZECODE                          058168
+     C                     END                             E1
+     C*                                                                   S01486
+     C                     ADD  1         SNORE                           S01486
+     C*
+     C** IF NO CHANGE OF CUSTOMER NUMBER OR SECURITY AND NOT FIRST
+     C** TIME COMPARE POSITIONS
+     C           WWCSCN    IFEQ CSCN                       B1
+     C           WWCSSC    ANDEQCSSC
+     C********** WWCSCN    OREQ 0                                                             CSD027
+     C           WWCSCN    OREQ *BLANKS                                                       CSD027
+     C*
+     C                     ADD  CSNT      WWCSNT
+     C                     ADD  CSNV      WWCSNV
+     C                     ELSE                            X1
+     C*
+     C** OTHERWISE COMPARE TOTALS
+     C           *IN86     IFEQ '0'                        B2
+     C***********QBCHTP    ANDNE'D'                                       S01486
+     C           QBTYLC    ANDNE'D'                                       S01486
+     C*
+     C           WWCSNT    IFNE TPOS                       B3
+     C           WWCSNV    ORNE VPOS
+     C***CHECK*OVERFLOW************************************************   S01486
+     C***********LINE1     IFGE 50                         B4             S01486
+     C***********          WRITEHEADP                                     S01486
+     C***********          Z-ADD1         LINE1   30                      S01486
+     C***********          END                             E4             S01486
+     C*                                                                   058168
+     C** ACCESS LF/SECTY FOR NOMINAL DECIMAL PLACES                       058168
+     C           WWCSSC    CHAINSECTY                60                   058168
+     C*                                                                   058168
+     C                     Z-ADDNMDP      ZDECS                           058168
+     C                     Z-ADDWWCSNT    ZFLD15                          058168
+     C                     EXSR ZSEDIT                                    058168
+     C                     MOVE ZOUT21    RRCSNT                          058168
+     C*                                                                   058168
+     C                     Z-ADDWWCSNV    ZFLD15                          058168
+     C                     EXSR ZSEDIT                                    058168
+     C                     MOVE ZOUT21    RRCSNV                          058168
+     C*                                                                   058168
+     C                     Z-ADDTPOS      ZFLD15                          058168
+     C                     EXSR ZSEDIT                                    058168
+     C                     MOVE ZOUT21    RRTPOS                          058168
+     C*                                                                   058168
+     C                     Z-ADDVPOS      ZFLD15                          058168
+     C                     EXSR ZSEDIT                                    058168
+     C                     MOVE ZOUT21    RRVPOS                          058168
+     C*                                                                   058168
+     C** At least one record to be output on report                       S01486
+     C*                                                                   S01486
+     C                     MOVE 'Y'       WRECF                           S01486
+     C*                                                                   S01486
+     C** OPEN detail printer file                                         S01486
+     C*                                                                   S01486
+     C           *IN24     IFEQ '0'                                       S01486
+     C                     OPEN PM4040P1                                  S01486
+     C                     MOVE '1'       *IN24                           S01486
+     C*                                                                   S01486
+     C** Ensure Report Spool File recorded by RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANK    SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM1                          S01486
+     C                     PARM           ZSERR   1                       S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*                                                                   S01486
+     C** If an error occurred during ZSFILE processing,                   S01486
+     C** Return to the calling program.                                   S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Output heading                                                   S01486
+     C*                                                                   S01486
+     C                     WRITEHEADP                                     S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Output heading in case of overflow                               S01486
+     C*                                                                   S01486
+     C           LINE      IFGT 50                                        S01486
+     C                     WRITEHEADP                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C** Write detail line to incorrect portfolio positions report        S01486
+     C*                                                                   S01486
+     C                     WRITEDETL
+     C***********          ADD  1         LINE1                           S01486
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     Z-ADDCSNT      WWCSNT 150
+     C                     Z-ADDCSNV      WWCSNV 150
+     C                     END                             E1
+     C*
+     C* ONLY PROCESS IF PORTFOLIO CUSTOMER
+     C           CSCN      IFNE WWCSCN                     B1
+     C           CSSC      ORNE WWCSSC
+     C                     MOVE CSSC      WWCSSC 10
+     C                     MOVE CSCN      QBCUST
+     C           CSCN      IFNE WWCSCN                     B2
+     C**********           MOVE CSCN      WWCSCN  60                                          CSD027
+     C                     MOVE CSCN      WWCSCN  6                                           CSD027
+     C***********QBCUST    CHAINSDPLCSLL             86                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM QBCUST    P@CUST 10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFEQ *BLANKS                                   S01486
+     C                     MOVE '0'       *IN86                           S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '1'       *IN86                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                             E2
+     C*
+     C           *IN86     IFEQ '0'                        B2
+     C***********QBCHTP    ANDNE'D'                                       S01486
+     C           QBTYLC    ANDNE'D'                                       S01486
+     C                     Z-ADD0         TPOS   150
+     C                     Z-ADD0         VPOS   150
+     C*
+     C* OBTAIN PORTFOLIO MANAGEMENT TRADE DATE POSITION
+     C                     MOVE 'T'       QATVDA
+     C           PMKEY     SETLLPMCPOSL0             88
+     C           PMKE1     READEPMCPOSL0                 88
+     C           *IN88     DOWEQ'0'                        B3
+     C                     ADD  QANOML    TPOS
+     C           PMKE1     READEPMCPOSL0                 88
+     C                     END                             E3
+     C*
+     C* OBTAIN PORTFOLIO MANAGEMENT TRADE DATE POSITION
+     C                     MOVE 'V'       QATVDA
+     C           PMKEY     SETLLPMCPOSL0             88
+     C           PMKE1     READEPMCPOSL0                 88
+     C           *IN88     DOWEQ'0'                        B3
+     C                     ADD  QANOML    VPOS
+     C           PMKE1     READEPMCPOSL0                 88
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** Last record                                                      S01486
+     C** Output heading in case of overflow                               S01486
+     C*                                                                   S01486
+     CLR         LINE      IFGT 50                                        S01486
+     CLR         *IN24     ANDEQ'1'                                       S01486
+     CLR                   WRITEHEADP                                     S01486
+     CLR                   END                                            S01486
+     C*                                                                   S01486
+     CLR         *IN24     IFEQ '1'                                       S01486
+     CLR                   WRITETRAILF                                    S01486
+     CLR                   END                                            S01486
+     C*                                                                   S01486
+     C** Produce Run Controls                                             S01486
+     C*                                                                   S01486
+     CLR                   WRITEHEADAU                                    S01486
+     CLR                   WRITECONTROL                                   S01486
+     C*                                                                   S01486
+     C** No details to report.                                            S01486
+     C*                                                                   S01486
+     CLR         WRECF     IFNE 'Y'                                       S01486
+     CLR                   WRITENODTLS                                    S01486
+     CLR                   END                                            S01486
+     C*                                                                   S01486
+     CLR                   RETRN
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C* #LDBER  - Database error processing                           *   S01486
+     C*                                                               *   S01486
+     C* Called by: Main                                               *   S01486
+     C* Calls    : None                                               *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C           #LDBER    BEGSR                           ***  #LDBER ** S01486
+     C*                                                                   S01486
+     C                     WRITEHEADAU                                    S01486
+     C                     WRITEDBERROR                                   S01486
+     C*                                                                   S01486
+     C           *IN24     IFEQ '1'                                       S01486
+     C                     WRITEDBERR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     EXSR *PSSR                                     S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C* *PSSR   - Subroutine to handle abnormal error conditions      *   S01486
+     C*                                                               *   S01486
+     C* Called by: Main                                               *   S01486
+     C* Calls    : None                                               *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C           *PSSR     BEGSR                           ***  PSSR  *** S01486
+     C*                                                                   S01486
+     C           WRUN      IFEQ *BLANKS                                   S01486
+     C                     MOVE 'Y'       WRUN    1                       S01486
+     C                     DUMP                                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************
+      /COPY ZSRSRC,ZSEDITZ3                                               058168
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

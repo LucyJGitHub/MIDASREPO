@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                /*AR1089863*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC210510 - Non Authorised Manual Transaction (COB)         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1089863*REDUNDANTDate 19Feb13              */
+/*       Prev Amend No. AR1009180 *CREATE  Date 25Nov12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089863 - Merging issues of 2.0 and 2.1 releases          */
+/*       AR1009180 - Show unauthorized manual transaction in         */
+/*                   Midas dashboard (Child:AR1009182)               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/** Check for unauthorised manual transaction */
+ 
+             CALL       PGM(GP004008) PARM(&PRTNCD &SYSID)
+ 
+             IF         COND(&PRTNCD = '       ') THEN(GOTO CMDLBL(END))
+ 
+             SNDMSG     MSG('Unauthorised Manual Transaction exist. +
+                          Please re-open the input cycle.') +
+                          TOMSGQ(MOPERQ)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDMSG     MSG('Program GOC210510 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

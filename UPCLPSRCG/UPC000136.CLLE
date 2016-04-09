@@ -1,0 +1,206 @@
+/*********************************************************************/
+/*OVR    OVRDBF FILE(UPMMLSTPD) TOFILE(QAFDMBRL)                     */
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Load module file UPMODSPD')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000136 - Identity module members from RPGSRC and CLPSRC  */
+/*                   and load module file UPMODSPD.                  */
+/*                                                                   */
+/*       Called by: UPC000135                                        */
+/*                                                                   */
+/*       Calls    : UPC000137                                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025             Date 20Sep06              */
+/*                      CUP029 *CREATE     Date 22SeP04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CPK025 - Added RPGSQLMOD in copy member                     */
+/*       CUP029 - Cross check module and program sources in a library*/
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB)
+ 
+             DCL        VAR(&SRCLIB)  TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&WRKLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNO)   TYPE(*CHAR) LEN(6)
+             DCL        VAR(&WRKLIBDESC)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFYET) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             DCLF       FILE(UPSRCFLM)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+             CLRPFM     FILE(UPMODSPD)
+ 
+/* Create temporary library &WRKLIB whose name = 'UP' + Job number */
+             RTVJOBA    NBR(&JOBNO)
+             CHGVAR     VAR(&WRKLIB) VALUE('UP' *CAT &JOBNO)
+ 
+/* check if user has authority to the command CRTLIB. */
+             CHKOBJ     OBJ(CRTLIB) OBJTYPE(*CMD) AUT(*USE)
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                RTVMSG     MSGID(UPM0013) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0014) MSGF(UTMSGF) MSGDTA(&WRKLIB) +
+                          MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC000136' 'ENTER' ' ')
+                CHGJOB     SWS(XXXXXX11)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             DLTLIB     LIB(&WRKLIB) ASPDEV(&IASP)                                        /*CSC043*/
+             MONMSG     MSGID(CPF2110)                                                    /*CSC043*/
+                                                                                          /*CSC043*/
+             CHGVAR     VAR(&WRKLIBDESC) VALUE('Temp lib for X-Check +
+                          mod & pgm' *BCAT &SRCLIB)                                       /*CSC043*/
+             CRTLIB     LIB(&WRKLIB) TEXT(&WRKLIBDESC) ASPDEV(&IASP)                      /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             DLTLIB     LIB(&WRKLIB)
+             MONMSG     MSGID(CPF2110)
+ 
+             CHGVAR     VAR(&WRKLIBDESC) VALUE('Temp lib for X-Check +
+                          mod & pgm' *BCAT &SRCLIB)
+             CRTLIB     LIB(&WRKLIB) TEXT(&WRKLIBDESC)
+             ENDDO                                                                        /*CSC043*/
+ 
+READNEXT:
+/* Get module source file record from UPSRCFLM */
+             RCVF
+/* Monitor end of file */
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(UPDATE))
+ 
+/* Copy member records with 'RPGBASEMOD' or 'CLPBASEMOD' to temporary library */
+             IF         COND(%SST(&SRFILE 3 3) *EQ 'RPG') THEN(DO)
+                CPYF       FROMFILE(&SRCLIB/&SRFILE) +
+                             TOFILE(&WRKLIB/&SRFILE) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) +
+                             CRTFILE(*YES) INCCHAR(*RCD 9 *CT +
+                             'RPGBASEMOD')
+                CPYF       FROMFILE(&SRCLIB/&SRFILE) +
+                             TOFILE(&WRKLIB/&SRFILE) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) +
+                             CRTFILE(*YES) INCCHAR(*RCD 9 *CT +
+                             'RPGSQLMOD')                                              /* CPK025 */
+/* Monitor when there is no member in the from source file. Then read next.  */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(GOTO +
+                             CMDLBL(READNEXT))
+             ENDDO
+             ELSE       CMD(DO)
+                CPYF       FROMFILE(&SRCLIB/&SRFILE) +
+                             TOFILE(&WRKLIB/&SRFILE) FROMMBR(*ALL) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) +
+                             CRTFILE(*YES) INCCHAR(*RCD 9 *CT +
+                             'CLPBASEMOD')
+/* Monitor when there is no member in the from source file. Then read next.  */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(GOTO +
+                             CMDLBL(READNEXT))
+             ENDDO
+ 
+             CHGVAR     VAR(&CPYFYET) VALUE('Y')
+             GOTO       CMDLBL(READNEXT)
+ 
+UPDATE:
+/* Delete workfiles that already exist. */
+             DLTF       FILE(QTEMP/UPMMLSTPD)
+             MONMSG     MSGID(CPF2105)
+ 
+             DLTF       FILE(QTEMP/UPMODSALL)
+             MONMSG     MSGID(CPF2105)
+ 
+/* If &WRKLIB is empty, exit this program. */
+             IF         COND(&CPYFYET *NE 'Y') THEN(GOTO CMDLBL(END))
+ 
+             CPYF       FROMFILE(UPMODSPD) TOFILE(QTEMP/UPMODSALL) +
+                          CRTFILE(*YES)
+ 
+             DSPFD      FILE(&WRKLIB/*ALL) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPMMLSTPD)
+ 
+/* Load UPMODSALL in QTEMP with module names excluding empty members in the sources. */
+             CPYF       FROMFILE(QTEMP/UPMMLSTPD) TOFILE(UPMODSALL) +
+                          MBROPT(*REPLACE) INCREL((*IF MLNRCD *GT +
+                          0)) FMTOPT(*MAP *DROP)
+ 
+/* Load UPMODSPD with member names whose creation parameters are active. */
+             CALL       PGM(UPC000137) PARM(&WRKLIB)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             DLTLIB     LIB(&WRKLIB)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000136') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog and dump for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000136' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

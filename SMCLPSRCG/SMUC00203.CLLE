@@ -1,0 +1,72 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Restore Permission Patch Backups')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00203 - Midas SM Backout Permission Patch               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD020108 *CREATE   Date 18Apr13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD020108 - Permission Patch                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PERMBCKUP)
+ 
+             DCL        VAR(&PERMBCKUP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SAVEPFX) TYPE(*CHAR) LEN(2)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHKOBJ     OBJ(&PERMBCKUP) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDUSRMSG  MSG('Library ' *CAT &PERMBCKUP *TCAT ' does +
+                          not exist or is an incorrect backup.')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHKOBJ     OBJ(&PERMBCKUP/BFLIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             SNDUSRMSG  MSG('BF schema backup does not exist in +
+                          backup')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             RTVDTAARA  DTAARA(&PERMBCKUP/PATCHSTAT (1 2)) +
+                          RTNVAR(&SAVEPFX)
+ 
+             CALL       PGM(RTVTRGET) PARM(&GLOBPFX)
+             IF         COND(&GLOBPFX *NE &SAVEPFX) THEN(DO)
+             SNDPGMMSG  MSG('Backup does not match target system.')
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             RSTLIB     SAVLIB(&BFLIB) DEV(*SAVF) +
+                          SAVF(&PERMBCKUP/BFLIB) OUTPUT(*PRINT)
+ 
+             CPYF       FROMFILE(&PERMBCKUP/GPMTXTPD) +
+                          TOFILE(GPMTXTPD) MBROPT(*REPLACE)
+ 
+             CPYF       FROMFILE(&PERMBCKUP/GPMENUPD) +
+                          TOFILE(GPMENUPD) MBROPT(*REPLACE)
+ 
+             CPYF       FROMFILE(&PERMBCKUP/MITB_PERMM) +
+                          TOFILE(MITB_PERMM) MBROPT(*REPLACE)
+ 
+             SNDPGMMSG  MSG('Permission data restored to pre-patch +
+                          state')
+ 
+             GOTO       CMDLBL(END)
+ERROR:
+             SNDPGMMSG  MSG('Restore program ended abnormally. See +
+                          joblog for details')
+END:
+             ENDPGM

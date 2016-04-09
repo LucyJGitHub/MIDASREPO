@@ -1,0 +1,364 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_15WF                                                      *
+/*EXI *  TEXT('Midas Std deal negotiable assets sold.')
+     A****************************************************************
+     A*                                                              *
+     A*  Midas - Money Market (Dealing)
+     A*                                                              *
+     A*          MMSTDSPP - STANDARD DEAL NEGOTIABLE ASSETS SOLD     *
+     A*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 25Nov05               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU003             Date 05Nov97               *
+      *                 S01378             Date 9APr92                *
+     A*                 S01319             Date 05Nov91               *
+     A*                         RT0150    DATE 12JUN91               *
+     A*                         S01279    DATE 15OCT90               *
+     A*                         E22405    DATE 14AUG90               *
+     A*                         E18380    DATE 16/02/89              *
+     A*                         S01117    DATE 09/12/88              *    S01165
+     A*                         S01177    DATE 02/09/88              *
+     A*                         S01165    DATE 16/05/88              *    S01165
+     A*--------------------------------------------------------------*
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+     A*   S01378 -  NA parcels. Allows partial sale of a parcel      *
+     A*             of NA's which have previously been entered as    *
+     A*             a single NA purchased transaction. (was MOF53)   *
+     A*     S01319 - MOVED FROM MMDDSSRCDM                           *
+     A*            - NUMBER OF MEMBERS CHANGED FROM *NOMAX TO 1      *
+     A*     RT0150 - MOVE ILRYLD TO END OF FILE.                     *
+     A*                                                              *
+     A*     S01279 - New field(ILRYLD) added, to process replacement *
+     A*              of CTC rate with average rate on TM MM Daily    *
+     A*              Summary enquiry                                 *
+     A*     E22405 - FIELD ADDED FOR COVER MT202 CHANGE.             *
+     A*     E18380 - Two new fields (Book code and linked            *
+     A*              reference number) have been CORRECTED           *
+     A*     S01117 - MULTI BRANCHING                                 *    S01165
+     A*     S01177 - EXTRA SETTLEMENT FIELDS ADDED                    *
+     A*     S01165 - Two new fields (Book code and linked            *    S01165
+     A*              reference number) have been added to this file. *    S01165
+     A*                                                              *
+     A*                                                              *
+     A****************************************************************
+     A*
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+/******: EXPDATE(*NONE) MAXMBRS(*NOMAX) MAINT(*IMMED) FRCACCPTH(*NO): *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A          R MMSTDSP0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*
+     A            ILRCID    R               REFFLD(RCID)
+     A            ILDLTF    R               REFFLD(DLTF)
+     A            ILDLUP    R               REFFLD(DLUP)
+     A            ILMLUP    R               REFFLD(MLUP)
+     A            ILYLUP    R               REFFLD(YLUP)
+     A            ILTLUP    R               REFFLD(TLUP)
+     A            ILCHTP    R               REFFLD(CHTP)
+     A            ILLCD     R               REFFLD(LCD)
+     A            ILLUID    R               REFFLD(LUID)
+     A            ILPCDN    R               REFFLD(DLPC)
+     A            ILDN38    R               REFFLD(DN38)
+     A            ILDADN    R               REFFLD(DADN)
+     A            ILBKCD    R               REFFLD(BKCD)
+     A            ILCCY     R               REFFLD(CCY)
+     A            ILCYDP    R               REFFLD(CYDP)
+     A            ILVDYY    R               REFFLD(VDYY)
+     A            ILVDMM    R               REFFLD(VDMM)
+     A            ILVDDD    R               REFFLD(VDDD)
+     A            ILDTYY    R               REFFLD(DTYY)
+     A            ILDTMM    R               REFFLD(DTMM)
+     A            ILDTDD    R               REFFLD(DTDD)
+     A            ILDDLT    R               REFFLD(DDLT)
+     A            ILDSTS    R               REFFLD(DSTS)
+     A            ILMTYP    R               REFFLD(MDTY)
+     A            ILRBSI    R               REFFLD(RBSI)
+     A            ILTYPE    R               REFFLD(DTPE)
+     A            ILSTYP    R               REFFLD(DLST)
+     A            ILCSNM    R               REFFLD(CSNM)
+      * Begin /CSD027/
+     A**********  ILCNUM    R               REFFLD(CNUM)                                      CSD027
+     A            ILCNUM         6A
+     A                                      TEXT('Customer number')
+     A                                      COLHDG('Customer            ' +
+     A                                      'Number')
+      * End /CSD027/
+     A            ILAMNP    R               REFFLD(AMNP)
+     A            ILINTR    R               REFFLD(INTR)
+     A*                                                        /S01117/
+     A********    ILBRCD    R               REFFLD(MBCD)
+     A            ILBRCA    R               REFFLD(MBCA)
+     A*                                                        /S01117/
+     A            ILDBRC    R               REFFLD(DBRC)
+     A            ILDDYY    R               REFFLD(DDYY)
+     A            ILDDMM    R               REFFLD(DDMM)
+     A            ILDDDD    R               REFFLD(DDDD)
+     A            ILBRKG    R               REFFLD(BRKG)
+     A            ILBKCY    R               REFFLD(BKCY)
+     A            ILBCDP    R               REFFLD(BKDP)
+     A            ILFEDF    R               REFFLD(FEDF)
+     A            ILCDRF    R               REFFLD(CDRF)
+     A            ILNIYY    R               REFFLD(NIYY)
+     A            ILNIMM    R               REFFLD(NIMM)
+     A            ILNIDD    R               REFFLD(NIDD)
+     A            ILIPFQ    R               REFFLD(IPFQ)
+     A            ILICMT    R               REFFLD(ICMT)
+     A            ILIPDM    R               REFFLD(IPDM)
+     A            ILFVAL    R               REFFLD(FAVL)
+     A            ILISUR    R               REFFLD(ISUR)
+      * Begin /CSD027/
+     A**********  ILISCN    R               REFFLD(ISCN)                                      CSD027
+     A            ILISCN         6A
+     A                                      TEXT('Issued by customer number')
+     A                                      COLHDG('Issued              ' +
+     A                                      'By cust             ' +
+     A                                      'Number')
+      * End /CSD027/
+     A            ILLIYY    R               REFFLD(LIYY)
+     A            ILLIMM    R               REFFLD(LIMM)
+     A            ILLIDD    R               REFFLD(LIDD)
+     A            ILFRAT    R               REFFLD(FRAT)
+     A            ILDCRT    R               REFFLD(DCRT)
+     A            ILMDYY    R               REFFLD(MDYY)
+     A            ILMDMM    R               REFFLD(MDMM)
+     A            ILMDDD    R               REFFLD(MDDD)
+     A            ILFCLY    R               REFFLD(FCLY)
+     A            ILBRAT    R               REFFLD(BCYR)
+     A            ILDORM    R               REFFLD(DORM)
+     A            ILORCM    R               REFFLD(ORCM)
+     A**Start of change CGL029
+     A**********  ILDORI    R               REFFLD(DORI)                                      CGL029
+     A            QQDORI        12A
+     A**********  ILMORI    R               REFFLD(MORI)                                      CGL029
+     A            QQMORI        12A
+     A**End of change CGL029
+     A            ILDCPI    R               REFFLD(DCPI)
+     A            ILMCPI    R               REFFLD(MCPI)
+     A            ILPCTN    R               REFFLD(PCTN)
+     A            ILCDRP    R               REFFLD(CDRP)
+     A            ILLACT    R               REFFLD(LACT)
+     A            ILTIME    R               REFFLD(TIME)
+     A            ILDUSC    R               REFFLD(DUSC)
+     A            ILAOFR    R               REFFLD(AOFR)
+     A            ILLDAT    R               REFFLD(DACT)
+     A*                                                    /E18380/
+     A            ILBOKC    R               REFFLD(BOKC)
+     A            ILLNKN    R               REFFLD(LNKDN)
+     A*                                                    /E18380/
+     A            ILBORM    R               REFFLD(BORM)
+     A**Start of change CGL029
+     A**********  ILBORI    R               REFFLD(BORI)                                      CGL029
+     A            QQBORI        12A
+     A**End of change CGL029
+     A            ILBCPI    R               REFFLD(BUCI)
+     A            ILBOPM    R               REFFLD(BOPM)
+     A**Start of change CGL029
+     A**********  ILBOPI    R               REFFLD(BOPI)                                      CGL029
+     A            QQBOPI        12A
+     A**End of change CGL029
+     A            ILBCRI    R               REFFLD(BCRI)
+     A            ILBAMT    R               REFFLD(BAMN)
+     A            ILBUCY    R               REFFLD(BUCY)
+      * Begin /CSD027/
+     A**********  ILBCNM    R               REFFLD(BUCN)                                      CSD027
+     A            ILBCNM         6A
+     A                                      TEXT('BU customer number')
+     A                                      COLHDG('BU                  ' +
+     A                                      'customer            ' +
+     A                                      'no')
+      * End /CSD027/
+     A            ILBVDT    R               REFFLD(BUDT)
+     A            ILBSTS    R               REFFLD(BSTS)
+     A            ILBCSN    R               REFFLD(BCSN)
+     A            ILBIRT    R               REFFLD(BINT)
+     A            ILBNID    R               REFFLD(BNID)
+     A            ILBIPF    R               REFFLD(BIPF)
+     A            ILBICM    R               REFFLD(BICM)
+     A            ILBIDM    R               REFFLD(BIDM)
+     A            ILBFVL    R               REFFLD(BFVL)
+     A            ILBFRT    R               REFFLD(BFRT)
+     A            ILBISR    R               REFFLD(BISR)
+     A            ILBLID    R               REFFLD(BLID)
+     A            ILBMTD    R               REFFLD(BMTD)
+     A            ILRORM    R               REFFLD(RORM)
+     A**Start of change CGL029
+     A**********  ILRORI    R               REFFLD(RORI)                                      CGL029
+     A            QQRORI        12A
+     A**End of change CGL029
+     A            ILRCPI    R               REFFLD(RDIN)
+     A            ILROPM    R               REFFLD(ROPM)
+     A**Start of change CGL029
+     A**********  ILROPI    R               REFFLD(ROPI)                                      CGL029
+     A            QQROPI        12A
+     A**End of change CGL029
+     A            ILRCRI    R               REFFLD(RCRI)
+     A            ILRBAT    R               REFFLD(RBAT)
+     A            ILRBCY    R               REFFLD(RBCY)
+      * Begin /CSD027/
+     A**********  ILRCNM    R               REFFLD(RCNM)                                      CSD027
+     A            ILRCNM         6A
+     A                                      TEXT('Related deal midas cust no.')
+     A                                      COLHDG('Related             ' +
+     A                                      'dl midas            ' +
+     A                                      'cust no')
+      * End /CSD027/
+     A            ILRVDT    R               REFFLD(RDVD)
+     A            ILRSTS    R               REFFLD(RSTS)
+     A            ILRCSN    R               REFFLD(RCSN)
+     A            ILRIRT    R               REFFLD(RIRT)
+     A            ILRNID    R               REFFLD(RNID)
+     A            ILRIPF    R               REFFLD(RIPF)
+     A            ILRICM    R               REFFLD(RICM)
+     A            ILRIDM    R               REFFLD(RIDM)
+     A            ILRFVL    R               REFFLD(RFVL)
+     A            ILRFRT    R               REFFLD(RFRT)
+     A            ILRISR    R               REFFLD(RISR)
+     A            ILRLID    R               REFFLD(RLID)
+     A            ILRMTD    R               REFFLD(RMTD)
+     A            ILRNAV    R               REFFLD(RNAV)
+     A            ILMCHD    R               REFFLD(MCHD)
+     A            ILBRNM    R               REFFLD(BRNM)
+     A            ILBKNM    R               REFFLD(BKNM)
+     A            ILBKTN    R               REFFLD(BKTN)
+     A            ILDVSD    R               REFFLD(DVSD)
+     A            ILDDND    R               REFFLD(DDND)
+     A            ILDLAD    R               REFFLD(DLAD)
+     A            ILNIPD    R               REFFLD(NIPD)
+     A            ILSLID    R               REFFLD(SLID)
+     A            ILMATD    R               REFFLD(MATD)
+     A            ILMACT    R               REFFLD(MACT)
+     A*                                           /S01165/ /E18380/
+     A************ILBOKC    R               REFFLD(BOKC)
+     A************ILLNKN    R               REFFLD(LNKDN)
+     A*                                           /S01165/ /E18380/
+     A*************              START OF S01279   START OF RT0150
+     A************ILRYLD        11P 7       TEXT('Related deal yield')
+     A*************              END OF S01279     END OF   RT0150
+     A*                                                    /*S01177*/
+     A            ILRSTM    R               REFFLD(RSTM)
+     A**Start of change CGL029
+     A**********  ILRONS    R               REFFLD(RONS)                                      CGL029
+     A            QQRONS        12A
+     A**End of change CGL029
+     A            ILRIBN    R               REFFLD(RIBN)
+     A            ILRIBA    R               REFFLD(RIBA)
+      * Begin /CSD027/
+     A**********  ILROBN    R               REFFLD(ROBN)                                      CSD027
+     A**********  ILROCN    R               REFFLD(ROCN)                                      CSD027
+     A            ILROBN         6A
+     A                                      TEXT('receipt - ordering bank no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            ILROCN         6A
+     A                                      TEXT('receipt - ordering customer +
+     A                                      no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            ILPSTM    R               REFFLD(PSTM)
+     A**Start of change CGL029
+     A**********  ILPONS    R               REFFLD(PONS)                                      CGL029
+     A            QQPONS        12A
+     A**End of change CGL029
+     A            ILPIBN    R               REFFLD(PIBN)
+     A            ILPIBA    R               REFFLD(PIBA)
+      * Begin /CSD027/
+     A**********  ILPOBN    R               REFFLD(POBN)                                      CSD027
+     A**********  ILPOCN    R               REFFLD(POCN)                                      CSD027
+     A            ILPOBN         6A
+     A                                      TEXT('pay - ordering bank no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            ILPOCN         6A
+     A                                      TEXT('pay - ordering customer no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            ILRCRN    R               REFFLD(RCRN)
+     A            ILRCRA    R               REFFLD(RCRA)
+     A            ILRVNO    R               REFFLD(RVNO)
+     A            ILAWBN    R               REFFLD(AWBN)
+     A            ILAWBA    R               REFFLD(AWBA)
+     A            ILBENN    R               REFFLD(BENN)
+     A            ILBENA    R               REFFLD(BENA)
+     A            ILDTP1    R               REFFLD(DTP1)
+     A            ILDTP2    R               REFFLD(DTP2)
+     A            ILDTP3    R               REFFLD(DTP3)
+     A            ILDTP4    R               REFFLD(DTP4)
+     A            ILDCHG    R               REFFLD(DCHG)
+     A            ILBTB1    R               REFFLD(BTB1)
+     A            ILBTB2    R               REFFLD(BTB2)
+     A            ILBTB3    R               REFFLD(BTB3)
+     A            ILBTB4    R               REFFLD(BTB4)
+     A            ILBTB5    R               REFFLD(BTB5)
+     A            ILBTB6    R               REFFLD(BTB6)
+     A*                                                    /*S01177*/
+     A*                                                        /S01117/
+     A************ILDORB    R               REFFLD(DORB)
+     A************ILMORB    R               REFFLD(MORB)
+     A************ILBOPB    R               REFFLD(BOPB)
+     A************ILBORB    R               REFFLD(BORB)
+     A************ILBPOB    R               REFFLD(BPOB)
+     A            ILBROB    R               REFFLD(BROB)
+     A            ILORBR    R               REFFLD(ORBR)
+     A            ILPRFC    R               REFFLD(PRFC)
+     A            ILROBR    R               REFFLD(ROBR)
+     A************ILPOBR    R               REFFLD(POBR)
+     A*                                                        /S01117/
+     A*                                                    /E22405/
+     A            ILCVMR    R               REFFLD(CVMR)
+     A*                                                    /E22405/
+     A*                                     START OF RT0150
+     A            ILRYLD        11P 7       TEXT('Related deal yield')
+     A*                                     END OF   RT0150
+     A*                                                    /S01378/
+     A** Parcel fields
+     A*  parcel indicator ('P' or ' ')                     /S01378/
+     A            ILPCLI    R               REFFLD(PCLI)
+     A*  parcel size (i.e. number of assets in parcel)     /S01378/
+     A*  (must refer to 5,0 field not older 3,0 field)      /S01378/
+     A            ILPSZE    R               REFFLD(PSIZ)
+     A*                                                    /S01378/
+     A*                                              Begin /CEU003/
+     A            ILSTCY         3          TEXT('Settlement Currency')
+     A                                      COLHDG('Settlement' +
+     A                                             'Currency')
+     A            ILIC72         3          TEXT('In Currency in +
+     A                                           Field 72')
+     A                                      COLHDG('In Currency in' +
+     A                                             'Field 72')
+     A*                                              End   /CEU003/
+     A**Start of change CGL029
+     A            ILDORI        18A
+     A            ILMORI        18A
+     A            ILBORI        18A
+     A            ILBOPI        18A
+     A            ILRORI        18A
+     A            ILROPI        18A
+     A            ILRONS        18A
+     A            ILPONS        18A
+     A**End of change CGL029
+     A*                                              Begin /CDL038/
+     A            ILCLAS         4A         TEXT('Deal Class')
+     A                                      COLHDG('Deal' 'Class')
+     A*                                              End   /CDL038/

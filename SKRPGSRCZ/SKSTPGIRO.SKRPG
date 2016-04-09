@@ -1,0 +1,213 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - (module name) Module                                 *
+      *                                                               *
+      *  mmnnnn - (Program Name)                                      *
+      *                                                               *
+      *  Function:  This source is provided as an outline for         *
+      *             a program to receive data for a specific message  *
+      *             tag from program FT0300.  Amendments are made to  *
+      *             the message and is then updated in FT0300.        *
+      *                                                               *
+      *  Called By: FT0300  - FT Auto Generation                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *                                                               *
+      *  Last Amend No. xxxxxx  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  xxxxxx - Description of change.                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                              *
+      *  54    String Processing                                      *
+      *  55    String Processing                                      *
+      *  LR    End program                                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Copyright Array
+      *
+     E                    CPY@    1   1 80               Copyright table
+      *
+      ** Work array
+      *
+     E                    WA         14  1
+      *****************************************************************
+      *
+      ** Data Structure for output parameter
+      *
+     IRTAG        DS
+     I                                        1  19 WOVRD
+     I                                       20 251 WGIRO
+      *
+      ** Data Structure to break input parameter
+      *
+     IITAGWK      DS                            251
+     I                                       20  20 ACCLIN
+     I                                       20  34 FULL
+     I                                       21  34 L14
+     I                                       21  24 W1199
+     I                                       21  30 L10
+     I                                       31  31 POS31
+     I                                       35  35 GT15
+      *                                                               *
+      *****************************************************************
+      *
+      ** Check to see if position 1 is an account line ('/')
+      *
+     C           ACCLIN    IFNE '/'
+     C                     EXSR SRFAIL
+     C                     ENDIF
+      *
+      ** If the account line is greater than 15 fail.
+      *
+     C           GT15      IFNE *BLANKS
+     C                     EXSR SRFAIL
+     C                     ENDIF
+      *
+      ** If the account line does not start with '1199'
+      *
+     C           W1199     IFNE '1199'
+      *
+      ** If the account line is greater than 10 digits
+      *
+     C           POS31     IFNE *BLANKS
+     C                     EXSR SRFAIL
+     C                     ENDIF
+      *
+      ** If account number does not start with 1199, move 1199 to
+      **    the start.
+      *
+     C           '1199'    CAT  L10       ACCNUM
+      *
+     C                     ELSE
+      *
+      ** Move full account number to account number work field.
+      *       Account already starts with 1199
+      *
+     C                     MOVELL14       ACCNUM
+      *
+     C                     ENDIF
+      *
+      ** If the account is less than 14 characters, add sufficient
+      *     zeros following the 1199 to make the account line exactly
+      *     14 digits long.
+      *
+      ** Find last character value before blank (if there is a blank)
+      *
+     C           ' '       CHEKRACCNUM    X            5554
+      *
+      ** If there are blanks, process
+      *
+     C           X         IFLT 14
+      *
+     C                     MOVEAACCNUM    WA
+     C           14        SUB  X         Z
+      *
+      ** Dont bother processing the 1st 4 characters 1199.
+      *
+     C           X         DOWGT4
+      *
+     C                     Z-ADDX         Y
+     C                     MOVEAWA,X      CHAR1
+     C                     ADD  Z         Y
+     C                     MOVEACHAR1     WA,Y
+     C                     SUB  Z         Y
+     C                     MOVEAWA,Y      CHAR1   1
+     C                     MOVEACHAR1     WA,X
+     C                     MOVE *BLANK    CHAR1
+     C                     MOVEACHAR1     WA,Y
+     C                     SUB  1         X
+     C                     ENDDO
+      *
+      ** Now fill in blanks with '0's.
+      *
+     C                     SETON                         54
+     C           *IN54     DOWEQ*ON
+     C                     Z-ADD1         X
+     C           ' '       LOKUPWA,X                     55
+     C                     MOVE *IN55     *IN54
+     C           *IN55     IFEQ *ON
+     C                     MOVEA'0'       WA,X
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** If processed via array, move data back.
+      *
+     C                     MOVEAWA        ACCNUM
+      * End if X LT 14
+     C                     ENDIF
+      *
+      ** Move account data to the return / repair tag
+      *
+     C                     MOVE *BLANKS   RTAG
+     C                     MOVEL'/'       WGIRO
+     C           WGIRO     CAT  ACCNUM:0  WGIRO
+      *
+      ** Move the valid return code
+      *
+     C                     MOVEL'*MAP   ' RTNCDE
+     C                     SETON                       LRRT
+     C                     RETRN
+      *
+      *****************************************************************
+      * Subroutine SRFAIL                                             *
+      *  Not a GIRO account.  Do not repair message.                  *
+      *****************************************************************
+     CSR         SRFAIL    BEGSR
+      *
+      ** Set Return Parameter as FAIL
+      *
+     C                     MOVEL'*FAIL'   RTNCDE
+      *
+     C                     EXSR SREXIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine SREXIT                                             *
+      *  Return                                                       *
+      *****************************************************************
+     CSR         SREXIT    BEGSR
+     C                     SETON                       LRRT
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine *INZSR                                             *
+      *  Initialisation                                               *
+      *****************************************************************
+     CSR         *INZSR    BEGSR
+      *
+      ** Define *ENTRY parameter list
+      *
+     C           *ENTRY    PLIST
+      * Return Code
+     C                     PARM           RTNCDE  7
+      * Input Tag
+     C                     PARM           ITAG  251
+      * Repair Tag
+     C                     PARM           RTAG
+      *
+      ** Define work account number field
+      *
+     C                     MOVE *BLANKS   ACCNUM 14
+     C                     Z-ADD0         X       30
+     C                     Z-ADD0         Y       30
+     C                     Z-ADD0         Z       30
+      *
+     C                     MOVEACPY@      CPYR@  80
+      *
+     C                     MOVELITAG      ITAGWK
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2007

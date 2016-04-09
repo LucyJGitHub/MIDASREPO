@@ -1,0 +1,959 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Close out set of closed position enquiry')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM6180 - PM CLOSE OUT SET OF A CLOSED POSITION ENQUIRY       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 11Sep96               *
+     F*                 CPM003             DATE 10JAN96               *
+     F*                 S71062             DATE 15FEB94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD006 - Market Data Feed                                    *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  CPM003 - FF/PM Upgrade to R10                                *
+     F*  S71062 - FF/PM INTERFACE - PM CHANGES                        *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            CPM003
+     F***********                                      KINFSR *PSSR       CPM003
+     F***SDCURRL1IF**E           K        DISK                            CPM003
+     F***********                                      KINFSR *PSSR       CPM003
+     F***SDBRCHL1IF**E           K        DISK                            CPM003
+     F***********                                      KINFSR *PSSR       CPM003
+     FMARKT   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FMKCTL   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINTYP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINTYP2  IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYPD2F
+     F                                              KINFSR *PSSR
+     F***CLINT***IF**E           K        DISK                            CPM003
+     F*********** CLINTCAF                          KIGNORE               CPM003
+     F*********** CLINTCCF                          KIGNORE               CPM003
+     F*********** CLINTC1F                          KIGNORE               CPM003
+     F***********                                   KINFSR *PSSR          CPM003
+     FBOOKD   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FTRANS2  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***PM6180DDCF**E                    WORKSTN      KINFDS DSPFDS      CPM003
+     FPM6180DFCF  E                    WORKSTN      KINFDS DSPFDS         CPM003
+     F                                              KINFSR *PSSR
+     F                                        RRN1  KSFILE PM6180S0
+     FCLOST10 IF  E           K        DISK
+     F            CLOSTTF                           KRENAMECLOSTT10
+     F                                              KINFSR *PSSR
+     FCLOST9  IF  E           K        DISK
+     F            CLOSTDF                           KRENAMECLOSTDF9
+     F                                              KINFSR *PSSR
+     FCLOSTTM IF  E           K        DISK
+     F            CLOSTTF                           KRENAMECLOSTTF3
+     F                                              KINFSR *PSSR
+      **************************************************************
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,FFPRCSZ2
+     E/COPY ZSRSRC,FFFMTZ1
+      *
+      ** ERROR CODES
+     E                    AERR       24  4
+     E                    CPY@    1   1 80
+     E                    NARR    1   1 20
+      **************************************************************
+     IINTYPD2F
+      *
+      ** Rename of fields from INTYP
+     I              ISTT                            ISTT2
+     I              ISTI                            ISTI2
+     I              ISPT                            ISPT2
+     I              ISCY                            ISCY2
+     I              QOTC                            QOTC2
+     I              TKDM                            TKDM2
+     I              MNPF                            MNPF2
+     I              TKVL                            TKVL2
+     I              OTHC                            OTHC2
+      *
+      ** Rename of fields from TRANS2
+     ITRANSDF
+     I              RECI                            RECIT
+     I              TNBR                            TNBRT
+     I**************BRCD                            BRCDT                 CPM003
+     I              BRCA                            BRCDT                 CPM003
+     I              BOCO                            BOCOT
+     I              CUSC                            CUSCT
+     I              BOKC                            BOKCT
+     I              ISTT                            ISTTT
+     I              YRNO                            YRNOT
+     I              MTHN                            MTHNT
+     I              PCAL                            PCALT
+     I              STRP                            STRPT
+     I              TRTY                            TRTYT
+     I              ULTT                            ULTTT
+     I              TRSD                            TRSDT
+     I              COPR                            COPRT
+     I              TNAR                            TNART
+     I              ISCY                            ISCYT
+     I              FCIN                            FCINT
+     I              LCD                             LCDT
+     I              CHTP                            CHTPT
+     I              TNLU                            TNLUT
+      *
+      ** Rename of fields from CLOST10
+     ICLOSTT10
+     I              RECI                            RECI10
+     I              CLON                            CLON10
+     I              TNBR                            TNBR10
+     I              NCCL                            NCCL10
+     I              TRSD                            TRSD10
+     I              TRTY                            TRTY10
+     I              FCLI                            FCLI10
+      *
+      ** Rename of fields from CLOSTTM
+     ICLOSTTF3
+     I              RECI                            RECIM
+     I              CLON                            CLONM
+     I              TNBR                            TNBRM
+     I              NCCL                            NCCLM
+     I              TRSD                            TRSDM
+     I              TRTY                            TRTYM
+     I              FCLI                            FCLIM
+      *
+      ** Rename of fields from CLOST9
+     ICLOSTDF9
+     I              RECI                            RECI9
+     I              CLON                            CLON9
+     I************* BRCD                            BRCD9                 CPM003
+     I              BRCA                            BRCD9                 CPM003
+     I              BOCO                            BOCO9
+     I              CUSC                            CUSC9
+     I              BOKC                            BOKC9
+     I              ISTT                            ISTT9
+     I              YRNO                            YRNO9
+     I              MTHN                            MTHN9
+     I              PCAL                            PCAL9
+     I              STRP                            STRP9
+     I              COPL                            COPL9
+     I              ISCY                            ISCY9
+     I              CLOD                            CLOD9
+     I              CLOT                            CLOT9
+     I              CORI                            CORI9
+     I              SHPI                            SHPI9
+     I              ECPI                            ECPI9
+      *
+      *****Group*data*area************************************************CPM003
+     I***WWGDA*****E*DSPMGRDAPP                                           CPM003
+      *
+     I***WWLDA*****E*DSPMLDAPP                                            CPM003
+     IWWLDA     E DSPMLDAPD                                               CPM003
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I/COPY ZSRSRC,FFSRDSZ1
+     I/COPY ZSRSRC,FFPRCSZ3
+     I/COPY ZSRSRC,FFFMTZ2
+      *
+      ** Data structure for workstation id for screen ouput
+     IPSDS       SDS                                                      CPM003
+     I***********SDS                                                      CPM003
+     I***********                           244 246 WSID                  CPM003
+     I***********                           254 263 USRID                 CPM003
+     I                                      244 253 WSID                  CPM003
+     I                                      254 263 USID                  CPM003
+      *
+      ** Data structure to display subfile after action code
+     IDSPFDS      DS
+     I                                    B 378 3790CPFPOS
+      *
+      ** Data structure for compilation  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Data structure to display narrative
+     I            DS
+     I                                        1  25 STNAR
+     I                                        1  16 WWNAR
+     I                                       17  19 WWCCY
+     I                                       20  25 WWBLK
+     IRUNDAT      DS                                                      CPM003
+     I**  Standard Data Area Layout for System flags and Run Date         CPM003
+     I                                       13  13 @MBIN                 CPM003
+     ISDCURR    E DSSDCURRPD                                              CPM003
+     I* DS FOR CURRENCIES DETAILS                                         CPM003
+     I*                                                                   CPM003
+     ISDCUST    E DSSDCUSTPD                                              CPM003
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 CPM003
+     I*                                                                   CPM003
+     ISDBANK    E DSSDBANKPD                                              CPM003
+     I** EXTERNAL DS FOR BANK DETAILS                                     CPM003
+     I*                                                                   CPM003
+     ISDBRCH    E DSSDBRCHPD                                              CPM003
+     I** DUMMY RECORD FORMAT FOR BRANCH DETAILS                           CPM003
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*                                                                   CPM003
+     IDSFDY     E DSDSFDY                                                 CPM003
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CPM003
+     I*                                                                   CPM003
+     IDSSDY     E DSDSSDY                                                 CPM003
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                CPM003
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      * SRMAIN   - MAIN PROCESSING                                       *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      * SRCUST   - ACCESS TO CUSTOMER                                    *
+      * SRBOOK   - ACCESS TO BROKER                                      *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      * SRWSFL   - WRITE SUBFILE DETAILS                                 *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * PMC1003  - RETRIEVE DATAAREA *LDA                                *
+      * PM2090   - F&O TRANSACTION                                       *
+      **PMC1004**-*RETRIEVE*DATAAREA**GDA*********************************CPM003
+      **PMC1002**-*UPDATE*DATAAREA**GDA***********************************CPM003
+      **PMC1020**-*TERMINATION*PGM****************************************CPM003
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRMAIN
+      *
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1003  - RETRIEVE DATAAREA *LDA                                *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWLDA****-*DATA*STRUCTURE*FORMAT*PMLDAPP**************************CPM003
+      * WWLDA    - DATA STRUCTURE FORMAT PMLDAPD                         *CPM003
+      * WWTNBR   - WORK FIELD TO ACCESS TO CLOSTTM                       *
+      *                                                                  *
+      ********************************************************************
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           TNBRA   6
+     C***********          PARM           WWLDA                           CPM003
+      ***********                                                         CPM003
+      ***Receive*parameters*from*data*area**GDA***************************CPM003
+      *  Receive parameters from data area *LDA                           CPM003
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C************         MOVELQMRUNA    DDRUNA                          CPM003
+     C                     MOVE QMCNUM    DDCNUM
+     C                     MOVELQMCRNM    DDCRNM
+     C                     MOVELQMPTFN    DDPTFN
+     C                     MOVELQMPTF2    DDPTF2
+      *
+      ** Set Up Program Constants.
+     C                     MOVE TNBRA     WWTNBR  60
+     C                     SETOF                     0312
+      *
+      ** SFLEND Indicator.
+     C                     SETON                     20
+      *
+      ** DSPATR(ND)
+     C                     SETOF                     50
+      *
+      ** Access SDBANKPD, if record not found or record not live, perform
+      ** database error
+     C************LOVAL    SETLLSDBANKL1                                  CPM003
+     C***********          READ SDBANKL1                 99               CPM003
+      ***********                                                         CPM003
+     C************IN99     IFEQ '1'                        *B1            CPM003
+     C                     CALL 'AOBANKR0'                                CPM003
+     C                     PARM *BLANKS   @RTCD   7                       CPM003
+     C                     PARM '*FIRST ' @OPTN   7                       CPM003
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM003
+     C** Record not found                                                 CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C                     Z-ADD1         QMERRN
+     C***********          MOVEL'SDBANKL1'QMFILE                          CPM003
+     C                     MOVE 'SDBANKPD'QMFILE                          CPM003
+     C                     MOVEL*BLANKS   QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Set indicator for date format
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Execute Subroutine to Load Subfile Of Close Out Details.
+     C                     EXSR SRLOAD
+      *
+      ** Terminate Program If No Close Out Details on Subfile.
+     C           RRN1      IFEQ 0                          *B1
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             *E1
+     C*                                                                   CPM003
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           CPM003
+     C*                                                                   CPM003
+     C           *NAMVAR   DEFN           RUNDAT                          CPM003
+     C                     IN   RUNDAT                                    CPM003
+     C           @MBIN     IFEQ 'Y'                                       CPM003
+     C                     MOVE '1'       *IN21                           CPM003
+     C                     END                                            CPM003
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRMAIN   - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PM2090   - F&O TRANSACTION                                       *
+      **PMC1004**-*RETRIEVE*DATAAREA**GDA*********************************CPM003
+      **PMC1002**-*UPDATE*DATAAREA**GDA***********************************CPM003
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWGDA****-*DATA*STRUCTURE*FORMAT*PMGRDAPP*************************CPM003
+      *                                                                  *
+      ********************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Display at the first record in subfile
+     C                     Z-ADD1         RRN1
+      *
+      ** DO WHILE Not CMD 3 (Exit) or CMD 12 (Return)
+     C           *IN03     DOWNE'1'                        *BW1
+     C           *IN12     ANDNE'1'
+      *
+     C                     WRITEPM6180F0
+     C                     WRITEPM6180F3
+     C                     EXFMTPM6180C0
+      *
+      ** Read action code input
+     C                     READCPM6180S0                 99
+      *
+      ** If no change (enter pressed)
+     C           *IN99     IFEQ '1'                        *B1
+     C           SELEC     OREQ ' '
+     C                     Z-ADDCPFPOS    RRN1
+     C                     ELSE                            *X1
+      *
+      ** Action code valid, call pgm to display trade
+     C           STNBR     IFLT 0                                         CPM003
+     C                     Z-SUBSTNBR     WKTNBR  60                      CPM003
+     C                     MOVE WKTNBR    TNBRA                           CPM003
+     C                     MOVE '-'       WWSIGN  1                       CPM003
+     C                     ELSE                                           CPM003
+     C                     MOVE STNBR     TNBRA   6
+     C                     MOVE ' '       WWSIGN                          CPM003
+     C                     END                                            CPM003
+     C                     CALL 'PM2090'
+     C                     PARM           TNBRA
+     C                     PARM *BLANKS   WWSIGN                          CPM003
+      *
+      ***Enquire*data*area**GDA*******************************************CPM003
+     C**********           CALL 'PMC1004'                                 CPM003
+     C**********           PARM           WWGDA                           CPM003
+      ** Enquire data area *LDA                                           CPM003
+     C                     CALL 'PMC1003'                                 CPM003
+     C                     PARM           WWLDA                           CPM003
+      *
+      ** Update record in subfile
+     C                     MOVEL*BLANKS   SELEC
+     C                     UPDATPM6180S0
+     C                     END                             *E1
+      *
+      ** F3 pressed, end GRP JOB
+     C           *IN03     IFEQ '1'                        *B2
+     C           QMENQT    OREQ 'Y'
+     C                     SETON                     03
+     C                     MOVE 'Y'       QMENQT
+     C**********           CALL 'PMC1002'                                 CPM003
+     C**********           PARM           WWGDA                           CPM003
+     C                     CALL 'PMC1001'                                 CPM003
+     C                     PARM           WWLDA                           CPM003
+     C                     END                             *E2
+      *
+      ** END DO WHILE Not CMD 3 (Exit)
+     C                     END                             *EW1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      * FFPRCS   -                                                       *
+      * SRCUST   - ACCESS TO CUSTOMER                                    *
+      * SRBOOK   - ACCESS TO BROKER                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWMRKT   - WORK FIELD TO ACCESS TO LF/MARKT & LF/MKCTL           *
+      *                                                                  *
+      ********************************************************************
+     C           SRHEAD    BEGSR
+      *
+      ** Access SDBRCHPD for branch, if record not found or record not live
+      ** Perform Database error processing
+     C***********          MOVELBRCD9     BRCDX   3                       CPM003
+     C***********BRCDX     CHAINSDBRCHL1             99                   CPM003
+      *
+     C**********           CALL 'AOBRCHR0'                                CPM003              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CPM003
+     C                     PARM '*KEY    '@OPTN                           CPM003
+     C                     PARM BRCD9     @KEY3   3                       CPM003
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           CPM003              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C**                                                                  CPM003
+     C************IN99     IFEQ '1'                        *B1            CPM003
+     C           @RTCD     IFNE *BLANKS                    *B1            CPM003
+     C                     Z-ADD2         QMERRN
+     C***********          MOVEL'SDBRCHL1'QMFILE                          CPM003
+     C                     MOVE 'SDBRCHPD'QMFILE                          CPM003
+     C***********          MOVELBRCDX     QMKEY                           CPM003
+     C                     MOVELBRCD9     QMKEY                           CPM003
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Access INTYP for instrument details, if record not found or not live
+      ** Perform Database-error
+     C           ISTT9     CHAININTYP                99
+      *
+     C           *IN99     IFEQ '1'                        *B1
+     C           RECI      ORNE 'D'
+     C                     Z-ADD5         QMERRN
+     C***********          MOVEL'INTYP'   QMFILE                          CPM003
+     C                     MOVE 'INTYP'   QMFILE                          CPM003
+     C                     MOVELISTT9     QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Market Centre not an OTC
+     C           ISTI      IFNE 'Y'                        *B1
+      *
+     C                     MOVELISTT      WWMRKT  2
+      *
+      ** Access MARKT, if record not found or not live
+      ** Perform Database-error
+      *
+     C           WWMRKT    CHAINMARKT                99
+      *
+     C           *IN99     IFEQ '1'                        **B2
+     C           RECI      ORNE 'D'
+     C                     Z-ADD3         QMERRN
+     C***********          MOVEL'MARKT'   QMFILE                          CPM003
+     C                     MOVE 'MARKT'   QMFILE                          CPM003
+     C                     MOVELWWMRKT    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             **E2
+      *
+      ** Access MKCTL, if record not found or not live
+      ** Perform Database-error
+     C           WWMRKT    CHAINMKCTL                99
+      *
+     C           *IN99     IFEQ '1'                        **B2
+     C           RECI      ORNE 'D'
+     C                     Z-ADD4         QMERRN
+     C***********          MOVEL'MKCTL'   QMFILE                          CPM003
+     C                     MOVE 'MKCTL'   QMFILE                          CPM003
+     C                     MOVELWWMRKT    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             **E2
+     C                     MOVELMKTN      DDMKTN    P
+      *
+     C                     ELSE                            *X1
+     C                     MOVELNARR,1    DDMKTN    P
+     C                     END                             *E1
+      *
+      ** Access SDCURRLPD for currency, if record not found or not live,
+      ** Perform Database error processing
+     C***********ISCY9     CHAINSDCURRL1             99                   CPM003
+      ***********                                                         CPM003
+     C************IN99     IFEQ '1'                        *B1            CPM003
+     C                     CALL 'AOCURRR0'                                CPM003
+     C                     PARM *BLANKS   @RTCD                           CPM003
+     C                     PARM '*KEY    '@OPTN                           CPM003
+     C                     PARM ISCY9     @KEY3                           CPM003
+     C***********SDCURR    PARM SDCURR    DSFDY                    CPM003 CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+     C**                                                                  CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C           RECI      ORNE 'D'
+     C                     Z-ADD6         QMERRN
+     C***********          MOVEL'SDCURRL1'QMFILE                          CPM003
+     C                     MOVE 'SDCURRPD'QMFILE                          CPM003
+     C                     MOVELISCY9     QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** IF Instrument is a Market Option
+      ** Access INTYP2 using Future reference for underlying ins
+      ** IF no record found, or not live
+      ** Perform Database-error
+     C           ISTI      IFEQ 'N'                        *B1
+     C           ISPT      ANDGT3
+     C           ISPT      ANDNE7                                         CPM003
+     C                     MOVELISTT9     ISTT2K  5
+     C                     MOVE FTRF      ISTT2K
+     C           ISTT2K    CHAININTYP2               99
+      *
+     C           *IN99     IFEQ '1'                        **B2
+     C           RECI      ORNE 'D'
+     C                     Z-ADD7         QMERRN
+     C***********          MOVEL'INTYP2'  QMFILE                          CPM003
+     C                     MOVE 'INTYP2'  QMFILE                          CPM003
+     C                     MOVELISTT2K    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             **E2
+      *
+     C                     END                             *E1
+      *
+      ** Instrument is a Market Instrument
+     C           ISTI      IFEQ 'N'                        *B1
+      *
+      ** Year Number Parameter
+     C                     MOVELYRNO9     SYRNO
+      *
+      ** Month Number Parameter
+     C                     MOVELZMNM,MTHN9SMTHDS
+      *
+     C                     END                             *E1
+      *
+      ** Strike Price Parameter
+      ** IF Instrument is an Option.
+      ** Format strike price:
+     C           ISPT      IFGT 3                          *B1
+     C           ISPT      ANDNE7                                         CPM003
+      *
+     C                     Z-ADDSTRP9     FFPRIC
+      *
+      ** IF Instrument is an Market Instrument use Ticks Denominator
+      ** and Minimun Price Fluctuate fron LF/INTYP2
+     C           ISTI      IFEQ 'N'                        **B2
+      *
+     C                     Z-ADDTKDM2     FFTKDM
+     C                     Z-ADDMNPF2     FFMNPF
+      *
+      ** ELSE if Instrument is an OTC Instrument use Ticks Denominator
+      ** and Minimun Price Fluctuate fron LF/INTYP
+     C                     ELSE                            **X2
+      *
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+      *
+     C                     END                             **E2
+      *
+      ** Execute Subroutine to Format Strike Price
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SSTRP
+      *
+     C                     END                             *E1
+      *
+      ** Put/Call
+     C                     MOVELPCAL9     SPCAL
+      *
+      ** Reset narratives to display
+     C                     MOVEL*BLANKS   NAR1
+     C                     MOVEL*BLANKS   DET1
+     C                     MOVEL*BLANKS   NAR2
+     C                     MOVEL*BLANKS   DET2
+      *
+      ** Broker Customer & Book format narratives to display
+     C********** BOCO9     IFNE *ZERO                      *B1                                CSD027
+     C           BOCO9     IFNE *BLANKS                    *B1                                CSD027
+     C                     MOVEL'Broker  'NAR1
+     C**********           Z-ADDBOCO9     CUSBRK                                              CSD027
+     C                     MOVE BOCO9     CUSBRK                                              CSD027
+     C                     EXSR SRCUST
+     C***********          MOVELCRNM      DET1                            CPM003
+     C                     MOVELBBCRNM    DET1                            CPM003
+      *
+     C           BOKC9     IFNE *BLANK                     **B2
+     C                     MOVEL'Book'    NAR2
+     C                     EXSR SRBOOK
+     C                     MOVELBOKD      DET2
+     C                     END                             **E2
+      *
+     C                     ELSE                            *X1
+      *
+     C           BOKC9     IFNE *BLANK                     **B2
+     C                     MOVEL'Book'    NAR2
+     C                     EXSR SRBOOK
+     C                     MOVELBOKD      DET2
+     C                     END                             **E2
+      *
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRCUST   - ACCESS TO CUSTOMER                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRCUST    BEGSR
+      *
+      ** Access CLINT for Customer/broker, if no record found or not live
+      ** Perform Database error processing
+     C           *LIKE     DEFN CUSC9     CUSBRK
+     C                     MOVELCUSBRK    P@KEY1                          CPM003
+      *
+     C***********CLINTK    KLIST                                          CPM003
+     C***********          KFLD           CUSBRK                          CPM003
+     C***********          KFLD           TYPE                            CPM003
+      *
+      ** Name/Address details
+     C************LIKE     DEFN RCDT      TYPE                            CPM003
+     C***********          MOVE 'A'       TYPE                            CPM003
+     C***********CLINTK    CHAINCLINT                99                   CPM003
+     C                     CALL 'AOCUSTR0'                                CPM003
+     C                     PARM *BLANKS   P@RTCD  7                       CPM003
+     C                     PARM '*KEY'    P@OPTN  7                       CPM003
+     C                     PARM           P@KEY1 10                       CPM003
+     C                     PARM *BLANKS   P@KYST  7                       CPM003
+     C           SDCUST    PARM SDCUST    DSSDY                           CPM003
+      *
+     C************IN99     IFEQ '1'                        *B1            CPM003
+     C           P@RTCD    IFNE *BLANKS                                   CPM003
+     C           RECI      ORNE 'D'
+     C                     Z-ADD8         QMERRN
+     C***********          MOVEL'CLINT'   QMFILE                          CPM003
+     C                     MOVE 'SDCUSTPD'QMFILE                          CPM003
+     C                     MOVELCUSBRK    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRBOOK   - ACCESS TO BROKER                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRBOOK    BEGSR
+      *
+     C           BOKC9     CHAINBOOKD                99
+      *
+     C           *IN99     IFEQ '1'                        *B1
+     C           RECI      ORNE 'D'
+     C                     Z-ADD9         QMERRN
+     C***********          MOVEL'BOOKD'   QMFILE                          CPM003
+     C                     MOVE 'BOOKD'   QMFILE                          CPM003
+     C                     MOVELBOKC9     QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      * SRWSFL   - WRITE SUBFILE DETAILS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTNBR   - WORK FIELD TO ACCESS TO CLOSTTM                       *
+      * WWSTNB   - WORK FIELD TO SAVE TRANSACTION NUMBER                 *
+      *                                                                  *
+      ********************************************************************
+     C           SRLOAD    BEGSR
+      *
+      ** Clear subfile
+     C                     MOVE '1'       *IN61
+     C                     WRITEPM6180C0
+     C                     MOVE '0'       *IN61
+     C                     Z-ADD*ZEROS    RRN1
+      *
+      ** At least one record on CLOSTTM must exist
+      ** for the Transaction number involved
+     C           WWTNBR    CHAINCLOSTTM              51
+      *
+     C           *IN51     IFEQ '1'                        *B1
+     C           RECIM     ORNE 'D'
+     C                     Z-ADD10        QMERRN
+     C                     MOVEL'CLOSTTM' QMFILE
+     C                     MOVELWWTNBR    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Save transaction number
+     C                     Z-ADDTNBRM     WWSTNB  60
+      *
+      ** Access to display header
+     C***********CLONM     CHAINCLOST9              N99
+     C           CLONM     CHAINCLOST9               99                   CPM003
+      *                                                                   CPM003
+     C           *IN99     IFEQ '1'                        *B1
+     C           RECI9     ORNE 'D'
+     C                     Z-ADD14        QMERRN
+     C***********          MOVEL'CLOST9'  QMFILE                          CPM003
+     C                     MOVE 'CLOST9'  QMFILE                          CPM003
+     C                     MOVELCLONM     QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Execute Subroutine to Set Up Screen Headings.
+     C                     EXSR SRHEAD
+      *
+      ** Do while same transaction & end of file
+     C           *IN51     DOWEQ'0'                        *BW1
+     C           TNBRM     ANDEQWWSTNB
+      *
+      ** Access to CLOST9 with close out number
+     C           CLONM     CHAINCLOST9               53
+      *
+     C           *IN53     IFEQ '1'                        *B1
+     C                     Z-ADD12        QMERRN
+     C***********          MOVEL'CLOST9'  QMFILE                          CPM003
+     C                     MOVE 'CLOST9'  QMFILE                          CPM003
+     C                     MOVELCLONM     QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Process subfile if test is valid
+     C           RECI9     IFEQ 'D'                        *B1
+     C           CORI9     ANDEQ'N'
+     C                     EXSR SRWSFL
+     C                     END                             *E1
+      *
+      ** Read next transaction
+     C                     READ CLOSTTM                  51
+      *
+     C                     END                             *EW1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRWSFL   - WRITE SUBFILE DETAILS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZFRPED   -                                                       *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      * ZDATE2   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWNAR    - WORK FIELD TO DISPLAY NARRATIVE                       *
+      * WWCCY    - WORK FIELD TO DISPLAY INSTRUMENT CURRENCY             *
+      *                                                                  *
+      ********************************************************************
+     C           SRWSFL    BEGSR
+      *
+      ** Write close out details in SFL
+     C                     MOVEL*BLANKS   SELEC
+     C                     SETON                     50
+     C                     MOVEL*BLANKS   STRDT
+     C                     MOVE CLON9     STNBR
+     C                     MOVEL*BLANKS   STRTY
+     C                     MOVEL*BLANKS   SCOPR
+     C                     MOVEL*BLANKS   WWBLK
+      *
+     C                     Z-ADDCOPL9     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    WWNAR
+      *
+     C                     MOVE ISCY9     WWCCY
+     C                     MOVEL*BLANKS   SFCIN
+     C                     MOVEL*BLANKS   SNCCL
+      *
+     C                     ADD  1         RRN1
+     C                     WRITEPM6180S0
+      *
+     C           CLONM     SETLLCLOST10
+     C           CLONM     READECLOST10                  54
+     C           *IN54     DOWEQ'0'                        **BW2
+      *
+      ** Get Transaction Details
+     C           TNBR10    CHAINTRANS2               99
+      *
+     C           *IN99     IFEQ '1'                        *B1
+     C           RECIT     ORNE 'D'
+     C                     Z-ADD13        QMERRN
+     C***********          MOVEL'TRANS2'  QMFILE                          CPM003
+     C                     MOVE 'TRANS2'  QMFILE                          CPM003
+     C                     MOVELTNBR10    QMKEY
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** Format Transaction Date
+     C                     Z-ADDTRSDT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STRDT
+      *
+      ** Transaction Number
+     C                     Z-ADDTNBRT     STNBR
+      *
+      ** Transaction Type
+     C                     MOVE TRTYT     STRTY
+      *
+      ** Contract price
+     C                     Z-ADDCOPRT     FFPRIC
+     C                     Z-ADDMNPF      FFMNPF
+     C                     Z-ADDTKDM      FFTKDM
+     C                     EXSR FFPRCS
+     C                     MOVE FFSPRC    SCOPR
+      *
+      ** Transaction Narrative
+     C                     MOVE TNART     STNAR
+      *
+      ** Final Closure Ind
+     C                     MOVE FCLI10    SFCIN
+      *
+      ** Number of Contracts Closed
+     C                     Z-ADDNCCL10    SNCCL
+      *
+      ** Action code
+     C                     MOVEL*BLANKS   SELEC
+     C                     SETOF                     50
+      *
+      ** Write Subfile Record.
+     C                     ADD  1         RRN1
+     C                     WRITEPM6180S0
+      *
+     C           CLONM     READECLOST10                  54
+      *
+     C                     END                             **EW2
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE AND DATABASE ERROR                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1002**-*UPDATE*DATAAREA**GDA***********************************CPM003
+      **PMC1020**-*TERMINATION*PGM****************************************CPM003
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      * SRHEAD   - SETUP FIELDS FOR DISPLAY                              *
+      * SRCUST   - ACCESS TO CUSTOMER                                    *
+      * SRBOOK   - ACCESS TO BROKER                                      *
+      * SRLOAD   - LOAD SUBFILE DETAILS                                  *
+      * SRWSFL   - WRITE SUBFILE DETAILS                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWGDA****-*DATA*STRUCTURE*FORMAT*PMGRDAPP                        *CPM003
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM6180'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+      *
+      ***Update*GDA*******************************************************CPM003
+      ** Update LDA                                                       CPM003
+     C************         CALL 'PMC1002'                                 CPM003
+     C************         PARM           WWGDA                           CPM003
+     C                     CALL 'PMC1001'                                 CPM003
+     C                     PARM           WWLDA                           CPM003
+      *
+     C                     DUMP
+      *
+     C************         CALL 'PMC1020'                                 CPM003
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,FFPRCSZ4
+     C/EJECT
+      ********************************************************************
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  NARR - NARRATIVE TO DISPLAY ON SCREEN WHEN THE MARKET IS OTC
+OVER THE COUNTER

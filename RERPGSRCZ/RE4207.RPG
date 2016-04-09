@@ -1,0 +1,274 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Create master file controls')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4207 - Create Master File Headers & File Size Procedures.  *
+     F*                                                               *
+     F*  Function:  This program will set up all of the Retail Teller *
+     F*   (COB)     System's master files during the initial set up.  *
+     F*                                                               *
+     F*  Called By: REC4207 - Create Master File Controls             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRT002             Date  1DEC95               *
+     F*                 CRT001  *CREATE    Date 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CSD006 - Market Data Feed             (recompile SDCURRPD)   *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCURRPD)   *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDFCTLL0UF  E           K        DISK         KINFSR *PSSR A
+     F**  Midas SD Standing Data Controls
+     F*
+     FCHQBKPH UF  E                    DISK         KINFSR *PSSR A
+     F**  RTS Cheque Book Header
+     F*
+     FCHQBKPT UF  E                    DISK         KINFSR *PSSR A
+     F**  RTS Cheque Book Trailer
+     F*
+     FPBUDCPH UF  E                    DISK         KINFSR *PSSR A
+     F**  RTS Passbook Update Control Header
+     F*
+     FTTRNTM1 UF  E                    DISK         KINFSR *PSSR A
+     F**  RTS Teller Controls/Totals Header
+     F*
+     FSDCURRPDUF  E                    DISK         KINFSR *PSSR          CRT002
+     F**  SD Currency Codes                                               CRT002
+     F*                                                                   CRT002
+     FRE4207AUO   E                    PRINTER                        UC
+     F**  Create Master Files Controls Audit report
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   70       Chain fail indicator.                              *
+     F*                                                               *
+     F*  U7-U8     Database Error.                                    *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  *PSSR   -  Error handling subroutine                         *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80
+     I*
+     I/SPACE 3
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Midas Bank details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, Short data structure
+     I*
+     I*
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*             S T A R T   O F   P R O G R A M                   *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Set on LR - One cycle only.
+     C*
+     C                     SETON                     LR
+     C*
+     C**  Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'RE4207'  DBPGM
+     C                     OUT  LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Create default value fields.
+     C*
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         AHNORC
+     C                     Z-ADD0         AHNOIN
+     C                     Z-ADD0         AHNOAM
+     C                     Z-ADD0         AHNODL
+     C*
+     C**  Access the file trailers. Create trailer if not found.
+     C*
+     C                     MOVEL'SDBNCDPD'AHFLNM
+     C           AHFLNM    CHAINSDFCTLL0             70
+     C           *IN70     IFEQ '1'
+     C                     WRITE@AHREAU
+     C                     ENDIF
+     C*
+     C                     MOVEL'SDFNCDPD'AHFLNM
+     C           AHFLNM    CHAINSDFCTLL0             70
+     C           *IN70     IFEQ '1'
+     C                     WRITE@AHREAU
+     C                     ENDIF
+     C*
+     C                     MOVEL'SDTELDPD'AHFLNM
+     C           AHFLNM    CHAINSDFCTLL0             70
+     C           *IN70     IFEQ '1'
+     C                     WRITE@AHREAU
+     C                     ENDIF
+     C*
+     C           1         CHAINCHQBKPHF             70
+     C           *IN70     IFEQ '1'
+     C                     MOVE 'H'       RECID
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         GCQI
+     C                     Z-ADD0         SCQN
+     C                     Z-ADD1         NCQN
+     C                     Z-ADD1         NGRN
+     C                     WRITECHQBKPHF
+     C                     ENDIF
+     C*
+     C           1         CHAINCHQBKPTF             70
+     C           *IN70     IFEQ '1'
+     C                     MOVE 'T'       RECID
+     C                     MOVE *ALL'9'   ACNO
+     C                     Z-ADD9         GCQI
+     C                     Z-ADD99999999  SCQN
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         NORECS
+     C                     WRITECHQBKPTF
+     C                     ENDIF
+     C*
+     C           1         CHAINPBUDCPHF             70
+     C           *IN70     IFEQ '1'
+     C                     MOVE 'H'       RECID
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         NORE
+     C                     WRITEPBUDCPHF
+     C                     ENDIF
+     C*
+     C           1         CHAINTTRNTM1F             70
+     C           *IN70     IFEQ '1'
+     C                     MOVE 'H'       RECI
+     C                     MOVE *BLANKS   TBRI
+     C                     MOVE *BLANKS   TBID
+     C                     MOVE *BLANKS   RCTP
+     C                     Z-ADD0         NORE
+     C                     WRITETTRNTM1F
+     C                     ENDIF
+      *                                                                   CRT002
+     C                     READ SDCURRD0                 89               CRT002
+      *                                                                   CRT002
+     C           *IN89     DOWEQ'0'                                       CRT002
+      *                                                                   CRT002
+     C           A6SMLD    IFEQ *ZEROS                                    CRT002
+     C                     Z-ADD1         A6SMLD                          CRT002
+     C                     UPDATSDCURRD0                                  CRT002
+     C                     ENDIF                                          CRT002
+      *                                                                   CRT002
+     C                     READ SDCURRD0                 89               CRT002
+      *                                                                   CRT002
+     C                     ENDDO                                          CRT002
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C* Called by: #INIT                                              *
+     C* Calls    : none                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C**  Audit file reporting
+     C*
+     C                     OPEN RE4207AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSERE4207AU
+     C*
+     C**  Produce program dump
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C*
+     C**  Return to the calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+** COPYRIGHT OBJECT **
+(c) Misys International Banking Systems Ltd. 2001

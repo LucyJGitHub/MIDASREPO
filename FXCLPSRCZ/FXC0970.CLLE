@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas FX Release Netted Payments')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       FXC0970 - Midas FX Release Netted Payments                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. 262076A            Date 23Jul13              */
+/*       Prev Amend No. 262076             Date 23Jul13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG6192            Date 24Feb05              */
+/*                      CDL025  *CREATE    Date 22Nov04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       262076A - FXC0970 looping as dtaara FX0970DTA missing       */
+/*               - Applied for MD021355                              */
+/*       262076 - FXC0970 looping as dtaara FX0970DTA missing        */
+/*               - Applied for MD021355                              */
+/*       BUG6192- STRCMTCTL switch                                   */
+/*       CDL025 - FX Netting Payment Generation                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&STIME)
+ 
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CTIME) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&QTIME) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DLIB) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Store Job Details */
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&NBR)
+             CHGDTAARA  DTAARA(FXNETRLS (1 10)) VALUE(&JOB)
+             CHGDTAARA  DTAARA(FXNETRLS (11 10)) VALUE(&USER)
+             CHGDTAARA  DTAARA(FXNETRLS (21 6)) VALUE(&NBR)
+ 
+/* Stop messages while Retrieveing Time */
+             CHGJOB     LOGCLPGM(*NO)
+ 
+/* Wait for requested Start time */
+ START:      RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&QTIME)
+             CHGVAR     VAR(&CTIME) VALUE(%SUBSTRING(&QTIME 1 4))
+ 
+             IF         COND(&CTIME *NE &STIME) THEN(DO)
+             DLYJOB     DLY(0060)
+             GOTO       CMDLBL(START)
+             ENDDO
+ 
+/* Restart messages */
+             CHGJOB     LOGCLPGM(*SAME)
+ 
+/* Submit Job */
+/**SUBMIT:     SBMJOB     CMD(CALL PGM(FXC0974) PARM(&CTIME)) +      */                  /*262076A*/
+/**********               JOB(FX0970) JOBD(MBATCH) OUTQ(*JOBD) +     */                  /*262076A*/
+/**********               USER(*CURRENT) RTGDTA(*JOBD) +             */                  /*262076A*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                */          /*BUG6192 262076A*/
+/* SUBMIT:     SBMJOB     CMD(CALL PGM(FX0970) PARM(&CTIME)) +            /*BUG6192*/
+/*                           JOB(FX0970) JOBD(MBATCH) OUTQ(*JOBD) +       /*BUG6192*/
+/*                           USER(*CURRENT) RTGDTA(*JOBD) +               /*BUG6192*/
+/*                           INLLIBL(*JOBD) MSGQ(MOPERQ)                  /*BUG6192*/
+ SUBMIT:     SBMJOB     CMD(CALL PGM(FXC0974) PARM(&CTIME)) +
+                          JOB(FX0970) JOBD(MBATCH) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                    /*262076A*/
+ 
+             DLYJOB     DLY(1800)
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&QTIME)
+             CHGVAR     VAR(&CTIME) VALUE(%SUBSTRING(&QTIME 1 4))
+             GOTO       CMDLBL(SUBMIT)
+ 
+ ABNOR:
+ /* Clear Data Area and Send termination message */
+ 
+/**********  CHGDTAARA  DTAARA(FX0970DTA) VALUE(' ')                 */                   /*262076*/
+             CHGDTAARA  DTAARA(FXNETRLS)  VALUE(' ')                                      /*262076*/
+             SNDPGMMSG  MSG('Program FXC0970 has ended') +
+                          TOMSGQ(MOPERQ)
+ 
+             ENDPGM

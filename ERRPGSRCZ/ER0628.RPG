@@ -1,0 +1,1802 @@
+     H        1   Y
+      *****************************************************************   ULX004
+/*STD *  RPGBASE                                                      *   ULX004
+/*EXI *  TEXT('Midas ER Extract program - Future & Options')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ER0628 - ER Extract - Futures & Options                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247517             Date 09May07               *
+      *                 CPK027             Date 16Apr07               *
+      *                 241147             Date 26Oct06               *
+      *                 225555             Date 01Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 213675             Date 08Jan03               *
+      *                 213674             Date 08Jan03               *
+      *                 205470             Date 16JUL02               *
+      *                 ULX047             Date 05Dec02               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX046             Date 31Oct02               *
+      *                 156961             Date 17MAR00               *
+      *                 CEU007 PTF08       Date 01Dec98               *
+      *                 CCF004             Date 05FEB99               *
+      *                 141873    PT       Date 29Jul98               *
+      *                 CAD007    PT       Date 23Jul98               *
+      *                 ERL462    PT       Date 24DEC97               *
+      *                 ULX004             Date 14MAR97               *
+      *                 ERC003    PT       Date 30MAY96               *
+      *                 ART021    PT       Date 16SEP96               *
+      *                 ER_R10             Date 25SEP95               *
+      *                 ERB211             Date 30JUN93               *
+      *                 60370 MG           Date 04NOV93               *
+      *                 ERL378 MG          Date 04NOV93               *
+      *                 60747 MG           Date 04NOV93               *
+      *                 60369 MG           Date 27OCT93               *
+      *                 ER0336 TLI         Date 30APR93               *
+      *                 ER0331 TLI         Date 17MAR93               *
+      *                 ER0321 TLI         Date 15FEB93               *
+      *                 ER0316 TLI         Date 29JAN93               *
+      *                 ER0315 TLI         Date 29JAN93               *
+      *                 ER0313 TLI         Date 28JAN93               *
+      *                 ER0301 TLI         Date 18JAN93               *
+      *                 ER0205 ADs         Date 14DEC92               *
+      *                 ER0201             Date 11JAN93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  247517 - Reversed fix 241147.                                *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147 - Recompile.                                          *
+      *  225555 - Add discount/premium amount, amount to amortize     *
+      *           and 'Prix d'Acquisition'. Recompile over changed    *
+      *           EREXTRPD.                                           *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  213675 - Nominal must be multiplied by the market price for  *
+      *           futures                                             *
+      *  213674 - Other amount must be used for currency OTC options  *
+      *  205470 - Warning when begin date greater than rollover date  *
+      *           Rollover date does not make sense for to; therefore *
+      *           reset field to zero                                 *
+      *  ULX047 - CSSF Market Values calculation                      *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX046 - Circulars 2002/170-174-175 Integration              *
+      *           Recompiled due to changes in file layout            *
+      *  156961 - INCORRECT AMOUNT DUE TO INCORRECT NUMBER OF DECIMAL *
+      *           PLACES ON TICK VALUE                                *
+      *  CEU007 - Holidays Changes For Reporting Interface.           *
+      *  CCF004 - Upgrade to DBAR2 : price changed from 11.7 to 15.8  *
+      *  141873 - Options processing type 4 & 6 reported *100         *
+      *  CAD007 - CAD adaptation to data dictionary version 1.6       *
+      *  ERL462 - 1. Values must be calculated according to the       *
+      *              quotation conv. and not currency decimal places  *
+      *           2. Check on final closure date must be removed      *
+      *  ULX004 - Capital Adequacy                                    *
+      *           (UCH001 Reference is replaced with ULX004 for DBA4) *
+      *  ERC003 - Calculate the positive/negative replacement value   *
+      *  ART021 - SNB Article 21 development                          *
+      *  ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10      *
+      *         - REVIEW HOLIDAYS PROCESSING                          *
+      *         - (R10 MULTIBRANCHING)                                *
+      *  ERB211 - Fix ER0315 removed                                  *
+      *  60370  - WRONG AMOUNT IN CURRENCY. THE SYSTEM ALWAYS         *
+      *           MULTIPLY BY THE FIRST STRIKE PRICE FOUND BY INSTR   *
+      *  ERL378 - FOR ISPT = 2 OR 5 SETUP EXTRACT CCY BY OTHER CCY    *
+      *  60747  - OPTION ON FUTURE ARE IN THE NOMINAL OF UNDERLYING   *
+      *           INSTR. MULTIPLIED BY STRIKE PRICE BUT NOT IN %      *
+      *  60369  - FF ALWAYS IN BOOK CODE FC                           *
+      *  ER0336 - Strike price overwritten by STRP from file BOKPL    *
+      *  ER0331 - For 'OPT' change setup for Principal Amount         *
+      *  ER0321 - Add 'Country of Citizenship'                        *
+      *  ER0316 - For 'OPT' only consider short position 'S'          *
+      *  ER0315 - Always setup '1' for Debit/Credit indicator         *
+      *  ER0313 - Field PCAL overlapped by another file               *
+      *  ER0301 - Price already dropped for trade : ignore trade      *
+      *  ER0205 - Add B/n-B ind. and second Ccy on extract file       *
+      *  ER0201 - New extract program for FO                          *
+      *                                                               *
+      *****************************************************************
+      *
+      *            FF Transactions for Input Today Rpt LF
+     FTRANS7  IF  E           K        DISK
+      *
+      *            Instrument Types file
+     FINTYP   IF  E           K        DISK
+      *
+      *            FF Market Price file
+     FPRICS   IF  E           K        DISK
+      *
+      *************Book Instrument Positions                              ULX004
+     F***BOKPL***IF**E***********K********DISK                            ULX004
+      *                                                                   ULX004
+      *            Book Codes Details                                     ULX004
+     FSDBOOKL0IF  E           K        DISK                               ULX004
+      *
+      *            Currency Codes file
+     FSDCURRL1IF  E           K        DISK
+      *
+      *            Branch Code master file
+     FSDBRCHL1IF  E           K        DISK
+      *
+      *            Bank Details file
+     FSDBANKL1IF  E           K        DISK
+      *
+      *            Market Control file
+     FMKCTL   IF  E           K        DISK
+      *
+      *            Market Centres file
+     FMARKT   IF  E           K        DISK
+      *
+      *            Customer Details file
+     FSDCUSTL1IF  E           K        DISK
+      *
+     FSDSECSL1IF  E           K        DISK                               ULX004
+     F* SE Client Details file                                            ULX004
+     F*                                                                   ULX004
+     FTRSET   IF  E           K        DISK                               ULX004
+     F* FF Transaction Settlement Details                                 ULX004
+     F*                                                                   ULX004
+      *                                                                   ULX004
+      ***  ULX004 : For Release 2  and 3                                  ULX004
+      *                                                                   ULX004
+      * SD Holiday Tables file                                    ER_R10  ULX004
+      *
+      *            ER Production Extract
+     FEREXTRPDO   E                    DISK                      A
+      *
+      *            ER Audit report for Future & Options extract
+     FER0628AUO   E                    PRINTER
+      *
+      *****************************************************************
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*       90         GENERAL FILE READ ERROR
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+      *****************************************************************
+      *
+      ** Instrument Months Quoted (used in S/R ZREVDT)
+      *
+     E                    IMQ        12  1
+      *                                                                   ULX004
+      ***  ULX004 : For Release 2 and 3                                   ULX004
+      *                                                                   ULX004
+     E/COPY ZSRSRC,ZHOLE                                                  ULX004
+      /COPY ZSRSRC,FFDATEZ1
+      /COPY ZSRSRC,ZDATE1Z1
+      /COPY ZSRSRC,ZDATE9Z1
+     E*                                                                   ULX004
+     E** ARRAY USED IN CURRENCY AMOUNT CONVERSION                         ULX004
+     E                    POWER   1   7  7 3                              ULX004
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     I*
+     I/COPY ZSRSRC,ZHOLDS                                                 ULX004
+      *
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,FFSRDSZ1                                               ULX004
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     ILDA       E DSLDA                         256                       ULX004
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***
+     I*   DATA STRUCTURES FOR S/R ZREVDT - FIELDS ARE @SCTD
+     I***
+     I            DS
+     I*    Current Trading date - (YYYYMMDD)
+     I                                        1   80@SCT
+     I                                        3   40@SCY
+     I                                        5   60@SCM
+     I                                        7   80@SCD
+     I            DS
+     I*    Contract Price redefined
+     I                                        1  117@SCOPR
+     I                                        1   40@SINT
+     I                                        5  110@SDEC
+      /COPY ZSRSRC,FFDATEZ2
+      *                                                                   ULX004
+      ***  ULX004  for Release 2 and 3
+      *
+      /COPY ZSRSRC,ZHOLI                                                  ULX004
+      /COPY ZSRSRC,ZDATE9Z2
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          P R O G R A M   E N T R Y                            *
+      *                                                               *
+      *===============================================================*
+      *
+      **   Receive/Pass  Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @PMRKT  2
+      *
+     C           SDBRCH    KLIST
+     C                     KFLD           KKBRCD           * Branch
+      *
+     C           SDCUST    KLIST
+     C                     KFLD           KKCUST           * Customer
+      *
+     C***********BOKPL0    KLIST                                          ULX004
+     C*********************KFLD           BRCD      * Branch Code  ER_R10 ULX004
+     C*********************KFLD           BRCA      * Branch       ER_R10 ULX004
+     C*********************KFLD           BOCC      * BOOK COND CD 60369  ULX004
+     C*********************KFLD           BOKC      * BOOK CODE    60369  ULX004
+     C*********************KFLD           CCY       * CURR CODE    60369  ULX004
+     C*********************KFLD           ISTT      * INSTR TYPE   60369  ULX004
+     C*********************KFLD           YRNO      * YEAR         60369  ULX004
+     C*********************KFLD           MTHN      * MONTH        60369  ULX004
+     C*********************KFLD           PCAL      * PUT CALL     60369  ULX004
+     C*********************KFLD           STRP      * STRIKE PRICE 60369  ULX004
+      *                                                                   ULX004
+     C           BOOKC0    KLIST                                          ULX004
+     C                     KFLD           BOKC             * Book Code    ULX004
+      *
+     C           INTYP0    KLIST
+     C                     KFLD           KKISTT           * Inst. Type
+      *
+     C           SDCURR    KLIST
+     C                     KFLD           KKCYCD           * Currency
+      *
+     C           PRICS0    KLIST
+     C                     KFLD           KKISTT           * Inst. Type
+     C                     KFLD           KKYRNO           * Year No.
+     C                     KFLD           KKMTHN           * Month No.
+     C                     KFLD           KKPCAL           * PUT CALL     60370
+     C                     KFLD           KKSTRP           * STRIKE PRICE 60370
+      *
+     C           *LIKE     DEFN A8BRCD    KKBRCD           * Branch
+     C*********  *LIKE     DEFN BRCD      K0BRCD           * Branch Code  60369
+     C           *LIKE     DEFN BBCUST    KKCUST           * Customer
+     C           *LIKE     DEFN ISTT      KKISTT           * Inst. Type
+     C           *LIKE     DEFN YRNO      KKYRNO           * Year No.
+     C           *LIKE     DEFN MTHN      KKMTHN           * Month No.
+     C           *LIKE     DEFN PCAL      KKPCAL           * PUT/CALL     60370
+     C           *LIKE     DEFN STRP      KKSTRP           * STRIKE PRICE 60370
+     C           *LIKE     DEFN A6CYCD    KKCYCD           * Currency
+      *
+     C           *LIKE     DEFN BRCA      @@BRCD           * Branch Code  ULX004
+     C           *LIKE     DEFN BJRDNB    @@DAYN           * Day No.
+     C           *LIKE     DEFN NOCO      @@NOCO           * Open Contracts
+     C           *LIKE     DEFN QOTC      @@QOTC           * Quotation Decs.
+     C           *LIKE     DEFN BBCOLC    @@COLC           * Origin Country
+      *
+     C                     Z-ADD0         @@REPD  80       * Report Date
+     C                     Z-ADD0         @@TCNT 160       * Total Amount
+     C                     Z-ADD0         NREC             * Extract Count
+     C*********************Z-ADD0         WWAMT  190       * WORK. ULX004 213674
+     C                     Z-ADD0         WWAMT  193       * WORK.        213674
+      *
+      *===============================================================*
+      *
+      ** Perform Initialisation routine
+      *
+     C                     EXSR #INIT
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Process all records from FF Transactions for Input Today Rpt
+      **   from the FF Transactions File (TRANSD).
+      *
+     C           *INLR     DOWEQ'0'                        *----------1
+     C*
+     C                     READ TRANSDF                  LR
+      *
+      ** Perform Main Processing (ignore if Record Id.is 'D' (Live deal)
+      **   and BOTH Broker Code & Customer Code not entered)
+      *
+     C           *INLR     IFEQ '0'                        *---------2
+     C           RECI      IFEQ 'D'                        *--------3
+     C********** BOCO      ANDEQ*ZEROS                     * Broker Code                     CSD027A
+     C********** CUSC      ANDNE*ZEROS                     * Customer                        CSD027A
+     C           BOCO      ANDEQ*BLANKS                    * Broker Code                     CSD027A
+     C           CUSC      ANDNE*BLANKS                    * Customer                        CSD027A
+     C           TRTY      ANDNE'E'                                       ULX004
+      *
+     C           RECI      OREQ 'D'                        * 'Live'
+     C********** BOCO      ANDNE*ZEROS                     * Broker Code                     CSD027A
+     C********** CUSC      ANDEQ*ZEROS                     * Customer                        CSD027A
+     C           BOCO      ANDNE*BLANKS                    * Broker Code                     CSD027A
+     C           CUSC      ANDEQ*BLANKS                    * Customer                        CSD027A
+     C           TRTY      ANDNE'E'                                       ULX004
+      *
+     C***********FCDA      IFEQ *ZEROS                     *-------4      ERL462
+     C***********BOCO      ANDNE*ZEROS                     * Broker Code  ERL462
+     C********** BOCO      IFNE *ZEROS                     * Broker Code              ERL462 CSD027A
+     C           BOCO      IFNE *BLANKS                    * Broker Code                     CSD027A
+     C           NOBO      ANDNE*ZEROS                     * Open:Broker
+     C           TRTY      ANDNE'E'                                       ULX004
+      *
+     C***********FCDA      OREQ *ZEROS                     * Final ClosureERL462
+     C***********CUSC      ANDNE*ZEROS                     * Customer     ERL462
+     C********** CUSC      ORNE *ZEROS                     * Customer                 ERL462 CSD027A
+     C           CUSC      ORNE *BLANKS                    * Customer                        CSD027A
+     C           NOCO      ANDNE*ZEROS                     * Open:C/m
+     C           TRTY      ANDNE'E'                                       ULX004
+      *
+     C                     EXSR #P003
+      *
+     C                     END                             *-------4
+     C                     END                             *--------3
+     C                     END                             *---------2
+      *
+     C                     END                             *----------1
+      *
+      *---------------------------------------------------------------*
+      *
+      ** TERMINATION PROCESSING
+      *
+     C                     WRITEDETAIL
+     C                     RETRN
+      *
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #INIT  - INITIALISATION PROCESSING                   *
+      *                                                               *
+      *===============================================================*
+     C           #INIT     BEGSR
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             ULX004
+     C                     MOVEL'ER0628'  DBPGM
+      *
+      ** Get Installation Control Data record 1
+      *
+     C                     READ SDBANKL1                 90
+      *
+      ** Installation Control Data record 1 not found
+      *
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     WRITEHEADAU
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'001'     DBASE            ************
+     C                     MOVEL'SDBANKL1'DBFILE           * ERROR 01 *
+     C                     MOVEL' NONE '  DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Set indicator *IN98 to off to give date in format YYMMDD
+      *
+     C                     MOVE '0'       *IN98
+      *
+      ** GET REPORTING DATE IN FORMAT YYYYMMDD
+      *
+     C                     Z-ADDBJRDNB    @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     @@REPD
+      *
+      ** Get Market Control record (except for O.T.C. market)
+      *
+     C           @PMRKT    IFNE *BLANKS                    *----------1
+     C           @PMRKT    CHAINMKCTL                90
+      *
+      ** Market Control Data record not found
+      *
+     C           *IN90     IFEQ '1'                        *---------2
+     C                     WRITEHEADAU
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'002'     DBASE            ************
+     C                     MOVEL'MKCTL   'DBFILE           * ERROR 02 *
+     C                     MOVEL' NONE '  DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *---------2
+      *
+      ** Get Market Centres record (except for O.T.C. market)
+      *
+     C           @PMRKT    CHAINMARKT                90
+      *
+      ** Market Centres Data record not found
+      *
+     C           *IN90     IFEQ '1'                        *---------2
+     C                     WRITEHEADAU
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'003'     DBASE            ************
+     C                     MOVEL'MARKT   'DBFILE           * ERROR 03 *
+     C                     MOVEL' NONE '  DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *---------2
+      *
+     C                     MOVELMKTN      @@MKTN
+     C                     ELSE                            X----------1
+     C                     MOVEL'OVER THE'@@MKTN
+     C                     MOVE ' COUNTER'@@MKTN
+     C                     END                             *----------1
+      *                                                                   CEU007
+      ***  Check if the feature CEU007 is installed.                      CEU007
+      *                                                                   CEU007
+     C                     MOVEL'N'       CEU007  1                       CEU007
+     C                     CALL 'AOSARDR0'                                CEU007
+     C                     PARM '       ' @RTCD   7                       CEU007
+     C                     PARM '*VERIFY' @OPTN   7                       CEU007
+     C                     PARM 'CEU007'  @SARD   6                       CEU007
+      *                                                                   CEU007
+     C           @RTCD     IFEQ *BLANKS                                   CEU007
+      *                                                                   CEU007
+      ***  It's existing.                                                 CEU007
+      *                                                                   CEU007
+     C                     MOVEL'Y'       CEU007                          CEU007
+      *                                                                   CEU007
+     C                     ENDIF                                          CEU007
+      *
+      ** WRITE HEADER OF THE AUDIT REPORT
+      *
+     C                     WRITEHEADAU
+      *
+     C           #INIT9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #P003  - MAIN PROCESSING (Set up fields for Output)  *
+      *                                                               *
+      *===============================================================*
+     C           #P003     BEGSR
+      *
+      ** SAVE VALUE OF PCAL
+     C                     MOVE PCAL      WWPCAL  1                       ER0313
+      *
+      ** Determine if change of Branch Code
+      *
+     C           BRCA      IFNE @@BRCD                     *----------1   ULX004
+      *
+      ** Store new Branch Code
+      *
+     C                     MOVE BRCA      @@BRCD                          ULX004
+      *
+      ** Get Branch record
+      *
+     C                     MOVE BRCA      KKBRCD           * Branch       ULX004
+     C           KKBRCD    CHAINSDBRCHL1             90
+     C           *IN90     IFEQ '1'                        *---------2
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'004'     DBASE            ************
+     C                     MOVEL'SDBRCHL1'DBFILE           * ERROR 04 *
+     C                     MOVELKKBRCD    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *---------2
+      *                                                                   ULX004
+      ***  ULX004 : Save Internal branch customer A8BICN                  ULX004
+      *                                                                   ULX004
+     C                     MOVE A8BICN    SVBICN  6                       ULX004
+      *
+      ** Get Customer record (using Branch Internal Customer No.)
+      *
+     C                     MOVE A8BICN    KKCUST           * Customer
+     C           KKCUST    CHAINSDCUSTL1             90
+     C           *IN90     IFEQ '1'                        *---------2
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'005'     DBASE            ************
+     C                     MOVEL'SDCUSTL1'DBFILE           * ERROR 05 *
+     C                     MOVELKKCUST    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *---------2
+      *
+      ** Store Country of Location for Branch
+      *
+     C                     MOVE BBCOLC    @@COLC
+      *
+     C                     END                             *----------1
+      *
+      ** Determine if Broker details should be used in Customer fields
+      *
+     C********** BOCO      IFNE *ZEROS                     *----------1                      CSD027A
+     C           BOCO      IFNE *BLANKS                    *----------1                      CSD027A
+     C                     MOVE BOCO      KKCUST           * Customer
+     C                     Z-ADDNOBO      @@NOCO           * Open Contracts
+     C                     ELSE                            X----------1
+     C                     MOVE CUSC      KKCUST           * Customer
+     C                     Z-ADDNOCO      @@NOCO           * Open Contracts
+      *
+     C                     END                             *----------1
+      *                                                                   ULX004
+      ***  get Customer Pledge agreement                                  ULX004
+      ***  PASCAL : (or always from CUSC ???)                             ULX004
+      *                                                                   ULX004
+     C           KKCUST    CHAINSDSECSL1             88                   ULX004
+     C***********          MOVE BFCLAS    EXCLAS                    ULX004ULX004
+      *                                                                   ULX004
+      ** Store Customer classification                                    ULX004
+     C           *IN88     IFEQ '0'                                       ULX004
+     C                     MOVE BFCLAS    EXCLAS                          ULX004
+      *                                                                   ULX004
+      ***  ULX004 : Store Pledge agreement                                ULX004
+      *                                                                   ULX004
+     C                     MOVE BFPLAG    EXPLAG                          ULX004
+     C                     END                                            ULX004
+      *
+      ** Get Customer record (using Broker Code OR Customer Code)
+      *
+     C           KKCUST    CHAINSDCUSTL1             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'006'     DBASE            ************
+     C                     MOVEL'SDCUSTL1'DBFILE           * ERROR 06 *
+     C                     MOVELKKCUST    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** STORE CUTOMER : BROKER OR CUSTOMER                               ER0301
+     C                     MOVELKKCUST    EXCUST                          ER0301
+     C*                                                                   ER0205
+     C** STORE Bank/non-Bank Indicator                                    ER0205
+     C                     MOVE BBBNBI    EXBNBI                          ER0205
+      *                                                                   ULX004
+      ***  ULX004 : Store counterparty type                               ULX004
+      *                                                                   ULX004
+      ** MAINTAINED ON A WINDOW NOW                                       ART021
+     C*********************MOVE BBBFIC    EXCTPY                   ULX004 ART021
+     C*                                                                   ULX004
+     C                     MOVE BBCOLC    EXCUCC           C/m Country    ULX004
+     C                     MOVE BBCSSN    EXCSSN           C/m Shortname  ULX004
+     C                     MOVE BBCRNM    EXCRNM           C/m Report N.  ULX004
+     C*                                                                   ULX004
+     C** STORE Country of Citizenship                                     ULX004
+     C                     MOVE BBCNCZ    EXCNCZ                          ULX004
+      *                                                                   ULX004
+      ***  Branch/subsidiary indicator                                    ULX004
+      *                                                                   ULX004
+     C                     MOVE BBBSIN    EXBSIN                          ULX004
+      *
+      ** If Customer record is a 'child' - find Parent Customer record
+      *
+     C           BBPCNB    IFNE *BLANKS                    *----------1
+      *
+     C                     MOVE BBPCNB    KKCUST           * Customer
+     C           KKCUST    CHAINSDCUSTL1             90
+     C           *IN90     IFEQ '1'                        *---------2
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'007'     DBASE            ************
+     C                     MOVEL'SDCUSTL1'DBFILE           * ERROR 07 *
+     C                     MOVELKKCUST    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *---------2
+      *
+      ** Store Parent Customer Number and Parent Country Code
+      *
+     C                     MOVE BBCUST    EXPCNB           * Parent C/m No
+     C                     MOVE BBCOLC    EXPRCC           * Parent Count.
+     C                     ELSE                            X----------1
+     C                     MOVE *BLANKS   EXPCNB           * Parent C/m No
+     C                     MOVE *BLANKS   EXPRCC           * Parent Count.
+      *
+     C                     END                             *----------1
+      *
+      ** Determine Debit/Credit Indicator
+      *
+     C***********TRTY      IFEQ 'S'                        *----------1   ER0315
+     C*********************Z-ADD1         EXDRCR           * DR/CR Ind.   ERB211
+     C*********************ELSE                            X----------1   ER0315
+     C*********************Z-ADD0         EXDRCR           * DR/CR Ind.   ER0315
+     C*********************END                             *----------1   ER0315
+     C           TRTY      IFEQ 'S'                        *----------1   ERB211
+     C                     Z-ADD1         EXDRCR           * DR/CR Ind.   ERB211
+     C                     ELSE                            X----------1   ERB211
+     C                     Z-ADD0         EXDRCR           * DR/CR Ind.   ERB211
+     C                     END                             *----------1   ERB211
+      *---------------------------------------------------------------*
+      *
+      ** Get FF Book Instrument Positions record
+      *
+     C*********************Z-ADDBRCD      K0BRCD           * Branch Code  60369
+     C***********K0BRCD****CHAINBOKPL                90                   60369
+     C***********BOKPL0    CHAINBOKPL                90             60369 ULX004
+     C           BOOKC0    CHAINSDBOOKL0             90                   ULX004
+     C           *IN90     IFEQ '1'                        - B1           156961
+     C           *LOCK     IN   LDA                                       156961
+     C                     MOVEL'010'     DBASE            ***************156961
+     C                     MOVEL'SDBOOKL1'DBFILE           ** DB ERROR 10 156961
+     C                     MOVELBOKC      DBKEY            ***************156961
+     C                     OUT  LDA                                       156961
+     C                     EXSR *PSSR                                     156961
+     C                     END                             - E1           156961
+     C*                                                                   156961
+     C           BDHGIN    IFEQ 'Y'                        - B1           156961
+     C                     MOVE 'I'       EXTRIN                          156961
+     C                     ELSE                            - X1           156961
+     C                     MOVE 'T'       EXTRIN                          156961
+     C                     END                             - E1           156961
+     C*                                                                   156961
+     C************IN90     IFEQ '1'                        *----------1   156961
+     C************         MOVE *BLANKS   EXTRIN           * Trade/Invest.156961
+     C************         ELSE                            X----------1   156961
+     C*********************MOVELHDGI      EXTRIN           * Trade/Invest.ULX004
+     C************         MOVELBDHGIN    EXTRIN           * Trade/ULX004 156961
+     C************         END                             *----------1   156961
+      *                                                                   ULX004
+      ***  Indicator hedged position                                      ULX004
+      *                                                                   ULX004
+     C***********EXTRIN    IFEQ 'Y'                                ULX004 156961
+     C           BDHGIN    IFEQ 'Y'                                       156961
+     C                     Z-ADD1         EXHEDG                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADD0         EXHEDG                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Get FF Instrument Types record
+      *
+     C                     MOVE ISTT      KKISTT           * Inst. Type
+     C           KKISTT    CHAININTYP                90
+     C           *IN90     IFEQ '1'                        *----------1
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'008'     DBASE            ************
+     C                     MOVEL'INTYP   'DBFILE           * ERROR 08 *
+     C                     MOVELKKISTT    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *                                                                   ULX004
+      ***  Exercise date of an option                                     ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         EXEXDA                          ULX004
+     C           ISPT      IFEQ 4                                         ULX004
+     C           ISPT      OREQ 5                                         ULX004
+     C           ISPT      OREQ 6                                         ULX004
+     C           ISPT      OREQ 8                                         ULX004
+     C           ISTI      IFNE 'Y'                                       ULX004
+     C                     MOVE FTDF      FFDATC           * Date Formula ULX004
+     C                     Z-ADDMTHN      FFMTH            * Mth reqd.    ULX004
+     C                     Z-ADDYRNO      FFYR             * Year reqd.   ULX004
+     C                     MOVE MKLC      FFCCY1           * Mkt ccy      ULX004
+     C                     MOVE ISCY      FFCCY2           * Inst. ccy    ULX004
+     C                     MOVE OTHC      FFCCY3           * Other ccy    ULX004
+     C                     EXSR FFDATE                                    ULX004
+     C                     Z-ADDFFDAY     @@DAYN           * Working day  ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADDFTDT      @@DAYN                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     EXSR ZDATE9                                    ULX004
+     C                     MOVE @@VDT     EXEXDA           * End Date     ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      ***  Call / Put indicator                                           ULX004
+      *                                                                   ULX004
+     C                     SELEC                                          ULX004
+     C           PCAL      WHEQ 'C'                                       ULX004
+     C                     Z-ADD1         EXCPIN                          ULX004
+     C           PCAL      WHEQ 'P'                                       ULX004
+     C                     Z-ADD2         EXCPIN                          ULX004
+     C                     OTHER                                          ULX004
+     C                     Z-ADD0         EXCPIN                          ULX004
+     C                     ENDSL                                          ULX004
+      *                                                                   ULX004
+      ***  Option style                                                   ULX004
+      *                                                                   ULX004
+     C                     SELEC                                          ULX004
+     C           AEIN      WHEQ 'E'                                       ULX004
+     C                     Z-ADD1         EXOPST                          ULX004
+     C           AEIN      WHEQ 'A'                                       ULX004
+     C                     Z-ADD2         EXOPST                          ULX004
+     C                     OTHER                                          ULX004
+     C                     Z-ADD0         EXOPST                          ULX004
+     C                     ENDSL                                          ULX004
+      *                                                                   ULX004
+      ***  OTC / exchange traded                                          ULX004
+      *                                                                   ULX004
+     C           ISTI      IFEQ 'Y'                                       ULX004
+     C                     Z-ADD1         EXOTCE                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADD2         EXOTCE                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ** Get Currency record (using Other Ccy for a FOREX transaction
+      **   otherwise Instrument Ccy)
+      *
+     C           ISPT      IFEQ 2                          *----------1
+     C           ISPT      OREQ 5
+     C                     MOVE OTHC      KKCYCD           * Currency
+     C                     ELSE                            X----------1
+     C                     MOVE ISCY      KKCYCD           * Currency
+     C                     END                             *----------1
+     C           KKCYCD    CHAINSDCURRL1             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'009'     DBASE            ************
+     C                     MOVEL'SDCURRL1'DBFILE           * ERROR 09 *
+     C                     MOVELKKCYCD    DBKEY            ************
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *                                                                   ULX004
+     C           ISPT      IFEQ 2                          *----------1   ULX004
+     C           ISPT      OREQ 5                                         ULX004
+     C                     Z-ADDA6NBDP    WWDPI                           ULX004
+     C                     MOVELA6MDIN    WWMDI                           ULX004
+     C                     Z-ADDA6SPRT    WWSRI                           ULX004
+     C                     END                             *----------1   156961
+     C                     MOVE ISCY      KKCYCD           * Currency     ULX004
+     C           KKCYCD    CHAINSDCURRL1             90                   ULX004
+     C           *IN90     IFEQ '1'                        *----------2   ULX004
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'009'     DBASE            ************   ULX004
+     C                     MOVEL'SDCURRL1'DBFILE           * ERROR 09 *   ULX004
+     C                     MOVELKKCYCD    DBKEY            ************   ULX004
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     END                             *----------2   ULX004
+      *                                                                   ULX004
+      ** Save the contingent amount                                       156961
+     C                     Z-ADDCTAM      WWCTAM 130                      156961
+     C                     Z-ADDA6NBDP    WWDPO                           ULX004
+     C                     MOVELA6MDIN    WWMDO                           ULX004
+     C                     Z-ADDA6SPRT    WWSRO                           ULX004
+      *                                                                   156961
+     C           ISPT      IFEQ 2                          *----------1   156961
+     C           ISPT      OREQ 5                                         156961
+     C                     Z-ADDCTAM      WWAMTI                          ULX004
+     C                     EXSR SCONV                                     ULX004
+     C                     Z-ADDWWAMTO    CTAM                            ULX004
+     C                     END                             *----------1   ULX004
+      *                                                                   ULX004
+      ***  Notional/Principal face value in foreign currency              ULX004
+      *                                                                   ULX004
+     C           CTAM      MULT @@NOCO    WWAMT            = (a) * (b)    ULX004
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+      *
+     C           A6NBDP    IFGT 0                                         ULX004
+     C                     DO   A6NBDP                                    ULX004
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ULX004
+     C                     ENDDO                                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     Z-ADDWWAMT     EXNOMA           = * (e) * .1   ULX004
+      *                                                                   ULX004
+      ***  Original contract value in foreign currency                    ULX004
+      *                                                                   ULX004
+     C                     Z-ADDEXNOMA    EXORCV                          ULX004
+      *                                                                   ULX004
+      ***  Exercise price of an option                                    ULX004
+      *                                                                   ULX004
+     C           ISPT      IFEQ 1                                         ULX004
+     C           ISPT      OREQ 2                                         ULX004
+     C           ISPT      OREQ 3                                         ULX004
+     C           ISPT      OREQ 7                                         ULX004
+     C                     Z-ADD0         EXEXPR                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADD@@NOCO    FFNOC                           ULX004
+     C                     Z-ADDSTRP      FFPRIC                          ULX004
+     C                     Z-ADDTKDM      FFTKDM                          ULX004
+     C                     Z-ADDMNPF      FFMNPF                          ULX004
+     C                     EXSR FFTVCL                                    ULX004
+     C           FFTNVL    MULT TKVL      WWAMT                           ULX004
+     C***********ISPT      IFEQ 4                                  141873 156961
+     C***********ISPT      OREQ 6                                  141873 156961
+     C***********WWAMT     MULT 10        WWAMT            = * (e) 141873 156961
+     C***********          ELSE                                    141873 156961
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+     C***********          END                                     141873 156961
+      *
+     C           WWDPO     IFGT 0                                         156961
+     C                     DO   WWDPO                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+      *                                                                   156961
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C           QOTC      IFLT 0                                         ERL462
+     C                     Z-SUBQOTC      WWQOTC  10                      ERL462
+     C***********          DO   QOTC                               ERL462 141873
+     C                     DO   WWQOTC                                    141873
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ERL462
+     C                     ENDDO                                          ERL462
+     C                     ENDIF                                          ERL462
+     C                     Z-ADDWWAMT     EXEXPR           = * (e) * .1   ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ** Store details for FUTURES transactions
+      *
+     C           ISPT      IFEQ 1                          *----------1
+     C           ISPT      OREQ 2
+     C           ISPT      OREQ 3
+     C                     MOVEL'FTR'     EXLOTD           * Lot Desc.
+     C                     MOVEL'FUTU'    EXRIND           * Record Id.
+     C                     Z-ADDCOPR      FFPRIC                          ULX004
+     C                     ELSE                            X----------1   ULX004
+      *                                                                   ULX004
+     C                     MOVEL'OPT'     EXLOTD           * Lot Desc.    ULX004
+     C                     MOVEL'OPTI'    EXRIND           * Record Id.   ULX004
+     C                     Z-ADDSTRP      FFPRIC                          ULX004
+     C                     END                                            ULX004
+      *
+     C                     Z-ADD0         EXAMNT                          ULX047
+     C           ISPT      IFEQ 4                                         ULX047
+     C           ISPT      OREQ 5                                         ULX047
+     C           ISPT      OREQ 6                                         ULX047
+      *                                                                   ULX047
+     C           ISPT      IFNE 5                                         156961
+     C                     Z-ADD@@NOCO    FFNOC                           ULX004
+     C                     Z-ADDTKDM      FFTKDM                          ULX004
+     C                     Z-ADDMNPF      FFMNPF                          ULX004
+     C                     EXSR FFTVCL                                    ULX004
+     C           FFTNVL    MULT TKVL      WWAMT                           ULX004
+     C***********ISPT      IFEQ 4                                  141873 156961
+     C***********ISPT      OREQ 6                                  141873 156961
+     C***********WWAMT     MULT 10        WWAMT            = * (e) 141873 156961
+     C***********          ELSE                                    141873 156961
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+     C           WWDPO     IFGT 0                                         156961
+     C                     DO   WWDPO                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+     C                     END                                            141873
+     C*                                                                   156961
+     C           ISPT      IFEQ 5                                         156961
+     C***********STRP      MULT @@NOCO    WWAMT                    156961 213674
+     C***********WWAMT     MULT WWCTAM    WWAMT                    156961 213674
+     C           @@NOCO    MULT CCAM      WWAMT                           213674
+     C           WWAMT     MULT 1000      WWAMT                           156961
+     C           WWDPI     IFGT 0                                         156961
+     C                     DO   WWDPI                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+     C                     ENDIF                                          156961
+      *                                                                   ULX004
+     C***********WWDPO     IFGT 0                                  156961 156961
+     C***********          DO   WWDPO                              156961 156961
+     C***********WWAMT     DIV  10        WWAMT                    156961 156961
+     C***********          ENDDO                                   156961 156961
+     C***********          ENDIF                                   156961 156961
+      *                                                                   156961
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C           QOTC      IFLT 0                                         ERL462
+     C                     Z-SUBQOTC      WWQOTC  10                      ERL462
+     C***********          DO   QOTC                               ERL462 141873
+     C                     DO   WWQOTC                                    141873
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ERL462
+     C                     ENDDO                                          ERL462
+     C                     ENDIF                                          ERL462
+     C*********************Z-ADDWWAMT     EXREAA           = * (e) ULX004 ULX047
+     C                     Z-ADDWWAMT     EXAMNT           = * (e) * .1   ULX047
+      *                                                                   ULX047
+     C                     ENDIF                                          ULX047
+      ***                                                                 ULX004
+      ***Calculate Realisation Amount as follows:-                        ULX004
+      ***  Contingent amount * no. of contracts *          = (a),(b)      ULX004
+      ***  contract price * 10pwr quotation convention *   = (c),(d)      ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***        CTAM      MULT @@NOCO    @@TCNT           = (a) * (b)    ULX004
+     C***        @@TCNT    MULT COPR      @@TCNT           = * (c)        ULX004
+      ***                                                                 ULX004
+     C***        QOTC      IFGT 0                          * Units?       ULX004
+     C***                  DO   QOTC                                      ULX004
+     C***        @@TCNT    MULT 10        @@TCNT           = * (d) * 10   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***        QOTC      IFLT 0                          * Fractions?   ULX004
+     C***        QOTC      MULT -1        @@QOTC                          ULX004
+     C***                  DO   @@QOTC                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (d) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXREAA           * Realisn.Amt. ULX004
+      ***                                                                 ULX004
+      ***Store details for OPTIONS transactions                           ULX004
+      ***                                                                 ULX004
+     C***                  ELSE                            X----------1   ULX004
+     C***                                                          ER0316 ULX004
+     C* ALL OPTIONS MUST BE EXTRACTED FOR CAD PURPOSES             ER0316 ULX004
+     C*******                                                      ER0316 ULX004
+     C***Only Process 'S' position                                 ER0316 ULX004
+     C*******    TRTY      IFNE 'S'                                ER0316 ULX004
+     C*******              GOTO #P0039                             ER0316 ULX004
+     C*******              END                                     ER0316 ULX004
+      ***                                                                 ULX004
+     C***                  MOVEL'OPT'     EXLOTD           * Lot Desc.    ULX004
+     C***                  MOVEL'OPTI'    EXRIND           * Record Id.   ULX004
+      ***                                                                 ULX004
+      ***Calculate Realisation Amount as follows:-                        ULX004
+      ***  Contingent amount * no. of contracts *          = (a),(b)      ULX004
+      ***  strike price * 10pwr quotation convention *     = (c),(d)      ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***        CTAM      MULT @@NOCO    @@TCNT           = (a) * (b)    ULX004
+     C***        @@TCNT    MULT STRP      @@TCNT           = * (c)        ULX004
+      ***                                                                 ULX004
+     C***        QOTC      IFGT 0                          * Units?       ULX004
+     C***                  DO   QOTC                                      ULX004
+     C***        @@TCNT    MULT 10        @@TCNT           = * (d) * 10   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***        QOTC      IFLT 0                          * Fractions?   ULX004
+     C***        QOTC      MULT -1        @@QOTC                          ULX004
+     C***                  DO   @@QOTC                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (d) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXREAA           * Realisn.Amt. ULX004
+      ***                                                                 ULX004
+     C***                  END                             *----------1   ULX004
+      *
+      ** Store details for MARKET, Instrument Ind. = 'N' transactions
+      *
+     C           ISTI      IFEQ 'N'                        *----------1
+     C                     MOVEL'MKT'     EXSESN           * Sec.Shortname
+     C                     MOVE '       ' EXSESN           * Sec.Shortname
+      *
+      ** Store details for O.T.C., Instrument Ind. <> 'N' transactions
+      *
+     C                     ELSE                            X----------1
+     C                     MOVEL'OTC'     EXSESN           * Sec.Shortname
+     C                     END                             *----------1   ULX047
+     C           ISPT      IFEQ 1                          *---------2
+     C           ISPT      OREQ 4
+     C                     MOVE 'INTERST' EXSESN           * Sec.Shortname
+     C                     END                             *---------2
+     C           ISPT      IFEQ 2                          *---------2
+     C           ISPT      OREQ 5
+     C                     MOVE '  FOREX' EXSESN           * Sec.Shortname
+     C                     END                             *---------2
+     C           ISPT      IFEQ 3                          *---------2
+     C           ISPT      OREQ 6
+     C                     MOVE 'COMMODI' EXSESN           * Sec.Shortname
+     C                     END                             *---------2
+     C*********************END                             *----------1   ULX047
+      *
+      ** Convert Transaction Date into YYYYMMDD format
+      *
+     C                     Z-ADDTRSD      @@DAYN           * Working day
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     EXSTRD           * Start Date
+      *                                                                   ULX004
+      ***  Start Date                                                     ULX004
+      *                                                                   ULX004
+     C                     Z-ADDEXSTRD    EXSTDA                          ULX004
+      *
+      ** Determine Settlement Date in YYYYMMDD format
+      *
+     C           ISTI      IFNE 'Y'                                       ULX004
+     C                     MOVE SEDF      FFDATC           * Date Formula
+     C                     Z-ADDMTHN      FFMTH            * Mth reqd.
+     C                     Z-ADDYRNO      FFYR             * Year reqd.
+     C                     MOVE MKLC      FFCCY1           * Mkt ccy
+     C                     MOVE ISCY      FFCCY2           * Inst. ccy
+     C                     MOVE OTHC      FFCCY3           * Other ccy
+     C                     EXSR FFDATE
+     C                     Z-ADDFFDAY     @@DAYN           * Working day
+     C                     ELSE                                           ULX004
+     C                     Z-ADDSETD      @@DAYN                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     EXENDD           * End Date
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+      *                                                                   CEU007
+      ***  Set up the fields with :                                       CEU007
+      ***  ISCY from PF/TRANS7                                            CEU007
+      ***  BJSLCD from PF/SDBANKPD                                        CEU007
+      *                                                                   CEU007
+     C                     MOVELISCY      EXSDCU           St.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXSDLO           St.Dat.Sett.LocCEU007
+     C                     MOVELISCY      EXEDCU           En.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXEDLO           En.Dat.Sett.LocCEU007
+     C                     MOVELISCY      EXRDCU           Re.Dat.Sett.CcyCEU007
+     C                     MOVELBJSLCD    EXRDLO           Re.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E1             CEU007
+      *                                                                   CEU007
+      *                                                                   ULX004
+      ***  Date A                                                         ULX004
+      *                                                                   ULX004
+     C*********************Z-ADDEXENDD    EXDATA                   ULX004 CAD007
+      *                                                                   ULX004
+      ***  Date B                                                         ULX004
+      *                                                                   ULX004
+     C                     Z-ADDEXENDD    EXDATB                          ULX004
+      *
+      ** Store details for Instrument Months Quoted <> *blanks trans.
+      *
+     C           ISMQ      IFNE *BLANKS                    *----------1
+      *
+      ** Calculate Next Revision Date in MIDAS format
+      *
+     C*******              EXSR ZREVDT                                    205470
+      *
+      ** Convert Next Revision Date into YYYYMMDD format
+      *
+     C*******              Z-ADDFFDAY     @@DAYN           * Working day  205470
+     C*******              EXSR ZDATE9                                    205470
+     C*******              MOVE @@VDT     EXREVD           * Revision Date205470
+     C                     Z-ADD0         EXREVD                          205470
+      *                                                                   CEU007
+      ***  If the feature CEU007 is installed, filling the new fields     CEU007
+      *                                                                   CEU007
+     C           CEU007    IFEQ 'Y'                        B1             CEU007
+     C           ISTI      ANDEQ'Y'                                       CEU007
+      *                                                                   CEU007
+      ***  Set up the fields with :                                       CEU007
+      ***  MLOC from PF/MARKT                                             CEU007
+      ***  ISCY from PF/TRANS7                                            CEU007
+      *                                                                   CEU007
+     C                     MOVELMLOC      EXEDLO           En.Dat.Sett.LocCEU007
+     C                     MOVELMLOC      EXRDLO           Re.Dat.Sett.LocCEU007
+      *                                                                   CEU007
+     C                     ENDIF                           E1             CEU007
+      *                                                                   CEU007
+     C                     ELSE                            X----------1
+     C                     Z-ADD0         EXREVD           * Revision Date
+     C                     END                             *----------1
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Get FF Market Prices record
+      *
+     C                     MOVE ISTT      KKISTT           * Inst. Type
+     C                     Z-ADDYRNO      KKYRNO           * Year No.
+     C                     Z-ADDMTHN      KKMTHN           * Month No.
+     C                     MOVE PCAL      KKPCAL           * PUT/CALL     60370
+     C                     Z-ADDSTRP      KKSTRP           * STRIKE PRICE 60370
+     C           PRICS0    CHAINPRICS                90
+     C           *IN90     IFEQ '1'                        *----------1
+     C*********************MOVEL'010'     DBASE            ************   ER0301
+     C*********************MOVEL'PRICS   'DBFILE           * ERROR 10 *   ER0301
+     C*********************MOVELKKYRNO    @@04A   4        *          *   ER0301
+     C*********************MOVE KKMTHN    @@04A            *          *   ER0301
+     C***********KKISTT****CAT  @@04A     DBKEY            *          *   ER0301
+???? C**********           MOVELKK????    DBKEY            ************
+     C*********************EXSR *PSSR                                     ER0301
+     C***********ISTI      IFEQ 'Y'                                ER0301 ULX047
+     C***********          Z-ADDCOPR      NEWP                     ER0301 ULX047
+     C***********          ELSE                                    ER0301 ULX047
+     C                     GOTO #P0039                                    ER0301
+     C***********          END                                     ER0301 ULX047
+     C                     END                             *----------1
+      *                                                                   ULX047
+     C           ISPT      IFEQ 1                                         ULX047
+     C           ISPT      OREQ 4                                         ULX047
+     C           100       SUB  NEWP      NEWP                            ULX047
+     C                     ENDIF                                          ULX047
+      *                                                                   ULX004
+      *****Market*Value*1*in*foreign*currency                      ULX004 ULX047
+      ***  Market Value of derivative in foreign currency                 ULX047
+      *                                                                   ULX004
+     C                     Z-ADD@@NOCO    FFNOC                           ULX004
+     C                     Z-ADDNEWP      FFPRIC                          ULX004
+     C                     Z-ADDTKDM      FFTKDM                          ULX004
+     C                     Z-ADDMNPF      FFMNPF                          ULX004
+     C                     EXSR FFTVCL                                    ULX004
+     C           FFTNVL    MULT TKVL      WWAMT                           ULX004
+     C***********ISPT      IFEQ 4                                  141873 156961
+     C***********ISPT      OREQ 6                                  141873 156961
+     C***********WWAMT     MULT 10        WWAMT            = * (e) 141873 156961
+     C***********          ELSE                                    141873 156961
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+     C***********          END                                     141873 156961
+      *
+     C           WWDPO     IFGT 0                                         156961
+     C                     DO   WWDPO                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+      *                                                                   156961
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C           QOTC      IFLT 0                                         ERL462
+     C                     Z-SUBQOTC      WWQOTC  10                      ERL462
+     C***********          DO   QOTC                               ERL462 141873
+     C                     DO   WWQOTC                                    141873
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ERL462
+     C                     ENDDO                                          ERL462
+     C                     ENDIF                                          ERL462
+     C*********************Z-ADDWWAMT     EXMKT1           = * (e) ULX004 ULX047
+     C                     Z-ADDWWAMT     EXDEMK           = * (e) * .1   ULX047
+      *                                                                   ULX004
+      *****Market*Value*of*derivative*in*foreign*currency          ULX004 ULX047
+      ***  Market Value 1 in foreign currency                             ULX047
+      ***                                                          ULX004 ULX047
+     C*********            Z-ADDEXMKT1    EXDEMK                   ULX004 ULX047
+     C           ISPT      IFEQ 1                                         ULX047
+     C           ISPT      OREQ 2                                         ULX047
+     C           ISPT      OREQ 3                                         ULX047
+     C                     Z-ADDEXNOMA    EXMKT1                          ULX047
+     C                     ELSE                                           ULX047
+     C                     Z-ADDEXAMNT    EXMKT1                          ULX047
+     C                     ENDIF                                          ULX047
+      *                                                                   ULX047
+      ***  Valuation amount                                               ULX047
+     C                     Z-ADD0         EXREAA                          ULX047
+     C           ISPT      IFEQ 5                                         ULX047
+     C           RSKF      IFNE 0                                         ULX047
+     C           EXDEMK    MULT RSKF      EXREAA                          ULX047
+     C                     ELSE                                           ULX047
+     C                     Z-ADDEXDEMK    EXREAA                          ULX047
+     C                     ENDIF                                          ULX047
+     C                     ENDIF                                          ULX047
+      *
+      ***  ULX004 : Store Risk Factor                                     ULX004
+      *                                                                   ULX004
+     C                     Z-ADDRSKF      EXRSKF                          ULX004
+      ***                                                                 ULX004
+      ***Calculate Exercise Amount as follows:-                           ULX004
+      ***  Contingent amount * no. of contracts *          = (a),(b)      ULX004
+      ***  New price *                                     = (c),         ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***        CTAM      MULT @@NOCO    @@TCNT           = (a) * (b)    ULX004
+     C***        @@TCNT    MULT NEWP      @@TCNT           = * (c)        ULX004
+      ***                                                                 ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXEXEA           * Exercise Amt.ULX004
+      *                                                                   ULX004
+     C                     Z-ADD@@NOCO    FFNOC                           ULX004
+     C                     Z-ADDNEWP      FFPRIC                          ULX004
+     C                     Z-ADDTKDM      FFTKDM                          ULX004
+     C                     Z-ADDMNPF      FFMNPF                          ULX004
+     C                     EXSR FFTVCL                                    ULX004
+     C           FFTNVL    MULT TKVL      WWAMT                           ULX004
+     C***********ISPT      IFEQ 4                                  141873 156961
+     C***********ISPT      OREQ 6                                  141873 156961
+     C***********WWAMT     MULT 10        WWAMT            = * (e) 141873 156961
+     C***********          ELSE                                    141873 156961
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+     C***********          END                                     141873 156961
+      *                                                                   ULX004
+     C           WWDPO     IFGT 0                                         156961
+     C                     DO   WWDPO                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+      *                                                                   156961
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C           QOTC      IFLT 0                                         ERL462
+     C                     Z-SUBQOTC      WWQOTC  10                      ERL462
+     C***********          DO   QOTC                               ERL462 141873
+     C                     DO   WWQOTC                                    141873
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ERL462
+     C                     ENDDO                                          ERL462
+     C                     ENDIF                                          ERL462
+     C                     Z-ADDWWAMT     EXEXEA           = * (e) * .1   ULX004
+      ***                                                                 ULX004
+      ***Calculate Amount in Currency as follows:-                        ULX004
+      ***  Contingent amount * no. of contracts *          = (a),(b)      ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***        CTAM      MULT @@NOCO    @@TCNT           = (a) * (b)    ULX004
+     C***                                                                 ULX004
+     C***        ISPT      IFEQ 4                                  ER0331 ULX004
+     C***        ISPT      OREQ 5                                  ER0331 ULX004
+     C***        ISPT      OREQ 6                                  ER0331 ULX004
+     C***        @@TCNT    MULT STRP      @@TCNT                   ER0331 ULX004
+     C***                  END                                     ER0331 ULX004
+      ***                                                                 ULX004
+     C**OPTION MUST BE IN% IT'S WHY WE MULTIPLY BY 10 INSTEAD 1000 60747  ULX004
+      ***                                                          60747  ULX004
+     C***        ISPT      IFEQ 4                                  60747  ULX004
+     C***        @@TCNT    MULT 10        @@TCNT    = * (e) * 10   60747  ULX004
+     C***                  ELSE                                    60747  ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+     C***                  ENDIF                                   60747  ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXAMNT           * Amount in CcyULX004
+      *                                                                   ULX004
+     C           ISPT      IFEQ 1                          *----------1   ULX004
+     C           ISPT      OREQ 2                                         ULX004
+     C           ISPT      OREQ 3                                         ULX004
+     C*********************Z-ADDEXNOMA    EXAMNT                   ULX004 213675
+     C           EXNOMA    MULT NEWP      EXAMNT                          213675
+     C*********************ELSE                                    ULX004 ULX047
+     C*********************Z-ADDEXREAA    EXAMNT           * AmountULX004 ULX047
+     C                     END                                            ULX004
+      *
+      ***For Ticks Denominator = 100,                                     ULX004
+      ***Calculate Netto Accounting Amount as follows:-                   ULX004
+      ***  Contract Price * no. of contracts *             = (a),(b)      ULX004
+      ***  Tick Value / Minimum Price Fluctuation *        = (c),(d)      ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***        TKDM      IFEQ 100                        *----------1   ULX004
+      ***                                                                 ULX004
+     C***        COPR      MULT @@NOCO    @@TCNT           = (a) * (b)    ULX004
+     C***        @@TCNT    MULT TKVL      @@TCNT           = * (c)        ULX004
+     C***        @@TCNT    DIV  MNPF      @@TCNT           = / (d)        ULX004
+      ***                                                                 ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXNETA           * Netto A/c AmtULX004
+      ***                                                                 ULX004
+      ***For Ticks Denominator <> 100,                                    ULX004
+      ***Calculate Netto Accounting Amount as follows:-                   ULX004
+      ***  Contract Price (Integer) * Tick Denominator +   = (a),(b)      ULX004
+      ***  Contract Price (Decimal) * no. of contracts *   = (c),(d)      ULX004
+      ***  10pwr rate conversion factor (ie.1000 / Decs.)  = (e)          ULX004
+      ***                                                                 ULX004
+     C***                  ELSE                            X----------1   ULX004
+     C***                  Z-ADDCOPR      @SCOPR                          ULX004
+      ***                                                                 ULX004
+     C***        @SINT     MULT TKDM      @@TCNT           = (a) * (b)    ULX004
+     C***        @@TCNT    ADD  @SDEC     @@TCNT           = + (c)        ULX004
+     C***        @@TCNT    MULT @@NOCO    @@TCNT           = * (d)        ULX004
+      ***                                                                 ULX004
+     C***        @@TCNT    MULT 1000      @@TCNT           = * (e) * 1000 ULX004
+      ***                                                                 ULX004
+     C***        A6NBDP    IFGT 0                                         ULX004
+     C***                  DO   A6NBDP                                    ULX004
+     C***        @@TCNT    DIV  10        @@TCNT           = * (e) * .1   ULX004
+     C***                  END                                            ULX004
+     C***                  END                                            ULX004
+      ***                                                                 ULX004
+     C***                  Z-ADD@@TCNT    EXNETA           * Netto A/c AmtULX004
+      ***                                                                 ULX004
+     C***                  END                             *----------1   ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         EXNETA                          ULX047
+     C           ISPT      IFEQ 4                          *----------1   ULX047
+     C           ISPT      OREQ 5                                         ULX047
+     C           ISPT      OREQ 6                                         ULX047
+     C                     Z-ADD@@NOCO    FFNOC                           ULX004
+     C*********************Z-ADDCOPR      FFPRIC                   ULX004 ULX047
+     C                     Z-ADDSTRP      FFPRIC                          ULX047
+     C                     Z-ADDTKDM      FFTKDM                          ULX004
+     C                     Z-ADDMNPF      FFMNPF                          ULX004
+     C                     EXSR FFTVCL                                    ULX004
+     C           FFTNVL    MULT TKVL      WWAMT                           ULX004
+     C***********ISPT      IFEQ 4                                  141873 156961
+     C***********ISPT      OREQ 6                                  141873 156961
+     C***********WWAMT     MULT 10        WWAMT            = * (e) 141873 156961
+     C***********          ELSE                                    141873 156961
+     C           WWAMT     MULT 1000      WWAMT            = * (e) * 1000 ULX004
+     C***********          END                                     141873 156961
+      *                                                                   ULX004
+     C           WWDPO     IFGT 0                                         156961
+     C                     DO   WWDPO                                     156961
+     C           WWAMT     DIV  10        WWAMT                           156961
+     C                     ENDDO                                          156961
+     C                     ENDIF                                          156961
+      *                                                                   156961
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C           QOTC      IFLT 0                                         ERL462
+     C                     Z-SUBQOTC      WWQOTC  10                      ERL462
+     C***********          DO   QOTC                               ERL462 141873
+     C                     DO   WWQOTC                                    141873
+     C           WWAMT     DIV  10        WWAMT            = * (e) * .1   ERL462
+     C                     ENDDO                                          ERL462
+     C                     ENDIF                                          ERL462
+     C                     Z-ADDWWAMT     EXNETA           = * (e) * .1   ULX004
+      *                                                                   ULX047
+     C                     ENDIF                                          ULX047
+      *---------------------------------------------------------------*
+      *                                                                   ULX004
+      ** Get Transaction Settlement Details                               ULX004
+      *                                                                   ULX004
+     C           TNBR      CHAINTRSET                90                   ULX004
+      *                                                                   ULX004
+      ** Transaction Settlement record not found                          ULX004
+      *                                                                   ULX004
+     C           *IN90     IFEQ '1'                        *---------1    ULX004
+     C                     WRITEHEADAU                                    ULX004
+     C           *LOCK     IN   LDA                                       ULX004
+     C                     MOVEL'011'     DBASE            ************   ULX004
+     C                     MOVEL'TRSET   'DBFILE           * ERROR 11 *   ULX004
+     C                     MOVELTNBR      DBKEY                           ULX004
+     C                     OUT  LDA                                       ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     END                             *---------1    ULX004
+      *                                                                   ULX004
+      ** Setup Premium Paid amount                                        ULX004
+      *                                                                   ULX004
+     C           PRMP      MULT 1000      @@TCNT           = * 1000       ULX004
+      *                                                                   ULX004
+     C           A6NBDP    IFGT 0                                         ULX004
+     C                     DO   A6NBDP                                    ULX004
+     C           @@TCNT    DIV  10        @@TCNT           = * .1         ULX004
+     C                     END                                            ULX004
+     C                     END                                            ULX004
+      *                                                                   ULX004
+     C                     Z-ADD@@TCNT    EXPRMP           * Premium Paid ULX004
+      *                                                                   ERC003
+      *****Calculate*profit*or*loss                                ERC003 ULX047
+      ***  Calculate net present value                             ERC003 ULX047
+      ***********                                                  ERC003 ULX047
+     C***********          Z-ADDTKDM      FFTKDM                   ERC003 ULX047
+     C***********          Z-ADDMNPF      FFMNPF                   ERC003 ULX047
+     C***********          Z-ADDTKVL      FFTKVL                   ERC003 ULX047
+     C***********          Z-ADD@@NOCO    FFNOC                    ERC003 ULX047
+     C***********          Z-ADDNEWP      FFPRCX                   ERC003 ULX047
+     C***********          Z-ADDCOPR      FFPRCY                   ERC003 ULX047
+      ***********                                                  ERC003 ULX047
+     C***********          EXSR FFPLCL                             ERC003 ULX047
+      ***********                                                  ERC003 ULX047
+     C***********FFPOL     MULT 1000      FFPOL                    ERC003 ULX047
+      ***********                                                  ERC003 ULX047
+     C***********A6NBDP    IFGT 0                                  ULX004 ERL462
+     C***********          DO   A6NBDP                             ULX004 ERL462
+     C***********WWAMT     DIV  10        WWAMT            = * (e) ULX004 ERL462
+     C***********          ENDDO                                   ULX004 ERL462
+     C***********          ENDIF                                   ULX004 ERL462
+     C***********QOTC      IFLT 0                                  ERL462 ULX047
+     C***********          Z-SUBQOTC      WWQOTC  10               ERL462 ULX047
+     C***********          DO   QOTC                               ERL462 141873
+     C***********          DO   WWQOTC                             141873 ULX047
+     C***********FFPOL     DIV  10        FFPOL            = * (e) ERL462 ULX047
+     C***********          ENDDO                                   ERL462 ULX047
+     C***********          ENDIF                                   ERL462 ULX047
+      ***********                                                  ERC003 ULX047
+     C***********          Z-ADDFFPOL     EXNPVA                   ERC003 ULX047
+      ***********                                                  ULX004 ULX047
+     C***********WWDPO     IFGT 0                                  156961 ULX047
+     C***********          DO   WWDPO                              156961 ULX047
+     C***********          DIV  10        EXNPVA           = * .1  156961 ULX047
+     C***********          END                                     156961 ULX047
+     C***********          END                                     156961 ULX047
+     C                     Z-ADDEXDEMK    EXNPVA                          ULX047
+      *                                                                   156961
+      ***  Issuer Name                                                    ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   EXISSN                          ULX004
+      *                                                                   ULX004
+      ***  Coupon Rate                                                    ULX004
+      *                                                                   ULX004
+     C                     Z-ADD0         EXCPNR                          ULX004
+      *                                                                   ULX004
+     C                     SELEC                                          ULX004
+      *                                                                   ULX004
+      *** Interest rate futures = 100 minus comtract price                ULX004
+      *                                                                   ULX004
+     C           ISPT      WHEQ 1                                         ULX004
+     C           100       SUB  COPR      EXCPNR    H                     ULX004
+      *                                                                   ULX004
+      *** Interest rate options = 100 minus strike price                  ULX004
+      *                                                                   ULX004
+     C           ISPT      WHEQ 4                                         ULX004
+     C           100       SUB  STRP      EXCPNR    H                     ULX004
+      *                                                                   ULX004
+     C                     ENDSL                                          ULX004
+      *                                                                   ULX004
+      ***  Long/Short position indicator 1                                ULX004
+      *                                                                   ULX004
+     C           TRTY      IFEQ 'S'                                       ULX004
+     C                     Z-ADD2         EXLSP1                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADD1         EXLSP1                          ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      ***  Long/Short position indicator 2                                ULX004
+      *                                                                   ULX004
+     C           ISPT      IFEQ 5                                         ULX004
+     C                     Z-ADD2         EXLSP2                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADD0         EXLSP2                          ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      ***  Unique contract reference                                      ULX004
+      *                                                                   ULX004
+     C                     MOVELTNBR      EXUCOR                          ULX004
+      *                                                                   ULX004
+      ***  Unique Issuance reference                                      ULX004
+      *                                                                   ULX004
+     C                     MOVE *BLANKS   EXUISS                          ULX004
+      *                                                                   ULX004
+      ***  Book Code                                                      ULX004
+      *                                                                   ULX004
+     C                     MOVELBOKC      EXBKCD                          ULX004
+      *
+      *---------------------------------------------------------------*
+      *
+      ** WRITE RECORD IN OUTPUT FILE
+      *
+     C                     EXSR #W001
+      *
+     C           #P0039    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #W001  - OUTPUT PROCESSING (To EREXTRPD file)        *
+      *                                                               *
+      *===============================================================*
+     C           #W001     BEGSR
+      *
+     C                     Z-ADD003       EXRECT           * Record Type
+      * 'FTR' or 'OPT'                    EXLOTD           * Lot Desc.
+      * 'FUTU' or 'OPTI'                  EXRIND           * Record Id.
+     C                     Z-ADD*ZEROS    EXREFI           * Internal Ref.
+     C                     Z-ADD*ZEROS    EXOSHA           * Origin Code
+     C                     Z-ADD*ZEROS    EXREPP           * Report.Period
+     C                     Z-ADD@@REPD    EXREPD           * Report.Date
+     C                     MOVE BRCA      EXBRCD           * Branch Code  ULX004
+     C***********BOKC      CAT  ISTT      @@07A   7                       ULX004
+     C           BOKC      CAT  ISTT      @@13A  13                       ULX004
+     C                     MOVE TNBR      @@13A                           ULX004
+     C***********          MOVEL@@07A     EXTREF           * Trans.Ref.   ULX004
+     C                     MOVEL@@13A     EXTREF           * Trans.Ref.   ULX004
+     C***********@@07A     CAT  PCAL      EXDECK    P      * Decision Key ER0313
+     C***********@@07A     CAT  WWPCAL    EXDECK    P      * Decisi ER0313ULX004
+     C                     MOVE ISPT      WISPT   1                       ULX004
+     C           BOKC      CAT  WISPT     EXDECK    P                     ULX004
+     C                     CAT  ISTI:0    EXDECK    P                     ULX004
+     C***        ISPT      IFEQ 2                                  ERL378 ULX004
+     C***        ISPT      OREQ 5                                  ERL378 ULX004
+     C***                  MOVE OTHC      EXCCYC       * OTHER CCY ERL378 ULX004
+     C***                  ELSE                                    ERL378 ULX004
+     C                     MOVE ISCY      EXCCYC           * Currency Code
+     C***                  ENDIF                                   ERL378 ULX004
+     C                     MOVE @@COLC    EXORCC           * Origin Count.
+     C                     Z-ADD*ZEROS    EXIRTT           * Int.Rate Type
+     C                     Z-ADD*ZEROS    EXPOOL           * Code Pool
+     C                     Z-ADD*ZEROS    EXDIST           * Discount Type
+     C                     MOVE *BLANKS   EXRCSI           * Recourse Ind.
+      *                                   EXPCNB           * Parent C/m No
+      *                                   EXPRCC           * Parent Count.
+      *                                   EXSTRD           * Start Date
+      *                                   EXENDD           * End Date
+      *                                   EXREVD           * Revision Date
+      *                                   EXAMNT           * Amount in Ccy
+      * '1' or '0'                        EXDRCR           * DR/CR Ind.
+     C***********          Z-ADD*ZEROS    EXNOMA           * Nominal Amt. ULX004
+     C                     MOVE *BLANKS   EXFCUS           * Facility C/m
+     C                     Z-ADD*ZEROS    EXFACT           * Facility Type
+     C                     Z-ADD*ZEROS    EXFCNO           * Facility No.
+     C                     Z-ADD*ZEROS    EXMARA           * Margin Amt.
+     C                     Z-ADD*ZEROS    EXRICA           * Risk Cent.Amt
+      * HDGI or *blanks                   EXTRIN           * Trade/Invest.
+     C                     Z-ADD*ZEROS    EXCLPR           * Clot.Price %
+     C                     Z-ADD*ZEROS    EXPBCP           * Prev.Clot.Pri
+     C                     MOVE *BLANKS   EXSVMC           * Code SVM Tit.
+     C                     Z-ADDQOTC      EXSECQ           * Security Quot
+     C                     MOVE ISTN      EXSECD           * Security Den.
+     C                     Z-ADD*ZEROS    EXCESC           * Cession Code
+      *                                   EXEXEA           * Exercise Amt.
+      *                                   EXREAA           * Realisn.Amt.
+      *                                   EXPREA           * Prev.Real.Amt
+      *                                   EXNETA           * Netto A/c Amt
+      * 'MKT       ' or 'OTCaaaaaaa'      EXSESN           * Sec.Shortname
+     C                     Z-ADD*ZEROS    EXQEVL           * Quarter Risk
+     C                     Z-ADD*ZEROS    EXREVL           * Report Risk
+     C                     Z-ADD*ZEROS    EXCRIS           * Comm. Risk
+     C                     Z-ADD*ZEROS    EXQCOM           * Quarter Comm.
+     C                     Z-ADD*ZEROS    EXRCOM           * Report Comm.
+     C                     Z-ADD*ZEROS    EXQINC           * Quarter Incr.
+     C                     Z-ADD*ZEROS    EXQDEC           * Quarter Decr.
+     C                     MOVE *BLANKS   EXRICC           * Risk Centre
+     C                     Z-ADD*ZEROS    EXRISA           * Risk Amount
+      *
+      ** ADD 1 TO NUMBER OF EXTRACTED RECORDS
+      *
+     C                     ADD  1         NREC
+      *
+      ** WRITE A RECORD
+      *
+      *                    =====
+     C                     WRITEEREXTRF0
+      *                    =====
+      *
+     C           #W0019    ENDSR
+      ****************************************************************    ERC003
+     C**                                                             *    ERC003
+     C**  SR:FFPLCL   - CALCULATES PROFIT OR LOSS ( AND EQUIVALENT   *    ERC003
+     C**                NET TRANSACTION VALUE ) FOR A GIVEN          *    ERC003
+     C**                NUMBER OF CONTRACTS DUE TO A PRICE           *    ERC003
+     C**                DIFFERENCE BETWEEN ONE PRICE                 *    ERC003
+     C**                ( PRICE X ) AND ANOTHER ( PRICE Y )          *    ERC003
+     C**                                                             *    ERC003
+     C**  CALLS ST S/R- FFTVCL                                       *    ERC003
+     C**                                                             *    ERC003
+     C**  INPUTS      - FFNOC   (5,0P) NUMBER OF CONTRACTS           *    ERC003
+     C**                FFPRCX (11,7P) PRICE X                       *    ERC003
+     C**                FFPRCY (11,7P) PRICE Y                       *    ERC003
+     C**                FFTKDM  (3,0P) TICKS DENOMINATOR             *    ERC003
+     C**                FFMNPF (11,7P) MINIMUM PRICE FLUCTUATION     *    ERC003
+     C**                FFTKVL (14,5P) TICK VALUE                    *    ERC003
+     C**  OUTPUTS     - FFPOL  (13,0P) PROFIT OR LOSS (HALF ADJUSTED)*    ERC003
+     C**                FFNTVL (13,0P) NET TRANSACTION VALUE         *    ERC003
+     C**                                                             *    ERC003
+     C****************************************************************    ERC003
+     C*                                                                   ERC003
+     C           FFPLCL    BEGSR                                          ERC003
+     C*                                                                   ERC003
+     C                     Z-ADDFFNOC     FFNOC   50                      ERC003
+     C***********          Z-ADDFFPRCX    FFPRCX 117                ERC003CCF004
+     C                     Z-ADDFFPRCX    FFPRCX 158                      CCF004
+     C***********          Z-ADDFFPRCY    FFPRCY 117                ERC003CCF004
+     C                     Z-ADDFFPRCY    FFPRCY 158                      CCF004
+     C                     Z-ADDFFTKDM    FFTKDM  30                      ERC003
+     C***********          Z-ADDFFMNPF    FFMNPF 117                ERC003CCF004
+     C                     Z-ADDFFMNPF    FFMNPF 158                      CCF004
+     C                     Z-ADDFFTKVL    FFTKVL 145                      ERC003
+     C*                                                                   ERC003
+     C                     Z-ADD0         FFPOL  130                      ERC003
+     C                     Z-ADD0         FFNTVL 130                      ERC003
+     C*                                                                   ERC003
+     C**  Calculate the Transaction Value for PRICE X                     ERC003
+     C*                                                                   ERC003
+     C                     Z-ADDFFPRCX    FFPRIC                          ERC003
+     C                     EXSR FFTVCL                                    ERC003
+     C                     Z-ADDFFTNVL    FFNTVL                          ERC003
+     C*                                                                   ERC003
+     C*                                                                   ERC003
+     C**  Calculate the Transaction Value for PRICE Y and                 ERC003
+     C**  subtract it from the Transaction Value for PRICE X              ERC003
+     C**  to get the Net Transaction Value                                ERC003
+     C*                                                                   ERC003
+     C                     Z-ADDFFPRCY    FFPRIC                          ERC003
+     C                     EXSR FFTVCL                                    ERC003
+     C                     SUB  FFTNVL    FFNTVL                          ERC003
+     C*                                                                   ERC003
+     C**  Calculate Profit or Loss by multiplying the                     ERC003
+     C**  Net Transaction Value by the Tick Value                         ERC003
+     C*                                                                   ERC003
+     C           FFNTVL    MULT FFTKVL    FFPOL     H                     ERC003
+     C*                                                                   ERC003
+     C                     ENDSR                                          ERC003
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          ZREVDT - CALCULATE REVISION DATE FROM FORMULA        *
+      *                                                               *
+      *===============================================================*
+     C           ZREVDT    BEGSR
+      *
+      ** Determine Current Trading Date:
+      **   - For Mkt Instr (= Market Business date from Market Control)
+      *
+     C           MRKT      IFNE '  '                       *----------1
+     C                     Z-ADDBUSD      @@DAYN
+      *
+      **   - For O.T.C. (= Run date from Bank Details record)
+      *
+     C                     ELSE                            X----------1
+     C                     Z-ADDBJRDNB    @@DAYN
+     C                     END                             *----------1
+      *
+      ** Convert Trading Date to determine Current Trading Year-Month
+      *
+     C                     MOVE @@DAYN    ZDAYNO
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     @SCT
+      *
+      ** Convert Spot Date Formula into current Monthly Date
+      *
+     C                     MOVE SPMF      FFDATC           * Date Formula
+     C                     Z-ADD@SCM      FFMTH            * Mth reqd.
+     C                     Z-ADD@SCY      FFYR             * Year reqd.
+     C                     MOVE MKLC      FFCCY1           * Mkt ccy
+     C                     MOVE ISCY      FFCCY2           * Inst. ccy
+     C                     MOVE OTHC      FFCCY3           * Other ccy
+     C                     EXSR FFDATE
+      *
+      ** Determine if Next Revision Date is in Current Trading Month
+      **   and, if so, has it been passed
+      *
+     C                     MOVEAISMQ      IMQ              * Inst.Quoted
+      *
+     C           IMQ,@SCM  IFEQ 'Y'                        *----------1
+     C           FFDAY     ANDLT@@DAYN
+     C                     Z-ADDFFDAY     @@DAYN           * Revision Date
+     C                     ELSE                            X----------1
+     C                     Z-ADD0         FFDAY
+      *
+     C           FFDAY     DOWEQ0                          *---------2
+     C                     ADD  1         @SCM
+      *
+      **   - new year?
+      *
+     C           @SCM      IFGT 12                         *--------3
+     C                     Z-ADD1         @SCM
+     C                     ADD  1         @SCY
+     C                     END                             *--------3
+      *
+      **   - traded month? If yes, convert Spot Date Formula for month
+      *
+     C           IMQ,@SCM  IFEQ 'Y'                        *--------3
+     C                     Z-ADD@SCM      FFMTH            * Mth reqd.
+     C                     Z-ADD@SCY      FFYR             * Year reqd.
+     C                     EXSR FFDATE
+     C                     END                             *--------3
+      *
+     C                     END                             *---------2
+     C                     END                             *----------1
+      *
+     C                     ENDSR
+     C********************************************************************ULX004
+     C**                                                                 *ULX004
+     C**  SCONV - Converts an amount from one currency to another.       *ULX004
+     C**                                                                 *ULX004
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *ULX004
+     C**                 WWSRI  13/8 spot rate for input currency        *ULX004
+     C**                 WWSRO  13/8 spot rate for output currency       *ULX004
+     C**                 WWDPI  1/0  no. of decimals for input currency  *ULX004
+     C**                 WWDPO  1/0  no. of decimals for output currency *ULX004
+     C**                 WWMDI  1    mult/div indicator for input curr.  *ULX004
+     C**                 WWMDO  1    mult/div indicator for output curr. *ULX004
+     C**                                                                 *ULX004
+     C**  Arrays       - POWER  powers of 10                             *ULX004
+     C**                                                                 *ULX004
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *ULX004
+     C**                                                                 *ULX004
+     C**  CALLS    - NONE                                                *ULX004
+     C**                                                                 *ULX004
+     C********************************************************************ULX004
+     C           SCONV     BEGSR                           **  SCONV    **ULX004
+     C*                                                                   ULX004
+     C** DEFINE ALL FIELDS                                                ULX004
+     C                     Z-ADDWWAMTI    WWAMTI 150                      ULX004
+     C                     Z-ADD0         WWAMTO 150                      ULX004
+     C           *LIKE     DEFN A6SPRT    WWSRI                           ULX004
+     C           *LIKE     DEFN A6SPRT    WWSRO                           ULX004
+     C           *LIKE     DEFN A6NBDP    WWDPI                           ULX004
+     C           *LIKE     DEFN A6NBDP    WWDPO                           ULX004
+     C           *LIKE     DEFN A6MDIN    WWMDI                           ULX004
+     C           *LIKE     DEFN A6MDIN    WWMDO                           ULX004
+     C*                                                                   ULX004
+     C           WWDPO     SUB  WWDPI     Z       10                      ULX004
+     C           Z         ADD  4         Z                               ULX004
+     C*                                                                   ULX004
+     C           WWMDI     IFNE WWMDO                                     ULX004
+     C*                                                                   ULX004
+     C** MULT/DIV INDICATORS DIFFERENT                                    ULX004
+     C           WWSRI     MULT WWSRO     WWRATE 159H                     ULX004
+     C                     ELSE                                           ULX004
+     C*                                                                   ULX004
+     C** MULT/DIV INDICATORS THE SAME                                     ULX004
+     C           WWSRO     IFEQ 0                                         ULX004
+     C                     GOTO SC0                                       ULX004
+     C                     END                                            ULX004
+     C           WWSRI     DIV  WWSRO     WWRATE    H                     ULX004
+     C                     END                                            ULX004
+     C*                                                                   ULX004
+     C           WWMDI     IFEQ 'D'                                       ULX004
+     C           WWRATE    IFEQ 0                                         ULX004
+     C                     GOTO SC0                                       ULX004
+     C                     END                                            ULX004
+     C           POWER,Z   DIV  WWRATE    WWRATE    H                     ULX004
+     C                     ELSE                                           ULX004
+     C           POWER,Z   MULT WWRATE    WWRATE    H                     ULX004
+     C                     END                                            ULX004
+     C*                                                                   ULX004
+     C           WWAMTI    MULT WWRATE    WWAMTO    H                     ULX004
+     C*                                                                   ULX004
+     C           SC0       ENDSR                           **  SC0      **ULX004
+      *===============================================================*
+      **
+      ** *PSSR  S/R
+      **
+     C*===============================================================*
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEERROR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /COPY ZSRSRC,FFDATEZ3
+      /COPY ZSRSRC,ZDATE1Z2
+      *                                                                   ULX004
+      ***  ULX004 : For Release 2 and 3                                   ULX004
+      *                                                                   ULX004
+     ****COPY*ZSRSRC,ZDATE3Z4                                             ER_R10
+     ****COPY*ZSRSRC,ZDATE5Z2                                             ER_R10
+      /COPY ZSRSRC,ZDATE9Z3
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,ZACCH                                                  ULX004
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,ZCHKH                                                  ULX004
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,ZFWDT                                                  ULX004
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,ZBKDT                                                  ULX004
+      /EJECT                                                              ULX004
+     C/COPY ZSRSRC,FFTVCLZ2                                               ULX004
+     C********************************************************************
+**   TABDY/TABNO  (Used by S/R FFDATE) - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY (Used by S/R ZDATE1) - YRS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY (Used by S/R ZDATE1) - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   @YD  (Used by S/R ZDATE9) - YEARS, IN DAYS, CUMUL. IN 4 YEAR SPAN
+00366007310109601461
+**   @MD  (Used by S/R ZDATE9) - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   POWER - POWERS OF 10 FOR CURRENCY CONVERSION                         ULX004
+0000001                                                                   ULX004
+0000010                                                                   ULX004
+0000100                                                                   ULX004
+0001000                                                                   ULX004
+0010000                                                                   ULX004
+0100000                                                                   ULX004
+1000000                                                                   ULX004
+**  CPY@                                                                  ULX004
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,640 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Fltng Rte CD Issd Inpt Wndw')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Money Market Module                                  *
+      *                                                               *
+      *  RPG/MM0090   - Floating Rate CD Issued Display               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL033  *CREATE    Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       01         First Cycle Only                             *
+      *       03         F3 Pressed Exit Program                      *
+      *       05         F5 Pressed Redisplay the screen              *
+      *       20         Protect Fielf on Delete, Enquiry and         *
+      *                  Authorization                                *
+      *       30         Redisplay the screen                         *
+      *       50         Chain Fail                                   *
+      *       51         Chain Lock Fail                              *
+      *       55         Delete Action - Enable F10                   *
+      *       56         Enquire, Authorise - Disable F5              *
+      *       57         Enquire                                      *
+      *       75         Error in validation                          *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  CLEAR  - Clear message file                                  *
+      *  EFORMT - Edit/Format screen for amend, delete and enquiry    *
+      *  END    - End program                                         *
+      *  EXIT   - Exit program F3                                     *
+      *  SRINIT - Initialize fields                                   *
+      *  RESET  - Rest the screen when F5 entered                     *
+      *  UPDAT  - Update the extension file                           *
+      *  SRCLSC - Clear Screen Fields                                 *
+      *  SRTOSC - Fields from File to Screen                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FMM0090DFCF  E                    WORKSTN
+      *
+     FMMDEALLLIF  E           K        DISK
+      ** DL Floating Rate CD file
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+     E                    TABFXT  6   6  2
+     E                    TABFXN  2   6 30
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     IA@CPY       DS
+      ** BIS Copyright array
+      *
+     I                                        1  80 CPY@
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access Programs, Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details Accessed via Access Program
+      *
+     ILDA         DS                            256
+      *
+      ** Data Structure for Database Error
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Program Name
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I              'FLOATING RATE CD ISS-C         CTEXT
+     I              'UED'
+      *
+     IPIDTES      DS                           3600
+      ** Maximum of 600 elements of dates (6A)
+      *
+     IPICONF      DS                            600
+      ** Maximum of 600 elements of Confirmed Holiday indicator
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDLNO   60
+     C                     PARM           PDLTP   2
+     C                     PARM           PINTRT 117
+     C                     PARM           PCTDT   50
+     C                     PARM           PCVDT   50
+     C                     PARM           PCMDT   50
+     C                     PARM           PCURR   3
+     C                     PARM           PRTCD   7
+      *
+      *****************************************************************
+      *                                                               *
+      *                   MAIN PROCESSING                             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Process window only for Deal Type "CF" (Floating rate CD)
+      *
+     C           PDLTP     LOKUPTABFXT    TABFXN         69
+     C           PDLTP     CASNE'CF'      ERRTP
+     C           *IN69     CASNE*ON       ERRTP
+     C                     ENDCS
+      *
+      *------------------------------------------------------------
+      *
+      ** INITIALISE DATA
+      *
+     C                     EXSR SRINIT
+      *
+      *------------------------------------------------------------
+      *
+      ** Continue to Redisplay the screen if Indicator 30 remains off
+      *
+     C           *IN30     DOUEQ*ON
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTMM0090F0
+     C                     EXSR CLEAR
+      *
+      ** Reset error indicators.
+      *
+     C                     MOVE *OFF      *IN75
+      *
+     C                     SELEC
+     C           *IN03     WHEQ *ON
+     C           *INKC     OREQ *ON
+     C                     EXSR EXIT
+     C           *IN12     WHEQ *ON
+     C           *INKL     OREQ *ON
+     C                     EXSR PREV
+     C                     OTHER
+      *
+     C                     MOVE *ON       *IN30
+      *
+     C                     MOVE PDLNO     PDLNO1
+     C                     MOVE PDLTP     PDTYPE
+     C                     MOVE 'E'       ACTN
+     C                     MOVE 'R'       RCIP
+     C                     MOVE *BLANKS   PRTCD
+     C                     MOVE PCURR     DDCCY
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           PCTDT
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE   60
+     C                     PARM           WQ0004  7
+     C                     MOVE ZDATE     CTLDAT  6
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           PCVDT
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE
+     C                     PARM           WQ0004
+     C                     MOVE ZDATE     DDVDAT  6
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM           PCMDT
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE
+     C                     PARM           WQ0004
+     C                     MOVE ZDATE     DDMDAT  6
+      *
+     C                     CALL 'MM0091'
+     C                     PARM           PDLNO1  60
+     C                     PARM           PDTYPE  2
+     C                     PARM           RCIP    1
+     C                     PARM           PCTDT
+     C                     PARM           PCVDT
+     C                     PARM           PCMDT
+     C                     PARM           DDCCY   3
+     C                     PARM           ACTN    1
+     C                     PARM           PIDTES
+     C                     PARM           PICONF
+     C                     PARM           PRTCD
+      *
+     C                     SELEC
+      *
+      ** Command 3 Processing
+      *
+     C           PRTCD     WHEQ 'Y2U9999'
+     C                     MOVE *ON       *IN03
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR EXIT
+      *
+      ** Command 12 Processing
+      *
+     C           PRTCD     WHEQ 'USR0790'
+     C                     MOVE *OFF      *IN30
+      *
+     C                     ENDSL
+      *
+     C           DDRCDT    IFNE CTLDAT
+     C           CALL      ANDEQ'N'
+     C                     MOVE 'Y'       CALL
+     C                     ENDIF
+      *
+     C           *IN30     IFEQ *ON
+     C           DDRCFR    ANDEQ'Z'
+     C           CALL      ANDEQ'Y'
+      *
+     C                     MOVE DDRCDT    CTLDAT
+     C                     MOVE #DLNO     PDLNO
+      *
+     C                     SELEC
+      *
+      ** Command 3 Processing
+      *
+     C           PRTCD     WHEQ 'Y2U9999'
+     C                     MOVE *ON       *IN03
+     C                     MOVE 'Y2U9999' W0RTN   7
+     C                     EXSR EXIT
+      *
+      ** Command 12 Processing
+      *
+     C           PRTCD     WHEQ 'USR0790'
+     C                     MOVE *OFF      *IN30
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     EXSR END
+      *
+      *================================================================
+      *
+     C           SRCLSC    BEGSR                           CLEAR SCREEN
+      *
+      *================================================================
+      *
+     C                     MOVE PDLNO     DDDEAL
+      *
+     C                     SELEC
+     C           *IN69     WHEQ *ON
+     C                     MOVELTABFXN    DDTYPE
+     C                     ENDSL
+      *
+     C                     MOVE *BLANKS   DDRCDT
+     C                     MOVE *BLANKS   DDRCFR
+     C                     MOVE *BLANKS   DDRCDM
+     C                     MOVE *BLANKS   DDSTRT
+     C                     MOVE *BLANKS   DDFXDM
+      *
+      ** Short Term Rate (Initial)
+      *
+     C           PINTRT    MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     @WAMT
+     C                     MOVE @WAMT     DDSTRT
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      *
+     C           SRTOSC    BEGSR                           TO SCRN FLDS
+      *
+      *================================================================
+      *
+      ** Rate Change Date
+      *
+     C                     MOVE PDLNO     DDDEAL
+     C                     MOVELCTEXT     DDTYPE
+     C                     MOVE HKRCDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDRCDT
+      *
+     C           DDRCDT    IFEQ '000000'
+     C                     MOVE *BLANK    DDRCDT
+     C                     ENDIF
+      *
+     C                     MOVE HKRCFR    DDRCFR           RATE CHG FRQ
+     C                     MOVE HKRCDM    DDRCDM           RATE CHG DAY
+      *
+     C           DDRCDM    IFEQ '00'
+     C                     MOVE *BLANK    DDRCDM
+     C                     ENDIF
+      *
+      * Short Term Rate
+      *
+      ** If Short Term Rate not yet processed, display Short Term Rate.
+      ** Else, display current interest rate as Short Term Rate.
+      *
+     C           HKSTRF    IFEQ 'Y'
+     C           HKSTRT    MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     @WAMT  17
+     C                     MOVE @WAMT     DDSTRT
+     C                     ELSE
+     C           PINTRT    MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     @WAMT
+     C                     MOVE @WAMT     DDSTRT
+     C                     ENDIF
+      *
+     C                     MOVE HKFXDM    DDFXDM           RATE FIX DAY
+      *
+     C           DDFXDM    IFEQ '00'
+     C                     MOVE *BLANK    DDFXDM
+     C                     ENDIF
+      *
+     C                     MOVE HKFYLD    DDFYLD           FWD YLD CRVE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Clear Message File
+      *
+      * Called from:  Main processing
+      * CallS:        CLP/Y2CLMSC
+      *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Initialise Fields
+      *
+      * Called from:  Main Processing
+      * Calls:        SR/EFORMT
+      *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** First cycle: Static Data
+      *
+     C           *IN01     IFEQ *OFF
+      *
+     C                     MOVE *ON       *IN01
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define work field Run day number
+      *
+     C                     Z-ADD*ZERO     WURDNB  50
+      *
+      ** Define work field Midas Run Date
+      *
+     C                     MOVEL*BLANK    WUMRDT  7
+      *
+      ** Define work field Set Up Complete
+      *
+     C                     MOVEL*BLANK    WUSUC   1
+      *
+      ** Define work field Date format flag
+      *
+     C                     MOVEL*BLANK    WUDFF   1
+      *
+      ** Define work field Multi-branching Indicator
+      *
+     C                     MOVEL*BLANK    WUMBIN  1
+      *
+      ** Get Rundate - Rundate  *
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C                     MOVE MRDT      ##MRDT  7        Run Date
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           Run Day No.
+     C                     MOVE SUC       WUSUC            Set-up Complt
+     C                     MOVE DFF       WUDFF            DTE Fmt flag
+     C                     MOVE MBIN      WUMBIN           Multi BR. Ind
+      *
+     C                     MOVE USER      DDUSER
+     C                     MOVE JOB       DDWSID
+     C                     MOVE MRDT      DDRUNA
+      *
+      ** Call Access Prog. for Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Check for data base error.
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'*FIRST ' DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'MMN089W1'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'                        B2
+     C                     MOVE *ON       *IN98            Date format
+     C                     ENDIF                           E2
+      *
+      ** If action code is enquiry -seton *IN57
+      *
+     C           ACTN      COMP 'E'                      57
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       CALL    1
+      *
+      ** Set up KLISTs and move in key from DATA
+      *
+     C                     MOVE PDLNO     #DLNO   6
+     C                     MOVE PDLTP     #DTYP   2
+      *
+     C                     EXSR EFORMT
+      *
+      ** If action is enquire or authorize, access record and
+      ** format for screen output.  Protect window field from input.
+      *
+     C           ACTN      IFEQ 'E'                        B1
+      *
+     C                     MOVE *ON       *IN20            protect ind.
+     C                     MOVE *ON       *IN56            protect ind.
+      *
+     C                     ENDIF                           E1
+      *
+      ** If record not found for actions delete, amend or enquiry
+      ** display screen with blank values rather than producing a
+      ** useless database error.
+      *
+      ** Output footer to screen.
+      *
+     C                     MOVE *BLANK    WWARN   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *****************************************************************
+      *
+      * Edit Format screen output for action enquiry.
+      *
+      * Called from:  SR/SRINIT
+      * Calls:        none
+      *
+      *****************************************************************
+      *
+     C           EFORMT    BEGSR
+      *
+     C                     MOVE #DLNO     DDDEAL
+     C                     Z-ADDWURDNB    DDLCD
+     C                     MOVE ACTN      DDCHTP
+      *
+     C                     MOVE PDLNO     FILKEY  60
+     C           FILKEY    CHAINMMDELDP0             50
+      *
+     C                     SELEC
+      *
+     C           *IN50     WHEQ *OFF
+     C                     EXSR SRTOSC                     File to scrn
+      *
+     C           *IN50     WHEQ *ON
+     C                     EXSR SRCLSC                     Clear Screen
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * PREV - Return to previous screen
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+     C                     MOVE 'PREV   ' PRTCD
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Exit from program if F3 has been pressed
+      *
+      * Called from:  Main processing
+      * Calls:        SR/END
+      *
+      *****************************************************************
+      *
+     C           EXIT      BEGSR
+      *
+     C                     MOVE 'EXIT   ' PRTCD
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Exit from program
+      *
+      * Called from:  Main processing, SR/VALID, SR/PREV, SR/EXIT
+      *
+      *****************************************************************
+      *
+     C           END       BEGSR
+      *
+     C                     SETOF                     30
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * Exit from program (Wrong Deal Type)
+      *
+      * Called from:  Main processing
+      *
+      *****************************************************************
+      *
+     C           ERRTP     BEGSR
+      *
+     C                     MOVE 'ERRTYP ' PRTCD
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Database Error Handling Subroutine                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2005
+** TABFXT
+CFITIPTDTICI
+** TABFXN
+FLOATING RATE CDS ISSUED      DEPOSIT TAKEN
+DEPOSIT PLACED                TIME DEPOSIT
+TIME LOAN                     CD ISSUED
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

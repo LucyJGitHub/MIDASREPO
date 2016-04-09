@@ -1,0 +1,467 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AGDL Reporting account file setup')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  ERAG02 - AGDL Reporting account file setup                   *
+      *                                                               *
+      *  Function:  This program enables the user to filled account   *
+      *             file using a menu option                          *
+      *  (phase(s)) Input cycle and end of year                       *
+      *                                                               *
+      *  Called By: ERCAG02 - AGDL account file setup                 *
+      *                                                               *
+      *  (C) Misys International Banking Systems, Ltd. 2005           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 11May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 187689             Date 21Dec00               *
+      *                 ULX008             Date 25Feb00               *
+      *                 ULX012             Date 09Feb00               *
+      *                 166701             Date 02Sep99               *
+      *                 ULX010  *CREATE    Date 24Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  187689 - GRD currency in EMU                                 *
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX008 - CSSF Statuatory Reporting : Commissariat aux Bourses*
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX012 - Pledges and Multiple Guarantors Management          *
+      *           Recompile only due to changes in PF/SDCUSTX6        *
+      *  166701 - Number of records truncated                         *
+      *           (Just recompiled)                                   *
+      *  ULX010 - AGDL Reporting statistiques sur les d{pôts garantis *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      * USING OF INDICATORS                                          *
+      *--------------------------------------------------------------*
+      * 20 = LOKUP TAC                                               *
+      * 21 = LOKUP XABB                                              *
+      * 22 = LOKUP TES                                               *
+      * 70 = READ FOR ACCNT                                          *
+      * 71 = READ FOR AGDLSEPP                                       *
+      * 72 = CHAIN FOR AGDLACV0                                      *
+      * 75 = CHAIN FOR SDCUSTX6                                      *
+      ****************************************************************
+      /SPACE 3
+      ****************************************************************
+      * CALL SUBROUTINES                                             *
+      *--------------------------------------------------------------*
+      * SRINIT = PROGRAMME INITIALIZATION                            *
+      * SRCUST = ACCES TO SDCUSTPD AND SDCUSTX6                      *
+      * SRWRIT = WRITE ON AGDLACV0                                   *
+      * *PSSR  = DATA BASE ERROR                                     *
+      ****************************************************************
+      /EJECT
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+      ** Account file
+      *
+     FAGDLSEPPIF  E           K        DISK         KINFSR *PSSR
+      *
+      ** AGDL ICD Setup
+      *
+     F***SDCUSTX6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCUX2PDIF  E           K        DISK         KINFSR *PSSR                              CER001
+      *
+      ** Economic sector
+      *
+     FAGDLACV0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      ** AGDL account file
+      *
+     FERAG02AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *
+      ** Audit report
+      *
+      /SPACE 3
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E**********          TAC        50  4                                                    CER001
+     E                    TAC        50 10                                                    CER001
+      *
+      ** Array containing account code to be extracted
+      *
+     E                    TES        30  4
+      *
+      ** Array containing economic sector to be extracted
+      *
+     E                    XABB       50  3   XABC    6
+      *
+      ** Array containing the branch code and
+      **                  the internal customer for the branch
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure for bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          ZZDFAC                                    CER001
+      *
+      ** Data Structure for branch details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Data Structure for customer details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure for acces programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure for acces programs
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOLU      DS
+      *
+      ***  File Information Data Structure for ERAG02AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      ****************************************************************
+      ** Program Start                                               *
+      ****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Read account file
+      *
+     C                     READ ACCNT                    70
+      *
+     C           *IN70     DOWEQ*OFF                       - B1
+      *
+      ** Check live record
+      *
+     C           RECI      IFEQ 'D'                        - B2
+      *
+      ** Check if account code is to be extracted
+      *
+     C**********           MOVE ACOD      WACOD   4                                           CER001
+     C                     MOVE ACOD      WACOD  10                                           CER001
+     C           WACOD     LOKUPTAC                      20
+     C           *IN20     IFEQ '1'                        - B3
+      *
+      ***If*new*client*chain*to*SDCUSTX6*******************************                       CER001
+      ** If new client chain to SDCUX2PD                                                      CER001
+      ** and acces to customer detail
+      *
+     C           CNUM      IFNE CMCNUM                     - B4
+     C                     EXSR SRCUST
+      *
+     C                     ENDIF                           - E4
+      *
+      ** Check if customer is not a bank
+      *
+     C           BBBNBI    IFEQ 'N'                        - B5
+      *
+      ** Check if customer is the initial branch customer
+      ** for the branch
+      *
+     C                     Z-ADD1         J       20
+     C           BRCA      LOKUPXABB,J                   21
+     C           *IN21     IFEQ '1'                        - B6
+     C           WKCNUM    IFNE XABC,J                     - B7
+      *
+      ** Check if economic sector is to be extracted
+      *
+     C           *IN75     IFEQ '0'                        - B8
+     C******               MOVE VFECOS    WECOS   4                       166701
+     C                     MOVE VFNCOS    WECOS   4                       166701
+     C           WECOS     LOKUPTES                      22
+     C           *IN22     IFEQ '1'                        - B9
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDIF                           - E9
+     C                     ENDIF                           - E8
+     C                     ENDIF                           - E7
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+     C                     READ ACCNT                    70
+      *
+     C                     ENDDO                           - E1
+      ****************************************************************
+      ** Program End                                                 *
+      ****************************************************************
+     C                     WRITEDETA
+     C                     WRITEENDAU
+     C                     SETON                       LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Subroutine to do program initialisation              *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ** Define klist
+      *
+     C           KL01      KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCUST
+     C                     KFLD           KCURR
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Access to bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'                        - B1
+     C                     SETON                     98
+     C                     ENDIF                           - E1
+      *
+      ***  Access to branch Details for loading all the branches
+      ***  for the bank (50 branches maximum)
+      ***  array XABB = branch code / array XABC = branch customer
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C                     PARM *BLANKS   WKEY3   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ****************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 002 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+     C                     Z-ADD0         J
+     C           WRTCD     DOWEQ*BLANKS                    - B1
+     C                     ADD  1         J
+     C                     MOVE A8BRCD    XABB,J
+     C                     MOVE A8BICN    XABC,J
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*NEXT  ' WOPTN   7
+     C                     PARM *BLANKS   WKEY3   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C                     ENDDO                           - E1
+      *
+      ** Acces to AGDLSEPP
+      *
+     C                     READ AGDLSEPP                 71
+     C           *IN71     IFEQ '1'                        - B1
+      *
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'AGDLSEPP'DBFILE           *DB ERROR 003 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+     C                     MOVEAAGACON    TAC
+     C                     MOVEAAGECON    TES
+      *
+     C                     WRITEHEADAU
+     C                     Z-ADD*ZEROS    RREXTR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **SRCUST*-*Acces*to*SDCUSTPD*and*SDCUSTX6************************                       CER001
+      * SRCUST - Acces to SDCUSTPD and SDCUX2PD                       *                       CER001
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR
+      *
+     C**********           Z-ADDCNUM      CMCNUM  60                                         CSD027A
+     C                     MOVE CNUM      CMCNUM  6                                          CSD027A
+     C                     MOVE CNUM      WKCNUM  6
+     C********** WKCNUM    CHAINSDCUSTX6             75                                       CER001
+     C           WKCNUM    CHAINSDCUX2PD             75                                       CER001
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WKCNUM    WKEY10 10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ****************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 004 *
+     C                     MOVELWKCNUM    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRWRIT - Subroutine to write a record to AGDLACV0             *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR                           ** SRWRIT **
+      *
+      ** Initialize klist
+      *
+     C**********           MOVE CNUM      KCUST   60                                         CSD027A
+     C                     MOVE CNUM      KCUST   6                                          CSD027A
+     C                     MOVE CCY       KCURR   3
+     C**********           MOVE ACOD      KACOD   40                                          CER001
+     C                     MOVE ACOD      KACOD  100                                          CER001
+     C                     MOVE ACSQ      KACSQ   20
+     C                     MOVE BRCA      KBRCA   3
+      *
+      ** Acces to AGDLACV0
+      *
+     C           KL01      CHAINAGDLACV0             72
+      *
+      ** Add a record if the key doesn't exist
+      *
+     C           *IN72     IFEQ '1'                        - B1
+     C                     MOVE BRCA      ALBRCA
+     C**********           Z-ADDCNUM      ALCUST                                             CSD027A
+     C                     MOVE CNUM      ALCUST                                             CSD027A
+     C                     MOVE CCY       ALCURR
+     C                     Z-ADDACOD      ALACOD
+     C                     Z-ADDACSQ      ALACSQ
+     C                     Z-ADD1         ALPART
+     C**********           Z-ADD0         ALLIN1                                             CSD027A
+     C**********           Z-ADD0         ALLIN2                                             CSD027A
+     C**********           Z-ADD0         ALLIN3                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN1                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN2                                             CSD027A
+     C                     MOVE *BLANKS   ALLIN3                                             CSD027A
+     C                     ADD  1         RREXTR
+     C                     WRITEAGDLACD0
+     C                     COMIT
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       @RUN    1
+     C                     ENDIF                           - E1
+      *
+     C           DBASE     IFEQ 0                          - B1
+     C                     Z-ADD999       DBASE
+     C                     ENDIF                           - E1
+      *
+      ***  Print error message in Audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     WRITEENDAU
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems, Ltd. 2005

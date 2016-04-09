@@ -1,0 +1,188 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - FACILITIES')                  *
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU66 - IML REPORTING - TRANSACTION DETAIL PROCESSING      *
+     H*                           FOR FACILITIES                     *
+     H*                                                              *
+     H*  (c) Misys International Banking Systems Ltd. 2005           *
+     H*                                                              *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 06May06               *
+      *                 CER001             Date 25Aug05               *
+     H*                 ULX004             Date 27Apr98               *
+     H*                 ERL432 PT          Date 30Aug94               *
+     H*                    ERL371 TLI         Date   22Dec93         *
+     H*                    ER0336 TLI         DATE   15APR93         *
+     H*                                                              *
+     F*****************************************************************
+      *                                                              *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     F*     ULX004 - IML Circular 97/138                              *
+     F*              Recompile only                                   *
+     F*     ERL432 - TO MANAGE THE DATABASE ERRORS CORRECTLY          *
+     F*     ERL371 - IML 1.4 DEVELOPMENT                              *
+     F*     ER0336 - IML 2.3 DEVELOPMENT                              *
+     F*****************************************************************
+     F*******SDCUSTY6IF  E           K        DISK                        ER0336
+     F* VF - ER Customer Extended file
+      *
+     F***FCLTYMY6IF**E           K        DISK                                                CER001
+     FLEFCX4L0IF  E           K        DISK                                                   CER001
+     F* VN - Facilities Extension File
+      *
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Data structure for KYFAST key
+     I            DS
+     I**********                              1   60KY1                                      CSD027A
+     I                                        1   6 KY1                                      CSD027A
+     I                                        7   90KY2
+     I                                       10  110KY3
+     I                                        1  110WWFACT
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      **=================================================================
+     C                     EXSR #INIT
+      *----------------------------------------------------------------==
+      ** Access Loan type/sub-type Extension file
+     C**********           MOVELEXFCUS    KY1     60                                         CSD027A
+     C                     MOVELEXFCUS    KY1     6                                          CSD027A
+     C                     Z-ADDEXFACT    KY2     30
+     C                     Z-ADDEXFCNO    KY3     20
+      *
+     C********** KYFACT    CHAINFCLTYMY6             80                                       CER001
+     C           KYFACT    CHAINLEFCX4L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'661'     DBASE            *****************
+     C**********           MOVEL'FCLTYMY6'DBFILE                                              CER001
+     C                     MOVEL'LEFCX4L0'DBFILE                                              CER001
+     C                     MOVELWWFACT    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X1
+      *                                                                   ERL371
+      ** SETUP FIELDS FOR IML 1.4                                         ERL371
+     C                     Z-ADDVNDGRI    EXDGRI                          ERL371
+     C                     MOVE VNSUBR    EXSUBR                          ERL371
+      *
+      ** Setup Guarantor Customer Number
+     C*********************MOVELVNGUCN    EXGUCN                          ER0336
+      *
+      ** Setup Guarantor Report Name
+     C***********VNGUCN    IFNE *BLANKS                    - B2           ER0336
+     C*********************MOVELVNGURN    EXGURN                          ER0336
+     C***********VNGUCN    CHAINSDCUSTY6             88                   ER0336
+     C************IN88     IFEQ '0'                        - B3           ER0336
+     C*********************Z-ADDVFECOS    EXGUEC                          ER0336
+     C*********************END                             - E3           ER0336
+     C*********************END                             - E2           ER0336
+      *
+     C                     END                             - E1
+      **=================================================================
+     C                     RETRN
+      **=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine
+      **
+      *----------------------------------------------------------------==
+     C           #INIT     BEGSR
+      *----------------------------------------------------------------==
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXFCUS  6
+     C                     PARM           EXFACT  30
+     C                     PARM           EXFCNO  20
+      *  Output Parameters
+     C*********************PARM           EXGUCN  6                       ER0336
+     C*********************PARM           EXGURN 20                       ER0336
+     C*********************PARM           EXGUEC  40                      ER0336
+     C                     PARM           EXSUBR  1                       ERL371
+     C                     PARM           EXDGRI  10                      ERL371
+     C                     PARM           ERROR   1                       ERL432
+      *
+      **  Set up Facility Key
+     C           KYFACT    KLIST
+     C                     KFLD           KY1
+     C                     KFLD           KY2
+     C                     KFLD           KY3
+      *
+     C                     MOVE '0'       *INU7
+      *
+     C                     ENDSR
+      **=================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #DBERR    BEGSR
+      **
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO)                                              */
+/*EXI *  TEXT('Midas FRS Extract Process - Repair Function')         */
+/*XBIA   OVRDBF FILE(QAFDMBRL) TOFILE(QAFDMBRL)                      */
+/*********************************************************************/
+/*                                                                   */
+/*       MidasPlus - FRS Regulatory Reporting                        */
+/*                                                                   */
+/*       RNC000025 - Extract Process - Repair Function               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG9715            Date 12Jan06              */
+/*       Prev Amend No. CRN001  *CREATE    Date 05Dec05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG9715 - T_bookCNT field INTPARRE rejected by IFS.         */
+/*                 Program RNBKCTUP is added after the run of        */
+/*                 SQLBOOKCNT to update fields INTPARRE and BOOCNTRE.*/
+/*       CRN001 - FRS Regulatory Reporting                           */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&MSGTEXT) TYPE(*CHAR) VALUE('RNC000025 - +
+                          Regulatory Reporting Extract Process Repair Function')
+             DCLF       FILE(QTEMP/QAFDMBRL)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG(&MSGTEXT) TOMSGQ(MRUNQ)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Loop through the members of rnrsql92; these contain the           */
+/* sql statements which perform the repair function.                 */
+ 
+             CHKOBJ     OBJ(RNRSQL92) OBJTYPE(*FILE) MBR(*FIRST)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+             DSPFD      FILE(RNRSQL92) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/QAFDMBRL)
+RCVF:
+             RCVF
+/****        MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))                          BUG9715*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(UPDBKCNT))                      /*BUG9715*/
+ 
+             RUNSQLSTM  SRCFILE(&MLFILE) SRCMBR(&MLNAME) COMMIT(*NONE)
+ 
+             GOTO       CMDLBL(RCVF)
+ 
+UPDBKCNT:                                                                               /*BUG9715*/
+/* Update table T__BOOKCNT.                                                             /*BUG9715*/
+             CALL       PGM(RNBKCTUP)                                                   /*BUG9715*/
+             GOTO       CMDLBL(ENDPGM)                                                  /*BUG9715*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

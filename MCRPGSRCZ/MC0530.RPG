@@ -1,0 +1,427 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Funding GAP Accruals DROP')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounts Module                           *
+      *                                                               *
+      *  MC0530 - MC Funding GAP Accruals Drop                        *
+      *                                                               *
+      *  Function:  This program purges the Funding Gap Accruals      *
+      *  (C.O.B.)   File, of records dated before the back-value      *
+      *             date.  Subsequent back-valued movements dated     *
+      *             before the earliest record will be processed      *
+      *             as if dated on the earliest date.                 *
+      *                                                               *
+      *  Called By: MCC0530 - MC Drop GAP Accrual Details             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB023             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 127975             Date 01Dec97               *
+      *                 CMC001 *CREATE     Date 18Mar96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  127975 - RCF problem in MC0530.                              *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Created for Management Accounts.                    *
+      *                                                               *
+      *****************************************************************
+     FMCACHRL1UF  E           K        DISK         KINFSR *PSSR
+      *
+      ** MC Funding GAP Accrual Header
+      *
+     FMCACDTL0UF  E           K        DISK         KINFSR *PSSR
+      *
+      ** MC Funding GAP Accrual Details
+      *
+     FMC0530AUO   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOLU
+      *
+      ** MC Funding GAP Purge Audit Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   20    - End of File for LF/MCACHRL1                         *
+      *   30    - READ fail for LF/MCACDTL0                           *
+      *   90-99 - Used by Standard Subroutines                        *
+      *   U7+U8 - Database Error                                      *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INIT  - Program Initialisation                              *
+      *  #PROC  - Detail Processing                                   *
+      *  #DELET - Delete GAP Accrual Detail Records                   *
+      *  #AUDIT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      ***#RCF***-*RCF*Processing*for*Audit*Report                     *   127975
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOLU      DS
+      *
+      ** File Information Data Structure for MC0530AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Dummy Data Structures used by Access Programs
+      *
+     I***SDBANK*   E DSSDBANKPD                                                               CCB023
+     ISDBANK    E DSSDSBNKTD                                                                  CCB023
+      *
+      ** External data structures for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR #INIT
+      *
+      ** Perform Detail Processing
+      *
+     C                     EXSR #PROC
+      *
+      ** Output Audit Report and End Program
+      *
+     C                     EXSR #AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #INIT  - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      ***#RCF***-*RCF*Processing*for*MC0530AU*Audit*Report            *   127975
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR                           ** #INIT **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0530'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details
+      *
+     C**********           CALL 'AOBANKR0'                                                    CCB023
+     C                     CALL 'AOSBNKR0'                                                    CCB023
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Define Key List for LF/MCACDTL0 (Full Key)
+      *
+     C           ACCHDR    KLIST
+     C                     KFLD           GHBRCD
+     C                     KFLD           GHCYCD
+     C                     KFLD           GHACCD
+     C                     KFLD           GHCUST
+     C                     KFLD           GHACSN
+     C                     KFLD           GHPCCD
+     C                     KFLD           WBVDT
+      *
+      ** Define Key List for LF/MCACDTL0 (Partial Key)
+      *
+     C           ACCDTL    KLIST
+     C                     KFLD           GHBRCD
+     C                     KFLD           GHCYCD
+     C                     KFLD           GHACCD
+     C                     KFLD           GHCUST
+     C                     KFLD           GHACSN
+     C                     KFLD           GHPCCD
+      *
+     C                     MOVE 'N'       WNOREC  1
+     C                     Z-ADD*ZERO     RREAD
+     C                     Z-ADD*ZERO     RUPDT
+     C                     Z-ADD*ZERO     RDELT
+      *
+      ** Calculate Backvalue Date
+      *
+     C           BJRDNB    SUB  BJBVPD    WBVDT   50
+      *
+      ***RCF*processing*for*Audit*File*MC0530AU                           127975
+      ***********                                                         127975
+     C***********          EXSR #RCF                                      127975
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#PROC
+      *****************************************************************
+      *                                                               *
+      *  #PROC  - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  #AUDIT - Produce Audit Report and End Program                *
+      *  #DELET - Delete GAP Accrual Detail Records                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #PROC     BEGSR                           ** #PROC **
+      *
+      ** Read GAP Accrual Headers until EOF
+      *
+     C                     READ MCACHRL1                 20
+      *
+      ** If End of File, Perform Audit Reporting (No Records)
+      *
+     C           *IN20     IFEQ *ON
+     C                     MOVE 'Y'       WNOREC  1
+     C                     EXSR #AUDIT
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ** Count Headers Processed
+      *
+     C                     ADD  1         RREAD
+      *
+      ** Delete GAP Accrual Detail Records
+      *
+     C                     EXSR #DELET
+      *
+      ** Update GAP Acruals Header
+      *
+     C                     Z-ADDWBVDT     GHERLD
+     C                     UPDATMCACHRD0
+      *
+      ** Count Records Updated
+      *
+     C                     ADD  1         RUPDT
+      *
+      ** Read Next GAP Header Record
+      *
+     C                     READ MCACHRL1                 20
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/#DELET
+      *****************************************************************
+      *                                                               *
+      *  #DELET - Subroutine to delete GAP Accrual Detail Records.    *
+      *                                                               *
+      *  Called By: #PROC - Detail Processing                         *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DELET    BEGSR                           ** #DELET **
+      *
+      ** Read Accrual Details for the Account on or before the
+      ** Back value date
+      *
+     C           ACCHDR    SETGTMCACDTD0
+     C           ACCDTL    REDPEMCACDTD0            N    30
+      *
+      ** If Record before Back value date found, delete rest
+      *
+     C           *IN30     IFEQ *OFF
+      *
+     C           ACCDTL    REDPEMCACDTL0                 30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C                     DELETMCACDTD0
+      *
+      ** Count Records Deleted
+      *
+     C                     ADD  1         RDELT
+      *
+      ** Read Next Record
+      *
+     C           ACCDTL    REDPEMCACDTL0                 30
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #AUDIT    BEGSR                           ** #AUDIT **
+      *
+      ** Open the Audit file
+      *
+     C                     OPEN MC0530AU
+      *
+      ** Output Report Header
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message
+      *
+     C           WNOREC    IFEQ 'Y'
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Close the Audit File
+      *
+     C                     CLOSEMC0530AU
+      *
+      ** End Program and Return
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                            ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR #AUDIT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ****/TITLE SR/#RCF                                                  127975
+      *****************************************************************   127975
+      *****************************************************************   127975
+      ***#RCF***-*Subroutine*to*register*the*AU*Printer*File*via*RCF.**   127975
+      *****************************************************************   127975
+      *****************************************************************   127975
+      ***********                                                         127975
+     C***********#RCF      BEGSR                           *** #RCF ***   127975
+      ***********                                                         127975
+      ***Ensure*Audit*Spool*File*recorded*by*RCF                          127975
+      ***********                                                         127975
+     C***********          Z-ADDSFNUMU    ZSNUMU  60                      127975
+      ***********                                                         127975
+     C***********          CALL 'ZSFILE'                                  127975
+     C***********          PARM           SEQ     5                       127975
+     C***********          PARM *BLANKS   SENTY   3                       127975
+     C***********          PARM           SFILEU                          127975
+     C***********          PARM           ZSNUMU                          127975
+     C***********          PARM *BLANK    ZSERR   1                       127975
+      ***********                                                         127975
+      ***If*Error*occurs*during*ZSFILE*processing,*then*return*to*the     127975
+      ***Calling8Program                                                  127975
+      ***********                                                         127975
+     C***********ZSERR     IFEQ 'Y'                                       127975
+     C***********          MOVE '1'       *INU7                           127975
+     C***********          MOVE '1'       *INU8                           127975
+     C***********          MOVE '1'       *INLR                           127975
+     C***********          RETRN                                          127975
+     C***********          ENDIF                                          127975
+      ***********                                                         127975
+     C***********          ENDSR                                          127975
+      ***********                                                         127975
+      *****************************************************************   127975
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

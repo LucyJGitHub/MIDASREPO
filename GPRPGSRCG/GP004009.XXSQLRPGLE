@@ -1,0 +1,150 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                    AR1089863
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GP004009 - Midas GO Download data control -                  *
+      *             Unauthorised Customer WIP Items                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. AR1089863*REDUNDANTDate 19Feb13               *
+      *  Prev Amend No. AR1010339 *CREATE  Date 25Nov12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1089863 - Merging issues of 2.0 and 2.1 releases           *
+      *  AR1010339 - Unauthorised Customer not shown in dashboard     *
+      *              (Child:AR1010340)                                *
+      *                                                               *
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Files                                ¦
+      ** ¦ =====                                ¦
+      ** +--------------------------------------+
+ 
+     FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D                 DS
+     D  CountN                 1      5  0
+     D  CountA                 1      5
+ 
+      ** Program Status Data Structure
+     D/COPY GPCPYSRCG,PSDS
+ 
+      ** Midas Local Data Area for database error reporting
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      ** The following fields are defined in the external file:
+      **                                    134 141 DBFile
+      **                                    142 170 DBKey
+      **                                    171 180 DBPgm
+      **                                    181 1830DBase
+      **                                    184 193 DBMod
+      **                                    194 203 DBProc
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+     D @RUN            S              1
+     D Value           S             50
+     D Zone            S             10
+     D Prtcd           S              7
+     D System_ID       S              2
+     D SysAPI          S              4
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+ 
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PRTCD
+     C                   PARM                    System_ID
+ 
+      ** Get Zone Name from system ID.
+ 
+     C     System_ID     CHAIN     GPZONED0                           90
+     C                   EVAL      Zone = ZOZONE
+ 
+      ** Check if there are unauthorised customer details
+ 
+     C                   EXSR      SrCheckDetl
+ 
+     C     ENDPGM        TAG
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SrCheckDetl - This does the read of the file containing       *
+      *               unauthorised customer record and updates        *
+      *               the return code accrodingly                     *
+      *                                                               *
+      * Called by: *MAIN                                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SrCheckDetl   BEGSR
+ 
+     C                   EVAL      SysAPI = 'CUSD'
+ 
+     C/EXEC SQL
+     C+  SELECT COUNT(*) INTO :CountN FROM T_MSWIP WHERE MSWAPI=:SysAPI
+     C+  AND MSWZONE = :Zone AND MSWSTAT NOT IN ('AUTHORISED', 'REJECTED',
+     C+  'NOT_APPROVED', 'INCOMPLETE')
+     C/END-EXEC
+ 
+     C                   IF        SQLCOD <> 0
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      PRTCD = *BLANKS
+ 
+     C                   IF        CountN > 0
+     C                   EVAL      PRTCD = 'Unauth'
+     C                   ENDIF
+ 
+     C                   ENDSR
+ 
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   ENDIF
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************

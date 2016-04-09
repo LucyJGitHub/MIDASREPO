@@ -1,0 +1,601 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Rate change for deals history')               *
+     H***********                                                         S01390
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*     DL9000 - ADD TODAYS RATE CHANGES TO HISTORY FILE.            *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. AR1055654          Date 07Jul15               *
+      *  Prev Amend No. CDL088             Date 07Jul15               *
+      *                 CGL165             Date 17Mar15               *
+      *                 MD031283           Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 AR755195           Date 13Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 048939             Date 15Jan93               *
+      *                 043995             Date 02Nov92               *
+     F*                    S01390     DATE 04AUG92                       *
+     F*                    PDLFIX     DATE 15/02/90                      *
+     F*                    S36008     DATE 01/02/90                      *
+     F*                    AUS006     DATE 18DEC90                       *AUS006
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  AR1055654 - Rate changes reflected incorrectly in enquiries. *
+      *  CDL088 - Allow Spread Change for Negotiable Assets           *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  MD031283 - Interest History File/Enquiry: Base Rate updated  *
+      *             wrong on the backdated start/value date           *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR755195 - Remove processing for non-CF deals and transfer   *
+      *             to DL0280 on rate change date. (Child: AR755196)  *
+      *           - Applied for MD024110                              *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CDL006 - Dealing Fiduciary (Recompile)                       *
+     F*    048939 - DL9000AU DOES NOT PRINT TITLE WHEN NO DETAILS ON DAMRX
+     F*    043995 - Rate change records show incorrect interest rate.    *
+     F*    S01390 - Release 10 Changes for Australianisation             *
+     F*    S36008 - INTEREST HISTORY ENQUIRY AND PURGE                   *
+     F*    AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY                *AUS006
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDAMRX   IP  E           K        DISK
+     F***DAMSC***IF**F      31 14AI     2 DISK                            S01390
+     FDAMSC   IF  F      31 14AI     2 DISK                           UC  S01390
+     F***TABLETK*IF**E           K        DISK                            S01390
+     F***TABLE***IF**F      96 12AI     2 DISK                            S01390
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F**********  DEALSDDF                          KIGNORE                                   CDL088
+     F            DEALSDEF                          KIGNORE
+     F** PDLFIX   DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     FHISTSAA O   E                    DISK                      A
+     FDLRTS   UF  E           K        DISK                      A
+     F***TABTB11*IF**E                    DISK                            S01390
+     F***DL9000P1O   F     132            PRINTER                         S01390
+     FDL9000AUO   F     132            PRINTER                            S01390
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            DAMEXDI FORMAT FROM DAMRX FILE
+     F* 02            DAMBRDI FORMAT FROM DAMRX FILE
+     F* 03            DAMRX CATCHALL
+     F* 06            DEALS FILE CATCHALL
+     F**09************TABLE*FILE*-*INST.CONTROL*1*************************S01390
+     F*       10      FIRST CYCLE
+     F*       50      WORK INDICATOR
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80                                S01390
+     I*
+     IDEAMSDIF    01
+     I*    DEAL AMENDMENT RATE CHANGES.
+     I*
+     I                                              DLNO  L2
+     I                                              VDAT  L1
+     I              DTYP                            DTYPDA
+     I              DLST                            DLSTDA
+     I              CCY                             CCYDA
+     I                                              CNUM  L3
+     I              CLAS                            CLASDA                                    CDL038
+     IDAMBRDIF    02
+     I*    BASE RATE CHANGES.
+     I*
+     I                                              DLNO  L2
+     I                                              VDAT  L1
+     I              DTYP                            DTYPDA
+     I              DLST                            DLSTDA
+     I              CCY                             CCYDA
+     I                                              CNUM  L3
+     I              CLAS                            CLASDA                                    CDL038
+     IDAMSC   NS
+     I*    DEAL AMENDMENTS CALL FILE - DETAIL
+     I*
+     I                                        1   1 RECIC
+     I                                        2   70DLNOC
+     I                                        8  120VDATC
+     I                                       13  150DASNC
+     I                                       16  17 AMTPC
+     I                                       18  20 CCYC
+     I                                       21  21 CALLC
+     IDEALSDCF
+     I*    DEAL FILE FOR LOANS AND DEPOSITS
+     I*
+     I              DLNO                            DLNODL
+     I              CNUM                            CNUMDL
+     I              VDAT                            VDATDL
+     I              PCPL                            PCPLDL
+     I              BRTT                            BRTTDL
+     I              BRTE                            BRTEDL
+     I              RTSP                            RTSPDL
+     I              ICBS                            ICBSDL                S36008
+     IDEALSDDF                                                                                CDL088
+     I              RTSP                            RTSPDL                                 AR1055654
+     I              ICBS                            ICBSDL                                    CDL088
+     I***TABLE***NS* 10   2 C0   3 C1  12 C1                              S01390
+     I*******AND*     13 C0                                               S01390
+     I***********                                                         S01390
+     I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.***************S01390
+     I***********                                                         S01390
+     I***********                             1   1 RECI                  S01390
+     I***********                             2   30RECT                  S01390
+     I***********                            12  130RCDE                  S01390
+     I***********                            14  66 TITL                  S01390
+     I***********                            67  67 DATF                  S01390
+     I***********                            68  700DFBR                  S01390
+     I***********                            74  74 MODI1                 S01390
+     I***********                            75  75 MODI2                 S01390
+     I***********                            76  76 MODI3                 S01390
+     I***********                         P  77  790RUND                  S01390
+     I***********                            80  86 RUNA                  S01390
+     I***********                            87  870SFLG                  S01390
+     I***********                         P  90  920LCD                   S01390
+     I***********                            93  93 CHTP                  S01390
+     I***********                         P  94  960TNLU                  S01390
+     I*
+     IDLRTSAAF
+     I              DLNO                            DLNO@
+     I              VDAT                            VDAT@
+     I              ORAT                            ORAT@
+     I              NRAT                            NRAT@
+     I              TERM                            TERM@
+     I            DS
+     I                                        1  140DAKY
+     I                                        1   60DLNO
+     I                                        7  110VDAT
+     I                                       12  140DASN
+     I***LDA********UDS                            256                    S01390
+     I***********                           129 133 DBFILE                S01390
+     I***********                           134 162 DBKEY                 S01390
+     I***********                           163 170 DBPGM                 S01390
+     I***********                           171 172 DBASE                 S01390
+     ILDA         DS                            256                       S01390
+     I*                                                                   S01390
+     I** Local Data Area To Identify Database Errors                      S01390
+     I*                                                                   S01390
+     I                                      134 141 DBFILE                S01390
+     I                                      142 170 DBKEY                 S01390
+     I                                      171 180 DBPGM                 S01390
+     I                                      181 1830DBASE                 S01390
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDBSRT    E DSSDBSRTPD                                              S01390
+     I* Base Rate Details Via Access Program                              S01390
+     I*                                                                   S01390
+     ISCSARD    E DSSCSARDPD                                              S01390
+     I** EXTERNAL DS FOR SAR DETAILS                                      S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*
+     I/EJECT
+     C*
+     C*
+     C*    FIRST CYCLE PROCESSING
+     C*
+     C           *IN10     IFEQ '0'
+     C                     EXSR FIRSTC
+     C                     END
+     C*
+     C*    CONTROL TOTALS FROM INPUT FILES
+     C*
+     C           *IN01     IFEQ ON
+     C                     ADD  1         EXIN    50
+     C                     ELSE
+     C           *IN02     IFEQ ON
+     C                     ADD  1         BRIN    50
+     C                     END
+     C                     END
+     C*                                                                   DL0265
+     C*    GET DEAL AMENDMENT CALL DETAIL                                 DL0265
+     C*                                                                   DL0265
+     C                     MOVE *BLANK    CALLC
+     C                     MOVE *BLANK    CALLCA  5
+     C           AUS008    IFEQ 'Y'                                       S01390
+     C           FILOPD    IFEQ 'Y'                                       S01390
+     C                     OPEN DAMSC                                     S01390
+     C                     MOVEL'Y'       FILOPD  1                       S01390
+     C                     END                                            S01390
+     C           CCYDA     IFEQ 'AUD'                      AUD AND SC
+     C           AMTP      ANDEQ'SC'
+     C           DAKY      CHAINDAMSC                80
+     C           *IN80     IFEQ '1'                        NOT FOUND
+     C                     MOVEL'DAMSC'   DBFILE
+     C                     MOVELDAKY      DBKEY
+     C                     MOVE '04'      DBASE
+     C                     MOVE ON        *INU8
+     C                     MOVE ON        *INLR
+     C                     END
+     C                     END
+     C                     END                                            S01390
+     C*
+     C*    GET CURRENT DEAL INFORMATION
+     C*
+     C           *INL2     IFEQ ON
+     C                     MOVE OFF       *IN25
+     C           DLNO      CHAINDEALS                80
+     C*
+     C*    ERROR PROCESSING
+     C*
+     C           *IN80     IFEQ ON
+     C                     MOVEL'DEALS'   DBFILE
+     C                     MOVELDLNO      DBKEY
+     C                     MOVE '02'      DBASE
+     C                     MOVE ON        *INU8
+     C                     MOVE ON        *INLR
+     C                     ELSE
+     C*
+     C*    STORE INTEREST RATE FROM DEALS FILES
+     C*
+     C           RCDT      IFEQ 'G'                        PDLFIX
+     C           RCDT      OREQ 'C'                                                         AR755195
+     C           AMTP      ANDEQ'FI'                                                        AR755195
+     C           DTYP      ANDNE'CF'                                                        AR755195
+     C                     MOVE ON        *IN25
+     C                     GOTO END1                         '
+     C                     END                               '
+     C                     Z-ADDINTR      NRAT
+     C                     END
+     C                     END
+     C*
+     C*    STORE THE CURRENT RATE FOR NEXT SET OF RATE CHANGES.
+     C*
+     C   25                GOTO END1                         '
+     C*
+     C           *INL1     IFEQ ON
+     C                     Z-ADDNRAT      ORAT
+     C                     END
+     C*
+     C                     MOVE OFF       *IN75
+     C                     MOVE *ZEROS    RAT#
+     C           VDAT      IFLT DNWDM1
+     C**********           MOVE DLNO@     DLNO$                                             MD031283
+     C                     MOVE DLNO      DLNO$                                             MD031283
+     C           KEY001    SETGTDLRTS
+     C                     READPDLRTS                    76
+     C           *IN76     IFEQ OFF
+     C           DLNO@     ANDEQDLNO$
+     C                     MOVE ON        *IN75
+     C                     MOVE NRAT@     RAT#
+     C                     END
+     C                     END
+     C*
+     C*    CALCULATE NEW RATE
+     C*
+     C           *IN01     IFEQ ON
+     C***********BRTT      ANDNE0                                         043995
+     C***********BRTKY     CHAINTABLETK              80            S01390 043995
+     C***********          MOVE BRTT      KYBR                     S01390 043995
+     C***********          CALL 'AOBSRTR0'                         S01390 043995
+     C***********          PARM *BLANKS   RTCD                     S01390 043995
+     C***********          PARM '*KEY   ' OPTN                     S01390 043995
+     C***********          PARM CCYDA     KYCY    3                S01390 043995
+     C***********          PARM           KYBR    2                S01390 043995
+     C***********SDBSRT    PARM SDBSRT    DSFDY                    S01390 043995
+     C*
+     C*      ERROR PROCESSING
+     C*
+     C************IN80     IFEQ ON                                        043995
+     C***********          MOVEL'TABLE'   DBFILE                          S01390
+     C***********          MOVELCCYDA     TEMP5   5                       S01390
+     C***********          MOVE BRTT      TEMP5                           S01390
+     C***********          MOVELTEMP5     DBKEY                           S01390
+     C***********          MOVE '03'      DBASE                           S01390
+     C***********          MOVEL'SDBSRTPD'DBFILE                   S01390 043995
+     C***********          MOVELCCYDA     DBKEY                    S01390 043995
+     C***********          MOVELBRTT      DBKEY                    S01390 043995
+     C***********          Z-ADD3         DBASE                    S01390 043995
+     C***********          MOVE ON        *INU8                           043995
+     C***********          MOVE ON        *INLR                           043995
+     C***********          ELSE                                           043995
+     C*
+     C*       ADD SPREAD TO BASE RATE TO GIVE NEW RATE
+     C*
+     C***********NBRT      ADD  RTSP      NRAT                            S01390
+     C***********BANBRT    ADD  RTSP      NRAT                     S01390 043995
+     C                     SUB  RTSPDL    NRAT                            043995
+     C                     ADD  RTSP      NRAT                            043995
+     C                     Z-ADDRTSP      RTSPDL                          043995
+     C                     END
+     C***********          ELSE                                           043995
+     C***********          Z-ADDRTSP      NRAT                            043995
+     C           *IN02     IFEQ ON                                        043995
+     C/COPY WNCPYSRC,DL9000C001
+      *                                                                                       CDL033
+      ** If zero interest and negative spread, add new spread                                 CDL033
+      **  and use this for the base rate.                                                     CDL033
+     C           NRAT      IFEQ *ZEROS                                                        CDL033
+     C           RTSPDL    ANDLT*ZEROS                                                        CDL033
+     C           CDL033    ANDEQ'Y'                                                           CDL033
+     C           RTSP      ADD  RTSPDL    NRAT                                                CDL033
+     C                     Z-ADDRTSP      BRTEDL                                              CDL033
+      *                                                                                       CDL033
+     C                     ELSE                                                               CDL033
+      *                                                                                       CDL033
+     C                     SUB  BRTEDL    NRAT                            043995
+     C                     ADD  RTSP      NRAT                            043995
+     C                     Z-ADDRTSP      BRTEDL                          043995
+     C/COPY WNCPYSRC,DL9000C002
+      *                                                                                       CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+      ** If zero interest and negative spread, zeroise interest                               CDL033
+      **  rate.                                                                               CDL033
+     C           NRAT      IFLT *ZEROS                                                        CDL033
+     C           RTSPDL    ANDLT*ZEROS                                                        CDL033
+     C           CDL033    ANDEQ'Y'                                                           CDL033
+     C                     Z-ADD*ZEROS    NRAT                                                CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C                     END
+     C*
+     C* CHAIN TO DLRTS.  IF RECORD FOUND THEN UPDATE OTHERWISE ADD.
+     C                     MOVE DLNO      DLNO@
+     C                     MOVE VDAT      VDAT@
+     C****                 MOVE NOTDM     TERM@
+     C                     MOVE CALLC     TERM@
+     C                     MOVE NRAT      NRAT@
+     C           *IN75     IFEQ ON
+     C                     Z-ADDRAT#      ORAT@
+     C                     ELSE
+     C                     Z-ADDINTR      ORAT@
+     C                     END
+     C           KEY001    CHAINDLRTS                77
+     C           *IN77     IFEQ OFF
+     C                     UPDATDLRTSAAF
+     C                     ELSE
+     C                     WRITEDLRTSAAF
+     C                     END
+     C*
+     C*    OUTPUT RATE CHANGE RECORD FOR VALUE DATE.
+     C*
+     C           END1      TAG
+     C*
+     C*1                   DO
+     CL1N25                DO                              PDLFIX
+     CL1                   Z-ADDVDAT      EDAT
+     CL1                   Z-ADDPCPLDL    PCPL
+     C*1*********          MOVE ICBSDL    ICBS    10       S36008         AUS006
+     CL1                   MOVE ICBSDL    ICBS                            AUS006
+     C*
+     C*       CALCULATE TERM
+     C*
+     CL1         *IN01     IFEQ ON
+     CL1         CALLC     ANDNE' '
+     C*1**       NOTDM     ANDNE' '
+     C*1**                 MOVE NOTDM     TERM
+     CL1                   MOVE CALLC     TERM
+     CL1                   MOVEL'00'      TERM
+     CL1                   ELSE
+     CL1                   MOVE '   '     TERM
+     CL1                   END
+     CL1                   EXCPTHISADD
+     CL1                   ADD  1         HIOUT   50
+     C*
+     CL1                   END
+     C*
+     CLR         *IN10     IFEQ '0'                                       048939
+     CLR                   EXSR FIRSTC                                    048939
+     CLR                   END                                            048939
+     C*
+     C********************************************************************
+     C*
+     C*      FIRST IS A SUBROUTINE TO PERFORM ALL FIRST CYCLE
+     C*      CALCULATIONS.
+     C*
+     C           FIRSTC    BEGSR                           ** FIRST TAG **
+     C*
+     C*    INITILIZE GENERAL INFORMATION.
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01390
+     C           *LOCK     IN   LDA                                       S01390
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'DL9000'  DBPGM
+     C                     OUT  LDA                                       S01390
+     C                     MOVE '1'       ON      1
+     C                     MOVE '0'       OFF     1
+     C                     MOVE ON        *IN10
+     C*
+     C***********          READ TABTB11                  99               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C***********DNWD      SUB  1         DNWDM1                          S01390
+     C           BJDNWD    SUB  1         DNWDM1                          S01390
+     C***********                                                         S01390
+     C*****GET*INSTALLATION*CONTROL*RECS.*********************************S01390
+     C*****ICD.*1*********************************************************S01390
+     C***********                                                         S01390
+     C***********          EXSR ZSYSTM                                    S01390
+     C************IN99     IFEQ ON                                        S01390
+     C***********          MOVEL'TABLE'   DBFILE                          S01390
+     C***********          MOVELZTABKY    DBKEY                           S01390
+     C***********          MOVE '01'      DBASE                           S01390
+     C***********          MOVE ON        *INLR                           S01390
+     C***********          MOVE ON        *INU8                           S01390
+     C***********          GOTO ENDFC                                     S01390
+     C***********          END                                            S01390
+     C*
+     C*    SET UP CONSTANTS FOR OUTPUT RECORD.
+     C*
+     C                     MOVE 'SC'      RTYP
+     C                     Z-ADD15        SQNO
+     C                     MOVE ' '       SECI
+     C                     Z-ADD0         EAMT
+     C                     MOVE 'N'       CHQI
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*                                                                   S01390
+     C** Access SAR details file to determine if Notice day changes       S01390
+     C** is switched on                                                   S01390
+     C*                                                                   S01390
+     C                     CALL 'AOSARDR0'                                S01390
+     C                     PARM *BLANKS   RTCD    7                       S01390
+     C                     PARM '*VERIFY' OPTN    7                       S01390
+     C                     PARM 'AUS008'  @SARD   6                       S01390
+     C           SCSARD    PARM SCSARD    DSFDY                           S01390
+     C           RTCD      IFEQ *BLANK                                    S01390
+     C                     MOVEL'Y'       AUS008  1                       S01390
+     C                     END                                            S01390
+     C/COPY WNCPYSRC,DL9000C003
+     C*
+      ** Access SAR Details file to determine if Negative Spread                              CDL033
+      ** Allowed feature/Floating Rate CDs Issued is switched on.                             CDL033
+      *                                                                                       CDL033
+     C                     MOVE *BLANKS   CDL033                                              CDL033
+     C                     CALL 'AOSARDR0'                                                    CDL033
+     C                     PARM *BLANKS   RTCD                                                CDL033
+     C                     PARM '*VERIFY' OPTN                                                CDL033
+     C                     PARM 'CDL033'  @SARD                                               CDL033
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL033
+      *                                                                                       CDL033
+     C           RTCD      IFEQ *BLANK                                                        CDL033
+     C                     MOVEL'Y'       CDL033  1                                           CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C           ENDFC     ENDSR                           ** ENDFC  ** **
+      /TITLE DEFINITION ROUTINE
+     C           #DEFN     BEGSR
+      **--------------------------------------------------------#DEFN
+      **                                                           **
+      ** #DEFN - DEFINITION ROUTINE.                               **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C***********                                                         S01390
+     C*    SET UP KEY LIST FOR BASE RATES FILE.
+     C***********                                                         S01390
+     C***********BRTKY     KLIST                                          S01390
+     C***********          KFLD           CCYDA                           S01390
+     C***********          KFLD           BRTT                            S01390
+     C*
+     C* KEY TO DLRTS - DEAL NUMBER AND VALUE DATE.
+     C           KEY001    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           VDAT
+     C*
+     C************LIKE     DEFN DNWD      DNWDM1                          S01390
+     C           *LIKE     DEFN BJDNWD    DNWDM1                          S01390
+     C           *LIKE     DEFN DLNO      DLNO$
+     C           *LIKE     DEFN ORAT@     RAT#
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C***********                                                         S01390
+     C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.***S01390
+     C***********                                                         S01390
+     C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01390
+     C***********                                                         S01390
+     C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.********************S01390
+     C***********          MOVEL'01      'ZTABKY 12                       S01390
+     C***********          MOVE '  10'    ZTABKY                          S01390
+     C***********                                                         S01390
+     C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01390
+     C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01390
+     C***********                                                         S01390
+     C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.********************S01390
+     C***********DATF      COMP 'M'                      98MMDDYY, 98 ON  S01390
+     C***********                                                         S01390
+     C***********          ENDSR                                          S01390
+     C***********                                                         S01390
+     C********************************************************************S01390
+     C/EJECT
+     OHISTSAAFEADD             HISADD
+     O                         *ALL
+     O***DL9000P1H**203   LR                                              S01390
+     O***********                        22 'REFERENCE DL9000'            S01390
+     O***********              TITL      89                               S01390
+     O*DL9000AUH**203   LR                                          S01390048939
+     ODL9000AUT  203   LR                                                 048939
+     O                                   22 'REFERENCE DL9000AU'          S01390
+     O                         BJURPT    89                               S01390
+     O                                  104 'DATE'
+     O***********              RUNA     112                               S01390
+     O                         BJMRDT   112                               S01390
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T  1     LR
+     O                                   59 'HISTORY FILE UPDATE'
+     O                                   83 'TO INCLUDE RATE CHANGES'
+     O        T  3     LR
+     O                                   59 '-------------------'
+     O                                   83 '------------------------'
+     O        T  1     LRNU8
+     O                                   51 'TOTAL RECORDS READ FROM'
+     O                                   59 'DAMEXDI'
+     O                         EXIN  3   66
+     O        T  2     LRNU8
+     O                                   51 '-----------------------'
+     O                                   59 '--------'
+     O        T  1     LRNU8
+     O                                   51 'TOTAL RECORDS READ FROM'
+     O                                   59 'DAMBRDI'
+     O                         BRIN  3   66
+     O        T  2     LRNU8
+     O                                   51 '-----------------------'
+     O                                   59 '--------'
+     O        T  1     LRNU8
+     O                                   51 'TOTAL RECORDS OUTPUT TO'
+     O                                   59 'HISTSAA'
+     O                         HIOUT 3   66
+     O        T  2     LRNU8
+     O                                   51 '-----------------------'
+     O                                   59 '--------'
+     O        T  2     LR U8
+     O                                   35 'DATA BASE ERROR'
+     O                                   45 'OCCURED :'
+     O                                   62 'FILE -'
+     O                         DBFILE    68
+     O                                   75 'KEY -'
+     O                         DBKEY    105
+     O                                  107 'AT -'
+     O                         DBASE    114
+     O********T*3      LR                                                 S01390
+     O***********                        62 '***   END OF REPORT'         S01390
+     O***********                        68 '***'                         S01390
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

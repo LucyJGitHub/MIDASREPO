@@ -1,0 +1,2996 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Daily delivery risk enquiry')                 *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  EXPOSURE MANAGEMENT MODULE
+     F*                                                                  *
+     F*  EM1500 - DAILY DELIVERY RISK ENQUIRY                            *
+     F*                                                                  *
+     F*  Function:                                                       *
+     F*  (I/C)                                                           *
+     F*  This program allows the user to enquire on the daily delivery   *
+     F*  risk for any customer on any future date. The user can specify  *
+     F*  that the risk be shown for all branches and currencies, or can  *
+     F*  restrict it to any particular combination they wish. They can   *
+     F*  further specify which business areas should be included in the  *
+     F*  risk amount.                                                    *
+     F*                                                                  *
+     F*  Details given for each transaction are Business Area comes      *
+     F*  from,Description of Deal Type,Currency,Amount and Limit         *
+     F*  Currency Equivalent. Other details displayed are the Overall    *
+     F*  DDR Limit and Currency,FX MDDR Limit and Currency,Delivery      *
+     F*  Amount for the given day and the Available Amount if all        *
+     F*  transactionas areas are selected along with all branches        *
+     F*  and all currencies.                                             *
+     F*                                                                  *
+     F*  Called By:  EMC0302                                             *
+     F*                                                                  *
+     F*  Calls:  If the particular deal transaction selected comes from  *
+     F*          from:- FX or MM calls DL0170 - Deals File Enquiry       *
+     F*                 LE calls LE0190 - Loan Details Enquiry           *
+     F*                 SE calls SEC04 with parameter SE0250             *
+     F*                                 - Trades Details Enquiry         *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG1832            Date 14Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 115327             Date 17Sep97               *
+      *                 CDL002             Date 17Sep97               *
+     F*                 116745             DATE 19SEP97                  *
+     F*                 092456             DATE 17JAN96                  *
+     F*                 052254             DATE 10JAN94                  *
+     F*                 S01453             DATE 14DEC93                  *
+     F*                 S01378             DATE 15OCT92                  *
+     F*                 S01393             DATE 22SEP92                  *
+     F*                 E40736             DATE 16SEP92                  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG1832- Projected Account Movements Enquiry Problems        *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CDL006 - Dealing Fiduciary.                                  *
+     F* 115327 - Limit currency equivalent amounts for some currencies   *
+     F*          (particularly those whose no. of decimal place is       *
+     F*          not equal to that of the limit currency) is incorrect.  *
+     F*          Apply fix 061535.                                       *
+     F* CDL002 - FX Netting. The enquiry will ignore netted deals from   *
+     F*          EMDDRFX and include netted deals from EMDDRNT.          *
+     F* 116745 - DDR Calculation incorrect if DL limit currency          *
+     F*          different from EM Limit currency.                       *
+     F* 092456 - Add new LF to read deal amendments file for MM trans    *
+     F*          so as to include the effect of principal decreases.     *
+     F* 052254 - RECOMPILED as CURRENT FACTOR amended from 9,8           *
+     F*          to 10,9                                                 *
+     F* S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY        *
+     F*          POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)         *
+      * S01378 - Facilitates the partial sale of a parcel
+      *          of negotiable instruments which have been
+      *          previously input to the system as a single
+      *          transaction (was MOF53). Include processing to cope
+      *          with partial sales of NA's purchased. AND prevent
+      *          fully sold, unparcelled NAB's from showing on maturity
+      *          date (core error). See also change to EMDDRMM3.
+     F*  S01393 - Recompiled for SRM                                     *
+     F*  E40736 - MDDR Limit exposure is not shown at parent level.      *
+     F*           For every parent customer, look for all the child      *
+     F*           customers and display the deals made by the parent     *
+     F*           and child altogether.                                  *
+     F*                                                                  *
+     F********************************************************************
+     FEMLIM   IF  E           K        DISK
+     F            EMLIML1F                          KIGNORE
+     F            EMLIML3F                          KIGNORE
+     F/COPY WNCPYSRC,EM1500F002
+     FEMDDRFX IF  E           K        DISK
+     F/COPY WNCPYSRC,EM1500F003
+     FEMDDRNT IF  E           K        DISK                               CDL002
+     F/COPY WNCPYSRC,EM1500F004
+     FEMDDRLE IF  E           K        DISK
+     F/COPY WNCPYSRC,EM1500F005
+     FEMDDRMM1IF  E           K        DISK
+     FEMDDRMM2IF  E           K        DISK
+     FEMDDRMM3IF  E           K        DISK
+     FEMDDRMM4IF  E           K        DISK
+     FEMDDRMM5IF  E           K        DISK                               092456
+     FEMDDRSECIF  E           K        DISK
+     F/COPY WNCPYSRC,EM1500F001
+     FEM1500FMCF  E                    WORKSTN
+     F                                        RRN   KSFILE EM1500S0
+     F*
+     F********************************************************************
+     F*   INDICATORS USED                                                *
+     F*                                                                  *
+     F*       KA         COMMAND KEY 01 HAS BEEN PRESSED                 *
+     F*       KY         COMMAND KEY 24 HAS BEEN PRESSED                 *
+     F*       01         COMMAND KEY 01 IS TO BE DISPLAYED AND ENABLED   *
+     F*       02         WHEN ON SHOW SECOND FOOTER                      *
+     F*       03         COMMAND KEY 03 HAS BEEN PRESSED                 *
+     F*       05         COMMAND KEY 05 HAS BEEN PRESSED                 *
+     F*       12         COMMAND KEY 12 HAS BEEN PRESSED                 *
+     F*                                                                  *
+     F*       20         CUSTOMER FIELD INVALID                          *
+     F*       21         BRANCH FIELD INVALID                            *
+     F*       22         CURRENCY FIELD INVALID                          *
+     F*       23         DATE FIELD INVALID                              *
+     F*       24         FX TRANSACTION FIELD INVALID                    *
+     F*       25         MM TRANSACTION FIELD INVALID                    *
+     F*       26         LE TRANSACTION FIELD INVALID                    *
+     F*       27         CP TRANSACTION FIELD INVALID                    *
+     F*       29         SELECTION FIELD INVALID                         *
+     F*                                                                  *
+     F*       30         A BUSINESS AREA HAS BEEN SELECTED               *
+     F*       31         DEALS FOR PARENT/CHILD READ                     *E40736
+     F*                                                                  *
+     F*       40         OVERALL DDR AMOUNT DOES NOT EXIST               *
+     F*       41         FX MDDR AMOUNT DOES NOT EXIST                   *
+     F*       42         AVAILABLE AMOUNT DOES NOT EXIST                 *
+     F*       43         FX MDDR AMOUNT IS NOT TO BE DISPLAYED           *
+     F*                                                                  *
+     F*       50         DISPLAY SUBFILE                                 *
+     F*       51         DISPLAY SUBFILE CONTROL                         *
+     F*       52         DISPLAY SUBFILE END                             *
+     F*       53         DISPLAY ERROR MESSAGE SUBFILE END               *
+     F*                                                                  *
+     F*       61         EMDDRFX FILE BEING USED                         *
+     F*       62         EMDDRLE FILE BEING USED                         *
+     F*       63         EMDDRMM1 FILE BEING USED                        *
+     F*       64         EMDDRMM2 FILE BEING USED                        *
+     F*       65         EMDDRMM3 FILE BEING USED                        *
+     F*       66         EMDDRMM4 FILE BEING USED                        *
+     F*       67         EMDDRSEC FILE BEING USED                        *
+     F*                                                                  *
+     F*       80         ERROR ON READ OF EM1500F2                       *
+     F*       81         END OF FILE ON ONE OF EMDDR FILES               *
+     F*       83         END OF TABLE ON LOOK UP OPERATION               *
+     F*       84         END OF FILE ON READ CHANGE OF EM1500S0          *
+     F*       85         RECORD FOUND WITH SET LOWER LIMITS              *
+     F*       88         MULTIBRANCHING                                  *
+     F*                                                                  *
+     F*       U7 & U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.      *
+     F*                                                                  *
+     F********************************************************************
+     E                    CPY@    1   1 80
+     E********************TABTYP  1  43  2   TABDES 17                    092456
+     E********************TABTYP  1  44  2   TABDES 17              092456CDL002
+     E                    TABTYP  1  45  2   TABDES 17                    CDL002
+     E                    BSNS    7   7  2
+     E                    TEXT    1   2 17
+     E                    TRNS        4  1
+     E                    CARR      999  6               CNUMs array      E40736
+     E*
+     E/COPY ZSRSRC,ZEDITZ1
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/EJECT
+     I*
+     I** REDEFINE FILE FIELDS TO BE THE SAME
+     I*
+     IDDRFXF
+     I/COPY WNCPYSRC,EM1500I005
+     I              PUCY                            CCY
+     I/COPY WNCPYSRC,EM1500I006
+     I*
+     IDDRMM5F                                                             092456
+     I              DAAM                            PCPL                  092456
+     I*                                                                   092456
+     IDDRMM42F
+     I              SAPR                            PCPL
+     I*
+     I/COPY WNCPYSRC,EM1500I003
+     I***DDRLEF                                                                               CLE148
+     I**********    LNRF                            DLNO                                      CLE148
+     I/COPY WNCPYSRC,EM1500I004
+     I*
+     IDDRSECF
+     I              SETC                            CCY
+     I              TDBA                            BRCA
+     I              TDTP                            DTYP
+     I              TCTR                            AMT
+     I/COPY WNCPYSRC,EM1500I002
+     ITRNSIN      DS
+     I*
+     I** DATA STRUCTURE FOR SCREEN INPUT FIELDS
+     I*
+     I                                        1   4 TRNS
+     I                                        1  26 STRNS
+     I                                        1   1 SCRFX
+     I                                        2   2 SCRMM
+     I                                        3   3 SCRLE
+     I                                        4   4 SCRCP
+     I                                        5  14 SCUST
+     I                                       15  17 SBRCA
+     I                                       18  20 SCCY
+     I                                       21  26 SDATE
+     ITRNSDS      DS
+     I*
+     I** DATA STRUCTURE FOR SAVED INPUT FIELDS
+     I*
+     I                                        1  26 XTRNS
+     I                                        1   4 TRANS
+     I                                        1   1 XFX
+     I                                        2   2 XMM
+     I                                        3   3 XLE
+     I                                        4   4 XCP
+     I                                        5  14 XCUST
+     I                                       15  17 XBRCA
+     I                                       18  20 XCCY
+     I                                       21  26 XDATE
+     IRUNDT       DS
+     I*
+     I** DATA STRUCTURE FOR RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     IZMUSER      DS
+     I*
+     I** DATA STRUCTURE FOR ZMUSER
+     I*
+     I                                       17  17 BANKAU
+     ILDA         DS                            256
+     I*
+     I** DATA STRUCTURE FOR DATABASE ERRORS
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     I*
+     I                                     *PROGRAM PGMNM
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ISESDS     E DSSESDS
+     I*
+     I** DS TO LINK TO SECURITY PROGRAMS
+     I*
+     ILESDS     E DSEMDTA
+     I*
+     I** DS TO LINK TO LENDING PROGRAMS
+     I*
+     I              RQDTD                           LRQDTD
+     I              RETND                           LRETND
+     I              RECID                           LRECID
+     I              PGN1D                           LPGN1D
+     I              PGT1D                           LPGT1D
+     I              PGL1D                           LPGL1D
+     I              PGO1D                           LPGO1D
+     I              PGN2D                           LPGN2D
+     I              PGT2D                           LPGT2D
+     I*
+     IDLSDS     E DSDLDTA
+     I*
+     I** DS TO LINK TO DEALING PROGRAMS
+     I*
+     I              RQDTD                           DRQDTD
+     I              RETND                           DRETND
+      *                                                                   CDL006
+     ISCSARD    E DSSCSARDPD                                              CDL006
+      ** External data structure for switchable features                  CDL006
+      *                                                                   CDL006
+     I/COPY WNCPYSRC,EM1500I001
+     IDSFDY     E DSDSFDY
+     I*
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO BRANCH DETAILS
+     I*
+     ISDCLLM    E DSSDCLLMPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CLIENT LIMIT DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CURRENCY DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CUSTOMER DETAILS
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO DEALING ICD DETAILS
+     I*
+     ISDEXPM    E DSSDEXPMPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO EM ICD DETAILS
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I/EJECT
+     C*
+     C** DO INITIALISATION
+     C*
+     C                     EXSR INIT
+     C*
+     C** READ IN INPUT IF CUSTOMER IS BLANK
+     C*
+     C           SCUST     IFEQ *BLANKS
+     C                     READ EM1500F2                 80
+     C                     END
+     C*
+     C** STOP PROCESSING IF A COMMAND KEY HAS BEEN PRESSED
+     C*
+     C           *INKA     DOWEQ'0'
+     C           *IN03     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C*
+     C** CLEAR ERROR MESSAGE SUBFILE
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGMQ      TOPGMQ
+     C                     PARM *BLANKS   PGMQRC
+     C                     WRITEEM1500C1
+     C*
+     C** IF COMMAND KEY 24 HAS BEEN PRESSED NEED TO CHANGE THE FOOTER
+     C*
+     C           *INKY     IFEQ '1'
+     C           *IN02     IFEQ '1'
+     C                     SETOF                     02
+     C                     ELSE
+     C                     SETON                     02
+     C                     END
+     C*
+     C                     SETOF                     KY
+     C                     WRITEEM1500F0
+     C                     WRITEEM1500F1
+     C                     EXFMTEM1500F2
+     C*
+     C                     ELSE
+     C*
+     C** IF F5 HAS BEEN PRESSED REDISPLAY SCREEN WITH BLANK INPUT
+     C** FIELDS AND NO SUBFILE CONTROL BEING SHOWN
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVEL*BLANKS   STRNS
+     C                     MOVEA'00000000'*IN,20
+     C                     WRITEEM1500F4
+     C                     EXFMTEM1500F2
+     C                     SETOF                     05
+     C*
+     C                     ELSE
+     C*
+     C** PERFORM VALIDATION
+     C*
+     C                     EXSR VALID
+     C*
+     C** IF NECESSARY REDISPLAY THE SCREEN
+     C*
+     C           REDSPY    IFEQ 'Y'
+     C                     WRITEEM1500F0
+     C                     WRITEEM1500F4
+     C*
+     C** IF THERE HAVE BEEN NO ERRORS THEN SEND MESSAGE TO SAY PRESS
+     C** ENTER TO CONFIRM SELECTION
+     C*
+     C           ERROR     IFEQ 'N'
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0015' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C                     END
+     C*
+     C                     WRITEEM1500C1
+     C                     EXFMTEM1500F2
+     C                     ELSE
+     C*
+     C** ELSE PROCESS FIELDS INPUT
+     C*
+     C                     EXSR PROCES
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** SET UP RETURN CODE PARAMETER
+     C*
+     C           *INKA     IFEQ '1'
+     C                     MOVEL'*INIT'   PRTCD
+     C                     ELSE
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'*EXIT'   PRTCD
+     C                     ELSE
+     C                     MOVEL'*PREV'   PRTCD
+     C                     END
+     C                     END
+     C*
+     C** END PROGRAM
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     LIST OF SUBROUTINES                                          *
+     C*                                                                  *
+     C*     VALID  - VALIDATION OF SCREEN INPUT FIELDS                   *
+     C*     PROCES - WORKS OUT WHAT TO DISPLAY GIVEN THE INPUT FIELDS    *
+     C*     NXTRCD - FINDS IF ANOTHER RELEVANT RECORD ON A FILE          *
+     C*     OUTPUT - SETS UP FIELDS FOR OUTPUT THAT ARE NOT IN SUBFILE   *
+     C*     MATCH  - DECIDES IF A RECORD MATCHS THE KEYS INPUT           *
+     C*     KEYSET - SETS UP THE KEYS AND FINDS FIRST RECORD OFF FILE    *
+     C*     FLLSFL - FILLS THE SUBFILE WITH RELEVANT FIELDS OFF FILE     *
+     C*     CONVRT - CONVERTS AMOUNT TO AMOUNT IN EM LIMIT CURRENCY      *
+     C*     DETAIL - DETAIL PROCESSING                                   *
+     C*     SELCTN - CHECKS FOR A SELECTION ON SUBFILE                   *
+     C*     ENQRE  - CALLS RELEVANT PROGRAM FOR DETAIL ENQUIRY           *
+     C*     RETN   - HANDLES RETURNING FROM DETAIL ENQUIRIES             *
+     C*     INIT   - INITIALISATION                                      *
+     C*                                                                  *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*     VALID SUBROUTINE                                             *
+     C*                                                                  *
+     C*     CALLED FROM :- MAIN                                          *
+     C*     CALLS SUBROUTINE :- ZDATE1,ZDATE2                            *
+     C*     CALLS PROGRAM :- AOBRCHR0,AOCURRR0,AOCUSTR0,Y2SNMGC,ZVBBU    *
+     C*                                                                  *
+     C*     This subroutine validates the screen input fields            *
+     C*     defaulting as necessary.                                     *
+     C*                                                                  *
+     C*     Indicator 20-27 are set on when the input field customer,    *
+     C*     branch,currency,date,FX,MM,LE and CP are respectively        *
+     C*     invalid.                                                     *
+     C*                                                                  *
+     C*     USES:- BANKAU - BANK AUTHORITY (Y/N)                         *
+     C*            BSNS   - DATA STRUCTURE FOR TRANSACTIONS AREAS        *
+     C*            MBIN   - MULTIBRANCHING (Y/N)                         *
+     C*            RUNA   - RUN DATE (ALPHA)                             *
+     C*            RUND   - RUN DAY NUMBER                               *
+     C*            SBRCA  - SCREEN INPUT BRANCH                          *
+     C*            SCCY   - SCREEN INPUT CURRENCY                        *
+     C*            SCUST  - SCREEN INPUT CUSTOMER NUMBER OR SHORTNAME    *
+     C*            SDATE  - SCREEN INPUT DATE                            *
+     C*            TRNS   - ARRAY HOLDING SCREEN INPUT TRANSACTIONS      *
+     C*                                                                  *
+     C*            @CRNM  - PROGRAM CUSTOMER REPORT NAME                 *
+     C*            @CSSN  - PROGRAM CUSTOMER SHORTNAME                   *
+     C*            @CTWN  - PROGRAM CUSTOMER REPORT TOWM                 *
+     C*            @CUST  - PROGRAM CUSTOMER NUMBER                      *
+     C*            @DATE  - PROGRAM DATE                                 *
+     C*            ERROR  - VALIDATION ERROR (Y/N)                       *
+     C*            REDSPY - REDISPLAY (Y/N)                              *
+     C*                                                                  *
+     C*            @ERR   - RETURN CODE FROM ZVBBU                       *
+     C*            @RTCD  - RETURN CODE FROM ACCESS PROGRAMS             *
+     C*            @SEL   - PROGRAM QUESTION MARK FIELD                  *
+     C*            I      - COUNTER FOR TRANSACTIONS                     *
+     C*            J      - COUNTER FOR TRANSACTIONS IN BSNS ARRAY       *
+     C*            OFFSET - OFFSET INDICATOR VALUE                       *
+     C*            IN     - INDICATOR TO BE SWITCHED ON FOR INVALID      *
+     C*                     TRANSACTION                                  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C                     MOVE 'N'       REDSPY  1
+     C                     MOVE 'N'       ERROR   1
+     C                     MOVEA'00000000'*IN,20
+     C*
+     C** VALIDATE CUSTOMER
+     C*
+     C           SCUST     IFEQ *BLANKS
+     C*
+     C** ADD EMM0001 TO ERROR MESSAGE SUBFILE AS INVALID
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN 10
+     C                     PARM *BLANKS   ZAPGRL  5
+     C                     PARM 'EMM0001' ZAMSID  7
+     C                     PARM 'DRSMM'   ZAMSGF 10
+     C                     PARM *BLANKS   ZAMSDA132
+     C                     PARM *BLANKS   ZAMSTP  7
+     C*
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     20
+     C*
+     C                     ELSE
+     C*
+     C** VALIDATE INPUTTED CUSTOMER
+     C*
+     C                     MOVELSCUST     @CKEY  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CKEY
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C** IF CORRECT
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELSCUST     @SEL    1
+     C*
+     C** IF A SELECTION WAS MADE MOVE FILE FIELD TO SCREEN
+     C*
+     C           @SEL      IFEQ '?'
+     C                     MOVEL*BLANKS   SCUST
+     C                     MOVELBBCUST    SCUST
+     C                     MOVE 'Y'       REDSPY
+     C                     END
+     C*
+     C                     MOVELBBCUST    @CUST
+     C                     MOVELBBCSSN    @CSSN
+     C                     MOVELBBCRNM    @CRNM
+     C                     MOVELBBCRTN    @CTWN
+     C*                                                                   E40736
+     C** Get all the child customers attached to the parent customer.     E40736
+     C*                                                                   E40736
+     C                     MOVELBBCUST    @PNUM   6                       E40736
+     C                     MOVE BBPAIN    @PAIN   1                       E40736
+     C                     MOVE *BLANKS   CARR                            E40736
+     C           @PAIN     IFEQ 'P'                                       E40736
+     C                     CALL 'AOCUSTR0'                                E40736
+     C                     PARM *BLANKS   @RTCD                           E40736
+     C                     PARM '*FIRST ' @OPTN                           E40736
+     C                     PARM *BLANKS   @CKEY                           E40736
+     C                     PARM *BLANKS   @KYST                           E40736
+     C           SDCUST    PARM SDCUST    DSSDY                           E40736
+     C                     Z-ADD2         X       30                      E40736
+     C                     MOVE @PNUM     CARR,1                          E40736
+     C           @RTCD     DOWNE'*EMPTY'                                  E40736
+     C           @RTCD     ANDNE'*EOF'                                    E40736
+     C           BBPCNB    IFEQ @PNUM                                     E40736
+     C                     MOVE BBCUST    CARR,X                          E40736
+     C                     ADD  1         X                               E40736
+     C                     END                                            E40736
+     C                     CALL 'AOCUSTR0'                                E40736
+     C                     PARM *BLANKS   @RTCD                           E40736
+     C                     PARM '*NEXT  ' @OPTN                           E40736
+     C                     PARM *BLANKS   @CKEY                           E40736
+     C                     PARM *BLANKS   @KYST                           E40736
+     C           SDCUST    PARM SDCUST    DSSDY                           E40736
+     C                     END                                            E40736
+     C                     ELSE                                           E40736
+     C                     MOVE BBCUST    CARR,1                          E40736
+     C                     END                                            E40736
+     C*                                                                   E40736
+     C                     ELSE
+     C*
+     C** CUSTOMER INCORRECT
+     C*
+     C           @RTCD     IFEQ '*NOSEL'
+     C*
+     C** NO SELECTION WAS MADE ALTHOUGH '?' ENTERED
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0002' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C           @RTCD     IFEQ '*NRF'
+     C*
+     C** NO RECORD FOUND
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0003' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C           @RTCD     IFEQ '*KEY'
+     C*
+     C** INVALID KEY FOUND
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0014' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C** DATABASE ERROR OCCURRED
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELSCUST     DBKEY
+     C                     MOVE 'SDCUSTPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C** SINCE CUSTOMER IS INVALID NEED TO REDISPLAY THE SCREEN
+     C*
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     20
+     C                     END
+     C                     END
+     C*
+     C** VALIDATE DATE
+     C*
+     C           SDATE     IFEQ *BLANKS
+     C*
+     C** DEFAULT SCREEN VALUE
+     C*
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDATE
+     C                     MOVE 'Y'       REDSPY
+     C*
+     C                     ELSE
+     C*
+     C** VALIDATE INPUTTED DATE
+     C*
+     C                     MOVE SDATE     ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** IF ERROR OCCURED
+     C*
+     C           *IN99     IFEQ '1'
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0008' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     23
+     C*
+     C                     ELSE
+     C*
+     C           ZDAYNO    IFLT RUND
+     C*
+     C** ERROR IF DATE INPUT IS LESS THAN TODAY'S DATE
+     C*
+     C                     MOVELRUNA      ZAMSDA
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0009' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM           ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     23
+     C*
+     C                     ELSE
+     C*
+     C** DATE IS CORRECT
+     C*
+     C                     MOVELZDAYNO    @DATE
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** VALIDATE CURRENCY
+     C*
+     C           SCCY      IFEQ *BLANKS
+     C*
+     C** DEFAULT SCREEN VALUE
+     C*
+     C                     MOVE 'ALL'     SCCY
+     C                     MOVE 'Y'       REDSPY
+     C*
+     C                     ELSE
+     C*
+     C           SCCY      IFNE 'ALL'
+     C*
+     C** VALIDATE INPUTTED CURRENCY IF NOT ALL
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SCCY      @KEYC   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** IF CORRECT
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELSCCY      @SEL
+     C*
+     C** IF A SELECTION WAS MADE MOVE FILE FIELD TO SCREEN
+     C*
+     C           @SEL      IFEQ '?'
+     C                     MOVEL*BLANKS   SCCY
+     C                     MOVELA6CYCD    SCCY
+     C                     MOVE 'Y'       REDSPY
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** CURRENCY INCORRECT
+     C*
+     C           @RTCD     IFEQ '*NOSEL'
+     C*
+     C** NO SELECTION WAS MADE ALTHOUGH '?' ENTERED
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0002' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C           @RTCD     IFEQ '*NRF'
+     C*
+     C** NO RECORD FOUND
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0007' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C** DATABASE ERROR OCCURRED
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELSCCY      DBKEY
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SINCE CURRENCY IS INVALID NEED TO REDISPLAY THE SCREEN
+     C*
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     22
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C** VALIDATE BRANCH
+     C*
+     C           MBIN      IFEQ 'N'
+     C*
+     C** IF IN A SINGLE BRANCH ENVIRONMENT DEFAULT BRANCH TO 'ALL'
+     C*
+     C                     MOVEL'ALL'     SBRCA
+     C                     ELSE
+     C*
+     C           SBRCA     IFEQ *BLANKS
+     C*
+     C** DEFAULT SCREEN VALUE
+     C*
+     C                     MOVE 'ALL'     SBRCA
+     C                     MOVE 'Y'       REDSPY
+     C*
+     C                     ELSE
+     C*
+     C           SBRCA     IFNE 'ALL'
+     C*
+     C** VALIDATE INPUTTED BRANCH IF NOT ALL
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SBRCA     @BKEY   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C** IF CORRECT
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELSBRCA     @SEL
+     C*
+     C** IF A SELECTION WAS MADE MOVE FILE FIELD TO SCREEN
+     C*
+     C           @SEL      IFEQ '?'
+     C                     MOVEL*BLANKS   SBRCA
+     C                     MOVELA8BRCD    SBRCA
+     C                     MOVE 'Y'       REDSPY
+     C                     END
+     C*
+     C** CHECK USERS AUTHORITY TO THIS BRANCH
+     C*
+     C                     CALL 'ZVBBU'
+     C                     PARM SBRCA     ZBRCDX  3
+     C                     PARM           @ERR    10
+     C*
+     C           @ERR      IFNE 0
+     C*
+     C** USER DOES NOT HAVE AUTHORITY
+     C*
+     C           @ERR      IFEQ 1
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0013' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C                     MOVELSBRCA     ZAMSDA
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0005' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM           ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C                     END
+     C*
+     C** SINCE AUTHORITY IS WRONG NEED TO REDISPLAY THE SCREEN
+     C*
+     C                     SETON                     21
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** BRANCH INCORRECT
+     C*
+     C           @RTCD     IFEQ '*NOSEL'
+     C*
+     C** NO SELECTION WAS MADE ALTHOUGH '?' ENTERED
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0002' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C           @RTCD     IFEQ '*NRF'
+     C*
+     C** NO RECORD FOUND
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0004' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     ELSE
+     C*
+     C** DATABASE ERROR OCCURRED
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELSBRCA     DBKEY
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SINCE BRANCH IS INVALID NEED TO REDISPLAY THE SCREEN
+     C*
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     21
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** NEED TO CHECK USER HAS BANK LEVEL AUTHORITY
+     C*
+     C           BANKAU    IFEQ 'N'
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0006' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     SETON                     21
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** VALIDATE TRANSACTIONS
+     C*
+     C                     Z-ADD1         I       10
+     C*
+     C** OFFSET IS USED TO DEFINE WHERE THE ERROR INDICATORS FOR THE
+     C** TRANSACTIONS START
+     C*
+     C                     Z-ADD23        OFFSET  30
+     C           I         DOUGE5
+     C           TRNS,I    IFEQ *BLANK
+     C*
+     C** NEED TO DEFAULT THE VALUE
+     C*
+     C                     MOVE 'Y'       TRNS,I
+     C                     MOVE 'Y'       REDSPY
+     C                     ELSE
+     C*
+     C** VALIDATE INPUTTED VALUE
+     C*
+     C           TRNS,I    IFNE 'Y'
+     C           TRNS,I    ANDNE'N'
+     C*
+     C           I         IFEQ 1
+     C                     MOVELBSNS,I    ZAMSDA
+     C                     ELSE
+     C           I         ADD  3         J       10
+     C                     MOVELBSNS,J    ZAMSDA
+     C                     END
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0010' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM           ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C                     MOVE 'Y'       REDSPY
+     C                     MOVE 'Y'       ERROR
+     C*
+     C** TO KNOW WHICH INDICATOR NEEDS TO BE SET ON,USE THE NUMBER OF
+     C** TIMES ROUND LOOP PLUS THE OFFSET
+     C*
+     C           OFFSET    ADD  I         IN      30
+     C                     MOVE '1'       *IN,IN
+     C                     END
+     C                     ADD  1         I
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     PROCES SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- MAIN                                          *
+     C*     CALLS SUBROUTINE :- DETAIL,FLLSFL,KEYSET,MATCH,OUTPUT,ZEDIT  *
+     C*     CALLS PROGRAM :- Y2CLMSC                                     *
+     C*                                                                  *
+     C*     This subroutine having been given valid input works out      *
+     C*     what to display. The input fields are placed in output       *
+     C*     fields and then the input fields are saved. For each         *
+     C*     business area selected,the relevant file is read to see if   *
+     C*     there are any details agreeing with the input fields. If     *
+     C*     there are these are placed in the subfile and the next       *
+     C*     record read until there are no more,else a no detail screen  *
+     C*     is displayed. The delivery and the available amount are      *
+     C*     worked out here.                                             *
+     C*                                                                  *
+     C*     Indicator 30 is set on if a particular business area has     *
+     C*     been selected. Indicator 42 is set on if the available       *
+     C*     amount can not be worked out this time. Indicators 50,51     *
+     C*     and 52 are set on to display the relevant parts of the       *
+     C*     subfile control.                                             *
+     C*                                                                  *
+     C*     USES:- @CUST  - PROGRAM CUSTOMER NUMBER                      *
+     C*            @CYEQA - PROGRAM LIMIT CURRENCY EQUIVALENT AMOUNT     *
+     C*            @DATE  - PROGRAM DATE                                 *
+     C*            @OVRAM - PROGRAM OVERALL AMOUNT                       *
+     C*            BSNS   - DATA STRUCTURE OF TRANSACTIONS AREAS         *
+     C*            EMNBDP - NO. OF DECIMAL PLACES FOR EM LIMIT CURRENCY  *
+     C*            MCHFND - MATCH FOUND                                  *
+     C*            PGMQ   - PROGRAM MESSAGE QUEUE                        *
+     C*            SCUST  - SCREEN INPUT CUSTOMER NUMBER OR SHORTNAME    *
+     C*            STRNS  - DATA STRUCTURE OF ALL INPUT FIELDS           *
+     C*            TRNS   - FIELD CONTAIN ALL FOUR TRANSACTION INPUTS    *
+     C*            XBRCA  - SAVED BRANCH                                 *
+     C*            XCCY   - SAVED CURRENCY                               *
+     C*            XCP    - SAVED CP                                     *
+     C*            XFX    - SAVED FX                                     *
+     C*            XLE    - SAVED LE                                     *
+     C*            XMM    - SAVED MM                                     *
+     C*                                                                  *
+     C*            COUNT  - COUNTER OF MM TRANSACTIONS IN BSNS ARRAY     *
+     C*            DSPREC - RRN OF SUBFILE TO BE FIRST DISPLAYED         *
+     C*            I      - COUNTER OF TRANSACTIONS IN BSNS ARRAY        *
+     C*            NEWDTL - NEW INPUT DETAILS (Y/N)                      *
+     C*            NODETL - NO DETAILS TO DISPLAY IN SUBFILE (Y/N)       *
+     C*            OAVAIL - OUTPUT AVAILABLE AMOUNT                      *
+     C*            ODELIV - OUTPUT DELIVERY AMOUNT                       *
+     C*            RRN    - RELATIVE RECORD NUMBER OF SUBFILE            *
+     C*            XDATEN - SAVED MIDAS DAY NUMBER OF INPUT DATE         *
+     C*            XDATEN - SAVED MIDAS DAY NUMBER OF INPUT DATE         *
+     C*            XRRN   - SAVED RELATIVE RECORD NUMBER OF SUBFILE      *
+     C*            XTRNS  - DATA STRUCTURE OF ALL SAVED INPUT FIELDS     *
+     C*                                                                  *
+     C*            @AVAIL - PROGRAM AVAILABLE AMOUNT                     *
+     C*            @BUSAR - PROGRAM BUSINESS AREA                        *
+     C*            @DELIV - PROGRAM DELIVERY AMOUNT                      *
+     C*            @DLVTH - PROGRAM DELIVERY AMOUNT IN THOUSANDS         *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PROCES    BEGSR
+     C*
+     C                     Z-ADD1         RRN
+     C                     Z-ADDRRN       DSPREC
+     C                     MOVEL*BLANKS   NEWDTL  1
+     C*
+     C** WHILST A COMMAND KEY HAS NOT BEEN PRESSED AND THERE ARE
+     C** NO NEW DETAILS DO THE FOLLOWING
+     C*
+     C           *INKA     DOWEQ'0'
+     C           *IN03     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           NEWDTL    ANDEQ*BLANKS
+     C*
+     C                     Z-ADD0         @DELIV
+     C                     Z-ADD0         @AVAIL
+     C                     Z-ADD0         XRRN
+     C/COPY WNCPYSRC,EM1500C026
+     C*
+     C** CLEAR ERROR MESSAGE SUBFILE
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGMQ      TOPGMQ 10
+     C                     PARM *BLANKS   PGMQRC  5
+     C                     WRITEEM1500C1
+     C*
+     C** CLEAR DETAIL SUBFILE
+     C*
+     C                     SETOF                     505152
+     C                     WRITEEM1500C0
+     C*
+     C** ONLY SAVE FIELDS IF F5 HAS NOT BEEN PRESSED
+     C*
+     C           *IN05     IFEQ '0'
+     C*
+     C** WORK OUT FIELDS FOR DISPLAY ABOVE SUBFILE
+     C*
+     C                     EXSR OUTPUT
+     C*
+     C** SAVE SCREEN INPUT FIELDS
+     C*
+     C                     MOVEL@CUST     XCUSTN
+     C                     MOVEL@DATE     XDATEN
+     C                     MOVELSTRNS     XTRNS
+     C*
+     C** ELSE MOVED THE SAVED FIELDS TO THE SCREEN INPUT FIELDS
+     C*
+     C                     ELSE
+     C                     MOVELXTRNS     STRNS
+     C                     SETOF                     29
+     C                     Z-ADD1         RRN
+     C                     Z-ADDRRN       DSPREC
+     C                     END
+     C*                                                                   E40736
+     C** Include all deals for the parent and child customers.            E40736
+     C*                                                                   E40736
+     C                     Z-ADD1         X                               E40736
+     C                     MOVE '0'       *IN31                           E40736
+     C           CARR,X    DOUEQ*BLANKS                                   E40736
+     C                     MOVELCARR,X    XCUSTN                          E40736
+     C*
+     C** FOR ALL BUSINESS AREAS
+     C*
+     C                     MOVEL'Y'       NODETL  1
+     C                     Z-ADD1         I
+     C                     Z-ADD1         COUNT   10
+     C           I         DOUGE8
+     C*
+     C** CHECK WHETHER THE BUSINESS AREA BEING LOOKED AT THIS TIME
+     C** ROUND HAS BEEN SELECTED
+     C*
+     C                     SETOF                     30
+     C           XFX       IFEQ 'Y'
+     C           I         ANDEQ1
+     C                     SETON                     30
+     C                     END
+     C           XMM       IFEQ 'Y'
+     C           I         ANDGE2
+     C           I         ANDLE5
+     C                     SETON                     30
+     C                     END
+     C           XLE       IFEQ 'Y'
+     C           I         ANDEQ6
+     C                     SETON                     30
+     C                     END
+     C           XCP       IFEQ 'Y'
+     C           I         ANDEQ7
+     C                     SETON                     30
+     C                     END
+     C*
+     C** IF THIS PARTICULAR BUSINESS AREA HAS BEEN SELECTED
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C** SETUP AND READ FIRST RECORD OF THE RELEVANT FILE
+     C*
+     C                     MOVE 'N'       DEAM    1                       092456
+     C                     EXSR KEYSET
+     C*
+     C** IF RECORD FOUND
+     C*
+     C           *IN81     DOWEQ'0'
+     C           *IN85     ANDEQ'1'
+     C*
+     C** CHECK WHETHER RECORD MATCH REQUIREMENTS
+     C*
+     C                     EXSR MATCH
+     C*
+     C** IF A MATCH FOUND
+     C*
+     C           MCHFND    IFEQ 'Y'
+     C/COPY WNCPYSRC,EM1500C022
+     C                     MOVE BSNS,I    @BUSAR  2
+     C/COPY WNCPYSRC,EM1500C023
+     C                     MOVE 'N'       NODETL
+     C                     MOVE '1'       *IN31                           E40736
+     C*
+     C** FILL SUBFILE
+     C*
+     C                     EXSR FLLSFL
+     C                     ADD  @CYEQA    @DELIV 150
+     C/COPY WNCPYSRC,EM1500C027
+     C                     END
+     C*
+     C** READ NEXT RECORD OFF RELEVANT FILE
+     C*
+     C                     EXSR NXTRCD
+     C*
+     C** END FOR DO UNTIL END OF FILE
+     C*
+     C                     END
+     C*
+     C** END FOR SELECTED BUSINESS AREA
+     C*
+     C                     END
+     C*
+     C                     ADD  1         I
+     C*
+     C** DO NEXT BUSINESS AREA
+     C*
+     C                     END
+     C*                                                                   E40736
+     C** Do next customer number                                          E40736
+     C*                                                                   E40736
+     C                     ADD  1         X                               E40736
+     C                     END                                            E40736
+     C*
+     C** EDIT DELIVERY AMOUNT FOR SCREEN WHEN ALL BUSINESS AREAS
+     C** PROCESSED
+     C*
+     C           @DELIV    DIV  1000      @DLVTH 130H
+     C*
+     C** IF NUMBER OF EM LIMIT CURRENCY DECIMAL PLACES IS 1
+     C*
+     C           EMNBDP    IFEQ 1
+     C           @DLVTH    DIV  10        @DLVTH    H
+     C                     END
+     C*
+     C** IF NUMBER OF EM LIMIT CURRENCY DECIMAL PLACES IS 2
+     C*
+     C           EMNBDP    IFEQ 2
+     C           @DLVTH    DIV  100       @DLVTH    H
+     C                     END
+     C*
+     C** IF NUMBER OF EM LIMIT CURRENCY DECIMAL PLACES IS 3
+     C*
+     C           EMNBDP    IFEQ 3
+     C           @DLVTH    DIV  1000      @DLVTH    H
+     C                     END
+     C*
+     C** ONLY EDIT DELIVERY AMOUNT IF NOT ZERO
+     C*
+     C           @DLVTH    IFNE 0
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE @DLVTH    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    ODELIV
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   ODELIV
+     C                     MOVE '0'       ODELIV
+     C                     END
+     C*
+     C** IF ALL TRANSACTIONS ARE REQUESTED AND BRANCH AND CURRENCY
+     C** ARE 'ALL' AND OVERALL AMOUNT EXISTS
+     C*
+     C           TRANS     IFEQ 'YYYY'
+     C           XBRCA     ANDEQ'ALL'
+     C           XCCY      ANDEQ'ALL'
+     C           *IN40     ANDEQ'0'
+     C*
+     C** WORK OUT AVAILABLE AMOUNT AS (OVERALL AMOUNT - DELIVERY AMT.)
+     C*
+     C           @OVRAM    SUB  @DLVTH    @AVAIL 130
+     C*
+     C** ONLY EDIT AVAILABLE AMOUNT IF NOT ZERO
+     C*
+     C           @AVAIL    IFNE 0
+     C*
+     C** EDIT AVAILABLE AMOUNT FOR SCREEN
+     C*
+     C                     Z-ADD@AVAIL    ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVEL*BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    OAVAIL
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   OAVAIL
+     C                     MOVE '0'       OAVAIL
+     C                     END
+     C                     SETOF                     42
+     C*
+     C                     ELSE
+     C*
+     C** AVAILABLE AMOUNT IS NOT AVAILABLE
+     C*
+     C                     SETON                     42
+     C                     END
+     C/COPY WNCPYSRC,EM1500C028
+     C*
+     C** DISPLAY SUBFILE TO SCREEN ONLY IF DETAILS IN SUBFILE
+     C*
+     C           *IN31     IFEQ '1'                                       E40736
+     C                     MOVE 'N'       NODETL                          E40736
+     C                     END                                            E40736
+     C           NODETL    IFEQ 'Y'
+     C                     SETON                     51
+     C                     SETOF                     5052
+     C                     WRITEEM1500C0
+     C                     WRITEEM1500F3
+     C*
+     C                     ELSE
+     C                     SETON                     505152
+     C                     WRITEEM1500C0
+     C                     END
+     C*
+     C                     WRITEEM1500C1
+     C                     WRITEEM1500F0
+     C                     WRITEEM1500F2
+     C*
+     C                     SETOF                     05
+     C*
+     C** BLANK OUT ONLY SCREEN INPUT CUSTOMER FIELD
+     C*
+     C                     MOVEL*BLANKS   SCUST
+     C*
+     C** DO DETAIL SCREEN PROCESSING
+     C*
+     C                     EXSR DETAIL
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     NXTRCD SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS nothing                                                *
+     C*                                                                  *
+     C*     This subroutine reads the next record from the relevant      *
+     C*     file depending on indicators 61 to 67                        *
+     C*                                                                  *
+     C*     Indicator 81 is set on if no more records can be found with  *
+     C*     the key fields the same as the selection.                    *
+     C*                                                                  *
+     C*     USES:- DBKYLT - KEY LIST CONTAINING THE SELECTION            *
+     C*                                                                  *
+     C*            AMT    - FILE AMOUNT                                  *
+     C*            DLNO   - FILE DEAL NUMBER                             *
+     C*            DTYP   - FILE DEAL TYPE                               *
+     C*            WORK   - Work field used to process parcelled NA's    *S01378
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           NXTRCD    BEGSR
+     C/COPY WNCPYSRC,EM1500C029
+     C*
+     C** IF FX
+     C*
+     C           *IN61     IFEQ '1'
+     C/COPY WNCPYSRC,EM1500C012
+     C           DBKYLT    READEEMDDRFX                  81
+     C/COPY WNCPYSRC,EM1500C013
+     C                     Z-ADDPUAM      AMT
+     C/COPY WNCPYSRC,EM1500C014
+      *                                                                   CDL002
+     C* Net FX Exposure?                                                  CDL002
+     C           W#NFXE    IFEQ 'Y'                                       CDL002
+     C*                                                                   CDL002
+     C           *IN81     IFEQ *OFF                                      CDL002
+     C           NETBR     IFNE *BLANKS                                   CDL002
+     C                     CLEARAMT                                       CDL002
+     C                     ENDIF                                          CDL002
+     C*                                                                   CDL002
+     C                     ELSE                                           CDL002
+      * Get Net                                                           CDL002
+     C           DBKYLT    SETLLEMDDRNT                  85               CDL002
+     C                     MOVE *ON       *IN60                           CDL002
+     C                     MOVE *OFF      *IN61                           CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+     C                     END
+      *                                                                   CDL002
+      * If FX Net                                                         CDL002
+     C           *IN60     IFEQ *ON                                       CDL002
+     C           DBKYLT    READEEMDDRNT                  81               CDL002
+     C                     Z-ADDAMDBUY    AMT                             CDL002
+     C/COPY WNCPYSRC,EM1500C030
+     C                     MOVE 'FN'      DTYP                            CDL002
+     C                     MOVE AMCCYD    CCY                             CDL002
+     C                     ENDIF                                          CDL002
+     C*
+     C** IF MM1
+     C*
+     C           *IN62     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM1                 81
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM1                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C001
+     C                     Z-ADDPCPL      AMT
+     C                     END
+     C*
+     C** IF MM2
+     C*
+     C           *IN63     IFEQ '1'
+     C           DEAM      IFEQ 'N'                                       092456
+     C           DBKYLT    READEEMDDRMM2                 81
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM2                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C002
+     C                     Z-ADDPCPL      AMT
+     C           *IN81     IFEQ '1'                                       092456
+     C           DBKYLT    SETLLEMDDRMM5                 85               092456
+     C           *IN85     IFEQ '1'                                       092456
+     C           DBKYLT    READEEMDDRMM5                 81               092456
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM5                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C003
+     C                     Z-ADDPCPL      AMT                             092456
+     C                     MOVE 'PD'      DTYP                            092456
+     C                     MOVE 'Y'       DEAM                            092456
+     C                     END                                            092456
+     C                     END                                            092456
+     C                     ELSE                                           092456
+     C           DBKYLT    READEEMDDRMM5                 81               092456
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM5                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C004
+     C                     Z-ADDPCPL      AMT                             092456
+     C                     MOVE 'PD'      DTYP                            092456
+     C                     END
+     C                     END                                            092456
+     C*
+     C** IF MM3
+     C*
+     C           *IN64     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM3                 81
+      *                                                                   S01378
+      ** If parcelled NAB must reduce FVAL to reflect NA's sold today.    S01378
+      ** (FVAL and PSZE are reduced during CoB (DL0280) to reflect        S01378
+      ** partial sales and NSLD is zeroised).                             S01378
+     C           NSLD      IFGT *ZERO                                     S01378
+      *                                                                   S01378
+      ** Obtain face value per parcel                                     S01378
+     C           FVAL      DIV  PSZE      WORK      H                     S01378
+      *                                                                   S01378
+      ** Obtain proportion of face value sold today                       S01378
+     C           NSLD      MULT WORK      WORK                            S01378
+      *                                                                   S01378
+      ** Reduce face value to remove portions sold today.                 S01378
+     C           FVAL      SUB  WORK      FVAL                            S01378
+     C                     END                                            S01378
+      *                                                                   S01378
+     C                     Z-ADDFVAL      AMT
+     C                     END
+     C*
+     C** IF MM4
+     C*
+     C           *IN65     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM4                 81
+     C                     Z-ADDPCPL      AMT
+     C                     END
+     C*
+     C** IF LE
+     C/COPY WNCPYSRC,EM1500C015
+     C*
+     C           *IN66     IFEQ '1'
+     C           DBKYLT    READEEMDDRLE                  81
+     C                     Z-ADDCPAM      AMT
+     C                     MOVELPTYP      DTYP
+     C                     END
+     C/COPY WNCPYSRC,EM1500C016
+     C*
+     C** IF SEC
+     C*
+     C           *IN67     IFEQ '1'
+     C           DBKYLT    READEEMDDRSEC                 81
+     C                     MOVE TDRF      DLNO
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     OUTPUT SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS SUBROUTINE :- ZDATE2,ZEDIT                             *
+     C*     CALLS PROGRAM :- AOCLLMR0                                    *
+     C*                                                                  *
+     C*     This subroutine sets up those fields which do not rely on    *
+     C*     a record being read,that is the input fields,Overall DDR     *
+     C*     Currency and Amount,FX MDDR Currency and Amount.             *
+     C*                                                                  *
+     C*     Indicator 40 is set on if the Overall DDR Limit is not       *
+     C*     available and indicator 41 is set on if the FX MDDR Limit    *
+     C*     is not available.                                            *
+     C*                                                                  *
+     C*     USES:- @CRNM  - PROGRAM CUSTOMER REPORT NAME                 *
+     C*            @CSSN  - PROGRAM CUSTOMER SHORTNAME                   *
+     C*            @CTWN  - PROGRAM CUSTOMER REPORT TOWN                 *
+     C*            @CUST  - PROGRAM CUSTOMER NUYMBER                     *
+     C*            @DATE  - PROGRAM DATE                                 *
+     C*            @RTCD  - PROGRAM RETURN CODE                          *
+     C*            SBRCA  - SCREEN INPUT BRANCH                          *
+     C*            SCCY   - SCREEN INPUT CURRENCY                        *
+     C*            SCRCP  - SCREEN INPUT CP                              *
+     C*            SCRFX  - SCREEN INPUT FX                              *
+     C*            SCRLE  - SCREEN INPUT LE                              *
+     C*            SCRMM  - SCREEN INPUT MM                              *
+     C*            TEXT   - ARRAY OF APPROPRIATE TEXTS                   *
+     C*                                                                  *
+     C*            @OVRAM - PROGRAM OVERALL AMOUNT                       *
+     C*            DDRAMT - OUTPUT FX MDDR AMOUNT                        *
+     C*            OBRCA  - OUTPUT BRANCH                                *
+     C*            OCCY   - OUTPUT CURRENCY                              *
+     C*            OCRNM  - OUTPUT CUSTOMER REPORT NAME                  *
+     C*            OCSSN  - OUTPUT CUSTOMER SHORTNAME                    *
+     C*            OCTWN  - OUTPUT CUSTOMER REPORT TOWN                  *
+     C*            ODATE  - OUTPUT DATE                                  *
+     C*            OUTCP  - OUTPUT CP                                    *
+     C*            OUTFX  - OUTPUT FX                                    *
+     C*            OUTLE  - OUTPUT LE                                    *
+     C*            OUTMM  - OUTPUT MM                                    *
+     C*            OVRAMT - OUTPUT OVERALL AMOUNT                        *
+     C*                                                                  *
+     C*            EMCUST - KEY CUSTOMER FOR EMLIM KEYLIST               *
+     C*            EMRECI - KEY RECORD ID FOR EMLIM KEYLIST              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           OUTPUT    BEGSR
+     C*
+     C                     SETOF                     404142
+     C*
+     C                     MOVEL@CSSN     OCSSN
+     C                     MOVEL@CRNM     OCRNM
+     C                     MOVEL@CTWN     OCTWN
+     C                     MOVELSBRCA     OBRCA
+     C                     MOVELSCCY      OCCY
+     C                     MOVELSCRFX     OUTFX
+     C                     MOVELSCRMM     OUTMM
+     C                     MOVELSCRLE     OUTLE
+     C                     MOVELSCRCP     OUTCP
+     C*
+     C** CONVERT NUMERIC DATE TO CORRECT FORMAT FOR SCREEN
+     C*
+     C                     Z-ADD@DATE     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ODATE
+     C*
+     C** CHAIN TO EMLIM FOR EM LIMIT DETAILS FOR CUSTOMER
+     C*
+     C           EMKYLT    KLIST
+     C                     KFLD           EMRECI
+     C                     KFLD           EMCUST
+     C*
+     C                     MOVEL@CUST     EMCUST  6
+     C                     MOVEL'1'       EMRECI  1
+     C*
+     C           EMKYLT    CHAINEMLIM                40
+     C*
+     C** IF RECORD FOUND
+     C*
+     C           *IN40     IFEQ '0'
+     C                     Z-ADDEMDR      @OVRAM 130
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE @OVRAM    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    OVRAMT
+     C                     ELSE
+     C                     MOVELTEXT,2    OVRAMT
+     C                     END
+     C*
+     C** ONLY LOOK UP FX MDDR LIMIT IF FX IS A SELECTED BUSINESS AREA
+     C*
+     C           SCRFX     IFEQ 'N'
+     C                     SETON                     43
+     C                     ELSE
+     C                     SETOF                     43
+     C*
+     C** ACCESS SDCLLMPD FOR DEALING LIMIT DETAILS
+     C*
+     C           SBRCA     IFEQ 'ALL'
+     C                     CALL 'AOCLLMR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @CUST     @CLKY1  6
+     C                     PARM 'S'       @CLKY2  1
+     C                     PARM 'SYS'     @CLKY3  3
+     C           SDCLLM    PARM SDCLLM    DSFDY
+     C*
+     C                     ELSE
+     C                     CALL 'AOCLLMR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @CUST     @CLKY1
+     C                     PARM 'B'       @CLKY2
+     C                     PARM SBRCA     @CLKY3
+     C           SDCLLM    PARM SDCLLM    DSFDY
+     C                     END
+     C*
+     C** IF NO RECORD FOUND
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     41
+     C                     MOVELTEXT,2    DDRAMT
+     C                     ELSE
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE DZMDDR    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DDRAMT
+     C                     SETOF                     41
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     MATCH SUBROUTINE                                             *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS nothing                                                *
+     C*                                                                  *
+     C*     This subroutine determines according to the input fields     *
+     C*     whether a record read is a match or not. What has to be      *
+     C*     checked is the currency and branch. If either of these       *
+     C*     are not 'ALL' then the inputted value must match that on     *
+     C*     the record just read.                                        *
+     C*                                                                  *
+     C*     USES:- BRCA   - FILE BRANCH                                  *
+     C*            CCY    - FILE CURRENCY                                *
+     C*            XBRCA  - SAVED BRANCH                                 *
+     C*            XCCY   - SAVED CURRENCY                               *
+     C*                                                                  *
+     C*            MCHFND - MATCH FOUND (Y/N)                            *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           MATCH     BEGSR
+     C*
+     C                     MOVEL'N'       MCHFND  1
+     C           XBRCA     IFEQ 'ALL'
+     C           XCCY      ANDEQ'ALL'
+     C                     MOVEL'Y'       MCHFND
+     C                     END
+     C*
+     C           XBRCA     IFEQ 'ALL'
+     C           XCCY      ANDEQCCY
+     C                     MOVEL'Y'       MCHFND
+     C                     END
+     C*
+     C           XBRCA     IFEQ BRCA
+     C           XCCY      ANDEQ'ALL'
+     C                     MOVEL'Y'       MCHFND
+     C                     END
+     C*
+     C           XBRCA     IFEQ BRCA
+     C           XCCY      ANDEQCCY
+     C                     MOVEL'Y'       MCHFND
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     KEYSET SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS nothing                                                *
+     C*                                                                  *
+     C*     This subroutine sets lower limits and read equals the first  *
+     C*     record on a particular file. The file depends on the         *
+     C*     business area and if MM whether 1st to 4th time through.     *
+     C*                                                                  *
+     C*     Indicator 85 is set on if the set lower limits is            *
+     C*     successful and indicator 81 is set on if the read equal      *
+     C*     is not successful. Indicators 61-67 are set on to show       *
+     C*     which file has just been read.                               *
+     C*                                                                  *
+     C*     USES:- BSNS   - DATA STRUCTURE OF ALL TRANSACTION AREAS      *
+     C*            COUNT  - COUNTER OF MM TRANSACTIONS IN BSNS ARRAY     *
+     C*            I      - COUNTER OF TRANSACTIONS IN BSNS ARRAY        *
+     C*            XCUSTN - SAVED CUSTOMER NUMBER                        *
+     C*            XDATEN - SAVED MIDAS DAY NUMBER OF INPUT DATE         *
+     C*                                                                  *
+     C*            AMT    - FILE AMOUNT                                  *
+     C*            DLNO   - FILE DEAL NUMBER                             *
+     C*            DTYP   - FILE DEAL TYPE                               *
+     C*            KCUST  - KEY CUSTOMER                                 *
+     C*            KDATE  - KEY DATE                                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           KEYSET    BEGSR
+     C*
+     C** SET UP KEY LIST
+     C*
+     C           DBKYLT    KLIST
+     C                     KFLD           KCUST
+     C                     KFLD           KDATE
+     C*
+     C**********           MOVELXCUSTN    KCUST   60                                          CSD027
+     C                     MOVELXCUSTN    KCUST   6                                           CSD027
+     C                     MOVELXDATEN    KDATE   50
+     C*
+     C/COPY WNCPYSRC,EM1500C017
+     C                     MOVEA'0000000' *IN,61
+     C                     CLEAR*IN60                                     CDL002
+     C*
+     C** IF FX
+     C*
+     C***********BSNS,I****IFEQ 'FX'                                      CDL002
+     C***********DBKYLT****SETLLEMDDRFX                  85               CDL002
+     C************IN85*****IFEQ '1'                                       CDL002
+     C***********DBKYLT****READEEMDDRFX                  81               CDL002
+     C*********************Z-ADDPUAM      AMT                             CDL002
+     C*********************SETON                     61                   CDL002
+     C*********************END                                            CDL002
+     C*********************END                                            CDL002
+     C*                                                                   CDL002
+     C           BSNS,I    IFEQ 'FX'                                      CDL002
+     C                     MOVE *ON       *IN85                           CDL002
+     C/COPY WNCPYSRC,EM1500C018
+     C           DBKYLT    CHAINEMDDRFX              81                   CDL002
+     C                     Z-ADDPUAM      AMT                             CDL002
+     C/COPY WNCPYSRC,EM1500C019
+     C                     MOVE *ON       *IN61                           CDL002
+      *                                                                   CDL002
+      * Net FX Exposure?                                                  CDL002
+     C           W#NFXE    IFEQ 'Y'                                       CDL002
+      *                                                                   CDL002
+     C           *IN81     IFEQ *OFF                                      CDL002
+      * Netted Deal?                                                      CDL002
+     C           NETBR     IFNE *BLANKS                                   CDL002
+      *   Show deals as nil delivery amount                               CDL002
+     C                     CLEARAMT                                       CDL002
+     C                     ENDIF                                          CDL002
+      *                                                                   CDL002
+     C                     ELSE                                           CDL002
+      * Get Net                                                           CDL002
+     C           DBKYLT    CHAINEMDDRNT              81                   CDL002
+     C                     Z-ADDAMDBUY    AMT                             CDL002
+     C                     MOVE 'FN'      DTYP                            CDL002
+     C                     MOVE AMCCYD    CCY                             CDL002
+     C                     MOVE *ON       *IN60                           CDL002
+     C                     MOVE *OFF      *IN61                           CDL002
+     C                     ENDIF                                          CDL002
+     C                     ENDIF                                          CDL002
+      *                                                                   CDL002
+     C/COPY WNCPYSRC,EM1500C031
+     C                     ENDIF                                          CDL002
+     C*
+     C** IF MM
+     C*
+     C           BSNS,I    IFEQ 'MM'
+     C*
+     C           COUNT     IFEQ 1
+     C           DBKYLT    SETLLEMDDRMM1                 85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM1                 81
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM1                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C005
+     C                     Z-ADDPCPL      AMT
+     C                     SETON                     62
+     C                     END
+     C                     END
+     C*
+     C           COUNT     IFEQ 2
+     C           DBKYLT    SETLLEMDDRMM2                 85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM2                 81
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM2                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C006
+     C                     Z-ADDPCPL      AMT
+     C                     SETON                     63
+     C                     END
+     C           *IN81     IFEQ '1'                                       092456
+     C           *IN85     OREQ '0'                                       092456
+     C                     MOVE 'Y'       DEAM                            092456
+     C           DBKYLT    SETLLEMDDRMM5                 85               092456
+     C           *IN85     IFEQ '1'                                       092456
+     C           DBKYLT    READEEMDDRMM5                 81               092456
+      *                                                                   CDL006
+      ** If Dealing Fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+     C                     EXSR SREM5                                     CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C007
+     C                     Z-ADDPCPL      AMT                             092456
+     C                     MOVE 'PD'      DTYP                            092456
+     C                     SETON                     63                   092456
+     C                     END                                            092456
+     C                     END                                            092456
+     C                     END
+     C*
+     C           COUNT     IFEQ 3
+     C           DBKYLT    SETLLEMDDRMM3                 85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM3                 81
+      *                                                                   S01378
+      ** If parcelled NAB must reduce FVAL to reflect NA's sold today.    S01378
+      ** (FVAL and PSZE are reduced during CoB (DL0280) to reflect        S01378
+      ** partial sales and NSLD is zeroised).                             S01378
+     C           NSLD      IFGT *ZERO                                     S01378
+      *                                                                   S01378
+      ** Obtain face value per parcel                                     S01378
+     C           *LIKE     DEFN FVAL      WORK                            S01378
+     C           FVAL      DIV  PSZE      WORK      H                     S01378
+      *                                                                   S01378
+      ** Obtain proportion of face value sold today                       S01378
+     C           NSLD      MULT WORK      WORK                            S01378
+      *                                                                   S01378
+      ** Reduce face value to remove portions sold today.                 S01378
+     C           FVAL      SUB  WORK      FVAL                            S01378
+     C                     END                                            S01378
+      *                                                                   S01378
+     C                     Z-ADDFVAL      AMT
+     C                     SETON                     64
+     C                     END
+     C                     END
+     C*
+     C           COUNT     IFEQ 4
+     C           DBKYLT    SETLLEMDDRMM4                 85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRMM4                 81
+     C                     Z-ADDPCPL      AMT
+     C                     SETON                     65
+     C                     END
+     C                     END
+     C*
+     C                     ADD  1         COUNT
+     C                     END
+     C*
+     C/COPY WNCPYSRC,EM1500C020
+     C** IF LE
+     C*
+     C           BSNS,I    IFEQ 'LE'
+     C           DBKYLT    SETLLEMDDRLE                  85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRLE                  81
+     C                     Z-ADDCPAM      AMT
+     C                     MOVELPTYP      DTYP
+     C                     SETON                     66
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,EM1500C021
+     C*
+     C** IF SEC
+     C*
+     C           BSNS,I    IFEQ 'CP'
+     C           DBKYLT    SETLLEMDDRSEC                 85
+     C           *IN85     IFEQ '1'
+     C           DBKYLT    READEEMDDRSEC                 81
+     C                     MOVE TDRF      DLNO
+     C                     SETON                     67
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     FLLSFL SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS SUBROUTINE:- CONVRT,ZEDIT                              *
+     C*     CALLS PROGRAM:- AOCURRR0                                     *
+     C*                                                                  *
+     C*     This subroutine fills the subfile with the relevant fields   *
+     C*     off the record read.                                         *
+     C*                                                                  *
+     C*     Indicator 83 is set on if the look up operation on deal      *
+     C*     types table is successful.                                   *
+     C*                                                                  *
+     C*     USES:- @BUSAR - PROGRAM BUSINESS AREA                        *
+     C*            @CYEQA - PROGRAM LIMIT CURRENCY EQUIVALENT AMOUNT     *
+     C*            AMT    - FILE AMOUNT                                  *
+     C*            CCY    - FILE CURRENCY                                *
+     C*            DLNO   - FILE DEAL NUMBER                             *
+     C*            DTYP   - FILE DEAL TYPE                               *
+     C*            EMNBDP - NO. OF DECIMAL PLACES FOR EM LIMIT CURRENCY  *
+     C*            FSLI   - FILE 1ST/2ND LEG SWAP INDICATOR              *
+     C*            NOTD   - FILE NOTICE DAYS                             *
+     C*            TDSS   - SECURITY SHORTNAME ON SE TRADE               *
+     C*            TEXT   - ARRAY OF APPROPRIATE TEXTS                   *
+     C*                                                                  *
+     C*            @ERLC  - PROGRAM EXCHANGE RATE FOR LIMIT CURRENCY     *
+     C*            @MBIN  - PROGRAM MUTLIPLY/DIVIDE INDICATOR (Y/N)      *
+     C*            @NBDP  - PROGRAM NUMBER OF DECIMAL PLACES             *
+     C*            RRN    - RELATIVE RECORD NUMBER OF SUBFILE            *
+     C*            SBAMT  - SUBFILE AMOUNT                               *
+     C*            SBBSNR - SUBFILE BUSINESS AREA                        *
+     C*            SBCCY  - SUBFILE CURRENCY                             *
+     C*            SBCEQA - SUBFILE LIMIT CURRENCY EQUIVALENT AMOUNT     *
+     C*            SBDESC - SUBFILE DEAL TYPE DESCRIPTION                *
+     C*            SBDLNO - SUBFILE DEAL NUMBER                          *
+     C*                                                                  *
+     C*            DTYPLK - DEAL TYPE TO BE LOOKED UP IN TABLE           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FLLSFL    BEGSR
+     C/COPY WNCPYSRC,EM1500C010
+     C*
+     C                     MOVELCCY       SBCCY
+     C                     MOVEL@BUSAR    SBBSNR
+     C           *IN66     IFEQ *ON                                                           CLE148
+     C                     MOVELLNRF      SBDLNO                                              CLE148
+     C                     ELSE                                                               CLE148
+     C                     MOVELDLNO      SBDLNO
+     C                     ENDIF                                                              CLE148
+     C*
+     C** LOOK UP DESCRIPTION OF DEAL TYPE
+     C*
+     C           @BUSAR    IFEQ 'CP'
+     C                     MOVEL*BLANKS   SBDESC
+     C                     MOVEL'CP'      SBDESC
+     C                     MOVE TDSS      SBDESC
+     C                     ELSE
+     C                     MOVELDTYP      DTYPLK  2
+     C           DTYP      IFEQ 'CL'
+     C           NOTD      ANDLT0
+     C                     MOVEL'NL'      DTYPLK
+     C                     END
+     C           DTYP      IFEQ 'CD'
+     C           NOTD      ANDLT0
+     C                     MOVEL'ND'      DTYPLK
+     C                     END
+     C           DTYP      IFEQ 'DL'
+     C           NOTD      ANDLT0
+     C                     MOVEL'NM'      DTYPLK
+     C                     END
+     C           DTYP      IFEQ 'SW'
+     C/COPY WNCPYSRC,EM1500C024
+     C           FSLI      ANDEQ2
+     C/COPY WNCPYSRC,EM1500C025
+     C                     MOVEL'S2'      DTYPLK
+     C                     END
+     C                     MOVE DTYPLK    SBDTYP                          CDL002
+     C           DTYPLK    LOKUPTABTYP    TABDES         83
+     C           *IN83     IFEQ '1'
+     C                     MOVELTABDES    SBDESC
+     C                     ELSE
+     C                     MOVELTEXT,1    SBDESC
+     C                     END
+     C                     END
+     C*
+     C** IF CURRENCY JUST OFF FILE IS DIFFERENT TO LAST CURRENCY
+     C** ACCESSED,ACCESS SDCURRPD FOR DETAILS ABOUT IT
+     C*
+     C           CCY       IFNE A6CYCD
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       @KEYC
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    @NBDP
+     C                     Z-ADDA6ERLC    @ERLC
+     C                     MOVELA6MDIN    @MDIN
+     C/COPY WNCPYSRC,EM1500C032
+     C*
+     C** EDIT AMOUNT ON FILE FOR SCREEN
+     C*
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE AMT       ZFIELD
+     C                     Z-ADD@NBDP     ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SBAMT
+     C*
+     C** CONVERT AMOUNT OFF FILE INTO THE EM LIMIT CURRENCY
+     C** EQUIVALENT AMOUNT
+     C*
+     C                     EXSR CONVRT
+     C/COPY WNCPYSRC,EM1500C033
+     C*
+     C*                                                                   115327
+     C** Check if decimal place of currency is the same as that of        115327
+     C** the limit currency, if not, recompute amount so that the         115327
+     C** decimal place of the limit currency will be followed by the      115327
+     C** correct amount                                                   115327
+     C*                                                                   115327
+     C           @NBDP     IFNE EMNBDP                                    115327
+     C           EMNBDP    SUB  @NBDP     @DIFF   10                      115327
+     C*                                                                   115327
+     C           @DIFF     IFGT 0                                         115327
+     C           1         DO   @DIFF                                     115327
+     C           @CYEQA    MULT 10        @CYEQA                          115327
+     C                     END                                            115327
+     C*                                                                   115327
+     C                     ELSE                                           115327
+     C           @DIFF     MULT -1        @DIFF                           115327
+     C           1         DO   @DIFF                                     115327
+     C           @CYEQA    DIV  10        @CYEQA                          115327
+     C                     END                                            115327
+     C                     END                                            115327
+     C*                                                                   115327
+     C                     END                                            115327
+     C** EDIT LIMIT CURRENCY EQUIVALENT AMOUNT FOR SCREEN
+     C*
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE @CYEQA    ZFIELD
+     C                     Z-ADDEMNBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SBCEQA
+     C*
+     C** WRITE FIELDS TO SUBFILE
+     C*
+     C                     WRITEEM1500S0
+     C                     ADD  1         RRN
+     C/COPY WNCPYSRC,EM1500C011
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     CONVRT SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- FLLSFL                                        *
+     C*     CALLS nothing                                                *
+     C*                                                                  *
+     C*     This subroutine converts the amount on file into the         *
+     C*     equivalent amount for the Dealing Limit Currency and then    *
+     C*     into the equivalent amount for the EM Limit Currency.
+     C*                                                                  *
+     C*     USES:- @ERLC  - PROGRAM EXCHANGE RATE FOR LIMIT CURRENCY     *
+     C*            @MDIN  - PROGRAM MULTIPLY/DIVIDE INDICATOR (Y/N)      *
+     C*            AMT    - FILE AMOUNT                                  *
+     C*            CCY    - FILE CURRENCY                                *
+     C*            DLLMCY - DEALING LIMIT CURRENCY                       *
+     C*            SCFACT - SCALING FACTOR                               *
+     C*            SCMDIN - SCALING MULTIPLY/DIVIDE INDICATOR (Y/N)      *
+     C*                                                                  *
+     C*            @CYEQA - PROGRAM LIMIT CURRENCY EQUIVALENT AMOUNT     *
+     C*                                                                  *
+     C*            @DCEQA - PROGRAM DEALING LIMIT CURRENCY EQUVALENT     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CONVRT    BEGSR
+     C*
+     C** IF CURRENCY OFF FILE IS THE SAME AS THE DEALING LIMIT CURRENCY
+     C*
+     C           CCY       IFEQ DLLMCY
+     C                     Z-ADDAMT       @DCEQA 150
+     C                     ELSE
+     C*                                                                   115327
+     C** Upscale amount to get correct decimal value                      115327
+     C*                                                                   115327
+     C           @NBDP     IFLT EMNBDP                                    115327
+     C           EMNBDP    SUB  @NBDP     @DIFF                           115327
+     C           1         DO   @DIFF                                     115327
+     C           AMT       MULT 10        AMT                             115327
+     C                     ADD  1         @NBDP                           115327
+     C                     END                                            115327
+     C                     END                                            115327
+     C*
+     C** WORK OUT THE DEALING LIMIT CURRENCY EQUIVALENT OF FILE AMOUNT
+     C*
+     C           @MDIN     IFEQ 'M'
+     C           AMT       MULT @ERLC     @DCEQA
+     C                     ELSE
+     C           AMT       DIV  @ERLC     @DCEQA
+     C                     END
+     C                     END
+     C*
+     C** THE FILE AMOUNT IS NOW IN DEALING CURRENCY. NEED TO CONVERT IT
+     C** TO EM LIMIT CURRENCY
+     C*********************                                               116745
+     C***********SCMDIN****IFEQ 'M'                                       116745
+     C***********@DCEQA****MULT SCFACT    @CYEQA 150                      116745
+     C*********************ELSE                                           116745
+     C***********@DCEQA****DIV  SCFACT    @CYEQA                          116745
+     C*********************END                                            116745
+     C*                                                                   116745
+     C           SCMDIN    IFEQ 'M'                                       116745
+     C           @DCEQA    DIV  SCFACT    @CYEQA 150                      116745
+     C                     ELSE                                           116745
+     C           @DCEQA    MULT SCFACT    @CYEQA                          116745
+     C                     END                                            116745
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     DETAIL SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- PROCES                                        *
+     C*     CALLS SUBROUTINE :- SELCTN                                   *
+     C*                                                                  *
+     C*     This subroutine checks to see if a particular record on the  *
+     C*     subfile has been selected else it checks to see if new       *
+     C*     details have been inputted. If neither of these has          *
+     C*     occurred the the relevant display file formats are           *
+     C*     displayed again.                                             *
+     C*                                                                  *
+     C*     Indicator 84 is set on when end of file of the subfile is    *
+     C*     reached and indicator 80 is set on if there is a error on    *
+     C*     reading in the input fields. Indicators 50,51 & 52 are set   *
+     C*     on to display the relevant parts of the subfile control.     *
+     C*     Indicator 29 is set on to highlight the select field.        *
+     C*                                                                  *
+     C*     USES:- NEWDTL - NEW INPUT DETAILS (Y/N)                      *
+     C*            NODETL - NO DETAILS TO DISPLAY IN SUBFILE (Y/N)       *
+     C*            STRNS  - DATA STRUCTURE OF ALL INPUT FIELDS           *
+     C*            XTRNS  - DATA STRUCTURE OF ALL SAVED INPUT FIELDS     *
+     C*                                                                  *
+     C*            SBSCLT - SUBFILE SELECTION FIELD                      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*
+     C                     READ EM1500F2                 80
+     C*
+     C** DO WHILEST A COMMAND KEY NOT PRESSED AND NO NEW DETAILS
+     C*
+     C           *INKA     DOWEQ'0'
+     C           *IN03     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           NEWDTL    ANDEQ*BLANKS
+     C*
+     C** CLEAR ERROR MESSAGE SUBFILE
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGMQ      TOPGMQ
+     C                     PARM *BLANKS   PGMQRC
+     C                     WRITEEM1500C1
+     C*
+     C** IF COMMAND KEY 24 HAS BEEN PRESSED NEED TO CHANGE THE FOOTER
+     C*
+     C           *INKY     IFEQ '1'
+     C           *IN02     IFEQ '1'
+     C                     SETOF                     02
+     C                     ELSE
+     C                     SETON                     02
+     C                     END
+     C*
+     C                     SETOF                     KY
+     C                     WRITEEM1500F0
+     C                     WRITEEM1500F1
+     C                     EXFMTEM1500F2
+     C*
+     C                     ELSE
+     C*
+     C** IF DETAILS IN SCREEN SUBFILE
+     C*
+     C           NODETL    IFEQ 'N'
+     C*
+     C** FIND FIRST CHANGE IN SUBFILE
+     C*
+     C           *IN84     DOUEQ'1'
+     C           SBSCLT    ORNE *BLANKS
+     C                     READCEM1500S0                 84
+     C*
+     C** IF BLANK SELECTION RESET CHANGE INDICATOR FOR THIS RECORD
+     C*
+     C           *IN84     IFEQ '0'
+     C           SBSCLT    ANDEQ*BLANKS
+     C                     SETOF                     29
+     C                     UPDATEM1500S0
+     C                     END
+     C                     END
+     C*
+     C** IF A CHANGE EXISTS
+     C*
+     C           SBSCLT    IFNE *BLANKS
+     C                     EXSR SELCTN
+     C                     ELSE
+     C*
+     C** SEE IF NEW DETAILS HAVE BEEN INPUTTED
+     C*
+     C           STRNS     IFNE XTRNS
+     C                     MOVEL'Y'       NEWDTL
+     C                     ELSE
+     C*
+     C** REWRITE SCREEN
+     C*
+     C                     SETON                     505152
+     C                     WRITEEM1500C0
+     C                     END
+     C                     END
+     C*
+     C** OR IF NO DETAIL DISPLAYED
+     C*
+     C                     ELSE
+     C*
+     C** SEE IF NEW DETAILS HAVE BEEN INPUTTED
+     C*
+     C           STRNS     IFNE XTRNS
+     C                     MOVEL'Y'       NEWDTL
+     C                     ELSE
+     C*
+     C** REWRITE SCREEN
+     C*
+     C                     SETON                     51
+     C                     SETOF                     5052
+     C                     WRITEEM1500C0
+     C                     WRITEEM1500F3
+     C                     END
+     C                     END
+     C*
+     C** IF NO NEW DETAILS REWRITE EM1500F2 SCREEN
+     C*
+     C           NEWDTL    IFEQ *BLANKS
+     C                     WRITEEM1500F0
+     C                     EXFMTEM1500F2
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     SELCTN SUBROUTINE                                            *
+     C*                                                                  *
+     C*     CALLED FROM :- DETAIL                                        *
+     C*     CALLS SUBROUTINE :- ENQRE                                    *
+     C*                                                                  *
+     C*     This subroutine checks for a valid selection and then        *
+     C*     checks for more than one selection.                          *
+     C*                                                                  *
+     C*     Indicator 84 is set on when end of file of the subfile is    *
+     C*     reached and indicator 29 is set on if the selection was      *
+     C*     invalid. Indicators 50,51 & 52 are set on to display the     *
+     C*     relevant parts of the subfile control.                       *
+     C*                                                                  *
+     C*     USES:- SBSCLT - SUBFILE SELECTION FIELD                      *
+     C*            RRN    - RELATIVE RECORD NUMBER OF SUBFILE            *
+     C*            XRRN   - SAVED RELATIVE RECORD NUMBER OF SUBFILE      *
+     C*                                                                  *
+     C*            DSPREC - RRN OF SUBFILE TO BE FIRST DISPLAYED         *
+     C*                                                                  *
+     C*            SUBERR - ERROR ON SELECTON OF SUBFILE (Y/N)           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SELCTN    BEGSR
+     C*
+     C** IF NOT A VALID SELECTION
+     C*
+     C           SBSCLT    IFNE '1'
+     C*
+     C** ADD EMM0011 TO ERROR MESSAGE SUBFILE AS INVALID
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM *BLANKS   ZAPGNN
+     C                     PARM *BLANKS   ZAPGRL
+     C                     PARM 'EMM0011' ZAMSID
+     C                     PARM 'DRSMM'   ZAMSGF
+     C                     PARM *BLANKS   ZAMSDA
+     C                     PARM *BLANKS   ZAMSTP
+     C*
+     C                     SETON                     29
+     C                     MOVEL'Y'       SUBERR  1
+     C                     SETON                     505152
+     C                     Z-ADDRRN       DSPREC
+     C                     UPDATEM1500S0
+     C*
+     C                     ELSE
+     C*
+     C* Detail not allowed for FX Net                                     CDL002
+     C           SBDTYP    IFEQ 'FN'                                      CDL002
+     C*                                                                   CDL002
+     C                     CALL 'Y2SNMGC'                                 CDL002
+     C                     PARM *BLANKS   ZAPGNN                          CDL002
+     C                     PARM *BLANKS   ZAPGRL                          CDL002
+     C                     PARM 'EMM0016' ZAMSID                          CDL002
+     C                     PARM 'DRSMM'   ZAMSGF                          CDL002
+     C                     PARM *BLANKS   ZAMSDA                          CDL002
+     C                     PARM *BLANKS   ZAMSTP                          CDL002
+     C*                                                                   CDL002
+     C                     SETON                     29                   CDL002
+     C                     MOVEL'Y'       SUBERR  1                       CDL002
+     C                     SETON                     505152               CDL002
+     C                     Z-ADDRRN       DSPREC                          CDL002
+     C                     UPDATEM1500S0                                  CDL002
+     C                     ELSE                                           CDL002
+     C*                                                                   CDL002
+     C** VALID SELECTION
+     C*
+     C                     SETOF                     29
+     C                     MOVE *BLANKS   SBSCLT
+     C                     UPDATEM1500S0
+     C                     EXSR ENQRE
+     C*
+     C                     Z-ADDRRN       DSPREC
+     C                     SETON                     505152
+     C                     ENDIF                                          CDL002
+     C                     END
+     C*
+     C** IF THERE WAS AN ERROR LAST TIME IN SUBROUTINE
+     C*
+     C           XRRN      IFNE 0
+     C*
+     C** IF THE PREVIOUS RECORD IS A DIFFERENT RECORD TO THAT JUST
+     C** PROCESSED
+     C*
+     C           XRRN      IFNE RRN
+     C*
+     C** TAKE HIGHLIGHT OFF THE PREVIOUS SELECTION
+     C*
+     C           XRRN      CHAINEM1500S0             84
+     C                     SETOF                     29
+     C                     SETON                     28
+     C                     UPDATEM1500S0
+     C                     SETOF                     28
+     C                     END
+     C                     END
+     C*
+     C** IF THE RECORD JUST PROCESSED WAS IN ERROR SAVE THE RELATIVE
+     C** RECORD NUMBER
+     C*
+     C           SUBERR    IFEQ 'Y'
+     C                     Z-ADDDSPREC    XRRN
+     C                     MOVEL'N'       SUBERR
+     C                     ELSE
+     C                     Z-ADD0         XRRN
+     C                     END
+     C*
+     C** WRITE OUT THE SUBFILE CONTROL RECORDS
+     C*
+     C                     WRITEEM1500C0
+     C                     WRITEEM1500C1
+     C*
+     C** SET THE VALUE OF THE SELECTION FIELD IN THE PROGRAM TO BLANKS
+     C*
+     C                     MOVEL*BLANKS   SBSCLT
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     ENQRE SUBROUTINE                                             *
+     C*                                                                  *
+     C*     CALLED FROM :- SELCTN                                        *
+     C*     CALLS SUBROUTINE :- RETN                                     *
+     C*     CALLS PROGRAMS :- DL0170,LE0190,SEC04                        *
+     C*                                                                  *
+     C*     This subroutine calls the relevant enquiry program for the   *
+     C*     business area of the transaction selected.                   *
+     C*                                                                  *
+     C*     USES:- DRETND - RETURN CODE IN DLSDS                         *
+     C*            LRETND - RETURN CODE IN LESDS                         *
+     C*            RTNC   - RETURN CODE IN SESDS                         *
+     C*            SBBSNR - SUBFILE BUSINESS AREA                        *
+     C*            SBDLNO - SUBFILE DEAL NUMBER                          *
+     C*                                                                  *
+     C*            DRQDTD - REQUEST DATA IN DLSDS                        *
+     C*            LRETND - REQUEST DATA IN LESDS                        *
+     C*            RQTDRF - REQUEST DATA IN SESDS                        *
+     C*            RRTCD  - PROGRAM RETURN CODE                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ENQRE     BEGSR
+     C*
+     C** IF FX OR MM
+     C*
+     C           SBBSNR    IFEQ 'FX'
+     C           SBBSNR    OREQ 'MM'
+     C           *LOCK     IN   DLSDS
+     C                     MOVE SBBSNR    DRQDTD
+     C                     MOVELSBDLNO    DRQDTD
+     C                     OUT  DLSDS
+     C*
+     C** CALL ENQUIRY PROGRAM
+     C*
+     C                     CALL 'DL0170'
+     C           *LOCK     IN   DLSDS
+     C                     MOVELDRETND    RRTCD   1
+     C                     OUT  DLSDS
+     C                     EXSR RETN
+     C                     END
+     C*
+     C** IF LE
+     C*
+     C           SBBSNR    IFEQ 'LE'
+     C           *LOCK     IN   LESDS
+     C                     MOVELSBDLNO    LRQDTD
+     C                     MOVE SBBSNR    LRQDTD
+     C                     OUT  LESDS
+     C*
+     C** CALL ENQUIRY PROGRAM
+     C*
+     C                     CALL 'LE0190'
+     C           *LOCK     IN   LESDS
+     C                     MOVELLRETND    RRTCD
+     C                     OUT  LESDS
+     C                     EXSR RETN
+     C                     END
+     C*
+     C** IF CP
+     C*
+     C           SBBSNR    IFEQ 'CP'
+     C           *LOCK     IN   SESDS
+     C                     MOVELSBDLNO    RQTDRF
+     C                     OUT  SESDS
+     C*
+     C** CALL ENQUIRY PROGRAM
+     C*
+     C                     CALL 'SEC04'
+     C                     PARM 'SE0250  'SEPGM   8
+     C           *LOCK     IN   SESDS
+     C                     MOVELRTNC      RRTCD
+     C                     OUT  SESDS
+     C                     EXSR RETN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     RETN SUBROUTINE                                              *
+     C*                                                                  *
+     C*     CALLED FROM :- ENQRE                                         *
+     C*     CALLS nothing                                                *
+     C*                                                                  *
+     C*     This subroutine determines what the return code should be    *
+     C*     set as if the enquiry program ends in any way except as if   *
+     C*     F12 has been pressed. This program ends in these cases.      *
+     C*                                                                  *
+     C*     USES:- RRTCD  - PROGRAM RETURN CODE                          *
+     C*                                                                  *
+     C*            PRTCD  - PARAMETER RETURN CODE                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           RETN      BEGSR
+     C*
+     C           RRTCD     IFEQ 'Q'
+     C           RRTCD     OREQ '1'
+     C*
+     C** EQUIVALENT TO SETTING ON F3
+     C*
+     C                     MOVEL'*EXIT'   PRTCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C           RRTCD     IFEQ 'S'
+     C           RRTCD     OREQ '7'
+     C           *IN01     IFEQ '1'
+     C*
+     C** EQUIVALENT TO SETTING ON F1 & THIS IS NOT THE INITIAL ENQUIRY
+     C*
+     C                     MOVEL'*INIT'   PRTCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C                     END
+     C*
+     C           RRTCD     IFEQ 'E'
+     C           RRTCD     OREQ '0'
+     C*
+     C** DATABASE ERROR OCCURED
+     C*
+     C                     MOVEL'*ERROR'  PRTCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*     INIT SUBROUTINE                                              *
+     C*                                                                  *
+     C*     CALLED FROM :- MAIN                                          *
+     C*     CALLS PROGRAMS :- AOCURRR0,AODEALR0,AOEXPMR0                 *
+     C*                                                                  *
+     C*     This subroutine sets up the values for various variables.    *
+     C*     The parameter fields are moved to the screen input fields    *
+     C*     and if the customer field is blanks then the other fields    *
+     C*     are defaulted as necessary.                                  *
+     C*                                                                  *
+     C*     Indicator 01 is set on if F1 is a valid command key.         *
+     C*     Indicator 53 is set on to suppress '+' at the end of the     *
+     C*     error message subfile. Indicator 88 is set on if             *
+     C*     multibranching is switched on. Indicator 98 is set on if     *
+     C*     the date format for this installation is MMDDYY.             *
+     C*                                                                  *
+     C*     USES:- PBRCA  - PARAMETER BRANCH                             *
+     C*            PCCY   - PARAMETER CURRENCY                           *
+     C*            PCP    - PARAMETER CP                                 *
+     C*            PCUST  - PARAMETER CUSTOMER                           *
+     C*            PDATE  - PARAMETER DATE                               *
+     C*            PFX    - PARAMETER FX                                 *
+     C*            PLE    - PARAMETER LE                                 *
+     C*            PMM    - PARAMETER MM                                 *
+     C*            PRTCD  - PARAMETER RETURN CODE                        *
+     C*            RUND   - RUN DAY NUMBER                               *
+     C*                                                                  *
+     C*            @CUST  - PROGRAM CUSTOMER NUMBER                      *
+     C*            @CRNM  - PROGRAM CUSTOMER REPORT NAME                 *
+     C*            @CSSN  - PROGRAM CUSTOMER SHORTNAME                   *
+     C*            @CTWN  - PROGRAM CUSTOMER REPORT TOWN                 *
+     C*            @DATE  - PROGRAM DATE                                 *
+     C*            @ERLC  - PROGRAM EXCHANGE RATE FOR LIMIT CURRENCY     *
+     C*            @MDIN  - PROGRAM MULTIPLY/DIVIDE (Y/N)                *
+     C*            @NBDP  - PROGRAM NUMBER OF DECIMAL PLACES             *
+     C*            EMLMCY - EM LIMIT CURRENCY                            *
+     C*            EMNBDP - NO. OF DECIMAL PLACES FOR EM LIMIT CURRENCY  *
+     C*            DLLMCY - DEALING LIMIT CURRENCY                       *
+     C*            PGMQ   - PROGRAM MESSAGE QUEUE                        *
+     C*            RRN    - RELATIVE RECORD NUMBER OF SUBFILE            *
+     C*            SBRCA  - SCREEN INPUT BRANCH                          *
+     C*            SCCY   - SCREEN INPUT CURRENCY                        *
+     C*            SCFACT - SCALING FACTOR                               *
+     C*            SCMDIN - SCALING MULTIPLY/DIVIDE (Y/N)                *
+     C*            SCRCP  - SCREEN INPUT CP                              *
+     C*            SCRFX  - SCREEN INPUT FX                              *
+     C*            SCRLE  - SCREEN INPUT LE                              *
+     C*            SCRMM  - SCREEN INPUT MM                              *
+     C*            SCUST  - SCREEN INPUT CUSTOMER NUMBER OR SHORTNAME    *
+     C*            SDATE  - SCREEN INPUT DATE                            *
+     C*            XCUSTN - SAVED CUSTOMER NUMBER                        *
+     C*            XDATEN - SAVED MIDAS DAY NUMBER OF INPUT DATE         *
+     C*            XRRN   - SAVED RELATIVE RECORD NUMBER OF SUBFILE      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+     C                     PARM           PCUST  10
+     C                     PARM           PBRCA   3
+     C                     PARM           PDATE   6
+     C                     PARM           PCCY    3
+     C                     PARM           PFX     1
+     C                     PARM           PMM     1
+     C                     PARM           PLE     1
+     C                     PARM           PCP     1
+     C*
+     C** DEFINE LIKE FIELDS
+     C*
+     C           *LIKE     DEFN BBCUST    @CUST
+     C           *LIKE     DEFN BBCUST    XCUSTN
+     C           *LIKE     DEFN RUND      @DATE
+     C           *LIKE     DEFN RUND      XDATEN
+     C           *LIKE     DEFN A6NBDP    EMNBDP
+     C           *LIKE     DEFN A6NBDP    @NBDP
+     C           *LIKE     DEFN BBCSSN    @CSSN
+     C           *LIKE     DEFN BBCRNM    @CRNM
+     C           *LIKE     DEFN BBCRTN    @CTWN
+     C           *LIKE     DEFN A6ERLC    @ERLC
+     C           *LIKE     DEFN A6ERLC    SCFACT
+     C           *LIKE     DEFN A6MDIN    @MDIN
+     C           *LIKE     DEFN A6MDIN    SCMDIN
+     C           *LIKE     DEFN DSPREC    RRN
+     C           *LIKE     DEFN DSPREC    XRRN
+     C*
+     C** DEFINE DATA AREAS
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           ZMUSER
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           SESDS
+     C           *NAMVAR   DEFN EMSDS     LESDS
+     C           *NAMVAR   DEFN           DLSDS
+     C                     IN   RUNDT
+     C                     IN   ZMUSER
+     C*
+     C           DATF      IFEQ 'M'
+     C                     SETON                         98
+     C                     END
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                         88
+     C                     END
+     C*
+     C                     SETON                         53
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EM1500'  DBPGM
+     C                     OUT  LDA
+     C                     MOVEL'EM1500'  PGMQ
+      *                                                                   CDL002
+      **  Access Switchable features file for                             CDL002
+      **  FX Netting - CDL002                                             CDL002
+     C                     CALL 'AOSARDR0'                                CDL002
+     C                     PARM *BLANKS   @RTCD                           CDL002
+     C                     PARM '*VERIFY' @OPTN                           CDL002
+     C                     PARM 'CDL002'  WSARD   6                       CDL002
+     C                     MOVE 'N'       CDL002  1                       CDL002
+     C           @RTCD     IFEQ *BLANK                                    CDL002
+     C                     MOVE 'Y'       CDL002                          CDL002
+     C                     END                                            CDL002
+      *                                                                   CDL006
+      ** Access Switchable Features file to check if Dealing Fiducia      CDL006
+      ** ry is installed.                                                 CDL006
+      *                                                                   CDL006
+     C                     MOVE 'N'       CDL006  1                       CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM *BLANKS   WRTCD   7                       CDL006
+     C                     PARM '*VERIFY' WOPTN   7                       CDL006
+     C                     PARM 'CDL006'  WSARD   6                       CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFNE *BLANKS                                   CDL006
+     C           WRTCD     ANDNE'*NRF   '                                 CDL006
+     C           *LOCK     IN   LDA                                       CDL006
+     C                     Z-ADD004       DBASE             ************* CDL006
+     C                     MOVEL'SCSARDPD'DBFILE            * DBERR 004 * CDL006
+     C                     MOVELWRTCD     DBKEY             ************* CDL006
+     C                     OUT  LDA                                       CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFEQ *BLANK                                    CDL006
+     C                     MOVEL'Y'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,EM1500C008
+     C*
+     C** ACCESS SDEXPMPD FOR EM LIMIT CURRENCY
+     C*
+     C                     CALL 'AOEXPMR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDEXPM    PARM SDEXPM    DSFDY
+     C*
+     C                     MOVELBUCYCD    EMLMCY
+      *                                                                   CDL002
+      * Net FX Exposure?                                                  CDL002
+     C                     MOVE 'N'       W#NFXE  1                       CDL002
+     C           CDL002    IFEQ 'Y'                                       CDL002
+     C                     MOVE BUNTEM    W#NFXE                          CDL002
+     C                     ENDIF                                          CDL002
+     C*
+     C** ACCESS SDDEALPD FOR DL LIMIT CURRENCY
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C                     MOVELBNCYCD    DLLMCY
+     C*
+     C** ACCESS SDCURRPD FOR DL LIMIT CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM DLLMCY    @KEYC
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** IF THE EM AND DL LIMIT CURRENCIES ARE THE SAME
+     C*
+     C           EMLMCY    IFEQ DLLMCY
+     C                     Z-ADD1         SCFACT
+     C                     MOVEL'M'       SCMDIN
+     C                     Z-ADDA6NBDP    EMNBDP
+     C*
+     C                     ELSE
+     C*
+     C** ACCESS SDCURRPD FOR EM LIMIT CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM EMLMCY    @KEYC
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C                     Z-ADDA6ERLC    SCFACT
+     C                     MOVELA6MDIN    SCMDIN
+     C                     Z-ADDA6NBDP    EMNBDP
+     C*
+     C                     END
+     C*
+     C** DETERMINE WHETHER THE PROGRAM CALLED FROM THE MAIN MENU OR NOT
+     C*
+     C           PCUST     IFEQ *BLANKS
+     C                     SETOF                     01
+     C                     ELSE
+     C                     SETON                     01
+     C                     END
+     C*
+     C** WRITE TO SCREEN HEADER AND FOOTER AS THESE WILL NOT CHANGE
+     C*
+     C                     WRITEEM1500F0
+     C                     WRITEEM1500F1
+     C*
+     C** WRITE PARAMETER FIELDS TO SCREEN INPUT FIELDS
+     C*
+     C                     MOVELPCUST     SCUST
+     C                     MOVELPBRCA     SBRCA
+     C                     MOVELPCCY      SCCY
+     C                     MOVELPDATE     SDATE
+     C                     MOVELPFX       SCRFX
+     C                     MOVELPMM       SCRMM
+     C                     MOVELPLE       SCRLE
+     C                     MOVELPCP       SCRCP
+     C*
+     C** IF INPUT CUSTOMER PARAMETER IS BLANK
+     C*
+     C           PCUST     IFEQ *BLANKS
+     C*
+     C** DEFAULT ANY OTHER INPUT PARAMETERS WHICH ARE BLANK
+     C*
+     C           PBRCA     IFEQ *BLANKS
+     C                     MOVEL'ALL'     SBRCA
+     C                     END
+     C*
+     C           PCCY      IFEQ *BLANKS
+     C                     MOVEL'ALL'     SCCY
+     C                     END
+     C*
+     C           PDATE     IFEQ *BLANKS
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     SDATE
+     C                     END
+     C*
+     C           PFX       IFEQ *BLANKS
+     C                     MOVEL'Y'       SCRFX
+     C                     END
+     C*
+     C           PMM       IFEQ *BLANKS
+     C                     MOVEL'Y'       SCRMM
+     C                     END
+     C*
+     C           PLE       IFEQ *BLANKS
+     C                     MOVEL'Y'       SCRLE
+     C                     END
+     C*
+     C           PCP       IFEQ *BLANKS
+     C                     MOVEL'Y'       SCRCP
+     C                     END
+     C*
+     C                     WRITEEM1500F2
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************   CDL006
+      /TITLE SR/SREM1                                                     CDL006
+      *****************************************************************   CDL006
+      *                                                               *   CDL006
+      *  SREM1  - Subroutine to bypass Fiduciary deals in             *   CDL006
+      *           EMDDRMM1 file.                                      *   CDL006
+      *                                                               *   CDL006
+      *  Called By: NXTRCD and KEYSET Subroutines                     *   CDL006
+      *                                                               *   CDL006
+      *  Calls: None                                                  *   CDL006
+      *                                                               *   CDL006
+      *                                                               *   CDL006
+      *****************************************************************   CDL006
+      *                                                                   CDL006
+     C           SREM1     BEGSR                           *** SREM1  *** CDL006
+      *                                                                   CDL006
+     C                     MOVE *OFF      *IN82                           CDL006
+      *                                                                   CDL006
+     C           *IN81     DOWEQ*OFF                                      CDL006
+     C           *IN82     ANDEQ*OFF                                      CDL006
+      *                                                                   CDL006
+     C           DTYP      IFEQ 'FL'                                      CDL006
+     C           DTYP      OREQ 'DP'                                      CDL006
+     C           DTYP      OREQ 'LP'                                      CDL006
+     C           DBKYLT    READEEMDDRMM1                 81               CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE *ON       *IN82                           CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDDO                                          CDL006
+      *                                                                   CDL006
+     C                     ENDSR                                          CDL006
+      *****************************************************************   CDL006
+      /TITLE SR/SREM2                                                     CDL006
+      *****************************************************************   CDL006
+      *                                                               *   CDL006
+      *  SREM2  - Subroutine to bypass Fiduciary deals in             *   CDL006
+      *           EMDDRMM2 file.                                      *   CDL006
+      *                                                               *   CDL006
+      *  Called By: NXTRCD and KEYSET Subroutines                     *   CDL006
+      *                                                               *   CDL006
+      *  Calls: None                                                  *   CDL006
+      *                                                               *   CDL006
+      *                                                               *   CDL006
+      *****************************************************************   CDL006
+      *                                                                   CDL006
+     C           SREM2     BEGSR                           *** SREM2  *** CDL006
+      *                                                                   CDL006
+     C                     MOVE *OFF      *IN82                           CDL006
+      *                                                                   CDL006
+     C           *IN81     DOWEQ*OFF                                      CDL006
+     C           *IN82     ANDEQ*OFF                                      CDL006
+      *                                                                   CDL006
+     C           DTYP      IFEQ 'FT'                                      CDL006
+     C           DTYP      OREQ 'DT'                                      CDL006
+     C           DTYP      OREQ 'LT'                                      CDL006
+     C           DBKYLT    READEEMDDRMM2                 81               CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE *ON       *IN82                           CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDDO                                          CDL006
+      *                                                                   CDL006
+     C                     ENDSR                                          CDL006
+      *****************************************************************   CDL006
+      /TITLE SR/SREM5                                                     CDL006
+      *****************************************************************   CDL006
+      *                                                               *   CDL006
+      *  SREM5  - Subroutine to bypass Fiduciary deals in             *   CDL006
+      *           EMDDRMM5 file.                                      *   CDL006
+      *                                                               *   CDL006
+      *  Called By: NXTRCD and KEYSET Subroutines                     *   CDL006
+      *                                                               *   CDL006
+      *  Calls: None                                                  *   CDL006
+      *                                                               *   CDL006
+      *                                                               *   CDL006
+      *****************************************************************   CDL006
+      *                                                                   CDL006
+     C           SREM5     BEGSR                           *** SREM5  *** CDL006
+      *                                                                   CDL006
+     C                     MOVE *OFF      *IN82                           CDL006
+      *                                                                   CDL006
+     C           *IN81     DOWEQ*OFF                                      CDL006
+     C           *IN82     ANDEQ*OFF                                      CDL006
+      *                                                                   CDL006
+     C           DTYP      IFEQ 'FL'                                      CDL006
+     C           DTYP      OREQ 'DP'                                      CDL006
+     C           DTYP      OREQ 'LP'                                      CDL006
+     C           DTYP      OREQ 'FT'                                      CDL006
+     C           DTYP      OREQ 'DT'                                      CDL006
+     C           DTYP      OREQ 'LT'                                      CDL006
+     C           DBKYLT    READEEMDDRMM5                 81               CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE *ON       *IN82                           CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDDO                                          CDL006
+      *                                                                   CDL006
+     C                     ENDSR                                          CDL006
+      *****************************************************************   CDL006
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *
+     C*                                                               *
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *
+     C*                                                               *
+     C* CALLS : NOTHING                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/COPY WNCPYSRC,EM1500C009
+     C*
+     C/COPY ZSRSRC,ZEDITZ2
+     C*
+     C/COPY ZSRSRC,ZSEDITZ3
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+**  CPY@  - COPYRIGHT STATEMENT
+(c) Misys International Banking Systems Ltd. 2001
+**  TABTYP & TABDES - DEAL TYPES WITH THEIR DESCRIPTIONS
+FPPurchase
+PIPurch - int pay
+FSSale
+SISale - int pay
+CXCross currency
+SWSwap 1st leg
+S2Swap 2nd leg
+OPOption
+OTOption takedown
+NXNostro transfer
+CLCall loan
+NLNotice loan
+DLCall demand
+NMNotice demand
+TITime loan
+LNCommercial loan
+IPInterbank loan
+CDCall deposit
+NDNotice deposit
+TDTime deposit
+ITInterbank dep
+BPBond brought
+C1Prim CD bought
+C2Sec CD bought
+BDBill bought
+TATrade acpt bght
+DABank acpt bght
+TBT-bill bought
+CICD issued
+BSBond sold
+CSCD sold
+BRBill sold
+TRTrade acpt sold
+RABank acpt sold
+TST-bill sold
+61Call loan
+62Term loan
+63Term loan disc
+64Part purchased
+65Part purch disc
+66Part sold
+67Part sold disc
+70Guarantee issued
+PDPrincipal reduced
+FNNet                                                                     CDL002
+**  BSNS  - LIST OF BUSINESS AREAS WITH MM MENTIONED 4 TIMES
+FXMMMMMMMMLECP
+**  TEXT  - MESSAGE TO BE SENT IF DEAL TYPE DESCRIPTION NOT FOUND
+NO DESCRIPTION
+NOT FOUND
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

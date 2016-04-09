@@ -1,0 +1,127 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Check for errors in FTP log')                */
+/*XBI    CRTSRCPF QTEMP/FTPCOMMAND 212 OUTPUT                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UTC000011 - Check for errors in FTP log file                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP096 *CREATE     Date 17Mar05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP096 - New utility                                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&Error)
+ 
+             DCL        VAR(&Error) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CHKDTA) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&LIBCHKFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RSTCHKFLAG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(512)
+ 
+/* QCLSCAN parameters  */
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(19)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+             DCLF       FILE(FTPCOMMAND)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&Error) VALUE(' ')
+             CHGVAR     VAR(&LIBCHKFLAG) VALUE(' ')
+             OVRDBF     FILE(FTPCOMMAND) TOFILE(QTEMP/FTPCOMMAND) +
+                          MBR(OUTPUT)
+ RCVF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+/* If to-library already exists, not an error             */
+             IF         COND(%SST(&SRCDTA 1 36) *EQ '550-Error +
+                          occurred on command CRTLIB') THEN(DO)
+                CHGVAR     VAR(&CHKDTA) VALUE(&SRCDTA)
+                CHGVAR     VAR(&LIBCHKFLAG) VALUE('Y')
+                GOTO       CMDLBL(RCVF)
+             ENDDO
+             IF         COND(&LIBCHKFLAG *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&LIBCHKFLAG) VALUE(' ')
+                IF         COND(%SST(&SRCDTA 1 35) *EQ '550 Error found +
+                             on CRTLIB command..') THEN(DO)
+                   CHGVAR     VAR(&SRCDTA) VALUE(&CHKDTA)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO       CMDLBL(RCVF)
+                ENDDO
+             ENDDO
+ 
+/* Ignore RSTOBJ errors if the object has actually been restored  */
+             IF         COND(%SST(&SRCDTA 1 36) *EQ '550-Error +
+                          occurred on command RSTOBJ') THEN(DO)
+                CHGVAR     VAR(&CHKDTA) VALUE(&SRCDTA)
+                CHGVAR     VAR(&RSTCHKFLAG) VALUE('Y')
+                GOTO       CMDLBL(RCVF)
+             ENDDO
+             IF         COND(&RSTCHKFLAG *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&RSTCHKFLAG) VALUE(' ')
+                CHGVAR     VAR(&STRLEN) VALUE(200)
+                CHGVAR     VAR(&STRPOS) VALUE(1)
+                CHGVAR     VAR(&PATTERN) VALUE(' 0 not restored to ')
+                CHGVAR     VAR(&PATLEN) VALUE(19)
+                CALL       PGM(QCLSCAN) PARM(&SRCDTA &STRLEN &STRPOS &PATTERN +
+                             &PATLEN '0' '0' '' &RESULT)
+                IF         COND(&RESULT *EQ 0) THEN(DO)
+                   CHGVAR     VAR(&SRCDTA) VALUE(&CHKDTA)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO       CMDLBL(RCVF)
+                ENDDO
+             ENDDO
+ 
+/* Check if ' bytes transferred ' begins with 4 or 5  */
+             IF         COND(%SST(&SRCDTA 1 1) *EQ '4' *OR +
+                          %SST(&SRCDTA 1 1) *EQ '5') THEN(DO)
+                CHGVAR     VAR(&STRLEN) VALUE(200)
+                CHGVAR     VAR(&STRPOS) VALUE(1)
+                CHGVAR     VAR(&PATTERN) VALUE(' bytes transferred ')
+                CHGVAR     VAR(&PATLEN) VALUE(19)
+                CHGVAR     VAR(&RESULT) VALUE(0)
+                CALL       PGM(QCLSCAN) PARM(&SRCDTA &STRLEN &STRPOS &PATTERN +
+                             &PATLEN '0' '0' '' &RESULT)
+                IF         COND(&RESULT *GT 1) THEN(DO)
+ 
+/* Not an error so get next record            */
+                   GOTO       CMDLBL(RCVF)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(%SST(&SRCDTA 1 1) *EQ '4' *OR +
+                          %SST(&SRCDTA 1 1) *EQ '5') THEN(DO)
+                CHGVAR     VAR(&Error) VALUE('1')
+                CHGVAR     VAR(&MSG) VALUE('FTPOBJ has stopped with the +
+                          following error -' *BCAT &SRCDTA *TCAT +
+                          '  Check file QTEMP/FTPLOG for more +
+                          details.')
+                SNDPGMMSG  MSG(&MSG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             GOTO       CMDLBL(RCVF)
+ Abnor:
+             CHGVAR     VAR(&Error) VALUE('1')
+ ENDPGM:
+             ENDPGM
+ 

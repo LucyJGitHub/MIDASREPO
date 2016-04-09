@@ -1,0 +1,589 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Create Pay/Receive Extract File')                *
+0002 F*****************************************************************
+0010 F*                                                               *
+0003 F*  Midas - Customer Lending Module                          *
+0004 F*                                                               *
+0005 F*  LE1060  -  PAY/RECEIVE EXTRACT                               *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                               *
+      *  Last Amend No. MD023830A          Date 19Aug14               *
+      *  Prev Amend No. AR1093201          Date 23Sep13               *
+      *                 AR1071448          Date 23Sep13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR322731           Date 23Jul12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122598             Date 04Sep97               *
+      *                 CLE002             Date 02Dec96               *
+     F*                 S01465             DATE 22MAR94               *
+     F*                 046646             DATE 02OCT92               *
+     F*                 S01194             DATE 18JAN90               *
+0008 F*                 S01117             DATE 29/05/89              *
+0008 F*                                                               *
+0011 F*---------------------------------------------------------------*
+0008 F*                                                               *
+      *  MD023830A - LEC0213 in MSGW status during I/C                *
+      *  AR1093201 - MT202 not generated on IC of loan creation.      *
+      *              Reversed part of AR1071448 to ensure that loan   *
+      *              RCDT ('L') from LTRIX will be processed and      *
+      *              extracted to Pay/Receive.  (Child: AR1093202)    *
+      *            - Applied for MD022492                             *
+      *  AR1071448 - No payment messages generated for loan events on *
+      *              date of insert. Allow message generation for MR, *
+      *              PI and RE if within telex notice date.           *
+      *              (Child: AR1071449)                               *
+      *            - Applied for MD022492                             *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  AR322731 - LEC0212A job on MSGW because APISERVER is locking *
+      *           - CLOAN (Child: AR322732)                           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  122598 - No SWIFT message is produced when a loan is         *
+     F*           authorised.                                         *
+     F*  CLE002 - Customer Lending Enhancements - Authorisation       *
+     F*  S01465 - BLI Lending Enhancements                            *
+     F*  046646 - REMOVE ROLLOVER CONF. FOR DISCOUNTED LOANS          *
+     F*  S01194 - NEW STANDING DATA                                   *
+0008 F*  S01117 - MULTIBRANCHING                                      *
+0008 F*                                                               *
+0011 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*TABLE***IP  F      96 12AI     2 DISK                              S01194
+0014 F***LTRIX***UF**F      40            DISK                            S01465
+0014 F***LTRIX***UF  F      43            DISK                                       S01465 AR322731
+     FLTRIX   UF  F      45            DISK                                                 AR322731
+     F                                              KINFSR ERRSR                           MD023830A
+     F                                              KINFDS COMDS                           MD023830A
+0015 FLTRIEHD O   F      40            DISK
+0015 F***LTRIEDL*O***F      40            DISK                            S01465
+0015 FLTRIEDL O   F      43            DISK                               S01465
+0015 FLTRIEZZ O   F      40            DISK
+     FCLOAN   IF  E           K        DISK                               122598
+     F            CLOANHHF                          KIGNORE               122598
+     F            CLOANCKF                          KIGNORE               122598
+     F            CLOANZ1F                          KIGNORE               122598
+     FLOAMS   IF  E           K        DISK                                                AR1071448
+     F            LOAMSDHF                          KIGNORE                                AR1071448
+     F            LOAMSZ1F                          KIGNORE                                AR1071448
+0016 F*E1060P1O** F     132            PRINTER                  S01124    S01117
+     FLE1060AUO   F     132     OB     PRINTER                            S01117
+0017 F*
+0018 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0019 F* 01            INSTALLATION CONTROL DATA REC. 1
+0020 F* 03            S/LTRIX - HEADER
+0021 F* 04                    - DETAIL
+0022 F*       40      1ST CYCLE IND.
+0023 F*       41      CHAIN FAILURE
+0025 F*       43      LOOP CONTROL
+     E                    CPY@    1   1 80
+     E                    MESSG   1   1 50                                                 MD023830A
+0026 F/EJECT
+0027 I*****TABLE*FILE***INSTALLATION*CONTROL*DATA*RECORD*1.               S01194
+0028 I**********                                                          S01194
+0029 I*TABLE***NS  01   1 CD   2 C0   3 C1                                S01194
+0030 I*******AND      12 C1  13 C0                                        S01194
+0031 I**********                              1   1 RECIT                 S01194
+0032 I**********                              2   30RECT                  S01194
+0033 I**********                             12  130RCDE                  S01194
+0034 I**********                             14  66 TITL                  S01194
+0035 I**********                             67  67 DATF                  S01194
+0036 I***********                            68  700DFBR                  S01194
+0037 I**********                             74  74 MODI1                 S01194
+0038 I**********                             75  75 MODI2                 S01194
+0039 I**********                             76  76 MODI3                 S01194
+0040 I**********                          P  77  790RUND                  S01194
+0041 I**********                             80  86 RUNA                  S01194
+0042 I**********                             87  870SFLG                  S01194
+0043 I**********                          P  90  920LCD                   S01194
+0044 I**********                             93  93 CHTP                  S01194
+0045 I**********                          P  94  960TNLU                  S01194
+0046 I**********                                                          S01194
+0047 I**CATCHALL                                                          S01194
+0048 I********NS                                                          S01194
+0049 I**********                              1   1 RECIT                 S01194
+0050 I**********                              2   30RECT                  S01194
+0051 I**********                             12  130RCDE                  S01194
+0052 I**********                                                          S01194
+0053 I**********                                                          S01194
+0054 I*    LOAN TRANSACTIONS INDEX FILE - HEADER RECORD.
+0055 I*
+      ** Rename Fields                                                                     AR1071448
+      *                                                                                    AR1071448
+     ILOAMSDKF                                                                             AR1071448
+     I              RECI                            LRECI                                  AR1071448
+     I              LNRF                            LLNRF                                  AR1071448
+     I              VDAT                            LVDAT                                  AR1071448
+     I              LASN                            LLASN                                  AR1071448
+     I              CHTP                            LCHTP                                  AR1071448
+     I              BRCA                            LBRCA                                  AR1071448
+     I              TNLU                            LTNLU                                  AR1071448
+      *                                                                                    AR1071448
+0056 ILTRIX   NS  03   1 CH
+0057 I                                        1   1 RECI
+0058 I                                        2   2 RCDT
+0059 I**********                              3   80LNRF                                      CLE148
+     I                                        3   8 LNRF                                      CLE148
+0060 I                                    P   9  110NORE
+0061 I                                    P  12  140FLSZ
+0062 I                                    P  15  170RRLC
+0063 I                                    P  18  200RRNA
+0064 I                                    P  21  230RRLX
+0065 I                                    P  24  260RRXP
+0066 I                                    P  27  290NLNR
+0067 I                                    P  30  320NLAR
+0068 I                                       33  330STPI
+0069 I                                    P  35  370RRNT
+0070 I                                    P  38  400TNLU
+0071 I*
+0072 I* DETAIL REC.
+0073 I        NS  04   1 CD
+0058 I                                        2   2 RCDT                  046646
+     I**********                              3   80LNRF                               122598 CLE148
+     I                                        3   8 LNRF                                      CLE148
+     I                                        9  130VDAT                                   AR1071448
+     I                                       14  160LASN                                   AR1071448
+     I                                       17  17 CHTP                  CLE002
+     I                                       27  270PRI1                                   AR1071448
+0074 I****************************************1  40 LOT                   S01465
+0074 I                                        1  43 LOT                   S01465
+0074 I                                       44  44 CFPF                                    AR322731
+0074 I                                       45  45 PRPF                                    AR322731
+0075 I*
+0076 I* CATCHALL
+0077 I        NS
+0078 I***   LOCAL DATA AREA
+0079 ILDA        UDS                            256
+0232 I*******                               134 138 DBFILE                S01117
+0233 I*******                               139 167 DBKEY                 S01117
+0234 I*******                               168 175 DBPGM                 S01117
+0235 I*******                               176 1770DBASE                 S01117
+0232 I                                      134 141 DBFILE                S01117
+0233 I                                      142 170 DBKEY                 S01117
+0234 I                                      171 180 DBPGM                 S01117
+0235 I                                      181 1830DBASE                 S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+      ** BANK DETAILS                                                     S01194
+     I              BJURPT                          TITL                  S01194
+     I              BJMRDT                          RUNA                  S01194
+     I**                                                                  S01117
+     ISCSARD    E DSSCSARDPD                                              CLE002
+      ***  External data structures for SAR Details                       CLE002
+      *                                                                   CLE002
+     ISDCLND    E DSSDCLNDPD                                              CLE002
+      ***  External data structures for Customer Lending ICD              CLE002
+      *                                                                   CLE002
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+      *                                                                                       CLE134
+      ** Second DS for access programs, long data structure                                   CLE134
+     IDSSDY     E DSDSSDY                                                                     CLE134
+      *
+     ICOMDS       DS                            366                                        MD023830A
+     I                                     *STATUS  FSTAT                                  MD023830A
+0084 I/EJECT
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C                     MOVEACPY@      BIS@   80
+0085 C* 1 S T   C Y C L E   P R O C E S S I N G
+0086 C***40******          GOTO START                                     S01194
+     C           *NAMVAR   DEFN           LDA                             S01194
+     C           *LOCK     IN   LDA                                       S01194
+0087 C**
+0088 C**   STORE PROGRAM NAME IN CASE OF DATABASE ERROR
+0089 C                     MOVE 'LE1060'  DBPGM
+0090 C                     MOVE 'LTRIX'   DBFILE
+0091 C                     Z-ADD1         RECIN
+0092 C                     Z-ADD2         RECOUT
+0093 C                     Z-ADD1         RRN     50
+     C                     Z-ADD0         COUNT                                            MD023830A
+0094 C********** RRN       CHAINLTRIX                41                                     AR322731
+0095 C**N03*****           SETON                     LRU7U8***************                  AR322731
+0096 C**N03*****           MOVE RRN       DBKEY            ***   01    ***                  AR322731
+0097 C**N03*****           MOVE '01'      DBASE            ***************                  AR322731
+0097 C                     SETON                     03                                     AR322731
+0098 C   03                EXCPT
+0099 C                     SETON                     40
+0101 C/SPACE 3
+0102 C* I S   T A B / I 1   M I S S I N G
+     C*
+     C***TABLE*ERROR*TRAP*IS*INSERTED*                                    S01194
+     C*  A/O ERROR TRAP IS INSERTED                                       S01194
+     C*
+0103 C***********START     TAG                             ** START TAG **S01194
+0105 C***01*****           GOTO MAIN                                      S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0108 C                     SETON                     LRU7U8
+     C**********           MOVEL'01    '  KEY1   12                       S01194
+     C**********           MOVE '    10'  KEY1                            S01194
+0090 C**********           MOVE 'TABLE'   DBFILE           ***************S01194
+0090 C                     MOVE 'SDBANKPD'DBFILE           ***************S01194
+0096 C**********           MOVELKEY1      DBKEY            ***   02    ***S01194
+0097 C                     MOVE '02'      DBASE            ***************
+0109 C                     GOTO END
+     C                     END                                            S01194
+      *                                                                   CLE002
+      ** Check if SAR CLE002 is present                                   CLE002
+      *                                                                   CLE002
+     C                     CALL 'AOSARDR0'                                CLE002
+     C                     PARM *BLANKS   P@RTCD  7                       CLE002
+     C                     PARM '*KEY   ' P@OPTN  7                       CLE002
+     C                     PARM 'CLE002'  P@SARD  6                       CLE002
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE002
+      *                                                                   CLE002
+     C           P@RTCD    IFEQ *BLANKS                                   CLE002
+     C                     MOVE *ON       CLE002  1                       CLE002
+     C                     ELSE                                           CLE002
+      *                                                                   CLE002
+      ** Handle Database Error                                            CLE002
+      *                                                                   CLE002
+     C           P@RTCD    IFNE '*NRF    '                                CLE002
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE002
+     C                     Z-ADD5         DBASE            * DBERR 05 *   CLE002
+     C                     MOVEL'CLE002'  DBKEY     P      ************   CLE002
+     C                     MOVE *ON       *INLR                           CLE002
+     C                     MOVE *ON       *INU7                           CLE002
+     C                     MOVE *ON       *INU8                           CLE002
+     C                     GOTO END                                       CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+      ** If CLE002 is present, Access ICD                                 CLE002
+      *                                                                   CLE002
+     C           CLE002    IFEQ *ON                                       CLE002
+      *                                                                   CLE002
+     C                     CALL 'AOCLNDR0'                                CLE002
+     C                     PARM *BLANKS   P@RTCD  7                       CLE002
+     C                     PARM '*FIRST ' P@OPTN  7                       CLE002
+     C********** SDCLND    PARM SDCLND    DSFDY                                        CLE002 CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+      *                                                                   CLE002
+      ** Handle Database Error                                            CLE002
+      *                                                                   CLE002
+     C           P@RTCD    IFNE *BLANKS                                   CLE002
+     C                     MOVEL'SDCLNDPD'DBFILE           ************   CLE002
+     C                     Z-ADD6         DBASE            * DBERR 06 *   CLE002
+     C                     MOVEL'*FIRST'  DBKEY     P      ************   CLE002
+     C                     MOVE *ON       *INLR                           CLE002
+     C                     MOVE *ON       *INU7                           CLE002
+     C                     MOVE *ON       *INU8                           CLE002
+     C                     GOTO END                                       CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+0110 C/SPACE 3
+0111 C* E X T R A C T   S / L T R I X   R E C O R D S
+0112 C***********MAIN      TAG                             ** MAIN TAG ** S01194
+0113 C********** RRLX      ADD  1         RRN                                               AR322731
+0114 C           LOOP      TAG                             ** LOOP TAG **
+0115 C           RECIN     ADD  1         RECIN   50        *
+0116 C                     SETOF                     04     *
+     C*
+     C*  THIS COMPARISON IS INSERTED TO STOP P/R FROM RUNNING
+     C*       BEFORE CONFIRMATION IS RUN.
+     C*
+     C********** RRN       COMP RRLC                 43     *                               AR322731
+     C***43*****           GOTO TAG43                                                       AR322731
+0117 C********** RRN       CHAINLTRIX                41     *                               AR322731
+     C           RETRY     TAG                                                             MD023830A
+     C                     READ LTRIX                    LR                                 AR322731
+     C                     Z-ADD0         COUNT                                            MD023830A
+     C   LR                GOTO END                                                         AR322731
+      *                                                                                     AR322731
+      ** If already processed by Pay/Receive or not yet treated by confirmation job         AR322731
+      *                                                                                     AR322731
+     C           PRPF      IFEQ 'Y'                                                         AR322731
+     C           CFPF      OREQ ' '                                                         AR322731
+     C           RCDT      ANDEQ'L'                                                        AR1093201
+     C                     GOTO LOOP                                                        AR322731
+     C                     ENDIF                                                            AR322731
+      *                                                                                    AR1071448
+      ** Allow message generation on IC only for MR, PI and RE                             AR1071448
+      ** inserted via Repayment Schedule if within telex notice                            AR1071448
+      ** date else read the next record.                                                   AR1071448
+      *                                                                                    AR1071448
+     C           RCDT      IFEQ 'A'                                                        AR1071448
+     C           PRI1      ANDEQ1                                                          AR1071448
+      *                                                                                    AR1071448
+      ** Check record from file                                                            AR1071448
+      *                                                                                    AR1071448
+     C           @LOAM     KLIST                                                           AR1071448
+     C                     KFLD           LNRF                                             AR1071448
+     C                     KFLD           VDAT                                             AR1071448
+     C                     KFLD           LASN                                             AR1071448
+      *                                                                                    AR1071448
+     C           @LOAM     CHAINLOAMS                76                                    AR1071448
+      *                                                                                    AR1071448
+     C           *IN76     IFEQ '0'                                                        AR1071448
+      *                                                                                    AR1071448
+      ** Check for Amendment Type                                                          AR1071448
+      *                                                                                    AR1071448
+     C           AMTP      IFEQ 'MR'                                                       AR1071448
+     C           AMTP      OREQ 'PI'                                                       AR1071448
+     C           AMTP      OREQ 'RE'                                                       AR1071448
+     C           LLAG      ANDEQ'A'                                                        AR1071448
+      *                                                                                    AR1071448
+     C                     ELSE                                                            AR1071448
+     C                     GOTO LOOP                                                       AR1071448
+     C                     ENDIF                                                           AR1071448
+      *                                                                                    AR1071448
+     C                     ELSE                                                            AR1071448
+     C                     GOTO LOOP                                                       AR1071448
+     C                     ENDIF                                                           AR1071448
+      *                                                                                    AR1071448
+     C                     ELSE                                                            AR1071448
+      *                                                                                    AR1093201
+      ** Loop only when loan amendments and PRI1 off                                       AR1093201
+      *                                                                                    AR1093201
+     C           RCDT      IFEQ 'A'                                                        AR1093201
+     C                     GOTO LOOP                                                       AR1071448
+     C                     ENDIF                                                           AR1093201
+      *                                                                                    AR1093201
+     C                     ENDIF                                                           AR1071448
+      *                                                                                     AR322731
+      ** Flag as 'Pay/Receive processed'                                                    AR322731
+      *                                                                                     AR322731
+     C           *IN04     IFEQ '1'                                                         AR322731
+     C                     SETOF                     04                                     AR322731
+     C                     SETON                     05                                     AR322731
+     C                     EXCPT                                                            AR322731
+     C                     SETON                     04                                     AR322731
+     C                     SETOF                     05                                     AR322731
+     C                     ENDIF                                                            AR322731
+0090 C***41*****           MOVE 'LTRIX'   DBFILE                                            AR322731
+0118 C***41*****           SETON                     LRU7U8***************                  AR322731
+0119 C***41*****           MOVE RRN       DBKEY            ***   03    ***                  AR322731
+0120 C***41*****           MOVE '03'      DBASE            ***************                  AR322731
+0121 C***41*****           GOTO END                         *                               AR322731
+     C* DO NOT INCLUDE LOAN ROLLOVER DETAILS IN PAY/RECEIVE EXTRACT       046646
+     C           *IN04     IFEQ '1'                                       046646
+     C           RCDT      ANDEQ'R'                                       046646
+     C                     SETOF                     04                   046646
+     C                     END                                            046646
+      *                                                                   CLE002
+      ** If SAR CLE002 is present                                         CLE002
+      *                                                                   CLE002
+     C           CLE002    IFEQ *ON                                       CLE002
+      *                                                                   CLE002
+      ** If Authorization is *ON (for Loans)                              CLE002
+      *                                                                   CLE002
+     C           RCDT      IFEQ 'L'                                       CLE002
+      *                                                                   CLE002
+     C           BPLOAU    IFEQ 'Y'                                       CLE002
+     C           BPPPAU    OREQ 'Y'                                       CLE002
+     C           BPPSAU    OREQ 'Y'                                       CLE002
+      *                                                                   122598
+      *  Set up key list for chain to CLOANCL to retrieve value of LSTS   122598
+      *                                                                   122598
+     C           @CLOAN    KLIST                                          122598
+     C                     KFLD           W@LNRF                          122598
+     C                     KFLD           W@RCDT                          122598
+      *                                                                   122598
+     C**********           MOVE LNRF      W@LNRF  60                                   122598 CLE148
+     C                     MOVE LNRF      W@LNRF  6                                           CLE148
+     C                     MOVE 'A'       W@RCDT  1                       122598
+      *                                                                   122598
+     C           @CLOAN    CHAINCLOAN               N75                   122598
+      *                                                                   CLE002
+      ***If*Type_of_last_Change*is*Insert*or*Amend,*Do'nt*Write*RecCLE002 122598
+      *  If Loan status is not Authorised, don't write record             122598
+      *                                                                   CLE002
+     C***********CHTP      IFEQ 'I'                                CLE002 122598
+     C***********CHTP      OREQ 'A'                                CLE002 122598
+     C           LSTS      IFNE 'A'                                       122598
+     C                     MOVE *OFF      *IN04                           CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+      ** If Authorization is *ON (for Loan Amendments)                    CLE002
+      *                                                                   CLE002
+     C           RCDT      IFEQ 'A'                                       CLE002
+      *                                                                   CLE002
+     C           BPLMAU    IFEQ 'Y'                                       CLE002
+     C           BPMRAU    OREQ 'Y'                                       CLE002
+     C           BPREAU    OREQ 'Y'                                       CLE002
+     C           BPTPAU    OREQ 'Y'                                       CLE002
+      *                                                                   122598
+      *  Set up key list for chain to CLOANCL to retrieve value of LSTS   122598
+      *                                                                   122598
+     C                     MOVE LNRF      W@LNRF                          122598
+     C                     MOVE 'A'       W@RCDT                          122598
+      *                                                                   122598
+     C           @CLOAN    CHAINCLOAN               N75                   122598
+      *                                                                   CLE002
+      ***If*Type_of_last_Change*is*Insert*or*Amend,*Do'nt*Write*RecCLE002 122598
+      *  If Loan status is not Authorised, don't write record             122598
+      *                                                                   CLE002
+     C***********CHTP      IFEQ 'I'                                CLE002 122598
+     C***********CHTP      OREQ 'A'                                CLE002 122598
+     C           LSTS      IFNE 'A'                                       122598
+     C                     MOVE *OFF      *IN04                           CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+      *                                                                   CLE002
+     C                     ENDIF                                          CLE002
+     C*                                                                   046646
+0122 C   04      RECOUT    ADD  1         RECOUT  50        *
+0123 C   04                EXCPT                            *
+0124 C********** RRN       ADD  1         RRN               *                               AR322731
+0126 C                     GOTO LOOP                       **ENDLOOP
+     C           TAG43     TAG
+0128 C                     SETON                     LR
+0129 C           END       TAG                             **  END TAG  **
+0130 C/SPACE 3
+0131 C* L A S T   R E C O R D
+0132 C*LR*******          Z-ADD1         RRN                                                AR322731
+0133 C*LRNU7****RRN       CHAINLTRIX     RRN        41                                      AR322731
+0090 C*LRNU7N03*            MOVE 'LTRIX'   DBFILE                                           AR322731
+0134 C*LRNU7N03*            MOVE RRN       DBKEY            ***************                 AR322731
+0135 C*LRNU7N03*            MOVE '04'      DBASE            ***   04    ***                 AR322731
+0136 C*LRNU7N03*            SETON                     LRU7U8***************                 AR322731
+0137 C*LR*03NU7*            EXCPT                                                           AR322731
+     CLR U7 U8             EXSR *PSSR                                     S01117
+1100 C********************************************************************
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C*                                                                   S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+      *****************************************************************                    MD023830A
+      /EJECT                                                                               MD023830A
+      *****************************************************************                    MD023830A
+      *                                                               *                    MD023830A
+      *  ERRSR - File Exception/Error Subroutine (INFSR)              *                    MD023830A
+      *                                                               *                    MD023830A
+      *  CALLED FROM: After abnormal operations occur                 *                    MD023830A
+      *                                                               *                    MD023830A
+      *  CALLS: None                                                  *                    MD023830A
+      *                                                               *                    MD023830A
+      *****************************************************************                    MD023830A
+      *                                                                                    MD023830A
+     C           ERRSR     BEGSR                                                           MD023830A
+      *                                                                                    MD023830A
+      ** Retry LTRIX record access                                                         MD023830A
+      *                                                                                    MD023830A
+     C                     MOVE *BLANKS   EXTTAG  6                                        MD023830A
+     C           FSTAT     IFEQ 01218                                                      MD023830A
+      ** Loop count                                                                        MD023830A
+     C           COUNT     IFEQ 5                                                          MD023830A
+     C                     MOVEAMESSG     MESS1  50                                        MD023830A
+     C           MESS1     DSPLY'MOPERQ'                                                   MD023830A
+     C                     Z-ADD0         COUNT                                            MD023830A
+     C                     END                                                             MD023830A
+      *                                                                                    MD023830A
+     C                     ADD  1         COUNT   20                                       MD023830A
+     C                     GOTO RETRY                                                      MD023830A
+     C                     ELSE                                                            MD023830A
+     C                     EXSR *PSSR                                                      MD023830A
+     C                     END                                                             MD023830A
+      *                                                                                    MD023830A
+     C                     ENDSREXTTAG                                                     MD023830A
+     C********************************************************************
+0138 C/EJECT
+0139 O*E1060P1T**203   LR                                       S01124    S01117
+0139 OLE1060AUT  203   LR                                                 S01117
+0140 O***********                        22 'REFERENCE LE1060'            S01117
+0140 O                                   24 'REFERENCE LE1060AU'          S01117
+0141 O                         TITL      89
+0142 O                                  122 'DATE              PAGE'
+0143 O                         RUNA     112
+0144 O                         PAGE  Z  127
+0145 O        T  1     LR
+0146 O                                   62 'LOAN TRANSACTIONS INDEX'
+0147 O                                   86 'EXTRACT - FILE CONTROLS'
+0148 O        T  3     LR
+0149 O                                   63 '------------------------'
+0150 O                                   86 '-----------------------'
+0151 O        T  1     LR
+0152 O                                   28 'S/LTRIX - RUN CONTROLS'
+0153 O                                   59 'NUMBER'
+0154 O        T  2     LR
+0155 O                                   28 '----------------------'
+0156 O                                   59 'OF RECORDS'
+0157 O        T  3     LR
+0158 O                                   29 'TOTAL RECORDS ON FILE'
+0159 O                         RECIN 3   59
+0160 O        T  1     LR
+0161 O                                   28 'S/LTRIE - RUN CONTROLS'
+0162 O        T  2     LR
+0163 O                                   28 '----------------------'
+0164 O        T  3     LR
+0165 O                                   29 'TOTAL RECORDS ON FILE'
+0166 O                         RECOUT3   59
+0167 O        T  3     LR U7
+0168 O***********                        42 '*** REFERENCE'               S01117
+     O                                   39 '*** REFERENCE'               S01117
+0169 O                         DBPGM     51
+0170 O                                   71 '- DATABASE ERROR AT'
+0171 O***********              DBASE     74                               S01117
+     O                         DBASE     76                               S01117
+0172 O        T  2     LR U7
+0173 O***********                        37 'FILENAME'                    S01117
+     O                                   34 'FILENAME'                    S01117
+0174 O                         DBFILE    43
+0175 O                                   48 'KEY'
+0176 O                         DBKEY     78
+0177 O**
+0178 O********T*00     LRNU7                                              S01117
+0179 O***********                        73 '*** END OF REPORT ***'       S01117
+0180 O/SPACE 3
+0181 OLTRIEHD E        03N40
+0182 O                                    1 'H'
+0183 OLTRIEDL E        04
+0184 O*************************LOT*******40                               S01465
+0184 O                         LOT       43                               S01465
+0185 OLTRIEZZ T        LR
+0186 O                                    1 'T'
+0187 O                         RECOUT     6
+0188 O/SPACE 3
+0189 OLTRIX   E        LR 03
+     O                         RRLC      26P
+     OLTRIX   E        05                                                                   AR322731
+     O                                   45 'Y'                                             AR322731
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** MESSG  **      LTRIX File Locking                                                       MD023830A
+LEC0213 program may loop due to LTRIX locking.                                             MD023830A

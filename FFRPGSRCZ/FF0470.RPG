@@ -1,0 +1,1220 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Initiate and Control EOC's')
+/*OVRF*: OVRDBF MKCTLX MKCTL                                        : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0470  -  INITIATE AND CONTROL END OF CENTRES                 *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*   LAST AMEND NO. S01456             DATE 08NOV93                 *
+     F*   PREV AMEND NO. 065591             DATE 24JAN94                 *
+     F*                  FO0059             DATE 05APR91                 *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  E21147             DATE 20FEB90                 *
+     F*                  S01117             DATE 09FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   065591  -  When allocation of market data area fails,          *
+     F*              display msg "OTHER USERS ARE ACTIVE IN THE          *
+     F*              MARKET" instead of error code '001'.                *
+     F*   FO0059  -  CMD PARM FOR DLCOBJ WAS INCORRECT                   *
+     F*   S01199  -  HELP SYSTEM (PROGRAM RECOMPILED)                *
+     F*   E21147  -  REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400         *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*     OVRDBF     FILE(MKCTLX) TOFILE(MKCTL)                        *
+     F*                                                                  *
+     F********************************************************************
+     FMKCTL   IF  E           K        DISK
+     FMKCTLX  UF  E           K        DISK
+     F            MKCTLDF                           KRENAMEMKCTLDFX
+     FMARKT   IF  E           K        DISK
+     F/COPY WNCPYSRC,FF0470F001
+     FFF0470DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE FF0470S0
+     F                                              KINFDS PAGNO
+     F*ABFF***IF* E           K        DISK                               S01117
+     F**ICD*1*****TABTB10F**************************KIGNORE***************S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB80F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       KC         F3
+     F*
+     F*       KL         F12
+     F*
+     F*       LR         Last record
+     F*
+     F*       U7}
+     F*         }        Data Base Error
+     F*       U8}
+     F*
+     F********10*        Help key                                         S01199
+     F*
+     F*       30         S/FF0470C0 SFLDSP
+     F*
+     F*       31         S/FF0470C0 SFLDSPCTL
+     F*
+     F*       32         S/FF0470C0 SFLCLR
+     F*
+     F*       33         S/FF0470C0 SFLCLR
+     F*
+     F*       34         S/FF0470F0 Error in ACTN field
+     F*
+     F*       35         S/FF0470F0 Error in PMRKT field
+     F*
+     F*       36         S/FF0470F0 Display error codes
+     F*
+     F*       37         CHAIN fail to MARKT file
+     F*
+     F*       38         LOKUP to TABMST and TABCST successful
+     F*
+     F*       39         CHAIN fail to MKCTL file
+     F*
+     F*       40         Ensures that W01 displayed once only
+     F*
+     F********41**       QCAEXEC FAILED                                   E21147
+     F*       41         QCMDEXC FAILED                                   E21147
+     F*
+     F*       42         S/FF0470F0 Display information message
+     F*
+     F*       43         Controls DO loop in main processing - set on
+     F*                     if validation errors occur
+     F*                                                                   065591
+     F*       44         Allocation fail to MKCTL data area.              065591
+     F*
+     F*       90-98      Used in Standard Subroutines
+     F*
+     F********99*********Error*on*TABTB10*********************************S01117
+     F/EJECT
+      *
+      ** Table to hold Market Centre Status text
+      *
+     E                    CPY@    1   1 80
+     E                    TABMST  1   4  1   TABMS  13
+      *
+      ** Table to hold End of Centre Status text
+      *
+     E                    TABCST  1   8  1   TABCS  10
+      *
+      ** Compile time arrays for the standard subroutine ZDATE2
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Array to information text
+      *
+     E********************INF     1   1 76                                065591
+     E                    INF     1   2 76                                065591
+      *
+      ** Array to hold first part of the ALCOBJ command
+      *
+     E                    AL1     1   1 12
+      *
+      ** Array to hold second part of the ALCOBJ command
+      *
+     E                    AL2     1   1 23
+      *
+      ** Array to hold first part of the DLCOBJ command
+      *
+     E                    DL1     1   1 12
+      *
+      ** Array to hold second part of the DLCOBJ command
+      *
+     E                    DL2     1   1 16
+      *
+      ***Array*to*hold*QCAEXEC*parameter*******                           E21147
+      ** Array to hold QCMDEXC parameter                                  E21147
+      *
+     E                    CMD        38  1
+      *
+      ** Array to hold error and warning codes
+      *
+     E                    ERR        19  4
+     E/EJECT
+      *
+      ** Local data area for database error details
+      *
+     I*DA********UDS                            256                       S01117
+     I***********                           134 175 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   S01117
+     IZMUSER      DS                             17                       S01117
+     I** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 USRBCH                S01117
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *
+      ** Program status data structure for WS ID
+      *
+     IPSDS       SDS
+     I                                      244 246 WSID
+      *
+      ** Data structure for screen error codes
+      *
+     ISCRMSG      DS                          1  76
+     I                                        1  76 ERR
+     I                                        1  76 ERRMSG
+      *
+      ** File information data structure to obtain last sfile page
+      ** displayed
+      *
+     IPAGNO       DS
+     I                                    B 378 3790LSRRN
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *
+      **                   INITIAL PROCESSING
+      *                    ~~~~~~~~~~~~~~~~~~
+     C/SPACE 3
+      *
+      ** Define the two parameters to be passed by the program
+      *
+     C           *LIKE     DEFN ACTN      EOCACT
+     C           *LIKE     DEFN PMRKT     MARKTP
+     C           *ENTRY    PLIST
+     C                     PARM           EOCACT
+     C                     PARM           MARKTP
+      *
+      ** Prepare LDA
+      *
+     C***********          MOVEL*BLANKS   DBLOT                           S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'FF0470'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT & ZMUSER                                  S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   RUNDT                                     S01117
+     C                     IN   ZMUSER                                    S01117
+      ***********                                                         S01117
+      ***Get*installation*control*data*record*1***************************S01117
+      ***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+     C**N99******RECI      COMP 'D'                  9999                 S01117
+      ***********                                                         S01117
+      ***If**in99*on,*the*table*is*deleted********************************S01117
+      ***********                                                         S01117
+     C************IN99     IFEQ '0'                                       S01117
+     C***********                                                         S01117
+     C***IF*FOUND*CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.*************S01117
+     C***********                                                         S01117
+     C*                                                                   S01117
+     C** CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY                       S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98
+     C*                                                                   S01117
+      ***********                                                         S01117
+      ***Format*MMDDYY*if**in98*on****************************************S01117
+      ***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C***OTHERWISE*DB*ERROR***********************************************S01117
+     C***********                                                         S01117
+     C***********          Z-ADD1         DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY 12                       S01117
+     C***********          MOVE '10'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+      *
+      ** Read all market control records and check their current status
+      ** If they are failed they will be flagged as such
+      *
+     C                     EXSR RESTRT
+      *
+      ** The binary field LSRRN contains the value 16448 during the
+      ** initial processing so reset
+      *
+     C                     Z-ADD0         LSRRN
+      *
+      ** Fill and display the subfile
+      *
+     C                     EXSR SUBFIL
+      *
+      ** Display then read the contents of the prompt record format
+      *
+     C                     EXSR DSPRD
+      *
+      ** Set on the error message indicator so that the main processing
+      ** section of the program is performed at least once
+      *
+     C                     MOVE '1'       *IN43
+     C/EJECT
+      *
+      **                   MAIN PROCESSING
+      *                    ~~~~~~~~~~~~~~~
+     C/SPACE 3
+      *
+      ** Perform the following until F3 is pressed or a valid entry
+      ** is made
+      *
+     C           *INKC     DOWEQ'0'
+     C           *IN43     ANDEQ'1'
+      *
+      ** Set off *in43
+      *
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44                           065591
+      *
+      ** If F12 is not pressed, validate the input fields
+      *
+     C           *INKL     IFEQ '0'
+     C                     EXSR VALIDD
+     C                     END
+      *
+      ** If F12 has been pressed or if there are errors present,
+      ** refill and redisplay the subfile
+      *
+     C           *INKL     IFEQ '1'
+     C           *IN36     OREQ '1'
+     C           *IN44     OREQ '1'                                       065591
+     C                     EXSR SUBFIL
+      *
+      ** Display then read the contents of the prompt record format
+      *
+     C                     EXSR DSPRD
+     C                     MOVE '1'       *IN43
+      *
+      ** If a Market Data Area has been allocated for Action Code O
+      ** and a warning error is about to be issued,de-allocate it
+      *
+     C           OBJALC    IFEQ 'Y'
+      *
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC*      E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CDBLD1
+      *
+      ** Then de-allocate the data area
+      *
+     C                     Z-ADD38        CMDL
+     C**********           CALL 'QCAEXEC'                                 E21147
+     C                     CALL 'QCMDEXC'                                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+     C                     MOVEL*BLANK    OBJALC
+     C                     END
+      *
+     C                     END
+     C                     END
+     C/EJECT
+      *
+      **                   FINAL PROCESSING
+      *                    ~~~~~~~~~~~~~~~~
+     C/SPACE 3
+      *
+      ** If F3 was pressed, reset the parameter values
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE *BLANKS   EOCACT
+     C                     MOVE *BLANKS   MARKTP
+      *
+     C                     ELSE
+      *
+      ** Otherwise set the values of the parameters equal to the values
+      ** input
+      *
+     C                     MOVE ACTN      EOCACT
+     C                     MOVE PMRKT     MARKTP
+     C                     END
+      *
+      ** End processing
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+      ********************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** RESTRT            CHECK FOR FAILED END OF CENTRES
+      **
+      ** SUBFIL            LOAD/DISPLAY SUBFILE
+      **
+      ** DSPRD             DISPLAY/READ PROMPT
+      **
+      ***HELP**************PROCESS HELP REQUEST                           S01199
+      **
+      ** FORMAT            FORMAT BUSINESS DATE
+      **
+      ** VALIDD            VALIDATE ACTION/MARKET CODE
+      **
+      ** VALIDI            CROSS VALIDATE ACTION CODE I
+      **
+      ** VALIDH            CROSS VALIDATE ACTION CODE H
+      **
+      ** VALIDC            CROSS VALIDATE ACTION CODE C
+      **
+      ** VALIDO            CROSS VALIDATE ACTION CODE O
+      **
+      ***CMDBLD************BUILD*PARAMETERS*FOR*QCAEXEC*****              E21147
+      ** CMDBLD            BUILD PARAMETERS FOR QCMDEXC                   E21147
+      **
+      ***CDBLD1************BUILD*PARAMETERS*FOR*QCAEXEC*                  E21147
+      ** CDBLD1            BUILD PARAMETERS FOR QCMDEXC                   E21147
+      **
+      ** DBERR             TERMINATE PROGRAM IF DATABASE ERROR
+      **
+      ********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** RESTRT S/R To check for any failed End of Centres
+      ** CALLED FROM  Initial Processing
+      ** CALLS CMDBLD; CDBLD1
+      **
+     C********************************************************************
+     C*
+     C           RESTRT    BEGSR
+      *
+      ** Read the first record on the market control file
+      *
+     C           *LOVAL    SETLLMKCTLDF
+      *
+     C                     READ MKCTLDF                  33
+      *
+      ** Process the following sequence until the last record on the
+      ** market control file is read
+      *
+     C           *IN33     DOWEQ'0'
+      *
+      ** If the market is in its End of Centre and is active according
+      ** to the EOC status indicator check whether it is really active
+      *
+     C           MKCI      IFEQ 'E'
+     C           ECFI      ANDNE'F'
+     C*
+     C           ECAI      IFEQ 'I'
+     C           ECAI      OREQ 'A'
+     C           ECAI      OREQ 'M'
+     C           ECAI      OREQ 'C'
+     C           ECAI      OREQ 'O'
+      *
+      ***Call*QCAEXEC*to*exclusively*allocate*the*market's*data*area      E21147
+      ** Call QCMDEXC to exclusively allocate the market's data area      E21147
+      *
+     C                     MOVELMRKT      PMRKT
+      *
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC       E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CMDBLD
+      *
+     C                     Z-ADD38        CMDL   155
+     C**********           CALL 'QCAEXEC'              41                 E21147
+     C                     CALL 'QCMDEXC'              41                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+      *
+      ** Error if the allocation succeeds
+      *
+     C           *IN41     IFEQ '0'
+      *
+      ** Flag the End of Centre as failed
+      *
+     C           PMRKT     CHAINMKCTLDFX             41
+     C                     MOVEL'F'       ECFI
+     C                     EXCPTUPDT
+      *
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC***    E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CDBLD1
+      *
+      ** Then de-allocate the data area
+      *
+     C                     Z-ADD38        CMDL
+     C**********           CALL 'QCAEXEC'                                 E21147
+     C                     CALL 'QCMDEXC'                                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVEL*BLANK    PMRKT
+      *
+      ** Read the next record on the market control file
+      *
+     C                     READ MKCTLDF                  33
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** SUBFIL S/R To load and display the subfile
+      ** CALLED FROM  Initial Processing
+      **              Main Processing
+      ** CALLS FORMAT SR
+      **
+     C********************************************************************
+     C*
+     C           SUBFIL    BEGSR
+      *
+      ** Move the RRN of the subfile into SFLRCDNBR. This is to ensure
+      ** that the same page is redisplayed after F12 or enter is
+      ** pressed
+      *
+     C           LSRRN     IFGT 0
+     C                     MOVE LSRRN     DSPNUM
+     C                     END
+      *
+      ** If F12 not pressed and there are no errors present,
+      ** display the subfile from the beginning
+      *
+     C           *INKL     IFEQ '0'
+     C           *IN36     ANDNE'1'
+     C                     MOVE 1         DSPNUM
+     C                     END
+      *
+      ** Initialise the subfile relative record number
+      *
+     C                     Z-ADD1         RRN     20
+      *
+      ** Initialise the screen indicators
+      *
+     C                     MOVEA'0000'    *IN,30
+      *
+      ** Clear the subfile
+      *
+     C                     MOVE '1'       *IN32
+     C                     WRITEFF0470C0
+     C                     MOVE '0'       *IN32
+      *
+      ** Read the first record on the market control file
+      *
+     C           *LOVAL    SETLLMKCTLDF
+      *
+     C                     MOVEL*BLANK    RECI
+     C           *IN33     DOWEQ'0'
+     C           RECI      ANDNE'D'
+     C                     READ MKCTLDF                  33
+     C                     END
+      *
+      ** If there are no records on the market control file, display
+      ** the appropriate message and do not display the subfile
+      *
+     C           *IN33     IFEQ '1'
+     C                     MOVE '1'       *IN42
+     C                     MOVEAINF,1     INFMSG
+     C                     ELSE
+      *
+      ** Process the following sequence until the last record on the
+      ** market control file is read
+      *
+     C           *IN33     DOWEQ'0'
+      *
+      ** Access the market centres file
+      *
+     C           MRKT      CHAINMARKTDF              37
+      *
+      ** If the CHAIN fails - Data Base Error Point 2
+      *
+     C           *IN37     IFEQ '1'                        ***************
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELMRKT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Format output fields
+      *
+     C                     EXSR FORMAT
+      *
+      ** Write a record to the subfile
+      *
+     C                     WRITEFF0470S0
+      *
+      ** Increment the RRN
+      *
+     C                     ADD  1         RRN
+      *
+      ** Read the next record on the market control file
+      *
+     C                     MOVEL*BLANK    RECI
+     C           *IN33     DOWEQ'0'
+     C           RECI      ANDNE'D'
+     C                     READ MKCTLDF                  33
+     C                     END
+      *
+     C                     END
+     C*                                                                   065591
+     C           *IN44     IFEQ '1'                                       065591
+     C                     MOVE '1'       *IN42                           065591
+     C                     MOVEAINF,2     INFMSG                          065591
+     C                     END                                            065591
+      *
+      ** Prepare to display the subfile
+      *
+     C                     MOVE '1'       *IN30
+     C                     END
+      *
+      ** Display the subfile by writing the subfile control
+      *
+     C                     MOVE '1'       *IN31
+     C                     WRITEFF0470C0
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** DSPRD S/R To display then read the prompt record format
+      ** CALLED FROM  Initial Processing
+      **              Main Processing
+      ** CALLS HELP SR
+      **
+     C********************************************************************
+     C*
+     C           DSPRD     BEGSR
+      *
+     C                     EXFMTFF0470F0
+      *
+      ** Allow HELP
+      *
+     C********** *IN10     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0470F0                 10               S01199
+     C**********           END                                            S01199
+     C                     ENDSR
+     C********************************************************************S01199
+      **********                                                          S01199
+      ***HELP**S/R To call HELP program                                   S01199
+      ***CALLED*FROM  DSPRD  Processing                                   S01199
+      ***CALLS***                                                         S01199
+      **********                                                          S01199
+     C********************************************************************S01199
+     C**********                                                          S01199
+     C********** HELP      BEGSR                                          S01199
+      **********                                                          S01199
+     C**********           MOVEL'FF0470'  HBPGM   6                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           ENDSR                                          S01199
+      /EJECT                                                              S01199
+     C********************************************************************
+      **
+      ** FORMAT S/R To format business date, the market and end of
+      **            centre statuses
+      ** CALLED FROM SUBFIL SR
+      ** CALLS ZDATE2 SR
+      **
+     C********************************************************************
+     C*
+     C           FORMAT    BEGSR
+      *
+      ** Format market code
+      *
+     C                     MOVE MRKT      SMRKT
+      *
+      ** Format market name
+      *
+     C                     MOVE MKTN      SMNAM
+      *
+      ** Format the business date
+      *
+     C                     MOVE BUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SBDAT
+      *
+      ** Obtain the relevant text to describe the market centre status
+      ** on TABMST. If the LOKUP operation fails - Data Base Error
+      ** Point 3
+      *
+     C           MKCI      LOKUPTABMST    TABMS          38
+     C           *IN38     IFEQ '1'
+     C                     MOVE TABMS     SMSTA
+     C                     ELSE                            ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C                     MOVEL'MKCTL'   DBFILE           ***************
+     C                     MOVELMRKT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Obtain the relevant text to describe the end of centre status
+      ** on TABCST. If the LOKUP operation fails - Data Base Error
+      ** Point 4
+      *
+     C           ECAI      LOKUPTABCST    TABCS          38
+     C           *IN38     IFEQ '1'
+     C                     MOVE TABCS     SECST
+     C                     ELSE                            ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C                     MOVEL'MKCTL'   DBFILE           ***************
+     C                     MOVELMRKT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Display 'Failed' if ECFI = F
+      *
+     C           ECFI      IFEQ 'F'
+     C                     MOVE 'FAILED'  SECFL
+     C                     ELSE
+     C                     MOVE *BLANKS   SECFL
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALIDD S/R To validate the action and market codes
+      ** CALLED FROM  Main Processing
+      ** CALLS        VALIDI
+      **           or VALIDH
+      **           or VALIDC
+      **           or VALIDO
+      **
+     C********************************************************************
+     C*
+     C           VALIDD    BEGSR
+      *
+      ** Set error indicators to zero
+      *
+     C                     MOVEA'000'     *IN,34
+      *
+      ** Set error count to zero
+      *
+     C                     Z-ADD*ZEROS    EC      40
+      *
+      ** Blank out error message code line
+      *
+     C                     MOVE *BLANKS   ERR
+      *
+      ** Validate the market code - error if not on MKCTL file
+      *
+     C           PMRKT     CHAINMKCTLDF              39
+     C           *IN39     IFEQ '1'
+     C                     MOVE '1'       *IN36
+     C                     ADD  1         EC         35
+     C                     MOVEL' 002'    ERR,EC
+     C                     ELSE
+      *
+      ** Access the MARKTD file to check the automatic end of centre
+      ** indicator - Data Base Error Point 5 if record not found
+      *
+     C           PMRKT     CHAINMARKTDF              37
+     C           *IN37     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD5         DBASE            **DB ERROR 05**
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     ELSE
+     C           AEOC      IFEQ *BLANK
+     C                     MOVE '1'       *IN36
+     C                     ADD  1         EC         35
+     C                     MOVEL' 012'    ERR,EC
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Validate the action code - error if not equal to I, H, C or O
+      *
+     C           ACTN      IFNE 'I'
+     C           ACTN      ANDNE'H'
+     C           ACTN      ANDNE'C'
+     C           ACTN      ANDNE'O'
+     C                     MOVE '1'       *IN36
+     C                     ADD  1         EC         34
+     C                     MOVEL' 003'    ERR,EC
+     C*                                                                   S01117
+     C** SPF CHECKING ON ACTION CODE                                      S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C** WHEN SINGLE BRANCH                                               S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     MOVE '1'       *IN36                           S01117
+     C                     ADD  1         EC         34                   S01117
+     C                     MOVEL' 303'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C** WHEN MULTI-BRANCH                                                S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     MOVE '1'       *IN36                           S01117
+     C                     ADD  1         EC         34                   S01117
+     C                     MOVEL' 304'    ERR,EC                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END
+      *
+      ** Proceed with cross-validation only if there are no errors
+      *
+     C           *IN34     IFEQ '0'
+     C           *IN35     ANDEQ'0'
+      *
+      ** If the action code is equal to 'I', process the
+      ** cross-validation subroutine before initiating the end of
+      ** centre
+      *
+     C           ACTN      IFEQ 'I'
+     C                     EXSR VALIDI
+     C                     ELSE
+      *
+      ** To process action codes H, C, or O, the market centre status
+      ** must be active (equal 'E')
+      *
+     C           MKCI      IFNE 'E'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 005'    ERR,EC
+     C                     ELSE
+      *
+      ** Process the appropriate cross-validation subroutine
+      *
+     C           ACTN      CASEQ'H'       VALIDH
+     C           ACTN      CASEQ'C'       VALIDC
+     C           ACTN      CASEQ'O'       VALIDO
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** If the action code is not equal to 'O' or there are invalid
+      ** entries, remove the warning message W01 set up in VALIDO
+      ** subroutine
+      *
+     C           ACTN      IFNE 'O'
+     C           *IN34     OREQ '1'
+     C           *IN35     OREQ '1'
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN42
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALIDI S/R To cross-validate the action code I
+      ** CALLED FROM  VALIDD
+      ** CALLS        CMDBLD; CDBLD1
+      **
+     C********************************************************************
+     C*
+     C           VALIDI    BEGSR
+      *
+      ** Error if the market centre status is not in input phase (=I)
+      **
+      *
+     C           MKCI      IFNE 'I'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 004'    ERR,EC
+     C                     ELSE
+      *
+     C/COPY WNCPYSRC,FF0470C001
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC***    E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CMDBLD
+      *
+      ***Call*QCAEXEC*to*exclusively*allocate*the*market's*data*area      E21147
+      ** Call QCMDEXC to exclusively allocate the market's data area      E21147
+      *
+     C                     Z-ADD38        CMDL   155
+     C**********           CALL 'QCAEXEC'              41                 E21147
+     C                     CALL 'QCMDEXC'              41                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+      *
+      ** Error if the allocation fails
+      *
+     C           *IN41     IFEQ '1'
+     C***********          MOVEA'111'     *IN,34                          065591
+     C***********          ADD  1         EC                              065591
+     C***********          MOVEL' 001'    ERR,EC                          065591
+     C                     MOVE '1'       *IN34                           065591
+     C                     MOVE '1'       *IN35                           065591
+     C                     MOVE '1'       *IN44                           065591
+     C                     ELSE
+      *
+      ** Otherwise, update the market centre status, the end of centre
+      ** status and the end of centre failed indicator
+      *
+     C           PMRKT     CHAINMKCTLDFX             41
+     C                     MOVE 'E'       MKCI
+     C                     MOVE 'I'       ECAI
+     C                     MOVE ' '       ECFI
+     C                     EXCPTUPDT
+     C                     END
+     C/COPY WNCPYSRC,FF0470C002
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALIDH S/R To cross-validate the action code 'H'
+      ** CALLED FROM  VALIDD
+      ** CALLS
+      **
+     C********************************************************************
+     C*
+     C           VALIDH    BEGSR
+      *
+      ** Error if ECAI not equal to 'A' and not equal to 'Q'
+      *
+     C           ECAI      IFNE 'A'
+     C           ECAI      ANDNE'Q'
+      *
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 006'    ERR,EC
+     C                     ELSE
+      *
+      ** Otherwise, error if the end of centre failed indicator is on
+      *
+     C           ECFI      IFEQ 'F'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 007'    ERR,EC
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALIDC S/R To cross-validate the action code C
+      ** CALLED FROM  VALIDD
+      ** CALLS
+      **
+     C********************************************************************
+     C*
+     C           VALIDC    BEGSR
+      *
+      ** Error if ECAI not equal to 'H' and the ECFI is not equal
+      ** to 'F'
+      *
+     C           ECAI      IFNE 'H'
+     C           ECFI      ANDNE'F'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 008'    ERR,EC
+     C                     END
+      *
+      ** Error if the end of centre failed indicator is equal to F and
+      **the end of centre staus indicator is not equal to Q,A,M,C or H
+      *
+     C           ECFI      IFEQ 'F'
+      *
+     C           ECAI      IFNE 'Q'
+     C           ECAI      ANDNE'A'
+     C           ECAI      ANDNE'M'
+     C           ECAI      ANDNE'C'
+     C           ECAI      ANDNE'H'
+      *
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 009'    ERR,EC
+     C                     END
+     C                     END
+      *
+      ** If no errors so far allocate the Market Data Area
+      *
+     C           *IN36     IFEQ '0'
+      *
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC       E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CMDBLD
+      *
+      ** Call*QCAEXEC*to*exclusively*allocate*the*market's*data*area      E21147
+      ** Call QCMDEXC to exclusively allocate the market's data area      E21147
+      *
+     C                     Z-ADD38        CMDL
+     C**********           CALL 'QCAEXEC'              41                 E21147
+     C                     CALL 'QCMDEXC'              41                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+      *
+      ** Error if the allocation fails
+      *
+     C           *IN41     IFEQ '1'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 013'    ERR,EC
+     C                     END
+     C                     END
+      *
+      ** If no errors so far and the end of centre status = H or M
+      ** (EOC was held or memos update had failed) set EOCACT to R
+      ** which will stop journal changes being removed for the end
+      ** of centre
+      *
+     C           *IN36     IFNE '1'
+     C           ECAI      IFEQ 'Q'
+     C           ECAI      OREQ 'H'
+     C           ECAI      OREQ 'M'
+     C                     MOVE 'R'       ACTN
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALIDO S/R To cross-validate the action code O
+      ** CALLED FROM  VALIDD
+      ** CALLS
+      **
+     C********************************************************************
+     C*
+     C           VALIDO    BEGSR
+      *
+      ** Error if ECAI not equal to 'H' and the ECFI is not equal
+      ** to 'F'
+      *
+     C           ECAI      IFNE 'H'
+     C           ECFI      ANDNE'F'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 010'    ERR,EC
+     C                     END
+      *
+      ** Error if the end of centre failed indicator is equal to F and
+      **the end of centre staus indicator is not equal to I, A, C or O
+      ** ,H or Q.
+      *
+     C           ECFI      IFEQ 'F'
+      *
+     C           ECAI      IFNE 'I'
+     C           ECAI      ANDNE'A'
+     C           ECAI      ANDNE'C'
+     C           ECAI      ANDNE'O'
+     C           ECAI      ANDNE'H'
+     C           ECAI      ANDNE'Q'
+      *
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 011'    ERR,EC
+     C                     END
+     C                     END
+      *
+      ** If no errors so far allocate the Market Data Area
+      *
+     C           *IN36     IFEQ '0'
+      *
+      ***Build*up*the*parameter*in*preparation*for*the*CALL*QCAEXEC*      E21147
+      ** Build up the parameter in preparation for the CALL QCMDEXC       E21147
+      *
+     C                     EXSR CMDBLD
+      *
+      ***Call*QCAEXEC*to*exclusively*allocate*the*market's*data*area      E21147
+      ** Call QCMDEXC to exclusively allocate the market's data area      E21147
+      *
+     C                     Z-ADD38        CMDL
+     C**********           CALL 'QCAEXEC'              41                 E21147
+     C                     CALL 'QCMDEXC'              41                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDL
+      *
+      ** Error if the allocation fails
+      *
+     C           *IN41     IFEQ '1'
+     C                     MOVEA'111'     *IN,34
+     C                     ADD  1         EC
+     C                     MOVEL' 013'    ERR,EC
+     C                     ELSE
+     C                     MOVEL'Y'       OBJALC  1
+     C                     END
+     C                     END
+      *
+      ** If all the fields are valid for the first time, display the
+      ** warning message W01
+      *
+     C           *IN34     IFEQ '0'
+     C           *IN35     ANDEQ'0'
+     C           *IN40     IFEQ '0'
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN36
+     C                     ADD  1         EC
+     C                     MOVEL' W01'    ERR,EC
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+      **
+      ** CMDBLD S/R To build up the parameter to be passed when
+      **************QCAEXEC is called**********************************   E21147
+      **            QCMDEXC is called                                     E21147
+      ** CALLED FROM   VALIDI
+      ** CALLS no other subroutines
+      **
+     C********************************************************************
+     C*
+     C           CMDBLD    BEGSR
+      *
+     C                     Z-ADD1         X       20
+     C                     MOVEAAL1       CMD,X
+      *
+     C                     Z-ADD13        X
+     C                     MOVEAPMRKT     CMD,X
+      *
+     C                     Z-ADD16        X
+     C                     MOVEAAL2       CMD,X
+      *
+     C                     ENDSR
+      *
+     C********************************************************************
+      **
+      ** CDBLD1 S/R To build up the parameter to be passed on the
+      **************QCAEXEC command********************                   E21147
+      **            QCMDEXC command                                       E21147
+      ** CALLED FROM   VALIDI
+      ** CALLS no other subroutines
+      **
+     C********************************************************************
+     C*
+     C           CDBLD1    BEGSR
+      *
+     C                     Z-ADD1         X       20
+     C                     MOVEA*BLANKS   CMD,X
+     C                     MOVEADL1       CMD,X
+      *
+     C                     Z-ADD13        X
+     C                     MOVEAPMRKT     CMD,X
+      *
+     C                     Z-ADD16        X
+     C                     MOVEADL2       CMD,X
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+     C********************************************************************
+      **
+      ** DBERR S/R To terminate program when error occurs
+      ** CALLED FROM
+      ** CALLS no other subroutines
+      **
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+      **     Set U7&U8
+      **     Program Dump                                                 S01117
+      **     Return
+     C*
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+      *
+      **                   OUTPUT
+      *                    ~~~~~~
+     O/SPACE 3
+     OMKCTLDFXE                UPDT
+     O                         MKCI
+     O                         ECAI
+     O                         ECFI
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** TABMST v TABMS  Expand Market Centre Status
+I    OPEN
+EEND OF CENTRE
+C   CLOSED
+SSET UP TODAY
+** TABCST v TABCS  Expand End of Centre Status
+ 
+IACTIVE INT
+Q  QUEUED
+AACTIVE BCH
+M  MEMOS
+CRESTARTED
+O REOPENED
+H   HELD
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** INF - Informational Messages to be Displayed at Bottom of Display
+No records on file
+Other users are active in the market                                      065591
+** AL1 - Used in QCMDEXC to Allocate Data Area                            E21147
+ALCOBJ OBJ((
+** AL2 - Used in QCMDEXC to Allocate Data Area                            E21147
+*DTAARA *EXCL)) WAIT(0)
+** DL1 - Used in QCMDEXC to Deallocate Data Area                          E21147
+DLCOBJ OBJ((
+** DL2 - Used in QCMDEXC to Deallocate Data Area                   E21147 FO0059
+*DTAARA *EXCL))

@@ -1,0 +1,971 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS¦ABS ER Specific Provisions by Customer')
+      *****************************************************************
+      *                                                               *
+      *  Misys - European Reporting                                   *
+      *                                                               *
+      *  ER0945   - ER Specific Provisions by Customer                *
+      *                                                               *
+      *  Function:  This program prints a new report that shows       *
+      *             details of all the live specific provisions       *
+      *             maintained on the system.                         *
+      *                                                               *
+      *  (phase(s)) Call during Close of Business                     *
+      *                                                               *
+      *  Called By: RPG/ERC0945 - ER Specific Provisions by Customer  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 12May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 134408             Date 24Jul98               *
+      *                 ULX004             Date 06Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  134408 - Secured amount wrongly set up                       *
+      *  ULX004 - Capital Adequacy                                    *
+      *                                                               *
+      *****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *  ===========================================                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *  BRBRK  - Process a change in company, branch, a/c officer,   *
+      *           receiving customer                                  *
+      *  PCTG   - Format and Write 'Reference Provision Percentage'   *
+      *  TOTAL  - Format and Write 'Total Provision Percentage'       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE FILES DESCRIPTION
+      *****************************************************************
+      *
+      * Guarantees and Collaterals Extract File     Prefix RT
+     FERGUEXL0IF  E           K        DISK
+      *
+     FER0945AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FER0945P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *
+      *****************************************************************
+      /TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    POWER   1   7  7 3             Power for ZCCYCN ULX004
+      *****************************************************************
+      /TITLE I-SPECIFICATIONS
+      *****************************************************************
+      *
+      ** Local data area for database errors
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                        1 256 DBERR
+      *
+      ** Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** Data Area giving Installation Control Details
+     IRUNDAT    E DSRUNDAT
+      *
+      ** File Information Data Structure for MMNNNNPY.
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ** File Information Data Structure for MMNNNNAU.
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      **  Dummy Data Structures used by Access Programs.
+      *
+      ** DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** External DS for Branch Details
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CER001
+      *
+      ** External DS for Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External DS for Company Details
+     ISDCOMP    E DSSDCOMPPD
+      *
+      ** External DS for Account Officer Details
+     ISDACOF    E DSSDACOFPD
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      **         P R O G R A M    S T A R T                           *
+      *****************************************************************
+      *
+      ** Execute initial processing
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      **  Output Audit Report and End Program.
+     C                     EXSR AUDIT
+      *
+      *****************************************************************
+      **         P R O G R A M    E N D                               *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+      *
+      ** Read first record from File.
+     C                     READ ERGUEXD0                 89
+      *
+      ** If End of Records, (*IN89), Perform: Audit Reporting (No
+      ** Records).
+     C           *IN89     IFEQ *ON                        - B1
+     C                     EXSR AUDIT
+     C                     ENDIF                           - E1
+      *
+      ** Do while not End of File.
+     C           *IN89     DOWEQ'0'                        - B1
+      *
+      ** If Secured by indicator equald 'S' (Specific Provisions)
+     C           RTSBYI    IFEQ 'S'                        - B2
+      *
+      ** Count records read.
+     C                     ADD  1         WCOUNT
+      *
+     C           RTUTSC    IFNE WWUTSC                       B3           ULX004
+     C           WCOUNT    OREQ 1                                         ULX004
+      *
+      ***  From Currency information
+      *
+     C           RTUTSC    IFNE BJCYCD                       B4           ULX004
+     C                     CALL 'AOCURRR0'                                ULX004
+     C                     PARM '*MSG   ' @RTCD   7                       ULX004
+     C                     PARM '*KEY   ' @OPTN   7                       ULX004
+     C                     PARM RTUTSC    @KEY2   3                       ULX004
+     C           SDCURR    PARM SDCURR    DSSDY                           ULX004
+      *
+     C           @RTCD     IFNE *BLANKS                      B5           ULX004
+     C                     MOVELRTUTSC    DBKEY     P      * DBERR 020 *  ULX004
+     C                     MOVE 'SDCURRPD'DBFILE           *************  ULX004
+     C                     Z-ADD20        DBASE            *************  ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                             E5           ULX004
+      *
+     C                     MOVELA6CYCD    ZCCYF            Currency code  ULX004
+     C                     Z-ADDA6SPRT    ZRATEF           Spot rate      ULX004
+     C                     MOVELA6MDIN    ZMDINF           Mult/div ind   ULX004
+     C                     Z-ADDA6NBDP    ZCDPF            NBr. dec       ULX004
+     C                     ENDIF                             E4           ULX004
+     C                     MOVE RTUTSC    WWUTSC                          ULX004
+     C                     ENDIF                             E3           ULX004
+      *
+      ** At first record selection save work fields
+     C           WCOUNT    IFEQ 1                          - B1
+     C                     Z-ADDRTUTSA    WWTOTL
+     C           RTUTSC    IFNE BJCYCD                       B4           ULX004
+     C                     Z-ADDRTUTSA    ZAMTF                           ULX004
+     C                     EXSR ZCCYCN                                    ULX004
+     C                     Z-ADDZAMTT     WWTOTL                          ULX004
+     C                     ENDIF                             E4           ULX004
+     C                     MOVE RTCOMP    WWCOMP  3
+     C                     MOVE RTBRCA    WWBRCA  3
+     C                     MOVE RTACOF    WWACOF  2
+     C**********           Z-ADDRTRCUS    WWRCUS  60                                         CSD027A
+     C                     MOVE RTRCUS    WWRCUS  6                                          CSD027A
+     C                     MOVE RTUTSI    WWUTSI  1
+     C**********           MOVE RTUTSR    WWUTSR 18                                           CER001
+     C                     MOVE RTUTSR    WWUTSR 24                                           CER001
+     C                     END                             - E3
+      *
+      ** Output used to secure details only if change in Used to Secure
+      ** Indicator or a change of used to secure reference and when not
+     C           RTUTSI    IFNE WWUTSI                     - B3
+     C           RTUTSR    ORNE WWUTSR
+     C           RTRCUS    ORNE WWRCUS
+      *
+     C           RTRCUS    IFEQ WWRCUS                     - B4
+     C           RTUTSC    IFNE BJCYCD                       B5           ULX004
+     C                     Z-ADDRTUTSA    ZAMTF                           ULX004
+     C                     EXSR ZCCYCN                                    ULX004
+     C                     ADD  ZAMTT     WWTOTL                          ULX004
+     C                     ELSE                                           ULX004
+     C                     ADD  RTUTSA    WWTOTL
+     C                     ENDIF                             E5           ULX004
+     C                     END                             - E4
+      *
+      ** Write Reference Provision percentage
+     C                     EXSR PCTG
+     C                     MOVE RTUTSI    WWUTSI
+     C                     MOVE RTUTSR    WWUTSR
+     C                     MOVE *ON       *IN20
+     C                     ELSE
+     C                     MOVE *OFF      *IN20
+     C                     END                             - E3
+      *
+      ** If change of Receiving Customer
+     C           RTRCUS    IFNE WWRCUS                     - B3
+      *
+      ** Write Total Provision Percentage
+     C                     EXSR TOTAL
+     C                     Z-ADDRTUTSA    WWTOTL
+     C           RTUTSC    IFNE BJCYCD                       B4           ULX004
+     C                     Z-ADDRTUTSA    ZAMTF                           ULX004
+     C                     EXSR ZCCYCN                                    ULX004
+     C                     Z-ADDZAMTT     WWTOTL                          ULX004
+     C                     ENDIF                             E4           ULX004
+     C                     END                             - E3
+      *
+      ** If change of company OR branch OR account officer OR receiving
+      ** customer OR first time processing OR overflow
+     C           RTCOMP    IFNE WWCOMP                     - B3
+     C           RTBRCA    ORNE WWBRCA
+     C           RTACOF    ORNE WWACOF
+     C           RTRCUS    ORNE WWRCUS
+     C           WOPEN     OREQ *BLANKS
+     C                     EXSR BRBRK
+      *
+      ** Set up work fields with new value
+     C                     MOVE RTCOMP    WWCOMP
+     C                     MOVE RTBRCA    WWBRCA
+     C                     MOVE RTACOF    WWACOF
+     C**********           Z-ADDRTRCUS    WWRCUS                                             CSD027A
+     C                     MOVE RTRCUS    WWRCUS                                             CSD027A
+     C                     ENDIF                           - E3
+      *
+      ** Process Report Lines.
+     C                     EXSR REPORT
+      *
+      ** Provision with a General Ledger/Retail Account
+     C***********RTSBYR    IFNE *BLANKS                    - B3           ULX004
+     C***********RTGAUS    MULT RTGPER    WWRST3                          ULX004
+     C***********WWRST3    DIV  100       WWRST4                          ULX004
+     C***********          ELSE                            - X3           ULX004
+      *
+      ** Provision with a Percentage
+     C***********RTGPER    IFEQ RTGCPE                     - B4           ULX004
+     C***********RTUTSA    MULT RTGPER    WWRST3                          ULX004
+     C***********WWRST3    DIV  100       WWRST4                          ULX004
+     C***********          ELSE                            - X4           ULX004
+      *
+      ** Provision with an Amount
+     C***********RTGAUS    MULT RTGPER    WWRST3                          ULX004
+     C***********WWRST3    DIV  100       WWRST4                          ULX004
+     C***********          ENDIF                           - E4           ULX004
+     C***********          ENDIF                           - E3           ULX004
+     C                     Z-ADDRTGAUS    WWRST4                          ULX004
+     C           RTUTSC    IFNE BJCYCD                       B3           ULX004
+     C                     Z-ADDRTGAUS    ZAMTF                           ULX004
+     C                     EXSR ZCCYCN                                    ULX004
+     C                     Z-ADDZAMTT     WWRST4                          ULX004
+     C                     ENDIF                           - E3           ULX004
+      *
+     C                     ADD  RTGCPE    WWRSPC
+     C                     ADD  WWRST4    WWREF
+     C                     ENDIF                           - E2
+      *
+      ** Read next record.
+     C                     READ ERGUEXD0                 89
+      *
+     C                     ENDDO                           - E1
+      *
+      ** If no records selected go to subroutine AUDIT
+     C           WCOUNT    IFEQ 0                          - B1
+     C                     EXSR AUDIT
+     C                     ELSE                            - X1
+      *
+      ** Write final records
+     C                     EXSR PCTG
+     C                     EXSR TOTAL
+     C                     EXSR WP1END
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+     C           REPORT    BEGSR
+      *
+      ** Fill file' fields into report' fields at correct formats
+      *
+     C           *IN20     IFEQ *ON                        - B1
+      *
+     C                     MOVE RTUTSI    RUTSI            Used to secure ind
+      *
+     C                     MOVELRTUTSR    RUTSR            Used to secure ref
+      *
+     C                     MOVE RTUTSC    RUTSC            Used to secure ccy
+      *
+      ** Save used to secure amount for calculation of Reference Provision
+      ** Percentage amount
+     C                     Z-ADDRTUTSA    WWUTSA
+      *
+     C                     ENDIF                           - E1           134408
+      *                                                                   134408
+      ** Currency information must be retrived to get correct information 134408
+      ** after secured by information access                              134408
+      *                                                                   134408
+      ** Retrieve number of decimal places to format Used to secure amount
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTUTSC    @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B2
+     C                     MOVELRTUTSC    DBKEY     P
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD006       DBASE            * DB ERROR 06 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E2
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RTUTSA    ZFLD15           Used to Secure Amt
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUTSA
+      *
+     C*********************ENDIF                           - E1           134408
+      *
+     C                     MOVE RTGCOD    RGCOD            Guarantee Code
+      *
+     C                     MOVE RTGSEQ    RGSEQ            Guarantee Sequence
+      *
+      ** Access SDCUSTPD to retrieve Given by Customer Details
+     C                     MOVE RTGVBY    @KEY1   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1   6
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTGVBY    DBKEY     P
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD007       DBASE            * DB ERROR 07 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF                           - E1
+      *
+     C                     MOVELBBCSSN    RCSSN            Given By Cust name
+      *
+     C                     MOVE RTSBYI    RSBYI            Secured by indicator
+      *
+     C                     MOVELRTSBYR    RSBYR            Secured by reference
+      *
+     C                     MOVE RTGCCY    RGCCY            Guarantee currency
+      *
+      ** Retrieve number of decimal places to format Guarantee Amount
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTGCCY    @KEY2   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTGCCY    DBKEY     P
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD008       DBASE            * DB ERROR 08 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE RTGAMT    ZFLD15           Secured by amount
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RGAUS
+      *
+     C                     Z-ADDRTGCPE    WWPURC  50H                     ULX004
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE RTGCPE    ZFLD15           Guarantee Perc ULX004
+     C                     MOVE WWPURC    ZFLD15           Guarantee Perc ULX004
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RGPER
+      *
+     C                     MOVE RTUTSL    RUTSL            Used Sec.Loans ULX004
+      *
+      ** Write out the record.
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           WP1REC    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+     C                     WRITEDETAIL
+      *
+      ** Reset Used to secure amount and Secured by amount
+     C                     MOVE *BLANKS   RUTSA
+     C                     MOVE *BLANKS   RGAUS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/PCTG
+      *****************************************************************
+      *                                                               *
+      *  PCTG   - Subroutine to Write Reference Provision Percentage  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           PCTG      BEGSR
+      *
+     C                     Z-ADDWWRSPC    WWPURC    H                     ULX004
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WWRSPC    ZFLD15                          ULX004
+     C                     MOVE WWPURC    ZFLD15                          ULX004
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPPC
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+     C                     WRITERSECU
+      *
+     C                     ADD  WWREF     WWEXPS
+      *
+      ** Reset work fields
+     C                     MOVE *BLANKS   RRPPC
+     C                     Z-ADD0         WWREF
+     C                     Z-ADD0         WWRST1
+     C                     Z-ADD0         WWRSPC
+     C                     Z-ADD0         WWUTSA
+      *
+     C                     ENDSR
+      /TITLE SR/TOTAL
+      *****************************************************************
+      *                                                               *
+      *  TOTAL  - Subroutine to Write Total Provision Percentage      *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           TOTAL     BEGSR
+      *
+      ** Calculate Total Provision Percentage
+     C           WWTOTL    IFNE 0
+     C           WWEXPS    MULT 100       WWRST2
+     C           WWRST2    DIV  WWTOTL    WWTCAL    H
+     C                     ELSE
+     C                     Z-ADD0         WWTCAL
+     C                     END
+      *
+     C                     Z-ADDWWTCAL    WWPURC    H                     ULX004
+     C                     MOVE *BLANKS   ZFLD15
+     C**********           MOVE WWTCAL    ZFLD15                          ULX004
+     C                     MOVE WWPURC    ZFLD15                          ULX004
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTCAL
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Detail Record.
+     C                     WRITERTOTA
+      *
+      ** Reset work fields
+     C                     MOVE *BLANKS   RTCAL
+     C                     Z-ADD0         WWEXPS
+     C                     Z-ADD0         WWTOTL
+     C                     Z-ADD0         WWRST2
+     C                     Z-ADD0         WWTCAL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/BRBRK
+      *****************************************************************
+      *                                                               *
+      *  BRBRK  - Subroutine to process a change in company, branch,  *
+      *           a/c officer or receiving customer.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           BRBRK     BEGSR
+      *
+      ** If printer file is open and entity is not blank, print footer
+     C           WOPEN     IFEQ 'Y'                        - B1
+     C           #RENT     ANDNE*BLANKS
+     C           RTBRCA    ANDNEWWBRCA
+      *
+      ** Output "End of Report"
+     C                     EXSR WP1END
+     C                     CLOSEER0945P1
+     C                     MOVE *BLANKS   WOPEN   1
+     C                     END                             - E1
+      *
+      ** Get company name using access object
+     C                     CALL 'AOCOMPR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTCOMP    @CMCD   3
+     C           SDCOMP    PARM SDCOMP    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTCOMP    DBKEY     P
+     C                     MOVE 'SDCOMPPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C                     MOVELRTCOMP    RCOMP            Company Code
+     C                     MOVELAPCMNM    RCMNM            Company Name
+      *
+      ** Get branch name using access object
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTBRCA    @KEY2   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTBRCA    DBKEY     P
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C                     MOVELRTBRCA    RBRCA            Branch code
+     C                     MOVELA8BRNM    RBRNM            Branch name
+      *
+      ** Get account officer name using access object
+      *                                                                   ULX004
+     C           RTACOF    IFNE *BLANKS                                   ULX004
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTACOF    @ACOC   2
+     C           SDACOF    PARM SDACOF    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTACOF    DBKEY     P
+     C                     MOVE 'SDACOFPD'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DB ERROR 04 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C                     MOVELRTACOF    RACOF            A/c Officer Code
+     C                     MOVELAZACON    RACON            A/c Officer Name
+      *                                                                   ULX004
+     C                     ELSE                                           ULX004
+     C                     MOVEL*BLANKS   RACOF            A/c Officer    ULX004
+     C           'No detai'CAT  'ls found'RACON     P                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ** Get receiving customer name using access object
+     C                     MOVE RTRCUS    @KEY1   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1   6
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    - B1
+     C                     MOVELRTRCUS    DBKEY     P
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADD005       DBASE            * DB ERROR 05 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C                     MOVELRTRCUS    RRCUS            Receiving Cust Nbr
+     C                     MOVELBBCRNM    RCRNM            Receiving Cust Name
+     C                     MOVELBBCRTN    RCRTN            Receiving Cust Town
+      *
+      ** Open printer file ER0925P1 if entity is not blank
+      ** or the printer file is not yet open
+     C           #RENT     IFNE *BLANKS                    - B1
+     C           WOPEN     ORNE 'Y'
+      *
+     C           RTBRCA    IFNE WWBRCA                     - B2
+     C           WFIRST    OREQ 'Y'
+     C                     OPEN ER0945P1
+     C                     MOVE 'Y'       WOPEN
+     C                     MOVE 'N'       WFIRST
+      *
+      ** Ensure Report Spool File recorded by RCF
+     C           #RENT     IFNE *BLANKS                    - B3
+     C                     MOVE RTBRCA    SENTY
+     C                     END                             - E3
+      *
+     C                     EXSR RCFP1
+     C                     END                             - E2
+      *
+      ***Output*report*header*******                                      ULX004
+     C***********          WRITEHEADP1                                    ULX004
+      *
+     C                     END                             - E1
+      *
+      ** Output report header                                             ULX004
+     C                     WRITEHEADP1                                    ULX004
+      *
+      ** Make sure Used to Secure details are printed on new page even if
+      ** there is no change in the Used to Secure Indicator
+     C           RTUTSI    IFEQ WWUTSI                     - B1
+     C                     MOVE *ON       *IN20
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFP1     BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM #SEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           WP1END    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format.
+     C                     WRITEENDP1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+     C           WCOUNT    IFEQ 0
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return.
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Receive Parameter List.
+     C           *ENTRY    PLIST
+     C                     PARM           #SEQ    5
+     C                     PARM           #RLEV   1
+     C                     PARM           #RENT   3
+      *
+      ** Initialise LDA field.
+     C                     MOVEL'ER0945'  DBPGM
+      *
+      ** Access Bank details via access program
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C           @RTCD     IFNE *BLANK                     - B1
+     C                     MOVEL'BANK'    DBKEY     P
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)  MMDDYY (*IN98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      *** Access base currency details
+      *
+     C                     CALL 'AOCURRR0'                                ULX004
+     C                     PARM *BLANKS   @RTCD                           ULX004
+     C                     PARM '*KEY   ' @OPTN   7                       ULX004
+     C                     PARM BJCYCD    @KEY2   3                       ULX004
+     C           SDCURR    PARM SDCURR    DSSDY                           ULX004
+      *                                                                   ULX004
+     C           @RTCD     IFNE *BLANKS                                   ULX004
+     C                     MOVELBJCYCD    DBKEY     P                     ULX004
+     C                     MOVE 'SDCURRPD'DBFILE           ***************ULX004
+     C                     Z-ADD011       DBASE            * DB ERROR 11 *ULX004
+     C                     EXSR *PSSR                      ***************ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVELA6CYCD    ZCCYT            Currency code  ULX004
+     C                     Z-ADDA6SPRT    ZRATET           Spot rate      ULX004
+     C                     MOVELA6MDIN    ZMDINT           Mult/div ind   ULX004
+     C                     Z-ADDA6NBDP    ZCDPT            NBr. dec       ULX004
+      *
+      ** Access RUNDAT for multibranching indicator
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'                        - B1
+     C                     SETON                     37
+     C                     END                             - E1
+      *
+      ** RCF Processing for Audit File.
+     C                     EXSR RCFAU
+      *
+      ** Report Work fields.
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         WCOUNT 150
+      *
+      ** Work fields.
+     C                     MOVE *BLANKS   WWUTSC  3                       ULX004
+     C                     Z-ADD0         WWEXPS 150
+     C                     Z-ADD0         WWREF  150
+     C                     Z-ADD0         WWTOTL 150
+     C                     Z-ADD0         WWUTSA 150
+     C                     Z-ADD0         WWRST1 150
+     C                     Z-ADD0         WWRST2 150
+     C                     Z-ADD0         WWRST3 150
+     C                     Z-ADD0         WWRST4 150
+     C***********          Z-ADD0         WWRSPC  30                      ULX004
+     C***********          Z-ADD0         WWTCAL  30                      ULX004
+     C                     Z-ADD0         WWRSPC 138                      ULX004
+     C                     Z-ADD0         WWTCAL 138                      ULX004
+      *
+     C                     MOVE 'Y'       WFIRST  1
+      *
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+     C           RCFAU     BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM #SEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/ZSEDIT
+      *****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCCYCN                                                 ULX004
+      * Convert amount From CCY inTO another CCY
+      * Input fields  : From : ZAMTF (15,0), ZCCYF(3), ZRATEF (13,8)
+      *                        ZMDINF (1), ZCDPF (1,0)
+      *                 To   : ZCCYT(3), ZRATET (13,8)
+      *                        ZMDINT (1), ZCDPT (1,0)
+      * Output fields : ZAMTT (15,0), ZCRSRCT (13,8), ZCRSMD (1)
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**  POWER  (7,3)  For ZCCYCN subroutine
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

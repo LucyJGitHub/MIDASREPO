@@ -1,0 +1,364 @@
+     H DEBUG
+     H ALWNULL(*USRCTL)                                                                      BG13292
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D****RPGBASEMOD****************************************************                      CCB023A
+/*E*I****ALWNULL(*USRCTL)**********************************************              BG13292 CCB023A
+      *****************************************************************
+      *                                                               *
+      *  Midas - APIs module                                          *
+      *                                                               *
+      *  APCHKRPRQS - Check Repair Queue table                        *
+      *                                                               *
+      *  Function:  This module checks whether transactions exist on  *
+      *             the Midas GP repair queue. The close of business  *
+      *             is then halted if there are outstanding records   *
+      *             that need to be repaired first.                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CCB023A *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CAP190             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG13365           Date 15Feb07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 BG13292            Date 13Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CAP185  *CREATE    Date 21Apr06               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CCB023A - COB Restructure - Input Cycle Termination          *
+      *            Restructuring (Redundant)                          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CAP190 - Customer Exchange MQ enabling.  (Recompiled)        *
+      *  BUG13365 - Use zonal file.                                   *
+      *  BG13292 - Program needs to handle null-capable fields.       *
+      *  CAP185 - MQ Series Interface                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Indicator Function Summary
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      *
+      *       U6         Program exception/error condition has occurred
+      *       U7         Set on with U8 to signify file handling error.
+      *       U8         Set on with U7 to signify file handling error.
+      *
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+     F*****MSRPRQL1  IF   E           K DISK    INFSR(INFSR)                                BUG13365
+     FAPMRPQZL1 IF   E           K DISK    INFSR(INFSR)                                     BUG13365
+ 
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **--------------------------------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D SVALKK          C                   CONST('HaltICTIfInvalid')                 Key to SDSVALPD
+      *
+     D SVAL1           DS           200
+     D  WSVAl1                 1      1
+      *
+      ** Short data structure for access programs
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C     Start         TAG
+      ** Note: the above tag is only there to force the first comments in
+      ** the C-specs to appear after the D- or I-specs in compiled listings.
+ 
+      **  Initial processing.
+     C                   EXSR      #A
+      *
+      **  Main processing
+     C                   EXSR      #B
+      *
+      **  Termination processing
+     C                   EXSR      #C
+      *
+     C     ENDPGM        TAG                                                    **ENDPGM**
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #B       - Main processing.                              *
+      *  02  #A       - Initial processing.                           *
+      *  03  #C       - Termination processing.                       *
+      *  04  INFSR    - Error handling SR for file errors.            *
+      *  05  *PSSR    - Error handling SR for pgm errors.             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  SUBROUTINE: #B     - Main Processing.
+      *
+      * FLDS USED  GHHTIN - Halt ICT if invalid transactions outstanding
+      *            @OKINV - Invalid transactions flag.
+      *
+      *  CALLED BY :           MAIN PROGRAM
+      *  CALLS     :
+      *
+      *****************************************************************
+     C     #B            BEGSR
+      *
+      ** Check for invalid records.
+     C     WSVAL1        IFEQ      'Y'
+      *
+     C**********         MOVEL     'MSRPRQL1 '   DBFILE                                     BUG13365
+     C                   MOVEL     'APMRPQZL1'   DBFILE                                     BUG13365
+     C**********         READ      MSRPRQL1                               LR                BUG13365
+     C                   READ      APMRPQZL1                              LR                BUG13365
+      *
+      ** If a record exists set OK for after hours flag to 'N'.
+     C     *INLR         IFNE      '1'
+     C                   MOVE      'N'           @OKINV
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      **  Terminate processing.
+     C     @OKINV        IFEQ      'Y'
+     C                   MOVE      '1'           *INLR
+     C                   ENDIF
+      *
+     C     #B9           ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE:  #A     - Initial processing.                    *
+      *                                                               *
+      * FLDS USED  @OKINV - Invalid transactions flag.                *
+      *            @FRUN  - First time through cycle flag.            *
+      *                                                               *
+      *  CALLED BY :          MAIN PROGRAM                            *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+     C     #A            BEGSR
+      *
+      **  Parameter list for returning the 'OK for after hours' flag.
+     C     *ENTRY        PLIST
+     C                   PARM                    @OKINV            1
+      *
+      **  Default 'OK after hours' flags.
+     C                   MOVE      'Y'           @OKINV
+      *
+      **  Set @FRUN to 'N'.
+     C                   MOVE      'N'           @FRUN             1
+      *
+      ** Define data area LDA to Program
+      *
+     C     *LOCK         IN        LDA
+      *
+      **  Move program name into *LDA field.
+     C                   MOVEL     'APCHKRPRQS'  DBPGM
+     C                   OUT       LDA                                                         DT018
+      *
+      **  Check ICD flag to determine whether valid, invalid or both
+      **  types of outstanding transactions are to be checked.
+     C
+      ** Call AOSVALR0 to get the system value for the
+      ** Halt ICT if invalid records in repair queue
+      *
+     C                   CALL      'AOSVALR0'
+     C                   PARM                    @RTCD
+     C                   PARM      SVALKK        SVALK1           20
+     C                   PARM                    SVAL1           200
+     C                   PARM                    SVALK2           20
+     C                   PARM                    SVAL2           200
+     C                   PARM                    SVALK3           20
+     C                   PARM                    SVAL3           200
+     C                   PARM                    SVALK4           20
+     C                   PARM                    SVAL4           200
+     C                   PARM                    SVALK5           20
+     C                   PARM                    SVAL5           200
+     C                   PARM                    SVALK6           20
+     C                   PARM                    SVAL6           200
+     C                   PARM                    SVALK7           20
+     C                   PARM                    SVAL7           200
+     C                   PARM                    SVALK8           20
+     C                   PARM                    SVAL8           200
+     C                   PARM                    SVALK9           20
+     C                   PARM                    SVAL9           200
+     C                   PARM                    SVALK10          20
+     C                   PARM                    SVAL10          200
+      *
+      ** If the system value is not found then issue a database error
+     C                   IF        @RTCD <> '*NRF' AND
+     C                             @RTCD <> *BLANKS
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFile = 'SDSVALPD'
+     C                   EVAL      DBase = 990
+     C                   EVAL      DBKey = SVALK1
+      *
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C
+ 
+     C     #A9           ENDSR                                                  **#A9**
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: #C     - Terminates program.                     *
+      *                                                               *
+      *  FIELDS USED:       NONE.                                     *
+      *                                                               *
+      *  CALLED BY :          Main processing                         *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     #C            BEGSR
+      *
+     C                   MOVE      '1'           *INLR
+      *
+     C                   RETURN
+      *
+     C     #C9           ENDSR                                                  **#C9**
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: INFSR  - Handle error on file handling.          *
+      *                                                               *
+      *  FIELDS USED:        @ERR2  - Field to prevent looping.       *
+      *                      @OKINV - Invalid transactions flag.      *
+      *                                                               *
+      *  CALLED BY :                                                  *
+      *  CALLS     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     INFSR         BEGSR
+      *
+      **  Set @ERR2 to 'Y' to prevent looping if further errors occur.
+     C     @ERR2         IFNE      'Y'                                          B1
+      *
+     C                   MOVE      'Y'           @ERR2             1            *1
+     C                   MOVE      '1'           *INU7                          *1
+     C                   MOVE      '1'           *INU8                          *1
+      *
+      **  Set 'OK for after hours' flags to 'N'.
+     C                   MOVE      'N'           @OKINV
+      *
+      **  Set up fields in local data area.
+     C     *LOCK         IN        LDA                                                         DT018
+     C                   MOVEL     'APCHKRPRQS'  DBPGM                          *1
+     C                   MOVEL     '992'         DBASE                          *1
+     C                   OUT       LDA                                                         DT018
+     C                   DUMP                                                   *1
+      *
+     C                   END                                                    E1
+      *
+      **  Terminate processing immediately.
+     C                   MOVE      '1'           *INLR
+      *
+     C                   RETURN
+      *
+     C     INFSR9        ENDSR                                                  **INFSR9**
+      *                                                               *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: *PSSR - Error handling subroutine.               *
+      *                                                               *
+      *  FIELDS USED:        @ERR1  - Field to prevent looping.       *
+      *                      @OKINV - Invalid transactions flag.      *
+      *                                                               *
+      *  CALLED BY : This routine is called if there are any program  *
+      *                      errors.                                  *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+      **  Set @ERR1 to 'Y' to prevent looping if further errors occur.
+     C     @ERR1         IFNE      'Y'                                          B1
+      *
+     C                   MOVE      'Y'           @ERR1             1            *1
+     C                   MOVE      '1'           *INU6                          *1
+      *
+      **  Set up fields in local data area.
+     C     *LOCK         IN        LDA                                                         DT018
+     C                   MOVEL     'APCHKRPRQS'  DBPGM                          *1
+     C                   MOVEL     '991'         DBASE                          *1
+     C                   OUT       LDA                                                         DT018
+     C                   DUMP                                                   *1
+      *
+      **  Set 'OK for after hours' flags to 'N'.
+     C                   MOVE      'N'           @OKINV
+      *
+     C                   END                                                    E1
+      *
+      **  Terminate processing immediately.
+     C                   MOVE      '1'           *INLR
+      *
+     C                   RETURN
+      *
+     C     #PSSR9        ENDSR                                                   ***PSSR9**
+      *
+**CTDATA CPY@
+(c) Misys International Banking Systems Ltd. 2006

@@ -1,0 +1,1107 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Netting Deals Enquiry')                       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module - Foreign Exchange                    *
+     F*                                                               *
+     F*  FX0940 - FX Netting Deals Enquiry                            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. 245692             Date 09Dec13               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 133143             Date 25Feb98               *
+      *                 CEU003             Date 19Mar98               *
+     F*                 131020             DATE 23Feb98               *
+     F*                 CDL002             DATE 24Apr97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CDL010 - Prevent last user that actioned the trade from      *
+     F*           authorising it.Recompile due to changes in FXDEALPP.*
+     F*  133143 - Program does not allow for MMDDYY date format       *
+     F*  CEU003 - EMU Dealing Settlement Ccy conversion.              *
+     F*  131020 - Applies Fix 127079 (should only show deals not      *
+     F*           netted) and 126779 (includes F5 to refresh screen)  *
+     F*  CDL002 - FX Netting incorporation into core.                 *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*****************************************************************
+     F*    03            EXIT SCREEN                                  *
+     F*    05            REFRESH SCREEN                               *   131020
+     F*    12            CANCEL                                       *
+     F*       31         DEACTIVATE ROLLUP KEY                        *
+     F*       32         SFLNXTCHG INDICATOR                          *
+     F*       33         ROLLUP INDICATOR                             *
+     F*      N34         DISPLAY SUBFILE                              *
+     F*       35         CLEAR SUBFILE                                *
+     F*       36         INITIALIZE SUBFILE                           *
+     F*      N37         DISPLAY SUBFILE CONTROL RECORD               *
+     F*       38         SFLEND INDICATOR                             *
+     F*       40         EOF INDICATOR                                *
+     F*       41         EOF INDICATOR - LIVE DEALS                   *
+     F*       42         EOF INDICATOR - HISTORY DEALS                *
+     F*       43         EOF INDICATOR - SDCUSTLC                     *
+     F*       44         EOF INDICATOR - SDCGRPL1                     *
+     F*       45         EOF INDICATOR - MGOREFLG                     *
+     F*       46         EOF INDICATOR - CFFEEDL0                     *
+     F*       49         WORK INDICATOR                               *
+     F*       57         DISPLAY CUST, CPTY, TEL# on DEALS SELECTION  *
+     F*       58         CHAIN FAIL/EOF INDICATOR                     *
+     F*****************************************************************
+     FDEALSDBLIF  E           K        DISK
+     F*  FX DEALS BY CUSTOMER NO/VALUE DATE (FXDEALPP)
+     FDLDEALL3IF  E           K        DISK
+     F*  FX HISTORY DEALS BY CUSTOMER NO/VALUE DATE (DEALSDB/DLBHISPD)
+     FFX0940DFCF  E                    WORKSTN
+     F*  SCREEN
+     F                                        S1RRN KSFILE FX0940S1
+     FSDCGRPL1IF  E           K        DISK
+     F*  CUSTOMER GROUPS
+     FSDCUSTLCIF  E           K        DISK
+     F*  CUSTOMER BY GROUP
+     FMGOREFLGIF  E           K        DISK
+     F*  MESSAGE REFERENCE BY TRANSACTION NUMBER
+     FCFFEEDL0IF  E           K        DISK
+     F*  CONFIRMATION FEEDBACK BY MODULE, TRANSACTION NUMBER
+     F/COPY WNCPYSRC,FX0940F001
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CY        200  3
+     E                    CYD       200  1 0
+     E/COPY WNCPYSRC,FX0940E001
+     E/COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZFRPEDZ1                                                                   245692
+     E**
+     I/EJECT
+     ICYDDS     E DSSDCURRPD
+      **   Currency details data structure
+     ILIVDTA    E DSDEALSDBL
+      *  Live data read
+     ISAVLIV      DS                           1165
+      *  Live data saved
+      *  Could not use DEFN as LIVDTA is too long
+     IPGMDS     ESDSY2PGDSP
+     I*   (MMDDYY)
+     I            DS
+     I                                        1   60WKMDY
+     I                                        1   20WDRM3
+     I                                        3   40WMRD3
+     I                                        5   60WYR3
+     I*   (YYYYMMDD)
+     I            DS
+     I                                        1   80WDAT2
+     I                                        3   8 WDAT26
+     I                                        1   40WYR2
+     I                                        5   60WMTH2
+     I                                        7   80WDAY2
+      * DATA STRUCTURE TO REDEFINE ARRAY @Q AS INPUT FIELD @@AMTW
+     I            DS
+     I                                        1  130@@AMTW
+     I                                        1  100@@AMT0
+     I                                        1   90@@AMT1
+     I                                        1   80@@AMT2
+     I                                        1   70@@AMT3
+     I* Data structure to redefine value date
+     IDVDDS       DS
+     I                                        1   80DVD
+     I                                        1   40DVDY
+     I                                        5   60DVDM
+     I                                        7   80DVDD
+     I* Data structure to define pair currencies
+     IPCCYDS      DS
+     I                                        1   3 PCCY1
+     I                                        4   6 PCCY2
+     I            DS
+     I                                        1   80FHVDAT
+     I                                        1   40FHVY
+     I                                        5   60FHVM
+     I                                        7   80FHVD
+     IDBERR     E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I** *LOCK IN LDA immediately before and OUT LDA immediately
+     I** after each database error handling.
+     I**
+     I**         Defines :                  134 141 DBFILE
+     I**                                    142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     IRUNDAT    E DSRUNDAT
+     I*
+     I** Data Area giving Installation Control Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     ISDCUST    E DSSDCUSTPD
+     I** CUSTOMER DETAILS
+     I/COPY WNCPYSRC,FXH00098
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS
+     ISDMMOD    E DSSDMMODPD
+     I** MIDAS MODULE DETAILS
+     ISDDEAL    E DSSDDEALPD                                                                  245692
+     I              QQACCD                          @@ACCD                                    245692
+      ** DUMMY RECORD FORMAT FOR DEALING ICD DETAILS                                          245692
+      *                                                                                       245692
+      *  Copy is for Date formatting
+      /COPY ZSRSRC,ZDATE9Z2
+      /COPY ZSRSRC,ZFRPEDZ2                                                                   245692
+     I*
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      CPY2@  80
+      *  Define Save data Field
+     C           *LIKE     DEFN CNUM      SAVCUS
+     C           *LIKE     DEFN BBCSSN    SAVCSN
+     C           *LIKE     DEFN A6NBDP    CDP
+     C           *LIKE     DEFN VDAT      KEYVD
+     C           *LIKE     DEFN FHVDYY    KEYVDY
+     C           *LIKE     DEFN FHVDMM    KEYVDM
+     C           *LIKE     DEFN FHVDDD    KEYVDD
+     C*  ENTRY PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           @@CUS#  6        CUST NO.
+     C                     PARM           @@VALD  6        Net Value Date
+     C                     PARM           @@CCY   3        Net CCY
+     C                     PARM           @@CCYP  6        Net CCY PAIR
+     C                     PARM           @@GRPC  4        GROUP REF
+     C                     PARM           @@NETR 19        Net REF
+     C                     PARM           @@SEL   1        SELECTION
+     C/COPY WNCPYSRC,FXH00099
+     C*
+     C**  KEY LIST FOR LF/DEALSDBL
+     C           CSLKEY    KLIST
+     C                     KFLD           SAVCUS
+     C                     KFLD           KEYVDY
+     C                     KFLD           KEYVDM
+     C                     KFLD           KEYVDD
+     C*
+     C**  KEY LIST FOR LF/DLDEALL3
+     C           CSHKEY    KLIST
+     C                     KFLD           SAVCUS
+     C                     KFLD           KEYVD
+     C*
+     C**  KEY LIST FOR LF/SDCGRPL1
+     C           GRPKEY    KLIST
+     C                     KFLD           KEYG    1
+     C                     KFLD           @@GRPC
+     C*
+     C**  KEY LIST FOR LF/MGOREFLG
+     C           OREFKY    KLIST
+     C                     KFLD           KMODI   2
+     C                     KFLD           KMTRN  15
+     C*
+     C*  MAIN PROCESSING
+     C                     EXSR INIT
+     C                     EXSR DETL
+     C                     EXSR EXIT
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  SR. FILREC   FILL A RECORD OF DEALS SELECTION SUBFILE        *
+     C*                                                               *
+     C*  CALLED FROM: LOADSB                                          *
+     C*  CALLS:                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C           FILREC    BEGSR
+     C*
+     C                     MOVE STATUS    S1PRVS
+     C                     MOVE FHDN38    S1DLNO           DEAL NO
+     C                     MOVE FHCCY1    S1PCCY           BUY CCY
+     C                     Z-ADD0         S1PUAM 100                                          245692
+     C                     Z-ADD0         S1SLAM 100                                          245692
+     C                     Z-ADD0         S1EXRT 138                                          245692
+     C*
+     C**  OBTAIN NO. CCY DECIMAL PLACES FOR BUY CCY
+     C                     Z-ADD1         @K      30
+     C           FHCCY1    LOKUPCY,@K                    58
+      *
+     C           *IN58     IFEQ '1'
+     C                     Z-ADDCYD,@K    CDP
+     C                     ELSE
+     C                     Z-ADD0         CDP
+     C                     END
+      *
+     C                     Z-ADDFHDBUY    @@AMTW
+     C           CDP       IFEQ 0
+     C                     Z-ADD@@AMT0    S1PUAM
+     C                     ELSE
+     C           CDP       IFEQ 1
+     C                     Z-ADD@@AMT1    S1PUAM
+     C                     ELSE
+     C           CDP       IFEQ 2
+     C                     Z-ADD@@AMT2    S1PUAM
+     C                     ELSE
+     C           CDP       IFEQ 3
+     C                     Z-ADD@@AMT3    S1PUAM
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *                                                                                       245692
+      ** Format the amount for output                                                         245692
+      *                                                                                       245692
+     C                     Z-ADD0         ZDECS                                               245692
+     C                     MOVE 'J'       ZECODE                                              245692
+     C                     MOVE S1PUAM    ZFLD15                                              245692
+     C                     EXSR ZFRPED                                                        245692
+     C                     MOVE ZOUT25    S#PUAM 13                                           245692
+     C*
+     C                     Z-ADDFHDXRT    S1EXRT           EXCHANGE RATE
+      *                                                                                       245692
+      ** Format the amount for output                                                         245692
+      *                                                                                       245692
+     C                     Z-ADD8         ZDECS                                               245692
+     C                     MOVE S1EXRT    ZFLD15                                              245692
+     C                     EXSR ZFRPED                                                        245692
+     C                     MOVE ZOUT25    S#EXRT 14                                           245692
+      *                                                                                       245692
+     C                     MOVE FHCCY2    S1SCCY           SELL CCY
+     C*
+     C**  OBTAIN NO. CCY DECIMAL PLACES FOR SELL CCY
+     C                     Z-ADD1         @K      30
+     C           FHCCY2    LOKUPCY,@K                    58
+      *
+     C           *IN58     IFEQ '1'
+     C                     Z-ADDCYD,@K    CDP
+     C                     ELSE
+     C                     Z-ADD0         CDP
+     C                     END
+     C                     Z-ADDFHDSEL    @@AMTW
+     C           CDP       IFEQ 0
+     C                     Z-ADD@@AMT0    S1SLAM
+     C                     ELSE
+     C           CDP       IFEQ 1
+     C                     Z-ADD@@AMT1    S1SLAM
+     C                     ELSE
+     C           CDP       IFEQ 2
+     C                     Z-ADD@@AMT2    S1SLAM
+     C                     ELSE
+     C           CDP       IFEQ 3
+     C                     Z-ADD@@AMT3    S1SLAM
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *                                                                                       245692
+      ** Format the amount for output                                                         245692
+      *                                                                                       245692
+     C                     Z-ADD0         ZDECS                                               245692
+     C                     MOVE S1SLAM    ZFLD15                                              245692
+     C                     EXSR ZFRPED                                                        245692
+     C                     MOVE ZOUT25    S#SLAM 13                                           245692
+     C*
+     C                     MOVELFHNBUY    S1NBUY
+     C                     MOVELFHNSEL    S1NSEL
+     C*
+     C**    GET CUSTOMER SHORT NAME
+     C           @@GRPC    IFNE *BLANKS
+     C                     MOVELSAVCSN    S1CSNM
+     C                     END
+     C*
+     C* WRITE RECORD TO SUBFILE
+     C           SFLCNT    ADD  1         S1RRN
+     C                     ADD  1         WCNT1
+     C                     ADD  1         SFLCNT           # OF SFL RECS
+     C                     WRITEFX0940S1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. MCHFLD   CHECK IF ALL FIELDS MATCH FOR DEALS SELECTION   *
+     C*                                                               *
+     C*  CALLED FROM: S01                                             *
+     C*  CALLS:       FILREC                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           MCHFLD    BEGSR
+     C*
+     C                     MOVE 'Y'       MATCHF  1
+     C*
+     C** Check deal customer agrees with customer looking for
+     C*
+     C           FHDCNO    IFNE SAVCUS
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C*
+     C** Check value date of deal agrees with value date parameter
+     C** First convert value date parameter into CCYYMMDD format
+     C*
+     C                     MOVEL@@VALD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    @@DAYN
+     C                     EXSR ZDATE9
+     C*
+     C                     Z-ADDFHVY      DVDY
+     C                     Z-ADDFHVM      DVDM
+     C                     Z-ADDFHVD      DVDD
+     C*
+     C           DVD       IFNE @@VDT
+     C                     MOVE 'N'       MATCHF
+     C                     END
+     C*
+     C** Check deal is to be netted
+     C*
+     C           FHNBUY    IFEQ 'N'
+     C           FHNSEL    ANDEQ'N'
+     C                     MOVE 'N'       MATCHF
+     C                     END
+     C*
+     C** Only do further checks if record is still valid
+     C*
+     C           MATCHF    IFEQ 'Y'
+     C*
+     C** Check deal currencies against currency parameter if given.
+     C*
+     C           @@CCYP    IFEQ *BLANKS
+     C           @@CCY     ANDNE*BLANKS
+     C*
+     C           FHCCY1    IFNE @@CCY
+     C           FHCCY2    ANDNE@@CCY
+     C           FHCCY1    OREQ @@CCY                                     CEU003
+     C           FHRSCY    ANDNE*BLANKS                                   CEU003
+     C           FHCCY2    OREQ @@CCY                                     CEU003
+     C           FHPSCY    ANDNE*BLANKS                                   CEU003
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C*
+     C** Check deal currencies against currency pair parameter if
+     C** given.
+     C*
+     C           @@CCYP    IFNE *BLANKS
+     C*
+     C** Alpha sort deal currencies.
+     C*
+     C           FHCCY1    IFLE FHCCY2
+     C                     MOVELFHCCY1    PCCY1
+     C                     MOVELFHCCY2    PCCY2
+     C                     ELSE
+     C                     MOVELFHCCY2    PCCY1
+     C                     MOVELFHCCY1    PCCY2
+     C                     END
+     C*
+     C           PCCYDS    IFNE @@CCYP
+     C           FHRSCY    ORNE *BLANKS                                   CEU003
+     C           FHPSCY    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C*
+     C** Check deal net references against the net reference parameter
+     C** if given.
+     C*
+     C           @@NETR    IFNE *BLANKS
+     C*
+     C** If deal buy currency equals the currency parameter, check the
+     C** buy net indicator and buy net reference.
+     C*
+     C           FHCCY1    IFEQ @@CCY
+     C           FHNBUY    IFNE 'Y'
+     C           FHNBRF    ORNE @@NETR
+     C           FHRSCY    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C*
+     C** If deal sell currency equals the currency parameter, check the
+     C** sell net indicator and sell net reference.
+     C*
+     C           FHCCY2    IFEQ @@CCY
+     C           FHNSEL    IFNE 'Y'
+     C           FHNSRF    ORNE @@NETR
+     C           FHPSCY    ORNE *BLANKS                                   CEU003
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** Only do further checks if record is still valid
+     C*
+     C           MATCHF    IFEQ 'Y'
+     C*
+     C** Check status of deals
+     C*
+     C                     MOVEL*BLANKS   STATUS  1
+     C*
+     C** Deal could be authorised.
+     C*
+     C           FHDSTS    IFEQ 'A'
+     C*
+     C** Deal could be manually matched or if Confirmation Matching is
+     C** on, the counterparty status of the confirmation message gives
+     C** the matching status.
+     C*
+     C           FHMTCH    IFEQ 'Y'
+     C                     MOVEL'Y'       STATUS
+     C                     ELSE
+     C           BGCFMT    IFEQ 'Y'
+     C*
+     C** First record read will be the latest confirmation message.
+     C*
+     C                     MOVEL'DL'      KMODI
+     C                     MOVELFHDN38    KMTRN
+     C           OREFKY    CHAINMGOREFLG             45
+     C           *IN45     IFEQ '1'
+     C                     MOVEL'U'       STATUS
+     C                     ELSE
+     C           TRNO      CHAINCFFEEDL0             46
+     C*
+     C           *IN46     IFEQ '1'
+     C                     MOVEL'U'       STATUS
+     C                     ELSE
+     C*
+     C                     SELEC
+     C           CPSX      WHEQ 50
+     C           CPSX      OREQ 97
+     C           CPSX      OREQ 99
+     C                     MOVEL'Y'       STATUS
+     C           CPSX      WHEQ 51
+     C           CPSX      OREQ 52
+     C           CPSX      OREQ 53
+     C           CPSX      OREQ 54
+     C                     MOVEL'M'       STATUS
+     C                     OTHER
+     C                     MOVEL'U'       STATUS
+     C                     ENDSL
+     C*
+     C                     END
+     C                     END
+     C                     ELSE
+     C                     MOVEL'U'       STATUS
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C           FHDSTS    IFEQ 'C'
+     C           FHDSTS    OREQ 'R'
+     C                     MOVEL'O'       STATUS
+     C                     ELSE
+     C                     MOVEL'X'       STATUS
+     C                     END
+     C                     END
+     C*
+     C** Select matched records when the selection parameter is M or N
+     C*
+     C           @@SEL     IFEQ 'M'
+     C           @@NETR    ANDEQ*BLANKS
+     C           @@SEL     OREQ 'N'
+     C           STATUS    IFNE 'Y'
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C*
+     C** Select all status records when selection parameter is blanks.
+     C*
+     C           @@SEL     IFEQ *BLANKS
+     C           @@NETR    ANDEQ*BLANKS
+     C*
+     C           STATUS    IFEQ 'X'
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C*
+     C** Select matched records with no net reference when the
+     C** selection parameter is 'N'.
+     C*
+     C***********@@SEL     IFEQ 'N'                                       131020
+     C           @@NETR    IFEQ ' '                                       131020
+     C*
+     C** Check the buy net indicator and buy net reference.
+     C** or the sell net indicator and sell net reference.
+     C*
+     C           FHNBUY    IFEQ 'Y'
+     C           FHNBRF    ANDEQ*BLANKS
+     C/COPY WNCPYSRC,FX0940C001
+     C           FHNSEL    OREQ 'Y'
+     C           FHNSRF    ANDEQ*BLANKS
+     C/COPY WNCPYSRC,FX0940C002
+     C                     MOVEL'Y'       MATCHF
+     C                     ELSE
+     C                     MOVEL'N'       MATCHF
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,FX0940C003
+     C*
+     C* ADD RECORD TO SUBFILE IF MATCH SUCCESSFUL
+     C           MATCHF    IFEQ 'Y'
+     C                     EXSR FILREC
+     C                     END
+     C/COPY WNCPYSRC,FXH00100
+     C*
+     C           ENDMCH    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. LODSB3   FILL A PAGE IN DEALS SELECTION SUBFILE          *
+     C*                                                               *
+     C*  CALLED FROM: S01                                             *
+     C*  CALLS:       LDSB3A-H                                        *
+     C*                                                               *
+     C*****************************************************************
+     C           LODSB3    BEGSR
+     C*
+     C* SHOULD START DISPLAY WITH 1 MORE THAN THE END OF THE PRIOR SCREEN
+     C           SFLCNT    ADD  1         S1RRND
+     C*
+     C*
+     C** IF CUSTOMER INPUT
+     C*
+     C           @@GRPC    IFEQ *BLANKS
+     C                     SETON                     57
+     C                     EXSR LDSB3B
+     C*
+     C** IF GROUP INPUT
+     C*
+     C                     ELSE
+     C                     SETOF                     57
+     C           *IN43     DOWNE'1'
+     C           S1RRND    ANDLT14
+     C/COPY WNCPYSRC,FX0940C004
+     C*
+     C                     EXSR LDSB3B
+     C*
+     C** REMOVE INDICATORS FOR END OF CUSTOMER DETAILS
+     C*
+     C                     SETOF                     3138
+     C*
+     C           S1RRND    IFLT 14
+     C           @@GRPC    READESDCUSTLC                 43
+     C/COPY WNCPYSRC,FXH00101
+     C                     MOVELBBCUST    SAVCUS
+     C                     MOVELBBCSSN    SAVCSN
+     C                     MOVE 'Y'       WFRDHS
+     C                     MOVE 'Y'       WFRDLV
+     C           CSLKEY    SETLLDEALSDBL             40
+     C           CSHKEY    SETLLDLDEALL3             42
+     C/COPY WNCPYSRC,FX0940C005
+     C                     END
+     C                     END
+     C*
+     C** SET INDICATORS FOR END OF GROUP DETAILS
+     C*
+     C           S1RRND    IFLT 14
+     C           *IN43     OREQ '1'
+     C/COPY WNCPYSRC,FX0940C006
+     C                     SETON                     3138
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. LDSB3B   FILL A PAGE IN DEALS SELECTION SUBFILE          *
+     C*                                                               *
+     C*  CALLED FROM: LODSB3                                          *
+     C*  CALLS:       MCHFLD                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           LDSB3B    BEGSR
+     C*
+     C**  CUSTOMER NUMBER ORDER
+     C           WFRDLV    IFEQ 'Y'
+     C           SAVCUS    READEDEALSDBL                 40
+     C                     END
+     C           WFRDHS    IFEQ 'Y'
+     C           SAVCUS    READEDLDEALL3                 42
+     C                     END
+     C                     Z-ADD0         WCNT1   20
+      *
+     C           *IN40     DOWEQ'0'
+     C           WCNT1     ANDLT14
+     C           *IN42     OREQ '0'
+     C           WCNT1     ANDLT14
+      *  Reset Read Indicators
+     C                     MOVE 'N'       WFRDHS  1
+     C                     MOVE 'N'       WFRDLV  1
+      *  Select Deal to be processed
+     C                     Z-ADDFHVDYY    WYR2
+     C                     Z-ADDFHVDMM    WMTH2
+     C                     Z-ADDFHVDDD    WDAY2
+     C                     Z-ADDWDAT2     FHVDAT  80
+     C                     MOVE WDAY2     WDRM3
+     C                     MOVE WMTH2     WMRD3
+     C                     MOVE WYR2      WYR3
+      *  Calculate Day Number of Value Date
+     C                     MOVE WKMDY     ZDATE
+     C                     EXSR ZDATE1
+      *  Select deal to process
+      *    History used if read, Value date earlier than live value date
+     C           VDAT      IFLT ZDAYNO
+     C           *IN42     ANDEQ'0'
+      *    History used if read, Value dates equal but Deal no. lower
+     C           VDAT      OREQ ZDAYNO
+     C           DLNO      ANDLEFHDN38
+     C           *IN42     ANDEQ'0'
+      *    History used if History read but live not
+     C           *IN40     OREQ '1'
+     C           *IN42     ANDEQ'0'
+     C                     MOVE LIVDTA    SAVLIV
+     C                     EXSR HSTREF
+     C                     MOVE 'Y'       WFRDHS
+     C                     ELSE
+     C                     MOVE 'Y'       WFRDLV
+     C                     END
+     C* CHECK FOR A MATCH AND WRITE TO SUBFILE
+     C                     EXSR MCHFLD
+      * Reset Live Data
+     C           WFRDLV    IFEQ 'N'
+     C           *IN40     ANDEQ'0'
+     C                     MOVE SAVLIV    LIVDTA
+     C                     END
+      *  Read Deals if screen not full
+     C           WCNT1     IFNE 14
+      *  History Deals
+     C           WFRDHS    IFEQ 'Y'
+     C           SAVCUS    READEDLDEALL3                 42
+     C                     END
+      *  Live Deals
+     C           WFRDLV    IFEQ 'Y'
+     C           SAVCUS    READEDEALSDBL                 40
+     C                     END
+     C                     END
+      *
+     C                     END
+     C*
+     C**  SET ON INDICATORS FOR SFLEND AND DEACTIVATE ROLLUP KEY
+     C           WCNT1     IFNE 14
+     C           *IN40     OREQ '1'
+     C           *IN42     ANDEQ'1'
+     C                     SETON                     3138
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. DETL     MAIN DETAIL ROUTINE                             *
+     C*                                                               *
+     C*  CALLED FROM: MAIN                                            *
+     C*  CALLS:       S01                                             *
+     C*               S02                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           DETL      BEGSR
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C           *IN03     DOWEQ'0'                        EXIT
+     C           *IN12     ANDEQ'0'                        CANCEL
+     C           *IN05     OREQ '1'                        REFRESH        131020
+     C*                                                                   131020
+      *  Reset refresh Indicator                                          131020
+     C           *IN05     IFEQ '1'                        REFRESH        131020
+     C                     MOVE *OFF      *IN05                           131020
+     C                     ENDIF                                          131020
+     C*
+      *  Display Deals selected
+     C                     EXSR S01                        DEALS SELECT
+     C                     END
+     C*
+     C           ENDDET    TAG
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'E'       @@SEL
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*  SR. S01      DEALS SELECTION ROUTINE                         *
+     C*                                                               *
+     C*  CALLED FROM: DETL                                            *
+     C*  CALLS:       LODSB1, LODSB2                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           S01       BEGSR
+     C*
+     C                     MOVE 'N'       DSPFLG  1
+     C*
+     C**  CLEAR THE SUBFILE
+     C                     SETON                     343537
+     C                     WRITEFX0940C1
+     C*
+     C                     MOVEA'00000'   *IN,34
+     C                     SETOF                     31
+     C                     MOVE '1'       *IN33            ROLLUP
+     C                     Z-ADD0         S1RRN   40
+     C                     Z-ADD0         SFLCNT  50
+     C*
+     C**  SET STARTING POSITION ON FILE
+     C                     EXSR SETSRC
+     C*
+     C           *IN03     DOWEQ'0'                        EXIT
+     C           *IN12     ANDEQ'0'                        CANCEL
+     C           *IN05     ANDEQ'0'                        REFRESH        131020
+     C*
+     C**  IF FIRST SCREEN OR ROLLUP PRESSED, LOAD SUBFILE WITH
+     C**  DEAL DETAILS.
+     C           *IN33     IFEQ '1'
+     C*
+     C                     EXSR LODSB3
+     C*
+     C                     END
+     C*
+     C*
+     C* DISPLAY SUBFILE IF THERE ARE ANY RECORDS
+     C           S1RRN     IFEQ 0
+     C                     MOVE '1'       *IN35            CLEAR
+     C                     MOVE '0'       *IN37            SFLDSPCTL
+     C                     CALL 'ZA0240'
+     C                     PARM 'FXM5003' MSGID
+     C                     END
+     C*
+     C           S01DSP    TAG
+      *  RESET INVALID SFLRCDNBR VALUE
+     C           S1RRND    IFGT S1RRN
+     C           S1RRND    IFGT 14
+     C                     SUB  14        S1RRND
+     C                     ELSE
+     C                     Z-ADD1         S1RRND
+     C                     END
+     C                     END
+      *   DISPLAY SUBFILE
+     C                     WRITEFX0940CM
+     C                     EXFMTFX0940C1                   DISPLAY SUBFILE
+     C*
+     C* NEXT RECORD
+     C           S01NXT    TAG
+     C* CLEAR PROGRAM QUEUE
+     C                     CALL 'ZA0250'
+     C*
+     C                     END
+     C*
+     C           S01END    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. SETSRC   SET STARTING POSITION ON APPROPRIATE FILE FOR   *
+     C*               DESIRED SEARCH                                  *
+     C*                                                               *
+     C*  CALLED FROM: S01                                             *
+     C*  CALLS:       NONE                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           SETSRC    BEGSR
+     C*
+     C                     MOVE 'Y'       WFRDHS
+     C                     MOVE 'Y'       WFRDLV
+     C*
+     C** If processing a customer, get details about customer
+     C*
+     C           @@GRPC    IFEQ *BLANKS
+     C                     MOVEL@@CUS#    SAVCUS
+     C                     MOVEL@@CUS#    KEYC
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM '*KEY   ' OPTN    7
+     C                     PARM           KEYC   10
+     C                     PARM *BLANKS   KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           RTCD      IFNE *BLANKS
+     C                     Z-ADD10        DBASE
+     C                     MOVE SAVCUS    DBKEY
+     C                     MOVE 'SDCUSTPD'DBFILE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBBCUST    S1@CUS
+     C                     MOVELBBCSSN    S1@CSN
+     C                     MOVELBBCRNM    S1@CRN
+     C                     END
+     C*
+     C** If processing a group, set file at first customer in the group
+     C** and get details about group
+     C*
+     C                     ELSE
+     C           @@GRPC    SETLLSDCUSTLC             43
+     C/COPY WNCPYSRC,FXH00102
+     C           @@GRPC    READESDCUSTLC                 43
+     C/COPY WNCPYSRC,FXH00103
+     C                     MOVELBBCUST    SAVCUS
+     C                     MOVELBBCSSN    SAVCSN
+     C*
+     C           GRPKEY    CHAINSDCGRPL1             44
+     C*
+     C           *IN44     IFEQ '1'
+     C                     Z-ADD11        DBASE
+     C                     MOVE 'SDCGRPPD'DBFILE
+     C                     MOVEL@@GRPC    DBFILE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE D6GPCD    S1@GRP
+     C                     MOVE D6GPDS    S1@GPD
+     C                     END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FXH00206
+     C                     MOVEL@@VALD    S1@VLD
+     C                     MOVEL@@VALD    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    @@DAYN
+     C                     Z-ADDZDAYNO    KEYVD
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     DVD
+     C                     Z-ADDDVDY      KEYVDY
+     C                     Z-ADDDVDM      KEYVDM
+     C                     Z-ADDDVDD      KEYVDD
+     C*
+     C           CSLKEY    SETLLDEALSDBL             40
+     C           CSHKEY    SETLLDLDEALL3             42
+     C*
+     C/COPY WNCPYSRC,FX0940C007
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. HSTREF   History Reformat Subroutine                     *
+     C*                                                               *
+     C*  CALLED FROM:                                                 *
+     C*  CALLS:       NONE                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           HSTREF    BEGSR
+      *
+     C                     MOVE DLNO      FHDN38
+     C                     Z-ADDVDAT      @@DAYN  50
+     C                     EXSR ZDATE9
+     C           @@RTN     IFNE '1'
+     C                     MOVE @@VDT     FHVDAT
+     C                     END
+     C                     MOVE RECI      FHDSTS
+     C           RECI      IFEQ 'D'
+     C                     MOVE 'A'       FHDSTS
+     C                     END
+     C                     MOVE CNUM      FHDCNO
+     C                     MOVE EXRT      FHDXRT
+     C                     MOVE PUCY      FHCCY1
+     C                     MOVE SLCY      FHCCY2
+     C                     Z-ADDPUAM      FHDBUY
+     C                     Z-ADDSLAM      FHDSEL
+     C*
+     C                     MOVELNETBY     FHNBUY
+     C                     MOVELNETBR     FHNBRF
+     C                     MOVELNETSL     FHNSEL
+     C                     MOVELNETSR     FHNSRF
+     C                     MOVELMATCH     FHMTCH
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SR. INIT.    INITIALIZATION ROUTINE                          *
+     C*                                                               *
+     C*  CALLED FROM: MAIN                                            *
+     C*  CALLS:       NONE                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C                     MOVE *BLANKS   MSGID  10
+     C**********           MOVE @@CUS#    @@CUSN  60                                          CSD027
+     C                     MOVE @@CUS#    @@CUSN  6                                           CSD027
+     C                     MOVEL'*'       KEYG
+      *  Read in LDA
+     C           *NAMVAR   DEFN           LDA   256
+      *  Read in RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C* CLEAR PROGRAM QUEUE
+     C                     CALL 'ZA0250'
+     C*
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                                                       245692
+      ** Call Access Program for DEALING ICD Details                                          245692
+      *                                                                                       245692
+     C                     CALL 'AODEALR1'                                                    245692
+     C                     PARM '*DBERR ' @RTCD                                               245692
+     C                     PARM '*FIRST ' @OPTN                                               245692
+     C           SDDEAL    PARM SDDEAL    DSFDY                                               245692
+      *                                                                                       245692
+      *
+      ** Access Midas Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           BJDFIN    IFEQ 'D'                                       133143
+     C                     MOVE '0'       *IN98
+     C                     ELSE                                           133143
+     C                     MOVE '1'       *IN98                           133143
+     C                     ENDIF                                          133143
+     C*
+     C           @@CCY     IFNE *BLANKS
+     C                     SETON                     59
+     C                     MOVE @@CCY     S2CCY
+     C                     END
+     C*
+     C           @@CCYP    IFNE *BLANKS
+     C                     SETON                     60
+     C                     MOVEL@@CCYP    S2CCY1
+     C                     MOVE @@CCYP    S2CCY2
+     C                     END
+     C*
+     C           @@NETR    IFNE *BLANKS
+     C                     SETON                     61
+     C                     MOVE @@NETR    S2NETR
+     C                     END
+     C*
+     C** LOAD CURRENCY AND DECIMAL PLACES ARRAYS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM *BLANKS   @KEYCY  3
+     C           CYDDS     PARM CYDDS     DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '*FIRST ' DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 006 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         @K
+     C*
+     C           @RTCD     DOWEQ*BLANKS
+     C           @K        OREQ 200
+     C*
+     C                     ADD  1         @K
+     C                     MOVELA6CYCD    CY,@K
+     C                     Z-ADDA6NBDP    CYD,@K
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM *BLANKS   @KEYCY
+     C           CYDDS     PARM CYDDS     DSSDY
+     C                     ENDDO
+     C*
+     C/COPY WNCPYSRC,FX0940C008
+     C                     ENDSR
+      ***************************************************************                         245692
+      /EJECT                                                                                  245692
+      /COPY ZSRSRC,ZFRPEDZ4                                                                   245692
+     C/EJECT
+     C*****************************************************************
+     C*  SR. EXIT.    EXIT ROUTINE                                    *
+     C*                                                               *
+     C*  CALLED FROM: MAIN                                            *
+     C*  CALLS:       NONE                                            *
+     C*                                                               *
+     C*****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C***  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELDBERR     LDA
+     C                     OUT  LDA
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C***  Call Standard DB Error Handler.
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C*
+     C***  If *PSSR already run, then just end the program here.
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR EXIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C**
+      /COPY ZSRSRC,ZDATE9Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

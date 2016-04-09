@@ -1,0 +1,143 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*        Midas - Close of Business Processing                       */
+/*                                                                   */
+/*       CBCE007 - CB Reset APOSTPD LF access paths to *IMMED        */
+/*                                                                   */
+/*      (c) Misys International Banking Systems Ltd. 2008            */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/*      Midas Plus 1.4 Base -----------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       CCB016 - COB Enhancements: use OPNDBF to rebuild access     */
+/*                path in case maintenance was changed from *REBLD.  */
+/*                Error handler for shared access path allocation.   */
+/*                Delay LF Access paths over APOSTPD during GLC42.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(20)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&LGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LGFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&KEYLENGTH) TYPE(*DEC) LEN(3 0) VALUE(15)
+             DCL        VAR(&KEYDATA) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&SNDLENGTH) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&SNDINFO) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MSGKEY) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MSGEID) TYPE(*CHAR) LEN(7)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+             SNDPGMMSG  MSG('CBCE007 - CB Reset APOSTPD Logical File +
+                          access paths') TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+ 
+             CHGVAR     VAR(&DTAQLIB) VALUE(&PRE *TCAT 'XLIB')
+ 
+/* Read a message from the file information dataqueue                                             */
+ 
+ RCVDTAQ:    CHGVAR     VAR(&KEYDATA) VALUE('999999999999999')
+             CALL       PGM(QRCVDTAQ) PARM('CCB016FILE' &DTAQLIB +
+                          &MSGLENGTH &MSGDATA &RCVWAIT 'LE' +
+                          &KEYLENGTH &KEYDATA &SNDLENGTH &SNDINFO)
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') +
+                          THEN(GOTO CMDLBL(END))
+ 
+             CHGVAR     VAR(&LGLIB) VALUE(%SUBSTRING(&MSGDATA 1 10))
+             CHGVAR     VAR(&LGFILE) VALUE(%SUBSTRING(&MSGDATA 11 10))
+ CHGLF:
+             CHGLF      FILE(&LGLIB/&LGFILE) MAINT(*IMMED)
+             MONMSG     MSGID(CPF7304) EXEC(DO) /* Not changed */
+ 
+               /* Receive last escape message */
+ 
+               RCVMSG MSGTYPE(*LAST) RMV(*NO) KEYVAR(&MSGKEY) MSGID(&MSGEID)
+ 
+               /* Receive previous diagnostic message */
+ 
+             RCVMSG     MSGTYPE(*PRV) MSGKEY(&MSGKEY) RMV(*NO) +
+                          KEYVAR(&MSGKEY) MSGID(&MSGEID)
+ 
+               IF (&MSGEID = 'CPF3203') DO
+ 
+                 /* Cannot allocate object - possible shared access path rebuild */
+                 /* in progress. Wait and retry.                                 */
+ 
+                 DLYJOB DLY(60)
+ 
+                 GOTO CHGLF
+               ENDDO
+             ENDDO
+             MONMSG     MSGID(CPF0000)
+ 
+/* Ensure that logical file is usable now or rebuild access path synchronously in */
+/* case it previously has maintenance option set to *REBLD.                       */
+ 
+ OPNDBF:     OPNDBF     FILE(&LGLIB/&LGFILE) OPTION(*INP)
+             MONMSG     MSGID(CPF4125) EXEC(DO) /* Open failed */
+ 
+               /* Receive last escape message */
+ 
+               RCVMSG MSGTYPE(*LAST) RMV(*NO) KEYVAR(&MSGKEY) MSGID(&MSGEID)
+ 
+               /* Receive previous diagnostic message */
+ 
+             RCVMSG     MSGTYPE(*PRV) MSGKEY(&MSGKEY) RMV(*NO) +
+                          KEYVAR(&MSGKEY) MSGID(&MSGEID)
+ 
+               IF (&MSGEID = 'CPF4126') DO
+ 
+                 /* Object not available - possible shared access path rebuild */
+                 /* is in progress. Wait and retry.                            */
+ 
+                 DLYJOB DLY(60)
+ 
+                 GOTO OPNDBF
+               ENDDO
+             ENDDO
+             CLOF       OPNID(&LGFILE)
+ 
+             GOTO       CMDLBL(RCVDTAQ)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE007 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+/* Send FINISH message to termination message queue to indicate the program has                   */
+/* completed.                                                                                     */
+ 
+ END:        CHGVAR     VAR(%SST(&MSGDATA 1 20)) VALUE('FINISH')
+ 
+             CALL       PGM(QSNDDTAQ) PARM('CCB016TERM' &DTAQLIB +
+                          &MSGLENGTH &MSGDATA)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

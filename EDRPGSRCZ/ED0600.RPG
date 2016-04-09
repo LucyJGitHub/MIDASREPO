@@ -1,0 +1,153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Multi-Currency Rollovers extract')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0600 - Multi-Currency Rollover extract program             *
+      *                                                               *
+      *  Function: This program is called just after LE0400 in the    *
+      *            close of business to extract all loans which       *
+      *            have undergone multi-currency rollover today.      *
+      *            These records will be processed later on in        *
+      *            for export to Global Manager.                      *
+      *                                                               *
+      *  Called By: LEC0604 - History Processing                      *
+      *                                                               *
+      *  Calls:     AO/AOBANKR0                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CLE042             Date 06Sep05               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU031 *CREATE     Date 12Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CEU031 - EMU Global Manager Changes.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDACT5L0IF  E                    DISK         KINFSR *PSSR
+      * Lending Actions File,  select AMTP = 'MC'
+      *
+     FEDMCRLPDO   E                    DISK         KINFSR *PSSR
+      * Multi-Ccy Rolled Over Loans Extract
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  40 -  EOF, EDACT5L0                                          *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *****************************************************************
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Copyright Statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Read all records in Action File EDACT5L0, write
+      ** details to file EDMCRLPD.
+      *
+     C                     READ EDACT5L0                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+     C**********           Z-ADDLNRF      EDLNRF                                              CLE148
+     C                     MOVELLNRF      EDLNRF                                              CLE148
+     C                     Z-ADDVDAT      EDVDAT
+      *
+      ** Write record to file
+      *
+     C                     WRITEEDMCRLD0
+      *
+      ** Read next rollover record
+      *
+     C                     READ EDACT5L0                 40
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0600'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,639 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Update SWIFT A/c's closed today')             *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas  MESSAGE MANAGEMENT
+0005 F*                                                               *
+0006 F*  ME0240 - UPDATE S.W.I.F.T ACCOUNTS FOR ACCOUNTS CLOSED       *
+0006 F*           TODAY                                               *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0009 F*                                                               *
+      *  Last Amend No. AR796439           Date 23Jul12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 261155             Date 11Sep09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG21806           Date 27Nov08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 249040             Date 16Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 218515             Date 06Jun06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 163501             Date 31Jan01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 155982             Date 18Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CSW004             DATE 13NOV95               *
+     F*                 041393             DATE 15DEC93               *
+     F*                 S01310             DATE 06APR91               *
+     F*                 LN0125             DATE 08MAY90               *
+     F*                 S01199             DATE 02JAN90               *
+     F*                 S01117             DATE 02JAN90               *
+     F*                                                               *
+0011 F*                                                               *
+0012 F*****************************************************************
+     F*                                                               *
+      *  AR796439 - MEC103 00001. ME0240 FILE CONTROLS OUT OF BALANCE.*
+      *             For accounts opened and closed on the same day,   *
+      *             where DACO is backvalued, use ORED to check the   *
+      *             open date. APPLIED FIX AR694017 which             *
+      *             Enhanced fix 257225 to also cater scenario for    *
+      *             accounts opened and closed but was also reopened  *
+      *             on same day due to postings (Child: AR796440)     *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  261155 - Component MEC103 has failed in Amsterdam COB.       *
+      *           Applied core fix 253800 & 253800A.                  *
+      *  253800A- Used ORED instead of DACO in determining that the   *
+      *           account is opened and closed on the same day        *
+      *  253800 - Account opened and closed the same day should       *
+      *           still be counted in accounts opened. This is insync *
+      *           with the process of updating ACCNTAC in AMAD        *
+      *  BUG21806 - Applied fix 21237                                 *
+      *  BUG21237 - COB MEC103 failed.  Report ME0240AU shows FOOB    *
+      *             for number of accounts opened.                    *
+      *  249040 - Applied fix 244106.                                 *
+      *  244106 - MEC103 fails due to FCOOB. Include LCD in checking  *
+      *           number of accounts opened. (Partial)                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  218515 - FCOOB during COB. Reinstate fix 041393 because NORE *
+     F*           is being decremented already by pgm/ME0021 during   *
+     F*           deletion of Swift A/cs so there is no need to add   *
+     F*           the number of deleted records to the total number.  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  163501 - Remove fix 041393, which is inconsistent with       *
+     F*           SWIFT Account maintenance and ME0040 and causes     *
+     F*           FCOOB problems in COB.                              *
+     F*  155982 - Deletion of wrong SWIFT Account in PF/SWACSSB       *
+     F*  CSW004 - 'MT940 Destination' field added to PF/SWACSSB       *
+     F*  041393 - Remove file controls calculation for deleted        *
+     F*           records                                             *
+     F*  S01310 - RATIONALISATION - PROGRAM BASED ON SW0010 IN        *
+     F*           MIDAS SWIFT DIRECT LINK                             *
+     F*  LN0125 - REPORT SHOULD HAVE 'AU' AT THE END OF THE REF.      *
+     F*  S01194 - Copyright                                           *
+     F*  S01117 - Update LDA                                          *
+     F*           Change MS0240P1 to MS0240AU                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0047 F***ACDETAB IP AF     400            DISK                                                CGL029
+     FACDETAB IP AF     573            DISK                                                   CGL029
+0048 F*WACS***US AF      64 15AI     2 DISK                               CSW004
+0048 F***SWACS** US AF      75 15AI     2 DISK                                         CSW004 CGL029
+     FSWACS   US AF      85 21AI     2 DISK                                                   CGL029
+0047 FACDETAA IS  F     400            DISK
+0047 FACDETAC IS  F     400            DISK
+0049 FTABMS   IF  F      96 12AI     2 DISK
+0050 F*MS0240P1O   F     132            PRINTER                           S01117
+0050 F*MS0240AUO   F     132            PRINTER                           S01310
+0050 FME0240AUO   F     132            PRINTER                            S01310
+     F/COPY WNCPYSRC,ME0240F001
+0014 F**                                                                **
+0015 F**ID F  C  H  L    FUNCTION OF INDICATORS                         **
+0016 F**                                                                **
+0017 F**01            ACCOUNTS DETAILS FILE - HEADER RECORD             **
+0018 F**02                                  - DETAIL RECORD             **
+0019 F**03                                  - TRAILER RECORD            **
+0020 F**04                                  - CATCH-ALL                 **
+0021 F**05            SWIFT ACCOUNTS FILE - HEADER RECORD               **
+0022 F**06                                - DETAIL RECORD               **
+0023 F**07                                - TRAILER RECORD              **
+0024 F**08                                - CATCH-ALL                   **
+0025 F**09            TABLE FILE - I.C.D.RECORD 1                       **
+0026 F**10                       - CATCH-ALL                            **
+0027 F**      20      FIRST CYCLE INDICATOR                             **
+0028 F**      30      ACDET RECORD IS CLOSED - TRANSACTION FAILURE      **
+0029 F**      31                       OPENED                           **
+0030 F**      32                       RE-OPENED                        **
+0031 F**      33                       CLOSED                           **
+0032 F**      34,35   SWACS RECORD IS CLOSED                            **
+0033 F**      40      NO.OF A/C'S OPENED TOTALS DISAGREE                **
+0034 F**      41                  CLOSED TOTALS DISAGREE                **
+0035 F**      42                  RE-OPENED TOTALS DISAGREE             **
+0036 F**      43                  CLOSED - TRANS.FAILURES TOTALS DISAGREE*
+0037 F**      44                  CONTROL TOTALS DISAGREE               **
+0038 F**      50      S/SWACS FILE CONTROLS DO NOT BALANCE              **
+0039 F**      99      USED BY STANDARD SUBROUTINE ZSYSTM                **
+0040 F**         U7   FILE CONTROLS OUT OF BALANCE                      **
+0041 F**         U7,U8DATABASE IN ERROR                                 **
+0042 F**           MR MATCH BETWEEN S/SWACS AND S/ACDET OVER THE        **
+0043 F**              CUSTOMER NUMBER, CURRENCY CODE, ACCOUNT CODE      **
+0044 F**              AND ACCOUNT SEQUENCE FIELDS                       **
+0045 F**                                                                **
+0046 F********************************************************************
+     E*   Copyright array                                                 S01194
+     E                    CPY@    1   1 80                                S01194
+     E********************************************************************
+0051 I*
+0052 I*
+0053 I*    ACCOUNTS DETAILS FILE - HEADER RECORD.
+0054 I*
+0055 IACDETAA NS  01   1 CH
+0056 I                                        1   1 RECI
+0057 I                                       23  23 ORDI
+0058 I                                    P  24  260FLSZ
+0059 I*
+0060 I*
+0061 I*    ACCOUNTS DETAILS FILE - DETAIL RECORD.
+0062 I*
+0063 IACDETAB NS  02   1 CD
+0064 I       OR        1 CC
+0065 I                                        1   1 RECI
+0066 I**********                              2   70CNUM    M4                                CSD027
+0066 I                                        2   7 CNUM    M4                                CSD027
+0067 I                                        8  10 CCY     M3
+0068 I**********                             11  140ACOD    M2                                CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0069 I                                       15  160ACSQ    M1
+0070 I                                       23  250BRCD
+0071 I                                       26  26 ATYP
+0072 I                                       27  27 STYP
+0073 I                                       29  29 ACST
+0074 I                                    P  30  320DACO
+0075 I                                    P  33  350DACC
+0076 I                                       36  55 ANAM
+0077 I                                    P  56  630LDBL
+0078 I                                    P  64  710CLBL
+0079 I                                       72  72 STFQ
+0080 I                                       73  740STDY
+0081 I                                    P  75  770LSTD
+0082 I                                    P  78  800NSTD
+0083 I                                    P  81  820LSTP
+0084 I                                    P  83  900CFSB
+0085 I                                    P  91  930LMVD
+0086 I                                    P  94 1010EPLB
+0087 I                                    P 102 1090EPCB
+0088 I                                    P 110 1170YTDB
+0089 I                                    P 110 1170CFCB
+0090 I                                      118 118 GLBT
+     I                                    P 135 1370ORED                                    BUG21237
+0091 I                                    P 138 1400DLIM
+0092 I                                    P 141 1430LRCR
+0093 I                                    P 144 1510RTCB
+0094 I                                    P 152 1590RTLB
+0095 I                                    P 160 1660DITM
+0096 I                                    P 167 1730CITM
+0097 I                                    P 178 1837CDIR
+0098 I                                    P 184 1897CCIR
+0099 I                                    P 178 1837CDIR
+0100 I                                    P 184 1897CCIR
+0101 I                                      190 1990ACNO
+0102 I                                      200 200 RETB
+0103 I                                      201 201 ODSC
+0104 I                                    P 202 2070ODLN
+0105 I                                    P 208 2100ODED
+0106 I                                    P 211 2120DIOD
+0107 I                                      213 2150FACT
+0108 I                                      216 2170FCNO
+0109 I                                      218 219 EFAC
+0110 I                                    P 220 2270HELD
+0111 I                                    P 228 2330MINB
+0112 I                                    P 234 2360LACD
+0113 I                                    P 237 2380LISP
+0114 I                                    P 239 2410RRNM
+0115 I                                      242 2430DRIB
+0116 I                                    P 244 2497DRIS
+0117 I                                    P 250 2520DRCD
+0118 I                                      253 2530DRIC
+0119 I                                      254 254 DRIF
+0120 I                                      255 2560DRDY
+0121 I                                    P 257 2590NDID
+0122 I                                    P 260 2620LDID
+0123 I                                    P 263 2690LDIA
+0124 I                                      270 270 SDAP
+0125 I                                    P 271 2730LPAR
+0126 I                                    P 274 2800DIIE
+0127 I                                    P 281 2880DAIC
+0128 I                                    P 289 2950MADI
+0129 I                                    P 296 3020GADI
+0130 I                                      303 303 DDIS
+0131 I                                    P 304 3060DDIA
+0132 I                                    P 307 3090OLDR
+0133 I                                      310 3110OLDB
+0134 I                                    P 312 3177OLDS
+0135 I                                      318 3190CRIB
+0136 I                                    P 320 3257CRIS
+0137 I                                    P 326 3280CRCD
+0138 I                                      329 3290CRIC
+0139 I                                      330 330 CRIF
+0140 I                                      331 3320CRDY
+0141 I                                    P 333 3350NCID
+0142 I                                    P 336 3380LCID
+0143 I                                    P 339 3450LCIA
+0144 I                                      346 346 SCAP
+0145 I                                    P 347 3490LPAP
+0146 I                                    P 350 3560CIIE
+0147 I                                    P 357 3640CAIC
+0148 I                                    P 365 3710MACI
+0149 I                                    P 372 3780GACI
+0150 I                                      379 379 CDIS
+0151 I                                    P 380 3820DCIA
+0152 I                                    P 383 3850OLCR
+0153 I                                      386 3870OLCB
+0154 I                                    P 388 3937OLCS
+0155 I                                    P 394 3960LCD
+0156 I                                      397 397 CHTP
+0157 I                                    P 398 4000TNLU
+     I                                      554 5630ACOD    M2                                CGL029
+0158 I*
+0159 I*
+0160 I*    ACCOUNTS DETAILS FILE - TRAILER RECORD.
+0161 I*
+0162 IACDETAC NS  03   1 CT
+0163 I                                        1   1 RECI
+0164 I                                    P  23  250NORE
+0165 I                                    P  23  250ANORE
+0166 I                                    P  29  310NOOA
+0167 I                                    P  32  340NINU
+0168 I                                    P  35  370NOAM
+0169 I                                    P  38  400NOCL
+0170 I                                    P  41  430NOAU
+0171 I                                    P  44  460NINP
+0172 I                                    P  47  490NORD
+0173 I                                    P  50  520NOCF
+0174 I                                    P  53  550NAMP
+0175 I                                    P  56  580NAUP
+0176 I                                    P  59  660HWND
+0177 I                                    P  67  680HDCD
+0178 I                                    P  69  760HWNC
+0179 I                                    P  77  780HDCC
+0180 I                                    P 395 3970LCD
+0181 I                                    P 398 4000TNLU
+0187 I**
+0188 I**
+0189 I**   SWIFT ACCOUNTS FILE - HEADER RECORD
+0190 I**
+0191 ISWACS   NS  05   1 CH   2 CH
+0192 I                                        1   1 RECID
+0193 I                                        2   2 KEYID
+0194 I                                    P  17  190SIZE
+0195 I                                        1  64 SWACH
+0196 I**
+0197 I**
+0198 I**   SWIFT ACCOUNTS FILE - DETAIL RECORD
+0199 I**
+0200 ISWACS   NS  06   1 CD
+0201 I       OR        1 CC
+0202 I                                        1   1 RECID
+0203 I**********                              2   70CNUM    M4                                CSD027
+0203 I                                        2   7 CNUM    M4                                CSD027
+0204 I                                        8  10 CCY     M3
+0205 I**********                             11  140ACODE   M2                                CGL029
+     I                                       11  140CODEQQ                                    CGL029
+0206 I                                       15  160ACSEQ   M1
+0207 I                                    P  17  230CFBAL
+0208 I                                    P  24  260LSDT
+0209 I                                    P  27  290NSDT
+0210 I                                       30  390RACNO
+0211 I                                       40  40 SFREQ
+0212 I                                       41  420SDAY
+0213 I                                    P  43  450LSNO
+0214 I                                       46  460UPREP
+0215 I                                       47  47 DEMST
+     I                                       48  500BRCA                  155982
+0216 I                                    P  58  600DTLC
+0217 I                                       61  61 CHTP
+0218 I                                    P  62  640TNLC
+0061 I                                       65  75 MT94                  CSW004
+0063 I*****                                   1  64 SWACD                 CSW004
+0063 I**********                              1  75 SWACD                              CSW004 CGL029
+     I                                       76  850ACODE   M2                                CGL029
+     I                                        1  85 SWACD                                     CGL029
+     I/COPY WNCPYSRC,ME0240I001
+0220 I**
+0221 I**
+0222 I**   SWIFT ACCOUNTS FILE - TRAILER RECORD
+0223 I**
+0224 ISWACS   NS  07   1 CT
+0225 I                                        1   1 RECID
+0226 I                                        2   8 KYID
+0227 I                                    P  17  190NORE
+0228 I                                    P  17  190SNORE
+0229 I                                    P  20  220NORDS
+0230 I                                    P  59  610DTLC
+0231 I                                    P  62  640TNLC
+0232 I                                        1  64 SWACT
+0233 I**
+0234 I**
+0235 I**   SWIFT ACCOUNTS FILE - CATCH-ALL
+0236 I**
+0237 ISWACS   NS  08
+0238 I*
+0239 I*
+0240 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0241 I*
+0242 ITABMS   NS  09   2 C0   3 C1  12 C1
+0243 I       AND      13 C0
+0244 I                                        1   1 RECI
+0245 I                                        2   30RECT
+0246 I                                       12  130RCDE
+0247 I                                       14  66 TITL
+0248 I                                       67  67 DATF
+0249 I                                       68  700DFBR
+0250 I                                       74  74 MODI1
+0251 I                                       75  75 MODI2
+0252 I                                       76  76 MODI3
+0253 I                                    P  77  790RUND
+0254 I                                       80  86 RUNA
+0255 I                                       87  870SFLG
+0256 I                                    P  90  920LCD
+0257 I                                       93  93 CHTP
+0258 I                                    P  94  960TNLU
+0259 I**
+0260 I**
+0261 I**   TABLE FILE - CATCH-ALL
+0262 I**
+0263 ITABMS   NS  10
+0264 I**
+0265 I**   LOCAL DATA AREA
+0266 ILDA        UDS                            256
+     I**
+     I**************************************134 138 DBFILE                S01117
+     I**************************************139 167 DBKEY                 S01117
+     I**************************************168 175 DBPGM                 S01117
+     I**************************************176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+0271 C**
+0272 C**   FIRST CYCLE CALCULATIONS
+     C*                                                                   S01194
+     C* Reference Copyright Array                                         S01194
+     C*                                                                   S01194
+     C                     MOVEACPY@      CPY@@   1                       S01194
+     C*                                                                   S01194
+0273 C   20                GOTO ENDFC
+0274 C                     SETON                     20
+0275 C**
+0276 C**   INITIALISE COUNTS USED IN PROGRAM
+0277 C                     Z-ADD0         ACDTOP  50
+0278 C                     Z-ADD0         ACDTCL  50
+0279 C                     Z-ADD0         ACDTRE  50
+0280 C                     Z-ADD0         ACDTTF  50
+0281 C                     Z-ADD0         ACDTTO  50
+0282 C**
+0283 C                     Z-ADD0         SWACTO  50
+0284 C                     Z-ADD0         SWACCL  50
+0285 C**   SET UP FIELDS TO HANDLE DATABASE ERRORS
+0286 C                     MOVE '        'BLAN16 16
+0287 C                     MOVEL'        'BLAN16
+0288 C                     MOVE BLAN16    DBKEY
+0289 C                     MOVELBLAN16    DBKEY
+0290 C                     MOVE '     '   DBFILE
+0291 C                     MOVE 'ME0240  'DBPGM
+0292 C                     Z-ADD0         DBASE
+0293 C**
+0294 C**   ACCESS INSTALLATION CONTROL DATA RECORD 1
+0295 C                     EXSR ZSYSTM
+0296 C   99                SETON                     U7U8LR
+0297 C   99                Z-ADD1         DBASE            * DB ERROR 01 *
+0298 C   99                MOVE 'TABMS'   DBFILE
+0299 C   99                MOVELZTABKY    DBKEY
+0300 C   99                GOTO END
+     C/COPY WNCPYSRC,ME0240C001
+0301 C**
+0302 C           ENDFC     TAG                             ** ENDFC TAG **
+0303 C**
+0304 C**   PROCESSING FOR S/SWACS HEADER RECORD
+0305 C  N05                GOTO LABEL1
+0306 C**
+0307 C           SWACTO    ADD  1         SWACTO
+0308 C                     GOTO END
+0309 C**
+0310 C           LABEL1    TAG                             ** LABEL1 TAG *
+0311 C**
+0312 C**   PROCESSING FOR S/ACDET DETAIL RECORD
+0313 C  N02                GOTO LABEL2
+0314 C**
+0315 C**   SETOF INDICATORS
+0316 C                     SETOF                     303132
+0317 C                     SETOF                     33
+0318 C**
+0319 C**   INCREMENT APPROPRIATE COUNT
+0320 C           CHTP      COMP 'I'                      31
+      *                                                                                     BUG21237
+      ** Accounts inserted and deleted on the same day.                                     BUG21237
+      *                                                                                     BUG21237
+     C           CHTP      IFEQ 'C'                                                         BUG21237
+     C           ORED      ANDEQRUND                                                        BUG21237
+     C                     MOVE *ON       *IN31                                             BUG21237
+     C                     ENDIF                                                            BUG21237
+      *                                                                                       244106
+     C           *IN31     IFEQ '1'                                                           244106
+     C           LCD       ANDNERUND                                                          244106
+     C                     MOVE '0'       *IN31                                               244106
+     C                     ENDIF                                                              244106
+      *                                                                                       244106
+0321 C           CHTP      COMP 'R'                      32
+0322 C           CHTP      COMP 'C'                      33
+0323 C   33      ACST      COMP 'C'                  303033
+      *                                                                                     AR796439
+     C           *IN30     IFEQ *ON                                                         AR796439
+     C           *IN32     OREQ *ON                                                         AR796439
+     C           *IN33     OREQ *ON                                                         AR796439
+     C   30                                                                                   253800
+     COR 33      ORED      COMP RUND                     31                                  253800A
+     C                     ENDIF                                                            AR796439
+0324 C**
+0325 C   30      ACDTTF    ADD  1         ACDTTF
+0326 C   31      ACDTOP    ADD  1         ACDTOP
+0327 C   32      ACDTRE    ADD  1         ACDTRE
+     C   33      ACDTCL    ADD  1         ACDTCL
+0330 C**
+0331 C                     GOTO END
+0332 C**
+0333 C           LABEL2    TAG                             ** LABEL2 TAG *
+0334 C**
+0335 C**   PROCESSING FOR S/SWACS DETAIL RECORD
+0336 C  N06                GOTO LABEL3
+0337 C**
+0338 C**   INCREMENT APPROPRIATE COUNTS AND FLAG ANY RECORDS WHICH
+0339 C**   REQUIRE DELETION
+0340 C                     SETOF                     35
+0341 C           SWACTO    ADD  1         SWACTO
+0342 C           RECID     COMP 'C'                      34
+0343 C   34      SWACCL    ADD  1         SWACCL
+0344 C   34                GOTO END
+0345 C   MR      RECID     COMP 'D'                      35
+     C   MR 35   BRCD      COMP BRCA                     35               155982
+0346 C   MR 35   ACST      COMP 'C'                      35
+0347 C   MR 35   SWACCL    ADD  1         SWACCL
+0348 C**
+0349 C           LABEL3    TAG                             ** LABEL3 TAG *
+0350 C**********                                                   163501 218515
+0351 C**PROCESSING*FOR*S/SWACS*DELETED*RECORD**********************163501 218515
+0352 C**N08*****           GOTO LABEL4                             163501 218515
+0353 C**********                                                   163501 218515
+0354 C**INCREMENT*COUNT*OF*RECORDS*ON*FILE*************************163501 218515
+0355 C********** SWACTO    ADD  1         SWACTO                   163501 218515
+0356 C**********                                                   163501 218515
+0357 C********** LABEL4    TAG                             ** LABEL163501 218515
+0350 C***********                                                         041393
+0351 C**PROCESSING*FOR*S/SWACS*DELETED*RECORD**************************   041393
+0352 C**N08******          GOTO LABEL4                                    041393
+0353 C***********                                                         041393
+0354 C**INCREMENT*COUNT*OF*RECORDS*ON*FILE*****************************   041393
+0355 C***********SWACTO    ADD  1         SWACTO                          041393
+0356 C***********                                                         041393
+0357 C***********LABEL4    TAG                             ** LABEL4 TAG *041393
+0358 C**
+     C/COPY WNCPYSRC,ME0240C002
+0381 C           END       TAG                             *** END TAG ***
+0361 C**
+0362 C**   TOTAL RECORD COUNTS AND COMPARE TOTALS
+0363 CLR         ACDTTO    ADD  ACDTOP    ACDTTO
+0364 CLR         ACDTTO    ADD  ACDTCL    ACDTTO
+0365 CLR         ACDTTO    ADD  ACDTRE    ACDTTO
+0366 CLR         ACDTTO    ADD  ACDTTF    ACDTTO
+0367 C**
+0368 CLR         NINU      ADD  NINP      NOP     50
+     CLR         NOCL      SUB  NOCF      NOCL
+0369 CLR         NOP       COMP ACDTOP               4040
+0370 CLR         NOCL      COMP ACDTCL               4141
+0371 CLR         NORD      COMP ACDTRE               4242
+0372 CLR         NOCF      COMP ACDTTF               4343
+0373 C**
+0374 CLR         TOTAL     ADD  NOP       TOTAL   50
+0375 CLR         TOTAL     ADD  NOCL      TOTAL
+0376 CLR         TOTAL     ADD  NORD      TOTAL
+0377 CLR         TOTAL     ADD  NOCF      TOTAL
+0378 C**
+0379 CLR         TOTAL     COMP ACDTTO               4444
+0380 C**
+0382 C**
+0383 C**   LAST RECORD PROCESSING
+0384 CLR U7 U8             GOTO ENDLR
+0385 C**
+0386 C**   INCREMENT S/SWACS RECORD TOTAL
+0387 CLR         SWACTO    ADD  1         SWACTO
+0388 C**
+0389 C**   COMPARE S/SWACS FILE CONTROLS
+0390 CLR         SNORE     COMP SWACTO               5050
+0391 C**
+0392 C**   SET ON U7 IF ANY OF THE FILE CONTROLS DIFFER
+0393 CLR 40
+0394 COR 41
+0395 COR 42
+0396 COR 43
+0397 COR 44
+0398 COR 50                SETON                     U7
+0399 C**
+0400 CLR         ENDLR     TAG                             ** ENDLR TAG **
+0401 C**
+0402 C********************************************************************
+0403 C**
+0404 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0405 C**
+0406 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0407 C**
+0408 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0409 C                     MOVEL'01      'ZTABKY 12
+0410 C                     MOVE '  10'    ZTABKY
+0411 C**
+0412 C           ZTABKY    CHAINTABMS                99    ON NOT THERE
+0413 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0414 C**
+0415 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0416 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0417 C**
+0418 C                     ENDSR
+0419 C**
+0420 C**
+0421 C********************************************************************
+0422 OSWACS   D        06 35
+0423 O                                    1 'C'
+0424 O                                   46 '1'
+0425 O*MS0240P1T   0305 LR                                                S01117
+0425 O*MS0240AUT   0305 LR                                          S01117S01310
+0426 O***************                    16 'REFERENCE MS0240'            LN0125
+0425 OME0240AUT   0305 LR                                                 S01310
+0426 O***************                    24 'REFERENCE MS0240AU'    LN0125S01310
+0426 O                                   24 'REFERENCE ME0240AU'          S01310
+0427 O                         TITL      89
+0428 O                                  111 'DATE'
+0429 O                         RUNA     119
+0430 O                                  125 'PAGE'
+0431 O                         PAGE     130
+0432 O        T     06 LR
+0433 O                                   69 'SWIFT ACCOUNTS UPDATE '
+0434 O                                   82 'FILE CONTROLS'
+0435 O        T        LR
+0436 O                                   69 '----------------------'
+0437 O                                   82 '-------------'
+0438 O        T   1820 LR
+0439 O                                   79 'INPUT   CALCULATED'
+0440 O        T     21 LR
+0441 O                                   42 'FILE CONTROLS - S/ACDET'
+0442 O        T     23 LR
+0443 O                                   42 '-----------------------'
+0444 O        T     24 LR
+0445 O                                   38 'NUMBER OF ACCOUNTS '
+0446 O                                   58 'OPENED             -'
+0447 O                         NOP   3   66
+0448 O                         ACDTOP3   79
+0449 O                       40         100 '*** DIFFERENCE ***'
+0450 O        T     25 LR
+0451 O                                   38 'NUMBER OF ACCOUNTS '
+0452 O                                   58 'CLOSED             -'
+0453 O                         NOCL  3   66
+0454 O                         ACDTCL3   79
+0455 O                       41         100 '*** DIFFERENCE ***'
+0456 O        T     26 LR
+0457 O                                   38 'NUMBER OF ACCOUNTS '
+0458 O                                   58 'REOPENED           -'
+0459 O                         NORD  3   66
+0460 O                         ACDTRE3   79
+0461 O                       42         100 '*** DIFFERENCE ***'
+0462 O        T     27 LR
+0463 O                                   36 'NUMBER OF CLOSED '
+0464 O                                   58 'TRANSACTION FAILURES -'
+0465 O                         NOCF  3   66
+0466 O                         ACDTTF3   79
+0467 O                       43         100 '*** DIFFERENCE ***'
+0468 O        T     30 LR
+0469 O                                   26 'CONTROL'
+0470 O                                   58 '-'
+0471 O                         TOTAL 3   66
+0472 O                         ACDTTO3   79
+0473 O                       44         100 '*** DIFFERENCE ***'
+0474 O        T     31 LR
+0475 O                                   42 'FILE CONTROLS - S/SWACS'
+0476 O        T     33 LR
+0477 O                                   42 '-----------------------'
+0478 O        T     34 LR
+0479 O                                   40 'NUMBER OF RECORDS ON '
+0480 O                                   58 'FILE             -'
+0481 O                         SNORE 3   66
+0482 O                         SWACTO3   79
+0483 O                       50         100 '*** DIFFERENCE ***'
+0484 O        T        LR
+0485 O                                   36 'NUMBER OF RECORDS'
+0486 O                                   58 'CLOSED              -'
+0487 O                         SWACCL3   79
+0488 O        T   40   LRNU7NU8
+0489 O                                   77 '*** END OF REPORT ***'
+0490 O        T   40   LR U7NU8
+0491 O                                   72 '*** FILE CONTROLS OUT OF'
+0492 O                                   84 ' BALANCE ***'
+0493 O        T   40   LR U7 U8
+0494 O                                   42 '*** REFERENCE'
+0495 O                         DBPGM     51
+0496 O                                   71 '-DATABASE ERROR AT'
+0497 O                         DBASE     74
+0498 O        T   41   LR U7 U8
+0499 O                                   37 'FILE NAME'
+0500 O                         DBFILE    43
+0501 O                                   48 'KEY'
+0502 O                         DBKEY     78
+**  CPY@                                                                  S01194
+(c) Misys International Banking Systems Ltd. 2001

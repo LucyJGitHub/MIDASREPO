@@ -1,0 +1,385 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IR dealing net present value calculation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DLZNPV - DEALING NET PRESENT VALUE CALCULATION               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CIR013             Date 25Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 218227             Date 27Jun03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 108091             Date 08Dec97               *
+      *                 100317             Date 13Mar96               *
+     F*                 CIR001 *CREATE     DATE 13JUN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZCBDYS.                              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *           By calling AOSARDR0 in the main body of this        *
+      *           program its average speed of execution is slowed    *
+      *           by a couple of orders of magnitude.                 *
+      *  218227 - Introduce new program ZAXPINR to perform            *
+      *           exponential interpolation of a rate.                *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CIR004 - Dealing Calculation Method Change (Recompiled due   *
+      *           change in ZCBDYSZ1)                                 *
+     F*  108091 - For the 1st period of IRS dicount factor, system    *
+     F*           should interpolate between 1.000000000 and the      *
+     F*           discount factor from the 1st period.                *
+     F*  100317 - The straight-line method of interpolating discount  *
+     F*           factors using SR/ZINTPL did not provide satisfatory *
+     F*           results. As the discount factors curve is           *
+     F*           exponential, an PL1 program (ZEXPIN) is used to     *
+     F*           perform an exponential interpolation.               *
+     F*  CIR001 - Interest Rate Calendars                             *
+     F*                                                               *
+     F*****************************************************************
+     FDLIRDFL2IF  E           K        DISK
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       90-99       STANDARD SUBROUTINES
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E                    ZYDY    4   4  4 0             ZDATE2 SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE2 SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+     I/COPY WNCPYSRC,DLZNPVI001
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+     I/COPY ZSRSRC,ZDAT10Z1                                               182370
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     ILDA       E DSLDA                         256                                           CAS001
+      ** Local data area for database error details                                           CAS001
+      *                                                                                       CAS001
+     ISCSARD    E DSSCSARDPD                                                                  CAS001
+      ** External DS for SAR Details                                                          CAS001
+      *                                                                                       CAS001
+     IDSFDY     E DSDSFDY                                                                     CAS001
+      ** First DS for Access Programs, Short Data Structure                                   CAS001
+      *                                                                                       CAS001
+      /SPACE 5
+     C**C*PY*ZSRSRC,ZEXPINZ1****************************************************       100317 CAS001
+      /SPACE 5                                                            100317
+     C/COPY WNCPYSRC,DLZNPVC001
+     C**************************************************************************
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZNPRTC  5
+     C                     PARM           ZNPCCY  3        * CURRENCY
+     C                     PARM           ZNPINC  1        * INT.CALC.METH.
+     C                     PARM           ZNPSDT  50       * SPOT DATE
+     C                     PARM           ZNPFDT  50       * FORWARD DATE
+     C                     PARM           ZNPAMT 130       * AMOUNT
+     C                     PARM           ZNPRAT 117
+     C**********           PARM           ZNPDF  119                                          CAS001
+     C                     PARM           ZNPDF  139                                          CAS001
+     C                     PARM           ZNPOUT 130
+     C                     PARM           ZNYLDC  5                                           CAS001
+      *                                                                                       CAS001
+     C************NAMVAR***DEFN           LDA                                          CAS001 CDL038
+      **********************                                                           CAS001 CDL038
+      ***Determine*if*Switcheable Feature CAS001 is installed                          CAS001 CDL038
+      **********************                                                           CAS001 CDL038
+     C*********************CALL 'AOSARDR0'                                             CAS001 CDL038
+     C*********************PARM *BLANKS   PRTCD   7                                    CAS001 CDL038
+     C*********************PARM '*VERIFY' POPTN   7                                    CAS001 CDL038
+     C*********************PARM 'CAS001'  PSARD   6                                    CAS001 CDL038
+     C***********SCSARD****PARM SCSARD    DSFDY                                        CAS001 CDL038
+      *********************                                                            CAS001 CDL038
+     C***********PRTCD*****IFEQ *BLANKS                                                CAS001 CDL038
+     C*********************MOVE 'Y'       CAS001  1                                    CAS001 CDL038
+     C*********************ELSE                                                        CAS001 CDL038
+     C*********************MOVE 'N'       CAS001                                       CAS001 CDL038
+      *********************                                                            CAS001 CDL038
+     C***********PRTCD*****IFNE '*NRF'                                                 CAS001 CDL038
+     C************LOCK*****IN   LDA                                                    CAS001 CDL038
+     C*********************MOVEL'CAS001'  DBKEY                                        CAS001 CDL038
+     C*********************MOVEL'SCSARDPD'DBFILE                                       CAS001 CDL038
+     C*********************Z-ADD1         DBASE                                        CAS001 CDL038
+     C*********************OUT  LDA                                                    CAS001 CDL038
+     C*********************MOVE *ON       *INU7                                        CAS001 CDL038
+     C*********************MOVE *ON       *INU8                                        CAS001 CDL038
+     C*********************EXSR *PSSR                                                  CAS001 CDL038
+     C*********************ENDIF                                                       CAS001 CDL038
+      *********************                                                            CAS001 CDL038
+     C*********************ENDIF                                                       CAS001 CDL038
+      *
+      ***  Initialise fields.
+      *
+     C                     Z-ADD0         ZNPRAT
+     C                     Z-ADD1         ZNPDF
+     C                     Z-ADD0         ZNPOUT
+      *
+     C/COPY WNCPYSRC,DLZNPVC002
+     C                     SETOF                     919293
+     C*
+     C                     MOVE '0'       *IN98
+      *                                                                                       CAS001
+      ** If CAS001 is not installed, determine Discount Factor from                           CAS001
+      ** Discount Factor file                                                                 CAS001
+      *                                                                                       CAS001
+     C           CAS001    IFEQ 'N'                                                           CAS001
+      *
+      ***  Key Lists for the IRS Discount factors file
+      *
+     C           DLIRDK    KLIST
+     C                     KFLD           ZNPCCY
+     C                     KFLD           ZNPINC
+     C                     KFLD           ZNPFDT
+     C           DLIRDP    KLIST
+     C                     KFLD           ZNPCCY
+     C                     KFLD           ZNPINC
+      *
+      ***  First find the Discount Factor to use for discounting.
+      *
+     C           DLIRDK    SETLLDLIRDFL2             91
+      *
+      ***  If not EOF, Read Equal the next record of the Currency.
+      *
+     C           *IN91     IFEQ '0'
+     C           DLIRDP    READEDLIRDFL2                 92
+      *
+      ***  If a record was read and is the correct date, set up the
+      ***  Factor and GOTO Present Value Calculation.
+      *
+     C           *IN92     IFEQ '0'
+     C           I2MMDN    ANDEQZNPFDT
+     C                     Z-ADDI2DF      ZNPDF
+     C                     GOTO ZNP002
+     C                     END
+      *
+     C                     END
+      *
+      ***  If a record has not yet been retrieved, reposition the file
+      ***  and read the last record of the Currency.
+      *
+     C           *IN91     IFEQ '1'
+     C           *IN92     OREQ '1'
+     C           DLIRDK    SETGTDLIRDFL2
+      *
+      ***  If Record found, set up the Factor and GOTO Present Value
+      ***  Calculation, else Currency is not on File
+      *
+     C           DLIRDP    REDPEDLIRDFL2                 93
+     C           *IN93     IFEQ '0'
+     C                     Z-ADDI2DF      ZNPDF
+     C                     GOTO ZNP002
+     C                     END
+      *
+     C                     MOVEL'*NRCD'   ZNPRTC
+     C                     GOTO ZNPEND
+     C                     END
+      *
+      ***  If this point has been reached, a record has been found with
+      ***  a date greater than the one we want and it will probably be
+      ***  necessary to use interpolation, so set up Far Date and Far
+      *****Rate*fields*(for*SR/ZEXPIN).*****************************************       100317 CAS001
+      ** Rate fields (for PGM/ZAEXPIN).                                                       CAS001
+      *****Rate*fields*(for*SR/ZINTPL).***                                100317
+      *
+     C                     Z-ADDI2MMDN    ZIFDAT
+     C                     Z-ADDI2DF      ZIFRAT
+      *
+      ***  Read the Previous record to get the Near Discount Factor. If
+      ***  not found, then the the record already retrieved is the first
+      ***  record of the Currency and that Factor should be used.
+      *
+     C           DLIRDP    REDPEDLIRDFL2                 91
+      *
+     C           *IN91     IFEQ '1'
+     C******************** Z-ADDZIFRAT    ZNPDF                           108091
+     C                     Z-ADDZNPSDT    ZINDAT                          108091
+     C                     Z-ADD1         ZINRAT                          108091
+     C                     ELSE
+      *
+      ***  Else set up Near Date and Near Factor for interpolation.
+      *
+     C                     Z-ADDI2MMDN    ZINDAT
+     C                     Z-ADDI2DF      ZINRAT
+     C                     END                                            108091
+      *
+      ***  Set up Broken Date and interpolate the Factor
+      *
+     C                     Z-ADDZNPFDT    ZIBDAT
+     C**********           EXSR ZINTPL                                    100317
+      *                                                                   100317
+      ***Define*parameters*to*PGM/ZEXPIN*as*data-structure.**************              100317 CAS001
+      ** Define parameters to PGM/ZAEXPIN                                                     CAS001
+      *                                                                   100317
+     C********** ZPLEXP    PLIST                                                       100317 CAS001
+     C**********           PARM           ZDSEXP                                       100317 CAS001
+     C                     Z-ADDZNPSDT    ZISDAT                          100317
+     C                     Z-ADD0         ZIBRAT                          100317
+      *                                                                   100317
+     C**********           CALL 'ZEXPIN'  ZPLEXP                                       100317 CAS001
+      *                                                                                       218227
+     C           CAS001    IFEQ 'Y'                                                           218227
+     C                     CALL 'ZAEXPIN'                                                     CAS001
+     C                     PARM           ZISDAT  50                                          CAS001
+     C                     PARM           ZINDAT  50                                          CAS001
+     C                     PARM           ZIBDAT  50                                          CAS001
+     C                     PARM           ZIFDAT  50                                          CAS001
+     C                     PARM           ZINRAT 139                                          CAS001
+     C                     PARM           ZIFRAT 139                                          CAS001
+     C                     PARM           ZIBRAT 139                                          CAS001
+     C                     ELSE                                                               218227
+     C                     CALL 'ZAXPINR'                                                     218227
+     C                     PARM           ZISDAT                                              218227
+     C                     PARM           ZINDAT                                              218227
+     C                     PARM           ZIBDAT                                              218227
+     C                     PARM           ZIFDAT                                              218227
+     C                     PARM           ZINRAT                                              218227
+     C                     PARM           ZIFRAT                                              218227
+     C                     PARM           ZIBRAT                                              218227
+     C                     ENDIF                                                              218227
+      *                                                                   100317
+     C                     Z-ADDZIBRAT    ZNPDF
+     C***********          END                                            108091
+      *
+      ** If CAS001 is installed, call ZADSFCAL to determine Discount                          CAS001
+      ** Factor                                                                               CAS001
+      *                                                                                       CAS001
+     C                     ELSE                                                               CAS001
+      *                                                                                       CAS001
+     C                     CALL 'ZADSFCAL'                                                    CAS001
+     C                     PARM           ZNRTCD  7                                           CAS001
+     C                     PARM           ZNPRTC                                              CAS001
+     C                     PARM           ZNYLDC                                              CAS001
+     C                     PARM           ZNPCCY                                              CAS001
+     C                     PARM           ZNPINC                                              CAS001
+     C                     PARM           ZNPFDT                                              CAS001
+     C                     PARM           ZNPDF                                               CAS001
+      *                                                                                       CAS001
+     C                     ENDIF                                                              CAS001
+      *                                                                                       CAS001
+     C           ZNP002    TAG                             *** ZNP002 ***
+      *
+      ***  Present Value is then calculated as:
+      ***
+      ***
+      ***  Present Value =   Future Amount x Discount Factor
+      ***
+      *
+     C           ZNPAMT    MULT ZNPDF     ZNPOUT    H
+     C/COPY WNCPYSRC,DLZNPVC003
+      *
+      *---------------------------------------------------------------*
+      *
+     C           ZNPEND    TAG                             *** ZNPEND ***
+      *
+     C                     RETRN
+      *
+     C**************************************************************************
+      /SPACE 5                                                                                CDL038
+     C**************************************************************************              CDL038
+     C           *INZSR    BEGSR                                                              CDL038
+      *                                                                                       CDL038
+     C           *NAMVAR   DEFN           LDA                                                 CDL038
+      *                                                                                       CDL038
+      ** Determine if Switcheable Feature CAS001 is installed                                 CDL038
+      *                                                                                       CDL038
+     C                     CALL 'AOSARDR0'                                                    CDL038
+     C                     PARM *BLANKS   PRTCD   7                                           CDL038
+     C                     PARM '*VERIFY' POPTN   7                                           CDL038
+     C                     PARM 'CAS001'  PSARD   6                                           CDL038
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL038
+      *                                                                                       CDL038
+     C           PRTCD     IFEQ *BLANKS                                                       CDL038
+     C                     MOVE 'Y'       CAS001  1                                           CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVE 'N'       CAS001                                              CDL038
+      *                                                                                       CDL038
+     C           PRTCD     IFNE '*NRF'                                                        CDL038
+     C           *LOCK     IN   LDA                                                           CDL038
+     C                     MOVEL'CAS001'  DBKEY                                               CDL038
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL038
+     C                     Z-ADD1         DBASE                                               CDL038
+     C                     OUT  LDA                                                           CDL038
+     C                     MOVE *ON       *INU7                                               CDL038
+     C                     MOVE *ON       *INU8                                               CDL038
+     C                     EXSR *PSSR                                                         CDL038
+     C                     ENDIF                                                              CDL038
+      *                                                                                       CDL038
+     C                     ENDIF                                                              CDL038
+     C                     ENDSR                                                              CDL038
+     C**************************************************************************              CDL038
+      /SPACE 5
+     C**************************************************************************
+     C           *PSSR     BEGSR
+     C           ZNPRTC    IFEQ *BLANK
+     C                     MOVE '*ERR*'   ZNPRTC
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+      *SPACE*5**                                                          100317
+     C*COPY*ZSRSRC,ZINTPLZ1***                                            100317
+      /SPACE 5
+     C/COPY ZSRSRC,ZCBDYSZ1
+      /SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+      /SPACE 5                                                            182370
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+      /SPACE 5                                                            182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+      /SPACE 5                                                            182370
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

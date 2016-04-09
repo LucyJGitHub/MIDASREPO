@@ -1,0 +1,544 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Parcels of NAs Sold Extract')                 *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*   DL4040 - Extract of N/A's sold                                 *
+     F*                                                                  *
+     F*   Function:  This extracts N/A's sold details for use by         *
+     F*   (CoB)      DL0280 for processing parcels of N/A's.             *
+     F*              Parcelled NA's sold are processed as deal           *
+     F*              amendments, i.e. a principal decrease.              *
+     F*              The program reads LF/DEALS (deals file)             *
+     F*              sequentially and extracts parcelled negotiable      *
+     F*              asset sold details (from DEALSDE) when
+     F*              the value date is less than or equal to             *
+     F*              the event control date and when the value date      *
+     F*              accounting entry indicator (on DEALSDE) is off.     *
+     F*              The extract is written to PF/DAPCLI with deal       *
+     F*              amendment type 'NS'.                                *
+     F*              The trailer, PF/DAPCLJ, and the audit report is     *
+     F*              updated with control totals. There is no checking   *
+     F*              for file totals out balance - no need and not       *
+     F*              simple to get correctly matching.                   *
+     F*                                                                  *
+     F*   Called by: DLC0606A - Deal amendments update phase 2           *
+     F*                                                                  *
+     F*   Calls:     none                                                *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001               *
+     F*                                                                  *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE009             Date 04Oct02               *
+      * Midas Release 4 --------------- Base ----------------------------*
+      * Midas DBA 3.00 ---------------- Base ----------------------------*
+      *                 056836             Date 10Nov93               *
+     F*                  S01378     DATE 15OCT92                         *
+     F*                                                                  *
+     F********************************************************************
+     F*
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CCB020 - COB Restructure - Seconday COB Infrastracture       *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*   CRE009 - Projected Account Movements for RE Accounts
+     F*   056836 - Message 'I/O operation was applied to closed file
+     F*            DL0275P1' was received when processing DAPCLI (NA's
+     F*            parcels) because this file does not cater to R10
+     F*            multi-branching.
+     F*   S01378 - Facilitates the partial sale of a parcel
+     F*            of negotiable instruments which have been
+     F*            previously input to the system as a single
+     F*            transaction. When NAB is entered the parcel
+     F*            size defines the number of parcels it may be
+     F*            split into for selling. The parcel size on the
+     F*            NAS defines the number of parcels being sold
+     F*            by the transaction. (was MOF53).
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDEALS   IP  E           K        DISK
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     FDAPCLH  O   E                    DISK
+     FDAPCLI  O   E                    DISK
+     FDAPCLJ  O   E                    DISK
+     FDL4040AUO   F     132            PRINTER
+      *
+      ********************************************************************
+      *
+      *                  F U N C T I O N   O F   I N D I C A T O R S
+      * ID F  C  H  L
+      *       41      Seton if ACEI bit 0 is set of
+      *      90-99    STANDARD Z-SUBROUTINES
+      *       U7      DATABASE ERROR
+      *
+      ********************************************************************
+      *
+     ISDBANK    E DSSDBANKPD
+      * Bank details accessed via access program
+      *
+     ISDGELR    E DSSDGELRPD
+      * General ledger details accessed via access program
+      *
+     IDSFDY     E DSDSFDY                                                 S01194
+      * First DS for access programs, short data structure                S01194
+      *
+     ISCSARD    E DSSCSARDPD                                              CRE009
+      * Switchable Features details via access program                    CRE009
+      *                                                                   CRE009
+     IREPMED      DS                              5                       CRE009
+      ***Data*area to hold the latest date in Projected A/c Movemetns                  CRE009 CCB020
+      **********                                                                       CRE009 CCB020
+     I*MPHAS****   DS                              1                                   CRE009 CCB020
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      ** Data area to hold the Day Phase                                  CRE009
+      *                                                                   CRE009
+      ***************************************************************
+      *    MAIN processing
+      *
+      *    CALLS         : #A Initial processing
+      *                    #B Detail processing
+      *                    #C Last record processing
+      ***************************************************************
+      ** Note that DEALSDA is not KIGNORE'd to ensure that if no
+      ** parcels, *INLR is not set on immediately causing total time
+      ** calcs to be processed and not detail time (must always run
+      ** sr/#A).
+      *
+      ** process first cycle
+     C           @FIRST    IFEQ *BLANKS
+     C                     EXSR #A
+     C                     END
+      *
+      ** process detail records
+     C           *INU7     IFEQ '0'
+     C                     EXSR #B
+     C                     END
+      *
+      ** last record processing (LR processing cannot be
+      ** in a subroutine).
+      *
+      ** skip processing if previous error (*INU7)
+     CLR         *INU7     IFEQ '0'                        B1
+      *
+      ** Output a trailer record for extract file
+     CLR                   MOVE 'T'       RECI             *1
+     CLR                   Z-ADD999999    DLNO             *1
+     CLR                   Z-ADD99999     VDAT             *1
+     CLR                   Z-ADD999       DASN             *1
+     CLR                   Z-ADD*ZERO     FLSZ             *1
+     CLR                   Z-ADD*ZERO     NLRB             *1
+     CLR                   Z-ADD*ZERO     NINS             *1
+     CLR                   Z-ADD*ZERO     NIPR             *1
+     CLR                   Z-ADD*ZERO     NDPR             *1
+     CLR                   Z-ADD*ZERO     NDEL             *1
+     CLR                   Z-ADD*ZERO     VLBF             *1
+     CLR                   Z-ADD*ZERO     VLBL             *1
+     CLR                   Z-ADD*ZERO     VRIF             *1
+     CLR                   Z-ADD*ZERO     VRIL             *1
+     CLR                   Z-ADD*ZERO     VRDF             *1
+     CLR                   Z-ADD*ZERO     VRDL             *1
+     CLR                   Z-ADD*ZERO     VIPF             *1
+     CLR                   Z-ADD*ZERO     VIPL             *1
+     CLR                   Z-ADD*ZERO     VDPF             *1
+     CLR                   Z-ADD*ZERO     VDPL             *1
+     CLR                   Z-ADDTOTIPC    VLAF             *1
+     CLR                   Z-ADDTOTDPC    VLAL             *1
+      *
+     CLR                   WRITEDAPCLJF                    *1
+      *
+     CLR                   END                             E1
+      *
+      ********************************************************************
+      /EJECT
+      ****************************************************************
+      *
+      *    #A  Initital (first cycle) processing
+      *        CALLED BY  : MAIN routine
+      *        CALLS      : AOBANKR0 - access object for bank details
+      *                     AOGELRR0 - access object for general ledger
+      *
+      ***************************************************************
+      *
+     C           #A        BEGSR
+      *
+      ** initialise and define working fields
+     C                     MOVE 'N'       @FIRST  1
+     C                     Z-ADD2         NORE
+     C                     Z-ADD*ZERO     NLRA
+      *
+      ** Access bank details for date format field
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check for data base error.
+     C           @RTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'DBFILE 10        *************
+     C                     MOVEL'001'     DBASE   3        * DBERR 001 *
+     C                     MOVEL@OPTN     DBOPTN  7        *************
+     C                     MOVEL'*FIRST ' DBKEY  29        *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *IN99            *1
+     C                     MOVE '1'       *IN88            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *
+      ** Check system date format, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *
+      ** Access General ledger details for accrual/profit date
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Check for data base error.
+     C           @RTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVEL@OPTN     DBOPTN           *************
+     C                     MOVEL'*FIRST ' DBKEY            *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+      *                                                                   CRE009
+      ** Access AOSARDR0 and check if CRE009 is installed                 CRE009
+      *                                                                   CRE009
+     C                     CALL 'AOSARDR0'                                CRE009
+     C                     PARM *BLANKS   PRTCD   7                       CRE009
+     C                     PARM '*VERIFY' POPTN   7                       CRE009
+     C                     PARM 'CRE009'  PSARD   6                       CRE009
+     C           SCSARD    PARM SCSARD    DSFDY                           CRE009
+      *                                                                   CRE009
+     C           PRTCD     IFEQ *BLANKS                                   CRE009
+     C                     MOVE 'Y'       CRE009  1                       CRE009
+     C                     ELSE                                           CRE009
+     C                     MOVE 'N'       CRE009                          CRE009
+     C                     ENDIF                                          CRE009
+      *                                                                   CRE009
+      ** Get value of dtaara REPMED                                       CRE009
+      *                                                                   CRE009
+     C           *NAMVAR   DEFN           REPMED                          CRE009
+     C********** *NAMVAR   DEFN           MPHAS                                        CRE009 CCB020
+      *                                                                   CRE009
+     C           *LOCK     IN   REPMED                                    CRE009
+     C                     MOVE REPMED    @REPMD  50                      CRE009
+     C********** *LOCK     IN   MPHAS                                                  CRE009 CCB020
+     C**********           MOVE MPHAS     @MPHAS  1                                    CRE009 CCB020
+      *                                                                   CRE009
+      ** Use earlier of Day before next working date or Accrual profit
+      ** date as the event control date.
+     C           BJDNWD    SUB  1         EVNTDT  50
+     C           EVNTDT    IFLT BKAPDT                     B1
+     C                     Z-ADDEVNTDT    EVCD             *1
+     C                     ELSE                            X1
+     C                     Z-ADDBKAPDT    EVCD    50       *1
+     C                     END                             E1
+      *
+      ** Output a header record for extract file
+     C                     MOVE 'A'       RECI
+     C                     Z-ADD*ZEROS    DLNO
+     C                     Z-ADD*ZEROS    VDAT
+     C                     Z-ADD*ZEROS    DASN
+      *
+     C                     WRITEDAPCLHF
+      *
+     C           #A9       ENDSR                           ** #A9 ENDSR **
+      ***************************************************************  ***
+      ****************************************************************
+      *
+      *    #B  Detail processing
+      *        CALLED BY  : MAIN routine for each run of cycle
+      *        CALLS      : GLZADD add amount to totals
+      *
+      ****************************************************************
+      *
+     C           #B        BEGSR                           ** #B BEGSR **
+      *
+      ** Check the value date accounting entry indicator on DEALSDE.
+      ** *IN41 is set on if bit 1 is off (vdate not yet processed)
+     C                     MOVE '0'       *IN41
+     C                     TESTB'1'       ACEI       41
+      *                                                                    CRE009
+      ** If CRE009 is ON and program running in shadow post mode           CRE009
+      ** change the event date to the value in REPMED.                     CRE009
+      *                                                                    CRE009
+     C           CRE009    IFEQ 'Y'                                        CRE009
+     C********** @MPHAS    ANDEQ'F'                                                    CRE009 CCB020
+     C           *INU7     ANDEQ'0'                                                           CCB020
+     C                     Z-ADD@REPMD    @EVCD   50                       CRE009
+     C                     ELSE                                            CRE009
+     C                     Z-ADDEVCD      @EVCD                            CRE009
+     C                     ENDIF                                           CRE009
+      *
+      ** Only process live parcelled N/A's sold for the extract
+     C           RCDT      IFEQ 'E'                        B1
+     C           RECI      ANDEQ'D'                        B1
+     C           PCLI      ANDEQ'P'                        B1
+      *
+      ** and only if value date is less than or equal to the event
+      ** control date
+     C********   VDAT      ANDLEEVCD                       B1               CRE009
+     C           VDAT      ANDLE@EVCD                      B1               CRE009
+      *
+      ** and only if value date accounting entry indicator on DEALSDE
+      ** is off (vdate not yet processed)
+     C           *IN41     ANDEQ'1'                        B1
+      *
+      ** Count records output to DAPCLI
+     C                     ADD  1         NORE             *1
+     C                     ADD  1         NLRA             *1
+      *
+      ** Hash total records going to S/DAPCLI file.
+     C           SAPR      DIV  1000      ZZAMT            *1
+     C                     Z-ADDTOTIPC    ZZTOTI           *1
+     C                     Z-ADDTOTDPC    ZZTOTD           *1
+     C                     EXSR GLZADD                     *1
+     C                     Z-ADDZZTOTI    TOTIPC 150       *1
+     C                     Z-ADDZZTOTD    TOTDPC  30       *1
+      *
+      ** Output detail to extract file
+      ** Move data from DEALSDE fields into DAPCLI fields
+     C                     MOVE DLNO      RDLN             *1
+     C                     Z-ADDSAPR      DAAM             *1
+     C                     MOVE RPDN      DLNO             *1
+     C                     MOVE BRCA      OSBR             *1             056836
+     C                     Z-ADD*ZEROS    DASN             *1
+     C                     MOVE *BLANKS   DTYP             *1
+     C                     MOVE *BLANKS   DLST             *1
+     C                     MOVE *BLANK    CLAS             *1                                 CDL038
+     C                     MOVE 'NS'      AMTP             *1
+     C                     Z-ADD7         PSEQ             *1
+     C                     Z-ADD*ZEROS    BRTT             *1
+     C                     Z-ADD*ZEROS    RTSP             *1
+     C**********           Z-ADDSCUS      CNUM             *1                                 CSD027
+     C                     MOVE SCUS      CNUM             *1                                 CSD027
+      *
+     C                     WRITEDAPCLIF                    *1
+      *
+     C                     END                             E1
+      *
+     C           #B9       ENDSR                           ** #B9 ENDSR **
+      *
+      ********************************************************************
+      ****************************************************************
+      *
+      *    GLZADD  To add an amount (ZZAMT) to the total (ZZTOTI,
+      *            ZZTOTD). *IN99 is set for an overflow error
+      *        CALLED BY  : #B detail processing
+      *        CALLS      : GLZSUM
+      *
+      ****************************************************************
+      * SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+      *   IND '99' IS SET BY AN OVERFLOW ERROR
+      *
+     C           GLZADD    BEGSR                           *** GLZADD ****
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+      *
+      * SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     C                     MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+      * BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+      *
+     C                     EXSR GLZSUM
+     C           ZZAEND    ENDSR                           ** ZZAEND TAG *
+      *
+      ********************************************************************
+      *
+      ****************************************************************
+      *
+      *    GLZSUM  To carry out addition for subroutines -
+      *                        GLZADD, GLZSUB, GLZCMP.
+      *        CALLED BY  : GLZADD hash totalling routine
+      *        CALLS      : none
+      *
+      *        PARAMETERS
+      *          INPUT    : ZZAMTI ZZAMTD
+      *          OUTPUT   : ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+      *
+      ****************************************************************
+      *
+     C           GLZSUM    BEGSR                           *** GLZSUM ****
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      *    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+      *
+      *    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      *    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+      *    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = CARRY
+     C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      * IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      * IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      * THE 'SIGNS' ARE DIFFERENT
+     C           ZZOFPS    TAG                             ** ZZOFPS TAG**
+      * IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      * IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      * BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      * IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      * IF ZZTOT GT. ZZAMT.
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      *
+      * IF ZZAMT GT. ZZTOT.
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      * REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      **
+      **   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG                             ** ZZSEND TAG *
+      **
+      **   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C                     ENDSR                             ** ENDSR **
+      ********************************************************************
+      /EJECT
+      *
+      ** Audit report DL4040AU
+     ODL4040AUT   03   LR
+     O                                   22 'REFERENCE DL4040'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T   05   LR
+     O                                   63 'PARCELS OF NEGOTIABLE'
+     O                                   83 'INSTRUMENTS EXTRACT'
+     O        T   06   LR
+     O                                   64 '----------------------'
+     O                                   83 '-------------------'
+     O        T   15   LRNU7
+     O                                   32 'RUN CONTROLS'
+     O                                   95 'IN PROGRAM'
+     O        T   16   LRNU7
+     O                                   32 '------------'
+     O        T   18   LRNU7
+     O                                   41 'S/DAPCL  -  NUMBER OF'
+     O                                   49 'RECORDS'
+     O                         NORE  Z   95
+     O        T   20   LRNU7
+     O                                   42 'HASH TOTAL'
+     O                         TOTIPCZ   92
+     O                         TOTDPC    95
+      *
+      ** Output database error if necessary
+     O        T   28   LR U7
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        T   29   LR U7
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    78
+     O        T   30   LR U7
+     O                                   49 'OPTION'
+     O                         DBOPTN    57
+     O                                   66 'KEY'
+     O                         DBKEY     96

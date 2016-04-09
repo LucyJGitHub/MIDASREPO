@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD MMM to Compliance interface')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDCTOCMP - MMM/Compliance Interface for Global Prcessing    */
+/*                  Control Program                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG3641 *CREATE    Date 07Jul04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG3641- MMM/Compliance Interface for Global Prcessing      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Begin commitment control */
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+/** Allocate dataarea SDTOCOMP */
+ 
+             ALCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL)) WAIT(30)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                            MSGDTA('SDCTOCMP - Attempt to start +
+                            Compliance Watch List Message Status +
+                            Engine has failed. Engine +
+                            is active already') TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+               CHGJOB     LOG(*SAME *SAME *NOLIST)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** MMM/Compliance Interface for Global Prcessing has started */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('SDCTOCMP - Compliance Watch List +
+                          Message Engine Status has started.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Call MMM/Compliance Interface for Global Prcessing feeder */
+ 
+             CALL       PGM(SDTOCOMP)
+ 
+/** MMM/Compliance Interface for Global Prcessing has ended */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('SDCTOCMP - Compliance Watch List +
+                          Message Status Engine is now terminating') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Deallocate dataarea SDTOCOMP */
+ 
+             DLCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL))
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCTOCMP ended abnormally - see previous +
+                          job log for details') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+ 
+             ENDPGM

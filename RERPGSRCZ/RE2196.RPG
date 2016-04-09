@@ -1,0 +1,2692 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE BRT S17 report production')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE2196 - BRT S17 REPORT PRODUCTION                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE051             Date 14Jan09               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE021             Date 28Jan05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CRE007             Date 01Mar01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 180467             Date 03Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 088192             DATE 20MAR96               *
+     F*                 084914             DATE 20MAR96               *
+     F*                 062208             DATE 23NOV93               *
+     F*                 053520             DATE 12NOV93               *
+     F*                 042015             DATE 08JUL92               *
+     F*                 S01383             DATE 27APR92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CRE051 - BRT S17 Changes for 2009                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRE021 - S17 Return changes.                                *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRE007 - Base Rate Tax 2001.                                 *
+     F*  180467 - Only use retail number if it is not zero, else use  *
+     F*           the full account reference.                         *
+     F*  088192 - For matured deal or closed account, participator    *
+     F*           details should be up-to-date except in cases where  *
+     F*           the number of participators changes.                *
+     F*  084914 - Amend 066208 to suppress production of Form Type 3  *
+     F*           as well as 2 if 0 amounts.                          *
+     F*  062208 - Suppress production of S17 report for accounts with *
+     F*           zero gross interest and zero tax deduction.         *
+     F*  053520 - PSEQ must be passed as parameter, since this pgm    *
+     F*           may be run as on-request or as a mandatory report.  *
+     F*           Remove fix 042015 and amend REC2189 to pass a       *
+     F*           blank sequence number to RE2196.                    *
+     F*  042015 - PARAMETER IS NO LONGER PASSED FROM COMPONENT AS     *
+     F*           THIS IS A MANDATORY REPORT AND SHOULD ALWAYS        *
+     F*           PASS A BLANK FIRST PARAMETER TO ZSFILE              *
+     F*  S01383 - BASIC RATE TAX INCORPORATION                        *
+     F*           NEW PROGRAM                                         *
+     F*                                                               *
+     F*****************************************************************
+     FINTPSL24IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FSDCBRTL1IF  E           K        DISK
+     FSDBRTDL1IF  E           K        DISK
+     FTABTB10 IF  E                    DISK
+     FTABTB20 IF  E                    DISK
+     FACCNT   IF  E           K        DISK
+     F*PTYHSTPDIF*E***********K        DISK                               088192
+     FPTYSEQPDIF  E           K        DISK
+     FS17RTNPDO   E                    DISK
+     FNEWINTPDO   E                    DISK
+     F            INTPSDDF                          KRENAMENEWINTFF
+     FNEWCINPDO   E                    DISK
+     F            COINTDDF                          KRENAMENEWCINFF
+     FRE2196P1O   E                    PRINTER
+     F                                              KINFDS SPOOL
+     F*
+     F*-------------------------------------------------------------------------
+     F*     F U N C T I O N   O F   I N D I C A T O R S
+     F*     ~~~~~~~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~
+     F*
+     F*         01          CHAIN FAIL,  FILE TABTB10
+     F*         02          CHAIN FAIL,  FILE SDBRTDL1
+     F*         03          END OF FILE, FILE INTPSL24
+     F*         06          CHAIN FAIL,  FILE CLINTCB
+     F*         07          CHAIN FAIL,  FILE CLINTCC
+     F*         08          CHAIN FAIL,  FILE SDCBRTL1
+     F*         09          CHAIN FAIL,  FILE PTYSEQPD
+     F*
+     F*         10          INTERIM REPORT REQUESTED
+     F*
+     F*         11          PRINT FORM TYPE 3 & FIRST PARTICIPATOR DETAILS
+     F*         12          PRINT SECOND PARTICIPATOR DETAILS
+     F*         13          PRINT THIRD  PARTICIPATOR DETAILS
+     F*         14          PRINT FOURTH PARTICIPATOR DETAILS
+     F*         15          PRINT FIFTH  PARTICIPATOR DETAILS
+     F*
+     F*         16          CHAIN FAIL, FILE PTYHSTPD
+     F*         17          NO DEAL NUMBER
+     F*
+     F*         18          WORK INDICATOR
+     F*         19          CATEGORY - INDIVIDUALS
+     F*         20             "     - CORPORATES
+     F*         21                   - BANKS
+     F*
+     F*         22          WORK IND - ELEMENT OF SEQUENCE NO ARRAY IS
+     F*                                BLANK
+     F*
+     F*         30          FIRST ALPHABETIC (RANGE A..Z) CHARACTER ON TITL
+     F*
+     F*         31          CHAIN FAIL, FILE TABTB20
+     F*         32          CHAIN FAIL, FILE ACCNT
+     F*
+     F*      90-99          STANDARD MIDAS SUBROUTINES
+     F*
+     F*         U7U8        DATABASE ERROR
+     F*         LR          END OF PROGRAM
+     F*
+     F**************************************************************************
+     F/EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+     E*
+     E                    WKA1       53  1
+     E                    WKA2       53  1
+     E                    LFLG       10  1
+     E                    SEQ         5  2 0
+     E                    SEQ1        5  2 0                              088192
+     E                    BRTL        5  1
+     E                    BRTLX       5  1
+     E                    WKPTY       5130
+     E                    DOB         5  6 0
+     E*
+     IPTYSEQF
+     I              DLNO                            ZDLNO
+     I              CNUM                            ZCNUM
+     I              CCY                             ZCCY
+     I              ACOD                            ZACOD
+     I              ACSQ                            ZACSQ
+     I              BRCA                            ZBRCA
+     I*
+     IACCNTABF
+     I              CNUM                            YCNUM
+     I              CCY                             YCCY
+     I              ACOD                            YACOD
+     I              ACSQ                            YACSQ
+     I              BRCA                            YBRCA
+     I*
+     I** FORM TYPE 1 DATA STRUCTURE
+     I            DS
+     I**********                              1 225 F1DATA                                    CRE051
+     I                                        1 250 F1DATA                                    CRE051
+     I                                        1   1 F1RECT
+     I                                        2   9 F1IRRN
+     I                                       10  59 F1INST
+     I                                       60 109 F1BRNM
+     I                                      110 115 F1SORT
+     I                                      116 119 F1CCYY
+     I                                      120 120 F1STRS
+     I                                      121 1240F1ACTL
+     I                                      125 1280F1NAML
+     I                                      129 1300F1NAMC
+     I                                      131 1340F1ADLL
+     I                                      135 1360F1ADLC
+     I                                      137 1400F1PNML
+     I                                      141 1440F1PTTL
+     I                                      145 1480F1PINL
+     I                                      149 1520F1PSNL
+     I                                      153 1560F1PALL
+     I                                      157 1580F1PALC
+     I**********                            159 225 F1ZZZZ                                    CRE051
+     I                                      159 250 F1ZZZZ                                    CRE051
+     I*
+     I** FORM TYPE 2 DATA STRUCTURE
+     I            DS
+     I**********                              1 225 F2DATA                                    CRE051
+     I                                        1 250 F2DATA                                    CRE051
+     I                                        1   1 F2RECT
+     I                                        2  21 F2ACNU
+     I                                       22  56 F2ANAM
+     I                                       57 161 F2AADD
+     I**************************************162 169 F2PCDE                                    CRE021
+     I**************************************170 170 F2GRGI                                    CRE021
+     I**************************************171 171 F2NAC                                     CRE021
+     I**************************************172 1820F2SGRI                CRE007
+     I**************************************183 1930F2SBRT                CRE007
+     I**************************************194 196 F2CCY                 CRE007
+     I**************************************197 1980F2NOOP                CRE007
+     I**************************************199 2000F2NPCU                CRE007
+     I**************************************201 225 F2ZZZZ                CRE007
+     I**************************************172 172 F2PSTR                             CRE007 CRE021
+     I**************************************173 1830F2SGRI                             CRE007 CRE021
+     I**************************************184 1940F2SBRT                             CRE007 CRE021
+     I**************************************195 197 F2CCY                              CRE007 CRE021
+     I**************************************198 1990F2NOOP                             CRE007 CRE021
+     I**************************************200 2010F2NPCU                             CRE007 CRE021
+     I**************************************202 225 F2ZZZZ                             CRE007 CRE021
+     I                                      162 170 F2PCDE                                    CRE021
+     I                                      171 171 F2GRGI                                    CRE021
+     I                                      172 172 F2NAC                                     CRE021
+     I                                      173 173 F2PSTR                                    CRE021
+     I                                      174 1840F2SGRI                                    CRE021
+     I                                      185 1950F2SBRT                                    CRE021
+     I                                      196 198 F2CCY                                     CRE021
+     I                                      199 2020F2NOOP                                    CRE021
+     I                                      203 2060F2NPCU                                    CRE021
+     I                                      207 208 F2ACNC                                    CRE021
+     I**********                            209 219 F21STP                             CRE021 CRE051
+     I                                      209 2190F21STP                                    CRE051
+     I                                      220 223 F2INCO                                    CRE021
+     I**********                            224 225 F2ZZZZ                             CRE021 CRE051
+     I                                      224 250 F2ZZZZ                                    CRE051
+     I*
+     I** FORM TYPE 3 DATA STRUCTURE
+     I            DS
+     I**********                              1 225 F3DATA                                    CRE051
+     I                                        1 250 F3DATA                                    CRE051
+     I                                        1   1 F3RECT
+     I                                        2  36 F3PANM                                    CRE051
+     I**********                              2   5 F3TITL                                    CRE051
+     I**********                              6  10 F3PINI                                    CRE051
+     I**********                             11  33 F3PNAM                                    CRE051
+     I**********                             34 117 F3PADD                                    CRE051
+     I**************************************118 125 F3PCDE                                    CRE021
+     I**************************************126 134 F3NINO                                    CRE021
+     I**************************************135 142 F3DOB                                     CRE021
+     I**************************************143 143 F3GRGI                                    CRE021
+     I**************************************144 225 F3ZZZZ                                    CRE021
+     I**********                            118 126 F3PCDE                             CRE021 CRE051
+     I**********                            127 135 F3NINO                             CRE021 CRE051
+     I**********                            136 143 F3DOB                              CRE021 CRE051
+     I**********                            144 144 F3GRGI                             CRE021 CRE051
+     I**********                            145 145 F3R85A                             CRE021 CRE051
+     I**********                            146 165 F3TAXI                             CRE021 CRE051
+     I**********                            166 167 F3CCOB                             CRE021 CRE051
+     I**********                            168 202 F3PLOB                             CRE021 CRE051
+     I**********                            203 203 F3SIIN                             CRE021 CRE051
+     I**********                            204 205 F3PNCO                             CRE021 CRE051
+     I**********                            206 207 F3CCDE                             CRE021 CRE051
+     I**********                            208 225 F3ZZZZ                             CRE021 CRE051
+     I                                       37  40 F3TITL                                    CRE051
+     I                                       41  45 F3PINI                                    CRE051
+     I                                       46  68 F3PNAM                                    CRE051
+     I                                       69 152 F3PADD                                    CRE051
+     I                                      153 161 F3PCDE                                    CRE051
+     I                                      162 170 F3NINO                                    CRE051
+     I                                      171 178 F3DOB                                     CRE051
+     I                                      179 179 F3GRGI                                    CRE051
+     I                                      180 180 F3R85A                                    CRE051
+     I                                      181 200 F3TAXI                                    CRE051
+     I                                      201 202 F3CCOB                                    CRE051
+     I                                      203 237 F3PLOB                                    CRE051
+     I                                      238 238 F3SIIN                                    CRE051
+     I                                      239 240 F3PNCO                                    CRE051
+     I                                      241 242 F3CCDE                                    CRE051
+     I                                      243 250 F3ZZZZ                                    CRE051
+     I*
+     I** FORM TYPE 4 DATA STRUCTURE
+     I            DS
+     I**********                              1 225 F4DATA                                    CRE051
+     I                                        1 250 F4DATA                                    CRE051
+     I                                        1   1 F4RECT
+     I                                        2  120F4ACTC
+     I**********                             13 225 F4ZZZZ                                    CRE051
+     I                                       13 250 F4ZZZZ                                    CRE051
+     I*
+     I** TAX DATE
+     ITAXDAT      DS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+     I*
+     I** PARTICIPATOR DATE OF BIRTH 6N - DDMMYY
+     I            DS
+     I                                        1   6 HHDOB
+     I                                        1   2 DDDOB
+     I                                        3   4 MMDOB
+     I                                        5   6 YYDOB
+     I*
+     I** CENTURIAN DATE FORMAT DDMMCCYY
+     I            DS
+     I                                        1   8 CENDAT
+     I                                        1   2 DDDAT
+     I                                        3   4 MMDAT
+     I                                        5   6 CCDAT
+     I                                        7   8 YYDAT
+     I*
+     I** ACCOUNT NUMBER
+     I            DS
+     I**********                              1  18 ACNUM                                     CGL029
+     I                                        1  24 ACNUM                                     CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+     I*
+     I** PREVIOUS ACCOUNT NUMBER
+     I            DS
+     I**********                              1  18 SACNUM                                    CGL029
+     I                                        1  24 SACNUM                                    CGL029
+     I**********                              1   60SCNUM                                     CSD027
+     I                                        1   6 SCNUM                                     CSD027
+     I                                        7   9 SCCY
+     I**********                             10  130SACOD                                     CGL029
+     I**********                             14  150SACSQ                                     CGL029
+     I**********                             16  18 SBRCA                                     CGL029
+     I                                       10  190SACOD                                     CGL029
+     I                                       20  210SACSQ                                     CGL029
+     I                                       22  24 SBRCA                                     CGL029
+     I*
+     I            DS
+     I                                        1  84 WRK84
+     I                                        1  28 WRK28A
+     I                                       29  56 WRK28B
+     I                                       57  84 WRK28C
+     I*
+     I            DS
+     I                                        1 105 WRK105
+     I                                        1  35 WRK35A
+     I                                       36  70 WRK35B
+     I                                       71 105 WRK35C
+     I*
+     I            DS
+     I                                        1   5 WRK005
+     I                                        1   1 WRK5AA
+     I                                        3   3 WRK5BB
+     I                                        5   5 WRK5CC
+     I*
+     I            DS
+     I                                        1   3 WRK003
+     I                                        1   1 WRK3AA
+     I                                        2   2 WRK3BB
+     I                                        3   3 WRK3CC
+     I*
+     I** PARTICIPATOR SEQUENCE NOS
+     I            DS
+     I                                        1  100SEQ
+     I                                        1   20PTYSQ1
+     I                                        3   40PTYSQ2
+     I                                        5   60PTYSQ3
+     I                                        7   80PTYSQ4
+     I                                        9  100PTYSQ5
+     I            DS                                                      088192
+     I                                        1  100SEQ1                  088192
+     I                                        1   20H1SEQN
+     I                                        3   40H2SEQN
+     I                                        5   60H3SEQN
+     I                                        7   80H4SEQN
+     I                                        9  100H5SEQN
+     I*
+     I** PARTICIPATOR HISTORY DETAILS
+     I            DS
+     I                                        1 130 WKPART
+     I                                        1   4 PTTITL
+     I                                        5  27 PTNAME
+     I                                       28  30 PTINIT
+     I                                       31  58 PTADR1
+     I                                       59  86 PTADR2
+     I                                       87 114 PTADR3
+     I                                      115 118 PTPCD1
+     I                                      119 121 PTPCD2
+     I                                      122 130 PTNINO
+     I*
+     I** PARTICIPATOR DATA STRUCTURES
+     I            DS
+     I                                        1 650 WKPTY
+     I                                        1   4 H1TITL
+     I                                        5  27 H1NAME
+     I                                       28  30 H1INIT
+     I                                       31  58 H1ADR1
+     I                                       59  86 H1ADR2
+     I                                       87 114 H1ADR3
+     I                                      115 118 H1PCD1
+     I                                      119 121 H1PCD2
+     I                                      122 130 H1NINO
+     I                                      131 134 H2TITL
+     I                                      135 157 H2NAME
+     I                                      158 160 H2INIT
+     I                                      161 188 H2ADR1
+     I                                      189 216 H2ADR2
+     I                                      217 244 H2ADR3
+     I                                      245 248 H2PCD1
+     I                                      249 251 H2PCD2
+     I                                      252 260 H2NINO
+     I                                      261 264 H3TITL
+     I                                      265 287 H3NAME
+     I                                      288 290 H3INIT
+     I                                      291 318 H3ADR1
+     I                                      319 346 H3ADR2
+     I                                      347 374 H3ADR3
+     I                                      375 378 H3PCD1
+     I                                      379 381 H3PCD2
+     I                                      382 390 H3NINO
+     I                                      391 394 H4TITL
+     I                                      395 417 H4NAME
+     I                                      418 420 H4INIT
+     I                                      421 448 H4ADR1
+     I                                      449 476 H4ADR2
+     I                                      477 504 H4ADR3
+     I                                      505 508 H4PCD1
+     I                                      509 511 H4PCD2
+     I                                      512 520 H4NINO
+     I                                      521 524 H5TITL
+     I                                      525 547 H5NAME
+     I                                      548 550 H5INIT
+     I                                      551 578 H5ADR1
+     I                                      579 606 H5ADR2
+     I                                      607 634 H5ADR3
+     I                                      635 638 H5PCD1
+     I                                      639 641 H5PCD2
+     I                                      642 650 H5NINO
+     I*
+     I** PARTICIPATOR WORK DATA STRUCTURES
+     I            DS
+     I                                        1 130 WKDET1
+     I                                        1   4 W1TITL
+     I                                        5  27 W1NAME
+     I                                       28  30 W1INIT
+     I                                       31  58 W1ADR1
+     I                                       59  86 W1ADR2
+     I                                       87 114 W1ADR3
+     I                                      115 118 W1PCD1
+     I                                      119 121 W1PCD2
+     I                                      122 130 W1NINO
+     I            DS
+     I                                        1 130 WKDET2
+     I                                        1   4 W2TITL
+     I                                        5  27 W2NAME
+     I                                       28  30 W2INIT
+     I                                       31  58 W2ADR1
+     I                                       59  86 W2ADR2
+     I                                       87 114 W2ADR3
+     I                                      115 118 W2PCD1
+     I                                      119 121 W2PCD2
+     I                                      122 130 W2NINO
+     I            DS
+     I                                        1 130 WKDET3
+     I                                        1   4 W3TITL
+     I                                        5  27 W3NAME
+     I                                       28  30 W3INIT
+     I                                       31  58 W3ADR1
+     I                                       59  86 W3ADR2
+     I                                       87 114 W3ADR3
+     I                                      115 118 W3PCD1
+     I                                      119 121 W3PCD2
+     I                                      122 130 W3NINO
+     I            DS
+     I                                        1 130 WKDET4
+     I                                        1   4 W4TITL
+     I                                        5  27 W4NAME
+     I                                       28  30 W4INIT
+     I                                       31  58 W4ADR1
+     I                                       59  86 W4ADR2
+     I                                       87 114 W4ADR3
+     I                                      115 118 W4PCD1
+     I                                      119 121 W4PCD2
+     I                                      122 130 W4NINO
+     I            DS
+     I                                        1 130 WKDET5
+     I                                        1   4 W5TITL
+     I                                        5  27 W5NAME
+     I                                       28  30 W5INIT
+     I                                       31  58 W5ADR1
+     I                                       59  86 W5ADR2
+     I                                       87 114 W5ADR3
+     I                                      115 118 W5PCD1
+     I                                      119 121 W5PCD2
+     I                                      122 130 W5NINO
+     I*
+     I** DATE OF BIRTH DATA STRUCTURES
+     I            DS
+     I                                        1  300DOB
+     I                                        1   60H1DOB
+     I                                        7  120H2DOB
+     I                                       13  180H3DOB
+     I                                       19  240H4DOB
+     I                                       25  300H5DOB
+     I*
+     I** BRT LIABLE DATA STRUCTURE 1
+     I            DS
+     I                                        1   5 BRTLX
+     I                                        1   1 H1BRTL
+     I                                        2   2 H2BRTL
+     I                                        3   3 H3BRTL
+     I                                        4   4 H4BRTL
+     I                                        5   5 H5BRTL
+     I*
+     I** BRT LIABLE DATA STRUCTURE 2
+     I            DS
+     I                                        1  10 LFLAGS
+     I                                        1  10 LFLG
+     ISDBRCH    E DSSDBRCHPD
+      * Data Structure for Branch Details Access Program
+     IDSFDY     E DSDSFDY
+      * Short Data Structure for Access Programs
+     ISDCUST    E DSSDCUSTPD                                                                  CRE051
+      * Data Structure for Customer Details Access Program                                    CRE051
+     I              QQDFAC                          WQDFAC                                    CRE051
+     I*
+     I** ERROR DATA STRUCTURE FOR LDA
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL       DS
+     I*
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      * Data structure for AOSVALR0 string                                                    CRE021
+     I            DS                                                                          CRE021
+     I                                        1 200 SVAL1                                     CRE021
+     I                                        1   2 SVAL12                                    CRE021
+      *                                                                                       CRE021
+      * System Value                                                                          CRE021
+     I            DS                                                                          CRE021
+     I I            'AccountNamingCode'       1  20 SVALK1                                    CRE021
+      *                                                                                       CRE021
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C***************************************************************
+     C*                                                             *
+     C*   M A I N   P R O C E S S I N G                             *
+     C*                                                             *
+     C*   CALLS  INIT   -  INITIAL PROCESSING                       *
+     C*          DETAIL -  DETAIL  PROCESSING                       *
+     C*          FINAL  -  FINAL   PROCESSING                       *
+     C*                                                             *
+     C***************************************************************
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C** PERFORM DETAIL PROCESSING
+     C*
+     C           *INU7     IFNE '1'                        B1
+     C                     EXSR DETAIL                     *1
+     C                     END                             E1
+     C*
+     C** PERFORM FINAL PROCESSING
+     C*
+     C                     EXSR FINAL
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*    I N D E X   O F   S U B R O U T I N E S             *
+     C*    ~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~~~             *
+     C*                                                        *
+     C*     INIT   - INITIAL PROCESSING                        *
+     C*     DETAIL - DETAIL  PROCESSING                        *
+     C*     FINAL  - FINAL   PROCESSING                        *
+     C*                                                        *
+     C*     #BRCH  - PROCESS BRANCH DETAILS                    *
+     C*     #CUST  - PROCESS CUSTOMER DETAILS                  *
+     C*     FMTDOB - FORMAT 6N DATE OF BIRTH TO DDMMCCYY       *
+     C*     #ADDET - PROCESS ACCOUNT OR DEAL DETAILS           *
+     C*     CERTIF - DETERMINE PART/FULL SELF-CERTIFIER STATUS *
+     C*     #ADHST - PROCESS ACCOUNT OR DEAL INTEREST HISTORY  *
+     C*                                                        *
+     C*     #WR01  - WRITE FORM TYPE 1                         *
+     C*     #WR23  - WRITE FORM TYPE 2 AND 3                   *
+     C*     #FORF2 - FORMAT FILE FIELDS FOR FORM TYPE 2        *
+     C*     #FORF3 - FORMAT FILE FIELDS FOR FORM TYPE 3        *
+     C*     #FOR3N - FORMAT FILE FIELDS FOR FORM TYPE 3        *                              CRE051
+     C*              FOR NON-INDIVIDUAL ACCOUNTS               *                              CRE051
+     C*     #CL23  - CLEAR WORK FIELDS ON FORM TYPE 2 AND 3    *
+     C*     #WR04  - WRITE FORM TYPE 4                         *
+     C*                                                        *
+     C*     DBERR  - DEFAULT ERROR HANDLING                    *
+     C*     ZDATE1 - REFORMAT DATE TO DAY NO                   *
+     C*     ZDATE2 - REFORMAT DAY NO TO DATE                   *
+     C*     ZEDIT  - EDIT NUMERIC FIELDS FOR PRINT FORMAT      *
+     C*                                                        *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   DETAIL  - DETAIL PROCESSING                          *
+     C*                                                        *
+     C*   CALLED BY :  MAIN PROCESSING                         *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     #BRCH  - PROCESS BRANCH DETAILS                    *
+     C*     #CUST  - PROCESS CUSTOMER DETAILS                  *
+     C*     #ADDET - PROCESS ACCOUNT OR DEAL DETAILS           *
+     C*     #ADHST - PROCESS ACCOUNT OR DEAL INTEREST HISTORY  *
+     C*     #WR23  - WRITE FORM TYPE 2 AND 3                   *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           DETAIL    BEGSR
+     C*
+     C** READ FIRST RECORD FROM INTEREST HISTORY PAYMENT FILE
+     C*
+     C                     READ INTPSL24                 03
+     C*
+     C** DO WHILE NOT EOF
+     C*
+     C           *IN03     DOWEQ'0'                        B1
+     C*
+     C** PERFORM PROCESSING ONLY IF THE INTEREST PAYMENT DATE IS WITHIN
+     C** THE TAX PERIOD (IE BEFORE LAST DATE OF CURRENT TAX YEAR)
+     C*
+     C** PROCESS BRANCH DETAILS
+     C*
+     C           IPDT      IFLE TAXET                      B*2
+     C                     EXSR #BRCH                      **2
+     C                     END                             E*2
+     C*
+     C** SAVE BRANCH CODE TO WORK FIELD
+     C*
+     C                     MOVELBRCA      SBRCA            *1
+     C*
+     C**   DO WHILE BRANCH CODE EQUALS PREVIOUS BRANCH CODE
+     C*
+     C           BRCA      DOWEQSBRCA                      B*2
+     C*
+     C**   PROCESS CUSTOMER DETAILS
+     C*
+     C           IPDT      IFLE TAXET                      B**3
+     C                     EXSR #CUST                      ***3
+     C                     END                             E**3
+     C*
+     C**   SAVE CUSTOMER NUMBER TO WORK FIELD
+     C*
+     C**********           Z-ADDCNUM      SCNUM            **2                                CSD027
+     C                     MOVE CNUM      SCNUM            **2                                CSD027
+     C*
+     C**     DO WHILE CUSTOMER NUMBER EQUALS PREVIOUS CUSTOMER NUMBER
+     C*
+     C           CNUM      DOWEQSCNUM                      B**3
+     C*
+     C**     PROCESS ACCOUNT OR DEAL DETAILS
+     C*
+     C           IPDT      IFLE TAXET                      B***4
+     C                     EXSR #ADDET                     ****4
+     C*
+     C**     IF ERROR IN PARTICIPATOR HISTORY PROGRAM SD2466, END PROGRAM
+     C*
+     C           *INU7     IFEQ '1'                        B****5
+     C                     GOTO DETAI9                     *****5
+     C                     END                             E****5
+     C                     END                             E***4
+     C*
+     C**     SAVE DEAL NUMBER AND ACCOUNT NUMBER TO WORK FIELDS
+     C*
+     C                     Z-ADDDLNO      SDLNO            ***3
+     C                     MOVE ACNUM     SACNUM           ***3
+     C*
+     C**     SAVE BRT CATEGORY TO WORK FIELD
+     C*
+     C                     MOVE RTYP      SRTYP
+     C*
+     C**       DO WHILE DEAL NUMBER AND ACCOUNT NUMBER EQUALS PREVIOUS
+     C*
+     C           DLNO      DOWEQSDLNO                      B***4
+     C           ACNUM     ANDEQSACNUM                     B***4
+     C*
+     C**       PROCESS ACCOUNT OR DEAL INTEREST HISTORY
+     C*
+     C           IPDT      IFLE TAXET                      B****5
+     C                     EXSR #ADHST                     *****5
+     C                     END                             E****5
+     C*
+     C**       IF THE RECORD IS IN THE THE NEXT TAX PERIOD, WRITE THE
+     C**       RECORD TO THE POST TAX YEAR FILE, EITHER NEWINTPD OR
+     C**       NEWCINPD.
+     C**       (ONLY IF END OF YEAR PROCESSING)
+     C*
+     C           IPDT      IFGT TAXET                      B****5
+     C           PEOY      ANDEQ'Y'                        B****5
+     C           RTYP      IFEQ 'A'
+     C           RTYP      OREQ 'R'                                       CRE007
+     C                     WRITENEWINTFF                   *****5
+     C                     ELSE
+     C                     WRITENEWCINFF
+     C                     END
+     C                     END                             E****5
+     C*
+     C**       READ NEXT RECORD
+     C*
+     C                     READ INTPSL24                 03****4
+     C*
+     C           *IN03     IFEQ '1'                        B****5
+     C*
+     C**     WRITE FORM TYPES 2 AND 3 FOR LAST RECORD
+     C*
+     C           IPDT      IFLE TAXET                      B*****6
+     C                     EXSR #WR23                      ******6
+     C                     END                             E*****6
+     C*
+     C                     GOTO DETAI9                     *****5
+     C                     END                             E****5
+     C*
+     C                     END                             E***4
+     C*
+     C**     WRITE FORM TYPES 2 AND 3
+     C*
+     C           IPDT      IFLE TAXET                      B***4
+     C                     EXSR #WR23                      ****4
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C                     MOVE *BLANKS   WKDOB1           **2
+     C                     MOVE *BLANKS   WKDOB2           **2
+     C                     MOVE *BLANKS   WKDOB3           **2
+     C                     MOVE *BLANKS   WKDOB4           **2
+     C                     MOVE *BLANKS   WKDOB5           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C           DETAI9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #BRCH - PROCESS BRANCH CODES                         *
+     C*                                                        *
+     C*   CALLED BY :  DETAIL PROCESSING                       *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     #WR01  - WRITE FORM TYPE 1                         *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #BRCH     BEGSR
+     C*
+     C** ACCESS BRANCH FILE
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           BRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C**  IF NO RECORD ON FILE - DATABASE ERROR
+     C*
+     C           @RTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBRCHPD'#FILE            ***************
+     C                     MOVELBRCA      #KEY             * DB ERROR 004*
+     C                     MOVEL'004'     #BASE            ***************
+     C                     EXSR DBERR                      *1
+     C                     END                             E1
+     C*
+     C** PRINT FORM TYPE 1
+     C*
+     C                     EXSR #WR01
+     C*
+     C           #BRCH9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #CUST - PROCESS CUSTOMER DETAILS                     *
+     C*                                                        *
+     C*   CALLED BY :  DETAIL PROCESSING                       *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     FMTDOB - FORMAT 6N DATE OF BIRTH TO DDMMCCYY       *
+     C*                                                        *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #CUST     BEGSR
+     C*
+     C** CHAIN TO CUSTOMER FILES
+     C*
+     C** CHAIN TO CUSTOMER MASTER FILE I
+     C*
+     C**********           Z-ADDCNUM      KCNUM                                               CSD027
+     C                     MOVE CNUM      KCNUM                                               CSD027
+     C                     MOVE 'A'       KRTYP
+     C*
+     C           KCLINT    CHAINCLINTCBF             06
+     C*
+     C** IF NO RECORD ON FILE - DATABASE ERROR
+     C*
+     C           *IN06     IFEQ '1'                        B1
+     C           RECI      ORNE 'D'                        B1
+     C           RECI      ANDNE'C'                        B1
+     C                     MOVEL'CLINTCB' #FILE            ***************
+     C                     MOVELKCNUM     #KEY             * DB ERROR 005*
+     C                     MOVEL'005'     #BASE            ***************
+     C                     EXSR DBERR                      *1
+     C                     END                             E1
+     C*
+     C** CHAIN TO CUSTOMER MASTER FILE II
+     C*
+     C                     MOVE 'B'       KRTYP
+     C*
+     C           KCLINT    CHAINCLINTCCF             07
+     C*
+     C** IF NO RECORD ON FILE - ZEROISE CUSTOMER ADDRESS FIELDS
+     C*
+     C           *IN07     IFEQ '1'                        B1
+     C           RECI      ORNE 'D'                        B1
+     C           RECI      ANDNE'C'                        B1
+     C                     MOVE *BLANKS   CNA2             *1
+     C                     MOVE *BLANKS   CNA3             *1
+     C                     MOVE *BLANKS   CNA4             *1
+     C                     END                             E1
+     C           #CUST9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   FMTDOB - FORMAT 6 N DATE OF BIRTH TO DDMMCCYY        *
+     C*                                                        *
+     C*   CALLED BY :  #CUST - PROCESS CUSTOMER DETAILS        *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           FMTDOB    BEGSR
+     C*
+     C** FORMAT DATE TO CENTURIAN
+     C*
+     C                     MOVE *ZEROS    CENDAT
+     C                     MOVE DDDOB     DDDAT
+     C                     MOVE MMDOB     MMDAT
+     C                     MOVE '  '      CCDAT
+     C                     MOVE YYDOB     YYDAT
+     C*
+     C           FMTDO9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #ADDET - PROCESS ACCOUNT OR DEAL DETAILS             *
+     C*                                                        *
+     C*   CALLED BY :  DETAIL PROCESSING                       *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     SD2466 - PARTICIPATOR HISTORY PROGRAM              *
+     C*     CERTIF - DETERMINE PART/FULL SELF-CERTIFIER STATUS *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #ADDET    BEGSR
+     C*
+     C** IF THE INTEREST HISTORY IS NOT FROM A DEAL, SURPRESS PRINT
+     C** OF ACCOUNT NUMBER/DEAL NUMBER COMBINATION
+     C*
+     C           DLNO      IFEQ 0                          B1
+     C                     MOVE '1'       *IN17            *1
+     C                     ELSE                            *1
+     C                     MOVE '0'       *IN17            *1
+     C                     END                             E1
+     C           #ADDE9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #ADHST - PROCESS ACCOUNT OR DEAL INTEREST HISTORY    *
+     C*                                                        *
+     C*   CALLED BY :  DETAIL PROCESSING                       *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #ADHST    BEGSR
+     C*
+     C** IF THE STERLING GROSS INTEREST > 0
+     C*
+     C           STGGRI    IFGT 0                          B1
+     C*
+     C** ACCUMULATE STG GROSS INTEREST TO TOTAL GROSS INTEREST FOR THE
+     C** ACCOUNT/DEAL
+     C*
+     C                     ADD  STGGRI    WRKGRI           *1
+     C*
+     C** ACCUMULATE STG BRT DEDUCTED TO TOTAL BRT TAX DEDUCTED FOR THE
+     C** ACCOUNT/DEAL
+     C*
+     C                     ADD  STGBRT    WRKBRT           *1
+     C*
+     C** STORE THE VALUE OF THE NEW A/C SIGNAL AND SAVE THE INTEREST
+     C** PAYMENT DATE IF THE DATE IS GREATER THAN THE PREVIOUS DATE READ
+     C** FOR THIS ACCOUNT/DEAL
+     C*
+     C           IPDT      IFGT SIPDT                      B*2
+     C                     MOVE NACSG     WRKNAC           **2
+     C                     Z-ADDIPDT      SIPDT            **2
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C** OTHERWISE
+     C*
+     C** IF THE STERLING GROSS INTEREST = 0
+     C*
+     C           STGGRI    IFEQ 0                          B1
+     C*
+     C** SUBTRACT STG BRT CREDITED FROM TOTAL BRT TAX DEDUCTED FOR THE
+     C** ACCOUNT/DEAL
+     C*
+     C                     SUB  CRBRTS    WRKBRT           *1
+     C                     END                             E1
+     C*
+     C           #ADHS9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #WR01  - WRITE FORM TYPE 1                           *
+     C*                                                        *
+     C*   CALLED BY :  #BRCH - PROCESS BRANCH CODES            *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #WR01     BEGSR
+     C*
+     C** REMOVE UNWANTED BLANKS AND NON A-Z CHARACTERS FROM TITL ON TABTB10
+     C*
+     C                     MOVE '0'       *IN30
+     C                     MOVEATITL      WKA1
+     C                     Z-ADD1         Z       20
+     C                     Z-ADD1         I       20
+     C*
+     C                     DO   53                         B1
+     C*
+     C** SET ON INDICATOR FOR FIRST ALPHABETIC CHARACTER IN TITL
+     C*
+     C           WKA1,Z    IFGE 'A'                        B*2
+     C           WKA1,Z    ANDLE'Z'                        B*2
+     C                     MOVE '1'       *IN30            **2
+     C                     END                             E*2
+     C*
+     C           *IN30     IFEQ '1'                        B*2
+     C                     MOVEAWKA1,Z    WKA2,I           **2
+     C                     ADD  1         I                **2
+     C                     END                             E*2
+     C*
+     C                     ADD  1         Z                *1
+     C*
+     C                     END                             E1
+     C*
+     C                     MOVEAWKA2      INSTIT 53
+     C*
+     C*
+     C** FORMAT OUTPUT FILE FIELDS FOR FORM TYPE 1
+     C*
+     C                     MOVE '1'       F1RECT
+     C                     MOVELIRRN      F1IRRN
+     C                     MOVELINSTIT    F1INST
+     C                     MOVELA8BRNM    F1BRNM
+     C*
+     C           A8STCD    IFEQ *ZEROS
+     C                     MOVE *BLANKS   F1SORT
+     C                     ELSE
+     C                     MOVE A8STCD    F1SORT
+     C                     END
+     C*
+     C                     MOVELCCYY      F1CCYY
+     C                     MOVE 'Y'       F1STRS
+     C                     Z-ADD35        F1ACTL
+     C                     Z-ADD0         F1NAML
+     C                     Z-ADD0         F1NAMC
+     C                     Z-ADD35        F1ADLL
+     C                     Z-ADD3         F1ADLC
+     C**********           Z-ADD0         F1PNML                                              CRE051
+     C                     Z-ADD35        F1PNML                                              CRE051
+     C                     Z-ADD4         F1PTTL
+     C                     Z-ADD5         F1PINL
+     C                     Z-ADD23        F1PSNL
+     C                     Z-ADD28        F1PALL
+     C                     Z-ADD3         F1PALC
+     C*
+     C** FORMAT PRINTER FILE FIELDS FOR FORM TYPE 1
+     C*
+     C                     MOVELIRRN      P1IRRN
+     C                     MOVELINSTIT    P1INST
+     C                     MOVELA8BRNM    P1BRNM
+     C*
+     C           A8STCD    IFEQ *ZEROS
+     C                     MOVE *BLANKS   P1SORT
+     C                     ELSE
+     C                     MOVE A8STCD    P1SORT
+     C                     END
+     C*
+     C                     MOVELCCYY      P1CCYY
+     C*
+     C** WRITE FORM TYPE 1
+     C*
+     C                     MOVELF1DATA    DATA
+     C                     WRITES17RTNFF
+     C*
+     C** PRINT FORM TYPE 1
+     C*
+     C                     WRITERE2196HH
+     C                     WRITERE2196F1
+     C*
+     C** INCREMENT NO OF FORMS
+     C*
+     C**                   ADD  1         NOFORM
+     C*
+     C           #WR019    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #WR23  - WRITE FORM TYPE 2 AND 3                     *
+     C*                                                        *
+     C*   CALLED BY :  DETAIL - DETAIL PROCESSING              *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     #FORF2 - FORMAT FILE FIELDS FOR FORM TYPE 2        *
+     C*     #FORF3 - FORMAT FILE FIELDS FOR FORM TYPE 3        *
+     C*     #CL23  - CLEAR WORK FIELDS ON FORM TYPE 2 AND 3    *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #WR23     BEGSR
+     C*
+     C** ACCUMULATE THE TOTAL STG GROSS INTEREST AND BRT TAX DEDUCTED
+     C** FOR THE ACCOUNT/DEAL TO A SUMMARY TOTAL
+     C*
+     C**                   ADD  WRKGRI    TOTGRI
+     C**                   ADD  WRKBRT    TOTBRT
+     C*
+     C** FORMAT OUTPUT FIELDS FOR FORM TYPE 2
+     C** ------------------------------------
+     C*
+     C                     MOVE '2'       F2RECT
+     C*
+     C** OBTAIN ACCOUNT NUMBER
+     C*
+     C**********           MOVEL*BLANKS   WRK018 18                                           CGL029
+     C                     MOVEL*BLANKS   WRK018 24                                           CGL029
+     C           *IN17     IFEQ '1'                        B1
+     C*
+     C** IF RETAIL ACCOUNT NUMBERS TO BE USED CHAIN TO LF/ACCNT
+     C** FOR RETAIL ACCOUNT NUMBER
+     C*
+     C           RACN      IFEQ 'Y'                        B*2
+     C           KACCNT    CHAINACCNT                32
+     C*
+     C** IF RECORD FOUND USE RETAIL ACCOUNT NUMBER
+     C** However, if retail account number is zero then use               180467
+     C** standard 18 character account reference.                         180467
+     C*
+     C           *IN32     IFEQ '0'                        B**3
+     C           ACNO      IFNE *ZERO                      B**4           180467
+     C                     MOVELACNO      WRK018
+     C                     ELSE                            X4             180467
+     C                     MOVELSACNUM    WRK018           **4            180467
+     C                     END                             E**4           180467
+     C                     END                             E**3
+     C                     END                             E*2
+     C*
+     C** IF NOT USING RETAIL ACCOUNT NUMBERS
+     C** OR A RECORD IS NOT FOUND ON LF/ACCNT
+     C** USE THE STANDARD 15 CHARACTER ACCOUNT NUMBER
+     C*
+     C           RACN      IFEQ 'N'                        B*2
+     C           *IN32     OREQ '1'                        B*2
+     C                     MOVELSACNUM    WRK018           **2
+     C                     END                             E*2
+     C*
+     C                     ELSE                            X1
+     C                     MOVELSCNUM     WRK018           *1
+     C                     MOVE SDLNO     WRK018           *1
+     C                     END                             E1
+     C                     MOVELWRK018    F2ACNU
+     C                     MOVELWRK018    P2ACNU
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF2
+     C*
+     C** WRITE FORM TYPE 2
+     C*
+     C** Only output form type 2 if tax deducted or gross int *NE 0.      062208
+     C*                                                                   062208
+     C           F2SGRI    IFEQ 0                                         062208
+     C           F2SBRT    ANDEQ0                                         062208
+     C                     GOTO FORM3                                     062208
+     C                     END                                            062208
+     C*                                                                   062208
+     C                     MOVELF2DATA    DATA
+     C                     WRITES17RTNFF
+     C*
+     C** SETON APPROPRIATE CATEGORY INDICATOR
+     C*
+     C           SRTYP     IFEQ 'C'                        B1
+     C                     MOVE '1'       *IN20            *1
+     C                     ELSE                            X1
+     C           SRTYP     IFEQ 'B'                        B*2
+     C                     MOVE '1'       *IN21            **2
+     C                     ELSE                            X*2
+     C                     MOVE '1'       *IN19            **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C** PRINT FORM TYPE 2
+     C*
+     C                     WRITERE2196HH
+     C                     WRITERE2196F2
+     C*
+     C                     MOVE '0'       *IN19
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C*                                                                   062208
+     C***********FORM3     TAG                                      062208084914
+     C*
+     C*
+     C** FORMAT OUTPUT FIELDS FOR FORM TYPE 3
+     C** ------------------------------------
+     C** WRITE TYPE 3 RECORDS FOR NON-INDIVIDUAL ACCOUNTS                                     CRE051
+     C           ACHLRT    IFEQ 'C'                                                           CRE051
+     C           ACHLRT    OREQ 'B'                                                           CRE051
+     C                     EXSR #FOR3N                                                        CRE051
+     C                     ENDIF                                                              CRE051
+     C*
+     C** WRITE FORM TYPE 3 IF PARTICIPATORS EXIST
+     C*
+     C           *IN11     IFEQ '1'                        B1
+     C*
+     C                     MOVE '3'       F3RECT           *1
+     C                     MOVELW1TITL    HHTITL  4
+     C                     MOVELW1NAME    HHNAME 23
+     C                     MOVELW1INIT    HHINIT  3
+     C                     MOVELW1ADR1    HHADD1 28
+     C                     MOVELW1ADR2    HHADD2 28
+     C                     MOVELW1ADR3    HHADD3 28
+     C                     MOVELW1PCD1    HHPCD1  4
+     C                     MOVELW1PCD2    HHPCD2  3
+     C                     MOVELW1NINO    HHNINO  9
+     C*
+     C                     MOVELWKDOB1    HHCDOB  8        *1
+     C                     MOVELWKGRI1    HHGRGI  1
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF3                     *1
+     C*
+     C** WRITE FORM TYPE 3
+     C*
+     C                     MOVELF3DATA    DATA             *1
+     C                     WRITES17RTNFF                   *1
+     C*
+     C** PRINT FORM TYPE 3
+     C*
+     C                     WRITERE2196H3                   *1
+     C                     WRITERE2196F3                   *1
+     C*
+     C** INCREMENT NO OF FORMS
+     C*
+     C**                   ADD  1         NOFORM           *1
+     C*
+     C*
+     C** WRITE SECOND PARTICIPATOR IF EXIST
+     C*
+     C           *IN12     IFEQ '1'                         B*2
+     C                     MOVELW2TITL    HHTITL
+     C                     MOVELW2NAME    HHNAME
+     C                     MOVELW2INIT    HHINIT
+     C                     MOVELW2ADR1    HHADD1
+     C                     MOVELW2ADR2    HHADD2
+     C                     MOVELW2ADR3    HHADD3
+     C                     MOVELW2PCD1    HHPCD1
+     C                     MOVELW2PCD2    HHPCD2
+     C                     MOVELW2NINO    HHNINO
+     C*
+     C                     MOVELWKDOB2    HHCDOB            **2
+     C                     MOVELWKGRI2    HHGRGI
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF3                      **2
+     C*
+     C** WRITE FORM TYPE 3
+     C*
+     C                     MOVELF3DATA    DATA              **2
+     C                     WRITES17RTNFF                    **2
+     C*
+     C** PRINT FORM TYPE 3
+     C*
+     C                     WRITERE2196F3                    **2
+     C*
+     C                     END                              E*2
+     C*
+     C** WRITE THIRD  PARTICIPATOR IF EXIST
+     C*
+     C           *IN13     IFEQ '1'                         B*2
+     C                     MOVELW3TITL    HHTITL
+     C                     MOVELW3NAME    HHNAME
+     C                     MOVELW3INIT    HHINIT
+     C                     MOVELW3ADR1    HHADD1
+     C                     MOVELW3ADR2    HHADD2
+     C                     MOVELW3ADR3    HHADD3
+     C                     MOVELW3PCD1    HHPCD1
+     C                     MOVELW3PCD2    HHPCD2
+     C                     MOVELW3NINO    HHNINO
+     C*
+     C                     MOVELWKDOB3    HHCDOB            **2
+     C                     MOVELWKGRI3    HHGRGI
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF3                      **2
+     C*
+     C** WRITE FORM TYPE 3
+     C*
+     C                     MOVELF3DATA    DATA              **2
+     C                     WRITES17RTNFF                    **2
+     C*
+     C** PRINT FORM TYPE 3
+     C*
+     C                     WRITERE2196F3                    **2
+     C*
+     C                     END                              E*2
+     C*
+     C** WRITE FOURTH PARTICIPATOR IF EXIST
+     C*
+     C           *IN14     IFEQ '1'                         B*2
+     C                     MOVELW4TITL    HHTITL
+     C                     MOVELW4NAME    HHNAME
+     C                     MOVELW4INIT    HHINIT
+     C                     MOVELW4ADR1    HHADD1
+     C                     MOVELW4ADR2    HHADD2
+     C                     MOVELW4ADR3    HHADD3
+     C                     MOVELW4PCD1    HHPCD1
+     C                     MOVELW4PCD2    HHPCD2
+     C                     MOVELW4NINO    HHNINO
+     C*
+     C                     MOVELWKDOB4    HHCDOB            **2
+     C                     MOVELWKGRI4    HHGRGI
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF3                      **2
+     C*
+     C** WRITE FORM TYPE 3
+     C*
+     C                     MOVELF3DATA    DATA              **2
+     C                     WRITES17RTNFF                    **2
+     C*
+     C** PRINT FORM TYPE 3
+     C*
+     C                     WRITERE2196F3                    **2
+     C*
+     C                     END                              E*2
+     C*
+     C** WRITE FIFTH  PARTICIPATOR IF EXIST
+     C*
+     C           *IN15     IFEQ '1'                         B*2
+     C                     MOVELW5TITL    HHTITL
+     C                     MOVELW5NAME    HHNAME
+     C                     MOVELW5INIT    HHINIT
+     C                     MOVELW5ADR1    HHADD1
+     C                     MOVELW5ADR2    HHADD2
+     C                     MOVELW5ADR3    HHADD3
+     C                     MOVELW5PCD1    HHPCD1
+     C                     MOVELW5PCD2    HHPCD2
+     C                     MOVELW5NINO    HHNINO
+     C*
+     C                     MOVELWKDOB5    HHCDOB            **2
+     C                     MOVELWKGRI5    HHGRGI
+     C*
+     C** FORMAT FIELDS
+     C*
+     C                     EXSR #FORF3                      **2
+     C*
+     C** WRITE FORM TYPE 3
+     C*
+     C                     MOVELF3DATA    DATA              **2
+     C                     WRITES17RTNFF                    **2
+     C*
+     C** PRINT FORM TYPE 3
+     C*
+     C                     WRITERE2196F3                    **2
+     C*
+     C                     END                              E*2
+     C*
+     C                     END                              E1
+     C*
+     C** CLEAR WORK FIELDS ON FORM TYPE 2 AND 3
+     C*
+     C           FORM3     TAG                                            084914
+     C                     EXSR #CL23
+     C*
+     C           #WR239    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #FORF2 - FORMAT FILE FIELDS FOR FORM TYPE 2          *
+     C*                                                        *
+     C*   CALLED BY :  #WR23                                   *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     ZEDIT  - EDIT NUMERIC FIELDS FOR PRINT FORMAT      *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #FORF2    BEGSR
+     C*
+     C** INCREMENT NO OF FORMS
+     C*
+     C                     ADD  1         NOACCS
+     C*
+     C** INITIALISE WORK FIELDS
+     C*
+     C                     MOVE *BLANKS   WRK105
+     C*
+     C** INITIALISE OUTPUT FILE FIELDS
+     C*
+     C                     MOVE *BLANKS   F2ANAM
+     C                     MOVE *BLANKS   F2AADD
+     C                     Z-ADD0         F2SGRI
+     C                     Z-ADD0         F2SBRT
+     C                     MOVE *BLANKS   F2GRGI
+     C                     MOVE *BLANKS   F2NAC
+     C                     MOVE *BLANK    F2PSTR                          CRE007
+     C                     Z-ADD0         F2NOOP
+     C                     MOVE ACNCOD    F2ACNC                                              CRE021
+     C**********           MOVE *BLANKS   F21STP                                       CRE021 CRE051
+     C                     Z-ADD0         F21STP                                              CRE051
+     C                     MOVEL'NONE'    F2INCO                                              CRE021
+     C*
+     C** INITIALISE PRINTER FILE FIELDS
+     C*
+     C                     MOVE *BLANKS   P2CNA1
+     C                     MOVE *BLANKS   P2CNA2
+     C                     MOVE *BLANKS   P2CNA3
+     C                     MOVE *BLANKS   P2CNA4
+     C                     MOVE *BLANKS   P2SGRI
+     C                     MOVE *BLANKS   P2SBRT
+     C                     MOVE *BLANKS   P2GRGI
+     C                     MOVE *BLANKS   P2NAC
+     C                     Z-ADD0         P2NOOP
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C                     MOVE '0'       *IN13
+     C                     MOVE '0'       *IN14
+     C                     MOVE '0'       *IN15
+     C*
+     C                     Z-ADD0         NOOP
+     C*
+     C                     MOVE SDLNO     KDLNO
+     C                     MOVE SCNUM     KCNUM
+     C                     MOVE SCCY      KCCY
+     C                     MOVE SACOD     KACOD
+     C                     MOVE SACSQ     KACSQ
+     C                     MOVE SBRCA     KBRCA
+     C*
+     C           KPTSEQ    CHAINPTYSEQF              09
+     C*
+     C**  IF CHAIN TO SEQUENCE FILE SUCCESSFUL
+     C**  (IE. MATURED DEAL OR CLOSED ACCOUNT)
+     C**  ------------------------------------
+     C*
+     C           *IN09     IFEQ '0'                        B1
+     C*
+     C**  IF ACCOUNT HOLDER TYPE 'I' OR 'J'
+     C*
+     C           PTYSQ1    IFNE 0                          B*2
+     C*                                                                   088192
+     C           KCNUM     CHAINSDCBRTL1             08    *1             088192
+     C*                                                                   088192
+     C** IF NO RECORD ON FILE - DATABASE ERROR                            088192
+     C*                                                                   088192
+     C           *IN08     IFEQ '1'                        B*2            088192
+     C           RECI      ORNE 'D'                        B*2            088192
+     C           RECI      ANDNE'C'                        B*2            088192
+     C                     MOVEL'SDCBRTPD'#FILE            ***************088192
+     C                     MOVELKCNUM     #KEY             * DB ERROR 008*088192
+     C                     MOVEL'008'     #BASE            ***************088192
+     C                     EXSR DBERR                      **2            088192
+     C                     END                             E*2            088192
+     C*
+     C**  PROCESS FOR EACH PARTICIPATOR SEQUENCE NO. ON PTYSEQPD RECORD
+     C*
+     C                     MOVE *BLANKS   BRTL             **2
+     C                     Z-ADD0         Z                **2
+     C                     MOVE '0'       *IN22            **2
+     C           *IN22     DOUEQ'1'                        B**3
+     C           Z         OREQ 5                          B**3
+     C                     ADD  1         Z                ***3
+     C*
+     C**  IF SEQUENCE NUMBER IS ZERO THEN END DO LOOP
+     C*
+     C           SEQ,Z     IFEQ 0                          B***4
+     C                     MOVE '1'       *IN22            ****4
+     C                     ELSE                            X***4
+     C*
+     C****READ*PART*HISTORY RECORD WITH MATCHING SEQUENCE NO.             088192
+     C***********                                                         088192
+     C***********          MOVE ZCNUM     KXCNM            ****4          088192
+     C***********          Z-ADDSEQ,Z     KPTYSQ           ****4          088192
+     C***********                                                         088192
+     C***********KPTHST    CHAINPTYHSTF              16    ****4          088192
+     C***********                                                         088192
+     C****IF*NO*RECORD ON FILE - DATABASE ERROR                           088192
+     C***********                                                         088192
+     C************IN16     IFEQ '1'                        B****5         088192
+     C***********RECI      ORNE 'D'                        B****5         088192
+     C***********          MOVEL'PTYHSTPD'#FILE            ***************088192
+     C***********          MOVELZCNUM     #KEY             * DB ERROR 006*088192
+     C***********          MOVEL'006'     #BASE            ***************088192
+     C***********          EXSR DBERR                      *****5         088192
+     C***********          END                             E****5         088192
+     C***********                                                         088192
+     C****PART*HISTORY RECORD EXISTS.                                     088192
+     C***********                                                         088192
+     C****IF*THE*LAST BRT LIABLE FLAG IS NOT 'X'                          088192
+     C***********                                                         088192
+     C***********          Z-ADD1         X       10       ****4          088192
+     C***********' '       LOKUPLFLG,X                   18****4          088192
+     C***********                                                         088192
+     C************IN18     IFEQ '0'                        B****5         088192
+     C***********          MOVE LFLG,10   WKLFLG  1        *****5         088192
+     C***********          ELSE                            X****5         088192
+     C***********X         IFNE 1                          B****6         088192
+     C***********          SUB  1         X                *****6         088192
+     C***********          END                             E****6         088192
+     C***********          MOVE LFLG,X    WKLFLG           *****5         088192
+     C***********          END                             E****5         088192
+     C***********                                                         088192
+     C***********WKLFLG    IFNE 'X'                        B****5         088192
+     C***********          ADD  1         NOOP             *****5         088192
+     C***********          MOVE WKLFLG    BRTL,Z           *****5         088192
+     C*                                                                   088192
+     C**  IF BRT LIABLE FLAG IS NOT 'X' (IE. 'Y' OR 'N')                  088192
+     C*                                                                   088192
+     C           BRTLX,Z   IFNE 'X'                        B****5         088192
+     C                     ADD  1         NOOP             *****5         088192
+     C                     MOVE BRTLX,Z   BRTL,Z           *****5         088192
+     C*
+     C**  IF 1ST PARTICIPATOR
+     C**     ----------------
+     C*
+     C           NOOP      IFEQ 1                          B*****6
+     C***********          MOVE WKPART    WKDET1           ******6        088192
+     C                     MOVE WKPTY,Z   WKDET1           ******6        088192
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C***********PTDOB     IFNE 0                          B******7       088192
+     C***********          MOVE PTDOB     HHDOB            *******7       088192
+     C           DOB,Z     IFNE 0                          B******7       088192
+     C                     MOVE DOB,Z     HHDOB            *******7       088192
+     C                     EXSR FMTDOB                     *******7
+     C                     MOVE CENDAT    WKDOB1           *******7
+     C                     END                             E******7
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C***********WKLFLG    IFEQ 'N'                        B******7       088192
+     C           BRTLX,Z   IFEQ 'N'                        B******7       088192
+     C                     MOVE 'Y'       WKGRI1  1        *******7
+     C                     ELSE                            X******7
+     C                     MOVE 'N'       WKGRI1           *******7
+     C                     END                             E******7
+     C*
+     C                     MOVE '1'       *IN11            ******6
+     C*
+     C                     ELSE                            X*****6
+     C*
+     C**  ELSE IF 2ND PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 2                          B******7
+     C***********          MOVE WKPART    WKDET2           *******7       088192
+     C                     MOVE WKPTY,Z   WKDET2           *******7       088192
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C***********PTDOB     IFNE 0                          B*******8      088192
+     C***********          MOVE PTDOB     HHDOB            ********8      088192
+     C           DOB,Z     IFNE 0                          B*******8      088192
+     C                     MOVE DOB,Z     HHDOB            ********8      088192
+     C                     EXSR FMTDOB                     ********8
+     C                     MOVE CENDAT    WKDOB2           ********8
+     C                     END                             E*******8
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C***********WKLFLG    IFEQ 'N'                        B*******8      088192
+     C           BRTLX,Z   IFEQ 'N'                        B*******8      088192
+     C                     MOVE 'Y'       WKGRI2  1        ********8
+     C                     ELSE                            X*******8
+     C                     MOVE 'N'       WKGRI2           ********8
+     C                     END                             E*******8
+     C*
+     C                     MOVE '1'       *IN12            *******7
+     C*
+     C                     ELSE                            X******7
+     C*
+     C**  ELSE IF 3RD PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 3                          B*******8
+     C***********          MOVE WKPART    WKDET3           ********8      088192
+     C                     MOVE WKPTY,Z   WKDET3           ********8      088192
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C***********PTDOB     IFNE 0                          B********9     088192
+     C***********          MOVE PTDOB     HHDOB            *********9     088192
+     C           DOB,Z     IFNE 0                          B********9     088192
+     C                     MOVE DOB,Z     HHDOB            *********9     088192
+     C                     EXSR FMTDOB                     *********9
+     C                     MOVE CENDAT    WKDOB3           *********9
+     C                     END                             E********9
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C***********WKLFLG    IFEQ 'N'                        B********9     088192
+     C           BRTLX,Z   IFEQ 'N'                        B********9     088192
+     C                     MOVE 'Y'       WKGRI3  1        *********9
+     C                     ELSE                            X********9
+     C                     MOVE 'N'       WKGRI3           *********9
+     C                     END                             E********9
+     C*
+     C                     MOVE '1'       *IN13            ********8
+     C*
+     C                     ELSE                            X*******8
+     C*
+     C**  ELSE IF 4TH PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 4                          B********9
+     C***********          MOVE WKPART    WKDET4           *********9     088192
+     C                     MOVE WKPTY,Z   WKDET4           *********9     088192
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C***********PTDOB     IFNE 0                          B*********10   088192
+     C***********          MOVE PTDOB     HHDOB            **********10   088192
+     C           DOB,Z     IFNE 0                          B*********10   088192
+     C                     MOVE DOB,Z     HHDOB            **********10   088192
+     C                     EXSR FMTDOB                     **********10
+     C                     MOVE CENDAT    WKDOB4           **********10
+     C                     END                             E*********10
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C***********WKLFLG    IFEQ 'N'                        B*********10   088192
+     C           BRTLX,Z   IFEQ 'N'                        B*********10   088192
+     C                     MOVE 'Y'       WKGRI4  1        **********10
+     C                     ELSE                            X*********10
+     C                     MOVE 'N'       WKGRI4           **********10
+     C                     END                             E*********10
+     C*
+     C                     MOVE '1'       *IN14            *********9
+     C*
+     C                     ELSE                            X********9
+     C*
+     C**  ELSE IF 5TH PARTICIPATOR
+     C**          ----------------
+     C*
+     C***********          MOVE WKPART    WKDET5           *********9     088192
+     C                     MOVE WKPTY,Z   WKDET5           *********9     088192
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C***********PTDOB     IFNE 0                          B*********10   088192
+     C***********          MOVE PTDOB     HHDOB            **********10   088192
+     C           DOB,Z     IFNE 0                          B*********10   088192
+     C                     MOVE DOB,Z     HHDOB            **********10   088192
+     C                     EXSR FMTDOB                     **********10
+     C                     MOVE CENDAT    WKDOB5           **********10
+     C                     END                             E*********10
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C***********WKLFLG    IFEQ 'N'                        B*********10   088192
+     C           BRTLX,Z   IFEQ 'N'                        B*********10   088192
+     C                     MOVE 'Y'       WKGRI5  1        **********10
+     C                     ELSE                            X*********10
+     C                     MOVE 'N'       WKGRI5           **********10
+     C                     END                             E*********10
+     C*
+     C                     MOVE '1'       *IN15            *********9
+     C                     END                             E********9
+     C*
+     C                     END                             E*******8
+     C*
+     C                     END                             E******7
+     C*
+     C                     END                             E*****6
+     C*
+     C                     END                             E****5
+     C*
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C**  FIND OUT HOW MANY OF THE PARTICIPATORS ARE BRT LIABLE 'N'
+     C*
+     C                     Z-ADD0         Y       10       **2
+     C                     Z-ADD0         WKCNT   10       **2
+     C           Y         DOUEQ5                          B**3
+     C                     ADD  1         Y                ***3
+     C           BRTL,Y    IFEQ 'N'                        B***4
+     C                     ADD  1         WKCNT            ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C*
+     C**  IF ALL THE PARTICIPATORS ARE BRT LIABLE 'N' THEN
+     C**  THE GROSS REGISTRATION INDICATOR SHOULD BE SET TO 'F'
+     C*
+     C           WKCNT     IFEQ NOOP                       B**3
+     C                     MOVE 'F'       F2GRGI           ***3
+     C                     MOVE 'F'       P2GRGI           ***3
+     C                     ELSE                            X**3
+     C*
+     C**  ELSE IF NONE OF THE PARTICIPATORS ARE BRT LIABLE 'N' THEN
+     C**  ALL MUST BE BRT LIABLE 'Y' AND THE GROSS REGISTRATION
+     C**  INDICATOR SHOULD BE SET TO 'N'
+     C*
+     C           WKCNT     IFEQ 0                          B***4
+     C                     MOVE 'N'       F2GRGI           ****4
+     C                     MOVE 'N'       P2GRGI           ****4
+     C                     ELSE                            X***4
+     C*
+     C**  ELSE THE PARTICIPORS MUST BE A MIXTURE OF 'Y' AND 'N', AND
+     C**  THE GROSS REGISTRATION INDICATOR SHOULD BE SET TO 'P'
+     C*
+     C                     MOVE 'P'       F2GRGI           ****4
+     C                     MOVE 'P'       P2GRGI           ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  IF ACCOUNT HOLDER TYPE NOT 'I' OR 'J'
+     C*
+     C                     MOVE 'N'       F2GRGI           **2
+     C                     MOVE 'N'       P2GRGI           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     ELSE                            X1
+     C*
+     C** ELSE CHAIN TO CUSTOMER BRT DETAILS FILE
+     C** (IE. LIVE DEAL OR STILL OPEN ACCOUNT)
+     C** ---------------------------------------
+     C*
+     C           KCNUM     CHAINSDCBRTL1             08    *1
+     C*
+     C** IF NO RECORD ON FILE - DATABASE ERROR
+     C*
+     C           *IN08     IFEQ '1'                        B*2
+     C           RECI      ORNE 'D'                        B*2
+     C           RECI      ANDNE'C'                        B*2
+     C                     MOVEL'SDCBRTPD'#FILE            ***************
+     C                     MOVELKCNUM     #KEY             * DB ERROR 007*
+     C                     MOVEL'007'     #BASE            ***************
+     C                     EXSR DBERR                      **2
+     C                     END                             E*2
+     C*
+     C****IF*ACCOUNT*HOLDER*TYPE*IS*'I'*OR*'J'***                         CRE007
+     C**  IF ACCOUNT HOLDER TYPE IS 'I','J' OR 'R'                        CRE007
+     C*
+     C           ACHLRT    IFEQ 'I'                        B*2
+     C           ACHLRT    OREQ 'J'                        B*2
+     C           ACHLRT    OREQ 'R'                        B*2            CRE007
+     C*
+     C**  DO PROCESS FOR EACH PARTICIPATOR
+     C*
+     C                     MOVE *BLANKS   BRTL             **2
+     C                     Z-ADD0         Z                **2
+     C                     MOVE '0'       *IN22            **2
+     C           *IN22     DOUEQ'1'                        B**3
+     C           Z         OREQ 5                          B**3
+     C                     ADD  1         Z                ***3
+     C*
+     C**  IF SEQUNECE NUMBER IS ZERO THEN END DO LOOP
+     C*
+     C***********SEQ,Z     IFEQ 0                          B***4          088192
+     C           SEQ1,Z    IFEQ 0                          B***4          088192
+     C                     MOVE '1'       *IN22            ****4
+     C                     ELSE                            X***4
+     C*
+     C**  IF BRT LIABLE FLAG IS NOT 'X' (IE. 'Y' OR 'N')
+     C**  OR BRT LIABLE FLAG IS 'N' AND ACCOUNT HOLDER IS 'R'             CRE007
+     C**  TYPE 3 RECORDS NOW REQUIRED FOR THE FIRST TWO NAMED PARTICIPANTS                    CRE051
+     C*
+     C           BRTLX,Z   IFNE 'X'                        B****5
+     C           ACHLRT    ANDNE'R'                        B****5         CRE007
+     C           BRTLX,Z   OREQ 'N'                        B****5         CRE007
+     C           ACHLRT    ANDEQ'R'                        B****5         CRE007
+     C           NOOP      OREQ 0                                                             CRE051
+     C           NOOP      OREQ 1                                                             CRE051
+     C                     ADD  1         NOOP             *****5
+     C                     MOVE BRTLX,Z   BRTL,Z           *****5
+     C*
+     C**  IF 1ST PARTICIPATOR
+     C**     ----------------
+     C*
+     C           NOOP      IFEQ 1                          B*****6
+     C                     MOVE WKPTY,Z   WKDET1           ******6
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C           DOB,Z     IFNE 0                          B******7
+     C                     MOVE DOB,Z     HHDOB            *******7
+     C                     EXSR FMTDOB                     *******7
+     C                     MOVE CENDAT    WKDOB1           *******7
+     C                     END                             E******7
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C           BRTLX,Z   IFEQ 'N'                        B******7
+     C                     MOVE 'Y'       WKGRI1  1        *******7
+     C                     ELSE                            X******7
+     C                     MOVE 'N'       WKGRI1           *******7
+     C                     END                             E******7
+     C*
+     C                     MOVE '1'       *IN11            ******6
+     C*
+     C                     ELSE                            X*****6
+     C*
+     C**  ELSE IF 2ND PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 2                          B******7
+     C                     MOVE WKPTY,Z   WKDET2           *******7
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C           DOB,Z     IFNE 0                          B*******8
+     C                     MOVE DOB,Z     HHDOB            ********8
+     C                     EXSR FMTDOB                     X*******8
+     C                     MOVE CENDAT    WKDOB2           ********8
+     C                     END                             E*******8
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C           BRTLX,Z   IFEQ 'N'                        B*******8
+     C                     MOVE 'Y'       WKGRI2  1        ********8
+     C                     ELSE                            X*******8
+     C                     MOVE 'N'       WKGRI2           ********8
+     C                     END                             E*******8
+     C*
+     C                     MOVE '1'       *IN12            *******7
+     C*
+     C                     ELSE                            X******7
+     C*
+     C**  ELSE IF 3RD PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 3                          B*******8
+     C                     MOVE WKPTY,Z   WKDET3           ********8
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C           DOB,Z     IFNE 0                          B********9
+     C                     MOVE DOB,Z     HHDOB            *********9
+     C                     EXSR FMTDOB                     *********9
+     C                     MOVE CENDAT    WKDOB3           *********9
+     C                     END                             E********9
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C           BRTLX,Z   IFEQ 'N'                        B********9
+     C                     MOVE 'Y'       WKGRI3  1        *********9
+     C                     ELSE                            X********9
+     C                     MOVE 'N'       WKGRI3           *********9
+     C                     END                             E********9
+     C*
+     C                     MOVE '1'       *IN13            ********8
+     C*
+     C                     ELSE                            X*******8
+     C*
+     C**  ELSE IF 4TH PARTICIPATOR
+     C**          ----------------
+     C*
+     C           NOOP      IFEQ 4                          B********9
+     C                     MOVE WKPTY,Z   WKDET4           *********9
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C           DOB,Z     IFNE 0                          B*********10
+     C                     MOVE DOB,Z     HHDOB            **********10
+     C                     EXSR FMTDOB                     **********10
+     C                     MOVE CENDAT    WKDOB4           **********10
+     C                     END                             E*********10
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C           BRTLX,Z   IFEQ 'N'                        B*********10
+     C                     MOVE 'Y'       WKGRI4  1        **********10
+     C                     ELSE                            X*********10
+     C                     MOVE 'N'       WKGRI4           **********10
+     C                     END                             E*********10
+     C*
+     C                     MOVE '1'       *IN14            *********9
+     C*
+     C                     ELSE                            X********9
+     C*
+     C**  ELSE IF 5TH PARTICIPATOR
+     C**          ----------------
+     C*
+     C                     MOVE WKPTY,Z   WKDET5           *********9
+     C*
+     C**   FORMAT DATE OF BIRTH
+     C*
+     C           DOB,Z     IFNE 0                          B*********10
+     C                     MOVE DOB,Z     HHDOB            **********10
+     C                     EXSR FMTDOB                     **********10
+     C                     MOVE CENDAT    WKDOB5           **********10
+     C                     END                             E*********10
+     C*
+     C**   SET UP GROSS REGISTRATION IND FOR TYPE 3 RECORD
+     C*
+     C           BRTLX,Z   IFEQ 'N'                        B*********10
+     C                     MOVE 'Y'       WKGRI5  1        **********10
+     C                     ELSE                            X*********10
+     C                     MOVE 'N'       WKGRI5           **********10
+     C                     END                             E*********10
+     C*
+     C                     MOVE '1'       *IN15            *********9
+     C                     END                             E********9
+     C*
+     C                     END                             E*******8
+     C*
+     C                     END                             E******7
+     C*
+     C                     END                             E*****6
+     C*
+     C                     END                             E****5
+     C*
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C**  FIND OUT HOW MANY OF THE PARTICIPATORS ARE BRT LIABLE 'N'
+     C*
+     C                     Z-ADD0         Y                **2
+     C                     Z-ADD0         WKCNT            **2
+     C           Y         DOUEQ5                          B**3
+     C                     ADD  1         Y                ***3
+     C           BRTL,Y    IFEQ 'N'                        B***4
+     C                     ADD  1         WKCNT            ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C*
+     C**  IF ALL THE PARTICIPATORS ARE BRT LIABLE 'N' THEN
+     C**  THE GROSS REGISTRATION INDICATOR SHOULD BE SET TO 'F'
+     C*
+     C           WKCNT     IFEQ NOOP                       B**3
+     C                     MOVE 'F'       F2GRGI           ***3
+     C                     MOVE 'F'       P2GRGI           ***3
+     C                     ELSE                            X**3
+     C*
+     C**  ELSE IF NONE OF THE PARTICIPATORS ARE BRT LIABLE 'N' THEN
+     C**  ALL MUST BE BRT LIABLE 'Y' AND THE GROSS REGISTRATION
+     C**  INDICATOR SHOULD BE SET TO 'N'
+     C*
+     C           WKCNT     IFEQ 0                          B***4
+     C                     MOVE 'N'       F2GRGI           ****4
+     C                     MOVE 'N'       P2GRGI           ****4
+     C                     ELSE                            X***4
+     C*
+     C**  ELSE THE PARTICIPORS MUST BE A MIXTURE OF 'Y' AND 'N', AND
+     C**  THE GROSS REGISTRATION INDICATOR SHOULD BE SET TO 'P'
+     C*
+     C                     MOVE 'P'       F2GRGI           ****4
+     C                     MOVE 'P'       P2GRGI           ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  IF ACCOUNT HOLDER TYPE NOT 'I' OR 'J'
+     C*
+     C                     MOVE 'N'       F2GRGI           **2
+     C                     MOVE 'N'       P2GRGI           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C** FORMAT OUTPUT FILE FIELDS FOR FORM TYPE 2
+     C** -----------------------------------------
+     C*
+     C                     MOVELCNA1      F2ANAM
+     C*
+     C                     MOVELCNA2      WRK35A
+     C                     MOVELCNA3      WRK35B
+     C                     MOVELCNA4      WRK35C
+     C                     MOVELWRK105    F2AADD
+     C*
+     C                     MOVEL*BLANKS   F2PCDE
+     C*
+     C** NEGATIVE AMOUNTS SHOULD BE REPORTED AS ZERO
+     C*
+     C           WRKGRI    IFLT 0                          B1
+     C                     Z-ADD0         WRKGRI           *1
+     C                     END                             E1
+     C*
+     C           WRKBRT    IFLT 0                          B1
+     C                     Z-ADD0         WRKBRT           *1
+     C                     END                             E1
+     C*
+     C                     Z-ADDWRKGRI    F2SGRI
+     C                     Z-ADDWRKBRT    F2SBRT
+     C*
+     C                     MOVE 'GBP'     F2CCY
+     C*
+     C                     MOVE WRKNAC    F2NAC
+      *                                                                   CRE007
+     C                     MOVE PSTR      F2PSTR                          CRE007
+     C           PSTR      IFEQ 'S'                                       CRE007
+     C           PSTR      OREQ ' '                                                           CRE051
+     C**********           MOVE *BLANK    F2PSTR                                       CRE007 CRE051
+     C                     MOVE 'N'       F2PSTR                                              CRE051
+     C                     ENDIF                                          CRE007
+      *                                                                   CRE007
+     C                     Z-ADDNOOP      F2NOOP
+     C                     Z-ADDNOOP      F2NPCU
+      *                                                                                       CRE051
+     C           ACHLRT    IFEQ 'C'                                                           CRE051
+     C           ACHLRT    OREQ 'B'                                                           CRE051
+     C                     Z-ADD1         F2NPCU                                              CRE051
+     C                     ENDIF                                                              CRE051
+     C*
+     C** FORMAT PRINTER FILE FIELDS FOR FORM TYPE 2
+     C** ------------------------------------------
+     C*
+     C                     MOVELCNA1      P2CNA1
+     C                     MOVELCNA2      P2CNA2
+     C                     MOVELCNA3      P2CNA3
+     C                     MOVELCNA4      P2CNA4
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WRKGRI    ZFIELD
+     C                     Z-ADD2         ZADEC   10
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P2SGRI
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WRKBRT    ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P2SBRT
+     C*
+     C                     MOVE WRKNAC    P2NAC
+     C                     Z-ADDNOOP      P2NOOP
+     C**********           Z-ADDNOOP      P2NPCU                                              CRE051
+     C                     Z-ADDF2NPCU    P2NPCU                                              CRE051
+      *                                                                   CRE007
+     C           CRE007    IFEQ 'Y'                                       CRE007
+     C**********           MOVE PSTR      P2PSTR                                       CRE007 CRE051
+     C                     MOVE F2PSTR    P2PSTR                                              CRE051
+     C                     ENDIF                                          CRE007
+     C*
+     C           #FOR29    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #FORF3 - FORMAT FILE FIELDS FOR FORM TYPE 3          *
+     C*                                                        *
+     C*   CALLED BY :  #WR23                                   *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #FORF3    BEGSR
+     C*
+     C** INITIALISE WORK FIELDS
+     C*
+     C                     MOVE *BLANKS   WRK003
+     C                     MOVE *BLANKS   WRK005
+     C                     MOVE *BLANKS   WRK84
+     C*
+     C** INITIALISE OUTPUT FILE FIELDS
+     C*
+     C                     MOVE *BLANKS   F3PANM                                              CRE051
+     C                     MOVE *BLANKS   F3TITL
+     C                     MOVE *BLANKS   F3PNAM
+     C                     MOVE *BLANKS   F3PINI
+     C                     MOVE *BLANKS   F3PADD
+     C                     MOVE *BLANKS   F3PCDE
+     C                     MOVE *BLANKS   F3NINO
+     C                     MOVE *BLANKS   F3DOB
+     C                     MOVE *BLANKS   F3GRGI
+     C                     MOVE *BLANKS   F3R85A                                              CRE021
+     C                     MOVE *BLANKS   F3TAXI                                              CRE021
+     C                     MOVE *BLANKS   F3CCOB                                              CRE021
+     C                     MOVE *BLANKS   F3PLOB                                              CRE021
+     C                     MOVE 'N'       F3SIIN                                              CRE021
+     C                     MOVE '00'      F3PNCO                                              CRE021
+     C                     MOVE 'ZZ'      F3CCDE                                              CRE021
+     C*
+     C** INITIALISE PRINTER FILE FIELDS
+     C*
+     C                     MOVE *BLANKS   P3TITL
+     C                     MOVE *BLANKS   P3PNAM
+     C                     MOVE *BLANKS   P3PINI
+     C                     MOVE *BLANKS   P3ADD1
+     C                     MOVE *BLANKS   P3ADD2
+     C                     MOVE *BLANKS   P3ADD3
+     C                     MOVE *BLANKS   P3PCD1
+     C                     MOVE *BLANKS   P3PCD2
+     C                     MOVE *BLANKS   P3NINO
+     C                     MOVE *BLANKS   P3DOB
+     C                     MOVE *BLANKS   P3GRGI
+     C*
+     C*
+     C** FORMAT OUTPUT FILE FIELDS FOR FORM TYPE 3
+     C** -----------------------------------------
+     C*
+     C                     MOVELHHTITL    F3TITL
+     C                     MOVELHHNAME    F3PNAM
+     C*
+     C                     MOVELHHINIT    WRK003
+     C*
+     C** EXPAND PARTICIPATOR INITIALS FROM 3 TO 5 LONG
+     C** MAKING PROVISION FOR ANY OF THE POSITIONS CURRENTLY BEING
+     C** ' ' OR '.'
+     C*
+     C           WRK3AA    IFEQ ' '                        B1
+     C           WRK3AA    OREQ '.'                        B1
+     C*
+     C           WRK3BB    IFEQ ' '                          B*2
+     C           WRK3BB    OREQ '.'                          B*2
+     C*
+     C           WRK3CC    IFNE ' '                          B**3
+     C                     MOVE WRK3CC    WRK5AA             ***3
+     C                     END                               E**3
+     C*
+     C                     ELSE                              X*2
+     C                     MOVE WRK3BB    WRK5AA             **2
+     C           WRK3CC    IFNE ' '                          B**3
+     C                     MOVE WRK3CC    WRK5BB             ***3
+     C                     END                               E**3
+     C*
+     C                     END                               E*2
+     C*
+     C                     ELSE                              X1
+     C                     MOVE WRK3AA    WRK5AA             *1
+     C           WRK3BB    IFEQ ' '                          B*2
+     C           WRK3BB    OREQ '.'
+     C*
+     C           WRK3CC    IFNE ' '                          B**3
+     C                     MOVE WRK3CC    WRK5BB             ***3
+     C                     END                               E**3
+     C*
+     C                     ELSE                              X*2
+     C                     MOVE WRK3BB    WRK5BB             **2
+     C           WRK3CC    IFNE ' '                          B**3
+     C           WRK3CC    ANDNE'.'                          B**3
+     C                     MOVE WRK3CC    WRK5CC             ***3
+     C                     END                               E**3
+     C                     END                               E*2
+     C                     END                               E1
+     C*
+     C                     MOVELWRK005    F3PINI
+     C*
+     C                     MOVELHHADD1    WRK28A
+     C                     MOVELHHADD2    WRK28B
+     C                     MOVELHHADD3    WRK28C
+     C                     MOVELWRK84     F3PADD
+     C*
+     C*********            MOVELHHPCD1    F3PCDE                                              CRE021
+     C*********            MOVE HHPCD2    F3PCDE                                              CRE021
+     C                     MOVELHHPCD1    WRK8    8                                           CRE021
+     C                     MOVE HHPCD2    WRK8                                                CRE021
+     C                     MOVELWRK8      F3PCDE                                              CRE021
+     C*
+     C                     MOVELHHNINO    F3NINO
+     C                     MOVELHHCDOB    F3DOB
+     C                     MOVELHHGRGI    F3GRGI
+     C*
+     C** FORMAT PRINTER FILE FIELDS FOR FORM TYPE 3
+     C** ------------------------------------------
+     C*
+     C                     MOVELHHTITL    P3TITL
+     C                     MOVELHHNAME    P3PNAM
+     C                     MOVELWRK005    P3PINI
+     C                     MOVELHHADD1    P3ADD1
+     C                     MOVELHHADD2    P3ADD2
+     C                     MOVELHHADD3    P3ADD3
+     C                     MOVELHHPCD1    P3PCD1
+     C                     MOVE HHPCD2    P3PCD2
+     C                     MOVELHHNINO    P3NINO
+     C                     MOVELHHCDOB    P3DOB
+     C                     MOVELHHGRGI    P3GRGI
+     C*
+     C           #FOR39    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #CL23  - CLEAR WORK FIELDS AND INDICATORS USED FOR   *
+     C*            OUTPUT FORM TYPE 2 AND 3                    *
+     C*                                                        *
+     C*   CALLED BY :  #WR23 - WRITE FORM TYPE 2 AND 3         *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #CL23     BEGSR
+     C*
+     C** FOR FORM TYPE 2
+     C** ---------------
+     C*
+     C** INITIALISE INDICATORS
+     C*
+     C                     MOVE '0'       *IN17
+     C*
+     C** ZEROISE GROSS STG INTEREST AND BRT TAX DEDUCTED TOTALS FOR THE
+     C** ACCOUNT/DEAL
+     C*
+     C                     Z-ADD0         WRKGRI
+     C                     Z-ADD0         WRKBRT
+     C*
+     C** INITIALISE NEW/MIXED A/C FIELDS
+     C*
+     C                     MOVE *BLANKS   WRKNAC
+     C**                   MOVE *BLANKS   WRKMAC
+     C*
+     C** CLEAR SAVED INTEREST PAYMENT DATE
+     C*
+     C                     Z-ADD0         SIPDT
+     C*
+     C           #CL239    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   #WR04  - WRITE FORM TYPE 4                           *
+     C*                                                        *
+     C*   CALLED BY :  FINAL - FINAL PROCESSING                *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     ZEDIT  - EDIT NUMERIC FIELDS FOR PRINT FORMAT      *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           #WR04     BEGSR
+     C*
+     C** FORMAT OUTPUT FILE FIELDS FOR FORM TYPE 4
+     C** -----------------------------------------
+     C*
+     C                     MOVE '4'       F4RECT
+     C                     Z-ADDNOACCS    F4ACTC
+     C*
+     C** FORMAT PRINTER FILE FIELDS FOR FORM TYPE 4
+     C** ------------------------------------------
+     C*
+     C                     Z-ADDNOACCS    P4ACTC
+     C*
+     C** WRITE FORM TYPE 4
+     C*
+     C                     MOVELF4DATA    DATA
+     C                     WRITES17RTNFF
+     C*
+     C** PRINT FORM TYPE 4
+     C*
+     C                     WRITERE2196HH
+     C                     WRITERE2196F4
+     C*
+     C           #WR049    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   FINAL - FINAL PROCESSING                             *
+     C*                                                        *
+     C*   CALLED BY :  MAIN PROCESSING                         *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     #WR04  - PRINT FORM TYPE 4                         *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C**  FORMAT TOTAL INTEREST AND TAX FIELDS AND PRINT FORM TYPE 4
+     C*
+     C           *INU7     IFEQ '0'
+     C                     EXSR #WR04
+     C                     END
+     C*
+     C                     WRITERE2196ZZ
+     C                     SETON                     LR
+     C*
+     C           FINAL9    ENDSR
+     C*
+     C/EJECT
+     C**********************************************************
+     C*                                                        *
+     C*   INIT - INITIAL PROCESSING                            *
+     C*                                                        *
+     C*   CALLED BY :  MAIN PROCESSING                         *
+     C*                                                        *
+     C*   CALLS     :                                          *
+     C*                                                        *
+     C*     ZDATE1 - REFORMAT DATE TO DAY NO                   *
+     C*     ZDATE2 - REFORMAT DAY NO TO DATE                   *
+     C*                                                        *
+     C**********************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN DLNO      SDLNO
+     C           *LIKE     DEFN IPDT      SIPDT
+     C           *LIKE     DEFN RTYP      SRTYP
+     C*
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C           *LIKE     DEFN DBFILE    #FILE
+     C           *LIKE     DEFN DBPGM     #PGM
+     C*
+     C           *LIKE     DEFN F2NAC     WRKNAC
+     C*
+     C           *LIKE     DEFN F3DOB     WKDOB1
+     C           *LIKE     DEFN F3DOB     WKDOB2
+     C           *LIKE     DEFN F3DOB     WKDOB3
+     C           *LIKE     DEFN F3DOB     WKDOB4
+     C           *LIKE     DEFN F3DOB     WKDOB5
+     C*
+     C** DEFINE KEY TO LF/CLINT
+     C*
+     C           KCLINT    KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KRTYP   1
+     C*
+     C** DEFINE KEY TO PF/PTYSEQPD
+     C*
+     C           KPTSEQ    KLIST
+     C                     KFLD           KDLNO   60
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+     C*
+     C** DEFINE KEY TO PF/PTYHSTPD
+     C*
+     C           KPTHST    KLIST
+     C                     KFLD           KXCNM   60
+     C                     KFLD           KPTYSQ  20
+     C*
+     C** DEFINE KEY TO LF/ACCNT
+     C*
+     C           KACCNT    KLIST
+     C**********           KFLD           SCNUM   60                                          CSD027
+     C                     KFLD           SCNUM   6                                           CSD027
+     C                     KFLD           SCCY    3
+     C**********           KFLD           SACOD   40                                          CGL029
+     C                     KFLD           SACOD                                               CGL029
+     C                     KFLD           SACSQ   20
+     C                     KFLD           SBRCA
+     C*
+     C** ZEROISE WORK FIELDS
+     C*
+     C                     Z-ADD0         NOACCS 110       NO OF ACCOUNTS
+     C*********            Z-ADD0         NOOP    30       NO OF PARTICIPATORS                CRE021
+     C                     Z-ADD0         NOOP    40       NO OF PARTICIPATORS                CRE021
+     C*
+     C                     Z-ADD0         WRKGRI 140
+     C                     Z-ADD0         WRKBRT 150
+     C*
+     C                     MOVE *BLANKS   RTNCDE  1        RETURN CODE
+     C*
+     C                     MOVE *BLANKS   F1ZZZZ
+     C                     MOVE *BLANKS   F2ZZZZ
+     C                     MOVE *BLANKS   F3ZZZZ
+     C                     MOVE *BLANKS   F4ZZZZ
+     C*
+     C** SETUP FIELDS FOR LDA
+     C*
+     C                     MOVEL'RE2196'  #PGM
+     C*
+     C** READ IN RUN TYPE PARAMETER
+     C*
+     C           *ENTRY    PLIST
+     C*********************PARM           PSEQ    5                       042015
+     C                     PARM           PSEQ    5                       053520
+     C                     PARM           PEOY    1
+     C*
+     C** RCF Processing for Detail Printer File
+     C*
+     C                     EXSR RCFP1
+     C*
+     C** READ TABTB10 RECORD
+     C*
+     C           1         CHAINTABTB10              01
+     C*
+     C** IF RECORD NOT FOUND/NOT LIVE - DATABASE ERROR
+     C*
+     C           *IN01     IFEQ '1'                        B1
+     C           RECI      ORNE 'D'                        B1
+     C                     MOVEL'TABTB10' #FILE            ***************
+     C                     MOVEL'*FIRST'  #KEY             * DB ERROR 001*
+     C                     MOVEL'001'     #BASE            ***************
+     C                     EXSR DBERR                      *1
+     C                     END                             E1
+     C*
+     C           DATF      COMP 'M'                  98
+     C*
+     C** READ SDBRTDL1 RECORD
+     C*
+     C                     MOVE 'D'       KRECI   1
+     C           KRECI     CHAINSDBRTDD0             02
+     C*
+     C**  IF NO RECORD ON FILE - DATABASE ERROR
+     C*
+     C           *IN02     IFEQ '1'                        B1
+     C                     MOVEL'SDBRTDPD'#FILE            ***************
+     C                     MOVELKRECI     #KEY             * DB ERROR 002*
+     C                     MOVEL'002'     #BASE            ***************
+     C                     EXSR DBERR                      *1
+     C                     END                             E1
+     C*
+     C** READ TABTB20 RECORD
+     C*
+2887 C           1         CHAINTABTB20              31
+     C*
+     C** IF RECORD NOT FOUND/NOT LIVE - DATABASE ERROR
+     C*
+     C           *IN31     IFEQ '1'                        B1
+     C           RECI      ORNE 'D'                        B1
+     C                     MOVEL'TABTB20' #FILE            ***************
+     C                     MOVEL'*FIRST'  #KEY             * DB ERROR 003*
+     C                     MOVEL'003'     #BASE            ***************
+     C                     EXSR DBERR                      *1
+     C                     END                             E1
+     C*
+     C** IF INPUT PARAMETER BLANK, INTERIM REPORT REQUESTED
+     C*
+     C           PEOY      IFEQ ' '                        B1
+     C                     MOVE '1'       *IN10            *1
+     C                     END                             E1
+     C*
+     C** REFORMAT DATE TO OUTPUT TO PRINT FILE
+     C*
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     TAXDAT
+     C*
+     C** TAXDAT NOW CONTAINS RUND IN DDMMYY FORMAT. USE DDMM PART
+     C** TO CALCULATE THE FIRST DAY OF CURRENT TAX YEAR (IN MIDAS DAY NO)
+     C** AND ALSO THE LAST DAY OF CURRENT TAX YEAR (IN MIDAS DAY NO)
+     C*
+     C** FIRST, FIND THE YEAR OF THE START OF THE CURRENT TAX YEAR (SY) AND
+     C** THE YEAR OF THE END OF THE CURRENT TAX YEAR (EY)
+     C*
+     C           MM        IFGE 01                         B1
+     C           MM        ANDLE03                         *1
+     C           MM        OREQ 04                         *1
+     C           DD        ANDLE05                         *1
+     C*
+     C                     Z-ADDYY        EY      20       *1
+     C           YY        SUB  1         SY      20       *1
+     C*
+     C                     ELSE                            X1
+     C*
+     C           YY        ADD  1         EY               *1
+     C                     Z-ADDYY        SY               *1
+     C*
+     C                     END                             E1
+     C*
+     C                     Z-ADDSY        YY
+     C                     Z-ADD4         MM
+     C                     Z-ADD6         DD
+     C*
+     C** TAXDAT NOW CONTAINS THE DATE FOR THE START OF THE CURRENT TAX
+     C** YEAR, I.E. 06/04/SY. CONVERT TO MIDAS DAY NUMBER
+     C*
+     C                     MOVE TAXDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    TAXST   50       STARTCURRENT YEAR
+     C*
+     C                     Z-ADDEY        YY
+     C                     Z-ADD4         MM
+     C                     Z-ADD5         DD
+     C*
+     C** TAXDAT NOW CONTAINS THE DATE FOR THE END OF THE CURRENT TAX
+     C** YEAR, I.E. 05/04/EY. CONVERT TO MIDAS DAY NUMBER
+     C*
+     C                     MOVE TAXDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    TAXET   50       END CURRENT YEAR
+     C*
+     C** USE THE YEAR END FOR PRINTER HEADING  "5TH APRIL Y/E CCEY"
+     C*
+     C                     MOVEL*BLANKS   CCYY    4
+     C                     MOVE EY        CCYY
+     C           EY        IFGE 72                         B1
+     C                     MOVEL19        CCYY             *1
+     C                     ELSE                            X1
+     C                     MOVEL20        CCYY             *1
+     C                     END                             E1
+      *                                                                   CRE007
+      ** Access SAR details file to see if Base Rate Tax 2001 is ON.      CRE007
+      *                                                                   CRE007
+     C                     CALL 'AOSARDR0'                                CRE007
+     C                     PARM '       ' @RTCD                           CRE007
+     C                     PARM '*VERIFY' @OPTN                           CRE007
+     C                     PARM 'CRE007'  @SARD   6                       CRE007
+      *                                                                   CRE007
+      ** If Base Rate Tax 2001 is switched ON output field                CRE007
+      ** P2PSTR - Post 5/4/01 R105.                                       CRE007
+      *                                                                   CRE007
+     C           @RTCD     IFEQ *BLANKS                                   CRE007
+     C                     MOVE 'Y'       CRE007  1                       CRE007
+     C                     MOVE *ON       *IN89                           CRE007
+     C                     ELSE                                           CRE007
+     C                     MOVE 'N'       CRE007                          CRE007
+     C                     ENDIF                                          CRE007
+      *                                                                                       CRE021
+      * Retrieve Account Naming Convention code:                                              CRE021
+     C                     MOVE *BLANKS   SVALK2                                              CRE021
+     C                     MOVE *BLANKS   SVALK3                                              CRE021
+     C                     MOVE *BLANKS   SVALK4                                              CRE021
+     C                     MOVE *BLANKS   SVALK5                                              CRE021
+     C                     MOVE *BLANKS   SVALK6                                              CRE021
+     C                     MOVE *BLANKS   SVALK7                                              CRE021
+     C                     MOVE *BLANKS   SVALK8                                              CRE021
+     C                     MOVE *BLANKS   SVALK7                                              CRE021
+     C                     MOVE *BLANKS   SVALK8                                              CRE021
+      *                                                                                       CRE021
+     C                     CALL 'AOSVALR0'                                                    CRE021
+     C                     PARM *BLANKS   @RTCD                                               CRE021
+     C                     PARM           SVALK1 20                                           CRE021
+     C                     PARM           SVAL1 200                                           CRE021
+     C                     PARM           SVALK2 20                                           CRE021
+     C                     PARM           SVAL2 200                                           CRE021
+     C                     PARM           SVALK3 20                                           CRE021
+     C                     PARM           SVAL3 200                                           CRE021
+     C                     PARM           SVALK4 20                                           CRE021
+     C                     PARM           SVAL4 200                                           CRE021
+     C                     PARM           SVALK5 20                                           CRE021
+     C                     PARM           SVAL5 200                                           CRE021
+     C                     PARM           SVALK6 20                                           CRE021
+     C                     PARM           SVAL6 200                                           CRE021
+     C                     PARM           SVALK7 20                                           CRE021
+     C                     PARM           SVAL7 200                                           CRE021
+     C                     PARM           SVALK8 20                                           CRE021
+     C                     PARM           SVAL8 200                                           CRE021
+     C                     PARM           SVALK9 20                                           CRE021
+     C                     PARM           SVAL9 200                                           CRE021
+     C                     PARM           SVALK0 20                                           CRE021
+     C                     PARM           SVAL10200                                           CRE021
+      *                                                                                       CRE021
+     C           @RTCD     IFNE *BLANKS                                                       CRE021
+     C           SVAL10    IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK0    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL9     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK9    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL8     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK8    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL7     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK7    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL6     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK6    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL5     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK5    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL4     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK4    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL3     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK3    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL2     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK2    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           SVAL1     IFEQ '*NRF'                                                        CRE021
+     C                     MOVE SVALK1    DBKEY                                               CRE021
+     C                     ENDIF                                                              CRE021
+     C           *LOCK     IN   LDA                                                           CRE021
+     C                     MOVEL'SDSVALPD'DBFILE           ***************                    CRE021
+     C                     MOVEL'009'     #BASE            * DB ERROR 009*                    CRE021
+     C                     EXSR DBERR                      ***************                    CRE021
+     C                     ENDIF                                                              CRE021
+     C                     MOVELSVAL12    ACNCOD  2                                           CRE021
+     C*                                                                                       CRE021
+     C*
+     C           INIT9     ENDSR
+     C*
+     C/EJECT
+     C**********************************************************                              CRE051
+     C*                                                        *                              CRE051
+     C*   #FOR3N - FORMAT FILE FIELDS FOR FORM TYPE 3          *                              CRE051
+     C*            FOR NON-INDIVIDUAL ACCOUNTS                 *                              CRE051
+     C*                                                        *                              CRE051
+     C*   CALLED BY :  #WR23                                   *                              CRE051
+     C*                                                        *                              CRE051
+     C*   CALLS     :                                          *                              CRE051
+     C*                                                        *                              CRE051
+     C**********************************************************                              CRE051
+     C*                                                                                       CRE051
+     C           #FOR3N    BEGSR                                                              CRE051
+     C*                                                                                       CRE051
+     C                     MOVELXCNUM     WXCNUM 10                                           CRE051
+     C*                                                                                       CRE051
+     C** Call Access Program to get Customer Details                                          CRE051
+     C*                                                                                       CRE051
+     C                     CALL 'AOCUSTR0'                                                    CRE051
+     C                     PARM *BLANKS   @RTCD   7                                           CRE051
+     C                     PARM '*KEY   ' @OPTN   7                                           CRE051
+     C                     PARM WXCNUM    @KEY1  10                                           CRE051
+     C                     PARM *BLANK    @KYST   7                                           CRE051
+     C           SDCUST    PARM SDCUST    DSSDY                                               CRE051
+      *                                                                                       CRE051
+      ** Customer record not found - Error                                                    CRE051
+      *                                                                                       CRE051
+     C           @RTCD     IFNE *BLANKS                                                       CRE051
+     C                     MOVEL'010'     #BASE              * * * * * * *                    CRE051
+     C                     MOVEL@KEY1     #KEY               * DBERR 010 *                    CRE051
+     C                     MOVEL'SDCUSTPD'#FILE              * * * * * * *                    CRE051
+     C                     EXSR DBERR                                                         CRE051
+     C                     END                                                                CRE051
+     C*                                                                                       CRE051
+     C** Set Type 3 data file values                                                          CRE051
+     C*                                                                                       CRE051
+     C                     MOVE '3'       F3RECT                                              CRE051
+     C                     MOVELBBCNA1    F3PANM                                              CRE051
+     C                     MOVE *BLANKS   F3TITL                                              CRE051
+     C                     MOVE *BLANKS   F3PINI                                              CRE051
+     C                     MOVE *BLANKS   F3PNAM                                              CRE051
+     C                     MOVE *BLANKS   F3PADD                                              CRE051
+     C                     MOVE *BLANKS   F3PCDE                                              CRE051
+     C                     MOVE *BLANKS   F3NINO                                              CRE051
+     C                     MOVE *BLANKS   F3DOB                                               CRE051
+     C                     MOVE 'N'       F3GRGI                                              CRE051
+     C                     MOVE *BLANKS   F3R85A                                              CRE051
+     C                     MOVE *BLANKS   F3TAXI                                              CRE051
+     C                     MOVE *BLANKS   F3CCOB                                              CRE051
+     C                     MOVE *BLANKS   F3PLOB                                              CRE051
+     C                     MOVE 'N'       F3SIIN                                              CRE051
+     C                     MOVE '07'      F3PNCO                                              CRE051
+     C                     MOVE 'ZZ'      F3CCDE                                              CRE051
+     C*                                                                                       CRE051
+     C** Set Type 3 printer values                                                            CRE051
+     C*                                                                                       CRE051
+     C                     MOVELBBCNA1    P3PNAM                                              CRE051
+     C                     MOVE *BLANKS   P3TITL                                              CRE051
+     C                     MOVE *BLANKS   P3PINI                                              CRE051
+     C                     MOVE *BLANKS   P3ADD1                                              CRE051
+     C                     MOVE *BLANKS   P3ADD2                                              CRE051
+     C                     MOVE *BLANKS   P3ADD3                                              CRE051
+     C                     MOVE *BLANKS   P3PCD1                                              CRE051
+     C                     MOVE *BLANKS   P3PCD2                                              CRE051
+     C                     MOVE *BLANKS   P3NINO                                              CRE051
+     C                     MOVE *BLANKS   P3DOB                                               CRE051
+     C                     MOVE 'N'       P3GRGI                                              CRE051
+     C*                                                                                       CRE051
+     C** Write Form Type 3                                                                    CRE051
+     C*                                                                                       CRE051
+     C                     MOVELF3DATA    DATA                                                CRE051
+     C                     WRITES17RTNFF                                                      CRE051
+     C*                                                                                       CRE051
+     C** Print Form Type 3                                                                    CRE051
+     C*                                                                                       CRE051
+     C                     WRITERE2196H3                                                      CRE051
+     C                     WRITERE2196F3                                                      CRE051
+     C*                                                                                       CRE051
+     C                     ENDSR                                                              CRE051
+     C*                                                                                       CRE051
+     C/EJECT                                                                                  CRE051
+     C*****************************************************************
+     C*
+     C*     DBERR  - DATABASE ERROR HANDLING
+     C*
+     C*     CALLED BY :
+     C*
+     C*     CALLS     :
+     C*
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C                     SETON                       U7U8LR
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C                     OUT  LDA
+     C*
+     C** PRINT DATABASE ERROR
+     C*
+     C                     WRITERE2196HH
+     C                     WRITERE2196ER
+     C                     WRITERE2196ZZ
+     C*
+     C                     DUMP
+     C                     RETRN
+     C*
+     C           DBERR9    ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C*********************PARM           PSEQ    5                       042015
+     C***********          PARM *BLANKS   PSEQ    5                042015 053520
+     C                     PARM           PSEQ    5                       053520
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

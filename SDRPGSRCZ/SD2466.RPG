@@ -1,0 +1,968 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Determine self-certifier status')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Standing Data Module
+     F*                                                                  *
+     F*     SD2466  -  DETERMINE SELF-CERTIFIER STATUS OF PARTICIPATORS  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 16May06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01383             Date 27Apr92               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     S01383  -  BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM * NOT USED CURRENTLY *                *
+     F*                KEPT FOR POSSIBLE INLAND REVENUE RULE CHANGE      *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABTB10 IF  E                    DISK
+     FSDCBRTL1IF  E           K        DISK
+     FPTYHSTPDIF  E           K        DISK
+     FINTPSL15IF  E           K        DISK
+     F            INTPSDDF                          KRENAMEINTPS15
+     FINTPSL16IF  E           K        DISK
+     F            INTPSDDF                          KRENAMEINTPS16
+      /EJECT
+      ***************************************************************** **
+      **                                                                **
+      **    F U N C T I O N   O F   I N D I C A T O R S                 **
+      **    ~~~~~~~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~                 **
+      **                                                                **
+      **        01          FAILED CHAIN TO TABTB10                     **
+      **        02          FAILED CHAIN TO SDCBRTL1                    **
+      **        03          FAILED CHAIN TO PTYHSTPD                    **
+      **        10          LOKUP DATE SUCCESSFUL                       **
+      **        11          LOKUP NUMI SUCCESSFUL                       **
+      **        12          LOKUP DATE SUCCESSFUL                       **
+      **        13          LOKUP      SUCCESSFUL                       **
+      **        14          LOKUP      SUCCESSFUL                       **
+      **        15          LOKUP      SUCCESSFUL                       **
+      **        16          LOKUP      SUCCESSFUL                       **
+      **        20          READ OF INTPSL15 UNSUCCESSFUL               **
+      **        21          READ OF INTPSL16 UNSUCCESSFUL               **
+      **        22          READ OF INTPSL15 UNSUCCESSFUL               **
+      **        23          READ OF INTPSL16 UNSUCCESSFUL               **
+      **        30                                                      **
+      **        31                                                      **
+      **        LR          END OF PROGRAM                              **
+      **                                                                **
+      /EJECT
+      *                                                                 **
+      *  INDEX TO SUBROUTINES :                                         **
+      *                                                                 **
+      *          INIT   -  Initial processing                           **
+      *          DETL1  -  Detail processing                            **
+      *          CALCSC -       processing                              **
+      *                                                                 **
+      ********************************************************************
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    SC          5  1
+     E                    LFG        10  1
+     E                    EFD        10  5 0
+     E                    LCH        10  5 0
+     E                    DATE       10  5 0 NUM    20
+     E                    NUMI       10  2 0
+     E                    IGN        10  2 0
+     E                    LFT        10  5 0
+     E                    REM        10  1
+     E                    FLDA       10  2
+     E                    WRKA       10  2
+      *
+     ILDA        UDS
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I            DS
+     I                                        1  200NUMI
+     I                                        1  20 WRKA
+      *
+     I            DS
+     I                                        1  10 LFLAGS
+     I                                        1  10 LFG
+      *
+     I            DS
+     I                                        1  30 EFFLDS
+     I                                    P   1  30 EFD
+      *
+     I            DS
+     I                                        1  30 LCHGDS
+     I                                    P   1  30 LCH
+      *
+      ** Data structure for date of start of tax year
+      *
+     ITAXDAT      DS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+      /EJECT
+      *
+      *****************************************************************
+      *
+      ** MAIN PROCESSING :
+      *
+      ** initial processing
+     C                     EXSR INIT
+      *
+      ** detail processing
+     C                     EXSR DETL1
+      *
+      ** end program
+     C                     EXSR FINAL
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      **  DETL1      :  DETAIL PROCESSING                             *
+      *   CALLED BY  :  MAIN PROCESSING                               *
+      *   CALLS      :  PTYCH                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETL1     BEGSR
+      *
+      ** Initialise array SC
+     C                     MOVEA*BLANKS   SC
+      *
+     C                     Z-ADD*ZEROS    X       10
+     C                     Z-ADD*ZEROS    HXSEQN  20
+      *
+      ** Access SDCBRTL1 with CNUM
+     C**********           Z-ADDCNUM      CLNKEY  60                                         CSD027A
+     C                     MOVE CNUM      CLNKEY  6                                          CSD027A
+     C           CLNKEY    CHAINSDCBRTL1             02
+      *
+     C           *IN02     IFEQ '1'                        B1
+     C           XRECI     ORNE 'D'                        *1
+     C           XRECI     ANDNE'C'                        *1
+     C                     MOVEL'SDCBRTPD'DBFILE           ************
+     C                     MOVELCLNKEY    DBKEY            * DBERR 02 *
+     C                     MOVE '2'       DBASE            ************
+     C                     SETON                     U7LR  *1
+     C                     MOVE 'E'       RTNCDE           *1
+     C                     DUMP                            *1
+     C                     UNLCKLDA
+     C                     RETRN                           *1
+     C                     END                             E1
+      *
+     C           H1SEQN    IFNE *ZEROS                     B1
+     C                     Z-ADDH1SEQN    HXSEQN           *1
+     C                     Z-ADD1         X                *1
+     C                     EXSR PTYCH                      *1
+     C                     END                             E1
+      *
+     C           H2SEQN    IFNE *ZEROS                     B1
+     C                     Z-ADDH2SEQN    HXSEQN           *1
+     C                     Z-ADD2         X                *1
+     C                     EXSR PTYCH                      *1
+     C                     END                             E1
+      *
+     C           H3SEQN    IFNE *ZEROS                     B1
+     C                     Z-ADDH3SEQN    HXSEQN           *1
+     C                     Z-ADD3         X                *1
+     C                     EXSR PTYCH                      *1
+     C                     END                             E1
+      *
+     C           H4SEQN    IFNE *ZEROS                     B1
+     C                     Z-ADDH4SEQN    HXSEQN           *1
+     C                     Z-ADD4         X                *1
+     C                     EXSR PTYCH                      *1
+     C                     END                             E1
+      *
+     C           H5SEQN    IFNE *ZEROS                     B1
+     C                     Z-ADDH5SEQN    HXSEQN           *1
+     C                     Z-ADD5         X                *1
+     C                     EXSR PTYCH                      *1
+     C                     END                             E1
+      *
+     C                     MOVEASC        SELFC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  PTYCH      :         PROCESSING                             *
+      *   CALLED BY  :  DETL1                                         *
+      *   CALLS      :  SAMDAT                                        *
+      *              :  IGNDAT                                        *
+      *              :  IGNLFG                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PTYCH     BEGSR
+      *
+     C                     MOVEA*BLANKS   LFG
+     C                     Z-ADD*ZEROS    EFD
+     C                     Z-ADD*ZEROS    LCH
+      *
+     C                     Z-ADDHXSEQN    WFLD2
+      *
+     C           PTYKEY    CHAINPTYHSTF              03
+      *
+      * If record not found
+      *
+     C           *IN03     IFEQ '1'                        B1
+     C                     MOVELWFLD1     DBKEY            ************
+     C                     MOVE 'PTYHS'   DBFILE           * DBERR 03 *
+     C                     MOVE '03'      DBASE            ************
+     C                     SETON                     U7LR  *1
+     C                     MOVE 'E'       RTNCDE           *1
+     C                     DUMP                            *1
+     C                     UNLCKLDA
+     C                     RETRN                           *1
+      *
+     C                     ELSE                            X1
+      *
+      ** Count no. of non-blank entries in LFG
+     C                     Z-ADD0         COUNT   20       *1
+     C                     Z-ADD1         J       20       *1
+      *
+     C           J         DOUEQ11                         B*2
+     C           LFG,J     IFNE *BLANKS                    B**3
+     C                     ADD  1         COUNT            ***3
+     C                     ADD  1         J                ***3
+      *
+     C                     ELSE                            X**3
+      *
+     C                     Z-ADD11        J                ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** Store value of COUNT for later use in SR/SNGLE
+     C                     Z-ADDCOUNT     COUNT3  20
+      *
+     C           COUNT     IFEQ 1                          B*2
+     C           LFG,1     ANDEQ'N'                        B*2
+      *
+     C           EFD,1     IFEQ TAXDT                      B**3
+     C                     MOVEA'F'       SC,X             ***3
+     C                     END                             E**3
+      *
+     C           EFD,1     IFGT TAXDT                      B**3
+     C                     MOVEA'P'       SC,X             ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+     C           COUNT     IFGT 1                          B*2
+      *
+      ** For each non-zero entry in the effective dates array (EFD)
+      ** Record which elements have the same effective date
+     C                     EXSR SAMDAT                     **2
+      *
+      ** For each non-zero entry in the array DATE
+      ** work out which records to eliminate from processing
+     C                     EXSR IGNDAT                     **2
+      *
+      ** Determine how many elements are left after elemination
+      ** processing
+     C                     EXSR IGNLFG                     **2
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  SAMDAT     :                                                *
+      *   CALLED BY  :  PTYCH                                         *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SAMDAT    BEGSR
+      *
+      ** Check each non-zero entry in EFD
+     C                     Z-ADD1         Y       20
+     C                     Z-ADD1         Z       20
+     C                     Z-ADD*ZEROS    L       20
+     C                     Z-ADD*ZEROS    DATE
+      *
+     C                     DO   COUNT                      B1
+     C           EFD,Y     LOKUPDATE,Z                   10*1
+      *
+     C           *IN10     IFEQ '1'                        B*2
+      *
+      ** move contents of alpha NUM, into numeric NUMI
+     C                     Z-ADD*ZEROS    NUMI             **2
+     C                     MOVEANUM,Z     FLDA             **2
+     C                     Z-ADD1         L                **2
+     C                     DO   10                         B**3
+     C                     MOVE FLDA,L    NUMI,L           ***3
+     C                     ADD  1         L                ***3
+     C                     END                             E**3
+      *
+     C                     Z-ADD1         A       20       **2
+     C                     Z-ADD*ZEROS    ZERO    20       **2
+     C           ZERO      LOKUPNUMI,A                   11**2
+      *
+     C           *IN11     IFEQ '1'                        B**3
+     C                     Z-ADDY         NUMI,A           ***3
+      *
+      ** move contents of numeric NUMI into alpha NUM
+     C                     MOVEAWRKA      NUM,Z            ***3
+     C                     END                             E**3
+      *
+     C                     ELSE                            X*2
+      *
+     C                     Z-ADD*ZEROS    NUMI             **2
+     C                     Z-ADD*ZEROS    ZERR    50       **2
+     C           ZERR      LOKUPDATE,Z                   12**2
+      *
+     C           *IN12     IFEQ '1'                        B**3
+     C                     Z-ADDEFD,Y     DATE,Z           ***3
+     C                     Z-ADDY         NUMI,1           ***3
+      *
+      ** move contents of numeric NUMI into alpha NUM
+     C                     MOVEAWRKA      NUM,Z            ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+     C                     ADD  1         Y                *1
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  IGNDAT     :                                                *
+      *   CALLED BY  :  PTYCH                                         *
+      *   CALLS      :  DEALSR                                        *
+      *                 ACCNSR                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IGNDAT    BEGSR
+      *
+      ** Initialise count D for ignored elements in SR/DCRIND
+     C                     Z-ADD1         D       20
+      *
+      ** Check each non-zero entry in DATE
+     C                     Z-ADDZ         COUNT2  20
+     C                     Z-ADD1         Z
+     C                     Z-ADD*ZEROS    E       20
+     C                     Z-ADD*ZEROS    C       20
+      *
+      ** For each non-zero entry check if any have same effective date
+      ** (worked out in SR/SAMDAT and stored in array NUM)
+     C                     DO   COUNT2                     B*1
+      *
+      ** move contents of alpha NUM, into numeric NUMI
+     C                     Z-ADD*ZEROS    NUMI             *1
+     C                     MOVEANUM,Z     FLDA             *1
+     C                     Z-ADD1         M                *1
+     C                     DO   10                         B*2
+     C                     MOVE FLDA,M    NUMI,M           **2
+     C                     ADD  1         M                **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         Z                *1
+      *
+      ** Count number of non-zero elements in NUMI (count = E)
+     C                     Z-ADD1         M       20
+     C                     Z-ADD*ZEROS    ZERO
+     C           ZERO      LOKUPNUMI,M                   13*1
+      *
+     C           *IN13     IFEQ '1'                        B*2
+     C           M         SUB  1         E                **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     Z-ADD10        E                **2
+      *
+     C                     END                             E*2
+      *
+      ** Store value of last non-zero element read from NUMI as C
+     C                     MOVE NUMI,E    C
+      *
+      ** If count of non-zero elements in NUMI is greater or equal to 2
+     C           E         IFGE 2                          B*2
+      *
+      ** If processing deal i.e DLNO not zero
+     C           DLKEY     IFNE *ZEROS                     B**3
+     C                     EXSR DEALSR
+      *
+      ** If processing account i.e DLNO is zero
+     C                     ELSE                            X**3
+      *
+     C                     EXSR ACCNSR
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  DEALSR     :                                                *
+      *   CALLED BY  :  IGNDAT                                        *
+      *   CALLS      :  DCRIND                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEALSR    BEGSR
+      *
+     C                     MOVE '0'       DRIN    1
+     C                     MOVE '0'       CRIN    1
+      *
+     C                     Z-ADDDATE,Z    WDFLD2
+      *
+     C           DLDKEY    SETLLINTPSL15
+     C                     READ INTPSL15                 20
+      *
+      ** Process while record is a Deal and int. payment date is less
+      ** than or equal to last change date of last non-zero element of NUMI
+     C           *IN20     DOWEQ'0'                        B1
+     C           DLNO      ANDEQWDFLD1                     *1
+     C           IPDT      ANDLELCH,C                      *1
+      *
+     C           CRBRTC    IFGT 0                          B*2
+     C                     MOVE '1'       CRIN             **2
+     C                     END                             E*2
+      *
+     C           CRBRTC    IFLE 0                          B*2
+     C                     MOVE '1'       DRIN             **2
+     C                     END                             E*2
+      *
+     C                     READ INTPSL15                 20*1
+      *
+     C                     END                             E1
+      *
+      ** Check for intrest payment records and credit records
+     C                     EXSR DCRIND
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  ACCNSR     :                                                *
+      *   CALLED BY  :  IGNDAT                                        *
+      *   CALLS      :  DCRIND                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACCNSR    BEGSR
+      *
+     C                     MOVE '0'       DRIN    1
+     C                     MOVE '0'       CRIN    1
+      *
+     C                     Z-ADDDATE,Z    WAFLD5
+      *
+     C           INAKEY    SETLLINTPSL16
+     C                     READ INTPSL16                 21
+      *
+      ** Process while record is an A/c and int. payment date is less
+      ** than or equal to last change date of last non-zero element of NUMI
+     C           *IN21     DOWEQ'0'                        B1
+     C           CNUM      ANDEQWAFLD1                     *1
+     C           CCY       ANDEQWAFLD2                     *1
+     C           ACOD      ANDEQWAFLD3                     *1
+     C           ACSQ      ANDEQWAFLD4                     *1
+     C           DATE,Z    ANDEQWAFLD5                     *1
+     C           IPDT      ANDLELCH,C                      *1
+      *
+     C           CRBRTC    IFGT 0                          B*2
+     C                     MOVE '1'       CRIN             **2
+     C                     END                             E*2
+      *
+     C           CRBRTC    IFLE 0                          B*2
+     C                     MOVE '1'       DRIN             **2
+     C                     END                             E*2
+      *
+     C                     READ INTPSL16                 21*1
+      *
+     C                     END                             E1
+      *
+      ** Check for intrest payment records and credit records
+     C                     EXSR DCRIND
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   DCRIND     :                                                *
+      *   CALLED BY  :  DEALSR                                        *
+      *   CALLED BY  :  ACCNSR                                        *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DCRIND    BEGSR
+      *
+     C                     Z-ADD1         F       20
+      *
+     C           DRIN      IFEQ '1'                        B1
+     C           CRIN      ANDEQ'0'                        B1
+     C                     Z-ADDNUMI,E    IGN,D            *1
+     C                     ADD  1         D                *1
+     C                     END                             E1
+      *
+     C           DRIN      IFEQ '1'                        B1
+     C           CRIN      ANDEQ'1'                        B1
+      *
+     C           F         DOWLTE                          B*2
+     C                     Z-ADDNUMI,F    IGN,D            **2
+     C                     ADD  1         D                **2
+     C                     ADD  1         F                **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  IGNLFG     :                                                *
+      *   CALLED BY  :  PTYCH                                         *
+      *   CALLS      :  SNGLE                                         *
+      *                 PLURL                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IGNLFG    BEGSR
+      *
+      ** Count number of non-zero entries in array IGN (count = WIGNZ)
+     C                     Z-ADD1         N       20
+     C                     Z-ADD*ZEROS    WIGNZ   20
+     C                     Z-ADD*ZEROS    ZERO
+     C           ZERO      LOKUPIGN,N                    14
+      *
+     C           *IN14     IFEQ '1'                        B1
+     C           N         SUB  1         WIGNZ            *1
+      *
+     C                     ELSE                            X1
+      *
+     C                     Z-ADD10        WIGNZ            *1
+      *
+     C                     END                             E1
+      *
+      ** Count number of non-blank entries in array LFG (count = WLFGZ)
+      *
+     C                     Z-ADD1         O       20
+     C                     Z-ADD*ZEROS    WLFGZ   20       *1
+     C                     MOVE *BLANKS   BLNK    1
+     C           BLNK      LOKUPLFG,O                    15
+      *
+     C           *IN15     IFEQ '1'                        B1
+     C           O         SUB  1         WLFGZ            *1
+      *
+     C                     ELSE                            X1
+      *
+     C                     Z-ADD10        WLFGZ            *1
+      *
+     C                     END                             E1
+      *
+     C           WLFGZ     SUB  WIGNZ     SUM     20
+      *
+      ** If only one element left
+     C           SUM       IFEQ 1                          B1
+     C                     EXSR SNGLE                      *1
+     C                     END                             E1
+      *
+      ** If more than one element left
+     C           SUM       IFGT 1                          B1
+     C                     EXSR PLURL                      *1
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   SNGLE      :                                                *
+      *   CALLED BY  :  IGNLFG                                        *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNGLE     BEGSR
+      *
+      ** Check each non-zero entry in EFD
+      ** Read first non-zero element in EFD
+     C                     Z-ADD1         Y
+      *
+     C                     DO   COUNT3                     B1
+     C           Y         LOKUPIGN                      16*1
+     C           *IN16     IFEQ '1'                        B*2
+     C                     ADD  1         Y                **2
+      *
+     C                     ELSE                            X*2
+      *
+     C           LFG,Y     IFEQ 'N'                        B**3
+      *
+     C           EFD,Y     IFEQ TAXDT                      B***4
+     C                     MOVEA'F'       SC,X             ****4
+     C                     END                             E***4
+      *
+     C           EFD,Y     IFGT TAXDT                      B***4
+     C                     MOVEA'P'       SC,X             ****4
+     C                     END                             E***4
+      *
+     C                     GOTO EEND                       ***3
+      *
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           EEND      ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   PLURL      :                                                *
+      *   CALLED BY  :  IGNLFG                                        *
+      *   CALLS      :  DLPL                                          *
+      *                 ACPL                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PLURL     BEGSR
+     C                     Z-ADD1         Y
+     C                     Z-ADD*ZEROS    G       20
+      *
+     C           Y         DOUEQ10                         B1
+      *
+     C           EFD,Y     IFNE 0                          B*2
+     C           Y         LOKUPIGN                      17**2
+     C           *IN17     IFEQ '0'                        B**3
+     C                     ADD  1         G                ***3
+     C                     Z-ADDEFD,Y     LFT,G            ***3
+     C                     MOVE LFG,Y     REM,G            ***3
+     C                     END                             E**3
+      *
+     C                     ADD  1         Y                **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     Z-ADD10        Y                **2
+      *
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** Check if processing DEAL or ACCOUNT
+     C           DLKEY     IFNE *ZEROS                     B1
+     C                     EXSR DLPL                       *1
+     C                     ELSE                            *1
+     C                     EXSR ACPL                       *1
+     C                     END                             E1
+      *
+     C           CRIN      IFEQ '1'                        B1
+     C                     Z-ADDG         COUNT4  20       *1
+     C                     Z-ADD1         G                *1
+      *
+      ** For each non-zero entry in LFT (ie G times)
+     C                     DO   COUNT4    G                B*2
+     C           LFT,G     IFLE INTD                       B**3
+     C                     Z-ADD*ZEROS    LFT,G            ***3
+     C                     MOVE *BLANKS   REM,G            ***3
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+      ** Check contents of REM
+     C                     Z-ADD*ZEROS    BLCNT   20
+     C                     Z-ADD*ZEROS    NCNT    20
+     C                     Z-ADD*ZEROS    NILCNT  20
+     C                     MOVEA*BLANKS   SC,X
+     C                     Z-ADD1         G
+      *
+     C                     DO   10                         B1
+      *
+      ** Count number of non - blank entries
+     C           REM,G     IFNE ' '                        B*2
+     C                     ADD  1         BLCNT            **2
+     C                     END                             E*2
+      *
+      ** Count number of 'N' entries
+     C           REM,G     IFEQ 'N'                        B*2
+     C                     ADD  1         NCNT             **2
+     C                     END                             E*2
+      *
+      ** Count number of non 'N' entries
+     C           REM,G     IFNE ' '                        B*2
+     C           REM,G     ANDNE'N'                        **2
+     C                     ADD  1         NILCNT           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         G                *1
+      *
+     C                     END                             E1
+      *
+     C           NCNT      IFEQ BLCNT                      B1
+     C           NCNT      ANDNE0                          *1
+     C                     MOVEA'F'       SC,X             *1
+     C                     END                             E1
+      *
+     C           NCNT      IFGE 1                          B1
+     C           NILCNT    ANDGE1                          *1
+     C                     MOVEA'P'       SC,X             *1
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   DLPL       :                                                *
+      *   CALLED BY  :  PLURL                                         *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DLPL      BEGSR
+      *
+     C                     MOVE '0'       CRIN    1
+      *
+     C           DLKEY     SETLLINTPSL15
+     C                     READ INTPSL15                 22
+      *
+      ** Process while record is a Deal
+     C           *IN22     DOWEQ'0'                        B1
+     C           DLNO      ANDEQDLKEY                      *1
+      *
+     C           CRBRTC    IFGT 0                          B*2
+     C                     MOVE '1'       CRIN             **2
+     C                     Z-ADDIPDT      INTD    50       **2
+     C                     END                             E*2
+      *
+     C                     READ INTPSL15                 22*1
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   ACPL       :                                                *
+      *   CALLED BY  :  PLURL                                         *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACPL      BEGSR
+     C                     MOVE '0'       CRIN
+      *
+     C           INBKEY    SETLLINTPSL16
+     C                     READ INTPSL16                 23
+      *
+      ** Process while record is a Deal
+     C           *IN23     DOWEQ'0'                        B1
+     C           CNUM      ANDEQWBFLD1                     *1
+     C           CCY       ANDEQWBFLD2                     *1
+     C           ACOD      ANDEQWBFLD3                     *1
+     C           ACSQ      ANDEQWBFLD4                     *1
+      *
+     C           CRBRTC    IFGT 0                          B*2
+     C                     MOVE '1'       CRIN             **2
+     C                     Z-ADDIPDT      INTD             **2
+     C                     END                             E*2
+      *
+     C                     READ INTPSL16                 23*1
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  INIT       :  INITIAL PROCESSING                            *
+      *   CALLED BY  :  MAIN PROCESS                                  *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SD2466'  DBPGM
+      *
+      ** Read in parameters
+     C           *ENTRY    PLIST
+     C**********           PARM           CNUM    60                                         CSD027A
+     C                     PARM           CNUM    6                                          CSD027A
+     C                     PARM           DLNO    60
+     C                     PARM           CCY     3
+     C**********           PARM           ACOD    40                                          CGL029
+     C                     PARM           ACOD   100                                          CGL029
+     C                     PARM           ACSQ    20
+     C                     PARM           SELFC   5
+     C                     PARM           RTNCDE  1
+      *
+      ** Set up key list to chain to participator history file
+     C           PTYKEY    KLIST
+     C**********           KFLD           WFLD1   60                                         CSD027A
+     C                     KFLD           WFLD1   6                                          CSD027A
+     C                     KFLD           WFLD2   20
+     C**********           Z-ADDCNUM      WFLD1                                              CSD027A
+     C                     MOVE CNUM      WFLD1                                              CSD027A
+      *
+      ** Set up key list to SETLL on int. payment history file
+     C           DLDKEY    KLIST
+     C                     KFLD           WDFLD1  60
+     C                     KFLD           WDFLD2  50
+     C                     Z-ADDDLNO      WDFLD1
+      *
+     C                     Z-ADDDLNO      DLKEY   60
+      *
+      ** Set up key list to SETLL on int. payment history file
+     C           INAKEY    KLIST
+     C**********           KFLD           WAFLD1  60                                         CSD027A
+     C                     KFLD           WAFLD1  6                                          CSD027A
+     C                     KFLD           WAFLD2  3
+     C**********           KFLD           WAFLD3  40                                          CGL029
+     C                     KFLD           WAFLD3 100                                          CGL029
+     C                     KFLD           WAFLD4  20
+     C                     KFLD           WAFLD5  50
+     C**********           Z-ADDCNUM      WAFLD1                                             CSD027A
+     C                     MOVE CNUM      WAFLD1                                             CSD027A
+     C                     MOVE CCY       WAFLD2
+     C                     Z-ADDACOD      WAFLD3
+     C                     Z-ADDACSQ      WAFLD4
+      *
+      ** Set up 2nd key list to SETLL on int. payment history file
+     C           INBKEY    KLIST
+     C**********           KFLD           WBFLD1  60                                         CSD027A
+     C                     KFLD           WBFLD1  6                                          CSD027A
+     C                     KFLD           WBFLD2  3
+     C**********           KFLD           WBFLD3  40                                          CGL029
+     C                     KFLD           WBFLD3 100                                          CGL029
+     C                     KFLD           WBFLD4  20
+     C**********           Z-ADDCNUM      WBFLD1                                             CSD027A
+     C                     MOVE CNUM      WBFLD1                                             CSD027A
+     C                     MOVE CCY       WBFLD2
+     C                     Z-ADDACOD      WBFLD3
+     C                     Z-ADDACSQ      WBFLD4
+      *
+      ** Access TABTB10
+      *
+     C           1         CHAINTABTB10              01
+      *
+      * If record not found
+      *
+     C           *IN01     IFEQ '1'                        B1
+     C                     MOVEL'ICD 1'   DBKEY            ************
+     C                     MOVE 'TABLE'   DBFILE           * DBERR 001*
+     C                     MOVE '01'      DBASE            ************
+     C                     SETON                     U7LR  *1
+     C                     MOVE 'E'       RTNCDE           *1
+     C                     DUMP                            *1
+     C                     UNLCKLDA
+     C                     RETRN                           *1
+     C                     END                             E1
+      *
+     C           DATF      COMP 'M'                  98
+      *
+      ** date processing
+     C                     EXSR DATCH
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **  DATCH      :  DATE PROCESSING                               *
+      *   CALLED BY  :  INIT                                          *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DATCH     BEGSR
+      *
+      ** Use run date to calculate current tax year
+      *
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     TAXDAT
+      *
+      ** TAXDAT now contains RUND in DDMMYY format. Use DDMM part
+      ** to calculate current tax year
+      *
+     C           MM        IFGE 01                         B1
+     C           MM        ANDLE03                         *1
+      *
+     C           MM        OREQ 04                         *1
+     C           DD        ANDLE05                         *1
+      *
+     C           YY        SUB  1         YY               *1
+      *
+     C                     END                             E1
+      *
+     C                     Z-ADD6         DD
+     C                     Z-ADD4         MM
+      *
+      ** TAXDAT now contains the date for the start of the current tax
+      ** year, i.e  06/04/YY. This must now be converted into a
+      ** Midas number
+      *
+     C                     MOVE TAXDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    TAXDT   50
+      *
+     C                     ENDSR
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+      *                                                               *
+      **  FINAL      :  TERMINATION PROCESSING                        *
+      *   CALLED BY  :  MAIN PROCESS                                  *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FINAL     BEGSR
+      *
+     C                     UNLCKLDA
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

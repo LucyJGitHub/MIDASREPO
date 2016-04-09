@@ -1,0 +1,138 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *  TEXT('Midas ZA EU Tax Calculation for Private Individual')   *
+/*E*I**:*MODULE(ZATXCLPI)*******************************************: *                       CGL035
+/*E*I**:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************: *                       CGL035
+/*EXI *: MODULE(ZATXCLPI) ACTGRP(*CALLER)                           : *                       CGL035
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Common Routines                                     *
+      *                                                               *
+      *  ZATXCLPI - EU Tax Calculation for Private Individuals        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CER070             Date 19Aug14               *
+      *  Prev Amend No. MD030924           Date 07Oct14               *
+      *                 CER069             Date 03Jul14               *
+      *                 MD027307A          Date 19Aug14               *
+      *                 MD027318           Date 09Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR744769           Date 28Apr11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26979           Date 22Jan10               *
+      *                 BUG26839           Date 05Jan10               *
+      *                 BUG26790           Date 27Nov09               *
+      *                 BUG26581           Date 13Nov09               *
+      *                 BUG26703           Date 09Nov09               *
+      *                 BUG24630A          Date 02Jul09               *
+      *                 BUG24630           Date 01Jul09               *
+      *                 BUG24521           Date 23Jun09               *
+      *                 BUG24344           Date 17Jun06               *
+      *                 BUG24053           Date 20May09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG24197           Date 02Jun09               *
+      *                 BUG24051           Date 28May09               *
+      *                 BUG23732           Date 23Apr09               *
+      *                 BUG23657           Date 13Apr09               *
+      *                 BUG23090           Date 25Feb09               *
+      *                 BUG22953A          Date 25Feb09               *
+      *                 BUG23071           Date 23Feb09               *
+      *                 BUG22911           Date 17Feb09               *
+      *                 BUG22953           Date 17Feb09               *
+      *                 BUG22529           Date 10Feb09               *
+      *                 BUG22754           Date 10Feb09               *
+      *                 CER048             Date 19May08               *
+      *                 CER034             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 236453             Date 17Oct05               *
+      *                 236812             Date 17Jun05               *
+      *                 236461             Date 18Oct05               *
+      *                 236399             Date 18Oct05               *
+      *                 235663             Date 30Sep05               *
+      *                 236065             Date 13Sep05               *
+      *                 235303             Date 03Aug05               *
+      *                 236825             Date 26Jun05               *
+      *                 233269             Date 27Apr05               *
+      *                 232543             Date 15Mar05               *
+      *                 CGL035             Date 01Mar05               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  MD030924 - For Customer combi S with Transaction Tax         *
+      *             Indicator A, taxes were computed (Recompile)      *
+      *  CER069 - German Tax Enhancement (Recompile)                  *
+      *  MD027307A  - Second tax is deducted twice.                   *
+      *  (Reopen)   - Need to correct fix done for MD027318.          *
+      *             - Recompiled.                                     *
+      *  MD027318 - Payment message deduct only main tax instead of   *
+      *             both taxes.                                       *
+      *           - Recompiled due to changes done in module.         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR744769 - Total tax amount discrepancy brought by rounding  *
+      *             off issue (Child: AR744770) (Recompile)           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26979 - Serious Midas error encountered while trying      *
+      *             to roll-over (Recompile)                          *
+      *  BUG26839 - JA1_Threshold limit of the main joint customer was*
+      *             utilized by the member (Recompile)                *
+      *  BUG26790 - DLC0606B 00001 Database error in SDACUSPD         *
+      *             (Recompile)                                       *
+      *  BUG26581 - Federal State Code used has zero amount           *
+      *             (Recompile)                                       *
+      *  BUG26703 - SD200205P1 report does not break the data down    *
+      *             by state code (Recompile)                         *
+      *  BUG24630A - In MM and Retail Interest Calculation Threshold  *
+      *              is not being Deducted. (Recompile)               *
+      *  BUG24630 - In MM and Retail Interest Calculation Threshold is*
+      *              not being Deducted. (Recompile)                  *
+      *  BUG24521 - Utilisation at Joint Account was not reflected    *
+      *             (Recompile)                                       *
+      *  BUG24344 - Incorrect calculation of tax (Recompile)          *
+      *  BUG24053 - Non taxable transaction generated third tax in    *
+      *             SDCSINPD (Recompile)                              *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  BUG24197 - Incorrect Gross Interest (Recompile)              *
+      *  BUG24051 - Incorrect Threshold Utilisation Postings          *
+      *             (Recompile)                                       *
+      *  BUG23732 - Joint Account threshold (Recompile)               *
+      *  BUG23657 - Threshold/Certificate Value date and expiry date  *
+      *             (Recompile)                                       *
+      *  BUG23090 - Used DSLDY instead of DSSDY to prevent looping    *
+      *             after producing dump in DL1705 (Recompile)        *
+      *  BUG22953A - Secondary and Main tax not calculated on OSIC    *
+      *            (Recompile)                                        *
+      *  BUG23071 - Cannot do the roll over for Money market          *
+      *             (Recompile)                                       *
+      *  BUG22911 - Changes for Correct Tax Calculation (recompile)   *
+      *  BUG22953 - Secondary and Main tax not calculated on OSIC     *
+      *           (Recompile)                                         *
+      *  BUG22529 - Global Additional Customer Details (Recompile)    *
+      *  BUG22754 - Incorrect main and secondary tax calculations     *
+      *             (Recompile)                                       *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER034 - German Features - New Fields and Enquiries          *
+      *           (Recompile)                                         *
+      *  236453 - Change access object for customer to also consider  *
+      *           'Closed' customer.                                  *
+      *  236812 - Incorrect condition for NOTAP caused no tax being   *
+      *           calculated                                          *
+      *  236461 - Change access object for customer to also consider  *
+      *           'Closed' customer.                                  *
+      *  236399 - Recompiled over change in module.                   *
+      *  235663 - Retrieve correct Tax Basket record                  *
+      *           reversing out 236065 as this is a better fix        *
+      *  236065 - Incorrect detail for customer with No Tax           *
+      *  235303 - Customer Tax details error                          *
+      *  236825 - Tax wrongly rounded                                 *
+      *  233269 - Errors on ZATXCLJA and ZATXCLPI (Recompile)         *
+      *  232543 - Fix to CGL031 (Recompile)                           *
+      *  CGL035 - EUSD Upgrade to Midasplus                           *
+      *  CGL031 - Taxation of Savings Income                          *
+      *                                                               *
+      *****************************************************************

@@ -1,0 +1,1815 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS communications pgm for ST400 SII')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT direct link                               *
+      *                                                               *
+      *   MS3500 - STS Communications Program (SWIFT II version)      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                  136088            DATE 13OCT98               *
+      *                  146340            DATE 29Oct98               *
+      *                  146592            DATE 03Nov98               *
+      *                  124673            DATE 08Jun98               *
+      *                  113352            DATE 13FEB97               *
+      *                  105617            DATE 28FEB97               *
+      *                  108092            DATE 25FEB97               *
+      *                  CSW095            DATE 10APR95               *
+      *                  068105            DATE 20JAN94               *
+      *                  068106            DATE 16JAN94               *
+      *                  063288            DATE 25NOV93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   136088 - Cannot send outgoing msg to ST400.                 *
+      *            Recompiled due to changes in MSCOMMS file.         *
+      *   146340 - Century field set up in wrong position.            *
+      *   146592 - Recompile over changes in MSCOMMS                  *
+      *   124673 - Add Century field to be written into MSMSI2PD.     *
+      *   113352 - Recompile over changes in mgorefpd                 *
+      *   105617 - Take out the DB error when no corresponding message*
+      *            is found in MSOREFPD for incoming ACK and NAK.     *
+      *            Apply fix 066119.                                  *
+      *   108092 - Unable to update MT580 status with ACK/NAK.        *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   068105 - Output MOR and MIR to MEDTA                        *
+      *   068106 - Check if message is a duplicate via MS3550         *
+      *   063288 - REMOVE ACCESS TO FILE SDMSDLPD & DATABASE ERROR    *
+      *            PROCESSING.                                        *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FMSCOMMS CF  E                    WORKSTN
+     F                                              KINFDS ERRDS
+     FMGOREFL0UF  E           K        DISK
+     F                                              KCOMIT
+     FMSMSI2L0O   E                    DISK                      A
+     F                                              KCOMIT
+     FMGOMSGLYIF  E           K        DISK                               108092
+     F*MSIXI2L2IF**E           K        DISK                              068106
+     F************MSIXI2D0                          KRENAMEMSREF2L2       068106
+     FMS3500P1O   E                    PRINTER                        UC
+     FMSTRACPDO   E                    DISK                      A    U1
+     F            MSTRACPD                          KRENAMEMSTRACPF
+      *
+      **  For all logical states, 1 => TRUE, 0 => FALSE
+      *
+      *   Ind i/d          Use
+      *   -------          ---
+      *   10               conversational_reply_expected (in)
+      *   11               conversational_reply_required (out)
+      *   12               data available
+      *   18               call to MSC4015 failed
+      *   20               time now > TOM(time) + 3 mins. (s/r TIMCHK)
+      *   50               work
+      *   51               work
+      *   60               work                                                               CSW209
+      *   69               outgoing message to be sent
+      *   70               error on MSCOMMS
+      *   71               error on MSCOMMS (INVITE)
+      *   75               receive turnaround
+      *   80               EoF, MSCOMMS
+      *   99               terminate program
+      *
+      *   U1               trace facility required. Write to MSTRACPD.
+      *   U7 & U8          Error
+      *
+     E                    CPY@    1   1 80               Copyright
+     E                    TABCOD  1  12  4   TABSTS  5   Status codes from c/r
+     E***********         IN         13252               Incoming message CSW095
+     E                    FLDX      252  1               Incoming message
+     E***********         MSI        12256               Incoming message CSW095
+     E                    @PDE       16  1               Block 5 Array.
+     E                    ERS         3  3               Error codes from NAK
+     E                    DLA        14  1               Error codes from NAK
+     E***********         EOT      3072  1               Find end of text CSW095
+     E                    DTA      1000  1               Message on MSDTQB
+     E***********         SND      2000  1               Outgoing message CSW095
+     E***********         TOM      2040  1               Temp o/g msg     CSW095
+     E***********         FL2      2042  1               Outgoing message
+     E                    IN         40252               Incoming message CSW095
+     E                    MSI        39256               Incoming message CSW095
+     E                    EOT      9999  1               Find end of text CSW095
+     E                    SND      9999  1               Outgoing message CSW095
+     E                    TOM      9999  1               Temp o/g msg     CSW095
+     E                    MSIA     9932  1               Incoming message CSW095
+     E                    FL2      8189  1               Outgoing message CSW095
+     E                    DLY     1   1 14               DLYJOB command
+     E                    DLT     1  10  2               seconds delay incoming
+     E                    AR1     1  14  4   AR2     1                                        CSW209
+      ** Escape Sequence Translation Array                                                    CSW209
+      **  Tables and arrays
+      *
+     IMGOMSGD0                                                            108092
+     I              TRNO                            MGTRN                 108092
+      *                                                                   108092
+     IPSDS       SDS
+     I                                      244 253 RWST
+     I                                      254 263 RUSE
+     I                                      264 269 RJOB
+      **  Program status data structure
+      *
+     IERRDS       DS                            488
+     I                                      280 280 INVSTA
+     I                                      281 281 DATAV
+     I                                    B 372 3750NUMBYT
+     I                                      401 404 MAJMIN
+      **  Information data structure for ICFF/MSCOMMS
+      *
+     ICREP        DS                             14
+     I I            '  #SW'                   1   5 CREPBN
+     I                                        6  10 CREPSQ
+     I I            'RCVD'                   11  14 CREPRD
+      **  Outgoing Conversational reply
+      *
+     I***FLDA********DS                           2044                    CSW095
+     I*I*********   '  '                      1   2 BL2                   CSW095
+     I***********                             32044 FL2                   CSW095
+     IFLDA        DS                                                      CSW095
+     I I            '  '                      1   2 BL2                   CSW095
+     I                                        38191 FL2                   CSW095
+      **  Outgoing message data
+      *
+     ITRAFF       DS                             21
+     I I            '  $RS001,'               1   9 TRF
+     I                                       10  21 OURTID
+      **  Traffic report request
+      *
+     I            DS
+     I                                        1   1 CR
+     I                                        2   2 LF
+     I                                        1   2 CRLF
+     I                                        3   3 DASH
+     I                                        1   3 EOMSG
+      **  CarriageReturn/LineFeed and End of Message
+      *
+     I            DS
+     I                                        1   60@TIME
+     I                                        1   20@HRS
+     I                                        3   40@MINS
+     I                                        5   60@SECS
+      **  Data structure for TIME
+      *
+     I            DS
+     I                                        1   60@LATM
+     I                                        1   40@LAHR
+     I I            00                        5   60@LASE
+      **  Data Structure for Last Action Time
+      *
+     I            DS
+     I                                        1   3 ERCOD
+     I                                        1   1 ERCOD1
+      **  STS error code from NAK
+      *
+     I***INALL*******DS                           3139                    CSW095
+     IINALL       DS                           9999                       CSW095
+      **  To remove first three characters from incoming message
+      *
+     I***INCOM*******DS                           3136                    CSW095
+     IINCOM       DS                           9996                       CSW095
+     I                                        1   3 BEGIN
+     I                                        4   8 INMSM
+     I                                        9 264 AKI
+     I                                       659996 MSIA                  CSW095
+     I***********                            653136 MSI                   CSW095
+      **  Incoming message data structure
+      *
+     I                                        9  12 ACKSTS
+     I                                       13  17 STLSN
+      **  Incoming Conversational reply
+      *
+     I            DS
+     I                                        1   1 IMOD
+     I                                        2  16 ITRF
+     I                                        1  16 ACKTRN
+      **  Common data for all ACK/NAKs
+      *
+     I@HOLD       DS                             46
+     I                                        1   3 MTPY
+     I                                        4   7 TME
+     I                                        8  35 MIR
+     I                                       36  410MODE
+     I                                       42  450MOTM
+     I                                       46  46 MPRY
+      **  Split up Block 2 of incoming message
+      *
+     I            DS
+     I                                        1  28 @MOR
+     I                                        1   60@MORD
+     I                                        7  28 @MORI
+      **  Data Structure to set up the MOR
+      *
+     I            DS
+     I                                        1  28 @MIR
+     I                                        1   60@LADT
+     I                                        7  28 @INMIR
+      **  Data Structure to set up the MIR
+      *
+     I***@SND********DS                           2000                    CSW095
+     I***********                             12000 SND                   CSW095
+     I@SND        DS                           9999                       CSW095
+     I                                        19999 SND                   CSW095
+      **  Outgoing Message to enable scan
+      *
+     I***MSDTQB******DS                           1019                    CSW095
+     I***********                             1   1 ACTI                  CSW095
+     I***********                             2   20NORECS                CSW095
+     I***********                             3   30RECNUM                CSW095
+     I***********                             4  19 DQTRN                 CSW095
+     I***********                            201019 DTA                   CSW095
+     I***********                            33  33 @DST8                 CSW095
+     IMSDTQB      DS                           1021                       CSW095
+     I                                        1   1 ACTI                  CSW095
+     I                                        2   30NORECS                CSW095
+     I                                        4   50RECNUM                CSW095
+     I                                        6  21 DQTRN                 CSW095
+     I                                       221021 DTA                   CSW095
+     I                                       35  35 @DST8                 CSW095
+      **  Data structure for records from MSDTQB
+      *
+     I***SDMSDL    E DSSDMSDLPD                                           063288
+      ****Data*structure*for*SWIFT*direct*link*table********************* 063288
+     1***********                                                         063288
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank details table
+      *
+     IMSSTAT      DS                            256
+     I                                        9  20 CSIDX
+     I                                       23  23 CPAIND
+     I                                       24  24 PDEIND
+     I                                       25  25 MTCIND
+     I                                       26  51 JOBDET
+     I                                       26  35 JOBNAM
+     I                                       36  45 USRNAM
+     I                                       46  51 JOBNUM
+     I                                       52  52 JAMIND
+     I                                       53  560OTIME
+     I                                       57  57 IMRIND
+     I                                      128 132 LSTSEQ
+     I                                      133 133 REFRUN
+      **  MSSTAT data structure
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     IMEDTA     E DSMEDTA                                                 068105
+      *                                                                   068105
+      *  Message Management Data Area                                     068105
+      *                                                                   068105
+      *                                                                                       CSW209
+     IDS1         DS                           9999                                           CSW209
+     IDS2         DS                           9999                                           CSW209
+     IDS3         DS                           9999                                           CSW209
+     IDS4         DS                           9999                                           CSW209
+      ** Data Structure to hold MSG during processing                                         CSW209
+      *                                                                                       CSW209
+      *****************************************************************
+      *                 Index to subroutines                          *
+      *                                                               *
+      *   Main process                                                *
+      *   INIT          Initial process                               *
+      *   TIMCHK        Check whether time(now) > TOM(time) + 3 mins. *
+      *   PREAD         Process communications file for READ          *
+      *   PRCESC        Process escape sequence translation           *                       CSW209
+      *   READCF        Read communications file                      *
+      *   PWRITE        Process communications file for WRITE         *
+      *   CONREP        Process incoming conversational reply         *
+      *   ICTX          Process incoming transmission                 *
+      *   ICTR          Process incoming traffice report              *
+      *   TRASH         Process incoming garbage                      *
+      *   PACK          Process logical acknowledgement               *
+      *   PNAK          Process negative acknowledgement              *
+      *   ICMSG         Process incoming message                      *
+      *   GETIX         Get index record for ACK/NAK                  *
+      *   MSIWRT        Write ACK/NAK/incoming message to MSMSI2L0    *
+      *   FNDEOT        Find end of incoming message text and add ETX *
+      *   SETOG         Set up outgoing message for transmission      *
+      *   RDDTAQ        Read data queue for next outgoing message     *
+      *   TERM          End program, and other batch jobs             *
+      *   TRACE         Write trace data to MSTRACPD                  *
+      *   *PSSR         General error handling sub-routine            *
+      *****************************************************************
+     C/EJECT
+      **  INITIAL PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      *****************************************************************
+      **  MAIN PROCESSING
+      *
+      **  DoWhile :termination message not set up by compression pgm.
+      **          :or waiting to send conversational reply.
+      **          :or waiting to receive conversational reply.
+     C           *IN99     DOWEQ'0'
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+      *
+      **  Process communications file for READ
+     C                     EXSR PREAD
+      *
+      **  Process communications file for WRITE
+     C                     EXSR PWRITE
+      *
+      **  If incoming conversational reply expected, and one has not
+      **  been received for > 3 mins, issue error message and terminate.
+     C           *IN10     IFEQ '1'
+     C                     EXSR TIMCHK
+     C           *IN20     IFEQ '1'
+     C                     OPEN MS3500P1
+     C                     WRITEMS3500F1
+     C                     WRITEMS3500F2
+     C                     WRITEMS3500F9
+     C                     CLOSEMS3500P1
+     C                     EXSR *PSSR
+     C                     END                             IF
+     C                     END                             IF
+      *
+      **  Update MSSTAT to tell everyone that we are still active
+     C                     TIME           @TIME
+     C           *LOCK     IN   MSSTAT
+     C                     MOVEL@TIME     OTIME
+     C                     OUT  MSSTAT
+      *
+     C                     END                             DOW
+      *
+      *****************************************************************
+      **  TERMINATION PROCESSING
+      *
+     C                     EXSR TERM
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  PREAD                                          *
+      * Purpose     :  Process communications file for READ           *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  READCF                                         *
+      *                CONREP                                         *
+      *                ICTX                                           *
+      *                ICTR                                           *
+      *                TRASH                                          *
+      *                TRACE                                          *
+      *                PRCESC                                         *                       CSW209
+      *****************************************************************
+      *
+     C           PREAD     BEGSR
+      *
+      **  Establish whether data is available using POST (unless
+      **  already known)
+     C           *IN12     IFEQ '0'
+      *
+     C                     TIME           @TIME
+     C           'SWIFT'   POST           ERRDS        70
+     C           DATAV     IFEQ 'Y'
+     C                     MOVE '1'       *IN12
+     C                     END                             IF
+      *
+      **  Invite data (to stop WACKS being sent) - only if not already
+      **  invited (invite status is returned to INFDS after POST)
+     C           INVSTA    IFEQ 'N'
+     C                     WRITEINVT                   71
+     C                     END                             IF
+      *
+     C                     MOVEL'POSTP1'  POSN    6        Trace
+     C                     EXSR TRACE
+     C                     END                             IF IN12
+      *
+      **  If data is available (POST was positive, or last write
+      **  gave contention) read incoming data
+     C           *IN12     IFEQ '1'
+      *
+      **  Set POST delay count to 0, because we are going to read data
+     C                     Z-ADD0         CT      20
+      *
+     C                     MOVE '0'       *IN75
+      *
+      **  DoWhile line not turnaround (ind. 75)
+     C           *IN75     DOWEQ'0'
+      *
+      **  Initialise pointer and incoming message array, IN.
+     C                     Z-ADD1         J       50
+     C                     MOVEA*BLANKS   IN
+      *
+      **  Read communications file
+     C                     EXSR READCF
+      *
+      **  DoWhile not time-out (MAJMIN 0310) and not turnaround
+      **  (MAJMIN 0300)
+     C           MAJMIN    DOWNE'0310'
+     C           MAJMIN    ANDNE'0300'
+      *
+      **  Move data from communications file field to array FLDX
+     C                     MOVEAFLDZ      FLDX
+      *
+      **  If no. of bytes in record reported via INFDS for MSCOMMS is
+      **  less than buffer length, remove any trailing control chars.
+     C           NUMBYT    IFLT 252
+     C           NUMBYT    ADD  1         I       50
+     C                     MOVEA*BLANKS   FLDX,I
+     C                     END                             IF
+      *
+      **  Move record from array FLDX to incoming message array IN
+     C                     MOVEAFLDX      IN,J
+      *
+     C                     ADD  1         J
+      *
+      **  Read communications file
+     C                     EXSR READCF
+      *
+     C                     END                             DOW
+      *
+      **  Move data to DS INCOM, removing first three characters
+     C                     MOVEAIN        INALL
+     C                     MOVE INALL     INCOM
+     C                     MOVEAMSIA      MSI                             CSW095
+      *                                                                                       CSW209
+      ** Scan message for Escape Sequence Translation                                         CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     EXSR PRCESC                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      **  If data read from file, attempt to process
+     C           INCOM     IFNE *BLANKS
+      *
+      **  CASE                            Processed by subroutine
+      **  ----                            -----------------------
+      **  Incoming Conversational Reply   CONREP
+      **  Incoming Transmission needing   ICTX
+      **   a reply (ACK, NAK or message)
+      **  Traffic Report                  ICTR
+      **  Garbage                         TRASH
+      *
+     C           BEGIN     CASEQ'#RS'     CONREP
+     C           BEGIN     CASEQ'#SW'     ICTX
+     C           BEGIN     CASEQ'$RS'     ICTR
+     C                     CAS            TRASH
+     C                     END                             CAS
+      *
+     C                     END                             IF
+      *
+     C                     END                             DOW
+      *
+     C                     ELSE
+      *
+      **  Else no data in input buffer, so therefore do a DLYJOB
+      **  Set time delay according to number of iterations, according
+      **  to array DLT.
+     C                     ADD  1         CT
+     C           CT        IFGT 10
+     C                     Z-ADD10        CT
+     C                     END                             IF
+     C                     MOVEADLT,CT    DLA2    2
+     C                     MOVEADLA2      DLA,12
+      *
+     C                     TIME           @TIME
+      *
+      **  Only do a DLYJOB if amount is not ' 0'
+     C           DLA2      IFNE ' 0'
+     C                     MOVEADLA       OVR
+     C                     CALL 'QCMDEXC'
+     C                     PARM           OVR    14
+     C                     PARM 14        WLEN   155
+     C                     END                             IF
+      *
+     C                     MOVEL'DLY P2'  POSN             Trace
+     C                     EXSR TRACE
+     C                     END                             IF
+      *
+      **  End of read process, so data not available. Set flag
+      **  approriately and cancel invite
+     C                     MOVE '0'       *IN12
+      *
+     C                     ENDSR                           PREAD
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  READCF                                         *
+      * Purpose     :  Process communications file for READ           *
+      *                                                               *
+      * Called by   :  PREAD                                          *
+      * Calls       :  -                                              *
+      *                TRACE                                          *
+      *****************************************************************
+      *
+     C           READCF    BEGSR
+      *
+      **  Read communications file
+     C                     TIME           @TIME
+     C                     READ RECV                   7080
+      *
+     C                     MOVEL'IN  P3'  POSN             Trace
+     C                     EXSR TRACE
+      *
+      **  If read fails terminate program
+     C           *IN70     IFEQ '1'
+     C                     OPEN MS3500P1
+     C                     WRITEMS3500F1
+     C                     WRITEMS3500F3
+     C                     WRITEMS3500F9
+     C                     CLOSEMS3500P1
+     C                     EXSR *PSSR
+     C                     END                             IF
+      *
+     C                     ENDSR                           READCF
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  PWRITE                                         *
+      * Purpose     :  Process communications file for WRITE          *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  SETOG                                          *
+      *                TRACE                                          *
+      *****************************************************************
+      *
+     C           PWRITE    BEGSR
+      *
+      **  Get next message to be sent, if not one already there -
+      **  if TOM(message) = blank, set up Outgoing Message for
+      **  transmission
+     C           TOM,1     IFEQ *BLANKS
+     C                     EXSR SETOG
+     C                     END                             IF
+      *
+      ** If there is a message to be sent, then stop the invite being
+      ** set on when an outgoing conversational reply is written.
+     C                     MOVE '0'       *IN69
+     C           TOM,1     IFNE *BLANKS
+     C                     MOVE '1'       *IN69
+     C                     END                             IF
+      *
+      **  If outgoing conversational_reply_required = TRUE, write
+      **  MSCOMMS with conversational reply
+     C           *IN11     IFEQ '1'
+     C                     MOVE *BLANKS   FLDA
+     C                     MOVELCREP      FLDA
+     C                     TIME           @TIME
+     C                     WRITESEND                   70
+     C           MAJMIN    IFEQ '0412'
+     C                     MOVE '1'       *IN12
+     C                     END                             IF
+      *
+     C                     MOVEL'OUT P5'  POSN             Trace
+     C                     EXSR TRACE
+      *
+     C                     END                             IF
+      *
+      **  If no contention (or incoming conversational_reply_required
+      **  = FALSE)
+     C           MAJMIN    IFNE '0412'
+     C           *IN11     OREQ '0'
+      *
+      **  Set incoming conversational_reply_required = FALSE
+     C                     MOVE '0'       *IN11
+      *
+      **  If TOM(message) *ne blank, and incoming conversational_reply_
+      **  expected = FALSE, attempt to write outgoing message
+     C           TOM,1     IFNE *BLANKS
+     C           *IN10     ANDEQ'0'
+      *                                                                   CSW095
+      ** The current processing sends a msg as a block of 2044 chars;     CSW095
+      ** to enable us to send a msg > 2044 chars the ICF File MSCOMMS     CSW095
+      ** has been modified to contain serveral blocks of 2044 up to       CSW095
+      ** 8192 characters.                                                 CSW095
+      *                                                                   CSW095
+     C                     MOVE '0'       *IN69
+     C                     MOVE *BLANKS   FLDA
+     C                     MOVEATOM       FL2
+     C                     TIME           @TIME
+     C                     WRITESEND                   70
+     C           MAJMIN    IFEQ '0412'
+     C                     MOVE '1'       *IN12
+     C                     END                             IF
+      *
+     C                     MOVEL'OUT P6'  POSN
+     C                     EXSR TRACE                      Trace
+      *
+      **  If no contention set incoming conversational_reply_expected
+      **  = TRUE. Set time of transmission and increment sequence
+      **  number
+     C           *IN70     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     TIME           TOMTIM
+     C                     ADD  1         TOMSEQ
+      *
+      ** Update the message status to transmitted.
+     C           DQTRN     CHAINMGOREFL0             50
+     C                     MOVE 'TRAN'    MGSG
+     C                     TIME           @LATM
+     C                     MOVE @LATM     LATM
+      *
+      ** Update Outgoing Message index record.
+     C                     UPDATMGOREFD0
+      *
+     C                     END                             IF
+     C                     END                             IF
+      *
+     C                     END                             IF
+      *
+     C                     ENDSR                           PWRITE
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SETOG                                          *
+      * Purpose     :  Set up outgoing message for transmission       *
+      *                nb. returns without setting up message if none *
+      *                available on data queue                        *
+      *                                                               *
+      * Called by   :  PWRITE                                         *
+      * Calls       :  RDDTAQ                                         *
+      *****************************************************************
+      *
+     C           SETOG     BEGSR
+      *
+      **  Set data queue wait time if there is no outgoing
+      **  conversational reply to be sent. Otherwise don't wait,
+      **  because we don't want to delay our outgoing conv. reply
+     C           *IN11     IFEQ '0'
+     C                     MOVE DLA2      WAIT
+     C                     ELSE
+     C                     Z-ADD0         WAIT    50
+     C                     END                             IF-ELSE
+     C                     EXSR RDDTAQ
+      *
+      **  Check for funnies
+     C           ACTI      IFEQ '¬'
+     C                     Z-ADD0         LENGTH
+     C                     END                             If
+      *
+      **  If entry found...
+     C           LENGTH    IFNE 0
+      *
+      **  If entry is not Termination...
+     C           ACTI      IFNE 'T'
+      *
+      **  If not the first record of a message, report error
+     C           RECNUM    IFNE 1
+     C                     OPEN MS3500P1
+     C                     WRITEMS3500F1
+     C                     WRITEMS3500F4
+     C                     WRITEMS3500F9
+     C                     CLOSEMS3500P1
+     C                     EXSR *PSSR
+     C                     END                             IF
+      *
+      **  Initialise message array and pointer
+     C                     MOVEA*BLANKS   SND
+     C                     Z-ADD1         P       50
+     C                     MOVEADTA       SND,P
+      *
+      **  Loop to access the rest of the message, where applicable (use
+      **  a wait time of 5 seconds to allow the compression program to
+      **  catch up if necessary).
+     C                     Z-ADD5         WAIT
+     C           RECNUM    DOWLTNORECS
+     C                     Z-ADD5         WAIT                            CSW095
+     C                     EXSR RDDTAQ
+     C                     ADD  1000      P
+     C                     MOVEADTA       SND,P
+     C                     END                             DOW
+      *
+      **  Locate ETX
+     C                     Z-ADD1         Q       50
+     C           ETX       LOKUPSND,Q                    50
+      *
+      **  If PDE required, replace ETX with PDE
+     C                     IN   MSSTAT
+     C                     SETOF                     50
+      *
+      **  Clear out the PDE array.
+     C                     MOVEA*BLANKS   @PDE
+      *
+      **  TNG (training) trailer as required
+     C           '{1:'     SCAN @SND      H
+     C                     ADD  14        H
+     C           1         SUBST@SND:H    @TEST
+     C           @TEST     IFEQ '0'
+     C                     MOVEA'{5:'     @PDE
+     C                     MOVEA'{TNG:}'  @PDE,4
+     C                     Z-ADD10        J
+     C                     MOVEA'}'       @PDE,J
+     C                     SETON                     50
+     C                     END
+      *
+      **  PDE (possible duplicate emission) as required
+     C           PDEIND    IFEQ 'Y'
+     C           *IN50     IFEQ '0'
+     C                     MOVEA'{5:'     @PDE
+     C                     Z-ADD4         J
+     C                     END
+     C                     MOVEA'{PDE:}'  @PDE,J
+     C                     ADD  6         J
+     C                     MOVEA'}'       @PDE,J
+     C                     SETON                     50
+     C                     END
+      *
+      **  Move the PDE array to SND
+     C           *IN50     IFEQ '1'
+     C                     MOVEA@PDE      SND,Q
+     C                     ELSE
+      *
+      **  Else just remove ETX
+     C                     MOVEA' '       SND,Q
+     C                     END                             IF-ELSE
+      *
+      **  Set up TOM
+     C                     MOVE TOMSEQ    @WK8A
+     C                     MOVEL'#RS'     @WK8A
+     C                     MOVEA@WK8A     TOM
+     C                     MOVEASND,1     TOM,9
+     C                     MOVE DQTRN     TOMTRN
+      *
+     C                     ELSE
+      *
+      **  If entry IS termination, set *IN99 to terminate program
+     C                     MOVE '1'       *IN99
+      *
+     C                     END                             IF-ELSE
+      *
+     C                     END                             IF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  RDDTAQ                                         *
+      * Purpose     :  Read data queue for next outgoing message      *
+      *                                                               *
+      * Called by   :  SETOG                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           RDDTAQ    BEGSR
+      *
+      **  Set length to length of message entry
+     C***********          Z-ADD1019      LENGTH  50                      CSW095
+     C                     Z-ADD1021      LENGTH  50                      CSW095
+      *
+      **  Read data queue
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM           DTAQ
+     C                     PARM           LIBR
+     C                     PARM           LENGTH
+     C                     PARM           MSDTQB
+     C                     PARM           WAIT
+      *
+     C                     ENDSR                           RDDTAQ
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TRACE                                          *
+      * Purpose     :  Write a trace record                           *
+      *                                                               *
+      * Called by   :  Many subroutines                               *
+      * Inputs      :  Position  - POSN  6A                           *
+      *                Time      - @TIME 6A                           *
+      *                                                               *
+      *                Note that TIME is taken BEFORE operation that  *
+      *                is being traced has been performed             *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TRACE     BEGSR
+      *
+      **  If U1 (trace facility required) is on, output to MSTRACPD
+     C           *INU1     IFEQ '1'
+     C                     MOVE @TIME     RTIME
+     C                     MOVEL*BLANKS   DATAX
+      *
+      **  Set up data according to posn parameter passed
+     C           POSN      IFEQ 'POSTP1'
+     C                     MOVELDATAV     DATAX
+     C                     END                             IF
+      *
+     C           POSN      IFEQ 'DLY P2'
+     C                     MOVEADLA       DATAX
+     C                     END                             IF
+      *
+     C           POSN      IFEQ 'IN  P3'
+     C           POSN      OREQ 'IN  P4'
+     C                     MOVELFLDZ      DATAX
+     C                     END                             IF
+      *
+     C           POSN      IFEQ 'OUT P5'
+     C           POSN      OREQ 'OUT P6'
+     C           POSN      OREQ 'OUT P7'
+     C                     MOVELFLDA      DATAX
+     C                     END                             IF
+      *
+     C                     MOVE *BLANKS   TEXT
+     C           *IN70     IFEQ '1'
+     C                     MOVE '********'TEXT
+     C                     END                             IF
+     C                     MOVE MAJMIN    TEXT
+     C                     MOVELPOSN      TEXT
+     C                     WRITEMSTRACPF
+     C                     END                             IF
+      *
+     C                     ENDSR                           TRACE
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  CONREP                                         *
+      * Purpose     :  Process incoming conversational reply          *
+      *                                                               *
+      * Called by   :  PREAD                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           CONREP    BEGSR
+      *
+      **  Set conversational_reply_expected = FALSE
+     C                     MOVE '0'       *IN10
+      *
+      **  If incoming conversational reply code is ESEQ (error in
+      **  sequence, then update current message with next-expected
+      **  sequence-number as returned by STS device
+     C           ACKSTS    IFEQ 'ESEQ'
+      *
+     C                     MOVE STLSN     TOMSEQ
+     C                     ADD  1         TOMSEQ
+     C                     MOVE TOMSEQ    @WK8A   8
+     C                     MOVEL'#RS'     @WK8A
+     C                     MOVEA@WK8A     TOM
+      *
+      **  Else use reply code to update message status on MGOREFL0,
+      **  and clear TOM to enable the next message to be sent
+     C                     ELSE
+      *
+      **  Access Outgoing Message index record
+     C           TOMTRN    CHAINMGOREFL0             50
+      *
+      **  Database error if record not found
+     C           *IN50     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVELTOMTRN    DBKEY            *  DBERR 003  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             IF
+      *
+      **  Look up status code on table
+     C           ACKSTS    LOKUPTABCOD    TABSTS         50
+     C                     MOVELTABSTS    MGST
+     C                     MOVE TABSTS    MGSG
+      *
+      **  Update Outgoing Message index record
+     C                     UPDATMGOREFD0
+     C                     COMIT
+      *
+      **  Clear TOM(message/time) to enable next message to be sent
+     C                     MOVEA*BLANKS   TOM
+     C                     MOVE *BLANKS   TOMTRN
+     C                     Z-ADD0         TOMTIM
+      *
+     C                     END                             IF-ELSE
+      *
+     C                     ENDSR                           CONREP
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  ICTX                                           *
+      * Purpose     :  Process incoming transmission                  *
+      *                                                               *
+      * Called by   :  PREAD                                          *
+      * Calls       :  PACK                                           *
+      *                PNAK                                           *
+      *                ICMSG                                          *
+      *****************************************************************
+      *
+     C           ICTX      BEGSR
+      *
+      **  Set outgoing conversational_reply_required = TRUE
+     C                     MOVE '1'       *IN11
+      *
+      **  Move incoming transmission sequence number to DS for
+      **  outgoing conversational reply
+     C                     MOVE INMSM     CREPSQ
+      *
+      **  CASE                            Processed by subroutine
+      **  ----                            -----------------------
+      **  Logical acknowledgement         PACK
+      **  Negative acknowledgement        PNAK
+      **  Incoming message                ICMSG
+      *
+      *
+      **  Check if the message is an ACK, NAK or incoming message
+     C           '{2:'     SCAN INCOM     H       50     50
+      *
+      **  If {2: not found, must be PSEUDO ack/nak. If it is found,
+      **  then I => 'real' ack/nak; O => message
+     C           *IN50     IFEQ '1'                        IF1
+     C                     ADD  3         H
+     C           1         SUBSTINCOM:H   @TEST   1
+     C           @TEST     IFEQ 'I'                        IF2
+     C                     MOVE '0'       *IN50
+     C                     END                             END2
+     C                     END                             END1
+      *
+      **  If 50 is off, either {2: is not found, or first character
+      **  of {2: is 'I'... either way, process as ACK/NAK
+     C           *IN50     IFEQ '0'                        IF1
+      *
+      **  Access field {451:}
+     C           '{451:'   SCAN INCOM     H       50
+      *
+     C                     ADD  5         H
+      *
+      **  If the message is a NAK field {451: position 1 will be a
+      **  '0'. If it is an ACK it will be a '1'.
+     C           1         SUBSTINCOM:H   @TEST   1
+     C           @TEST     IFEQ '1'                        IF2
+     C                     EXSR PNAK
+     C                     ELSE                            ELSE2
+     C                     EXSR PACK
+     C                     END                             END2
+      *
+      **  else for an actual message (indicator 50 is on)
+     C                     ELSE                            ELSE1
+     C                     EXSR ICMSG
+      *
+     C                     END                             END1
+      *
+     C                     ENDSR                           ICTX
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TIMCHK                                         *
+      * Purpose     :  Compare time now with time of last             *
+      *                transmission. Set on indicator 20 if           *
+      *                difference is greater than 3 minutes.          *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TIMCHK    BEGSR
+      *
+      **  Initialise return indicator
+     C                     MOVE '0'       *IN20
+      *
+      **  TOMSEC is time last outgoing message transmitted (in seconds)
+     C                     Z-ADDTOMTIM    @TIME
+     C           @HRS      MULT 3600      TOMSEC  80
+     C           @MINS     MULT 60        @WK8N   80
+     C                     ADD  @WK8N     TOMSEC
+     C                     ADD  @SECS     TOMSEC
+      *
+      **  NOWSEC is time now in seconds
+     C                     TIME           @TIME
+     C           @HRS      MULT 3600      NOWSEC  80
+     C           @MINS     MULT 60        @WK8N
+     C                     ADD  @WK8N     NOWSEC
+     C                     ADD  @SECS     NOWSEC
+      *
+      **  If time(now) is less than time when message transmitted,
+      **  time of transmission must be before midnight, and time now
+      **  after. Add 86400 (no. of secs in day) to compensate.
+     C           NOWSEC    IFLT TOMSEC
+     C                     ADD  86400     NOWSEC
+     C                     END                             IF
+      *
+      **  Add 3 minutes (180 seconds) to TOM(time)
+     C                     ADD  180       TOMSEC
+      *
+      **  If time(now) > TOM(time) + 3 minutes, set on indicator 20
+     C           NOWSEC    IFGT TOMSEC
+     C                     MOVE '1'       *IN20
+     C                     END                             IF
+      *
+     C                     ENDSR                           TIMCHK
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  ICTR                                           *
+      * Purpose     :  Process incoming traffic report                *
+      *                                                               *
+      * Called by   :  PREAD                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           ICTR      BEGSR
+      *
+     C                     ENDSR                           ICTR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TRASH                                          *
+      * Purpose     :  Process incoming garbage                       *
+      *                                                               *
+      * Called by   :  PREAD                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TRASH     BEGSR
+      *
+     C                     ENDSR                           TRASH
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  PACK                                           *
+      * Purpose     :  Process logical acknowledgement                *
+      *                                                               *
+      * Called by   :  ICTX                                           *
+      * Calls       :  GETIX                                          *
+      *                MSIWRT                                         *
+      *****************************************************************
+      *
+     C           PACK      BEGSR
+      *
+      **  Access the ACK/NAK for the TRN (for access of index record
+      **  in s/r GETIX)
+     C           '{TRN:'   SCAN INCOM     H
+      *
+      **  Scan for the end of the TRN
+     C           '}'       SCAN INCOM:H   J
+      *
+      **  Calculate the length of the TRN
+     C                     ADD  5         H
+     C           J         SUB  H         K       20
+      *
+      **  Move the TRN into the field ACKTRN
+     C                     MOVE *BLANKS   ACKTRN
+     C           K         SUBSTINCOM:H   ACKTRN
+      *
+      **  Access Outgoing Message index record on MGOREFL0
+     C                     EXSR GETIX
+      *
+      **  Set message status to 'L' - Logically acknowledged
+     C                     MOVE 'LACK'    MGST
+     C                     MOVE '3'       MGSG
+      *
+      **  Find the NAK date and time from field 177:.
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the NAK time to the last action time.
+     C           4         SUBSTINCOM:J   LAHR    6
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      **  Set last action date to run-date from PF/SDBANKPD
+     C                     MOVELBJMRDT    LADT
+      *
+      **  Check if the message has been sent via STTX of SWIFT network.
+     C           '{311:'   SCAN INCOM     H              51
+      *
+      **  If *in51 is on, field {311: has been found and the message
+      **  has been sent via STTX, otherwise it has been sent via SWIFT.
+     C           *IN51     IFEQ '1'                        If1
+      *
+      **  Set Network Indicator to STTX.
+     C                     MOVE 'T'       NETI
+     C                     ELSE                            Else1
+      *
+      **  Set Network Indicator to SWIFT.
+     C                     MOVE 'S'       NETI
+      *
+      **  Set up the MIR from the NAK date, and the 'In-MIR'.
+     C                     MOVELLADT      @LADT
+      *
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @INMIR
+      *
+     C                     MOVE @MIR      MIR
+      *
+      **  Save the MIR for use in the write to the file.
+     C                     MOVE @MIR      @MIRH  28
+     C                     END                             End1
+      *
+      **  Update Outgoing Message index record
+     C           *IN50     IFEQ '0'                                       105617
+     C                     UPDATMGOREFD0
+     C                     END                                            105617
+      *
+      **  Write ACK to MSMSI2L0
+     C                     MOVE 'A'       MSIPAR
+     C                     EXSR MSIWRT
+      *
+     C                     ENDSR                           PACK
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  PNAK                                           *
+      * Purpose     :  Process negative acknowledgement               *
+      *                                                               *
+      * Called by   :  ICTX                                           *
+      * Calls       :  GETIX                                          *
+      *                MSIWRT                                         *
+      *****************************************************************
+      *
+     C           PNAK      BEGSR
+      *
+      **  Access the ACK/NAK for the TRN (for access of index record
+      **  in s/r GETIX)
+     C           '{TRN:'   SCAN INCOM     H
+      *
+      **  Scan for the end of the TRN
+     C           '}'       SCAN INCOM:H   J
+      *
+      **  Calculate the length of the TRN
+     C                     ADD  5         H
+     C           J         SUB  H         K
+      *
+      **  Move the TRN into the field ACKTRN
+     C                     MOVE *BLANKS   ACKTRN
+     C           K         SUBSTINCOM:H   ACKTRN
+      *
+     C                     EXSR GETIX
+      *
+      **  Set message status to 'N' - Negatively Acknowledged
+     C                     MOVE 'NACK'    MGST
+     C                     MOVE '4'       MGSG
+      *
+      **  Find the NAK date and time from field 177:
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the NAK time to the last action time
+     C           4         SUBSTINCOM:J   LAHR
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      **  Set last action date to run-date from PF/SDBANKPD
+     C                     MOVELBJMRDT    LADT
+      *
+      **  Check if the message has been sent via STTX of SWIFT network.
+     C           '{311:'   SCAN INCOM     H              51
+      *
+      **  If *in51 is on, field {311: has been found and the message
+      **  has been sent via STTX, otherwise it has been sent via SWIFT.
+     C           *IN51     IFEQ '1'                        If1
+      *
+      **  Set Network Indicator to STTX.
+     C                     MOVE 'T'       NETI
+     C                     ELSE                            Else1
+      *
+      **  Set Network Indicator to SWIFT.
+     C                     MOVE 'S'       NETI
+      *
+      **  Set up the MIR from the NAK date, and the 'In-MIR'.
+     C                     MOVELLADT      @LADT
+      *
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @INMIR
+      *
+     C                     MOVE @MIR      MIR
+      *
+      **  Save the MIR for use in the write to the file.
+     C                     MOVE @MIR      @MIRH
+      *
+      **  Set up the error code
+     C           '{405:'   SCAN INCOM:J   H
+     C                     ADD  5         H
+     C           3         SUBSTINCOM:H   MSE1
+     C                     ADD  3         H
+     C           3         SUBSTINCOM:H   ELIN
+     C                     END                             End1
+      *
+      **  Update Outgoing Message index record
+     C           *IN50     IFEQ '0'                                       105617
+     C                     UPDATMGOREFD0
+     C                     END                                            105617
+      *
+      **  Write NAK to MSMSI2L0
+     C                     MOVE 'N'       MSIPAR
+     C                     EXSR MSIWRT
+      *
+     C                     ENDSR                           PNAK
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  ICMSG                                          *
+      * Purpose     :  Process incoming message                       *
+      *                                                               *
+      * Called by   :  ICTX                                           *
+      * Calls       :  MSIWRT                                         *
+      *****************************************************************
+      *
+     C           ICMSG     BEGSR
+      *
+      **  Check for System Possible Duplicate (SPD)
+     C           '{SPD:}'  SCAN INCOM     P              50
+      *
+      **  50 on => message is System Possible Duplicate, so
+      **  check file for other occurences.
+     C           *IN50     IFEQ '1'                        IF1
+      *
+      **  Set up the MIR from the NAK date, and the 'In-MIR'.
+     C                     MOVELLADT      @LADT
+      *
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @INMIR
+      *
+     C                     MOVE @MIR      MIR
+      *
+      **  Save the MIR for use in the write to the file.
+     C                     MOVE @MIR      @MIRH  28
+      *
+      **  Access MSIXOPF using the MIR.
+     C***********@MIR      CHAINMSREF2L2             52                   068106
+      *                                                                   068106
+      * Call MS3550 to check if MIR already exists                        068106
+      *                                                                   068106
+     C           *LIKE     DEFN MIR       W0MIR                           068106
+      *                                                                   068106
+     C                     CALL 'MS3550'                                  068106
+     C                     PARM *BLANKS   W0RTN   7                       068106
+     C                     PARM @MIR      W0MIR                           068106
+      *                                                                   068106
+      * If return code not blank then set on 52 to show not found         068106
+      *                                                                   068106
+     C                     MOVEL'0'       *IN52                           068106
+     C           W0RTN     IFNE *BLANKS                                   068106
+     C                     MOVEL'1'       *IN52                           068106
+     C                     END                                            068106
+      *
+     C                     END                             IF1
+      *
+      ** If message is not a duplicate, write to MSMSI2PD
+     C           *IN52     IFEQ '1'                        IF1
+     C           *IN50     OREQ '0'
+      *
+      **  Write message to MSMSI2L0
+     C                     MOVE 'M'       MSIPAR
+     C                     EXSR MSIWRT
+      *
+      **  If reference generation not already active, call MSC4040 to
+      **  submit it.
+     C                     IN   MSSTAT
+     C           IMRIND    IFNE 'Y'                        IF2
+     C                     CALL 'MSC4040'
+     C                     END                             END2
+      *
+      **  Send 'C' to MSDTQD, in order to start reference generation
+      **  if not already running
+     C           REFRUN    IFNE 'Y'
+     C                     CALL 'QSNDDTAQ'                 IF2
+     C                     PARM 'MSDTQD'  DTQC   10
+     C                     PARM '*LIBL'   LIBC   10
+     C                     PARM 1         LENC    50
+     C                     PARM 'C'       DAC     1
+     C                     END                             END2
+      *
+     C                     END                             END1
+      *
+     C                     ENDSR                           ICMSG
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  GETIX                                          *
+      * Purpose     :  Get Outgoing Message index record for message  *
+      *                referred to in incoming ACK/NAK                *
+      *                                                               *
+      * Called by   :  PACK                                           *
+      *                PNAK                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           GETIX     BEGSR
+      *
+      **  Remove CR/LF and anything after from TRN
+     C           CRLF      SCAN ITRF      Q              50
+     C           *IN50     IFEQ '1'
+     C                     MOVE *BLANKS   @WK15A 15
+     C                     SUB  1         Q
+     C           Q         SUBSTITRF      @WK15A
+     C                     MOVEL@WK15A    ITRF
+     C                     END
+      *
+      **  Use TRN from incoming message buffer to access LF/MGOREFL0
+     C           ACKTRN    CHAINMGOREFL0             50
+     C*                                                                   108092
+     C**  If no record found, then check if it is MT5XX messages. If      108092
+     C**  it is then need to get the transaction ref. from MGOMSGLY.      108092
+     C*                                                                   108092
+     C           *IN50     IFEQ '1'                                       108092
+     C                     MOVELACKTRN    #MSGID  2                       108092
+     C           #MSGID    IFEQ 'SE'                                      108092
+     C                     MOVE *BLANKS   #SKEY  50                       108092
+     C                     MOVELACKTRN    #SKEY                           108092
+     C           #SKEY     CHAINMGOMSGLY             50                   108092
+     C           *IN50     IFEQ '0'                                       108092
+     C           MGTRN     CHAINMGOREFL0             50                   108092
+     C                     END                                            108092
+     C                     END                                            108092
+     C                     END                                            108092
+      *
+      **  If this record is a part (such as in the case of a 203, where
+      **  the first part was deleted before transmission), access the
+      **  header for update.
+     C           TRNF      IFNE *BLANKS
+     C***********TRNO      CHAINMGOREFL0             50                   108092
+     C           TRNF      CHAINMGOREFL0             50                   108092
+     C                     END
+      *
+      **  Database error if record not found
+     C************IN50     IFEQ '1'                                       105617
+     C************LOCK     IN   LDA                                       105617
+     C***********          MOVE '004'     DBASE            * * * * * * * *105617
+     C***********          MOVELACKTRN    DBKEY            *  DBERR 004  *105617
+     C***********          MOVEL'MGOREFL0'DBFILE           * * * * * * * *105617
+     C***********          OUT  LDA                                       105617
+     C***********          EXSR *PSSR                                     105617
+     C***********          END                             IF             105617
+      *
+     C                     ENDSR                           GETIX
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  MSIWRT                                         *
+      * Purpose     :  Write ACK/NAK/incoming message to LF/MSMSI2L0  *
+      *                                                               *
+      * Called by   :  PACK                                           *
+      *                PNAK                                           *
+      *                ICMSG                                          *
+      * Calls       :  FNDEOT                                         *
+      * Parameters  :  MSIPAR - type of incoming transmission         *
+      *                          A : ACK                              *
+      *                          N : NAK                              *
+      *                          M : incoming message                 *
+      *****************************************************************
+      *
+     C           MSIWRT    BEGSR
+      *
+      **  Define parameter length
+     C                     MOVE MSIPAR    MSIPAR  1
+      *
+      **  Set up fields common to all incoming transmissions
+     C                     MOVELBJMRDT    MODE
+     C                     TIME           @TIME
+     C                     MOVEL@TIME     MOTM
+      ***********                                                  124673 146340
+      ***Set*up*century field.                                     124673 146340
+     C***********          MOVELMODE      CENT    2                124673 146340
+     C***********CENT      IFLT '72'                               124673 146340
+     C***********          MOVE '20'      MODEC                    124673 146340
+     C***********          ELSE                                    124673 146340
+     C***********          MOVE '19'      MODEC                    124673 146340
+     C***********          ENDIF                                   124673 146340
+      ***********                                                  124673 146340
+      *
+      **  Set up fields for incoming messages only
+     C           MSIPAR    IFEQ 'M'                        IF1
+      *
+      **  Locate Block 2 of the message to set up the data fields
+     C           '{2:'     SCAN INCOM     H
+     C                     ADD  4         H
+      *
+      **  Move Block 2 into a data structure
+     C           46        SUBSTINCOM:H   @HOLD
+      *                                                                   146340
+      ** Set up century field.                                            146340
+     C                     MOVELMODE      CENT    2                       146340
+     C           CENT      IFLT '72'                                      146340
+     C                     MOVE '20'      MODEC                           146340
+     C                     ELSE                                           146340
+     C                     MOVE '19'      MODEC                           146340
+     C                     ENDIF                                          146340
+      *
+      **  Set up the MOR date from the incoming date
+     C                     MOVE MODE      @MORD
+      *
+      **  Locate Block 1 of the message to set up the MOR fields
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @MORI
+      *
+      **  Move the MOR to the output field
+     C                     MOVE @MOR      MOR
+      *
+     C                     MOVE *BLANKS   ACNK
+     C**                   MOVE *BLANKS   MODA
+     C                     MOVE *BLANKS   TRNO
+      *
+      **  Find end of incoming message and add ETX
+     C                     EXSR FNDEOT
+      *
+      **  Write all records to MSMSI2PD and Comit.
+      **  Output data to MDTA
+     C                     Z-ADD1         P
+     C           MSI,P     DOWNE*BLANKS
+     C***********P         ANDLE12                                        CSW095
+     C           P         ANDLE39                                        CSW095
+     C                     MOVEAMSI,P     MDTA
+     C                     WRITEMSMSI2D0
+     C                     ADD  1         P
+     C                     END                             DOW
+     C                     COMIT
+      *                                                                   068105
+      *  Update received network information                              068105
+      *                                                                   068105
+     C           *NAMVAR   DEFN           MEDTA                           068105
+     C           *LOCK     IN   MEDTA                                     068105
+     C                     MOVELMOR       DAMOR                           068105
+     C                     MOVELMIR       DAMIR                           068105
+     C                     OUT  MEDTA                                     068105
+      *
+      **  Else set up fields For ACK/NAK
+     C                     ELSE                            ELSE 1
+     C                     MOVE *BLANKS   MTPY
+     C                     MOVE *BLANKS   MPRY
+     C                     MOVE *BLANKS   MOR
+      *
+      **  Move the saved MIR to MIR
+     C                     MOVE @MIRH     MIR
+      *
+      **  Find the NAK date and time from field 177:.
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the NAK time to the last action time.
+     C           4         SUBSTINCOM:H   LAHR
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      *
+      **  Set last action date to run-date from PF/SDBANKPD
+     C                     MOVELBJMRDT    MODE
+      *
+      **  Access the TRN.
+     C           '{TRN:'   SCAN INCOM     H
+     C                     ADD  5         H
+      *
+      **  Scan for the end of the TRN.
+     C           '}'       SCAN INCOM:H   J
+     C           J         SUB  H         LENT    20
+     C           LENT      SUBSTINCOM:H   TRNO
+      *
+      **  If ACK, set ACNK to 'A'; else NAK, so set ACNK to 'N'
+     C           MSIPAR    IFEQ 'A'
+     C                     MOVE 'A'       ACNK
+     C                     ELSE
+     C                     MOVE 'N'       ACNK
+     C                     END                             IF-ELSE
+      *
+      **  Output 1st record of ACK/NAK to MSMSI2PD.
+     C                     MOVE AKI       MDTA
+     C                     WRITEMSMSI2D0
+     C                     COMIT
+     C                     END                             IF-ELSE
+      *
+     C                     ENDSR                           MSIWRT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  FNDEOT                                         *
+      * Purpose     :  Find end of incoming message text, and add ETX *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FNDEOT    BEGSR
+      *
+      **  Move incoming message to array EOT
+     C                     MOVEAMSI       EOT
+      *
+      **  Find last non-blank character in message
+     C***********          Z-ADD3072      Q                               CSW095
+     C                     Z-ADD9999      Q                               CSW095
+     C           Q         DOWGE1
+     C           EOT,Q     ANDEQ' '
+     C                     SUB  1         Q
+     C                     END                             DOW
+      *
+      **  Add ETX
+     C           Q         IFNE 0
+     C                     ADD  1         Q
+     C                     MOVE ETX       EOT,Q
+     C                     END                             IF
+      *
+      **  Move array EOT back into message
+     C                     MOVEAEOT       MSI
+     C*
+     C                     ENDSR                           FNDEOT
+     C/EJECT
+      *****************************************************************                       CSW209
+      * Subroutine  :  PRCESC                                         *                       CSW209
+      * Purpose     :  Process Escape Sequence Translation            *                       CSW209
+      *                                                               *                       CSW209
+      * Called by   :  PREAD                                          *                       CSW209
+      * Calls       :                                                 *                       CSW209
+      *****************************************************************                       CSW209
+     C           PRCESC    BEGSR                                                              CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD0         A       40                                          CSW209
+     C                     Z-ADD0         B       40                                          CSW209
+     C                     Z-ADD0         C       40                                          CSW209
+     C                     MOVEL*BLANK    @TT1    1                                           CSW209
+      *                                                                                       CSW209
+     C                     MOVELINCOM     DS1                                                 CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD1         Z       20                                          CSW209
+      *                                                                                       CSW209
+     C           Z         DOWLT15                                                            CSW209
+      *                                                                                       CSW209
+     C           AR1,Z     SCAN DS1       A              60                                   CSW209
+     C           *IN60     DOWEQ*ON                                                           CSW209
+     C                     MOVELAR2,Z     @TT1                                                CSW209
+      *                                                                                       CSW209
+     C           A         IFEQ 1                                                             CSW209
+     C           A         ADD  4         C                                                   CSW209
+     C                     SUBSTDS1:C     DS3                                                 CSW209
+     C           @TT1      CAT  DS3:0     DS4                                                 CSW209
+     C                     ELSE                                                               CSW209
+     C           A         SUB  1         B                                                   CSW209
+     C           B         SUBSTDS1       DS2                                                 CSW209
+     C           A         ADD  4         C                                                   CSW209
+     C                     SUBSTDS1:C     DS3                                                 CSW209
+     C                     MOVE *BLANKS   TEMP    1                                           CSW209
+     C                     MOVE B         POST    50                                          CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     MOVE 0         CTR     10                                          CSW209
+     C           TEMP      DOWEQ' '                                                           CSW209
+     C                     ADD  1         CTR                                                 CSW209
+     C                     SUB  1         POST                                                CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     ENDDO                                                              CSW209
+     C           DS2       CAT  @TT1:0    DS2                                                 CSW209
+     C           DS2       CAT  DS3:0     DS4                                                 CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     MOVELDS4       DS1                                                 CSW209
+     C                     MOVEL*BLANKS   DS2                                                 CSW209
+     C                     MOVEL*BLANKS   DS3                                                 CSW209
+     C                     MOVEL*BLANKS   DS4                                                 CSW209
+     C           AR1,Z     SCAN DS1       A              60                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     ADD  1         Z                                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     MOVELDS1       INCOM                                               CSW209
+      *                                                                                       CSW209
+     C                     ENDSR                                                              CSW209
+      *                                                                                       CSW209
+      *****************************************************************                       CSW209
+     C/EJECT                                                                                  CSW209
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Purpose     :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Initialise object copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MS3500'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C                     MOVE *BLANKS   DBASE
+      *
+      **  Access SDBANKPD for bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS                               1
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             IF
+      ***********                                                         063288
+      ****Access*SDMSDLPD*for*SWIFT*direct*link*ICD*********************  063288
+     C***********          CALL 'AOMSDLR0'                                063288
+     C***********          PARM '*MSG   ' @RTCD   7                       063288
+     C***********          PARM '*FIRST ' @OPTN   7                       063288
+     C***********          PARM           SDMSDL                          063288
+      ***********                                                         063288
+     C***********@RTCD     IFNE *BLANKS                                   063288
+     C************LOCK     IN   LDA                                       063288
+     C***********          MOVE '002'     DBASE            * * * * * * * *063288
+     C***********          MOVEL'FIRST'   DBKEY            *  DBERR 002  *063288
+     C***********          MOVEL'SDMSDLPD'DBFILE           * * * * * * * *063288
+     C***********          OUT  LDA                                       063288
+     C***********          EXSR *PSSR                                     063288
+     C***********          END                             IF             063288
+      *
+      **  Access MSSTAT
+     C           *NAMVAR   DEFN           MSSTAT
+     C                     IN   MSSTAT
+      *
+      **  If close-down requested (MSSTAT posn. 25), call MSC4015.
+     C           MTCIND    IFEQ 'Y'
+     C                     CALL 'MSC4015'              18
+      *
+      **  If MSC4015 fails, terminate program immediately.
+     C           *IN18     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             IF
+      *
+     C                     END                             IF
+      *
+      ** Check if SWIFT2009 is installed                                                      CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM           @RTCD                                               CSW209
+      *                                                                                       CSW209
+     C           @RTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+      **  Initialise constant fields:
+      **   - CarriageReturn
+     C                     BITOF'01234567'CR      1
+     C                     BITON'457'     CR
+      **   - LineFeed
+     C                     BITOF'01234567'LF      1
+     C                     BITON'257'     LF
+      **   - ETX
+     C                     BITOF'01234567'ETX     1
+     C                     BITON'67'      ETX
+      **   - DASH
+     C                     BITOF'01234567'DASH    1
+     C                     BITON'12'      DASH
+      **   - CRLF2
+     C                     MOVELCRLF      CRLF2   4
+     C                     MOVE CRLF      CRLF2   4
+      *
+      ** Set up parameters for QCMDEXC (used in delay job)
+     C                     Z-ADD14        WLEN
+     C                     MOVEADLY       DLA
+      *
+      ** Update MSSTAT
+     C                     TIME           @TIME
+     C           *LOCK     IN   MSSTAT
+     C                     MOVEL@TIME     OTIME
+     C                     MOVE 'Y'       CPAIND
+     C                     MOVE 'Y'       JAMIND
+     C                     MOVE RWST      JOBNAM
+     C                     MOVE RUSE      USRNAM
+     C                     MOVE RJOB      JOBNUM
+     C                     OUT  MSSTAT
+      *
+      **  Initialise work indicators (nb. 1 => TRUE, 0 => FALSE):
+      **   - incoming conversational_reply_expected
+     C                     MOVE '0'       *IN10
+      **   - outgoing conversational_reply_required
+     C                     MOVE '0'       *IN11
+      *
+      **  Initialise TOM - Temporary Outgoing Message buffer
+     C                     MOVEA*BLANKS   TOM
+     C                     MOVE LSTSEQ    TOMSEQ  50
+     C                     MOVE *ZEROS    TOMTIM  60
+     C                     MOVE *BLANKS   TOMTRN 16
+      *
+      **  Initialise data queue variables
+     C                     MOVEL'MSDTQB'  DTAQ   10
+     C                     MOVEL'*LIBL'   LIBR   10
+      *
+      **  Send traffic report request
+     C                     MOVE '0'       *IN69
+     C                     MOVE CSIDX     OURTID
+     C                     MOVELTRAFF     FLDA
+     C                     TIME           @TIME
+     C                     WRITESEND                   70
+      *
+     C                     MOVEL'OUT P7'  POSN             Trace
+     C                     EXSR TRACE
+      *
+      ** Set JAMIND off to tell MSC0200 that comms are working
+     C           *LOCK     IN   MSSTAT
+     C                     MOVE ' '       JAMIND
+     C                     OUT  MSSTAT
+      *
+      **  Start reference generation
+     C                     CALL 'MSC4040'
+      *
+     C                     ENDSR                           INIT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TERM                                           *
+      * Purpose     :  To end this program, and other related jobs    *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      *                *PSSR                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+      **  Send 'T' to MSDTQD, in order to stop reference generation
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM 'MSDTQD'  DTQC
+     C                     PARM '*LIBL'   LIBC
+     C                     PARM 1         LENC
+     C                     PARM 'T'       DAC
+      *
+      **  On termination, update MSSTAT
+     C           *LOCK     IN   MSSTAT
+     C                     MOVE 'N'       CPAIND
+     C                     MOVE *BLANKS   JOBDET
+     C                     MOVE TOMSEQ    LSTSEQ
+     C                     OUT  MSSTAT
+      *
+     C                     ENDSR                           TERM
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Purpose     :  General error handling sub-routine             *
+      *                                                               *
+      * Called by   :  -                                              *
+      * Calls       :  TERM                                           *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Set switches
+     C                     SETON                     U7U8LR
+      *
+      **  If database error, produce report
+     C           DBFILE    IFNE *BLANK
+     C                     OPEN MS3500P1
+     C                     WRITEMS3500F1
+     C                     WRITEMS3500F5
+     C                     WRITEMS3500F9
+     C                     CLOSEMS3500P1
+     C                     END                             IF
+      *
+      **  Perform termination processing
+     C                     EXSR TERM
+      *
+      **  Dump and return
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+     C/EJECT
+**  CPY@ Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+**  Incoming Conversational reply codes v. message status
+QRDYTRAN2
+QVERTRAN2
+QAPPTRAN2
+EFMTEFMT4
+ELAUELAU4
+EHDREHDR4
+ETIDETID4
+ETLRETLR4
+ELENELEN4
+EAUTEAUT4
+QRDQQRDQ4
+QVRQOVRQ4
+**  DLY
+DLYJOB DLY(  )
+**  Delays between POSTs - UNITS MUST BE RIGHT JUSTIFIED
+ 0
+ 0
+ 0
+ 0
+ 1
+ 1
+ 1
+ 1
+ 1
+ 3
+** AR1 AR2
+??4C<
+??4F!
+??50&
+??5C*
+??5E;
+??6C%
+??6D_
+??6E>
+??7B#
+??7C@
+??7E=
+??7F"
+??C0{
+??D0}

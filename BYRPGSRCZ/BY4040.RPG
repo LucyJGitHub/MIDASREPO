@@ -1,0 +1,527 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Month End Update')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY4040 - Month End Update                                    *
+      *                                                               *
+      *  Function:  This program updates the extension files          *
+      *             PF/BYACNTPP and PF/BYDLDCPP with Max. CR/DR       *
+      *             details for the period.  This is a Close of       *
+      *             Business program to be run at month end only.     *
+      *                                                               *
+      *  Called By: BYC4040 - Month End Update                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 1997            *
+      *                                                               *
+      *  Last Amend No. CSD027             Date 21Jan09               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 Xnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion of Customer number from Number to Alpha  *
+      *  LLN022 - BOE Upgrade to MidasPlus                            *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR
+     FBYACNTPPUF  E           K        DISK         KINFSR *PSSR
+     FBYDLDCPPUF  E           K        DISK         KINFSR *PSSR
+     FDEALSDC IF  E                    DISK         KINFSR *PSSR
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      /SPACE 3
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDCURR    E DSSDCURRPD                199
+      *
+      ** Trading Data ICD
+     ISDTRAD    E DSSDTRADPD
+     I              QQACCD                          QQACOD                                    LLN022
+      *
+     ISDDEAL    E DSSDDEALPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ** Data Structure to extract month type
+     IDSRPTA      DS
+     I                                        1   2 ULDAY
+     I                                        3   5 ULMNTH
+     I                                        6   7 ULYEAR
+      *
+      ** Data Structure for DBKEY error no. 2
+     IDSACKY      DS
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM
+     I                                        4   9 CNUM
+     I                                       10  12 CCY                                       CSD027
+     I**********                             13  160ACOD                                      LLN022
+     I**********                             17  180ACSQ                                      LLN022
+     I                                       13  220ACOD                                      LLN022
+     I                                       23  240ACSQ                                      LLN022
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Detail Processing
+     C                     EXSR #LDETL
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+     C                     MOVE L0RPDA    DSRPTA
+     C                     Z-ADDL0RPDT    ULRPDT
+     C                     ADD  1         ULRPDT
+      *
+      ** Determine Max CR/DR actions according to date in period
+     C           ULMNTH    IFEQ 'JAN'
+     C           ULMNTH    OREQ 'APR'
+     C           ULMNTH    OREQ 'JUL'
+     C           ULMNTH    OREQ 'OCT'
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           ULMNTH    IFEQ 'FEB'
+     C           ULMNTH    OREQ 'MAY'
+     C           ULMNTH    OREQ 'AUG'
+     C           ULMNTH    OREQ 'NOV'
+     C                     MOVE '2'       ULMTYP
+     C                     ENDIF
+      *
+     C           ULMNTH    IFEQ 'MAR'
+     C           ULMNTH    OREQ 'JUN'
+     C           ULMNTH    OREQ 'SEP'
+     C           ULMNTH    OREQ 'DEC'
+     C                     MOVE '3'       ULMTYP
+     C                     ENDIF
+      *
+      ** Determine Ledger Balance on LF/ACCNT
+     C                     READ ACCNTABF                 90
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Only process open accounts
+     C           ACST      IFNE 'C'
+     C                     MOVE CCY       ULICCY
+     C                     Z-ADDLDBL      ULIAMT
+      *
+      ** Update BYACNTPP according to month (MTYP)
+     C           K1LIST    CHAINBYACNTPP             89
+     C           *IN89     IFEQ *OFF                       Record exists
+     C           ULIAMT    IFLT 0
+     C                     EXSR #LNEG
+     C                     ELSE
+     C                     EXSR #LPOS
+     C                     ENDIF
+     C                     UPDATBYACNTD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ ACCNTABF                 90
+     C                     ENDDO
+      *
+      *
+      ** Determine Deal Principal on PF/DEALSDC
+     C                     READ DEALSDC                  90
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Only process live deals
+     C           RECI      IFEQ 'D'
+     C                     MOVE CCY       ULICCY
+     C                     Z-ADDPCPL      ULIAMT
+     C                     MOVE DTYP      ULDTYP
+      *
+      ** Update BYDLDCPP according to month (MTYP) and deal type
+     C           DLNO      CHAINBYDLDCPP             89
+     C           *IN89     IFEQ *OFF
+     C           ULDTYP    IFEQ 'IT'
+     C           ULDTYP    OREQ 'TD'
+     C           ULDTYP    OREQ 'CD'
+     C           ULDTYP    OREQ 'CI'
+     C                     EXSR #LNEG
+     C                     ELSE
+     C                     EXSR #LPOS
+     C                     ENDIF
+     C                     UPDATBYDLDCD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ DEALSDC                  90
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1
+     C                     MOVE *BLANK    ULERRI  1                    dicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     Z-ADD0         ULRPDT  50
+     C                     MOVE *BLANK    ULMTYP  1
+     C                     MOVE *BLANK    ULDTYP  2
+      *
+      ** Parameter List Definitions
+      *
+      *    P1LIST - Parameter list for calling 'program name'
+     C           P1LIST    PLIST
+     C                     PARM           ULIAMT 150
+     C                     PARM           ULICCY  3
+     C                     PARM           ULOAMT 150
+     C                     PARM           ULOCCY  3
+     C                     PARM *BLANKS   ULRC1   1
+      *
+      *    K1LIST - Key list for LF/BYACNTPP
+     C           K1LIST    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+      ** Field Defintions for key lists fields
+     C           *LIKE     DEFN BJCUST    P1BCUS
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD
+      *
+      ** Copyright Statement
+     C                     MOVEA@CPY      ULCPY   8
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Get Trading Data ICD Record For GBP Currency Code (BLCYCD)
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C                     PARM           SDTRAD
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 02 *
+     C                     MOVEL'SDTRADPD'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Set GBP Currency Code for conversion program
+     C                     MOVE BJCYCD    ULOCCY
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      ** Move Head Office Customer No. to input parameter for BECUST
+     C                     MOVE BJCUST    P1BCUS
+      *
+      ** Obtain Reporting Date from PF/BYRPDTPP
+     C           1         CHAINBYRPDTPP             90
+      *
+      ** If chain failed or no active record, database error
+     C           *IN90     IFEQ '1'
+     C           L0RECI    ORNE 'D'
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'1'       DBKEY
+     C                     MOVEL'BYRPDTPP'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 005*
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+      ** Initialise DSACKY Data Structure
+     C                     MOVE *BLANKS   BRCA
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVE *BLANKS   CCY
+     C                     Z-ADD0         ACOD
+     C                     Z-ADD0         ACSQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LNEG - Subroutine called if ledger balance less than 0 or    *
+      *         deal type is either IT, TD, CD or CI.                 *
+      *                                                               *
+      * Called by:  SR/#LDETL                                         *
+      *                                                               *
+      * Calls: SR/#LCRDT                                              *
+      *        SR/#LZERO                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LNEG     BEGSR
+      *
+      ** Feb, May, Aug or Nov end of month processing (credit)
+     C           ULMTYP    IFEQ '2'
+     C                     EXSR #LCRDT
+     C                     ELSE
+      *
+      ** Month type must be three (Mar, Jun, Sep, Dec)
+     C                     EXSR #LZERO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LPOS - Subroutine called if ledger balance greater than 0    *
+      *         or deal type is either LN, DL, IP, TI or CL           *
+      *                                                               *
+      * Called by:  SR/#LDETL                                         *
+      *                                                               *
+      * Calls: SR/#LDEBT                                              *
+      *        SR/#LZERO                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LPOS     BEGSR
+      *
+      ** Feb, May, Aug or Nov end of month processing (Debit)
+     C           ULMTYP    IFEQ '2'
+     C                     EXSR #LZERO
+     C                     ELSE
+      *
+      ** Month type must be three (Mar, Jun, Sep, Dec)
+     C                     EXSR #LDEBT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LCRDT - Subroutine called in order to move data into Max     *
+      *          Credit fields & convert them to Sterling.            *
+      *                                                               *
+      * Called by:  SR/#LNEG                                          *
+      *                                                               *
+      * Calls: PGM/BY9070                                             *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LCRDT    BEGSR
+      *
+     C                     Z-ADDULIAMT    LMKCC
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ended abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDULOAMT    LSMXC
+     C                     Z-ADDULRPDT    LMXCD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LDEBT - Subroutine called in order to move data into Max     *
+      *          Debit fields & convert them to Sterling.             *
+      *                                                               *
+      * Called by:  SR/#LPOS                                          *
+      *                                                               *
+      * Calls: PGM/BY9070                                             *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEBT    BEGSR
+      *
+     C                     Z-ADDULIAMT    LMKDC
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ended abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDULOAMT    LSMXD
+     C                     Z-ADDULRPDT    LMXDD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #LZERO - Subroutine called in order to move zero values       *
+      *          into Max DR/CR fields.                               *
+      *                                                               *
+      * Called by: SR/#LNEG                                           *
+      *            SR/#LPOS                                           *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LZERO    BEGSR
+      *
+      ** Month type 2 zeros Credit fields
+     C           ULMTYP    IFEQ '2'
+     C                     Z-ADD0         LMKCC
+     C                     Z-ADD0         LSMXC
+     C                     Z-ADDULRPDT    LMXCD
+     C                     ELSE
+      *
+      ** Month type 3 zeros Debit fields
+     C                     Z-ADD0         LMKDC
+     C                     Z-ADD0         LSMXD
+     C                     Z-ADDULRPDT    LMXDD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  @CPY
+(c) Misys International Banking Systems Ltd. 1997

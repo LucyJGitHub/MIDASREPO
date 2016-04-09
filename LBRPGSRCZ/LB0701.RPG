@@ -1,0 +1,730 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Portfolio Lending Extrct Summary/Parents')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0701 - Portfolio Lending Extract Summary Creation - Parents*
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01498             Date 11AUG94               *
+     F*                 39703              Date 25MAY92               *
+     F*                 R5569              DATE 01MAR91               *
+     F*                 R5515              DATE 21FEB91               *
+     F*                 R5512              DATE 21FEB91               *
+     F*                 R5507              DATE 20FEB91               *
+     F*                 R0702              DATE 11NOV90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  39703  - COMMITMENT LINE FOR PARENT WRONG.                   *
+     F*  R5569  - PROGRAM DON'T CHECK THE EXISTENCE OF THE RECORD     *
+     F*  R5515  - COMMITMENT LINE NOT CALCULATED                      *
+     F*  R5512  - PLEDGES WERE ACCUMULATED FOR THE PARENT             *
+     F*  R5507  - WRONG FIELD USED TO SET UP CASH INDICATOR FIELD     *
+     F*  R0702  - REWRITE SUBROUTINE #B                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****Bank*Details*File***************-*Prefix*BJ***********         S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F**   Run Controls Report
+     FLB0701AUO   E             21     PRINTER      KINFDS ERF2DS
+     F                                              KINFSR *PSSR
+     F*                                                                   R5515
+     F**   Commitment Line Authorisation    - Prefix CA                   R5515
+     FLBCOMAL2IF  E           K        DISK         KINFSR *PSSR          R5515
+     F*
+     F**   PORTFOLIO Extract Summary          - Prefix ES
+     F*LBEXTSPDO   E           K        DISK         KINFSR *PSSR A       R5569
+     FLBEXTSL1UF  E           K        DISK         KINFSR *PSSR A        R5569
+     F*
+     F**** PORTFOLIO Extract Detail           - Prefix EE                 R0702
+     F*LBEXTRL3IF  E           K        DISK         KINFSR *PSSR         R0702
+     F*
+     F**   PORTFOLIO Extract Summary          - Prefix ES                 R0702
+     FLBEXTSL3IF  E           K        DISK         KINFSR *PSSR          R0702
+     F            LBEXTSD0                          KRENAMEEXTSL3F        R0702
+     F*
+     I*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**       21      - Overflow indicator on LB0701AU               *
+     F**                                                              *
+     F**       23      - File error (READ)                            *
+     F**       29      - End of file on read LBEXTSL3                 *
+     F**       66      - End of file on READE                         *
+     F**       69      - End of file on CHAIN *******                 *
+     F**                                                              *
+     F*****************************************************************
+     I/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E********************************************************************
+     E/EJECT
+     I*****************************************************************
+     I/EJECT
+      *                                                                   R0702
+      **  RENAME DUPLICATE FIELDS                                         R0702
+     IEXTSL3F                                                             R0702
+     I              ESCNUM                          SSCNUM                R0702
+     I              ESOWEX                          SSOWEX                R0702
+     I              ESOWCO                          SSOWCO                R0702
+     I              ESLPWR                          SSLPWR                R0702
+     I              ESTACD                          SSTACD                R0702
+     I              ESTACC                          SSTACC                R0702
+     I              ESTPRD                          SSTPRD                R0702
+     I              ESTPRV                          SSTPRV                R0702
+     I              ESTPID                          SSTPID                R0702
+     I              ESTPIU                          SSTPIU                R0702
+     I              ESTLMT                          SSTLMT                R0702
+     I              ESCIFL                          SSCIFL                R0702
+     I              ESPCNB                          SSPCNB                R0702
+     I              ESCMTL                          SSCMTL                R0702
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FOR OVERFLOW
+     IERF2DS      DS
+     I                                    B 367 3680LINE1
+     I*
+     I**   FOR DAY, MONTH, YEAR OF LAST UPDATE
+     I            DS
+     I***********                             1   7 BJMRDT                S01498
+     I                                        1   7 WWMRDT                S01498
+     I                                        1   2 WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   7 WWYLUP
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Midas  Bank details                                          S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I**  Long data structure                                             S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure                                            S01498
+     I*                                                                   S01498
+     C*****************************************************************   R5515
+     C*                                                                   R5515
+     C           KL1       KLIST                                          R5515
+     C                     KFLD           WWPCNN                          R5515
+     C                     KFLD           BJRDNB                          R5515
+     C*                                                                   R5515
+     C**  Define local data area                                          S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C*                                                                   S01498
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR #C
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**                                                              *
+     C**   #A      - Performs initial processing                      *
+     C**   #B      - Main processing                                  *
+     C**   #BB     - Write Records To Portfolio Extract Summary File  *
+     C**   #C      - Termination process                              *
+     C**   #ZA     - Process Database Errors                          *
+     C**   *PSSR   - Program error handling routine                   *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - THIS SUBROUTINE PERFORMS INTIAL PROCESSING     *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C** SRT OF ALL INDICATORS
+     C*
+     C                     MOVEA'00000000'*IN,21
+     C                     MOVEA'00000000'*IN,29
+     C                     MOVEA'000'     *IN,37
+     C                     MOVEA'00000000'*IN,71
+     C                     MOVE '0'       *IN98
+     C*
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C*
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'LB0701'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C*
+     C*****ACCESS*ICD*RECORD*1*TO*GET*RUN*DATE*&*TITLE***********         S01498
+     C***********                                                         S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 23               S01498
+     C***********                                                         S01498
+     C*****IF*RECORD*NOT*FOUND*OR*LAST-CHANGE-TYPE =*'D'*(DELETED)        S01498
+     C***********                                                         S01498
+     C************IN23     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C***********          Z-ADD1         DBASE            ***************S01498
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001 S01498
+     C***********          MOVE *BLANKS   DBKEY            *              S01498
+     C***********          EXSR #ZA                        ***************S01498
+     C***********          ELSE                                           S01498
+     C*                                                                   S01498
+     C**  Access bank details                                             S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD1         DBASE            ***************S01498
+     C                     MOVE 'SDBANKPD'DBFILE           *DB ERROR 001 *S01498
+     C                     MOVEL*BLANKS   DBKEY            ***************S01498
+     C                     MOVEL'*FIRST'  DBKEY                           S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA                                       S01498
+     C                     ENDIF                                          S01498
+     C*                                                                   S01498
+     C**  Split date into day-month-year...                               S01498
+     C*                                                                   S01498
+     C                     MOVE BJMRDT    WWMRDT                          S01498
+     C*
+     C** EVENT CONTROL DATE = DATE OF NEXT WORKING DAY MINUS 1
+     C*
+     C           BJDNWD    SUB  1         WWDNWD
+     C***********          END                                            S01498
+     C*
+     C**   DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN BJDNWD    WWDNWD
+     C           *LIKE     DEFN ESOWEX    WWOWEX
+     C           *LIKE     DEFN ESOWCO    WWOWCO
+     C           *LIKE     DEFN ESLPWR    WWLPWR
+     C           *LIKE     DEFN ESTACD    WWTACD
+     C           *LIKE     DEFN ESTACC    WWTACC
+     C           *LIKE     DEFN ESTPRD    WWTPRD
+     C           *LIKE     DEFN ESTPRV    WWTPRV
+     C           *LIKE     DEFN ESTPID    WWTPID
+     C           *LIKE     DEFN ESTPIU    WWTPIU
+     C           *LIKE     DEFN ESTLMT    WWTLMT
+     C           *LIKE     DEFN ESCIFL    WWCIFL
+     C           *LIKE     DEFN SSPCNB    WWPCNB
+     C*
+     C**   INITIALISE COUNTER ACCUMULATION VARIABLES
+     C*
+     C                     Z-ADD*ZEROS    RRNRPD
+     C                     Z-ADD*ZEROS    RRNSPD
+     C*
+     C**   INITIALISE ACCUMULATION FIELDS
+     C*
+     C                     Z-ADD*ZEROS    WWOWEX
+     C                     Z-ADD*ZEROS    WWOWCO
+     C                     Z-ADD*ZEROS    WWLPWR
+     C                     Z-ADD*ZEROS    WWTACD
+     C                     Z-ADD*ZEROS    WWTACC
+     C                     Z-ADD*ZEROS    WWTPRD
+     C                     Z-ADD*ZEROS    WWTPRV
+     C                     Z-ADD*ZEROS    WWTPID
+     C                     Z-ADD*ZEROS    WWTPIU
+     C                     Z-ADD*ZEROS    WWTLMT
+     C*
+     C**   INITIALISE LINE COUNT
+     C*
+     C                     Z-ADD*ZEROS    LINE1
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - MAIN PROCESSING                                *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C***                                                                 R0702
+     C***EAD FIRST RECORD ON 'LBEXTRL3'                                   R0702
+     C***        *LOVAL    SETLLLBEXTRL3                                  R0702
+     C***                  READ LBEXTRL3                 29               R0702
+     C***                                                                 R0702
+     C***OT END OF FILE CONTINUE...                                       R0702
+     C***        *IN29     IFEQ '0'                                       R0702
+     C***                                                                 R0702
+     C***OUNT NO. OF RECORDS SELECTED                                     R0702
+     C***                  ADD  1         RRNRPD                          R0702
+     C***                                                                 R0702
+     C***LOOP UNTIL END OF FILE LBEXTRL3                                  R0702
+     C***        *IN29     DOUEQ'1'                                       R0702
+     C***                                                                 R0702
+     C***SAVE CUSTOMER NUMBER/PARENT NO                                   R0702
+     C***                  MOVE EEPCNB    WWPCNB                          R0702
+     C***                                                                 R0702
+     C****IN20 = ALL RECORDS FOR PARENT HAVE A CASH INSTRUMENT FLAG       R0702
+     C***                  SETON                     20                   R0702
+     C***                                                                 R0702
+     C****IN68 = WRITE RECORDS TO SUMMARY FILE INDICATOR                  R0702
+     C***                  SETOF                     68                   R0702
+     C***                                                                 R0702
+     C***LOOP UNTIL END OF FILE LBEXTRL3 OR CHANGE OF PARENT NUMBER       R0702
+     C***        *IN29     DOUEQ'1'                                       R0702
+     C***        WWPCNB    ORNE EEPCNB                                    R0702
+     C***                                                                 R0702
+     C***ELECT ONLY ACTIVE RECORDS                                        R0702
+     C***        EERECI    IFEQ 'D'                                       R0702
+     C***                  SETON                     68                   R0702
+     C***                                                                 R0702
+     C***FORMAT RUNNING TOTALS FOR SAME PARENT                            R0702
+     C***ACCUMULATE CUSTOMER'S AMOUNTS FOR SAME PARENT                    R0702
+     C***                  ADD  ESOWEX    WWOWEX                          R0702
+     C***                  ADD  ESOWCO    WWOWCO                          R0702
+     C***                  ADD  ESLPWR    WWLPWR                          R0702
+     C***                  ADD  ESTACD    WWTACD                          R0702
+     C***                  ADD  ESTACC    WWTACC                          R0702
+     C***                  ADD  ESTPRD    WWTPRD                          R0702
+     C***                  ADD  ESTPRV    WWTPIU                          R0702
+     C***                  ADD  ESTPID    WWTPID                          R0702
+     C***                  ADD  ESTPIU    WWTPIU                          R0702
+     C***                  ADD  ESTLMT    WWTLMT                          R0702
+     C***                                                                 R0702
+     C***IF ANY CUSTOMER DOES NOT HAVE A CASH INST FLAG (EECIFL =Y)       R0702
+     C***SETOF  *IN20.                                                    R0702
+     C***        EECIFL    IFNE 'Y'                                       R0702
+     C***                  SETOF                     20                   R0702
+     C***                  END                                            R0702
+     C***                                                                 R0702
+     C***READ NEXT RECORD ON LBEXTRL3                                     R0702
+     C***                  END                                            R0702
+     C***                  READ LBEXTRL3                 29               R0702
+     C***                                                                 R0702
+     C***        *IN29     IFEQ '0'                                       R0702
+     C***COUNT OF NO. OF RECORDS SELECTED                                 R0702
+     C***                  ADD  1         RRNRPD                          R0702
+     C***                  END                                            R0702
+     C***                  END                                            R0702
+     C***                                                                 R0702
+     C***WRITE RECORDS TO THE PORTFOLIO EXTRACT SUMMARY FILE LBEXTSPD     R0702
+     C***IF WRITE INDICATOR = 1                                           R0702
+     C***        *IN68     IFEQ '1'                                       R0702
+     C***                  EXSR #BB                                       R0702
+     C***                  END                                            R0702
+     C***                  END                                            R0702
+     C***                  END                                            R0702
+     C***                                                                 R0702
+      *                                                                   R0702
+      **  Read first record from Portfolio Extract Detail file            R0702
+     C           *LOVAL    SETLLLBEXTSL3                                  R0702
+     C                     READ LBEXTSL3                 29               R0702
+      *                                                                   R0702
+      **  Loop until end of Portfolio Extract Detail file                 R0702
+     C************IN29     DOUEQ'1'                                R0702  S01498
+     C           *IN29     DOWNE'1'                                R0702  S01498
+      *                                                                   R0702
+      **  Count no. of records selected                                   R0702
+     C                     ADD  1         RRNRPD                          R0702
+      ****                                                                R5507
+      *** *in20 = all records for parent have a cash instrument flag      R5507
+     C*********************SETON                     20                   R5507
+      *                                                                   R0702
+      **  Change of parent                                                R0702
+     C           SSPCNB    IFNE WWPCNB                                    R0702
+     C           *IN10     ANDEQ'1'                                       R0702
+      *                                                                   R0702
+      **  Write records to Portfolio Extract Summary file                 R0702
+     C                     EXSR #BB                                       R0702
+     C                     END                                            R0702
+      *                                                                   R5507
+      **  *in20 = all records for parent have a cash instrument flag      R5507
+     C                     SETON                     20                   R5507
+      *                                                                   R0702
+      **  Accumulate customer's amounts for same parent                   R0702
+     C                     MOVE '1'       *IN10                           R0702
+     C                     MOVE SSPCNB    WWPCNB                          R0702
+     C                     ADD  SSOWEX    WWOWEX                          R0702
+     C                     ADD  SSOWCO    WWOWCO                          R0702
+     C                     ADD  SSLPWR    WWLPWR                          R0702
+     C                     ADD  SSTACD    WWTACD                          R0702
+     C                     ADD  SSTACC    WWTACC                          R0702
+     C*********************ADD  SSTPRD    WWTPRD                    R0702 R5512
+     C                     ADD  SSTPRV    WWTPIU                          R0702
+     C                     ADD  SSTPID    WWTPID                          R0702
+     C                     ADD  SSTPIU    WWTPIU                          R0702
+     C                     ADD  SSTLMT    WWTLMT                          R0702
+      *                                                                   R0702
+      **  If any customer does not have a cash instrument flag            R0702
+     C***********ESCIFL    IFNE 'Y'                                 R0702 R5507
+     C           SSCIFL    IFNE 'Y'                                 R0702 R5507
+     C                     SETOF                     20                   R0702
+     C                     END                                            R0702
+      *                                                                   R0702
+      **  Read next record                                                R0702
+     C                     READ LBEXTSL3                 29               R0702
+      *                                                                   R0702
+     C                     END                                            R0702
+      *                                                                   R0702
+      **  Write records to Portfolio Extract Summary file                 R0702
+     C           WWPCNB    IFNE *ZEROS                                    R5569
+     C           WWPCNB    ANDNE*BLANKS                                   R5569
+     C                     EXSR #BB                                       R0702
+     C                     END                                            R5569
+      *                                                                   R0702
+     C                     ENDSR                                          R0702
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - THIS SUBROUTINE WRITES RECORDS TO THE PORTFOLIO*
+     C**               EXTRACT SUMMARY FILE.                          *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C** CALCULATE COMMITMENT LINE                                        R5569
+     C                     EXSR #BBA                                      R5569
+     C*                                                                   R5569
+     C                     MOVE WWPCNB    ESCNUM                          R5569
+     C           ESCNUM    CHAINLBEXTSL1             68                   R5569
+     C           *IN68     IFEQ '0'                                       R5569
+     C*                                                                   R5569
+     C** FORMAT REMAINING FIELDS                                          R5569
+     C*                                                                   R5569
+     C                     MOVE WWDLUP    ESDLUP                          R5569
+     C                     MOVE WWMLUP    ESMLUP                          R5569
+     C                     MOVE WWYLUP    ESYLUP                          R5569
+     C                     TIME           ESTLUP                          R5569
+     C                     MOVE 'A'       ESCHTP                          R5569
+     C                     Z-ADDWWDNWD    ESLCD                           R5569
+     C                     ADD  WWOWEX    ESOWEX                          R5569
+     C                     ADD  WWOWCO    ESOWCO                          R5569
+     C                     ADD  WWLPWR    ESLPWR                          R5569
+     C                     ADD  WWTACD    ESTACD                          R5569
+     C                     ADD  WWTACC    ESTACC                          R5569
+     C                     Z-ADD*ZERO     ESTPRD                          R5569
+     C                     Z-ADD*ZERO     ESTPRV                          R5569
+     C                     ADD  WWTPID    ESTPID                          R5569
+     C                     ADD  WWTPIU    ESTPIU                          R5569
+     C                     ADD  WWTLMT    ESTLMT                          R5569
+     C                     MOVE *BLANKS   ESCIFL                          R5569
+     C           *IN20     IFEQ '1'                                       R5569
+     C                     MOVE 'Y'       ESCIFL                          R5569
+     C                     END                                            R5569
+     C                     MOVE *BLANKS   ESPCNB                          R5569
+     C*                                                                   R5569
+     C** UPDATE RECORDS TO LBEXTSPD                                       R5569
+     C*                                                                   R5569
+     C                     UPDATLBEXTSD0                                  R5569
+     C*                                                                   R5569
+     C                     ELSE                                           R5569
+     C*                                                                   R5569
+     C** FORMAT REMAINING FIELDS                                          R5569
+     C*                                                                   R5569
+     C                     MOVE 'D'       ESRECI                          R5569
+     C                     MOVE WWDLUP    ESDLUP                          R5569
+     C                     MOVE WWMLUP    ESMLUP                          R5569
+     C                     MOVE WWYLUP    ESYLUP                          R5569
+     C                     TIME           ESTLUP                          R5569
+     C                     MOVE 'I'       ESCHTP                          R5569
+     C                     Z-ADDWWDNWD    ESLCD                           R5569
+     C                     Z-ADDWWDNWD    ESORED                          R5569
+     C                     Z-ADDWWOWEX    ESOWEX                          R5569
+     C                     Z-ADDWWOWCO    ESOWCO                          R5569
+     C                     Z-ADDWWLPWR    ESLPWR                          R5569
+     C                     Z-ADDWWTACD    ESTACD                          R5569
+     C                     Z-ADDWWTACC    ESTACC                          R5569
+     C                     Z-ADD*ZERO     ESTPRD                          R5569
+     C                     Z-ADD*ZERO     ESTPRV                          R5569
+     C                     Z-ADDWWTPID    ESTPID                          R5569
+     C                     Z-ADDWWTPIU    ESTPIU                          R5569
+     C                     Z-ADDWWTLMT    ESTLMT                          R5569
+     C                     MOVE *BLANKS   ESCIFL                          R5569
+     C           *IN20     IFEQ '1'                                       R5569
+     C                     MOVE 'Y'       ESCIFL                          R5569
+     C                     END                                            R5569
+     C                     MOVE *BLANKS   ESPCNB                          R5569
+     C*                                                                   R5569
+     C** WRITE RECORDS TO LBEXTSPD                                        R5569
+     C*                                                                   R5569
+     C                     WRITELBEXTSD0                                  R5569
+     C*                                                                   R5569
+     C** COUNT OF NO. OF RECORDS WRITTEN TO LBEXTSPD                      R5569
+     C*                                                                   R5569
+     C                     ADD  1         RRNSPD                          R5569
+     C*                                                                   R5569
+     C                     END                                            R5569
+     C*                                                                   R5569
+     C***                                                                 R5569
+     C***FORMAT REMAINING FIELDS                                          R5569
+     C***                                                                 R5569
+     C***                  MOVE 'D'       ESRECI                          R5569
+     C***                  MOVE WWDLUP    ESDLUP                          R5569
+     C***                  MOVE WWMLUP    ESMLUP                          R5569
+     C***                  MOVE WWYLUP    ESYLUP                          R5569
+     C***                  TIME           ESTLUP                          R5569
+     C***                  MOVE 'A'       ESCHTP                          R5569
+     C***                  Z-ADDWWDNWD    ESLCD                           R5569
+     C***                  Z-ADDWWDNWD    ESORED                          R5569
+     C***                  MOVE WWPCNB    ESCNUM                          R5569
+     C***                  Z-ADDWWOWEX    ESOWEX                          R5569
+     C***                  Z-ADDWWOWCO    ESOWCO                          R5569
+     C***                  Z-ADDWWLPWR    ESLPWR                          R5569
+     C***                  Z-ADDWWTACD    ESTACD                          R5569
+     C***                  Z-ADDWWTACC    ESTACC                          R5569
+     C*********************Z-ADDWWTPRD    ESTPRD                    R5512 R5569
+     C*********************Z-ADDWWTPRV    ESTPRV                    R5512 R5569
+     C***                  Z-ADD*ZERO     ESTPRD                    R5512 R5569
+     C***                  Z-ADD*ZERO     ESTPRV                    R5512 R5569
+     C***                  Z-ADDWWTPID    ESTPID                          R5569
+     C***                  Z-ADDWWTPIU    ESTPIU                          R5569
+     C***                  Z-ADDWWTLMT    ESTLMT                          R5569
+     C***                  MOVE *BLANKS   ESCIFL                          R5569
+     C***        *IN20     IFEQ '1'                                       R5569
+     C***                  MOVE 'Y'       ESCIFL                          R5569
+     C***                  END                                            R5569
+     C***                  MOVE *BLANKS   ESPCNB                          R5569
+     C***                                                           R5515 R5569
+     C***RETRIEVE ACTIVE COMMITMENT LINE                            R5515 R5569
+     C***                                                           R5515 R5569
+     C*********************Z-ADD0         ESCMTL                    R5515 R5569
+     C***                  MOVE WWPCNB    WWPCNN  60                R5515 R5569
+     C***        KL1       SETLLLBCOMAL2                            R5515 R5569
+     C***        WWPCNN    READELBCOMAL2                 66         R5515 R5569
+     C***        *IN66     IFEQ '0'                                 R5515 R5569
+     C***                                                           R5515 R5569
+     C***LOOP UNTIL EOF (LBCOMAL2) OR ACTIVE COMMITMENT LINE FOUND  R5515 R5569
+     C***                                                           R5515 R5569
+     C***        *IN66     DOUEQ'1'                                 R5515 R5569
+     C***        *IN67     OREQ '1'                                 R5515 R5569
+     C***                                                           R5515 R5569
+     C***FIND FIRST ACTIVE COMMITMENT LINE (IE TODAYS DATE IS BETWE R5515 R5569
+     C***THE START DATE AND EXPIRY DATE)                            R5515 R5569
+     C***                                                           R5515 R5569
+     C***        BJRDNB    IFGE CASTTD                              R5515 R5569
+     C***        BJRDNB    ANDLECAEXPD                              R5515 R5569
+     C***                  Z-ADDCACMTL    ESCMTL                    R5515 R5569
+     C***                  SETON                     67             R5515 R5569
+     C***                  END                                      R5515 R5569
+     C***                                                           R5515 R5569
+     C***        WWPCNN    READELBCOMAL2                 66         R5515 R5569
+     C***                  END                                      R5515 R5569
+     C***                  END                                      R5515 R5569
+     C***                                                                 R5569
+     C***WRITE RECORDS TO LBEXTSPD                                        R5569
+     C***                                                                 R5569
+     C***                  WRITELBEXTSD0                                  R5569
+     C***                                                                 R5569
+     C***COUNT OF NO. OF RECORDS WRITTEN TO LBEXTSPD                      R5569
+     C***                                                                 R5569
+     C***                  ADD  1         RRNSPD                          R5569
+     C*
+     C** INITIALISE ACCUMULATION FIELDS: READY FOR NEXT PARENT
+     C*
+     C                     Z-ADD*ZEROS    WWOWEX
+     C                     Z-ADD*ZEROS    WWOWCO
+     C                     Z-ADD*ZEROS    WWLPWR
+     C                     Z-ADD*ZEROS    WWTACD
+     C                     Z-ADD*ZEROS    WWTACC
+     C                     Z-ADD*ZEROS    WWTPRD
+     C                     Z-ADD*ZEROS    WWTPRV
+     C                     Z-ADD*ZEROS    WWTPID
+     C                     Z-ADD*ZEROS    WWTPIU
+     C                     Z-ADD*ZEROS    WWTLMT
+     C*
+     C                     ENDSR
+     C/EJECT                                                              R5569
+     C*****************************************************************   R5569
+     C**                                                              *   R5569
+     C**   #BBA      - THIS SUBROUTINE CALCULATES THE COMMITMENT LINE *   R5569
+     C**                                                              *   R5569
+     C**   CALLS     - NONE                                           *   R5569
+     C**                                                              *   R5569
+     C**   CALLED BY - #BB                                            *   R5569
+     C**                                                              *   R5569
+     C*****************************************************************   R5569
+     C*                                                                   R5569
+     C           #BBA      BEGSR                                          R5569
+     C*                                                                   R5569
+     C** RETRIEVE ACTIVE COMMITMENT LINE                                  R5569
+     C*                                                                   R5569
+     C**********           MOVE WWPCNB    WWPCNN  60                                    R5569 CSD027
+     C                     MOVE WWPCNB    WWPCNN  6                                           CSD027
+     C           KL1       SETLLLBCOMAL2                                  R5569
+     C           WWPCNN    READELBCOMAL2                 66               R5569
+     C*                                                                   R5569
+     C           *IN66     IFEQ '0'                                       R5569
+     C*                                                                   R5569
+     C** LOOP UNTIL EOF (LBCOMAL2) OR ACTIVE COMMITMENT LINE FOUND        R5569
+     C*                                                                   R5569
+     C           *IN66     DOUEQ'1'                                       R5569
+     C           *IN67     OREQ '1'                                       R5569
+     C*                                                                   R5569
+     C** FIND FIRST ACTIVE COMMITMENT LINE (IE TODAYS DATE IS BETWEEN     R5569
+     C** THE START DATE AND EXPIRY DATE)                                  R5569
+     C*                                                                   R5569
+     C           BJRDNB    IFGE CASTTD                                    R5569
+     C           BJRDNB    ANDLECAEXPD                                    R5569
+     C                     Z-ADDCACMTL    ESCMTL                          R5569
+     C                     SETON                     67                   R5569
+     C                     END                                            R5569
+     C*                                                                   R5569
+     C           WWPCNN    READELBCOMAL2                 66               R5569
+     C                     END                                            R5569
+     C                     ELSE                                           39703
+     C                     Z-ADD0         ESCMTL                          39703
+     C                     END                                            R5569
+     C*                                                                   R5569
+     C                     ENDSR                                          R5569
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #C        - TERMINATION PROCESS                            *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**   WRITE HEADINGS
+     C*
+     C                     WRITEHDRCTRL1
+     C*
+     C**   WRITE DETAILS & FOOTINGS
+     C*
+     C                     WRITEDTRCTRL1
+     C*                                                                   S01498
+     C           RRNRPD    IFEQ *ZERO                                     S01498
+     C                     WRITENODTLS                                    S01498
+     C                     ENDIF                                          S01498
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - PROCESS DATABASE ERRORS                        *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #A                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     WRITEHDRCTRL1
+     C                     WRITEDBERROR1
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - PROGRAM ERROR HANDLING ROUTINE                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY -                                                *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**  Cpy@
+(c) Misys International Banking Systems Ltd. 2001

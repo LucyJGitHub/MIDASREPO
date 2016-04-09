@@ -1,0 +1,1017 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Format incoming message line')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1010F0 - Format Incoming Message Information               *
+     F*                                                               *
+     F*  Function:  This program                                      *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By: ME1140  - Print IMM Transaction Details           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW097             Date 26May97               *
+      *                 CRT002             Date  1Dec95               *
+     F*                 094636             Date 14Oct95               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 29JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  CSW097 - Swift changes 1997:                                 *
+     F*           The program was amended to recognise dates          *
+     F*           in CCYYMMDD format.                                 *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  094636 - The pgm does not consider the field tag of length   *
+     F*           > 50 but less than 100.  The presentation of this   *
+     F*           field is quite difficult to read.                   *
+     F*           44A: Shipment Details Format A                      *
+     F*           44B: Shipment Details Format B                      *
+     F*           44D: Shipment Details Format D                      *
+     F*           45A: Description of Goods and/or Service Format A   *
+     F*           45B: Description of Goods and/or Service Format B   *
+     F*           46A: Documents Required Format A                    *
+     F*           46B: Documents Required Format B                    *
+     F*           47A: Additional Conditions Format A                 *
+     F*           47B: Additional Conditions Format B                 *
+     F*           78:  Instruction to Paying/Accepting/Negotiating Bnk*
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General Work Indicator                                 *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FSDMTAGL0IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Message tag
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    L65     1  10  5                                094636
+      *
+      *  Copyright table
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    FLA        50  1               Format field
+     E                    FLB        50  1               Formatted field
+     E                    #R         60  1               Move Right Array
+     E                    #S         60  1               Res. Right Array
+      *
+      *  Arrays for formatting tag line details
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+     ISDCUST    E DSSDCUSTPD
+      *
+      *  Calling parameter data structure for AOCUSTR0
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+      *  Calling parameter data structure for ME1400
+      *
+      /EJECT
+      *
+      * Multiple message part headings for screens
+      *
+     I            DS
+     I                                        1  76 FORMSC
+     I                                        1  20 EFSCFD
+     I                                       21  25 MTAG
+     I                                       27  76 MFLD
+     I                                        1  25 MFLDS1                094636
+     I                                       11  76 MFLDS2                094636
+      *
+      * Multiple message part headings for reports
+      *
+     I            DS
+     I                                        1 120 FORMRP
+     I                                        1  60 EFRPFD
+     I                                       63  67 MTAGRP
+     I                                       70 119 MFLDRP
+     I                                        1  67 MFLDR1                094636
+     I                                       54 119 MFLDR2                094636
+      *
+      * Layout for BIC directory processing
+      *
+     IBICLAY      DS                            120
+     I                                       27  76 #DATS
+     I                                       70 120 #DATR
+      * Format for Screen
+     I                                       27  61 #SCR1
+     I                                       62  76 #SCR2
+      * Format for Report
+     I                                       70 104 #RPT1
+     I                                      105 120 #RPT2
+      *
+      **  Heading for Message Managemnt free-format messages
+      *
+     I            DS
+     I                                        1   8 WRKDAT
+     I                                        1   2 WRKYY
+     I                                        4   5 WRKMM
+     I                                        7   8 WRKDD
+      *
+      **  Data structure for rearranging date
+      *
+     I            DS
+     I                                        1   8 CHGDAT
+     I                                        1   5 @CHG5
+     I I            '/'                       3   3 @1
+     I I            '/'                       6   6 @@2
+     I                                        7   8 CHGYY
+      *                                                                   CSW097
+      ** New data structure was introduced to accommodate                 CSW097
+      ** CCYYMMDD format.                                                 CSW097
+      *                                                                   CSW097
+     I            DS                                                      CSW097
+     I                                        1  10 WKDAT                 CSW097
+     I                                        1   4 WKYY                  CSW097
+     I                                        6   7 WKMM                  CSW097
+     I                                        9  10 WKDD                  CSW097
+      *                                                                   CSW097
+      ** Data structure for rearranging date in CCYYMMDD format.          CSW097
+      *                                                                   CSW097
+     I            DS                                                      CSW097
+     I                                        1  10 CHDAT                 CSW097
+     I                                        1   5 @CH5                  CSW097
+     I I            '/'                       3   3 @3                    CSW097
+     I I            '/'                       6   6 @@4                   CSW097
+     I                                        7  10 CHYY                  CSW097
+      *                                                                   CSW097
+      ** Define a constant.                                               CSW097
+      *                                                                   CSW097
+     I              '0123456789'          C         DIGITS                CSW097
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+      *
+     I#MSTX2      DS                            512
+      *
+      *  Define fields for extended message
+      *
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           I#NWRK  6        Network
+     C                     PARM           I#MTAG  5        Tag No.
+     C                     PARM           I#MTPY  3        Msg Type
+     C                     PARM           I#FPID  1        1st Line of Tag
+     C                     PARM           I#MFLD100        Tag Detail Line
+     C                     PARM           O#MDTA 76        Screen Data 1
+     C                     PARM           O#MDT2 76        Screen Data 2
+     C                     PARM           O#MDT3 76        Screen Data 2
+     C                     PARM           O#MDT4 76        Screen Data 2
+     C                     PARM           O#MDT5 76        Screen Data 2
+     C                     PARM           O#RDTA120        Report Data 1
+     C                     PARM           O#RDT2120        Report Data 2
+     C                     PARM           O#RDT3120        Report Data 2
+     C                     PARM           O#RDT4120        Report Data 2
+      *
+      *  Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Write message text
+      *
+     C                     EXSR SRTEXT
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTEXT   : Validate contents of Message Reference field      *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRFORM                                            *
+      *           : SRSWAD                                            *
+      *                                                               *
+      *****************************************************************
+     CSR         SRTEXT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+      *
+      * Initialise to blanks Out data
+      *
+     C                     MOVEL*BLANKS   O#MDTA           Screen
+     C                     MOVEL*BLANKS   O#MDT2           Screen
+     C                     MOVEL*BLANKS   O#MDT3           Screen
+     C                     MOVEL*BLANKS   O#MDT4           Screen
+     C                     MOVEL*BLANKS   O#MDT5           Screen
+     C                     MOVEL*BLANKS   FORMSC
+      *
+     C                     MOVEL*BLANKS   O#RDTA           Report
+     C                     MOVEL*BLANKS   O#RDT2           Report
+     C                     MOVEL*BLANKS   O#RDT3           Report
+     C                     MOVEL*BLANKS   O#RDT4           Report
+     C                     MOVEL*BLANKS   FORMRP
+      *
+      * Access field tag file using message tag & type. If a record is
+      * not found, try again with for just the tag.
+      *
+     C                     MOVELI#MTAG    MTAGK
+     C                     MOVELI#MTPY    MTPYK
+     C           MGTGK1    CHAINSDMTAGL0             98
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL'ALL'     MTPYK
+     C           MGTGK1    CHAINSDMTAGL0             98
+      *
+      * If description not found, set fields with 'No Description' msg
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEL##NODS    EFSCFD           Screen
+     C                     MOVEL##NODS    EFRPFD           Report
+     C                     END
+      *
+     C                     END
+      *
+      *  Get tag and field information
+      *
+     C           1         SUBSTI#MTAG:2  #WK1    1        Tag No.
+     C           1         SUBSTI#MTAG:4  #WK2    1        Tag Format I.D
+     C           1         SUBSTI#MFLD:1  #WK3    1        Detail Line
+      *
+      *  /COPY to allow specific formatting
+      *
+     C/COPY WNCPYSRC,ME1010F0S1
+      *
+      *  Call appropriate formatting subroutine
+      *
+      * If tag format exists
+      *
+     C                     SELEC
+      *
+     C           EFTAGF    WHNE *BLANKS
+     C                     EXSR SRFORM
+      *
+      *  If SWIFT address obtain name/town
+      *
+     C           I#NWRK    WHEQ 'SWIFT'
+     C           #WK1      ANDEQ'5'
+     C           #WK2      ANDEQ'A'
+     C           #WK3      ANDNE'/'
+     C/COPY WNCPYSRC,ME1010F0C1
+     C                     MOVELI#MFLD    @WK50  50
+     C                     EXSR SRSWAD
+      *
+     C                     MOVEL@WK50     MFLD
+     C                     MOVEL@WK50     MFLDRP
+      *
+      *  Map data
+      *
+     C                     OTHER
+     C                     MOVELI#MFLD    MFLD
+     C                     MOVELI#MFLD    MFLDRP
+     C                     ENDSL
+      *
+      *  Set Tag No./Tag Description fields in data structures
+      *
+     C                     MOVELI#MTAG    MTAG
+     C                     MOVELI#MTAG    MTAGRP
+      *
+      *  If not the first line for the tag, clear tag heading fields
+      *
+     C           I#FPID    IFNE 'F'
+     C                     MOVEL*BLANKS   EFSCFD
+     C                     MOVEL*BLANKS   EFRPFD
+     C                     MOVEL*BLANKS   MTAG
+     C                     MOVEL*BLANKS   MTAGRP
+     C                     END
+      *
+      *  Shift formatted text to right
+      *
+     C                     EXSR SRMOVR
+      *                                                                   094636
+      ** If the field tag contains more than 50 lines, try to show        094636
+      ** in the second line.                                              094636
+      *                                                                   094636
+     C                     Z-ADD1         A       20                      094636
+     C           I#MTAG    LOKUPL65,A                    53               094636
+     C*                                                                   094636
+     C           *IN53     IFEQ '1'                                       094636
+      *                                                                   094636
+      *  Move formatted data structures to parameters                     094636
+      *  tag description and tag only.                                    094636
+      *                                                                   094636
+     C           I#FPID    IFEQ 'F'                                       094636
+      *                                                                   094636
+      *  Format first line                                                094636
+      *                                                                   094636
+     C                     MOVELMFLDS1    O#MDTA           Screen         094636
+     C                     MOVELMFLDR1    O#RDTA           Report         094636
+      *                                                                   094636
+      *  Format second line                                               094636
+      *                                                                   094636
+     C                     MOVEL*BLANKS   FORMSC                          094636
+     C                     MOVEL*BLANKS   FORMRP                          094636
+     C                     MOVELI#MFLD    MFLDS2                          094636
+     C                     MOVELI#MFLD    MFLDR2                          094636
+     C                     MOVELFORMSC    O#MDT2           Screen         094636
+     C                     MOVELFORMRP    O#RDT2           Report         094636
+     C                     MOVEL*BLANKS   FORMSC                          094636
+     C                     MOVEL*BLANKS   FORMRP                          094636
+      *                                                                   094636
+     C                     ELSE                                           094636
+      *                                                                   094636
+      *  Format other lines                                               094636
+      *                                                                   094636
+     C                     MOVEL*BLANKS   FORMSC                          094636
+     C                     MOVEL*BLANKS   FORMRP                          094636
+     C                     MOVELI#MFLD    MFLDS2                          094636
+     C                     MOVELI#MFLD    MFLDR2                          094636
+     C                     MOVELFORMSC    O#MDTA           Screen         094636
+     C                     MOVELFORMRP    O#RDTA           Report         094636
+      *                                                                   094636
+     C                     END                                            094636
+      *                                                                   094636
+     C                     GOTO EXTEXT                                    094636
+      *                                                                   094636
+     C                     END                                            094636
+      *
+      *  Move formatted data structures to parameters
+      *
+     C                     MOVELFORMSC    O#MDTA           Screen
+     C                     MOVELFORMRP    O#RDTA           Report
+      *
+      *  Format second line if needed
+      *
+     C                     MOVE I#MFLD    @WK50
+     C           @WK50     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   EFSCFD
+     C                     MOVEL*BLANKS   EFRPFD
+     C                     MOVEL*BLANKS   MTAG
+     C                     MOVEL*BLANKS   MTAGRP
+      *
+     C                     MOVE I#MFLD    MFLD
+     C                     MOVE I#MFLD    MFLDRP
+      *
+     C                     MOVELFORMSC    O#MDT2           Screen
+     C                     MOVELFORMRP    O#RDT2           Report
+     C                     END
+      *
+      *  /COPY to allow specific formatting
+      *
+     C/COPY WNCPYSRC,ME1010F0S2
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXTEXT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFORM   : Format subfield                                   *
+      *                                                               *
+      *  CALLED BY:  SRTEXT write message text                        *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     CSR         SRFORM    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFORM'  @STK,Q
+      *
+      *  /COPY to allow specific formatting
+      *
+     C/COPY WNCPYSRC,ME1010F0S3
+      *
+     C                     MOVEAI#MFLD    FLA
+     C                     MOVE *BLANKS   FLB
+      *
+      *  If Tag Format is for Value Date/Currency/Amount
+      *  then replace the ',' in the amount with a '.'
+      *
+     C           EFTAGF    IFEQ 'DCA'                                 1
+     C           EFTAGF    OREQ 'CA'                                  1
+     C           EFTAGF    OREQ 'A'
+      *
+     C                     Z-ADD1         A       20
+     C           ','       LOKUPFLA,A                    53
+      *
+     C           *IN53     IFEQ '1'                                   1
+     C                     MOVE '.'       FLA,A
+     C                     END                                       E1
+      *                                                                   CRT002
+      **  Format the second amount (Position Amount 2) for                CRT002
+      **  message tag CPOST.                                              CRT002
+      *                                                                   CRT002
+     C           EFMTAG    IFEQ 'CPOST'                                   CRT002
+     C           *IN53     ANDEQ'1'                                       CRT002
+     C                     ADD  1         A                               CRT002
+     C           ','       LOKUPFLA,A                    53               CRT002
+     C           *IN53     IFEQ '1'                                       CRT002
+     C                     MOVE '.'       FLA,A                           CRT002
+     C                     END                                            CRT002
+     C                     END                                            CRT002
+      *
+     C                     END                                       E1
+      *
+      *  Format the Date - insert '/'
+      *
+     C           EFTAGF    IFEQ 'DCA'                                 1
+     C           EFTAGF    OREQ 'D'
+     C           DIGITS    CHECKFLA,7                    47               CSW097
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEAFLA,1     @WK2    2
+     C                     MOVEA@WK2      FLB,1
+     C                     MOVE '/'       FLB,3
+     C                     MOVEAFLA,3     @WK2
+     C                     MOVEA@WK2      FLB,4
+     C                     MOVE '/'       FLB,6
+     C                     MOVEAFLA,5     @WK2
+     C                     MOVEA@WK2      FLB,7
+      *
+     C                     MOVEAFLB,1     WRKDAT
+     C                     MOVE WRKYY     CHGYY
+     C                     ELSE                                           CSW097
+     C                     MOVEAFLA,1     @WK4    4                       CSW097
+     C                     MOVEA@WK4      FLB,1                           CSW097
+     C                     MOVEA'/'       FLB,5                           CSW097
+     C                     MOVEAFLA,5     @WK2                            CSW097
+     C                     MOVEA@WK2      FLB,6                           CSW097
+     C                     MOVEA'/'       FLB,8                           CSW097
+     C                     MOVEAFLA,7     @WK2                            CSW097
+     C                     MOVEA@WK2      FLB,9                           CSW097
+     C                     MOVEAFLB,1     WKDAT                           CSW097
+     C                     MOVE WKYY      CHYY                            CSW097
+     C                     ENDIF                                          CSW097
+      *
+      *  Present date in relevant format - DDMMYY or MMDDYY
+      *
+     C           WUDFF     IFEQ 'M'
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVELWRKMM     @CHG5
+     C                     MOVE WRKDD     @CHG5
+     C                     ELSE                                           CSW097
+     C                     MOVELWKMM      @CH5                            CSW097
+     C                     MOVE WKDD      @CH5                            CSW097
+     C                     ENDIF                                          CSW097
+     C                     ELSE
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVE WRKMM     @CHG5
+     C                     MOVELWRKDD     @CHG5
+     C                     ELSE                                           CSW097
+     C                     MOVE WKMM      @CH5                            CSW097
+     C                     MOVELWKDD      @CH5                            CSW097
+     C                     ENDIF                                          CSW097
+     C                     END
+      *
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEACHGDAT    FLB,1
+     C                     ELSE                                           CSW097
+     C                     MOVEACHDAT     FLB,1                           CSW097
+     C                     ENDIF                                          CSW097
+      *
+     C                     END                                       E1
+      *                                                                   CRT002
+      **  Format the second date (Todays Date) for message tag CDATE.     CRT002
+      *                                                                   CRT002
+     C           EFMTAG    IFEQ 'CDATE'                                   CRT002
+     C           EFTAGF    ANDEQ'D'                                       CRT002
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEAFLA,7     @WK2    2                       CRT002
+     C                     MOVEA@WK2      FLB,10                          CRT002
+     C                     MOVE '/'       FLB,12                          CRT002
+     C                     MOVEAFLA,9     @WK2                            CRT002
+     C                     MOVEA@WK2      FLB,13                          CRT002
+     C                     MOVE '/'       FLB,15                          CRT002
+     C                     MOVEAFLA,11    @WK2                            CRT002
+     C                     MOVEA@WK2      FLB,16                          CRT002
+      *                                                                   CRT002
+     C                     MOVEAFLB,10    WRKDAT                          CRT002
+     C                     MOVE WRKYY     CHGYY                           CRT002
+     C                     ELSE                                           CSW097
+     C                     MOVEAFLA,7     @WK2                            CSW097
+     C                     MOVEA@WK2      FLB,10                          CSW097
+     C                     MOVEA'/'       FLB,14                          CSW097
+     C                     MOVEAFLA,11    @WK2                            CSW097
+     C                     MOVEA@WK2      FLB,15                          CSW097
+     C                     MOVEA'/'       FLB,17                          CSW097
+     C                     MOVEAFLA,13    @WK2                            CSW097
+     C                     MOVEA@WK2      FLB,18                          CSW097
+     C                     MOVEAFLB,10    WKDAT                           CSW097
+     C                     MOVE WKYY      CHYY                            CSW097
+     C                     ENDIF                                          CSW097
+      *                                                                   CRT002
+      **  Present date in relevant format - DDMMYY or MMDDYY.             CRT002
+      *                                                                   CRT002
+     C           WUDFF     IFEQ 'M'                                       CRT002
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVELWRKMM     @CHG5                           CRT002
+     C                     MOVE WRKDD     @CHG5                           CRT002
+     C                     ELSE                                           CSW097
+     C                     MOVELWKMM      @CH5                            CSW097
+     C                     MOVE WKDD      @CH5                            CSW097
+     C                     ENDIF                                          CSW097
+     C                     ELSE                                           CRT002
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVE WRKMM     @CHG5                           CRT002
+     C                     MOVELWRKDD     @CHG5                           CRT002
+     C                     ELSE                                           CSW097
+     C                     MOVELWKMM      @CH5                            CSW097
+     C                     MOVE WKDD      @CH5                            CSW097
+     C                     ENDIF                                          CSW097
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEACHGDAT    FLB,10                          CRT002
+     C                     ELSE                                           CSW097
+     C                     MOVEACHDAT     FLB,10                          CSW097
+     C                     ENDIF                                          CSW097
+      *                                                                   CRT002
+     C                     END                                            CRT002
+      *
+      *  Move Currency/Amount into formatted array.
+      *
+      *  Values are extracted from the array dependant on the
+      *  combination of data provided.
+      *
+      *  Date/Currency/Amount
+      *
+     C           EFTAGF    IFEQ 'DCA'                                 1
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEAFLA,7     @WL3    3
+     C                     MOVEA@WL3      FLB,10
+     C                     MOVEAFLA,10    @WK15  15
+     C                     MOVEA@WK15     FLB,14
+     C                     ELSE                                           CSW097
+     C                     MOVEAFLA,9     @WL3                            CSW097
+     C                     MOVEA@WL3      FLB,12                          CSW097
+     C                     MOVEAFLA,12    @WK15                           CSW097
+     C                     MOVEA@WK15     FLB,16                          CSW097
+     C                     ENDIF                                          CSW097
+     C                     END                                       E1
+      *
+      *  Currency/Amount
+      *
+     C           EFTAGF    IFEQ 'CA'                                  1
+     C                     MOVEAFLA,1     @WL3
+     C                     MOVEA@WL3      FLB,1
+     C                     MOVEAFLA,4     @WK15
+     C                     MOVEA@WK15     FLB,5
+     C                     END                                       E1
+      *
+      *  Amount only
+      *
+     C           EFTAGF    IFEQ 'A'                                   1
+     C                     MOVEAFLA,1     FLB,1
+     C                     END                                       E1
+      *
+      *  Move formatted field to output data structure
+      *
+     C                     MOVEAFLB       MFLD
+     C                     MOVEAFLB       MFLDRP
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFORM    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMOVR   : Move right report text                            *
+      *                                                               *
+      *  CALLED BY:  SRTEXT write message text                        *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     CSR         SRMOVR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMOVR'  @STK,Q
+      *
+      *  If blank return
+      *
+     C           EFRPFD    IFEQ *BLANKS
+     C                     GOTO EXMOVR
+     C                     END
+      *
+      *  Move Report tag description to array
+      *
+     C                     MOVEA*BLANKS   #S
+     C                     MOVEA*BLANKS   #R
+     C                     MOVEAEFRPFD    #R
+     C                     Z-ADD60        S       50
+     C                     Z-ADD60        R       50
+     C                     MOVEL'N'       CHARFD  1        Char found
+      *
+      *  Scan array from top to bottom
+      *
+     C           R         DOUEQ0
+      *
+      *  If array element blank and not data found - iterate
+      *
+     C           #R,R      IFEQ *BLANKS
+     C           CHARFD    ANDEQ'N'
+     C                     SUB  1         R
+     C                     ITER
+     C                     END
+      *
+      *  Move array element to new position
+      *
+     C                     MOVEA#R,R      #S,S
+     C                     SUB  1         S
+     C                     SUB  1         R
+     C                     MOVEL'Y'       CHARFD  1        Char found
+      *
+     C                     ENDDO
+      *
+      *  Move back contents
+      *
+     C                     MOVEA#S        EFRPFD
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMOVR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *   SRSWAD  : Format Name/Town from SWIFT address and get other *
+      *             Network adresses for this SWIFT address           *
+      *                                                               *
+      *  CALLED BY:  SRTEXT write message text                        *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     CSR         SRSWAD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSWAD'  @STK,Q
+      *
+      *  Call Access object to validate identifier
+      *
+     C                     MOVELI#MFLD    W9BICC
+     C           3         SUBSTI#MFLD:9  W9BICB
+      *
+     C                     CALL 'ME1400'
+     C                     PARM *BLANKS   W9RTN   7
+     C                     PARM           W9BICC  8
+     C                     PARM           W9BICB  3
+     C                     PARM           SDCUST
+     C                     PARM           SDCNST
+     C                     PARM           MEBICD
+     C                     PARM *BLANKS   W9CUST  1
+     C                     PARM *BLANKS   W9CNST  1
+     C                     PARM *BLANKS   W9BICD  1
+      *
+     C                     SELEC
+      *
+      *  Record not found - S.W.I.F.T does not exist
+      *
+     C           W9RTN     WHEQ 'Y2U0005'
+      * No action
+      *
+      *  Use data depending on file that the data exists on
+      *
+     C           W9BICD    WHEQ 'Y'
+      *
+      * Format First Line for screen
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDINS1    #SCR1
+      *
+      *  Check fields not concatenated
+      *
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    #SCR2
+     C                     ELSE
+     C           15        SUBSTBDINS2:2  #SCR2
+     C                     END
+     C                     MOVELBICLAY    O#MDT2
+      *
+      * Format Second Line for screen
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDCITY    #SCR1
+     C                     MOVELBICLAY    O#MDT3
+      *
+      * Format Third Line for screen
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDBRC1    #SCR1
+     C                     MOVELBICLAY    O#MDT4
+      *
+      * Format First Line for report
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDINS1    #RPT1
+      *
+      *  Check fields not concatenated
+      *
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    #RPT2
+     C                     ELSE
+     C           16        SUBSTBDINS2:2  #RPT2
+     C                     END
+     C                     MOVELBICLAY    O#RDT2
+      *
+      * Format Second Line for report
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDCITY    #RPT1
+     C                     MOVELBICLAY    O#RDT3
+      *
+      * Format Third Line for report
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBDBRC1    #RPT1
+     C                     MOVELBICLAY    O#RDT4
+      *
+     C           W9CUST    WHEQ 'Y'
+      *
+      * Format Screen lines
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBBCRNM    #SCR1
+     C                     MOVELBICLAY    O#MDT2
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBBCRTN    #SCR1
+     C                     MOVELBICLAY    O#MDT3
+      *
+      * Format Report lines
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBBCRNM    #RPT1
+     C                     MOVELBICLAY    O#RDT2
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELBBCRTN    #RPT1
+     C                     MOVELBICLAY    O#RDT3
+      *
+     C           W9CNST    WHEQ 'Y'
+      *
+      * Format Screen lines
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELAWCPNM    #SCR1
+     C                     MOVELBICLAY    O#MDT2
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELAWCNTN    #SCR1
+     C                     MOVELBICLAY    O#MDT3
+      *
+      * Format Report lines
+      *
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELAWCPNM    #RPT1
+     C                     MOVELBICLAY    O#RDT2
+     C                     MOVEL*BLANKS   BICLAY
+     C                     MOVELAWCNTN    #RPT1
+     C                     MOVELBICLAY    O#RDT3
+      *
+     C                     ENDSL
+      *
+      **  Define standard fields
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSWAD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Define fields
+      *
+      *
+      * Define key list for SDMTAGL0
+      *
+     C           MGTGK1    KLIST
+     C                     KFLD           MTAGK   5
+     C                     KFLD           MTPYK   3
+      *
+      * Open Files
+      *
+     C                     OPEN SDMTAGL0
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      * Retreive No description text
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0016' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##NODS 20
+      *
+      * Retreive Text for sub-file
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'MIN0017' #MSGID
+     C                     PARM 'MEMSG'   #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    ##STXT 76
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+** L65 - Long message tag of length 65 required whole line to show        094636
+:44A:                                                                     094636
+:44B:                                                                     094636
+:44D:                                                                     094636
+:45A:                                                                     094636
+:45B:                                                                     094636
+:46A:                                                                     094636
+:46B:                                                                     094636
+:47A:                                                                     094636
+:47B:                                                                     094636
+:78:                                                                      094636

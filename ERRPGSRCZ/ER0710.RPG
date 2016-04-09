@@ -1,0 +1,847 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER - FIRE RT30 - GENERATION IN MIDAS')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting (Luxembourg)                      *
+      *                                                               *
+      *  ER0710 - FIRE RT30 - GENERATION IN MIDAS                     *
+      *                                                               *
+      *  Function:  This program will produce a File to be downloaded *
+      *  (phase(s)) onto PC format. ERFT30PP is kept in xxDPLIB.      *
+      *             PC file will be downloaded under ERddmmyyPP name  *
+      *                                                               *
+      *  Called  in : COB automatically (ERBANKPD Rundat)             *
+      *                                                               *
+      *  Called By: ERC0710 - ER Download File to PCFILE Format       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 12May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 225508             Date 16Mar04               *
+      *                 ULX047             Date 02Jan03               *
+      *                 UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 ULX040             Date 20Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  225508 - THE NEGATIF SIGN SHOULD BE BEFORE THE AMOUNT        *
+      *  ULX047 - CSSF Market Values Calculation                      *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  ULX040 - FIRE - RT30 Generation in Midas                     *
+      *                                                               *
+      *****************************************************************
+     F***ERBANKPDIF  E           K        DISK         KINFSR *PSSR      UC
+     FERBANKPDIF  E           K        DISK         KINFSR *PSSR
+      ***  ER BANK Copy
+      *
+     FERLUCAL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Extraction for CAD Reporting
+      *
+     FERFT30PPO   E                    DISK         KINFSR *PSSR
+      ***  Output to PC Download
+      *
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+     E                    CPY@    1   1 80
+      *** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I            DS
+     I                                        1   60ZDATE
+     I                                        1   2 WKDAY
+     I                                        5   6 WKYEAR
+      *
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Read Extracted file
+      *
+     C                     READ ERLUCAL0                 35
+     C           *IN35     DOWEQ*OFF
+      *
+      ***  Fill in Record details
+      *
+     C                     EXSR #FILL
+      *
+     C                     WRITEERFT30D0                   Write Out
+      *
+      ***  Read Next record
+      *
+     C                     READ ERLUCAL0                 35
+     C                     ENDDO
+      *
+      *****************************************************************
+      *              E N D     O F     M A I N L I N E S              *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  #FILL  - Fill in Details Record of ERFT14PP                  *
+      *  ------                                                       *
+      *  Called by : #DETA                                            *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #FILL     BEGSR
+      *
+      ***  Reset Format
+      *
+     C                     MOVE *BLANKS   FMT30R
+      *
+      ***  Format all fields from ERLUCAPD except Following ones :
+      ***  EXTINT, EXSEQN, EXLNPV, EXLSTA, EXPORT, EXPOSI, EXOPTI,
+      ***  EXOFOP, EXOFGA, EXOFVE, EXCUST, EXCRNM, EXDECK, EXISSR.
+      *
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXRECT    ZFIELD    P      Record type
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXCCYL    TEMP  256 P      ISO currency Code
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXCUCL    TEMP  256 P      ISO country code Cntprty
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXECOS    ZFIELD    P      Inst. sector of Cntprty
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXIRTT    ZFIELD    P      Interest Rate type
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXAMNT    ZFIELD    P      Amount in CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLAMT    ZFIELD    P      Amount in local CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXNOMA    ZFIELD    P      Nominal in CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLNOM    ZFIELD    P      Nominal in local CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXISSN    TEMP  256 P      Issuer name
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXEXPR    ZFIELD    P      Exerc. Price
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLEXP    ZFIELD    P      Exerc. Price
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMKT1    ZFIELD    P      Market value 1
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLMK1    ZFIELD    P      MKT value 1 local CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXORIG    TEMP  256 P      Origin of record
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXDLNO    TEMP  256 P      Deal number
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCLAT    ZFIELD    P      Claims type local CCY
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXPRDC    ZFIELD    P      Product Code
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXIGRF    ZFIELD    P      intra-group trans. flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXISEC    ZFIELD    P      Issuer Econ. Sector
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXLISS    TEMP  256 P      ISO CTRY of Issuer
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXBKTP    ZFIELD    P      Book type
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     Z-ADDEXDEMK    WWDEMK 160                      ULX047
+     C           EXDEMK    IFLT 0                                         ULX047
+     C                     Z-SUBEXDEMK    EXDEMK                          ULX047
+     C                     ENDIF                                          ULX047
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXDEMK    ZFIELD    P      Derivative MKT Value FX
+     C                     EXSR #NUML
+     C           WWDEMK    IFLT 0                                                225508
+     C           '-'       CAT  TEMP:0    TEMP                                   225508
+     C                     ENDIF                                                 225508
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C*****      WWDEMK    IFLT 0                                         ULX047 225508
+     C*****      FMT30R    CAT  '-':0     FMT30R                          ULX047 225508
+     C*****                ENDIF                                          ULX047 225508
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     Z-ADDEXLDMK    WWLDMK 160                      ULX047
+     C           EXLDMK    IFLT 0                                         ULX047
+     C                     Z-SUBEXLDMK    EXLDMK                          ULX047
+     C                     ENDIF                                          ULX047
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLDMK    ZFIELD    P      Derivative MKT
+     C                     EXSR #NUML
+     C           WWLDMK    IFLT 0                                                225508
+     C           '-'       CAT  TEMP:0    TEMP                                   225508
+     C                     ENDIF                                                 225508
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C*****      WWLDMK    IFLT 0                                         ULX047 225508
+     C*****      FMT30R    CAT  '-':0     FMT30R                          ULX047 225508
+     C*****                ENDIF                                          ULX047 225508
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXOPCM    ZFIELD    P      Opt. Calc. Meth.
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCRKW    ZFIELD    P      Cntrprty risk Weight
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXUNSF    ZFIELD    P      Unsettle Trans. flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXWDPS    ZFIELD    P      Nr Wrking days
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXORCV    ZFIELD    P      Original contract value
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLOCV    ZFIELD    P      Orig. Contract value
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXUNWF    ZFIELD    P      Unwritten Flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXSRKQ    ZFIELD    P      Specific risk qual.
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCPNR    ZFIELD    P      coupon Rate
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXHEDG    ZFIELD    P      Hedged Position
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXIRRM    ZFIELD    P      Inter. rate rsik calc.
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMODA    ZFIELD    P      Mod. Duration A
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMODB    ZFIELD    P      Mod. duration B
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLSP1    ZFIELD    P      Long/short Pos. 1
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLSP2    ZFIELD    P      Long/short Pos. 2
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD2         ZADEC            2 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXIRRT    ZFIELD    P      Intern. Rate of Return
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXREFR    TEMP  256 P      Reference Rate
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXBBIX    ZFIELD    P      Braod Based index flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMNIF    ZFIELD    P      IMAtur. Next FI
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMATA    ZFIELD    P      Maturity A
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMATB    ZFIELD    P      Maturity B
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXTRTY    ZFIELD    P      transactionn type
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXEXCF    ZFIELD    P      Excess coll. Treatm. Flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXREPO    TEMP  256 P      Repo Reference
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXMKT2    ZFIELD    P      Market value 2
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLMK2    ZFIELD    P      Market value 2 Local ccy
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXNUND    ZFIELD    P      Nature of underlying
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCTFG    ZFIELD    P      Convertible Treatm. Flag
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXEPRM    ZFIELD    P      Equity Pos. Risk Meth.
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXRMEX    ZFIELD    P      Rem. mat. till Ex. date
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXRMSW    ZFIELD    P      Rem. Mat. till end swap
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXUCOR    TEMP  256 P      Unique contract Ref.
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXOTCE    ZFIELD    P      OTC/Exchange traded
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXUISS    TEMP  256 P      Unique issuance Ref.
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXDYSU    ZFIELD    P      Days after Wrking days
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXNTAG    ZFIELD    P      Netting Agreement
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCGRP    ZFIELD    P      Economic group
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXCGRN    TEMP  256 P      Econ. Group name
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXRFCP    TEMP  256 P      Unique Ref. Cntrprty
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXORMA    ZFIELD    P      Original Maturity
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXACCR    ZFIELD    P      Accrued interest
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLACC    ZFIELD    P      Accrued Int. in Local CCy
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXRNKG    TEMP  256 P      Ranking
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXPRVS    ZFIELD    P      Provision & Depreciation
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD3         ZADEC            3 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXLPRV    ZFIELD    P      Prov & Depr. in Local ccy
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXOPST    ZFIELD    P      Option Style
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXCPIN    ZFIELD    P      Call/Put option
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C                     MOVELEXAUD1    TEMP  256 P      Audir trail 1
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXAUD2    TEMP  256 P      Audit trail 2
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXAUD3    TEMP  256 P      Audit trail 3
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C                     MOVELEXCRID    TEMP  256 P      Credit Id.
+     C                     EXSR #LEFT
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields Separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXNIFD    ZFIELD    P      Next interest Fix. date
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXDATA    ZFIELD    P      Date A
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXDATB    ZFIELD    P      Date B
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXEXDA    ZFIELD    P      Exerc. Date (option)
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXFMSW    ZFIELD    P      Final Matur. date of Swap
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXSTDA    ZFIELD    P      Start date
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+     C           FMT30R    CAT  ',':0     FMT30R           Fields separator
+      *
+     C***                  Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE EXFMDT    ZFIELD    P      Final Maturity date
+     C                     EXSR #NUML
+     C           FMT30R    CAT  TEMP:0    FMT30R
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #LEFT  - This routine will align string TEMP of 256 Char     *
+      *  -----                                                        *
+      *  Called by : #HEAD, #FILL, #TRAI, #NUML                       *
+      *  Calls     : *NONE                                            *
+      *****************************************************************
+      *
+     C           #LEFT     BEGSR
+      *
+      ***  Declare temp size
+      *
+     C                     MOVELTEMP      TEMP  256
+      *
+      ***  Search first non blanks
+      *
+     C           ' '       CHECKTEMP      #I      30
+     C           #I        IFNE 0
+      *
+      ***  When found, left align by substring and Blanks padding
+      *
+     C                     SUBSTTEMP:#I   TEMP      P
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #NUML  - Remove Trailing Zero of Numeric value and left      *
+      *  -----    in TEMP field                                       *
+      *  input : ZFIELD (16A)                                         *
+      *          ZADEC  (1N0)                                         *
+      *  Output : TEMP  (100A)                                        *
+      *  Called by : #HEAD, #FILL, #TRAI                              *
+      *  Calls     : ZEDIT, #LEFT                                     *
+      *****************************************************************
+      *
+     C           #NUML     BEGSR
+      *
+     C                     EXSR ZEDIT
+      *
+      ***  ZADEC is used to detect number of Maximum trailing 0
+      *
+     C           ZADEC     IFGT 1                          Keep 1
+     C           ZADEC     SUB  1         #L      20       Mas of Loops
+     C                     Z-ADD16        #J      20       Right scanning
+     C           #L        DOWGT0
+      *
+      ***  Remove trailing Zero if found, if different then stop
+      *
+     C           ZA2,#J    IFEQ '0'                        use ZEDIT array
+     C                     MOVEA' '       ZA2,#J
+     C                     SUB  1         #J
+     C                     ELSE
+     C                     Z-ADD0         #L               Stop when 0
+     C                     ENDIF
+      *
+      ***  Discrease loop
+      *
+     C                     SUB  1         #L               stop when 0
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ***  PUT and left ALign
+      *
+     C                     MOVE *BLANKS   TEMP  256        Reset
+     C                     MOVEAZA2       TEMP              put new value
+     C                     EXSR #LEFT                       Left align
+      *
+     C                     ENDSR
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial subroutine called automatically             *
+      *  ------                                                       *
+      *  Called by : At Pgm start                                     *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDATE   6        5 ALPHA
+      *
+      ***  If eqal to Zero, take midas rundate
+      *
+     C           PDATE     IFEQ '      '
+     C***                  OPEN ERBANKPD
+     C                     READ ERBANKPD                 99
+     C                     Z-ADDBJRDNB    WKDATE  50       Midas Run date
+     C**                   CLOSEERBANKPD
+      *
+      ***  Validate date as correct using ZDATE2
+      *
+     C                     MOVE *OFF      *IN98            DDMMYY
+     C                     Z-ADDWKDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 001 *
+     C                     MOVEL'*NONE'   DBFILE           ***************
+     C           'WRONG '  CAT  'DATE'    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Output Date
+      *
+     C                     MOVE WKYEAR    INTER   2
+     C                     MOVE WKDAY     WKYEAR
+     C                     MOVE INTER     WKDAY
+     C                     MOVELZDATE     PDATE     P      YYMMDD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------   Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by : database error                                    *
+      * Calls     : *none                                             *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZALIGNZ2
+      ********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

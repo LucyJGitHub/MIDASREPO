@@ -1,0 +1,653 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('WHT Deductions by Customer report')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0202 - WHT deductions by customer                          *
+      *                                                               *
+      *  Function:  This report runs at end of month during COB and   *
+      *  (COB)      prints details of all deals/accounts by customer  *
+      *             which are liable for WHT, with details of credit  *
+      *             interest paid this month/year to date, and the    *
+      *             WHT deducted this month/year to date.             *
+      *                                                               *
+      *  Called By: GLC0202  - WHT Deductions by Customer control     *
+      *                                                               *
+      *  Calls    : ZSFILE   - Set up spool file numbers file         *
+      *             AOACCTR0 - Retrieve Account details               *
+      *             AOBANKR0 - Retrieve Bank details                  *
+      *             AOCURRR0 - Retrieve Currency details              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL013  *CREATE    Date 08Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CDL013 - Details of interest paid this month/year to date &  *
+      *           WHT deducted this month/year to date.               *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLWHTCL1IF  E           K        DISK         KINFSR *PSSR
+      ** WHT deductions by Customer
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+      ** Deals file
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KRENAMEDEALSF
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+      *
+     FDEALSH  IF  E           K        DISK         KINFSR *PSSR
+      ** Matured deals file
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KRENAMEMDEALSF
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DLBHISD0                          KIGNORE
+     F            DLCHISD0                          KIGNORE
+     F            DLDHISD0                          KIGNORE
+     F            DLEHISD0                          KIGNORE
+     F            DLGHISD0                          KIGNORE
+      *
+     FGL0202P1O   E             69     PRINTER      KINFDS SPOOL      UC
+      ** WHT deductions by Customer report file
+      *
+     FGL0202AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      ** WHT deductions by Customer audit
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     65 - Deal/Account Indicator is 'D' for deals              *
+      *     66 - Change of branch                                     *
+      *     67 - Change of customer                                   *
+      *     68 - Change of currency                                   *
+      *     69 - Overflow Indicator                                   *
+      *     70 - Record not found                                     *
+      *     71 - Record not found                                     *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Subroutines                                                  *
+      *  -----------                                                  *
+      *  ZFRPED - Edit amounts for output on report                   *
+      *  #EMAIN - Main processing                                     *
+      *  #EINIT - Initial Processing                                  *
+      *  #EINWF - Initialise work fields                              *
+      *  #EFAMT - Format the amounts                                  *
+      *  #EFTTL - Format the totals                                   *
+      *  #ERCDP - Retrieve Ccy decimal places                         *
+      *  #EUPWF - Update work fields                                  *
+      *  #EUPSN - Update status narrative                             *
+      *  #ELAST - Final Processing                                    *
+      *  *PSSR  - Program error                                       *
+      *                                                               *
+      *****************************************************************
+     E/COPY ZSRSRC,ZFRPEDZ1
+      ** Run-time arrays for subroutine ZFRPED
+      *
+     E                    CPY@    1   1 80
+      ** Array for Object Copyright Statement
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      ** Data structures for subroutine ZFRPED
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDACCT    E DSACCNTAB
+      ** Account Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for access programs
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            #EMAIN - Main Control Processing                   *
+      *                                                               *
+      *  Calls     #EINIT - Initial Processing                        *
+      *            #EINWF - Initialise work fields                    *
+      *            #EFAMT - Format the amounts                        *
+      *            #EFTTL - Format the totals                         *
+      *            #ERCDP - Retrieve Ccy decimal places               *
+      *            #EUPWF - Update work fields                        *
+      *            #EUPSN - Update status narrative                   *
+      *            #ELAST - Final Processing                          *
+      *            ZFRPED - Edit amounts for output on report         *
+      *                                                               *
+      *****************************************************************
+      ** Initial Processing
+     C                     EXSR #EINIT
+      *
+      ** Initialise work fields
+     C                     EXSR #EINWF
+      *
+      ** Main Processing
+      *
+      ** Set AUDIT  to 'N'    - Do not record audit spool file by RCF
+      ** Set OLDCCY to blanks - old currency code
+      ** Set OLDBCH to blanks - old branch code
+      ** Set OLDCUS to blanks - old customer number
+     C                     MOVE 'N'       AUDIT   1
+     C                     MOVE *BLANKS   OLDCCY  3
+     C                     MOVE *BLANKS   OLDBCH  3
+     C                     MOVE *BLANKS   OLDCUS  6
+      *
+      ** Go to the first record
+     C           *LOVAL    SETLLGLWHTCL1
+      *
+      ** Read the record from Tax Details file
+     C                     READ GLWHTCL1                 70
+      *
+      ** If UNSUCCESFUL, set AUDIT to 'Y' for RCF of audit spool file,
+      ** open the audit file, print the message & terminate program
+     C           *IN70     IFEQ *ON
+     C                     MOVE 'Y'       AUDIT
+     C                     OPEN GL0202AU
+     C                     WRITEAUHEAD
+     C                     WRITENODETL
+     C                     CLOSEGL0202AU
+      ** Otherwise, print header, set print indicators ON,
+      ** update old codes & retrieve Ccy decimal places
+     C                     ELSE
+     C                     OPEN GL0202P1
+     C                     WRITEHEADER
+     C                     MOVE *ON       *IN67
+     C                     MOVE *ON       *IN68
+     C                     MOVE EBRCA     OLDBCH
+     C                     MOVE ECUST     OLDCUS
+     C                     MOVE ECURR     OLDCCY
+     C                     EXSR #ERCDP
+     C                     ENDIF
+      *
+      ** Do while READ succesful
+     C           *IN70     DOWEQ*OFF
+      *
+      ** Update status narrative
+     C                     EXSR #EUPSN
+      *
+      ** Format the amounts
+     C                     EXSR #EFAMT
+      *
+      ** Print detail line
+     C                     WRITEDETAIL
+      *
+      ** If overflow, print header & currency detail line
+     C           *IN69     IFEQ *ON
+     C                     WRITEHEADER
+     C                     MOVE *OFF      *IN69
+     C                     ENDIF
+      *
+      ** Update work fields
+     C                     EXSR #EUPWF
+      *
+      ** Read next record from tax details file
+     C                     READ GLWHTCL1                 70
+      *
+      ** If UNSUCCESFUL, convert and print Ccy total,
+      ** print report and branch footer & close printer file
+     C           *IN70     IFEQ *ON
+     C                     EXSR #EFTTL
+     C                     WRITECCYTTL
+     C                     WRITEBCHFOOT
+     C                     WRITEFOOTER
+     C                     CLOSEGL0202P1
+      *
+      ** Otherwise, set the indicators for printout
+     C                     ELSE
+      *
+      ** Set indicators OFF
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+      *
+      ** If Branch has changed, set *IN66 ON
+     C           EBRCA     IFNE OLDBCH
+     C                     MOVE *ON       *IN66
+     C                     ENDIF
+      *
+      ** If Customer changed, set *IN67 ON
+     C           ECUST     IFNE OLDCUS
+     C                     MOVE *ON       *IN67
+     C                     ENDIF
+      *
+      ** If Currency changed, set *IN68 ON
+     C           ECURR     IFNE OLDCCY
+     C                     MOVE *ON       *IN68
+     C                     ENDIF
+      *
+      ** If any code has changed, format and print totals,
+      ** retrieve NewCur decimal plac, reset work fields,
+      ** check if branch has changed & update old codes
+     C           *IN66     IFEQ *ON
+     C           *IN67     OREQ *ON
+     C           *IN68     OREQ *ON
+      *
+     C                     EXSR #EFTTL
+     C                     WRITECCYTTL
+     C                     EXSR #ERCDP
+     C                     EXSR #EINWF
+      ** If Branch changed, write OldBch footer & NewBch header
+     C           *IN66     IFEQ *ON
+     C                     WRITEBCHFOOT
+     C                     WRITEHEADER
+     C                     ENDIF
+     C                     MOVE EBRCA     OLDBCH
+     C                     MOVE ECUST     OLDCUS
+     C                     MOVE ECURR     OLDCCY
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Terminate the program
+     C                     EXSR #ELAST
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EINIT - Initial processing                                  *
+      *                                                               *
+      *  Calls    AOBANKR0 - Retrieve run date                        *
+      *           *PSSR    - Program error                            *
+      *                                                               *
+      *****************************************************************
+     C           #EINIT    BEGSR
+      *
+      ** RCF parameters
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Retrieve Run Date & User Report Title via AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD01        DBASE
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Copyright statement
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EINWF - Initialise work fields                              *
+      *                                                               *
+      *****************************************************************
+     C           #EINWF    BEGSR
+      *
+     C                     Z-ADD0         WTINTM 190
+     C                     Z-ADD0         WTINTY 190
+     C                     Z-ADD0         WTWHTM 190
+     C                     Z-ADD0         WTWHTY 190
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ERCDP - Retrieve Ccy decimal places                         *
+      *                                                               *
+      *  Calls    AOCURRR0 - Retrieve decimal places                  *
+      *                                                               *
+      *****************************************************************
+     C           #ERCDP    BEGSR
+      *
+      ** Retrieve currency decimal places via access program AOCURRR0
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C           ECURR     PARM ECURR     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD02        DBASE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EUPSN - Update status narrative                             *
+      *                                                               *
+      *****************************************************************
+     C           #EUPSN    BEGSR
+      *
+      ** Reset status narrative & set Deal Indicator *IN65 OFF.
+     C                     MOVE *BLANKS   STATUS  7
+     C                     MOVE *OFF      *IN65
+      *
+      ** If Deal, set *IN65 ON, extract Deal No & acces deals file
+     C           EDAIN     IFEQ 'D'
+      *
+     C                     MOVE *ON       *IN65
+     C                     MOVE EDLAC     WDLNUM  60
+     C           WDLNUM    CHAINDEALSF               71
+      *
+      ** If deal found in deals file
+     C           *IN71     IFEQ *OFF
+      ** If Rec Id 'R', update narrative
+     C           RECI      IFEQ 'R'
+     C                     MOVE 'DELETED' STATUS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Deal NOT found in deals file, acces matured deals file
+     C           *IN71     IFEQ *ON
+      *
+     C           WDLNUM    CHAINMDEALSF              71
+      ** If deal not found, update narrative
+     C           *IN71     IFEQ *ON
+     C                     MOVE 'DROPPED' STATUS
+     C                     ENDIF
+      ** If Rec Id 'M' or 'N' for deal, update narrative
+     C           *IN71     IFEQ *OFF
+     C           RECI      ANDEQ'M'
+     C           RECI      OREQ 'N'
+     C                     MOVE 'MATURED' STATUS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If NOT Deal, access Account details via AOACCTR0
+     C           EDAIN     IFNE 'D'
+     C                     MOVE EDLAC     WRETL  10
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WRETL     @RETL  10
+     C                     PARM *BLANKS   @CNUM   6
+     C                     PARM *BLANKS   @CUCD   3
+     C                     PARM *BLANKS   @ACCD  10
+     C                     PARM *BLANKS   @ACSQ   2
+     C                     PARM *BLANKS   @BRCA   3
+     C           SDACCT    PARM SDACCT    DSSDY
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ACCNTAB 'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD03        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If Record NOT found or Rec Id NOT 'D', update narrative
+     C           @RTCD     IFEQ '*NRF   '
+     C           RECI      ORNE 'D'
+     C                     MOVEL'CLOSED'  STATUS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If status is not blanks, print star before and after
+     C           STATUS    IFNE *BLANKS
+     C                     MOVE '*'       STAR1   1
+     C                     MOVE '*'       STAR2   1
+     C                     ELSE
+     C                     MOVE ' '       STAR1   1
+     C                     MOVE ' '       STAR2   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EFAMT - Format the amounts                                  *
+      *                                                               *
+      *****************************************************************
+     C           #EFAMT    BEGSR
+      *
+      ** Convert CR Interest this month
+     C                     MOVE ECRTM     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PCRTM  19
+      *
+      ** Convert WHT this month
+     C                     MOVE EWTTM     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PWTTM  19
+      *
+      ** Convert CR Interest this year to date
+     C                     MOVE ECRYD     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PCRYD  19
+      *
+      ** Convert WHT this year to date
+     C                     MOVE EWTYD     ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PWTYD  19
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EFTTL - Format the totals                                   *
+      *                                                               *
+      *****************************************************************
+     C           #EFTTL    BEGSR
+      *
+      ** Convert TOTAL CR Interest this month
+     C                     MOVE WTINTM    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PTINTM 21
+      *
+      ** Convert TOTAL WHT this month
+     C                     MOVE WTWHTM    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PTWHTM 21
+      *
+      ** Convert TOTAL CR Interest this year to date
+     C                     MOVE WTINTY    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PTINTY 21
+      *
+      ** Convert TOTAL WHT this year to date
+     C                     MOVE WTWHTY    ZFLD15
+     C                     MOVE A6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PTWHTY 21
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EUPWF - Update work fields                                  *
+      *                                                               *
+      *****************************************************************
+     C           #EUPWF    BEGSR
+      *
+     C                     ADD  ECRTM     WTINTM
+     C                     ADD  ECRYD     WTINTY
+     C                     ADD  EWTTM     WTWHTM
+     C                     ADD  EWTYD     WTWHTY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ELAST - Final processing                                    *
+      *                                                               *
+      *****************************************************************
+     C           #ELAST    BEGSR
+      *
+      ** Update LDA before calling ZSFILE
+     C                     OUT  LDA
+      *
+      ** If AUDIT is 'N', record report spool file
+     C           AUDIT     IFEQ 'N'
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      ** Otherwise, record audit spool file
+     C                     ELSE
+     C                     Z-ADDSFNUMU    SFNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR
+     C                     ENDIF
+      *
+      ** Retrieve LDA after calling ZSFILE
+     C           *LOCK     IN   LDA
+      *
+      ** If error in ZSFILE
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Terminate the program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program error                                       *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Update LDA
+     C                     MOVEL'GL0202'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ** Open audit file & print standard DBERR printout
+     C                     OPEN GL0202AU
+     C                     WRITEAUHEAD
+     C                     WRITEDBERROR
+     C                     CLOSEGL0202AU
+      *
+      ** If *PSSR has not been called yet, dump the program
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+      ** If *PSSR already run, then just end the program here
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2006

@@ -1,0 +1,1644 @@
+     H        1
+/*OVRF*: OVRDBF REODHSLL REODHSL1                                   : *
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail history upd for overdraft int')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE3667 - History Update For Overdraft Interest               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CRE083BN           Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER055             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 161934             Date 19Jul01               *
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CPK011             Date 27Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRE001 *CREATE     Date 18Feb97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CRE083BN - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *           (Recompile)                                         *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  161934 - Change to program to ignore overdraft line if       *
+      *           ARECI isn't 'D' on ACCNTAB.                         *
+      *  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+      *           PF/ACCNTBXC.                                        *
+      *  CPK011 - Recompile due to addition of extra fields in        *
+      *           ACCNTBXC (added for CAP035).                        *
+      *  CRE001 - Overdraft Interest Calculation                      *
+      *                                                               *
+      *****************************************************************
+     F***ACCNTBXCUF  E           K        DISK         KCOMIT                               CRE083BN
+     FACCNTBXCUF  E           K        DISK                                                 CRE083BN
+     F***ACCNT   UF  E           K        DISK         KCOMIT                               CRE083BN
+     FACCNT   UF  E           K        DISK                                                 CRE083BN
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FREODHSLLIF  E           K        DISK
+     F***REODHSL1UF  E           K        DISK         KCOMIT                               CRE083BN
+     FREODHSL1UF  E           K        DISK                                                 CRE083BN
+     F            REODHSD0                          KRENAMEREODHSF1
+     F                                              KINFDS REO1DS
+     F                                              KINFSR REO1SR
+     F***REODHSL2UF  E           K        DISK         KCOMIT                               CRE083BN
+     FREODHSL2UF  E           K        DISK                                                 CRE083BN
+     F            REODHSD0                          KRENAMEREODHSF2
+     F                                              KINFDS REO2DS
+     F                                              KINFSR REO2SR
+     F***REHISDL UF  E           K        DISK         KCOMIT       A                       CRE083BN
+     FREHISDL UF  E           K        DISK                      A                          CRE083BN
+     F                                              KINFDS REHDDS
+     F                                              KINFSR REHDSR
+     F***REHISBL UF  E           K        DISK         KCOMIT                               CRE083BN
+     FREHISBL UF  E           K        DISK                                                 CRE083BN
+     F            REHISPPF                          KRENAMEREHISPBF
+     F                                              KINFDS REHBDS
+     F                                              KINFSR REHBSR
+     FRE3667P1O   E             91     PRINTER      KINFDS SPOOL1     UC
+     FRE3667P2O   E             92     PRINTER      KINFDS SPOOL2     UC
+     FRE3667P3O   E             93     PRINTER      KINFDS SPOOL3     UC
+     FRE3667P4O   E             94     PRINTER      KINFDS SPOOL4     UC
+     FRE3667P5O   E             95     PRINTER      KINFDS SPOOL5     UC
+     FRE3667AUO   E             90     PRINTER      KINFDS SPOOLU
+      *
+     F/COPY WNCPYSRC,RE3667F001
+     F/TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *       50         End of File, REODHSLL                        *
+      *       51         End of File, REODHSL1                        *
+      *       52         End of File, REODHSL2                        *
+      *                                                               *
+      *       90         Overflow, RE3667AU                           *
+      *       91         Overflow, RE3667P1                           *
+      *       92         Overflow, RE3667P2                           *
+      *       93         Overflow, RE3667P3                           *
+      *       94         Overflow, RE3667P4                           *
+      *       95         Overflow, RE3667P5                           *
+      *                                                               *
+      *       97         Show *STATUS on DB Error report              *
+      *       98         Date Format Indicator (for ZDATE2)           *
+      *       99         General Error, CHAIN fail                    *
+      *       U7         Database Error                               *
+      *       U8         Database Error                               *
+      *                                                               *
+      *****************************************************************
+     F/TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   MAIN   - Main processing                                    *
+      *   DLTPRC - Deleted/Processed Overdraft History                *
+      *   LIVEOD - Current Overdraft History                          *
+      *   POSIPR - Retail History Position                            *
+      *   ZDATE2 - Convert Date (to DDMMMYY)                          *
+      *   TOTAL  - Total/End processing                               *
+      *   FIRST  - First cycle                                        *
+      *   SRBRCH - Change of Branch processing                        *
+      *   SRACNT - Change of Account processing                       *
+      *   SRPRTn - Print Detail/Headings for RE3667Pn                 *
+      *   SROPNn - Open printer file RE3667Pn                         *
+      *   SRRRCF - Record printer file to RCF                         *
+      *   REO1SR - REODHSL1 file exception/error handling             *
+      *   REO2SR - REODHSL2 file exception/error handling             *
+      *   REHBSR - REHISDL file exception/error handling              *
+      *   REHDSR - REHISBL file exception/error handling              *
+      *   *PSSR  - Database error handling                            *
+      *                                                               *
+      *   Next Available DBASE No. for DB Error Handling - 9          *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/EJECT
+      *****************************************************************
+      ** Field Renames
+      *****************************************************************
+     IACCNTABF
+      *
+      ** Rename ACCNT/ACCNTABF fields
+     I              RECI                            ARECI
+     I              CNUM                            ACNUM
+     I              CCY                             ACCY
+     I              ACOD                            AACOD
+     I              ACSQ                            AACSQ
+     I              LTAB                            ALTAB
+     I              LTAS                            ALTAS
+     I              BRCA                            ABRCA
+     I              ATYP                            AATYP
+     I              STYP                            ASTYP
+     I              MFFQ                            AMFFQ
+     I              ACST                            AACST
+     I              DACO                            ADACO
+     I              DACC                            ADACC
+     I              ANAM                            AANAM
+     I              LDBL                            ALDBL
+     I              CLBL                            ACLBL
+     I              STFQ                            ASTFQ
+     I              STDY                            ASTDY
+     I              LSTD                            ALSTD
+     I              NSTD                            ANSTD
+     I              LSTP                            ALSTP
+     I              CFSB                            ACFSB
+     I              LMVD                            ALMVD
+     I              EPLB                            AEPLB
+     I              EPCB                            AEPCB
+     I              YTDB                            AYTDB
+     I              GLBT                            AGLBT
+     I              ADREF1                          AAREF1
+     I              LTAC                            ALTAC
+     I              ORED                            AORED
+     I              DLIM                            ADLIM
+     I              LRCR                            ALRCR
+     I              RTCB                            ARTCB
+     I              RTLB                            ARTLB
+     I              DITM                            ADITM
+     I              CITM                            ACITM
+     I              ADREF2                          AAREF2
+     I              CDIR                            ACDIR
+     I              CCIR                            ACCIR
+     I              ACNO                            AACNO
+     I              RETB                            ARETB
+     I              ODSC                            AODSC
+     I              ODLN                            AODLN
+     I              ODED                            AODED
+     I              DIOD                            ADIOD
+     I              FACT                            AFACT
+     I              FCNO                            AFCNO
+     I              EFAC                            AEFAC
+     I              HELD                            AHELD
+     I              MINB                            AMINB
+     I              LACD                            ALACD
+     I              LISP                            ALISP
+     I              RRNM                            ARRNM
+     I              DRIB                            ADRIB
+     I              DRIS                            ADRIS
+     I              DRCD                            ADRCD
+     I              DRIC                            ADRIC
+     I              DRIF                            ADRIF
+     I              DRDY                            ADRDY
+     I              NDID                            ANDID
+     I              LDID                            ALDID
+     I              LDIA                            ALDIA
+     I              SDAP                            ASDAP
+     I              LPAR                            ALPAR
+     I              DIIE                            ADIIE
+     I              DAIC                            ADAIC
+     I              MADI                            AMADI
+     I              GADI                            AGADI
+     I              DDIS                            ADDIS
+     I              DDIA                            ADDIA
+     I              OLDR                            AOLDR
+     I              OLDB                            AOLDB
+     I              OLDS                            AOLDS
+     I              CRIB                            ACRIB
+     I              CRIS                            ACRIS
+     I              CRCD                            ACRCD
+     I              CRIC                            ACRIC
+     I              CRIF                            ACRIF
+     I              CRDY                            ACRDY
+     I              NCID                            ANCID
+     I              LCID                            ALCID
+     I              LCIA                            ALCIA
+     I              SCAP                            ASCAP
+     I              LPAP                            ALPAP
+     I              CIIE                            ACIIE
+     I              CAIC                            ACAIC
+     I              MACI                            AMACI
+     I              GACI                            AGACI
+     I              CDIS                            ACDIS
+     I              DCIA                            ADCIA
+     I              OLCR                            AOLCR
+     I              OLCB                            AOLCB
+     I              OLCS                            AOLCS
+     I              LCD                             ALCD
+     I              CHTP                            ACHTP
+     I              TNLU                            ATNLU
+     I              R4ACNT                          AACNT
+     I              ENOC                            AENOC
+     I              EPNO                            AEPNO
+     I              ECFB                            AECFB
+     IREHISPBF
+      *
+      ** Rename REHISBL/REHISPBF fields
+     I              RECI                            BRECI
+     I              BRCA                            BBRCA
+     I              CNUM                            BCNUM
+     I              CCY                             BCCY
+     I              ACOD                            BACOD
+     I              ACSQ                            BACSQ
+     I              HISD                            BHISD
+     I              HISB                            BHISB
+     I              MNBL                            BMNBL
+     I              CHGAR                           BCHGAR
+     I              TCHGAR                          BTHGAR
+     I              CHGAN                           BCHGAN
+     I              TCHGAN                          BTHGAN
+     I              DMVT                            BDMVT
+     I              DICT                            BDICT
+     I              DRCB                            BDRCB
+     I              DRIR                            BDRIR
+     I              DRCD                            BDRCD
+     I              DAID                            BDAID
+     I              MADI                            BMADI
+     I              TMADI                           BTMADI
+     I              PDID                            BPDID
+     I              DMINT                           BDMINT
+     I              CMVT                            BCMVT
+     I              CICT                            BCICT
+     I              CRCB                            BCRCB
+     I              CRIR                            BCRIR
+     I              CRCD                            BCRCD
+     I              CAID                            BCAID
+     I              MACI                            BMACI
+     I              TMACI                           BTMACI
+     I              PCID                            BPCID
+     I              CMINT                           BCMINT
+     I              DICI                            BDICI
+     I              CICI                            BCICI
+     I              DRCI                            BDRCI
+     I              CRCI                            BCRCI
+     I              VDTC                            BVDTC
+     I              ADTY                            BADTY
+     I              ALTI                            BALTI
+     I              MNBCP                           BMNBCP
+     I              LGID                            BLGID
+     I              VALL                            BVALL
+     I              LINK                            BLINK
+     I              AODR                            BAODR
+     I              ODRL                            BODRL
+     I              ODLI                            BODLI
+     I              ODIA                            BODIA
+     IREODHSD0
+      *
+      ** Rename REODHSLL/REODHSD0 fields
+     I              BRCA                            WBBRCA
+     I              CNUM                            WBCNUM
+     I              CCY                             WBCCY
+     I              ACOD                            WBACOD
+     I              ACSQ                            WBACSQ
+     I              ACNO                            WBACNO
+     I              HISD                            WBHISD
+     I              PSTD                            WBPSTD
+     I              PCSI                            WBPCSI
+     I              ODLN                            WBODLN
+     I              ODED                            WBODED
+     I              PODL                            WBPODL
+     I              POLE                            WBPOLE
+     IREHISPPF
+      *
+      ** Rename REDISDL/REHISPPF fields
+     I              RECI                            DRECI
+     I              BRCA                            DBRCA
+     I              CNUM                            DCNUM
+     I              CCY                             DCCY
+     I              ACOD                            DACOD
+     I              ACSQ                            DACSQ
+     I              HISD                            DHISD
+     I              VALL                            DVALL
+     I              LINK                            DLINK
+     I              ODRL                            DODRL
+     I              ODLI                            DODLI
+     I              ODIA                            DODIA
+     I/EJECT
+      *****************************************************************
+      ** Internally Described Data Structures
+      *****************************************************************
+     ICPYR@#      DS
+      *
+      ** Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I            DS
+      *
+      ** Account Key comparison, DB Error output
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I**********                             19  230HISD                                      CGL029
+     I**********                              1  18 WBKEY                                     CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I                                       25  290HISD                                      CGL029
+     I                                        1  24 WBKEY                                     CGL029
+     I            DS
+      *
+      ** Previous Key, Account comparison, DB Errors
+     I                                        1   30WPBRCD
+     I                                        4   90WPCNUM
+     I                                       10  12 WPCCY
+     I**********                             13  160WPACOD                                    CGL029
+     I**********                             17  180WPACSQ                                    CGL029
+     I**********                             19  230REHISD                                    CGL029
+     I**********                              1  18 WPKEY                                     CGL029
+     I**********                              1  23 WPDKEY                                    CGL029
+     I                                       13  220WPACOD                                    CGL029
+     I                                       23  240WPACSQ                                    CGL029
+     I                                       25  290REHISD                                    CGL029
+     I                                        1  24 WPKEY                                     CGL029
+     I                                        1  29 WPDKEY                                    CGL029
+     I            DS
+      *
+      ** Look Ahead Key
+     I                                        1   3 WBBRCA
+     I**********                              4   90WBCNUM                                    CSD027
+     I                                        4   9 WBCNUM                                    CSD027
+     I                                       10  12 WBCCY
+     I**********                             13  160WBACOD                                    CGL029
+     I**********                             17  180WBACSQ                                    CGL029
+     I**********                              1  18 WBREAK                                    CGL029
+     I                                       13  220WBACOD                                    CGL029
+     I                                       23  240WBACSQ                                    CGL029
+     I                                        1  24 WBREAK                                    CGL029
+      *
+     I/EJECT
+      *****************************************************************
+      * File Information Data Stuctures
+      *****************************************************************
+     IREO1DS      DS
+      *
+      ** RPG Error Handling, REODHSL1
+     I                                     *STATUS  STSRO1
+     IREO2DS      DS
+      *
+      ** RPG Error Handling, REODHSL2
+     I                                     *STATUS  STSRO2
+     IREHBDS      DS
+      *
+      ** RPG Error Handling, REHISBL
+     I                                     *STATUS  STSRHB
+     IREHDDS      DS
+      *
+      ** RPG Error Handling, REHISDL
+     I                                     *STATUS  STSRHD
+     ISPOOL1      DS
+      *
+      ** Spool File/RCF, RE3667P1
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+      *
+      ** Spool File/RCF, RE3667P2
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOL3      DS
+      *
+      ** Spool File/RCF, RE3667P3
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     ISPOOL4      DS
+      *
+      ** Spool File/RCF, RE3667P4
+     I                                       83  92 SFILE4
+     I                                    B 123 1240SFNUM4
+     ISPOOL5      DS
+      *
+      ** Spool File/RCF, RE3667P5
+     I                                       83  92 SFILE5
+     I                                    B 123 1240SFNUM5
+     ISPOOLU      DS
+      *
+      ** Spool File/RCF, RE3667AU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I/EJECT
+      *****************************************************************
+      ** Externally Described Data Stuctures
+      *****************************************************************
+     ILDA       E DSLDA
+      *
+      ** Local Data Area
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     ISDGELR    E DSSDGELRPD
+      *
+      **  General Ledger Details.
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Branch Codes.
+     I              A8BRNM                          BRNM
+     ISDRETL    E DSSDRETLPD
+     I              QQACCD                          QQACC1                                    CGL029
+      *
+      **  Retail Details
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, Short data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** Second DS for access progrmas, Long data structure
+     I/COPY WNCPYSRC,RE3667I001
+     C/EJECT
+      *****************************************************************
+      ** Key Lists
+      *****************************************************************
+      *
+      ** ACCNT
+     C           AAKEY     KLIST
+     C                     KFLD           CNUM             Customer No.
+     C                     KFLD           CCY              Currency
+     C                     KFLD           ACOD             Account Code
+     C                     KFLD           ACSQ             Account Seq.
+     C                     KFLD           BRCA             Branch Code
+      *
+      ** ACCNTBXC
+     C           ABKEY     KLIST
+     C                     KFLD           CNUM             Customer No.
+     C                     KFLD           CCY              Currency
+     C                     KFLD           ACOD             Account Code
+     C                     KFLD           ACSQ             Account Seq.
+     C                     KFLD           BRCA             Branch Cde.
+      *
+      ** REHISBL
+     C           BBKEY     KLIST
+     C                     KFLD           BRCA             Branch Code
+     C                     KFLD           CNUM             Customer No.
+     C                     KFLD           CCY              Currency
+     C                     KFLD           ACOD             Account Code
+     C                     KFLD           ACSQ             Account Seq.
+      *
+      ** REHISDL
+     C           DDKEY     KLIST
+     C                     KFLD           BRCA             Branch Code
+     C                     KFLD           CNUM             Customer No.
+     C                     KFLD           CCY              Currency
+     C                     KFLD           ACOD             Account Code
+     C                     KFLD           ACSQ             Account Seq.
+     C                     KFLD           REHISD           Retl.Hist.Dt
+      *
+      *****************************************************************
+      ** Work Fields Definitions
+      *****************************************************************
+     C           *LIKE     DEFN BJRDNB    WPVALD
+     C           *LIKE     DEFN BJRDNB    WVALD
+     C           *LIKE     DEFN BJRDNB    RUNCTL
+     C           *LIKE     DEFN BJRDNB    DRPCTL
+     C           *LIKE     DEFN ODLN      WODLN
+     C           *LIKE     DEFN SFILE1    ZSFILE
+     C/EJECT
+      *================================================================
+      ** P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** First cycle processing
+     C                     EXSR FIRST
+      *
+      *****************************************************************
+      *  Process REODHSL2, Retail Overdraft History, Processed
+      *****************************************************************
+      *
+      ** Read first record
+     C                     READ REODHSL2                 52
+      *
+      ** Do While not EoF
+     C           *IN52     DOWEQ*OFF                       B1
+      *
+      ** Increment Records Read count
+     C                     ADD  1         TOTREC
+      *
+      ** Perform Main Process
+     C                     EXSR MAINL2
+      *
+      ** Read next record
+     C                     READ REODHSL2                 52
+      *
+     C                     ENDDO                           E1
+      *
+      ** Re-initialise Branch title/store field
+     C                     MOVE *BLANKS   BRCA#
+      *
+      *****************************************************************
+      *  Process REODHSL1, Retail Overdraft History, Not Processed
+      *****************************************************************
+      *
+      ** Read first AND second records (Input Index)
+     C                     READ REODHSLL                 50
+     C  N50                READ REODHSLL                 50
+     C   50                MOVE *BLANK    WBREAK
+      *
+      ** Read first record (Update Index)
+     C                     READ REODHSL1                 51
+      *
+      ** Do While not EoF
+     C           *IN51     DOWEQ'0'                        B1
+      *
+      ** Increment Records Read count
+     C                     ADD  1         TOTREC
+      *
+      ** Perform Main Process
+     C                     EXSR MAINL1
+      *
+      ** Read next record (Input Index)
+     C                     READ REODHSLL                 50
+     C   50                MOVE *BLANK    WBREAK
+      *
+      ** Read next record (Update Index)
+     C                     READ REODHSL1                 51
+      *
+     C                     ENDDO                           E1
+      *
+      ** End of File, set on LR
+     C   51                MOVE *ON       *INLR
+      *
+      ** Perform Totals Process
+     C                     EXSR TOTAL
+      *****************************************************************                     CRE083BN
+      ***Commit*File*Changes*******************************************                     CRE083BN
+     C**********           COMIT                                                            CRE083BN
+      *================================================================
+      ** P R O G R A M     E N D
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      **
+      ** MAINL1 - Main processing for records from REODHSL1 (Not Proc.)
+      **
+      **     Called by       S T A R T
+      **     Calls           SRBRCH,SRACNT,ZDATE2,LIVEOD,DLTPRC,POSIPR
+      **                     SRPRT3,SRPRT5
+      **
+      *****************************************************************
+     C           MAINL1    BEGSR
+      *
+      ** If Change of Branch
+     C           BRCA      IFNE BRCA#                      B1
+      *
+      ** Perform Change of Branch processing
+     C                     EXSR SRBRCH
+      *
+     C                     ENDIF                           E1
+      *
+      ** If Change of Account
+     C           WBKEY     IFNE WPKEY                      B1
+      *
+      ** Initialise Previous Value Date on change of account
+     C                     Z-ADD*ZERO     WPVALD
+      *
+      ** Perform Change of Account processing
+     C                     EXSR SRACNT
+      *
+     C                     ENDIF                           E1
+      *
+      ** If Overdraft History Date, REODHSL1
+      **    < or = Run Control Date
+     C           HISD      IFGT RUNCTL                     B1
+      *
+      ** Format Overdraft History Date, REODHSL1 for output
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RHISD
+      *
+      ** Write Future detail format
+     C                     EXSR SRPRT3
+      *
+     C                     ELSE                            X1
+      *
+      ** If Overdraft Expiry Date, ACCNT
+      **    > or = Overdraft History Date, REODHSL1
+     C           AODED     IFGE HISD                       B.2
+      *
+      ** Set values on ACCNTBXC, A/c Master 'Core' Extension as follows:-
+      ** Field   Description          Source/Value
+      ** ATPOLC  Prev.O'd Line Chg Dt ACCNTBXC, ATOLVD, O'd Line Chg Date
+      ** ATOLVD  O'd Line Chg Date    REODHSL1, HISD, Overdraft History Date
+     C                     Z-ADDATOLVD    ATPOLC
+     C                     Z-ADDHISD      ATOLVD
+      *
+      ** Set values on ACCNT, Account Master as follows:-
+      ** Field  Description           Source/Value
+      ** AODLN  Overdraft Limit       REODHSL1, ODLN, Overdraft Line Amount
+     C                     Z-ADDODLN      AODLN
+      *
+      ** Perform Live Overdraft History Process
+     C                     EXSR LIVEOD
+      *
+     C                     ELSE                            X.2
+      *
+      ** Format Overdraft History Date, REODHSL1 for output
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RHISD
+      *
+      ** Write Expired detail format
+     C                     EXSR SRPRT5
+      *
+     C                     ENDIF                           E.2
+      *
+      ** If not same Account
+     C           WBREAK    IFNE WBKEY                      B.2
+      *
+      ** If Work Previous Value Date NOT = 0
+     C           WPVALD    IFNE *ZERO                      B..3
+      *
+      ** Perform Positions Process
+     C                     EXSR POSIPR
+      *
+     C                     ENDIF                           E..3
+      *
+      ** Update ACCNT, Account Master
+     C                     UPDATACCNTABF
+      *
+      ** Update ACCNTBXC, Account Master 'Core' Extension
+     C                     UPDATACCNTBD0
+      *
+      ** Update REHISBL, Retail History Account Balances
+      ** if the account is live.                                          161934
+      *                                                                   161934
+     C           ARECI     IFEQ 'D'                                       161934
+     C                     UPDATREHISPBF
+     C                     ENDIF                                          161934
+      *
+      ** Re-initialise the Work Previous Value Date to 0
+     C                     Z-ADD*ZERO     WPVALD
+      *****************************************************************                     CRE083BN
+      ***Commit*File*Changes*******************************************                     CRE083BN
+     C**********           COMIT                                                            CRE083BN
+      *
+     C                     ENDIF                           E.2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** MAINL2 - Main processing for records from REODHSL2 (Processed)
+      **
+      **     Called by       S T A R T
+      **     Calls           SRBRCH,DLTPRC
+      **
+      *****************************************************************
+     C           MAINL2    BEGSR
+      *
+      ** If Change of Branch
+     C           BRCA      IFNE BRCA#                      B1
+      *
+      ** Perform Change of Branch processing
+     C                     EXSR SRBRCH
+      *
+     C                     ENDIF                           E1
+      *
+      ** If Overdraft History Date, REODHSL2
+      **    < or = Drop Control Date
+     C           HISD      IFLE DRPCTL                     B1
+      *
+      ** Perform Deleted/Processed Overdraft History Process
+     C                     EXSR DLTPRC
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** DLTPRC subroutine for OVERDRAFT RECORD Processing
+      **
+      **     Called by       MAINL2,LIVEOD
+      **     Calls           SRPRT2,SRPRT4
+      **
+      *****************************************************************
+     C           DLTPRC    BEGSR
+      *
+      ** If record already processed
+     C           PCSI      IFEQ 'Y'                        B1
+      *
+      ** Format Overdraft History Date, REODHSL2 for output
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RHISD
+      *
+      ** Write Deleted detail format
+     C                     EXSR SRPRT4
+      *
+      ** Delete Processed record from REODHSL2, Retail Overdraft History
+     C                     DELETREODHSF2
+      *****************************************************************                     CRE083BN
+      ***Commit*File*Changes*******************************************                     CRE083BN
+     C**********           COMIT                                                            CRE083BN
+      *
+     C                     ELSE                            X1
+      *
+      ** Set Retail Hist.Date to Overdraft Hist.Date,REODHSL1 value
+     C                     Z-ADDHISD      REHISD
+      *
+      ** Update values on REODHSL1, Retail Overdraft History
+      ** Field  Description          Source/Value
+      ** HISD   O'Draft History Date WVALD, Work Current Value Date
+      ** PCSI   Processed Indicator  'Y'
+     C                     Z-ADDWVALD     HISD
+     C                     MOVE 'Y'       PCSI
+     C                     UPDATREODHSF1
+      *
+      ** Format Overdraft History Date, REODHSL1 for output
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RHISD
+      *
+      ** Write Processed detail format
+     C                     EXSR SRPRT2
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** LIVEOD subroutine to execute detail processing.
+      **
+      **     Called by       MAINL1
+      **     Calls           POSIPR,DLTPRC,ZDATE2,SRPRT1
+      **
+      *****************************************************************
+     C           LIVEOD    BEGSR
+      *
+      ** If Overdraft History Date, REODHSL1
+      **    > or = History Date, REHISBL, Retail Hist. A/c Bals.)
+     C           HISD      IFGE BHISD                      B1
+      *
+      ** Set Work Current Value Date to REODHSL1, HISD, O'draft Hist.Date
+     C                     Z-ADDHISD      WVALD
+      *
+     C                     ELSE                            X1
+      *
+      ** Set Work Current Value Date to REHISBL, BHISD, History Date
+     C                     Z-ADDBHISD     WVALD
+      *
+     C                     ENDIF                           E1
+      *
+      ** Format Overdraft History Date, REODHSL1 for output
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ORDATE
+      *
+      ** Format Work Current Value Date for output
+     C                     Z-ADDWVALD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    UPDATE
+      *
+      ** If Work Previous Value Date NOT = Work Current Value Date
+     C           WPVALD    IFNE WVALD                      B1
+      *
+      ** If Work Previous Value Date NOT = 0
+     C           WPVALD    IFNE *ZERO                      B.2
+      *
+      ** Perform Positions Process
+     C                     EXSR POSIPR
+      *
+     C                     ENDIF                           E.2
+      *
+      ** Set Work Previous Value Date to Work Current Value Date
+     C                     Z-ADDWVALD     WPVALD
+      *
+      ** Set Work Previous O'draft Line to Overdraft History Overdraft Line
+     C                     Z-ADDODLN      WODLN
+      *
+     C                     ENDIF                           E1
+      *
+      ** Perform Deleted/Processed Overdraft History Process
+     C                     EXSR DLTPRC
+      *
+      ** If Retail History Date
+      **    > or = History Date, REHISBL, Retail Hist. A/c Bals.)
+     C           REHISD    IFLT BHISD                      B1
+      *
+      ** Format History Date, REHISDL for output
+     C                     Z-ADDREHISD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ORDATE
+      *
+      ** Format History Date, REHISBL for output
+     C                     Z-ADDBHISD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    UPDATE
+      *
+      ** Write Updated detail format
+     C                     EXSR SRPRT1
+      *
+      ** Reset report fields for Original & Updated Dates to *blanks
+     C                     MOVE *BLANKS   ORDATE
+     C                     MOVE *BLANKS   UPDATE
+      *
+     C                     ENDIF                           E1
+      *
+      ** Set Account Balance Actioned Today Flag to 'Y'
+     C                     MOVE 'Y'       BADTY
+      *
+      ** If Work Current Value Date
+      **    < Backvalue Limit Drop Date (REHISBL, Retail Hist. A/c Bals.)
+     C           WVALD     IFLT BVDTC                      B1
+      *
+      ** Set Backvalue Limit Drop Date to Work Current Value Date
+     C                     Z-ADDWVALD     BVDTC
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** POSIPR subroutine for position record processing
+      **
+      **     Called by       LIVEOD
+      **     Calls
+      **
+      *****************************************************************
+     C           POSIPR    BEGSR
+      *
+      ** If Retail History Date
+      **    < History Date (REHISBL, Retail Hist. A/c Bals.)
+     C           REHISD    IFLT BHISD                      B1
+      *
+      ** Set Retail History Date to value of
+      **               History Date (REHISBL, Retail Hist. A/c Bals.)
+     C                     Z-ADDBHISD     REHISD
+      *
+     C                     ENDIF                           E1
+      *
+      ** If Retail History Date
+      **    NOT = History Date (REHISBL, Retail Hist. A/c Bals.)
+     C           REHISD    IFNE BHISD                      B1
+      *
+      ** REHISDL, Retail Hist. Positions - Access with the following key:-
+      ** Key    Description          Source/Value
+      ** CNUM   Customer Number      REODHSLn, Retail Overdraft History
+      ** CCY    Currency             ----------------::----------------
+      ** ACOD   Account Code         ----------------::----------------
+      ** ACSQ   Account Sequence     ----------------::----------------
+      ** REHISD History Date         REHISDL, Retail History Positions
+     C           DDKEY     CHAINREHISDL              99
+      *
+      ** If record not found
+     C           *IN99     IFEQ *ON                        B.2
+      *
+      ** Write default/initial file values as follows:-
+      ** File - REHISDL, Retail History Positions
+      ** Field  Description          Source/Value
+      ** DRECI  Record Id            'D'
+      ** DBRCA  Branch Code          REODHSLn, Retail Overdraft History
+      ** DCNUM  Customer Number      ----------------::----------------
+      ** DCCY   Currency             ----------------::----------------
+      ** DACOD  Account Code         ----------------::----------------
+      ** DACSQ  Account Sequence     ----------------::----------------
+      ** DHISD  History Date         WPVALD, Work Previous Value Date
+      ** DODRL  Overdraft Line       WODLN, Work Overdraft Line
+      ** DODLI  Overdraft Line Chg   'Y'
+     C                     CLEARREHISPPF
+     C                     MOVE 'D'       DRECI
+     C                     MOVE BRCA      DBRCA
+     C**********           Z-ADDCNUM      DCNUM                                               CSD027
+     C                     MOVE CNUM      DCNUM                                               CSD027
+     C                     MOVE CCY       DCCY
+     C                     Z-ADDACOD      DACOD
+     C                     Z-ADDACSQ      DACSQ
+     C                     Z-ADDWPVALD    DHISD
+     C                     MOVE 'Y'       DODLI
+     C                     MOVE WODLN     DODRL
+     C                     WRITEREHISPPF
+      *
+     C/COPY WNCPYSRC,RE3667C001
+     C                     ELSE                            X.2
+      *
+      ** Update file values as follows:-
+      ** File - REHISDL, Retail History Positions
+      ** Field  Description          Source/Value
+      ** DODRL  Overdraft Line       WODLN, Work Overdraft Line
+      ** DODLI  Overdraft Line Chg   'Y'
+     C                     Z-ADDWODLN     DODRL
+     C                     MOVE 'Y'       DODLI
+     C                     UPDATREHISPPF
+      *
+     C                     ENDIF                           E.2
+      *
+     C                     ELSE                            X1
+      *
+      ** REHISBL, Retail Hist. A/c Bals. - Access with the following key:-
+      ** Key    Description          Source/Value
+      ** BRCA   Branch Code          REODHSLn, Retail Overdraft Hist.
+      ** CNUM   Customer Number      -------------::----------------
+      ** CCY    Currency             -------------::----------------
+      ** ACOD   Account Code         -------------::----------------
+      ** ACSQ   Account Sequence     -------------::----------------
+     C           BBKEY     CHAINREHISBL              99
+      *
+     C           *IN99     IFEQ *ON                        B..3
+     C                     MOVEL'REHISBL' DBFILE           ***************
+     C                     MOVELWBKEY     DBKEY            * DB ERROR 003*
+     C                     Z-ADD3         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E..3
+      *
+      ** Move file values as follows:-
+      ** Field  Description          Source/Value
+      ** BODRL  Overdraft Line       WODLN, Work Overdraft Line
+      ** BODLI  Overdraft Line Chg   'Y'
+     C                     Z-ADDWODLN     BODRL
+     C                     MOVE 'Y'       BODLI
+      *
+     C                     ENDIF                           E1
+      *
+      ** Reset Work Overdraft Line
+     C                     Z-ADD*ZERO     WODLN
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRBRCH - Change of Branch Processing
+      **
+      *****************************************************************
+     C           SRBRCH    BEGSR
+      *
+      ** If not first time
+     C           BRCA#     IFNE *BLANKS                    B1
+      *
+      ** If record from REODHSL2 (Processed)
+     C           PCSI      IFEQ 'Y'                        B.2
+      *
+      ** Write 'End of Branch' format, Close file, reset page count
+     C           P4OPEN    IFEQ 'Y'                        B..3
+     C                     WRITEENDBP4
+     C                     CLOSERE3667P4
+     C                     MOVE 'N'       P4OPEN
+     C                     Z-ADD0         PAGE4
+     C                     ENDIF                           E..3
+      *
+     C                     ELSE                            X.2
+      *
+      ** Write 'End of Branch' formats, Close files, reset page count
+     C           P1OPEN    IFEQ 'Y'                        B..3
+     C                     WRITEENDBP1
+     C                     CLOSERE3667P1
+     C                     MOVE 'N'       P1OPEN
+     C                     Z-ADD0         PAGE1
+     C                     ENDIF                           E..3
+      *
+     C           P2OPEN    IFEQ 'Y'                        B..3
+     C                     WRITEENDBP2
+     C                     CLOSERE3667P2
+     C                     MOVE 'N'       P2OPEN
+     C                     Z-ADD0         PAGE2
+     C                     ENDIF                           E..3
+      *
+     C           P3OPEN    IFEQ 'Y'                        B..3
+     C                     WRITEENDBP3
+     C                     CLOSERE3667P3
+     C                     MOVE 'N'       P3OPEN
+     C                     Z-ADD0         PAGE3
+     C                     ENDIF                           E..3
+      *
+     C           P5OPEN    IFEQ 'Y'                        B..3
+     C                     WRITEENDBP5
+     C                     CLOSERE3667P5
+     C                     MOVE 'N'       P5OPEN
+     C                     Z-ADD0         PAGE5
+     C                     ENDIF                           E..3
+     C                     ENDIF                           E.2
+     C                     ENDIF                           E1
+      *
+      ** Move new Branch Code to title/store field
+     C                     MOVE BRCA      BRCA#
+      *
+      ** Retrieve Branch Name
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA#     @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 004*
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRACNT - Change of Account Processing
+      **
+      *****************************************************************
+     C           SRACNT    BEGSR
+      *
+      ** ACCNT, Account Master - Access with the following key:-
+      ** Key    Description          Source/Value
+      ** CNUM   Customer Number      REODHSLn, Retail Overdraft Hist.
+      ** CCY    Currency             -------------::----------------
+      ** ACOD   Account Code         -------------::----------------
+      ** ACSQ   Account Sequence     -------------::----------------
+     C           AAKEY     CHAINACCNT                99
+      *
+     C           *IN99     IFEQ *ON                        B.2
+     C                     MOVEL'ACCNT'   DBFILE           ***************
+     C                     MOVELWBKEY     DBKEY            * DB ERROR 005*
+     C                     Z-ADD5         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E.2
+      *
+      ** ACCNTBXC, A/c Master 'Core' Extn. - Access with the following key:-
+      ** Key    Description          Source/Value
+      ** CNUM   Customer Number      REODHSLn, Retail Overdraft Hist.
+      ** CCY    Currency             -------------::----------------
+      ** ACOD   Account Code         -------------::----------------
+      ** ACSQ   Account Sequence     -------------::----------------
+      ** BRCA   Branch Code          -------------::----------------
+     C           ABKEY     CHAINACCNTBXC             99
+      *
+     C           *IN99     IFEQ *ON                        B.2
+     C                     MOVEL'ACCNTBXC'DBFILE           ***************
+     C                     MOVELWBKEY     DBKEY            * DB ERROR 006*
+     C                     Z-ADD6         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E.2
+      *
+      ** REHISBL, Retail Hist. A/c Bals. - Access with the following key:-
+      ** Key    Description          Source/Value
+      ** BRCA   Branch Code          REODHSLn, Retail Overdraft Hist.
+      ** CNUM   Customer Number      -------------::----------------
+      ** CCY    Currency             -------------::----------------
+      ** ACOD   Account Code         -------------::----------------
+      ** ACSQ   Account Sequence     -------------::----------------
+      *                                                                   161934
+      ** Only chain if account is live.                                   161934
+      *                                                                   161934
+     C           ARECI     IFEQ 'D'                                       161934
+      *                                                                   161934
+     C           BBKEY     CHAINREHISBL              99
+      *
+     C           *IN99     IFEQ *ON                        B.2
+     C                     MOVEL'REHISBL' DBFILE           ***************
+     C                     MOVELWBKEY     DBKEY            * DB ERROR 007*
+     C                     Z-ADD7         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E.2
+      *                                                                   161934
+     C                     ENDIF                                          161934
+      *
+      ** Store Current Key as Previous Key
+     C                     MOVE WBKEY     WPKEY
+      *
+      ** Store Overdraft Line (REODHSLn, Retail O'draft Hist.) in work field
+     C                     Z-ADDODLN      WODLN
+      *
+     C/COPY WNCPYSRC,RE3667C002
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** TOTAL subroutine to execute end processing.
+      **
+      **     Called by       S T A R T
+      **     Calls
+      **
+      *****************************************************************
+     C           TOTAL     BEGSR
+      *
+      ** For each open printer file, write final 'End of Branch' line
+     C                     SELEC
+     C           P1OPEN    WHEQ 'Y'                        W1
+     C                     WRITEENDBP1
+     C           P2OPEN    WHEQ 'Y'                        W1
+     C                     WRITEENDBP2
+     C           P3OPEN    WHEQ 'Y'                        W1
+     C                     WRITEENDBP3
+     C           P4OPEN    WHEQ 'Y'                        W1
+     C                     WRITEENDBP4
+     C           P5OPEN    WHEQ 'Y'                        W1
+     C                     WRITEENDBP5
+     C                     ENDSL
+      *
+      ** Output Audit Detail/End formats
+     C                     WRITETOTALS
+     C                     WRITEENDRAU
+      *
+      ** Close all printer files
+     C                     CLOSE*ALL
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** FIRST subroutine to execute first cycle.
+      **
+      **     Called by       S T A R T
+      **     Calls           *PSSR
+      **
+      *****************************************************************
+      *
+     C           FIRST     BEGSR
+      *
+      ** Define Local Data Area
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set Database error variables to initial values
+     C                     MOVEL'RE3667  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'N'       P1OPEN  1
+     C                     MOVE 'N'       P2OPEN  1
+     C                     MOVE 'N'       P3OPEN  1
+     C                     MOVE 'N'       P4OPEN  1
+     C                     MOVE 'N'       P5OPEN  1
+      *
+      ** Access Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      ** Write Audit Header
+     C                     WRITEHEADAU
+      *
+      ** Access General Ledger details
+     C/COPY WNCPYSRC,RE3667C004
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C/COPY WNCPYSRC,RE3667C005
+     C           @RTCD     IFNE *BLANK                     B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      ** Initialise work fields to *blanks/*zeros
+     C                     MOVE *BLANKS   WPKEY
+     C                     MOVE *BLANKS   ORDATE
+     C                     MOVE *BLANKS   UPDATE
+     C                     MOVE *BLANKS   BRCA#
+     C                     Z-ADD*ZEROS    WODLN
+     C                     Z-ADD*ZEROS    WPVALD
+     C                     Z-ADD*ZEROS    WVALD
+     C                     Z-ADD*ZEROS    TOTREC
+     C                     Z-ADD*ZEROS    TOTPRC
+     C                     Z-ADD*ZEROS    TOTFUT
+     C                     Z-ADD*ZEROS    TOTDEL
+     C                     Z-ADD*ZEROS    TOTEXP
+      *
+      ** Set Run Control Date to lesser of:
+      **     a) Date of Next Working Day - 1
+      **     b) Accruals Profit Date
+     C                     SUB  1         BJDNWD
+     C           BJDNWD    IFLE BKAPDT                     B1
+     C                     Z-ADDBJDNWD    RUNCTL
+     C                     ELSE                            X1
+     C                     Z-ADDBKAPDT    RUNCTL
+     C                     ENDIF                           E1
+      *
+      ** Set Drop Control Date to:
+      **     Run Control Date - Back Value Period
+     C           RUNCTL    SUB  BJBVPD    DRPCTL
+      *
+      ** Set Date Format Indicator for ZDATE2
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           E1
+      *
+     C/COPY WNCPYSRC,RE3667C003
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRPRT1 - Print RE3667P1, Updated
+      **
+      *****************************************************************
+     C           SRPRT1    BEGSR
+      *
+      ** If file not yet open, open it
+     C           P1OPEN    IFEQ 'N'                        B1
+     C                     EXSR SROPN1
+     C                     ENDIF                           E1
+      *
+      ** Print Heading Lines
+      **   (If 1st Time, Change of Branch, File Opened or Overflow)
+     C           *IN91     IFEQ *ON                        B1
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN91
+     C                     ENDIF                           E1
+      *
+      ** Print Detail Line
+     C                     WRITEDETLP1
+      *
+      ** Increment record count
+     C                     ADD  1         TOTUPD
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRPRT2 - Print RE3667P2, Processed
+      **
+      *****************************************************************
+     C           SRPRT2    BEGSR
+      *
+      ** If file not yet open, open it
+     C           P2OPEN    IFEQ 'N'                        B1
+     C                     EXSR SROPN2
+     C                     ENDIF                           E1
+      *
+      ** Print Heading Lines
+      **   (If 1st Time, Change of Branch, File Opened or Overflow)
+     C           *IN92     IFEQ *ON                        B1
+     C                     WRITEHEADP2
+     C                     MOVE *OFF      *IN92
+     C                     ENDIF                           E1
+      *
+      ** Print Detail Line
+     C                     WRITEDETLP2
+      *
+      ** Increment record count
+     C                     ADD  1         TOTPRC
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRPRT3 - Print RE3667P3, Future
+      **
+      *****************************************************************
+     C           SRPRT3    BEGSR
+      *
+      ** If file not yet open, open it
+     C           P3OPEN    IFEQ 'N'                        B1
+     C                     EXSR SROPN3
+     C                     ENDIF                           E1
+      *
+      ** Print Heading Lines
+      **   (If 1st Time, Change of Branch, File Opened or Overflow)
+     C           *IN93     IFEQ *ON                        B1
+     C                     WRITEHEADP3
+     C                     MOVE *OFF      *IN93
+     C                     ENDIF                           E1
+      *
+      ** Print Detail Line
+     C                     WRITEDETLP3
+      *
+      ** Increment record count
+     C                     ADD  1         TOTFUT
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRPRT4 - Print RE3667P4, Deleted
+      **
+      *****************************************************************
+     C           SRPRT4    BEGSR
+      *
+      ** If file not yet open, open it
+     C           P4OPEN    IFEQ 'N'                        B1
+     C                     EXSR SROPN4
+     C                     ENDIF                           E1
+      *
+      ** Print Heading Lines
+      **   (If 1st Time, Change of Branch, File Opened or Overflow)
+     C           *IN94     IFEQ *ON                        B1
+     C                     WRITEHEADP4
+     C                     MOVE *OFF      *IN94
+     C                     ENDIF                           E1
+      *
+      ** Print Detail Line
+     C                     WRITEDETLP4
+      *
+      ** Increment record count
+     C                     ADD  1         TOTDEL
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRPRT5 - Print RE3667P5, Expired
+      **
+      *****************************************************************
+     C           SRPRT5    BEGSR
+      *
+      ** If file not yet open, open it
+     C           P5OPEN    IFEQ 'N'                        B1
+     C                     EXSR SROPN5
+     C                     ENDIF                           E1
+      *
+      ** Print Heading Lines
+      **   (If 1st Time, Change of Branch, File Opened or Overflow)
+     C           *IN95     IFEQ *ON                        B1
+     C                     WRITEHEADP5
+     C                     MOVE *OFF      *IN95
+     C                     ENDIF                           E1
+      *
+      ** Print Detail Line
+     C                     WRITEDETLP5
+      *
+      ** Increment record count
+     C                     ADD  1         TOTEXP
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SROPN1 - Open spool file RE3667P1
+      **
+      *****************************************************************
+     C           SROPN1    BEGSR
+      *
+      ** Open spool file
+     C                     OPEN RE3667P1
+     C                     MOVE 'Y'       P1OPEN
+      *
+      ** Record to RCF
+     C                     MOVE SFILE1    ZSFILE
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     EXSR SRRRCF
+      *
+      ** Set on indicator to trigger Headings
+     C                     MOVE *ON       *IN91
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SROPN2 - Open spool file RE3667P2
+      **
+      *****************************************************************
+     C           SROPN2    BEGSR
+      *
+      ** Open spool file
+     C                     OPEN RE3667P2
+     C                     MOVE 'Y'       P2OPEN
+      *
+      ** Record to RCF
+     C                     MOVE SFILE2    ZSFILE
+     C                     Z-ADDSFNUM2    ZSNUM   60
+     C                     EXSR SRRRCF
+      *
+      ** Set on indicator to trigger Headings
+     C                     MOVE *ON       *IN92
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SROPN3 - Open spool file RE3667P3
+      **
+      *****************************************************************
+     C           SROPN3    BEGSR
+      *
+      ** Open spool file
+     C                     OPEN RE3667P3
+     C                     MOVE 'Y'       P3OPEN
+      *
+      ** Record to RCF
+     C                     MOVE SFILE3    ZSFILE
+     C                     Z-ADDSFNUM3    ZSNUM   60
+     C                     EXSR SRRRCF
+      *
+      ** Set on indicator to trigger Headings
+     C                     MOVE *ON       *IN93
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SROPN4 - Open spool file RE3667P4
+      **
+      *****************************************************************
+     C           SROPN4    BEGSR
+      *
+      ** Open spool file
+     C                     OPEN RE3667P4
+     C                     MOVE 'Y'       P4OPEN
+      *
+      ** Record to RCF
+     C                     MOVE SFILE4    ZSFILE
+     C                     Z-ADDSFNUM4    ZSNUM   60
+     C                     EXSR SRRRCF
+      *
+      ** Set on indicator to trigger Headings
+     C                     MOVE *ON       *IN94
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SROPN5 - Open spool file RE3667P5
+      **
+      *****************************************************************
+     C           SROPN5    BEGSR
+      *
+      ** Open spool file
+     C                     OPEN RE3667P5
+     C                     MOVE 'Y'       P5OPEN
+      *
+      ** Record to RCF
+     C                     MOVE SFILE5    ZSFILE
+     C                     Z-ADDSFNUM5    ZSNUM   60
+     C                     EXSR SRRRCF
+      *
+      ** Set on indicator to trigger Headings
+     C                     MOVE *ON       *IN95
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** SRRRCF - Record Spool File to RCF
+      **
+      *****************************************************************
+     C           SRRRCF    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           ZSFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** Error during ZSFILE Processing, Return to Calling Program
+     C           ZSERR     IFEQ 'Y'                        B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE  'DBFILE           ***************
+     C                     MOVELBRCA      DBKEY            * DB ERROR 008*
+     C                     Z-ADD8         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR                                       SR*
+     C/EJECT
+      *****************************************************************
+      **
+      ** REO1SR subroutine for REODHSL1 file exception/error handling
+      **
+      **     Called by       Input specifications
+      **     Calls           *PSSR
+      **
+      *****************************************************************
+     C           REO1SR    BEGSR
+      *
+     C                     MOVE 'REODHSL1'DBFILE           ***************
+     C                     MOVELWPKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSRO1    DBSTAT           ***************
+     C                     MOVE *ON       *IN97
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** REO2SR subroutine for REODHSL2 file exception/error handling
+      **
+      **     Called by       Input specifications
+      **     Calls           *PSSR
+      **
+      *****************************************************************
+     C           REO2SR    BEGSR
+      *
+     C                     MOVE 'REODHSL2'DBFILE           ***************
+     C                     MOVELWPKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSRO2    DBSTAT           ***************
+     C                     MOVE *ON       *IN97
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** REHBSR subroutine for REHISBL file exception/error handling
+      **
+      **     Called by       Input specifications
+      **     Calls           *PSSR
+      **
+      *****************************************************************
+     C           REHBSR    BEGSR
+      *
+     C                     MOVE 'REHISBL' DBFILE           ***************
+     C                     MOVELWPKEY     DBKEY            **STATUS ERR **
+     C                     MOVELSTSRHB    DBSTAT           ***************
+     C                     MOVE *ON       *IN97
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** REHDSR subroutine for REHISDL file exception/error handling
+      **
+      **     Called by       Input specifications
+      **     Calls           *PSSR
+      **
+      *****************************************************************
+     C           REHDSR    BEGSR
+      *
+     C                     MOVE 'REHISDL' DBFILE           ***************
+     C                     MOVELWPDKEY    DBKEY            **STATUS ERR **
+     C                     MOVELSTSRHD    DBSTAT           ***************
+     C                     MOVE *ON       *IN97
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **
+      ** *PSSR subroutine for database error handling
+      **
+      **     Called by       Various
+      **     Calls           -
+      **
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS                    B1
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF                           E1
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+      ** Write Database Error formats
+     C                     SELEC
+     C           P1OPEN    WHEQ 'Y'                        B1
+     C                     WRITEDBERP1
+     C           P2OPEN    WHEQ 'Y'                        B1
+     C                     WRITEDBERP2
+     C           P3OPEN    WHEQ 'Y'                        B1
+     C                     WRITEDBERP3
+     C           P4OPEN    WHEQ 'Y'                        B1
+     C                     WRITEDBERP4
+     C           P5OPEN    WHEQ 'Y'                        B1
+     C                     WRITEDBERP5
+     C                     ENDSL                           E1
+      *
+      ** Write Database Audit format
+     C                     WRITEDBERAU
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

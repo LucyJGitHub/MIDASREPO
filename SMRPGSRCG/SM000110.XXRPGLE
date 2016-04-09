@@ -1,0 +1,146 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+      *****************************************************************
+/*S*D ***RPGBASEBND****************************************************
+/*E*I ***TEXT('Midas*SM*Update*SMSETUL6*for*global*prefix')************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM000110 - Update SMSETUL6 for system prefix                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CUP042 *REDUNDANT   Date 03Nov14              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 259613             Date 17Apr09               *
+      *                 CUP038             Date 07Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSM005  *CREATE    Date 08Sep05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CUP042 - Changes for Bridge deliverable data split           *
+      *  259613 - Allow more generic name of library.                 *
+      *  CUP038 - Handle all Service Pack numbers.                    *
+      *  CSM005 - Changes to libraries for MidasPlus.                 *
+      *                                                               *
+      *****************************************************************
+      *
+      * +--------------------------------------+
+      * ¦ F-specs                              ¦
+      * ¦ =======                              ¦
+      * +--------------------------------------+
+      *
+     FSMSETUPD  UF   E             DISK
+      *
+     D Recursive       S              1
+     D*BeforeFCLIB*    S              9                                                       CUP038
+     D*AfterFCLIB*     S              9                                                       CUP038
+     D*BeforeNCLIB*    S              9                                                       CUP038
+     D*AfterNCLIB*     S              9                                                       CUP038
+     D*BeforeFCLIB*    S              7                                                       CUP038
+     D*AfterFCLIB*     S              7                                                       CUP038
+     D*BeforeNCLIB*    S              7                                                       CUP038
+     D*AfterNCLIB*     S              7                                                       CUP038
+     D BeforeFCLIB     S              6                                                CUP038 259613
+     D AfterFCLIB      S              6                                                CUP038 259613
+     D BeforeNCLIB     S              6                                                CUP038 259613
+     D AfterNCLIB      S              6                                                CUP038 259613
+     D StartPos        S              2  0
+      * +--- Start of Main processing -----------------------------------+
+      * ¦                                                                ¦
+      * +----------------------------------------------------------------+
+     C     *ENTRY        PLIST
+     C                   PARM                    BeforePrefix      2
+     C                   PARM                    AfterPrefix       2
+      *
+     C                   EVAL      Recursive = 'N'
+      * Set up library names.
+     C                   EVAL      BeforeFCLIB = 'FC_' +
+     C                             BeforePrefix +
+     C**********                   '_S00'                                                     CUP038
+     C**********                   '_S'                                                CUP038 259613
+     C                             '_'                                                        259613
+     C                   EVAL      AfterFCLIB = 'FC_' +
+     C                             AfterPrefix +
+     C**********                   '_S00'                                                     CUP038
+     C**********                   '_S'                                                CUP038 259613
+     C                             '_'                                                        259613
+     C                   EVAL      BeforeNCLIB = 'NC_' +
+     C                             BeforePrefix +
+     C**********                   '_S00'                                                     CUP038
+     C**********                   '_S'                                                CUP038 259613
+     C                             '_'                                                        259613
+     C                   EVAL      AfterNCLIB = 'NC_' +
+     C                             AfterPrefix +
+     C**********                   '_S00'                                                     CUP038
+     C**********                   '_S'                                                CUP038 259613
+     C                             '_'                                                        259613
+      *
+     C                   READ      SMSETUPD                               20
+      *
+     C                   DOW       *IN20 = *OFF
+      *
+      * Check if record is one that needs to be changed.
+     C**********         IF        DFNAME = BeforeFCLIB                                       CUP038
+     C**********         EVAL      DFNAME = AfterFCLIB                                        CUP038
+     C**********         IF        %SUBST(DFNAME:1:7) = BeforeFCLIB                    CUP038 259613
+     C**********         EVAL      %SUBST(DFNAME:1:7) = AfterFCLIB                     CUP038 259613
+     C                   IF        %SUBST(DFNAME:1:6) = BeforeFCLIB                           259613
+     C                   EVAL      %SUBST(DFNAME:1:6) = AfterFCLIB                            259613
+     C                   EVAL      StartPos = %SCAN(BeforeFCLIB:DFCMD)
+     C                   IF        StartPos <> 0
+     C**********         EVAL      %SUBST(DFCMD:StartPos:9) = AfterFCLIB                      CUP038
+     C**********         EVAL      %SUBST(DFCMD:StartPos:7) = AfterFCLIB               CUP038 259613
+     C                   EVAL      %SUBST(DFCMD:StartPos:6) = AfterFCLIB                      259613
+     C                   EVAL      StartPos = 0
+     C                   ENDIF
+     C                   UPDATE    SMSETUD0
+     C                   ENDIF
+      *
+     C**********         IF        DFNAME = BeforeNCLIB                                       CUP038
+     C**********         EVAL      DFNAME = AfterNCLIB                                        CUP038
+     C**********         IF        %SUBST(DFNAME:1:7) = BeforeNCLIB                           CUP038
+     C**********         EVAL      %SUBST(DFNAME:1:7) = AfterNCLIB                     CUP038 259613
+     C                   IF        %SUBST(DFNAME:1:6) = BeforeNCLIB                    CUP038 259613
+     C                   EVAL      %SUBST(DFNAME:1:6) = AfterNCLIB                            259613
+     C                   EVAL      StartPos = %SCAN(BeforeNCLIB:DFCMD)
+     C                   IF        StartPos <> 0
+     C**********         EVAL      %SUBST(DFCMD:StartPos:9) = AfterNCLIB                      CUP038
+     C**********         EVAL      %SUBST(DFCMD:StartPos:7) = AfterNCLIB               CUP038 259613
+     C                   EVAL      %SUBST(DFCMD:StartPos:6) = AfterNCLIB                      259613
+     C                   EVAL      StartPos = 0
+     C                   ENDIF
+     C                   UPDATE    SMSETUD0
+     C                   ENDIF
+      *
+     C                   READ      SMSETUPD                               20
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        Recursive = 'N'
+     C                   EVAL      Recursive = 'Y'
+     C                   SETON                                        U7U8
+     C                   SETON                                        LR
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *

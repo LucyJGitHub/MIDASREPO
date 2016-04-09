@@ -1,0 +1,1223 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas LE Syndicated loan amendments maint today')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      *  PRTF/LE0320P2 - Syndicated Loan Amendments Maint Today       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 30Nov05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE038             Date 11May04               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE034             Date 05May03               *
+      *                 CLE031             Date 19Feb03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 14Mar02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197704             Date 11Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154570             Date 04Feb99               *
+      *                 147935             Date 03Dec98               *
+      *                 146373             Date 03Nov98               *
+      *                 CEU020             Date 25May98               *
+      *                 123863             Date 16Oct97               *
+      *                 CLE004 *CREATE     Date 02Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE038 - Lending Enhancement for Nordea: Allocation by Amount*
+      *  CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2: *
+      *           Allow specific base rates                           *
+      *           Allow repayments in facility currency               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE034 - Lending Enhancements Phase 1 Priority 1A            *
+      *  CLE031 - Lending Enhancements.                               *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  197704 - Report the past due amount for repayment type 1 or  *
+      *           2.  Also, changed the past due narrative from 'PAST *
+      *           DUE REPAYMENT' to 'PAST DUE'.                       *
+      *  154570 - Display Change type for Spread rates.               *
+      *  147935 - Addition of insert, authorise and amend user        *
+      *           profiles to lending reports                         *
+      *  146373 - Loan Amendment Maintenance shows misleading         *
+      *           settlement instructions.                            *
+      *  CEU020 - EMU LE Multi-Currency Rollover                      *
+      *  123863 - Output Past Due field for tranche 3, and output     *
+      *           penalty amount for manual repayments/transfer from  *
+      *  CLE004 - Customer Lending Enhancements - Syndications        *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+      ** Report Header Record Format
+      *
+     A          R HEADP2                    TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                      SKIPB(3)
+     A                                     6'REFERENCE LE0320P2'
+     A            TITL      R             37REFFLD(URPT)
+     A                                   101'DATE'
+     A            RUNA      R            106REFFLD(MRDT)
+     A                                   119'PAGE'
+     A                                   124PAGNBR
+     A                                      EDTCDE(Z)
+     A                                      SPACEA(1)
+     A                                   101'TIME'
+     A                                   106TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                      SPACEA(2)
+      *
+     A                                    46'LOAN AMENDMENTS MAIN+
+     A                                      TENANCE TODAY'
+      *
+     A  88                                87'BRANCH'
+     A  88        BRCA      R             94REFFLD(BRCA)
+     A  88                                97'-'
+     A  88        BRNM      R             98REFFLD(BRNM)
+      *
+     A                                   132' '
+     A                                      SPACEA(1)
+     A                                    46'---------------------+
+     A                                      ------------'
+     A                                      SPACEA(2)
+      *
+      ** Sub-header Record Format 1
+      *
+     A          R SBHEAD2
+     A                                     6'CUSTOMER'
+     A                                      SPACEB(2)
+     A            RCRNM     R             17REFFLD(CRNM)
+     A**Start of change 201123
+     A  81                                40'ORIG BORROWER'
+     A**********                          41'LOAN'                                            201123
+     A**********  RLNRF     R             47REFFLD(CCUS)                                      201123
+     A                                    57'LOAN'
+      **Start of change CLE148
+     A**********  RLNRF     R             63REFFLD(CCUS)                                      CLE148
+     A            RLNRF          6A       63
+      **End of change CLE148
+     A**End of change 201123
+      *                                              Begin /CEU020/
+     A***********                         57'CCY'
+     A*********** RLCCY     R             62REFFLD(BRCA)
+     A**Start of change 201123
+     A**********                          57'LOAN CCY'                                        201123
+     A**********  RLCCY     R             67REFFLD(BRCA)                                      201123
+     A                                    73'LOAN CCY'
+     A            RLCCY     R             83REFFLD(BRCA)
+     A**End of change 201123
+      *                                              End   /CEU020/
+     A                                   127'ACTION'
+     A                                      SPACEA(1)
+      * Begin /CSD027/
+     A**********  RCNUM     R             17REFFLD(CCUS)                                      CSD027
+     A            RCNUM          6A       17TEXT('Credit customer number')
+      * End /CSD027/
+     A**Start of change 201123
+     A**********                            SPACEA(3)                                         201123
+     A            OLNOZ     R             43REFFLD(ZZ006)
+     A                                      SPACEA(3)
+     A**End of change 201123
+      *
+      ** Detail Records
+      *
+      ** Spread Rate Change, Stop Accruals, Sub-type change and
+      ** Repayment Schedule.
+      *
+     A          R DETL00
+     A                                     2'VALUE DATE'
+     A  42        RVDAT     R             13REFFLD(LADT)
+     A            RLASN     R             22REFFLD(AMSQ)
+     A            RACTI     R            130REFFLD(ATYP)
+      *
+     A**Start of change 197704
+     A**28******                          28'PAST DUE REPAYMENT'                              197704
+     A  28                                28'PAST DUE'
+     A**End of change 197704
+      *
+     A  29                                28'REPAYMENT SCHEDULE'
+      *                                               Begin /CEU020/
+     A  28
+     AO 29                                48'CCY'
+     A  28
+     AO 29        RRCCY     R             52REFFLD(BRCA)
+      *
+     A**30*******                         48'AMOUNT'
+     A**30*46**** RPRA0     R             57REFFLD(LOCEA)
+     A**30*47**** RTAM0     R             57REFFLD(LOCEA)
+     A**30*******                         76'TYPE'
+     A**30******* RREPT     R             82REFFLD(ATYP)
+     A**30*******                         85'AUTO-SETTLEMENT'
+     A**30******* RAUTO     R            102REFFLD(ATYP)
+      *
+     A**Start of change 197704
+     A**30******                          57'AMOUNT'                                          197704
+     A  30 46                             57'PRINCIPAL AMOUNT'
+     A  30 47                             57'AMOUNT'
+     A**30*46***  RPRA0     R             66REFFLD(LOCEA)                                     197704
+     A  30 46     RPRA0     R             76REFFLD(LOCEA)
+     A**End of change 197704
+     A  30 47     RTAM0     R             66REFFLD(LOCEA)
+     A**Start of change 197704
+     A**30******                          85'TYPE'                                            197704
+     A  30 46                             95'TYPE'
+     A  30 47                             85'TYPE'
+     A**30******  RREPT     R             91REFFLD(ATYP)                                      197704
+     A  30 46     RREPT     R            101REFFLD(ATYP)
+     A  30 47     RREP3     R             91REFFLD(ATYP)
+     A**30******                          94'AUTO-SETTLEMENT'                                 197704
+     A  30 46                            104'AUTO-SETTLEMENT'
+     A  30 47                             94'AUTO-SETTLEMENT'
+     A**30******  RAUTO     R            111REFFLD(ATYP)                                      197704
+     A  30 46     RAUTO     R            121REFFLD(ATYP)
+     A  28 46                               SPACEA(1)
+     A  28 46                             48'INTEREST AMOUNT'
+     A  28 46     RINT0     R             67REFFLD(LOCEA)
+     A  30 47     RAUT3     R            111REFFLD(ATYP)
+     A**Start of change CLE036
+     A  30 51                             48'FACILITY CCY'
+     A  30 51                               SPACEB(1)
+     A  30 51     RFRCY     R             67REFFLD(BRCA)
+     A  30 51 46                          48'FAC. CCY PRINCIPAL'
+     A  30 51 46                            SPACEB(1)
+     A  30 51 46  RFRAM     R             67REFFLD(ZZ018)
+     A  30 51 47                          48'FAC. CCY TOTAL'
+     A  30 51 47                            SPACEB(1)
+     A  30 51 47  RFTOT     R             67REFFLD(ZZ018)
+     A  28 51 46                          48'FAC. CCY INTEREST'
+     A  28 51 46                            SPACEB(1)
+     A  28 51 46  RFINT     R             67REFFLD(ZZ018)
+     A**End of change CLE036
+     A**End of change 197704
+      *                                              End   /CEU020/
+      *
+     A  31                                28'MANUAL REPAYMENTS'
+      *                                              Begin /CEU020/
+     A  31                                48'CCY'
+     A  31        RMCCY     R             52REFFLD(BRCA)
+     A**31*******                         48'PRINCIPAL AMOUNT'
+     A**31******* RPR20     R             67REFFLD(LOCEA)
+     A  31                                57'PRINCIPAL AMOUNT'
+     A  31        RPR20     R             74REFFLD(LOCEA)
+      *                                              End   /CEU020/
+      *
+     A  32                                28'PRINCIPAL INCREASE'
+      *                                              Begin /CEU020/
+     A  32                                48'CCY'
+     A  32        RPCCY     R             52REFFLD(BRCA)
+     A**32*******                         48'AMOUNT'
+     A**32******* RPR30     R             57REFFLD(LOCEA)
+     A  32                                57'AMOUNT'
+     A  32        RPR30     R             66REFFLD(LOCEA)
+      *                                              End   /CEU020/
+      *
+     A  33                                28'BASE RATE CHANGE'
+      *                                              Begin /CEU020/
+     A  33                                48'CCY'
+     A  33        RBCCY     R             52REFFLD(BRCA)
+     A**33*******                         48'BASE RATE CODE'
+     A**33******* RBRTT     R             64REFFLD(ASEQ)
+      **Start of change CLE036
+     A**33******                          57'BASE RATE CODE'                                  CLE036
+     A**33******  RBRTT     R             73REFFLD(ASEQ)                                      CLE036
+     A  33N72                             57'BASE RATE CODE'
+     A  33N72     RBRTT     R             73REFFLD(ASEQ)
+     A  33 72                             57'BASE RATE'
+     A  33 72     RBASR     R             67REFFLD(IPAC)
+      **End of change CLE036
+      *                                              End   /CEU020/
+      *
+     A  34                                28'SPREAD RATE CHANGE'
+      *                                              Begin /CEU020/
+     A  34                                48'CCY'
+     A  34        RSCCY     R             52REFFLD(BRCA)
+     A**34N55****                         48'SPREAD RATE'
+     A**34N55**** RRTS1     R             63REFFLD(IPAC)
+     A**34*55*56*                         48'SPREAD RATE'
+     A**34*55*56* RRTS2     R             63REFFLD(IPAC)
+     A**34*57N56*                         48'FUNDING SPREAD RATE'
+     A**34*57N56* RFSR1     R             63REFFLD(IPAC)
+     A**34*57*56*                         76'FUNDING SPREAD RATE'
+     A**34*57*56* RFSR2     R             97REFFLD(IPAC)
+     A  34N55                             57'SPREAD RATE'
+     A  34N55     RRTS1     R             72REFFLD(IPAC)
+     A  34 55 56                          57'SPREAD RATE'
+     A  34 55 56  RRTS2     R             72REFFLD(IPAC)
+     A  34 57N56                          57'FUNDING SPREAD RATE'
+     A  34 57N56  RFSR1     R             72REFFLD(IPAC)
+     A  34 57 56                          85'FUNDING SPREAD RATE'
+     A  34 57 56  RFSR2     R            106REFFLD(IPAC)
+      *                                              End   /CEU020/
+      *
+     A  35                                28'STOP ACCRUALS'
+     A  36                                28'START ACCRUALS'
+      *
+     A  38                                28'SUB-TYPE CHANGE'
+     A  38                                45'LOAN TYPE/SUB-TYPE'
+     A  38        RLTYP     R             69REFFLD(CRTP)
+     A  38                                71'/'
+     A  38        RSUTP     R             72REFFLD(CRTP)
+     A*                                              Begin /CLE042/
+     A  38        RCLAS          4A       74                                                  CLE042
+     A*                                              End   /CLE042/
+     A*/COPY WNCPYSRC,LE0320P201
+      *
+     A* 16                               130'I'
+     A* 17                               130'A'
+     A* 18                               130'R'
+      *                                              Begin /123863/
+      *                                              Begin /154570/
+     A************RCHTP*****R************130REFFLD(SPIN)***********
+     A  19        RCHTP     R            130REFFLD(SPIN)
+     A N19        CHTP      R            130REFFLD(SPIN)
+      *                                              End   /154570/
+      *                                              End   /123863/
+     A                                     1' '
+     A                                      SPACEA(1)
+     A  34
+     AO 35
+      *                                              Begin /154570/
+     A**34*********************************************************
+     A*O*35********************************************************
+     A  35
+      *                                              End   /154570/
+     AO 36
+     AO 38                                 2' '
+     A                                      SPACEA(1)
+      *
+      ** Indicator 30 is *ON.
+      *
+     A          R DETL30
+      *
+     A**Start of change CGL029
+     A****N70***                          48'SETTLEMENT TYPE'                                 CGL029
+     A****N70***  RSETP     R             64REFFLD(ASEQ)                                      CGL029
+     A****N70***                          68'OURS'                                            CGL029
+     A****N70***  ROSAC     R             73REFFLD(IPAC)                                      CGL029
+     A****N70*88  ROSBR     R             86REFFLD(BRCA)                                      CGL029
+     A****N70***                          91'THEIRS'                                          CGL029
+     A****N70***  RTSEN     R             98REFFLD(CTOW)                                      CGL029
+     A****N70***                         110'FOR A/C OF'                                      CGL029
+     A****N70***  RFACO     R            121REFFLD(CTOW)                                      CGL029
+     A    N70                             48'SETTLEMENT TYP'
+     A    N70     RSETP     R             63REFFLD(ASEQ)
+     A    N70                             66'OURS'
+     A    N70     ROSAC     R             71REFFLD(FULA)
+     A    N70 88  ROSBR     R             90REFFLD(BRCA)
+     A    N70                             94'THEIRS'
+     A    N70     RTSEN     R            101REFFLD(CTOW)
+     A    N70                            112'FOR A/C OF'
+     A    N70     RFACO     R            123REFFLD(CTOW)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A    N70                             48'SPEC INSTR'
+     A    N70     RSPI1     R             60REFFLD(CHNM)
+     A                                      SPACEA(1)
+     A    N70     RSPI2     R             60REFFLD(CHNM)
+     A                                      SPACEA(1)
+     A    N70     RSPI3     R             60REFFLD(CHNM)
+     A                                      SPACEA(2)
+      *
+     A     70N50                          48'RECEIPT INSTRUCTIONS: +
+     A                                      SETTLEMENT METHOD'
+     A     70N50  RRSTM     R             89REFFLD(ASEQ)
+     A     70N50                          92'OUR NOSTRO'
+     A**Start of change CGL029
+     A*****70N50  RRONS     R            104REFFLD(IPAC)                                      CGL029
+     A     70N50  RRONS     R            104REFFLD(FULA)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A     70N50                          48'ORDERING CUSTOMER'
+      * Begin /CSD027/
+     A*****70N50  RROCN     R             70REFFLD(CCUS)                                      CSD027
+     A     70N50  RROCN          6A       70TEXT('Credit customer number')
+      * End /CSD027/
+     A     70N50                          85'ORDERING BANK'
+      * Begin /CSD027/
+     A*****70N50  RROBN     R            100REFFLD(CCUS)                                      CSD027
+     A     70N50  RROBN          6A      100TEXT('Credit customer number')
+      * End /CSD027/
+     A                                      SPACEA(1)
+     A     70N50                          48'INTERMEDIARY BANK NO'
+     A     70N50  RRIBN     R             70REFFLD(SDRN)
+     A     70N50                          80'A/C LINE'
+     A     70N50  RRIBA     R             98REFFLD(ACB1)
+      *                                              Begin /147935/
+     A************                          SPACEA(2)
+     A                                      SPACEA(1)
+      *                                              End   /147935/
+      *
+     A     70 50                          48'PAYMENT INSTRUCTIONS: +
+     A                                      SETTLEMENT METHOD'
+     A     70 50  RPSTM     R             89REFFLD(ASEQ)
+     A     70 50                          92'OUR NOSTRO'
+     A**Start of change CGL029
+     A*****70*50  RPONS     R            104REFFLD(IPAC)                                      CGL029
+     A     70 50  RPONS     R            104REFFLD(FULA)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A     70 50                          48'MT202 SUPPLEMENTARY +
+     A                                      MESSAGE'
+     A     70 50  RCVMR     R             77REFFLD(ATYP)
+     A     70 50                          85'RECEIVER'
+     A     70 50  RRVNO     R             98REFFLD(SDRN)
+     A                                      SPACEA(1)
+     A     70 50                          48'ORDERING CUSTOMER'
+      * Begin /CSD027/
+     A*****70*50  RPOCN     R             70REFFLD(CCUS)                                      CSD027
+     A     70 50  RPOCN          6A       70TEXT('Credit customer number')
+      * End /CSD027/
+     A     70 50                          85'ORDERING BANK'
+      * Begin /CSD027/
+     A*****70*50  RPOBN     R            100REFFLD(CCUS)                                      CSD027
+     A     70 50  RPOBN          6A      100TEXT('Credit customer number')
+      * End /CSD027/
+     A                                      SPACEA(1)
+     A     70 50                          48'RECEIVER''S CORR NO'
+     A     70 50  RRCRN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RRCRA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'INTERMED BANK NO'
+     A     70 50  RPIBN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RPIBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'A/C WITH BANK NO'
+     A     70 50  RAWBN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RAWBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'BENEFICIARY NO'
+     A     70 50  RBENN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RBENA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'DETAILS OF PAYMENT 1'
+     A     70 50  RDTP1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'2'
+     A     70 50  RDTP2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'3'
+     A     70 50  RDTP3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'4'
+     A     70 50  RDTP4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'DETAILS OF CHARGES'
+     A     70 50  RDCHG     R             69REFFLD(BRCA)
+     A                                      SPACEA(1)
+     A     70 50                          48'BANK TO BANK INFO  1'
+     A     70 50  RBTB1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'2'
+     A     70 50  RBTB2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'3'
+     A     70 50  RBTB3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'4'
+     A     70 50  RBTB4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'5'
+     A     70 50  RBTB5     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'6'
+     A     70 50  RBTB6     R             69REFFLD(ACB1)
+      *                                              Begin /147935/
+     A                                      SPACEA(1)
+     A************                          SPACEA(2)
+      **Start of change CLE034
+     A**********                          17'INSERTING USER'                                  CLE034
+     A**********  IUSR      R             33REFFLD(ZZ010)                                     CLE034
+     A**********                          48'AMENDING USER'                                   CLE034
+     A**********  AUSR      R             63REFFLD(ZZ010)                                     CLE034
+     A**********                          84'AUTHORISING USER'                                CLE034
+     A**********  XUSR      R            102REFFLD(ZZ010)                                     CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                17'INSERTING USER'
+     A N80        IUSR      R             33REFFLD(ZZ010)
+     A N80                                48'AMENDING USER'
+     A N80        AUSR      R             63REFFLD(ZZ010)
+     A N80                                84'AUTHORISING USER'
+     A N80        XUSR      R            102REFFLD(ZZ010)
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      *                                              End   /147935/
+      *
+      ** Indicator 31 is *ON.
+      *
+     A          R DETL31
+      *
+     A                                    48'INTEREST AMOUNT'
+     A            RINT0     R             67REFFLD(LOCEA)
+     A                                      SPACEA(1)
+     A                                    48'FEE AMOUNT'
+     A            RFEA0     R             67REFFLD(LOCEA)
+     A                                    86'FEE CODE'
+     A     44     RFECD     R             95REFFLD(ASEQ)
+     A                                    48'TOTAL AMOUNT'
+     A                                      SPACEB(1)
+     A            RTA20     R             67REFFLD(LOCEA)
+      *                                              Begin /123863/
+     A***********                         86'PAST DUE'
+     A*********** RPAST     R             95REFFLD(ATYP)
+     A     76                             86'PAST DUE'
+     A     76     RPAST     R             95REFFLD(ATYP)
+     A                                   132' '
+     A                                      SPACEA(1)
+     A                                    48'PENALTY AMOUNT'
+     A            RPNA0     R             67REFFLD(LOCEA)
+      *                                              End   /123863/
+     A                                      SPACEA(1)
+     A                                    48'SCHEDULED VALUE DATE'
+     A     43     RXAVD     R             70REFFLD(LADT)
+     A                                    79'SEQ. NO.'
+     A     45     RXASQ     R             89REFFLD(AMSQ)
+     A                                    94'W/O'
+     A            RLWOI     R             99REFFLD(ATYP)
+     A                                      SPACEA(1)
+     A**Start of change CLE036
+     A  51                                48'FACILITY CCY'
+     A  51        RFRCY     R             67REFFLD(BRCA)
+     A  51                                  SPACEA(1)
+     A  51                                48'FAC. CCY PRINCIPAL'
+     A  51        RFRAM     R             67REFFLD(ZZ018)
+     A  51                                  SPACEA(1)
+     A  51                                48'FAC. CCY INTEREST'
+     A  51        RFINT     R             67REFFLD(ZZ018)
+     A  51                                  SPACEA(1)
+     A  51                                48'FAC. CCY TOTAL'
+     A  51        RFTOT     R             67REFFLD(ZZ018)
+     A  51                                  SPACEA(1)
+     A  51                                48'FAC. CCY PENALTY'
+     A  51        RFPEN     R             67REFFLD(ZZ018)
+     A  51                                  SPACEA(1)
+     A**End of change CLE036
+      *
+     A    N70                             48'SETTLEMENT TYPE'
+     A    N70     RSETP     R             64REFFLD(ASEQ)
+     A    N70                             68'OURS'
+     A**Start of change CGL029
+     A****N70***  ROSAC     R             73REFFLD(IPAC)                                      CGL029
+     A****N70*88  ROSBR     R             86REFFLD(BRCA)                                      CGL029
+     A****N70***                          91'THEIRS'                                          CGL029
+     A****N70***  RTSEN     R             98REFFLD(CTOW)                                      CGL029
+     A    N70     ROSAC     R             73REFFLD(FULA)
+     A    N70 88  ROSBR     R             92REFFLD(BRCA)
+     A    N70                             97'THEIRS'
+     A    N70     RTSEN     R            104REFFLD(CTOW)
+     A**End of change CGL029
+     A    N70                               SPACEA(2)
+      *
+     A     70N50                          48'RECEIPT INSTRUCTIONS: +
+     A                                      SETTLEMENT METHOD'
+     A     70N50  RRSTM     R             89REFFLD(ASEQ)
+     A     70N50                          92'OUR NOSTRO'
+     A**Start of change CGL029
+     A*****70N50  RRONS     R            104REFFLD(IPAC)                                      CGL029
+     A     70N50  RRONS     R            104REFFLD(FULA)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A     70N50                          48'ORDERING CUSTOMER'
+      * Begin /CSD027/
+     A*****70N50  RROCN     R             70REFFLD(CCUS)                                      CSD027
+     A     70N50  RROCN          6A       70TEXT('Credit customer number')
+      * End /CSD027/
+     A     70N50                          80'ORDERING BANK'
+      * Begin /CSD027/
+     A*****70N50  RROBN     R             98REFFLD(CCUS)                                      CSD027
+     A     70N50  RROBN          6A       98TEXT('Credit customer number')
+      * End /CSD027/
+     A                                      SPACEA(1)
+     A     70N50                          48'INTERMEDIARY BANK NO'
+     A     70N50  RRIBN     R             70REFFLD(SDRN)
+     A     70N50                          80'A/C LINE'
+     A     70N50  RRIBA     R             98REFFLD(ACB1)
+      *                                              Begin /147935/
+     A************                          SPACEA(2)
+     A                                      SPACEA(1)
+      *                                              End   /147935/
+      *
+     A     70 50                          48'PAYMENT INSTRUCTIONS: +
+     A                                      SETTLEMENT METHOD'
+     A     70 50  RPSTM     R             89REFFLD(ASEQ)
+     A     70 50                          92'OUR NOSTRO'
+     A**Start of change CGL029
+     A*****70*50  RPONS     R            104REFFLD(IPAC)                                      CGL029
+     A     70 50  RPONS     R            104REFFLD(FULA)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A     70 50                          48'MT202 SUPPLEMENTARY +
+     A                                      MESSAGE'
+     A     70 50  RCVMR     R             77REFFLD(ATYP)
+     A     70 50                          85'RECEIVER'
+     A     70 50  RRVNO     R             98REFFLD(SDRN)
+     A                                      SPACEA(1)
+     A     70 50                          48'ORDERING CUSTOMER'
+      * Begin /CSD027/
+     A*****70*50  RPOCN     R             67REFFLD(CCUS)                                      CSD027
+     A     70 50  RPOCN          6A       67TEXT('Credit customer number')
+      * End /CSD027/
+     A     70 50                          75'ORDERING BANK'
+      * Begin /CSD027/
+     A*****70*50  RPOBN     R             90REFFLD(CCUS)                                      CSD027
+     A     70 50  RPOBN          6A       90TEXT('Credit customer number')
+      * End /CSD027/
+     A                                      SPACEA(1)
+     A     70 50                          48'RECEIVER''S CORR NO'
+     A     70 50  RRCRN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RRCRA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'INTERMED BANK NO'
+     A     70 50  RPIBN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RPIBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'A/C WITH BANK NO'
+     A     70 50  RAWBN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RAWBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'BENEFICIARY NO'
+     A     70 50  RBENN     R             67REFFLD(SDRN)
+     A     70 50                          78'A/C LINE'
+     A     70 50  RBENA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'DETAILS OF PAYMENT 1'
+     A     70 50  RDTP1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'2'
+     A     70 50  RDTP2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'3'
+     A     70 50  RDTP3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'4'
+     A     70 50  RDTP4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          48'DETAILS OF CHARGES'
+     A     70 50  RDCHG     R             69REFFLD(BRCA)
+     A                                      SPACEA(1)
+     A     70 50                          48'BANK TO BANK INFO  1'
+     A     70 50  RBTB1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'2'
+     A     70 50  RBTB2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'3'
+     A     70 50  RBTB3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'4'
+     A     70 50  RBTB4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'5'
+     A     70 50  RBTB5     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70 50                          67'6'
+     A     70 50  RBTB6     R             69REFFLD(ACB1)
+      *                                              Begin /147935/
+     A************                          SPACEA(2)
+     A                                      SPACEA(1)
+      **Start of change CLE034
+     A**********                          17'INSERTING USER'                                  CLE034
+     A**********  IUSR      R             33REFFLD(ZZ010)                                     CLE034
+     A**********                          48'AMENDING USER'                                   CLE034
+     A**********  AUSR      R             63REFFLD(ZZ010)                                     CLE034
+     A**********                          84'AUTHORISING USER'                                CLE034
+     A**********  XUSR      R            102REFFLD(ZZ010)                                     CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                17'INSERTING USER'
+     A N80        IUSR      R             33REFFLD(ZZ010)
+     A N80                                48'AMENDING USER'
+     A N80        AUSR      R             63REFFLD(ZZ010)
+     A N80                                84'AUTHORISING USER'
+     A N80        XUSR      R            102REFFLD(ZZ010)
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      *                                              End   /147935/
+      *
+      ** Indicator 32 is *ON.
+      *
+     A          R DETL32
+      *
+     A**Start of change CGL029
+     A****N70***                          48'SETTLEMENT TYPE'                                 CGL029
+     A****N70***  RSETP     R             64REFFLD(ASEQ)                                      CGL029
+     A****N70***                          68'OURS'                                            CGL029
+     A****N70***  ROSAC     R             73REFFLD(IPAC)                                      CGL029
+     A****N70*88  ROSBR     R             86REFFLD(BRCA)                                      CGL029
+     A****N70***                          91'THEIRS'                                          CGL029
+     A****N70***  RTSEN     R             98REFFLD(CTOW)                                      CGL029
+     A****N70***                         110'FOR A/C OF'                                      CGL029
+     A****N70***  RFACO     R            121REFFLD(CTOW)                                      CGL029
+     A    N70                             48'SETTLEMENT TYP'
+     A    N70     RSETP     R             63REFFLD(ASEQ)
+     A    N70                             66'OURS'
+     A    N70     ROSAC     R             71REFFLD(FULA)
+     A    N70 88  ROSBR     R             90REFFLD(BRCA)
+     A    N70                             94'THEIRS'
+     A    N70     RTSEN     R            101REFFLD(CTOW)
+     A    N70                            112'FOR A/C OF'
+     A    N70     RFACO     R            123REFFLD(CTOW)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A    N70N22                          48'SPEC INSTR'
+     A    N70 22                          48'BENIF. BANK'
+     A    N70     RSPI1     R             60REFFLD(CHNM)
+     A                                      SPACEA(1)
+     A    N70 22                          48'SPEC INSTR'
+     A    N70     RSPI2     R             60REFFLD(CHNM)
+     A                                      SPACEA(1)
+     A    N70     RSPI3     R             60REFFLD(CHNM)
+      *                                              Begin /147935/
+     A************                          SPACEA(2)
+     A                                      SPACEA(1)
+      *                                              End   /147935/
+      *
+     A     70                             48'PAYMENT INSTRUCTIONS: +
+     A                                      SETTLEMENT METHOD'
+     A     70     RPSTM     R             89REFFLD(ASEQ)
+     A     70                             92'OUR NOSTRO'
+     A**Start of change CGL029
+     A*****70***  RPONS     R            104REFFLD(IPAC)                                      CGL029
+     A     70     RPONS     R            104REFFLD(FULA)
+     A**End of change CGL029
+     A                                      SPACEA(1)
+     A     70                             48'MT202 SUPPLEMENTARY +
+     A                                      MESSAGE'
+     A     70     RCVMR     R             77REFFLD(ATYP)
+     A     70                             85'RECEIVER'
+     A     70     RRVNO     R             98REFFLD(SDRN)
+     A                                      SPACEA(1)
+     A     70                             48'ORDERING CUSTOMER'
+      * Begin /CSD027/
+     A*****70***  RPOCN     R             70REFFLD(CCUS)                                      CSD027
+     A     70     RPOCN          6A       70TEXT('Credit customer number')
+      * End /CSD027/
+     A     70                             85'ORDERING BANK'
+      * Begin /CSD027/
+     A*****70***  RPOBN     R            100REFFLD(CCUS)                                      CSD027
+     A     70     RPOBN          6A      100TEXT('Credit customer number')
+      * End /CSD027/
+     A                                      SPACEA(1)
+     A     70                             48'RECEIVER''S CORR NO'
+     A     70     RRCRN     R             67REFFLD(SDRN)
+     A     70                             78'A/C LINE'
+     A     70     RRCRA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             48'INTERMED BANK NO'
+     A     70     RPIBN     R             67REFFLD(SDRN)
+     A     70                             78'A/C LINE'
+     A     70     RPIBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             48'A/C WITH BANK NO'
+     A     70     RAWBN     R             67REFFLD(SDRN)
+     A     70                             78'A/C LINE'
+     A     70     RAWBA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             48'BENEFICIARY NO'
+     A     70     RBENN     R             67REFFLD(SDRN)
+     A     70                             78'A/C LINE'
+     A     70     RBENA     R             91REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             48'DETAILS OF PAYMENT 1'
+     A     70     RDTP1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'2'
+     A     70     RDTP2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'3'
+     A     70     RDTP3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'4'
+     A     70     RDTP4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             48'DETAILS OF CHARGES'
+     A     70     RDCHG     R             69REFFLD(BRCA)
+     A                                      SPACEA(1)
+     A     70                             48'BANK TO BANK INFO  1'
+     A     70     RBTB1     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'2'
+     A     70     RBTB2     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'3'
+     A     70     RBTB3     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'4'
+     A     70     RBTB4     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'5'
+     A     70     RBTB5     R             69REFFLD(ACB1)
+     A                                      SPACEA(1)
+     A     70                             67'6'
+     A     70     RBTB6     R             69REFFLD(ACB1)
+      *                                              Begin /147935/
+     A************                          SPACEA(2)
+     A                                      SPACEA(1)
+      **Start of change CLE034
+     A**********                          17'INSERTING USER'                                  CLE034
+     A**********  IUSR      R             33REFFLD(ZZ010)                                     CLE034
+     A**********                          48'AMENDING USER'                                   CLE034
+     A**********  AUSR      R             63REFFLD(ZZ010)                                     CLE034
+     A**********                          84'AUTHORISING USER'                                CLE034
+     A**********  XUSR      R            102REFFLD(ZZ010)                                     CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                17'INSERTING USER'
+     A N80        IUSR      R             33REFFLD(ZZ010)
+     A N80                                48'AMENDING USER'
+     A N80        AUSR      R             63REFFLD(ZZ010)
+     A N80                                84'AUTHORISING USER'
+     A N80        XUSR      R            102REFFLD(ZZ010)
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      *                                              End   /147935/
+      *                                              Begin /154570/
+      *
+      ** Indicator 34 is *ON.
+      *
+     A          R DETL34
+      *
+      **Start of change CLE034
+     A**********                          17'INSERTING USER'                                  CLE034
+     A**********  IUSR      R             33REFFLD(ZZ010)                                     CLE034
+     A**********                          48'AMENDING USER'                                   CLE034
+     A**********  AUSR      R             63REFFLD(ZZ010)                                     CLE034
+     A**********                          84'AUTHORISING USER'                                CLE034
+     A**********  XUSR      R            102REFFLD(ZZ010)                                     CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                17'INSERTING USER'
+     A N80        IUSR      R             33REFFLD(ZZ010)
+     A N80                                48'AMENDING USER'
+     A N80        AUSR      R             63REFFLD(ZZ010)
+     A N80                                84'AUTHORISING USER'
+     A N80        XUSR      R            102REFFLD(ZZ010)
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      *                                              End   /154570/
+      **Start of change CLE034
+     A          R RPRHD
+     A  05                                48'RECEIPT'
+     A N05                                48'PAYMENT'
+      **Start of change CLE038
+     A**********                          56'INSTRUCTION: (METHOD/+                           CLE038
+     A**********                            CURRENCY/ACCOUNT/+                                CLE038
+     A**********                            PERCENTAGE)'                                      CLE038
+     A N54                                56'INSTRUCTION: (METHOD/+
+     A                                      CURRENCY/ACCOUNT/+
+     A                                      PERCENTAGE)'
+     A                                      SPACEA(1)
+     A  54                                56'INSTRUCTION: (METHOD/+
+     A                                      CURRENCY/ACCOUNT/+
+     A                                      AMOUNT)'
+      **End of change CLE038
+     A                                      SPACEA(1)
+      *
+     A          R RPRDT
+     A            RSETM     R             56REFFLD(SEME)
+     A                                    59'/'
+     A            RSETC     R             61REFFLD(SETC)
+     A                                    65'/'
+     A**Start of change CGL029
+     A**********  RSETA     R             67REFFLD(SETA)                                      CGL029
+     A**********                          80'/'                                               CGL029
+     A**********  RSTLP     R             82REFFLD(SPTR)                                      CGL029
+     A            RSETA         18        67
+     A                                    86'/'
+      **Start of change CLE038
+     A**********  RSTLP     R             88REFFLD(SPTR)                                      CLE038
+     A N54        RSTLP     R             88REFFLD(SPTR)
+     A                                      SPACEA(1)
+     A  54        RSTAM     R             88REFFLD(SPTR)
+      **End of change CLE038
+     A**End of change CGL029
+     A                                      SPACEA(1)
+      *
+     A          R RADTL
+     A                                    48'INTEREST AMOUNT'
+     A            RINT0     R             67REFFLD(LOCEA)
+     A                                      SPACEA(1)
+     A                                    48'FEE AMOUNT'
+     A            RFEA0     R             67REFFLD(LOCEA)
+     A                                    86'FEE CODE'
+     A     44     RFECD     R             95REFFLD(ASEQ)
+     A                                    48'TOTAL AMOUNT'
+     A                                      SPACEB(1)
+     A            RTA20     R             67REFFLD(LOCEA)
+     A     76                             86'PAST DUE'
+     A     76     RPAST     R             95REFFLD(ATYP)
+     A                                   132' '
+     A                                      SPACEA(1)
+     A                                    48'PENALTY AMOUNT'
+     A            RPNA0     R             67REFFLD(LOCEA)
+     A                                      SPACEA(1)
+     A                                    48'SCHEDULED VALUE DATE'
+     A     43     RXAVD     R             70REFFLD(LADT)
+     A                                    79'SEQ. NO.'
+     A     45     RXASQ     R             89REFFLD(AMSQ)
+     A                                    94'W/O'
+     A            RLWOI     R             99REFFLD(ATYP)
+     A                                      SPACEA(1)
+      *
+     A          R RSTAL
+     A                                    48'SETTLEMENT ALLOCATION'
+     A            RSTLA     R             76REFFLD(PRYN)
+     A                                      SPACEA(1)
+      *
+     A          R RUSRP
+     A                                    17'INSERTING USER'
+     A            RIUSR     R             33REFFLD(USRP)
+     A                                    48'AMENDING USER'
+     A            RAUSR     R             63REFFLD(USRP)
+     A                                    84'AUTHORISING USER'
+     A            RXUSR     R            102REFFLD(USRP)
+     A                                      SPACEA(2)
+      **End of change CLE034
+      *
+      ** Transfer Principal To
+      *
+     A          R AMND8
+     A                                     2'VALUE DATE'
+     A            RVDAT     R             13REFFLD(LADT)
+     A            RLASN     R             22REFFLD(AMSQ)
+     A            RACTI     R            130REFFLD(ATYP)
+     A                                    28'TRANSFER PRINCIPAL TO'
+     A                                    52'AMOUNT'
+      *                                              Begin /123863/
+     A*****46**** RPR30     R             61REFFLD(LOCEA)
+     A*****47**** RTA30     R             61REFFLD(LOCEA)
+     A            RPRA0     R             61REFFLD(LOCEA)
+      *                                              Begin /154570/
+     A************RCHTP*****R************130REFFLD(SPIN)***********
+     A     19     RCHTP     R            130REFFLD(SPIN)
+      *                                              End   /154570/
+      *                                              End   /123863/
+     A                                    52'ORIGINATING LOAN'
+     A                                      SPACEB(1)
+      **Start of change CLE148
+     A**********  RROLN     R             71REFFLD(CCUS)                                      CLE148
+     A            RROLN          6A       71
+      **End of change CLE148
+      *                                              Begin /146373/
+      *                                              Begin /147935/
+     A                                      SPACEA(1)
+      **Start of change CLE034
+     A**********                          22'INSERTING USER'                                  CLE034
+     A**********  RIUSR     R             38REFFLD(ZZ010)                                     CLE034
+     A**********                          52'AMENDING USER'                                   CLE034
+     A**********  RAUSR     R             67REFFLD(ZZ010)                                     CLE034
+     A**********                          86'AUTHORISING USER'                                CLE034
+     A**********  RXUSR     R            104REFFLD(ZZ010)                                     CLE034
+     A N80                                22'INSERTING USER'
+     A N80        RIUSR     R             38REFFLD(ZZ010)
+     A N80                                52'AMENDING USER'
+     A N80        RAUSR     R             67REFFLD(ZZ010)
+     A N80                                86'AUTHORISING USER'
+     A N80        RXUSR     R            104REFFLD(ZZ010)
+      **End of change CLE034
+      *                                              End   /147935/
+     A***********                           SPACEA(1)
+      **Start of change CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      ***********
+     A****N70****                         52'SETTLEMENT TYPE'
+     A****N70**** RSETP     R             68REFFLD(ASEQ)
+     A****N70****                         72'OURS'
+     A****N70**** ROSAC     R             77REFFLD(IPAC)
+     A****N70*88* ROSBR     R             90REFFLD(BRCA)
+     A****N70****                         95'THEIRS'
+     A****N70**** RTSEN     R            102REFFLD(CTOW)
+     A****N70****                        114'FOR A/C OF'
+     A****N70**** RFACO     R            125REFFLD(CTOW)
+     A***********                           SPACEA(1)
+     A****N70N22*                         52'SPECAINSTR'
+     A****N70*22*                         52'BENIF.1BANK'
+     A****N70**** RSPI1     R             64REFFLD(CHNM)
+     A***********                           SPACEA(1)
+     A****N70*22*                         52'SPEC INSTR'
+     A****N70**** RSPI2     R             64REFFLD(CHNM)
+     A***********                           SPACEA(1)
+     A****N70**** RSPI3     R             64REFFLD(CHNM)
+     A***********                           SPACEA(2)
+      ***********
+     A*****70****                         52'PAYMENT INSTRUCTIONS: +
+     A***********                           SETTLEMENT METHOD'
+     A*****70**** RPSTM     R             93REFFLD(ASEQ)
+     A*****70****                         96'OUR NOSTRO'
+     A*****70**** RPONS     R            108REFFLD(IPAC)
+     A***********                           SPACEA(1)
+     A*****70****                         52'MT202 SUPPLEMENTARY +
+     A***********                           MESSAGE'
+     A*****70**** RCVMR     R             81REFFLD(ATYP)
+     A*****70****                         89'RECEIVER'
+     A*****70**** RRVNO     R            102REFFLD(SDRN)
+     A***********                           SPACEA(1)
+     A*****70****                         52'ORDERING CUSTOMER'
+     A*****70**** RPOCN     R             74REFFLD(CCUS)
+     A*****70****                         89'ORDERING BANK'
+     A*****70**** RPOBN     R            104REFFLD(CCUS)
+     A***********                           SPACEA(1)
+     A*****70****                         52'RECEIVER''S CORR NO'
+     A*****70**** RRCRN     R             71REFFLD(SDRN)
+     A*****70****                         82'A/C LINE'
+     A*****70**** RRCRA     R             95REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         52'INTERMED BANK NO'
+     A*****70**** RPIBN     R             71REFFLD(SDRN)
+     A*****70****                         82'A/C LINE'
+     A*****70**** RPIBA     R             95REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         52'A/C WITH BANK NO'
+     A*****70**** RAWBN     R             71REFFLD(SDRN)
+     A*****70****                         82'A/C LINE'
+     A*****70**** RAWBA     R             95REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         52'BENEFICIARY NO'
+     A*****70**** RBENN     R             71REFFLD(SDRN)
+     A*****70****                         82'A/C LINE'
+     A*****70**** RBENA     R             95REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         52'DETAILS OF PAYMENT 1'
+     A*****70**** RDTP1     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'2'
+     A*****70**** RDTP2     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'3'
+     A*****70**** RDTP3     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'4'
+     A*****70**** RDTP4     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         52'DETAILS OF CHARGES'
+     A*****70**** RDCHG     R             73REFFLD(BRCA)
+     A***********                           SPACEA(1)
+     A*****70****                         52'BANK TO BANK INFO  1'
+     A*****70**** RBTB1     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'2'
+     A*****70**** RBTB2     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'3'
+     A*****70**** RBTB3     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'4'
+     A*****70**** RBTB4     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'5'
+     A*****70**** RBTB5     R             73REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70****                         71'6'
+     A*****70**** RBTB6     R             73REFFLD(ACB1)
+     A***********                           SPACEA(2)
+      *                                              End   /146373/
+      *
+      ** Transfer Principal From
+      *
+     A          R AMND9
+     A                                     2'VALUE DATE'
+O    A            RVDAT     R             13REFFLD(LADT)
+     A            RLASN     R             22REFFLD(AMSQ)
+     A            RACTI     R            130REFFLD(ATYP)
+     A                                    28'TRANSFER PRINCIPAL FROM'
+     A                                    54'PRINCIPAL AMOUNT'
+     A            RPR20     R             73REFFLD(LOCEA)
+      *                                              Begin /123863/
+     A***********                           SPACEA(1)
+     A***********                         54'INTEREST AMOUNT'
+     A*********** RINT0     R             73REFFLD(LOCEA)
+     A***********                           SPACEA(1)
+     A***********                         54'FEE AMOUNT'
+     A*********** RFEA0     R             73REFFLD(LOCEA)
+     A***********                         93'FEE CODE'
+     A**44******* RFECD     R            102REFFLD(ASEQ)
+     A***********                         54'TOTAL AMOUNT'
+     A***********                           SPACEB(1)
+     A*********** RTA20     R             73REFFLD(LOCEA)
+     A***********                         93'PAST DUE'
+     A*********** RPAST     R            102REFFLD(ATYP)
+     A***********                           SPACEA(1)
+      *                                              Begin /154570/
+     A************RCHTP*****R************130REFFLD(SPIN)***********
+     A     19     RCHTP     R            130REFFLD(SPIN)
+      *                                              End   /154570/
+     A                                      SPACEA(1)
+      *                                              End   /123863/
+     A                                    54'RECEIVING LOAN'
+      **Start of change CLE148
+     A**********  RROLN     R             73REFFLD(CCUS)                                      CLE148
+     A            RROLN          6A       73
+      **End of change CLE148
+      *                                              Begin /147935/
+     A                                      SPACEA(1)
+      **Start of change CLE034
+     A**********                          22'INSERTING USER'                                  CLE034
+     A**********  RIUSR     R             38REFFLD(ZZ010)                                     CLE034
+     A**********                          54'AMENDING USER'                                   CLE034
+     A**********  RAUSR     R             69REFFLD(ZZ010)                                     CLE034
+     A**********                          86'AUTHORISING USER'                                CLE034
+     A**********  RXUSR     R            104REFFLD(ZZ010)                                     CLE034
+     A N80                                22'INSERTING USER'
+     A N80        RIUSR     R             38REFFLD(ZZ010)
+     A N80                                54'AMENDING USER'
+     A N80        RAUSR     R             69REFFLD(ZZ010)
+     A N80                                86'AUTHORISING USER'
+     A N80        RXUSR     R            104REFFLD(ZZ010)
+      **End of change CLE034
+      *                                              End   /147935/
+      *                                              Begin /146373/
+     A***********                           SPACEA(1)
+      **Start of change CLE034
+     A**********                            SPACEA(2)                                         CLE034
+     A N80                                  SPACEA(2)
+      **End of change CLE034
+      *                                              End   /146373/
+      *                                              Begin /123863/
+     A***********                         54'SCHEDULED VALUE DATE'
+     A**43******* RXAVD     R             75REFFLD(LADT)
+     A***********                         86'SEQ. NO.'
+     A**45******* RXASQ     R             95REFFLD(AMSQ)
+     A***********                        100'W/O'
+     A*********** RLWOI     R            105REFFLD(ATYP)
+     A***********                           SPACEA(1)
+      *                                              End   /123863/
+      *
+      *                                              Begin /146373/
+     A****N70****                         54'SETTLEMENT TYPE'
+     A****N70**** RSETP     R             72REFFLD(ASEQ)
+     A****N70****                         74'OURS'
+     A****N70**** ROSAC     R             79REFFLD(IPAC)
+     A****N70*88* ROSBR     R             92REFFLD(BRCA)
+     A****N70****                         97'THEIRS'
+     A****N70**** RTSEN     R            104REFFLD(CTOW)
+     A****N70****                           SPACEA(2)
+      ***********
+     A*****70N50*                         54'RECEIPT INSTRUCTIONS: +
+     A***********                           SETTLEMENT METHOD'
+     A*****70N50* RRSTM     R             95REFFLD(ASEQ)
+     A*****70N50*                         98'OUR NOSTRO'
+     A*****70N50* RRONS     R            110REFFLD(IPAC)
+     A***********                           SPACEA(1)
+     A*****70N50*                         54'ORDERING CUSTOMER'
+     A*****70N50* RROCN     R             76REFFLD(CCUS)
+     A*****70N50*                         86'ORDERING BANK'
+     A*****70N50* RROBN     R            104REFFLD(CCUS)
+     A***********                           SPACEA(1)
+     A*****70N50*                         54'INTERMEDIARY BANK NO'
+     A*****70N50* RRIBN     R             76REFFLD(SDRN)
+     A*****70N50*                         86'A/C LINE'
+     A*****70N50* RRIBA     R            104REFFLD(ACB1)
+     A***********                           SPACEA(2)
+      ***********
+     A*****70*50*                         54'PAYMENT INSTRUCTIONS: +
+     A***********                           SETTLEMENT METHOD'
+     A*****70*50* RPSTM     R             95REFFLD(ASEQ)
+     A*****70*50*                         98'OUR NOSTRO'
+     A*****70*50* RPONS     R            110REFFLD(IPAC)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'MT202 SUPPLEMENTARY +
+     A***********                           MESSAGE'
+     A*****70*50* RCVMR     R             83REFFLD(ATYP)
+     A*****70*50*                         91'RECEIVER'
+     A*****70*50* RRVNO     R            104REFFLD(SDRN)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'ORDERING CUSTOMER'
+     A*****70*50* RPOCN     R             76REFFLD(CCUS)
+     A*****70*50*                         91'ORDERING BANK'
+     A*****70*50* RPOBN     R            106REFFLD(CCUS)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'RECEIVER''S CORR NO'
+     A*****70*50* RRCRN     R             73REFFLD(SDRN)
+     A*****70*50*                         84'A/C LINE'
+     A*****70*50* RRCRA     R             97REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'INTERMED BANK NO'
+     A*****70*50* RPIBN     R             73REFFLD(SDRN)
+     A*****70*50*                         84'A/C LINE'
+     A*****70*50* RPIBA     R             97REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'A/C WITH BANK NO'
+     A*****70*50* RAWBN     R             73REFFLD(SDRN)
+     A*****70*50*                         84'A/C LINE'
+     A*****70*50* RAWBA     R             97REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'BENEFICIARY NO'
+     A*****70*50* RBENN     R             73REFFLD(SDRN)
+     A*****70*50*                         84'A/C LINE'
+     A*****70*50* RBENA     R             97REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'DETAILS OF PAYMENT 1'
+     A*****70*50* RDTP1     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'2'
+     A*****70*50* RDTP2     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'3'
+     A*****70*50* RDTP3     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'4'
+     A*****70*50* RDTP4     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'DETAILS OF CHARGES'
+     A*****70*50* RDCHG     R             75REFFLD(BRCA)
+     A***********                           SPACEA(1)
+     A*****70*50*                         54'BANK TO BANK INFO  1'
+     A*****70*50* RBTB1     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'2'
+     A*****70*50* RBTB2     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'3'
+     A*****70*50* RBTB3     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'4'
+     A*****70*50* RBTB4     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'5'
+     A*****70*50* RBTB5     R             75REFFLD(ACB1)
+     A***********                           SPACEA(1)
+     A*****70*50*                         73'6'
+     A*****70*50* RBTB6     R             75REFFLD(ACB1)
+     A***********                           SPACEA(2)
+      *                                              End   /146373/
+      *
+      ** Report Trailer
+      *
+     A          R TRAIL2
+     A  89                                44'***  REFERENCE LE0310  +
+     A                                        DATABASE ERROR ***'
+     A                                      SPACEB(3)
+     A N89 88N84                          45'***  END OF REPORT FOR +
+     A                                      BRANCH'
+     A                                      SPACEB(3)
+     A N89 88N84  RPBRC     R             75REFFLD(BRCA)
+     A N89 88N84                          80'***'
+     A N89    84                          50'***  NO DETAILS TO REPO+
+     A                                      RT  ***'
+     A                                      SPACEB(3)
+     A N89N88 73                          53'***  END OF REPORT  ***'
+     A                                      SPACEB(3)
+      *

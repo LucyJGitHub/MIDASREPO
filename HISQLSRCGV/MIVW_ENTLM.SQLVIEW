@@ -1,0 +1,79 @@
+/******************************************************************************/
+/*                                                                            */
+/*       Midas - Host Integration Layer                                       */
+/*                                                                            */
+/*       MIVW_ENTLM - Permissions mapping to BankFusion artefacts             */
+/*                                                                            */
+/*       (c) Misys International Banking Systems Ltd. 2011                    */
+/*                                                                            */
+/*       Last Amend No. MD023309A          Date 19JNov3                        */
+/*       Prev Amend No. MD019405A          Date 02May13                       */
+/*                      AR1097374          Date 26Mar13                       */
+/*                      AR1081565          Date 11Feb13                       */
+/*                      CBF022             Date 16Jul12                       */
+/*                      AR887374           Date 13Feb12                       */
+/*                      AR907056           Date 03Feb12                       */
+/*                      CBF005   *CREATE   Date 04Jul11                       */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*       MD023309A - BFP 3.1 Build 2 Patch 10 Issues (Recompile)               */
+/*       MD019405A - Amended user only updates when clearing T_SECDATA        */
+/*                  (Recompile)                                               */
+/*       AR1097374 - BFP 3.1 Absorption Issues (Recompile)                    */
+/*       AR1081565- "AddRecordEntitlementReferral" artefact is appearing twice*/
+/*                  in the Artefacts Permission Audit Report. (Recompile)     */
+/*       CBF022   - BF Infrastructure: Auditability (Recompile)               */
+/*       AR887374 - Dependencies between HIL and Midas views upon restoration */
+/*       AR907056 - Redelivery of BFMI Schema (Recompile)                     */
+/*       CBF005 - BF Infrastructure: Single Security User Maintenance Profile */
+/*                                                                            */
+/******************************************************************************/
+                                                                                :
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+    BFARTEFACTID,                                                               :
+    BFDISPLAYNAME,                                                              :
+    BFUSERNAME,                                                                 :
+    BFGROUPNAME,                                                                :
+    BFENTITLEMENTTYPE,                                                          :
+    BFENTITLEMENTVALUE,                                                         :
+    BFZONE,                                                                     :
+    VERSIONNUM                                                                  :
+  )                                                                             :
+  AS SELECT                                                                     :
+    RESOURCE.BFARTEFACTID,                                                      :
+    RESOURCE.BFDISPLAYNAME,                                                     :
+    ENTITLEMENTS.BFUSERNAME,                                                    :
+    ENTITLEMENTS.BFGROUPNAME,                                                   :
+    ENTITLEMENTS.BFENTITLEMENTTYPE,                                             :
+    ENTITLEMENTS.BFENTITLEMENTVALUE,                                            :
+    ' ' AS BFZONE,                                                              :
+    ENTITLEMENTS.VERSIONNUM                                                     :
+                                                                                :
+****FROM*BFTB_ENTITLEMENTS*ENTITLEMENTS******************************************           AR887374
+    from BFTB_ENTITLEMENTSVIEW ENTITLEMENTS                                     :           AR887374
+                                                                                :
+****JOIN*BFTB_ORGANISATIONGRP*ORGGROUP*ON****************************************           AR887374
+    join BFTB_ORGANISATIONGRPVIEW ORGGROUP on                                   :           AR887374
+    ENTITLEMENTS.BFGROUPNAME = ORGGROUP.BFGROUPNAME                             :
+                                                                                :
+****JOIN*BFTB_GROUPPERMMAP*GROUPPERMMAP*ON***************************************           AR887374
+    join BFTB_GROUPPERMMAPVIEW GROUPPERMMAP on                                  :           AR887374
+    ORGGROUP.BFGROUPIDPK = GROUPPERMMAP.BFGROUPID                               :
+                                                                                :
+****JOIN*BFTB_RESOURCEPERM*RESOURCEPERM*ON***************************************           AR887374
+    JOIN BFTB_RESOURCEPERMVIEW RESOURCEPERM ON                                  :           AR887374
+    GROUPPERMMAP.BFPERMISSIONID = RESOURCEPERM.BFPERMISSIONID                   :
+                                                                                :
+****JOIN*BFTB_RESOURCE*RESOURCE*ON***********************************************           AR887374
+    join BFTB_RESOURCEVIEW RESOURCE on                                          :           AR887374
+    RESOURCEPERM.BFRESOURCEID = RESOURCE.BFARTEFACTID                           :
+                                                                                :           AR887374
+    rcdfmt MIVW_ENTLM;                                                          :           AR887374
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas HI Permissions Mapping                      ';                     :
+                                                                                :

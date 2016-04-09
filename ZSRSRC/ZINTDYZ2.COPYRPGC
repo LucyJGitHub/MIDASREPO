@@ -1,0 +1,621 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZINTDYZ2- Calculate Number of Interest Days                  *
+      *                                                               *
+      *  Last Amend No. AR996895           Date 25Nov12               *
+      *  Prev Amend No. 263666             Date 29Jan10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 242286             Date 25Sep06               *
+      *                 CIR013             Date 07Apr05               *
+      *                 CPK016             Date 13Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *             126017                 Date 14Nov97               *
+      *             097885                 Date 03Feb97               *
+      *             095244                 DATE  1NOV95               *
+      *             095238                 DATE 31OCT95               *
+      *             040697                 DATE 14JUL93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  AR996895 - Incorrect accrual interest calculation            *
+      *             (Child:AR996897)                                  *
+      *  263666 - Missing a ZZMM1 = 2 condition on processing calc.   *
+      *           method 3, ZZDD1 = 1, & ZZDD2 = 28 or 29.            *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *           to Midas Plus                                       *
+      *  BUG12990 - Subtraction of 1 day from the date range when     *
+      *             the end day is 31st should only be applicable to  *
+      *             method 3.                                         *
+      *  246141 - Incorrect calculation for method 7 (30E/360).       *
+      *           Corrected the calculation to follow Eurobond basis. *
+      *  164847 - Interest Calculation method 3 change:               *
+      *           For leap year: 01Feb to 29Feb should be 29 days     *
+      *                          (including 30Feb)                    *
+      *           For non-leap year: 01Feb to 28Feb should be 29 days *
+      *                          (including 29Feb and 30Feb)          *
+      *  242286 - Enhance computation for calc basis 6.               *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *  CPK016 - Release 5 Packaging.                                *
+      *           - Place the call to AOSARDR0 in a protective IF     *
+      *             to avoid unnecessary re-calls.                    *
+      *  CIR004 - Dealing Calculation Method Change                   *
+      *  126017 - Amendment to calculation method 6 to allow for the  *
+      *           fact that not every day in the period falls in a    *
+      *           leap year, so cannot just divide by 366. Need to    *
+      *           adjust the no. of non-leap year days by 366/365 to  *
+      *           give a factored no. of days in the interest period. *
+      *           The result of this method is to avoid any rounding  *
+      *           errors which could result from doing many seperate  *
+      *           calculations. Adds call to SR/ZDAT10.               *
+      *  097885 - The number of day interest was negatif ( = -1)      *
+      *           FS0001 apply fix 097885 from R10CBLLUX              *
+      *  095244 - Calculation method 3 should only use 30 days in the *
+      *           month if days are in the same month                 *
+      *  095238 - SAVE IND 80 USED IN THIS SUBR. AS IT WAS NOT A      *
+      *           STANDARD IND. FOR SUBR.                             *
+      *  040697 - For calculation method, treat the last day in Feb   *
+      *           as Feb 30th - e.g. the period from 27 Feb to 28 Feb *
+      *           (if not a leap year) should accrue 3 days interest. *
+      *                                                               *
+      *****************************************************************
+     C           ZINTDY    BEGSR
+     C*
+     C           *IN80     IFEQ '1'                                       095238
+     C                     MOVE '1'       IN80SV  1                       095238
+     C                     ELSE                                           095238
+     C                     MOVE '0'       IN80SV                          095238
+     C                     END                                            095238
+     C                     MOVE ZZBEG     ZZBEG   50
+     C                     MOVE ZZEND     ZZEND   50
+     C                     MOVE ZZCALC    ZZCALC  1
+     C                     Z-ADD*ZEROS    ZZINDY  50
+     C                     Z-ADD*ZEROS    ZZLPNM  50
+      *                                                                                       CPK016
+      * Call access objects only once in a /COPY                                              CPK016
+      *                                                                                       CPK016
+     C           AORUN     IFEQ ' '                                                           CPK016
+      *                                                                   CIR004
+      ** Check if Dealing Calculation Method is installed                 CIR004
+      *                                                                   CIR004
+     C                     CALL 'AOSARDR0'                                CIR004
+     C                     PARM *BLANKS   @RTCD   7                       CIR004
+     C                     PARM '*VERIFY' @OPTN   7                       CIR004
+     C                     PARM 'CIR004'  @SARD   6                       CIR004
+     C           @RTCD     IFEQ *BLANKS                                   CIR004
+     C                     MOVE 'Y'       CIR004  1                       CIR004
+     C                     ELSE                                           CIR004
+     C                     MOVE 'N'       CIR004                          CIR004
+     C                     ENDIF                                          CIR004
+      *                                                                                      CER016A
+      ** Check if German Interest Calculation is installed                                   CER016A
+      *                                                                                      CER016A
+     C                     CALL 'AOSARDR0'                                                   CER016A
+     C                     PARM *BLANKS   @RTCD                                              CER016A
+     C                     PARM '*VERIFY' @OPTN                                              CER016A
+     C                     PARM 'CER016'  @SARD                                              CER016A
+     C           @RTCD     IFEQ *BLANKS                                                      CER016A
+     C                     MOVE 'Y'       CER016  1                                          CER016A
+     C                     ELSE                                                              CER016A
+     C                     MOVE 'N'       CER016                                             CER016A
+     C                     ENDIF                                                             CER016A
+     C                     MOVE *BLANKS   @RTCD                           CIR004
+      *                                                                                       CPK016
+      * Flag access objects as having been run                                                CPK016
+      *                                                                                       CPK016
+     C                     MOVE 'Y'       AORUN   1                                           CPK016
+      *                                                                                       CPK016
+     C                     ENDIF                                                              CPK016
+     C*
+     C**  FIND NUMBER OF DAYS DIFFERENCE BETWEEN DATES
+     C           ZZEND     SUB  ZZBEG     ZZWDAT  50
+     C*
+     C****FOR*CALCULATION*METHODS*3,4*OR*5**                              126017
+     C****FOR*CALCULATION*METHODS*3,4,5*OR*6**                            126017 CIR013
+     C****FOR*CALCULATION*METHODS*3,4,5,*6,*7*&*CIR004*OR*9                           CIR013 CER016A
+     C**  FOR CALCULATION METHODS 3,4,5, 6, 7 & CIR004 OR 9 OR 0                             CER016A
+     C           ZZCALC    IFEQ '3'
+     C           ZZCALC    OREQ '4'
+     C           ZZCALC    OREQ '5'
+     C           ZZCALC    OREQ '6'                                       126017
+     C           ZZCALC    OREQ '7'                                       CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+     C           ZZCALC    OREQ '9'                                       CIR013
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C*
+     C                     Z-ADDZZBEG     @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     ZZDATA
+     C*
+     C                     Z-ADDZZEND     @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     ZZDATB
+     C                     END                                            126017
+     C*                                                                   CIR013
+     C* Check for the existence of any February 29th within the dates     CIR013
+     C           ZZCALC    IFEQ '9'                                       CIR013
+     C* ZZDATA (start date) and ZZDATB (end date) are in YYYYMMDD format  CIR013
+     C*                                                                   CIR013
+     C* #29FEB - Flag to represent the existence of a 29th Feb. between   CIR013
+     C*          the start and end dates                                  CIR013
+     C                     MOVE 'N'       #29FEB  1                       CIR013
+     C*                                                                   CIR013
+     C* ZZYY1 - start year from data structure over ZZDATA in ZINTDYZ1    CIR013
+     C* #29WKY = incremental year initially at start year                 CIR013
+     C                     Z-ADDZZYY1     #29WKY  40                      CIR013
+     C*                                                                   CIR013
+     C* Move to subfields of @@VDT - data structure from ZDATE9Z2 - 8,0   CIR013
+     C                     Z-ADDZZYY1     @@YR                            CIR013
+     C                     Z-ADD2         @@Z71M                          CIR013
+     C                     Z-ADD29        @@Z71D                          CIR013
+     C* #29YA - 29/02/start year (fixed workfield)                        CIR013
+     C                     Z-ADD@@VDT     #29YA   80                      CIR013
+     C* ZZYY2 - end year from data structure over ZZDATB in ZINTDYZ1      CIR013
+     C                     Z-ADDZZYY2     @@YR                            CIR013
+     C* #29YB - 29/02/end year (fixed workfield)                          CIR013
+     C                     Z-ADD@@VDT     #29YB   80                      CIR013
+     C*                                                                   CIR013
+      * Loop round incrementing the year from start to end                CIR013
+     C           #29WKY    DOUGTZZYY2                                     CIR013
+     C* Check to see whether 29/02/xx is a valid date by checking         CIR013
+     C* to see whether any of the years falling between the two dates     CIR013
+     C* are leap years.                                                   CIR013
+     C           ZZDATA    IFLE #29YA                                     CIR013
+     C           #29WKY    ANDEQZZYY1                                     CIR013
+     C           ZZDATB    ANDGE#29YA                                     CIR013
+     C           #29WKY    ORGT ZZYY1                                     CIR013
+     C           #29WKY    ANDLTZZYY2                                     CIR013
+     C           ZZDATB    ORGE #29YB                                     CIR013
+     C           #29WKY    ANDEQZZYY2                                     CIR013
+     C           ZZDATA    ANDLE#29YB                                     CIR013
+     C*                                                                   CIR013
+     C           #29WKY    DIV  4         ZLYR30  30                      CIR013
+     C                     MVR            ZLY     10                      CIR013
+     C* Leap year                                                         CIR013
+     C           ZLY       IFEQ 0                                         CIR013
+     C                     MOVE 'Y'       #29FEB                          CIR013
+     C                     LEAVE                                          CIR013
+     C                     ENDIF                                          CIR013
+     C                     ENDIF                                          CIR013
+     C*                                                                   CIR013
+     C                     ADD  1         #29WKY                          CIR013
+     C                     ENDDO                                          CIR013
+     C                     ENDIF                                          CIR013
+     C*                                                                   CIR013
+      *                                                                   126017
+     C           ZZCALC    IFEQ '3'                                       126017
+     C           ZZCALC    OREQ '4'                                       126017
+     C           ZZCALC    OREQ '5'                                       126017
+     C********** ZZCALC    OREQ '7'                                                    CIR004 246141
+     C********** CIR004    ANDEQ'Y'                                                    CIR004 246141
+     C           ZZCALC    OREQ '9'                                       CIR013
+     C           #29FEB    ANDEQ'N'                                       CIR013
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C*
+     C**  IF IN SAME MONTH
+     C           ZZYY1     IFEQ ZZYY2
+     C           ZZMM1     IFEQ ZZMM2
+     C           ZZDD2     SUB  ZZDD1     ZZINDY           - LOAD OUTPT
+     C           ZZCALC    IFEQ '3'                                                         BUG12990
+     C           ZZDD2     IFEQ 31                                        095244
+     C           ZZDD1     ANDNEZZDD2                                     097885
+     C                     SUB  1         ZZINDY                          095244
+     C                     END                                            095244
+     C                     ENDIF                                                            BUG12990
+      *                                                                                       164847
+      ***If*calculation*method*3*and*start*day*of*February                            164847 CER016A
+      ** If calculation method 3 or 0 and CER016 is on                                       CER016A
+      ** and start day of February                                                           CER016A
+      *                                                                                       164847
+     C           ZZCALC    IFEQ '3'                                                           164847
+     C           ZZDD1     ANDEQ1                                                             164847
+     C           ZZMM1     ANDEQ2                                                             263666
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C           CER016    ANDEQ'N'                                                          CER016A
+     C           ZZDD1     ANDEQ1                                                            CER016A
+     C           ZZMM1     ANDEQ2                                                             263666
+      *                                                                                       164847
+      ** Test if Leap Year                                                                    164847
+      *                                                                                       164847
+     C           ZZYY1     DIV  4         ZZWN5                                               164847
+     C                     MVR            ZZWN5          80                                   164847
+      *                                                                                       164847
+      ** Leap year and last day of the month is 29                                            164847
+      *                                                                                       164847
+     C           *IN80     IFEQ '1'                                                           164847
+     C           ZZDD2     ANDEQ29                                                            164847
+      *                                                                                       164847
+      ** Not a leap year and the last day of the month is 28                                  164847
+      *                                                                                       164847
+     C           *IN80     OREQ '0'                                                           164847
+     C           ZZDD2     ANDEQ28                                                            164847
+      *                                                                                       164847
+      ** Start day of Feb to last day Feb should be 29 days                                   164847
+      ** (30Feb - 01Feb)                                                                      164847
+      *                                                                                       164847
+     C                     Z-ADD29        ZZINDY                                              164847
+     C                     ENDIF                                                              164847
+      *                                                                                       164847
+     C                     ENDIF                                                              164847
+      *                                                                                       164847
+     C                     GOTO ZINTD9                     ----------->
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+      *                                                                   126017
+     C           ZZCALC    IFEQ '6'                        B1             126017
+     C           ZZCALC    OREQ '9'                                       CIR013
+     C           #29FEB    ANDEQ'Y'                                       CIR013
+      *                                                                   126017
+      * Perform no. of days calculation for method 6                      126017
+      * Find the number of leap year and non-leap year days in the        126017
+      * interest period. The non-leap year days are then adjusted by a    126017
+      * factor of 366/365 to allow for the divisor of 366 in GLINTC.      126017
+      * This figure is then added to the actual leap year days to give    126017
+      * a factored number of days in the interest period.                 126017
+      *                                                                   126017
+     C                     Z-ADD0         LEAP50  50                      126017
+     C                     Z-ADD0         NLEAP   50                      126017
+      *                                                                   126017
+      * If start and end date are in the same year, check if the          126017
+      * year is a leap year and add no. of interest days to the           126017
+      * relevant total                                                    126017
+     C           ZZYY1     IFEQ ZZYY2                      B2             126017
+     C           ZZYY1     DIV  4         ZZWN5                           126017
+     C                     MVR            ZZWN5                           126017
+     C           ZZWN5     IFNE 0                          B3             126017
+     C                     ADD  ZZWDAT    NLEAP                           126017
+     C                     ELSE                            X3             126017
+     C                     ADD  ZZWDAT    LEAP50                          126017
+     C                     END                             E3             126017
+      *                                                                   126017
+      * else must break down the interest period into leap years          126017
+      * and non-leap years                                                126017
+     C                     ELSE                            X2             126017
+      *                                                                   126017
+      * Save end date year value                                          126017
+     C                     Z-ADDZZDATB    DATBSV  80                      126017
+     C                     Z-ADDZZYY2     YY2SAV  40                      126017
+      *                                                                   126017
+      * Add 1 to starting year number                                     126017
+     C           ZZYY1     ADD  1         ZZYY2                           126017
+      *                                                                   126017
+      * Get Midas day number for 1st Jan of year after start date         126017
+     C                     MOVE '01'      ZZMM2                           126017
+     C                     MOVE '01'      ZZDD2                           126017
+     C                     MOVE ZZDATB    ZZDTIN                          126017
+     C                     EXSR ZDAT10                                    126017
+     C                     Z-ADDZZMDNO    ZZENDW  50                      126017
+     C           ZZENDW    SUB  ZZBEG     ZZWDAT                          126017
+      *                                                                   126017
+      * Check if current year is a leap year                              126017
+     C           ZZYY1     DIV  4         ZZWN5                           126017
+     C                     MVR            ZZWN5                           126017
+     C           ZZWN5     IFNE 0                          B3             126017
+     C                     ADD  ZZWDAT    NLEAP                           126017
+     C                     ELSE                            X3             126017
+     C                     ADD  ZZWDAT    LEAP50                          126017
+     C                     END                             E3             126017
+      *                                                                   126017
+      * Accumulate leap year and non-leap year days for complete          126017
+      * years in the interest period                                      126017
+     C           ZZYY2     DOWLTYY2SAV                     B3             126017
+      *                                                                   126017
+      * Check if current year is a leap year                              126017
+     C           ZZYY2     DIV  4         ZZWN5                           126017
+     C                     MVR            ZZWN5                           126017
+     C           ZZWN5     IFNE 0                          B4             126017
+     C                     ADD  365       NLEAP                           126017
+     C                     ELSE                            X4             126017
+     C                     ADD  366       LEAP50                          126017
+     C                     END                             E4             126017
+      *                                                                   126017
+      * Add 1 to year number                                              126017
+     C                     ADD  1         ZZYY2                           126017
+     C                     ENDDO                           E3             126017
+      *                                                                   126017
+      * Finally calculate the days for the last part-year up              126017
+      * to the end date                                                   126017
+      *                                                                   126017
+      * Get Midas day number for 1st Jan of current year                  126017
+     C                     MOVE '01'      ZZMM2                           126017
+     C                     MOVE '01'      ZZDD2                           126017
+     C                     MOVE ZZDATB    ZZDTIN                          126017
+     C                     EXSR ZDAT10                                    126017
+     C                     Z-ADDZZMDNO    ZZBEG                           126017
+     C           ZZEND     SUB  ZZBEG     ZZWDAT                          126017
+      *                                                                   126017
+      * Check if year is a leap year                                      126017
+     C           ZZYY2     DIV  4         ZZWN5                           126017
+     C                     MVR            ZZWN5                           126017
+     C           ZZWN5     IFNE 0                          B3             126017
+     C                     ADD  ZZWDAT    NLEAP                           126017
+     C                     ELSE                            X3             126017
+     C                     ADD  ZZWDAT    LEAP50                          126017
+     C                     END                             E3             126017
+      *                                                                   126017
+     C                     END                             E2             126017
+      *                                                                   CIR013
+      * Factoring of non-leap year days is not required for method 9      CIR013
+     C           ZZCALC    IFEQ '9'                                       CIR013
+     C                     Z-ADDNLEAP     WNLP2                           CIR013
+     C                     ELSE                                           CIR013
+      *                                                                   126017
+      * Multiply non-leap year days by 366/365                            126017
+     C           NLEAP     MULT 366       WNLP1  150                      126017
+     C********** WNLP1     DIV  365       WNLP2  157H                                  126017 242286
+     C           WNLP1     DIV  365       WNLP2  159H                                         242286
+      *                                                                   CIR013
+     C                     ENDIF                                          CIR013
+      *                                                                   126017
+      * Add the result to the number of leap year days to give            126017
+      * the total days in interest period                                 126017
+     C********** LEAP50    ADD  WNLP2     INT6DY 157H                                  126017 242286
+     C           LEAP50    ADD  WNLP2     INT6DY 159H                                         242286
+     C*                                                                   126017
+     C                     ELSE                                           126017
+      *                                                                                       246141
+     C           ZZCALC    IFEQ '7'                                                           246141
+     C           CIR004    ANDEQ'Y'                                                           246141
+      *                                                                                       246141
+      ** If the day1 or day 2 is 31, change to 30.                                            246141
+      *                                                                                       246141
+     C           ZZDD1     IFEQ 31                                                            246141
+     C                     Z-ADD30        ZZDD1                                               246141
+     C                     ENDIF                                                              246141
+      *                                                                                       246141
+     C           ZZDD2     IFEQ 31                                                            246141
+     C                     Z-ADD30        ZZDD2                                               246141
+     C                     ENDIF                                                              246141
+      *                                                                                       246141
+      ** Get the number of days from the year.                                                246141
+      *                                                                                       246141
+     C           ZZYY2     SUB  ZZYY1     ZZP1                                                246141
+     C           ZZP1      MULT 360       ZZP1                                                246141
+     C           ZZMM2     SUB  ZZMM1     ZZP2                                                246141
+     C           ZZP2      MULT 30        ZZP2                                                246141
+     C           ZZDD2     SUB  ZZDD1     ZZP3                                                246141
+      *                                                                                       246141
+     C           ZZP1      ADD  ZZP2      ZZINDY                                              246141
+     C                     ADD  ZZP3      ZZINDY                                              246141
+     C                     GOTO ZINTD9                                                        246141
+      *                                                                                       246141
+     C                     ELSE                                                               246141
+      *                                                                   126017
+     C****IF*NOT*3,4*OR*5*EXIT*PROCESSING*******                          126017
+     C**  IF NOT 3,4,5 OR 6 EXIT PROCESSING                               126017
+      ** or 7 when enhancement CIR004 is on.                              CIR004
+      *                                                                   CIR004
+      ** or 9                                                             CIR013
+      *                                                                   CIR013
+      ** or 0                                                                                CER016A
+      *                                                                                      CER016A
+     C                     Z-ADDZZWDAT    ZZINDY           - LOAD OUTPT
+     C                     GOTO ZINTD9                     ----------->
+     C*
+     C                     ENDIF                                                              246141
+     C                     END
+     C                     END                                            126017
+     C*
+     C           ZZCALC    IFEQ '3'
+     C********** ZZCALC    OREQ '7'                                                    CIR004 246141
+     C********** CIR004    ANDEQ'Y'                                                    CIR004 246141
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C*
+     C**  CALC NO. DAYS IN FIRST MONTH
+     C           ZZCALC    IFEQ '3'                                                          CER016A
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C           CER016    ANDEQ'N'                                                          CER016A
+     C*****************************************************************              040697 AR996895
+     C****FOR*FEB*TEST*IF*DAY*EQUAL*TO*END*OF*MONTH********************              040697 AR996895
+     C********** ZZMM1     IFEQ 2                                                    040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C****TEST*IF*LEAP*YEAR********************************************              040697 AR996895
+     C********** ZZYY1     DIV  4         ZZWN5                                      040697 AR996895
+     C**********           MVR            ZZWN5          80                          040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C****STORE*DAY*NUMBER*********************************************              040697 AR996895
+     C**********           Z-ADDZZDD1     ZZSTO1  50                                 040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C****FOR*LAST*DAY*OF*MONTH*--->*INITIALISE*WITH*30****************              040697 AR996895
+     C********** *IN80     IFEQ '1'                                                  040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C********** ZZDD1     IFEQ 29                                                   040697 AR996895
+     C**********           Z-ADD30        ZZDD1                                      040697 AR996895
+     C**********           END                                                       040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C**********           ELSE                                                      040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C********** ZZDD1     IFEQ 28                                                   040697 AR996895
+     C**********           Z-ADD30        ZZDD1                                      040697 AR996895
+     C**********           END                                                       040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C**********           END                                                       040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C**********           END                                                       040697 AR996895
+     C*****************************************************************              040697 AR996895
+     C                     ENDIF                                                             CER016A
+      *                                                                                      CER016A
+     C           30        SUB  ZZDD1     ZZP1    50   80
+     C*
+     C**  IF < 0, INITIALISE TO 0
+     C           *IN80     IFEQ '1'
+     C                     Z-ADD*ZEROS    ZZP1
+     C                     END
+     C*****************************************************************              040697 AR996895
+     C****RESTORE*START*DATE*DAY*NUMBER********************************              040697 AR996895
+     C********** ZZMM1     IFEQ 2                                                    040697 AR996895
+     C**********           Z-ADDZZSTO1    ZZDD1                                      040697 AR996895
+     C**********           END                                                       040697 AR996895
+     C*
+     C**  CALC NO. DAYS IN LAST MONTH
+     C           ZZDD2     IFLE 30
+     C                     Z-ADDZZDD2     ZZP2    50
+     C                     ELSE
+     C                     Z-ADD30        ZZP2
+     C                     END
+      *                                                                                      CER016A
+     C           ZZCALC    IFEQ '3'                                                          CER016A
+     C           ZZCALC    OREQ '0'                                                          CER016A
+     C           CER016    ANDEQ'N'                                                          CER016A
+     C*                                                                   040697
+     C**  FOR FEB TEST IF DAY EQUAL TO END OF MONTH                       040697
+     C           ZZMM2     IFEQ 2                                         040697
+     C*                                                                   040697
+     C**  TEST IF LEAP YEAR                                               040697
+     C           ZZYY2     DIV  4         ZZWN5                           040697
+     C                     MVR            ZZWN5          80               040697
+     C*                                                                   040697
+     C**  INTIALISE WITH NUMBER OF DAYS IN LAST MONTH                     040697
+     C                     Z-ADDZZDD2     ZZP2                            040697
+     C*                                                                   040697
+     C**  IF END OF MONTH CONSIDER 30 DAYS                                040697
+     C           *IN80     IFEQ '1'                                       040697
+     C*                                                                   040697
+     C           ZZDD2     IFEQ 29                                        040697
+     C           ZZCALC    ANDEQ'3'                                       CIR004
+     C           ZZDD2     OREQ 29                                                           CER016A
+     C           ZZCALC    ANDEQ'0'                                                          CER016A
+     C                     Z-ADD30        ZZP2                            040697
+     C                     END                                            040697
+     C*                                                                   040697
+     C                     ELSE                                           040697
+     C*                                                                   040697
+     C           ZZDD2     IFEQ 28                                        040697
+     C           ZZCALC    ANDEQ'3'                                       CIR004
+     C           ZZDD2     OREQ 28                                                           CER016A
+     C           ZZCALC    ANDEQ'0'                                                          CER016A
+     C                     Z-ADD30        ZZP2                            040697
+     C                     END                                            040697
+     C*                                                                   040697
+     C                     END                                            040697
+     C*                                                                   040697
+     C                     END                                            040697
+      *                                                                                      CER016A
+     C                     ENDIF                                                             CER016A
+     C*
+     C**  CALC NO. DAYS IN INTERVENING MONTHS
+     C           ZZYY2     IFEQ ZZYY1
+     C*
+     C           ZZMM2     SUB  ZZMM1     ZZP3    50
+     C                     SUB  1         ZZP3
+     C                     MULT 30        ZZP3
+     C*
+     C                     ELSE
+     C*
+     C**  FIND NO. OF DAYS FOR THE COMPLETE YEARS
+     C           ZZYY2     SUB  ZZYY1     ZZP3
+     C                     SUB  1         ZZP3
+     C                     MULT 360       ZZP3
+     C*
+     C**  FIND NO. OF MONTHS FOR THE TWO PARTIAL YEARS
+     C           12        SUB  ZZMM1     ZZWN5A  50
+     C                     MULT 30        ZZWN5A
+     C*
+     C           ZZMM2     SUB  1         ZZWN5
+     C           ZZWN5     MULT 30        ZZWN5
+     C*
+     C**  ACCUMULATE
+     C           ZZWN5A    ADD  ZZWN5     ZZWN5A
+     C           ZZP3      ADD  ZZWN5A    ZZP3
+     C*
+     C                     END
+     C*
+     C**  FINAL SUM
+     C           ZZP1      ADD  ZZP2      ZZINDY
+     C                     ADD  ZZP3      ZZINDY
+     C*
+     C                     END
+     C*
+     C**  FOR*METHODS*4*AND*5**                                           CIR013
+     C**  FOR METHODS 4 AND 5  or 9                                       CIR013
+     C           ZZCALC    IFEQ '4'
+     C           ZZCALC    OREQ '5'
+     C           ZZCALC    OREQ '9'                                       CIR013
+     C           #29FEB    ANDEQ'N'                                       CIR013
+     C*
+     C**  CALC NO. OF LEAP YEARS BETWEEN START AND END DATES
+     C           ZZYY1     DIV  4         ZZWN5   50                   YR
+     C                     MVR            ZZWN5          80
+     C*
+     C**  CHECK WHETHER START YEAR IS AFFECTED BY LEAP YEAR
+     C           ZZYY1     IFEQ ZZYY2
+     C*
+     C           ZZMM1     IFLE 2
+     C           ZZMM2     ANDGT2
+     C           *IN80     ANDEQ'1'
+     C                     ADD  1         ZZLPNM
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           ZZMM1     IFLE 2
+     C           *IN80     ANDEQ'1'
+     C                     ADD  1         ZZLPNM
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  LOOP TO CALCULATE NO. LEAP YEARS
+     C           ZZYY1     DOWLTZZYY2
+     C*
+     C**  INCREMENT START YEAR
+     C                     ADD  1         ZZYY1
+     C*
+     C           ZZYY1     IFEQ ZZYY2
+     C*
+     C           ZZMM2     IFGT 2
+     C           ZZYY2     DIV  4         ZZWN5                        YR
+     C                     MVR            ZZWN5          80
+     C*
+     C**  ADD 1 IF LEAP YEAR
+     C           *IN80     IFEQ '1'
+     C                     ADD  1         ZZLPNM
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           ZZYY1     DIV  4         ZZWN5                        YR
+     C                     MVR            ZZWN5          80
+     C*
+     C**  ADD 1 IF LEAP YEAR
+     C           *IN80     IFEQ '1'
+     C                     ADD  1         ZZLPNM
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  DEDUCT NO. OF LEAP YEARS CALCULATED BETWEEN START
+     C**  AND END DATES
+     C           ZZWDAT    SUB  ZZLPNM    ZZINDY           - LOAD OUTPT
+     C*
+     C                     END
+     C           ZINTD9    TAG                                            095238
+     C           IN80SV    IFEQ '1'                                       095238
+     C                     MOVE '1'       *IN80                           095238
+     C                     ELSE                                           095238
+     C                     MOVE '0'       *IN80                           095238
+     C                     END                                            095238
+     C*
+     C***********ZINTD9    ENDSR                                          095238
+     C                     ENDSR                                          095238
+      *****************************************************************
+      * End of /COPY ZINTDYZ2                                         *
+      *****************************************************************

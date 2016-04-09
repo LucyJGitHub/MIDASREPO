@@ -1,0 +1,346 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Query Selection')
+      *****************************************************************
+      *                                                               *
+      *  Midas   -  General Ledger Module                             *
+      *                                                               *
+      *  GL003200 - Midas GL ATU Accounts to be Transferred Query     *
+      *             Selection                                         *
+      *                                                               *
+      *  Function:  This program builds a Query Selection String for  *
+      *             an Open Query File over a file joining the        *
+      *             accounts and customer details. The Selection      *
+      *             Criteria is based on the criteria entered via     *
+      *             the Account Transfer Criteria maintenance.        *
+      *                                                               *
+      *  Called by: GLC003200                                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLACRFPDIF  E           K        DISK         KINFSR *PSSR
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     C/EJECT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@REFN 10
+     C                     PARM           P@RTCD  2
+     C                     PARM           P@QRSL256
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR PSACRF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PSACRF - Process Account Transfer Criteria.                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XRACRF, XSSTRG                                        *
+      *                                                               *
+      *****************************************************************
+     C           PSACRF    BEGSR
+      *
+      ** PSLAC: Process Account Transfer Criteria.
+      ** Retreive Account Transfer Criteria Details.
+      *
+     C                     EXSR XRACRF
+      *
+      ** Build Query String.
+      ** Branch Details
+      *
+     C           ACBRCA    IFNE *BLANKS
+     C           'BRCA'    CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACBRCA:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     ENDIF
+      *
+      ** Customer Details
+      ** If details have been entered, build string depending if:-
+      ** Range of customers been entered.
+      ** Single customers been entered.
+      *
+     C           ACCNU1    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'BBCUST':1P@QRSL
+      *
+     C           ACCNU2    IFEQ *BLANKS
+     C                     CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACCNU1:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+      *
+     C                     ELSE
+     C                     CAT  '*GE "':1 P@QRSL
+     C                     CAT  ACCNU1:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     CAT  '*AND':1  P@QRSL
+     C                     CAT  'BBCUST':1P@QRSL
+     C                     CAT  '*LE "':1 P@QRSL
+     C                     CAT  ACCNU2:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Currency Details
+      *
+     C           ACCCY     IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'CCY':1   P@QRSL
+     C                     CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACCCY:0   P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     ENDIF
+      *
+      ** Account Code Details
+      ** If details have been entered, build string depending if:
+      ** Range of Account Codes have been entered or
+      ** Single Account Code entered.
+      *
+     C           ACACO1    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'ACOD':1  P@QRSL
+      *
+     C           ACACO2    IFEQ *BLANKS
+     C                     CAT  '*EQ':1   P@QRSL
+     C                     CAT  ACACO1:1  P@QRSL
+      *
+     C                     ELSE
+     C                     CAT  '*GE':1   P@QRSL
+     C                     CAT  ACACO1:1  P@QRSL
+     C                     CAT  '*AND':1  P@QRSL
+     C                     CAT  'ACOD':1  P@QRSL
+     C                     CAT  '*LE':1   P@QRSL
+     C                     CAT  ACACO2:1  P@QRSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Account Sequence Number
+      *
+     C           ACACSQ    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'ACSQ':1  P@QRSL
+     C                     CAT  '*EQ':1   P@QRSL
+     C                     CAT  ACACSQ:1  P@QRSL
+     C                     ENDIF
+      *
+      ** Retail Account Number
+      ** If details have been entered, build string depending if:
+      ** Range of Retail Account Numbers have been entered or
+      ** Single Retail Account Number entered.
+      *
+     C           ACACN1    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'ACNO':1  P@QRSL
+      *
+     C           ACACN2    IFEQ *BLANKS
+     C                     CAT  '*EQ':1   P@QRSL
+     C                     CAT  ACACN1:1  P@QRSL
+      *
+     C                     ELSE
+      *
+     C                     CAT  '*GE':1   P@QRSL
+     C                     CAT  ACACN1:1  P@QRSL
+     C                     CAT  '*AND':1  P@QRSL
+     C                     CAT  'ACNO':1  P@QRSL
+     C                     CAT  '*LE':1   P@QRSL
+     C                     CAT  ACACN2:1  P@QRSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Account Officer Codes
+      *
+     C           ACACOC    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'BBACOC':1P@QRSL
+     C                     CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACACOC:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     ENDIF
+      *
+      ** Account Type
+      *
+     C           ACATYP    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'ATYP':1  P@QRSL
+     C                     CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACATYP:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     ENDIF
+      *
+      ** Country of Citizenship
+      *
+     C           ACCOLC    IFNE *BLANKS
+     C                     EXSR XSSTRG
+     C                     CAT  'BBCNCZ':1P@QRSL
+     C                     CAT  '*EQ "':1 P@QRSL
+     C                     CAT  ACCOLC:0  P@QRSL
+     C                     CAT  '"':0     P@QRSL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XRACRF - Retreive from Account Transfer Criteria             *
+      *                                                               *
+      *  Called By: PSACRF                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XRACRF    BEGSR
+      *
+      ** Retreive Account Transfer Criteria Details.
+      *
+     C                     MOVELP@REFN    KREFN
+     C           KREF      CHAINGLACRFPD             2021
+      *
+     C           *IN20     IFEQ *ON
+     C           *IN21     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'GLACRFPD'DBFILE    P
+     C                     MOVELP@REFN    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSSTRG - Set String.                                         *
+      *                                                               *
+      *  Called By: PSACRF                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSSTRG    BEGSR
+      *
+      ** Set qurey selection screen.
+      *
+     C           P@QRSL    IFNE *BLANKS
+     C                     CAT  '*AND':1  P@QRSL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT -  Initialise and define fields                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+     C           *LIKE     DEFN ACRFNO    KREFN
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     CLEARP@QRSL
+      *
+     C           KREF      KLIST
+     C                     KFLD           KREFN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Copyright International Banking Systems Ltd. 2010

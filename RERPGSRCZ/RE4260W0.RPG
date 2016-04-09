@@ -1,0 +1,469 @@
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Travellers Cheques Details Window')
+     H        1
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4260W0 - Travellers Cheques Register Details Window        *
+     F*                                                               *
+     F*  Function:  Maintenance program for the travellers cheques    *
+     F*             details contained in PF/RETCRDPD.                 *
+     F*                                                               *
+     F*  Called By: RE4260 - Travellers Cheques Register Control      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 16May06               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. 196730             Date 14Sep01
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRT002  *CREATE    DATE  1Dec95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  196730 - Database error caused by incorrect window position. *
+      *           Recompile over changed DSPF/RE4260#0.               *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  FUNCTION OF INDICATORS                                       *
+     F*  ----------------------                                       *
+     F*                                                               *
+     F*  11 - Amend mode.                                             *
+     F*                                                               *
+     F*  70 - Subfile clear/display control indicator.                *
+     F*  71 - EOF indicator for PF/RETCRCPD.                          *
+     F*  72 - Subfile display indicator.                              *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  SUBROUTINE USAGE                                             *
+     F*  ----------------                                             *
+     F*                                                               *
+     F*  *PSSR  - Program error.                                      *
+     F*  AMDRTN - Amend Routine.                                      *
+     F*  CHQPRS - Cheque Presented Validation.                        *
+     F*  DLTRTN - Deletion Routine.                                   *
+     F*  ENQDLT - Enquiry/Delete Routine.                             *
+     F*  LDCHQD - Load Cheque Book Details.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FRETCRDL1UF  E           K        DISK
+      **  Travellers Cheques Details - updates
+     F            RETCRDD0                          KRENAMERETCRDD1
+      *
+     FRETCRDL0IF  E           K        DISK
+      **  Travellers Cheques Details
+      *
+     FRE4260#0CF  E                    WORKSTN
+     F                                        @RRN2 KSFILE RE4260S0
+      **  Display File
+      *
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      **  Object Copyright
+      *
+     E                    FTR     1   2 70
+      **  Array for function/command keys
+      *
+     IPDATA       DS                           1024
+     I**********                              1   60@ISSU                                    CSD027A
+     I                                        1   6 @ISSU                                    CSD027A
+     I                                        7  180@STCN
+     I                                       19  300@ETCN
+     I                                       31  320@NOTC
+     I                                       33  33 @SUCC
+      *
+     IPSPARE      DS                            256
+     I                                        1 256 SDATA
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, Short data structure
+      *
+      /EJECT
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTAG    1
+     C                     PARM           PDATA
+     C                     PARM           PRTCD   7
+     C                     PARM           PWDWD   30
+     C                     PARM           PLDWD   30
+     C                     PARM           PSRWD   30
+     C                     PARM           PSCWD   30
+     C                     PARM           PTLWD   7
+     C                     PARM           PSPARE
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Search key for LF/RETCRDL0 and LF/RETCRDL1.
+      *
+     C           KCRD      KLIST
+     C**********           KFLD           @ISSU   60                                         CSD027A
+     C                     KFLD           @ISSU   6                                          CSD027A
+     C                     KFLD           @CHQN  120
+      *
+      **  Set starting row and column.  Initialise to non-amend mode.
+      *
+     C                     Z-ADDPSRWD     SWROW
+     C                     Z-ADDPSCWD     SWCOL
+     C                     MOVEL'0'       *IN11
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'GBRTSMSG'WUMSGF 10                       CRT002
+     C                     MOVE 'F '      WUMSGF                          CRT002
+     C                     MOVEL' '       @SUCC
+      *
+      **  Process request.
+      *
+     C                     SELEC
+      *
+     C           PTAG      WHEQ 'C'
+     C                     EXSR ENQDLT
+      *
+     C           PTAG      WHEQ 'D'
+     C                     EXSR ENQDLT
+      *
+     C           PTAG      WHEQ 'A'
+     C                     EXSR AMDRTN
+      *
+     C                     ENDSL
+      *
+      **  Return appropriate codes according to key pressed.
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVEL'Y2U9999' PRTCD
+     C                     END
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'USR0790' PRTCD
+     C                     END
+      *
+     C                     MOVEL'1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           ENQDLT  - Enquiry/Delete Routine.                   *
+      *                                                               *
+      * CALLS     CHQPRS  - Cheque Presented Validation.              *
+      *           DLTRTN  - Delete Routine.                           *
+      *           LDCHQD  - Load Cheque Book Details.                 *
+      *                                                               *
+      * CALLED BY AMDRTN  - Amend Routine.                            *
+      *           MAIN    - Main Control Processing.                  *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ENQDLT    BEGSR                           ** ENQDLT **
+      *
+     C                     MOVEL'0'       *IN13
+      *
+     C           PTAG      IFEQ 'D'
+     C                     MOVELFTR,2     SFNK
+     C                     ELSE
+     C                     MOVELFTR,1     SFNK
+     C                     ENDIF
+      *
+      **  Load subfile and display cheque details.
+      *
+     C                     EXSR LDCHQD
+      *
+     C           *IN72     IFEQ '0'
+     C                     Z-ADD1         @RRN2
+     C                     ENDIF
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITERE4260F0
+     C                     WRITERE4260F1
+     C                     EXFMTRE4260C0
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+     C           *IN13     IFEQ '1'
+     C                     MOVEL'0'       *IN13
+     C                     MOVEL*BLANKS   SMSG
+     C                     WRITERE4260F1
+     C                     ENDIF
+      *
+      **  If deletion, ensure that all cheques have been settled first
+      **  before allowing it.
+      *
+     C           *INKJ     IFEQ '1'
+     C           PTAG      ANDEQ'D'
+      *
+     C                     EXSR CHQPRS
+      *
+     C           *IN12     IFEQ '0'
+     C                     EXSR DLTRTN
+     C                     MOVEL'Y'       @SUCC
+     C                     EXSR LDCHQD
+      *
+     C                     ELSE
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0179' WUMSID
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           WUMSID
+     C                     PARM           WUMSGF
+     C                     PARM           SMSG
+     C                     WRITERE4260F1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           LDCHQD  - Load Cheque Book Details.                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY ENQDLT  - Enquiry/Delete Routine.                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LDCHQD    BEGSR                           ** LDCHQD **
+      *
+      **  Clear Subfile.
+      *
+     C                     MOVE '1'       *IN70
+     C                     WRITERE4260C0
+     C                     MOVE '0'       *IN70
+      *
+     C                     Z-ADD0         @RRN2
+     C                     MOVEL@STCN     @CHQN
+      *
+      **  Load Subfile.
+      *
+     C           KCRD      SETLLRETCRDL0
+     C                     READ RETCRDL0                 71
+      *
+     C                     MOVE '0'       *IN72
+     C           *IN71     IFEQ '1'
+     C           ROISSU    ORNE @ISSU
+     C           ROTCSN    ORLT @STCN
+     C           ROTCSN    ORGT @ETCN
+     C                     MOVE '1'       *IN72
+     C                     MOVEL'USR0178' WUMSID
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           WUMSID
+     C                     PARM           WUMSGF
+     C                     PARM           SMSG
+     C                     ENDIF
+      *
+     C           *IN71     IFEQ '0'
+     C                     Z-ADD@STCN     @TCSN  120
+     C                     ENDIF
+      *
+     C           *IN71     DOWEQ'0'
+     C           @ISSU     ANDEQROISSU
+     C           ROTCSN    ANDLE@ETCN
+      *
+     C           @TCSN     IFGE ROTCSN
+     C                     MOVELROTCSN    SF2TCS
+     C                     MOVELROBYNM    SF2BYN
+     C                     MOVELROIDTP    SF2IDT
+     C                     MOVELROBYID    SF2BYI
+     C                     MOVELROTCSE    SF2TCP
+     C                     MOVELROTCNO    SF2TCN
+      *
+     C                     ADD  1         @RRN2
+     C                     WRITERE4260S0
+     C                     READ RETCRDL0                 71
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         @TCSN
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DLTRTN - Deletion Routine                          *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  ENQDLT - Enquiry/Delete Routine.                   *
+      *                                                               *
+      *****************************************************************
+     C           DLTRTN    BEGSR                           ** DLTRTN **
+      *
+      **  Delete each cheque detail record in PF/RETCRDPD before book
+      **  can be allowed to be deleted.
+      *
+     C                     Z-ADD1         @CTR
+     C                     Z-ADD@STCN     @CHQN
+      *
+     C           KCRD      CHAINRETCRDL1             71
+      *
+     C           *IN71     DOWEQ'0'
+     C           @CTR      ANDLE@NOTC
+      *
+     C                     DELETRETCRDD1
+      *
+     C                     ADD  1         @CTR
+     C                     ADD  1         @CHQN
+      *
+     C           KCRD      CHAINRETCRDL1             71
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            AMDRTN - Amend Routine                             *
+      *                                                               *
+      * CALLS      ENQDLT - Enquiry/Delete Routine.                   *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           AMDRTN    BEGSR                           ** AMDRTN **
+      *
+      **  Set to amend mode and load screen.
+      *
+     C                     MOVE '1'       *IN11
+     C                     EXSR ENQDLT
+      *
+      **  If there are records to be displayed, proceed with amend.
+      *
+     C           *IN72     IFEQ '0'
+      *
+     C                     READCRE4260S0                 71
+      *
+     C           *IN71     DOWEQ'0'
+      *
+     C                     MOVELSF2TCS    @CHQN
+     C           KCRD      CHAINRETCRDD1             71
+      *
+     C           *IN71     IFEQ '0'
+     C                     MOVELSF2BYN    ROBYNM
+     C                     MOVELSF2BYI    ROBYID
+     C                     MOVELSF2TCP    ROTCSE
+     C                     MOVELSF2TCN    ROTCNO
+     C                     UPDATRETCRDD1
+     C                     ENDIF
+      *
+     C                     READCRE4260S0                 71
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            CHQPRS - Cheque Presented Validation.              *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  ENQDLT - Enquiry/Delete Routine.                   *
+      *                                                               *
+      *****************************************************************
+     C           CHQPRS    BEGSR                           ** CHQPRS **
+      *
+      **  Check that each cheque has been settled.
+      *
+     C                     Z-ADD1         @CTR    20
+     C                     Z-ADD@STCN     @CHQN
+     C                     MOVEL'0'       *IN12
+      *
+     C           KCRD      CHAINRETCRDD1             71
+     C           *IN71     IFEQ '1'
+     C                     MOVEL'1'       *IN12
+     C                     ENDIF
+      *
+     C           *IN71     DOWEQ'0'
+     C           @CTR      ANDLE@NOTC
+     C           *IN12     ANDEQ'0'
+      *
+     C           ROTCSE    IFNE 'Y'
+     C                     MOVEL'1'       *IN12
+     C                     ENDIF
+      *
+     C                     ADD  1         @CTR
+     C                     ADD  1         @CHQN
+      *
+     C           KCRD      CHAINRETCRDD1             71
+     C           *IN71     IFEQ '1'
+     C           @CTR      ANDLE@NOTC
+     C                     MOVEL'1'       *IN12
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           SNDMSG  - Send program message parameters           *
+      *                                                               *
+      * CALLS     SCC0240 - Send message to program queue             *
+      *                                                               *
+      * CALLED BY LDCHQD  - Load Cheque Book Details                  *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  FTR - Footer
+F3 = Exit   F12 = Initial Screen   F20 = Unfold
+F3 = Exit   F10 = Confirm Delete   F12 = Initial Screen   F20 = Unfold

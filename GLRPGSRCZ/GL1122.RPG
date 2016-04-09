@@ -1,0 +1,2101 @@
+0001 H        1                                                           GL1122
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Amount accrual input - insert screen')        *
+     F********************************************************************GL1122
+0003 F*                                                                  *GL1122
+     F*  Midas   GENERAL LEDGER MODULE                                GL1121
+0005 F*                                                                  *GL1122
+0006 F*     GL1122 - AMOUNT ACCRUAL INPUT - S/AMACC                      *GL1122
+0007 F*              INSERT SCREEN VALIDATION                            *GL1122
+0008 F*                                                                  *GL1122
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *GL1122
+      *  Last Amend No. MD029265           Date 15Aug14               *
+      *  Prev Amend No. AR1094265          Date 07Mar13               *
+      *                 CGL141             Date 12Dec12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL064             Date 10Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 188471             Date 26Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176510             Date 04Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01MAR99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+0011 F*                    CGL003             DATE 17DEC96               *S01199
+0011 F*                    S01199             DATE 27FEB90               *S01199
+0011 F*                    S01117             DATE 14/03/89              *S01117
+0011 F*                    S01194             DATE 10/03/89              *S01117
+0011 F*                    E16275             DATE 14/12/88              *GL1122
+0011 F*                    E13156             DATE 23/05/88              *GL1122
+0012 F*                                                                  *GL1122
+     F*------------------------------------------------------------------*GL1122
+     F*                                                                  *GL1122
+      *  MD029265 - Cannot complete accrual input insert due to       *
+      *             missing narrative upon 'Enter' (Recompile)        *
+      *  AR1094265 - Associated Customer in accrual input must be the *
+      *              same with the input                              *
+      *  CGL141 - Amount Accruals Extended Narrative.                 *
+      *           Added Hooks: CGL141_14  to CGL141_016               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CGL064 - Associated Customer / Cost Centre Validation        *
+      *           Changes                                             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     188471 - Profit Centre mandatory if it says so on GL ICD     *
+      *     CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *     176510 - Allocation/Validation of Default prfit centre
+      *              after Debit customer number has been validated.
+      *              The Debit customer number and account officer are
+      *              now parmed to the access object AOPRFMR0.
+      *     CSD005 - Standing Data Account Narrative.  Add new field
+      *              to SDACODPD.  Recompilation of programs.
+      *     CTI002 - Recompiled : File SDACODPD changed
+     A*     CGL003 - Add fields for Accrual Frequency on Amount          *
+     A*              Accruals                                            *
+0012 F*     S01199 - HELP SYSTEM                                         *GL1121
+     F*     S01117 - MULTIBRANCHING                                      *S01117
+     F*              PROFIT CENTRE ADDED                                 *S01117
+     F*     S01194 - NEW STANDING DATA                                   *S01117
+     F*     E16275 - CHANGE INDICATOR TO MATCH F12                       *E13156
+     F*     E13156 - HIGHLIGHT FIELDS IN ERROR ON SCREEN                 *E13156
+     F*                                                                  *GL1122
+     F*****************************************************************
+0016 FGL1120FMCF  E                    WORKSTN                            GL1122
+0020 F*ABLE***IF* F      96 12AI     2 DISK                               S01194
+0021 F*LINT   IF  F     256  7AI     2 DISK                               S01194
+0022 F*CCNT***IF* F     400 15AI     2 DISK                               S01194
+0022 F***ACCNT***IF  F     400 18AI     2 DISK                                         S01194 CGL029
+     F***ACCNT** IF  F     573 24AI     2 DISK                                         CGL029 CLE025
+     FACCNT   IF  F     580 24AI     2 DISK                                                   CLE025
+     F/COPY WNCPYSRC,GL1122F001
+     F*ABTB11*IF* E                    DISK                               S01117
+     F*ABLETR*IF* E           K        DISK                               S01117
+0023 F*                                                                   GL1122
+0024 F*       FUNCTION OF INDICATORS                                      GL1122
+0025 F*       STANDARD INPUT PROGRAM INDICATORS                           GL1122
+0014 F*  10   USED TO CONDITION FIRST TIME PASS THROUGH RPG CALC CYCLE  * GL1122
+0015 F***45***SET ON IF ERROR DURING READ FROM THE WORK STATION & HELP  * S01199
+0015 F*  45   SET ON IF ERROR DURING READ FROM THE WORK STATION         * S01199
+0026 F********U7      DATABASE ERROR                               GL1122 CGL003
+     F*       U7U8    DATABASE ERROR                                      CGL003
+0027 F*       89      BLINK ACTION CODE LABEL                             GL1122
+0028 F*       88      NON-DISPLAY ERROR MESSAGE/CODES                     GL1122
+0029 F*       87      NON-DISPLAY CHANGE DETAILS                          GL1122
+0030 F*       86      NON-DISPLAY USEFUL DATA                             GL1122
+0031 F*       85      OUTPUT ENQUIRE - SE - SCREEN                        GL1122
+0032 F*       84      OUTPUT DELETE - SD - SCREEN                         GL1122
+0033 F*       83      OUTPUT AMEND - SA - SCREEN                          GL1122
+0034 F*       82      OUTPUT INSERT - SI - SCREEN                         GL1122
+0035 F*       81      OUTPUT INITIAL - SF - SCREEN                        GL1122
+0036 F*       80      BLINK DELETE CHECK FIELD LABEL                      GL1122
+0037 F*       79      SYSTEM SET-UP FLAG ON                               GL1122
+0038 F*       78      SI SCREEN READ IN                                   GL1122
+0039 F*       77      FIRST CYCLE IND                                     GL1122
+0040 F*       76      UPDATE WORKSTATION TRANSACTION FILE                 GL1122
+0041 F*       NON-STANDARD INPUT PROGRAM INDICATORS                       GL1122
+0042 F*       02      BLINK REFERENCE NUMBER                              GL1122
+0043 F*       03      BLINK CURRENCY                                      GL1122
+0044 F*       04      BLINK AMOUNT                                        GL1122
+0045 F*       05      BLINK START DATE                                    GL1122
+0046 F*       06      BLINK MATURITY DATE                                 GL1122
+0047 F*       07      BLINK DEBIT ACCOUNT                                 GL1122
+0048 F*       08      BLINK DEBIT CUSTOMER                                GL1122
+0049 F*       09      BLINK CREDIT ACCOUNT                                GL1122
+0050 F*       12      BLINK CREDIT CUSTOMER                               GL1122
+0051 F*       13      BLINK NARRATIVE                                     GL1122
+0052 F*       24     BLINK DEBIT A/C SEQ.NO.                              GL1122
+0053 F*       25     BLINK CREDIT A/C SEQ.NO.                             GL1122
+0054 F*       31     DEBIT A/C SEQ.NO. BLANK-DEFAULT TO 01                GL1122
+0055 F*       32     CREDIT A/C SEQ.NO. BLANK-DEFAULT TO 01               GL1122
+0056 F*       33     DEBIT A/C SEQ. NO. NON-NUMERIC                       GL1122
+0057 F*       34     CREDIT A/C SEQ.NO. NON-NUMERIC                       GL1122
+     F*       39      TABLETR READ FAIL                                   S01117
+     F*       40      MULTIBRANCHING INDICATOR OFF                        S01117
+     F*       41      REVERSE IMAGE BRANCH CODE                           S01117
+     F*       42      INVALID BRANCH CODE                                 S01117
+     F*       43     INVALID ASSOCIATED CUSTOMER                          CGL064
+     F*       46     ACCRUAL FREQUENCY SWITCHABLE FEATURE ON              CGL003
+     F*       47     ERROR IN ACCRUAL FREQUENCY                           CGL003
+     F*       48     ERROR IN ACCRUAL DAY NUMBER                          CGL003
+     F*       49     ERROR IN ACCRUAL DATE                                CGL003
+     F*       50     PROFIT CENTRE USED                                   S01117
+     F*       51     PROFIT CENTRE AMEND                                  S01117
+     F*       52     PROFIT CENTRE ENTERED IS INVALID                     S01117
+     F*       53     PROFIT CENTRE DEFAULT                                S01117
+     F*       54     DISPLAY ASSOCIATED CUSTOMER                          CGL064
+0057 F*       74     DEBIT ERROR ACCOUNT ON SCREEN                        E13156
+0057 F*       75     CREDIT ERROR ACCOUNT ON SCREEN                       E13156
+     E                    CPY@    1   1 80
+0058 E*    SUBROUTINE TABLES/ARRAYS                                       GL1122
+0059 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYGL1122
+0060 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYGL1122
+0062 E                    ZA1        16  1               ZALIGN/ZEDIT     GL1122
+0063 E                    ZA2        16  1               ZALIGN/ZEDIT     GL1122
+0064 E*    STANDARD TABLES/ARRAYS                                         GL1122
+0065 E***********         ERCD       19  4               ERROR CODES      S01117
+0066 E***********         ERCM    1   1 79               ERROR MESSAGES   S01117
+     E                    ERCD       25  4               ERROR CODES      S01117
+     E/COPY WNCPYSRC,GL1122E001
+0066 E**********          ERCM    1   4 79               ERROR MESSAGES   S01117 CGL064
+     E                    ERCM    1   6 79               ERROR MESSAGES          CGL064
+     E/COPY WNCPYSRC,GL1122E002
+0067 E*    NON-STANDARD TABLES/ARRAYS                                     GL1122
+0068 I*    STANDARD FILES                                                 GL1122
+0069 I*                                                                   GL1122
+0070 I*    WORKSTATION FILE                                               GL1122
+0071 I*                                                                   GL1122
+0072 I*    FORMAT - INSERT SCREEN                                         GL1122
+0073 I*                                                                   GL1122
+0074 IGL1120F2    78                                                      GL1122
+0090 I              RUNA                            SRUNA                 GL1122
+0095 I*                                NON-STANDARD KEY FIELDS            GL1122
+0096 I              FAREF                           SREFN           15    GL1122
+0097 I*                                STANDARD ACTION CODE AND STRING    GL1122
+0098 I              ACTN                            SACTN                 GL1122
+0113 I*                                NON-STANDARD DETAIL SCREEN FIELDS  GL1122
+0116 I              SSTDT                           SSDAT                 GL1122
+0118 I              SDRCO                           SDRAC                 GL1122
+0121 I              SCRCO                           SCRAC                 GL1122
+0124 I              SPNAR                           SNARR                 GL1122
+0107 I*                                                                   GL1122
+0108 I*    NON-STANDARD FILES                                             GL1122
+0109 I*                                                                   GL1122
+0110 I*****TABLE*FILE - CURRENCIES RECORD 1.                              S01194
+0111 I***********                                                         S01194
+0112 I*ABLE***NS* 11   1 CD   2 C2   3 C0                                 S01194
+0113 I*******AND*     13 C1                                               S01194
+0114 I***********                             1   1 RECI                  S01194
+0115 I***********                             2   30RECT                  S01194
+0116 I***********                            10  12 CCY                   S01194
+0117 I***********                            13  130SREC                  S01194
+0118 I***********                            14  27 CCNM                  S01194
+0119 I***********                         P  28  348SPOT                  S01194
+0120 I***********                            35  37 CCYS                  S01194
+0121 I***********                            38  380CDP                   S01194
+0122 I***********                            39  390TNOT                  S01194
+0123 I***********                            40  40 DCCY                  S01194
+0124 I***********                            41  44 SRC1                  S01194
+0125 I***********                            45  48 SRC2                  S01194
+0126 I***********                            49  520TACC                  S01194
+0127 I***********                            53  560TEQV                  S01194
+0128 I***********                            57  600SWQV                  S01194
+0129 I***********                            61  640TAC4                  S01194
+0130 I***********                            65  680TAC5                  S01194
+0131 I***********                            69  69 HIND                  S01194
+0132 I***********                         P  70  768PART                  S01194
+0133 I***********                            77  780SSNO                  S01194
+0134 I***********                         P  79  858ERLC                  S01194
+0135 I***********                            86  860MDIN                  S01194
+0136 I***********                            87  870MDIA                  S01194
+0137 I***********                            88  880MDIB                  S01194
+0138 I***********                         P  90  920LCD                   S01194
+0139 I***********                            93  93 CHTP                  S01194
+0140 I***********                         P  94  960TNLU                  S01194
+0141 I***********                                                         S01194
+0142 I*****TABLE*FILE - ACCOUNT CODES RECORD 1.                           S01194
+0143 I***********                                                         S01194
+0144 I********NS* 16   1 CD   2 C3   3 C0                                 S01194
+0145 I*******AND*     13 C1                                               S01194
+0146 I***********                             1   1 RECI                  S01194
+0147 I***********                             2   30RECT                  S01194
+0148 I***********                             9  120ACOD                  S01194
+0149 I***********                            13  130SREC                  S01194
+0150 I***********                            14  38 ACKN                  S01194
+0151 I***********                            39  39 ATYP                  S01194
+0152 I***********                         P  40  420SHLC                  S01194
+0153 I***********                         P  43  450SHFC                  S01194
+0154 I***********                            48  48 TITO                  S01194
+0155 I***********                            49  520BSDR                  S01194
+0156 I***********                            53  560BSCR                  S01194
+0157 I***********                            57  600PLDR                  S01194
+0158 I***********                            61  640PLCR                  S01194
+0159 I***********                            65  740RPCD                  S01194
+0160 I***********                            75  76 ACCS                  S01194
+0161 I***********                            77  77 STYP                  S01194
+0162 I***********                                                         S01194
+0163 I***********                                                         S01194
+0164 I*****TABLE FILE - NARRATIVE CODES RECORD.                           S01194
+0165 I***********                                                         S01194
+0166 I********NS* 17   1 CD   2 C9   3 C0                                 S01194
+0167 I***********                             1   1 RECI                  S01194
+0168 I***********                             2   30RECT                  S01194
+0169 I***********                            12  130NARC                  S01194
+0170 I***********                            14  43 NARD                  S01194
+0171 I***********                         P  90  920LCD                   S01194
+0172 I***********                            93  93 CHTP                  S01194
+0173 I***********                         P  94  960TNLU                  S01194
+0174 I***********                                                         S01194
+0175 I*****CATCHALL                                                       S01194
+0176 I********NS* 15                                                      S01194
+0177 I***********                                                         S01194
+0178 I*****CLIENT FILE - CUSTOMER STANDING DATA RECORD.                   S01194
+0179 I***********                                                         S01194
+0180 I*LINT***NS* 18   1 CD   8 CA                                        S01194
+0181 I***********                             1   1 RECI                  S01194
+0182 I***********                             2   70CNUM                  S01194
+0183 I***********                             8   8 RCDT                  S01194
+0184 I***********                                                         S01194
+0185 I******CLIENT FILE - CATCHALL                                        S01194
+0186 I***********                                                         S01194
+0187 I********NS* 15                                                      S01194
+0188 I***********                             1   1 RECI                  S01194
+0189 I*                                                                   GL1122
+0190 I*    ACCOUNTS MASTER FILE - DETAIL RECORD.                          GL1122
+0191 I*                                                                   GL1122
+0192 IACCNT   NS  19   1 CD                                               GL1122
+0193 I                                        1   1 RECI                  GL1122
+0194 I**********                              2   70CNUM                               GL1122 CSD027
+0194 I                                        2   7 CNUM                                      CSD027
+0195 I                                        8  10 CCY                   GL1122
+0196 I**********                             11  140ACOD                               GL1122 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0197 I                                       15  160ACSQ                  GL1122
+     I                                      554 5630ACOD                                      CGL029
+     I                                       26  26 ATYP                                      CGL014
+     I                                      580 580 COLF                                      CGL014
+0198 I*        ACCNT FILE - CATCHALL                                      GL1122
+0199 I        NS  15                                                      GL1122
+0200 I                                        1   1 RECI                  GL1122
+     I/COPY WNCPYSRC,GL1122I003
+0201 I*                                                                   GL1122
+0202 I*    NON-STANDARD DATA STRUCTURES                                   GL1122
+0203 I*                                                                   GL1122
+0204 I*****DATA*STRUCTURE FOR TABLE FILE KEY                              S01194
+0205 I***********                                                         S01194
+0206 I*********** DS                                                      S01194
+0207 I***********                             1  12 TABKEY                S01194
+0208 I***********                             1   2 TAB2                  S01194
+0209 I***********                             9  11 TAB3A                 S01194
+0210 I***********                            10  12 TAB3B                 S01194
+0211 I***********                             8  11 TAB4A                 S01194
+0212 I***********                             9  12 TAB4                  S01194
+0213 I***********                            12  12 TAB1                  S01194
+0214 I***********                             6  11 TAB6                  S01194
+0215 I***********                            11  12 TAB2B                 S01194
+0216 I***********                                                         S01194
+0217 I*****DATA*STRUCTURE FOR CLINT FILE KEY                              S01194
+0218 I***********                                                         S01194
+0219 I*********** DS                                                      S01194
+0220 I***********                             1   7 CLKEY                 S01194
+0221 I***********                             1   6 CLKEY1                S01194
+0222 I***********                             7   7 CLKEY2                S01194
+0223 I*                                                                   GL1122
+0224 I*    DATA STRUCTURE FOR ACCNT FILE KEY                              GL1122
+0225 I            DS                                                      GL1122
+0226 I***********                             1  15 ACKEY                 S01117
+0226 I**********                              1  18 ACKEY                              S01117 CGL029
+     I                                        1  24 ACKEY                                     CGL029
+0227 I                                        1   6 ACKEY1                GL1122
+0228 I                                        7   9 ACKEY2                GL1122
+0229 I**********                             10  13 ACKEY3                             GL1122 CGL029
+0230 I**********                             14  15 ACKEY4                             GL1122 CGL029
+0230 I**********                             16  18 ACKEY5                             S01117 CGL029
+     I                                       10  19 ACKEY3                                    CGL029
+     I                                       20  21 ACKEY4                                    CGL029
+     I                                       22  24 ACKEY5                                    CGL029
+0231 I*                                                                   GL1122
+0232 I*    STANDARD LOCAL DATA AREA FIELDS                                GL1122
+0233 I*                                                                   GL1122
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0234 ILDA        UDS                            256                       GL1122
+0235 I                                        1   8 LPROC                 GL1122
+     I***********                           134 138 LFILE                 S01194
+     I***********                           139 167 LKEY                  S01194
+     I***********                           168 175 LPROG                 S01194
+     I***********                           176 1770LDBNO                 S01194
+0073 I**********                            181 1850LRUND                 S01194
+0074 I**********                            186 192 LRUNA                 S01194
+0075 I**********                            193 193 LDATF                 S01194
+0076 I***********                           194 1940LSFLG                 S01194
+0077 I**********                            195 1960LKEYL                 S01194
+0078 I**********                            197 202 LISP                  S01194
+0079 I**********                            203 203 LTWOL                 S01194
+0080 I**********                            204 2040LLDLP                 S01194
+0081 I**********                            205 2090LTNLU                 S01194
+0082 I**********                            210 210 LDELM                 S01194
+0083 I**********                            211 211 LDUD                  S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+0073 I                                      184 1880LRUND                 S01194
+0074 I                                      189 195 LRUNA                 S01194
+0075 I                                      196 196 LDATF                 S01194
+0076 I                                      197 1970LSFLG                 S01194
+0077 I                                      198 1990LKEYL                 S01194
+0078 I                                      200 205 LISP                  S01194
+0079 I                                      206 206 LTWOL                 S01194
+0080 I                                      207 2070LLDLP                 S01194
+0081 I                                      208 2120LTNLU                 S01194
+0082 I                                      213 213 LDELM                 S01194
+0083 I                                      214 214 LDUD                  S01194
+     IWSTRN      UDS                            860
+     I                                        1 200 WST200
+     I                                      201 400 WST400
+     I                                      401 600 WST600
+     I                                      601 800 WST800
+     I                                      801 860 WST860
+     I*  MASTER FILE RECORD
+     I                                        1   1 WST001
+     I                                        2   70WST007
+     I                                        8   8 WST008
+     I                                    P  31  330WST033
+     I                                    P  34  360WST036
+     I                                    P  37  390WST039
+     I                                       40  40 WST040
+     I                                    P  41  470WST047
+     I                                       48  50 WST050
+     I                                    P  51  530WST053
+     I                                    P  54  560WST056
+     I**********                             57  600WST060                                    CGL029
+     I                                       57  600QQT060                                    CGL029
+     I**********                             61  660WST066                                    CSD027
+     I                                       61  66 WST066                                    CSD027
+     I**********                             67  700WST070                                    CGL029
+     I                                       67  700QQT070                                    CGL029
+     I**********                             71  760WST076                                    CSD027
+     I                                       71  76 WST076                                    CSD027
+     I                                       77 106 WST106
+     I                                    P 107 1130WST113
+     I                                      114 1150WST115
+     I                                      116 1170WST117
+     I                                      122 125 WST125                S01117
+     I                                      126 128 WST128                S01117
+     I                                      129 129 WST129                CGL003
+     I                                      130 1310WST131                CGL003
+     I                                    P 132 1340WST134                CGL003
+     I                                      135 1440WST060                                    CGL029
+     I                                      145 1540WST070                                    CGL029
+     I**********                            155 1600WST160                          CGL064 AR1094265
+     I                                      155 160 WST160                                 AR1094265
+     I*
+     I                                      401 401 WST401
+     I                                    P 402 4040WST404
+     I                                    P 405 4070WST407
+     I                                      408 409 WST409
+     I                                      410 418 WST418
+     I                                      419 429 WST429
+     I                                      430 4300WST430
+     I                                      431 4310WST431
+     I                                      449 4540WST454
+     I*  SCREEN DATA STRUCTURE
+     I                                      461 467 WST467
+     I                                      468 469 WST469
+     I                                      470 475 WST475
+     I                                      476 478 WST478
+     I                                      479 484 WST484
+     I                                      485 485 WST485
+     I                                      486 488 WST488
+     I***********                           489 502 WST502                S01117
+     I***********                           503 508 WST508                S01117
+     I***********                           509 514 WST514                S01117
+     I***********                           515 518 WST518                S01117
+     I***********                           519 520 WST520                S01117
+     I***********                           521 526 WST526                S01117
+     I***********                           527 530 WST530                S01117
+     I***********                           531 532 WST532                S01117
+     I***********                           533 538 WST538                S01117
+     I***********                           539 568 WST568                S01117
+     I                                      489 491 WST491                S01117
+     I                                      492 505 WST505                S01117
+     I                                      506 509 WST509                S01117
+     I                                      510 515 WST515                S01117
+     I                                      516 521 WST521                S01117
+     I**********                            522 525 WST525                             S01117 CGL029
+     I**********                            526 527 WST527                             S01117 CGL029
+     I**********                            528 533 WST533                             S01117 CGL029
+     I**********                            534 537 WST537                             S01117 CGL029
+     I**********                            538 539 WST539                             S01117 CGL029
+     I**********                            540 545 WST545                             S01117 CGL029
+     I**********                            546 575 WST575                             S01117 CGL029
+     I**********                            576 576 WST576                             CGL003 CGL029
+     I**********                            577 578 WST578                             CGL003 CGL029
+     I**********                            579 584 WST584                             CGL003 CGL029
+     I                                      522 531 WST525                                    CGL029
+     I                                      532 533 WST527                                    CGL029
+     I                                      534 539 WST533                                    CGL029
+     I                                      540 549 WST537                                    CGL029
+     I                                      550 551 WST539                                    CGL029
+     I                                      552 557 WST545                                    CGL029
+     I                                      558 587 WST575                                    CGL029
+     I                                      588 588 WST576                                    CGL029
+     I                                      589 590 WST578                                    CGL029
+     I                                      591 596 WST584                                    CGL029
+     I*
+     IPSDS       SDS
+     I                                      244 246 SWID
+     I                                      254 263 USRID                 S01117
+     IRUNDT       DS                                                      S01194
+     I*                                                                   S01194
+     I* External DTAARA for run-date                                      S01194
+     I*                                                                   S01194
+     I                                        1   7 RUNA                  S01194
+     I                                    P   8  100RUND                  S01194
+     I                                       11  11 SSF                   S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+     IZMUSER      DS                             17                       S01117
+     I**                                                                  S01117
+     I** DATA AREA OF MENU USER                                           S01117
+     I**                                                                  S01117
+     I                                       11  13 USRBCH                S01117
+0044 I*                                                                   S01194
+     I/COPY WNCPYSRC,GL1122I002
+     ISDACOD    E DSSDACODPD                                              S01194
+     I**   ACCOUNT CODE DETAIL                                            S01194
+0044 I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I**   BANK DETAILS                                                   S01117
+     I*                                                                   S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01194
+     I**   BRANCH   CODES DETAIL                                          S01194
+     I*                                                                   S01117
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I**   CURRENCY CODES DETAIL                                          S01194
+     I*                                                                   S01194
+     ISDCUST    E DSSDCUSTPD                                              S01194
+     I**   CUSTOMER DETAILS                                               S01194
+     I              QQDFAC                          QQDFAX                                    CGL029
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I**   GENERAL LEDGER DETAILS                                         S01117
+     I              QQACCD                          QQACCX                                    CGL029
+     I*                                                                   S01117
+     ISDNARR    E DSSDNARRPD                                              S01194
+     I**   NARRATIVE DETAILS                                              S01194
+     I*                                                                   S01194
+     ISDPRFM    E DSSDPRFMPD                                              S01117
+     I**   PROFIT CENTRE DFT. MATRIX RETRIEVAL INDEX                      S01117
+     I*                                                                   S01117
+     ISDPRFC    E DSSDPRFCPD                                              S01117
+     I**   PROFIT CENTRES                                                 S01117
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CGL014
+      ** Switchable features                                                                  CGL014
+      *                                                                                       CGL014
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY WNCPYSRC,GL1122I001
+     I/COPY OFCPYSRCZ,CGL141_014                                                              CGL141
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WSTRN
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01194
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WSTRN
+     C                     IN   RUNDT                                     S01194
+     C                     IN   ZMUSER                                    S01117
+     C**                                                                  S01117
+0251 C*  FIRST CYCLE PROCESSING                                           GL1122
+     C**                                                                  S01117
+     C**  CHECK TO SEE IF SYSTEM HAS MULTIBRANCHING INDICATOR PRESENT     S01117
+     C**                                                                  S01117
+     C           *IN77     IFEQ '0'                                       S01117
+     C                     MOVEACPY@      BIS@   80
+     C**                                                                  S01117
+     C                     MOVEL'GL1122  'DBPGM                           S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETOF                     40                   S01117
+     C                     ELSE                                           S01117
+     C                     SETON                     40                   S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C** CHECK IF ACCRUAL FREQUENCY FEATURE IS SWITCHED ON                CGL003
+     C*                                                                   CGL003
+     C                     CALL 'AOSARDR0'                                CGL003
+     C                     PARM *BLANKS   #RTCD   7                       CGL003
+     C                     PARM '*VERIFY' #OPTN   7                       CGL003
+     C                     PARM 'CGL003'  WSARD   6                       CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFNE *BLANK                                    CGL003
+     C           #RTCD     ANDNE'*NRF   '                                 CGL003
+     C                     MOVEL'AOSARDR0'DBFILE                          CGL003
+     C                     Z-ADD3         DBASE            *************  CGL003
+     C                     MOVELWSARD     DBKEY            * DBERROR 03*  CGL003
+     C                     MOVE #OPTN     DBOPTN  7        *************  CGL003
+     C                     SETON                     U7U8LR               CGL003
+     C                     EXSR *PSSR                                     CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C           #RTCD     IFEQ *BLANK                                    CGL003
+     C                     MOVE 'Y'       CGL003  1                       CGL003
+     C                     MOVE *ON       *IN46                           CGL003
+     C                     END                                            CGL003
+      *                                                                                       CGL014
+      ** Check if enhancement CGL014 (Collaterals Processing) is on                           CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL014
+     C                     PARM *BLANKS   PRTCD   7                                           CGL014
+     C                     PARM '*VERIFY' POPTN   7                                           CGL014
+     C                     PARM 'CGL014'  PSARD   6                                           CGL014
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFNE *BLANKS                                                       CGL014
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL014
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL014
+     C                     MOVEL'CGL014  'DBKEY                                               CGL014
+     C                     Z-ADD001       DBASE                                               CGL014
+     C                     SETON                     U7U8LR                                   CGL014
+     C                     EXSR *PSSR                                                         CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ *BLANKS                                                       CGL014
+     C                     MOVE 'Y'       CGL014  1                                           CGL014
+     C                     MOVE '0'       WWARN   1                                           CGL014
+     C                     Z-ADD0         WCOPY  130                                          CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVE 'N'       CGL014                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL064
+     C                     PARM *BLANKS   #RTCD                                               CGL064
+     C                     PARM '*VERIFY' #OPTN                                               CGL064
+     C                     PARM 'CGL064'  WSARD                                               CGL064
+      *                                                                                       CGL064
+     C           #RTCD     IFEQ *BLANK                                                        CGL064
+     C                     MOVE 'Y'       CGL064  1                                           CGL064
+     C                     MOVE *ON       *IN54                                               CGL064
+     C                     ELSE                                                               CGL064
+     C                     MOVE 'N'       CGL064                                              CGL064
+     C                     MOVE *OFF      *IN54                                               CGL064
+     C                     ENDIF                                                              CGL064
+      *                                                                                       CGL064
+     C/COPY WNCPYSRC,GL1122C001
+     C/COPY OFCPYSRCZ,CGL141_015                                                              CGL141
+     C*                                                                   CGL003
+     C** CHECK IF PROFIT CENTRE PROCESSING IS REQUIRED                    S01117
+     C**                                                                  S01117
+     C                     EXSR PRUSED                                    S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+0252 C*                                                                   GL1122
+     C           *IN45     DOUEQ'0'
+0271 C                     READ GL1120FM                 45               GL1122
+     C************IN45     IFEQ '1'                                       S01199
+     C************         MOVEAERCD      HERCD 160                       S01199
+     C************         MOVEL'GL1120'  HBPGM   8                       S01199
+     C************         CALL 'MHELP'                                   S01199
+     C************         PARM           HBPGM                           S01199
+     C************         PARM           HERCD                           S01199
+     C************         END                                            S01199
+     C                     END
+0256 C   77                GOTO ENDFC                                     GL1122
+0257 C                     SETON                     77                   GL1122
+0258 C*                                                                   GL1122
+0259 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM   GL1122
+0260 C*                                                                   GL1122
+0261 C                     MOVELLISP      WPROG   8                       GL1122
+0262 C                     MOVE '2  '     WPROG                           GL1122
+0263 C                     MOVELWPROG     SPID    6                       GL1122
+0264 C*  SET-UP STANDARD LDA FIELDS                                       GL1122
+0265 C***********          MOVE WPROG     LPROG                           S01194
+0265 C                     MOVE WPROG     DBPGM                           S01194
+0266 C                     Z-ADD2         LLDLP                           GL1122
+0267 C*  SET-UP STANDARD BLANK FIELDS                                     GL1122
+0268 C                     MOVE *BLANKS   BLK200200                       GL1122
+0268 C                     MOVE *BLANKS   BLK400200                       GL1122
+0268 C                     MOVE *BLANKS   BLK600200                       GL1122
+0268 C                     MOVE *BLANKS   BLK800200                       GL1122
+0268 C                     MOVE *BLANKS   BLK860 60                       GL1122
+0269 C*                                                                   GL1122
+0270 C           LDATF     COMP 'M'                      98* DATE FORMAT  GL1122
+0271 C           LSFLG     COMP 1                        79* SSF          GL1122
+0272 C*                                                                   GL1122
+0273 C                     Z-ADD0         ZERO05  50                      GL1122
+0274 C*                                                                   GL1122
+0275 C*  LOG PROGRAM NAME                                                 GL1122
+0276 C*                                                                   GL1122
+0277 C                     MOVE LISP      WLOGP   6                       GL1122
+0278 C                     MOVE '9'       WLOGP                           GL1122
+0279 C*                                                                   GL1122
+0280 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE                    GL1122
+0281 C*                                                                   GL1122
+0282 C                     MOVE ' '       BLK7    7                       GL1122
+0283 C*                                                                   GL1122
+0284 C*  INITIALISE BLANKS TO TEST FOR BLANK INPUT FIELDS                 GL1122
+0285 C*                                                                   GL1122
+0286 C                     MOVE ' '       BLK3    3                       GL1122
+0287 C                     MOVE ' '       BLK14  14                       GL1122
+0288 C                     MOVE ' '       BLK6    6                       GL1122
+0289 C**********           MOVE ' '       BLK4    4                                    GL1122 CGL029
+     C                     MOVE ' '       BLK4   10                                           CGL029
+0290 C                     MOVE ' '       BLK30  30                       GL1122
+0291 C                     MOVE ' '       BLK28  28                       GL1122
+     C                     MOVE '   '     BLK3B   3                       S01117
+0292 C*                                                                   GL1122
+0293 C*    SETUP FOR AMOUNT POSTED TO DATE FIELD                          GL1122
+0294 C                     Z-ADD0         NAMPD  130                      GL1122
+0295 C*                                                                   GL1122
+0296 C           ENDFC     TAG                             ** ENDFC TAG   GL1122
+0297 C*                                                                   GL1122
+0298 C*  INITIALISE STANDARD INDICATORS                                   GL1122
+0299 C                     SETON                     888786* NON-DISPLAY  GL1122
+0300 C                     SETOF                     8980  * BLINK LABELS GL1122
+0301 C                     SETOF                     858483* OUTPUT       GL1122
+0302 C                     SETOF                     8281  * SCREENS      GL1122
+0304 C*                                                                   GL1122
+0305 C*  INITIALISE NON-STANDARD INDS                                     GL1122
+0306 C*                                                                   GL1122
+0307 C                     SETOF                     010203               GL1122
+0308 C                     SETOF                     040506               GL1122
+0309 C                     SETOF                     070809               GL1122
+0310 C                     SETOF                     121314               GL1122
+0311 C                     SETOF                     2425                 GL1122
+     C                     SETOF                     414252               S01117
+     C                     SETOF                     474849               CGL003
+0312 C*                                                                   GL1122
+0313 C*  CHECK FOR CORRECT SCREEN READ IN                                 GL1122
+0314 C*                                                                   GL1122
+0315 C   78                GOTO PROCES                                    GL1122
+0316 C                     SETON                     U7LR                 GL1122
+0317 C***********          MOVE 'SCREN'   LFILE                           S01194
+0318 C***********          MOVE BLK200    LKEY                            S01194
+0319 C***********          MOVEL'SI'      LKEY                            S01194
+0320 C***********          MOVE 'FOUND   'LKEY                            S01194
+0321 C***********          MOVE SID       LKEY                            S01194
+0322 C***********          MOVE '92'      LDBNO            ** DB ERROR 92 S01194
+0317 C                     MOVEL'SCREN   'DBFILE                          S01194
+0318 C                     MOVE BLK200    DBKEY                           S01194
+0319 C                     MOVEL'SI'      DBKEY                           S01194
+0320 C                     MOVE 'FOUND   'DBKEY                           S01194
+0321 C                     MOVE SID       DBKEY                           S01194
+0322 C                     MOVE '92'      DBASE            ** DB ERROR 92 S01194
+     C                     EXSR *PSSR                                     S01194
+0323 C                     GOTO END                                       GL1122
+0324 C*                                                                   GL1122
+0325 C           PROCES    TAG                             ** PROCES TAG  GL1122
+0326 C*                                                                   GL1122
+0327 C*  CLEAR ERROR CODE ARRAY, RESET INDEX                              GL1122
+0328 C*                                                                   GL1122
+0329 C                     MOVE BLK200    ERMSG  79                       GL1122
+0330 C                     MOVE '    '    ERCD                            GL1122
+0331 C                     Z-ADD0         S       20                      GL1122
+0332 C*                                                                   GL1122
+0333 C*  IF F3, END THE PROGRAM                                           GL1122
+0334 C*                                                                   GL1122
+0335 C   KC                MOVEL'**      'LPROC                           GL1122
+0336 C   KC                SETON                     LR                   GL1122
+0337 C   KC                GOTO END                                       GL1122
+0338 C*                                                                   GL1122
+0339 C*  IF F12, OUTPUT BLANK INITIAL SCREEN                              GL1122
+0340 C*                                                                   GL1122
+0341 C***KE                EXSR SUBSF                                     E16275
+0342 C***KE                GOTO END                                       E16375
+0341 C   KL                EXSR SUBSF                                     E16275
+0342 C   KL                GOTO END                                       E16275
+0343 C*                                                                   GL1122
+0344 C*  IF F10, OUTPUT ERROR MSG TO INSERT SCREEN                        GL1122
+0345 C*                                                                   GL1122
+0346 C   KJ                EXSR SUBSI                                     GL1122
+0347 C   KJ                SETOF                     88                   GL1122
+0348 C   KJ      S         ADD  1         S                               GL1122
+0349 C   KJ                MOVE ' 915'    ERCD,S                          GL1122
+0350 C   KJ                MOVE ERCM,1    ERMSG                           GL1122
+0351 C   KJ                GOTO END                                       GL1122
+0352 C*                                                                   GL1122
+0353 C*  IF NO CMD KEY ENTERED, NOW VALIDATE DATA INPUT                   GL1122
+0354 C*                                                                   GL1122
+0355 C                     EXSR VALSI                                     GL1122
+0356 C*                                                                   GL1122
+0357 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS                            GL1122
+0358 C*                                                                   GL1122
+0359 C           S         COMP 0                    8282                 GL1122
+0360 C*                                                                   GL1122
+0361 C*  IF THERE ARE ANY ERRORS, REOUTPUT THE                            GL1122
+0362 C*  INSERT SCREEN WITH ERROR CODES                                   GL1122
+0363 C*                                                                   GL1122
+0364 C   82                EXSR SUBSI                                     GL1122
+0365 C   82                SETOF                     88                   GL1122
+0366 C   82                GOTO END                                       GL1122
+     C*
+     C/COPY WNCPYSRC,GL1122C002
+     C/COPY OFCPYSRCZ,CGL141_016                                                              CGL141
+     C*
+0367 C*                                                                   GL1122
+     C*  SET UP WSTRN DATA AREA
+     C                     EXSR WTRNCH
+0372 C*                                                                   GL1122
+0375 C                     SETON                     76LR                 GL1122
+0376 C                     MOVE '9  '     LPROC                           GL1122
+0377 C*                                                                   GL1122
+0378 C           END       TAG                             ** END TAG     GL1122
+0379 C*                                                                   GL1122
+0380 C*  SETOF OUTPUT INDS IF DATABASE ERROR                              GL1122
+0381 C*                                                                   GL1122
+0382 C   U7                SETOF                     818276               GL1122
+     C*
+     C*  SETUP ERROR CODES
+     C*
+     C                     MOVEAERCD      ERCOD
+0383 C*                                                                   GL1122
+     C   81                WRITEGL1120F1
+     C   82                WRITEGL1120F2
+     C*
+     C                     OUT  LDA
+     C                     OUT  WSTRN
+     C   LR                RETRN
+0385 C*                                                                   GL1122
+0386 C********************************************************************GL1122
+0387 C**                                                                  GL1122
+0388 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT                        GL1122
+0389 C**                                                                  GL1122
+0390 C           SUBSF     BEGSR                           ***  SUBSF  ***GL1122
+0391 C                     SETON                     81LR                 GL1122
+     C                     MOVE *BLANKS   FAREF
+     C                     MOVE *BLANKS   ACTN
+0392 C                     MOVE '1  '     LPROC                           GL1122
+0393 C                     MOVE 'SF'      SID                             GL1122
+0394 C                     ENDSR                                          GL1122
+0395 C********************************************************************GL1122
+0396 C**                                                                  GL1122
+0397 C**   SUBR. - TO SET UP INSERT SCREEN OUTPUT                         GL1122
+0398 C**                                                                  GL1122
+0399 C           SUBSI     BEGSR                           ***  SUBSI  ***GL1122
+0400 C                     SETON                     82                   GL1122
+0401 C                     MOVE '2  '     LPROC                           GL1122
+0402 C                     MOVE 'SI'      SID                             GL1122
+0403 C                     ENDSR                                          GL1122
+0404 C********************************************************************GL1122
+0405 C**                                                                  GL1122
+0406 C**  SUBR. - TO VALIDATE DATA ENTERED ON THE INSERT SCREEN           GL1122
+0407 C**                                                                  GL1122
+0408 C           VALSI     BEGSR                           ***  VALSI  ***GL1122
+0409 C*                                                                   GL1122
+     C*  VALIDATE BRANCH CODE :-                                          S01117
+     C*  IF MULTIBRANCHING INDICATOR IS OFF (MBIN = 'N') THEN USE THE     S01117
+     C*      SINGLE BRANCH CODE IN 'SDBANKPD' AS DEFAULT BRANCH CODE      S01117
+     C*  ELSE /*MBIN = 'Y'*/ IF BRANCH CODE ENTERED FROM SCREEN IS BLANK  S01117
+     C*      THEN OBTAIN THE DEFAULT BRANCH CODE FROM DATAAREA ZMUSER     S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C           SBRCA     OREQ *BLANKS                                   S01117
+     C                     MOVE USRBCH    SBRCA                           S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SBRCA     @AJCD   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01194              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           S         ADD  1         S                               S01117
+     C                     MOVE ' 026'    ERCD,S                          S01117
+     C                     SETON                     42                   S01117
+     C                     ELSE                                           S01117
+     C                     MOVE A8BRCD    SBRCA                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**  VALIDATE ACTION CODE FOR USER/PROGRAM IF THE BRANCH CODE IS     S01117
+     C**  VALID                                                           S01117
+     C**  NOTE: IF MULTIBRANCHING INDICATOR IS OFF, THE VALIDATION IS     S01117
+     C**        DONE IN GL1121                                            S01117
+     C*                                                                   S01117
+     C           *IN42     IFEQ '0'                                       S01117
+     C                     EXSR ACTNVL                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           VALCUR    TAG                                            S01117
+     C*                                                                   S01117
+0410 C*  VALIDATE CURRENCY                                                GL1122
+0411 C*                                                                   GL1122
+0412 C*  MANDATORY                                                        GL1122
+0413 C*                                                                   GL1122
+0414 C           SCCY      COMP BLK3                     03               GL1122
+0415 C   03      S         ADD  1         S                               GL1122
+0416 C   03                MOVE ' 002'    ERCD,S                          GL1122
+0417 C   03                GOTO VALPRC                                    S01117
+0417 C***03******          GOTO VALSSD                                    S01117
+0418 C*                                                                   GL1122
+0419 C*  MUST BE LIVE RECORD ON TABLE FILE                                GL1122
+0420 C*                                                                   GL1122
+     C***********          MOVE BLK200    TABKEY                          S01194
+0422 C***********          MOVE '20'      TAB2                            S01194
+0423 C***********          MOVE '1'       TAB1                            S01194
+0424 C***********          MOVE SCCY      TAB3A                           S01194
+0425 C***********          EXSR TABCHN                                    S01194
+0426 C**N11*******         SETON                     03                   S01194
+0427 C***03******S         ADD  1         S                               S01194
+0428 C***03******          MOVE ' 003'    ERCD,S                          S01194
+0429 C***03******          GOTO VALSSD                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM SCCY      @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+0813 C*                                                                   S01194
+0814 C*  ERROR IF CURRENCY NOT FOUND                                      S01194
+0815 C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0426 C                     SETON                     03                   S01194
+0427 C           S         ADD  1         S                               S01194
+0428 C                     MOVE ' 003'    ERCD,S                          S01194
+0430 C*                                                                   GL1122
+     C                     ELSE                                           S01194
+     C                     MOVE A6CYCD    SCCY                            S01194
+0431 C*  VALIDATE AMOUNT                                                  GL1122
+0432 C*                                                                   GL1122
+0433 C*  MANDATORY                                                        GL1122
+0434 C*                                                                   GL1122
+0435 C           SAMNT     COMP BLK14                    04               GL1122
+0436 C   04      S         ADD  1         S                               GL1122
+0437 C   04                MOVE ' 004'    ERCD,S                          GL1122
+0438 C   04                GOTO VALPRC                                    S01117
+0438 C***04*****           GOTO VALSSD                                    S01117
+0439 C*                                                                   GL1122
+0440 C*  CHECK NUMERIC                                                    GL1122
+0441 C***********          Z-ADDCDP       ZADEC                           S01194
+0442 C***********13        SUB  CDP       ZADIG                           S01194
+0441 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0442 C           13        SUB  A6NBDP    ZADIG                           S01194
+0443 C                     MOVE SAMNT     ZFIELD                          GL1122
+0444 C                     EXSR ZALIGN                                    GL1122
+0445 C   99                SETON                     04                   GL1122
+0446 C   04      S         ADD  1         S                               GL1122
+0447 C   04                MOVE ' 005'    ERCD,S                          GL1122
+0448 C   04                GOTO VALPRC                                    S01117
+0448 C***04******          GOTO VALSSD                                    GL1122
+0449 C*                                                                   GL1122
+0450 C*  MUST BE GREATER THAN ZERO. WAMNT WILL BE USED                    GL1122
+0451 C*  TO UPDATE THE MASTER FILE                                        GL1122
+0452 C*                                                                   GL1122
+0453 C                     MOVE ZFIELD    WAMNT  130                      GL1122
+0454 C           WAMNT     COMP 0                        04               GL1122
+0455 C   04      S         ADD  1         S                               GL1122
+0456 C   04                MOVE ' 006'    ERCD,S                          GL1122
+0457 C   04                GOTO VALPRC                                    S01117
+0457 C***04******          GOTO VALSSD                                    S01117
+0458 C*                                                                   GL1122
+0459 C*  IF VALID, FORMAT AMOUNT FOR OUTPUT TO SCREEN                     GL1122
+0460 C*                                                                   GL1122
+0461 C                     EXSR ZEDIT                                     GL1122
+0462 C                     MOVE ZFIELD    SAMNT                           GL1122
+     C                     END                                            S01194
+     C*                                                                   S01117
+     C           VALPRC    TAG                                            S01117
+0404 C**************************************************************S01117176510
+0404 C***VALIDATE*THE*ENTERED*PROFIT*CENTRE.************************S01117176510
+0404 C**************************************************************S01117176510
+0404 C***IF*PROFIT*CENTRE*IS*USED*THEN*:-***************************S01117176510
+0404 C***VALIDATE*THE*INPUT*IF*PROFIT*CENTRE*IF*ENTERED*************S01117176510
+0404 C**************************************************************S01117176510
+0441 C************IN50     IFEQ '1'                        *B1      S01117176510
+0441 C***********SPRFC     IFNE *BLANK                     *B2      S01117176510
+0441 C***********          EXSR PRVAL                               S01117176510
+     C**                                                            S01117176510
+0404 C***ELSE*/**PROFIT*CENTRE*IS*USED*BUT*NOT*ENTERED**/*:-********S01117176510
+0404 C***EXTRACT*THE*DEFAULT*PROFIT*CENTRE*IF*INPUT*PROFIT*CENTRE*ISS01117176510
+0404 C***BLANK*AND*PROFIT*CENTRE*USED*FLAG*IS*ON*AND*DEFAULT*FLAG*ISS01117176510
+0404 C***ALSO*ON.***************************************************S01117176510
+0441 C***********          ELSE                            *X2      S01117176510
+0441 C************IN53     IFEQ '1'                        *B3      S01117176510
+0441 C***********          EXSR DFTPC                               S01117176510
+0441 C************INU7     IFEQ '1'                        *B4      S01117176510
+0441 C***********          GOTO END                                 S01117176510
+0441 C***********          ELSE                                     S01117176510
+0441 C***********          MOVE PRFCPR    SPRFC                     S01194176510
+0441 C***********          END                             *E4      S01117176510
+0441 C***********          END                             *E3      S01117176510
+0441 C***********          END                             *E2      S01117176510
+0441 C************IN52     IFEQ '1'                        *B2      S01117176510
+0441 C***********          ADD  1         S                         S01117176510
+0441 C***********          MOVE ' 030'    ERCD,S                    S01117176510
+0441 C***********          END                             *E2      S01117176510
+0441 C***********          END                             *E1      S01117176510
+0463 C*                                                                   GL1122
+0464 C           VALSSD    TAG                                            GL1122
+0465 C*                                                                   GL1122
+0466 C*  VALIDATE DATE                                                    GL1122
+0467 C*                                                                   GL1122
+0468 C*  MANDATORY                                                        GL1122
+0469 C*                                                                   GL1122
+0470 C           SSDAT     COMP BLK6                     05               GL1122
+0471 C   05      S         ADD  1         S                               GL1122
+0472 C   05                MOVE ' 007'    ERCD,S                          GL1122
+0473 C   05                GOTO VALSMD                                    GL1122
+0474 C*                                                                   GL1122
+0475 C*                                                                   GL1122
+0476 C*  CHECK DATE ENTERED                                               GL1122
+0477 C                     MOVE SSDAT     ZDATE                           GL1122
+0478 C                     EXSR ZDATE1                                    GL1122
+0479 C   99                SETON                     05                   GL1122
+0480 C   05      S         ADD  1         S                               GL1122
+0481 C   05                MOVE ' 008'    ERCD,S                          GL1122
+0482 C   05                GOTO VALSMD                                    GL1122
+0483 C*                                                                   GL1122
+0484 C*                                                                   GL1122
+0485 C*  IF DATE IS VALID, MOVE INTO OUTPUT FIELD FOR MASTER FILE         GL1122
+0486 C                     Z-ADDZDAYNO    WSDAT   50                      GL1122
+0487 C*                                                                   GL1122
+0488 C           VALSMD    TAG                                            GL1122
+0489 C*  MANDATORY                                                        GL1122
+0490 C*                                                                   GL1122
+0491 C           SMDAT     COMP BLK6                     06               GL1122
+0492 C   06      S         ADD  1         S                               GL1122
+0493 C   06                MOVE ' 009'    ERCD,S                          GL1122
+0494 C***06****************GOTO VALDRC                             GL1122 CGL003
+0494 C   06                GOTO VALPFQ                             GL1122 CGL003
+0495 C*                                                                   GL1122
+0496 C*  CHECK DATE ENTERED                                               GL1122
+0497 C                     MOVE SMDAT     ZDATE                           GL1122
+0498 C                     EXSR ZDATE1                                    GL1122
+0499 C   99                SETON                     06                   GL1122
+0500 C   06      S         ADD  1         S                               GL1122
+0501 C   06                MOVE ' 010'    ERCD,S                          GL1122
+0502 C***06****************GOTO VALDRC                             GL1122 CGL003
+0494 C   06                GOTO VALPFQ                             GL1122 CGL003
+0503 C*                                                                   GL1122
+0504 C*                                                                   GL1122
+0505 C*    DATE MUST BE GREATER THAN OR EQUAL TO                          GL1122
+0506 C*    RUN DATE AND GREATER THAN START DATE                           GL1122
+0507 C           ZDAYNO    COMP LRUND                  06                 GL1122
+0508 C  N06N05   ZDAYNO    COMP WSDAT                  0606               GL1122
+0509 C   06      S         ADD  1         S                               GL1122
+0510 C   06                MOVE ' 011'    ERCD,S                          GL1122
+0511 C***06****************GOTO VALDRC                             GL1122 CGL003
+0494 C   06                GOTO VALPFQ                             GL1122 CGL003
+0512 C*                                                                   GL1122
+0513 C*  IF DATE IS VALID, MOVE INTO OUTPUT FIELD FOR MASTER FILE         GL1122
+0514 C                     Z-ADDZDAYNO    WMDAT   50                      GL1122
+     C*                                                                   CGL003
+0515 C*  VALIDATE ACCRUAL FREQUENCY                                GL1122 CGL003
+     C*                                                                   CGL003
+     C           VALPFQ    TAG                                            CGL003
+     C           CGL003    IFNE 'Y'                                       CGL003
+     C                     GOTO VALDRC                                    CGL003
+     C                     ENDIF                                          CGL003
+      *                                                                   CGL003
+     C           SAPFQ     IFNE 'D'                                       CGL003
+     C           SAPFQ     ANDNE'W'                                       CGL003
+     C           SAPFQ     ANDNE'F'                                       CGL003
+     C           SAPFQ     ANDNE'M'                                       CGL003
+     C           SAPFQ     ANDNE'L'                                       CGL003
+     C           SAPFQ     ANDNE'B'                                       CGL003
+     C           SAPFQ     ANDNE'A'                                       CGL003
+     C                     MOVE *ON       *IN47                           CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 031'    ERCD,S                          CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C* VALIDATE ACCRUAL DAY MONTH                                        CGL003
+     C*                                                                   CGL003
+     C           SAPFQ     IFNE 'M'                                       CGL003
+     C           SFDAY     IFNE 0                                         CGL003
+     C                     MOVE *ON       *IN48                           CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 032'    ERCD,S                          CGL003
+     C                     ELSE                                           CGL003
+     C                     MOVE *OFF      *IN48                           CGL003
+     C                     ENDIF                                          CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C           SAPFQ     IFEQ 'M'                                       CGL003
+     C           SFDAY     IFEQ 0                                         CGL003
+     C           SFDAY     ORGT 31                                        CGL003
+     C                     MOVE *ON       *IN48                           CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 036'    ERCD,S                          CGL003
+     C                     ELSE                                           CGL003
+     C                     MOVE *OFF      *IN48                           CGL003
+     C                     ENDIF                                          CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C* VALIDATE NEXT DATE                                                CGL003
+     C*                                                                   CGL003
+     C           SAPDA     IFEQ BLK6                                      CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 033'    ERCD,S                          CGL003
+     C                     MOVE *ON       *IN49                           CGL003
+     C                     GOTO VALDRC                                    CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C* CHECK DATE ENTERED                                                CGL003
+     C*                                                                   CGL003
+     C                     MOVE SAPDA     ZDATE                           CGL003
+     C                     EXSR ZDATE1                                    CGL003
+     C           *IN99     IFEQ '1'                                       CGL003
+     C                     MOVE *ON       *IN49                           CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 034'    ERCD,S                          CGL003
+     C                     GOTO VALDRC                                    CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+     C* NEXT DATE CANNOT BE LESS THAN RUNDATE, LESS THAN START DATE       CGL003
+     C* OR GREATER THAN MATURITY DATE.                                    CGL003
+     C*                                                                   CGL003
+     C           ZDAYNO    IFLT LRUND                                     CGL003
+     C           ZDAYNO    ORLT WSDAT                                     CGL003
+     C           ZDAYNO    ORGT WMDAT                                     CGL003
+     C                     MOVE *ON       *IN49                           CGL003
+     C           S         ADD  1         S                               CGL003
+     C                     MOVE ' 035'    ERCD,S                          CGL003
+     C                     GOTO VALDRC                                    CGL003
+     C                     ELSE                                           CGL003
+     C                     Z-ADDZDAYNO    WAPDA   50                      CGL003
+     C                     ENDIF                                          CGL003
+     C*                                                                   CGL003
+0516 C           VALDRC    TAG                                            GL1122
+0517 C*                                                                   GL1122
+0518 C*    VALIDATE DEBIT AND CREDIT A/C CODES                            GL1122
+0519 C*                                                                   GL1122
+0520 C*  MANDATORY                                                        GL1122
+0521 C*                                                                   GL1122
+0522 C           SDRAC     COMP BLK4                     07               GL1122
+0523 C   07      S         ADD  1         S                               GL1122
+0524 C   07                MOVE ' 012'    ERCD,S                          GL1122
+0525 C   07                GOTO VALCRC                                    GL1122
+0526 C*                                                                   GL1122
+0527 C*  MUST BE LIVE RECORD ON TABLE FILE                                GL1122
+0528 C*                                                                   GL1122
+0529 C***********          MOVE BLK200    TABKEY                          S01194
+0530 C***********          MOVE '30'      TAB2                            S01194
+0531 C***********          MOVE '1'       TAB1                            S01194
+0532 C***********          MOVE SDRAC     TAB4A                           S01194
+0533 C***********          EXSR TABCHN                                    S01194
+0534 C**N16******          SETON                     07                   S01194
+0535 C***07******S         ADD  1         S                               S01194
+0536 C***07******          MOVE ' 013'    ERCD,S                          S01194
+     C                     CALL 'AOACODR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C**********           PARM SDRAC     @AFNB   4                                    S01194 CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01194 CGL029
+     C                     PARM SDRAC     @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0534 C                     SETON                     07                   S01194
+0427 C           S         ADD  1         S                               S01194
+0428 C                     MOVE ' 013'    ERCD,S                          S01194
+     C                     ELSE                                           S01194
+     C                     MOVE A5ACCD    SDRAC                           S01194
+     C                     END                                            S01194
+0537 C*                                                                   GL1122
+0538 C           VALCRC    TAG                                            GL1122
+0539 C*                                                                   GL1122
+0540 C*  MANDATORY                                                        GL1122
+0541 C*                                                                   GL1122
+0542 C           SCRAC     COMP BLK4                     09               GL1122
+0543 C   09      S         ADD  1         S                               GL1122
+0544 C   09                MOVE ' 016'    ERCD,S                          GL1122
+0545 C   09                GOTO VALDRN                                    GL1122
+0546 C*                                                                   GL1122
+0547 C*  MUST BE LIVE RECORD ON TABLE FILE                                GL1122
+0548 C*                                                                   GL1122
+0549 C***********          MOVE BLK200    TABKEY                          S01194
+0550 C***********          MOVE '30'      TAB2                            S01194
+0551 C***********          MOVE '1'       TAB1                            S01194
+0552 C***********          MOVE SCRAC     TAB4A                           S01194
+0553 C***********          EXSR TABCHN                                    S01194
+0554 C**N16******          SETON                     09                   S01194
+0555 C***09******S         ADD  1         S                               S01194
+0556 C***09******          MOVE ' 017'    ERCD,S                          S01194
+     C                     CALL 'AOACODR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C**********           PARM SCRAC     @AFNB   4                                    S01194 CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01194 CGL029
+     C                     PARM SCRAC     @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0534 C                     SETON                     09                   S01194
+0427 C           S         ADD  1         S                               S01194
+0428 C                     MOVE ' 017'    ERCD,S                          S01194
+     C                     ELSE                                           S01194
+     C                     MOVE A5ACCD    SCRAC                           S01194
+     C                     END                                            S01194
+0557 C*                                                                   GL1122
+0558 C           VALDRN    TAG                                            GL1122
+0559 C*****                                                               GL1122
+0560 C* ENSURE DEBIT AND CREDIT A/C SEQUENCE                              GL1122
+0561 C* NUMBERS ARE NUMERIC                                               GL1122
+0562 C**                                                                  GL1122
+0563 C                     Z-ADD0         NUM1    20                      GL1122
+0564 C                     Z-ADD0         NUM2    20                      GL1122
+0565 C                     MOVE '  '      ALPH1   2                       GL1122
+0566 C                     MOVE '  '      ALPH2   2                       GL1122
+0567 C**                                                                  GL1122
+0568 C           SDRSQ     COMP '  '                     31               GL1122
+0569 C   31                MOVE '01'      SDRSQ                           GL1122
+0570 C           SCRSQ     COMP '  '                     32               GL1122
+0571 C   32                MOVE '01'      SCRSQ                           GL1122
+0572 C**                                                                  GL1122
+0573 C                     MOVE SDRSQ     NUM1                            GL1122
+0574 C                     MOVE NUM1      ALPH1                           GL1122
+0575 C           SDRSQ     COMP ALPH1                    33               GL1122
+0576 C  N33      S         ADD  1         S                               GL1122
+0577 C  N33                MOVE ' 024'    ERCD,S                          GL1122
+0578 C  N33                SETON                     24                   GL1122
+0579 C**                                                                  GL1122
+0580 C                     MOVE SCRSQ     NUM2                            GL1122
+0581 C                     MOVE NUM2      ALPH2                           GL1122
+0582 C           SCRSQ     COMP ALPH2                    34               GL1122
+0583 C**                                                                  GL1122
+0584 C  N34      S         ADD  1         S                               GL1122
+0585 C  N34                MOVE ' 024'    ERCD,S                          GL1122
+0586 C  N34                SETON                     25                   GL1122
+0587 C**                                                                  GL1122
+0588 C**                                                                  GL1122
+0589 C*                                                                   GL1122
+0590 C*    VALIDATE DEBIT AND CREDIT CUSTOMERS                            GL1122
+0591 C*                                                                   GL1122
+0592 C*    MANDATORY                                                      GL1122
+0593 C           SDRCN     COMP BLK6                     08               GL1122
+0594 C   08      S         ADD  1         S                               GL1122
+0595 C   08                MOVE ' 014'    ERCD,S                          GL1122
+0596 C   08                GOTO VALCRN                                    GL1122
+0597 C*                                                                   GL1122
+0598 C*    MUST BE VALID CUSTOMER ON CLIENT FILE                          GL1122
+0599 C*                                                                   GL1122
+0600 C***********          MOVE BLK200    CLKEY                           S01194
+0601 C***********          MOVELSDRCN     CLKEY1                          S01194
+0602 C***********          MOVE 'A'       CLKEY2                          S01194
+0603 C***********          SETOF                     1899                 S01194
+0604 C***********CLKEY     CHAINCLINT                99                   S01194
+0605 C**N18******          SETON                     08                   S01194
+0606 C***08******S         ADD  1         S                               S01194
+0607 C***08******          MOVE ' 015'    ERCD,S                          S01194
+     C                     MOVE *BLANKS   @KEY1                           S01194
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM SDRCN     @KEY1  10                       S01194
+     C                     PARM           @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C           BBDTDL    ORNE *ZERO                                     S01194
+     C           @KYST     OREQ '*CSHT  '                                                     CSD027
+0534 C                     SETON                     08                   S01194
+0606 C                     ADD  1         S                               S01194
+0607 C                     MOVE ' 015'    ERCD,S                          S01194
+     C                     ELSE                                           S01194
+     C                     MOVE BBCUST    SDRCN                           S01194
+     C**********           MOVE BBCUST    WDRCN   2                176510 CSD009
+     C                     MOVE BBCUST    WDRCN   6                       CSD009
+     C                     MOVE BBACOC    WACOF   2                       176510
+0607 C                     END                                            S01194
+     C**                                                                  S01117
+     C** VALIDATE THE ENTERED PROFIT CENTRE.                              176510
+     C**                                                                  176510
+     C** If Profit Centre is used and the debit customer is valid         176510
+     C** VALIDATE THE INPUT -                                             176510
+     C** IF PROFIT CENTRE IF ENTERED                                      176510
+     C*                                                                   176510
+     C           *IN50     IFEQ '1'                        *B1            176510
+     C           *IN08     ANDNE'1'                                       176510
+     C           SPRFC     IFNE *BLANK                     *B2            176510
+     C                     EXSR PRVAL                                     176510
+     C**                                                                  176510
+     C** ELSE /* PROFIT CENTRE IS USED BUT NOT ENTERED */ :-              176510
+     C** EXTRACT THE DEFAULT PROFIT CENTRE IF INPUT PROFIT CENTRE IS      176510
+     C** BLANK AND PROFIT CENTRE USED FLAG IS ON AND DEFAULT FLAG IS      176510
+     C** ALSO ON.                                                         176510
+     C                     ELSE                            *X2            176510
+     C           *IN53     IFEQ '1'                        *B3            176510
+     C                     EXSR DFTPC                                     176510
+     C           *INU7     IFEQ '1'                        *B4            176510
+     C                     GOTO END                                       176510
+     C                     ELSE                                           176510
+     C                     MOVE PRFCPR    SPRFC                           176510
+     C                     END                             *E4            176510
+     C                     ELSE                                                               188471
+     C                     SETON                     52                                       188471
+     C                     END                             *E3            176510
+     C                     END                             *E2            176510
+     C           *IN52     IFEQ '1'                        *B2            176510
+     C                     ADD  1         S                               176510
+     C                     MOVE ' 030'    ERCD,S                          176510
+     C                     END                             *E2            176510
+     C                     END                             *E1            176510
+0608 C*                                                                   GL1122
+0609 C           VALCRN    TAG                                            GL1122
+0610 C*                                                                   GL1122
+0611 C*    MANDATORY                                                      GL1122
+0612 C*                                                                   GL1122
+0613 C           SCRCN     COMP BLK6                     12               GL1122
+0614 C   12      S         ADD  1         S                               GL1122
+0615 C   12                MOVE ' 018'    ERCD,S                          GL1122
+0616 C   12                GOTO VALNAR                                    GL1122
+0617 C*                                                                   GL1122
+0618 C*    MUST BE VALID CUSTOMER ON CLIENT FILE                          GL1122
+0619 C*                                                                   GL1122
+0620 C***********          MOVE BLK200    CLKEY                           S01194
+0621 C***********          MOVELSCRCN     CLKEY1                          S01194
+0622 C***********          MOVE 'A'       CLKEY2                          S01194
+0623 C***********          SETOF                     1899                 S01194
+0624 C***********CLKEY     CHAINCLINT                99                   S01194
+0625 C**N18******          SETON                     12                   S01194
+0626 C***12******S         ADD  1         S                               S01194
+0627 C***12******          MOVE ' 019'    ERCD,S                          S01194
+     C                     MOVE *BLANKS   @KEY1                           S01194
+     C                     CALL 'AOCUSTR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM SCRCN     @KEY1  10                       S01194
+     C                     PARM           @KYST   7                       S01194
+     C           SDCUST    PARM SDCUST    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C           BBDTDL    ORNE *ZERO                                     S01194
+     C           @KYST     OREQ '*CSHT  '                                                     CSD027
+0534 C                     SETON                     12                   S01194
+0606 C                     ADD  1         S                               S01194
+0607 C                     MOVE ' 019'    ERCD,S                          S01194
+     C                     ELSE                                           S01194
+     C                     MOVE BBCUST    SCRCN                           S01194
+0607 C                     END                                            S01194
+0628 C*                                                                   GL1122
+0629 C*    VALIDATE NARRATIVE/NARRATIVE CODE                              GL1122
+0630 C*                                                                   GL1122
+0631 C           VALNAR    TAG                                            GL1122
+0632 C*                                                                   GL1122
+0633 C*    MANDATORY                                                      GL1122
+0634 C*                                                                   GL1122
+0635 C           SNARR     COMP BLK30                    13               GL1122
+0636 C   13      S         ADD  1         S                               GL1122
+0637 C   13                MOVE ' 020'    ERCD,S                          GL1122
+0638 C   13                GOTO VALSIE                                    GL1122
+0639 C*                                                                   GL1122
+0640 C*    IF FIRST 2 CHARACTERS ONLY ENTERED,                            GL1122
+0641 C*    MUST BE VALID NARRATIVE CODE ON TABLE                          GL1122
+0642 C*    FILE                                                           GL1122
+0643 C                     MOVE SNARR     NAR28  28                       GL1122
+0644 C           NAR28     COMP BLK28                    20               GL1122
+0645 C***20******          MOVE BLK200    TABKEY                          S01194
+0646 C***20******          MOVE '90'      TAB2                            S01194
+0647 C***20******          MOVELSNARR     TAB2B                           S01194
+0648 C***20******          EXSR TABCHN                                    S01194
+0649 C***20*17***          MOVE NARD      SNARR                           S01194
+0650 C***20N17***          SETON                     13                   S01194
+0651 C***20*13***S         ADD  1         S                               S01194
+0652 C***20*13***          MOVE ' 021'    ERCD,S                          S01194
+     C           *IN20     IFEQ '1'                                       S01194
+     C                     MOVELSNARR     W@NARR  2                       S01194
+     C                     CALL 'AONARRR0'                                S01194
+     C                     PARM *BLANKS   @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM W@NARR    @CBNB   2                       S01194
+     C           SDNARR    PARM SDNARR    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0534 C                     SETON                     13                   S01194
+0606 C                     ADD  1         S                               S01194
+0607 C                     MOVE ' 021'    ERCD,S                          S01194
+0607 C                     ELSE                                           S01194
+0649 C                     MOVE ALDON     SNARR                           S01194
+0607 C                     END                                            S01194
+     C                     END                                            S01194
+     C/COPY WNCPYSRC,GL1122C003
+0653 C*                                                                   GL1122
+0654 C*                                                                   GL1122
+0655 C           VALSIE    TAG                             **  VALSIE TAG GL1122
+      *                                                                                      CGL064
+      * Entry to associated customer field is optional. If entered, it will be validated     CGL064
+      * against the customer file.                                                           CGL064
+      * If this field is left blank, default with the debit or credit customer from the      CGL064
+      * first screen.  To determine which customer, access the account codes file using      CGL064
+      * the debit account code. If account section is income or expense, default to the      CGL064
+      * debit customer. Otherwise, reaccess account codes file using the credit account      CGL064
+      * code. If income or expense, default the associated customer to credit customer.      CGL064
+      *                                                                                      CGL064
+     C           CGL064    IFEQ 'Y'                                                          CGL064
+     C                     MOVE '0'       *IN43                                              CGL064
+      *                                                                                      CGL064
+     C           SASOC     IFNE *BLANK                                                       CGL064
+      *                                                                                      CGL064
+     C                     MOVE SASOC     UASOC   6                                          CGL064
+     C                     CALL 'AOCUSTR0'                                                   CGL064
+     C                     PARM *BLANKS   @RTCD                                              CGL064
+     C                     PARM '*KEY   ' @OPTN                                              CGL064
+     C                     PARM UASOC     WKEY1  10                                          CGL064
+     C                     PARM *BLANKS   WKYST   7                                          CGL064
+     C           SDCUST    PARM SDCUST    DSSDY                                              CGL064
+      *                                                                                      CGL064
+     C           @RTCD     IFEQ *BLANKS                                                      CGL064
+     C                     MOVE BBCUST    SASOC                                              CGL064
+     C                     ELSE                                                              CGL064
+     C                     MOVE '1'       *IN43                                              CGL064
+     C           @RTCD     IFEQ '*NOSEL'                                                     CGL064
+     C                     MOVE ERCM,5    ERMSG                                              CGL064
+     C                     ELSE                                                              CGL064
+     C                     MOVE ERCM,6    ERMSG                                              CGL064
+     C                     ENDIF                                                             CGL064
+     C                     ENDIF                                                             CGL064
+      *                                                                                      CGL064
+     C                     ELSE                                                              CGL064
+      *                                                                                      CGL064
+      ** If field is blank                                                                   CGL064
+     C                     CALL 'AOACODR0'                                                   CGL064
+     C                     PARM *BLANKS   @RTCD                                              CGL064
+     C                     PARM '*KEY    '@OPTN                                              CGL064
+     C                     PARM SDRAC     WACCD   6                                          CGL064
+     C           SDACOD    PARM SDACOD    DSFDY                                              CGL064
+      *                                                                                      CGL064
+     C           A5ACSC    IFEQ 'EX'                                                         CGL064
+     C           A5ACSC    OREQ 'IN'                                                         CGL064
+     C                     MOVE SDRCN     SASOC                                              CGL064
+     C                     GOTO VALASC                                                       CGL064
+     C                     ENDIF                                                             CGL064
+      *                                                                                      CGL064
+     C                     CALL 'AOACODR0'                                                   CGL064
+     C                     PARM *BLANKS   @RTCD                                              CGL064
+     C                     PARM '*KEY    '@OPTN                                              CGL064
+     C                     PARM SCRAC     WACCD                                              CGL064
+     C           SDACOD    PARM SDACOD    DSFDY                                              CGL064
+      *                                                                                      CGL064
+     C           A5ACSC    IFEQ 'EX'                                                         CGL064
+     C           A5ACSC    OREQ 'IN'                                                         CGL064
+     C                     MOVE SCRCN     SASOC                                              CGL064
+     C                     ENDIF                                                             CGL064
+      *                                                                                      CGL064
+     C                     ENDIF                                                             CGL064
+      *                                                                                      CGL064
+     C           VALASC    TAG                                                               CGL064
+     C                     ENDIF                                                             CGL064
+      *                                                                                      CGL064
+0656 C*                                                                   GL1122
+0657 C*    CHECK THAT RELEVANT ACCOUNTS EXIST                             GL1122
+0658 C*                                                                   GL1122
+0659 C                     SETOF                     21                   E13156
+0659 C  N03N04N05                                                         GL1122
+0660 CANN06N07N08                                                         GL1122
+0661 C*NN09N12N13          SETON                     21                   S01117
+     CANN09N12N13                                                         S01117
+     C*ANN41N42             SETON                     21                  S01117 CGL064
+     CANN41N42N43          SETON                     21                          CGL064
+0662 C  N21                GOTO VALID                                     GL1122
+0663 C                     MOVE BLK200    ACKEY                           GL1122
+0664 C                     MOVE SDRCN     ACKEY1                          GL1122
+0665 C                     MOVE SCCY      ACKEY2                          GL1122
+0666 C                     MOVE SDRAC     ACKEY3                          GL1122
+0667 C                     MOVE SDRSQ     ACKEY4                          GL1122
+0667 C                     MOVE SBRCA     ACKEY5                          S01117
+0668 C                     SETOF                     1999                 GL1122
+0668 C                     SETOF                     7475                 E13156
+0669 C           ACKEY     CHAINACCNT                99                   GL1122
+0670 C  N19      S         ADD  1         S                               GL1122
+0671 C  N19                MOVE ' 022'    ERCD,S                          GL1122
+0668 C  N19                SETON                     74                   E13156
+0668 C           *IN19     IFEQ '0'                                       S01117
+     C           MBIN      ANDEQ'Y'                                       S01117
+     C                     SETON                     41                   S01117
+     C                     END                                            S01117
+      *                                                                                       CGL014
+      ** Check if remaining balance of the retail debit account                               CGL014
+      ** is sufficient to cover the blocked amount                                            CGL014
+      *                                                                                       CGL014
+     C           CGL014    IFEQ 'Y'                                                           CGL014
+     C           *IN19     ANDEQ'1'                                                           CGL014
+     C           ATYP      ANDEQ'R'                                                           CGL014
+     C           COLF      ANDEQ'Y'                                                           CGL014
+     C                     Z-ADDWAMNT     PTAMNT                                              CGL014
+      *                                                                                       CGL014
+     C                     CALL 'GL006000'                                                    CGL014
+     C                     PARM           PTAMNT 150                                          CGL014
+     C                     PARM SCCY      PTCCY   3                                           CGL014
+     C                     PARM SBRCA     PABRCA  3                                           CGL014
+     C                     PARM SDRCN     PACNUM  6                                           CGL014
+     C                     PARM SCCY      PACCY   3                                           CGL014
+     C                     PARM SDRAC     PAACOD 10                                           CGL014
+     C                     PARM SDRSQ     PAACSQ  2                                           CGL014
+     C                     PARM           PAACNO 100                                          CGL014
+     C                     PARM *BLANKS   PRTCD                                               CGL014
+      *                                                                                       CGL014
+      ** Error if available balance is not sufficient to cover blocked amount                 CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ '*BLKERR'                                                     CGL014
+     C           S         ADD  1         S                                                   CGL014
+     C                     MOVE ' 037'    ERCD,S                                              CGL014
+     C                     MOVE *ON       *IN04                                               CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+      ** Warning:  Minimum balance will be exceeded                                           CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ '*WARN  '                                                     CGL014
+     C           WAMNT     IFNE WCOPY                                                         CGL014
+     C                     MOVE '0'       WWARN                                               CGL014
+     C                     ENDIF                                                              CGL014
+     C           WWARN     IFEQ '0'                                                           CGL014
+     C                     ADD  1         S                                                   CGL014
+     C                     MOVE 'W01'     ERCD,S                                              CGL014
+     C                     MOVE *ON       *IN04                                               CGL014
+     C                     Z-ADDWAMNT     WCOPY                                               CGL014
+     C           S         IFEQ 1                                                             CGL014
+     C                     MOVE '1'       WWARN                                               CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+0672 C                     MOVE BLK200    ACKEY                           GL1122
+0673 C                     MOVE SCRCN     ACKEY1                          GL1122
+0674 C                     MOVE SCCY      ACKEY2                          GL1122
+0675 C                     MOVE SCRAC     ACKEY3                          GL1122
+0676 C                     MOVE SCRSQ     ACKEY4                          GL1122
+0667 C                     MOVE SBRCA     ACKEY5                          S01117
+0677 C                     SETOF                     1999                 GL1122
+0678 C           ACKEY     CHAINACCNT                99                   GL1122
+0679 C  N19      S         ADD  1         S                               GL1122
+0680 C  N19                MOVE ' 023'    ERCD,S                          GL1122
+0680 C  N19                SETON                     75                   E13156
+     C           *IN19     IFEQ '0'                                       S01117
+     C           MBIN      ANDEQ'Y'                                       S01117
+     C                     SETON                     41                   S01117
+     C                     END                                            S01117
+0680 C*                                                                   E13156
+0680 C*   74 AND 75 USED TO SET HIGHLIGHT FIELDS IN GL1120F2.             E13156
+0680 C*                                                                   E13156
+0680 C   74                SETON                     030708               E13156
+0680 C   74                SETON                     24                   E13156
+0680 C   75                SETON                     030912               E13156
+0680 C   75                SETON                     25                   E13156
+0681 C*                                                                   GL1122
+0682 C           VALID     ENDSR                                          GL1122
+0683 C*                                                                   GL1122
+0684 C********************************************************************GL1122
+     C**
+     C**   SUBR. - TO SET UP WSTRN DATA AREA
+     C**
+     C           WTRNCH    BEGSR                           ***  WTRNCH
+     C**
+     C                     MOVE BLK200    WST200
+     C                     MOVE BLK400    WST400
+     C                     MOVE BLK600    WST600
+     C                     MOVE BLK800    WST800
+     C                     MOVE BLK860    WST860
+     C                     MOVE 'D'       WST001
+     C                     MOVE SREFN     WST007
+     C                     MOVE 'A'       WST008
+     C                     Z-ADDZERO05    WST033
+     C                     Z-ADDLRUND     WST036
+     C                     Z-ADDLRUND     WST039
+     C                     MOVE 'I'       WST040
+     C                     Z-ADDWAMNT     WST047
+     C                     MOVE SCCY      WST050
+     C                     Z-ADDWSDAT     WST053
+     C                     Z-ADDWMDAT     WST056
+     C                     MOVE SDRAC     WST060
+     C                     MOVE SDRCN     WST066
+     C                     MOVE SCRAC     WST070
+     C                     MOVE SCRCN     WST076
+     C                     MOVE SNARR     WST106
+     C                     Z-ADDNAMPD     WST113
+     C                     MOVE SDRSQ     WST115
+     C                     MOVE SCRSQ     WST117
+     C                     MOVE SPRFC     WST125                          S01117
+     C                     MOVE SBRCA     WST128                          S01117
+     C                     MOVE SAPFQ     WST129                          CGL003
+     C                     Z-ADDSFDAY     WST131                          CGL003
+     C                     Z-ADDWAPDA     WST134                          CGL003
+     C                     MOVE SASOC     WST160                          CGL064
+     C                     MOVE 'D'       WST401
+     C                     Z-ADDZERO05    WST404
+     C                     Z-ADDZERO05    WST407
+     C                     MOVE SWID      WST409
+     C***********          MOVE LFILE     WST418                          S01194
+     C                     MOVE DBFILE    WST418                          S01194
+     C                     MOVE WLOGP     WST429
+     C                     MOVE '1'       WST430
+     C                     MOVE 'I'       WST431
+     C*
+     C*  SET UP SCREEN IN ONE FIELD
+     C                     MOVE SRUNA     WST467
+     C                     MOVE SID       WST469
+     C                     MOVE SPID      WST475
+     C                     MOVE SWID      WST478
+     C                     MOVE SREFN     WST484
+     C                     MOVE SACTN     WST485
+     C***********          MOVE SCCY      WST488                          S01117
+     C***********          MOVE SAMNT     WST502                          S01117
+     C***********          MOVE SSDAT     WST508                          S01117
+     C***********          MOVE SMDAT     WST514                          S01117
+     C***********          MOVE SDRAC     WST518                          S01117
+     C***********          MOVE SDRSQ     WST520                          S01117
+     C***********          MOVE SDRCN     WST526                          S01117
+     C***********          MOVE SCRAC     WST530                          S01117
+     C***********          MOVE SCRSQ     WST532                          S01117
+     C***********          MOVE SCRCN     WST538                          S01117
+     C***********          MOVE SNARR     WST568                          S01117
+     C                     MOVE SBRCA     WST488                          S01117
+     C                     MOVE SCCY      WST491                          S01117
+     C                     MOVE SAMNT     WST505                          S01117
+     C                     MOVE SPRFC     WST509                          S01117
+     C                     MOVE SSDAT     WST515                          S01117
+     C                     MOVE SMDAT     WST521                          S01117
+     C                     MOVE SDRAC     WST525                          S01117
+     C                     MOVE SDRSQ     WST527                          S01117
+     C                     MOVE SDRCN     WST533                          S01117
+     C                     MOVE SCRAC     WST537                          S01117
+     C                     MOVE SCRSQ     WST539                          S01117
+     C                     MOVE SCRCN     WST545                          S01117
+     C                     MOVE SNARR     WST575                          S01117
+     C                     MOVE SAPFQ     WST576                          CGL003
+     C                     MOVE SFDAY     WST578                          CGL003
+     C                     MOVE SAPDA     WST584                          CGL003
+     C**
+     C                     ENDSR
+0684 C********************************************************************GL1122
+0698 C***********                                                         S01194
+0699 C*****SUBR.*- TO CHAIN TO TABLE FILE                                 S01194
+0700 C***********                                                         S01194
+0701 C***********TABCHN    BEGSR                           ***  TABCHN ***S01194
+0702 C***********                                                         S01194
+0703 C***********          SETOF                     111617               S01194
+0704 C***********          SETOF                     99                   S01194
+0705 C***********                                                         S01194
+0706 C***********TABKEY    CHAINTABLE                99                   S01194
+0707 C***********                                                         S01194
+0708 C***********          ENDSR                                          S01194
+0709 C********************************************************************GL1122
+0710 C**                                                                  GL1122
+0711 C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                     GL1122
+0712 C**              CONVERT TO A NUMBER OF DAYS.                        GL1122
+0713 C**                                                                  GL1122
+0714 C           ZDATE1    BEGSR                           *** ZDATE1 *** GL1122
+0715 C**                                                                  GL1122
+0716 C**   CLEAR DAY NUMBER.                                              GL1122
+0717 C                     Z-ADD0         ZDAYNO  50                      GL1122
+0718 C**                                                                  GL1122
+0719 C**   CALCULATION TO DEFINE INPUT DATE FIELD.                        GL1122
+0720 C                     Z-ADDZDATE     ZDATE   60                      GL1122
+0721 C**                                                                  GL1122
+0722 C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.                     GL1122
+0723 C                     MOVE ZDATE     ZYEAR   20                      GL1122
+0724 C  N98                MOVELZDATE     ZDAY    20                      GL1122
+0725 C   98                MOVELZDATE     ZMTH    20                      GL1122
+0726 C                     MOVE ZDATE     ZWRK4   40                      GL1122
+0727 C  N98                MOVELZWRK4     ZMTH                            GL1122
+0728 C   98                MOVELZWRK4     ZDAY                            GL1122
+0729 C**                                                                  GL1122
+0730 C**   ENSURE MONTH IS VALID.                                         GL1122
+0731 C           ZMTH      COMP 0                      9999               GL1122
+0732 C  N99      ZMTH      COMP 12                   99                   GL1122
+0733 C   99                GOTO ZDEND1                     BYPASS IF ERRORGL1122
+0734 C**                                                                  GL1122
+0735 C**   CHECK FOR 30 DAY MONTHS.                                       GL1122
+0736 C           ZMTH      COMP 4                        90IF 90 ON, 30   GL1122
+0737 C  N90      ZMTH      COMP 6                        90DAY MONTH.     GL1122
+0738 C  N90      ZMTH      COMP 9                        90               GL1122
+0739 C  N90      ZMTH      COMP 11                       90               GL1122
+0740 C**                                                                  GL1122
+0741 C**   ENSURE DAY IS VALID.                                           GL1122
+0742 C           ZDAY      COMP 0                      9999               GL1122
+0743 C   90N99   ZDAY      COMP 30                   99                   GL1122
+0744 C  N90N99   ZDAY      COMP 31                   99                   GL1122
+0745 C   99                GOTO ZDEND1                     BYPASS IF ERRORGL1122
+0746 C**                                                                  GL1122
+0747 C**   CHECK FOR LEAP YEAR AND FEBRUARY.                              GL1122
+0748 C           ZYEAR     ADD  28        ZYEAR                           GL1122
+0749 C           ZYEAR     DIV  4         ZLYR    20                      GL1122
+0750 C                     MVR            ZLY     10     91LEAP YR, 91 ON GL1122
+0751 C           ZMTH      COMP 2                    93  92FEB., 92 ON    GL1122
+0752 C**                                                   PAST FEB, 93 ONGL1122
+0753 C**   IF FEBUARY FURTHER VALIDATE DAY.                               GL1122
+0754 C  N91 92   ZDAY      COMP 28                   99                   GL1122
+0755 C   91 92   ZDAY      COMP 29                   99                   GL1122
+0756 C   99                GOTO ZDEND1                     BYPASS IF ERRORGL1122
+0757 C**                                                                  GL1122
+0758 C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANSGL1122
+0759 C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.GL1122
+0760 C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRGL1122
+0761 C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.GL1122
+0762 C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR GL1122
+0763 C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHGL1122
+0764 C**                                                                  GL1122
+0765 C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*GL1122
+0766 C**                                                                  GL1122
+0767 C**                                                                  GL1122
+0768 C********************************************************************GL1122
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+0871 C**                                                                 *GL1122
+0872 C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*GL1122
+0873 C**  AND TO BLANK OUT LEADING ZEROES.                               *GL1122
+0874 C**      INPUT FIELDS:   ZFIELD 16/                                 *GL1122
+0875 C*                       ZADEC                                      *GL1122
+0876 C*                       ZADIG - NOT ACTUALLY USED                  *GL1122
+0877 C*                                                                  *GL1122
+0878 C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *GL1122
+0879 C*                                                                  *GL1122
+0880 C*       OUTPUT FIELD   ZFIELD                                      *GL1122
+0881 C*                                                                  *GL1122
+0882 C           ZEDIT     BEGSR                           ***  ZEDIT  ***GL1122
+0883 C**                                                                 *GL1122
+0884 C*       SET UP WORK FIELDS                                         *GL1122
+0885 C**                                                                 *GL1122
+0886 C                     Z-ADDZADIG     ZADIG   20                     *GL1122
+0887 C                     Z-ADDZADEC     ZADEC   10                     *GL1122
+0888 C*                                                                  *GL1122
+0889 C                     MOVEA' '       ZA1                            *GL1122
+0890 C                     MOVEA' '       ZA2                            *GL1122
+0891 C*                                                                  *GL1122
+0892 C                     Z-ADD16        Z1      20                     *GL1122
+0893 C                     Z-ADD16        Z2      20                     *GL1122
+0894 C*                                                                  *GL1122
+0895 C           16        SUB  ZADEC     ZADEC2  20                     *GL1122
+0896 C*                                                                  *GL1122
+0897 C*                                                                  *GL1122
+0898 C                     MOVEAZFIELD    ZA1                            *GL1122
+0899 C*                                                                  *GL1122
+0900 C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *GL1122
+0901 C*                                                                  *GL1122
+0902 C           ZADEC     COMP 0                        91              *GL1122
+0903 C   91                GOTO ZT20                                     *GL1122
+0904 C**                                                                 *GL1122
+0905 C           ZT10      TAG                             ** ZT10 TAG ***GL1122
+0906 C**                                                                 *GL1122
+0907 C*                                                                  *GL1122
+0908 C*       SET UP DECIMALS                                            *GL1122
+0909 C*                                                                  *GL1122
+0910 C                     MOVE ZA1,Z1    ZA2,Z2                         *GL1122
+0911 C           Z1        SUB  1         Z1                             *GL1122
+0912 C           Z2        SUB  1         Z2                             *GL1122
+0913 C*                                                                  *GL1122
+0914 C           Z2        COMP 0                        90              *GL1122
+0915 C   90                GOTO ZT30                                     *GL1122
+0916 C*                                                                  *GL1122
+0917 C*       CHECK IF END OF DECIMALS                                   *GL1122
+0918 C**                                                                 *GL1122
+0919 C           Z2        COMP ZADEC2               90                  *GL1122
+0920 C   90                GOTO ZT10                                     *GL1122
+0921 C*                                                                  *GL1122
+0922 C**                                                                 *GL1122
+0923 C*       PUT IN DECIMAL PLACE                                       *GL1122
+0924 C*                                                                  *GL1122
+0925 C                     MOVE '.'       ZA2,Z2                         *GL1122
+0926 C           Z2        SUB  1         Z2                             *GL1122
+0927 C*                                                                  *GL1122
+0928 C           ZT20      TAG                             ** ZT20 TAG ***GL1122
+0929 C*                                                                  *GL1122
+0930 C*       SET UP INTEGERS                                            *GL1122
+0931 C*                                                                  *GL1122
+0932 C                     MOVE ZA1,Z1    ZA2,Z2                         *GL1122
+0933 C           Z1        SUB  1         Z1                             *GL1122
+0934 C           Z2        SUB  1         Z2                             *GL1122
+0935 C**                                                                 *GL1122
+0936 C           Z2        COMP 0                    90                  *GL1122
+0937 C   90                GOTO ZT20                                     *GL1122
+0938 C*                                                                  *GL1122
+0939 C*       PUT IN LEADING BLANKS                                      *GL1122
+0940 C*                                                                  *GL1122
+0941 C           ZT30      TAG                             ** ZT30 TAG ***GL1122
+0942 C**                                                                 *GL1122
+0943 C                     Z-ADD1         Z2                             *GL1122
+0944 C**                                                                 *GL1122
+0945 C           ZT40      TAG                             ** ZT40 TAG ***GL1122
+0946 C*                                                                  *GL1122
+0947 C           ZA2,Z2    COMP '0'                  9090                *GL1122
+0948 C   90      ZA2,Z2    COMP ' '                  9090                *GL1122
+0949 C*                                                                  *GL1122
+0950 C   90                GOTO ZT50                                     *GL1122
+0951 C*                                                                  *GL1122
+0952 C                     MOVE ' '       ZA2,Z2                         *GL1122
+0953 C           Z2        ADD  1         Z2                             *GL1122
+0954 C*                                                                  *GL1122
+0955 C           Z2        COMP 16                     90                *GL1122
+0956 C   90                GOTO ZT40                                     *GL1122
+0957 C*                                                                  *GL1122
+0958 C*       IF NO INTEGERS PUT IN LEADING ZERO                         *GL1122
+0959 C*                                                                  *GL1122
+0960 C           ZT50      TAG                             ** ZT50 TAG ***GL1122
+0961 C*                                                                  *GL1122
+0962 C                     Z-ADDZADEC2    Z2                             *GL1122
+0963 C  N91      Z2        SUB  1         Z2                             *GL1122
+0964 C           ZA2,Z2    COMP ' '                      90              *GL1122
+0965 C   90                MOVE '0'       ZA2,Z2                         *GL1122
+0966 C*                                                                  *GL1122
+0967 C*                                                                  *GL1122
+0968 C*       SET UP OUTPUT FIELD                                         GL1122
+0969 C*                                                                  *GL1122
+0970 C           ZT60      TAG                             ** ZT60 TAG ***GL1122
+0971 C*                                                                  *GL1122
+0972 C                     MOVEAZA2       ZFIELD 16                      *GL1122
+0973 C**                                                                 *GL1122
+0974 C           ZEND      ENDSR                           ** ZEND **    *GL1122
+0975 C*                                                                  *GL1122
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*   DFTPC --- SUBROUTINE TO OBTAIN THE DEFAULT PROFIT CENTRE        S01117
+     C*                                                                   S01117
+     C*   CALLED BY: VALSI                                                S01117
+     C*                                                                   S01117
+     C*   CALLS: ACCESS OBJECT AOPRFMR0                                   S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           DFTPC     BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     CALL 'AOPRFMR0'                                S01117
+     C                     PARM *BLANKS   RTCDPR  1                       S01117
+     C                     PARM *BLANKS   BOOKPR  2                       S01117
+     C                     PARM *BLANKS   TRTPPR  5                       S01117
+     C                     PARM *BLANKS   SUTPPR  2                       S01117
+     C                     PARM SBRCA     BRANPR  3                       S01117
+     C                     PARM *BLANKS   DEPTPR  3                       S01117
+     C                     PARM USRID     USERPR 10                       S01117
+     C******************   PARM *BLANKS   ACOFPR  2                 S01117176510
+     C******************   PARM *BLANKS   CNUMPR  6                 S01117176510
+     C                     PARM WACOF     ACOFPR  2                       176510
+     C                     PARM WDRCN     CNUMPR  6                       176510
+     C                     PARM *BLANKS   PRFCPR  4                       S01117
+     C*                                                                   S01117
+     C                     MOVE PRFCPR    SPRFC                           S01194
+     C           RTCDPR    IFEQ '2'                                       S01117
+     C                     SETON                     52                   S01117
+     C                     ADD  1         S                               S01117
+     C                     MOVE ' 310'    ERCD,S                          S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0976 C********************************************************************GL1122
+     C*                                                                   S01117
+     C*   PRUSED --- SUBROUTINE TO FOR PROFIT CENTRE PROCESSING           S01117
+     C*                                                                   S01117
+     C*   CALLED FROM : 1ST CYCLE                                         S01117
+     C*                                                                   S01117
+     C*   CALLS : NOTHING                                                 S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C           PRUSED    BEGSR                           **** PRUSED    S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+0972 C*  CHECK IF 'PROFIT CENTRE USED' IN ICD IS OFF AND SETON 50        *S01117
+     C           BKPRCU    IFEQ 'Y'                                       S01117
+     C                     SETON                     50                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE AMEND' IN ICD IS OFF AND SETON 51       *S01117
+     C           BKPRCA    IFEQ 'Y'                                       S01117
+     C                     SETON                     51                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE DEFAULT' IN ICD IS OFF AND SETON 53     *S01117
+     C           BKPCDU    IFEQ 'Y'                                       S01117
+     C                     SETON                     53                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C*   PRVAL  --- SUBROUTINE TO VALIDATE THE PROFIT CENTRE CODE        S01117
+     C*                                                                   S01117
+     C*   CALLED FROM : 1ST CYCLE                                         S01117
+     C*                                                                   S01117
+     C*   CALLS : NOTHING                                                 S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C           PRVAL     BEGSR                           **** PRVAL     S01117
+     C*** USE THE PROFIT CENTRE CODE AS PARAMETER FOR THE STATANDING      S01117
+     C*** ACCESS ROUTINE TO CHAIN ON TO THE REQUIRED RECORD. IF THE       S01117
+     C*** IF THE RETURN CODE IS NOT EQUAL BLANK THEN THE PROFIT           S01117
+     C*** CENTRE CODE IS NOT DEFINED.                                     S01117
+     C*                                                                   S01117
+     C                     MOVE *BLANKS   @KEY                            S01117
+     C                     CALL 'AOPRFCR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY    '@OPTN   7                       S01117
+     C                     PARM SPRFC     @KEY    4                       S01117
+     C           SDPRFC    PARM SDPRFC    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     52                   S01117
+     C                     ELSE                                           S01117
+     C                     MOVE DSPCCD    SPRFC                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* ACTNVL --- SUBROUTINE TO CHECK IF THE USER HAS ANY AUTHORISATION  S01117
+     C*            TO THIS ACTION CODE WHEN MULTIBRANCHING INDICATOR IS   S01117
+     C*            ON                                                     S01117
+     C*                                                                   S01117
+     C* CALLED FROM: VALSI                                                S01117
+     C*                                                                   S01117
+     C* CALLS: ZPF PROGRAM - ZVACTBU                                      S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* ERROR CODES SUMMARY:                                              S01117
+     C*  '921' - ACTION CODES NOT AUTHORISED FOR THIS USER/MENU ITEM -    S01117
+     C*          HIGHLIGHT ACTION CODE (SINGLE BRANCH ONLY)
+     C*  '922' - USER IS ALLOWED TO NO ACTIONS FOR THIS BRANCH/MENU       S01117
+     C*          ITEM - HIGHLIGHT BRANCH (MULTIBRANCHING ONLY)            S01117
+     C*  '923' - ACTION CODE NOT AUTHORISED FOR THIS USER/BRANCH/MENU     S01117
+     C*          ITEM - HIGHLIGHT BRANCH (MULTIBRANCHING ONLY)            S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           ACTNVL    BEGSR                                          S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM SACTN     @ACTN   1                       S01117
+     C                     PARM SBRCA     @BRCA   3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C                     ELSE                                           S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SACTN     @ACTN   1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           @ERR      IFNE 0                                         S01117
+     C                     SETON                     41                   S01117
+     C           S         ADD  1         S                               S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     Z-ADD921       ECODE                           S01117
+     C                     Z-ADD2         INX                             S01117
+     C                     ELSE                                           S01117
+     C           @ERR      ADD  921       ECODE   30                      S01117
+     C           @ERR      ADD  2         INX     20                      S01117
+     C                     END                                            S01117
+     C                     MOVE *BLANKS   ERCD,S                          S01117
+     C                     MOVE ECODE     ERCD,S                          S01117
+     C*                                                                   S01117
+     C* IN ARRAY ERCM, ERROR CODES FOR SPF START FROM ENTRY 2 TO 4        S01117
+     C*                                                                   S01117
+     C                     MOVE ERCM,INX  ERMSG                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0102 C********************************************************************S01194
+     C*                                                                   S01194
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01194
+     C*                                                                   S01194
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01194
+     C*                                                                   S01194
+     C* CALLS: NOTHING                                                    S01194
+     C*                                                                   S01194
+     C*****************************************************************   S01194
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                           ** *PSSR **    S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C*                                                                   S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                           ** *PSSR **    S01194
+     C********************************************************************S01194
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ERROR MESSAGES
+F10 KEY NOT ALLOWED NOW
+ACTION CODE NOT AUTHORISED FOR THIS USER/MENU ITEM
+USER IS AUTHORISED TO NO ACTIONS FOR THIS BRANCH/MENU ITEM
+ACTION CODE NOT AUTHORISED FOR THIS USER/BRANCH/MENU ITEM
+NO VALUE SELECTED
+INVALID ENTRY
+     X/COPY WNCPYSRC,GL1122X001

@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Validity checker for RELEASELVL command')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000070 - CPP for RELEASELVL command                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27791  *CREATE  Date 28May10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27791 - Identify 'from' release more easily              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&KEYPARM &PRODUCT &REL &SUBRLS)
+ 
+             DCL        VAR(&KEYPARM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBRLS) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&FOUND) TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+             DCLF       FILE(SMRLSLPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&RLPROD *EQ &PRODUCT *AND &RLRLS *EQ +
+                          &REL *AND &RLSRLS *EQ &SUBRLS) THEN(DO)
+                CHGVAR     VAR(&FOUND) VALUE('Y')
+             ENDDO
+             GOTO       CMDLBL(READNEXT)
+ 
+CHECK:
+             IF         COND(&FOUND *NE 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Release combination not +
+                             found.') MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+ 
+ ENDPGM:
+             ENDPGM

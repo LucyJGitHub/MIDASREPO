@@ -1,0 +1,288 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB Close of business monitor control')          */
+/*********************************************************************/
+/*                                                                   */
+/*  Midas - Close of Business Processing                             */
+/*                                                                   */
+/*  CBC000002 - Non-Working Day CoB Monitor Control                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1096378          Date 20Mar13              */
+/*       Prev Amend No. CCB021  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1096378 - NWDC issues encountered during link testing.    */
+/*       CCB021 - COB Restructure - Non Working Day COB              */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&ERROR &JOB)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRCB0170) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COBSTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SCHSTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNT)  TYPE(*DEC) LEN(2)
+             DCL        VAR(&DTQALEN)  TYPE(*DEC) LEN(5) VALUE(16)
+             DCL        VAR(&DTQBLEN)  TYPE(*DEC) LEN(5) VALUE(8)
+             DCL        VAR(&DTQDLEN)  TYPE(*DEC) LEN(5) VALUE(86)
+             DCL        VAR(&WAIT)  TYPE(*DEC) LEN(5) VALUE(15)
+             DCL        VAR(&MSGA) TYPE(*CHAR) LEN(16) +
+                          VALUE('COBBEGIN  00001C')
+             DCL        VAR(&MSGB) TYPE(*CHAR) LEN(8) VALUE('STREAM  ')
+             DCL        VAR(&MSGD) TYPE(*CHAR) LEN(86)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DOMNASA)  TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NOAS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DOMNAS) TYPE(*DEC) LEN(2)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(1 0)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check MONCHK. Check if the monitor is already active */
+ 
+             ALCOBJ     OBJ((MONCHK *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+             SNDPGMMSG  MSG('CBC000002 - COB Monitor is already +
+                          active.') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                CHGJOB     SWS(XXXXXX11)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Set attention program CB000003 */
+ 
+             SETATNPGM  PGM(CB000003)
+ 
+/* Call CBCICD - Midas CB COB read to COB ICD */
+ 
+             CALL       CBCICD PARM(&DOMNAS)
+ 
+/* Get &COBSTS (CoB status) from CBSTAT ICD */
+ 
+             RTVDTAARA  DTAARA(CBSTAT (45 1)) RTNVAR(&COBSTS)
+ 
+/* Check CBCHK for locking */
+ 
+             ALCOBJ     OBJ((CBCHK *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(SCHACT))
+             DLCOBJ     OBJ((CBCHK *DTAARA *EXCL))
+ 
+/* Update CBSTAT based on &COBSTS */
+ 
+             IF         COND(&COBSTS *EQ 'Y') THEN(DO)
+                CHGDTAARA  DTAARA(CBSTAT (17 1)) VALUE('N')
+             ENDDO
+ 
+             RTVDTAARA  DTAARA(CBSTAT (17 1)) RTNVAR(&SCHSTS)
+ 
+/* If &SCHSTS  <> 'Y'  (scheduler is not active) */
+ 
+             IF         COND(&SCHSTS *NE 'Y') THEN(DO)
+                IF         COND(&COBSTS *EQ 'N') THEN(DO)
+ 
+/* Send COBBEGIN message to DTAQ/CBDTQA */
+ 
+                      CALL QSNDDTAQ PARM('CBDTQA    ' '*LIBL     ' +
+                                         &DTQALEN &MSGA)
+ 
+/* Send the appropriate number of stream messages to DTAQ/CBDTQB */
+ 
+                      CHGVAR     VAR(&CNT) VALUE(0)
+DTAQ:
+                      CHGVAR     VAR(%SST(&MSGB 7 2)) VALUE(&CNT)
+                      CALL QSNDDTAQ PARM('CBDTQB    ' '*LIBL     ' +
+                                         &DTQBLEN &MSGB)
+                      CHGVAR     VAR(&CNT)    VALUE(&CNT + 1)
+                      IF         COND(&CNT *LT &DOMNAS) THEN(GOTO DTAQ)
+                ENDDO
+ 
+/* When Cob Status is 'H' for Halted */
+ 
+                IF         COND(&COBSTS *EQ 'H') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Close +
+                          of Business processing restarting after +
+                          halt') TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                   CALL       PGM(CBC0075) PARM(&DOMNAS)
+                ENDDO
+ 
+/* When Cob Status is 'Y' for Unexpected COB ending or */
+/* machine crash */
+ 
+                IF         COND(&COBSTS *EQ 'Y') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Close +
+                          of Business processing restarting') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                   CALL       PGM(CB0090) PARM(&DOMNAS)
+                   CALL       PGM(CB0170) PARM('Y' &ERRCB0170)
+                   IF         COND(&ERRCB0170 *EQ 'Y') THEN(DO)
+             SNDPGMMSG  MSG('CB0170 - Error processing for scheduler +
+                          terminated abnormally') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO
+ 
+/* When Cob Status is 'R' for Restart after failure */
+ 
+                IF         COND(&COBSTS *EQ 'R') THEN(DO)
+                      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('+
+                          Close of Business processing restarting') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                   CALL       PGM(CBC0095) PARM(&DOMNAS)
+                ENDDO
+ 
+/* When Cob Status is 'S' for Scheduler failed */
+ 
+                IF         COND(&COBSTS *EQ 'S') THEN(DO)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Close +
+                          of Business processing restarting') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+                   CALL       PGM(CB0080) PARM(&DOMNAS)
+                ENDDO
+ 
+/* After all condition, if error then process else submit job. */
+ 
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO ABNOR
+                ENDDO
+                ELSE DO
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Close +
+                          of Business Scheduler being started') +
+                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+             SBMJOB     JOB(COBSCHED) JOBD(MEODD) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                          RQSDTA('CALL PGM(MLC0000) +
+                          PARM(''SCC0107'' ''CBC0010'' '' '' '' '' +
+                          '' '' '' '')') INLLIBL(*JOBD) MSGQ(*NONE)
+ 
+/* Update CBSTAT Scheduler Active (field 17) to 'Y' */
+ 
+                   CHGDTAARA  DTAARA(CBSTAT (17 1)) VALUE('Y')
+ 
+/* Update CBSTAT to show COB running normally and no halts */
+/* in operation */
+ 
+                   CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')
+                   CHGDTAARA  DTAARA(CBSTAT (20 1)) VALUE('N')
+ 
+/* If cob is restarted from failure */
+ 
+                   IF         COND(&COBSTS *EQ 'R') THEN(DO)
+                      CALL       PGM(CB000003)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+ 
+             CHGVAR     VAR(&MSGD) +
+                          VALUE('                                     -
+                                 REFRESH         ')
+ 
+             GOTO STRMON
+ 
+/* Scheduler Active Tag */
+ 
+SCHACT:
+             CHGVAR     VAR(&MSGD) +
+                          VALUE('                                     -
+                                 RESTART         ')
+             CALL QSNDDTAQ PARM('CBDTQD    ' '*LIBL     ' +
+                                         &DTQDLEN &MSGD)
+             MONMSG     MSGID(CPF9503) EXEC(DO)
+                IF         COND(&COUNT *LE 6) THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   DLYJOB     DLY(10)
+                   GOTO       CMDLBL(LOOP)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+STRMON:
+ 
+/* If a restart after a monitor faulire and */
+/* nothing was active, display menu to allow restart */
+ 
+             RTVDTAARA  DTAARA(CBSTAT (18 2)) RTNVAR(&NOAS)
+             IF         COND((&NOAS *EQ '00') *AND (&COBSTS *EQ 'M')) +
+                          THEN(DO)
+                CHGDTAARA  DTAARA(CBSTAT (45 1)) VALUE('N')
+                CALL       PGM(CB000003)
+             ENDDO
+ 
+/* Receive message from DTAQ/CBDTQD */
+ 
+LOOP:
+                 CALL QRCVDTAQ PARM('CBDTQD    ' '*LIBL     ' +
+                                    &DTQDLEN &MSGD &WAIT)
+ 
+/* Call the monitor */
+ 
+                 CHGVAR     VAR(&DOMNASA) VALUE(&DOMNAS)
+/**********      CALL CBMON PARM(&JOB &MSGD &DOMNASA)                */                /*AR1096378*/
+                 CALL       PGM(CB000004)                                              /*AR1096378*/
+ 
+/* Move default msg of 'REFRESH' into &MSGD in case of */
+/* DTAQ timeout */
+ 
+                 CHGVAR     VAR(&MSGD) +
+                          VALUE('                                     -
+                                 REFRESH         ')
+ 
+/* Retrieve DTAARA/CBSTAT to see if the scheduler is active */
+ 
+                 RTVDTAARA DTAARA(CBSTAT (17 1)) RTNVAR(&SCHSTS)
+ 
+/* If scheduler is active and no DB errors GOTO LOOP tag */
+ 
+             IF         COND((&SCHSTS *EQ 'Y') *AND +
+                          (%SWITCH(XXXXXX00))) THEN(GOTO CMDLBL(LOOP))
+ 
+ 
+/* If scheduler ended in error or error occurred in CBCMON/CBMON */
+/* perform usual error processing */
+ 
+            RTVDTAARA   DTAARA(CBSTAT (17 1)) RTNVAR(&SCHSTS)
+ 
+            IF COND((&SCHSTS *EQ 'E') *OR (%SWITCH(XXXXXX11))) THEN(DO)
+                 IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                     RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                     SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                                MSGDTA(&MEM) TOMSGQ(MOPERQ)
+                 ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('CBC000002 - COB monitor terminated +
+                          abnormally') TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                            CHGJOB SWS(XXXXXX11)
+                            CHGVAR VAR(&ERROR) VALUE('Y')
+                 MONMSG     MSGID(CPF0000)
+ 
+                 DMPCLPGM
+ 
+/* If the monitor failed then set the COB status field to 'M' */
+ 
+                 RTVDTAARA DTAARA(CBSTAT (45 1)) RTNVAR(&COBSTS)
+                 MONMSG     MSGID(CPF0000)
+                 IF         COND(&COBSTS *EQ 'N') THEN(DO)
+                    CHGDTAARA DTAARA(CBSTAT (45 1)) VALUE('M')
+                    MONMSG     MSGID(CPF0000)
+                 ENDDO
+            ENDDO
+ 
+ END:
+             DLCOBJ     OBJ((MONCHK *DTAARA *EXCL))
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

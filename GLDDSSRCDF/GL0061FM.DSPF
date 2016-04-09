@@ -1,0 +1,565 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas GL Account Balances Enquiry')                    *
+      *===============================================================*
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0061FM - CUSTOMER ACCOUNT BALANCES ENQUIRY.                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD025573           Date 19Aug14               *
+      *  Prev Amend No. CGL140             Date 12Dec12               *
+      *                 CGL131             Date 28Sep12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243811             Date 20Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CRE023             Date 29Jul05               *
+      *                 BUG4738            Date 17Nov04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 16Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 01Mar96               *
+      *                 E41816             Date 01Jul92               *
+      *                 S01311        DATE  21JAN91                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD025573 - Currency and Branch shown on second line          *
+      *  CGL140 - Online Statement                                    *
+      *           Added Hooks: CGL140_001, CGL140_002, CGL140_020,    *
+      *            CGL140_021                                         *
+      *  CGL131 - Customer Account Balance Enquiry (with available    *
+      *           balance)                                            *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,GLH00022                                 *
+      *             WNCPYSRC,GLH00023                                 *
+      *  243811 - Remove 'Cleared' text from initial screen           *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus.                *
+      *  BUG4738- 987 Customer balance enquiry do not have carried    *
+      *           forward balance (Recompile for webfacing)           *
+      *  CLE025 - Credit Lines                                        *
+      *  CAAA03 - Webfacing Changes                                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  S01408 - Addition of core hook GL0061FM01                    *
+      *           Addition of core hook GL0061FM02                    *
+      *           Addition of core hook GL0061FM03                    *
+      *           Addition of core hook GL0061FM04                    *
+      *  E41816 - CONDITION NARR 'CLEARED' ON RET5IL PRESENT          *
+      *  S01311 - R10 EXPOSURE MANAGEMENT ENHANCEMENTS.               *
+      *           Program rewritten to allow enquiry to be called     *
+      *           directly from a Midas menu or indirectly via a      *
+      *           linked enquiry. Replaces GL0060FM.                  *
+      *                                                               *
+      *===============================================================*
+      *                                                               *
+      *  I N D I C A T O R S                                          *
+      *                                                               *
+      *  01 - F1 (Initial Enquiry) from screen                        *
+      *  03 - F3 (Exit) from screen                                   *
+      *  12 - F12 (Previous) from screen                              *
+      *  25 - Rollup from screen                                      *
+      *  26 - Rolldown from screen                                    *
+      *                                                               *
+      *  30 - Display subfile control                                 *
+      *  31 - Display subfile and column headers                      *
+      *  32 - Display customer details in screen header               *
+      *  33 - First subfile page displayed (Rolldown suppressed)      *
+      *  34 - Last subfile page displayed (Rollup suppressed)         *
+      *  35 - Activate modified data flag                             *
+      *  39 - Called as Linked Enquiry (F1 and F12 available)         *
+      *  40 - Retail in system (Retail column headers displayed)      *
+      *                                                               *
+      *  55 - Linked enquiry option in error                          *
+      *  56 - Customer prompt in error                                *
+      *  57 - Branch prompt in error                                  *
+      *                                                               *
+      *  58 - Multi-branching environment (process branch prompt)     *
+      *                                                               *
+      *  70 - Display error message                                   *
+      *                                                               *
+      *  88 - Retail Account balances from previous day               *
+      *  89 - Display message warning of balances from previous day   *
+      *                                                               *
+      *===============================================================*
+      *
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A**Start of change CGL029
+     A                                      DSPSIZ(*DS4)
+     A**End of change CGL029
+      *
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  HEADER FORMAT                                                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061F1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                      BLINK
+     A                                      PUTOVR
+     A                                      OVERLAY
+      *
+     A                                  1 13'GL0061'
+     A            USER          10A  O  1  2
+     A**Start of change CGL029
+     A**********  BJMRDT         7A  O  1 73                                                  CGL029
+     A            BJMRDT         7A  O  1 79
+     A**End of change CGL029
+     A            WSID          10A  O  2  2
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,GL0061FM01                                          S01408
+     A*                                                                   S01408
+     A**Start of change CGL029
+     A**********                        2 24'CUSTOMER ACCOUNT +                               CGL029
+     A**********                            BALANCES ENQUIRY'                                 CGL029
+     A                                  2 28'CUSTOMER ACCOUNT +
+     A                                      BALANCES ENQUIRY'
+     A**End of change CGL029
+     A                                      DSPATR(HI UL)
+     A**Start of change CGL029
+     A**********                        2 72TIME                                              CGL029
+     A                                  2 78TIME
+     A**End of change CGL029
+     A                                      OVRATR
+     A*/COPY WNCPYSRC,GL0061FM06
+      *
+     A                                  4  2'Customer'
+     A N32                                  DSPATR(ND)
+     A                                      OVRATR
+     A            CNUMD          6A  O  4 12DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CRNMD         20A  O  4 21DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CSNMD         10A  O  4 44DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  4 65'A/c Officer'
+     A N32                                  DSPATR(ND)
+     A                                      OVRATR
+     A            ACOCD          2A  O  4 78DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CTWND         10A  O  5 21DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                  6  4'Ccy'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  6  8'A/c'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********                        6 12'Seq'                                             CGL029
+     A                                  6 18'Seq'
+     A**End of change CGL029
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********                        6 16'Brc'                                             CGL029
+     A                                  6 22'Brc'
+     A**End of change CGL029
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********                        6 20'Ret A/c No'                                      CGL029
+     A                                  6 26'Ret A/c No'
+     A**End of change CGL029
+     A N31
+     AON40                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********                        6 45'Ledger'                                          CGL029
+     A                                  6 51'Ledger'
+     A**End of change CGL029
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********                        6 67'Cleared'                                         CGL029
+      **Start of change CRE023
+     A**********                        6 73'Cleared'                                         CRE023
+     A N67                              6 73'Cleared'
+      **Start of change 243811
+     A N31
+     AON41                                  DSPATR(ND)
+     A                                      OVRATR
+      **End of change 243811
+     A  67                              6 71'Available'
+      **End of change CRE023
+     A**End of change CGL029
+     A N31
+     A* E41816 START
+     A*N40                                  DSPATR(ND)
+     AON41                                  DSPATR(ND)
+     A* E41816 END
+     A                                      OVRATR
+     A**Start of change CLE025
+     A                                  6 88'Status'
+     A N27
+     AON31                                  DSPATR(ND)
+     A                                      OVRATR
+     A**End of change CLE025
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,GL0061FM02                                          S01408
+     A*                                                                   S01408
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLEAR SUBFILE FORMAT FROM SCREEN                             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061F2                  SLNO(7)
+     A*/COPY WNCPYSRC,GL0061FM07
+     A**Start of change CGL029
+     A**********                            CLRL(14)                                          CGL029
+     A                                      CLRL(17)
+     A**End of change CGL029
+     A                                      OVERLAY
+     A                                      PROTECT
+      *
+     A*/COPY WNCPYSRC,GL0061FM08
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  SUBFILE FORMAT                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061SF                  SFL
+     A  35                                  SFLNXTCHG
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,GL0061FM03                                          S01408
+     A*                                                                   S01408
+      *
+     A            OPTN           1A  B  7  2
+     A                                      DSPATR(HI)
+     A N55                                  DSPATR(UL)
+     A  55                                  DSPATR(PC RI)
+     A            CCY            3A  O  7  4DSPATR(HI)
+     A**Start of change CGL029
+     A**********  ACOD           4Y 0O  7  8DSPATR(HI)                                        CGL029
+     A**********  ACSQ           2Y 0O  7 13DSPATR(HI)                                        CGL029
+     A**********  BRCA           3A  O  7 16DSPATR(HI)                                        CGL029
+     A**********  ACNOD         10A  O  7 20DSPATR(HI)                                        CGL029
+     A**********  LDBLD         22A  O  7 31DSPATR(HI)                                        CGL029
+     A**********  CLBLD         22A  O  7 54DSPATR(HI)                                        CGL029
+     A**********                        7 77'**'                                              CGL029
+     A            ACOD          10Y 0O  7  8DSPATR(HI)
+     A            ACSQ           2Y 0O  7 19DSPATR(HI)
+     A            BRCA           3A  O  7 22DSPATR(HI)
+     A            ACNOD         10A  O  7 26DSPATR(HI)
+     A            LDBLD         22A  O  7 37DSPATR(HI)
+     A            CLBLD         22A  O  7 60DSPATR(HI)
+     A                                  7 83'**'
+     A**End of change CGL029
+     A N88                                  DSPATR(ND)
+     A**Start of change CLE025
+     A            STATUS        10A  O  7 86
+     A  27                                  DSPATR(HI)
+     A N27                                  DSPATR(ND)
+     A**End of change CLE025
+     A            OLDBAL         1A  H
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,GL0061FM04                                          S01408
+     A*                                                                   S01408
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  SUBFILE CONTROL                                              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061SC                  SFLCTL(GL0061SF)
+     A*/COPY WNCPYSRC,GL0061FM09
+      *
+     A                                      BLINK
+     A  30                                  SFLDSPCTL
+     A  31                                  SFLDSP
+     A**Start of change CGL029
+     A**********                            SFLSIZ(14)                                        CGL029
+     A**********                            SFLPAG(14)                                        CGL029
+     A                                      SFLSIZ(17)
+     A                                      SFLPAG(17)
+     A**End of change CGL029
+     A N30N31                               SFLCLR
+     A  34                                  SFLEND
+     A*/COPY WNCPYSRC,GL0061FM10
+      *
+     A  39                                  CF01(01 'F1 Initial Enq')
+     A                                      CF03(03 'F3 Exit')
+     A  39                                  CF12(12 'F12 Previous')
+     A  31N34                               ROLLUP(25)
+     A  31N33                               ROLLDOWN(26)
+     A                                      OVERLAY
+      *
+     A            SFRN           3  0H      SFLRCDNBR
+     A*/COPY WNCPYSRC,GLH00022
+     A*/COPY OFCPYSRCZ,CGL140_001                                                             CGL140
+     A**Start of change CGL029
+     A**********  MSG           78A  O 21 02                                                  CGL029
+     A            MSG           78A  O 24 02
+     A**End of change CGL029
+     A*/COPY OFCPYSRCZ,CGL140_002                                                             CGL140
+     A*/COPY WNCPYSRC,GLH00023
+      ** Start of change CAAA03
+     A**********                            DSPATR(HI RI)                                     CAAA03
+     A                                      DSPATR(HI)
+     A  70
+     AO 89                                  DSPATR(RI)
+      ** End of change CAAA03
+     A N70N89                               DSPATR(ND)
+      *
+     A**Start of change CGL029
+     A*N39******                       22 02'F3=Exit'                                         CGL029
+     A N39                             25 02'F3=Exit'
+     A**End of change CGL029
+     A N39 31
+     A**Start of change CGL029
+     A*A*33N34**                       22 12'Rollup'                                          CGL029
+     AA 33N34                          25 12'Rollup'
+     A**End of change CGL029
+     A N39 31
+     A**Start of change CGL029
+     A*AN33N34**                       22 12'Rollup   Rolldown'                               CGL029
+     AAN33N34                          25 12'Rollup   Rolldown'
+     A**End of change CGL029
+     A N39 31
+     A**Start of change CGL029
+     A*AN33*34**                       22 12'Rolldown'                                        CGL029
+     AAN33 34                          25 12'Rolldown'
+     A**End of change CGL029
+      *
+     A**Start of change CGL029
+     A**39******                       22 02'F1=Initial Enquiry'                              CGL029
+     A**39******                       22 23'F3=Exit'                                         CGL029
+     A**39******                       22 33'F12=Previous'                                    CGL029
+     A  39                             25 02'F1=Initial Enquiry'
+     A  39                             25 23'F3=Exit'
+     A  39                             25 33'F12=Previous'
+     A**End of change CGL029
+     A  39 31
+     A**Start of change CGL029
+     A*A*33N34**                       22 48'Rollup'                                          CGL029
+     AA 33N34                          25 48'Rollup'
+     A**End of change CGL029
+     A  39 31
+     A**Start of change CGL029
+     A*AN33N34**                       22 48'Rollup   Rolldown'                               CGL029
+     AAN33N34                          25 48'Rollup   Rolldown'
+     A**End of change CGL029
+     A  39 31
+     A**Start of change CGL029
+     A*AN33*34**                       22 48'Rolldown'                                        CGL029
+     AAN33 34                          25 48'Rolldown'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,GL0061FM11
+      *
+     A**Start of change CGL029
+     A**********                       23 02'Or enter customer number +                       CGL029
+     A**********                             or shortname'                                    CGL029
+     A**********  CUSTD         10A  B 23 40DSPATR(HI)                                        CGL029
+     A                                 26 02'Or enter customer number +
+     A                                       or shortname'
+     A            CUSTD         10A  B 26 40DSPATR(HI)
+     A**End of change CGL029
+     A N56                                  DSPATR(UL)
+     A  56                                  DSPATR(RI)
+     A**Start of change CGL029
+     A**58******                       23 51'and branch code'                                 CGL029
+     A**58******  BRCHD          3A  B 23 67DSPATR(HI)                                        CGL029
+     A  58                             26 51'and branch code'
+     A  58        BRCHD          3A  B 26 67DSPATR(HI)
+     A**End of change CGL029
+     A N58                                  DSPATR(PR)
+     A N57                                  DSPATR(UL)
+     A  57                                  DSPATR(PC RI)
+      *
+     A*/COPY WNCPYSRC,GL0061FM05
+      *===============================================================*
+      **Start of Change CGL131
+      *
+     A          R GL0061FA                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2012')
+      *
+     A                                      BLINK
+     A                                      PUTOVR
+     A                                      OVERLAY
+      *
+     A                                  1 13'GL0061A'
+     A            USER          10A  O  1  2
+     A            BJMRDT         7A  O  1 73
+     A            WSID          10A  O  2  2
+     A                                  1 24'CUSTOMER ACCOUNT +
+     A                                      BALANCES ENQUIRY'
+     A                                      DSPATR(HI UL)
+     A                                  2 72TIME
+     A                                      OVRATR
+     A                                  3  2'Customer'
+     A N32                                  DSPATR(ND)
+     A                                      OVRATR
+     A            CNUMD          6A  O  3 12DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CRNMD         20A  O  3 21DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CSNMD         10A  O  3 44DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  3 65'A/c Officer'
+     A N32                                  DSPATR(ND)
+     A                                      OVRATR
+     A            ACOCD          2A  O  3 78DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            CTWND         10A  O  4 21DSPATR(HI)
+     A N32                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                  5  4'Ccy'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5  8'A/c'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5 18'Seq'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5 22'Brc'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5 26'Ret A/c No'
+     A N31
+     AON40                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5 51'Ledger'
+     A N31                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  5 73'Cleared'
+     A N31
+     AON41                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                  6 73'Available'
+     A N31
+     AON41                                  DSPATR(ND)
+     A                                      OVRATR
+     A
+     A                                  6 88'Status'
+     A N27
+     AON31                                  DSPATR(ND)
+     A                                      OVRATR
+     A
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      ** SUBFILE FORMAT                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061SA                  SFL
+     A  35                                  SFLNXTCHG
+     A            OPTN           1A  B  7  2
+     A                                      DSPATR(HI)
+     A N55                                  DSPATR(UL)
+     A  55                                  DSPATR(PC RI)
+     A  85                                  DSPATR(ND)
+     A  85                                  DSPATR(PR)
+     A            CCY            3A  O  7  4DSPATR(HI)
+      **Start of Change MD025573
+     A  85                                  DSPATR(ND)
+      **End of Change MD025573
+     A            ACOD          10Y 0O  7  8DSPATR(HI)
+     A  85                                  DSPATR(ND)
+     A            ACSQ           2Y 0O  7 19DSPATR(HI)
+     A  85                                  DSPATR(ND)
+     A            BRCA           3A  O  7 22DSPATR(HI)
+      **Start of Change MD025573
+     A  85                                  DSPATR(ND)
+      **End of Change MD025573
+     A            ACNOD         10A  O  7 26DSPATR(HI)
+     A            LDBLD         22A  O  7 37DSPATR(HI)
+     A            CLBLD         22A  O  7 60DSPATR(HI)
+     A                                  7 83'**'
+     A N88                                  DSPATR(ND)
+     A
+     A            STATUS        10A  O  7 86
+     A  27                                  DSPATR(HI)
+     A N27                                  DSPATR(ND)
+     A
+     A            OLDBAL         1A  H
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      ** SUBFILE CONTROL                                              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     A          R GL0061SB                  SFLCTL(GL0061SA)
+      *
+     A                                      BLINK
+     A  30                                  SFLDSPCTL
+     A  31                                  SFLDSP
+     A                                      SFLSIZ(14)
+     A                                      SFLPAG(14)
+     A N30N31                               SFLCLR
+     A  34                                  SFLEND
+      *
+     A  39                                  CF01(01 'F1 Initial Enq')
+     A                                      CF03(03 'F3 Exit')
+     A  39                                  CF12(12 'F12 Previous')
+     A  31N34                               ROLLUP(25)
+     A  31N33                               ROLLDOWN(26)
+     A                                      OVERLAY
+      *
+     A            SFRN           3  0H      SFLRCDNBR
+     A*/COPY OFCPYSRCZ,CGL140_020                                                             CGL140
+     A            MSG           78A  O 21 02
+     A*/COPY OFCPYSRCZ,CGL140_021                                                             CGL140
+     A                                      DSPATR(HI)
+     A  70
+     AO 89                                  DSPATR(RI)
+     A N70N89                               DSPATR(ND)
+      *
+     A N39                             22 02'F3=Exit'
+     A N39 31
+     AA 33N34                          22 12'Rollup'
+     A N39 31
+     AAN33N34                          22 12'Rollup   Rolldown'
+     A N39 31
+     AAN33 34                          22 12'Rolldown'
+      *
+     A  39                             22 02'F1=Initial Enquiry'
+     A  39                             22 23'F3=Exit'
+     A  39                             22 33'F12=Previous'
+     A  39 31
+     AA 33N34                          22 48'Rollup'
+     A  39 31
+     AAN33N34                          22 48'Rollup   Rolldown'
+     A  39 31
+     AAN33 34                          22 48'Rolldown'
+      *
+     A                                 23 02'Or enter customer number +
+     A                                       or shortname'
+     A            CUSTD         10A  B 23 40DSPATR(HI)
+     A N56                                  DSPATR(UL)
+     A  56                                  DSPATR(RI)
+     A  58                             23 51'and branch code'
+     A  58        BRCHD          3A  B 23 67DSPATR(HI)
+     A N58                                  DSPATR(PR)
+     A N57                                  DSPATR(UL)
+     A  57                                  DSPATR(PC RI)
+      ** End of Change CGL131

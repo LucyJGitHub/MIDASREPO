@@ -1,0 +1,387 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC I/C init. interface')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Report Control Facility Module
+     F*                                                                  *
+     F*  FC0010 - I/C INIT INTERFACE                                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 115439             Date 29Jan98               *
+      *                 S01117             Date 25Mar92               *
+     F*                     S01343           DATE 28AUG91                *
+     F*                     S01269           DATE 25JUN91                *
+     F*                     LN1277           DATE 22MAY91                *
+     F*                     LN1083           DATE 14DEC90                *
+     F*                     LN1034           DATE 27NOV90                *
+     F*                     LN0938           DATE 31OCT90                *
+      ********************************************************************
+      *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *      115439 - Update data area REPSEQ after writing a record
+      *               to FCRREQPD
+      *      S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD
+      *      S01343 - SDC01 RENAMED TO SCC01
+      *
+      *      S01269 - RECOMPILE FOR TRADE AUTHORISATION CHANGE TO
+      *               MUSERDD
+      *      LN1277 - CHAIN TO SDBANKL1 FOR VALUE OF DAY OF NEXT
+      *               WORKING DAY AS THE ACCESS PROGRAM WILL STILL
+      *               HOLD YESTERDAYS VALUES
+      *
+      *      LN1083 - UPDATING D9PNDT WHICH IS A KEY ON FCPREQL2 MADE
+      *               THE PGM READ THE SAME PERIODIC TWICE. UPDATE
+      *               FCPREQPD.
+      *
+      *      LN1034 - REMOVE CALL FROM FCC01 AND MOVE TO SCC01
+      *               TO SET UP PERIODIC REPORTING DATES PROPERLY
+      *
+      *      LN0938 - AMEND PARAMETER ON CALL TO FC0015                   LN0938
+      *
+      ********************************************************************
+      *  C R E A T I O N     P A R A M E T E R S
+      *
+      *
+      ********************************************************************
+      *****************************************************************
+      * OPERATION
+      * ~~~~~~~~~
+      *
+      * THIS PROGRAM DOES THE FOLLOWING WHEN NEXT ACTIVE DATE IN
+      * FILE FCPREQPD HAS BEEN REACHED : -
+      *
+      *      WRITES A RECORD TO FCRREQPD
+      *      WRITES A RECORD TO FCPARDPD - IF APPLICABLE
+      *      WRITES A RECORD TO MAARCDPD - IF APPLICABLE
+      *      AMENDS NEXT ACTIVE DATE IN FCPREQPD
+      *
+      *      INDICATORS:
+      *                    28   END OF FILE 'FCPARPL1'
+      *                    71   END OF FILE 'MUSER'
+      *                    73   END OF FILE 'MAARCPL2'
+      *************        75   END OF FILE 'FCPREQL2'                    LN1083
+      *                    75   END OF FILE 'FCPREQPD'                    LN1083
+      *****************************************************************
+      *
+     F*************FCPREQL2UF  E           K        DISK                  LN1083
+     FFCPREQPDUF  E           K        DISK                               LN1083
+     FFCRREQPDO   E                    DISK
+     FFCPARPL1IF  E           K        DISK
+     FFCPARDPDO   E                    DISK
+     FMAARCDPDO   E                    DISK
+     FMAARCPL2IF  E           K        DISK
+     FMUSER   IF  E           K        DISK
+     FSDBANKL1IF  E           K        DISK                               LN1277
+     F/COPY WNCPYSRC,FC0010F001
+     E                    CPY@    1   1 80
+     ILDA        UDS                            256
+      **
+      * DATA STRUCTURE FOR DATABASE ERROR
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I*                                                                   115439
+     I** Report Sequence Number                                           115439
+     I*                                                                   115439
+     IREPSEQ      DS                                                      115439
+     I                                        1   50SEQ                   115439
+      *
+     I*DSFDY*****E*DSDSFDY                                                LN1277
+      **200*BYTE*DATASTRUCTURE*FOR*ACCESS*PROGRAMS                        LN1277
+      *
+     I*P@BANK****E*DSSDBANKPD                                             LN1277
+      **Bank*ICD*Access*Program*record*format*data*structure              LN1277
+      *
+     C                     MOVEACPY@      BIS@   80
+     C/COPY WNCPYSRC,FC0010C001
+      **
+      **PARAMETER*PASSED*FROM*FCC01*:*REPORT*SEQ.*NO.******************   LN1034
+      **PARAMETER*PASSED*FROM*SDC01*:*REPORT*SEQ.*NO.************* LN1034 S01343
+      * PARAMETER PASSED FROM SCC01 : REPORT SEQ. NO.                     S01343
+      *
+     C************ENTRY    PLIST                                          115439
+     C************         PARM           REPCON  50                      115439
+     C**
+     C* KLIST TO READ MAARCPPD & FCPARPPD IN REPORT NAME & SEQ. NO.
+     C* ORDER
+     C*
+     C           ARCKEY    KLIST
+     C                     KFLD           D9RNAM
+     C                     KFLD           D9PSQN
+     C*
+     C                     MOVEL'FC0010'  DBPGM
+     C**
+     C**CALLS*ACCESS*OBJECT*'AOBANKR0'*TO*GET*NEXT*WORKING*DAY            LN1277
+     C*
+     C*
+     C***********          CALL 'AOBANKR0'                   <BANK ICD>   LN1277
+     C***********          PARM *BLANK    P@APRC  7          B:Return codeLN1277
+     C***********          PARM '*FIRST'  P@APOP  7          I:Option     LN1277
+     C***********P@BANK    PARM P@BANK    DSFDY              O:Rec.format LN1277
+     C*
+     C***********P@APRC    IFNE *BLANK                                    LN1277
+     C*                                                                   LN1277
+     C* CHAIN TO SDBANKL1 TO GET NEXT WORKING DAY                         LN1277
+     C*                                                                   LN1277
+     C                     MOVEL'BANK'    KEY    10                       LN1277
+     C           KEY       CHAINSDBANKL1             30                   LN1277
+     C*                                                                   LN1277
+     C           *IN30     IFEQ '1'                                       LN1277
+     C                     MOVEL'SDBANKL1'DBFILE
+     C***********          MOVEL'*FIRST'  DBKEY                           LN1277
+     C                     MOVELKEY       DBKEY                           LN1277
+     C                     Z-ADD7         DBASE            *************
+     C                     EXSR *PSSR                      * DBERR 007 *
+     C                     EXSR RET                        *************
+     C                     END
+     C*
+     C***********          READ FCPREQL2                 75               LN1083
+     C                     READ FCPREQPD                 75               LN1083
+     C*
+     C* PROCESS WHILE RECORDS EXIST ON FCPREQPD WITH A NEXT ACTIVE
+     C* DATE < NEXT WORKING DAY
+     C*
+     C           *IN75     DOWEQ'0'
+     C***********D9PNDT    ANDLTBJDNWD                                    LN1083
+     C           D9PNDT    IFLT BJDNWD                                    LN1083
+     C*                                                                   115439
+     C** Obtain next sequence number from data area REPSEQ and update     115439
+     C** data area for next request.                                      115439
+     C*                                                                   115439
+     C           *NAMVAR   DEFN           REPSEQ                          115439
+     C           *LOCK     IN   REPSEQ                                    115439
+     C                     MOVE SEQ       REPCON  50                      115439
+     C                     ADD  1         SEQ                             115439
+     C                     OUT  REPSEQ                                    115439
+     C*
+     C                     MOVELD9RNAM    CHARCP 12
+     C                     MOVE D9PSQN    CHARCP
+      *
+      * WRITES A RECORD TO FCRREQPD FROM FCPREQPD, MUSERDD & REPCON
+      *
+     C                     MOVE D9RNAM    D5RNAM
+     C                     MOVE REPCON    D5RQSQ
+     C                     MOVE D9SOID    D5SOID
+     C                     MOVE D9LVL     D5LVL
+     C                     MOVE D9ETTY    D5ETTY
+      * MOVE 'N' TO INPUT CYCLE *
+     C                     MOVE 'N'       D5IPCY
+      * MOVE 'Y' TO PERIODIC *
+     C                     MOVE 'Y'       D5PDFL
+     C                     MOVE D9DLS1    D5DLS1
+     C                     MOVE D9DLS2    D5DLS2
+     C                     MOVE D9USRO    D5USRO
+     C                     MOVE D9ARMF    D5ARMF
+     C                     MOVE D9AROD    D5AROD
+     C                     MOVE D9DRQD    D5DRQD
+     C                     MOVE D9USRR    D5USRR
+      * SET REQ TIME TO ZERO *
+     C                     Z-ADD0         D5RQTM
+      * 'N' TO CLOSE OF BUSINESS *
+     C                     MOVE 'N'       D5COBR
+     C                     MOVE *BLANKS   D5JBNM
+     C                     MOVE *BLANKS   D5JUSR
+     C                     MOVE *BLANKS   D5JBNB
+     C                     MOVE D9PSQN    D5PSQR
+     C                     MOVELD9COTT    D5COTT
+     C                     MOVELD9CSEQ    D5CSEQ
+     C**
+     C* RETRIEVE USER BRANCH FROM MUSERDD THEN WRITE RECORD TO FCRREQPD
+     C*
+     C           D9USRR    CHAINMUSER                71
+     C*
+     C           *IN71     IFEQ '1'
+     C                     MOVEL'MUSER'   DBFILE           **************
+     C                     MOVELD9USRR    DBKEY            *  DBERR 001 *
+     C                     Z-ADD1         DBASE            **************
+     C                     SETOF                         71
+     C                     EXSR *PSSR
+     C                     EXSR RET
+     C                     END
+     C*
+     C                     MOVE DBRN      D5DBRN
+     C**
+     C* UPDATES SEQUENCE NUMBER
+     C*
+     C***********          ADD  1         REPCON                          115439
+     C*
+     C                     WRITEFCRREQD0
+     C**
+     C* CHAIN TO FCPARPPD USING KEY ACCESSED ON FCPREQPD
+     C*
+     C           ARCKEY    CHAINFCPARPL1             28
+     C**
+     C* IF CHAIN SUCCESSFUL WRITE A RECORD TO FCPARDPD
+     C*
+     C           *IN28     IFEQ '0'
+     C                     MOVE D9RNAM    D7RNAM
+     C                     MOVE D5RQSQ    D7RQSQ
+     C                     MOVELD8PARM    D7PARM
+     C*
+     C                     WRITEFCPARDD0
+     C/COPY WNCPYSRC,FC0010C002
+     C*
+     C                     ELSE
+     C                     SETOF                     28
+     C                     END
+     C**
+     C* IF ARCHIVED ON MICROFICHE AND/OR OPTICAL DISK = 'Y'
+     C* IN FCPREQPD WRITE A RECORD TO MAARCDPD
+     C*
+     C           D9ARMF    IFEQ 'Y'
+     C           D9AROD    OREQ 'Y'
+     C*
+     C           ARCKEY    SETLLMAARCPL2
+     C**
+     C* READ EQUAL ON LGL. FILE MAARCPL2(KEYED ON REPT.NAME & SEQ NO.)
+     C*
+     C           ARCKEY    READEMAARCPL2                 73
+     C*
+     C           *IN73     IFEQ '1'
+     C*
+     C                     MOVEL'MAARCPL2'DBFILE           *************
+     C                     MOVELCHARCP    DBKEY            * DBERR 002 *
+     C                     Z-ADD2         DBASE            *************
+     C                     SETOF                         73
+     C                     EXSR *PSSR
+     C                     EXSR RET
+     C                     END
+     C*
+     C           *IN73     DOWEQ'0'
+     C                     MOVE ECARID    EBARID
+     C                     MOVE D9RNAM    EBRNAM
+     C                     MOVE D5RQSQ    EBRQSQ
+     C                     MOVE ECRSFX    EBRSFX
+     C                     MOVE *BLANKS   EBCFLG
+     C                     MOVE *BLANKS   EBACFL
+     C*
+     C                     WRITEMAARCDD0
+     C*
+     C           ARCKEY    READEMAARCPL2                 73
+     C                     END
+     C*
+     C                     SETOF                         73
+     C                     END
+     C**
+     C* CALLS PROGRAM FC0015 TO AMEND NEXT ACTIVE DATE
+     C* TO CORRECT VALUE
+     C*
+     C                     MOVE BJDNWD    NNXTDT  50
+     C                     MOVE D9FDAY    FDAY    2                       LN0938
+     C*
+     C                     CALL 'FC0015'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM           D9FREQ
+     C*********            PARM           D9FDAY                          LN0938
+     C                     PARM           FDAY                            LN0938
+     C                     PARM           NNXTDT
+     C**
+     C* IF DATABASE ERROR OCCURRED IN FC0015, END PROG.
+     C*
+     C           P@RTCD    IFEQ '*FREQ'
+     C***********          MOVEL'FCPREQL2'DBFILE                          LN1083
+     C                     MOVEL'FCPREQPD'DBFILE                          LN1083
+     C                     MOVELCHARCP    DBKEY
+     C                     Z-ADD3         DBASE            *************
+     C                     EXSR *PSSR                      * DBERR 003 *
+     C                     EXSR RET                        *************
+     C                     END
+     C*
+     C           P@RTCD    IFEQ '*FRQDAY'
+     C***********          MOVEL'FCPREQL2'DBFILE                          LN1083
+     C                     MOVEL'FCPREQPD'DBFILE                          LN1083
+     C                     MOVELCHARCP    DBKEY
+     C                     Z-ADD4         DBASE            *************
+     C                     EXSR *PSSR                      * DBERR 004 *
+     C                     EXSR RET                        *************
+     C                     END
+     C*
+     C           P@RTCD    IFEQ '*AOGEL'
+     C                     MOVEL'SDGELRL1'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD5         DBASE            *************
+     C                     EXSR *PSSR                      * DBERR 005 *
+     C                     EXSR RET                        *************
+     C                     END
+     C*
+     C           P@RTCD    IFEQ '*AOBANK'
+     C                     MOVEL'SDBANKL1'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD6         DBASE            *************
+     C                     EXSR *PSSR                      * DBERR 006 *
+     C                     EXSR RET                        *************
+     C                     END
+     C*
+     C                     MOVE NNXTDT    D9PNDT
+     C*
+     C***********          UPDAT@PREQAQ                                   LN1083
+     C                     UPDATFCPREQD0                                  LN1083
+     C*                                                                   LN1083
+     C                     END                             FI             LN1083
+     C**
+     C* READS NEXT RECORD ON FCPREQPD
+     C*
+     C***********          READ FCPREQL2                 75               LN1083
+     C                     READ FCPREQPD                 75               LN1083
+     C                     END
+     C                     SETON                     LR
+     C                     EXSR RET
+     C*
+      /EJECT
+     C********************************************************************
+     C*
+     C*                  SUMMARY  OF  SUBROUTINES
+     C*                 **************************
+     C*
+     C*     *PSSR       Database Error Handling : Terminates program
+     C******RET*********Returns*control*to*CL*program*'FCC01'**********   LN1034
+     C******RET*********Returns*control*to*CL*program*'SDC01'**** LN1034  S01343
+     C*     RET         Returns control to CL program 'SCC01'             S01343
+      ****************************************************************
+      /EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   *PSSR SR. -  Database Error Handling : Terminates program;    *
+     C**   ~~~~~~~~~      includes errors in 'FC0015'                    *
+     C**                                                                 *
+     C**      Called From                  Main code                     *
+     C**                                                                 *
+     C**
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+     C********************************************************************
+     C**                                                                 *
+     C*****RET***SR.*-**Returns*control*to*CL*program*'FCC01'**********  *LN1034
+     C*****RET***SR.*-**Returns*control*to*CL*program*'SDC01'******LN1034 S01343
+     C**   RET   SR. -  Returns control to CL program 'SCC01'            *S01343
+     C**                                                                 *
+     C**      Called From                  Main code                     *
+     C**                                                                 *
+     C**
+     C           RET       BEGSR
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

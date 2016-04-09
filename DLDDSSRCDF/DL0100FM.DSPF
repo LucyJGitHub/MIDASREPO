@@ -1,0 +1,191 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas DL Accrued interest adjustments')
+     A*****************************************************************
+     A*  Midas - Dealing Module
+     A*                                                               *
+     A*     DL0100FM - ACCRUED INTEREST ADJUSTMENTS                   *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG2111            Date 05May04               *
+      *  Prev Amend No. CAS005             Date 16Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001             Date 01Feb96               *
+     A*                 S01408             DATE 03AUG95               *
+     A*                 CIR002             DATE 13JUN95               *
+     A*                   S01253           DATE 17APR90               *
+     A*                   E00044           DATE 13NOV89               *
+     A*                   S01199           DATE 17MAR89               *
+     A*                   S01119           DATE 10JUL87               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  BUG2111- Webfacing changes.                                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+     A*  CAC001  -  Profit Centre Accounting Development:             *
+     A*             Add two fields 'Cost of Funds Accrual Adjustment' *
+     A*             and Sign if Analytical Accounting is installed.   *
+     A*     S01408 - Core hook DL0100FM01 added                       *
+     A*              Core hook DL0100FM02 added                       *
+     A*     CIR002 - Compounding of Interest.                         *
+     A*     S01253 - RECOMPILED FOR MULTILANGUAGE SCREENS.            *
+     A*     E00044 - POSITIONING OF CURSOR ON FIELD IN ERROR          *
+     A*     S01199 - HELP SYSTEM.                                     *
+     A*     S01119 - ADDITION OF EXTRA FIELD FOR FRA/IRS              *   S01119
+     A*                                                               *
+     A*****************************************************************
+     A                                      CHGINPDFT             PRINT(MPRINT)
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A          R DL0100F1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      CF12
+     A                                      CF03
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,DL0100FM01                                          S01408
+     A*                                                                   S01408
+     A*                                                    /*S01199*/
+     A            SID            2A  B 01 02DSPATR(PR ND)
+     A                                 01 22'ADJUSTMENT TO ACCRUED INTEREST-DE-
+     A                                      ALS'
+     A                                      DSPATR(UL HI)
+     A            OTIME          8A  O 01 65
+     A                                 01 74'WID'
+     A            WSID           3A  O 01 78
+     A*
+     A                                 03 11'Deal no.'
+     A            INDEAL         6A  B 03 21
+     A N41                                  DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A                                      DSPATR(HI)
+     A*
+     A                                 04 11'Customer'
+     A            INCUSN        10A  B 04 21
+     A N51                                  DSPATR(UL)
+     A**                                                   /*E00044/
+     A**51                                  DSPATR(RI)
+     A  51                                  DSPATR(RI PC)
+     A**                                                   /*E00044/
+     A                                      DSPATR(HI)
+     A*
+     A                                 06 11'Adjustment'
+     A            INADJ         14A  B 06 26
+     A N61                                  DSPATR(UL)
+     A**                                                   /*E00044/
+     A**61                                  DSPATR(RI)
+     A  61                                  DSPATR(RI PC)
+     A**                                                   /*E00044/
+     A                                      DSPATR(HI)
+     A*
+     A                                 07 11'Sign'
+     A            INSIGN         1A  B 07 26
+     A N63                                  DSPATR(UL)
+     A**                                                   /*E00044/
+     A**63                                  DSPATR(RI)
+     A  63                                  DSPATR(RI PC)
+     A**                                                   /*E00044/
+     A                                      DSPATR(HI)
+     A*
+     A                                 08 11'Currency'
+     A            INCCY          3A  B 08 26
+     A N67                                  DSPATR(UL)
+     A**                                                   /*E00044/
+     A**67                                  DSPATR(RI)
+     A  67                                  DSPATR(RI PC)
+     A**                                                   /*E00044/
+     A                                      DSPATR(HI)
+     A*                                                    /*S01119*/
+     A**************************************CHECK(FE)
+     A*
+     A N12                             09 11'Ours/Theirs'
+     A N12        INIRS          1A  B 09 26
+     A N50                                  DSPATR(UL)
+     A  50                                  DSPATR(RI)
+     A                                      DSPATR(HI)
+     A                                      CHECK(FE)
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,DL0100FM02                                          S01408
+     A*                                                                   S01408
+     A*                                                    /*S01119*/
+     A*                                              Begin /CIR002/
+     A                                 11 11'Unsettled interest'
+     A N14                                  DSPATR(ND)
+     A            SUSIT         14A  B 11 30
+      **Start of change BUG2111
+     A*N14******                            DSPATR(ND)                                       BUG2111
+     A N14                                  DSPATR(ND PR)
+      **End of change BUG2111
+     A  14N15                               DSPATR(UL)
+     A  14 15                               DSPATR(RI PC)
+     A  14                                  DSPATR(HI)
+     A            SSIGN          1A  B 11 48
+      **Start of change BUG2111
+     A*N14******                            DSPATR(ND)                                       BUG2111
+     A N14                                  DSPATR(ND PR)
+      **End of change BUG2111
+     A  14N16                               DSPATR(UL)
+     A  14 16                               DSPATR(RI PC)
+     A  14                                  DSPATR(HI)
+     A*                                              End   /CIR002/
+     A*                                              Begin /CAC001/
+     A                                 13 11'Cost of Funds Accrual Adjustment'
+     A N17                                  DSPATR(ND)
+     A            SCFAA         14A  B 13 44
+     A N17                                  DSPATR(ND PR)
+     A  17N18                               DSPATR(UL)
+     A  17 18                               DSPATR(RI PC)
+     A  17                                  DSPATR(HI)
+     A            SCFAS          1A  B 13 62
+     A N17                                  DSPATR(ND PR)
+     A  17N19                               DSPATR(UL)
+     A  17 19                               DSPATR(RI PC)
+     A  17                                  DSPATR(HI)
+     A*                                              End   /CAC001/
+     A*
+      **Start of change CAS005
+     A                                 15 11'Adjustment using Net-+
+     A                                       Treasury-Rate'
+     A N84                                  DSPATR(ND)
+     A            #1AINN        14A  B 15 46
+     A N84                                  DSPATR(ND PR)
+     A  84N85                               DSPATR(UL)
+     A  84 85                               DSPATR(RI PC)
+     A  84                                  DSPATR(HI)
+     A            #1AINS         1A  B 15 64
+     A N84                                  DSPATR(ND PR)
+     A  84N86                               DSPATR(UL)
+     A  84 86                               DSPATR(RI PC)
+     A  84                                  DSPATR(HI)
+      *
+     A                                 17 11'Adjustment using Base +
+     A                                       Rate'
+     A N84                                  DSPATR(ND)
+     A            #1XINB        14A  B 17 46
+     A N84                                  DSPATR(ND PR)
+     A  84N87                               DSPATR(UL)
+     A  84 87                               DSPATR(RI PC)
+     A  84                                  DSPATR(HI)
+     A            #1XINS         1A  B 17 64
+     A N84                                  DSPATR(ND PR)
+     A  84N88                               DSPATR(UL)
+     A  84 88                               DSPATR(RI PC)
+     A  84                                  DSPATR(HI)
+      **End of change CAS005
+     A            ERRMSG        79A  O 20 02
+     A  33                                  DSPATR(ND)
+     A N33                                  DSPATR(RI HI)
+     A            ERCDS         79A  O 21 02
+     A  32                                  DSPATR(ND)
+     A N32                                  DSPATR(RI HI)
+     A*
+     A                                 23 02'Press F3 to end, press F12 f-
+     A                                      or fresh screen'

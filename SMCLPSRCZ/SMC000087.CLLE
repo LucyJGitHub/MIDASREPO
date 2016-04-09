@@ -1,0 +1,186 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Initial switch on of modules')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000087 - Initial switch on of modules                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 24Sep10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &MODE)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AGSUC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area MIDASMSG in QTEMP for screen error handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PFX) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000087' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CALL       PGM(UPC0014) PARM(&PFX)
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PFX *TCAT 'DMLIB')
+ 
+/* Check if system set up flag is on; if yes then end program. */
+             RTVDTAARA  DTAARA(&DMLIB/RUNDAT (11 1)) RTNVAR(&AGSUC)
+             IF         COND(&AGSUC *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&RTNCODE) VALUE('*SETUP')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Start commitment control. */
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCCMTCTL) PARM('S')
+ 
+/* Override message files. */
+             OVRMSGF    MSGF(SDUSRMSG) TOMSGF(GBSDUSRMSG)
+             OVRMSGF    MSGF(Y2USRMSG) TOMSGF(GBY2USRMSG)
+ 
+/* Clear down / initialise files if this is first call. */
+             IF         COND(&MODE *EQ '*FIRST') THEN(DO)
+                CLRPFM     FILE(SDMMODPD)
+                CLRPFM     FILE(SDGELRPD)
+                CLRPFM     FILE(SDBANKPD)
+                CLRPFM     FILE(SDRCFPD)
+                CLRPFM     FILE(SDCOBPPD)
+                CLRPFM     FILE(SDDEALPD)
+                INZPFM     FILE(TABLETA) TOTRCDS(1)
+                MONMSG     MSGID(CPF3132)
+ 
+                CALL       PGM(SD9006X) PARM(&RTNCODE)
+                IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SD9006X')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* Initialise ICD records before calling modules maintenance. */
+                CALL       PGM(SD9005X) PARM(&RTNCODE)
+                IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SD9005X')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+/* Initialise ICD records before calling modules maintenance. */
+/*           CALL       PGM(SD9005X) PARM(&RTNCODE)           */
+/*           IF         COND(&RTNCODE *NE ' ') THEN(DO)       */
+/*              CHGVAR     VAR(&ERRPGM) VALUE('SD9005X')      */
+/*              GOTO       CMDLBL(ERROR)                      */
+/*           ENDDO                                            */
+ 
+/* Call modules maintenance. */
+             CALL       PGM(SD9004X) PARM('' &RTNCODE)
+             IF         COND(&RTNCODE *NE ' ' *AND &RTNCODE *NE +
+                          '**CMD**') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD9004X')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Initialise all ICD records for required modules. */
+             CALL       PGM(SD9005X) PARM(&RTNCODE)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SD9005X')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                ROLLBACK
+                MONMSG     MSGID(CPF0000)
+                IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                   IF         COND(&RTNCODE *EQ '*SETUP') THEN(DO)
+                      CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('System +
+                                   setup flag is on.')
+                      GOTO       CMDLBL(DSPERR)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&ERRPGM) +
+                                   MSG(&MESSAGE)
+                      MONMSG     MSGID(CPF0000)
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                                MSGDTA('SMC000087') MSG(&MESSAGE)
+                   MONMSG     MSGID(CPF0000)
+                ENDDO
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog for details')
+                MONMSG     MSGID(CPF0000)
+DSPERR:
+                CALL       PGM(SCC0010) PARM('SMC000087' 'ENTER' ' ')
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+ENDPGM:
+             DLTOVR     FILE(SDUSRMSG Y2USRMSG)
+             MONMSG     MSGID(CPF0000)
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

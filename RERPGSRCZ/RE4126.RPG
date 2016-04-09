@@ -1,0 +1,840 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Online Transaction Journal Prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4126 - Online Transaction Journal Prompt                   *
+     F*                                                               *
+     F*  Function:  This program displays a prompt when the report    *
+     F*  (I/C)      request is made to allow selection of the journal *
+     F*             for all tellers, one teller, all batches, one     *
+     F*             batch or the one teller reprint.                  *
+     F*                                                               *
+     F*  Called By: REC4220  - Teller Transaction Journal Prompt -    *
+     F*                        Reprint                                *
+     F*             REC4221  - Batch Transaction Journal Prompt       *
+     F*             REC4222  - Teller Transaction Journal Prompt      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTTRNT   IF  E           K        DISK         KINFSR *PSSR
+     F** Teller Controls/Totals
+     F*
+     FRE4126DFCF  E                    WORKSTN      KINFSR *PSSR
+     F** Display file - online transaction prompt
+     F*
+     F*****************************************************************
+      /EJECT
+     F****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Message Subfile End Indicator (SFLEND)                *
+     F*                                                               *
+     F*   31  - Screen indicator for teller/batch                     *
+     F*   32  - Screen indicator for from transaction no              *
+     F*   33  - Screen indicator for to transaction no                *
+     F*                                                               *
+     F*   51  - Batch no not numeric indicator                        *
+     F*   52  - Nill transaction for teller/batch indicator           *
+     F*   61  - Overall input validation indication                   *
+     F*   62  - Invalid from transaction no indicator                 *
+     F*   63  - Invalid to transaction no indicator                   *
+     F*   65  - All inputs valid indicator                            *
+     F*                                                               *
+     F*   69  - General error indicator                               *
+     F*   71  - General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F*   KC  - Exit Program                                          *
+     F*   KL  - Previous Screen                                       *
+     F*                                                               *
+     F*   U1  - Teller/Reprint Report                                 *
+     F*   U2  - Batch Report                                          *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  VALF1  - Validate screen input                               *
+     F*  DSPF0  - Display and accept screen format                    *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*  INT01  - Initialize Indicators for key Fields                *
+     F*  CHKTRN - Check transaction no                                *
+     F*  SETTRN - Setup transaction no                                *
+     F*  SETSCR - Setup screen indicators                             *
+     F*  FIRST  - Initialize                                          *
+     F*  FINAL  - Terminate                                           *
+     F*  SNDMSG - Subroutine for calling SCC0250                      *
+     F*                                                               *
+     F*  *PSSR  - Program error                                       *
+     F*  DBERR  - Database Error Handling                             *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+      *
+     I            DS                              5
+      ** Data structure to hold key fields of LF/TTRNT
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for System flags and Run Date
+     I*
+     IPPARM       DS                            100
+     I** Data structure for input/output parameter
+     I*
+     I                                        1   1 POPT
+     I                                        2   4 PTLBT
+     I                                        5   9 WFSTN
+     I                                       10  14 WLSTN
+     I                                       15  17 PBRCA
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 SWSID
+      **  Field containing Workstation ID
+     I                                      254 263 SUSER
+      **  Field Containing User ID
+      *
+     ILDA         DS                            256
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN              - Control Processing                        *
+      *                                                               *
+      * CALLS      FIRST  - Initialize                                *
+      *            FINAL  - Terminate                                 *
+      *            DSPF0  - Display and accept screen format          *
+      *            VALF1  - Validate screen input                     *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+      ** Initial processing
+     C                     EXSR FIRST
+      *
+      ** Do while input is not valid
+     C                     SETON                     65
+     C           *IN65     DOWEQ'1'
+      *
+      ** Display & accept initial screen
+     C                     EXSR DSPF0
+      *
+      ** If Enter key is pressed, validate screen input
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR FINAL
+      *
+     C                     ELSE
+      *
+     C                     EXSR VALF1
+      *
+      ** If no input validation errors
+     C           *IN61     IFEQ '0'
+     C           SENQY     OREQ 'ALL'
+      *
+      ** Display Total/Batch information screen
+     C           SENQY     IFNE 'ALL'
+     C                     EXSR CHKTRN
+     C                     END
+      *
+      ** If no input validation errors set input valid indicator
+     C           *IN61     IFEQ '0'
+     C                     SETOF                     65
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     EXSR SETTRN
+      *
+     C                     EXSR FINAL
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DSPF0             - Display Initial Screen                    *
+      *                                                               *
+      * CALLS     SCC0250 - clear message queue                       *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing                   *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DSPF0     BEGSR                           ** DSPF0  **
+      *
+      **  Setting up of screen format depending on query asked for
+      **  a Teller or a Batch
+     C   U1                MOVEL'Teller ' SPMPT  10
+     C   U1                MOVE 'ID'      SPMPT
+     C   U2                MOVEL'Batch '  SPMPT
+     C   U2                MOVE 'No.'     SPMPT
+      *
+      ** If Cmd/3 is not pressed
+     C           *INKC     IFEQ '0'
+      *
+      ** Write subfile for error messages in screen accept
+     C                     WRITERE4126C0
+      *
+      ** Display and accept screen format
+     C                     EXFMTRE4126F0
+      *
+      ** Clear program message queue
+     C                     CALL 'SCC0250'
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial process                           *
+      *                                                               *
+      * CALLS -    IFLDS  - Initialize Work/Screen Flds.              *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PPARM 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+     C*
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN34
+     C                     END
+      *
+      ** Define program work fields
+     C           *LIKE     DEFN TNLU      @TNLU
+      *
+      ** Setup screen indicators
+     C                     EXSR SETSCR
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** initialize parameters for SCC0240
+      *
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+      *
+      ** Initialize screen message queue
+     C                     MOVEL'*'       SPGMQ
+      *
+      ** Seton  message subfile end indicator
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVE *BLANKS   SRUNA
+      *
+      ** Clear screen variables
+     C                     EXSR IFLDS
+     C*
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     Z-ADD1         DBASE            ** DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            **************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVELBJSUC     @SCI    1
+      *
+     C                     END
+      *
+      ** Move midas run date to screen field
+     C                     MOVELBJMRDT    SRUNA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SETSCR            - Setup screen indicators                   *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FIRST  - Initialise                                *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SETSCR    BEGSR                           ** SETSCR **
+      *
+      ** If Batch then from/to option should not be displayed
+     C           POPT      IFEQ 'B'
+     C                     SETOF                     3233
+     C                     END
+      *
+      ** If teller reprint(R) then both from & to option should be on
+     C           POPT      IFEQ 'R'
+     C                     SETON                     3233
+     C                     END
+      *
+      ** If teller (T) then only last transaction no indicator is on
+     C           POPT      IFEQ 'T'
+     C                     SETON                     33
+     C                     SETOF                     32
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * IFLDS             - Initialize work/screen fields             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY         - FIRST                                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SPMPT
+     C                     MOVE *BLANKS   SENQY
+     C                     MOVE *ZEROS    SFROM
+     C                     MOVE *ZEROS    STO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INT01             - Initialize indicators for key fields      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY         - VALF1                                     *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+     C                     SETOF                     5152
+     C                     SETOF                     71  31
+     C                     SETOF                     616263
+     C                     TIME           STIME   60
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * VALF1             - Validations of screen inputs              *
+      *                                                               *
+      * CALLS -    SNDMSG - Send message to queue                     *
+      *            INT01  - Initialize Indicators                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALF1     BEGSR                           ** VALF1  **
+      *
+      ** Initialize validation indicators for key fields
+     C                     EXSR INT01
+      *
+      *
+      * Define Keylist.
+     C           KLTRNT    KLIST
+     C                     KFLD           KTBRI
+     C                     KFLD           KTBID
+     C                     KFLD           KRCTP
+     C*
+     C** Check for an 'ALL' teller or 'ALL' batch input
+     C*
+     C           SENQY     IFEQ 'ALL'
+     C*
+     C** 'ALL' not valid in teller reprint request
+     C*
+     C           POPT      IFEQ 'R'
+     C                     SETON                     3161
+     C                     MOVEL'USR1200' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C*
+     C** Last transaction numbers must be blank/zeros
+     C*
+     C           STO       IFNE *ZEROS
+     C                     SETON                     336163
+     C                     MOVEL'USR1202' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Check if a teller/batch corresponds to the selected branch
+     C*
+     C           PENT      IFNE *BLANKS
+     C           PENT      ANDNE'ALL'
+     C                     SETOF                     11
+     C*
+     C                     READ TTRNTM2F                 71
+     C*
+     C           *IN71     DOWEQ'0'
+     C*
+     C           *INU1     IFEQ '1'
+     C           TBRI      ANDEQ'T'
+     C           PENT      ANDEQTLBC
+     C           NATN      ANDGT1
+     C           *INU2     OREQ '1'
+     C           TBRI      ANDEQ'B'
+     C           PENT      ANDEQTLBC
+     C           NATN      ANDGT1
+     C                     SETON                     11
+     C                     LEAVE
+     C                     END
+     C*
+     C                     READ TTRNTM2F                 71
+     C*
+     C                     END
+     C*
+     C           *IN11     IFEQ '0'
+     C                     SETON                     3161
+     C                     MOVEL'USR1204' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+      *
+      ** Check if screen input is blanks or zeros for Teller query
+      ** message - Teller identifier must not be blanks or zeros
+     C           *INU1     IFEQ '1'
+      *
+     C           SENQY     IFEQ *BLANKS
+     C           SENQY     OREQ *ZEROS
+     C                     SETON                     31
+     C                     SETON                     61
+     C                     MOVEL'USR0032' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** Check if SENQY is numeric
+     C                     TESTN          SENQY      51
+      *
+      ** Check if screen input is numeric and non blank for batch query
+      ** message - Batch number must be numeric and non blanks
+     C           *INU2     IFEQ '1'
+      *
+     C           *IN51     IFEQ '0'
+     C                     SETON                     31
+     C                     SETON                     61
+     C                     MOVEL'USR0046' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      * Move fields to key list.
+     C           *INU1     IFEQ '1'
+     C                     MOVEL'T'       KTBRI
+     C                     ELSE
+     C                     MOVEL'B'       KTBRI
+     C                     END
+     C                     MOVELSENQY     KTBID
+     C                     MOVEL'1'       KRCTP
+      *
+      ** Check if record of both Controls and Totals type
+      ** exists in TTRNT file
+     C           KLTRNT    CHAINTTRNTM2F             71
+      *
+      ** If record does not exist in either Controls or Totals
+     C           *IN71     IFEQ '1'
+     C                     SETON                     31
+      *
+     C           *INU1     IFEQ '1'
+      *
+      ** message - Teller identifier not found
+     C                     SETON                     61
+     C                     MOVEL'USR0030' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+      *
+      ** Message for 'Batch no not found'
+     C                     SETON                     61
+     C                     MOVEL'USR0045' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** For Teller enquiry check no. of transactions not < 1
+     C           *INU1     IFEQ '1'
+     C           NATN      ANDLE1
+     C                     SETON                     5231
+     C                     ELSE
+     C           *INU2     IFEQ '1'
+     C           BITU      ANDEQ0
+     C                     SETON                     5231
+     C                     END
+      *
+     C                     END
+      *
+      ** Message - No transaction for this Teller/Batch
+     C           *IN52     IFEQ '1'
+     C                     SETON                     61
+     C                     MOVEL'USR0047' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C** Check if the teller/batch branch corresponds to the selected
+     C** branch
+     C*
+     C           *IN71     IFEQ '0'
+     C           PENT      ANDNE*BLANKS
+     C           PENT      ANDNE'ALL'
+     C           PENT      ANDNETLBC
+     C                     SETON                     3161
+     C                     MOVEL'USR1203' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SETTRN - Setup transaction no                      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SETTRN    BEGSR                           ** SETTRN **
+     C*
+     C           SENQY     IFNE 'ALL'
+      *
+      ** Set parameters to be sent out of the program for furthur
+      ** processing in case there are no errors
+     C           POPT      IFNE 'B'
+     C                     MOVELSFROM     FSTN    50
+      *
+     C           STO       IFGT 0
+     C                     MOVELSTO       LSTN    50
+     C                     ELSE
+     C           NATN      SUB  1         LSTN
+     C                     END
+      *
+     C                     ELSE
+     C           POPT      IFEQ 'B'
+     C                     MOVE 1         FSTN
+     C                     MOVE BITU      LSTN
+     C                     END
+      *
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVELFSTN      WFSTN
+     C                     MOVELLSTN      WLSTN
+      *
+     C                     MOVELTLBC      PBRCA   3
+     C                     MOVELSENQY     PTLBT   3
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            CHKTRN - Check transaction no                      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           CHKTRN    BEGSR                           ** CHKTRN **
+      *
+     C           POPT      IFEQ 'T'
+      *
+     C                     MOVEL'T'       KTBRI
+     C                     MOVEL'3'       KRCTP
+      *
+      ** Check if record of both Controls and Totals type
+      ** exists in TTRNT file
+     C           KLTRNT    CHAINTTRNTM4F             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNTM4F'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVEL@TTRNT    DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     END
+      *
+     C                     Z-ADDJUTN      SFROM
+     C                     ADD  1         SFROM
+      *
+     C                     END
+      *
+     C           POPT      IFNE 'B'
+     C           SFROM     IFGT 0
+     C           SFROM     IFGE NATN
+      *
+     C                     SELEC
+     C           POPT      WHEQ 'R'
+     C                     MOVEL'USR0048' @MSGID
+     C           POPT      WHEQ 'T'
+     C                     MOVEL'USR1201' @MSGID
+     C                     ENDSL
+      *
+     C                     SETON                     6162
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** If not entered move 1 to From transaction no
+     C                     ELSE
+     C                     Z-ADD1         SFROM
+     C                     END
+      *
+      ** If To is entered should be less than next available no
+     C           STO       IFGT 0
+     C           STO       IFGE NATN
+     C                     SETON                     6163
+     C                     MOVEL'USR0048' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** If not entered move 1 less from next trans no
+     C                     ELSE
+     C           NATN      SUB  1         STO
+     C                     END
+      *
+      ** If from is greater than to display invalid range
+     C           SFROM     IFGT STO
+     C                     SETON                     616263
+     C                     MOVEL'USR0015' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SNDMSG  - Sends parameters of SNDPGMMSG command to be executed*
+      *                                                               *
+      * CALLS     SCC0240 - Send message to program queue             *
+      *                                                               *
+      * CALLED BY  VALF1  - Validates screen inputs                   *
+      *            VFRTO  - Validation of From/to                     *
+      *                                                               *
+      * FLDS USED  @MSGID - Message id                                *
+      *            @MSGF  - Message file                              *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling                            *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                        *
+      *            CHKTRN - Check transaction number                  *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FINAL             - Terminate                                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY   Main  - Control process                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+     C*
+     C** If Command 3 pressed in called program return to menu
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       PCMD
+     C                     END
+     C*
+     C** If Command 12 pressed in called program return to previous menu
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       PCMD
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

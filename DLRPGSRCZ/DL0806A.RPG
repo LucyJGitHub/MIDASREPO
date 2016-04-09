@@ -1,0 +1,374 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cust dealing exp-prod op prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*   DL0806A - CUSTOMER DEALING EXPOSURE                         *
+     F*               (PRODUCTION OPTION PROMPT)                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 102958             Date 26Jan98               *
+      *                 E46848             Date 02Apr93               *
+     F*                 E34687             DATE 14FEB92               *
+     F*                 LN0774             DATE 21SEP90               *
+     F*                 E245               DATE 01MAR90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  102958 - Report request had Pring excesses 'Y' even though   *
+     F*           'N' was specified on teh request. Fix is to default *
+     F*           @EXR only if blank.                                 *
+     F*  E46848 - Type of report not displayed in system mode and     *
+     F*           non-multibranch.                                    *
+     F*  E34687 - DL0806A, DL0806B & DL0806C should display the user  *
+     F*           and job names properly.  /Obtain job name and user  *
+     F*           name from PSDS.                                     *
+     F*  LN0774 - Tidying up display file                             *
+     F*  E245   - Add extra parms for RCF standards                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDL806AFMCF  E                    WORKSTN
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       05      HELP KEY
+     F*       10      LIMITS IN EXCESS ONLY INDICATOR INVALID
+     F*       20      PRODUCTION OPTION INVALID
+     F*       30      SELECTED VALUE FOR CUSTOMER INVALID
+     F*       35      SELECTED VALUE FOR PARENT INVALID
+     F*       40      GENERAL ERROR FIELD INDICATOR
+     F*       45      PROTECT SCREEN FIELDS TO PREVENT INSERT/AMEND       E245
+     F*       46      ACTION CODE DELETE, ALLOW F10                       E245
+     F*       60      SYSTEM LEVEL SELECTED
+     F*       70      SUBFILE DISPLAY CONTROL INDICATOR
+     F*       71      SUBFILE END INDICATOR
+     F*     U7+U8     DATABASE ERROR
+     F*
+     F*     STANDARD PROGRAMS USED
+     F*
+     F*       ZA0240 - SEND MESSAGE TO PROGRAM MESSAGE QUEUE
+     F*       ZA0250 - CLEAR PROGRAM MESSAGE QUEUE
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     F*****************************************************************
+     E/EJECT
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** EXTERNAL DS FOR CUSTOMER DETAILS
+     I*
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IPSDS       SDS
+     I*****HOLDS*WORKSTATION*ID*******************************************E34687
+     I***********                           244 246 WSID                  E34687
+     I                                      244 253 WSJOB                 E34687
+     I                                      254 263 USER                  E34687
+     I*
+     I@PARM       DS                            100
+     I* ONE PARM FOR PROD OPT, CUST, PARENT & LIMITS-IN-EXCESS-ONLY IND
+     I                                        1   1 @PROD
+     I                                        2   7 @CUNO
+     I                                        8  13 @PTNO
+     I                                       14  14 @EXR
+     I*
+     IRUNDT       DS                             13                       LN0774
+     I                                        1   7 SRUNA                 LN0774
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           LN0774
+     C                     IN   RUNDT                                     LN0774
+     C*
+     C**   RECEIVE PRODUCTION OPTION, SELECTED VALUE AND BRANCH TYPE
+     C**   PARAMETERS FROM CALLING PROGRAM
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C                     PARM           @PARM
+     C**************       PARM           @ACTN   1                       E245
+     C                     PARM           @RACT   1                       E245
+     C                     PARM           @RCMD   1                       E245
+     C*                                                                   E245
+     C**   INITIALISE SCREEN FIELDS                                       E245
+     C**  ACTION CODES I,A ALLOW INPUT TO SCREEN FIELDS                   E245
+     C           @RACT     IFEQ 'I'                                       E245
+     C                     MOVE *BLANK    @PROD
+     C                     MOVE *BLANK    @CUST  10
+     C                     MOVE *BLANK    @PRNT  10
+     C                     ELSE                                           E245
+     C*                                                                   E245
+     C**  ACTION CODES E,D DO NOT ALLOW INPUT TO SCREEN FIELDS            E245
+     C**  ACTION CODES D ALLOW F10                                        E245
+     C                     MOVEL@CUNO     @CUST                           E245
+     C                     MOVEL@PTNO     @PRNT                           E245
+     C           @RACT     COMP 'D'                      46               E245
+     C           @RACT     COMP 'D'                      45               E245
+     C  N45      @RACT     COMP 'E'                      45               E245
+     C                     END                                            E245
+     C*
+     C**  INITIALISE SCREEN MESSAGE QUEUE AND SET ON SUBFILE END IND.
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '1'       *IN71
+     C*
+     C** IF SYSTEM LEVEL SELECTED PROMPT FOR PROD OPT,COUNTRY & PARENT
+     C*
+     C                     MOVE '0'       *IN60
+     C           @RLEV     IFEQ 'S'
+     C           @RLEV     OREQ ' '                                       E46848
+     C                     MOVE '1'       *IN60
+     C                     END
+     C*
+     C**  DEFAULT LIMITS-IN-EXCESS-ONLY FIELD TO YES
+     C           @EXR      IFEQ *BLANKS                                   102958
+     C                     MOVE 'Y'       @EXR
+     C                     ENDIF                                          102958
+     C**
+     C**   DISPLAY FOOTER
+     C                     WRITEDL806AD0
+     C**
+     C**   (LOOP UNTIL EITHER A COMMAND KEY HIT OR VALID SCREEN FIELDS
+     C**    ENTERED)
+     C**
+     C           *IN12     DOUEQ'1'
+     C           *IN03     OREQ '1'
+     C           *IN10     OREQ '1'                                       E245
+     C           *IN40     OREQ '0'
+     C**
+     C                     EXFMTDL806AS0
+     C**
+     C**   IF CMD/3 IS PRESSED, RETURN TO CALLING PROGRAM
+     C**
+     C           *IN03     IFEQ '1'
+     C****************     MOVE 'E'       @ACTN                           E245
+     C                     MOVE 'E'       @RCMD                           E245
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**
+     C           *IN12     IFEQ '1'
+     C****************     MOVE 'F'       @ACTN                           E245
+     C                     MOVE 'F'       @RCMD                           E245
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**                                                                  E245
+     C**   IF CMD/10 IS PRESSED, RETURN TO CALLING PROGRAM                E245
+     C**                                                                  E245
+     C           *IN10     IFEQ '1'                                       E245
+     C                     MOVE 'D'       @RCMD                           E245
+     C                     SETON                     LR                   E245
+     C                     RETRN                                          E245
+     C                     END                                            E245
+     C**
+     C**   RESET INDICATORS AND ERROR MESSAGE QUEUE
+     C**
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN40
+     C                     CALL 'ZA0250'
+     C**
+     C                     MOVE '1'       *IN70
+     C                     WRITEDL806AS0
+     C                     MOVE '0'       *IN70
+     C**
+     C**  IF AT SYSTEM LEVEL -
+     C           @RLEV     IFEQ 'S'
+     C           @RLEV     OREQ ' '                                       E46848
+     C**
+     C**   VALIDATE PRODUCTION OPTION
+     C                     EXSR #VPROD
+     C**
+     C** ONLY VALIDATE CUSTOMER & PARENT WHEN VALID PROD OPTION INPUT
+     C           *IN20     IFEQ '0'
+     C                     EXSR #VCUST
+     C                     EXSR #VPRNT
+     C                     END
+     C**
+     C                     END
+     C**
+     C** VALIDATE LIMITS-IN-EXCESS-ONLY INDICATOR
+     C                     EXSR #VEXR
+     C*
+     C** IF NO ERRORS ON INPUT THEN COME OUT OF PROGRAM ELSE LOOP BACK
+     C           *IN40     IFEQ '0'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VPROD - SUBROUTINE TO VALIDATE PRODUCTION OPTION
+     C**
+     C           #VPROD    BEGSR                           *** #VPROD SR **
+     C**
+     C           @PROD     IFNE '1'
+     C           @PROD     ANDNE'2'
+     C           @PROD     ANDNE'3'
+     C           @PROD     ANDNE'4'
+     C**
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0001' @MSGID 10
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VCUST SUBROUTINE TO VALIDATE CUSTOMER
+     C**
+     C           #VCUST    BEGSR                           ** #VCUST SR **
+     C**
+     C** CUSTOMER SHOULD ONLY BE INPUT FOR OPTION 3
+     C           @PROD     IFNE '3'
+     C           @CUST     ANDNE*BLANKS
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0008' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C*
+     C           @PROD     IFEQ '3'
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @CUST     @KEY1  10
+     C                     PARM *BLANKS   @KEY2   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C**
+     C**   SELECTED VALUE MUST EXIST ON CUSTOMERS FILE
+     C**
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0007' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C**
+     C** ELSE NO ERROR - ENSURE FIELD RETURNED IS NUMBER NOT SHORTNAME
+     C                     ELSE
+     C                     MOVELBBCUST    @CUNO
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VPRNT SUBROUTINE TO VALIDATE PARENT
+     C**
+     C           #VPRNT    BEGSR                           ** #VPRNT SR **
+     C**
+     C** PARENT SHOULD ONLY BE INPUT FOR OPTION 4
+     C           @PROD     IFNE '4'
+     C           @PRNT     ANDNE*BLANKS
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0010' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C*
+     C           @PROD     IFEQ '4'
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @PRNT     @KEY1
+     C                     PARM *BLANKS   @KEY2
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C**
+     C**   SELECTED VALUE MUST EXIST ON CUSTOMERS FILE
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0009' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     ELSE
+     C**
+     C**   IF IT EXISTS IT MUST BE A PARENT
+     C           BBPAIN    IFNE 'P'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0009' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C**
+     C** ELSE NO ERROR - ENSURE FIELD RETURNED IS NUMBER NOT SHORTNAME
+     C                     ELSE
+     C                     MOVELBBCUST    @PTNO
+     C                     END
+     C**
+     C                     END
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   #VEXR - SUBROUTINE TO VALIDATE LIMITS IN EXCESS ONLY IND.
+     C**
+     C           #VEXR     BEGSR                           *** #VEXR SR **
+     C**
+     C           @EXR      IFNE 'Y'
+     C           @EXR      ANDNE'N'
+     C**
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN40
+     C                     MOVEL'DLM0004' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

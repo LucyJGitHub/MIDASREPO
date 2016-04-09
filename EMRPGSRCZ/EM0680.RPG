@@ -1,0 +1,474 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Sub-Line Account Report')                              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0680 - Sub-line account report                             *
+      *                                                               *
+      *  Function:  This program produces a report over exposure      *
+      *             management sub-line accounts.                     *
+      *                                                               *
+      *  Called By:        - Menu option                              *
+      *                                                               *
+      *  Calls: AOMMODR0 - Access Midas moduleds details              *
+      *         AOSARDR0 - Access SAR details                         *
+      *         DBERRCTL - Error processing                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD030956           Date 09Oct14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002  *CREATE    Date 24Sep98               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Indicator Usage                                               *
+      * 01 - Printer Overflow                                         *
+      * 79 - EOF EMTFCBL1                                             *
+      * 80 - EOF EMTFSLL0                                             *
+      * 81 - GENERAL ERROR INDICATOR                                  *
+      * 89 - GENERAL ERROR INDICATOR                                  *
+      * 98 - DATE FORMAT INDICATOR                                    *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SUMRY  - Write Summary report                                *
+      *  *INZSR - Initial processing                                  *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * Sub-Line Accounts File
+     FEMTFSAL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Customer Balances
+     FEMTFCBL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Accounts File
+     FSDACODL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Currency File
+     FSDCURRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Control File
+     FSDEXPML0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Printer File
+     FEM0680P1O   E             01     PRINTER
+      * ---------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      * ---------------------------------------------------------------
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      * ---------------------------------------------------------------
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      * ---------------------------------------------------------------
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      * ---------------------------------------------------------------
+      * MODULE DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDMMOD    E DSSDMMODPD
+      *
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+      *
+      * ---------------------------------------------------------------
+      * KEYS DEFINITION
+     C           KTFCB1    KLIST
+     C                     KFLD           SAACOD
+      *
+      * ---------------------------------------------------------------
+      * MAIN PROCESSING
+      *
+      * Read all records in EMTFSAL0
+     C                     READ EMTFSAL0                 80
+     C           *IN80     DOWEQ*OFF
+      *
+      *
+      * Write Header ??
+     C           *IN01     IFEQ *ON
+     C                     MOVE *OFF      *IN01
+     C                     ADD  1         PAGNBR
+     C                     WRITEHDR680                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'HDR680'  DBFILE           *DB ERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE *OFF      *IN01
+     C                     ENDIF
+      *
+      * Show type and description field ?
+     C           SATYPE    IFEQ #TYPE
+     C                     MOVE *ON       *IN10
+     C                     ELSE
+     C                     MOVE *OFF      *IN10
+     C                     ENDIF
+      *
+      * Move Data
+     C                     MOVE SATYPE    #TYPE
+     C                     MOVE SAACOD    #ACOD
+      *
+     C           SAEXP     IFNE 0
+     C                     DIV  1000      SAEXP     H
+     C                     ENDIF
+      *
+     C           SAOFFA    IFNE 0
+     C                     EXSR CALCCB
+     C           WOFFB     IFNE 0
+     C                     DIV  1000      WOFFB     H
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD0         WOFFB
+     C                     ENDIF
+      *
+      * Do not divide limits by 1000 as they are input as 000's
+      *
+     C                     Z-ADDSAEXP     #EXP
+     C                     Z-ADDWOFFB     #OFFB
+     C           #EXP      SUB  #OFFB     #AMTN
+     C                     Z-ADDSALIM     #LIM
+     C                     MOVE SAOFFA    #OFFA
+     C                     MOVE *BLANKS   #ACCN
+     C                     MOVE *BLANKS   #OFFAN
+     C                     MOVE *BLANKS   A5ACCN
+      *
+      * Get account code descriptions
+     C                     MOVEL#ACOD     A5ACCD
+     C           A5ACCD    CHAINSDACODL0             79
+     C                     MOVELA5ACCN    #ACCN
+      *
+      * If offsetting balance account, get description too
+     C                     MOVEL#OFFA     A5ACCD
+     C           #OFFA     IFNE *ZEROS
+     C           A5ACCD    CHAINSDACODL0             79
+     C                     MOVELA5ACCN    #OFFAN
+     C                     ENDIF
+      *
+      * Sub-total
+     C                     EXSR SUMRY
+      *
+      *
+     C                     WRITEDTL680                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'DTL680'  DBFILE           *DB ERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      * Set data printed field to 'Y'
+     C                     MOVE 'Y'       WDATA
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      FSTTIM
+      *
+     C                     READ EMTFSAL0                 80
+     C                     ENDDO
+      *
+      *  At E-O-F, write summary, totals and Trailer record
+     C           WDATA     IFEQ 'Y'
+     C                     WRITESUM680                 81
+      *
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SUM680'  DBFILE           *DB ERROR 003 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITETRL680                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'TRL680'  DBFILE           *DB ERROR 004 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+      *
+      * No data report
+     C                     Z-ADD1         PAGNBR
+     C                     WRITEHDR680                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ***************
+     C                     MOVEL'HDR680'  DBFILE           *DB ERROR 011 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     WRITENODATA                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVEL'NODATA'  DBFILE           *DB ERROR 012 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+     C                     WRITETRAILER                81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'TRAILER' DBFILE           *DB ERROR 005 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      * ---------------------------------------------------------------
+      * Subroutine SUMRY
+      *            Write Summary Record
+      * ---------------------------------------------------------------
+     C           SUMRY     BEGSR
+      *
+     C           FSTTIM    IFEQ *OFF
+     C           *IN10     ANDEQ*OFF
+     C                     WRITESUM680                 81
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SUM680'  DBFILE           *DB ERROR 006 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADD0         S#EXP
+     C                     Z-ADD0         S#LIM
+     C                     Z-ADD0         S#OFFB
+     C                     Z-ADD0         S#AMTN
+     C                     ENDIF
+      *
+     C                     ADD  #EXP      S#EXP
+     C                     ADD  #LIM      S#LIM
+     C                     ADD  #OFFB     S#OFFB
+     C                     ADD  #AMTN     S#AMTN
+      *
+     C                     ADD  #EXP      T#EXP
+     C                     ADD  #LIM      T#LIM
+     C                     ADD  #OFFB     T#OFFB
+     C                     ADD  #AMTN     T#AMTN
+      *
+     C                     ENDSR
+      * ---------------------------------------------------------------
+      * Subroutine *INZSR
+      *            Initialisation routine
+      * ---------------------------------------------------------------
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C                     SETON                         01Write Header
+      *
+      ** Init data printed field
+      *
+     C                     MOVE *BLANKS   WDATA   1
+      *
+      * Define work fields
+     C           *LIKE     DEFN *IN10     FSTTIM
+      *
+     C                     MOVE *ON       FSTTIM
+      *
+      *
+      * Both Trade Innovation and feature CTI002 must be on.
+      ** Access MIDAS Modules details via access program
+      *  (database error handling done in access program)
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      **  Check for data base error.
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 007 *
+     C                     MOVEL'*FIRST ' DBKEY  29
+     C                     Z-ADD7         DBASE
+     C                     SETON                     81
+     C                     ENDIF
+      *
+      ** Access SAR details file to determine if CTI002 is switched ON
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CTI002'  PSARD   6
+     C                     MOVE 'N'       CTI002  1
+      *
+      ** If core feature is switched ON, set on indicator that will
+      ** condition the rest of the processing
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CTI002
+     C                     ELSE
+      *
+      ** else, database error (return code other than *NRF)
+      *
+     C           PRTCD     IFNE '*NRF   '
+     C           *LOCK     IN   LDA
+     C                     Z-ADD008       DBASE            ***************
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 008 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ****Check*to*see*if*Trade*Innovation*installed*and*CTI002********                     MD030956
+     C********** BGN3ST    IFNE 'Y'                                                         MD030956
+     C********** CTI002    ORNE 'Y'                                                         MD030956
+     C**********           SETON                         LR                                 MD030956
+     C**********           RETRN                                                            MD030956
+     C**********           ENDIF                                                            MD030956
+      *
+      * Get Exposure Management ICD Details
+     C           *LOVAL    SETLLSDEXPML0
+     C                     READ SDEXPML0                 89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD009       DBASE            ***************
+     C                     MOVEL'SDEXPMPD'DBFILE           *DB ERROR 009 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get currency Name
+     C           BUCYCD    CHAINSDCURRL1             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD010       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 010 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      * ---------------------------------------------------------------
+      * Subroutine CALCCB
+      *           Calculation of Customers Balances
+      * ---------------------------------------------------------------
+     C           CALCCB    BEGSR
+     C           *LIKE     DEFN CBOFFB    WOFFB
+     C                     Z-ADD0         WOFFB
+     C           KTFCB1    SETLLEMTFCBL1                 79
+     C           *IN79     IFEQ '1'
+      *
+     C           KTFCB1    READEEMTFCBL1                 79
+     C           *IN79     DOWEQ'0'
+     C                     ADD  CBOFFB    WOFFB
+     C           KTFCB1    READEEMTFCBL1                 79
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDSR
+      * ---------------------------------------------------------------
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

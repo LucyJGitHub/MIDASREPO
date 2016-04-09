@@ -1,0 +1,437 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Initialisation Program (LLN022)')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY0001 - Standing Data Extension Files Take-On               *
+      *                                                               *
+      *  Note:  This take on program is for a new Bank of England     *
+      *         Instalation not for a migration.                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CSD027             Date 21Jan09               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022A            Date 20Jun05               *
+      *                 LLN022 *CREATE     Date 24Jan05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  LLN022A- Correction to LLN022.                               *
+      *  LLN022 - BOE Upgrade to MidasPlus                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCUSTL0IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Details
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      ** Account Details
+      *
+     FSDBOOKL0IF  E           K        DISK         KINFSR *PSSR
+      ** Book Details
+      *
+     FSDBRCHL0IF  E           K        DISK         KINFSR *PSSR
+      ** Branch Details Extension File
+      *
+     F***BYCUSTX0O   E                    DISK         KINFSR *PSSR                          LLN022A
+     FBYCUSTY0UF  E           K        DISK         KINFSR *PSSR A                           LLN022A
+      ** Customer Details Extension File - New
+      *
+     FBYACCTX0O   E                    DISK         KINFSR *PSSR
+      ** Account Details Extension File - New
+      *
+     FBYBOOKX0O   E                    DISK         KINFSR *PSSR
+      ** Book Details Extension File - New
+      *
+     FBYBRCHX0O   E                    DISK         KINFSR *PSSR
+      ** Branch Details Extension File
+      *
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR A
+      ** Bank of England Report Extract Date
+      *
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      /EJECT
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure using Bank file format
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data structure for retrieval of data from DTAARA/RUNDAT
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     IBYSTAT    E DSBYSTATPP                                                                 LLN022A
+      * Data structure for BYSTAT                                                            LLN022A
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/SRDETL - Detail Processing                          *
+      *        SR/SRTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Detail Processing
+      *
+     C                     EXSR SRDETL
+      *
+      ** Termination Processing
+      *
+     C                     EXSR SRTERM
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR                           ** SR/SRDETL**
+      *
+      ** Read Customer Details
+      *
+     C                     READ SDCUSTL0                 89
+     C           *IN89     DOWEQ*OFF
+     C           BBDTDL    IFEQ 0
+     C                     EXSR SRCUSD
+     C                     ENDIF
+     C                     READ SDCUSTL0                 89
+     C                     ENDDO
+      *
+      ** Read Accounts Master File
+      *
+     C                     READ ACCNT                    89
+     C           *IN89     DOWEQ*OFF
+     C           RECI      IFEQ 'D'
+     C                     EXSR SRACCN
+     C                     ENDIF
+     C                     READ ACCNT                    89
+     C                     ENDDO
+      *
+      ** Read Book Codes
+      *
+     C                     READ SDBOOKL0                 89
+     C           *IN89     DOWEQ*OFF
+     C                     EXSR SRBOOK
+     C                     READ SDBOOKL0                 89
+     C                     ENDDO
+      *
+      ** Read Branch Codes
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           *LOVAL    SETLLSDBRCHL0
+     C                     READ SDBRCHL0                 89
+     C           *IN89     DOWEQ*OFF
+     C                     EXSR SRBRCH
+     C                     READ SDBRCHL0                 89
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Report Extract Date
+      *
+     C                     EXSR SRRPDT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           ** SR/SRTERM**
+      *
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCUSD - Create Extension Record                              *
+      *                                                               *
+      * Called by:  SRDETL - Main Processing                          *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUSD    BEGSR                           ** SRCUSD SR**
+      *                                                                                      LLN022A
+      *  Get customer details                                                                LLN022A
+     C           BBCUST    CHAINBYCUSTD0             90                                      LLN022A
+      *                                                                                      LLN022A
+      ** Default industry code                                                               LLN022A
+     C           LDINC     IFNE 'N'                                                          LLN022A
+     C                     MOVE BBLICD    LLICD                                              LLN022A
+     C                     ENDIF                                                             LLN022A
+      *                                                                                      LLN022A
+      ** Default institution code                                                            LLN022A
+     C           LDICD     IFNE 'N'                                                          LLN022A
+     C                     MOVE BBLINC    LLINC                                              LLN022A
+     C                     ENDIF                                                             LLN022A
+      *                                                                                      LLN022A
+      *  Initialise Industry and Institution Codes                                           LLN022A
+     C           *IN90     IFEQ *OFF                                                         LLN022A
+     C                     UPDATBYCUSTD0                                                     LLN022A
+     C                     ELSE                                                              LLN022A
+      *
+      ** Clear format
+      *
+     C                     CLEARBYCUSTD0
+      *
+      ** Default and map fields
+      *
+     C                     MOVE BBCUST    LCUST
+     C                     MOVE *BLANK    LUPAR
+     C                     MOVE 'N'       LHASI
+     C                     MOVE 'N'       LELGF
+     C                     MOVE *BLANK    LSIOF
+     C                     MOVE 'N'       LHASI
+     C                     MOVE BBLICD    LLICD
+     C                     MOVE BBLINC    LLINC
+      *
+      ** Output Detail
+      *
+     C                     WRITEBYCUSTD0
+     C                     ENDIF                                                             LLN022A
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRACCNT- Create Extension Record On BYACCTX0                  *
+      *                                                               *
+      * Called by:# SRDETL - Main Processing                          *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACCN    BEGSR                           ** SRACCN SR**
+      *
+      ** Clear format
+      *
+     C                     CLEARBYACCTD0
+      *
+      ** Default and map fields
+      *
+     C                     MOVE BRCA      LBRCD
+     C**********           Z-ADDCNUM      LCNUM                                               CSD027
+     C                     MOVE CNUM      LCNUM                                               CSD027
+     C                     MOVE CCY       LCCY
+     C                     Z-ADDACOD      LACOD
+     C                     Z-ADDACSQ      LACSQ
+     C                     MOVE 'N'       LNETI
+      *
+      ** Output Detail
+      *
+     C                     WRITEBYACCTD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRBOOK - Create Extension Record On BOOKY9                    *
+      *                                                               *
+      * Called by:  SRDETL - Main Processing                          *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBOOK    BEGSR                           ** SRACCN SR**
+      *
+      ** Clear format
+      *
+     C                     CLEARBYBOOKD0
+      *
+      ** Default and map fields
+      *
+     C                     MOVE BDBKCD    LBKCD
+     C                     MOVE 'B'       LTRDI
+      *
+      ** Output Detail
+      *
+     C                     WRITEBYBOOKD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRBRCH - Create Abacus Extract Files If Multi Branching       *
+      *                                                               *
+      * Called by:  SRDETL - Main Processing                          *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR                           ** SRBRCH SR**
+      *
+      ** Output Detail
+      *
+     C                     MOVE 'Y'       A8IBOE
+     C                     WRITEBYBRCHD0
+      *
+      ** Create extract file for branch
+      *
+     C                     CALL 'BYC9090'
+     C                     PARM 'I'       ULFLAG  1
+     C                     PARM           A8BRCD
+     C                     PARM *BLANK    ULRTCD  1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRPDT - Update Report Extract Date                           *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRPDT    BEGSR                           ** SRRPDT SR**
+      *
+      ** Create report/extract Date if record not found
+      *
+     C                     READ BYRPDTPP                 90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'D'       L0RECI
+     C                     TIME           L0UTIM
+     C                     Z-ADDBJRDNB    L0LCD
+     C                     Z-ADDBJRDNB    L0RPDT
+     C                     MOVELBJMRDT    L0RPDA
+     C                     MOVE 'I'       L0CHTP
+     C                     WRITEBYRPDTD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+      ** Check if multi-branching
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     UNLCKRUNDAT
+      *                                                                                      LLN022A
+      **  Get BOE ICD                                                                        LLN022A
+      *                                                                                      LLN022A
+     C           *NAMVAR   DEFN           BYSTAT                                             LLN022A
+     C                     IN   BYSTAT                                                       LLN022A
+     C                     UNLCKBYSTAT                                                       LLN022A
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'BY0001'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *********************************************************************
+      *                                                                   *
+      * *PSSR  - Program exception error routine                          *
+      *          Called automatically if a program error occurs,          *
+      *          or directly by the program code using EXSR.              *
+      *          This subroutine DUMPs the program just once.             *
+      *                                                                   *
+      * Called by: Main Processing                                        *
+      *                                                                   *
+      * Calls: DBERRCTL                                                   *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

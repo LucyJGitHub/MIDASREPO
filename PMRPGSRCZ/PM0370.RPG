@@ -1,0 +1,1987 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Portfolio charges accrued report')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM0370  - CHARGE ACCRUALS AND SETTLEMENTS CALCULATED TODAY   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8884            Date 05Oct05               *
+      *                 CSE071             Date 19Jul05               *
+     F*                 BUG1820            Date 13Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 161974             Date 09Jan99               *
+      *                 116572             Date 09Apr97               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 102506             Date 18Oct98               *
+     F*                 CPM005             Date 14Nov96               *
+     F*                 092961             Date 04Oct95               *
+     F*                 085811             DATE 13MAR95               *
+     F*                 081343             DATE 09JAN95               *
+     F*                 S01486             DATE 01SEP94               *
+     F*                 58175              DATE 05JUL93               *
+     F*                 56841              DATE 15JUN93               *
+     F*                 47719              DATE 24NOV92               *
+     F*                 B07866             DATE 25MAY91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8884- CSE071 holidays currencies not defined (recompile)  *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  BUG1820- Changes required for 10 digit account codes         *
+     F*  161974 - Wrong output queue used. Reset sequence number      *
+     F*           to blanks before to create a new spool file.        *
+      *  116572 - Apply some modifications due to SR/ZDYYR which was  *
+      *           amended by 100228 (See /COPY/ZDYYRZ3).              *
+      *           (Call ZLCD and ZNCD instead of ZD5DYS for coupon    *
+      *            calculation to ensure 29FEB is considered valid)   *
+     F*  102506 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  085811 - No need on underline anymore (recompile)            *
+     F*  081343 - PRINTER FILE CLOSED FOR WRITE OPERATION.            *
+     F*  S01486 - Portfolio Management Upgrade to R10                 *
+     F*  58175  - CALCULATE VALUE OF PORTFOLIO USING TRADE/VALUE DATE *
+     F*           PORTFOLIO TOTAL FIGURES                             *
+     F*  56841  - INCORRECT CALCULATION OF CHARGE ACCRUALS FOR        *
+     F*           TIERED CHARGING METHOD                              *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  B07866 - PROGRAM REWRITTEN FOR FIX. BASED ON PM0380          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**SDBANKL1IF  E           K        DISK                             S01486
+     F****REFIX : BJ                                                      S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F**SDPORTL0IF  E           K        DISK                             S01486
+     F***PREFIX : P9                                                      S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F**SDCURRL0IF  E           K        DISK                             S01486
+     F***PREFIX : A6                                                      S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F**PMCHRGPPIF  E           K        DISK                             S01486
+     FPMCHRGPDIF  E           K        DISK                               S01486
+     F** PREFIX : PO
+     F                                              KINFSR *PSSR
+     F**PMCGCDPPIF  E           K        DISK                             S01486
+     FPMCGCDPDIF  E           K        DISK                               S01486
+     F** PREFIX : P5
+     F                                              KINFSR *PSSR
+     F**PMPOTTPPIF  E           K        DISK                             S01486
+     FPMPOTTPDIF  E           K        DISK                               S01486
+     F** PREFIX : QC
+     F                                              KINFSR *PSSR
+     F**PMPORTJFIF  E           K        DISK                             S01486
+     FPMPORTQ0IF  E           K        DISK                               S01486
+     F** PREFIX : AZ, BB AND PN
+     F                                              KINFSR *PSSR
+     FACNUM   IF  E           K        DISK
+     F** PREFIX :
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,PM0370F001
+     F***PM0370AUO***E                    PRINTER                         S01486
+     F** PREFIX : RR
+     F**PM0370P1O   E             70     PRINTER                        UCS01486
+     FPM0370P1O   E             70     PRINTER      KINFDS SPOOL      UC  S01486
+     FPM0370AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F** PREFIX : RR
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       70         OVERFLOW ON PM0370P1
+     F*       71         ACCESS ON LF/ACNUM
+     F********72         ACCESS ON PF/PMCGCDPP                            S01486
+     F********73         ACCESS ON PF/PMCHRGPP                            S01486
+     F*       72         ACCESS ON PF/PMCGCDPD                            S01486
+     F*       73         ACCESS ON PF/PMCHRGPD                            S01486
+     F********74         ACCESS ON OPQ/PMPORTJF                           S01486
+     F*       74         ACCESS ON OPQ/PMPORTQ0                           S01486
+     F********75         ACCESS ON PF/PMPOTTPP                            S01486
+     F*       75         ACCESS ON PF/PMPOTTPD                            S01486
+     F********76         ACCESS ON LF/SDBANKL1                            S01486
+     F********77         ACCESS ON LF/SDCURRL0                            S01486
+     F********78         ACCESS ON LF/CDPORTL0                            S01486
+     F********81         FIRST RECORD READ ON OPQ/PMPORTJF                S01486
+     F*       81         FIRST RECORD READ ON OPQ/PMPORTQ0                S01486
+     F*
+     F*       98         DATE IN FORMAT MMDDYY
+     F*       99         WORK
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  ..
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  79  80
+     F*       ..  82  83  84  85  86  87  ..  89  90                      S01486
+     F*       91  92  93  94  95  96  97  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     E*=========================================================================
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY FOR QCMDEXC - IBM COMMAND
+     E*
+     E************        CMD     1   1 39                                S01486
+     E*
+     E** ARRAYS FOR S/R ZDATE2
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** ARRAY FOR S/R ZCCYXR
+     E*
+      /COPY ZSRSRC,ZPOWERZ1
+      *
+      ** ARRAY FOR S/R ZSEDIT
+      *
+      /COPY ZSRSRC,ZSEDITZ1
+      *
+      ** ARRAY FOR S/R ZPMCRG
+      *
+      /COPY ZSRSRC,ZDAYSZ1
+      /COPY ZSRSRC,ZNCDZ1
+     E                    ZRA        14 15 0
+     E                    ZRB        15 15 0
+     E                    ZPC        15 11 7
+     E                    ZCG        15 15 0
+      *
+      ** ARRAY FOR NARRATIVE
+      *
+     E                    NAR     1   5 23
+      *
+      ** ARRAY FOR SETTING CUSTOMER SETTLEMENT ACCOUNT
+      *
+     E**********          CUS        12  1                                                   BUG1820
+     E                    CUS        18  1                                                   BUG1820
+     E/COPY WNCPYSRC,PM0370E001
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I***********                           132 141 DBFILE                S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** DATA STRUCTURE FOR SR/ZPMCRG
+      *
+      /COPY ZSRSRC,ZNCDZ2
+     I*
+     I**  DATA STRUCTURE TO FILL TABLE
+     I*
+     I**DSTR      E DSPMCGCDPP                                            S01486
+     IDSTR      E DSPMCGCDPD                                              S01486
+     I                                    P  52 1630ZRA
+     I                                    P 164 2537ZPC
+     I                                    P 254 3730ZCG
+      *
+      ** DATA STRUCTURE FOR ZSEDIT
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I***CKEY*TO*FILL*DBKEY*IF*DATA*BASE*ERROR*ON*PF/PMCGCDPP**********   S01486
+     I** CKEY to fill DBKEY if data base error on PF/PMCGCDPD             S01486
+     I*
+     ICKEY        DS
+     I                                        1   3 PNBCGY
+     I                                        4   5 WWCGCO
+     I*
+     IPMSTAT    E DS
+     I                                        1   50WWECD
+     I                                        1 256 WWSTAT
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** EXTERNAL DS FOR PORTFOLIO DETAILS                                S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I**                                                                  S01486
+     I** DATA STRUCTURE FOR COMPILATION                                   S01486
+     I**                                                                  S01486
+     ICPYR@#      DS                                                      S01486
+     I                                        1  80 CPY@                  S01486
+     I                                        1  20 CPY@##                S01486
+     I/COPY WNCPYSRC,PM0370I001
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - PROCESS INPUT PARAMETERS                              *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P06     - ACCESS ADDITIONAL PORTFOLIO DETAILS                   *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      * #P08     - DETERMINE EFFECTIVE CHARGE DETAILS                    *
+      * #P09     - PROCESS CHARGE ADJUSTEMENT DETAILS                    *
+      * #P10     - PROCESS ACCRUED TODAY DETAILS                         *
+      * #P11     - PROCESS ACTUAL DETAILS                                *
+      * #W01     - WRITE TO CHARGES ON PORTFOLIOS CLOSING TODAY AUDIT    *
+      * #W02     - WRITE REPORT HEADING TO CHARGES ON PORTFOLIOS CLOS    *
+      * #W03     - WRITE PORTFOLIO HEADING TO CHARGES ON PORTFOLIOS C    *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMYY                    *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO NUMERIC FIELD    *
+      * ZPMCRG   - CALCULATE PORTFOLIO MANAGEMENT CHARGES                *
+      * ZDAYS    - CALCULATE NO. OF DAYS BETWEEN TWO DATES               *
+      * ZDYYR    - CALCULATE NO. OF DAYS IN INTEREST YEAR                *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      * ZCCYXR   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * QCMDEXC  - EXECUTE OVERIDE ON PRINTER FILE                       *
+      *                                                                  *
+      ********************************************************************
+     C**************************************************************************
+      *
+      ***KLIST*CLIST*TO*ACCESS*PF/PMCGCDPP*****************************   S01486
+     C** KLIST CLIST to access PF/PMCGCDPD                                S01486
+      *
+     C           CLIST     KLIST
+     C                     KFLD           PNBCGY
+     C                     KFLD           WWCGCO
+      *
+      ***KLIST*LLIST*TO*ACCESS*PF/PMPOTTPP*AND*PF/PMCHRGPP*************   S01486
+     C** KLIST LLIST to access PF/PMPOTTPD AND PF/PMCHRGPD                S01486
+      *
+     C           LLIST     KLIST
+     C                     KFLD           WWCNUN
+     C                     KFLD           PNPTFR
+     C*================================================================
+     C*
+     C**  D E F I N E   W O R K   F I E L D S
+     C*
+     C           *LIKE     DEFN AZACON    WWCMD +13
+     C           *LIKE     DEFN AZACOC    WWCMDP+ 2
+     C           *LIKE     DEFN AZACOC    WWACOC
+     C           *LIKE     DEFN BBCUST    WWCUST
+     C           *LIKE     DEFN BBCUST    WWCNUM
+     C           *LIKE     DEFN CNUM      WWCNUN
+     C************LIKE     DEFN AZPRTL    WWPRTL                          S01486
+     C           *LIKE     DEFN A6SPRT    WWC9N1
+     C           *LIKE     DEFN A6NBDP    WWDAN1
+     C           *LIKE     DEFN A6MDIN    WWA8S1
+     C           *LIKE     DEFN A6SPRT    WWC9N2
+     C           *LIKE     DEFN A6NBDP    WWDAN2
+     C           *LIKE     DEFN A6MDIN    WWA8S2
+     C           *LIKE     DEFN POCGAJ    WWMVBC
+     C           *LIKE     DEFN POCGAJ    WWMVPC
+     C           *LIKE     DEFN POCGAJ    WWTCRG
+     C           *LIKE     DEFN POCGAJ    WWTCR1
+     C           *LIKE     DEFN POCGSP    WWCGSP
+     C           *LIKE     DEFN POCGSI    WWCGSI
+     C           *LIKE     DEFN PNCUSA    WWCUSA- 2
+     C           *LIKE     DEFN ACNO      WWACNO
+     C           *LIKE     DEFN BBCUST    WWCNU3
+     C********** *LIKE     DEFN BBCUST    WWACO3- 2                                           CSD027
+     C********** *LIKE     DEFN BBCUST    WWACS3- 4                                           CSD027
+     C                     Z-ADD*ZEROS    WWACO3  40                                          CSD027
+     C                     Z-ADD*ZEROS    WWACS3  20                                          CSD027
+     C           *LIKE     DEFN PNPTFR    PPACOC
+     C           *LIKE     DEFN PNPTFR    PPPREF
+     C           *LIKE     DEFN RRCNT     WWCNT
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+      *
+      ** PERFORM SETUP OF STANDARD FIELDS
+      *
+     C           *ENTRY    PLIST                                          S01486
+     C                     PARM           RSEQ    5                       S01486
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C                     EXSR #INIT
+      *
+      ** PROCESS INPUT PARAMETERS
+      *
+     C                     EXSR #P01
+      *
+      ** PROCESS AUDIT REPORT
+      *
+     C                     EXSR #W01
+      *
+      ** TERMINATE PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCMD    - COMMAND FOR QCMDEXC                                   *
+      * WWCMDP   - END OF COMMAND FOR QCMDEXC                            *
+      * WWCNT    - COUNTER FOR NUMBER OF WRITING RECORD BY PORTFOLIO     *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           **#INIT BSR**
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'PM0370'  DBPGM
+     C                     OUT  LDA                                       S01486
+      *
+      ** SET EDIT CODE FOR ZSEDIT
+      *
+     C                     MOVE 'J'       ZECODE
+      *
+      ** GET INSTALLATION CONTROL DATA RECORD 1
+      *
+     C************LOVAL    SETLLSDBANKL1                                  S01486
+     C************         READ SDBANKL1                 76               S01486
+      ************                                                        S01486
+     C************IN76     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************
+     C************         MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**S01486
+     C                     MOVE 'SDBANKPD'DBFILE           **DB ERROR 01**S01486
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      *  CHECK THE FORMAT OF THE DATE
+      *
+     C           BJDFIN    IFEQ 'M'                        - B1
+     C                     MOVE '1'       *IN98
+     C                     END                             - E1
+      *
+      ** GET PORTFOLIO MANAGEMENT INSTALLATION CONTROL DATA
+      *
+     C***********          READ SDPORTL0                 78               S01486
+      ***********                                                         S01486
+     C************IN78     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ***************
+     C***********          MOVEL'SDPORTL0'DBFILE           **DB ERROR 02**S01486
+     C                     MOVE 'SDPORTPD'DBFILE           **DB ERROR 02**S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      ***********                                                         S01486
+      ***BUILD*COMMAND EXPRESSION FOR QCMDEXC                             S01486
+      ***********                                                         S01486
+     C***********          MOVELCMD,1     WWCMD                           S01486
+     C***********          MOVE ')'       WWCMDP                          S01486
+      *
+      ** INITIALIZE COUNTER
+      *
+     C                     Z-ADD*ZEROS    WWCNT
+     C                     Z-ADD*ZEROS    ECD     50
+     C*
+     C** DEFINE DATA AREA PMSTAT
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C                     MOVE RSEQ      SEQ                             S01486
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY                           S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+      *
+     C/COPY WNCPYSRC,PM0370C001
+     C                     ENDSR                           **#INIT ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - PROCESS INPUT PARAMETERS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P03     - PROCESS ALL CUSTOMERS                                 *
+      * #P04     - PROCESS ALL PORTFOLIOS                                *
+      * #P05     - PROCESS A PORTFOLIO                                   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           **#P01  BSR**
+      *
+      ** PROCESS PORTFOLIOS SELECTED IN OPEN QUERY FILE
+     C                     EXSR #P02
+      *
+     C***********RRCNT     IFEQ *ZEROS                     - B1           S01486
+      ***********                                                         S01486
+      ***OPEN*FILE PM0370P1                                               S01486
+      ***********                                                         S01486
+     C***********          OPEN PM0370P1                                  S01486
+      ***********                                                         S01486
+      ***NO*RECORD PRINT ON PRINTER FILE                                  S01486
+      ***********                                                         S01486
+     C***********          WRITEPM0370F1                                  S01486
+      ***********                                                         S01486
+     C***********          END                             - E1           S01486
+      ***********                                                         S01486
+     C***********          WRITEPM0370F5                                  S01486
+      ***********                                                         S01486
+     C***********          CLOSEPM0370P1                                  S01486
+      *
+     C                     ENDSR                           **#P01  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  - EXECUTE OVERIDE ON PRINTER FILE                       *
+      * #W02     - WRITE REPORT HEADING TO CHARGES ON PORTFOLIOS CLOS    *
+      * #W03     - WRITE PORTFOLIO HEADING TO CHARGES ON PORTFOLIOS C    *
+      * #P06     - ACCESS ADDITIONAL PORTFOLIO DETAILS                   *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS INPUT PARAMETERS                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAVCD   - ACCOUNT OFFICER CODE                                  *
+      * WWAENB   - ALPHANUMERIC CUSTOMER NUMBER                          *
+      * WWPRTL   - PRINTER LOCATION CODE                                 *
+      * WWCMDP   - END OF COMMAND FOR QCMDEXC                            *
+      * WWCMD    - COMMAND FOR QCMDEXC                                   *
+      * WWCNT    - COUNTER FOR NUMBER OF WRITING RECORD BY PORTFOLIO     *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           **#P02  BSR**
+      *
+      ** *IN81 USE FOR FIRST RECORD PROCESSING
+      *
+     C                     MOVE '1'       *IN81
+      *
+      ***PROCESS*UNTIL THE END OF FILE ON PMPORTJF IS REACHED             S01486
+      ** PROCESS UNTIL THE END OF FILE ON PMPORTQ0 IS REACHED             S01486
+      *
+     C***********          READ PMPORTJF                 74               S01486
+     C                     READ PMPORTQ0                 74               S01486
+     C           *IN74     IFEQ '1'                                       S01486
+     C                     MOVE '1'       *IN88                           S01486
+     C                     GOTO END01                                     S01486
+     C                     END                                            S01486
+     C**                                                                  S01486
+     C           *IN74     DOWEQ'0'                        - B1
+      *
+     C                     MOVE 'N'       WWHEAD  1
+      *
+      ** PROCESS ONLY IF NOT END OF FILE PMPORTJF
+      *
+     C           *IN74     IFEQ '0'                        - B2
+     C           PNCSCY    ANDNE*BLANKS
+      *
+      ** ACCESS ADDITIONAL PORTFOLIO DETAILS
+      *
+     C                     EXSR #P06
+      *
+      ** PRODUCE DETAILS OF CHARGES TO BE POSTED TODAY
+      *
+     C                     EXSR #P07
+     C                     END                             - E2
+      *
+     C************         READ PMPORTJF                 74               S01486
+     C                     READ PMPORTQ0                 74               S01486
+      *
+     C                     END                             - E1
+     C************         WRITEPM0370F5                           S01486 081343
+     C************         CLOSEPM0370P1                           S01486 081343
+      *
+     C************         ENDSR                           **#P02  ESR**  S01486
+     C           END01     ENDSR                           **#P02  ESR**  S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************S01486
+      *                                                                  *S01486
+      * #OPEN    - OPEN PRINTER FILE                                     *S01486
+      *                                                                  *S01486
+      * SUBROUTINE CALLS:                                                *S01486
+      *                                                                  *S01486
+      *                                                                  *S01486
+      * SUBROUTINE CALLED FROM:                                          *S01486
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *S01486
+      *                                                                  *S01486
+      *                                                                  *S01486
+      ********************************************************************S01486
+     C           #OPEN     BEGSR                                          S01486
+     C**                                                                  S01486
+     C************IN81     IFEQ '0'                                S01486 081343
+     C************         CLOSEPM0370P1                           S01486 081343
+     C************         END                                     S01486 081343
+     C**                                                                  S01486
+     C                     OPEN PM0370P1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C**                                                                  S01486
+     C                     ENDSR                                          S01486
+      ********************************************************************S01486
+      /EJECT                                                              S01486
+      ********************************************************************
+      *                                                                  *
+      * #P06     - ACCESS ADDITIONAL PORTFOLIO DETAILS                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P03     - PROCESS ALL CUSTOMERS                                 *
+      * #P04     - PROCESS ALL PORTFOLIOS                                *
+      * #P05     - PROCESS A PORTFOLIO                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWC9N1   - SPOT RATE OF CUSTOMER SETTLEMENT CURRENCY             *
+      * WWDAN1   - NUMBER OF DECIMAL PLACE OF CUSTOMER SETTLEMENT CCY    *
+      * WWA8S1   - MULTIPLY/DIVIDE IND OF CUSTOMER SETTLEMENT CCY        *
+      * WWC9N2   - SPOT RATE OF BANK CHARGING CURRENCY                   *
+      * WWDAN2   - NUMBER OF DECIMAL PLACE OF BANK CHARGING CCY          *
+      * WWA8S2   - MULTIPLY/DIVIDE IND OF BANK CHARGING CURRENCY         *
+      * WWCNUN   - NUMERIC CUSTOMER NUMBER                               *
+      * WWMVBC   - MARKET VALUE IN BANK CHARGING CURRENCY                *
+      * WWMVPC   - MARKET VALUE IN PORTFOLIO CURRENCY                    *
+      *                                                                  *
+      ********************************************************************
+     C           #P06      BEGSR                           **#P06  ESR**
+      ***********                                                         S01486
+      ***ACCESS SDCURRL0 USING CUSTOMER SETTLEMENT CURRENCY               S01486
+      ***********                                                         S01486
+     C***********PNCSCY    CHAINSDCURRL0             77                   S01486
+      ***********                                                         S01486
+     C************IN77     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM PNCSCY    WWKEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            ***************
+     C***********          MOVEL'SDCURRL0'DBFILE           **DB ERROR 03**S01486
+     C                     MOVE 'SDCURRPD'DBFILE           **DB ERROR 03**S01486
+     C                     MOVELPNCSCY    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      ** SAVE SPOT RATE, NUMBER OF DECIMAL PLACES AND MULTIPLY/DIVIDE
+      ** INDICATOR FOR CUSTOMER SETTLEMENT CURRENCY
+      *
+     C                     Z-ADDA6SPRT    WWC9N1
+     C                     Z-ADDA6NBDP    WWDAN1
+     C                     MOVE A6MDIN    WWA8S1
+      *
+      ** ACCESS SDCURRL0 USING BANK CHARGING CURRENCY
+      *
+     C***********PNBCGY    CHAINSDCURRL0             77                   S01486
+      ***********                                                         S01486
+     C************IN77     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM PNBCGY    WWKEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            ***************
+     C***********          MOVEL'SDCURRL0'DBFILE           **DB ERROR 04**S01486
+     C                     MOVE 'SDCURRPD'DBFILE           **DB ERROR 04**S01486
+     C                     MOVELPNBCGY    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+      ** SAVE SPOT RATE, NUMBER OF DECIMAL PLACES AND MULTIPLY/DIVIDE
+      ** INDICATOR FOR BANK CHARGING CURRENCY
+      *
+     C                     Z-ADDA6SPRT    WWC9N2
+     C                     Z-ADDA6NBDP    WWDAN2
+     C                     MOVE A6MDIN    WWA8S2
+      *
+      ***ACCESS*PORTFOLIO*TOTALS*PMPOTTPP*USING*CUSTOMER*NUMBER*AND****   S01486
+      ***PORTFOLIO*REFERENCE FROM PMPORTJF                                S01486
+     C** Access portfolio totals PMPOTTPD using customer number and       S01486
+     C** portfolio reference from PMPORTQ0                                S01486
+      *
+     C                     MOVE PNCNUM    WWCNUN
+      *
+     C***********LLIST     CHAINPMPOTTPP             75                   S01486
+     C           LLIST     CHAINPMPOTTPD             75                   S01486
+      *
+     C           *IN75     IFEQ '1'                        - B1
+      *
+      ** SET THE MARKET VALUE IN BANK CHARGING CURRENCY EQUAL TO ZERO
+      *
+     C                     Z-ADD*ZEROS    WWMVPC
+     C                     Z-ADD*ZEROS    WWMVBC
+      *
+     C                     ELSE                            - X1
+      *
+      ** SET THE MARKET VALUE IN PORTFOLIO CURRENCY EQUAL TO THE SUM
+      ** OF THE TRADE DATE POSITIVE ASSETS AND THE TRADE DATE NEGATIVE
+      ** ASSETS
+      *
+     C***********P9TVPS    IFEQ 'T'                                 58175 S01486
+     C           FCTVPS    IFEQ 'T'                                       S01486
+     C                     Z-ADDQCPTPA    WWMVPC
+     C*********            ADD  QCPTNA    WWMVPC
+     C           WWMVPC    SUB  QCPTNA    WWMVPC
+     C                     ELSE                                           58175
+     C                     Z-ADDQCPVPA    WWMVPC                          58175
+     C           WWMVPC    SUB  QCPVNA    WWMVPC                          58175
+     C                     END                                            58175
+      *                                                                   58175
+     C           WWMVPC    ADD  QCPTAI    WWMVPC
+     C           WWMVPC    SUB  QCPTNI    WWMVPC
+      *
+      ** ACCESS SDCURRL0 USING THE PORTFOLIO CURRENCY TO GET SPOT RATE,
+      ** NUMBER OF DECIMAL PLACES AND MULTIPLY/DIVIDE INDICATOR
+      *
+     C***********PNPTCY    CHAINSDCURRL0             77                   S01486
+      ***********                                                         S01486
+     C************IN77     IFEQ '1'                        - B2           S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM PNPTCY    WWKEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            ***************
+     C***********          MOVEL'SDCURRL0'DBFILE           **DB ERROR 05**S01486
+     C                     MOVE 'SDCURRPD'DBFILE           **DB ERROR 05**S01486
+     C                     MOVELPNPTCY    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+      ** CONVERT THE MARKET VALUE IN PORTFOLIO CURRENCY INTO A MARKET
+      ** VALUE IN BANK CHARGING CURRENCY USING ZCCYCN
+      *
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDWWC9N2    ZRATET
+     C                     Z-ADDWWDAN2    ZCDPT
+     C                     MOVE WWA8S2    ZMDINT
+     C                     MOVE PNPTCY    ZCCYF
+     C                     MOVE PNBCGY    ZCCYT
+     C                     Z-ADDWWMVPC    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWMVBC
+      *
+     C                     END                             - E1
+     C*
+     C** IF MARKET VALUE OF PORTFOLIO NEGATIVE, NO CHARGES TO BE TAKEN
+     C           WWMVPC    IFLT 0
+     C                     Z-ADD0         WWMVPC
+     C                     Z-ADD0         WWMVBC
+     C                     END
+      *
+     C                     ENDSR                           **#P06  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P07     - PRODUCE DETAILSD OFFES TO BE CHARGED ON PORTFOLIOS    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P08     - DETERMINE EFFECTIVE CHARGE DETAILS                    *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMYY                    *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO NUMERIC FIELD    *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      * #P09     - PROCESS CHARGE ADJUSTEMENT DETAILS                    *
+      * #P10     - PROCESS ACCRUED TODAY DETAILS                         *
+      * #P11     - PROCESS ACTUAL DETAILS                                *
+      * #W02     - WRITE REPORT HEADING TO CHARGES ON PORTFOLIOS CLOS    *
+      * #W03     - WRITE PORTFOLIO HEADING TO CHARGES ON PORTFOLIOS C    *
+      * #W04     - WRITE COLUMN HEADINGS TO CHARGES ON PORTFOLIOS CLO    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P03     - PROCESS ALL CUSTOMERS                                 *
+      * #P04     - PROCESS ALL PORTFOLIOS                                *
+      * #P05     - PROCESS A PORTFOLIO                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUN   - NUMERIC CUSTOMER NUMBER                               *
+      * WWCNUM   - NUMERIC CUSTOMER NUMBER                               *
+      * WWCGCO   - EFFECTIVE CHARGE CODE                                 *
+      * WWC9N2   - SPOT RATE OF BANK CHARGING CURRENCY                   *
+      * WWDAN2   - NUMBER OF DECIMAL PLACE OF BANK CHARGING CCY          *
+      * WWA8S2   - MULTIPLY/DIVIDE IND OF BANK CHARGING CURRENCY         *
+      * WWC9N1   - SPOT RATE OF CUSTOMER SETTLEMENT CURRENCY             *
+      * WWDAN1   - NUMBER OF DECIMAL PLACE OF CUSTOMER SETTLEMENT CCY    *
+      * WWA8S1   - MULTIPLY/DIVIDE IND OF CUSTOMER SETTLEMENT CCY        *
+      * WWCNT    - COUNTER FOR NUMBER OF WRITING RECORD BY PORTFOLIO     *
+      * WWTCRG   - TOTAL CHARGE                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P07      BEGSR                           **#P07  ESR**
+      *
+      ***ACCESS*PMCHRGPP*PORTFOLIO*CHARGE*DETAILS*USING*CUSTOMER*NUMBER   S01486
+      ***AND*PORTFOLIO REFERENCE FROM PMPORTJF                            S01486
+     C** Access PMCHRGPD portfolio charge details using customer number   S01486
+     C** and portfolio reference from PMPORTQ0                            S01486
+      *
+     C                     MOVE PNCNUM    WWCNUN
+      *
+     C***********LLIST     SETLLPMCHRGPP                 73               S01486
+     C***********LLIST     READEPMCHRGPP                 73               S01486
+     C           LLIST     SETLLPMCHRGPD                 73               S01486
+     C           LLIST     READEPMCHRGPD                 73               S01486
+      *
+     C           *IN73     DOWEQ'0'
+      *
+      ** ONLY PROCESS LIVE RECORDS
+     C           PORECI    CABEQ'*'       NXTREC
+      *
+     C                     MOVE '0'       *IN62
+      *
+      ** DETERMINE THE EFFECTIVE CHARGE CODE, EFECTIVE CHARGE SPREAD
+      ** AND EFFECTIVE CHARGE SPREAD INDICATOR
+      *
+     C                     EXSR #P08
+      *
+      ** SET CHARGE NARRATIVE ON REPORT
+      *
+     C                     MOVE WWCGCO    RRCGCO
+      *
+      ***SET*CHARGE*NARRATIVE*ON*REPORT*WITH*CHARGE*NARRATIVE*FROM*PMCGCDPS01486
+     C**  Set charge narrative on report with charge narrative            S01486
+     C**  from PMCGCDPD                                                   S01486
+      *
+     C                     MOVE P5CNAR    RRCNAR
+      *
+     C                     Z-ADDPOCGLD    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ** SET THE LAST ACCRUAL DATE ON REPORT
+      *
+     C                     MOVE ZADATE    RRCGAD
+      *
+      ***SET*CHARGE*STOPPED*ON*REPORT*WITH*CHARGE*STOPPED*FROM*PMCHRGPP   S01486
+     C** Set charge stopped on report with charge stopped from PMCHRGPD   S01486
+      *
+     C                     MOVE WWCGST    RRCGST
+      *
+      ** CONVERT NEXT SETTLEMENT DATE FROM MIDAS DAY NUMBER TO
+      ** DDMMMYY FORMAT
+      *
+     C                     Z-ADDPOCSND    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ** SET THE NEXT SETTLEMENT DATE ON REPORT
+      *
+     C                     MOVE ZADATE    RRCSND
+      *
+      ** SET THE TOTAL CHARGES EQUAL TO CHARGES ACCRUED TO DATE
+      *
+     C                     Z-ADDPOCGAD    WWTCRG
+     C                     Z-ADD*ZEROS    WWTCR1
+      *
+      ** IF THE NEXT CHARGE DATE IS *LE EVENT CONTROL DATE CALCULATE
+      ** CHARGE TO BE ACCRUED TODAY
+      *
+     C           POCGND    IFLE WWECD                      - B2
+     C           WWCGST    ANDNE'Y'
+     C           WWCGCO    ANDNE*BLANKS
+     C           PORECI    ANDEQ'D'
+      *
+      ** PROCESS ACCRUED TODAY DETAILS
+      *
+     C                     EXSR #P10
+     C                     END                             - E2
+      *
+      ***IF*THE*CHARGE*ADJUSTMENT*AMOUNT*FROM*PMCHRGPP*IS*NOT*ZERO*****   S01486
+     C** If the charge adjustment amount from PMCHRGPD is not zero        S01486
+      *
+     C           POCGAJ    IFNE *ZEROS                     - B2
+      *
+      ** PROCESS CHARGE ADJUSTEMENT DETAILS
+      *
+     C                     EXSR #P09
+     C                     END                             - E2
+      *
+      ** IF SETTLEMENT DATE *LE EVENT CONTROL DATE OUTPUT SETTLEMENT
+      ** AMOUNT
+     C           POCSND    IFLE WWECD                      - B2
+     C           PORECI    OREQ 'C'
+      *
+      ** PROCESS ACTUAL DETAILS
+      *
+     C                     ADD  WWTCR1    WWTCRG
+     C                     EXSR #P11
+     C                     END                             - E2
+      *
+     C           NXTREC    TAG
+     C***********LLIST     READEPMCHRGPP                 73               S01486
+     C           LLIST     READEPMCHRGPD                 73               S01486
+      *
+     C                     MOVE POCNUM    WWCNUM
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **#P07  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P08     - DETERMINE EFFECTIVE CHARGE DETAILS                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCGCO   - EFFECTIVE CHARGE CODE                                 *
+      * WWCGSP   - EFFECTIVE CHARGE SPREAD                               *
+      * WWCGSI   - EFFECTIVE CHARGE SPREAD INDICATOR                     *
+      *                                                                  *
+      ********************************************************************
+     C           #P08      BEGSR                           **#P08  ESR**
+      *
+      ** CHARGE EFFECTIVE INDICATOR IS C (CURRENT PERIOD)
+      *
+     C           POCGEI    IFEQ 'C'                        - B1
+      *
+      ** SET THE EFFECTIVE CHARGE CODE EQUAL TO THE CHARGE CODE
+      *
+     C                     MOVE POCGCO    WWCGCO
+      *
+      ** SET THE EFFECTIVE CHARGE SPREAD EQUAL TO THE CHARGE SPREAD
+      *
+     C                     Z-ADDPOCGSP    WWCGSP
+      *
+      ** SET THE EFFECTIVE CHARGE SPREAD INDICATOR EQUAL TO THE CHARGE
+      ** SPREAD INDICATOR
+      *
+     C                     MOVE POCGSI    WWCGSI
+     C                     MOVE POCGST    WWCGST  1
+     C                     END                             - E1
+      *
+      ** CHARGE EFFECTIVE INDICATOR IS N (NEXT PERIOD)
+      *
+     C           POCGEI    IFEQ 'N'                        - B1
+      *
+      ** SET THE EFFECTIVE CHARGE CODE EQUAL TO THE CHARGE CODE AT START
+      ** OF PERIOD
+      *
+     C                     MOVE POCCSP    WWCGCO
+      *
+      ** SET THE EFFECTIVE CHARGE SPREAD EQUAL TO THE CHARGE SPREAD
+      ** AT START OF PERIOD
+      *
+     C                     Z-ADDPOCSSP    WWCGSP
+      *
+      ** SET THE EFFECTIVE CHARGE SPREAD INDICATOR EQUAL TO THE CHARGE
+      ** SPREAD INDICATOR AT START OF PERIOD
+      *
+     C                     MOVE POCISP    WWCGSI
+     C                     MOVE POCSIS    WWCGST  1
+     C                     END                             - E1
+      *
+      ** CHARGE EFFECTIVE INDICATOR IS NOT BLANK
+      *
+     C           POCGEI    IFNE *BLANKS                    - B1
+     C           WWCGCO    ANDNE*BLANKS
+      *
+      ***ACCESS*PF/PMCGCDPP*TO*GET*CHARGE*CODE*DETAILS*****************   S01486
+      ***(ZRA*&*ZRB,*ZPC*&*ZCG)*USING*BANK*CHARGING*CURRENCY*FROM*PMPORTPPS01486
+     C**  Access PF/PMCGCDPD to get charge code details                   S01486
+     C**  (ZRA & ZRB, ZPC & ZCG) using bank charging ccy from PMPORTPD    S01486
+      ** AND EFFECTIVE CHARGE CODE
+      *
+     C***********CLIST     CHAINPMCGCDPP             72                   S01486
+     C           CLIST     CHAINPMCGCDPD             72                   S01486
+     C           *IN72     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD06        DBASE            ***************
+     C***********          MOVEL'PMCGCDPP'DBFILE           **DB ERROR 06**S01486
+     C                     MOVE 'PMCGCDPD'DBFILE           **DB ERROR 06**S01486
+     C                     MOVELCKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+      ** SET ZRB WITH ZRA FOR PORTFOLIO MANAGEMENT CHAGRE
+      *
+     C                     MOVEAZRA       ZRB
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **#P08  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P09     - PROCESS CHARGE ADJUSTEMENT DETAILS                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO NUMERIC FIELD    *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWC9N2   - SPOT RATE OF BANK CHARGING CURRENCY                   *
+      * WWDAN2   - NUMBER OF DECIMAL PLACE OF BANK CHARGING CCY          *
+      * WWA8S2   - MULTIPLY/DIVIDE IND OF BANK CHARGING CURRENCY         *
+      * WWC9N1   - SPOT RATE OF CUSTOMER SETTLEMENT CURRENCY             *
+      * WWDAN1   - NUMBER OF DECIMAL PLACE OF CUSTOMER SETTLEMENT CCY    *
+      * WWA8S1   - MULTIPLY/DIVIDE IND OF CUSTOMER SETTLEMENT CCY        *
+      * WWTCRG   - TOTAL CHARGE                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P09      BEGSR                           **#P09  ESR**
+      *
+      ** EDIT CHARGE ADJUSTEMENT AMOUNT FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDPOCGAJ    ZFLD15
+     C                     Z-ADDPNBCGD    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN BANK CHARGING CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMBC
+     C                     MOVE POCGAS    RRAMBC
+      *
+      ** CONVERT CHARGE ADJUSTEMENT AMOUNT FROM BANK CHARGING CURRENCY
+      ** TO CUSTOMER SETTLEMENT CURRENCY
+      *
+     C                     Z-ADDWWC9N2    ZRATEF
+     C                     Z-ADDWWDAN2    ZCDPF
+     C                     MOVE WWA8S2    ZMDINF
+     C                     Z-ADDWWC9N1    ZRATET
+     C                     Z-ADDWWDAN1    ZCDPT
+     C                     MOVE WWA8S1    ZMDINT
+     C                     MOVE PNBCGY    ZCCYF
+     C                     MOVE PNCSCY    ZCCYT
+     C                     Z-ADDPOCGAJ    ZAMTF
+     C/COPY WNCPYSRC,PM0370C002
+     C                     EXSR ZCCYCN
+     C/COPY WNCPYSRC,PM0370C003
+      *
+      ** EDIT CHARGE ADJUSTEMENT AMOUNT FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDZAMTT     ZFLD15
+     C                     Z-ADDPNCSDP    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN CUSTOMER SETTLEMENT CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMSC
+     C                     MOVE POCGAS    RRAMSC
+      *
+      ** SET CHARGES TEXT ON REPORT
+      *
+     C                     MOVE *BLANKS   RRCTXT
+     C                     MOVEANAR,2     RRCTXT
+     C                     MOVELPOPFRC    RRPRFC                          S01486
+      *
+      ** CHARGE ADJUSTEMENT SIGN IS '+'
+      *
+     C           POCGAS    IFEQ '+'                        - B1
+      *
+      ** ADD THE CHARGE ADJUSTEMENT AMOUNT TO THE TOTAL CHARGE
+      *
+     C                     ADD  POCGAJ    WWTCR1
+      *
+     C                     ELSE                            - X1
+      *
+      ** SUBTRACT THE CHARGE ADJUSTEMENT AMOUNT FROM THE TOTAL CHARGE
+      *
+     C                     SUB  POCGAJ    WWTCR1
+      *
+     C                     END                             - E1
+      *
+      ** PERFORM SR/W04 TO WRITE REPORT TITLES
+     C                     EXSR #W04
+      *
+     C                     WRITEPM0370F7
+      *
+     C                     MOVE '1'       *IN62
+      *
+     C                     ENDSR                           **#P09  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P10     - PROCESS ACCRUED TODAY DETAILS                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZPMCRG   - CALCULATE PORTFOLIO MANAGEMENT CHARGES                *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO NUMERIC FIELD    *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWMVBC   - MARKET VALUE IN BANK CHARGING CURRENCY                *
+      * WWCGSP   - EFFECTIVE CHARGE SPREAD                               *
+      * WWCGSI   - EFFECTIVE CHARGE SPREAD INDICATOR                     *
+      * WWC9N2   - SPOT RATE OF BANK CHARGING CURRENCY                   *
+      * WWDAN2   - NUMBER OF DECIMAL PLACE OF BANK CHARGING CCY          *
+      * WWA8S2   - MULTIPLY/DIVIDE IND OF BANK CHARGING CURRENCY         *
+      * WWC9N1   - SPOT RATE OF CUSTOMER SETTLEMENT CURRENCY             *
+      * WWDAN1   - NUMBER OF DECIMAL PLACE OF CUSTOMER SETTLEMENT CCY    *
+      * WWA8S1   - MULTIPLY/DIVIDE IND OF CUSTOMER SETTLEMENT CCY        *
+      * WWTCRG   - TOTAL CHARGE                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P10      BEGSR                           **#P10  ESR**
+      *
+      ** CALCULATE THE CHARGE FOR THIS PERIOD
+      *
+     C                     Z-ADDWWMVBC    ZAMT
+     C***********          Z-ADDP9CDYB    ZDYBS                           S01486
+     C***********          Z-ADDP9CDVB    ZDVBS                           S01486
+     C                     Z-ADDFCCDYB    ZDYBS                           S01486
+     C                     Z-ADDFCCDVB    ZDVBS                           S01486
+     C                     Z-ADDPOCGLD    ZFMDAT
+     C                     Z-ADDPOCGND    ZTODAT
+     C                     Z-ADDWWCGSP    ZSPRD
+     C                     MOVE WWCGSI    ZSPRI
+     C                     MOVE P5CGBS    ZCGBS
+     C                     MOVE P5CGMT    ZCGMT
+     C                     Z-ADDP5MINC    ZMINC
+     C                     EXSR ZPMCRG
+      *
+      ** EDIT CHARGES ACCRUED TODAY FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDZCHGA     ZFLD15
+     C                     Z-ADDPNBCGD    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN BANK CHARGING CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMBC
+      *
+      ** CONVERT CHARGES ACCRUED TODAY FROM BANK CHARGING CURRENCY
+      ** TO CUSTOMER SETTLEMENT CURRENCY
+      *
+     C                     Z-ADDWWC9N2    ZRATEF
+     C                     Z-ADDWWDAN2    ZCDPF
+     C                     MOVE WWA8S2    ZMDINF
+     C                     Z-ADDWWC9N1    ZRATET
+     C                     Z-ADDWWDAN1    ZCDPT
+     C                     MOVE WWA8S1    ZMDINT
+     C                     MOVE PNBCGY    ZCCYF
+     C                     MOVE PNCSCY    ZCCYT
+     C                     Z-ADDZCHGA     ZAMTF
+     C/COPY WNCPYSRC,PM0370C004
+     C                     EXSR ZCCYCN
+     C/COPY WNCPYSRC,PM0370C005
+      *
+      ** EDIT CHARGES ACCRUED AMOUNT FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDZAMTT     ZFLD15
+     C                     Z-ADDPNCSDP    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN CUSTOMER SETTLEMENT CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMSC
+      *
+      ** SET CHARGES TEXT ON REPORT
+      *
+     C                     MOVE *BLANKS   RRCTXT
+     C                     MOVEANAR,1     RRCTXT
+     C                     MOVELPOPFRC    RRPRFC                          S01486
+      *
+      ** CONVERT CHARGE ACCRUAL DATE FROM MIDAS DAY NUMBER TO
+      ** DDMMMYY FORMAT AND OUT PUT TO REPORT
+      *
+     C                     Z-ADDPOCGND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRCTXT
+      *
+      ** WRITE ADJUSTEMENT DETAILS
+      *
+     C           ZCHGA     IFNE 0                          - B1
+      *
+      ** PERFORM SR/W04 TO WRITE REPORT TITLES
+     C                     EXSR #W04
+      *
+     C                     WRITEPM0370F7
+      *
+     C                     MOVE '1'       *IN62
+      *
+      ** ADD CHARGES ACCRUED TODAY TO THE TOTAL CHARGE
+      *
+     C                     ADD  ZCHGA     WWTCR1
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **#P10  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P11     - PROCESS SETTLEMENT DETAILS                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO NUMERIC FIELD    *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTCRG   - TOTAL CHARGE                                          *
+      * WWC9N2   - SPOT RATE OF BANK CHARGING CURRENCY                   *
+      * WWDAN2   - NUMBER OF DECIMAL PLACE OF BANK CHARGING CCY          *
+      * WWA8S2   - MULTIPLY/DIVIDE IND OF BANK CHARGING CURRENCY         *
+      * WWC9N1   - SPOT RATE OF CUSTOMER SETTLEMENT CURRENCY             *
+      * WWDAN1   - NUMBER OF DECIMAL PLACE OF CUSTOMER SETTLEMENT CCY    *
+      * WWA8S1   - MULTIPLY/DIVIDE IND OF CUSTOMER SETTLEMENT CCY        *
+      *                                                                  *
+      ********************************************************************
+     C           #P11      BEGSR                           **#P11  ESR**
+      *
+     C                     MOVE '1'       *IN60
+      *
+      ** EDIT TOTAL CHARGE FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDWWTCRG    ZFLD15
+     C                     Z-ADDPNBCGD    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN BANK CHARGING CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMBC
+      *
+      ** CONVERT TOTAL CHARGE FROM BANK CHARGING CURRENCY TO
+      ** CUSTOMER SETTLEMENT CURRENCY
+      *
+     C                     Z-ADDWWC9N2    ZRATEF
+     C                     Z-ADDWWDAN2    ZCDPF
+     C                     MOVE WWA8S2    ZMDINF
+     C                     Z-ADDWWC9N1    ZRATET
+     C                     Z-ADDWWDAN1    ZCDPT
+     C                     MOVE WWA8S1    ZMDINT
+     C                     MOVE PNBCGY    ZCCYF
+     C                     MOVE PNCSCY    ZCCYT
+     C                     Z-ADDWWTCRG    ZAMTF
+     C/COPY WNCPYSRC,PM0370C006
+     C                     EXSR ZCCYCN
+     C/COPY WNCPYSRC,PM0370C007
+      *
+      ** EDIT TOTAL CHARGE AMOUNT FOR OUTPUT TO REPORT
+      *
+     C                     Z-ADDZAMTT     ZFLD15
+     C                     Z-ADDPNCSDP    ZDECS
+     C                     EXSR ZSEDIT
+      *
+      ** SET AMOUNT IN CUSTOMER SETTLEMENT CURRENCY ON REPORT
+      *
+     C                     MOVE ZOUT21    RRAMSC
+      *
+      ** SET CHARGES TEXT ON REPORT STATING WHETHER CHARGES DUE OR
+      ** WHETHER CHARGES HAVE BEEN SETTLED
+      *
+     C                     MOVE *BLANKS   RRCTXT
+     C                     MOVELNAR,3     RRCTXT
+     C                     MOVELPOPFRC    RRPRFC                          S01486
+      *
+      ** PERFORM SR/W04 TO WRITE REPORT TITLES
+     C                     EXSR #W04
+      *
+     C                     WRITEPM0370F7
+      *
+     C                     MOVE '1'       *IN62
+      *
+     C                     ENDSR                           **#P11  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE TO CHARGES ON PORTFOLIOS CLOSING TODAY AUDIT    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR                           **#W01  ESR**
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+     C************         WRITEENDAU                                     S01486
+     C   88                WRITENODETAIL                                  S01486
+      *
+     C                     ENDSR                           **#W01  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W02     - WRITE REPORT HEADING TO CHARGES ON PORTFOLIOS CLOS    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P03     - PROCESS ALL CUSTOMERS                                 *
+      * #P04     - PROCESS ALL PORTFOLIOS                                *
+      * #P05     - PROCESS A PORTFOLIO                                   *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR                           **#W02  ESR**
+      ** SET PRINTER LOCATION CODE
+     C*************        MOVE AZPRTL    RRPRTL                          S01486
+      ** SET ACCOUNT OFFICER CODE
+     C                     MOVE AZACOC    RRACOC
+      ** SET ACCOUNT OFFICER NAME
+     C                     MOVE AZACON    RRACON
+      ** SET CUSTOMER NUMBER
+     C                     MOVE BBCUST    RRCUST
+      ** SET CUSTOMER NAME
+     C                     MOVE BBCRNM    RRCRNM
+      *
+     C                     WRITEPM0370F2
+      *
+     C                     ENDSR                           **#W02  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - WRITE PORTFOLIO HEADING TO CHARGES ON PORTFOLIOS C    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - PROCESS ALL ACCOUNT OFFICERS                          *
+      * #P03     - PROCESS ALL CUSTOMERS                                 *
+      * #P04     - PROCESS ALL PORTFOLIOS                                *
+      * #P05     - PROCESS A PORTFOLIO                                   *
+      * #P07     - PRODUCE CHARGES ON PORTFOLIOS CLOSING TODAY REPORT    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCUSA   - CUSTOMER SETTLEMENT ACCOUNT                           *
+      * WWACNO   - RETAIL NUMBER                                         *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR                           **#W03  ESR**
+     C*
+     C                     MOVE 'Y'       WWHEAD  1
+      ** SET PORTFOLIO REFERENCE
+     C                     MOVE PNPTFR    RRPTFR
+      ** SET PORTFOLIO NARRATIVE
+     C                     MOVE PNPTFN    RRPTFN
+      ** SET PORTFOLIO CURRENCY
+     C                     MOVE PNPTCY    RRPTCY
+     C                     MOVE PNBCGY    RRBCGY
+     C                     MOVE PNBCGY    RRBCG1
+     C                     MOVE PNBCGY    RRCGCY
+      ** SET SETTLEMENT ACCOUNT
+      *
+     C                     MOVEAPNCUSA    CUS
+      *
+      * CHECK IF IT IS A RETAIL NUMBER OR A FULL MIDAS KEY
+      *
+     C********** CUS,11    IFEQ *ZEROS                     - B1                              BUG1820
+     C********** CUS,12    ANDEQ*ZEROS                                                       BUG1820
+     C********** CUS,11    OREQ *BLANKS                                                      BUG1820
+     C********** CUS,12    ANDEQ*BLANKS                                                      BUG1820
+     C           CUS,17    IFEQ *ZEROS                     - B1                              BUG1820
+     C           CUS,18    ANDEQ*ZEROS                                                       BUG1820
+     C           CUS,17    OREQ *BLANKS                                                      BUG1820
+     C           CUS,18    ANDEQ*BLANKS                                                      BUG1820
+      *
+      * PROCESS RETAIL NUMBER
+      *
+     C                     MOVEACUS,1     WWCUSA
+     C                     MOVE WWCUSA    WWACNO
+      *
+      * CHECK IF THIS RETAIL NUMBER EXISTS
+      *
+     C           WWACNO    CHAINACNUM                71
+     C           *IN71     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD07        DBASE            ***************
+     C***********          MOVEL'ACNUM   'DBFILE           **DB ERROR 07**S01486
+     C                     MOVE 'ACNUM   'DBFILE           **DB ERROR 07**S01486
+     C                     MOVELWWACNO    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+      * GET THE FULL MIDAS KEY FROM LF/ACNUM
+      *
+     C                     MOVE CNUM      RRCUST
+     C                     MOVE ACOD      RRACOD
+     C                     MOVE ACSQ      RRACSQ
+     C                     MOVE CCY       RRCSCY
+      *
+     C                     ELSE                            - X1
+      *
+      **GET*THE*FULL*MIDAS*KEY*FROM*PF/PMPORTPP************************   S01486
+     C**  Get the full Midas key from PF/PMPORTPD                         S01486
+      *
+     C                     MOVEACUS,1     RRCUST
+     C                     MOVEACUS,7     RRACOD
+     C**********           MOVEACUS,11    RRACSQ                                             BUG1820
+     C                     MOVEACUS,17    RRACSQ                                             BUG1820
+     C                     MOVE PNCSCY    RRCSCY
+      *
+     C                     END                             - E1
+      *
+      ** FORMAT PORTFOLIO MARKET VALUE FOR OUTPUT
+     C                     Z-ADDWWMVPC    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPNAV
+      *
+      ** FORMAT PORTFOLIO MARKET VALUE IN BANK CHARGE CCY FOR OUTPUT
+     C                     Z-ADDWWMVBC    ZFLD15
+     C                     Z-ADDPNBCGD    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPNAC
+      *
+     C                     WRITEPM0370F3
+     C                     ADD  1         RRCNT
+      *
+     C                     ENDSR                           **#W03  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W04     - WRITE REPORT HEADINGS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      ********************************************************************
+     C           #W04      BEGSR
+      *
+      ** IF IT IS THE FIRST RECORD READ OR THE ACCOUNT OFFICER OR
+      ** THE CUSTOMER NUMBER HAVE CHANGED FROM THOSE ON THE PREVIOUS
+      ** RECORD OR A NEW PAGE IS REQUIRED
+      *
+     C           *IN81     IFEQ '1'                        - B1
+     C           WWACOC    ORNE AZACOC
+     C           WWCUST    ORNE BBCUST
+     C           *IN70     OREQ '1'
+     C**                                                                  S01486
+     C           *IN81     IFEQ '1'                                       S01486
+     C                     MOVELAZACOC    WWACOC                          S01486
+     C                     EXSR #OPEN                                     S01486
+     C                     MOVE '0'       *IN81                           S01486
+     C                     END                                            S01486
+     C**                                                                  S01486
+     C           WWACOC    IFNE AZACOC                                    S01486
+     C                     WRITEPM0370F5                                  S01486
+     C                     CLOSEPM0370P1                                  081343
+     C                     MOVE *BLANKS   SEQ                             161974
+     C                     EXSR #OPEN                                     S01486
+     C                     END                                            S01486
+     C**                                                                  S01486
+      ***********                                                         S01486
+      ***IF*THIS*IS THE FISRT RECORD ON FILE                              S01486
+      ***********                                                         S01486
+     C************IN81     IFEQ '1'                        - B2           S01486
+      ***********                                                         S01486
+      ***SET*THE*PARAMETER FOR QCMDEXC COMMAND (PRINTER LOCATION CODE)    S01486
+      ***********                                                         S01486
+     C***********          MOVELAZPRTL    WWPRTL                          S01486
+     C***********          MOVELAZPRTL    WWCMDP                          S01486
+     C***********          MOVE WWCMDP    WWCMD                           S01486
+      ***********                                                         S01486
+      ***EXEC*QCMDEXC COMMAND (OVERRIDE THE PRINTER FILE WITH THE PRINTER S01486
+      ***LOCATION CODE)                                                   S01486
+      ***********                                                         S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+      ***********                                                         S01486
+      ***OPEN*THE PRINTER FILE                                            S01486
+      ***********                                                         S01486
+     C***********          OPEN PM0370P1                                  S01486
+      ***********                                                         S01486
+     C***********          MOVE '0'       *IN81                           S01486
+      ***********                                                         S01486
+     C***********          END                             - E2           S01486
+      ***********                                                         S01486
+      ***CHECK*IF THE PRINTER LOCATION CODE HAS CHANGED                   S01486
+      ***********                                                         S01486
+     C***********WWPRTL    IFNE AZPRTL                     - B2           S01486
+      ***********                                                         S01486
+     C***********          WRITEPM0370F5                                  S01486
+      ***********                                                         S01486
+      ***CLOSE*THE PRINTER FILE                                           S01486
+      ***********                                                         S01486
+     C***********          CLOSEPM0370P1                                  S01486
+      ***********                                                         S01486
+      ***SET*THE*PARAMETER FOR QCMDEXC COMMAND (PRINTER LOCATION CODE)    S01486
+      ***********                                                         S01486
+     C***********          MOVE AZPRTL    WWPRTL                          S01486
+     C***********          MOVELAZPRTL    WWCMDP                          S01486
+     C***********          MOVE WWCMDP    WWCMD                           S01486
+      ***********                                                         S01486
+      ***EXEC*QCMDEXC COMMAND (OVERRIDE THE PRINTER FILE WITH THE PRINTER S01486
+      ***LOCATION CODE)                                                   S01486
+      ***********                                                         S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA                            S01486
+     C***********          PARM 43        QCAN                            S01486
+      ***********                                                         S01486
+      ***OPEN*THE PRINTER FILE                                            S01486
+      ***********                                                         S01486
+     C***********          OPEN PM0370P1                                  S01486
+      ***********                                                         S01486
+     C***********          END                             - E2           S01486
+      *
+      ** WRITE CUSTOMER AND ACCOUNT OFFICER TITLE
+      *
+     C                     EXSR #W02
+     C                     MOVE AZACOC    WWACOC
+     C                     MOVE BBCUST    WWCUST
+      *
+      ** WRITE PORTFOLIO TITLE
+      *
+     C                     EXSR #W03
+     C                     MOVE PNPTFR    WWPTFS  4
+      *
+      ** WRITE REPORT HEADINGS
+      *
+     C                     WRITEPM0370F4
+      *
+     C                     END                             - E1
+      *
+      ** IF THE PORTFOLIO HAS CHANGED WRITE THE PORTFOLIO TITLE
+     C           PNPTFR    IFNE WWPTFS                     - B1
+     C                     EXSR #W03
+     C                     MOVE PNPTFR    WWPTFS
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P06     - ACCESS ADDITIONAL PORTFOLIO DETAILS                   *
+      * #P08     - DETERMINE EFFECTIVE CHARGE DETAILS                    *
+      * #W03     - WRITE PORTFOLIO HEADING TO CHARGES ON PORTFOLIOS C    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           ***PSRR BSR**
+      *
+      ** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+      *
+     C                     SETON                     LRU7U8
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     S01486
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR                            ***PSRR ESR**
+      *
+      **************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZPMCRG SR. TO CALCULATE PORTFOLIO MANAGEMENT CHARGES                  *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAMT   150     PRINCIPAL AMOUNT                                  *
+     C*       ZDYBS   10     DAY BASIS                                         *
+     C*       ZDVBS   10     DIVISOR BASIS                                     *
+     C*       ZFMDAT  50     FROM DATE                                         *
+     C*       ZTODAT  50     TO DATE                                           *
+     C*       ZSPRD  130     EFFECTIVE CHARGE SPREAD                           *
+     C*       ZSPRI   1      EFFECTIVE CHARGE SPREAD INDICATOR                 *
+     C*       ZCGBS   1      CHARGE BASIS                                      *
+     C*       ZCGMT   1      CHARGING METHOD                                   *
+     C*       ZMINC  150     MINIMUM CHARGE AMOUNT                             *
+     C*       ZRA    150x14  RANGE UPPER LIMITS                                *
+     C*       ZPC    117x15  PERCENTAGES                                       *
+     C*       ZCG    150x15  FLAT CHARGE AMOUNTS                               *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZCHGA  150     TOTAL CHARGE AMOUNT                               *
+     C*                                                                        *
+     C*  CALLS: ZDYYR                                                          *
+     C*         ZDAYS                                                          *
+     C**************************************************************************
+     C*
+     C           ZPMCRG    BEGSR                           *** ZPMCRG ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADD0         CPNR   117                      102506
+     C                     Z-ADD*ZEROS    FCPN    50                      CPM005
+     C                     Z-ADD*ZEROS    ISSD    50                      CPM005
+     C                     Z-ADD*ZEROS    NCD     50
+     C                     MOVE *BLANKS   DVBS    1
+     C                     MOVE *BLANKS   DYBS    1
+     C                     Z-ADD*ZEROS    MATY    50
+     C                     Z-ADD*ZEROS    LCPN    50
+     C                     Z-ADD*ZEROS    ITLD    50
+     C                     Z-ADD*ZEROS    IADJ    50
+     C                     Z-ADDZAMT      ZAMT   150
+     C                     Z-ADDZDYBS     ZDYBS   10
+     C                     Z-ADDZDVBS     ZDVBS   10
+     C                     Z-ADDZFMDAT    ZFMDAT  50
+     C                     Z-ADDZTODAT    ZTODAT  50
+     C                     Z-ADDZSPRD     ZSPRD  130
+     C                     MOVE ZSPRI     ZSPRI   1
+     C                     MOVE ZCGBS     ZCGBS   1
+     C                     MOVE ZCGMT     ZCGMT   1
+     C                     Z-ADDZMINC     ZMINC  150
+     C                     Z-ADD*ZEROS    ZCHGA  150
+     C                     Z-ADD*ZEROS    ZZ      20
+     C                     MOVEAZRA       ZRB
+     C                     Z-ADD*HIVAL    ZRB,15
+     C                     MOVE *BLANKS   ZFLAG   1
+     C                     Z-ADD0         FCPN    50                      116572
+     C                     Z-ADD0         ISSD    50                      116572
+     C*
+     C** DETERMINE THE NUMBER OF CHARGE DAYS
+     C*
+     C                     Z-ADDZFMDAT    ZSDATE
+     C                     Z-ADDZTODAT    ZEDATE
+     C                     MOVE ZDYBS     DYBS
+     C** PROCESS SUB-ROUTINE
+     C                     EXSR ZDAYS
+     C*
+     C                     Z-ADDZDDAYS    ZNOCD   50
+     C*
+     C** DETERMINE THE NUMBER OF DAYS IN THE CHARGE YEAR
+     C*
+     C                     Z-ADDZFMDAT    NCD
+     C                     MOVE ZDVBS     DVBS
+     C                     Z-ADDZTODAT    MATY
+     C                     Z-ADD*ZEROS    LCPN
+     C                     Z-ADD*ZEROS    ITLD
+     C                     MOVE *BLANKS   CR
+     C** PROCESS SUB-ROUTINE
+     C                     EXSR ZDYYR
+     C*
+     C                     Z-ADDZINTDD    ZNOCY   50
+     C*
+     C** CHECK IF CHARGE BASIS (ZCGBS) IS 'F' (FLAT)
+     C*
+     C           ZCGBS     IFEQ 'F'                        - B1
+     C*
+     C** DO UNTIL FLAG IS 'Y'
+     C*
+     C           ZFLAG     DOUEQ'Y'                        - B2
+     C                     ADD  1         ZZ
+     C*
+     C** CHECK INDEX
+     C*
+     C           ZZ        IFEQ 15                         - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF PRINCIPAL AMOUNT IS LESS EQUAL THAN RANGE UPPER LIMITS
+     C*
+     C           ZAMT      IFLE ZRB,ZZ                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF RANGE UPPER LIMITS IS ZERO
+     C*
+     C           ZRB,ZZ    IFEQ *ZEROS                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** SET THE TOTAL CHARGE AMOUNT (ZCHGA) TO FLAT CHARGE AMOUNTS
+     C*
+     C                     Z-ADDZCG,ZZ    ZCHGA
+     C*
+     C** CHECK IF THE CHARGE SPREAD INDICATOR IS '+' OR '-'
+     C*
+     C           ZSPRI     IFEQ '+'                        - B2
+     C                     ADD  ZSPRD     ZCHGA
+     C                     ELSE                            - X2
+     C                     SUB  ZSPRD     ZCHGA
+     C                     END                             - E2
+     C*
+     C** MULTIPLY TOTAL CHARGE AMOUNT BY NUMBER OF CHARGE DAYS
+     C*
+     C           ZCHGA     MULT ZNOCD     ZCHGA
+     C*
+     C** DIVIDE TOTAL CHARGE AMOUNT BY NUMBER OF DAYS IN THE CHARGE YEAR
+     C*
+     C           ZCHGA     DIV  ZNOCY     ZCHGA     H
+     C*
+     C                     END                             - E1
+     C*
+     C** CHECK IF CHARGE BASIS (ZCGBS) IS 'P' (PERCENTAGE) AND THE CHARGING
+     C** METHOD IS 'T' (THRESHOLD)
+     C*
+     C           ZCGBS     IFEQ 'P'                        - B1
+     C           ZCGMT     ANDEQ'T'
+     C*
+     C** DO UNTIL FLAG IS 'Y'
+     C*
+     C           ZFLAG     DOUEQ'Y'                        - B2
+     C                     ADD  1         ZZ
+     C*
+     C** CHECK INDEX
+     C*
+     C           ZZ        IFEQ 15                         - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF PRINCIPAL AMOUNT IS LESS EQUAL THAN RANGE UPPER LIMITS
+     C*
+     C           ZAMT      IFLE ZRB,ZZ                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF RANGE UPPER LIMITS IS ZERO
+     C*
+     C           ZRB,ZZ    IFEQ *ZEROS                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** SET THE CHARGE RATE (ZCGRT) EQUAL TO PERCENTAGE
+     C*
+     C                     Z-ADDZPC,ZZ    ZCGRT  117
+     C*
+     C** MOVE THE EFFECTIVE CHARGE SPREAD (ZSPRD) INTO THE ADJUSTED
+     C** CHARGE SPREAD (ZACSD)
+     C*
+     C                     MOVE ZSPRD     ZACSD  117
+     C*
+     C** CHECK IF THE CHARGE SPREAD INDICATOR IS '+' OR '-'
+     C*
+     C           ZSPRI     IFEQ '+'                        - B2
+     C                     ADD  ZACSD     ZCGRT
+     C                     ELSE                            - X2
+     C                     SUB  ZACSD     ZCGRT
+     C                     END                             - E2
+     C*
+     C** DIVIDE THE PRINCIPAL AMOUNT BY 100 AND PUT THE RESULT IN A WORK
+     C** FIELD (ZZ152)
+     C*
+     C           ZAMT      DIV  100       ZZ152  152H
+     C*
+     C** MULTIPLY THIS WORK FIELD BY NUMBER OF CHARGE DAYS AND PUT THE
+     C** RESULT IN A WORK FIELD (ZZ154)
+     C*
+     C           ZZ152     MULT ZNOCD     ZZ154  154
+     C*
+     C** DIVIDE TOTAL CHARGE AMOUNT BY NUMBER OF DAYS IN THE CHARGE YEAR
+     C*
+     C           ZZ154     DIV  ZNOCY     ZZ154     H
+     C*
+     C** MULTIPLY THIS WORK FIELD BY THE CHARGE RATE (ZCGRT)
+     C*
+     C           ZZ154     MULT ZCGRT     ZCHGA
+     C*
+     C           ZMINC     MULT ZNOCD     ZMINC
+     C           ZMINC     DIV  ZNOCY     ZMINC     H
+     C*
+     C           ZCHGA     IFLT ZMINC
+     C                     Z-ADDZMINC     ZCHGA
+     C                     END
+     C*
+     C                     END                             - E1
+     C*
+     C** CHECK IF CHARGE BASIS (ZCGBS) IS 'P' (PERCENTAGE) AND THE CHARGING
+     C** METHOD IS 'X' (TIERED)
+     C*
+     C           ZCGBS     IFEQ 'P'                        - B1
+     C           ZCGMT     ANDEQ'X'
+     C*
+     C** DO UNTIL FLAG IS 'Y'
+     C*
+     C           ZFLAG     DOUEQ'Y'                        - B2
+     C                     ADD  1         ZZ
+     C*
+     C** CHECK INDEX
+     C*
+     C           ZZ        IFEQ 15                         - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF PRINCIPAL AMOUNT IS LESS EQUAL THAN RANGE UPPER LIMITS
+     C*
+     C           ZAMT      IFLE ZRB,ZZ                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** CHECK IF RANGE UPPER LIMITS IS ZERO
+     C*
+     C           ZRB,ZZ    IFEQ *ZEROS                     - B3
+     C                     MOVE 'Y'       ZFLAG
+     C                     END                             - E3
+     C*
+     C** SET THE CHARGE RATE (ZCGRT) EQUAL TO PERCENTAGE
+     C*
+     C                     Z-ADDZPC,ZZ    ZCGRT
+     C*
+     C** MOVE THE EFFECTIVE CHARGE SPREAD (ZSPRD) INTO THE ADJUSTED
+     C** CHARGE SPREAD (ZACSD)
+     C*
+     C                     MOVE ZSPRD     ZACSD
+     C*
+     C** CHECK IF THE CHARGE SPREAD INDICATOR IS '+' OR '-'
+     C*
+     C           ZSPRI     IFEQ '+'                        - B3
+     C                     ADD  ZACSD     ZCGRT
+     C                     ELSE                            - X3
+     C                     SUB  ZACSD     ZCGRT
+     C                     END                             - E3
+     C*
+     C** IF THE PRINCIPAL AMOUNT IS GREATER THAN RANGE UPPER LIMITS
+     C*
+     C           ZAMT      IFGT ZRB,ZZ                     - B3
+     C           ZRB,ZZ    ANDNE*ZEROS
+     C*
+     C** CHECK THE INDEX
+     C*
+     C           ZZ        IFEQ 1                          - B4
+     C*
+     C** IF INDEX IS 1 PUT THE RANGE UPPER LIMITS IN A WORK FIELD ZZ152
+     C*
+     C                     Z-ADDZRB,ZZ    ZZ152  152
+     C*
+     C                     ELSE                            - X4
+     C*
+     C** OTHERWISE CALCULATE THE DIFFERENCE BETWEEN THE TWO LIMITS
+     C*
+     C           ZZ        SUB  1         Z2      20
+     C           ZRB,ZZ    SUB  ZRB,Z2    ZZ152
+     C                     END                             - E4
+     C*
+     C                     ELSE                            - X3
+     C*
+     C** IF THE PRINCIPAL AMOUNT IS LESS OR EQUAL THAN RANGE UPPER LIMITS
+     C*
+     C*
+     C** CHECK THE INDEX
+     C*
+     C           ZZ        IFEQ 1                          - B4
+     C*
+     C** IF INDEX IS 1 PUT THE RANGE UPPER LIMITS IN A WORK FIELD ZZ152
+     C*
+     C                     Z-ADDZAMT      ZZ152
+     C*
+     C                     ELSE                            - X4
+     C*
+     C** OTHERWISE CALCULATE THE DIFFERENCE BETWEEN THE TWO LIMITS
+     C*
+     C           ZZ        SUB  1         Z2      20
+     C           ZAMT      SUB  ZRB,Z2    ZZ152
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C** DIVIDE ZZ152 BY 100
+     C*
+     C           ZZ152     DIV  100       ZZ152     H
+     C*
+     C** MULTIPLY ZZ152 BY THE NUMBER OF CHARGE DAYS AND PUT THE RESULT
+     C** IN A WORK FIELD (ZZ154)
+     C*
+     C           ZZ152     MULT ZNOCD     ZZ154  154
+     C*
+     C** DIVIDE THIS WORK FIELD (ZZ154) BY THE NUMBER OF DAYS IN THE
+     C** CHARGE YEAR (ZNOCY)
+     C*
+     C           ZZ154     DIV  ZNOCY     ZZ154     H
+     C*
+     C**MULTIPLY THIS WORK FIELD ZZ154 BY THE CHARGE RATE (ZCGRT)
+     C*
+     C           ZZ154     MULT ZCGRT     ZZ154
+     C*
+     C** ADD THIS WORK FIELD ZZ154 TO THE TOTAL CHARGE AMOUNT (ZCHGA)
+     C*
+     C                     ADD  ZZ154     ZCHGA
+     C****                                                                56841
+     C****       ZMINC     MULT ZNOCD     ZMINC                           56841
+     C****       ZMINC     DIV  ZNOCY     ZMINC     H                     56841
+     C****                                                                56841
+     C****       ZCHGA     IFLT ZMINC                                     56841
+     C****                 Z-ADDZMINC     ZCHGA                           56841
+     C****                 END                                            56841
+     C*
+     C                     END                             - E2
+     C*                                                                   56841
+     C           ZMINC     MULT ZNOCD     ZMINC                           56841
+     C           ZMINC     DIV  ZNOCY     ZMINC     H                     56841
+     C*                                                                   56841
+     C           ZCHGA     IFLT ZMINC                                     56841
+     C                     Z-ADDZMINC     ZCHGA                           56841
+     C                     END                                            56841
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           ** ZPMCRG ESR**
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+      /COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+      /COPY ZSRSRC,ZNCDZ3                                                 CPM005
+      /EJECT                                                              CPM005
+      /COPY ZSRSRC,ZLCDZ1                                                 CPM005
+      /EJECT                                                              CPM005
+      /COPY ZSRSRC,ZCCYCN
+      ****/EJECT                                                          47719
+      ****/COPY ZSRSRC,ZCCYXR                                             47719
+     C/COPY WNCPYSRC,PM0370C008
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  NAR NARRATIVE FOR TEXT CHARGES
+FEES ACCRUED ON
+ADJUSTMENT POSTED TODAY
+FEE SETTLEMENT POSTED

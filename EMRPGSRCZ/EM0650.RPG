@@ -1,0 +1,1320 @@
+0001 H                                                                    EM0650
+0002  ********************************************************************EM0650
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Customer Lending Exps Processing')            *
+0002 F********************************************************************EM0650
+0004 F*                                                                  *EM0650
+     F*  Midas  EXPOSURE MANAGEMENT MODULE.                           EM0650
+0004 F*                                                                  *EM0650
+0005 F*    EM0650 - CUSTOMER LENDING EXPOSURE CREATE                     *EM0650
+0006 F*                                                                  *EM0650
+     F*  Function: This program calculates the effect of tomorrows
+     F*  (COB)     events on the exposure and offsetting balance for
+     F*            each customer lending loan. The resulting balances
+0008 F*            are output to file EMLEEE4 which will be used in      *
+0008 F*            program EM0700 to to make adjustments to the on-line  *
+0008 F*            exposure file EMCEXX2.                                *
+0008 F*                                                                  *
+0008 F*            The Customer Lending Extract file, EMXTL, and the     *
+0008 F*            Customer Lending Tomorrows events file, EMTE1, are    *
+0008 F*            read by loan number within customer number.           *
+0008 F*                                                                  *
+     F*            In processing the two files, if there is a valid
+0008 F*            loan record with events, or events without a loan     *
+0008 F*            record, then an adjustment has to be created and      *
+0008 F*            added to file EMLEEE4.                                *
+0008 F*                                                                  *
+0008 F*            When all event records for the loan have been         *
+0008 F*            processed, the changes to the exposure and off-       *
+0008 F*            setting balances are converted from the loan          *
+0008 F*            currency to the Exposure Management limit currency.   *
+0008 F*                                                                  *
+0008 F*            If scaling is set up for customer lending on the      *
+0008 F*            exposure management scaling file (EMEXSCL1), the      *
+0008 F*            scaling 'to date' (Maturity date - Run date) is       *
+0008 F*            calculated and the exposure amount multiplied by the  *
+0008 F*            relevant scaling factor.                              *
+0008 F*                                                                  *
+0008 F*            When all records for a customer have been processed,  *
+0008 F*            the total change in exposure/offsetting balance is    *
+0008 F*            written to EMLEEE4.                                   *
+0008 F*                                                                  *
+     F*  Called By: EMC0603
+     F*
+     F*  Calls: None
+     F*
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                                  *EM0650
+      *  Last Amend No. MD029604           Date 27Aug14               *
+      *  Prev Amend No. MD019933           Date 24Apr13               *
+      *                 AR1078776          Date 18Feb13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 180734             Date 09Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU020             Date 25Mar98               *
+     F*                   CLE005           Date 22May97               *
+     F*                   CLE006           Date 02Dec96               *
+0009 F*                   E26194                Date 10Jul91          *
+0009 F*                   S01332                Date 12JUN91          *
+0007 F*                   RT0086      DATE 13MAY91                       *
+0009 F*                   S01117      DATE 25/10/89                      *E10849
+0009 F*                   S01129      DATE 24/11/87                      *E10849
+0009 F*                   E10849      DATE 24/04/87                      *E10836
+     F*                   E10836      DATE 24/04/87
+0010 F*                                                                  *EM0650
+0011 F********************************************************************EM0650
+0010 F*                                                                  *EM0650
+      *  MD029604 - Lending Limits does not consider outstanding loans*
+      *             as Exposure. Added validation of Auto settlement  *
+      *             indicator before subtracting from Balance if event*
+      *             code is 'R1' or 'M1' or 'R9'.                     *
+      *  MD019933 - EMC06 seq 00003 in FOOB error during Day 4 EN     *
+      *             and SG COB                                        *
+      *  AR1078776 - Encountered FOOB in EMC06 seq 00002 and 00003    *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *  180734 - Wrong amount is being displayed in Limit/Exposure/  *
+      *           Availability by Customer or Parent's enquiry.       *
+      *           Check Multiply/Divide Indicator before convertion   *
+      *           to EM limit currency.  Applied fix 180913.          *
+     F*  CEU020 - EMU Lending Multi-Ccy Rollover                      *
+     F*  CLE005 - Customer Lending Enhancements - Tranche 3           *
+     F*  CLE006 - Customer Lending Enhancements - Rollovers           *
+     F*    E26194 - PROGRAM USING INCORRECT POSITIONS ON EMXTL TRAILER   *
+     F*             RECORD FOR NUMBER OF RECORDS ON FILE                 *
+     F*             SUBSEQUENTLY FOUND TO BE NOT AN ERROR, CODING        *
+     F*             REINSTATED                                           *
+     F*    S01332 - EXPOSURE MANAGEMENT RELEASE 10 ENHANCEMENTS.         *
+     F*    RT0086 - REMOVE 'END OF REPORT' FROM AU REPORT.               *
+     F*    S01117 - RELEASE 10 MULTIBRANCHING
+     F*    S01129 - SECURITIES TRADING RELEASE 2
+     F*    E10849 - WRONG EXPOSURE BEING UPDATED IN EMLEE FOR A          *E10849
+     F*             CUSTOMER WITH ONE PARTS. PURCHASED WITHOUT RECOURSE  *E10849
+     F*             AND TWO PARTS. SOLD - ONE WITH RECOURSE AND          *E10849
+     F*             ONE WITHOUT - ALL OF WHICH ARE MATURING ON THE       *E10849
+     F*             NEXT DAY                                             *E10849
+     F*    E10836 - PARTS. SOLD WITHOUT RECOURSE FOR PARTS. PURCHASED    *E10836
+     F*             ORIGINALLY WITHOUT RECOURSE SHOULD EFFECT THE        *E10836
+     F*             EXPOSURE/OFFSET OF THE ORIGINAL BORROWER AND NOT     *E10836
+     F*             THE PARTS. PURCHASED FROM CUSTOMER.                  *E10836
+0010 F*                                                                  *EM0650
+0011 F********************************************************************E10849
+0015 FEMXTL   IP AF     128  6AI     2 DISK                               EM0650
+0016 FEMTE1   IS AF     128  6AI     2 DISK                               EM0650
+0017 F*CLOAN***IF**F     400  7AI     2 DISK                       EM0650 CLE011
+     FCLOAN   IF  F    1310  7AI     2 DISK                               CLE011
+0018 F*****TABLE   IF  F      96 12AI     2 DISK                          S01129
+     FTABEM   IF  E           K        DISK                               S01129
+     F            TABTB36F                          KIGNORE               S01129
+     F            TABTE10F                          KIGNORE               S01129
+     F            TABLETHF                          KIGNORE               S01129
+     F            TABLETIF                          KIGNORE               S01129
+     F            TABLETNF                          KIGNORE               S01129
+     F            TABLETTF                          KIGNORE               S01129
+0019 FEMLEE   UF  F     128  6AI     2 DISK                               EM0650
+0019 FEMLEEH1 O   F     128  6AI     2 DISK                      A        EM0650
+0019 FEMLEEE4 O   F     128  6AI     2 DISK                      A        EM0650
+0019 FEMLEET1 O   F     128  6AI     2 DISK                      A        EM0650
+     F**  Exposure management scaling file LF/EMEXSCL1                    S01332
+     F/COPY ZSRSRC,ZEXPSCLZ2                                              S01332
+0020 F*M0650P1O***F     132            PRINTER                   S01124   S01117
+0020 FEM0650AUO   F     132            PRINTER                            S01117
+0021 F**                                                                  EM0650
+0022 F********************************************************************EM0650
+0023 F**                                                                  EM0650
+0024 F* ID F  C  H  L    FUNCTION OF INDICATORS                           EM0650
+0025 F**                                                                  EM0650
+0026 F* 01            EMXTL - DETAIL RECORD.                              EM0650
+0027 F* 02                  - TRAILER RECORD.                             EM0650
+0028 F* 03                  - CATCH ALL.                                  EM0650
+0029 F**                                                                  EM0650
+0030 F* 05            EMTES - DETAIL RECORD.                              EM0650
+0031 F* 06                  - TRAILER RECORD.                             EM0650
+0032 F* 07                  - CATCH ALL.                                  EM0650
+0033 F**                                                                  EM0650
+0034 F* 04            EMXTR - DETAIL RECORD.                              EM0650
+0035 F* 08                  - TRAILER RECORD.                             EM0650
+0036 F* 11                  - CATCH ALL.                                  EM0650
+0037 F**                                                                  EM0650
+0038 F* 09            CLOAN - CUSTOMER LENDING DETAIL RECORD.             EM0650
+0039 F* 10                  - CATCH ALL.                                  EM0650
+0040 F**                                                                  EM0650
+0041 F**12**          TABLE - ICDR 1                                      S01129
+0042 F**13**                - ICDR 2.                                     S01129
+0043 F**14**                - CURRENCY RECORD.                            S01129
+0044 F**15**                - CATCH ALL.                                  S01129
+0045 F**                                                                  EM0650
+0046 F* 17            EMLEE - DETAIL RECORD.                              EM0650
+0047 F* 18                  - CATCH ALL.                                  EM0650
+0048 F**                                                                  EM0650
+0049 F*    20         SPOT RATE IS TO BE INVERTED.                        EM0650
+0050 F**                                                                  EM0650
+0051 F*       40      FIRST CYCLE INDICATOR.                              EM0650
+0052 F*       41      ON - VALID EVENT CONTROL DATE.                      EM0650
+0053 F*       42      ON - PROCESSING TYPE = 66 OR 67.                    EM0650
+0054 F*       43      ON - PROCESSING TYPE = 61,62,63,64,65,70.           EM0650
+0055 F*       44      ON - RECOURSE INDICATOR = 'Y'.                      EM0650
+0056 F*       45      EVENT TYPE = V1 - ADD TO BALANCE.                   EM0650
+0057 F*       46      EVENT TYPE = V3 - ADD TO BALANCE.                   EM0650
+0058 F*       47      EVENT TYPE = R1 - SUBTRACT FROM BALANCE.            EM0650
+0059 F*       48      EVENT TYPE = M1 - SUBTRACT FROM BALANCE.            EM0650
+0060 F*       49      WORK INDICATOR.                                     EM0650
+0061 F*       50      WORK INDICATOR.                                     EM0650
+0062 F*       51      WORK INDICATOR.                                     EM0650
+0063 F*       60      ON - NO OUTPUT TO EMLEE. RECORD IGNORED.            EM0650
+0064 F*       61      ON - DIFFERENCE IN EMXTL RECORD TOTALS.             EM0650
+0065 F*       62      ON - DIFFERENCE IN EMTE1 RECORD TOTALS.             EM0650
+0066 F**      78      FORCE CONTROL BREAK INDICATOR                       EM0650
+0067 F*       79      ON - PROCESS CUSTOMER TOTALS.                       EM0650
+0068 F*       80      ON - O/P HEADER RECORD FOR EMLEE FILE - FIRST CYCLE.EM0650
+0069 F*       81      ON - PROCESS LOAN TOTALS.                           EM0650
+0070 F*       82      EXCEPTION OUTPUT TO EMLEE FILE - RECORD EXISTS.     EM0650
+0071 F*       83      EXCEPTION OUTPUT TO EMLEE FILE - NEW RECORD ADDED.  EM0650
+0072 F**                                                                  EM0650
+0073 F*       90-97   USED BY Z - SUBROUTINES.                            EM0650
+0074 F*       98      DATE FORMAT MMDDYY IF ON.                           EM0650
+0075 F*       99      DATABASE ERROR.                                     EM0650
+0076 F**                                                                  EM0650
+0077 F*               EXTERNAL INDICATOR MEANINGS ON OUTPUT-              EM0650
+0078 F*          U7 - U8 DATABASE ERROR, REQUIRED RECORDS NOT FOUND.      EM0650
+0079 F*          U8   FILE UNBALANCED, DIFFERENCE IN NUMBER OF RECORDS    EM0650
+0080 F*               CALCULATED AND ON FILE.                             EM0650
+0081 F*               N.B. U7 & U8 END THE PROGRAM AND CONDITION          EM0650
+0082 F*                    FOLLOWING OCL EXECUTION.                       EM0650
+0083 F**                                                                  EM0650
+0084 F*    M1         MATCHING LOAN NUMBER FIELD.                         EM0650
+0085 F*    M2         MATCHING CUSTOMER NUMBER FIELD.                     EM0650
+0086 F*          L1   CHANGE OF LOAN NUMBER.                              EM0650
+0087 F*          L2   CHANGE OF CUSTOMER NUMBER.                          EM0650
+0088 F*          LR   LAST RECORD READ OR TO END PROGRAM IN ERROR.        EM0650
+0089 F**                                                                  EM0650
+0090 F********************************************************************EM0650
+0091 E**                                                                  EM0650
+     E**  Exposure management scaling arrays.                             S01332
+     E/COPY ZSRSRC,ZEXPSCLZ3                                              S01332
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+0092 E***********         TABA    2   2  2  A            PROC TYPE EM0650 CLE006
+0093 E***********         TABB    6   6  2  A            PROC TYPE EM0650 CLE006
+      *                                                                   CLE006
+0092 E                    TABA    4   4  2  A            PROC TYPE SELECT CLE006
+0093 E**********          TABB    8   8  2  A            PROC TYPE SELECT              CLE006 CLE028
+0093 E                    TABB    9   9  2  A                                                 CLE028
+      *                                                                   CLE006
+0094 E                    POWER   1   7  7 0             POWERS OF 10     EM0650
+0095 I/EJECT                                                              EM0650
+0096 I********************************************************************EM0650
+0097 I**   *************                                                  EM0650
+0098 I**   INPUT SECTION                                                  EM0650
+0099 I**   *************                                                  EM0650
+0100 I**                                                                  EM0650
+0101 I**   SORTED/MERGED MASTER FILE EXTRACT.                             EM0650
+0102 I**                                                                  EM0650
+0103 IEMXTL   NS  01   1 CL                                               EM0650
+0104 I                                        1   1 RECI                  EM0650
+0105 I**********                              2   70MCUN  L2M2                         EM0650 CSD027
+0105 I                                        2   7 MCUN  L2M2                                CSD027
+0106 I**********                              8  130LNRF  L1M1                         EM0650 CLE148
+0106 I                                        8  13 LNRF  L1M1                                CLE148
+0107 I                                       14  150MPTY                  EM0650
+0108 I                                    P  16  220MCPR                  EM0650
+     I****                                   33  33 MLER                  E10849
+     I                                       33  33 MLER1                 E10849
+0110 I                                    P  40  420MLSD                  EM0650
+0111 I                                    P  43  450MMD                   EM0650
+0112 I*                                                                   EM0650
+0113 I        NS  02   1 CT                                               EM0650
+0114 I***********                         P  12  140RECXTL                E26194
+0114 I***********                         P   9  110RECXTL                E26194
+0114 I**********                          P  12  140RECXTL                          E26194 AR1078776
+0114 I                                       12  16 RECXTL                                 AR1078776
+0115 I*                                                                   EM0650
+0116 I***CATCHALL***                                                      EM0650
+0117 I        NS  03                                                      EM0650
+0118 I**                                                                  EM0650
+0119 I**   SORTED/MERGED TOMORROW'S EVENTS FILE.                          EM0650
+0120 I**                                                                  EM0650
+0121 IEMTE1   NS  05   1 CL                                               EM0650
+0122 I                                        1   1 RECI                  EM0650
+0123 I**********                              2   70MCUN  L2M2                         EM0650 CSD027
+0123 I                                        2   7 MCUN  L2M2                                CSD027
+0124 I                                        8   9 MTYP                  EM0650
+0125 I                                       10  11 MCOD                  EM0650
+0126 I                                       12  14 MEVC                  EM0650
+0127 I                                    P  15  210MEVA                  EM0650
+0128 I                                       22  22 MLER                  EM0650
+     I****                                   25  300LNRF  L1M1            E10849
+     I**********                             25  300LNRF1 L1M1                         E10849 CLE148
+     I                                       25  30 LNRF1 L1M1                                CLE148
+0130 I**********                             31  360OLNO                               EM0650 CLE148
+     I                                       31  36 OLNO                                      CLE148
+     I                                    P  43  450MDAT                  S01332
+0131 I*                                                                   EM0650
+0132 I        NS  06   1 CT   8 CL                                        EM0650
+0133 I                                    P   9  110RECTES                EM0650
+0134 I*                                                                   EM0650
+0135 I***CATCHALL***                                                      EM0650
+0136 I        NS  07                                                      EM0650
+0137 I**                                                                  EM0650
+0138 I**                                                                  EM0650
+0139 I**   CUSTOMER LENDING LOANS FILE.                                   EM0650
+0140 I**                                                                  EM0650
+0141 ICLOAN   NS  09   8 CA                                               EM0650
+     I                                       10  110PTYP                  E10836
+0142 I**********                             12  170CNUM                               EM0650 CSD027
+     I**********                            290 2950OLNOC                              E10836 CSD027
+0142 I                                       12  17 CNUM                                      CSD027
+     I                                      117 117 AUTO                                    MD029604
+     I                                      290 295 OLNOC                                     CSD027
+     I                                      296 296 RCSIC                 E10836
+0143 I*                                                                   EM0650
+0144 I***CATCHALL***                                                      EM0650
+0145 I        NS  10                                                      EM0650
+0146 I***                                                                 S01129
+0147 I***  TABLE FILE.                                                    S01129
+0148 I***                                                                 S01129
+0149 I***  INSTALLATION CONTROL DATA RECORD ONE.                          S01129
+0150 I***                                                                 S01129
+0151 I****TABLE   NS  12   1 CD   2 C0   3 C1                             S01129
+0152 I***    AND      12 C1  13 C0                                        S01129
+0153 I***                                     1   1 RECI                  S01129
+0154 I***                                    14  66 TITL                  S01129
+0155 I***                                    67  67 DATF                  S01129
+0156 I***                                 P  77  790RUND                  S01129
+0157 I***                                    80  86 RUNA                  S01129
+0158 I***                                                                 S01129
+0159 I***  INSTALLATIONS CONTROL DATA RECORD TWO.                         S01129
+0160 I***                                                                 S01129
+0161 I***     NS  13   1 CD   2 C0   3 C1                                 S01129
+0162 I***    AND      12 C1  13 C1                                        S01129
+0163 I***                                     1   1 RECI                  S01129
+0164 I***                                 P  41  430DNWD                  S01129
+0165 I***                                    69  71 LCCY                  S01129
+0166 I***                                                                 S01129
+0167 I***  CURRENCIES RECORD.                                             S01129
+0168 I***                                                                 S01129
+0169 I***     NS  14   1 CD   2 C2   3 C0                                 S01129
+0170 I***                                     1   1 RECI                  S01129
+0171 I***                                 P  28  348SPOT                  S01129
+0172 I***                                    38  380CDP                   S01129
+0173 I***                                    86  860MDIN            20    S01129
+0174 I***                                                                 S01129
+0175 I***CATCHALL***                                                      S01129
+0176 I***     NS  15                                                      S01129
+0177 I**                                                                  EM0650
+0178 I**   CUSTOMER LENDING EXPOSURE FILE.                                EM0650
+0179 I**                                                                  EM0650
+0180 IEMLEE   NS  17   1 CD                                               EM0650
+0181 I                                        1   1 RECI                  EM0650
+0182 I**********                              2   70MCUN                               EM0650 CSD027
+0182 I                                        2   7 MCUN                                      CSD027
+0183 I                                    P   8  140PLEX                  EM0650
+0184 I                                    P  15  210PLOB                  EM0650
+0185 I*                                                                   EM0650
+0186 I***CATCHALL***                                                      EM0650
+0187 I        NS  18                                                      EM0650
+0188 I**                                                                  EM0650
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0189 I**   DATA STRUCTURE TO STORE WORK FIELDS.                           EM0650
+0190 I**                                                                  EM0650
+0191 I            DS                                                      EM0650
+0192 I                                        1  12 ZTABKY                EM0650
+0193 I                                        1   2 RECT                  EM0650
+0194 I                                        9  11 CCY                   EM0650
+0195 I                                       12  12 SREC                  EM0650
+0196 I                                       13  140MPTY                  EM0650
+0197 I                                       13  14 MPTYA                 EM0650
+0198 I**                                                                  EM0650
+0199 I**   DATA STRUCTURE TO ACCESS LOCAL DATA AREA                       EM0650
+0200 I**                                                                  EM0650
+0201 ILDA        UDS                            256                       EM0650
+0202 I**********                            134 138 DBFILE                S01117
+0203 I**********                            139 167 DBKEY                 S01117
+0204 I**********                            168 175 DBPGM                 S01117
+0205 I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IACCODE      DS                                                      EM0650
+0206 I**                                                                  EM0650
+     IDSFDY     E DSDSFDY                                                 CLE006
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               CLE006
+      *                                                                   CLE006
+     ISCSARD    E DSSCSARDPD                                              CLE006
+      ** Switchable Features File                                         CLE006
+      *                                                                   CLE006
+0207 C/EJECT                                                              EM0650
+0208 C********************************************************************EM0650
+     C                     MOVEACPY@      BIS@   80
+      *                                                                                     MD029604
+      ** Initialise work variable for Auto-settlement indicator                             MD029604
+     C                     MOVE ' '       WAUTO   1                                         MD029604
+0209 C**   *******************                                            EM0650
+0210 C**   FIRST CYCLE SECTION                                            EM0650
+0211 C**   *******************                                            EM0650
+0212 C                     SETOF                     80                   EM0650
+0213 C  N40                EXSR FSTCYC                                    EM0650
+0214 C  N40                SETON                     4080                 EM0650
+0215 C***80*****           GOTO PGMEND                                               EM0650 MD019933
+0216 C**                                                                  EM0650
+0217 C********************************************************************EM0650
+0218 C/EJECT                                                              EM0650
+0219 C********************************************************************EM0650
+0220 C**   ************                                                   EM0650
+0221 C**   MAIN SECTION                                                   EM0650
+0222 C**   ************                                                   EM0650
+0223 C**                                                                  EM0650
+0224 C**   ***********                                                    EM0650
+0225 C**   DETAIL TIME                                                    EM0650
+0226 C**   ***********                                                    EM0650
+0227 C**                                                                  EM0650
+0228 C**   IF MATCHING RECORDS AND EXTRACT FILE                           EM0650
+0229 C**   - PROCESS EXTRACT FILE RECORD.                                 EM0650
+0230 C**                                                                  EM0650
+0231 C   01                EXSR PROXTL                                    EM0650
+0232 C**                                                                  EM0650
+0233 C**   IF MATCHING RECORDS AND EVENTS FILE                            EM0650
+0234 C**   - PROCESS EVENTS FILE RECORD.                                  EM0650
+0235 C**                                                                  EM0650
+0236 C   05                EXSR PROTES                                    EM0650
+0237 C**                                                                  EM0650
+0238 C**                                                                  EM0650
+0239 C           PGMEND    TAG                             ** PGMEND TAG *EM0650
+0240 C**                                                                  EM0650
+0241 C********************************************************************EM0650
+0242 C/EJECT                                                              EM0650
+0243 C********************************************************************EM0650
+0244 C**   **********                                                     EM0650
+0245 C**   TOTAL TIME                                                     EM0650
+0246 C**   **********                                                     EM0650
+0247 C**                                                                  EM0650
+     CL0 06                SETON                     L1L2                 E10849
+0248 C**                                                                  EM0650
+0249 C**   CHANGE OF LOAN NUMBER                                          EM0650
+0250 C**   - DETERMINE LOAN TOTALS AND MAINTAIN CUSTOMER RUNNING TOTALS   EM0650
+0251 C**                                                                  EM0650
+0252 CL1 81                EXSR PROLOA                                    EM0650
+0253 C**                                                                  EM0650
+0254 C**   CHANGE OF CUSTOMER NUMBER                                      EM0650
+0255 C**   - UPDATE EMLEE.                                                EM0650
+0256 C**                                                                  EM0650
+0257 CL2 79                EXSR PROCUS                                    EM0650
+0258 C**                                                                  EM0650
+0259 C**   LAST RECORD.                                                   EM0650
+0260 C**                                                                  EM0650
+0261 CLRNU7                EXSR PROCLR                                    EM0650
+0262 C**                                                                  EM0650
+0263 C********************************************************************EM0650
+0264 C/EJECT                                                              EM0650
+0265 C********************************************************************EM0650
+0266 C********************************************************************EM0650
+0267 C**   ******************                                             EM0650
+0268 C**   SUBROUTINE SECTION                                             EM0650
+0269 C**   ******************                                             EM0650
+0270 C**                                                                  EM0650
+0271 C**   (SUBROUTINES ARE IN ALPHABETICAL ORDER)                        EM0650
+0272 C**                                                                  EM0650
+0273 C********************************************************************EM0650
+0274 C********************************************************************EM0650
+0275 C**                                                                  EM0650
+0276 C**   CHKECD SR. TO CHECK IF THIS RECORD IS TO BE PROCESSED.         EM0650
+0277 C**                                                                  EM0650
+0278 C           CHKECD    BEGSR                           *** CHKECD *** EM0650
+0279 C**                                                                  EM0650
+0280 C           ECD       COMP MLSD                 41  4141 ON, ECD IS  EM0650
+0281 C**                                                   >= START DATE  EM0650
+0282 C   41      ECD       COMP MMD                    41  41 ON, ECD IS  EM0650
+0283 C**                                                   < MATURITY DATEEM0650
+0284 C                     ENDSR                                          EM0650
+0285 C**                                                                  EM0650
+0286 C********************************************************************EM0650
+0287 C********************************************************************EM0650
+0288 C**                                                                  EM0650
+0289 C**   CHKSIN SR. TO DETERMINE THE SIGNS OF THE PRINCIPAL AND         EM0650
+0290 C**   BALANCE AMOUNT.                                                EM0650
+0291 C**                                                                  EM0650
+0292 C           CHKSIN    BEGSR                           *** CHKSIN *** EM0650
+0293 C**                                                                  EM0650
+0294 C                     SETOF                     616263               EM0650
+0295 C                     SETOF                     6465                 EM0650
+0296 C**                                                                  EM0650
+0297 C           PRIN      COMP BALA                     6060 ON, NO PROC EM0650
+0298 C**                                                                  EM0650
+0299 C**                                                                  EM0650
+0300 C   60                GOTO ENDSIN                                    EM0650
+0301 C**                                                                  EM0650
+0302 C           PRIN      COMP 0                    61626361 ON, PRIN +VEEM0650
+0303 C**                                                   62 ON, PRIN -VEEM0650
+0304 C**                                                   63 ON, PRIN 0  EM0650
+0305 C           BALA      COMP 0                    64656464 ON,BAL +VE/0EM0650
+0306 C**                                                   65 ON, BAL -VE EM0650
+0307 C**   IF PRINCIPAL IS ZERO ASSUME IT IS SAME SIGN AS BALANCE.        EM0650
+0308 C**                                                                  EM0650
+0309 C   63 64             SETON                     61                   EM0650
+0310 C   63 65             SETON                     62                   EM0650
+0311 C**                                                                  EM0650
+0312 C           ENDSIN    ENDSR                           ** ENDSIN TAG *EM0650
+0313 C**                                                                  EM0650
+0314 C********************************************************************EM0650
+0315 C********************************************************************EM0650
+0316 C**                                                                  EM0650
+0317 C**   CLOCHN SR. TO OBTAIN ORIGINAL CUSTOMER NUMBER FROM THE         EM0650
+0318 C**   LOANS FILE.                                                    EM0650
+0319 C**                                                                  EM0650
+0320 C           CLOCHN    BEGSR                           *** CLOCHN *** EM0650
+0321 C**                                                                  EM0650
+0322 C                     MOVE 'A'       CLOKEY  7                       EM0650
+      ** If processing type = 61,62,63,64,65,70                                             MD029604
+     C           *IN43     IFEQ '1'                                                         MD029604
+     C                     MOVELLNRF1     CLOKEY                                            MD029604
+     C                     ELSE                                                             MD029604
+0323 C                     MOVELOLNO      CLOKEY                          EM0650
+     C                     ENDIF                                                            MD029604
+0324 C           CLOKEY    CHAINCLOAN                99    99 ON,NOT THEREEM0650
+0325 C   99                SETON                     U7U8LR               EM0650
+      ** If record exist, move file field to work variable                                  MD029604
+0325 C  N99                MOVE AUTO      WAUTO                                             MD029604
+0326 C   U7 U8             MOVE 'CLOAN'   DBFILE           ***************EM0650
+0327 C   U7 U8             MOVE CLOKEY    DBKEY            *** DBASE 11 **EM0650
+0328 C   U7 U8             Z-ADD11        DBASE            ***************EM0650
+0329 C**                                                                  EM0650
+0330 C                     ENDSR                                          EM0650
+0331 C**                                                                  EM0650
+0332 C********************************************************************EM0650
+0333 C********************************************************************EM0650
+0334 C**                                                                  EM0650
+0335 C**   CONVRT SR. TO CONVERT AMOUNT FROM ANY CCY TO E.M. LIMIT CCY    EM0650
+0336 C**                                                                  EM0650
+0337 C           CONVRT    BEGSR                           *** CONVRT *** EM0650
+0338 C**                                                                  EM0650
+0339 C**   CALCULATE X RATE.                                              EM0650
+0340 C**                                                                  EM0650
+0341 C***20******1         DIV  SPOT      SPOTA  138               EM0650 180734
+0342 C***20******SPOTA     DIV  LSPOT     XSPOT  138               EM0650 180734
+0343 C**N20******SPOT      DIV  LSPOT     XSPOT                    EM0650 180734
+      *                                                                   180734
+      ** Access event currency details for spot rate.                     180734
+      *                                                                   180734
+     C           MDIN      IFEQ 0                                         180734
+     C           1         DIV  SPOT      SPOT                            180734
+     C                     ENDIF                                          180734
+     C           SPOT      DIV  LSPOT     XSPOT  138                      180734
+0344 C**                                                                  EM0650
+0345 C**   SET UP ARRAY INDEX FOR 'POWER' TO CORRECT DECIMAL PLACES.      EM0650
+0346 C**                                                                  EM0650
+0347 C           CDP       ADD  1         N       10                      EM0650
+0348 C           LCDP      ADD  1         Y       10                      EM0650
+0349 C           1         DIV  POWER,N   DECP   138H                     EM0650
+0350 C**                                                                  EM0650
+0351 C**   CALCULATE AMOUNT TO BE OUTPUT/ACCUM.                           EM0650
+0352 C**                                                                  EM0650
+0353 C**                                                                  EM0650
+0354 C           TAMT      MULT DECP      TAMT                            EM0650
+0355 C           TAMT      MULT XSPOT     OAMT   130                      EM0650
+0356 C**                                                                  EM0650
+0357 C** DO NOT MULTIPLY BY POWER ARRAY FOR WHOLE UNITS                   EM0650
+0358 C**         TAMT      MULT POWER,Y   OAMT   130                      EM0650
+0359 C**                                                                  EM0650
+0360 C**                                                                  EM0650
+0361 C                     ENDSR                                          EM0650
+0362 C**                                                                  EM0650
+0363 C********************************************************************EM0650
+0364 C********************************************************************EM0650
+0365 C**                                                                  EM0650
+0366 C**   EMLCHN SR. TO RANDOM ACCESS EMLEE FILE.                        EM0650
+0367 C**                                                                  EM0650
+0368 C           EMLCHN    BEGSR                           *** EMLCHN *** EM0650
+0369 C**                                                                  EM0650
+0370 C**   RANDOM ACCESS EMLEE FILE BY RECORD KEY.                        EM0650
+0371 C**                                                                  EM0650
+0372 C           EMLKEY    CHAINEMLEE                99    99 ON NOT THEREEM0650
+0373 C**                                                                  EM0650
+0374 C                     ENDSR                                          EM0650
+0375 C**                                                                  EM0650
+0376 C********************************************************************EM0650
+0377 C********************************************************************EM0650
+0378 C**                                                                  EM0650
+0379 C**   EXCPTN SR. TO PERFORM EXCEPTION TIME OUTPUT.                   EM0650
+0380 C**              AND RESET EXCEPTION CONTROL INDICATORS.             EM0650
+0381 C**                                                                  EM0650
+0382 C           EXCPTN    BEGSR                           *** EXCPTN *** EM0650
+      *                                                                   S01332
+      ** Set up scaling type and 'to date'                                S01332
+      *                                                                   S01332
+     C                     MOVE 'LE'      @DELTP  2                       S01332
+     C           MDAT      SUB  RUND      @TDATE  50                      S01332
+      *                                                                   S01332
+      * If record already exists.                                         S01332
+     C           *IN82     IFEQ '1'                        B1             S01332
+      *                                                                   S01332
+     C           PLEX      IFNE *ZEROS                     B2             S01332
+     C                     Z-ADDPLEX      @SCAMT 130                      S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    PLEX                            S01332
+     C                     END                             E2             S01332
+      *                                                                   S01332
+     C           PLEX      IFNE *ZEROS                     B2             S01332
+     C                     Z-ADDPLOB      @SCAMT                          S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    PLOB                            S01332
+     C                     END                             E2             S01332
+      *                                                                   S01332
+     C                     END                             E1             S01332
+0383 C**                                                                  EM0650
+      * If record does not exist.                                         S01332
+     C           *IN83     IFEQ '1'                        B1             S01332
+      *                                                                   S01332
+     C           PLUSEX    IFNE *ZEROS                     B2             S01332
+     C                     Z-ADDPLUSEX    @SCAMT                          S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    PLUSEX                          S01332
+     C                     END                             E2             S01332
+      *                                                                   S01332
+     C           PLUSOB    IFNE *ZEROS                     B2             S01332
+     C                     Z-ADDPLUSOB    @SCAMT                          S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    PLUSOB                          S01332
+     C                     END                             E2             S01332
+      *                                                                   S01332
+     C                     END                             E1             S01332
+0384 C**   EXCEPTION OUTPUT.                                              EM0650
+0385 C**                                                                  EM0650
+0386 C                     EXCPT                                          EM0650
+0387 C**                                                                  EM0650
+0388 C**   MAINTAIN COUNT OF NUMBER OF RECORDS WRITTEN TO EMLEE FILE.     EM0650
+0389 C**                                                                  EM0650
+0390 C   83N60             ADD  1         NUMLEE  50                      EM0650
+0391 C**                                                                  EM0650
+0392 C                     SETOF                     8283                 EM0650
+0393 C**                                                                  EM0650
+0394 C                     ENDSR                                          EM0650
+0395 C**                                                                  EM0650
+0396 C********************************************************************EM0650
+      ** Exposure management scaling subroutine                           S01332
+     C/COPY ZSRSRC,ZEXPSCLZ1                                              S01332
+0397 C********************************************************************EM0650
+0398 C**                                                                  EM0650
+0399 C**   FSTCYC SR. TO PROCESS FIRST RPG CYCLE OF PROGRAM.              EM0650
+0400 C**                                                                  EM0650
+0401 C           FSTCYC    BEGSR                           *** FSTCYC *** EM0650
+0402 C**                                                                  EM0650
+0403 C                     MOVE 'EM0650'  DBPGM                           EM0650
+0404 C**                                                                  EM0650
+0405 C**   CHECK DATE FORMAT.                                             EM0650
+0406 C**                                                                  EM0650
+0407 C                     EXSR ZSYSTM                                    EM0650
+0408 C   99                SETON                     U7U8LR               EM0650
+0409 C   U7 U8             MOVE 'TABLE'   DBFILE           ***************EM0650
+0410 C   U7 U8             MOVE ZTABKY    DBKEY            *** DBASE 1 ***EM0650
+0411 C   U7 U8             Z-ADD1         DBASE            ***************EM0650
+0412 C   U7 U8             GOTO ENDFST                                    EM0650
+0413 C**                                                                  EM0650
+0414 C**   SETUP KEY FOR INSTALLATION CONTROL DATA RECORD 2.              EM0650
+0415 C**                                                                  EM0650
+0416 C                     MOVEL'01      'ZTABKY                          EM0650
+0417 C                     MOVE '  11'    ZTABKY                          EM0650
+0418 C**                                                                  EM0650
+0419 C                     EXSR TABCHN                                    EM0650
+0420 C**N13***                                                            S01129
+0421 C**OR*99*             SETON                     U7U8LR               S01129
+     C  N99      RECI      COMP '*'                      99               S01129
+     C           *IN99     IFEQ '1'                                       S01129
+     C                     SETON                     U7U8LR               S01129
+0422 C   U7 U8             MOVE 'TABLE'   DBFILE           ***************EM0650
+0423 C   U7 U8             MOVE ZTABKY    DBKEY            *** DBASE 3 ***EM0650
+0424 C   U7 U8             Z-ADD3         DBASE            ***************EM0650
+0425 C   U7 U8             GOTO ENDFST                                    EM0650
+     C                     END                                            S01129
+     C**                                                                  S01129
+     C** ACCESS TABTB95 FOR LIMIT CURRENCY                                S01129
+     C**                                                                  S01129
+     C                     MOVEL'01      'ZTABKY                          S01129
+     C                     MOVE '  95'    ZTABKY                          S01129
+     C**                                                                  S01129
+     C                     EXSR TABCHN                                    S01129
+     C  N99      RECI      COMP '*'                      99               S01129
+     C           *IN99     IFEQ '1'                                       S01129
+     C                     SETON                     U7U8LR               S01129
+     C                     MOVE 'TABLE'   DBFILE                          S01129
+     C                     MOVE ZTABKY    DBKEY            ***************S01129
+     C                     Z-ADD4         DBASE            ** DB ERROR 04 S01129
+     C                     GOTO ENDFST                     ***************S01129
+     C                     END                                            S01129
+0426 C**                                                                  EM0650
+0427 C*****USE LIMIT CCY ON ICDR 2 TO ACCESS CURRENCY TABLE FOR SPOT RATE S01129
+0427 C**  USE LIMIT CCY ON ICD 95 TO ACCESS CURRENCY TABLE FOR SPOT RATE  S01129
+0428 C**   AND DECIMAL PLACES.                                            EM0650
+0429 C**                                                                  EM0650
+0430 C                     MOVE *BLANKS   ZTABKY                          EM0650
+0431 C                     MOVE '20'      RECT                            EM0650
+0432 C                     MOVE LCCY      CCY                             EM0650
+0433 C                     MOVE '1'       SREC                            EM0650
+0434 C**                                                                  EM0650
+0435 C                     EXSR TABCHN                                    EM0650
+0436 C**N14**                                                             S01129
+0437 C**OR*99***           SETON                     U7U8LR               S01129
+     C  N99      RECI      COMP '*'                      99               S01129
+     C           *IN99     IFEQ '1'                                       S01129
+     C                     SETON                     U7U8LR               S01129
+0438 C   U7 U8             MOVE 'TABLE'   DBFILE           ***************EM0650
+0439 C   U7 U8             MOVE ZTABKY    DBKEY            *** DBASE 5 ***EM0650
+0440 C   U7 U8             Z-ADD5         DBASE            ***************EM0650
+0441 C   U7 U8             GOTO ENDFST                                    EM0650
+     C                     END                                            S01129
+0442 C** MDIN TEST FOR ZERO MOVED DUE TO EXTERNAL DESCRIBING OF FILE      S01129
+     C           MDIN      IFEQ 0                                         S01129
+     C                     SETON                     20                   S01129
+     C                     END                                            S01129
+     C**                                                                  S01129
+0443 C                     MOVE SPOT      LSPOT  138                      EM0650
+0444 C   20      1         DIV  LSPOT     LSPOT                           EM0650
+0445 C                     MOVE CDP       LCDP    10                      EM0650
+0446 C**                                                                  EM0650
+0447 C**   DETERMINE THE EVENT CONTROL DATE.                              EM0650
+0448 C**                                                                  EM0650
+0449 C           DNWD      SUB  1         ECD     50                      EM0650
+      *                                                                   CLE006
+      ** Check if CLE006 is switched *ON.                                 CLE006
+      *                                                                   CLE006
+     C                     MOVE 'N'       CLE006  1                       CLE006
+     C                     CALL 'AOSARDR0'                                CLE006
+     C                     PARM *BLANKS   @RTCD   7                       CLE006
+     C                     PARM '*VERIFY' @OPTN   7                       CLE006
+     C                     PARM 'CLE006'  @SARD   6                       CLE006
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE006
+      *                                                                   CLE006
+     C           @RTCD     IFEQ *BLANKS                                   CLE006
+     C                     MOVE 'Y'       CLE006                          CLE006
+     C                     END                                            CLE006
+      *                                                                   CLE006
+     C           @RTCD     IFNE *BLANKS                                   CLE006
+     C           @RTCD     ANDNE'*NRF   '                                 CLE006
+      *                                                                   CLE006
+      ** Call to program ended in error                                   CLE006
+      *                                                                   CLE006
+     C                     MOVEL'CLE006'  DBKEY            ************   CLE006
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERR 06 *   CLE006
+     C                     MOVEL'06'      DBASE            ************   CLE006
+     C                     SETON                     U7U8LR               CLE006
+     C                     ENDIF                                          CLE006
+0450 C**                                                                  EM0650
+      ** Check if SAR CLE005 is present                                   CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   P@RTCD  7                       CLE005
+     C                     PARM '*KEY   ' P@OPTN  7                       CLE005
+     C                     PARM 'CLE005'  P@SARD  6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+      *                                                                   CLE005
+      ** Handle Database Error                                            CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFNE '*NRF    '                                CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD16        DBASE            * DBERR 16 *   CLE005
+     C                     MOVEL'CLE005'  DBKEY            ************   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** Check if SAR CEU020 is present                                   CEU020
+      *                                                                   CEU020
+     C                     CALL 'AOSARDR0'                                CEU020
+     C                     PARM *BLANKS   P@RTCD  7                       CEU020
+     C                     PARM '*KEY   ' P@OPTN  7                       CEU020
+     C                     PARM 'CEU020'  P@SARD  6                       CEU020
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU020
+      *                                                                   CEU020
+     C           P@RTCD    IFEQ *BLANKS                                   CEU020
+     C                     MOVE 'Y'       CEU020  1                       CEU020
+     C                     ELSE                                           CEU020
+      *                                                                   CEU020
+      ** Handle Database Error                                            CEU020
+      *                                                                   CEU020
+     C           P@RTCD    IFNE '*NRF    '                                CEU020
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU020
+     C                     Z-ADD17        DBASE            * DBERR 17 *   CEU020
+     C                     MOVEL'CEU020'  DBKEY            ************   CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+0451 C           ENDFST    ENDSR                           ** ENDFST TAG *EM0650
+0452 C**                                                                  EM0650
+0453 C********************************************************************EM0650
+0454 C********************************************************************EM0650
+0455 C**                                                                  EM0650
+0456 C**   PROCA SR. TO PROCESS LOAN WITH PROCESSING TYPE 66 OR 67.       EM0650
+0457 C**                                                                  EM0650
+0458 C           PROCA     BEGSR                           *** PROCA ***  EM0650
+0459 C**                                                                  EM0650
+0460 C                     EXSR CHKSIN                                    EM0650
+0461 C   60                GOTO ENDA                                      EM0650
+0462 C**                                                                  EM0650
+0463 C**   PROCESS FOR RECOURSE INDICATOR = 'Y'.                          EM0650
+0464 C**                                                                  EM0650
+0465 C   44      PRIN      SUB  BALA      DIFF                            EM0650
+0466 C   44      PLUSOB    SUB  DIFF      PLUSOB                          EM0650
+0467 C**                                                                  EM0650
+0468 C**   PROCESS FOR RECOURSE INDICATOR = ' ' BY USING ORIGINAL         EM0650
+0469 C**   CUSTOMER NUMBER AND CHAINING TO EMLEE FILE.                    EM0650
+0470 C**                                                                  EM0650
+     C**N44                MOVE CNUM      EMLKEY  6                       E10836
+     C  N44      PTYP      IFEQ 64                                        E10836
+     C           PTYP      OREQ 65                                        E10836
+     C           PTYP      OREQ 68                                        CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C           PTYP      OREQ 71                                        CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C           RCSIC     IFEQ 'Y'                                       E10836
+     C                     MOVE CNUM      EMLKEY  6                       E10836
+     C**********           MOVE CNUM      CNUM1   60                                   E10836 CSD027
+     C                     MOVE CNUM      CNUM1   6                                           CSD027
+     C                     ELSE                                           E10836
+     C                     MOVE OLNOC     EMLKEY                          E10836
+     C                     MOVE OLNOC     CNUM1                           E10836
+     C                     END                                            E10836
+     C                     ELSE                                           E10836
+     C                     MOVE CNUM      EMLKEY  6                       E10836
+     C**********           MOVE CNUM      CNUM1   60                                   E10836 CSD027
+     C                     MOVE CNUM      CNUM1   6                                           CSD027
+     C                     END                                            E10836
+0472 C  N44                EXSR EMLCHN                                    EM0650
+0473 C  N44      PRIN      SUB  BALA      DIFF                            EM0650
+0474 C**                                                                  EM0650
+0475 C**   RECORD FOUND IN EMLEE FILE.                                    EM0650
+0476 C**                                                                  EM0650
+0477 C  N44N99   PLEX      ADD  DIFF      PLEX                            EM0650
+0478 C  N44N99             SETON                     82                   EM0650
+0479 C  N44N99             EXSR EXCPTN                                    EM0650
+0480 C**                                                                  EM0650
+0481 C**   RECORD NOT FOUND IN EMLEE FILE.                                EM0650
+0482 C**                                                                  EM0650
+0483 C  N44 99   PLUSEX    ADD  DIFF      PLUSEX                          EM0650
+0484 C**                                                                  EM0650
+0485 C**                                                                  EM0650
+0486 C  N44 99             SETON                     83                   EM0650
+0487 C  N44 99             EXSR EXCPTN                                    EM0650
+0488 C**                                                                  EM0650
+0489 C  N44 99             Z-ADD0         PLUSEX                          EM0650
+0490 C  N44 99             Z-ADD0         PLUSOB                          EM0650
+     C                     SETOF                     79                   S01332
+0491 C           ENDA      ENDSR                           ** ENDA TAG ** EM0650
+0492 C**                                                                  EM0650
+0493 C********************************************************************EM0650
+0494 C********************************************************************EM0650
+0495 C**                                                                  EM0650
+0496 C**   PROCB SR. TO PROCESS LOANS WITH PROCESSING TYPE 61,62,63,      EM0650
+0497 C**   64,65 OR 70.                                                   EM0650
+0498 C**                                                                  EM0650
+0499 C           PROCB     BEGSR                           *** PROCB ***  EM0650
+0500 C**                                                                  EM0650
+0501 C                     EXSR CHKSIN                                    EM0650
+0502 C   60                GOTO ENDB                                      EM0650
+0503 C**                                                                  EM0650
+0504 C**   PRINCIPAL AND BALANCE ARE BOTH +VE                             EM0650
+0505 C**   - SUBTRACT DIFF FROM EXPOSURE.                                 EM0650
+0506 C**                                                                  EM0650
+0507 C   61 64   PRIN      SUB  BALA      DIFF   130                      EM0650
+0508 C   61 64   PLUSEX    SUB  DIFF      PLUSEX                          EM0650
+0509 C**                                                                  EM0650
+0510 C**   PRINCIPAL AND BALANCE ARE BOTH -VE                             EM0650
+0511 C**   - ADD DIFF TO OFF-SETTING BALANCE.                             EM0650
+0512 C**                                                                  EM0650
+0513 C   62 65   PRIN      SUB  BALA      DIFF                            EM0650
+0514 C   62 65   PLUSOB    SUB  DIFF      PLUSOB                          EM0650
+0515 C**                                                                  EM0650
+0516 C**   PRINCIPAL IS +VE AND BALANCE IS -VE.                           EM0650
+0517 C**                                                                  EM0650
+0518 C   61 65   PLUSEX    SUB  PRIN      PLUSEX                          EM0650
+0519 C   61 65   PLUSOB    SUB  BALA      PLUSOB                          EM0650
+0520 C**                                                                  EM0650
+0521 C**   PRINCIPAL IS -VE AND BALANCE IS +VE.                           EM0650
+0522 C**                                                                  EM0650
+0523 C   62 64   PLUSEX    ADD  BALA      PLUSEX                          EM0650
+0524 C   62 64   PLUSOB    ADD  PRIN      PLUSOB                          EM0650
+0525 C**                                                                  EM0650
+0526 C**                                                                  EM0650
+0527 C           ENDB      ENDSR                           ** ENDB TAG ** EM0650
+0528 C**                                                                  EM0650
+0529 C********************************************************************EM0650
+0530 C********************************************************************EM0650
+0531 C**                                                                  EM0650
+0532 C**   PROCLR SR. TO COMPARE NUMBER OF RECORDS READ WITH NUMBER OF    EM0650
+0533 C**   RECORDS ON FILE - IF DIFFERENT FLAG ERROR ON FILE CONTROL      EM0650
+0534 C**   REPORT.                                                        EM0650
+0535 C**                                                                  EM0650
+0536 C           PROCLR    BEGSR                           *** PROCLR *** EM0650
+0537 C**                                                                  EM0650
+0538 C********** RECXTL    COMP NUMXTL               6161                           EM0650 AR1078776
+     C                     MOVE RECXTL    EMXNUM  50                                       AR1078776
+0538 C           EMXNUM    COMP NUMXTL               6161                                  AR1078776
+0539 C           RECTES    COMP NUMTES               6262                 EM0650
+0540 C   61                                                               EM0650
+0541 COR 62                SETON                     U8                   EM0650
+0542 C**                                                                  EM0650
+0543 C                     ENDSR                                          EM0650
+0544 C**                                                                  EM0650
+0545 C********************************************************************EM0650
+0546 C********************************************************************EM0650
+0547 C**                                                                  EM0650
+0548 C**   PROCUS SR. TO WRITE A RECORD TO EMLEE AT CHANGE OF CUSTOMER NO.EM0650
+0549 C**                                                                  EM0650
+0550 C           PROCUS    BEGSR                           *** PROCUS *** EM0650
+0551 C**                                                                  EM0650
+0552 C                     MOVE MCUN      EMLKEY                          EM0650
+     C***42N44             MOVE CNUM      EMLKEY                          E10836
+     C   42N44   PTYP      IFEQ 64                                        E10836
+     C           PTYP      OREQ 65                                        E10836
+     C           PTYP      OREQ 68                                        CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C           PTYP      OREQ 71                                        CLE005
+     C           CLE005    ANDEQ'Y'                                       CLE005
+     C           RCSIC     IFEQ 'Y'                                       E10836
+     C                     MOVE CNUM      EMLKEY                          E10836
+     C**********           MOVE CNUM      CNUM1   60                                   E10836 CSD027
+     C                     MOVE CNUM      CNUM1   6                                           CSD027
+     C                     ELSE                                           E10836
+     C                     MOVE OLNOC     EMLKEY                          E10836
+     C                     MOVE OLNOC     CNUM1                           E10836
+     C                     END                                            E10836
+     C                     ELSE                                           E10836
+     C                     MOVE CNUM      EMLKEY                          E10836
+     C                     MOVE CNUM      CNUM1                           E10836
+     C                     END                                            E10836
+0554 C                     EXSR EMLCHN                                    EM0650
+0555 C**                                                                  EM0650
+0556 C**   RECORD FOUND ON EMLEE FILE.                                    EM0650
+0557 C**                                                                  EM0650
+0558 C  N99      PLUSEX    ADD  PLEX      PLEX                            EM0650
+0559 C  N99      PLUSOB    ADD  PLOB      PLOB                            EM0650
+0560 C**                                                                  EM0650
+0561 C**                                                                  EM0650
+0562 C  N99                SETON                     82                   EM0650
+0563 C  N99                EXSR EXCPTN                                    EM0650
+0564 C**                                                                  EM0650
+0565 C**   RECORD NOT FOUND ON EMLEE FILE.                                EM0650
+0566 C**                                                                  EM0650
+0567 C   99                SETON                     83                   EM0650
+0568 C   99                EXSR EXCPTN                                    EM0650
+0569 C**                                                                  EM0650
+0570 C                     Z-ADD0         PLUSEX 130                      EM0650
+0571 C                     Z-ADD0         PLUSOB 130                      EM0650
+0572 C                     SETOF                     79                   EM0650
+0573 C**                                                                  EM0650
+0574 C                     ENDSR                                          EM0650
+0575 C**                                                                  EM0650
+0576 C********************************************************************EM0650
+0577 C********************************************************************EM0650
+0578 C**                                                                  EM0650
+0579 C**   PROLOA SR. TO PROCESS LOAN TOTALS AND MAINTAIN CUSTOMER        EM0650
+0580 C**   RUNNING TOTALS.                                                EM0650
+0581 C**                                                                  EM0650
+0582 C           PROLOA    BEGSR                           *** PROLOA *** EM0650
+0583 C**                                                                  EM0650
+0584 C**   CONVERT LOAN PRINCIPAL FROM LOAN CURRENCY TO E.M.LIMIT CCY.    EM0650
+0585 C**                                                                  EM0650
+0586 C                     MOVE *BLANK    ZTABKY                          EM0650
+0587 C                     MOVE MEVC      CCY                             EM0650
+0588 C                     EXSR SETUP                                     EM0650
+0589 C   U7 U8             GOTO ENDLOA                                    EM0650
+0590 C  NMR                Z-ADD0         MCPR                            EM0650
+0591 C  NMR                Z-ADD0         PRIN                            EM0650
+0592 C  NMR                GOTO CONBAL                                    EM0650
+0593 C                     Z-ADDMCPR      TAMT   130                      EM0650
+0594 C**                                                                  EM0650
+0595 C**                                                                  EM0650
+0596 C                     EXSR CONVRT                                    EM0650
+0597 C                     Z-ADDOAMT      PRIN   130                      EM0650
+0598 C**                                                                  EM0650
+0599 C**                                                                  EM0650
+0600 C**   CONVERT LOAN BALANCE FROM LOAN CURRENCY TO E.M. LIMIT CCY.     EM0650
+0601 C**                                                                  EM0650
+0602 C           CONBAL    TAG                             ** CONBAL TAG *EM0650
+0603 C**                                                                  EM0650
+0604 C**                                                                  EM0650
+0605 C                     Z-ADDSTRPRN    TAMT                            EM0650
+0606 C                     EXSR CONVRT                                    EM0650
+0607 C                     Z-ADDOAMT      BALA   130                      EM0650
+0608 C**                                                                  EM0650
+0609 C**                                                                  EM0650
+0610 C   43                EXSR PROCB                                     EM0650
+0611 C   42                EXSR PROCA                                     EM0650
+0612 C**                                                                  EM0650
+0613 C                     SETOF                     81                   EM0650
+0614 C**                                                                  EM0650
+0615 C           ENDLOA    ENDSR                           ** ENDLOA TAG *EM0650
+0616 C**                                                                  EM0650
+0617 C********************************************************************EM0650
+0618 C********************************************************************EM0650
+0619 C**                                                                  EM0650
+0620 C**   PROTES SR. TO PROCESS RECORDS FROM TOMORROW'S EVENTS FILE      EM0650
+0621 C**   WHEN MATCHING RECORD INDICATOR IS SETON.                       EM0650
+0622 C**                                                                  EM0650
+0623 C           PROTES    BEGSR                           *** PROTES *** EM0650
+0624 C**                                                                  EM0650
+0625 C**   MAINTAIN COUNT OF NUMBER OF CUSTOMER LENDING RECORDS READ.     EM0650
+0626 C**                                                                  EM0650
+0627 C                     ADD  1         NUMTES  50                      EM0650
+0628 C                     SETON                     7981                 EM0650
+0629 C                     SETOF                     424344               EM0650
+0630 C                     SETOF                     454647               EM0650
+0631 C                     SETOF                     484950               EM0650
+0632 C**                                                                  EM0650
+0633 C**   DETERMINE EVENT TYPE.                                          EM0650
+0634 C**                                                                  EM0650
+0635 C           MCOD      COMP 'V1'                     45ON, EVENT = V1 EM0650
+      *                                                                   CLE006
+      ** Check for incoming multi-currency rollover event.                CLE006
+      *                                                                   CLE006
+     C           CLE006    IFEQ 'Y'                                       CLE006
+     C           MCOD      ANDEQ'V7'                                      CLE006
+     C           *IN45     ANDEQ*OFF                                      CLE006
+     C                     MOVE *ON       *IN45                           CLE006
+     C                     ENDIF                                          CLE006
+      *                                                                   CEU020
+      ** If CEU020 is installed.                                          CEU020
+      *                                                                   CEU020
+     C           CEU020    IFEQ 'Y'                                       CEU020
+     C           MCOD      ANDEQ'V7'                                      CEU020
+     C           *IN45     ANDEQ*OFF                                      CEU020
+     C                     MOVE *ON       *IN45                           CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CLE006
+0636 C  N45      MCOD      COMP 'V3'                     46ON, EVENT = V3 EM0650
+0637 C  N45N46   MCOD      COMP 'R1'                     47ON, EVENT = R1 EM0650
+      *                                                                   CLE006
+      ** Check for outgoing multi-currency rollover event.                CLE006
+      *                                                                   CLE006
+     C           CLE006    IFEQ 'Y'                                       CLE006
+     C           MCOD      ANDEQ'R9'                                      CLE006
+     C           *IN45     ANDEQ*OFF                                      CLE006
+     C           *IN46     ANDEQ*OFF                                      CLE006
+     C           *IN47     ANDEQ*OFF                                      CLE006
+     C                     MOVE *ON       *IN47                           CLE006
+     C                     ENDIF                                          CLE006
+      *                                                                   CLE006
+      ** If CEU020 is installed.                                          CEU020
+      *                                                                   CEU020
+     C           CEU020    IFEQ 'Y'                                       CEU020
+     C           MCOD      ANDEQ'R9'                                      CEU020
+     C           *IN45     ANDEQ*OFF                                      CEU020
+     C           *IN46     ANDEQ*OFF                                      CEU020
+     C           *IN47     ANDEQ*OFF                                      CEU020
+     C                     MOVE *ON       *IN47                           CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+0638 C  N45N46N47MCOD      COMP 'M1'                     48ON, EVENT = M1 EM0650
+0639 C  N45N46N47                                                         EM0650
+0640 CANN48                SETON                     49    ON, INVAL EVENTEM0650
+0641 C   49                GOTO ENDTES                                    EM0650
+0642 C**                                                                  EM0650
+0643 C**   IF ONLY EVENT EXISTS AND NO LOAN RECORD                        EM0650
+0644 C**   - LOAN PRINCIPAL IS ZERO.                                      EM0650
+0645 C**                                                                  EM0650
+0646 C  NMR                Z-ADD0         STRPRN                          EM0650
+0647 C  NMR                Z-ADD0         MCPR                            EM0650
+0648 C**                                                                  EM0650
+0649 C**   DETERMINE LOAN PROCESSING TYPE.                                EM0650
+0650 C**                                                                  EM0650
+0651 C           MTYP      LOKUPTABA                     4242 ON,TYP 66,67EM0650
+0652 C  N42      MTYP      LOKUPTABB                     4343 ON,TYP 61,62EM0650
+0653 C**                                                   63,64,65 OR 70 EM0650
+0654 C  N42N43             SETON                     50    50 ON,NO PTYPE EM0650
+0655 C**                                                                  EM0650
+0656 C**                                                                  EM0650
+0657 C   50                GOTO ENDTES                                    EM0650
+0658 C**                                                                  EM0650
+0659 C**   OBTAIN ORIGINAL CUSTOMER NUMBER IF PROCESSING TYPE 66, 67      EM0650
+0660 C**   AND RECOURSE INDICATOR NOT 'Y'.                                EM0650
+0661 C**                                                                  EM0650
+0662 C   42      MLER      COMP 'Y'                      4444 ON, REC = Y EM0650
+0663 C***42N44**           EXSR CLOCHN                                               EM0650 MD029604
+0663 C   42N44                                                                              MD029604
+0663 COR 43 48 MR          EXSR CLOCHN                                                      MD029604
+0664 C   U7 U8             GOTO ENDTES                                    EM0650
+0665 C**                                                                  EM0650
+0666 C**   ADD TO BALANCE IF EVENT CODE IS V1 OR V3.                      EM0650
+      **   ... or event code is V7.                                       CLE006
+0667 C**                                                                  EM0650
+0668 C   45                                                               EM0650
+0669 COR 46      STRPRN    ADD  MEVA      STRPRN                          EM0650
+0670 C**                                                                  EM0650
+0671 C**   SUBTRACT FROM BALANCE IF EVENT CODE IS R1 OR M1.               EM0650
+      **   ... or event code is R9.                                       CLE006
+0672 C**                                                                  EM0650
+0673 C***47*****                                                                     EM0650 MD029604
+0674 C*OR*48****  STRPRN    SUB  MEVA      STRPRN                                    EM0650 MD029604
+      ** If event type is 'R1'                                                              MD029604
+     C           *IN47     IFEQ '1'                                                         MD029604
+     C           STRPRN    SUB  MEVA      STRPRN                                            MD029604
+     C                     ELSE                                                             MD029604
+      ** If event type is 'M1' and Auto Settlement indicator is 'Y'                         MD029604
+     C           *IN48     IFEQ '1'                                                         MD029604
+     C           WAUTO     ANDEQ'Y'                                                         MD029604
+     C           STRPRN    SUB  MEVA      STRPRN                                            MD029604
+     C                     ENDIF                                                            MD029604
+     C                     ENDIF                                                            MD029604
+0675 C**                                                                  EM0650
+0676 C**                                                                  EM0650
+0677 C           ENDTES    ENDSR                           ** ENDTES TAG *EM0650
+0678 C**                                                                  EM0650
+0679 C********************************************************************EM0650
+0680 C********************************************************************EM0650
+0681 C**                                                                  EM0650
+0682 C**   PROXTL SR. TO PROCESS RECORDS FROM EXTRACT FILE WHEN           EM0650
+0683 C**   MATCHING RECORD INDICATOR IS SETON.                            EM0650
+0684 C**                                                                  EM0650
+0685 C           PROXTL    BEGSR                           *** PROXTL *** EM0650
+0686 C**                                                                  EM0650
+0687 C**   MAINTAIN COUNT OF NUMBER OF CUSTOMER LENDING RECORDS READ.     EM0650
+0688 C**                                                                  EM0650
+0689 C                     ADD  1         NUMXTL  50                      EM0650
+0690 C**                                                                  EM0650
+0691 C**   CHECK WHETHER EVENT CONTROL DATE IS VALID.                     EM0650
+0692 C**                                                                  EM0650
+0693 C   MR                EXSR CHKECD                                    EM0650
+0694 C**                                                                  EM0650
+0695 C**   STORE THE LOAN PRINCIPAL IN A TEMPORARY WORKFIELD.             EM0650
+0696 C**                                                                  EM0650
+0697 C   MR                Z-ADDMCPR      STRPRN 130                      EM0650
+0698 C**                                                                  EM0650
+0699 C**                                                                  EM0650
+0700 C                     ENDSR                                          EM0650
+0701 C**                                                                  EM0650
+0702 C********************************************************************EM0650
+0703 C********************************************************************EM0650
+0704 C**                                                                  EM0650
+0705 C**   SETUP SR. TO SET UP THE CURRENCY DETAILS AND THE AMOUNTS       EM0650
+0706 C**   FOR CONVERSION TO LIMIT CURRENCY.                              EM0650
+0707 C**                                                                  EM0650
+0708 C           SETUP     BEGSR                           *** SETUP ***  EM0650
+0709 C**                                                                  EM0650
+0710 C**   SET UP BASIC DETAILS FOR CURRENCY KEY.                         EM0650
+0711 C**                                                                  EM0650
+0712 C                     MOVE '20'      RECT                            EM0650
+0713 C                     MOVE '1'       SREC                            EM0650
+0714 C**                                                                  EM0650
+0715 C                     EXSR TABCHN                                    EM0650
+0716 C**N14***                                                            S01129
+0717 C**OR*99*             SETON                     U7U8LR               S01129
+     C  N99      RECI      COMP '*'                      99               S01129
+     C           *IN99     IFEQ '1'                                       S01129
+     C                     SETON                     U7U8LR               S01129
+0718 C   U7 U8             MOVE 'TABLE'   DBFILE           ***************EM0650
+0719 C   U7 U8             MOVE ZTABKY    DBKEY            *** DBASE 15 **EM0650
+0720 C   U7 U8             Z-ADD15        DBASE            ***************EM0650
+     C                     END                                            S01129
+0721 C**                                                                  EM0650
+0722 C                     ENDSR                                          EM0650
+0723 C**                                                                  EM0650
+0724 C********************************************************************EM0650
+0725 C********************************************************************EM0650
+0726 C**                                                                  EM0650
+0727 C**   TABCHN SR. TO RANDOM ACCESS TABLE FILE.                        EM0650
+0728 C**                                                                  EM0650
+0729 C           TABCHN    BEGSR                           *** TABCHN *** EM0650
+0730 C**                                                                  EM0650
+0731 C**   RANDOM ACCESS TABLE FILE BY KEY.                               EM0650
+0732 C**                                                                  EM0650
+0733 C*****      ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0733 C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0734 C**                                                                  EM0650
+0735 C                     ENDSR                                          EM0650
+0736 C**                                                                  EM0650
+0737 C********************************************************************EM0650
+0738 C********************************************************************EM0650
+0739 C**                                                                  EM0650
+0740 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   EM0650
+0741 C**                                                                  EM0650
+0742 C           ZSYSTM    BEGSR                           *** ZSYSTM *** EM0650
+0743 C**                                                                  EM0650
+0744 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    EM0650
+0745 C**                                                                  EM0650
+0746 C                     MOVEL'01      'ZTABKY 12                       EM0650
+0747 C                     MOVE '  10'    ZTABKY                          EM0650
+0748 C**                                                                  EM0650
+0749 C****       ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0749 C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0750 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED EM0650
+0751 C**                                                                  EM0650
+0752 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    EM0650
+0753 C**                                                                  EM0650
+0754 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  EM0650
+0755 C**                                                                  EM0650
+0756 C                     ENDSR                                          EM0650
+0757 C**                                                                  EM0650
+0758 C**                                                                  EM0650
+0759 C********************************************************************EM0650
+0760 C********************************************************************EM0650
+0761 C**                                                                  EM0650
+0762 O/EJECT                                                              EM0650
+0763 O**                                                                  EM0650
+0764 O********************************************************************EM0650
+0765 O**   **************                                                 EM0650
+0766 O**   OUTPUT SECTION.                                                EM0650
+0767 O**   **************                                                 EM0650
+0768 O**                                                                  EM0650
+0769 O**   ******************************                                 EM0650
+0770 O**   CUSTOMER LENDING EXPOSURE FILE                                 EM0650
+0771 O**   ******************************                                 EM0650
+0772 O**                                                                  EM0650
+0773 OEMLEEH1 DADD     80                                                 EM0650
+0774 O                                    1 'H'                           EM0650
+0775 O**                                                                  EM0650
+0776 OEMLEE   E       N60 82                                              EM0650
+0777 O                         PLEX      14P                              EM0650
+0778 O                         PLOB      21P                              EM0650
+0779 O**                                                                  EM0650
+0780 OEMLEEE4 EADD    N60 83                                              EM0650
+0781 O                                    1 'D'                           EM0650
+0782 O                         MCUN       7                               EM0650
+     O****             42N44   CNUM       7                               E10836
+     O                 42N44   CNUM1      7                               E10836
+0783 O                         PLUSEX    14P                              EM0650
+0784 O                         PLUSOB    21P                              EM0650
+0785 O**                                                                  EM0650
+0786 OEMLEET1 TADD     LRNU7                                              EM0650
+0787 O                                    1 'T'                           EM0650
+0788 O                                    7 '999999'                      EM0650
+0789 O                         NUMLEE    10P                              EM0650
+0790 O**                                                                  EM0650
+0791 O**   *******************                                            EM0650
+0792 O**   FILE CONTROL REPORT                                            EM0650
+0793 O**   *******************                                            EM0650
+0794 O**                                                                  EM0650
+0795 O*M0650P1T***03   LRNU7                                      S01124  S01117
+0795 OEM0650AUT   03   LRNU7                                              S01117
+0796 O**********                         22 'REFERENCE EM0650'            S01117
+0796 O                                   22 'REFERENCE EM0650AU'          S01117
+0797 O                         TITL      89                               EM0650
+0798 O                                  103 'DATE'                        EM0650
+0799 O                         RUNA     112                               EM0650
+0800 O                                  122 'PAGE'                        EM0650
+0801 O                         PAGE  Z  127                               EM0650
+0802 O**                                                                  EM0650
+0803 O        T 2      LRNU7                                              EM0650
+0804 O                                   52 'CUSTOMER LENDING'            EM0650
+0805 O                                   75 'EXPOSURE CREATE - FILE'      EM0650
+0806 O                                   84 'CONTROLS'                    EM0650
+0807 O**                                                                  EM0650
+0808 O        T 1      LRNU7                                              EM0650
+0809 O                                   53 '-----------------'           EM0650
+0810 O                                   75 '----------------------'      EM0650
+0811 O                                   84 '---------'                   EM0650
+0812 O**                                                                  EM0650
+0813 O        T   11   LRNU7                                              EM0650
+0814 O                                   22 'INPUT'                       EM0650
+0815 O                                  107 'CALCULATED      ON FILE'     EM0650
+0816 O**                                                                  EM0650
+0817 O        T 1      LRNU7                                              EM0650
+0818 O                                   22 '-----'                       EM0650
+0819 O**                                                                  EM0650
+0820 O        T   15   LRNU7                                              EM0650
+0821 O                                   48 'NO. OF CUSTOMER LENDING'     EM0650
+0822 O                                   56 'RECORDS'                     EM0650
+0823 O**                                                                  EM0650
+0824 O        T 2      LRNU7                                              EM0650
+0825 O                                   29 'S/EMTE1'                     EM0650
+0826 O                         NUMTESJ   94                               EM0650
+0827 O                         RECTESJ  107                               EM0650
+0828 O                 62               129 '*** DIFFERENCE ***'          EM0650
+0829 O**                                                                  EM0650
+0830 O**                                                                  EM0650
+0831 O        T 2      LRNU7                                              EM0650
+0832 O                                   29 'S/EMXTL'                     EM0650
+0833 O                         NUMXTLJ   94                               EM0650
+0834 O**********               RECXTLJ  107                                         EM0650 AR1078776
+0834 O                         EMXNUMJ  107                                                AR1078776
+0835 O                 61               129 '*** DIFFERENCE ***'          EM0650
+0836 O**                                                                  EM0650
+0837 O**                                                                  EM0650
+0838 O        T   28   LRNU7                                              EM0650
+0839 O                                   23 'OUTPUT'                      EM0650
+0840 O**                                                                  EM0650
+0841 O        T 1      LRNU7                                              EM0650
+0842 O                                   23 '------'                      EM0650
+0843 O**                                                                  EM0650
+0844 O        T   32   LRNU7                                              EM0650
+0845 O                                   29 'S/EMLEE'                     EM0650
+0846 O**                                                                  EM0650
+0847 O        T 2      LRNU7                                              EM0650
+0848 O                                   47 'NO. OF RECORDS WRITTEN'      EM0650
+0849 O                         NUMLEEJ   94                               EM0650
+0850 O**                                                                  EM0650
+0851 O*****   T   43   LRNU7                                       EM0650 RT0086
+0852 O*****                              75 '*** END OF REPORT ***'EM0650 RT0086
+0853 O**                                                                  EM0650
+0854 O**   DATABASE ERROR OUTPUT                                          EM0650
+0855 O**                                                                  EM0650
+0856 O        T  103   U7 U8 LR                                           EM0650
+0857 O                                   48 '**** DATABASE ERROR ****'    EM0650
+0858 O        T 2      U7 U8 LR                                           EM0650
+0859 O                                   34 '************************'    EM0650
+0860 O                                   58 '************************'    EM0650
+0861 O                                   64 '******'                      EM0650
+0862 O        T 1      U7 U8 LR                                           EM0650
+0863 O                                   11 '*'                           EM0650
+0864 O                                   64 '*'                           EM0650
+0865 O        T 1      U7 U8 LR                                           EM0650
+0866 O                                   29 '*    FILE NAME    '''        EM0650
+0867 O                         DBFILE    34                               EM0650
+0868 O                                   35 ''''                          EM0650
+0869 O                                   64 '*'                           EM0650
+0870 O        T 1      U7 U8 LR                                           EM0650
+0871 O                                   29 '*    KEY          '''        EM0650
+0872 O                         DBKEY     58                               EM0650
+0873 O                                   64 '''    *'                     EM0650
+0874 O        T 1      U7 U8 LR                                           EM0650
+0875 O                                   29 '*    PROGRAM NAME '''        EM0650
+0876 O                         DBPGM     37                               EM0650
+0877 O                                   38 ''''                          EM0650
+0878 O                                   64 '*'                           EM0650
+0879 O        T 1      U7 U8 LR                                           EM0650
+0880 O                                   29 '*    AT           '''        EM0650
+0881 O                         DBASE     31                               EM0650
+0882 O                                   32 ''''                          EM0650
+0883 O                                   64 '*'                           EM0650
+0884 O        T 1      U7 U8 LR                                           EM0650
+0885 O                                   11 '*'                           EM0650
+0886 O                                   64 '*'                           EM0650
+0887 O        T 1      U7 U8 LR                                           EM0650
+0888 O                                   34 '************************'    EM0650
+0889 O                                   58 '************************'    EM0650
+0890 O                                   64 '******'                      EM0650
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  TABA
+66676972
+**  TABB
+616263646568707180                                                                            CLE028
+**  POWER
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

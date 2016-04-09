@@ -1,0 +1,940 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Base Change/Rollover Amendments Update')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0371 - 'BC' & 'RO'/'MC'  LOAN AMENDMENTS UPDATE            *
+      *                                                               *
+      *  Function:  This program processes Base Rate Code and         *
+      *             Rollover Amendment types backvalued prior to the  *
+      *             start/last interest date of the loan. It deletes  *
+      *             rate details from history and creates new rate    *
+      *             and rollover actions.                             *
+      *                                                               *
+      *  Called By: LEC0603  - Daily Files Maintenance - Phase I      *
+      *             LEC0603A - Daily Files Maintenance - Phase I      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD031736           Date 02Mar15               *
+      *  Prev Amend No. AR820967           Date 10May13               *
+      *                 CLE075BI           Date 06Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 259765             Date 27Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG23206           Date 11Mar09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246621             Date 29Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243251             Date 29Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239076             Date 28Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 235147             Date 06Jun06               *
+      *                 235034             Date 06Jun06               *
+      *                 230179             Date 06Jun06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 29Sep03               *
+      *                 CAP075             Date 08Jul02               *
+      *                 CLE034             Date 21May03               *
+      *                 CLE031             Date 05Feb03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      *                 157669             Date 07Dec00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004             Date 02Jun97               *
+      *                 117928             Date 16MAY97               *
+      *                 116331             Date 09APR97               *
+      *                 115884             Date 21MAR97               *
+      *                 CLE003 *CREATE     Date 12MAR97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031736 - Incorrect Accrued Interest Amount due to wrong    *
+      *             NIAD. Update NIAD with VDAT of the latest event   *
+      *             from ACTN3DK/HISTSHQ/HISTSHP. Patterned fix after *
+      *             AR1045621.                                        *
+      *  AR820967 - Incorrect accrued interest amount due to wrong    *
+      *             NIAD. Ensure that NIAD will be populated          *
+      *             correctly. (Child: AR820968)                      *
+      *  CLE075BI - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  259765 - Use details from LOAMSDK for BC record.             *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  BUG23206 - Base Rate change does not take effect when not    *
+      *             linked to a base rate code                        *
+      *  246621 - LOAC shows base rate changes prior to loan start    *
+      *  243251 - Applied fix 229183. Added fix to correct BC record. *
+      *  229183 - Backvalued BC via LOAMS does not take effect if     *
+      *           SLID is zero (no interest payment yet).             *
+      *  239076 - Applied Core fix 228121.                            *
+      *  228121 - Consider Rate Fix Days when retrieving historic     *
+      *           base rates.                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  235147 - Dbase error occured in LE0371AU.  If the value date *
+      *           of rollover is earlier than the earliest base rate  *
+      *           history record, get the base rate of the earliest   *
+      *           base rate history record.                           *
+      *  235034 - If no rollover details has been input, the previous *
+      *           rates should apply.                                 *
+      *  230179 - Check if Base Rate code is newly inserted before    *
+      *           issuing the DB error.                               *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2: *
+      *           Allow repayments in facility currency (Recompile)   *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CLE034 - Lending Enhancements.                               *
+      *           Recompile                                           *
+      *  CLE031 - Lending Enhancements.                               *
+      *           Recompile                                           *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  157669 - Cost of Funds are being reported incorrectly        *
+      *           Recompiled due to changes in files HISTSHM,         *
+      *           HISTSHP, and HISTSHQ.                               *
+      *  CLE004 - Processing of of multi-currency rollovers ('MC')    *
+      *           is added.                                           *
+      *  117928 - First record output to the action file should be    *
+      *           a 'BC' (with last seq no) if processing a 'BC'.     *
+      *           History purge:-                                     *
+      *           start from rollover if processing a rollover;       *
+      *           start from just after rollover if processing a base *
+      *           rate code change;                                   *
+      *           continue up to, but not including, next rollover.   *
+      *  116331 - Back-valued BC's & RO's not actioned; set acti.     *
+      *  115884 - READ should be READE when reading through lehistl0! *
+      *  CLE003 - Back-valued loan amendments                         *
+      *                                                               *
+      *****************************************************************
+     FLELOAML2IF  E           K        DISK
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLEHISTL0UF  E           K        DISK
+     FSDBSHSL1IF  E           K        DISK
+     FSDBSRTL0IF  E           K        DISK                                                   230179
+     FACTN3DK O   E                    DISK
+     F            LOAMSDKF                          KRENAMEACTN3DKF
+     FACTN4   UF  E           K        DISK                                                 AR820967
+     F            LOAMSDHF                          KIGNORE                                 AR820967
+     F            LOAMSDKF                          KIGNORE                                 AR820967
+     F            LOAMSZ1F                          KIGNORE                                 AR820967
+     FLEHISTLJIF  E           K        DISK                                                 MD031736
+     F            HISTSHQF                          KRENAMEHISTHQ5F                         MD031736
+     F            ACTN3DKF                          KRENAMEACTNDK5F                         MD031736
+     FACTN3ZX UF  E                    DISK
+     FHISTSZX UF  E                    DISK
+     FLE0371AUO   E             61     PRINTER
+     FLE0371P1O   E             62     PRINTER
+      *
+     F*****************************************************************
+     F*
+     F* 85 - Work indicator for read on ACTN3ZX & HISTSZX trailer files
+      * 42 - Cache hit for Base Rate Cache                                                  CLE075BI
+     F*
+     F*****************************************************************
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE                                                                      228121
+      *                                                                                     CLE075BI
+      ** Base Rate Code (Key for Cache)                                                     CLE075BI
+      *                                                                                     CLE075BI
+     E                    CDBR      300  5                                                  CLE075BI
+      *                                                                                     CLE075BI
+      ** Least recently used array and sorted LRU array                                     CLE075BI
+      *                                                                                     CLE075BI
+     E                    LRUA      300 13 0                                                CLE075BI
+     E                    LRUS      300 13 0                                                CLE075BI
+      *
+     I*
+     I*        Rename duplicate name fields on ACTN3ZX & HISTSZX
+     ILOAMSZ1F
+     I              NORE                            NOREA3
+     I              NLRA                            NLRAA3
+      *                                                                                       259765
+      ** Rename LOAMSDK                                                                       259765
+      *                                                                                       259765
+     ILOAMSDKF                                                                                259765
+     I              AUTO                            AUTOA                                     259765
+     I              ORED                            OREDA                                     259765
+      *                                                                                     AR820967
+      ** Rename ACNT4                                                                       AR820967
+      *                                                                                     AR820967
+     IACTN1DNF                                                                              AR820967
+     I              RECI                            NRECI                                   AR820967
+     I              LNRF                            NLNRF                                   AR820967
+     I              VDAT                            NVDAT                                   AR820967
+     I              LASN                            NLASN                                   AR820967
+     I              MRIN                            NMRIN                                   AR820967
+     I              LTYP                            NLTYP                                   AR820967
+     I              SUTP                            NSUTP                                   AR820967
+     I              PTYP                            NPTYP                                   AR820967
+     I              AMTP                            NAMTP                                   AR820967
+     I              PRSQ                            NPRSQ                                   AR820967
+     I              CCY                             NCCY                                    AR820967
+     I              BRCA                            NBRCA                                   AR820967
+     I              CNUM                            NCNUM                                   AR820967
+     I              AITC                            NAITC                                   AR820967
+     I              WTRT                            NWTRT                                   AR820967
+     I              NACD                            NNACD                                   AR820967
+     I              BTIN                            NBTIN                                   AR820967
+     I              FCUS                            NFCUS                                   AR820967
+     I              FCLB                            NFCLB                                   AR820967
+     I              RDFC                            NRDFC                                   AR820967
+     I              ADDI                            NADDI                                   AR820967
+     I              ACDA                            NACDA                                   AR820967
+     I              AITN                            NAITN                                   AR820967
+     I              CLAS                            NCLAS                                   AR820967
+      *                                                                                     MD031736
+      ** Rename HISTSHP                                                                     MD031736
+      *                                                                                     MD031736
+     IHISTSHPF                                                                              MD031736
+     I              RECI                            HRECI                                   MD031736
+     I              LNRF                            HLNRF                                   MD031736
+     I              VDAT                            HVDAT                                   MD031736
+     I              AMTP                            HAMTP                                   MD031736
+      *                                                                                     MD031736
+      ** RENAME HISTSHQ                                                                     MD031736
+      *                                                                                     MD031736
+     IHISTHQ5F                                                                              MD031736
+     I              RECI                            HRECI                                   MD031736
+     I              LNRF                            HLNRF                                   MD031736
+     I              VDAT                            HVDAT                                   MD031736
+     I              AMTP                            HAMTP                                   MD031736
+      *                                                                                     MD031736
+      ** RENAME ACTN3DK                                                                     MD031736
+      *                                                                                     MD031736
+     IACTNDK5F                                                                              MD031736
+     I              RECI                            HRECI                                   MD031736
+     I              LNRF                            HLNRF                                   MD031736
+     I              VDAT                            HVDAT                                   MD031736
+     I              AMTP                            HAMTP                                   MD031736
+     I              ACTI                            HACTI                                   MD031736
+     I              BRTT                            HBRTT                                   MD031736
+     I              CCY                             HCCY                                    MD031736
+     I*
+     IHISTSZXF
+     I              NORE                            NOREHS
+      *                                                                                     CLE075BI
+      ** Data structure to overlay single character named fields                            CLE075BI
+      *                                                                                     CLE075BI
+     ICACFLD      DS                                                                        CLE075BI
+     I                                        1   40C                                       CLE075BI
+     I                                        1   40CXBSRT                                  CLE075BI
+     I*
+      *  Data Area FILKEY
+     IFILKEY      DS
+     I**********                              1   60LNRF                                      CLE148
+     I                                        1   6 LNRF                                      CLE148
+     I                                        7   7 RCDT
+      *
+     ID#BSKY      DS
+     I                                        1   3 CCY
+     I                                        4   50W#BSRC
+     I/COPY ZSRSRC,ZHOLI                                                                      228121
+     I/COPY ZSRSRC,ZHOLDS                                                                     228121
+      *
+     ILDA       EUDS
+      *
+     IDSFDY     E DS
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDBSRT    E DSSDBSRTPD                300                                             CLE075BI
+     ISCSARD    E DSSCSARDPD                                              CLE004
+      ** SAR File Details Accessed via Access Program AOSARDR0            CLE004
+      *                                                                   CLE004
+      *---------------------------------------------------------------------
+      * Access 'BC' loan amendments.
+     C           *LOVAL    SETLLLELOAML2
+     C                     READ LELOAML2                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      * Save amendment type, value date, base rate code.
+     C                     MOVE AMTP      W#AMTP
+     C                     MOVE VDAT      W#VDAT
+     C                     MOVE LASN      W#LASN                          117928
+     C                     Z-ADDBRTT      W#BSRC
+     C                     Z-ADDBRTE      W#BRTE 117                                        BUG23206
+     C                     Z-ADDBASR      W#BASR 117                                        BUG23206
+      *
+     C                     MOVE 'A'       RCDT
+     C           CLNKEY    CHAINCLOAN                81
+     C           *IN81     IFEQ *ON
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'CLOAN   'DBFILE
+     C                     MOVELFILKEY    DBKEY
+     C                     EXSR AUDPRT
+     C                     EXSR *PSSR
+     C                     ELSE                                                               246621
+     C                     Z-ADDVDAT      VDATS   50                                          246621
+     C                     ENDIF
+      *
+      *  If value date < start last interest date.
+     C********** W#VDAT    IFLT SLID                                                          229183
+     C           W#VDAT    IFLT BJRDNB                                                        229183
+      *
+     C                     EXSR DELHIS
+      *                                                                                       259765
+      ** Use autosettlement indicator from LOAMSDK for BC records                             259765
+      *                                                                                       259765
+     C                     MOVE AUTOA     AUTO                                                259765
+     C                     Z-ADDOREDA     ORED                                                259765
+      *                                                                                       259765
+     C                     EXSR WRTHIS
+      *
+     C                     ENDIF
+      *
+     C                     READ LELOAML2                 80
+     C                     ENDDO
+      *
+      *---------------------------------------------------------------------
+      * Access rollovers.
+     C           *LOVAL    SETLLCLOAN
+     C                     READ CLOAN                    81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      * Need live rec with rollover date < start last interest date.
+     C           RECI      IFEQ 'D'
+     C           RLDT      ANDGT*ZERO
+     C           RLDT      ANDLTSLID
+      *
+     C                     MOVE 'RO'      W#AMTP
+     C*  If Rollover Date = Last Multi-ccy Rollover Date, this is         CLE004
+     C*  a multi-currency rollover                                        CLE004
+     C*                                                                                       235034
+     C           NBRA      IFEQ 0                                                             235034
+     C           NRTS      ANDEQ0                                                             235034
+     C                     Z-ADDBRTT      NBRA                                                235034
+     C                     MOVE ICBS      NCAS                                                235034
+     C                     MOVE SPIN      NSIN                                                235034
+     C                     MOVE CHIN      NCHI                                                235034
+     C                     Z-ADDRTSP      NRTS                                                235034
+     C                     ENDIF                                                              235034
+     C*                                                                                       235034
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C           RLDT      ANDEQLMCD                                      CLE004
+     C                     MOVE 'MC'      W#AMTP                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C                     MOVE RLDT      W#VDAT
+     C                     MOVE *ZEROS    W#LASN                          117928
+     C                     Z-ADDNBRA      W#BSRC
+     C                     EXSR DELHIS
+     C                     EXSR WRTHIS
+      *
+     C                     ENDIF
+      *
+     C                     READ CLOAN                    81
+     C                     ENDDO
+      *
+     C           *IN63     IFEQ *ON
+     C                     WRITELE0371E3
+     C                     ENDIF
+     C                     MOVE *ON       *INLR
+      *
+      *********************************************************
+      *  DELHIS - Delete old history and print                *
+      *********************************************************
+     C           DELHIS    BEGSR
+      *
+     C                     MOVE BJRDNB    ENDDAT
+      *
+     C                     Z-ADD26        W#PRSQ                          117928
+     C           W#AMTP    IFEQ 'RO'                                      117928
+     C           W#AMTP    OREQ 'MC'                                      CLE004
+     C           W#AMTP    IFEQ 'MC'                                      CLE004
+     C                     Z-ADD25        W#PRSQ                          CLE004
+     C                     ELSE                                           CLE004
+     C                     Z-ADD26        W#PRSQ                          117928
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C           W#AMTP    IFEQ 'RO'                                      117928
+     C           W#AMTP    OREQ 'MC'                                      CLE004
+     C           HISKEY    SETLLLEHISTL0
+     C                     ELSE                                           117928
+     C           HISKEY    SETGTLEHISTL0                                  117928
+     C                     ENDIF                                          117928
+     C           LNRF      READELEHISTL0                 81
+     C           *IN81     DOWEQ*OFF
+      *
+      * Leave loop if:-
+      *       encounter later rollover.                                   117928
+      ********processing*RO*and*encounter*later*rollover;***********      117928
+      ****or**processing*BC*and*encounter*rollover.*****************      117928
+     C***********W#AMTP    IFEQ 'RO'                                      117928
+     C***********AMTP      ANDEQ'RO'                                      117928
+     C           AMTP      IFEQ 'RO'                                      117928
+     C           VDAT      ANDGTW#VDAT
+     C           AMTP      OREQ 'MC'                                      CLE004
+     C           VDAT      ANDGTW#VDAT                                    CLE004
+     C***********W#AMTP    OREQ 'BC'                                      117928
+     C***********AMTP      ANDEQ'RO'                                      117928
+     C                     Z-ADDVDAT      ENDDAT
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           W#AMTP    IFEQ 'MC'                                      CLE004
+     C           AMTP      ANDEQ'MC'                                      CLE004
+     C                     Z-ADDPRINRO    W#CPAM                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C                     DELETHISTSHQF
+      *
+     C                     EXSR DROPRT
+      *
+      * Update counter for trailer deletion HISTSZX
+     C                     ADD  1         C1
+      *
+      * For rollovers with Next Base Rate Type not entered,
+      * do not delete subsequent BR records.
+     C           W#AMTP    IFEQ 'RO'
+     C           AMTP      ANDEQ'RO'
+     C           W#BSRC    ANDEQ*ZERO
+     C           W#AMTP    OREQ 'MC'                                      CLE004
+     C           AMTP      ANDEQ'MC'                                      CLE004
+     C           W#BSRC    ANDEQ*ZERO                                     CLE004
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C***********          READ LEHISTL0                 81               115884
+     C           LNRF      READELEHISTL0                 81               115884
+     C                     ENDDO
+      *
+      * Update Trailer - Sub 1 from No. of records
+     C           C1        IFNE 0
+     C           1         SETLLHISTSZX
+     C                     READ HISTSZX                  85
+      *   Database error
+     C           *IN85     IFEQ *ON
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'HISTSZX 'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR AUDPRT
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     SUB  C1        NOREHS
+     C                     UPDATHISTSZXF
+     C                     Z-ADD0         C1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *********************************************************
+      *  WRTHIS - Write new history                           *
+      *********************************************************
+     C           WRTHIS    BEGSR
+      *
+     C           W#AMTP    IFEQ 'BC'                                                          243251
+     C                     MOVE ' '       CALC                                                243251
+     C                     MOVE ' '       SPIN                                                243251
+     C                     Z-ADD*ZEROS    RTSP                                                243251
+     C                     ENDIF                                                              243251
+      *                                                                                       243251
+     C           W#BSRC    IFNE *ZERO
+      *
+      * Get most recent record for currency/code, not later than
+      * value date; a record should exist.
+      *                                                                                       228121
+     C                     MOVE W#VDAT    SVVDAT  50                                          228121
+     C                     MOVE RFDY      ZNRDYS                                              228121
+     C           ZNRDYS    IFNE *ZERO                                                         228121
+     C                     MOVE W#VDAT    ZDAYNO                                              228121
+     C                     MOVE CCY       ZCCY                                                228121
+     C                     MOVE *BLANK    ZLOC                                                228121
+     C                     EXSR ZBKDT                                                         228121
+     C                     MOVE ZDYNBR    W#VDAT                                              228121
+     C           ZDYNBR    IFLT VDATS                                                         246621
+     C                     Z-ADDSVVDAT    W#VDAT                                              246621
+     C                     ENDIF                                                              246621
+     C                     ENDIF                                                              228121
+     C           BSKEY1    SETGTSDBSHSL1
+     C                     MOVE SVVDAT    W#VDAT                                              228121
+     C           BSKEY2    REDPESDBSHSL1                 84
+      *
+     C           *IN84     IFEQ *ON
+     C                     MOVELW#BSRC    WBSRC                                               230179
+     C                     ADD  1         RCSQ                                              CLE075BI
+     C                     MOVELCCY       KYBSRT                                            CLE075BI
+     C                     MOVE WBSRC     KYBSRT                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Check if KYBSRT in Cache, set BSRTFD to 'Y' if found                               CLE075BI
+      *                                                                                     CLE075BI
+     C                     EXSR CHKBSR                                                      CLE075BI
+      *                                                                                     CLE075BI
+     C           BSRTFD    IFEQ 'Y'                                                         CLE075BI
+     C           CXBSRT    OCUR SDBSRT                                                      CLE075BI
+      *                                                                                     CLE075BI
+     C                     ELSE                                                             CLE075BI
+      *                                                                                     CLE075BI
+      ** Prepare cache to store details about to be retrieved                               CLE075BI
+      *                                                                                     CLE075BI
+     C           TXBSRT    IFGT 1                                                           CLE075BI
+     C           TXBSRT    SUB  1         CXBSRT                                            CLE075BI
+     C                     ELSE                                                             CLE075BI
+     C                     Z-ADD1         CXBSRT                                            CLE075BI
+     C                     MOVEALRUA      LRUS                                              CLE075BI
+     C                     SORTALRUS                                                        CLE075BI
+     C                     Z-ADDLRUS,1    LEASTE                                            CLE075BI
+     C           LEASTE    LOKUPLRUA,C                   42                                 CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Retrieve details from File Chain                                                   CLE075BI
+      *                                                                                     CLE075BI
+     C           CXBSRT    OCUR SDBSRT                                                      CLE075BI
+     C                     MOVELKYBSRT    CCY                                               CLE075BI
+     C                     MOVE KYBSRT    WBSRC                                             CLE075BI
+     C           BSKEY3    CHAINSDBSRTL0             84                                       230179
+      *                                                                                       230179
+      ** If not found in SDBSRTPD and last change date is less than                           230179
+      ** run date                                                                             230179
+      *                                                                                       230179
+     C           *IN84     IFEQ '1'                                                           230179
+     C********** *IN84     OREQ '0'                                                    230179 235147
+     C********** BALCD     ANDLTBJRDNB                                                 230179 235147
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDBSHSL1'DBFILE
+     C                     MOVELD#BSKY    DBKEY
+     C                     EXSR AUDPRT
+     C                     EXSR *PSSR
+     C                     ELSE                                                             CLE075BI
+     C                     EXSR ADDBSR                                                      CLE075BI
+     C                     ENDIF
+      *                                                                                     CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                       230179
+     C                     Z-ADDBANBRT    BRTE                                                230179
+     C                     ELSE                                                               230179
+     C                     Z-ADDG0CBSR    BRTE
+     C                     ENDIF
+      *                                                                                     BUG23206
+     C                     ELSE                                                             BUG23206
+      *                                                                                     BUG23206
+     C           W#AMTP    IFEQ 'BC'                                                        BUG23206
+     C                     Z-ADDW#BASR    BRTE                                              BUG23206
+     C                     Z-ADDW#BASR    BASR                                              BUG23206
+     C                     ENDIF                                                            BUG23206
+      *                                                                                       230179
+     C                     ENDIF                                                              230179
+      *
+      ****Create*ACTN3DK*RO/BR*record.*****************************       117928
+      ****Create*ACTN3DK*RO/BC*record.*****************************117928 CLE004
+      *   Create ACTN3DK RO/MC/BC record.                                 CLE004
+     C                     MOVE 'D'       RECI
+     C***********          MOVE 'BR'      AMTP                            117928
+     C***********          Z-ADD38        PRSQ                            117928
+     C                     MOVE W#AMTP    AMTP                            117928
+     C                     Z-ADD39        PRSQ                            117928
+     C                     Z-ADDW#BSRC    BRTT                            116331
+     C                     Z-ADD2         MRIN
+     C                     Z-ADDW#VDAT    VDAT
+     C                     MOVE W#LASN    LASN                            117928
+     C                     MOVE 'Y'       ACTI                            116331
+     C           W#AMTP    IFEQ 'RO'
+     C***********          MOVE W#AMTP    AMTP                            117928
+     C                     Z-ADD26        PRSQ
+     C***********          Z-ADDW#BSRC    BRTT                            116331
+     C                     MOVE NCAS      CALC
+     C                     MOVE NSIN      SPIN
+     C                     Z-ADDNRTS      RTSP
+     C                     MOVE NCHI      ZZ001            next chg ind
+     C                     ENDIF
+      *
+     C           W#AMTP    IFEQ 'MC'                                      CLE004
+     C                     Z-ADD25        PRSQ                            CLE004
+     C                     MOVE NCAS      CALC                            CLE004
+     C                     MOVE NSIN      SPIN                            CLE004
+     C                     Z-ADDNRTS      RTSP                            CLE004
+     C                     MOVE NCHI      ZZ001            next chg ind   CLE004
+     C                     Z-ADDW#CPAM    PRAM                            CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C                     WRITEACTN3DKF
+      *
+      * Update Trailer counter ACTN3ZX
+     C                     ADD  1         C2
+      *                                                                                     AR820967
+     C           ACNKEY    CHAINACTN1DNF             88                                     AR820967
+     C           *IN88     IFEQ '0'                                                         AR820967
+      *                                                                                     MD031736
+      ** update field NIAD with value date of the latest event                              MD031736
+      ** from Action File (ACTN3DK)/ History Files (HISTSHQ/HISTSHP)                        MD031736
+      *                                                                                     MD031736
+     C                     Z-ADDVDAT      NIAD                                              MD031736
+     C           LNRF      SETGTLEHISTLJ                                                    MD031736
+     C           LNRF      REDPELEHISTLJ                 81                                 MD031736
+      *                                                                                     MD031736
+     C           *IN81     DOWEQ'0'                                                         MD031736
+     C           HVDAT     ANDGTVDAT                                                        MD031736
+     C           HVDAT     IFGT VDAT                                                        MD031736
+     C           HAMTP     ANDNE'BR'                                                        MD031736
+     C           HVDAT     ORGT VDAT                                                        MD031736
+     C           HAMTP     ANDEQ'BR'                                                        MD031736
+     C           HCCY      ANDEQCCY                                                         MD031736
+     C           HBRTT     ANDEQBRTT                                                        MD031736
+     C                     Z-ADDHVDAT     NIAD                                              MD031736
+     C                     ENDIF                                                            MD031736
+     C           LNRF      REDPELEHISTLJ                 81                                 MD031736
+     C                     ENDDO                                                            MD031736
+     C********** VDAT      IFGT NIAD                                               AR820967 MD031736
+     C**********           Z-ADDVDAT      NIAD                                     AR820967 MD031736
+     C                     UPDATACTN1DNF                                                    AR820967
+     C**********           ENDIF                                                   AR820967 MD031736
+     C                     ENDIF                                                            AR820967
+      *
+      * For rollovers with Next Base Rate Type not entered,
+      * write rollover rec ONLY.
+     C           W#AMTP    IFEQ 'RO'
+     C           AMTP      ANDEQ'RO'
+     C           W#BSRC    ANDEQ*ZERO
+     C           W#AMTP    OREQ 'MC'                                      CLE004
+     C           AMTP      ANDEQ'MC'                                      CLE004
+     C           W#BSRC    ANDEQ*ZERO                                     CLE004
+     C                     ELSE
+      *
+     C           CHIN      IFEQ 'D'
+     C           CHIN      OREQ *BLANK
+     C                     MOVE G0CBSR    PBRATE
+      *
+     C           BSKEY2    READESDBSHSL1                 82
+     C           *IN82     DOWEQ*OFF
+     C           G0HIDT    ANDLTENDDAT
+      *
+     C           G0CBSR    IFNE PBRATE
+      *
+      *   Create ACTN3DK BR record.
+     C                     MOVE 'BR'      AMTP
+     C                     Z-ADD38        PRSQ
+     C                     Z-ADDG0HIDT    VDAT
+     C                     Z-ADDG0CBSR    BRTE
+     C                     MOVE 'Y'       ACTI                            116331
+     C                     WRITEACTN3DKF
+      *
+     C                     MOVE G0CBSR    PBRATE
+      *
+      * Update Trailer counter ACTN3ZX
+     C                     ADD  1         C2
+      *                                                                                     AR820967
+     C           ACNKEY    CHAINACTN1DNF             88                                     AR820967
+     C           *IN88     IFEQ '0'                                                         AR820967
+      *                                                                                     MD031736
+      ** update field NIAD with value date of the latest event                              MD031736
+      ** from Action File (ACTN3DK)/ History Files (HISTSHQ/HISTSHP)                        MD031736
+      *                                                                                     MD031736
+     C                     Z-ADDVDAT      NIAD                                              MD031736
+     C           LNRF      SETGTLEHISTLJ                                                    MD031736
+     C           LNRF      REDPELEHISTLJ                 81                                 MD031736
+      *                                                                                     MD031736
+     C           *IN81     DOWEQ'0'                                                         MD031736
+     C           HVDAT     ANDGTVDAT                                                        MD031736
+     C           HVDAT     IFGT VDAT                                                        MD031736
+     C           HAMTP     ANDNE'BR'                                                        MD031736
+     C           HVDAT     ORGT VDAT                                                        MD031736
+     C           HAMTP     ANDEQ'BR'                                                        MD031736
+     C           HCCY      ANDEQCCY                                                         MD031736
+     C           HBRTT     ANDEQBRTT                                                        MD031736
+     C                     Z-ADDHVDAT     NIAD                                              MD031736
+     C                     ENDIF                                                            MD031736
+     C           LNRF      REDPELEHISTLJ                 81                                 MD031736
+     C                     ENDDO                                                            MD031736
+      *                                                                                     MD031736
+     C********** VDAT      IFGT NIAD                                               AR820967 MD031736
+     C**********           MOVE VDAT      NIAD                                     AR820967 MD031736
+     C                     UPDATACTN1DNF                                                    AR820967
+     C**********           ENDIF                                                   AR820967 MD031736
+     C                     ENDIF                                                            AR820967
+      *                                                                                     AR820967
+     C                     ENDIF
+      *
+     C           BSKEY2    READESDBSHSL1                 82
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Update Trailer file - add C2 to No. of records
+     C*
+     C           C2        IFNE 0
+     C           1         SETLLACTN3ZX
+     C                     READ ACTN3ZX                  85
+      *   Database error
+     C           *IN85     IFEQ *ON
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'ACTN3ZX 'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR AUDPRT
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  C2        NOREA3
+     C                     UPDATLOAMSZ1F
+     C                     Z-ADD0         C2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *********************************************************
+      *  DROPRT - Print Dropped History Report                *
+      *********************************************************
+     C           DROPRT    BEGSR
+      *
+     C           *IN62     IFEQ *ON
+     C                     WRITELE0371H1
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *ON       *IN63
+     C                     ENDIF
+      *
+      ** CONVERT VALUE DATE
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     VLDAT
+      *
+     C                     WRITELE0371D1
+      *
+     C                     ENDSR
+      *********************************************************
+      *  AUDPRT - Print Audit/Error Report                    *
+      *********************************************************
+     C           AUDPRT    BEGSR
+      *
+     C           *IN61     IFEQ *ON
+     C                     WRITELE0371F1
+     C                     MOVE *OFF      *IN61
+     C                     ENDIF
+     C                     WRITELE0371F2
+     C                     WRITELE0371F3
+      *
+     C                     ENDSR
+     C/COPY ZSRSRC,ZDATE2Z2
+      *********************************************************
+      *  *INZSR                                               *
+      *********************************************************
+     C           *INZSR    BEGSR
+      *                                                                                       CLE134
+     C           *ENTRY    PLIST                                                              CLE134
+     C                     PARM           WPNAM  10                                           CLE134
+      *
+     C                     MOVEL'LE0371'  DBPGM
+      *
+      * Read first ICD details for report heading and Run Date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Error in ICD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@RTCD     DBKEY
+     C                     EXSR AUDPRT
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *
+      *                                                                   CLE004
+      ** Determine if Customer Lending Enhancements - Syndications        CLE004
+      ** (CLE004) is installed                                            CLE004
+      *                                                                   CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*VERIFY' @OPTN                           CLE004
+     C                     PARM 'CLE004'  PSARD   6                       CLE004
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE004
+      *                                                                   CLE004
+     C                     MOVE 'N'       CLE004  1                       CLE004
+      *                                                                   CLE004
+      ** If feature is on, set up SAR work flag                           CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004                          CLE004
+     C                     ELSE                                           CLE004
+      *                                                                   CLE004
+      ** else, database error (return code other than *NRF)               CLE004
+      *                                                                   CLE004
+     C           @RTCD     IFNE '*NRF   '                                 CLE004
+     C                     Z-ADD6         DBASE                           CLE004
+     C                     MOVEL'SDSARDPD'DBFILE                          CLE004
+     C                     MOVEL@RTCD     DBKEY                           CLE004
+     C                     EXSR AUDPRT                                    CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+      *
+     C           CLNKEY    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+      *
+     C           HISKEY    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           W#VDAT
+     C                     KFLD           W#PRSQ                          117928
+      *
+     C           BSKEY1    KLIST
+     C                     KFLD           CCY
+     C                     KFLD           W#BSRC
+     C                     KFLD           W#VDAT
+      *
+     C           BSKEY2    KLIST
+     C                     KFLD           CCY
+     C                     KFLD           W#BSRC
+      *                                                                                       230179
+     C           BSKEY3    KLIST                                                              230179
+     C                     KFLD           CCY                                                 230179
+     C                     KFLD           WBSRC   2                                           230179
+      *
+     C           ACNKEY    KLIST                                                            AR820967
+     C                     KFLD           BRCA                                              AR820967
+     C                     KFLD           CNUM                                              AR820967
+     C                     KFLD           LNRF                                              AR820967
+      *                                                                                     AR820967
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE *OFF      *IN63
+     C                     Z-ADD0         C1      40
+     C                     Z-ADD0         C2      40
+      *
+     C           *LIKE     DEFN AMTP      W#AMTP
+     C           *LIKE     DEFN VDAT      W#VDAT
+     C           *LIKE     DEFN LASN      W#LASN                          117928
+     C           *LIKE     DEFN PRSQ      W#PRSQ                          117928
+     C           *LIKE     DEFN VDAT      ENDDAT
+     C           *LIKE     DEFN PRINRO    W#CPAM                          CLE004
+     C           *LIKE     DEFN G0CBSR    PBRATE
+      *
+      ** Define Partial Cache Fields (Base Rate Code)                                       CLE075BI
+      *                                                                                     CLE075BI
+     C                     Z-ADD300       SZBSRT  30                                        CLE075BI
+      *                                                                                     CLE075BI
+     C                     Z-ADD0         LEASTE 130                                        CLE075BI
+     C           *LIKE     DEFN LEASTE    RCSQ                                              CLE075BI
+      *                                                                                     CLE075BI
+     C           SZBSRT    ADD  1         TXBSRT  40                                        CLE075BI
+     C           *LIKE     DEFN TXBSRT    PXBSRT                                            CLE075BI
+     C           *LIKE     DEFN CDBR      KYBSRT                                            CLE075BI
+      *                                                                                     CLE075BI
+     C                     MOVE 'N'       BSRTFD  1                                         CLE075BI
+     C                     MOVE *BLANKS   KYBSRT                                            CLE075BI
+     C                     Z-ADDSZBSRT    PXBSRT                                            CLE075BI
+     C                     Z-ADDSZBSRT    CXBSRT                                            CLE075BI
+      *                                                                                     CLE075BI
+     C                     ENDSR
+      *****************************************************************                     CLE075BI
+      *                                                               *                     CLE075BI
+      *  CHKBSR - Check Base Rate Code details in array               *                     CLE075BI
+      *                                                               *                     CLE075BI
+      *****************************************************************                     CLE075BI
+     C           CHKBSR    BEGSR                                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Initialize search indicators                                                       CLE075BI
+      *                                                                                     CLE075BI
+     C                     MOVE 'N'       BSRTFD                                            CLE075BI
+     C                     MOVE *OFF      *IN42                                             CLE075BI
+      *                                                                                     CLE075BI
+      ** Search only if key is not blank and cache not empty                                CLE075BI
+      ** If current search is same with previous, resend details                            CLE075BI
+      *                                                                                     CLE075BI
+     C           KYBSRT    IFNE *BLANKS                                                     CLE075BI
+     C           TXBSRT    ANDLESZBSRT                                                      CLE075BI
+      *                                                                                     CLE075BI
+     C                     Z-ADDPXBSRT    CXBSRT                                            CLE075BI
+     C           KYBSRT    IFEQ CDBR,C                                                      CLE075BI
+     C                     MOVE *ON       *IN42                                             CLE075BI
+      *                                                                                     CLE075BI
+      ** otherwise, search in cache                                                         CLE075BI
+      *                                                                                     CLE075BI
+     C                     ELSE                                                             CLE075BI
+     C                     Z-ADDTXBSRT    CXBSRT                                            CLE075BI
+     C           KYBSRT    LOKUPCDBR,C                   42                                 CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** If found in cache, set appropriate indicators and                                  CLE075BI
+      ** update record sequence of matching entry                                           CLE075BI
+      *                                                                                     CLE075BI
+     C           *IN42     IFEQ *ON                                                         CLE075BI
+     C                     Z-ADDRCSQ      LRUA,C                                            CLE075BI
+     C                     Z-ADDCXBSRT    PXBSRT                                            CLE075BI
+     C                     MOVE 'Y'       BSRTFD                                            CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                     CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                     CLE075BI
+     C                     ENDSR                                                            CLE075BI
+      *****************************************************************                     CLE075BI
+      *                                                               *                     CLE075BI
+      *  ADDBSR - Add Base Rate Code details to array                 *                     CLE075BI
+      *                                                               *                     CLE075BI
+      *****************************************************************                     CLE075BI
+     C           ADDBSR    BEGSR                                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Update trailer index to reflect number of active entries                           CLE075BI
+      *                                                                                     CLE075BI
+     C           TXBSRT    IFGT 1                                                           CLE075BI
+     C                     SUB  1         TXBSRT                                            CLE075BI
+     C                     ENDIF                                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Add key and record sequence of newly added entry to array                          CLE075BI
+      *                                                                                     CLE075BI
+     C                     MOVELKYBSRT    CDBR,C                                            CLE075BI
+     C                     MOVE RCSQ      LRUA,C                                            CLE075BI
+      *                                                                                     CLE075BI
+      ** Update previous search indexPIDX so that CHKBSR checks this                        CLE075BI
+      *                                                                                     CLE075BI
+     C                     Z-ADDCXBSRT    PXBSRT                                            CLE075BI
+      *                                                                                     CLE075BI
+     C                     ENDSR                                                            CLE075BI
+      ********************************************************************
+      *
+      * *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+      *
+      * CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+     C/COPY ZSRSRC,ZACCH                                                                      228121
+     C/COPY ZSRSRC,ZBKDT                                                                      228121
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

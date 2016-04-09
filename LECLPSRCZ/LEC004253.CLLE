@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Update Account Officers Modified Today')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       LEC004253 - Update Account Officers Modified Today          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1089839          Date 19Feb13              */
+/*       Prev Amend No. CLE075AJ  *CREATE  Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089839 - COBOP and 2.1 source clashes                    */
+/*       CLE075AJ - COB Restructure - LE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TABLE)
+ 
+             DCL        VAR(&TABLE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLD_ACOF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLD_CUST) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FLD_DEPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBQ1) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SUBQ2) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SUBQ3) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(300)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+             CHGJOB     SWS(XXXXXX00)
+ 
+ /* Replace ACOFs having 00's and blanks with **. */
+ 
+ /*********  RUNSQL     SQL('UPDATE LECSTXPD SET BBACOC = ''**'' + */                  /*AR1089839*/
+ /*********               WHERE BBACOC = ''00'' OR BBACOC = ''  +  */                  /*AR1089839*/
+ /*********               ''') COMMIT(*NONE)                       */                  /*AR1089839*/
+             SCRUNSQL   SQL('UPDATE LECSTXPD SET BBACOC = ''**'' +
+                          WHERE BBACOC = ''00'' OR BBACOC = ''  ''')                   /*AR1089839*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+ /* Replace department codes having 000's and blanks with ***. */
+                                                                                       /*AR1089839*/
+ /*********  RUNSQL     SQL('UPDATE LEACFXPD SET AZDPCD = ''***'' +*/                  /*AR1089839*/
+ /*********               WHERE AZDPCD = ''000'' OR AZDPCD = ''   +*/                  /*AR1089839*/
+ /*********               ''') COMMIT(*NONE)                       */
+             SCRUNSQL   SQL('UPDATE LEACFXPD SET AZDPCD = ''***'' +
+                          WHERE AZDPCD = ''000'' OR AZDPCD = ''   ''')                 /*AR1089839*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SELECT
+ 
+ /* LEPEFCD */
+ 
+             WHEN       COND(&TABLE *EQ 'LEPEFCD') THEN(DO)
+             CHGVAR     VAR(&FLD_CUST) VALUE('FDFCUS')
+             CHGVAR     VAR(&FLD_ACOF) VALUE('FDACOF')
+             CHGVAR     VAR(&FLD_DEPT) VALUE('FDDEPT')
+             ENDDO
+ 
+ /* LEPERED */
+ 
+             WHEN       COND(&TABLE *EQ 'LEPERED') THEN(DO)
+             CHGVAR     VAR(&FLD_CUST) VALUE('RDCNUM')
+             CHGVAR     VAR(&FLD_ACOF) VALUE('RDACOF')
+             CHGVAR     VAR(&FLD_DEPT) VALUE('RDDEPT')
+             ENDDO
+ 
+ /* LEPEGLD */
+ 
+             WHEN       COND(&TABLE *EQ 'LEPEGLD') THEN(DO)
+             CHGVAR     VAR(&FLD_CUST) VALUE('GDCNUM')
+             CHGVAR     VAR(&FLD_ACOF) VALUE('GDACOF')
+             CHGVAR     VAR(&FLD_DEPT) VALUE('GDDEPT')
+             ENDDO
+ 
+ /* LEPEDFD */
+ 
+             WHEN       COND(&TABLE *EQ 'LEPEDFD') THEN(DO)
+             CHGVAR     VAR(&FLD_CUST) VALUE('DDCNUM')
+             CHGVAR     VAR(&FLD_ACOF) VALUE('DDACOF')
+             CHGVAR     VAR(&FLD_DEPT) VALUE('DDDEPT')
+             ENDDO
+ 
+             ENDSELECT
+ 
+/* Update the account officer in the table joined on Customer. */
+ 
+             CHGVAR     VAR(&SUBQ1) VALUE('UPDATE ' *CAT &TABLE +
+                          *TCAT ' A SET A.' *CAT &FLD_ACOF)
+             CHGVAR     VAR(&SUBQ2) VALUE(' = (SELECT +
+                          LECSTXPD.BBACOC FROM LECSTXPD WHERE A.' +
+                          *CAT &FLD_CUST *TCAT ' = LECSTXPD.BBCUST) +
+                          WHERE EXISTS ')
+             CHGVAR     VAR(&SUBQ3) VALUE(' (SELECT * FROM LECSTXPD +
+                          WHERE A.' *CAT &FLD_CUST *TCAT ' = +
+                          LECSTXPD.BBCUST)')
+ 
+             CHGVAR     VAR(&SQL) VALUE(&SUBQ1 *TCAT &SUBQ2 *TCAT +
+                          &SUBQ3)
+ 
+/**********  RUNSQL     SQL(&SQL) COMMIT(*NONE)                    */                  /*AR1089839*/
+             SCRUNSQL   SQL(&SQL)                                                      /*AR1089839*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Update the department code on the table joined on ACOF. */
+ 
+             CHGVAR     VAR(&SUBQ1) VALUE('UPDATE ' *CAT &TABLE +
+                          *TCAT ' A SET A.' *CAT &FLD_DEPT)
+             CHGVAR     VAR(&SUBQ2) VALUE(' = (SELECT +
+                          LEACFXPD.AZDPCD FROM LEACFXPD WHERE A.' +
+                          *CAT &FLD_ACOF *TCAT ' = LEACFXPD.AZACOC) +
+                          WHERE EXISTS ')
+             CHGVAR     VAR(&SUBQ3) VALUE(' (SELECT * FROM LEACFXPD +
+                          WHERE A.' *CAT &FLD_ACOF *TCAT ' = +
+                          LEACFXPD.AZACOC)')
+ 
+             CHGVAR     VAR(&SQL) VALUE(&SUBQ1 *TCAT &SUBQ2 *TCAT +
+                          &SUBQ3)
+ /********** RUNSQL     SQL(&SQL) COMMIT(*NONE)                    */                  /*AR1089839*/
+             SCRUNSQL   SQL(&SQL)                                                      /*AR1089839*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('LEC004253 - Update Account Officers +
+                          Modified Today terminated abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

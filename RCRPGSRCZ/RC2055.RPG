@@ -1,0 +1,519 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RC II - Statements Review 2')
+/*OVRF*: OVRDBF FILE(RCIXI2LU) TOFILE(RCIXI2L2)                     : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Autorecs II Module                                   *
+      *                                                               *
+      *  RC2055 - Statements Review 2                                 *
+      *                                                               *
+      *  Function:  Display Autorecs Statement details                *
+      *  I/C                                                          *
+      *                                                               *
+      *  Called By: RC2050 - Statements Review                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 105223             Date 04JUL96               *
+      *                 S01449             Date 07JAN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  105223 - Array index error on line 35900.  There are dup.    *
+      *           messages which system unable to trap, treating all  *
+      *           these messages as single message (not enough for    *
+      *           array DT1 to accomodate).                           *
+      *  S01449 - Autorecs II module.                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+     FRC2055DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE RC2055F2
+     FRCIXI2L2IF  E           K        DISK
+     FRCIXI2LUUF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSIXI2UP
+     FMSMSI2LAIF  E           K        DISK
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *    10            EoF RCIXI2L2                                 *
+      *    11            EoF MSMSI2LA                                 *
+      *                                                               *
+      *    20            SFLDSP                                       *
+      *    21            SFLDSPCTL                                    *
+      *    22            SFLEND                                       *
+      *                                                               *
+      *    23            F8 enabled                                   *
+      *    24            F9 enabled                                   *
+      *                                                               *
+      *    70            re-send function (F24) enabled               *
+      *    71            downloaded/report download details           *
+      *                                                               *
+      *    KH            F8                                           *
+      *    KI            F9                                           *
+      *    KL            F12                                          *
+      *    KY            F24                                          *
+      *                                                               *
+      *    U7U8LR        DB error                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    TXT     1   3 20
+     E                    TABMM   1  12  2   TABMON  3                 format
+     E                    CPY@    1   1 80
+      **  Compile time arrays
+      *
+     E                    DT1        10256
+     E                    DT2      2560  1
+      **  Message data arrays
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUNN
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I            DS
+     I                                        1 256 @DRCD
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        4   4 @COL4
+     I                                        5   5 @COL5
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+      **  DS to break up data record
+      *
+     I            DS
+     I                                        1   60MODE
+     I                                        1   2 @YY
+     I                                        3   4 @MM
+     I                                        5   6 @DD
+     I            DS
+     I                                        1   7 @HADAT
+     I                                        1   2 @SD
+     I                                        3   5 @SM
+     I                                        6   7 @SY
+      **  Reformat SWIFT format dates
+      *
+     IDTDS        DS
+     I                                        12560 DT2
+      **  Message data
+      *
+     I@CRLF       DS
+     I                                        1   1 @CR
+     I                                        2   2 @LF
+      **  Carriage Return/Line Feed
+      *
+      /EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           @PMOR  28
+     C                     PARM           @PACT   1
+     C                     PARM           @PFOL   1
+     C                     PARM           @PRTC   2
+     C                     PARM           @PERR   1
+      *
+      **  ZM1001
+     C           PLIST1    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+     C                     MOVEL'RC2055'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   main process                                                *
+      *   INIT   - initial process                                    *
+      *   HDNG   - write message headings                             *
+      *   TEXT   - write message text                                 *
+      *   RSND   - flag message for re-send                           *
+      *   *PSSR  - error handling                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Access message reference file using SWIFT Message Output
+      **  Rererence (MOR)
+     C           @PMOR     CHAINRCIXI2L2             10
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL@PMOR     DBKEY            * DB ERROR 01 *
+     C                     MOVEL'RCIXI2L2'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Write message headings
+     C                     EXSR HDNG
+      *
+      **  Write message text
+     C                     EXSR TEXT
+      *
+      **  If last or single message disable F8-Next
+     C           @PFOL     IFNE 'L'
+     C           @PFOL     ANDNE'S'
+     C                     SETON                     23
+     C                     END
+      *
+      **  If first or single message disable F9-Previous
+     C           @PFOL     IFNE 'F'
+     C           @PFOL     ANDNE'S'
+     C                     SETON                     24
+     C                     END
+      *
+      **  Do until F8, F9 or F12 pressed
+     C           *INKH     DOWEQ'0'
+     C           *INKI     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If F24 pressed process for re-send
+     C           *INKY     IFEQ '1'
+     C                     EXSR RSND
+     C                     END
+      *
+      **  If option taken and message still eligible for re-send
+      **  set display indicator
+     C                     SETOF                     70
+     C           @PACT     IFEQ 'R'
+     C           R3RPTS    ANDEQ'D'
+     C                     SETON                     70
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITERC2055F1
+     C                     WRITESFLMSGC
+     C                     EXFMTRC2055F3
+     C                     CALL 'ZM1002'
+      *
+      **  If F8 pressed return '08' to calling program
+     C           *INKH     IFEQ '1'
+     C                     MOVE '08'      @PRTC
+     C                     END
+      *
+      **  If F9 pressed return value '09' to calling program
+     C           *INKI     IFEQ '1'
+     C                     MOVE '09'      @PRTC
+     C                     END
+      *
+      **  If F12 pressed return value '12' to calling program
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      @PRTC
+     C                     END
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RC2055'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Set on indicator 50 if multi-branched system
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     50
+     C                     END
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITERC2055F3
+     C                     SETON                     202122
+     C                     Z-ADD1         RRN     50
+      *
+      **  Initialise constant fields:
+      **   - CarriageReturn
+     C                     BITOF'01234567'@CR     1
+     C                     BITON'457'     @CR
+      **   - LineFeed
+     C                     BITOF'01234567'@LF     1
+     C                     BITON'257'     @LF
+      *
+     C                     ENDSR                           INIT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  HDNG                                           *
+      * Function    :  Format heading details                         *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           HDNG      BEGSR
+      *
+      **  Format arrival date
+     C                     MOVEL@YY       @SY
+     C                     MOVEL@DD       @SD
+     C           @MM       LOKUPTABMM     TABMON         57
+     C                     MOVELTABMON    @SM
+      *
+      **  Format branch
+     C                     MOVELBRCA      @HBRCA
+      *
+      **  Format current status
+     C           R3RPTS    SCAN 'ARD'     Q       50
+     C                     MOVELTXT,Q     @HSTAT
+      *
+      **  Format message type
+     C                     MOVELMTPY      @HMTPY
+      *
+      **  Format TRN
+     C                     MOVELTRNO      @HTRNO
+      *
+      **  Format MOR
+     C                     MOVELMOR       @HMOR
+      *
+      **  Format sender's SWIFT address
+     C                     MOVELSTID      @HSTID
+      *
+      **  If status not Arrived, output download information
+     C                     SETOF                     71
+     C           R3RPTS    IFNE 'A'
+     C                     SETON                     71
+     C                     CALL 'ZA0140'
+     C                     PARM R3RDAT    ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATD    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+     C                     MOVE R3RTIM    @HTIMD
+     C                     MOVE R3DSEQ    @H1SEQ
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR                           HDNG
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TEXT                                           *
+      * Function    :  Format message text                            *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TEXT      BEGSR
+      *
+      **  Access first record of message (database error if not found)
+     C           @PMOR     CHAINMSMSI2LA             11
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL@PMOR     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'MSMSI2LA'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Read message into array DT1
+     C                     Z-ADD1         Q       50
+     C           *IN11     DOWEQ'0'
+      *                                                                   105223
+      **  If "{1:" has been repeated, it's a duplicate message            105223
+     C                     MOVELMDTA      WSTRT   3                       105223
+     C           WSTRT     IFEQ '{1:'                                     105223
+     C           Q         ANDNE1                                         105223
+     C                     LEAVE                                          105223
+     C                     ENDIF                                          105223
+      *                                                                   105223
+     C                     MOVE MDTA      DT1,Q
+     C                     ADD  1         Q
+     C           @PMOR     READEMSMSI2LA                 11
+     C                     ENDDO
+      *
+      **  Move to array DT2 for processing
+     C                     MOVEADT1       DT2
+      *
+      **  Find start of message text (block {4:})
+     C           '{4:'     SCAN DTDS      Q              15
+      *
+      **  For all fields/subfields
+     C           *IN15     DOUEQ'0'
+      *
+      **  Extract field/subfield (delimited by CrLf)
+     C           @CRLF     SCAN DTDS:Q    Q
+     C           Q         ADD  2         S       50
+     C           @CRLF     SCAN DTDS:S    Q              15
+     C           Q         SUB  S         @LEN    50
+      *
+      **  If field/subfield found...
+     C           *IN15     IFEQ '1'
+      *
+      **  Move field details to screen fields
+     C                     CLEAR@DRCD
+     C           @LEN      SUBSTDTDS:S    @DRCD
+     C                     CLEAR@DTAG
+     C                     CLEAR@DDAT
+     C           @COL5     IFEQ ':'
+     C                     MOVEL@TAG5     @DTAG
+     C                     MOVEL@DAT5     @DDAT
+     C                     ELSE
+     C           @COL4     IFEQ ':'
+     C                     MOVEL@TAG4     @DTAG
+     C                     MOVEL@DAT4     @DDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   @DTAG
+     C                     MOVEL@DRCD     @DDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Write to sub-file
+     C                     WRITERC2055F2
+     C                     ADD  1         RRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR                           TEXT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  RSND                                           *
+      * Function    :  flag details for re-send                       *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  HDNG format heading details                    *
+      *                TEXT format message text                       *
+      *****************************************************************
+      *
+     C           RSND      BEGSR
+      *
+      **  Re access reference file
+     C           @PMOR     CHAINMSIXI2UP             10
+      *
+      **  If message status has changed send message to user and
+      **  and release locked reference record
+     C           R3RPTS    IFNE 'D'
+     C                     MOVEL'MEM1071' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     EXCPT
+     C                     ELSE
+      *
+      **  else flag message for re-send
+     C                     MOVE 'R'       R3RPTS
+     C                     Z-ADDRUNN      R3SDAT
+     C                     TIME           R3STIM
+     C                     MOVEL@JOB      R3LJOB
+     C                     MOVEL@USER     R3LUSR
+     C                     MOVEL@NUM      R3LJNO
+      *
+     C                     UPDATMSIXI2UP
+      *
+     C                     END
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITERC2055F3
+     C                     SETON                     202122
+     C                     Z-ADD1         RRN     50
+      *
+      **  Re-build display for new details
+     C                     EXSR HDNG
+     C                     EXSR TEXT
+      *
+     C                     ENDSR                           RSND
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called automatically if a program error occurs *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @PERR     IFNE '1'
+     C                     MOVE '1'       @PERR
+     C                     SETON                     LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+      *
+     OMSIXI2UPE
+**  TXT
+Arrived
+Flagged for re-send
+Downloaded to PC
+**  Months MM/MMM format
+01JAN
+02FEB
+03MAR
+04APR
+05MAY
+06JUN
+07JUL
+08AUG
+09SEP
+10OCT
+11NOV
+12DEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

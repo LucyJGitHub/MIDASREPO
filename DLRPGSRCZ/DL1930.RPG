@@ -1,0 +1,2234 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA/IRS rates maintenance')
+/*OVRF*: OVRDBF FILE(DLFIRSL1) TOFILE(DLFRARL1)                     : *
+/*OVRF*: OVRDBF FILE(DLFIRSL2) TOFILE(DLFRARL2)                     : *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - FRA/IRS Module
+     F*                                                              *
+     F*  DL1930 - FRA/IRS RATES MAINTENANCE                          *
+     F*                                                              *
+     F*  Function: To enable maintenance of either the FRA or the    *
+     F*   (I/C)    IRS Rates.                                        *
+     F*            The program is called in one of two modes         *
+     F*            determined by the input parameter, FI :           *
+     F*            FI = F runs in FRA mode :                         *
+     F*               DLFIRSL1 is overriden to DLFRARL1;             *
+     F*               DLFIRSL2 is overriden to DLFRARL2;             *
+     F*               the field prefix is FR;                        *
+     F*               the Date referred to is Value Date;            *
+     F*               the Title will mention 'FRA'.                  *
+     F*            FI = I runs in IRS mode :                         *
+     F*               DLFIRSL1 is overriden to DLIRSRL1;             *
+     F*               DLFIRSL2 is overriden to DLIRSRL2;             *
+     F*               the field prefix is IR;                        *
+     F*               the Date referred to is Maturity Date;         *
+     F*               the Title will mention 'IRS'.                  *
+     F*                                                              *
+     F*  The creation parameters override files DLFIRSL1 and L2 to   *
+     F*  DLFRARL1 and L2 so the file field names referred to in the  *
+     F*  program are the ones in DLFRARL1 and DLFRARL2, prefix FR.   *
+     F*                                                              *
+     F*  Called By: DLC1930 - FRA/IRS Rates Maintenance Control.     *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 237193             Date 22Jun06               *
+      *                 CAAA03             Date 18Mar04               *
+      *                 215819             Date 25Mar03              *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204546             Date 24Apr02              *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 200990             Date 15Jan02              *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 CSD006             Date 15May01              *
+     F*                 189888             Date 16Feb01              *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 061426             DATE 30SEP93              *
+     F*                 E38323             DATE 30JUL92              *
+     F*                 E36623             DATE 02APR92              *
+     F*                 S01328             DATE 13MAR91              *
+     F*                                                              *
+     F*--------------------------------------------------------------*
+      *                                                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  237193 - Variable ZNRDYS not initialize with A6SPDY during  *
+      *           insert.  Need to call AOCURRR0 to get Spot Days.   *
+      *           Also changed the default action code to 'E'.       *
+      *  CAAA03 - Separate DL1930S0 to 2 record formats to stop non-  *
+      *           display / errors.                                   *
+      *  215819 - Allow deletion of FRA rates.                       *
+      *  204546 - Spot date computation should be the same for all   *
+      *           currencies, rundate plus spot days.  Call to       *
+      *           access program AOCURRR0 is moved to start of       *
+      *           subroutine to retrieve number of spot days.  Amend *
+      *           all parts of program with spot date computation.   *
+      *  200990 - Value Date on screen should be updated.            *
+     F*  CSD006 - Use long DS with SDBSRTPD.
+     F*  189888 - If action is DELETE, compute for Maturity date     *
+     F*           starting from the Last Change Date and not from    *
+     F*           the current Rundate.                               *
+     F*           Computation for maturity date should be patterned  *
+     F*           with how it was inputted.  If currency is equal w/ *
+     F*           BJCYCD, maturity date starts from Last Change Date.*
+     F*           Otherwise, add 2 days to its Last Change Date.     *
+     F*  061426 - Recompile after ZDATE9 correction                  *
+     F*  E38323 - Recompilation of the program done due to a change  *
+     F*           in copy source ZFWDT subroutine                    *
+     F*  E36623 - FDINSTLL was made redundant by S01319.  Remove.    *
+     F*  S01328 - FRA/IRS Revaluation - New Program                  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                              *
+     F****************************************************************
+     F/EJECT
+     FFDTTOTLLUF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FDLFIRSL1IF  E           K        DISK         KINFSR *PSSR
+     FDLFIRSL2UF  E           K        DISK         KINFSR INFSR A
+     F                                              KINFDS INFDS
+     F                                              KCOMIT
+     F            DLFIRSP0                          KRENAMEDLFIRSXX
+     F*FDINSTLLIF**E********************DISK         KINFSR *PSSR         E36623
+     FDL1930DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        @RRN  KSFILE DL1930S1
+     F                                        @RRN1 KSFILE DL1930S5
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    KC  - END                                                  *
+     F*    KL  - END OR GO TO INITIAL LEVEL                           *
+     F*    KH  - NEXT RECORD                                          *
+     F*    KG  - PREVIOUS RECORD                                      *
+     F*    KJ  - CONFIRM DELETE                                       *
+     F*                                                               *
+     F*    10  - SFLEND DL1930S1                                      *
+     F*                                                               *
+     F*    20  - ERROR ON FIELD DDACTN                                *
+     F*    21  - ERROR ON FIELD DDCCY                                 *
+     F*    22  - POSITION CURSOR ON FIELD DDCCY                       *
+     F*    23  - ERROR ON FIELD DDBRTT                                *
+     F*                                                               *
+     F*    30  - ERROR ON FIELD DDPDYR                                *
+     F*    31  - ERROR ON FIELD DDPDMN                                *
+     F*    32  - ERROR ON FIELD DDPDDY                                *
+     F*    33  - ERROR ON FIELD DDRATE                                *
+     F*    34  - POSITION CURSOR ON FIELD DDPDYR                      *
+     F*    35  - POSITION CURSOR ON FIELD DDPDMN                      *
+     F*    36  - POSITION CURSOR ON FIELD DDPDDY                      *
+     F*    37  - POSITION CURSOR ON FIELD DDRATE                      *
+     F*                                                               *
+     F*    45  - CLEAR POINTS SUBFILE                                 *
+     F*                                                               *
+     F*    50  - ERROR INDICATOR                                      *
+     F*    51  - ROLLUP ON MESSAGE SUBFILE                            *
+     F*    52  - ROLLDOWN ON MESSAGE SUBFILE                          *
+     F*                                                               *
+     F*    60  - DELETE MODE                                          *
+     F*    65  - RECORD IS PRESENT ON DLFIRSL1                        *
+     F*                                                               *
+     F*    70  - EOF/CHAIN FAIL                                       *
+     F*    74  - RECORD LOCKED                                        *
+     F*                                                               *
+     F*  U7+U8 - DATA BASE ERROR                                      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F* #DISP - DISPLAY THE MAIN SCREEN.                              *
+     F* #READ - READ THE MAIN SCREEN.                                 *
+     F* #MAIN - LOOPS UNTIL CF3 OR CK12 IS TAKEN                      *
+     F* #RDFWD- READ A RECORD FROM THE FILE DLFIRSL1                  *
+     F* #RDPRV- READ THE PREVIOUS RECORD FROM DLFIRSL1                *
+     F* #ADVAN- CMD 8 PROCESSING-ADVANCE TO NEXT CURRENCY/BASE RATE   *
+     F* #RETRE- CMD 7 PROCESSING-RETREAT TO PREVIOUS CCY/BASE RATE    *
+     F* #CLRIN- CMD 12 PROCESSING-CLEAR INPUT FIELDS                  *
+     F* #INSRT- CONTROL THE INSERTING OF RECORDS.                     *
+     F* #AMEND- CONTROL THE AMENDING OF RECORDS.                      *
+     F* #DELET- CONTROL THE DELETING OF RECORDS.                      *
+     F* #PRODL- PROCESS DELETION WHEN CK/10 IS TAKEN                  *
+     F* #ENQRY- CONTROL THE ENQUIRY INTO RECORDS.                     *
+     F* #VALKY- VALIDATE KEY FIELDS (CURRENCY/BASE RATE)              *
+     F* #VALSF- VALIDATE SUBFILE FIELDS (INSERTIONS & AMENDMENTS ONLY)*
+     F* #UPDFL- PERFORM UPDATES TO THE FILES                          *
+     F* #SETUP- SET UP OUTPUT FIELDS                                  *
+     F* #LODSF- LOAD SUBFILE WITH RECORDS OF SELECTED CCY/BASE RATE   *
+     F* ZTNLU1- LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA      *
+     F* #INIT - INITIAL PROCESSING                                    *
+     F* #END  - TERMINATE THE PROGRAM BY SETTING ON LR                *
+     F* INFSR - FILE ERROR PROCESSING                                 *
+     F* *PSSR - PROGRAM ERROR PROCESSING                              *
+     F*                                                               *
+     F* STANDARD SUBROUTINES USED                                     *
+     F* -------------------------                                     *
+     F* ZALIGN - VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS              *
+     F* ZEDIT  - INSERT DECIMAL POINT/BLANK OUT LEADING ZEROES        *
+     F* ZDATE2 - CONVERT MIDAS DAY NUMBER TO DDMMMYY/DDMMYY           *
+     F* ZCPD   - CALCULATE THE PERIOD DATE FROM SPOT                  *
+     F* ZDATE9 - CONVERT MIDAS DAY NUMBER TO YYYYMMDD                 *
+     F* ZDAT10 - CONVERT YYYYMMDD TO MIDAS DAY NUMBER                 *
+     F*                                                               *
+     F* EXTERNAL ROUTINES USED                                        *
+     F* ----------------------                                        *
+     F* ZA0240 - ADD MESSAGE TO PROGRAM SUBFILE MESSAGE QUEUE         *
+     F* ZA0240 - CLEAR PROGRAM SUBFILE MESSAGE QUEUE                  *
+     F* ZA0440 - ADD MESSAGE WITH DATA TO MESSAGE QUEUE               *
+     F*****************************************************************
+     F/EJECT
+     E                    @PY        30  2 0             PERIOD YEARS
+     E                    @PM        30  2 0             PERIOD MONTHS
+     E                    @PD        30  2 0             PERIOD DAYS
+     E                    @VN        30  5 0             VALUE DAY NUMBER
+     E                    @VD        30  7               VALUE DATE
+     E                    @RT        30 11 7             RATES
+     E*
+     E                    @EM        10  1               ERROR MESSAGES
+     E*
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY ZSRSRC,ZDATE9Z1
+     E/COPY ZSRSRC,ZHOLE
+     E*
+     E                    HED     1   2  9
+     E                    NAR     1   2  8
+     E** SCREEN HEADING
+     E*
+     IINFDS       DS
+     I* DATA STRUCTURE FOR FILE STATUS
+     I                                     *STATUS  STATUS
+     I*
+     IPSDS       SDS
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     I@KEY        DS                             12
+     I**  Key to access FDTTOTLL
+     I                                        1   2 @KEY1
+     I*
+     I@CB         DS
+     I                                        1   3 @CCY
+     I                                        4   4 @SLASH
+     I                                        5   6 @BRTT
+     I*
+     IDNATN       DS                              5
+     I* DATA STRUCTURE TO UPDATE TRANSACTION NUMBER DATA AREA
+     I                                        1   50FNATN
+     I*
+     ICMTTXT      DS                            101
+     I* DATA STRUCTURE FOR TEXT ON COMIT ON JOURNAL
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       19  240MTIME
+     I*
+     I@DDS        DS                         30
+     I** DATA STRUCTURE TO HOLD SAVED VERSIONS OF THE SUBFILE RECORD FIELDS
+     I                                        1  25 @TOTL
+     I                                        1   2 @PDYR
+     I                                        3   4 @PDMN
+     I                                        5   6 @PDDY
+     I                                        7  13 @VDMY
+     I                                       14  25 @RATE
+     I*
+     IDDTOTL      DS
+     I** DATA STRUCTURE TO HOLD ALL SUBFILE RECORD FIELDS
+     I                                        1   6 DDYMD
+     I                                        1   2 DDPDYR
+     I                                        3   4 DDPDMN
+     I                                        5   6 DDPDDY
+     I                                        7  13 DDVDMY
+     I                                       14  25 DDRATE
+     I*
+     I/COPY ZSRSRC,ZCPDZ1
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS ACCESSED VIA ACCESS PORGRAM
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDBSRT    E DSSDBSRTPD
+     I* BASE RATE DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     I           UDS
+     I**  LOCAL DATA AREA FOR DATA BASE ERROR
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN PROCESSING - THIS ROUTINE CONTROLS THE WHOLE PROGRAM     *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :      #INIT                                            *
+     C*              #MAIN                                            *
+     C*              #END                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     EXSR #INIT
+     C*
+     C                     EXSR #MAIN
+     C*
+     C                     EXSR #END
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DISP - DISPLAY THE MAIN SCREEN.                              *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*             #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #DELET                                            *
+     C*             #ENQRY                                            *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DISP     BEGSR
+     C*
+     C                     TIME           DDTIME
+     C*
+     C** SAVE ALL DISPLAY FIELDS BEFORE DISPLAYING SCREEN
+     C*
+     C** FIRST SAVE ALL THE SUBFILE FIELDS IN THE DATA STRUCTURE
+     C*
+     C           1         DO   @CNT      @X
+     C           @X        CHAINDL1930S5             70
+     C           @X        OCUR @DDS
+     C                     MOVE DDTOTL    @TOTL
+     C                     END
+     C*
+     C** NOW SAVE THE OTHER FIELDS
+     C*
+     C** IF ACTION CODE BLANK DEFAULT TO 'E'
+     C*
+     C           DDACTN    IFEQ ' '
+     C**********           MOVE 'A'       DDACTN                                              237193
+     C                     MOVE 'E'       DDACTN                                              237193
+     C                     END
+     C                     MOVE DDACTN    @ACTN
+     C                     MOVE DDCCY     @CCY
+     C                     MOVE DDBRTT    @BRTT
+     C                     MOVE DDCCNM    @CCNM
+     C                     MOVE DDBSRN    @BSRN
+     C*
+     C* IF CURRENCY BLANK, POSITION CURSOR ON CURRENCY
+     C*
+     C           DDCCY     IFEQ *BLANK
+     C                     MOVE '1'       *IN22
+     C                     END
+     C*
+     C** DISPLAY THE MAIN SCREEN
+     C*
+     C                     WRITEDL1930D1                                                      CAAA03
+     C                     WRITEDL1930S0
+     C*
+     C** DISPLAY THE SUBFILE POINTS FIELDS
+     C*
+     C                     WRITEDL1930S4
+     C*
+     C** DISPLAY THE SCREEN FOOTER
+     C*
+     C                     WRITEDL1930D0
+     C*
+     C** REDISPLAY THE MAIN SCREEN IF THERE WAS AN ERROR; OTHERWISE
+     C** THE CURSOR REPOSITIONS ON THE FIRST INPUT CAPABLE FIELD.
+     C*
+     C           *IN20     IFEQ '1'
+     C           *IN21     OREQ '1'
+     C           *IN22     OREQ '1'
+     C           *IN23     OREQ '1'
+     C                     WRITEDL1930S0
+     C                     END
+     C*
+     C           #DISP9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #READ -THIS SUBROUTINE READS THE MAIN SCREEN                  *
+     C*        AND CLEARS ALL THE ERROR INDICATORS                    *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*             #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #DELET                                            *
+     C*             #ENQRY                                            *
+     C*                                                               *
+     C* CALLS :     ZA0250                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #READ     BEGSR
+     C*
+     C** READ THE SCREEN
+     C*
+      *                                                                                       CAAA03
+      ** Rollup/Rolldown of Message Subfile works even without the                            CAAA03
+      ** following codes.                                                                     CAAA03
+      *                                                                                       CAAA03
+     C**********           READ DL1930S0                 70                                   CAAA03
+     C********** *IN51     DOWEQ'1'                                                           CAAA03
+     C********** *IN52     OREQ '1'                                                           CAAA03
+     C**********           WRITEDL1930S0                                                      CAAA03
+     C**********           READ DL1930S0                 70                                   CAAA03
+     C**********           END                                                                CAAA03
+     C                     READ DL1930D1                 70                                   CAAA03
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C** RESET ERROR INDICATORS AND PAGE POSITION FIELD
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD1         RECNO
+     C           #READ9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #MAIN- THIS SUBROUTINE LOOPS UNTIL CF3 OR CK12 IS TAKEN       *
+     C*                                                               *
+     C* CALLED BY : MAINLINE                                          *
+     C*                                                               *
+     C* CALLS :     #DISP                                             *
+     C*             #READ                                             *
+     C*             ZA0240                                            *
+     C*             #ADVAN                                            *
+     C*             #RETRE                                            *
+     C*             #CLRIN                                            *
+     C*             #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #DELET                                            *
+     C*             #ENQRY                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #MAIN     BEGSR
+     C*
+     C** IF U7 OR U8 ARE ON GO TO END OF SUBROUTINE
+     C*
+     C           *INU7     CABEQ'1'       #MAIN9
+     C           *INU8     CABEQ'1'       #MAIN9
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C*
+     C** LOOP HERE UNTIL CF3 OR CF12 AT THE INITIAL LEVEL
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C** IF ACTION CODE IS BLANK DEFAULT TO E
+     C*
+     C           DDACTN    IFEQ ' '
+     C                     MOVE 'A'       DDACTN
+     C                     END
+     C*
+     C** VALIDATE ACTION CODE
+     C*
+     C           DDACTN    IFNE 'A'
+     C           DDACTN    ANDNE'D'
+     C           DDACTN    ANDNE'E'
+     C           DDACTN    ANDNE'I'
+     C                     MOVEL'FIS0032' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE '1'       *IN20
+     C*
+     C** REFRESH SUBFILE WITH SAVED DATA (AS AT LAST SCREEN DISPLAY)
+     C*
+     C           1         DO   @CNT      @X
+     C           @X        CHAINDL1930S5             70
+     C           @X        OCUR @DDS
+     C                     MOVE @TOTL     DDTOTL
+     C                     UPDATDL1930S5
+     C                     END
+     C*
+     C** REFRESH THE OTHER FIELDS
+     C*
+     C                     MOVE @CCNM     DDCCNM
+     C                     MOVE @BSRN     DDBSRN
+     C                     END
+     C*
+     C** CF8 PROCESSING - ADVANCE TO NEXT CURRENCY/BASE RATE
+     C*
+     C           *INKH     CASEQ'1'       #ADVAN
+     C*
+     C** CF7 PROCESSING - RETREAT TO PREVIOUS CURRENCY/BASE RATE
+     C*
+     C           *INKG     CASEQ'1'       #RETRE
+     C*
+     C** CF12 PROCESSING - CLEAR INPUT FIELDS
+     C*
+     C           *INKL     CASEQ'1'       #CLRIN
+     C*
+     C                     END
+     C*
+     C** INSERT MODE
+     C*
+     C           DDACTN    CASEQ'I'       #INSRT
+     C*
+     C** AMEND MODE
+     C*
+     C           DDACTN    CASEQ'A'       #AMEND
+     C*
+     C** DELETE MODE
+     C*
+     C           DDACTN    CASEQ'D'       #DELET
+     C*
+     C** ENQUIRY MODE
+     C*
+     C           DDACTN    CASEQ'E'       #ENQRY
+     C*
+     C                     END
+     C*
+     C** CHECK FOR DATA BASE ERROR
+     C*
+     C           *INU7     CABEQ'1'       #MAIN9
+     C*
+     C** CHECK FOR CF3
+     C*
+     C           *INKC     CABEQ'1'       #MAIN9
+     C*
+     C** IF ACTION CODE,CURRENCY CODE, OR BASE RATE IN ERROR,
+     C** DISPLAY AND READ SCREEN
+     C*
+     C           *IN20     IFEQ '1'
+     C           *IN21     OREQ '1'
+     C           *IN22     OREQ '1'
+     C           *IN23     OREQ '1'
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #MAIN9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RDFWD-THIS SUBROUTINE READS A RECORD FROM THE FILE DLFIRSL1  *
+     C*        IT WILL IGNORE DELETED RECORDS. IT WILL RETURN *IN70   *
+     C*        ON FOR EOF                                             *
+     C*                                                               *
+     C* CALLED BY : #ADVAN                                            *
+     C*             #LODSF                                            *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RDFWD    BEGSR
+     C*
+     C** READ RECORD UNTIL THE END OF THE FILE IS FOUND OR A LIVE RECORD
+     C*
+     C           FRDLTF    DOUEQ' '
+     C           *IN70     OREQ '1'
+     C                     READ DLFIRSL1                 70
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RDPRV-THIS SUBROUTINE READS THE PREVIOUS RECORD FROM DLFIRSL1*
+     C*        IT WILL IGNORE DELETED RECORDS. IT WILL RETURN *IN70   *
+     C*        ON FOR BOF                                             *
+     C*                                                               *
+     C* CALLED BY : #RETRE                                            *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RDPRV    BEGSR
+     C*
+     C* READ THE PREVIOUS RECORD FROM THE FILE UNTIL A LIVE RECORD IS
+     C* FOUND OR THE BEGINNING OF THE FILE IS FOUND
+     C*
+     C           FRDLTF    DOUEQ' '
+     C           *IN70     OREQ '1'
+     C                     READPDLFIRSL1                 70
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ADVAN- CMD 8 PROCESSING - ADVANCE TO NEXT CURRENCY/BASE RATE *
+     C*                                                               *
+     C*         THIS SUBROUTINE PERFORMS THE VALIDATION FOR CF8       *
+     C*         IF THE VALIDATION IS SUCCESSFUL THEN IT READS THE     *
+     C*         NEXT CURRENCY/BASE RATE                               *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     ZA0240                                            *
+     C*             #RDFWD                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ADVAN    BEGSR
+     C*
+     C** FIRST CHECK THE ACTION CODE IF INVALID EXIT
+     C*
+     C           DDACTN    IFEQ 'I'
+     C*
+     C** SEND PROGRAM MESSAGE
+     C*
+     C                     MOVEL'FIS0033' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C*
+     C** REVERSE IMAGE ACTION CODE
+     C*
+     C                     MOVE '1'       *IN20
+     C*
+     C                     GOTO #ADV9
+     C                     END
+     C*
+     C** NOW GET THE NEXT CURRENCY/BASE RATE ON FILE
+     C*
+     C           DLFRKY    SETGTDLFIRSL1
+     C                     EXSR #RDFWD
+     C*
+     C** IF ANOTHER CURRENCY/BASE RATE IS PRESENT UPDATE THE SCREEN FIELDS
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVELFRCCY     DDCCY
+     C                     MOVELFRBRTT    DDBRTT
+     C*
+     C** OTHERWISE OUTPUT END OF FILE MESSAGE
+     C*
+     C                     ELSE
+     C                     MOVEL'FIS0053' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     GOTO #ADV9
+     C                     END
+     C*
+     C           #ADV9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RETRE-CMD 7 PROCESSING-RETREAT TO PREVIOUS CURRENCY/BASE RATE*
+     C*                                                               *
+     C*         THIS SUBROUTINE PERFORMS THE VALIDATION FOR CF7       *
+     C*         IF THE VALIDATION IS SUCCESSFUL THEN IT READS THE     *
+     C*         PREVIOUS CURRENCY/BASE RATE                           *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     ZA0240                                            *
+     C*             #RDPRV                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RETRE    BEGSR
+     C*
+     C** FIRST CHECK THE ACTION CODE IF INVALID EXIT
+     C*
+     C           DDACTN    IFEQ 'I'
+     C*
+     C** SEND PROGRAM MESSAGE
+     C*
+     C                     MOVEL'FIS0033' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C*
+     C** REVERSE IMAGE ACTION CODE
+     C*
+     C                     MOVE '1'       *IN20
+     C*
+     C** EXIT SUBROUTINE
+     C*
+     C                     GOTO #RETR9
+     C                     END
+     C*
+     C** NOW GET THE PREVIOUS CURRENCY/BASE RATE ON FILE
+     C*
+     C           DLFRKY    SETLLDLFIRSL1
+     C                     EXSR #RDPRV
+     C*
+     C** IF A CURRENCY/BASE RATE IS PRESENT UPDATE THE SCREEN FIELDS
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVELFRCCY     DDCCY
+     C                     MOVELFRBRTT    DDBRTT
+     C*
+     C** OTHERWISE OUTPUT START OF FILE MESSAGE
+     C*
+     C                     ELSE
+     C                     MOVEL'FIS0054' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     GOTO #RETR9
+     C                     END
+     C*
+     C           #RETR9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #CLRIN- CMD 12 PROCESSING - CLEAR INPUT FIELDS                *
+     C*                                                               *
+     C*         THIS SUBROUTINE CLEARS THE INPUT FIELDS               *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*             #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #DELET                                            *
+     C*                                                               *
+     C* CALLS :     ZA0250                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #CLRIN    BEGSR
+     C*
+     C** CLEAR THE SUBFILE FIELDS
+     C*
+     C           1         DO   @CNT      @X
+     C           @X        CHAINDL1930S5             70
+     C                     MOVE *BLANK    DDTOTL
+     C                     UPDATDL1930S5
+     C                     END
+     C*
+     C** CLEAR THE OTHER FIELDS
+     C*
+     C           DDACTN    IFEQ 'D'
+     C                     MOVE *BLANKS   DDACTN
+     C                     END
+     C                     MOVE *BLANKS   DDCCY
+     C                     MOVE *BLANKS   DDBRTT
+     C                     MOVE *BLANKS   DDCCNM
+     C                     MOVE *BLANKS   DDBSRN
+     C*
+     C** CLEAR MESSAGE QUEUE
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C** SET ON INDICATOR TO POSITION CURSOR ON CURRENCY
+     C*
+     C                     MOVE '1'       *IN22
+     C*
+     C           #CLRI9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #INSRT- THIS SUBROUTINE CONTROLS THE INSERTING OF RECORDS.    *
+     C*         IT VALIDATES THE CURRENCY AND BASE RATE INPUT AND     *
+     C*         IF THEY ARE VALID IT OUTPUTS THE INSERT SCREEN.       *
+     C*         IT THEN VALIDATES THE SUBFILE INPUT AND IF THERE ARE  *
+     C*         NO ERRORS IT WILL CALL SUBR. #UPDFL TO UPDATE THE FILE*
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     #VALKY                                            *
+     C*             #VALSF                                            *
+     C*             #UPDFL                                            *
+     C*             #CLRIN                                            *
+     C*             ZA0440                                            *
+     C*             #DISP                                             *
+     C*             #READ                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #INSRT    BEGSR
+     C*
+     C** VALIDATE KEY FIELDS
+     C** IE. CCY/BASE RATE (DO NOT FILL UP SUBFILE WITH ACCESSED DATA)
+     C                     EXSR #VALKY
+     C*
+     C** IF CURRENCY OR BASE RATE IN ERROR, THEN EXIT
+     C           *IN21     IFEQ '1'
+     C           *IN23     OREQ '1'
+     C                     GOTO #INS9
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C*
+     C** DO WHILE ACTION CODE AND CURRENCY CODE ARE UNCHANGED
+     C*
+     C           DDCCY     DOWEQ@CCY
+     C           DDBRTT    ANDEQ@BRTT
+     C           DDACTN    ANDEQ@ACTN
+     C           @CCY      ANDNE*BLANK
+     C*
+     C** IF CMD 3 , CMD 7 , CMD 8 , CMD 12,   EXIT SUBROUTINE
+     C*
+     C           *INKC     IFEQ '1'
+     C           *INKG     OREQ '1'
+     C           *INKH     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     GOTO #INS9
+     C                     END
+     C*
+     C** NOW VALIDATE SUBFILE FIELDS
+     C*
+     C                     EXSR #VALSF
+     C*
+     C** IF THE SUBFILE DETAILS ARE VALID UPDATE THE FILE
+     C*
+     C           *IN50     IFEQ '0'
+     C*
+     C** INSERT OVER DELETED RECORDS, ELSE WRITE NEW RECORDS
+     C*
+     C                     MOVE DDCCY     @CCY
+     C                     MOVE DDBRTT    @BRTT
+     C                     MOVE 'Y'       @UPDTD
+     C                     EXSR #UPDFL
+     C*
+     C** CLEAR SCREEN FIELDS AND OUTPUT MESSAGE IF SUCCESSFUL INSERTION
+     C*
+     C           @UPDTD    IFEQ 'Y'
+     C                     EXSR #CLRIN
+     C                     MOVEL@CB       @DATA  45
+     C                     MOVEL'FIS0043' @MSGID
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+     C                     END
+     C*
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C                     END
+     C*
+     C           #INS9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #AMEND- THIS SUBROUTINE CONTROLS THE AMENDING OF RECORDS.     *
+     C*         IT VALIDATES THE CURRENCY AND BASE RATE INPUT AND     *
+     C*         IF THEY ARE VALID IT OUTPUTS THE AMEND SCREEN.        *
+     C*         IT THEN VALIDATES THE SUBFILE INPUT AND IF THERE ARE  *
+     C*         NO ERRORS IT WILL CALL SUBR. #UPDFL TO UPDATE THE FILE*
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     #VALKY                                            *
+     C*             #DISP                                             *
+     C*             #READ                                             *
+     C*             #VALSF                                            *
+     C*             #UPDFL                                            *
+     C*             #CLRIN                                            *
+     C*             ZA0440                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AMEND    BEGSR
+     C*
+     C** VALIDATE KEY FIELDS
+     C** IE CURRENCY/BASE RATE (AND FILL UP SUBFILE WITH ACCESSED DATA)
+     C*
+     C                     EXSR #VALKY
+     C*
+     C** IF CURRENCY OR BASE RATE IN ERROR, THEN EXIT
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN23     OREQ '1'
+     C                     GOTO #AMND9
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C*
+     C** DO WHILE ACTION CODE AND CURRENCY CODE ARE UNCHANGED
+     C*
+     C           DDCCY     DOWEQ@CCY
+     C           DDBRTT    ANDEQ@BRTT
+     C           DDACTN    ANDEQ@ACTN
+     C           @CCY      ANDNE*BLANK
+     C*
+     C** IF CMD 3 , CMD 7 , CMD 8 , CMD 12,   EXIT SUBROUTINE
+     C*
+     C           *INKC     IFEQ '1'
+     C           *INKG     OREQ '1'
+     C           *INKH     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     GOTO #AMND9
+     C                     END
+     C*
+     C** NOW VALIDATE SUBFILE FIELDS
+     C*
+     C                     EXSR #VALSF
+     C*
+     C** IF THE SUBFILE DETAILS ARE VALID UPDATE THE FILE
+     C*
+     C           *IN50     IFEQ '0'
+     C                     MOVE 'Y'       @UPDTD
+     C                     EXSR #UPDFL
+     C*
+     C** CLEAR SCREEN FIELDS AND OUTPUT MESSAGE IF SUCCESSFUL AMENDMENT
+     C*
+     C           @UPDTD    IFEQ 'Y'
+     C                     EXSR #CLRIN
+     C                     MOVEL@CB       @DATA  45
+     C                     MOVEL'FIS0041' @MSGID
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+     C                     END
+     C*
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C                     END
+     C*
+     C           #AMND9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DELET- THIS SUBROUTINE CONTROLS THE DELETING OF RECORDS.     *
+     C*         IT VALIDATES THE CURRENCY AND BASE RATE INPUT AND     *
+     C*         IF THEY ARE VALID IT OUTPUTS THE DELETE SCREEN.       *
+     C*         IT THEN WAITS FOR COMMAND KEY 10 TO BE TAKEN BEFORE   *
+     C*         IT WILL ATTEMPT TO UPDATE THE FILE.                   *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     #DISP                                             *
+     C*             #READ                                             *
+     C*             #CLRIN                                            *
+     C*             #PRODL                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #DELET    BEGSR
+     C*
+     C** VALIDATE KEY FIELDS
+     C** IE CURRENCY/BASE RATE (AND FILL UP SUBFILE WITH ACCESSED DATA)
+     C*
+     C                     EXSR #VALKY
+     C*
+     C** IF CURRENCY OR BASE RATE IN ERROR, THEN EXIT
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN23     OREQ '1'
+     C                     GOTO #DELT9
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN (*IN60 ON TO ENABLE CK10 ON SCREEN)
+     C*
+     C                     MOVE '1'       *IN60
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C                     MOVE '0'       *IN60
+     C*
+     C** DO WHILE ACTION CODE AND CURRENCY CODE ARE UNCHANGED
+     C*
+     C           DDCCY     DOWEQ@CCY
+     C           DDBRTT    ANDEQ@BRTT
+     C           DDACTN    ANDEQ@ACTN
+     C           @CCY      ANDNE*BLANK
+     C*
+     C** IF CMD 3 , CMD 7 , CMD 8 , CMD 12,   EXIT SUBROUTINE
+     C*
+     C           *INKC     IFEQ '1'
+     C           *INKG     OREQ '1'
+     C           *INKH     OREQ '1'
+     C           *INKL     OREQ '1'
+     C                     GOTO #DELT9
+     C                     END
+     C*
+     C** NOW VALIDATE SUBFILE FIELD TO FILL UPDATE ARRAYS WITH DATA
+     C*
+     C                     EXSR #VALSF
+     C*
+     C** DO UPDATES (AS LONG AS SCREEN IS UNCHANGED AND CK10 IS TAKEN)
+     C*
+     C                     MOVE 'Y'       @UPDTD
+     C                     EXSR #PRODL
+     C*
+     C** CLEAR SCREEN FIELDS AND OUTPUT MESSAGE IF SUCCESSFUL DELETION
+     C*
+     C           @UPDTD    IFEQ 'Y'
+     C                     EXSR #CLRIN
+     C                     MOVEL@CB       @DATA  45
+     C                     MOVEL'FIS0042' @MSGID
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+     C                     END
+     C*
+     C** DISPLAY AND READ SCREEN (*IN60 ON TO DISABLE COMM.KEYS ON SCREEN)
+     C*
+     C           DDACTN    IFEQ 'D'
+     C                     MOVE '1'       *IN60
+     C                     END
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C                     MOVE '0'       *IN60
+     C                     END
+     C*
+     C           #DELT9    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #PRODL -PROCESS DELETION WHEN CK/10 IS TAKEN                  *
+     C*         THIS CHECKS THAT NONE OF THE FIELDS HAVE BEEN CHANGED.*
+     C*         THEN IT WILL THEN CALL THE SUBROUTINE TO UPDATE THE   *
+     C*         RECORDS WITH THE LOGICAL DELETE FLAG SET TO '*'       *
+     C*                                                               *
+     C* CALLED BY : #DELET                                            *
+     C*                                                               *
+     C* CALLS :     ZA0250                                            *
+     C*             ZA0240                                            *
+     C*             #UPDFL                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #PRODL    BEGSR
+     C*
+     C** CHECK FIELDS HAVE NOT BEEN CHANGED
+     C*
+     C                     MOVE '0'       *IN70
+     C*
+     C** FIRST ALL THE RECORDS IN THE SUBFILE
+     C*
+     C           1         DO   @CNT      @RRN1
+     C           @RRN1     OCUR @DDS
+     C  N70      @RRN1     CHAINDL1930S5             70
+     C           DDPDYR    IFNE @PDYR
+     C           DDPDMN    ORNE @PDMN
+     C           DDPDDY    ORNE @PDDY
+     C********** DDVDMY    ORNE @VDMY                                                         215819
+     C           DDRATE    ORNE @RATE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C                     END
+     C*
+     C** NOW THE OTHER FIELDS
+     C*
+     C           *IN70     IFEQ '1'
+     C           DDACTN    ORNE @ACTN
+     C           DDCCY     ORNE @CCY
+     C           DDBRTT    ORNE @BRTT
+     C*
+     C** IF THERE ARE CHANGES,
+     C** CLEAR THE MESSAGE QUEUE AND SEND AN ERROR MESSAGE
+     C*
+     C                     CALL 'ZA0250'
+     C                     MOVEL'FIS0034' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE 'N'       @UPDTD  1
+     C*
+     C** REFRESH SUBFILE WITH SAVED DATA (AS AT LAST SCREEN DISPLAY)
+     C*
+     C           1         DO   @CNT      @X
+     C           @X        CHAINDL1930S5             70
+     C           @X        OCUR @DDS
+     C                     MOVE @TOTL     DDTOTL
+     C                     UPDATDL1930S5
+     C                     END
+     C*
+     C** REFRESH THE OTHER FIELDS
+     C*
+     C                     MOVE @ACTN     DDACTN
+     C                     MOVE @CCY      DDCCY
+     C                     MOVE @BRTT     DDBRTT
+     C                     MOVE @CCNM     DDCCNM
+     C                     MOVE @BSRN     DDBSRN
+     C                     GOTO #PROD9
+     C                     END
+     C*
+     C** NOW UPDATE FILE IF CK10 HAS BEEN TAKEN
+     C*
+     C           *INKJ     IFEQ '1'
+     C                     EXSR #UPDFL
+     C                     ELSE
+     C                     MOVE 'N'       @UPDTD
+     C                     END
+     C           #PROD9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ENQRY- THIS SUBROUTINE CONTROLS THE ENQUIRY INTO RECORDS.    *
+     C*         IT VALIDATES THE CURRENCY AND BASE RATE INPUT AND     *
+     C*         IF THEY ARE VALID IT OUTPUTS THE ENQUIRY SCREEN.      *
+     C*                                                               *
+     C* CALLED BY : #MAIN                                             *
+     C*                                                               *
+     C* CALLS :     #VALKY                                            *
+     C*             #DISP                                             *
+     C*             #READ                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ENQRY    BEGSR
+     C*
+     C** REFRESH SUBFILE WITH SAVED DATA (AS AT LAST SCREEN DISPLAY)
+     C*
+     C           1         DO   @CNT      @X
+     C           @X        CHAINDL1930S5             70
+     C           @X        OCUR @DDS
+     C                     MOVE @TOTL     DDTOTL
+     C                     UPDATDL1930S5
+     C                     END
+     C*
+     C** REFRESH THE OTHER FIELDS
+     C*
+     C                     MOVE @CCNM     DDCCNM
+     C                     MOVE @BSRN     DDBSRN
+     C*
+     C** VALIDATE KEY FIELDS IE CURRENCY CODE/BASE RATE
+     C*
+     C                     EXSR #VALKY
+     C*
+     C** DISPLAY AND READ SCREEN
+     C*
+     C                     EXSR #DISP
+     C                     EXSR #READ
+     C*
+     C           #ENQR9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #VALKY - VALIDATE KEY FIELDS (CURRENCY/BASE RATE)             *
+     C*                                                               *
+     C* CALLED BY : #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #DELET                                            *
+     C*             #ENQRY                                            *
+     C*                                                               *
+     C* CALLS :     ZA0240                                            *
+     C*             #LODSF                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #VALKY    BEGSR
+     C*
+     C** BASE RATE AND CURRENCY CANNOT BE BLANK
+     C*
+     C           DDBRTT    IFEQ *BLANKS
+     C           DDCCY     ANDEQ*BLANKS
+     C                     MOVE '1'       *IN23
+     C                     MOVEL'FIS0036' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     GOTO #VALK9
+     C                     END
+     C*
+     C* CALL ACCESS PROG. FOR BASE RATE DETAILS
+     C*
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM DDCCY     @AJCD   3
+     C                     PARM DDBRTT    @DWND   2
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+     C*
+     C* ERROR IF CURRENCY/BASE RATE NOT FOUND
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'FIS0035' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     GOTO #VALK9
+     C                     ELSE
+     C                     MOVELBACYCD    DDCCY
+     C                     MOVELBABSRC    DDBRTT
+     C                     MOVELBABSRC    NNBRTT
+     C                     END
+     C*
+     C** CHECK TO SEE IF RECORD EXISTS,
+     C** AND STORE TIME,DAY,MONTH,YEAR LAST UPDATED
+     C*
+     C                     Z-ADD*ZERO     @@TLUP
+     C                     Z-ADD*ZERO     @@DLUP
+     C                     MOVEL*BLANK    @@MLUP
+     C                     Z-ADD*ZERO     @@YLUP
+     C           DLFRKY    CHAINDLFIRSL1             65
+     C                     Z-ADDFRTLUP    @@TLUP
+     C                     Z-ADDFRDLUP    @@DLUP
+     C                     MOVELFRMLUP    @@MLUP
+     C                     Z-ADDFRYLUP    @@YLUP
+     C*
+     C** IF ACTION CODE IS INSERT
+     C*
+     C           DDACTN    IFEQ 'I'
+     C*
+     C** IF IT DOES EXIST THEN CHECK TO SEE IF IT HAS BEEN LOGICALLY DELETED
+     C*
+     C           *IN65     IFEQ '0'
+     C           FRDLTF    ANDEQ' '
+     C                     MOVEL'FIS0037' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C                     GOTO #VALK9
+     C                     END
+     C*
+     C** ELSE (IF ACTION CODE IS NOT INSERT IE AMEND,DELETE,ENQUIRE)
+     C*
+     C                     ELSE
+     C*
+     C** IF IT DOES EXIST THEN CHECK TO SEE IF IT HAS BEEN LOGICALLY DELETED
+     C*
+     C           *IN65     IFEQ '1'
+     C           FRDLTF    OREQ '*'
+     C                     MOVEL'FIS0038' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN23
+     C                     GOTO #VALK9
+     C                     END
+     C*
+     C** LOAD SUBFILE WITH RECORDS FOR SELECTED CURRENCY/BASE RATE
+     C*
+     C                     EXSR #LODSF
+     C                     END
+     C           #VALK9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #VALSF -VALIDATE SUBFILE FIELDS (INSERTIONS & AMENDMENTS ONLY)*
+     C*                                                               *
+     C* CALLED BY : #INSRT                                            *
+     C*             #AMEND                                            *
+     C*                                                               *
+     C* CALLS :     ZALIGN                                            *
+     C*             ZCPD                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #VALSF    BEGSR
+     C*
+     C* INITIALIZE ARRAYS USED IN OUTPUT TO FILE
+     C*
+     C                     MOVEL*BLANK    @EM
+     C                     Z-ADD0         @VN
+     C                     MOVEL*BLANK    @VD
+     C                     Z-ADD0         @PY
+     C                     Z-ADD0         @PM
+     C                     Z-ADD0         @PD
+     C                     Z-ADD0         @RT
+     C*
+      *                                                                                       237193
+      ** If Insert, access Currency file for Currency Name and Spot Days                      237193
+      *                                                                                       237193
+     C           DDACTN    IFEQ 'I'                                                           237193
+     C                     CALL 'AOCURRR0'                                                    237193
+     C                     PARM '*DBERR ' @RTCD                                               237193
+     C                     PARM '*KEY   ' @OPTN                                               237193
+     C                     PARM DDCCY     @CRKEY  3                                           237193
+     C           SDCURR    PARM SDCURR    DSSDY                                               237193
+      *                                                                                       237193
+     C                     MOVELA6CYNM    DDCCNM                                              237193
+     C                     ENDIF                                                              237193
+      *                                                                                       237193
+     C** VALIDATE ALL THE FIELDS IN THE SUBFILE
+     C*
+     C                     Z-ADD99        RECNO
+     C           1         DO   @CNT      @RRN1
+     C           @RRN1     CHAINDL1930S5             70
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVEL*BLANK    DDVDMY
+     C*
+     C** VALIDATE IF THE FIRST ELEMENT OR IF DATA INPUT
+     C*
+     C           @RRN1     IFEQ 1
+     C           DDTOTL    ORNE *BLANK
+     C*
+     C** PERIOD YEARS
+     C*
+     C           DDPDYR    IFEQ *BLANKS
+     C           DDYMD     ANDEQ*BLANKS
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,1
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELDDPDYR    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C           DDPDYR    ANDNE'. '
+     C           DDPDYR    ANDNE' .'
+     C                     Z-ADD@RRN1     @X
+     C                     MOVE ZFIELD    @PY,@X
+     C                     MOVE ZFIELD    DDPDYR
+     C                     ELSE
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,2
+     C                     END
+     C                     END
+     C*
+     C** PERIOD MONTHS
+     C*
+     C           DDPDMN    IFEQ *BLANKS
+     C           DDYMD     ANDEQ*BLANKS
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,3
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELDDPDMN    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C           DDPDMN    ANDNE'. '
+     C           DDPDMN    ANDNE' .'
+     C                     Z-ADD@RRN1     @X
+     C                     MOVE ZFIELD    @PM,@X
+     C                     MOVE ZFIELD    DDPDMN
+     C           @PM,@X    IFLT 0
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,4
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,4
+     C                     END
+     C                     END
+     C*
+     C** PERIOD DAYS
+     C*
+     C           DDPDDY    IFEQ *BLANKS
+     C           DDYMD     ANDEQ*BLANKS
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,5
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELDDPDDY    ZFIELD
+     C                     Z-ADD2         ZADIG
+     C                     Z-ADD0         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C           DDPDDY    ANDNE'. '
+     C           DDPDDY    ANDNE' .'
+     C                     Z-ADD@RRN1     @X
+     C                     MOVE ZFIELD    @PD,@X
+     C                     MOVE ZFIELD    DDPDDY
+     C           @PD,@X    IFLT 0
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,6
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,6
+     C                     END
+     C                     END
+     C*
+     C** IF PERIOD YEARS,MONTHS,DAYS ARE VALID, THEN CALCULATE PERIOD DATE
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C           *IN32     ANDEQ'0'
+     C*
+     C**  SET UP NUMBER OF YEARS, MONTHS AND DAYS FOR SR ZCPD
+     C*
+     C                     MOVELDDPDYR    ZNYR
+     C                     MOVELDDPDMN    ZNMN
+     C                     MOVELDDPDDY    ZNDY
+     C*                                                                   189888
+     C** If action is DELETE, get the record's Last Change Date so that   189888
+     C** it will be used as starting date for computing the Maturity      189888
+     C** date.                                                            189888
+     C*                                                                   189888
+     C           DDACTN    IFEQ 'D'                                       189888
+     C                     MOVE DDBRTT    NNBRTT                          189888
+     C           DLFRKY    CHAINDLFIRSL1             75                   189888
+     C           *IN75     IFEQ '0'                                       189888
+     C********** DDCCY     IFEQ BJCYCD                                                 189888 204546
+     C**********           Z-ADDFRLCD     ZINDT                                        189888 204546
+     C**********           ELSE                                                        189888 204546
+     C                     MOVE DDCCY     ZCCY                            189888
+     C                     MOVE *BLANKS   ZLOC                            189888
+     C                     Z-ADDFRLCD     ZDAYNO                          189888
+     C**********           Z-ADD2         ZNRDYS                                       189888 204546
+     C                     Z-ADDA6SPDY    ZNRDYS                                              204546
+     C                     EXSR ZFWDT                                     189888
+     C                     Z-ADDZDYNBR    ZINDT                           189888
+     C**********           END                                                         189888 204546
+     C                     END                                            189888
+     C                     ELSE                                           189888
+     C                     SETON                     75                   189888
+     C                     END                                            189888
+     C*                                                                   189888
+     C           *IN75     IFEQ '1'                                       189888
+     C**********                                                                              204546
+     C****IF*CURRENCY*THE*SAME*AS*THE*LOCAL*CURRENCY*SPOT*DATE*IS*TODAY                       204546
+     C**********                                                                              204546
+     C********** DDCCY     IFEQ BJCYCD                                                        204546
+     C**********           Z-ADDBJRDNB    ZINDT                                               204546
+     C**********           ELSE                                                               204546
+     C**********                                                                              204546
+     C****ELSE*SPOT*DATE*IS*TWO*WORKING*DAYS*FROM*TODAY                                       204546
+     C**********                                                                              204546
+      *                                                                                       204546
+      ** Use the currency spot days in all cases to calculate spot date                       204546
+      *                                                                                       204546
+     C                     MOVE DDCCY     ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C**********           Z-ADD2         ZNRDYS                                              204546
+     C                     Z-ADDA6SPDY    ZNRDYS                                              204546
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    ZINDT
+     C**********           END                                                                204546
+     C*                                                                   189888
+     C                     END                                            189888
+     C*
+     C**  CALCULATE THE PERIOD DATE
+     C*
+     C                     EXSR ZCPD
+     C*
+     C**  UPDATE RATES TABLE WITH PERIOD DATE
+     C**  CHECK FOR DUPLICATE RECORDS FIRST
+     C*
+     C                     Z-ADD1         @Y
+     C           ZPDNO     LOKUP@VN,@Y                   34
+     C           *IN34     IFEQ '1'
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,9
+     C                     ELSE
+     C                     MOVE ZPDNO     @VN,@X
+     C                     MOVE ZPDTE     @VD,@X
+     C                     END
+     C                     MOVE ZPDTE     DDVDMY
+     C                     END
+     C*
+     C**  RATES
+     C*
+     C           DDRATE    IFEQ *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,7
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELDDRATE    ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD@RRN1     @X
+     C                     MOVE ZFIELD    @RT,@X
+     C           @RT,@X    IFEQ 0
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,8
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'X'       @EM,8
+     C                     END
+     C                     END
+     C*
+     C* SET RECORD NUMBER FOR SUBFILE PAGE DISPLAY TO FIRST PAGE IN ERROR
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECNO     ANDEQ99
+     C                     Z-ADD@RRN1     RECNO
+     C                     END
+     C                     END
+     C                     UPDATDL1930S5
+     C                     END
+     C*
+     C* IF NO ERRORS, SET RECORD NUMBER FOR SUBFILE PAGE DISPLAY = 1
+     C*
+     C           RECNO     IFEQ 99
+     C                     Z-ADD1         RECNO
+     C                     END
+     C*
+     C** SEND MESSAGES ACCORDING TO ERRORS
+     C*
+     C           @EM,1     IFEQ 'X'
+     C                     MOVEL'FIS0045' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,2     IFEQ 'X'
+     C                     MOVEL'FIS0046' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,3     IFEQ 'X'
+     C                     MOVEL'FIS0047' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,4     IFEQ 'X'
+     C                     MOVEL'FIS0048' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,5     IFEQ 'X'
+     C                     MOVEL'FIS0049' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,6     IFEQ 'X'
+     C                     MOVEL'FIS0050' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,7     IFEQ 'X'
+     C                     MOVEL'FIS0051' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,8     IFEQ 'X'
+     C                     MOVEL'FIS0052' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C           @EM,9     IFEQ 'X'
+     C                     MOVEL'FIS0055' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     END
+     C*
+     C** SET OFF SUBFILE RECORD ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZACCH
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZCPDZ2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE9Z3
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDAT10Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZFWDT
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #UPDFL-THIS SUBROUTINE PERFORMS UPDATES TO THE FILES          *
+     C*                                                               *
+     C* CALLED BY : #INSRT                                            *
+     C*             #AMEND                                            *
+     C*             #PRODL                                            *
+     C*                                                               *
+     C* CALLS :     *PSSR                                             *
+     C*             #SETUP                                            *
+     C*             ZA0240                                            *
+     C*             ZTNLU1                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #UPDFL    BEGSR
+     C*
+     C** GET HEADER RECORD FOR UPDATE
+     C*
+     C                     MOVE *BLANKS   @KEY
+     C           FI        IFEQ 'F'
+     C                     MOVE 'FR'      @KEY1
+     C                     ELSE
+     C                     MOVE 'IR'      @KEY1
+     C                     END
+     C           @KEY      CHAINFDTTOTLL             7074
+     C*
+     C**  DATA BASE ERROR
+     C*
+     C           *IN70     IFEQ '1'
+     C                     MOVEL@KEY      DBKEY            ***************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DB ERROR 005*
+     C                     MOVE '005'     DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF RECORD LOCKED SEND MESSAGE AND RELEASE MAIN UPDATE RECORD
+     C*
+     C           *IN74     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     MOVEL'FIS0039' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE 'N'       @UPDTD
+     C                     ROLBK
+     C                     GOTO #UPD9
+     C                     END
+     C*
+     C** POSITION POINTER ON FILE
+     C*
+     C           DLFRKY    SETLLDLFIRSL2
+     C*
+     C** LOOP UNTIL ALL SUBFILE ELEMENTS HAVE BEEN PROCESSED
+     C*
+     C                     MOVE '0'       *IN70
+     C           1         DO   @CNT      @X
+     C*
+     C** ONLY PROCESS RECORDS ON THE SUBFILE FOR WHICH DETAILS ARE PRESENT
+     C*
+     C           @RT,@X    IFNE *ZERO
+     C*
+     C** IF END OF FILE HAS ALREADY BEEN REACHED
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C** SET UP FIELDS FOR OUTPUT, AND WRITE A RECORD
+     C*
+     C                     EXSR #SETUP
+     C                     WRITEDLFIRSXX
+     C*
+     C** UPDATE TOTALS OF CHANGES DONE TODAY
+     C*
+     C                     ADD  1         NINS
+     C*
+     C** OTHERWISE, READ THE NEXT RECORD ON THE FILE
+     C*
+     C                     ELSE
+     C           DLFRKY    READEDLFIRSL2               7470
+     C*
+     C** RECORD LOCKED
+     C*
+     C           *IN74     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     MOVEL'FIS0039' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE 'N'       @UPDTD
+     C                     ROLBK
+     C                     GOTO #UPD9
+     C                     END
+     C*
+     C** IF A RECORD WAS NOT READ IN
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C** SET UP FIELDS FOR OUTPUT, AND WRITE A RECORD
+     C*
+     C                     EXSR #SETUP
+     C                     WRITEDLFIRSXX
+     C*
+     C** UPDATE TOTALS OF CHANGES DONE TODAY
+     C*
+     C                     ADD  1         NINS
+     C*
+     C** OTHERWISE, IF A RECORD WAS READ IN
+     C** CHECK FOR UPDATES BY ANOTHER WORKSTATION
+     C*
+     C                     ELSE
+     C           @@TLUP    IFNE FRTLUP
+     C           @@DLUP    ORNE FRDLUP
+     C           @@MLUP    ORNE FRMLUP
+     C           @@YLUP    ORNE FRYLUP
+     C                     CALL 'ZA0250'
+     C                     MOVEL'FIS0040' @MSGID
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     MOVE 'N'       @UPDTD
+     C                     ROLBK
+     C                     GOTO #UPD9
+     C                     END
+     C*
+     C** UPDATE TOTALS OF CHANGES DONE TODAY
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     ADD  1         NINS
+     C                     ELSE
+     C           DDACTN    IFEQ 'A'
+     C                     ADD  1         NAMD
+     C                     ELSE
+     C                     ADD  1         NDEL
+     C                     END
+     C                     END
+     C*
+     C** SET UP FIELDS FOR OUTPUT, AND UPDATE THE RECORD READ IN
+     C*
+     C                     EXSR #SETUP
+     C                     UPDATDLFIRSXX
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** PHYSICALLY DELETE ANY REMAINING RECORDS
+     C*
+     C           *IN70     DOWEQ'0'
+     C           DLFRKY    READEDLFIRSL2                 70
+     C  N70                DELETDLFIRSXX
+     C*
+     C** UPDATE TOTALS OF CHANGES DONE TODAY
+     C*
+     C           *IN70     IFEQ '0'
+     C           FRDLTF    ANDNE'*'
+     C                     ADD  1         NDEL
+     C                     END
+     C                     END
+     C*
+     C** UPDATE TABLETX
+     C*
+     C                     UPDATTABLETXF
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C           #UPD9     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #SETUP - SET UP OUTPUT FIELDS                                 *
+     C*                                                               *
+     C* CALLED BY :  #UPDFL                                           *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #SETUP    BEGSR
+     C           DDACTN    IFEQ 'D'
+     C                     MOVE '*'       FRDLTF
+     C                     ELSE
+     C                     MOVE *BLANK    FRDLTF
+     C                     END
+     C                     MOVE DDCCY     FRCCY
+     C                     Z-ADDNNBRTT    FRBRTT
+     C                     Z-ADD@VN,@X    FRVMDN
+     C                     MOVEL@VD,@X    FRVDMY
+     C                     Z-ADD@PY,@X    FRPDYR
+     C                     Z-ADD@PM,@X    FRPDMN
+     C                     Z-ADD@PD,@X    FRPDDY
+     C                     Z-ADD@RT,@X    FRRATE
+     C                     MOVE DDACTN    FRCHTP
+     C                     MOVEL@USER     FRLUSI
+     C                     Z-ADDBJRDNB    FRLCD
+     C                     Z-ADDDDTIME    FRTLUP
+     C                     Z-ADD@RUNDY    FRDLUP
+     C                     MOVEL@RUNMN    FRMLUP
+     C                     Z-ADD@RUNYR    FRYLUP
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LODSF - LOAD SUBFILE WITH RECORDS OF SELECTED CRNCY/BASE RATE*
+     C*                                                               *
+     C* CALLED BY : #VALKY                                            *
+     C*                                                               *
+     C* CALLS :     #RDFWD                                            *
+     C*             ZEDIT                                             *
+     C*             *PSSR                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           #LODSF    BEGSR
+     C*
+     C* POSITION POINTER TO START OF CURRENCY
+     C*
+     C           DLFRKY    SETLLDLFIRSL1
+     C*
+     C** GET THE FIRST SUBFILE RECORD AND READ THE FIRST RECORD
+     C*
+     C                     Z-ADD1         @RRN1
+     C           @RRN1     CHAINDL1930S5             70
+     C                     EXSR #RDFWD
+     C*
+      **  ACCESS CURRENCY FILE FOR CURRENCY NAME                                              204546
+      *                                                                                       204546
+     C                     CALL 'AOCURRR0'                                                    204546
+     C                     PARM '*DBERR ' @RTCD   7                                           204546
+     C                     PARM '*KEY   ' @OPTN   7                                           204546
+     C                     PARM DDCCY     @CRKEY  3                                           204546
+     C           SDCURR    PARM SDCURR    DSSDY                                               204546
+      *                                                                                       204546
+     C                     MOVELA6CYNM    DDCCNM                                              204546
+      *                                                                                       204546
+     C** NOW LOOP TO FILL UP THE SUBFILE
+     C*
+     C           *IN70     DOWEQ'0'
+     C           FRCCY     ANDEQDDCCY
+     C           FRBRTT    ANDEQNNBRTT
+     C*
+     C** UPDATE THE SUBFILE RECORD
+     C*
+     C                     MOVELFRPDDY    DDPDDY
+     C                     MOVELFRPDMN    DDPDMN
+     C                     MOVELFRPDYR    DDPDYR
+      **********                                                                       200990 204546
+      ***Instead*of retrieving Value Date from file, calculate                         200990 204546
+      ***it*from*rundate.  Pattern after SR/#VALSF processing.                         200990 204546
+      **********                                                                       200990 204546
+     C**********           MOVELFRVDMY    DDVDMY                                              200990
+      *                                                                                       200990
+     C                     MOVELFRPDYR    ZNYR                                                200990
+     C                     MOVELFRPDMN    ZNMN                                                200990
+     C                     MOVELFRPDDY    ZNDY                                                200990
+      *                                                                                       200990
+      ** Use no. of spot days from rundate to derive spot date for all                        204546
+      ** currencies.                                                                          204546
+      *                                                                                       204546
+     C********** FRCCY     IFEQ BJCYCD                                                 200990 204546
+     C**********           Z-ADDBJRDNB    ZINDT                                        200990 204546
+     C**********           ELSE                                                        200990 204546
+     C                     MOVE FRCCY     ZCCY                                                200990
+     C                     MOVE *BLANKS   ZLOC                                                200990
+     C                     Z-ADDBJRDNB    ZDAYNO                                              200990
+     C**********           Z-ADD2         ZNRDYS                                       200990 204546
+     C                     Z-ADDA6SPDY    ZNRDYS                                              204546
+     C                     EXSR ZFWDT                                                         200990
+     C                     Z-ADDZDYNBR    ZINDT                                               200990
+     C**********           END                                                         200990 204546
+      *                                                                                       200990
+     C                     EXSR ZCPD                                                          200990
+     C                     MOVE ZPDTE     DDVDMY                                              200990
+      *                                                                                       200990
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FRRATE    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DDRATE
+     C                     UPDATDL1930S5
+     C*
+     C** GET THE NEXT SUBFILE RECORD AND READ THE NEXT RECORD
+     C*
+     C                     ADD  1         @RRN1
+     C           @RRN1     IFLE 30
+     C           @RRN1     CHAINDL1930S5             70
+     C                     END
+     C                     EXSR #RDFWD
+     C*
+     C                     END
+     C*
+     C* BLANK OUT UNUSED SUBFILE RECORDS
+     C*
+     C           @RRN1     DOWLE@CNT
+     C           @RRN1     CHAINDL1930S5             70
+     C                     MOVE *BLANK    DDTOTL
+     C                     UPDATDL1930S5
+     C                     ADD  1         @RRN1
+     C                     END
+     C**********                                                                              204546
+     C****ACCESS*CURRENCY*FILE*FOR*CURRENCY*NAME******************                            204546
+     C****(IF*NOT*FOUND*DATABASE*ERROR*HANDLED*BY*ACCESS*PROGRAM)*                            204546
+     C**********           CALL 'AOCURRR0'                                                    204546
+     C**********           PARM '*DBERR ' @RTCD   7                                           204546
+     C**********           PARM '*KEY   ' @OPTN   7                                           204546
+     C**********           PARM DDCCY     @CRKEY  3                                           204546
+     C********** SDCURR    PARM SDCURR    DSSDY                                               204546
+     C**********                                                                              204546
+     C**********           MOVELA6CYNM    DDCCNM                                              204546
+     C*
+     C* SET UP THE BASE RATE NAME
+     C                     MOVELBABSRN    DDBSRN
+     C*
+     C           #LODS9    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZEDITZ2
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU1 - TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA  *
+     C*                                                               *
+     C* CALLED BY : #UPDFL                                            *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     MOVE 'DL'      MDID
+     C                     MOVEL'DL1930'  PGMN
+     C                     Z-ADDNATN      TNLU
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #INIT- INITIAL PROCESSING                                     *
+     C*                                                               *
+     C* CALLED BY : MAINLINE                                          *
+     C*                                                               *
+     C* CALLS :     *PSSR                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #INIT     BEGSR
+     C*
+     C           *LIKE     DEFN DDACTN    @ACTN
+     C           *LIKE     DEFN DDCCNM    @CCNM
+     C           *LIKE     DEFN DDBSRN    @BSRN
+     C*
+     C           *LIKE     DEFN FRDLUP    @@DLUP
+     C           *LIKE     DEFN FRMLUP    @@MLUP
+     C           *LIKE     DEFN FRYLUP    @@YLUP
+     C           *LIKE     DEFN FRTLUP    @@TLUP
+     C*
+     C** PARAMETER PASSED TO THIS PROGRAM, DETERMINES FILE PROCESSED
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           FI      1
+     C           FI        IFEQ 'F'
+     C                     MOVELHED,1     DDHEAD
+     C                     MOVELNAR,1     DDNARR
+     C                     MOVE 'FR'      FRRCID
+     C                     ELSE
+     C                     MOVELHED,2     DDHEAD
+     C                     MOVELNAR,2     DDNARR
+     C                     MOVE 'IR'      FRRCID
+     C                     END
+     C*
+     C** CLEAR THE PROGRAM MESSAGE QUEUE
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C** DEFINE ALL WORK FIELDS USED IN PROGRAM
+     C*
+     C                     Z-ADD0         STATUS
+     C                     Z-ADD0         @CNT    50
+     C                     MOVE *BLANKS   @MSGID 10
+     C                     Z-ADD1         RECNO   20
+     C                     Z-ADD0         @RRN    50
+     C                     Z-ADD0         @RRN1   50
+     C                     Z-ADD0         @X      50
+     C                     Z-ADD0         @Y      50
+     C                     MOVE *BLANKS   EXTTAG  6
+     C                     Z-ADD@@DAYN    @@DAYN  50
+     C                     MOVE '/'       @SLASH
+     C*
+     C** INITIALISE SCREEN FIELDS
+     C*
+     C                     MOVE *BLANKS   DDCCY
+     C                     MOVE *BLANKS   DDCCNM
+     C                     MOVE *BLANKS   DDBRTT
+     C                     MOVE *BLANKS   DDBSRN
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '1'       *IN10
+     C                     MOVEL'DL1930'  DBPGM
+     C                     MOVEL@USER     DDUSER
+     C                     MOVEL@JOB      DDJOB
+     C                     Z-ADD0         DDTIME
+     C*
+     C** DEFINE KEY TO DLFIRSL1
+     C*
+     C           DLFRKY    KLIST
+     C                     KFLD           DDCCY
+     C                     KFLD           NNBRTT
+     C*
+     C                     Z-ADD*ZERO     NNBRTT  20
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*********************                                               E36623
+     C***OBTAIN*THE*DECIMAL SEPARATOR FROM FDINSTLL                       E36623
+     C*********************                                               E36623
+     C***********1*********CHAINFDINSTLL             70                   E36623
+     C************IN70*****IFEQ '1'                                       E36623
+     C***********IDDLTF****ORNE *BLANK                                    E36623
+     C*********************MOVE *BLANKS   DBKEY            ***************E36623
+     C*********************MOVEL'FDINSTLL'DBFILE           * DB ERROR 001*E36623
+     C*********************MOVE '001'     DBASE            ***************E36623
+     C*********************EXSR *PSSR                                     E36623
+     C*********************END                                            E36623
+     C*
+     C** FIRST CLEAR SUBFILE
+     C*
+     C                     MOVE '1'       *IN45
+     C                     WRITEDL1930S4
+     C                     MOVE '0'       *IN45
+     C*
+     C** SET UP SUBFILE (CREATE 30 BLANK RECORDS ON IT - 3 PAGES)
+     C*
+     C                     Z-ADD1         @RRN1
+     C                     Z-ADD1         @CNT
+     C           @CNT      DOWLT31
+     C                     MOVE *BLANK    DDPDYR
+     C                     MOVE *BLANK    DDPDMN
+     C                     MOVE *BLANK    DDPDDY
+     C                     MOVE *BLANK    DDVDMY
+     C                     MOVE *BLANK    DDRATE
+     C                     WRITEDL1930S5
+     C                     ADD  1         @CNT
+     C                     ADD  1         @RRN1
+     C                     END
+     C           @RRN1     SUB  1         @CNT
+     C*
+     C** CALL ACCESS PROGRAM FOR BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL@OPTN     DBKEY            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 002 *
+     C                     MOVEL'002'     DBASE            ****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  SET DATE FORMAT INDICATOR FOR LATER USE IN SR ZDATE2
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C**  SET RUN DAY,MONTH,YEAR FOR OUTPUT TO DLFIRSL2
+     C*
+     C                     MOVELBJMRDT    @WRK    5
+     C                     MOVELBJMRDT    @RUNDY  20
+     C                     MOVE @WRK      @RUNMN  3
+     C                     MOVE BJMRDT    @RUNYR  20
+     C           #INIT9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C  - TERMINATES THE PROGRAM BY SETTING ON LR                 *
+     C*                                                               *
+     C* CALLED BY : MAINLINE                                          *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #END      BEGSR
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INFSR - FILE ERROR PROCESSING                                 *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :    ZA0240                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR
+     C*
+     C           STATUS    IFEQ 01021
+     C*
+     C** CHAIN TO THE FILE
+     C*
+     C           DLFRKY    CHAINDLFIRSL1             65
+     C           *IN65     IFEQ '0'
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C*
+     C                     CALL 'ZA0250'
+     C                     ROLBK
+     C*
+     C** SEND MESSAGE RECORD UPDATED BY ANOTHER WORKSTATION
+     C*
+     C                     MOVELDDCCY     @DATA
+     C                     MOVEL'FIS0044' @MSGID
+     C                     CALL 'ZA0440'
+     C                     PARM           @MSGID
+     C                     PARM           @DATA
+     C                     MOVE '*DETC '  EXTTAG
+     C                     ELSE
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     DUMP
+     C                     END
+     C                     ELSE
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR - PROGRAM ERROR PROCESSING                              *
+     C*                                                               *
+     C* CALLED BY : #UPDFL                                            *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+** HEADING
+FRA RATES
+IRS RATES
+** NARRATIVE
+Value
+Maturity

@@ -1,0 +1,1241 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities Redenom Currency Chg Dtl Maint')   *
+/*OVRF*: OVRDBF FILE(SECTYX) TOFILE(SECTY) SHARE(*NO)               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7523 -  Securities Redenomination Currency Change Detail   *
+      *                                                               *
+      *  Function:  Prompt Program for Securities Redenomination      *
+      *  (I/C)      Currency Change Detail                            *
+      *                                                               *
+      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 149870             Date 12May99               *
+      *                 150947             Date 16Dec98               *
+      *                 149782             Date 07Dec98               *
+      *                 149153             Date 30Nov98               *
+      *                 136428             Date 15Jun98               *
+      *                 135685             Date 28May98               *
+      *                 135684             Date 27May98               *
+      *                 CEU017 *CREATE     Date 26Feb98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  149870 - Correct the date checks in SR/SRVDAT for 'Payment   *
+      *           Date' and 'Trade Date'.                             *
+      *  150947 - Invalid validation of Denomination Multiplier when  *
+      *           Number of decimal Positions equal to '4'            *
+      *  149782 - Error in calculating the stock allocation for       *
+      *           french government OAT bonds : new rounding type 'O' *
+      *  149153 - Error in allocation for EIB bonds : new rounding    *
+      *           type 'B' (down with rounding on the bond level)     *
+      *  136428 - Recompile due to addition of Days Basis and Divisor *
+      *           Basis field in SECORBPD.                            *
+      *  135685 - It's not feasible to enter the Compensation Price   *
+      *           at the Bulk level as the Bulk will have many        *
+      *           Securities all giving a cash compensation at a      *
+      *           different level. Therefore, allow the entry of      *
+      *           'MARKET' which will use the Market Price of the     *
+      *           Security at allocation effective date.              *
+      *  135684 - Check if Payment, Trade and Event date greater than *
+      *           Maturity date only if Maturity date not equal 0     *
+      *           (for Shares, Maturity date equal 0).                *
+      *  CEU017- Securities Redenomination Euro Changes               *
+      *                                                               *
+      *****************************************************************
+     FSE7523DFCF  E                    WORKSTN
+      ** Display File
+      *
+     FSECORBL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Securities Redenomination Bulk Detail
+      *
+     FSECOATL0IF  E           K        DISK         KINFSR *PSSR
+      **  Corporate Action Type Details
+      *
+     FSECTYX  IF  E           K        DISK         KINFSR *PSSR
+      ** Securities
+      *
+      /EJECT
+      *****************************************************************
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  01    Reverse Image indicator for Corporate Action Type      *
+      *  02    Reverse Image indicator for Date of Announcement       *
+      *  03    Reverse Image indicator for Ex-Date                    *
+      *  04    Reverse Image indicator for Allocation Effective Date  *
+      *  05    Reverse Image indicator for Trade/Value Date           *
+      *  06    Reverse Image indicator for Payment Date               *
+      *  07    Reverse Image indicator for Trade Date                 *
+      *  08    Reverse Image indicator for Event Date                 *
+      *  09    Reverse Image indicator for New Nominal Size           *
+      *  10    Reverse Image indicator for Old Nominal Size           *
+      *  11    Reverse Image indicator for Denomination Multiplier    *
+      *  12    Reverse Image indicator for Rounding Options Type      *
+      *  13    Reverse Image indicator for Cash                       *
+      *  14    Reverse Image indicator for Compensation Price         *
+      *  20    Final Allocation status indicator                      *
+      *  21    NBSESS blank (Security Shortname)                      *
+      *  37    Multibranch indicator                                  *
+      *  50    Enquiry mode indicator                                 *
+      *  52    Amend mode indicator                                   *
+      *  70    Lokup indicator                                        *
+      *  80    Chain indicator                                        *
+      *                                                               *
+      *  98    Date Format indicator                                  *
+      *  99    Error indicator                                        *
+      *  KC    F3 indicator                                           *
+      *  KL    F12 indicator                                          *
+      *  LR    Last record indicator                                  *
+      *  U7-U8 Database error indicator                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  *PSSR  - Error routine                                      *
+      *  SRCHK  - Check if date is a holiday                         *
+      *  SRINIT - Program Initialisation                             *
+      *  SRLOAD - Load values to screen fields                       *
+      *  SRSET0 - Initialise indicators to '0'                       *
+      *  SRUPD  - Update records                                     *
+      *  SRVAL  - Validate all fields                                *
+      *  SRVDAT - Validate all dates                                 *
+      *                                                              *
+      *  ZALIGN - Validate amounts                                   *
+      *  ZASNMS - Send messages on queue                             *
+      *  ZCHKH  - Check for currency hoildays                        *
+      *  ZDATE1 - Convert date to runday number                      *
+      *  ZDATE2 - Convert runday number to date                      *
+      *  ZEDIT  - Insert decimal point to amount                     *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+     E                    ACOM    1   1 78
+      *
+     E                    ADAT        6  1
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+     E/COPY ZSRSRC,ZHOLE
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+     IRUNDAT    E DS
+      **  Standard Data Area Layout for System flags and Run Date
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+     I                                       11  13 BVBRCD
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securites Trading ICD
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRUPD  - Update records                            *
+      *            SRINIT - Program Initialisation                    *
+      *            SRSET0 - Initialize indicators to '0'              *
+      *            SRVAL  - Validate all fields                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *ENTRY    PLIST                           ** Main **
+     C                     PARM           PBLKR   60
+     C                     PARM           PTAG    1
+     C                     PARM           PCODE   1
+      *
+      **  Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRSET0
+      *
+     C           *INKC     DOWEQ'0'
+     C           WVALID    ANDEQ0
+     C           *INKL     ANDEQ'0'
+      *
+      ** Read Input Screen
+      *
+     C                     Z-ADD1         WVALID  10
+     C                     WRITESE7523F0
+     C                     WRITESE7523C0
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXFMTSE7523F1
+     C                     EXSR SRSET0
+      *
+     C                     ELSE
+     C                     EXFMTSE7523F2
+     C                     Z-ADD0         WVALID
+     C                     ENDIF
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           *IN50     ANDEQ'0'
+      *
+     C                     EXSR SRVAL
+      *
+     C           WVALID    IFEQ 1
+     C                     EXSR SRUPD
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           *IN50     IFEQ '1'
+     C                     MOVE 'Y'       NOTF12  1
+     C                     MOVE '1'       *INKL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     SELEC
+      *
+     C           *INKC     WHEQ '1'
+     C                     MOVE '3'       PCODE
+      *
+     C           *INKL     WHEQ '1'
+     C           NOTF12    IFEQ 'Y'
+     C                     MOVE ' '       PCODE
+     C                     ELSE
+     C                     MOVE '2'       PCODE
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * CALLS      AOBANKR0 - Access Program for Bank Details         *
+      *            AOSTRDR0 - Access Program for Securities Trading   *
+      *            *PSSR    - Database Error Processing               *
+      *            SRLOAD   - Load values to screen fields            *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      WCPY   80
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE7523'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+      **  Read in DTAARA/ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in DTAARA/RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Access the Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE AGMRDT    SMRDT
+      *
+      **   Determine Date Format
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      **   Check Multibranching Indicator
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *
+      **   Access to Securities Trading Data
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      **   If Record not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVE 'SDSTRDPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **   Calculate the SE Backvalue Date
+      *
+     C           BJRDNB    SUB  BVBVP     WBACKD  50
+      *
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10
+     C                     MOVELSPGM      PGMNAM
+      *
+      **  Check if CEU018 (SE Decimal on Nominal Amount) is active
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CEU018'  PSARD   6
+      *
+      **  If record not found
+     C           PRTCD     IFEQ *BLANKS                    B*1
+     C                     MOVE '0'       *IN55
+     C                     ELSE                            X*1
+     C                     MOVE '1'       *IN55
+     C                     ENDIF                           E*1
+      *
+      ** Default Values of Screen Fields
+      *
+     C                     MOVE '0'       *IN50
+      *
+     C           PTAG      IFEQ 'E'
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+     C                     EXSR SRLOAD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSET0 - Initialise indicators to '0'              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSET0    BEGSR                           ** SRSET0 **
+      *
+     C                     MOVEA'00000000'*IN,01
+     C                     MOVEA'000000'  *IN,09
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVAL  - Validate All Fields                       *
+      *                                                               *
+      * CALLS      SRCHK  - Check for holidays                        *
+      *            SRVDAT - Validate all dates                        *
+      *            Y2CLMSC- Clear Subfile                             *
+      *            ZASNMS - Adds Error Messages to Message Subfile    *
+      *            ZALIGN - Validate amount                           *
+      *            ZDATE1 - Convert date runday number                *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR                           ** SRVAL **
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Validate Corporate Action Type
+     C                     SELEC
+     C           SCORP     WHEQ *BLANKS
+     C                     MOVEL'CO00514' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+      *
+     C           SCORP     WHNE *BLANKS
+     C           SCORP     CHAINSECOATD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'CO00502' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+     C           MMPTYP    IFNE 'CC'
+     C           *IN01     ANDEQ'0'
+     C                     MOVEL'CO00503' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSL
+      *
+      ** Validate Date of Announcement
+     C           SDATAN    IFNE *BLANKS
+     C                     MOVE SDATAN    ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN02
+     C                     MOVEL'CO00033' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     Z-ADDZDAYNO    WDATAN  50
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WDATAN
+     C                     ENDIF
+      *
+     C           *IN20     IFEQ '0'
+      *
+      ** Validate Ex-Date
+     C                     MOVE SEXDAT    ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN03
+     C                     MOVEL'CO00006' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE ZDAYNO    WEXDAT  50
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Allocation Effective Date
+     C                     MOVE SALLOC    ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN04
+     C                     MOVEL'CO00041' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE ZDAYNO    WALLOC  50
+     C                     ENDIF
+      *
+      ** Validate Trade/Value Date
+     C           STRVD     IFNE 'T'
+     C           STRVD     ANDNE'V'
+     C                     MOVE '1'       *IN05
+     C                     MOVEL'CO00505' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Payment Date
+     C           SPAYD     IFEQ *BLANKS
+     C           *IN04     ANDEQ'0'
+     C                     MOVE SALLOC    SPAYD
+     C                     MOVE WALLOC    WPAYD
+     C                     ENDIF
+      *
+     C                     MOVE SPAYD     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN06
+     C                     MOVEL'CO00038' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE ZDAYNO    WPAYD   50
+     C                     ENDIF
+      *
+      ** Validate Trade Date
+     C           STRAD     IFEQ *BLANKS
+     C           *IN04     ANDEQ'0'
+     C                     MOVE SALLOC    STRAD
+     C                     MOVE WALLOC    WTRAD
+     C                     ENDIF
+      *
+     C                     MOVE STRAD     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN07
+     C                     MOVEL'CO00301' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE ZDAYNO    WTRAD   50
+     C                     ENDIF
+      *
+      ** Validate Event Date
+     C           SEVDT     IFEQ *BLANKS
+     C           *IN03     ANDEQ'0'
+     C                     MOVE SEXDAT    SEVDT
+     C                     MOVE WEXDAT    WEVDT
+     C                     ENDIF
+      *
+     C                     MOVE SEVDT     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN08
+     C                     MOVEL'CO00211' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     MOVE ZDAYNO    WEVDT   50
+     C                     ENDIF
+      *
+     C           WVALID    IFEQ 1
+     C                     EXSR SRVDAT
+     C                     ENDIF
+      *
+      ** Validate New Nominal Size
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SNNS      ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     Z-ADD8         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'
+     C           SNNS      OREQ *BLANKS
+     C                     MOVE '1'       *IN09
+     C                     MOVEL'CO00228' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WNNS   150
+     C                     ENDIF
+      *
+      ** Validate Old Nominal Size
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SONS      ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'
+     C           SONS      OREQ *BLANKS
+     C                     MOVE '1'       *IN10
+     C                     MOVEL'CO00227' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WONS   150
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+      *
+     C                     SELEC
+     C           NBNDCP    WHEQ 0
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD15        ZADIG
+     C           NBNDCP    WHEQ 1
+     C                     Z-ADD1         ZADEC
+     C                     Z-ADD14        ZADIG
+     C           NBNDCP    WHEQ 2
+     C                     Z-ADD2         ZADEC
+     C                     Z-ADD13        ZADIG
+     C           NBNDCP    WHEQ 3
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD12        ZADIG
+     C           NBNDCP    WHEQ 4                                         150947
+     C                     Z-ADD4         ZADEC                           150947
+     C                     Z-ADD11        ZADIG                           150947
+     C                     ENDSL
+      *
+      ** Validate Denomination Multiplier
+     C                     MOVE SDENOM    ZFIELD
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'
+     C           SDENOM    OREQ *BLANKS
+     C                     MOVE '1'       *IN11
+     C                     MOVEL'CO00107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE ZFIELD    WDENOM 150
+     C                     ENDIF
+      *
+      ** Validate Rounding Option Type
+     C           STYPE     IFNE 'R'
+     C           STYPE     ANDNE'D'
+     C           STYPE     ANDNE'U'
+     C           STYPE     ANDNE'B'                                       149153
+     C           STYPE     ANDNE'O'                                       149782
+     C                     MOVEL'CO00506' ZAMSID
+     C                     MOVE '1'       *IN12
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Rounding Option Cash
+     C           SCASH     IFNE 'Y'
+     C           SCASH     ANDNE'N'
+     C                     MOVEL'CO00507' ZAMSID
+     C                     MOVE '1'       *IN13
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Compensation Price
+     C                     SELEC
+     C           SCASH     WHEQ 'N'
+     C           SCOMP     ANDNE*BLANKS
+     C           SCASH     OREQ 'Y'
+     C           SCOMP     ANDEQ*BLANKS
+     C                     MOVEL'CO00500' ZAMSID
+     C                     MOVE '1'       *IN14
+     C                     EXSR ZASNMS
+      *
+     C           SCASH     WHEQ 'Y'
+     C           SCOMP     ANDNE*BLANKS
+     C           SCOMP     ANDNE'MARKET'                                  135685
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SCOMP     ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     Z-ADD7         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'CO00108' ZAMSID                          135685
+     C                     MOVE '1'       *IN14
+     C                     EXSR ZASNMS                                    135685
+     C                     ELSE
+     C                     MOVE ZFIELD    WCOMP  150
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C           WVALID    IFEQ 1
+     C                     EXSR SRCHK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - Send message on queue                     *
+      *                                                               *
+      * CALLS      Y2SNMGC- Program to send messages on queue         *
+      *                                                               *
+      * CALLED BY  SRCHK  - Check for holidays                        *
+      *            SRVAL  - Validate all fields                       *
+      *            SRVDAT - Validate all dates                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELSPGM      ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C                     MOVE 0         WVALID
+      *
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRLOAD - Load values to screen fields              *
+      *                                                               *
+      * CALLS      *PSSR  - Error routine                             *
+      *            ZDATE2 - Convert runday number to date             *
+      *            ZEDIT  - Insert decimal point to amount            *
+      *                                                               *
+      * CALLED BY  SRINIT - Program initialisation                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR                           ** SRLOAD **
+      *
+     C                     MOVE '0'       *IN20
+     C                     MOVE PBLKR     SBULK
+      *
+     C           PBLKR     CHAINSECORBD0             80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SECORBPD'DBFILE
+     C                     MOVELPBLKR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN52
+      *
+     C                     MOVE NBNCCY    SNNC
+     C                     MOVE NBNDCP    SDEC
+     C                     MOVE NBVCCY    SNVC
+      *
+     C           NBSTAT    IFEQ 'S'
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+     C           NBSESS    IFEQ *BLANKS
+     C                     MOVE '1'       *IN21
+      *
+     C                     ELSE
+     C                     MOVE '0'       *IN21
+     C           NBSESS    CHAINSECTYDF              80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'SECTY   'DBFILE
+     C                     MOVELNBSESS    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           NBCOAN    IFEQ 0
+     C                     MOVE *BLANKS   SDATAN
+      *
+     C                     ELSE
+     C                     MOVE NBCOAN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDATAN
+      *
+     C                     ENDIF
+      *
+     C           NBCOEX    IFEQ 0
+     C                     MOVE *BLANKS   SEXDAT
+     C                     MOVE *BLANKS   SEXDA2
+      *
+     C                     ELSE
+     C                     MOVE NBCOEX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SEXDAT
+     C                     MOVE ZDATE     SEXDA2
+      *
+     C                     ENDIF
+      *
+     C           NBALEF    IFEQ 0
+     C                     MOVE *BLANKS   SALLOC
+      *
+     C                     ELSE
+     C                     MOVE NBALEF    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SALLOC
+      *
+     C                     ENDIF
+      *
+     C           NBCOPD    IFEQ 0
+     C                     MOVE *BLANKS   SPAYD
+      *
+     C                     ELSE
+     C                     MOVE NBCOPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SPAYD
+      *
+     C                     ENDIF
+      *
+     C           NBTDDT    IFEQ 0
+     C                     MOVE *BLANKS   STRAD
+      *
+     C                     ELSE
+     C                     MOVE NBTDDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     STRAD
+      *
+     C                     ENDIF
+      *
+     C           NBEVDT    IFEQ 0
+     C                     MOVE *BLANKS   SEVDT
+      *
+     C                     ELSE
+     C                     MOVE NBEVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SEVDT
+      *
+     C                     ENDIF
+      *
+     C                     MOVE NBCOAT    SCORP
+      *
+     C           *IN52     IFEQ '1'
+     C           NBTDVD    ANDEQ*BLANKS
+     C                     MOVE 'T'       STRVD
+     C                     ELSE
+     C                     MOVE NBTDVD    STRVD
+     C                     ENDIF
+      *
+     C           NBNNSZ    IFEQ 0
+     C                     MOVE *BLANKS   SNNS
+      *
+     C                     ELSE
+     C                     Z-ADD7         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBNNSZ    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SNNS
+      *
+     C                     ENDIF
+      *
+     C           NBONSZ    IFEQ 0
+     C                     MOVE *BLANKS   SONS
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBONSZ    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SONS
+      *
+     C                     ENDIF
+      *
+     C           NBDMLT    IFEQ 0
+      *
+     C           *IN52     IFEQ '1'
+     C                     MOVE 1         SDENOM
+     C                     ELSE
+     C                     MOVE *BLANKS   SDENOM
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE NBNDCP    ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBDMLT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDENOM
+      *
+     C                     ENDIF
+      *
+     C           NBRNDN    IFEQ *BLANKS
+     C           *IN52     ANDEQ'1'
+     C                     MOVE 'D'       STYPE
+     C                     ELSE
+     C                     MOVE NBRNDN    STYPE
+     C                     ENDIF
+      *
+     C           NBRNDS    IFEQ *BLANKS
+     C           *IN52     ANDEQ'1'
+     C                     MOVE 'N'       SCASH
+     C                     ELSE
+     C                     MOVE NBRNDS    SCASH
+     C                     ENDIF
+      *
+     C           NBCOMP    IFEQ 0
+      *                                                                   135685
+     C           NBMRKI    IFEQ 'Y'                                       135685
+     C                     MOVEL'MARKET'  SCOMP     P                     135685
+     C                     ELSE                                           135685
+     C                     MOVE *BLANKS   SCOMP
+     C                     ENDIF                                          135685
+      *                                                                   135685
+     C                     ELSE
+     C                     Z-ADD8         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBCOMP    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SCOMP
+     C                     ENDIF
+      *
+     C                     MOVE NBTXT1    SNARR1
+     C                     MOVE NBTXT2    SNARR2
+     C                     MOVE NBTXT3    SNARR3
+     C                     MOVE NBTXT4    SNARR4
+      *
+     C                     MOVEAACOM      SCOMM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRUPD  - Update records                            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPD     BEGSR                           ** SRUPD  **
+      *
+     C                     MOVE PBLKR     NBBLKR
+     C                     MOVE SCORP     NBCOAT
+     C                     MOVE WDATAN    NBCOAN
+      *
+     C           *IN20     IFEQ '0'
+     C                     MOVE WEXDAT    NBCOEX
+     C                     ENDIF
+      *
+     C                     MOVE WALLOC    NBALEF
+     C                     MOVE STRVD     NBTDVD
+     C                     MOVE WPAYD     NBCOPD
+     C                     MOVE WTRAD     NBTDDT
+     C                     MOVE WEVDT     NBEVDT
+     C                     MOVE WNNS      NBNNSZ
+     C                     MOVE WONS      NBONSZ
+     C                     MOVE WDENOM    NBDMLT
+     C                     MOVE STYPE     NBRNDN
+     C                     MOVE SCASH     NBRNDS
+      *
+     C           SCOMP     IFEQ 'MARKET'                                  135685
+     C                     Z-ADD*ZEROS    NBCOMP                          135685
+     C                     MOVE 'Y'       NBMRKI                          135685
+     C                     ELSE                                           135685
+     C                     MOVE WCOMP     NBCOMP
+     C                     MOVE 'N'       NBMRKI                          135685
+     C                     ENDIF                                          135685
+      *                                                                   135685
+     C                     MOVE SNARR1    NBTXT1
+     C                     MOVE SNARR2    NBTXT2
+     C                     MOVE SNARR3    NBTXT3
+     C                     MOVE SNARR4    NBTXT4
+      *
+     C                     MOVE SUSER     NBLUID
+     C                     Z-ADDBJRDNB    NBLCD
+     C                     MOVE 'A'       NBCHTP
+      *
+     C                     UPDATSECORBD0
+      *
+     C                     COMIT
+      *
+     C                     MOVE 'N'       WDUMMY  1
+      *
+     C           WDUMMY    IFEQ 'Y'
+     C                     WRITESECORBD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCHK  - Check for holidays                        *
+      *                                                               *
+      * CALLS      ZASNMS - Send messages on queue                    *
+      *            ZCHKH  - Check for holidays                        *
+      *                                                               *
+      * CALLED BY  SRVAL  - Validate all fields                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHK     BEGSR                           ** SRCHK  **
+      *
+     C                     MOVE WDATAN    ZDAYNO
+     C                     MOVE NBVCCY    ZCCY
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN02
+     C                     ENDIF
+      *
+     C           *IN20     IFEQ '0'
+      *
+     C                     MOVE WEXDAT    ZDAYNO
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN03
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE WALLOC    ZDAYNO
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN04
+     C                     ENDIF
+      *
+     C           SPAYD     IFNE *BLANKS
+      *
+     C                     MOVE WPAYD     ZDAYNO
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN06
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE WTRAD     ZDAYNO
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN07
+     C                     ENDIF
+      *
+     C                     MOVE WEVDT     ZDAYNO
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     MOVE '1'       *IN08
+     C                     ENDIF
+      *
+     C           *IN02     IFEQ '1'
+     C           *IN03     OREQ '1'
+     C           *IN04     OREQ '1'
+     C           *IN06     OREQ '1'
+     C           *IN07     OREQ '1'
+     C           *IN08     OREQ '1'
+      *
+     C                     MOVEL'CO00508' ZAMSID
+     C                     EXSR ZASNMS
+     C                     WRITESE7523F0
+     C                     WRITESE7523C0
+     C                     EXFMTSE7523F2
+      *
+     C                     SELEC
+     C           *INKL     WHEQ '1'
+     C                     MOVE '0'       *INKL
+     C           *INKC     WHEQ '1'
+     C                     MOVE 0         WVALID
+     C           *INKL     WHEQ '0'
+     C                     MOVE 1         WVALID
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVDAT - Validate all dates                        *
+      *                                                               *
+      * CALLS      ZASNMS - Send messages on queue                    *
+      *                                                               *
+      * CALLED BY  SRVAL  - Validate all fields                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVDAT    BEGSR                           ** SRVDAT **
+      *
+     C           *IN20     IFEQ '0'
+      *
+     C           WEXDAT    IFLE WBACKD
+     C                     MOVEL'CO00509' ZAMSID
+     C                     MOVE '1'       *IN03
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ '0'
+     C           WEXDAT    ANDGEMATY
+     C           MATY      ANDNE*ZEROS
+     C                     MOVEL'CO00515' ZAMSID
+     C                     MOVE '1'       *IN03
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WALLOC    IFLT WEXDAT
+     C           WALLOC    ORLT WEVDT
+     C                     MOVEL'CO00510' ZAMSID
+     C                     MOVE '1'       *IN04
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ '0'
+     C           WALLOC    ANDGEMATY
+     C           MATY      ANDNE*ZEROS
+     C                     MOVEL'CO00516' ZAMSID
+     C                     MOVE '1'       *IN04
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C***********WPAYD     IFLT WEXDAT                                    149870
+     C           WPAYD     IFLE WEXDAT                                    149870
+     C           WPAYD     ORLT WEVDT
+     C           WPAYD     ORLT WALLOC
+     C                     MOVEL'CO00511' ZAMSID
+     C                     MOVE '1'       *IN06
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ '0'
+     C           MATY      ANDNE0                                         135684
+     C           WPAYD     ANDGTMATY
+     C                     MOVEL'CO00517' ZAMSID
+     C                     MOVE '1'       *IN06
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           WTRAD     IFGT WALLOC
+     C           WTRAD     ORLT WBACKD
+     C                     MOVEL'CO00512' ZAMSID
+     C                     MOVE '1'       *IN07
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ '0'
+     C           MATY      ANDNE0                                         135684
+     C***********WTRAD     ANDGTMATY                                      149870
+     C           WTRAD     ANDGEMATY                                      149870
+     C                     MOVEL'CO00518' ZAMSID
+     C                     MOVE '1'       *IN07
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           WEVDT     IFLT WEXDAT
+     C                     MOVEL'CO00513' ZAMSID
+     C                     MOVE '1'       *IN08
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN21     IFEQ '0'
+     C           MATY      ANDNE0                                         135684
+     C           WEVDT     ANDGEMATY
+     C                     MOVEL'CO00519' ZAMSID
+     C                     MOVE '1'       *IN08
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Exception Error Routine.          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRINIT - Program initialisation                    *
+      *            SRLOAD - Load values to screen fields              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+     C                     MOVE 'E'       PCODE
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** Dump and return to the calling program
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     ROLBK
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZDATE1Z2
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+     C/COPY ZSRSRC,ZALIGNZ2
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+      *
+     C/COPY ZSRSRC,ZACCH
+      *
+     C/COPY ZSRSRC,ZCHKH
+      *
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ACOM
+F3=Exit  F12=Previous
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

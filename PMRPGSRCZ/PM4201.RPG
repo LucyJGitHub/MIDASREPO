@@ -1,0 +1,663 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Position Reconciliation Report (COB)')        *
+/*OVRF*: OVRDBF FILE(PMPCFEP1) TOFILE(PMPCFEQ0) SHARE(*NO)          : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM4201 - POSITION RECONCILIATION REPORT (COB)                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 15Jul96               *
+      *                 101266             Date 08Feb96               *
+     F*                 094891             Date 23Oct95               *
+     F*                 082662             Date 14Sep95               *
+     F*                 S01486             Date 08Dec94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  101266 - Bank Portfolios                                     *
+     F*  094891 - The temporary files in QTEMP have been renamed to   *
+     F*           make them unique and allow QTEMP to appear anywhere *
+     F*           in the library list - amend pgm to reference these  *
+     F*           files.                                              *
+     F*  082662 - Recompiled over printer file                        *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*           (Program based on PM4200)                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F***OVRDBF FILE(PMPTRRT0) TOFILE(PMPTRRQ0) SHARE(*NO)         094891 101266
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F***PMPTRRQ0IF  E           K        DISK         KINFSR *PSSR       094891
+     F***PMPTRRT0IF  E           K        DISK         KINFSR *PSSR094891 101266
+     FPMPTRRQ0IF  E           K        DISK         KINFSR *PSSR          101266
+     F*
+     F**  Performance Interim Monthly Totals - 'QT'
+     FPMPIMTPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**  PM Live Portfolio Definit - 'PN'
+     F***PMPORTL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          CPM005
+     F*
+     F**  Printer File.
+     FPM4201P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     FPM4201AUO   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOLU
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  41 - Detail line printed in bold                             *
+     F*  50 - Multibranching indicator                                *
+     F*  61 - LOKUP over array PECA                                   *
+     F********73*********FILE*OPERATIONS*INDICATOR*-*PMPTRRQ0**********   094891
+     F********73*********FILE OPERATIONS INDICATOR - PMPTRRT0      094891 101266
+     F*       73         FILE OPERATIONS INDICATOR - PMPTRRQ0             101266
+     F*  74 - File operations indicator - PMPIMTPD                    *
+     F***77*-*File*operations*indicator*-*PMPORTL1*********************   CPM005
+     F*  77 - File operations indicator - PMPORTPD                    *   CPM005
+     F*                                                               *
+     F*  U7 - Database error                                          *
+     F*  U8 - Program error                                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   O F   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  MAIN   - Main processing routine                             *
+     F*  #PRINT - Print Differences to Report                         *
+     F*  #LZSFL - Call ZSFILE                                         *
+     F*  ZSEDIT - Inserting decimal point and sign into numeric field *
+     F*  *PSSR  - File/program exeption handler                       *
+     F*                                                               *
+     F*****************************************************************
+     E**  Array for copyright
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E**  Array 15.0 of amounts
+     E                    AMOU       23 15 0
+     E*
+     E**  Array 3A of Performance categories
+     E                    PECA   23  23  3
+     E*
+     E**  Array for Performance Period
+     E                    PERI    1   3 17
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*****************************************************************
+     I/EJECT
+     I*
+     I**  Local data area for database error details
+     I*
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  Information area for PRTF (overflow + last line)
+     ISPOOL       DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890SSOF
+     I                                    B 367 3680SSLS
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**  Data structure for compilation - copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  Data structure for saving
+     I            DS
+     I                                        1  36 WWKEYS
+     I**********                              1   60QTCNUM                                    CSD027
+     I                                        1   6 QTCNUM                                    CSD027
+     I                                        7  10 QTPTFR
+     I                                       11  11 QTPFMP
+     I                                       12  14 QTINNR
+     I                                       15  34 QTRESH
+     I                                       35  36 QTMODI
+     I*
+     I**  Data structure for accessing saved data
+     I            DS
+     I                                        1  36 WWSAVI
+     I                                        1   60WTCNUM
+     I                                        7  10 WTPTFR
+     I                                       11  11 WTPFMP
+     I                                       12  14 WTINNR
+     I                                       15  34 WTRESH
+     I                                       35  36 WTMODI
+     I*
+     I**  Data structure for KLIST PORT
+     I            DS
+     I                                        1  10 PORTBB
+     I**********                              1   60R2CUST                                    CSD027
+     I                                        1   6 R2CUST                                    CSD027
+     I                                        7  10 PR2TFR
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for system flags and run date
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data structure for bank details
+     I*
+     ISDPORT    E DSSDPORTPD
+     I**  Data structure for portfolio management details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I**  Data structure for customer details
+     I*
+     ISDACOF    E DSSDACOFPD
+     I**  Data structure for account officer details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access objects
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure for access objects
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**  Copyright statement
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C*================================================================
+     C*
+     C**  Receive 'Print only differences' par. from calling program
+     C*  and RCF parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PRNO    1
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C*
+     C**  Define key list to process PMPIMTPD
+     C           PIMT      KLIST
+     C                     KFLD           R2CUST
+     C                     KFLD           R2PTFR
+     C                     KFLD           R2PEPE
+     C*
+     C****Define*key*list*to*process*PMPORTL1**************************   CPM005
+     C**  Define key list to process PMPORTPD                             CPM005
+     C           PORT      KLIST
+     C                     KFLD           R2CUST
+     C                     KFLD           R2PTFR
+     C*
+     C**  Define fields
+     C           *LIKE     DEFN BBCUST    WWCUSN
+     C           *LIKE     DEFN R2CUST    WWCUST
+     C           *LIKE     DEFN R2PTFR    WWPTFR
+     C           *LIKE     DEFN R2PEPE    WWPEPE
+     C*
+     C**  Read in DTAARA/RUNDAT and set up multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN50
+     C                     END
+     C*
+     C**  Prepare variables for database error
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'PM4201'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Get bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Get PM ICD
+     C*
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*FIRST'  WLOPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Edit code for every
+     C                     MOVE *BLANKS   ZECODE
+     C*
+     C**  Initialise first time through variable
+     C*
+     C                     MOVE 'Y'       WLFRST  1
+     C*
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  Read Portfolio Requiring Reconciliation ...
+     C***********          READ PMPTRRQ0                 73               094891
+     C***********          READ PMPTRRT0                 73        094891 101266
+     C                     READ PMPTRRQ0                 73               101266
+     C*
+     C**  ... in loop
+     C           *IN73     DOWEQ*OFF
+     C*
+     C**  Read Requiring Reconciliation
+     C           PIMT      CHAINPMPIMTP0             74
+     C*
+     C**  In loop for same Customer, Portfolio, Performance period
+     C           *IN74     DOWEQ*OFF
+     C*
+     C**  Save details of Customer, Portfolio, Performance Period,
+     C**  Instrument, Reference/Shortname, Module id.
+     C                     MOVE WWKEYS    WWSAVI
+     C                     MOVE 'N'       WWCIR   1
+     C                     MOVE 'N'       WWCOR   1
+     C*
+     C**  Loop for same keys saved above.
+     C           WWKEYS    DOWEQWWSAVI
+     C           *IN74     ANDEQ'0'
+     C*
+     C**  Find corresponding element
+     C                     Z-ADD1         I       30
+     C           QTPFMC    LOKUPPECA,I                   61
+     C*
+     C                     ADD  QTPFMA    AMOU,I
+     C*
+     C**  Set on indicator for both in and out movements found in
+     C**  Portfolio for an FX deal
+     C           QTMODI    IFEQ 'FX'
+     C*
+     C           QTPFMC    IFEQ 'CIR'
+     C                     MOVE 'Y'       WWCIR
+     C                     END
+     C*
+     C           QTPFMC    IFEQ 'COR'
+     C                     MOVE 'Y'       WWCOR
+     C                     END
+     C                     END
+     C*
+     C           PIMT      READEPMPIMTPD                 74
+     C                     ENDDO
+     C*
+     C**  Calculate Return
+     C                     Z-ADDAMOU,1    WWRETU 180
+     C                     SUB  AMOU,2    WWRETU
+     C                     SUB  AMOU,20   WWRETU
+     C                     ADD  AMOU,23   WWRETU
+     C                     SUB  AMOU,4    WWRETU
+     C                     ADD  AMOU,5    WWRETU
+     C*
+     C           WTMODI    IFNE 'FX'
+     C           WTMODI    OREQ 'FX'
+     C           WWCIR     ANDEQ'Y'
+     C           WWCOR     ANDEQ'Y'
+     C                     SUB  AMOU,22   WWRETU
+     C                     ADD  AMOU,21   WWRETU
+     C                     END
+     C*
+     C**  Calculate Sum of Components
+     C                     Z-ADD0         WWSUCO
+     C           7         DO   19        K       20
+     C                     ADD  AMOU,K    WWSUCO 180
+     C                     ENDDO
+     C*
+     C**  Calculate Difference
+     C           WWRETU    SUB  WWSUCO    WWDIFA 180
+     C*
+     C           WWDIFA    IFLT 0
+     C                     Z-SUBWWDIFA    WWDIFA
+     C                     ENDIF
+     C*
+     C           PRNO      IFEQ 'N'
+     C           PRNO      OREQ 'Y'
+     C           WWDIFA    ANDGTFCADIF
+     C                     MOVE 'Y'       WWEXCP  1
+     C                     EXSR #PRINT
+     C                     ENDIF
+     C*
+     C                     Z-ADD0         AMOU
+     C*
+     C                     ENDDO
+     C*
+     C***********          READ PMPTRRQ0                 73               094891
+     C***********          READ PMPTRRT0                 73        094891 101266
+     C                     READ PMPTRRQ0                 73               101266
+     C                     ENDDO
+     C*
+     C** If producing reconciliation report and no differences reported
+     C** output no exceptions report
+     C           PRNO      IFEQ 'Y'
+     C           WWEXCP    ANDNE'Y'
+     C*
+     C**  Open audit printer file and output 'No details to report'
+     C*
+     C                     OPEN PM4201AU
+     C                     WRITEPM4201HD
+     C                     WRITEPM4201ND
+     C*
+     C**  Ensure Audit Spool File recorded by RCF
+     C*
+     C                     MOVELSFILEU    SFILE
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     EXSR #LZSFL
+     C                     CLOSEPM4201AU
+     C                     END
+     C*
+     C**  Output *** End of report ***
+     C           WWEXCP    IFEQ 'Y'
+     C                     WRITEENDREP
+     C                     ENDIF
+     C*
+     C**  Terminate program
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #PRINT  -  Subroutine to print differences to report
+     C**
+     C** Called from main line
+     C**
+     C** Calls:  ZSEDIT - edit with currency decimal
+     C**
+     C*================================================================
+     C*
+     C           #PRINT    BEGSR
+     C*
+     C**  If change of Account officer code
+     C           AZACOC    IFNE R2ACOF
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM R2ACOF    WLACOF  2
+     C           SDACOF    PARM SDACOF    DSSDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 03 *
+     C                     MOVELR2ACOF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If change of Customer
+     C                     MOVE R2CUST    WWCUSN
+     C           WWCUSN    IFNE BBCUST
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM WWCUSN    WLCUST 10
+     C                     PARM           WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 04 *
+     C                     MOVELWWCUSN    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If change of Customer & Portfolio
+     C           PNCNUM    IFNE R2CUST
+     C           PNPTFR    ORNE R2PTFR
+     C*
+     C           PORT      CHAINPMPORTP0             7777
+     C*
+     C           *IN77     IFEQ *ON
+     C                     MOVEL'005'     DBASE            ***************
+     C***********          MOVEL'PMPORTL1'DBFILE           * DB ERROR 05 *CPM005
+     C                     MOVE 'PMPORTPD'DBFILE           * DB ERROR 05 *CPM005
+     C                     MOVELPORTBB    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If change Customer or Portfolio or Performance
+     C           R2CUST    IFNE WWCUST
+     C           R2PTFR    ORNE WWPTFR
+     C           R2PEPE    ORNE WWPEPE
+     C*
+     C**  Edit Difference with Portfolio currency decimal
+     C           WWEXCP    IFEQ 'Y'
+     C                     Z-ADDR2DIFF    ZFLD15
+     C                     Z-ADDR2PCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRDIFF
+     C*
+     C                     MOVE R2PEPE    WWNUM1  10
+     C                     Z-ADDWWNUM1    I
+     C                     MOVE PERI,I    RRPERI
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           R2PTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           R2PTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           R2PTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE R2PTFR    RRPTFR
+     C                     MOVE PNPTFN    RRPTFN
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE R2CUST    RRCUST
+     C                     MOVE BBCSSN    RRCSSN
+     C                     MOVE BBCRNM    RRCRNM
+     C                     MOVE R2ACOF    RRACOF
+     C                     MOVE AZACON    RRACON
+     C                     MOVE R2PTCY    RRPTCY
+     C                     ENDIF
+     C*
+     C**  Open printer file if first time through
+     C*
+     C           WLFRST    IFEQ 'Y'
+     C                     OPEN PM4201P1
+     C                     MOVE 'N'       WLFRST
+     C*
+     C** Ensure Report Spool File recorded by RCF
+     C                     MOVELSFILE1    SFILE
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     EXSR #LZSFL
+     C                     END
+     C*
+     C                     WRITEHEAD
+     C*
+     C**********           Z-ADDR2CUST    WWCUST                                              CSD027
+     C                     MOVE R2CUST    WWCUST                                              CSD027
+     C                     MOVE R2PTFR    WWPTFR
+     C                     MOVE R2PEPE    WWPEPE
+     C*
+     C                     ENDIF
+     C*
+     C**  Output detail line
+     C                     MOVE WTINNR    RRINNR
+     C                     MOVE WTRESH    RRRESH
+     C                     MOVE WTMODI    RRMODI
+     C*
+     C**  Edit Return with Portfolio currency decimal
+     C                     Z-ADDWWRETU    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRRETU
+     C*
+     C**  Edit Sum of Components with Portfolio currency decimal
+     C                     Z-ADDWWSUCO    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRSUCO
+     C*
+     C**  Edit Difference with Portfolio currency decimal
+     C                     Z-ADDWWDIFA    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRDIFA
+     C*
+     C**  Detail line in bold ?
+     C           PRNO      IFEQ 'N'
+     C           WWDIFA    ANDGTFCADIF
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETOF                     41
+     C                     ENDIF
+     C*
+     C**  Check Overflow print line
+     C           SSOF      SUB  SSLS      WWREST  20
+     C           WWREST    IFLE 3
+     C                     WRITEHEAD
+     C                     ENDIF
+     C*
+     C           WWEXCP    IFEQ 'Y'
+     C                     WRITEDETAIL
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*================================================================
+     C**
+     C** #LZSFL  -  Subroutine to call ZSFILE
+     C**
+     C** Called by: Main processing, #PRINT, *PSSR
+     C**
+     C** Calls:     ZSFILE
+     C**
+     C*================================================================
+     C           #LZSFL    BEGSR
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C**  If an error occurred during ZSFILE processing,
+     C**  return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+     C**
+     C** *PSSR -  Subroutine to handle abnormal error conditions
+     C**
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C**  Open audit printer file and report database error details
+     C*
+     C                     OPEN PM4201AU
+     C                     WRITEPM4201HD
+     C                     WRITEPM4201DB
+     C*
+     C**  Ensure Audit Spool File recorded by RCF
+     C*
+     C                     MOVELSFILEU    SFILE
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     EXSR #LZSFL
+     C                     CLOSEPM4201AU
+     C*
+     C**  If details have been printed, output database error reference
+     C*
+     C           WWEXCP    IFEQ 'Y'
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*================================================================
+     C/COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  PECA  Array of Performance categories
+VE VS VP CI CO CX TR TU DV IERIEUXIRXIUXTRXTUF  T  OT C  ADJCIRCORVA
+**  PERI  Array for Performance Period
+YEAR TO DATE
+TAX YEAR TO DATE
+ADDITIONAL PERIOD

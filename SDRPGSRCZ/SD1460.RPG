@@ -1,0 +1,351 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD MDF messaging')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1460 - Market Data Feed Messaging                          *
+      *                                                               *
+      *  Function:  This program creates messages for Market Watch    *
+      *                                                               *
+      *  Called By: SD1456 -  Begin / End messages for data feed      *
+      *                       request                                 *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CSD006  *CREATE    Date 16Oct00               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+     I              '*START'              C         START
+     I              '*END'                C         ENDPRC
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Scheduled times parameter
+     IP2SCHD      DS                            300
+      ** Scheduled times
+     IWMSCHD      DS                            300
+      ** Specific times
+     IP2SPTM      DS                             80
+     I                                        1   4 P2SP01
+     I                                        5   8 P2SP02
+     I                                        9  12 P2SP03
+     I                                       13  16 P2SP04
+     I                                       17  20 P2SP05
+     I                                       21  24 P2SP06
+     I                                       25  28 P2SP07
+     I                                       29  32 P2SP08
+     I                                       33  36 P2SP09
+     I                                       37  40 P2SP10
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Detail of request
+     ISDMDFR    E DSSDMDFRPD
+      ** Detail of request
+     IP@RQRC      DS                           9999
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Message data
+     C                     PARM           P@MSGD256
+      ** Error code
+     C                     PARM           P@ERRC 10
+      ** Mode
+     C                     PARM           P@MODE 10
+      ** Request Record (input / output parameters)
+     C                     PARM           P@RQRC
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@MSGD
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL*BLANK    P@ERRC
+     C                     MOVEL'N'       WEND    1
+      ** Format input parameters
+     C                     MOVELP@RQRC    SDMDFR
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      ** Check mode
+     C           P@RTN     IFEQ *BLANK
+     C           P@MODE    IFEQ START
+     C           P@MODE    OREQ ENDPRC
+     C                     EXSR PRCMSG
+      ** Format output parameters
+     C                     MOVELSDMDFR    P@RQRC
+     C                     ELSE
+     C                     MOVEL'SDM0072' P@RTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * PRCMSG - Process Message                                      *
+      *****************************************************************
+     C           PRCMSG    BEGSR
+      *
+      ** Retrieve request time table
+     C                     EXSR GNTMTB
+     C           P2RTN     IFEQ *BLANK
+      ** Fill output parameters of this program
+     C                     MOVELP2ERRC    P@ERRC
+     C                     MOVELP2MSGC    MRMSGC
+     C                     MOVELP2LRQT    MRLRQT
+      ** Memorize scheduled times for later use
+     C                     MOVELP2SCHD    WMSCHD
+      ** Memorize transaction code for later use
+     C           *LIKE     DEFN P2TRNC    WTRAN
+     C                     MOVELP2TRNC    WTRAN
+      *
+      ** Write Message Request according to the transaction code
+     C           WTRAN     IFNE *BLANK
+     C                     MOVELWMSCHD    P2SCHD
+     C                     MOVELWTRAN     P2MODE
+     C                     EXSR WRMGRQ
+     C           P2RTN     IFNE *BLANK
+     C                     MOVELP2RTN     P@RTN
+     C                     MOVELP2MSGD    P@MSGD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVELP2RTN     P@RTN
+     C                     ENDIF
+     C           ESTRMG    ENDSR
+      *****************************************************************
+      * GNTMTB - Generate Data Feed Time Table                        *
+      *****************************************************************
+     C           GNTMTB    BEGSR
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P@ERRC    P2ERRC
+     C           *LIKE     DEFN MRMSGC    P2MSGC
+     C           *LIKE     DEFN P2LRQT    P2SYST
+     C           *LIKE     DEFN P@MODE    P2MODE
+     C           *LIKE     DEFN P2LRQT    P2FRST
+     C           *LIKE     DEFN P2LRQT    P2LAST
+     C           *LIKE     DEFN P2LRQT    P2ITRV
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2ERRC
+     C                     MOVEL*BLANK    P2MSGC
+     C                     MOVEL*BLANK    P2LRQT  4
+     C                     MOVEL*BLANK    P2SCHD
+     C                     MOVEL*BLANK    P2TRNC 10
+      *
+      ** Default input parameters if not filled before EXSR GNTMTB
+     C           P2MODE    IFEQ *BLANK
+     C                     MOVELP@MODE    P2MODE
+     C                     ENDIF
+     C           P2SYST    IFEQ *BLANK
+     C                     TIME           WHMS    60
+      ** Fill only HHMM of system time
+     C                     MOVELWHMS      P2SYST
+     C                     ENDIF
+     C           P2FRST    IFEQ *BLANK
+     C                     MOVE MRFRST    P2FRST
+     C                     ENDIF
+     C           P2LAST    IFEQ *BLANK
+     C                     MOVE MRLAST    P2LAST
+     C                     ENDIF
+     C           P2ITRV    IFEQ *BLANK
+     C                     MOVE MRITRV    P2ITRV
+     C                     ENDIF
+     C           P2SPTM    IFEQ *BLANK
+      ** Initialise *ALL as Length(P2SPTM) > Length(MRSP01 x 10)
+     C                     MOVEL*ALL'0'   P2SPTM
+      *
+     C                     MOVE MRSP01    P2SP01
+     C                     MOVE MRSP02    P2SP02
+     C                     MOVE MRSP03    P2SP03
+     C                     MOVE MRSP04    P2SP04
+     C                     MOVE MRSP05    P2SP05
+     C                     MOVE MRSP06    P2SP06
+     C                     MOVE MRSP07    P2SP07
+     C                     MOVE MRSP08    P2SP08
+     C                     MOVE MRSP09    P2SP09
+     C                     MOVE MRSP10    P2SP10
+     C                     ENDIF
+      *
+     C                     CALL 'SD1461'
+     C                     PARM           P2RTN
+     C                     PARM           P2SYST
+     C                     PARM           P2MODE
+     C                     PARM           P2FRST
+     C                     PARM           P2LAST
+     C                     PARM           P2ITRV
+     C                     PARM           P2SPTM
+     C                     PARM           P2ERRC
+     C                     PARM           P2MSGC
+     C                     PARM           P2LRQT
+     C                     PARM           P2SCHD
+     C                     PARM           P2TRNC
+      *
+     C                     MOVEL*BLANK    P2SYST
+     C                     MOVEL*BLANK    P2MODE
+     C                     MOVEL*BLANK    P2FRST
+     C                     MOVEL*BLANK    P2LAST
+     C                     MOVEL*BLANK    P2ITRV
+     C                     MOVEL*BLANK    P2SPTM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * WRMGRQ - Write Message Request                                *
+      *****************************************************************
+     C           WRMGRQ    BEGSR
+     C           *LIKE     DEFN P@MSGD    P2MSGD
+     C           *LIKE     DEFN MRREQI    P2REQI
+     C           *LIKE     DEFN MRDTSC    P2DTSC
+     C           *LIKE     DEFN MRMAPC    P2MAPC
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2MSGD
+      *
+      ** Default parameters when not filled before EXSR WRMGRQ
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELMRREQI    P2REQI
+     C                     ENDIF
+     C           P2COMT    IFEQ *BLANK
+     C                     MOVEL'N'       P2COMT
+     C                     ENDIF
+     C           P2DTSC    IFEQ *BLANK
+     C                     MOVELMRDTSC    P2DTSC
+     C                     ENDIF
+     C           P2MAPC    IFEQ *BLANK
+     C                     MOVELMRMAPC    P2MAPC
+     C                     ENDIF
+      *
+     C                     CALL 'SD1462'
+     C                     PARM           P2RTN
+     C                     PARM           P2MSGD
+     C                     PARM           P2MODE
+     C                     PARM           P2SCHD
+     C                     PARM           P2REQI
+     C                     PARM           P2MAPC
+     C                     PARM           P2DTSC
+     C                     PARM           P2COMT
+      *
+     C                     MOVEL*BLANK    P2MODE
+     C                     MOVEL*BLANK    P2SCHD
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2DTSC
+     C                     MOVEL*BLANK    P2MAPC
+     C                     MOVEL*BLANK    P2COMT  1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Shell for calling Bridge mnt. programs')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - SPF                                                 */
+/*                                                                   */
+/*       UPC001000 - Shell for calling Bridge mnt. programs          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. CUP041   *CREATE   Date 16Jun14              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - Restructure of deliverable data files.             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PROGRAM)
+
+             DCL        VAR(&PROGRAM) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&INQMSGRPY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(800)
+
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             RTVJOBA    INQMSGRPY(&INQMSGRPY)
+             CHGJOB     INQMSGRPY(*DFT) SWS(00000000)
+
+             OVRDBF     FILE(SDUSRMSG) TOFILE(GBSDUSRMSG) +
+                          OVRSCOPE(*JOB)
+             OVRDBF     FILE(Y2USRMSG) TOFILE(GBY2USRMSG) +
+                          OVRSCOPE(*JOB)
+
+             CALL       PGM(&PROGRAM)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+
+             GOTO       CMDLBL(ENDPGM)
+
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSG('Program' *BCAT &PROGRAM *BCAT ' ended +
+                          in error.') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Program' *BCAT &PROGRAM *BCAT +
+                          'ended in error') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ENDPGM:
+             CHGJOB     INQMSGRPY(&INQMSGRPY)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

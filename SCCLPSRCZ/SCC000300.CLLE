@@ -1,0 +1,49 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Cache switchable features')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000300 - Midas SC Cache switchable features              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD024398*CREATE    Date 14Feb14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD024398 - API Performance Optimisation                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Reset job switch */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Send message to MRUNQ */
+             SNDPGMMSG  MSG('SCC000300 - Midas SC Cache switchable +
+                          features') TOMSGQ(MRUNQ)
+ 
+/* Call the program to populate the cache */
+             CALL       PGM(SC000300)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             SNDPGMMSG  MSG('Program SC000300 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

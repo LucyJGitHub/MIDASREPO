@@ -1,0 +1,437 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RC II - Ledger Detail Review 2')
+/*OVRF*: OVRDBF FILE(RCLDGRLU) TOFILE(RCLDGRL0)                     : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Autorecs II Module                                   *
+      *                                                               *
+      *  RC2045 - Ledger Details Review 2                             *
+      *                                                               *
+      *  Function:  Display Autorecs Ledger details                   *
+      *  I/C                                                          *
+      *                                                               *
+      *  Called By: RC2040 - Ledger Details Review                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01449             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  S01449 - Autorecs II module.                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+     FRC2045DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE RC2045F2
+     FRCLDGRL0IF  E           K        DISK
+     FRCLDGRLUUF  E           K        DISK
+     F            RCLDGRD0                          KRENAMERCLDGRUP
+     FRCLDGDL0IF  E           K        DISK
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *    10            EoF RCLDGRL0                                 *
+      *    11            EoF RCLDGDL0                                 *
+      *                                                               *
+      *    20            SFLDSP                                       *
+      *    21            SFLDSPCTL                                    *
+      *    22            SFLEND                                       *
+      *                                                               *
+      *    23            F8 enabled                                   *
+      *    24            F9 enabled                                   *
+      *                                                               *
+      *    70            re-send function (F24) enabled               *
+      *    71            downloaded/report download details           *
+      *                                                               *
+      *    KH            F8                                           *
+      *    KI            F9                                           *
+      *    KL            F12                                          *
+      *    KY            F24                                          *
+      *                                                               *
+      *    U7U8LR        DB error                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    TXT     1   3 20
+     E                    CPY@    1   1 80
+      ** Arrays
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUNN
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I            DS
+     I**********                              1  18 R1ACID                                    CGL029
+     I                                        1  24 R1ACID                                    CGL029
+     I                                        1   6 @HCUST
+     I                                        7   9 @HCCY
+     I                                       10  19 @HACOD                                    CGL029
+     I                                       20  21 @HACSQ                                    CGL029
+     I**********                             10  13 @HACOD                                    CGL029
+     I**********                             14  15 @HACSQ                                    CGL029
+      **  DS to break up account details
+      *
+     I            DS
+     I                                        1 256 @DRCD
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        4   4 @COL4
+     I                                        5   5 @COL5
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+      **  DS to break up data record
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @PTRN  16
+     C                     PARM           @PACT   1
+     C                     PARM           @PFOL   1
+     C                     PARM           @PRTC   2
+     C                     PARM           @PERR   1
+      *
+      **  ZM1001
+     C           PLIST1    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+     C                     MOVEL'RC2045'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   main process                                                *
+      *   INIT   - initial process                                    *
+      *   HDNG   - write message headings                             *
+      *   TEXT   - write message text                                 *
+      *   RSND   - flag message for re-send                           *
+      *   *PSSR  - error handling                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Access message reference file using transaction reference
+     C           @PTRN     CHAINRCLDGRL0             10
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL@PTRN     DBKEY            * DB ERROR 01 *
+     C                     MOVEL'RCLDGRL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Write message headings
+     C                     EXSR HDNG
+      *
+      **  Write message text
+     C                     EXSR TEXT
+      *
+      **  If last or single message disable F8-Next
+     C           @PFOL     IFNE 'L'
+     C           @PFOL     ANDNE'S'
+     C                     SETON                     23
+     C                     END
+      *
+      **  If first or single message disable F9-Previous
+     C           @PFOL     IFNE 'F'
+     C           @PFOL     ANDNE'S'
+     C                     SETON                     24
+     C                     END
+      *
+      **  Do until F8, F9 or F12 pressed
+     C           *INKH     DOWEQ'0'
+     C           *INKI     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If F24 pressed process for re-send
+     C           *INKY     IFEQ '1'
+     C                     EXSR RSND
+     C                     END
+      *
+      **  If option taken and message still eligible for re-send
+      **  set display indicator
+     C                     SETOF                     70
+     C           @PACT     IFEQ 'R'
+     C           R1RPTS    ANDEQ'D'
+     C                     SETON                     70
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITERC2045F1
+     C                     WRITESFLMSGC
+     C                     EXFMTRC2045F3
+     C                     CALL 'ZM1002'
+      *
+      **  If F8 pressed return '08' to calling program
+     C           *INKH     IFEQ '1'
+     C                     MOVE '08'      @PRTC
+     C                     END
+      *
+      **  If F9 pressed return value '09' to calling program
+     C           *INKI     IFEQ '1'
+     C                     MOVE '09'      @PRTC
+     C                     END
+      *
+      **  If F12 pressed return value '12' to calling program
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      @PRTC
+     C                     END
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RC2045'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Set on indicator 50 if multi-branched system
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     50
+     C                     END
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITERC2045F3
+     C                     SETON                     202122
+     C                     Z-ADD1         RRN     50
+      *
+     C                     ENDSR                           INIT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  HDNG                                           *
+      * Function    :  Format heading details                         *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  ZA0140     Day number to date conversion       *
+      *****************************************************************
+      *
+     C           HDNG      BEGSR
+      *
+      **  Format creation date
+     C                     CALL 'ZA0140'
+     C                     PARM R1CDAT    ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATC    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+      **  Format branch
+     C                     MOVE R1BRCA    @HBRCA
+      *
+      **  Format current status
+     C           R1RPTS    SCAN 'CRD'     Q       20
+     C                     MOVELTXT,Q     @HSTAT
+      *
+      **  If status not Created, output download information
+     C                     SETOF                     71
+     C           R1RPTS    IFNE 'C'
+     C                     SETON                     71
+     C                     CALL 'ZA0140'
+     C                     PARM R1RDAT    ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATD    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+     C                     MOVE R1RTIM    @HTIMD
+     C                     MOVE R1DSEQ    @H1SEQ
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR                           HDNG
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TEXT                                           *
+      * Function    :  Format message text                            *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           TEXT      BEGSR
+      *
+      **  Access first field
+     C           @PTRN     CHAINRCLDGDL0             11
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL@PTRN     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'RCLDGDL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  For each field
+     C           *IN11     DOWEQ'0'
+      *
+      **  Break up field into tag and data using data structure
+     C                     MOVELR2DATA    @DRCD
+      *
+      **  Move field details to screen fields
+     C                     CLEAR@DTAG
+     C                     CLEAR@DDAT
+     C           @COL5     IFEQ ':'
+     C                     MOVEL@TAG5     @DTAG
+     C                     MOVEL@DAT5     @DDAT
+     C                     ELSE
+     C           @COL4     IFEQ ':'
+     C                     MOVEL@TAG4     @DTAG
+     C                     MOVEL@DAT4     @DDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   @DTAG
+     C                     MOVELR2DATA    @DDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Write to sub-file
+     C                     WRITERC2045F2
+     C                     ADD  1         RRN
+      *
+      **  Read next record
+     C           @PTRN     READERCLDGDL0                 11
+     C                     ENDDO
+      *
+     C                     ENDSR                           TEXT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  RSND                                           *
+      * Function    :  flag details for re-send                       *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  HDNG format heading details                    *
+      *                TEXT format message text                       *
+      *****************************************************************
+      *
+     C           RSND      BEGSR
+      *
+      **  Re access reference file
+     C           @PTRN     CHAINRCLDGRUP             10
+      *
+      **  If message status has changed send message to user and
+      **  and release locked reference record
+     C           R1RPTS    IFNE 'D'
+     C                     MOVEL'MEM1071' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     EXCPT
+     C                     ELSE
+      *
+      **  else flag message for re-send
+     C                     MOVE 'R'       R1RPTS
+     C                     Z-ADDRUNN      R1SDAT
+     C                     TIME           R1STIM
+     C                     MOVEL@JOB      R1LJOB
+     C                     MOVEL@USER     R1LUSR
+     C                     MOVEL@NUM      R1LJNO
+      *
+     C                     UPDATRCLDGRUP
+      *
+     C                     END
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITERC2045F3
+     C                     SETON                     202122
+     C                     Z-ADD1         RRN     50
+      *
+      **  Re-build display for new details
+     C                     EXSR HDNG
+     C                     EXSR TEXT
+      *
+     C                     ENDSR                           RSND
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called automatically if a program error occurs *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @PERR     IFNE '1'
+     C                     MOVE '1'       @PERR
+     C                     SETON                     LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+      *
+     ORCLDGRUPE
+**  TXT
+Created
+Flagged For re-send
+Downloaded to PC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

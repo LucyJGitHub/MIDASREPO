@@ -1,0 +1,891 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IR dealing frequency calculation')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DLZFRQ - DEALING FREQUENCY CALCULATION                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 238629             Date 29Aug06               *
+      *                 BUG7769            Date 05Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 179458             Date 01Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180466             Date 27Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             DATE 02Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CIR001             DATE 13Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE064 - Enhancement of Lending Frequencies                  *
+      *  238629 - GOC0020 looping due to ZDATE w/c cannot handle date *
+      *           conversion beyond 2071 properly. Place ZDATE1 and   *
+      *           ZDATE2 /copys inside program with 160671 fix.       *
+      *  BUG7769- Include frequency type 'N'                          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  179458 - Program still uses local currency in checking the   *
+      *           holidays whenever the settlement is not via Nostro  *
+      *           Fix patterned to description of CSW097.             *
+      *  180466 - Add parameter ZFRZBD to include interest payment    *
+      *           base date in the calculation.                       *
+     F*  CSW097 - MT340s and MT360s changes for SWIFT97               *
+     F*           Here, make this program flexible enough to          *
+     F*           calculate next date whether rate change or          *
+     F*           interest payment:                                   *
+     F*               - Add parameter ZRCIP (to receive 'R'           *
+     F*                 for Rate Change or 'P' for Int Payment        *
+     F*               - Add parameter ZSTCY (to receive settlement    *
+     F*                 currency.                                     *
+     F*               - Next rate change date holiday checking will   *
+     F*                 only be based on transaction currency ZFRCCY  *
+     F*                 and system location code (BJSLCD)             *
+     F*               - Next Interest payment date will be calculated *
+     F*                 as originally designed in this program but    *
+     F*                 will use the settlement currency (ZSTCY)      *
+     F*                 if defined else the transaction currency      *
+     F*                 currency (ZFRCCY)                             *
+     F*  CIR001 - Interest Rate Calendars                             *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 5
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       90-99       STANDARD SUBROUTINES
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+     E                    ZHC        50  3               @FREQB SR. ARRAY
+     E                    ZFMD   12  12  2               @FREQB SR. ARRAY
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E/COPY ZSRSRC,ZHOLE
+      /SPACE 5
+     ISDNOST    E DSSDNOSTPD
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     I/COPY ZSRSRC,ZHOLI
+     C**************************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZFRRTC  5        * RETURN CODE
+     C                     PARM           ZFRDAT  50       * DATE
+     C                     PARM           ZFRFRQ  1        * FREQUENCY
+     C                     PARM           ZFRBAS  20       * BASE DAY
+     C                     PARM           ZFRSET  20       * SETTLE METH
+     C                     PARM           ZFRCCY  3        * CURRENCY
+     C                     PARM           ZSTCY   3        * Settl Ccy    CSW097
+     C                     PARM           ZRCIP   1        * 'R' or 'P'   CSW097
+     C                     PARM           ZFRNOS  2        * NOSTRO
+     C                     PARM           ZFRMDT  50       * MAT.DATE
+     C                     PARM           BKAPDT  50
+     C                     PARM           BJSLCD  3
+     C                     PARM           BJLCCY  3
+     C                     PARM           ZFRZBD  50       * BASE DATE    180466
+     C                     PARM           ZFRNXD  50       * NEXT DATE
+     C*
+     C                     MOVE '0'       *IN98
+     C                     Z-ADD0         ZNRDYS
+     C*
+     C** ERROR
+     C*
+     C           ZFRFRQ    IFEQ 'Z'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** CALCULATE NEXT DATE
+     C*
+     C           ZFRFRQ    IFNE ' '
+     C                     MOVE ZFRFRQ    ZFREQ
+     C                     Z-ADDZFRDAT    ZDAYNO
+     C                     Z-ADDZFRBAS    ZMDAY
+     C                     EXSR SRLOCN
+     C                     EXSR SRFREQ
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    ZFRNXD
+     C                     END
+     C*
+     C** SET TO MATURITY DATE IF NO FREQUENCY OR DATE EXCEEDED
+     C*
+     C           ZFRFRQ    IFEQ ' '
+     C           ZFRNXD    ORGT ZFRMDT
+     C                     Z-ADDZFRMDT    ZFRNXD
+     C                     END
+      *
+     C                     RETRN
+      /SPACE 5
+      ********************************************************************
+      ** SRLOCN - DETERMINE LOCATION CODE
+      ********************************************************************
+     C           SRLOCN    BEGSR
+      *
+      ** If Settlement method NOT = Previous settlement method
+      ** OR          Currency NOT = Previous Currency
+      ** OR       Nostro code NOT = Previous Nostro code
+      *
+      ** Set up new location code
+      *
+     C***********ZFRSET    IFNE #PSETM                                    CSW097
+     C***********ZFRCCY    ORNE #PCCY                                     CSW097
+     C***********ZFRNOS    ORNE #PNOST                                    CSW097
+     C           ZRCIP     IFEQ 'P'                                       CSW097
+     C                     MOVE ZFRSET    #PSETM  20
+     C           ZSTCY     IFNE *BLANKS                                   CSW097
+     C                     MOVE ZSTCY     #PCCY                           CSW097
+     C                     ELSE                                           CSW097
+     C                     MOVE ZFRCCY    #PCCY
+     C                     ENDIF                                          CSW097
+     C                     MOVE ZFRNOS    #PNOST
+      *
+      ** If settlement method is via a nostro
+     C           #PSETM    IFEQ 01
+     C           #PSETM    OREQ 02
+     C           #PSETM    OREQ 07
+     C           #PSETM    OREQ 08
+     C           #PSETM    OREQ 12
+      *
+      ** If Nostro Code not blank...set up location.
+      *
+     C           #PNOST    IFNE *BLANKS
+      *
+      ** Call ACCESS program to get NOSTRO details
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*MSG   ' #RTCD   7
+     C                     PARM '*KEY   ' #OPTN   7
+     C                     PARM *BLANK    #CUST   6        Customer No.
+     C                     PARM           #PCCY   3        Currency
+     C**********           PARM *BLANKS   #ACCD   4        A/C Code                           CGL029
+     C                     PARM *BLANKS   #ACCD  10                                           CGL029
+     C                     PARM *BLANKS   #ACSN   2        A/C Seq
+     C                     PARM           #PNOST  2        Nostro No.
+     C                     PARM *BLANKS   #BRCD   3        Branch Code
+     C                     PARM *BLANKS   #CSSN  10        Cust. Shortname
+     C                     PARM *BLANKS   #PNOI   1        Prime Nost. Ind
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** If database error, return to calling program
+     C           #RTCD     IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set ZLOC to Nostro location
+     C                     MOVE A7NOSN    ZLOC
+      *
+      ** Else if Nostro code blank set ZLOC to blanks
+     C                     ELSE
+     C                     MOVE *BLANKS   ZLOC
+     C                     END
+      *
+      ** Set ZCCY to Deal Currency
+     C***********          MOVE ZFRCCY    ZCCY                            CSW097
+     C                     MOVE #PCCY     ZCCY                            CSW097
+      *
+      ***Else*if*not*settled*via*a*Nostro*********************************179458
+      ***set*ZLOC*to*System*Location*&*ZCCY*to*local*currency*************179458
+      *                                                                   179458
+      ** CSW097 indicates that the Next Payment Date will be calculated   179458
+      ** using the settlement currency (ZSTCY) if defined else the        179458
+      ** transaction currency (ZSFRCCY) and not using the local currency. 179458
+      *                                                                   179458
+     C                     ELSE
+     C                     MOVE BJSLCD    ZLOC
+     C***********          MOVE BJLCCY    ZCCY                            179458
+     C                     MOVE #PCCY     ZCCY                            179458
+     C                     END
+      *                                                                   CSW097
+     C                     ELSE                                           CSW097
+      *                                                                   CSW097
+      **  If Next Rate Change Date, use deal currency and system          CSW097
+      **  location code, if defined.                                      CSW097
+      *                                                                   CSW097
+     C                     MOVELBJSLCD    ZLOC                            CSW097
+     C                     MOVELZFRCCY    ZCCY                            CSW097
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**   SRFREQ - SR. TO INCREMENT A DAY NUMBER DATE BY A
+     C**             PERIOD VALUE DETERMINED BY A CODE.
+     C********************************************************************
+     C           SRFREQ    BEGSR                           *** SRFREQ ***
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+     C**
+     C                     MOVE '   '     ZHC
+     C*
+     C*            FIELDS USED FOR PERIOD CODES M,T,Q,X,Y
+     C*
+     C                     MOVE '  '      ZINDE   2
+     C                     Z-ADD0         ZINTO   20
+     C**
+     C**   CONVERT DAY NUMBER TO DATE.
+     C                     EXSR ZDATE2
+     C                     SETOF                     90
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE D-DAILY-WORKING DAY.
+     C           ZFREQ     COMP 'D'                      91
+     C   91      ZDAYNO    ADD  1         ZDAYNO
+     C   91                GOTO ZFHCHK
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE W-WEEKLY.
+     C           ZFREQ     COMP 'W'                      91
+     C   91      ZDAYNO    ADD  7         ZDAYNO
+     C   91                GOTO ZFEND
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE F-FORTNIGHTLY.
+     C           ZFREQ     COMP 'F'                      91
+     C   91      ZDAYNO    ADD  14        ZDAYNO
+     C   91                GOTO ZFEND
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE S-SEMI-MONTHLY.
+     C           ZFREQ     COMP 'S'                      91
+     C   91      ZDAY      COMP 15                   939292
+     C   91 92             Z-ADD31        ZDAY
+     C   91 93             Z-ADD15        ZDAY
+     C   91 93   ZMTH      ADD  1         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE M-MONTHLY.
+     C           ZFREQ     COMP 'M'                      91
+     C   91                MOVE 'IN'      ZINDE
+     C   91                Z-ADDZMDAY     ZDAY
+     C   91      ZMTH      ADD  1         ZMTH
+     C   91                GOTO ZFDATE
+     C**                                                                                     BUG7769
+     C**   CHECK FOR AND INCREMENT FOR CODE N-MONTHLY Including at maturity                  BUG7769
+     C           ZFREQ     COMP 'N'                      91                                  BUG7769
+     C   91                MOVE 'IN'      ZINDE                                              BUG7769
+     C   91                Z-ADDZMDAY     ZDAY                                               BUG7769
+     C   91      ZMTH      ADD  1         ZMTH                                               BUG7769
+     C   91                GOTO ZFDATE                                                       BUG7769
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE R-SIX DAYS BEFORE END OF MONTH
+     C           ZFREQ     COMP 'R'                      91
+     C   91                Z-ADD31        ZDAY
+     C   91      ZMTH      ADD  1         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE T-BIMONTHLY.
+     C           ZFREQ     COMP 'T'                      91
+     C   91                MOVE 'IN'      ZINDE
+     C   91                Z-ADDZMDAY     ZDAY
+     C   91      ZMTH      ADD  2         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Q-QUARTERLY.
+     C           ZFREQ     COMP 'Q'                      91
+     C   91                MOVE 'IN'      ZINDE
+     C   91                Z-ADDZMDAY     ZDAY
+     C   91      ZMTH      ADD  3         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE X-SIX MONTHLY.
+     C           ZFREQ     COMP 'X'                      91
+     C   91                MOVE 'IN'      ZINDE
+     C   91                Z-ADDZMDAY     ZDAY
+     C   91      ZMTH      ADD  6         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.
+     C           ZFREQ     COMP 'Y'                      91
+     C   91                MOVE 'IN'      ZINDE
+     C   91                Z-ADDZMDAY     ZDAY
+     C   91      ZYEAR     ADD  1         ZYEAR
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE L-LAST CALENDAR DAY OF MONTH.
+     C           ZFREQ     COMP 'L'                      91
+     C   91                Z-ADD31        ZDAY
+     C   91      ZMTH      ADD  1         ZMTH
+     C   91                GOTO ZFDATE
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE B-LAST WORKING DAY OF MONTH.
+     C           ZFREQ     COMP 'B'                      91
+     C   91                Z-ADD31        ZDAY
+     C   91      ZMTH      ADD  1         ZMTH
+     C   91                GOTO ZFDATE
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE 4- 4 MONTHLY                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '4'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  4         ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE 5- 5 MONTHLY                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '5'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  5         ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE 7- 7 MONTHLY                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '7'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  7         ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE 8- 8 MONTHLY                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '8'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  8         ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE 9- 9 MONTHLY                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '9'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  9         ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE V- 10 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'V'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  10        ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE E- 11 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'E'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZMTH      ADD  11        ZMTH                                                CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE C- 24 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'C'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZYEAR     ADD  2         ZYEAR                                               CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE I- 36 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'I'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZYEAR     ADD  3         ZYEAR                                               CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE J- 48 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'J'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZYEAR     ADD  4         ZYEAR                                               CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE N- 60 MONTHLY                                     CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'N'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZYEAR     ADD  5         ZYEAR                                               CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+      *                                                                                       CLE064
+      **   CHECK FOR AND INCREMENT FOR CODE U- 120 MONTHLY                                    CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'U'                      91                                   CLE064
+     C   91                MOVE 'IN'      ZINDE                                               CLE064
+     C   91                Z-ADDZMDAY     ZDAY                                                CLE064
+     C   91      ZYEAR     ADD  10        ZYEAR                                               CLE064
+     C   91                GOTO ZFDATE                                                        CLE064
+     C**
+     C**   CHECK FOR AND INCREMENT FOR CODE A-MONTHLY ACCRUAL/PROFIT DATE.
+     C           ZFREQ     COMP 'A'                      91
+     C   91                Z-ADDBKAPDT    ZDAYNO
+     C**
+     C**   BYPASS IF ZFREQ IS 'A' OR ANY OTHER VALUE
+     C                     GOTO ZFEND
+     C**
+     C**
+     C**   REFORMAT DATE AND ENSURE VALID.
+     C           ZFDATE    TAG                             ** ZFDATE TAG*
+     C**
+     C**   VALIDATE MONTH.
+     C           ZMTH      COMP 12                   91
+     C   91      ZMTH      SUB  12        ZMTH
+     C   91      ZYEAR     ADD  1         ZYEAR
+     C**
+     C**   CHECK FOR LEAP YEAR.
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     92LEAP YEAR-92 ON
+     C**
+     C**   VALIDATE DAY NUMBER.
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      COMP 2                        93
+     C   92 93             Z-ADD29        ZWRK2
+     C**
+     C           ZDAY      COMP ZWRK2                94
+     C   94                Z-ADDZWRK2     ZDAY
+     C**
+     C**   CHECK IF CODE R, TO SUBTRACT 6 DAYS.
+     C           ZFREQ     COMP 'R'                      91
+     C   91      ZDAY      SUB  6         ZDAY
+     C**
+     C**   REFORMAT DATE, DDMMYY OR MMDDYY, AND CONVERT TO DAY NUMBER.
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+     C**
+     C**   CHECK IF CODE B, OR M,T,Q,X,Y TO BE CHECKED FOR HOLIDAY.
+     C           ZFREQ     COMP 'B'                      91
+     C           ZINDE     COMP 'IN'                     92
+      *                                                                   180466
+     C                     Z-ADDZDAYNO    ZFRZBD                          180466
+      *                                                                   180466
+     C   92N99
+     COR 91N99             GOTO ZFHCHK
+     C**
+     C                     GOTO ZFEND
+     C**
+     C**   CHECK IF DAY NUMBER IS A HOLIDAY.
+     C**
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *
+     C                     SETOF                     94
+     C           ZFREQ     COMP 'D'                      91
+     C           ZFREQ     COMP 'B'                      92
+     C   91
+     COR 92                GOTO ZSETK
+     C*
+     C*   FOR CODES M,T,Q,X,Y, CHECK ZINDE - 'IN' TO INCREMENT,
+     C*                                    - 'DE' TO DECREMENT
+     C*
+     C           ZINDE     COMP 'IN'                     90
+     C           ZINDE     COMP 'IN'                     91
+     C           ZINDE     COMP 'DE'                     92
+     C**
+     C           ZSETK     TAG                             ** ZSETK TAG **
+     C*
+     C                     EXSR ZCHKH
+     C*
+     C*    CHECK IF CURRENCY ON HOLIDAY.
+     C*
+     C           ZIND      CABEQ'W'       ZFEND
+     C**
+     C   92                GOTO ZDECR
+     C*
+     C**   INCREMENT OR DECREMENT DAY NUMBER AS REQUIRED.
+     C   91      ZDAYNO    ADD  1         ZDAYNO
+     C*
+     C*    ONLY FOR PERIOD CODE = M,T,Q,X OR Y, IF INCREMENTATION
+     C*    TAKES THE OUTPUT DATE INTO THE FOLLOWING MONTH, RETURN TO
+     C*    THE INPUT DATE AND DECREMENT - 92 ON.
+     C*
+     C   90 91   ZINTO     ADD  1         ZINTO
+     C   90 91   ZINTO     ADD  ZDAY      ZINTOT  20
+     C   90 91             MOVE ZINTOT    ZINTOA  2
+     C**TO ALLOW 29 FEB ON LEAP YEARS TO PASS
+     C                     SETOF                     93
+     C   90 91   ZYEAR     DIV  4         ZLYR
+     C   90 91             MVR            ZLY            92
+     C   90 91 92ZMTH      COMP 2                        93
+     C   93      ZINTOA    COMP '29'                 92
+     C   90 91N93ZINTOA    COMP ZFMD,ZMTH            92
+     C   90 91 92ZDAYNO    SUB  ZINTO     ZDAYNO
+     C   90 91 92          MOVE 'DE'      ZINDE
+     C**
+     C           ZDECR     TAG                             ** ZDECR TAG **
+     C   92      ZDAYNO    SUB  1         ZDAYNO
+     C                     GOTO ZFHCHK
+     C**
+     C**
+     C           ZFEND     ENDSR                           * ZFEND ENDSR *
+     C**
+     C**************************************************************************
+      /SPACE 5
+     C**************************************************************************
+     C           *PSSR     BEGSR
+     C           ZFRRTC    IFEQ *BLANK
+     C                     MOVE '*ERR*'   ZFRRTC
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5                                                                                238629
+     C*****************************************************************                       238629
+      *                                                                                       238629
+      *    ZDATE1 - SR. to validate dates submitted and convert to                            238629
+      *             a number of days.                                                         238629
+      *                                                                                       238629
+      *****************************************************************                       238629
+      *                                                                                       238629
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***                     238629
+      *                                                                                       238629
+      **   Clear day number. Reset Error Indicator                                            238629
+      *                                                                                       238629
+     C                     Z-ADD0         ZDAYNO  50                                          238629
+     C                     SETOF                     99                                       238629
+      *                                                                                       238629
+      ** Calculation to define input date field.                                              238629
+      *                                                                                       238629
+     C                     Z-ADDZDATE     ZDATE   60                                          238629
+      *                                                                                       238629
+      ** Calculation to define input century field.                                           238629
+      *                                                                                       238629
+     C                     Z-ADDZCENT     ZCENT   20                                          238629
+      *                                                                                       238629
+      ** Get individual day, month and year fields.                                           238629
+      *                                                                                       238629
+     C                     MOVE ZDATE     ZYEAR   20                                          238629
+     C  N98                MOVELZDATE     ZDAY    20                                          238629
+     C   98                MOVELZDATE     ZMTH    20                                          238629
+     C                     MOVE ZDATE     ZWRK4   40                                          238629
+     C  N98                MOVELZWRK4     ZMTH                                                238629
+     C   98                MOVELZWRK4     ZDAY                                                238629
+      *                                                                                       238629
+      ** Ensure month is valid. Bypass if error.                                              238629
+      *                                                                                       238629
+     C           ZMTH      IFLE 0                                                             238629
+     C           ZMTH      ORGT 12                                                            238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Ensure day is valid. Bypass if error.                                                238629
+      *                                                                                       238629
+     C           ZDAY      IFLE 0                                                             238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Check for 30 day months. Bypass if error.                                            238629
+      *                                                                                       238629
+     C           ZMTH      IFEQ 4                                                             238629
+     C           ZMTH      OREQ 6                                                             238629
+     C           ZMTH      OREQ 9                                                             238629
+     C           ZMTH      OREQ 11                                                            238629
+      *                                                                                       238629
+     C           ZDAY      IFGT 30                                                            238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+     C                     ELSE                                                               238629
+      *                                                                                       238629
+      ** Check for 31 day months (all others but Feb). Bypass if error.                       238629
+      *                                                                                       238629
+     C           ZDAY      IFGT 31                                                            238629
+     C           ZMTH      ANDNE2                                                             238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                                                        238629
+     C                     END                                                                238629
+      *                                                                                       238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Check for leap year: Remainder will be zero if it is a leap year.                    238629
+      *                                                                                       238629
+     C           ZYEAR     ADD  28        #ZYEAR  20                                          238629
+     C           #ZYEAR    DIV  4         ZLYR    20                                          238629
+     C                     MVR            ZLY     10                                          238629
+      *                                                                                       238629
+      ** If February, further validate day.                                                   238629
+      *                                                                                       238629
+     C           ZMTH      IFEQ 2                                                             238629
+      *                                                                                       238629
+      ** Invalid if greater than 28 and not a leap year.                                      238629
+      *                                                                                       238629
+     C           ZLY       IFGT 0                                                             238629
+     C           ZDAY      ANDGT28                                                            238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                     BYPASS IF ERROR                    238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Invalid if greater than 29 and a leap year - bypass if error.                        238629
+      *                                                                                       238629
+     C           ZLY       IFEQ 0                                                             238629
+     C           ZDAY      ANDGT29                                                            238629
+     C                     SETON                     99                                       238629
+     C                     GOTO ZDEND1                                                        238629
+     C                     END                                                                238629
+      *                                                                                       238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Determine number of days from 31/12/1971.                                            238629
+      *                                                                                       238629
+      ** Multiply no. of four-year spans, by no. of days in span.                             238629
+      *                                                                                       238629
+     C           ZLYR      MULT 1461      ZDAYNO                                              238629
+      *                                                                                       238629
+      ** If not a leap year, add appropriate no. of days for extra                            238629
+      ** years using remainder field (IE. 1, 2 or 3 X 356)                                    238629
+      *                                                                                       238629
+     C           ZLY       IFGT 0                                                             238629
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** If it is a leap year, and later than february, add one for                           238629
+      ** 29th of february.                                                                    238629
+      *                                                                                       238629
+     C           ZLY       IFEQ 0                                                             238629
+     C           ZMTH      ANDGT2                                                             238629
+     C           ZDAYNO    ADD  1         ZDAYNO                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Add appropriate number of days for the month number.                                 238629
+      *                                                                                       238629
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO                                              238629
+      *                                                                                       238629
+      ** Add number of days in month.                                                         238629
+      *                                                                                       238629
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO                                              238629
+      *                                                                                       238629
+      ** If Century is blank or 0, default date to range 1972 to 2071                         238629
+      *                                                                                       238629
+     C           ZCENT     IFLT 19                                                            238629
+     C           ZCENT     ORGT 22                                                            238629
+     C           ZYEAR     IFGE 72                                                            238629
+     C                     Z-ADD19        ZCENT                                               238629
+     C                     ELSE                                                               238629
+     C                     Z-ADD20        ZCENT                                               238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** If date is less than 01/01/1972, date is in error.                                   238629
+      *                                                                                       238629
+     C           ZYEAR     IFLT 72                                                            238629
+     C           ZCENT     ANDLE19                                                            238629
+     C                     SETON                     99                                       238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** If date is between 01/01/1972 and 31/12/2071, calculated day                         238629
+      ** number is already correct.                                                           238629
+      *                                                                                       238629
+     C           ZCENT     IFEQ 19                                                            238629
+     C           ZYEAR     ANDGE72                                                            238629
+     C           ZCENT     OREQ 20                                                            238629
+     C           ZYEAR     ANDLT72                                                            238629
+     C                     ELSE                                                               238629
+      *                                                                                       238629
+      ** If date is between 01/01/2072 and 31/12/2171, add 100 years                          238629
+      *                                                                                       238629
+     C           ZCENT     IFEQ 20                                                            238629
+     C           ZYEAR     ANDGE72                                                            238629
+     C           ZCENT     OREQ 21                                                            238629
+     C           ZYEAR     ANDLT72                                                            238629
+     C                     ADD  36525     ZDAYNO                                              238629
+     C                     ELSE                                                               238629
+      *                                                                                       238629
+      ** If date is between 01/01/2172 and 12/10/2245, add 200 years.                         238629
+      ** Need to format date as YYMMDD to check against 12/10/2245                            238629
+      ** which corresponds to Midas Date 99999                                                238629
+      *                                                                                       238629
+     C           ZYEAR     MULT 10000     @YMD    60                                          238629
+     C           ZMTH      MULT 100       @WRKMT  40                                          238629
+     C                     ADD  @WRKMT    @YMD                                                238629
+     C                     ADD  ZDAY      @YMD                                                238629
+     C           ZCENT     IFEQ 21                                                            238629
+     C           ZYEAR     ANDGE72                                                            238629
+     C           ZCENT     OREQ 22                                                            238629
+     C           @YMD      ANDLE451012                                                        238629
+     C                     ADD  73050     ZDAYNO                                              238629
+     C                     ELSE                                                               238629
+      *                                                                                       238629
+      ** If date is greater than 12/10/2245, date is in error.                                238629
+      *                                                                                       238629
+     C           ZCENT     IFEQ 22                                                            238629
+     C           @YMD      ANDGT451012                                                        238629
+     C                     SETON                     99                                       238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*                    238629
+      *                                                                                       238629
+      *****************************************************************                       238629
+      /SPACE 5                                                                                238629
+     C*****************************************************************                       238629
+      *                                                                                       238629
+      *    ZDATE2 - SR to convert a day number to date formats.                               238629
+      *                                                                                       238629
+      *****************************************************************                       238629
+      *                                                                                       238629
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***                     238629
+      *                                                                                       238629
+      ** Clear leap year work field.                                                          238629
+      *                                                                                       238629
+     C                     MOVE 'N'       ZLEAP   1                                           238629
+      *                                                                                       238629
+      ** Clear date fields.                                                                   238629
+      *                                                                                       238629
+     C                     Z-ADD0         ZDATE   60                                          238629
+     C                     MOVEL'       ' ZADATE  7                                           238629
+      *                                                                                       238629
+      ** Calculation to define input day number.                                              238629
+      *                                                                                       238629
+     C                     Z-ADDZDAYNO    ZDAYNO  50                                          238629
+      *                                                                                       238629
+      ** Determine century number.                                                            238629
+      *                                                                                       238629
+     C           ZDAYNO    IFLE 10227                                                         238629
+     C                     Z-ADD19        ZCENT   20                                          238629
+     C                     ELSE                                                               238629
+     C           ZDAYNO    IFLE 46252                                                         238629
+     C                     Z-ADD20        ZCENT   20                                          238629
+     C                     ELSE                                                               238629
+     C           ZDAYNO    IFLE 83277                                                         238629
+     C                     Z-ADD21        ZCENT   20                                          238629
+     C                     ELSE                                                               238629
+     C                     Z-ADD22        ZCENT   20                                          238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Determine year number.                                                               238629
+      ** Adjust day number in case last day of year.                                          238629
+      *                                                                                       238629
+     C           ZDAYNO    SUB  1         ZDAYN1  50                                          238629
+     C           ZDAYN1    IFLT 0                                                             238629
+     C                     GOTO ZDEND2                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Calculate number of 4 year spans since 31/12/1971.                                   238629
+      *                                                                                       238629
+     C           ZDAYN1    DIV  1461      ZLYR    20                                          238629
+     C                     MVR            ZDAYN1           SAVE REMAINING                     238629
+      *                                                    DAYS                               238629
+      ** Calculate number of remaining years.                                                 238629
+      *                                                    DAYS                               238629
+     C                     Z-ADD1         ZWRK2   20                                          238629
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *                    238629
+     C           ZDAYN1    IFGE ZYDY,ZWRK2                                                    238629
+     C           ZWRK2     ADD  1         ZWRK2                                               238629
+     C                     GOTO ZDTAG1                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+     C           ZWRK2     SUB  1         ZWRK2                                               238629
+      *                                                                                       238629
+      ** Decrement day no. by days in remaining years.                                        238629
+      *                                                                                       238629
+     C           ZWRK2     IFNE 0                                                             238629
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Calculate actual year number.                                                        238629
+      *                                                                                       238629
+     C           ZLYR      MULT 4         ZWRK3   30                                          238629
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972                       238629
+     C                     Z-ADDZWRK3     ZYEAR   20                                          238629
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR                               238629
+      *                                                                                       238629
+      ** Determine month number.                                                              238629
+      ** Adjust day no. in case last day of leap year February.                               238629
+      *                                                                                       238629
+     C           ZWRK2     IFEQ 0                                                             238629
+     C           ZDAYN1    IFEQ 59                                                            238629
+     C                     MOVE 'Y'       ZLEAP                                               238629
+     C                     ENDIF                                                              238629
+     C           ZDAYN1    IFGE 59                                                            238629
+     C           ZDAYN1    SUB  1         ZDAYN1                                              238629
+     C                     ENDIF                                                              238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Calculate month number.                                                              238629
+      *                                                                                       238629
+     C                     Z-ADD2         ZWRK2                                               238629
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *                    238629
+     C           ZDAYN1    IFGE ZMDY,ZWRK2                                                    238629
+     C           ZWRK2     ADD  1         ZWRK2                                               238629
+     C                     GOTO ZDTAG2                                                        238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+     C           ZWRK2     SUB  1         ZWRK2                                               238629
+      *                                                                                       238629
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH                              238629
+      *                                                                                       238629
+      ** Determine day of month.                                                              238629
+      ** Add back last day of year adjustment.                                                238629
+      *                                                                                       238629
+     C           ZDAYN1    ADD  1         ZDAYN1                                              238629
+      *                                                                                       238629
+      ** Calculate day of month.                                                              238629
+      *                                                                                       238629
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY                                238629
+      *                                                                                       238629
+      ** Add back leap year 29th February adjustment, if required.                            238629
+      *                                                                                       238629
+     C           ZLEAP     IFEQ 'Y'                                                           238629
+     C           ZDAY      ADD  1         ZDAY                                                238629
+     C                     ENDIF                                                              238629
+      *                                                                                       238629
+      ** Format date, DDMMYY or MMDDYY.                                                       238629
+      *                                                                                       238629
+     C  N98                MOVELZDAY      ZWRK4   40                                          238629
+     C   98                MOVE ZDAY      ZWRK4                                               238629
+     C  N98                MOVE ZMTH      ZWRK4                                               238629
+     C   98                MOVELZMTH      ZWRK4                                               238629
+     C                     MOVELZWRK4     ZDATE                                               238629
+     C                     MOVE ZYEAR     ZDATE                                               238629
+      *                                                                                       238629
+      ** Format alpha date, DDMMMYY.                                                          238629
+      *                                                                                       238629
+     C                     MOVELZDAY      ZWRK5   5                                           238629
+     C           ZDAY      IFLT 10                                                            238629
+     C                     MOVEL' '       ZWRK5                                               238629
+     C                     ENDIF                                                              238629
+     C                     MOVE ZMNM,ZMTH ZWRK5                                               238629
+     C                     MOVELZWRK5     ZADATE                                              238629
+     C                     MOVE ZYEAR     ZADATE                                              238629
+      *                                                                                       238629
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*                    238629
+      ********************************************************************                    238629
+      /SPACE 5
+     C/COPY ZSRSRC,ZACCH
+      /SPACE 5
+     C/COPY ZSRSRC,ZCHKH
+      /SPACE 5
+     C/COPY ZSRSRC,ZFWDT
+      /SPACE 5
+     C***/COPY*ZSRSRC,ZDATE1Z2                                                                238629
+      /SPACE 5
+     C***/COPY*ZSRSRC,ZDATE2Z2                                                                238629
+      /SPACE 5
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

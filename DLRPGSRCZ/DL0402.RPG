@@ -1,0 +1,391 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Leo DL Event File Update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - LEO/Midas Dealing Integration                        *
+      *                                                               *
+      *  DL0402 - LEO DL Event File Update                            *
+      *                                                               *
+      *  Function: This program allows the update of files EVNTXED    *
+      *  (COB)     and EVNTXEZ with parameters passed to it.          *
+      *                                                               *
+      *  Called By: RPG/CMIU20                                        *
+      *             RPG/CMIU21                                        *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01473             Date 06Nov94               *
+      *                 S01473             Date 23Aug94               *
+      *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     S01473 - Problems with parameters due to wrong length,    *
+      *              and *IN02 being on is not necessarily an error.  *
+      *                                                               *
+      *     S01473 - New program created for Midas/Leo Integration    *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FBVNTXEA O   E                    DISK
+     FBVNTXED O   E                    DISK
+     FBVNTXEZ UF  E                    DISK                      A
+      *
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01  - Update File                                          *
+     F*    02  - Trailer record not found                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Program Initialisation                              *
+     F*  UPDATE - Update File                                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+      *
+     I/EJECT
+     IBVNTXEZF
+     I              RECI                            RECT
+     I*
+     I**DETL1*******DS                             14                     S01473
+     IDETL1       DS                              4                       S01473
+      ** DS for parameters passed to program for BVNTXEA update
+     I                                        1   1 @RECH
+     I                                    P   2   40@EVCD
+     I*
+     I***DETL2**     DS                            250                                        CGL029
+     IDETL2       DS                            266                                           CGL029
+      ** DS for parameters passed to program for BVNTXED update
+     I                                        1   1 @RECI
+     I                                        2   7 @LCNO
+     I**********                              8  130@CNUM                                     CSD027
+     I                                        8  13 @CNUM                                     CSD027
+     I                                       14  17 @ETYP
+     I                                    P  18  200@EDAT
+     I                                    P  21  270@EAMT
+     I                                       28  30 @ECCY
+     I                                       31  320@ECSS
+     I                                       33  34 @DTYP
+     I                                       35  36 @DLST
+     I                                       37  39 @BRCA
+     I                                    P  40  420@OTHD
+     I                                    P  43  490@OTHA
+     I                                       50  52 @OTHC
+     I                                    P  53  590@DBCE
+     I                                    P  60  660@BCEQ
+     I                                    P  67  738@DBCR
+     I                                       74  750@SETP
+     I                                       76  77 @OSAC1
+     I**********                             78  87 @OSAC2                                    CGL029
+     I                                       78  87 @OSAQQ                                    CGL029
+     I                                       88  97 @TSEN
+     I                                       98 107 @FACO
+     I                                      108 142 @SPI
+     I                                      143 143 @FIPI
+     I                                      144 144 @INOI
+     I**********                            145 1500@CPCN                                     CSD027
+     I**********                            151 1560@CPAR                                     CSD027
+     I                                      145 150 @CPCN                                     CSD027
+     I                                      151 156 @CPAR                                     CSD027
+     I                                      157 1570@PARI
+     I                                      158 177 @CRNM
+     I                                      178 187 @CTWN
+     I                                      188 195 @CASK
+     I                                      196 215 @PRNM
+     I                                      216 225 @PTWN
+     I                                      226 233 @PASK
+     I                                      234 235 @CCTZ
+     I                                      236 237 @CLOC
+     I                                      238 239 @REGC
+     I                                      240 240 @FFIN
+     I                                    P 241 2470@LCEQ
+     I                                      248 250 @OSBR
+     I                                      251 266 @OSAC2                                    CGL029
+     I*
+     IDETL3       DS                             14
+      ** DS for parameters passed to program for BVNTXEZ update
+     I                                        1   1 @RECT
+     I                                    P   2   40@NORE
+     I                                    P   5  120@HRWN
+     I                                    P  13  140@HRDC
+     I*
+     ILDA       E DSLDA
+      ** Database error Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Update File  Processing.
+      *
+     C                     EXSR UPDATE
+      *
+      ***  End Program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - SUBROUTINE TO DO PROGRAM INITIALISATION.            *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RTCD    7
+     C                     PARM           DETL1
+     C                     PARM           DETL2
+     C                     PARM           DETL3
+     C*
+     C** Set up copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Define LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Initialise update fields
+     C*
+     C                     MOVE *BLANKS   RECI
+     C                     MOVE *BLANKS   LCNO
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVE *BLANKS   ETYP
+     C                     Z-ADD0         EDAT
+     C                     Z-ADD0         EAMT
+     C                     MOVE *BLANKS   ECCY
+     C                     Z-ADD0         ECSS
+     C                     MOVE *BLANKS   DTYP
+     C                     MOVE *BLANKS   DLST
+     C                     MOVE *BLANKS   BRCA
+     C                     Z-ADD0         OTHD
+     C                     Z-ADD0         OTHA
+     C                     MOVE *BLANKS   OTHC
+     C                     Z-ADD0         DBCE
+     C                     Z-ADD0         BCEQ
+     C                     Z-ADD0         DBCR
+     C                     Z-ADD0         SETP
+     C                     MOVE *BLANKS   OSAC1
+     C                     MOVE *BLANKS   OSAC2
+     C                     MOVE *BLANKS   TSEN
+     C                     MOVE *BLANKS   FACO
+     C                     MOVE *BLANKS   SPI
+     C                     MOVE *BLANKS   FIPI
+     C                     MOVE *BLANKS   INOI
+     C**********           Z-ADD0         CPCN                                                CSD027
+     C**********           Z-ADD0         CPAR                                                CSD027
+     C                     MOVE *BLANKS   CPCN                                                CSD027
+     C                     MOVE *BLANKS   CPAR                                                CSD027
+     C                     Z-ADD0         PARI
+     C                     MOVE *BLANKS   CRNM
+     C                     MOVE *BLANKS   CTWN
+     C                     MOVE *BLANKS   CASK
+     C                     MOVE *BLANKS   PRNM
+     C                     MOVE *BLANKS   PTWN
+     C                     MOVE *BLANKS   PASK
+     C                     MOVE *BLANKS   CCTZ
+     C                     MOVE *BLANKS   CLOC
+     C                     MOVE *BLANKS   REGC
+     C                     MOVE *BLANKS   FFIN
+     C                     Z-ADD0         LCEQ
+     C                     MOVE *BLANKS   OSBR
+     C*
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         HRWN
+     C                     Z-ADD0         HRDC
+     C*
+     C                     Z-ADD0         EVCD
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /TITLE SR/UPDATE
+      *****************************************************************
+      *                                                               *
+      *  UPDATE - SUBROUTINE TO UPDATE FILE BVNTXEA,BVNTXED,OR BVNTXEZ*
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           UPDATE    BEGSR
+     C*
+     C***  Process depending on parameters passed.
+     C***  If DETL2 blank and DETL3 blank, write BVNTXEA
+     C***  If DETL1 blank and DETL3 blank, write BVNTXED
+     C***  If DETL1 blank and DETL2 blank, write BVNTXEZ if call by
+     C***    CMIU20, update if call by CMIU21.
+     C*
+     C           DETL1     IFEQ *BLANKS
+     C           DETL2     ANDNE*BLANKS
+     C           DETL3     ANDEQ*BLANKS
+     C*
+     C** Move input parameters to output fields
+     C*
+     C                     MOVE @RECI     RECI
+     C                     MOVE @LCNO     LCNO
+     C**********           Z-ADD@CNUM     CNUM                                                CSD027
+     C                     MOVE @CNUM     CNUM                                                CSD027
+     C                     MOVE @ETYP     ETYP
+     C                     Z-ADD@EDAT     EDAT
+     C                     Z-ADD@EAMT     EAMT
+     C                     MOVE @ECCY     ECCY
+     C                     Z-ADD@ECSS     ECSS
+     C                     MOVE @DTYP     DTYP
+     C                     MOVE @DLST     DLST
+     C                     MOVE @BRCA     BRCA
+     C                     Z-ADD@OTHD     OTHD
+     C                     Z-ADD@OTHA     OTHA
+     C                     MOVE @OTHC     OTHC
+     C                     Z-ADD@DBCE     DBCE
+     C                     Z-ADD@BCEQ     BCEQ
+     C                     Z-ADD@DBCR     DBCR
+     C                     Z-ADD@SETP     SETP
+     C                     MOVE @OSAC1    OSAC1
+     C                     MOVE @OSAC2    OSAC2
+     C                     MOVE @TSEN     TSEN
+     C                     MOVE @FACO     FACO
+     C                     MOVE @SPI      SPI
+     C                     MOVE @FIPI     FIPI
+     C                     MOVE @INOI     INOI
+     C**********           Z-ADD@CPCN     CPCN                                                CSD027
+     C**********           Z-ADD@CPAR     CPAR                                                CSD027
+     C                     MOVE @CPCN     CPCN                                                CSD027
+     C                     MOVE @CPAR     CPAR                                                CSD027
+     C                     Z-ADD@PARI     PARI
+     C                     MOVE @CRNM     CRNM
+     C                     MOVE @CTWN     CTWN
+     C                     MOVE @CASK     CASK
+     C                     MOVE @PRNM     PRNM
+     C                     MOVE @PTWN     PTWN
+     C                     MOVE @PASK     PASK
+     C                     MOVE @CCTZ     CCTZ
+     C                     MOVE @CLOC     CLOC
+     C                     MOVE @REGC     REGC
+     C                     MOVE @FFIN     FFIN
+     C                     Z-ADD@LCEQ     LCEQ
+     C                     MOVE @OSBR     OSBR
+     C*
+     C** Update file BVNTXED
+     C*
+     C                     WRITEBVNTXEDF               01
+     C*
+     C                     ELSE
+     C*
+     C** Update Header file BVNTXEA
+     C*
+     C           DETL1     IFNE *BLANKS
+     C           DETL3     ANDEQ*BLANKS
+     C                     MOVE @RECH     RECI
+     C                     Z-ADD@EVCD     EVCD
+     C                     WRITEBVNTXEAF
+     C                     ELSE
+     C*
+     C***  Else update Trailer file BVNTXEZ if already there (ie called
+     C***  by CMIU21)
+     C*
+     C                     READ BVNTXEZ                  02               LEO29C
+     C*
+     C***  If all 3 parms are blank, CMIU21 is calling to retrieve
+     C***  details from trailer to update them. Shove them in 3rd parm
+     C***  to return them to CMIU21.
+     C*
+     C           DETL3     IFEQ *BLANKS
+     C*
+     C           *IN02     IFNE '1'
+     C*
+     C                     MOVE RECT      @RECT
+     C                     Z-ADDNORE      @NORE
+     C                     Z-ADDHRWN      @HRWN
+     C                     Z-ADDHRDC      @HRDC
+     C*
+     C                     ELSE
+     C*
+     C***  Error if no record found. CMIU20 should have written one.
+     C*
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           *IN02     IFNE '1'
+     C*
+     C** Move input parameters to output fields
+     C*
+     C                     MOVE @RECT     RECT
+     C                     Z-ADD@NORE     NORE
+     C                     Z-ADD@HRWN     HRWN
+     C                     Z-ADD@HRDC     HRDC
+     C*
+     C                     UPDATBVNTXEZF               01
+     C*
+     C                     ELSE
+     C*
+     C***  If not there, call by CMIU20, so WRITE.
+     C*
+     C                     MOVE @RECT     RECT
+     C                     Z-ADD@NORE     NORE
+     C                     Z-ADD@HRWN     HRWN
+     C                     Z-ADD@HRDC     HRDC
+     C                     WRITEBVNTXEZF
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** If error setup return code
+     C*
+     C           *IN01     IFEQ '1'
+     C************IN02     OREQ '1'                                       S01473
+     C                     MOVE '*ERROR'  RTCD
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

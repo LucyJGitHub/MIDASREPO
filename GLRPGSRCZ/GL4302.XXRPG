@@ -1,0 +1,269 @@
+     H        1   Y
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                      CGL061A
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL4302 - GL Balances Task Split Copy Data                    *
+      *                                                               *
+      *  Function:  This program will copy a block of records from    *
+      *             the old driver LF/STMT to a member in the         *
+      *             new driver PF/GLSTAMPD.                           *
+      *                                                               *
+      *  Called By: GLC4302                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGL061A *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CGL061 *Create     Date 26Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL061A - Statements Task Split Processing                   *
+      *  CGL061 - Multi-streaming GL Statements                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FSTMTS   IF  E           K        DISK         KINFSR *PSSR
+     F            STMTHHF                           KIGNORE
+     F            STMTZXF                           KIGNORE
+      *
+     FGLSTAMPDUF  E                    DISK         KINFSR *PSSR A
+     F            STMTAHF                           KRENAMEDRIVEF
+     F                                              KCOMIT
+      *
+     FGLSTMIPDUF  E                    DISK         KINFSR *PSSR A
+     F            STMTAHF                           KRENAMEINDEXF
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,GLH00691
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     50 - Indicator for dummy read of GLSTAMPD                 *
+      *     80 - READ indicator for GLSTMIPD                          *
+      *     81 - READ indicator for STMTS                             *
+      *                                                               *
+      *  U7+U8 - Database error                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IINDEXF
+      ** Rename fields for GLSTMIPD format
+     I              RECI                            WRECI
+     I              ATYP                            WATYP
+     I              BRCA                            WBRCA
+     I              CNUM                            WCNUM
+     I              CCY                             WCCY
+     I              ACODQQ                          WACODQ
+     I              ACSQ                            WACSQ
+     I              MSFL                            WMSFL
+     I              ZZ011                           WZ011
+     I              LSTD                            WLSTD
+     I              NSTD                            WNSTD
+     I              LSTP                            WLSTP
+     I              CFSB                            WCFSB
+     I              YTDB                            WYTDB
+     I              GLBT                            WGLBT
+     I              ACOD                            WACOD
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           RECTOT  70
+     C                     PARM           RTCODE  3
+     C/COPY WNCPYSRC,GLH00692
+      *
+      ** Initial processing
+     C                     EXSR INIT
+      *
+      ** Split records into new file
+     C                     EXSR TSPLIT
+      *
+      ** End processing
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SR/TSPLIT - Split records into new driver and index files.    *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           TSPLIT    BEGSR
+      *
+     C                     Z-ADD0         TOT     70
+      *
+      ** Check the Index file and set the file pointer to the next
+      ** driver record to be copied accordingly.
+      *
+     C                     READ GLSTMIPD                 80
+      *
+     C           *IN80     IFEQ '1'
+     C/COPY WNCPYSRC,GLH00693
+     C           *LOVAL    SETLLSTMTAHF
+     C/COPY WNCPYSRC,GLH00694
+     C                     ELSE
+     C                     MOVE WBRCA     KBRCA
+     C                     MOVE WCNUM     KCNUM
+     C                     MOVE WCCY      KCCY
+     C                     Z-ADDWACOD     KACOD
+     C                     Z-ADDWACSQ     KACSQ
+     C                     MOVE WATYP     KATYP
+     C/COPY WNCPYSRC,GLH00695
+     C           KEY       SETGTSTMTAHF
+     C/COPY WNCPYSRC,GLH00696
+     C                     ENDIF
+      *
+      ** Copy records to the new driver file until the limit
+      ** specified in the input parameter (RECTOT) is reached.
+      *
+     C           TOT       DOUEQRECTOT
+     C           *IN81     OREQ '1'
+      *
+     C/COPY WNCPYSRC,GLH00697
+     C                     READ STMTAHF                  81
+     C/COPY WNCPYSRC,GLH00698
+     C           *IN81     IFEQ '0'
+     C                     WRITEDRIVEF
+     C                     ADD  1         TOT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Set up fields for Index file with data from last record
+      ** written.
+      *
+     C                     MOVE RECI      WRECI
+     C                     MOVE ATYP      WATYP
+     C                     MOVE BRCA      WBRCA
+     C                     MOVE CNUM      WCNUM
+     C                     MOVE CCY       WCCY
+     C                     Z-ADDACODQQ    WACODQ
+     C                     Z-ADDACSQ      WACSQ
+     C                     MOVE MSFL      WMSFL
+     C                     MOVE ZZ011     WZ011
+     C                     Z-ADDLSTD      WLSTD
+     C                     Z-ADDNSTD      WNSTD
+     C                     Z-ADDLSTP      WLSTP
+     C                     Z-ADDCFSB      WCFSB
+     C                     Z-ADDYTDB      WYTDB
+     C                     MOVE GLBT      WGLBT
+     C                     Z-ADDACOD      WACOD
+      *
+      ** If Index file is empty write new record to it, else update
+      ** with details of last record written.
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITEINDEXF
+     C                     ELSE
+     C                     UPDATINDEXF
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SR/END - Exit program and return to calling program.          *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+      ** If end of file on STMTS set return code to notify server
+      *
+     C           *IN81     IFEQ '1'
+     C                     MOVE 'EOF'     RTCODE
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SR/INIT - Initial processing.                                 *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** KLIST for setting file pointer to next record to be copied
+      ** first key field is *none for RECI of header file format in logical
+      *
+     C           KEY       KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KATYP   1
+     C/COPY WNCPYSRC,GLH00699
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Dummy READ to GLSTAMPD for compilation purpose
+     C           *IN50     IFEQ '1'
+     C                     READ GLSTAMPD                 50
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ROLBK
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2006

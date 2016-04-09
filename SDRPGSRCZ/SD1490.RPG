@@ -1,0 +1,397 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD MDF market data feed batch monitor')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1490 - Market Data Feed batch monitor                      *
+      *                                                               *
+      *  Function:  This program creates messages for Market Watch    *
+      *                                                               *
+      *  Called By: SDC1490 - MDF background messaging                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. 196570             Date 06Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CSD006  *CREATE    Date 28Nov00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+      ** Data Request Message Start File
+     FSDDRQOPDO   E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      ** Data Request File
+     FSDMDFRPDUF  E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      ** Array containing Time formats (HH:MM or HH:MM,  )
+     E                    @TM        50  6
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      ** Define constants
+     I              50                    C         @TMSIZ
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Scheduled times parameter
+     IP2SCHD      DS                            300
+      ** Scheduled times
+     IWMSCHD      DS                            300
+     I                                        1 300 @TM
+      ** Specific times
+     IP2SPTM      DS                             80
+     I                                        1   4 P2SP01
+     I                                        5   8 P2SP02
+     I                                        9  12 P2SP03
+     I                                       13  16 P2SP04
+     I                                       17  20 P2SP05
+     I                                       21  24 P2SP06
+     I                                       25  28 P2SP07
+     I                                       29  32 P2SP08
+     I                                       33  36 P2SP09
+     I                                       37  40 P2SP10
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      ** Midas SD MDF ICD
+     ISDMDFC    E DSSDMDFCPD
+      *
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Message data
+     C                     PARM           P@MSGD256
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     COMIT
+     C                     ELSE
+      ** Unlock all the file in update
+     C                     UNLCKSDMDFRPD
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@MSGD
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      *
+      ** Open file with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDDRQOPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDDRQOPD
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFRPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFRPD
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C                     READ SDMDFRPD                 90
+     C           *IN90     DOWEQ'0'
+     C           P@RTN     ANDEQ*BLANK
+      *
+     C           MRACTF    IFEQ 'Y'
+     C           MRMSGC    ANDNE'Y'
+      ** Messages can be send to Market Watch
+     C                     EXSR PRCMSG
+      ** Determine whether request needs to be updated
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR UPDREQ
+     C                     ELSE
+     C                     UNLCKSDMDFRPD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C                     READ SDMDFRPD                 90
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDDRQOPD
+     C                     CLOSESDMDFRPD
+     C                     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+      ** Retrieve MDF ICD
+     C                     CALL 'AOMDFCR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDMDFC    PARM           SDY
+     C           P@RTCD    IFNE *BLANK
+     C           *IN90     OREQ '1'
+     C                     MOVEL'SDM0041' P@RTN
+     C                     GOTO ERTSYD
+     C                     ENDIF
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * PRCMSG - Process Message                                      *
+      *****************************************************************
+     C           PRCMSG    BEGSR
+     C           *LIKE     DEFN MRLRQT    WMLRQT
+      *
+      ** Retrieve request time table
+     C                     EXSR GNTMTB
+     C           P2RTN     IFEQ *BLANK
+      ** Memorize last requested time for later use
+     C                     MOVE P2LRQT    WMLRQT
+      ** Memorize scheduled times for later use
+     C                     MOVELP2SCHD    WMSCHD
+      ** Write Message Request according to the transaction code
+     C                     EXSR STROPR
+     C           P2RTN     IFNE *BLANK
+     C                     MOVELP2RTN     P@RTN
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVELP2RTN     P@RTN
+     C                     ENDIF
+     C           ESTRMG    ENDSR
+      *****************************************************************
+      * UPDREQ - Update request                                       *
+      *****************************************************************
+     C           UPDREQ    BEGSR
+      ** WMSCHD blank means no messages have been send to market
+      ** watch (i.e @TM is empty)
+     C           WMSCHD    IFEQ *BLANK
+     C                     UNLCKSDMDFRPD
+     C                     GOTO EUPDRQ
+     C                     ENDIF
+      *
+      ** Update last request time for requests being sent to
+      ** Meridian.
+      ** If all times have been processed. Request has completed.
+     C           WMLRQT    IFEQ MRLAST
+     C                     MOVEL'Y'       MRMSGC
+     C                     ENDIF
+     C                     MOVE WMLRQT    MRLRQT
+     C                     UPDATSDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0063' P@RTN
+     C                     ENDIF
+     C           EUPDRQ    ENDSR
+      *****************************************************************
+      * GNTMTB - Generate Data Feed Time Table                        *
+      *****************************************************************
+     C           GNTMTB    BEGSR
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P2LRQT    P2SYST
+     C           *LIKE     DEFN P2LRQT    P2FRST
+     C           *LIKE     DEFN P2LRQT    P2LAST
+     C           *LIKE     DEFN P2LRQT    P2ITRV
+     C           *LIKE     DEFN P2LRQT    P2LRTI
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2LRQT  4
+     C                     MOVEL*BLANK    P2SCHD
+     C           P2SYST    IFEQ *BLANK
+     C                     TIME           WHMS    60
+      ** Fill only HHMM of system time
+     C                     MOVELWHMS      P2SYST
+     C                     ENDIF
+     C           P2FRST    IFEQ *BLANK
+     C                     MOVE MRFRST    P2FRST
+     C                     ENDIF
+     C           P2LAST    IFEQ *BLANK
+     C                     MOVE MRLAST    P2LAST
+     C                     ENDIF
+     C           P2ITRV    IFEQ *BLANK
+     C                     MOVE MRITRV    P2ITRV
+     C                     ENDIF
+     C           P2SPTM    IFEQ *BLANK
+      ** Initialise *ALL as Length(P2SPTM) > Length(MRSP01 x 10)
+     C                     MOVEL*ALL'0'   P2SPTM
+      *
+     C                     MOVE MRSP01    P2SP01
+     C                     MOVE MRSP02    P2SP02
+     C                     MOVE MRSP03    P2SP03
+     C                     MOVE MRSP04    P2SP04
+     C                     MOVE MRSP05    P2SP05
+     C                     MOVE MRSP06    P2SP06
+     C                     MOVE MRSP07    P2SP07
+     C                     MOVE MRSP08    P2SP08
+     C                     MOVE MRSP09    P2SP09
+     C                     MOVE MRSP10    P2SP10
+     C                     ENDIF
+      *
+     C           P2LRTI    IFEQ *BLANK
+      ** Last request time is used to handle 2 times , n times
+      ** request only.
+     C           MRFRST    IFNE MRLAST
+     C                     MOVE MRLRQT    P2LRTI
+     C                     ELSE
+     C                     MOVE *ZEROS    P2LRTI
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CALL 'SD1491'
+     C                     PARM           P2RTN
+     C                     PARM           P2SYST
+     C                     PARM           P2LRTI
+     C                     PARM           P2FRST
+     C                     PARM           P2LAST
+     C                     PARM           P2ITRV
+     C                     PARM           P2SPTM
+     C                     PARM           P2LRQT
+     C                     PARM           P2SCHD
+      *
+     C                     MOVEL*BLANK    P2SYST
+     C                     MOVEL*BLANK    P2FRST
+     C                     MOVEL*BLANK    P2LAST
+     C                     MOVEL*BLANK    P2ITRV
+     C                     MOVEL*BLANK    P2SPTM
+     C                     MOVEL*BLANK    P2LRTI
+      *
+     C                     ENDSR
+      *****************************************************************
+      * STROPR - Start operation messages                             *
+      *****************************************************************
+     C           STROPR    BEGSR
+      *
+     C                     DO   @TMSIZ    I       30
+     C           @TM,I     IFEQ *BLANKS
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     CLEARSDDRQOD0
+     C                     MOVELMDTRGI    QONODK
+     C                     MOVELMRREQI    QODIWS
+     C                     MOVEL'0'       QOACKN
+     C                     WRITESDDRQOD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0091' P@RTN
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

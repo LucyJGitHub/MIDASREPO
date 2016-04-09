@@ -1,0 +1,120 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Accounts effective today')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       CLLE/REC004600 - Accounts Effective Today Processing        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*                                                                   */
+/*       Last Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Journalling variables */
+ 
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0) VALUE(00001)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) +
+                           VALUE('REC004600')
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start Journalling */
+ 
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                           *CAT &CSEQA)
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('S') TEXT(&STEXT)
+ 
+ 
+/* Call Block/Refer Debit/Credit fields update */
+ 
+             CALL       PGM(RE004600)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call Accounts becoming effective today report */
+ 
+             CALL       PGM(RE000567)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('REC004600 - Midas RE Accounts effective +
+                          today processing Program terminated +
+                          abnormally.') TOMSGQ(MOPERQ MRUNQ)
+ 
+/* Begin recovery from error or from restart */
+/* Retrieve attributes of current job */
+ 
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+ 
+/* Retrieve the most recent journal entry sequence number for the */
+/* specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                           TOENT(*FIRST) SEARCH(*DESCEND) +
+                           JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                           RTNRCV(&SJRNRCVR)
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+                  CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/* Determine starting journal sequence number of current job. */
+ 
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)
+ 
+/* Remove journal changes. */
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                           THEN(DO)
+                  RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB)) +
+                                FROMENT(&START) TOENT(&FINISH) +
+                                RCVRNG(&SJRNRCVR &FJRNRCVR)
+                  MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
+             ENDDO
+ 
+END:
+ 
+/* Write current journal sequence number to file SCJSEQPD */
+ 
+             CHGVAR     VAR(&STEXT) VALUE(' ')
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                           FLAG('E') TEXT(&STEXT)
+ 
+             ENDPGM

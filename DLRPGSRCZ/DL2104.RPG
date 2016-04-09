@@ -1,0 +1,1369 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Mismatched fiduc. deposits & loans report')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL2104 - Mismatched Fiduciary Deposits & Loans report        *
+      *                                                               *
+      *  (phase(s)) This new report will be produced by Midas during  *
+      *             the close of business and I/C on request          *
+      *                                                               *
+      *  Called By: DLC2104                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *                                                               *
+      *****************************************************************
+     FDLDPLAPDIF  E           K        DISK         KINFSR *PSSR
+      ** Fiduciary Placings Deposit
+      *
+     FDLDTAKPDIF  E           K        DISK         KINFSR *PSSR
+      ** Fiduciary Takings Deposit
+      *
+     FDLDDAMPDIF  E           K        DISK         KINFSR *PSSR
+      ** Fiduciary Deals Amendement
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+      ** Deals
+      *
+     FDEAMS   IF  E           K        DISK         KINFSR *PSSR
+      ** Deals Amendmemt
+      *
+     FDL2104AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      ** Mismatched Fiduciary Deposits  Audit
+      *
+     FDL2104P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      ** Mismatched Fiduciary Deposits  - Placing checking
+      *
+     FDL2104P2O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL2
+      ** Mismatched Fiduciary Deposits  - Taking checking
+      *
+     FDL2104P3O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL3
+      ** Mismatched Fiduciary Deposits  - Deal Amendment checking
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   11 - 18 Triggers mismatch messages                          *
+      *   19  - 'TAKING'                                              *
+      *   41  - No details to report for P1                           *
+      *   42  - No details to report for P2                           *
+      *   43  - No details to report for P3                           *
+      *   87  - Read to Deal amendments file                          *
+      *   88  - General indicator                                     *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRPLCG - Subroutine for Placing transaction                  *
+      *  SRTKNG - Subroutine for Taking transaction                   *
+      *  SRDCHK - Subroutine for Deal amendments                      *
+      *  SRREP1 - Process report lines                                *
+      *  SRREP2 - Process report lines                                *
+      *  SRREP3 - Process report lines                                *
+      *                                                               *
+      *  SRUDT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFP2  - RCF Processing for P2 Report                        *
+      *  RCFP3  - RCF Processing for P3 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    TTA        99 41
+      *
+     IDLDTAKP0
+     I              DLNO                            TADLNO
+     I              DLST                            TADLST
+     I              PCPL                            TAPCPL
+     I              CCY                             TACCY
+     I              VDAT                            TAVDAT
+     I              MDAT                            TAMDAT
+     I              NOTD                            TANOTD
+     I              INTR                            TAINTR
+     I              ICBS                            TAICBS
+     I              NIDT                            TANIDT
+     I              LNKDN                           TALNKD
+     I              DTYP                            TADTYP
+      *
+     IDLDDAMP0
+     I              DLNO                            DADLNO
+     I              VDAT                            DAVDAT
+     I              DASN                            DADASN
+     I              AMTP                            DAAMTP
+     I              RTSP                            DARTSP
+     I              CCY                             DACCY
+     I              DAAM                            DADAAM
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ** File Information Data Structure for DL2104P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOL2      DS
+      ** File Information Data Structure for DL2104P2.
+      *
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      *
+     ISPOOL3      DS
+      ** File Information Data Structure for DL2104P3.
+      *
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     I                                    B 188 1890OFLLN3
+     I                                    B 367 3680PRTLN3
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for DL2104AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I            DS
+     I                                        1  41 TAKDS
+     I                                        1   60TADLNO
+     I                                        7   8 TADLST
+     I                                    P   9  150TAPCPL
+     I                                       16  18 TACCY
+     I                                    P  19  210TAVDAT
+     I                                    P  22  240TAMDAT
+     I                                       25  270TANOTD
+     I                                    P  28  337TAINTR
+     I                                       34  340TAICBS
+     I                                    P  35  370TANIDT
+     I                                       38  41 IND
+     I                                       38  38 IND15
+     I                                       39  39 IND16
+     I                                       40  40 IND17
+     I                                       41  41 IND18
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZHOLDS
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** External data structures for Dealing ICD details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PASEQ   5
+     C                     PARM           PALEV   1
+     C                     PARM           PAENT   3
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD001       DBASE            * DBERR 001 *
+     C                     MOVEL'DL2104'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Access Dealing ICD
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDDEALPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD002       DBASE            * DBERR 002 *
+     C                     MOVEL'DL2102'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Report Work fields.
+      *
+     C                     MOVE *ALL'-'   PDASH
+     C                     MOVE 'Y'       WFIRS1  1
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE 'Y'       WFIRS2  1
+     C                     Z-ADD0         RQDLN2  30
+     C                     Z-ADD0         DIFLN2  30
+     C                     MOVE 'Y'       WFIRS3  1
+     C                     Z-ADD0         RQDLN3  30
+     C                     Z-ADD0         DIFLN3  30
+      *
+     C           *LIKE     DEFN DLNO      DALNKD
+      *
+     C           KDEAMS    KLIST
+     C                     KFLD           DALNKD
+     C                     KFLD           DAVDAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRPLCG - Subroutine for Placing transaction                  *
+      *  SRTKNG - Subroutine for Taking transaction                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      ** Placing checking
+      *
+     C                     READ DLDPLAP0                 89
+      *
+      ** If End of Records, (*IN89)
+      *
+     C                     SELEC
+      *
+     C           *IN89     WHEQ *ON
+     C                     MOVE *ON       *IN41
+     C                     EXSR SRTKNG
+      *
+     C           *IN89     WHEQ *OFF
+     C                     EXSR SRPLCG
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPLCG
+      *****************************************************************
+      *                                                               *
+      *  SRPLCG - Subroutine for Placing transaction                  *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRREP1  - Process Report Lines.                              *
+      *  SRTKNG - Subroutine for Taking transaction                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPLCG    BEGSR                           *** SRPLCG ***
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+     C                     Z-ADD0         TOTPCP 140
+     C                     MOVEA*BLANKS   TTA,1
+      *
+      ** Resetting *IN11 upto *IN18
+      *
+     C                     MOVEA'00000000'*IN,11
+      *
+     C           DTYP      IFEQ 'DP'
+     C           DTYP      OREQ 'LP'
+     C                     Z-ADD0         WNBCD   30
+     C                     Z-ADD0         WOTHER  30
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WI      30
+     C                     Z-ADD0         WNBER   30
+      *
+      ** For each Placing, read all placing linked with the deal number
+      ** number of the placing
+      *
+     C           DLNO      SETLLDLDTAKPD
+     C                     MOVE *OFF      *IN88
+     C           DLNO      READEDLDTAKPD                 88
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ** Accumulate the principal amount
+      *
+     C                     ADD  TAPCPL    TOTPCP
+      *
+      ** Check that some fields are equal
+      *
+     C           VDAT      COMP TAVDAT               1515
+     C           MDAT      COMP TAMDAT               1616
+      *
+     C           *IN16     IFEQ *OFF
+     C           MDAT      ANDEQ0
+     C           TAMDAT    ANDEQ0
+     C           NOTD      COMP TANOTD               1616
+     C                     ENDIF
+      *
+     C           INTR      COMP TAINTR               1717
+      *
+     C           *IN17     IFEQ *OFF
+     C           ICBS      COMP TAICBS               1717
+     C                     ENDIF
+      *
+     C           *IN17     IFEQ *OFF
+     C           NIDT      COMP TANIDT               1717
+     C                     ENDIF
+      *
+     C           DLST      COMP TADLST               1818
+      *
+     C                     MOVEA*IN,15    IND
+      *
+     C           IND       IFNE '0000'
+     C                     ADD  1         WNBER
+     C                     ENDIF
+      *
+      ** Store all taking into array with indicators
+      *
+     C           WI        IFLT 99
+     C                     ADD  1         WI
+     C                     MOVEATAKDS     TTA,WI
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'DP'
+     C           TADTYP    IFEQ 'DT'
+     C                     ADD  1         WNBCD
+     C                     ELSE
+     C                     ADD  1         WOTHER
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'LP'
+     C           TADTYP    IFEQ 'LT'
+     C                     ADD  1         WNBCD
+     C                     ELSE
+     C                     ADD  1         WOTHER
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DLNO      READEDLDTAKPD                 88
+     C                     ENDDO
+      *
+      ** Only one DT or LT  for one DP or LP
+      *
+     C           DTYP      IFEQ 'DP'
+     C           WNBCD     IFNE 1
+     C           WOTHER    ORNE 0
+     C                     MOVE *ON       *IN12
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'LP'
+     C           WNBCD     IFNE 1
+     C           WOTHER    ORNE 0
+     C                     MOVE *ON       *IN13
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Placing principal not equal total of Taking principals
+      *
+     C           PCPL      IFNE TOTPCP
+     C                     MOVE *ON       *IN11
+     C                     ENDIF
+      *
+      ** No error, read next placing
+      *
+     C           *IN11     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN13     ANDEQ*OFF
+     C           WNBER     ANDEQ0
+     C                     READ DLDPLAP0                 89
+     C                     ELSE
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRREP1
+      *
+      ** Read next record.
+      *
+     C                     READ DLDPLAP0                 89
+     C                     ENDIF
+      *
+      ** End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+     C           WFIRS1    IFNE 'Y'
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+      *
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      ** Process Taking transactions
+      *
+     C                     EXSR SRTKNG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTKNG
+      *****************************************************************
+      *                                                               *
+      *  SRTKNG - Subroutine for Taking transaction                   *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRDCHK  - Subroutine for Deal Amendments                     *
+      *  SRREP2  - Process Report Lines                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTKNG    BEGSR                           *** SRTKNG ***
+      *
+      ** Taking checking
+      *
+     C           *LOVAL    SETLLDLDTAKP0
+     C                     READ DLDTAKP0                 89
+      *
+      ** If End of Records, (*IN89)
+      *
+     C                     SELEC
+      *
+     C           *IN89     WHEQ *ON
+     C                     MOVE *ON       *IN42
+     C                     EXSR SRDCHK
+      *
+     C                     OTHER
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ** For each taking, check that linked placing found
+      *
+     C           TALNKD    CHAINDLDPLAPD             88
+      *
+     C           *IN88     IFEQ *ON
+     C                     EXSR SRREP2
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ DLDTAKP0                 89
+      *
+      ** End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+     C           WFIRS2    IFNE 'Y'
+     C                     Z-ADD4         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+      *
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEHEADP2
+     C                     ENDIF
+     C                     WRITETRAILP2
+     C                     ENDIF
+      *
+      ** Process Deal amendments
+      *
+     C                     EXSR SRDCHK
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDCHK
+      *****************************************************************
+      *                                                               *
+      *  SRDCHK - Subroutine for Deal amendments                      *
+      *                                                               *
+      *  Called By: SRTKNG Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRAUDT  - Subroutine for Audit                               *
+      *  SRREP3  - Process Report Lines                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDCHK    BEGSR                           *** SRDCHK ***
+      *
+      ** Deal amendment checking
+      *
+     C           *LOVAL    SETLLDLDDAMPD
+     C                     READ DLDDAMPD                 89
+      *
+      ** If End of Records, (*IN89)
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN43
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ** Retrieve Associated deal number
+      *
+     C                     Z-ADD0         DALNKD
+      *
+     C           DTYP      IFEQ 'DT'
+     C           DTYP      OREQ 'LT'
+     C           DADLNO    CHAINDEALS                88
+     C           *IN88     IFEQ *OFF
+     C                     Z-ADDLNKDN     DALNKD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'DP'
+     C           DTYP      OREQ 'LP'
+     C           DADLNO    CHAINDLDTAKPD             88
+     C           *IN88     IFEQ *OFF
+     C                     Z-ADDTADLNO    DALNKD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN88
+      *
+      ** Check that an equivalent deal amendment exists
+      *
+     C           KDEAMS    SETLLDEAMS
+      *
+     C                     MOVE *OFF      *IN87
+     C           KDEAMS    READEDEAMS                    87
+      *
+     C           *IN87     DOWEQ*OFF
+     C           DAAMTP    IFEQ AMTP
+     C           DARTSP    ANDEQRTSP
+     C           DACCY     ANDEQCCY
+     C           DADAAM    ANDEQDAAM
+     C                     MOVE *ON       *IN88
+     C                     LEAVE
+     C                     ENDIF
+     C           KDEAMS    READEDEAMS                    87
+     C                     ENDDO
+      *
+      ** Any record equivalent, print record
+      *
+     C           *IN88     IFEQ *OFF
+     C                     EXSR SRREP3
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ DLDDAMPD                 89
+      *
+      ** End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+     C           WFIRS3    IFNE 'Y'
+     C                     Z-ADD6         RQDLN3
+     C           OFLLN3    SUB  PRTLN3    DIFLN3
+      *
+     C           DIFLN3    IFLE RQDLN3
+     C                     WRITEHEADP3
+     C                     ENDIF
+     C                     WRITETRAILP3
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREP1
+      *****************************************************************
+      *                                                               *
+      *  SRREP1 - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPLCG                                            *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP1   - Subroutine to register P1 printer file via RCF.    *
+      *  ZDATE2  - Date conversion subroutine                         *
+      *  ZSEDIT  - Edit an amount                                     *
+      *  AOCURRR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREP1    BEGSR                           *** SRREP1 ***
+      *
+      ** Deal number
+      *
+     C                     Z-ADDDLNO      PPDLNO
+      *
+      ** Deal subtype
+      *
+     C                     MOVELDLST      PPDLST
+      *
+      ** Value date
+      *
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPVDAT
+      *
+      ** Maturity date
+      *
+     C           DTYP      IFEQ 'FL'
+     C           DTYP      OREQ 'DP'
+     C           MDAT      ANDNE0
+     C           DTYP      OREQ 'LP'
+     C           MDAT      ANDNE0
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPMDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   PPMDAT
+     C                     MOVELNOTD      PPMDAT
+     C                     ENDIF
+      *
+      ** Interest rate
+      *
+     C                     MOVE INTR      ZFLD15 150
+     C                     Z-ADD7         ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPINTR
+      *
+      ** Number of decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM CCY       WKEY1   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            *************
+     C                     MOVELCCY       DBKEY            * DBERR 003 *
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'DL2104'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Principal Amount
+      *
+     C                     MOVE PCPL      ZFLD15 150
+     C                     Z-ADDA6NBDP    ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPPCPL
+      *
+      ** Currency
+      *
+     C                     MOVELCCY       PPCCY
+      *
+      ** Interest calc.basis
+      *
+     C                     MOVELICBS      PPICBS
+      *
+      ** Interest payment date
+      *
+     C                     Z-ADDNIDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPNIDT
+      *
+     C                     MOVE 'Y'       WRTPLA  1
+     C                     MOVE *OFF      *IN19
+     C                     MOVE 'Y'       WWHEAD  1
+      *
+      ** Placing without taking
+      *
+     C           WI        IFEQ 0
+     C                     MOVE *ON       *IN14
+     C                     MOVE *OFF      *IN11
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *OFF      *IN13
+     C                     Z-ADD6         RQDLN1
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+      *
+     C           WFIRS1    IFEQ 'Y'
+     C           DIFLN1    ORLE RQDLN1
+      *
+     C           WFIRS1    IFEQ 'Y'
+      *
+      ** RCF Processing for P1 File.
+      *
+     C                     MOVE 'N'       WFIRS1
+     C                     EXSR RCFP1
+     C                     ENDIF
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITEDETPLA
+      *
+     C                     ELSE
+      *
+      ** Writing PLACING - and TAKING
+      *
+     C                     DO   WI        WJ      30
+     C                     MOVEATTA,WJ    TAKDS
+      *
+      ** If Placing Principal not equal to Taking Placing, print all
+      ** taking else write only taking on error.
+      *
+     C           *IN11     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN13     ANDEQ*OFF
+      *
+      ** Write only taking on error if print
+      *
+     C           IND       IFEQ '0000'
+     C                     ITER
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Calculate number of record to write
+      *
+     C                     Z-ADD0         RQDLN1
+      *
+     C           *IN15     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           *IN16     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           *IN17     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           *IN18     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           RQDLN1    IFEQ 0
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           WRTPLA    IFEQ 'Y'
+     C                     ADD  4         RQDLN1
+     C                     ENDIF
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+      *
+     C           WFIRS1    IFEQ 'Y'
+     C           DIFLN1    ORLE RQDLN1
+      *
+     C           WFIRS1    IFEQ 'Y'
+      *
+      ** RCF Processing for P1 File.
+      *
+     C                     MOVE 'N'       WFIRS1
+     C                     EXSR RCFP1
+     C                     ENDIF
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C           WRTPLA    IFEQ 'Y'
+     C                     WRITEDETPLA
+     C                     MOVE ' '       WRTPLA
+     C                     ENDIF
+      *
+     C                     MOVEAIND       *IN,15
+      *
+      ** Deal number
+      *
+     C                     Z-ADDTADLNO    PTDLNO
+      *
+      ** Deal subtype
+      *
+     C                     MOVELTADLST    PTDLST
+      *
+      ** Value date
+      *
+     C                     Z-ADDTAVDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PTVDAT
+      *
+      ** Maturity date
+      *
+     C           TADTYP    IFEQ 'FT'
+     C           TADTYP    OREQ 'DT'
+     C           TAMDAT    ANDNE0
+     C           TADTYP    OREQ 'LT'
+     C           TAMDAT    ANDNE0
+     C                     Z-ADDTAMDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PTMDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   PTMDAT
+     C                     MOVELTANOTD    PTMDAT
+     C                     ENDIF
+      *
+      ** Interest rate
+      *
+     C                     MOVE TAINTR    ZFLD15 150
+     C                     Z-ADD7         ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PTINTR
+      *
+      ** Principal Amount
+      ** NB: Currency is the same for the placing and all the takings
+      *
+     C                     MOVE TAPCPL    ZFLD15 150
+     C                     Z-ADDA6NBDP    ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PTPCPL
+      *
+      ** Currency
+      *
+     C                     MOVELTACCY     PTCCY
+      *
+      ** Interest calc.basis
+      *
+     C                     MOVELTAICBS    PTICBS
+      *
+      ** Interest payment date
+      *
+     C                     Z-ADDTANIDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PTNIDT
+      *
+      ** Writing TAKING
+      *
+     C           WWHEAD    IFEQ 'Y'
+     C                     MOVE 'N'       WWHEAD
+     C                     MOVE *ON       *IN19
+     C                     ELSE
+     C                     MOVE *OFF      *IN19
+     C                     ENDIF
+      *
+     C                     WRITEDETTAK
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C           WFIRS1    IFNE 'Y'
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     ELSE
+     C                     WRITEDETDAS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRREP2 - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRTKNG Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP2   - Subroutine to register P2 printer file via RCF     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREP2    BEGSR                           *** SRREP2 ***
+      *
+      ** Deal number
+      *
+     C                     Z-ADDTADLNO    PTDLNO
+      *
+      ** Linked deal number
+      *
+     C                     Z-ADDTALNKD    PTLNKN
+     C                     Z-ADD1         RQDLN2
+      *
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+      *
+     C           WFIRS2    IFEQ 'Y'
+     C           DIFLN2    ORLE RQDLN2
+      *
+     C           WFIRS2    IFEQ 'Y'
+      *
+      ** RCF Processing for P2 File.
+      *
+     C                     MOVE 'N'       WFIRS2
+     C                     EXSR RCFP2
+     C                     ENDIF
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+     C                     WRITEDETP2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRREP3 - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRDCHK Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP3   - Subroutine to register P3 printer file via RCF.    *
+      *  ZDATE2  - Date conversion subroutine                         *
+      *  ZSEDIT  - Edit an amount                                     *
+      *  AOCURRR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREP3    BEGSR                           *** SRREP3 ***
+      *
+      ** Deal number
+      *
+     C                     Z-ADDDADLNO    PRDLNO
+      *
+      ** Linked deal number
+      *
+     C                     Z-ADDDALNKD    PRLNKD
+      *
+      ** Amendment seq.
+      *
+     C                     MOVELDADASN    PRDASN
+      *
+      ** Amendment type
+      *
+     C                     MOVELDAAMTP    PRAMTP
+      *
+      ** Value date
+      *
+     C                     Z-ADDDAVDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PRVDAT
+      *
+      ** Interest rate
+      *
+     C                     MOVE DARTSP    ZFLD15 150
+     C                     Z-ADD7         ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRRTSP
+      *
+      ** Number of decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM DACCY     WKEY1   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            *************
+     C                     MOVELDACCY     DBKEY            * DBERR 004 *
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'DL2104'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Deal amendment amount
+      *
+     C                     MOVE DADAAM    ZFLD15 150
+     C                     Z-ADDA6NBDP    ZDECS   10
+     C                     MOVE 'J'       ZECODE  1
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRDAAM
+      *
+      ** Currency
+      *
+     C                     MOVELDACCY     PRCCY
+      *
+     C                     Z-ADD3         RQDLN3
+     C           OFLLN3    SUB  PRTLN3    DIFLN3
+      *
+     C           WFIRS3    IFEQ 'Y'
+     C           DIFLN3    ORLE RQDLN3
+      *
+     C           WFIRS3    IFEQ 'Y'
+      *
+      ** RCF Processing for P3 File.
+      *
+     C                     MOVE 'N'       WFIRS3
+     C                     EXSR RCFP3
+     C                     ENDIF
+     C                     WRITEHEADP3
+     C                     ENDIF
+      *
+     C                     WRITEDETP3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFAU   - Subroutine to register AU printer file via RCF     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           *IN41     IFEQ *ON
+     C           *IN42     OREQ *ON
+     C           *IN43     OREQ *ON
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     OPEN DL2104P1
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PASEQ     WSEQ    5
+     C                     PARM *BLANK    WSENTY  3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP2
+      *****************************************************************
+      *                                                               *
+      *  RCFP2  - Subroutine to register the P2 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP2     BEGSR                            *** RCFP2  ***
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     OPEN DL2104P2
+     C                     Z-ADDSFNUM2    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PASEQ     WSEQ
+     C                     PARM *BLANK    WSENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP3
+      *****************************************************************
+      *                                                               *
+      *  RCFP3  - Subroutine to register the P3 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP3     BEGSR                            *** RCFP3  ***
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     OPEN DL2104P3
+     C                     Z-ADDSFNUM3    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PASEQ     WSEQ
+     C                     PARM *BLANK    WSENTY
+     C                     PARM           SFILE3
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PASEQ     WSEQ
+     C                     PARM *BLANKS   WSENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,235 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP Webfacing entry control')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       GPC000200 - Webfacing Entry Control Program                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. MD023838           Date 09Jan14              */
+/*       Prev Amend No. AR940920           Date 15Nov13              */
+/*                      CCB021             Date 06Aug12              */
+/*                      AR706205           Date 22Feb11              */
+/*                      CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 29May08              */
+/*                      BG13987            Date 17May07              */
+/*                      BG12061            Date 20Sep06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSD031             Date 10Apr06              */
+/*                      BUG3187            Date 19Apr04              */
+/*                      CPK018             Date 19Apr04              */
+/*                      BUG229             Date 25May04              */
+/*                      BUG1676            Date 18May04              */
+/*                      BUG2090            Date 12May04              */
+/*                      BUG1764            Date 12May04              */
+/*                      TDA035             Date 02Apr04              */
+/*                      CSC021             Date 15Dec03              */
+/*                      CAAA02  *CREATE    Date 06Sep03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD023838 - Iseries in HATS Issue (Recompile due to addition */
+/*                  in FDD of running ADPT - adoption program)       */
+/*       AR940920 - HATS security fix. Recompile. (Child: AR940921)  */
+/*                - Applied for MD023126                             */
+/*       CCB021 - COB Restructure - Non Working Day COB              */
+/*       AR706205 - Command MIDASCOB ('RM') failed due to DBERR.     */
+/*                  Set pgm value &WFZONE.  (Child: AR706206)        */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       BG13987 - Include session set variable automatically        */
+/*                 (Recompile)                                       */
+/*       BG12061 - Addition of Consumer Banking message file         */
+/*       CSD031 - Enhanced Centralised Static Data                   */
+/*       BUG3187 - Add in capability to run global layer WebFacing   */
+/*       CPK018 - Simplify the starting and re-entering of a COB.    */
+/*       BUG229  - On zone change files were left open.  Activation  */
+/*                 Group has been used to ensure files are closed    */
+/*       BUG1676 - Ensure zone subsystem is running.                 */
+/*       BUG2090- Redisplay screen when enter key is pressed on the  */
+/*                blank screen.                                      */
+/*       BUG1764- Include AOBANKRO/SDBANKPD to free access object    */
+/*                from the previous zone.                            */
+/*       TDA035 - RTS Signon changes for MidasPlus.                  */
+/*                Perform Teller Sign-off.                           */
+/*       CSC021 - Retrieve the job attribute and send to the screen  */
+/*       CAAA02 - New program.                                       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM */                                                                      /*BG12061*/
+             PGM        PARM(&MULT)                                                      /*BG12061*/
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CALL) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MIDASMSG) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&ZONECHG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                     /*CSC021*/
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)                                    /*CSC021*/
+             DCL        VAR(&NUMBER) TYPE(*CHAR) LEN(6)                                   /*CSC021*/
+             DCL        VAR(&PTLID) TYPE(*CHAR) LEN(3)                                    /*TDA035*/
+             DCL        VAR(&DTAA) TYPE(*CHAR) LEN(5)                                     /*TDA035*/
+             DCL        VAR(&COBENV) TYPE(*CHAR) LEN(200)                                 /*CPK018*/
+             DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)                                     /*CSD031*/
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)                                    /*BG12061*/
+             DCL        VAR(&CBANKMSG) TYPE(*CHAR) LEN(10)                               /*BG12061*/
+             DCL        VAR(&ZONEDTA) TYPE(*CHAR) LEN(10)                                /*BG12061*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                    /*CCB021*/
+ 
+             DCLF       FILE(GPC00200DF)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+                                                                                          /*CSC021*/
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&NUMBER)                                /*CSC021*/
+             CHGVAR     VAR(&JOBINFO) VALUE(&NUMBER *CAT &USER *CAT +
+                          &JOB)                                                           /*CSC021*/
+                                                                                          /*CSC021*/
+/* Call check/start zonal subsystems to ensure they are running for MidasPlus.        */ /*BUG1676*/
+             CALL       PGM(GPC000201)                                                   /*BUG1676*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG1676*/
+                                                                                         /*BUG1676*/
+/* Call check/start global subsystem to ensure it is running for MidasPlus.           */ /*BUG1676*/
+             CALL       PGM(GPC000102)                                                   /*BUG1676*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG1676*/
+                                                                                          /*CPK018*/
+/* Check if this is a COB request */                                                      /*CPK018*/
+                                                                                          /*CPK018*/
+             RTVDTAARA  DTAARA(QTEMP/COBENVIRON *ALL) RTNVAR(&COBENV)                     /*CPK018*/
+             MONMSG     MSGID(CPF0000)                                                    /*CPK018*/
+                                                                                          /*CPK018*/
+/* Get MPHAS                                                                              /*CCB021*/
+                                                                                          /*CCB021*/
+             RTVDTAARA  DTAARA(&MPHAS *ALL) RTNVAR(&MPHAS)                                /*CCB021*/
+             MONMSG     MSGID(CPF0000)                                                    /*CCB021*/
+                                                                                          /*CCB021*/
+WFSELECT:
+             IF         COND(&COBENV *EQ '  ') THEN(DO)                                   /*CPK018*/
+             SNDRCVF    RCDFMT(GPC00200F0)
+             ENDDO                                                                        /*CPK018*/
+                                                                                          /*CPK018*/
+             IF         COND(&COBENV *NE '  ') THEN(DO)                                   /*CPK018*/
+                                                                                          /*CPK018*/
+/* Default the COB system value and the COB menu value */                                 /*CPK018*/
+                                                                                          /*CPK018*/
+                CHGVAR     VAR(&SYSTEM) VALUE(%SST(&COBENV 1 2))                          /*CPK018*/
+                IF         COND(&MPHAS *EQ 'N') THEN(CHGVAR VAR(&WFSEL) +
+                          VALUE('0000005111'))                                            /*CCB021*/
+                ELSE      DO                                                              /*CCB021*/
+                CHGVAR     VAR(&WFSEL) VALUE('0000001595')                                /*CPK018*/
+                ENDDO                                                                     /*CCB021*/
+/**/                                                                                    /*AR706205*/
+                CHGVAR     VAR(&WFZONE) VALUE(&COBENV)                                  /*AR706205*/
+/**/                                                                                    /*AR706205*/
+                                                                                          /*CPK018*/
+             ENDDO                                                                        /*CPK018*/
+ 
+/* Check if &WFSEL is blank if it is redisply screen.         */                         /*BUG2090*/
+             IF         COND(&WFSEL  *EQ '   ') THEN(DO)                                 /*BUG2090*/
+                GOTO       CMDLBL(WFSELECT)                                              /*BUG2090*/
+             ENDDO                                                                       /*BUG2090*/
+                                                                                         /*BUG3187*/
+/* If it a Global Webfacing menu item it should not matter about which  */               /*BUG3187*/
+/* zone is set up so it can go straight to run the menu option          */               /*BUG3187*/
+             IF         COND(&WFZONE *EQ '*G') THEN(GOTO +
+                          CMDLBL(GLOBSKIP))                                              /*BUG3187*/
+                                                                                         /*BUG3187*/
+/* Check that the Current System Data area (CURZONE) exists in QTEMP    */
+/* If it doesnt then it needs to be created blank and then go to CHECK. */
+/* It is does exist then retrieve the value                             */
+ 
+             RTVDTAARA  DTAARA(QTEMP/CURZONE (1 2)) +
+                          RTNVAR(&SYSTEM)
+             MONMSG     MSGID(CPF1015) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/CURZONE) TYPE(*CHAR) LEN(2) +
+                          VALUE(&WFZONE)
+             CHGVAR     VAR(&SYSTEM) VALUE('  ')
+             ENDDO
+ 
+CHECK:
+/* If this is a change of zone                                                */
+             IF         COND(&WFZONE *NE &SYSTEM) THEN(DO)
+                CHGVAR     VAR(&ZONECHG) VALUE('Y')
+/* Free the Access Objects for branches and currencies from the previous zone */
+/* if it is not the first sign on                                             */
+                IF         COND(&SYSTEM *NE '  ') THEN(DO)
+/**********      CALL       AOBRCHR0 (' ' '*FREE  ' ' ')                    **********/   /*BUG229*/
+/**********      CALL       AOCURRR0 (' ' '*FREE  ' ' '' ')                 **********/   /*BUG229*/
+/**********      CALL       AOBANKR0 (' ' '*FREE  ' ' '' ')     **********/ /*BUG1764*/   /*BUG229*/
+/* Reclaim the activation group so that resources in that group are freed     */          /*BUG229*/
+             RCLACTGRP  ACTGRP(SCC000100)                                                 /*BUG229*/
+             MONMSG     MSGID(CPF1653)                                                    /*BUG229*/
+/* Do the same for OPM pgms                                                   */          /*BUG229*/
+             RCLRSC                                                                       /*BUG229*/
+                                                                                          /*TDA035*/
+/* Perform Teller Signoff from previous zone */                                           /*TDA035*/
+                 CRTDTAARA  DTAARA(QTEMP/RTSDTA) TYPE(*CHAR) LEN(256) +
+                              TEXT('RTS Teller Transaction Job Dataarea')                 /*TDA035*/
+                 MONMSG     MSGID(CPF1023)                                                /*TDA035*/
+                 RTVDTAARA  DTAARA(QTEMP/RTSDTA (1 3)) RTNVAR(&PTLID)                     /*TDA035*/
+                 IF         COND(&PTLID *NE '   ') THEN(DO)                               /*TDA035*/
+/**********         CHGVAR     VAR(&DTAA) VALUE('RT' ** &PTLID)               /*TDA035*/ /*BG18886*/
+                    CHGVAR     VAR(&DTAA) VALUE('RT' *CAT &PTLID)                        /*BG18886*/
+                    DLCOBJ     OBJ((&DTAA *DTAARA *EXCL))                                 /*TDA035*/
+                    CHGDTAARA  DTAARA(QTEMP/RTSDTA) VALUE(' ')                            /*TDA035*/
+                    SNDPGMMSG  MSG('GPC000200 - The Teller-ID' *BCAT &PTLID +
+                                 *BCAT 'has signed off successfully.') +
+                                 TOMSGQ(MRUNQ)                                            /*TDA035*/
+                 ENDDO                                                                    /*TDA035*/
+                                                                                          /*TDA035*/
+                ENDDO
+/*                                                                                        /*CSC043*/
+/** CSC043 - IASP enablement. Programs are moved from the 'XLIB' to the 'XPLIB'. */       /*CSC043*/
+/*                                                                                        /*CSC043*/
+/**********     CHGVAR     VAR(&LIB) VALUE(&WFZONE *TCAT 'XLIB')                          /*CSC043*/
+                CHGVAR     VAR(&LIB) VALUE(&WFZONE *TCAT 'XPLIB')                         /*CSC043*/
+                CALL       PGM(&LIB/UPC0014) PARM(&WFZONE)
+                CALL       PGM(*LIBL/SCC000101) PARM(&ZONECHG)
+                CHGDTAARA  DTAARA(QTEMP/CURZONE) VALUE(&WFZONE)
+             ENDDO
+                                                                                         /*BG12061*/
+/* Create zone datalib name for qualified override */                                    /*BG12061*/
+                                                                                         /*BG12061*/
+             CHGVAR     VAR(&ZONEDTA) VALUE(&WFZONE *CAT 'DTALIB  ')                     /*BG12061*/
+             CHGVAR     VAR(&CBANKMSG) VALUE(&MULT *CAT 'CBANKMSG ')                     /*BG12061*/
+             DLTOVR     FILE(CKTMSGF) LVL(*ACTGRPDFN)                                    /*BG12061*/
+             MONMSG     MSGID(CPF0000)                                                   /*BG12061*/
+             OVRMSGF    MSGF(CKTMSGF) TOMSGF(&ZONEDTA/&CBANKMSG)                         /*BG12061*/
+ 
+GLOBSKIP:                                                                                /*BUG3187*/
+                                                                                          /*CSD031*/
+/* Make sure that SPF data areas are created even for a global webfacing menu. */         /*CSD031*/
+                                                                                          /*CSD031*/
+             IF         COND(&WFZONE *EQ '*G') THEN(DO)                                   /*CSD031*/
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)                               /*CSD031*/
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))                       /*CSD031*/
+             ENDDO                                                                        /*CSD031*/
+                                                                                          /*CSD031*/
+             IF         COND(&WFSEL *NE 'OFF') THEN(DO)
+                CALL       PGM(SCC000100) PARM(&WFSEL)
+                CHGVAR     VAR(&WFSEL) VALUE(' ')
+                GOTO       CMDLBL(WFSELECT)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

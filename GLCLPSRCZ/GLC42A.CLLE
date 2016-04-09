@@ -1,0 +1,60 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL EOD postings merge')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC42A -GL EOD Postings Merge                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &MEMBER)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             SNDPGMMSG  MSG('GLC42A - GL EOD postings Merge') +
+                        TOMSGQ(MRUNQ)
+ 
+/* Set Job switches                                                */
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Set blocking                                                    */
+ 
+             OVRDBF     FILE(APOSTPD) SEQONLY(*YES 100)
+             OVRDBF     FILE(EODPOPD) SEQONLY(*YES 100)
+ 
+/* Set member to drive merage from                                 */
+ 
+             OVRDBF     FILE(GLEODPPD) TOFILE(*FILE) MBR(&MEMBER)
+ 
+/* Call EOD Merge of postings                                      */
+ 
+             CALL       PGM(GL0415)
+ 
+/* Check if all is OK: No database error,                          */
+/* No account balance error etc.                                   */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* All is OK: No database error: Commit                            */
+ 
+             COMMIT
+             ENDDO
+ 
+ENDPGM:
+             RETURN
+             ENDPGM

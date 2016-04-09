@@ -1,0 +1,483 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Update COB data')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                     *
+     F*                                                               *
+     F*  CB0602U - Update C.O.B data         Execute external function*
+     F*                                                               *
+     F*  Function:  This program updates the COB related fields       *
+     F*  (phase(s)) Normally IC Termination through to IC Initiation  *
+     F*                                                               *
+     F*  Called By: SCC1710, SCC1711, SCC2449, SCC2453, SCC2454,      *
+     F*             SCC2455, SD1020,  TERM.                           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 102673             Date 26APR96               *
+     F*                 S01495             Date 01OCT94               *
+     F*                 S01375             DATE 22APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  102673 - Clear save files field on file CBAICDPD was never   *
+     F*           updated with correct value from CBACOBPD.  Save     *
+     F*           files were always cleared.                          *
+     F*  S01495 - COB Enhancements.                                   *
+     F*  S01375 - Automatic Close of Business                         *
+     F*                                                               *
+     F*****************************************************************
+     FCBAICDL1IF  E           K        DISK
+      * RTV : Automatic C.O.B. Control  Retrieval index
+      *
+     FCBAICDL0UF  E           K        DISK
+      * UPD : Automatic C.O.B. Control  Update index
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     I/SPACE 3
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     ILDA       E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I** *LOCK IN LDA immediately before and OUT LDA immediately
+     I** after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     I* Get Rundate - Rundate  *
+     IRUNDTA    E DSRUNDAT
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** Bank Details                                                     S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* First DS for Access Programs, Short Data Structure                S01194
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                            111
+      * RCD: AO C.O.B. Returned Data   Physical file
+      * B : MAP Auto C.O.B. key
+     I                                        1  10 P1AUTO
+      * I : MAP COB Clear savefiles opt.                                  102673
+     I                                       53  56 P1CSAV                102673
+      * I : MAP COB Run type
+     I                                       73  82 P1CBRT
+      * I : MAP COB Rcv save option
+     I                                       83  87 P1CBRO
+      * I : MAP COB DB save option
+     I                                       88  92 P1CBDO
+      * I : MAP COB Clear savefiles opt.
+     I                                       93  96 P1CBCF
+      * I : MAP COB new run date
+     I                                       97 103 P1CBMD
+      * I : MAP COB new run day no.
+     I                                    P 104 1060P1DBRN
+      * I : MAP COB DB savefile name
+     I                                      107 111 P1CBDN
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: AO C.O.B.
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Update C.O.B data
+      * Retrieve Midas Date - R10 Standard Functions  *
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C* Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      * Retrieve SDBANKPD details
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+      *
+      * Retrieve C.O.B. ICD - Automatic C.O.B. Control  *
+     C                     EXSR SARVGN
+      * if no record then no update
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+     C                     GOTO AAEXIT                     *QUIT
+     C                     END                             *FI
+      * Check day of week - R10 Standard Functions  *
+     C*
+     C* Divide Midas day number by 7 and place in remainder
+     C*
+     C                     Z-ADDWURDNB    U#DC    50
+     C           U#DC      DIV  7         U#S50   50
+     C                     MVR            WUDYWK
+      * Check day type - R10 Standard Functions  *
+     C           P1AUTO    IFEQ '*RESETD'                  *IF
+     C*
+     C* Determine day type
+     C*
+     C                     CALL 'SD2000'
+     C                     PARM           U1MNTH  1
+     C                     PARM           U1YEAR  1
+     C                     PARM           U1ERR   1
+     C*
+     C           U1YEAR    IFEQ 'Y'
+     C                     MOVEL'*YEAR'   U1AUTO 10
+     C                     ELSE
+     C           U1MNTH    IFEQ 'Y'
+     C                     MOVEL'*MONTH'  U1AUTO
+     C                     ELSE
+     C*
+     C*  Check if weekend
+     C*
+     C                     MOVEL'N'       U#DAY   1
+     C           U#DAY     DOWEQ'N'
+     C           WULDWK    IFEQ 'THR'
+     C           WUDYWK    ANDEQ6
+     C                     MOVEL'*WEEK'   U1AUTO
+     C                     MOVEL'Y'       U#DAY
+     C                     END
+     C           WULDWK    IFEQ 'FRI'
+     C           WUDYWK    ANDEQ0
+     C                     MOVEL'*WEEK'   U1AUTO
+     C                     MOVEL'Y'       U#DAY
+     C                     END
+     C           WULDWK    IFEQ 'SAT'
+     C           WUDYWK    ANDEQ1
+     C                     MOVEL'*WEEK'   U1AUTO
+     C                     MOVEL'Y'       U#DAY
+     C                     END
+     C                     ADD  1         U#DC
+     C           U#DC      IFLT BJDNWD
+     C           U#DC      DIV  7         U#S50   50
+     C                     MVR            WUDYWK
+     C                     ELSE
+     C                     MOVEL'Y'       U#DAY
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*  If nothing set then default to daily
+     C*
+     C           U1AUTO    IFEQ *BLANK
+     C                     MOVEL'*DAILY'  WUAUTO
+     C                     ELSE
+     C                     MOVELU1AUTO    WUAUTO
+     C                     END
+     C                     END
+      * If reset day then set run type and clear rest
+      * CASE: PAR.Auto C.O.B. key is *RESET DAY
+     C           P1AUTO    IFEQ '*RESETD'                  *IF
+     C                     MOVELWUAUTO    WUCBRT           COB Run type
+     C                     MOVEL*BLANK    WUCBRO           COB Rcv save op
+     C                     MOVEL*BLANK    WUCBDO           COB DB save opt
+     C                     MOVEL*BLANK    WUCBCF           COB Clear savef
+     C                     MOVEL*BLANK    WUCBMD           COB new run dat
+     C                     Z-ADD*ZERO     WUDBRN           COB new run day
+     C                     MOVEL*BLANK    WUCBDN           COB DB savefile
+     C                     END                             *FI
+      * If set rcv
+      * CASE: PAR.Auto C.O.B. key is *SETRCV
+     C           P1AUTO    IFEQ '*SETRCV'                  *IF
+     C                     MOVELP1CBRO    WUCBRO           COB Rcv save op
+      * CASE: WRK.COB Clear savefiles opt. is *NO
+     C           WUCBCF    IFEQ '*NO'                      *IF
+     C           WUCBCF    OREQ *BLANKS                    *IF
+     C                     MOVELP1CBCF    WUCBCF           COB Clear savef
+     C                     END                             *FI
+     C                     END                             *FI
+      * If set db
+      * CASE: PAR.Auto C.O.B. key is *SETDB
+     C           P1AUTO    IFEQ '*SETDB'                   *IF
+     C                     MOVELP1CBDO    WUCBDO           COB DB save opt
+     C                     MOVELP1CBDN    WUCBDN           COB DB savefile
+      * CASE: WRK.COB Clear savefiles opt. is *NO
+     C           WUCBCF    IFEQ '*NO'                      *IF
+     C           WUCBCF    OREQ *BLANKS                    *IF
+     C                     MOVELP1CBCF    WUCBCF           COB Clear savef
+     C                     END                             *FI
+     C                     END                             *FI
+      * if set date
+      * CASE: PAR.Auto C.O.B. key is *SETDATE
+     C           P1AUTO    IFEQ '*SETDATE'                 *IF
+     C                     MOVELP1CBMD    WUCBMD           COB new run dat
+     C                     Z-ADDP1DBRN    WUDBRN           COB new run day
+     C                     END                             *FI
+      * Change C.O.B. data - Automatic C.O.B. Control  *
+     C                     EXSR SBCHRC
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve C.O.B. ICD - Automatic C.O.B. Control  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           ABACOB           Auto C.O.B. Con
+      * Move fields to key list
+     C                     MOVE *BLANK    ABACOB           Auto C.O.B. Con
+     C                     MOVEL'A.COB'   ABACOB           Auto C.O.B. Con
+     C           KRSSA     CHAIN@AICDF1              90    *
+     C           *IN90     IFEQ '1'
+      * DBF record not found
+     C                     MOVEL'CCS0005' W0RTN   7
+      * USER: Processing if DBF record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * PAR = DB1 By name
+     C***********          MOVELABCOBT    WUCOBT           Auto C.O.B. flaS01495
+     C                     MOVELABDAYF    WUDAYF           Auto Daily flag
+     C                     MOVELABDYKY    WUDYKY           Auto Daily Type
+     C                     MOVELABCBNA    WUCBNA           Auto C.O.B. Nar
+     C                     MOVELABWKF     WUWKF            Auto Weekend fl
+     C                     MOVELABWKKY    WUWKKY           Auto Weekend Ty
+     C                     MOVELABWKNA    WUWKNA           Auto Weekend Ty
+     C                     MOVELABMTHF    WUMTHF           Auto Month End
+     C                     MOVELABMHKY    WUMHKY           Auto Month End
+     C                     MOVELABMHNA    WUMHNA           Auto Month End
+     C                     MOVELABYRF     WUYRF            Auto Year End F
+     C                     MOVELABYRKY    WUYRKY           Auto Year End T
+     C                     MOVELABYRNA    WUYRNA           Auto Year End T
+     C                     MOVELABLDWK    WULDWK           Last Day of Wee
+     C                     MOVELABCBRT    WUCBRT           COB Run type
+     C                     MOVELABCBRO    WUCBRO           COB Rcv save op
+     C                     MOVELABCBDO    WUCBDO           COB DB save opt
+     C                     MOVELABCBCF    WUCBCF           COB Clear savef
+     C                     MOVELABCBMD    WUCBMD           COB new run dat
+     C                     Z-ADDABDBRN    WUDBRN           COB new run day
+     C                     MOVELABCBDN    WUCBDN           COB DB savefile
+     C                     MOVELABCBRT    WUCBRT           COB Run type
+     C                     MOVELABLDWK    WULDWK           Last Day of Wee
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change C.O.B. data - Automatic C.O.B. Control  *
+      *================================================================
+      * Clear all neither parameters.
+     C***********          MOVEL*BLANK    WN0001  4        Auto C.O.B. flaS01495
+     C                     MOVEL*BLANK    WN0002  4        Auto Daily flag
+     C                     MOVEL*BLANK    WN0003 10        Auto Daily Type
+     C                     MOVEL*BLANK    WN0004  4        Auto Weekend fl
+     C                     MOVEL*BLANK    WN0005 10        Auto Weekend Ty
+     C                     MOVEL*BLANK    WN0006  4        Auto Month End
+     C                     MOVEL*BLANK    WN0007 10        Auto Month End
+     C                     MOVEL*BLANK    WN0008  4        Auto Year End F
+     C                     MOVEL*BLANK    WN0009 10        Auto Year End T
+     C                     MOVEL*BLANK    WN0010  3        Last Day of Wee
+     C                     MOVEL*BLANK    WN0011 10        Job name
+     C                     MOVEL*BLANK    WN0012 10        User name
+     C                     Z-ADD*ZERO     WN0013  60       Action Time
+     C                     MOVEL*BLANK    WN0014  7        Action Date
+     C                     MOVEL*BLANK    WN0015  1        Action Type
+     C                     Z-ADD*ZERO     WN0016  50       Run day number
+      *
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @AICDF0
+     C                     MOVE *BLANK    ABACOB           Auto C.O.B. Con
+     C                     MOVEL'A.COB'   ABACOB           Auto C.O.B. Con
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           ABACOB           Auto C.O.B. Con
+     C           KLCHSB    CHAIN@AICDF0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * Move non-key fields to @AICDF0
+     C                     MOVELWUCBRT    ABCBRT           COB Run type
+     C                     MOVELWUCBRO    ABCBRO           COB Rcv save op
+     C                     MOVELWUCBDO    ABCBDO           COB DB save opt
+     C                     MOVELWUCBCF    ABCBCF           COB Clear savef
+     C                     MOVELP1CSAV    ABCBCF           COB Clear savef102673
+     C                     MOVELWUCBMD    ABCBMD           COB new run dat
+     C                     Z-ADDWUDBRN    ABDBRN           COB new run day
+     C                     MOVELWUCBDN    ABCBDN           COB DB savefile
+      *
+     C                     UPDAT@AICDF0                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+      * Send if first error message or not an error message
+     C           ZAMSTP    IFNE *BLANK
+     C           ZAFSMS    ORNE 'N'
+     C           ZAMSTP    IFEQ *BLANK
+      * Signal first error message sent
+     C                     MOVEL'N'       ZAFSMS
+     C                     END
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C                     END
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      **Define*work*field*Auto*C.O.B.*flag*****************************   S01495
+     C***********          MOVEL*BLANK    WUCOBT  4                       S01495
+      * Define work field Auto Daily flag
+     C                     MOVEL*BLANK    WUDAYF  4
+      * Define work field Auto Daily Type
+     C                     MOVEL*BLANK    WUDYKY 10
+      * Define work field Auto C.O.B. Narrative
+     C                     MOVEL*BLANK    WUCBNA 50
+      * Define work field Auto Weekend flag
+     C                     MOVEL*BLANK    WUWKF   4
+      * Define work field Auto Weekend Type Auto C.
+     C                     MOVEL*BLANK    WUWKKY 10
+      * Define work field Auto Weekend Type Narr
+     C                     MOVEL*BLANK    WUWKNA 50
+      * Define work field Auto Month End Flag
+     C                     MOVEL*BLANK    WUMTHF  4
+      * Define work field Auto Month End Type Auto
+     C                     MOVEL*BLANK    WUMHKY 10
+      * Define work field Auto Month End Type Narr
+     C                     MOVEL*BLANK    WUMHNA 50
+      * Define work field Auto Year End Flag
+     C                     MOVEL*BLANK    WUYRF   4
+      * Define work field Auto Year End Type Auto C
+     C                     MOVEL*BLANK    WUYRKY 10
+      * Define work field Auto Year End Type Narr
+     C                     MOVEL*BLANK    WUYRNA 50
+      * Define work field Last Day of Week
+     C                     MOVEL*BLANK    WULDWK  3
+      * Define work field COB Run type
+     C                     MOVEL*BLANK    WUCBRT 10
+      * Define work field COB Rcv save option
+     C                     MOVEL*BLANK    WUCBRO  5
+      * Define work field COB DB save option
+     C                     MOVEL*BLANK    WUCBDO  5
+      * Define work field COB Clear savefiles opt.
+     C                     MOVEL*BLANK    WUCBCF  4
+      * Define work field COB new run date
+     C                     MOVEL*BLANK    WUCBMD  7
+      * Define work field COB new run day no.
+     C                     Z-ADD*ZERO     WUDBRN  50
+      * Define work field COB DB savefile name
+     C                     MOVEL*BLANK    WUCBDN  5
+      * Define work field Day of the week
+     C                     Z-ADD*ZERO     WUDYWK  50
+      * Define work field Auto C.O.B. key
+     C                     MOVEL*BLANK    WUAUTO 10
+      * Signal first error message outstanding
+     C                     MOVEL'Y'       ZAFSMS  1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

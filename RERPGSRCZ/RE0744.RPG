@@ -1,0 +1,683 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Base Rate Changes - Retail Report')              *
+0001 H***********                                                         S01117
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0744 - BASE RATE CHANGES - RETAIL REPORT                   *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990, 1993                                               *
+0009 F*                                                               *
+      *  Last Amend No. CRE083AU           Date 06Aug12               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRE001             Date 18Feb97               *
+      *                 S01413             Date 13Apr93               *
+0010 F*                 S01117             Date 07Nov89               *
+0011 F*                                                               *
+0011 F*****************************************************************
+0011 F*                                                               *
+      *  CRE083AU - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CRE001  -  Overdraft Interest Calculation:                   *
+     F*             Read the Additional Overdraft Rate from LF/SBCHG  *
+     F*             and format the percentage for output to report.   *
+     F*  S01413  -  Retail 3 Incorporation                            *
+0011 F*  S01117  -  Multibranching                                    *
+0011 F*                                                               *
+0012 F*****************************************************************
+0011 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F***SBCHG***IP  F     160 15AI     2 DISK                      RE0744CRE001
+     F***SBCHG** IP  F     166 15AI     2 DISK                                         CRE001 CGL029
+     F***SBCHG** IP  F     176 15AI     2 DISK                                         CGL029 CRE073
+     FSBCHG   IP  F     194 15AI     2 DISK                                                   CRE073
+0014 FCLINT   IF  F     256  7AI     2 DISK                               RE0744
+0015 FTABLE   IF  F      96 12AI     2 DISK                               RE0744
+0016 F*E0744P1O** F     132     OF     PRINTER                      S01124S01117
+0016 FRE0744P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
+0016 FRE0744AUO   F     132     OV     PRINTER      KINFDS SPOOLU         S01117
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS                           RE0744
+0018 F* 01            SBCHG DETAIL                                        RE0744
+0019 F* 02            SBCHG TRAILER                                       RE0744
+0020 F* 03            SBCHG CATCHALL                                      RE0744
+0021 F* 04            CLINT DETAIL                                        RE0744
+0022 F* 05            CLINT CATCHALL                                      RE0744
+0023 F* 06            TABLE ICR 1                                         RE0744
+0024 F* 07            TABLE CATCHALL                                      RE0744
+     F*  13           Overdraft Rate Positive                             CRE001
+     F*  14           Overdraft Rate Negative                             CRE001
+     F*  15           Switchable feature CRE001 indicator                 CRE001
+     F*  16           Switchable feature CRE073 indicator                                     CRE073
+0025 F*   N21         RETAIL ACCOUNT NUMBER EXISTS                        RE0744
+0026 F*    22         DEBIT                                               RE0744
+0027 F*   N23         EXCEPTION INDICATOR IS ON                           RE0744
+0028 F*    25         DETAIL RECORDS READ                                 RE0744
+0029 F*    30         BASE RATE ZERO                                      RE0744
+0030 F*       40      FIRST CYCLE                                         RE0744
+0031 F*       41      CHAIN FAIL                                          RE0744
+0031 F*       50      PRTF RE0744P1 OPEN FOR OUTPUT                       S01117
+0032 F*       U8      FILE CONTROLS OUT OF BALANCE                        RE0744
+0033 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYRE0744
+0034 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYRE0744
+0035 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY RE0744
+     E                    CPY@    1   1 80
+0036 E**                                                                  RE0744
+0037 I*                                                                   RE0744
+0038 I*    SORTED BASE RATE CHANGES                                       RE0744
+0039 I*                                                                   RE0744
+0040 ISBCHG   NS  01   1 CR                                               RE0744
+0041 I**********                              2   70CNUM                               RE0744 CSD027
+0041 I                                        2   7 CNUM                                      CSD027
+0042 I                                        8  10 CCY                   RE0744
+0043 I**********                             11  140ACOD                               RE0744 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0044 I                                       15  160ACSQ                  RE0744
+0045 I                                       23  320ACNO                  RE0744
+0046 I                                    P  36  380VALD                  RE0744
+0047 I                                       81  810DRCR                  RE0744
+0048 I***********                           103 1050BRCD  L1              S01117
+0048 I                                      103 105 BRCA  L1              S01117
+0049 I                                      123 1230NEIN                  RE0744
+0050 I                                    P 125 1270RVLD                  RE0744
+0051 I                                    P 138 1400LRCD                  RE0744
+0052 I                                      153 1540BRTT                  RE0744
+0053 I                                    P 155 1607RTSP                  RE0744
+     I                                    P 161 1667AODR                  CRE001
+     I                                      167 1760ACOD                                      CGL029
+     I                                    P 177 1827CNSP                                      CRE073
+     I                                      183 183 CNSG                                      CRE073
+     I                                      184 190 RDMT                                      CRE073
+     I                                      191 194 RDFD                                      CRE073
+0054 I        NS  02   1 CZ                                               RE0744
+0055 I                                    P   2   40NORE                  RE0744
+0056 I*                                                                   RE0744
+0057 I*    CATCHALL                                                       RE0744
+0058 I*                                                                   RE0744
+0059 I        NS  03                                                      RE0744
+0060 I*                                                                   RE0744
+0061 I*    CUSTOMER MASTER FILE                                           RE0744
+0062 I*                                                                   RE0744
+0063 ICLINT   NS  04   1 CD   8 CA                                        RE0744
+0064 I                                        9  28 CRNM                  RE0744
+0065 I*                                                                   RE0744
+0066 I*    CATCHALL                                                       RE0744
+0067 I*                                                                   RE0744
+0068 I        NS  05                                                      RE0744
+0069 I*                                                                   RE0744
+0070 I*    TABLE FILE ICR 1                                               RE0744
+0071 I*                                                                   RE0744
+0072 ITABLE   NS  06   1 CD   2 C0   3 C1                                 RE0744
+0073 I       AND      12 C1  13 C0                                        RE0744
+0074 I                                        1   1 RECI                  RE0744
+0075 I                                       14  66 TITL                  RE0744
+0076 I***********                            67  67 DATF                  S01117
+0077 I***********                            80  86 RUNA                  S01117
+0078 I*                                                                   RE0744
+0079 I*    CATCHALL                                                       RE0744
+0080 I*                                                                   RE0744
+0081 I        NS  07                                                      RE0744
+     I**                                                                  S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I**                                                                  S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+0193 I*                                                                   S01117
+0194 I*    LOCAL DATA AREA FOR DATABASE ERROR REFERENCES                  S01117
+0195 I*                                                                   S01117
+0196 ILDA        UDS                            256                       S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**                                                                  S01117
+     I              A8BRNM                          BRNM                  S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01117
+     I*                                                                   S01117
+0161 I**
+     C**********           MOVEACPY@      BIS@   80                                         CRE083AU
+     C**                                                                  S01117
+     C*    DEFINE LDA                                                     S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+0082 C*                                                                   RE0744
+0083 C*    FIRST CYCLE PROCESSING                                         RE0744
+0084 C*                                                                   RE0744
+0085 C   40                GOTO START                                     RE0744
+0086 C                     SETON                     40                   RE0744
+     C                     MOVEACPY@      BIS@   80                                         CRE083AU
+     C**                                                                  S01117
+     C**         IN THE DATAAREA RUNDAT                                   S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**         SETON MULTIBRANCH INDICATOR IF MBIN = Y                  S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                     88                   S01117
+     C                     END                                            S01117
+0087 C                     EXSR ZSYSTM                                    RE0744
+     C*                                                                   S01117
+0088 C                     MOVE 'A'       KEYC    7                       RE0744
+     C                     MOVE *BLANKS   KEYX    7                                         CRE083AU
+      *                                                                   CRE001
+      ** Check if SAR CRE001 is set on                                    CRE001
+      *                                                                   CRE001
+     C                     MOVE 'N'       CRE001  1                       CRE001
+     C                     CALL 'AOSARDR0'                                CRE001
+     C                     PARM *BLANKS   @RTCD   7                       CRE001
+     C                     PARM '*VERIFY' @OPTN   7                       CRE001
+     C                     PARM 'CRE001'  @SARD   6                       CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFNE *BLANKS                                   CRE001
+     C           @RTCD     ANDNE'*NRF   '                                 CRE001
+     C                     SETON                     U7U8LR               CRE001
+     C                     MOVEL'CRE001'  DBKEY            ***************CRE001
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERROR 001 *CRE001
+     C                     Z-ADD1         DBASE            ***************CRE001
+     C                     EXSR *PSSR                                     CRE001
+     C                     GOTO TOTAL                                     CRE001
+     C                     END                                            CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFEQ *BLANKS                                   CRE001
+     C                     MOVE 'Y'       CRE001                          CRE001
+     C                     MOVE '1'       *IN15                           CRE001
+     C                     ELSE                                           CRE001
+     C                     MOVE 'N'       CRE001                          CRE001
+     C                     MOVE '0'       *IN15                           CRE001
+     C                     END                                            CRE001
+      *                                                                   CRE001
+      ** Check if SAR CRE073 is set on                                                        CRE073
+      *                                                                                       CRE073
+     C                     CALL 'AOSARDR0'                                                    CRE073
+     C                     PARM *BLANKS   @RTCD   7                                           CRE073
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE073
+     C                     PARM 'CRE073'  @SARD   6                                           CRE073
+      *                                                                                       CRE073
+     C           @RTCD     IFNE *BLANKS                                                       CRE073
+     C           @RTCD     ANDNE'*NRF   '                                                     CRE073
+     C                     SETON                     U7U8LR                                   CRE073
+     C                     MOVEL'CRE073'  DBKEY            ***************                    CRE073
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERROR 002 *                    CRE073
+     C                     Z-ADD2         DBASE            ***************                    CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     GOTO TOTAL                                                         CRE073
+     C                     END                                                                CRE073
+      *                                                                                       CRE073
+     C           @RTCD     IFEQ *BLANKS                                                       CRE073
+     C                     MOVE *ON       *IN16                                               CRE073
+     C                     ELSE                                                               CRE073
+     C                     MOVE *OFF      *IN16                                               CRE073
+     C                     END                                                                CRE073
+      *                                                                                       CRE073
+0089 C           START     TAG                             ** START **    RE0744
+0090 C*    ACCUMULATE NO. OF RECORDS READ IN RECRED                       RE0744
+0091 C   01                                                               RE0744
+0092 COR 02                                                               RE0744
+0093 COR 03      RECRED    ADD  1         RECRED  50                      RE0744
+0094 C*                                                                   RE0744
+0095 C   02                                                               RE0744
+0096 COR 03                GOTO TOTAL                                     RE0744
+     C**                                                                  S01117
+     C** IF A REQUIRED BRANCH AND A LEVEL BREAK, OPEN RE0744P1            S01117
+     C           *INL1     IFEQ '1'                                       S01117
+     C                     CLOSERE0744P1                                  S01117
+     C                     SETON                     50                   S01117
+     C                     OPEN RE0744P1                                  S01117
+     C                     MOVE 'Y'       P1OP    1                       S01117
+     C                     Z-ADD0         BRTOT                           S01117
+     C                     Z-ADD0         PAGE                            S01117
+     C**                                                                  S01117
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF                       S01117
+     C**                                                                  S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     OUT  LDA                                       S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ                             S01117
+     C                     PARM BRCA      SENTY                           S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+      *                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**   GET BRANCH NAME IF MBIN = 'Y'                                  S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01117              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVEL@DSNB     DBKEY                           S01117
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************S01117
+     C                     Z-ADD12        DBASE            * DBERROR 012 *S01117
+     C                     SETON                     U7U8LR***************S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO TOTAL                                     S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+0097 C**                                                                  RE0744
+0098 C**   SETUP OUTPUT INDICATORS                                        RE0744
+0099 C           ACNO      COMP 0                        21               RE0744
+0100 C           DRCR      COMP 0                        22               RE0744
+0101 C           NEIN      COMP 0                        23               RE0744
+0102 C           BRTT      COMP 0                        30               RE0744
+0103 C*                                                                   RE0744
+0104 C*    RECOVER CUSTOMER NAME                                          RE0744
+0105 C  N25                SETON                     25                   RE0744
+0106 C                     SETOF                     1112                 RE0744
+0107 C           RTSP      COMP 0                    1112                 RE0744
+      *                                                                   CRE001
+      ** If Switchable feature CRE001 is on, set additional               CRE001
+      ** overdraft rate indicators accordingly (+/-)                      CRE001
+      *                                                                   CRE001
+     C           CRE001    IFEQ 'Y'                                       CRE001
+     C                     SETOF                     1314                 CRE001
+     C           AODR      IFGT 0                                         CRE001
+     C                     MOVE '1'       *IN13                           CRE001
+     C                     ENDIF                                          CRE001
+     C           AODR      IFLT 0                                         CRE001
+     C                     MOVE '1'       *IN14                           CRE001
+     C                     ENDIF                                          CRE001
+     C                     ENDIF                                          CRE001
+      *                                                                   CRE001
+0108 C                     MOVELCNUM      KEYC                            RE0744
+      *                                                                                     CRE083AU
+      ** Customer details are only accessed on a change of customer                         CRE083AU
+      *                                                                                     CRE083AU
+     C           KEYC      IFNE KEYX                                                        CRE083AU
+     C                     MOVE KEYC      KEYX                                              CRE083AU
+0109 C           KEYC      CHAINCLINT                41                   RE0744
+     C                     ENDIF                                                            CRE083AU
+0110 C*                                                                   RE0744
+0111 C*    ACC. NO OF DETAIL RECORDS PER BRANCH IN BRTOT                  RE0744
+0112 C           BRTOT     ADD  1         BRTOT   50                      RE0744
+0113 C*                                                                   RE0744
+0114 C*    CONVERT DAY NUMBERS TO ALPHAMERIC FORMAT                       RE0744
+0115 C                     Z-ADDRVLD      ZDAYNO  50                      RE0744
+0116 C                     EXSR ZDATE2                                    RE0744
+0117 C                     MOVE ZADATE    RVLDA   7                       RE0744
+0118 C*                                                                   RE0744
+0119 C                     Z-ADDLRCD      ZDAYNO                          RE0744
+0120 C                     EXSR ZDATE2                                    RE0744
+0121 C                     MOVE ZADATE    LRCDA   7                       RE0744
+0122 C*                                                                   RE0744
+0123 C                     Z-ADDVALD      ZDAYNO                          RE0744
+0124 C                     EXSR ZDATE2                                    RE0744
+0125 C                     MOVE ZADATE    VALDA   7                       RE0744
+0126 C*                                                                   RE0744
+0127 C           TOTAL     TAG                             ** TOTAL **    RE0744
+0343 C   U7                                                               S01117
+0344 COR U8                SETON                     LR                   S01117
+0128 CLR         NORE      COMP RECRED               U8U8                 RE0744
+     C**                                                                  S01117
+     C*       ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C**                                                                  S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     CLR                   OUT  LDA                                       S01117
+     C*                                                                   S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ     5                       S01117
+     CLR                   PARM *BLANK    SENTY   3                       S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM           ZSERR   1                       S01117
+      *                                                                   S01117
+     CLR         *LOCK     IN   LDA                                       S01117
+      *                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+      **                                                                  S01117
+     CLR    U7 U8          EXSR *PSSR                                     S01117
+0479 C/EJECT                                                              S01117
+0129 C********************************************************************RE0744
+0130 C**                                                                  RE0744
+0131 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0744
+0132 C**                                                                  RE0744
+0133 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0744
+0134 C**                                                                  RE0744
+0135 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0744
+0136 C                     MOVEL'01      'ZTABKY 12                       RE0744
+0137 C                     MOVE '  10'    ZTABKY                          RE0744
+0138 C**                                                                  RE0744
+0139 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0744
+0140 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0744
+0141 C**                                                                  RE0744
+0142 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0744
+0143 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0744
+0144 C**                                                                  RE0744
+0145 C                     ENDSR                                          RE0744
+0146 C**                                                                  RE0744
+0147 C**                                                                  RE0744
+0148 C********************************************************************RE0744
+0149 C**                                                                  RE0744
+0150 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            RE0744
+0151 C**                                                                  RE0744
+0152 C           ZDATE2    BEGSR                           *** ZDATE2 *** RE0744
+0153 C**                                                                  RE0744
+0154 C**   CLEAR DATE FIELDS.                                             RE0744
+0155 C                     Z-ADD0         ZDATE   60                      RE0744
+0156 C                     MOVEL'       ' ZADATE  7                       RE0744
+0157 C**                                                                  RE0744
+0158 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        RE0744
+0159 C                     Z-ADDZDAYNO    ZDAYNO  50                      RE0744
+0160 C**                                                                  RE0744
+0161 C**   DETERMINE YEAR NUMBER.                                         RE0744
+0162 C**                                                                  RE0744
+0163 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    RE0744
+0164 C           ZDAYNO    SUB  1         ZDAYN1  50   99                 RE0744
+0165 C   99                GOTO ZDEND2                                    RE0744
+0166 C**                                                                  RE0744
+0167 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             RE0744
+0168 C           ZDAYN1    DIV  1461      ZLYR    20                      RE0744
+0169 C                     MVR            ZDAYN1           SAVE REMAINING RE0744
+0170 C**                                                   DAYS           RE0744
+0171 C**   CALCULATE NUMBER OF REMAINING YEARS.                           RE0744
+0172 C                     Z-ADD1         ZWRK2   20                      RE0744
+0173 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *RE0744
+0174 C           ZDAYN1    COMP ZYDY,ZWRK2             90                 RE0744
+0175 C  N90      ZWRK2     ADD  1         ZWRK2                           RE0744
+0176 C  N90                GOTO ZDTAG1                                    RE0744
+0177 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON RE0744
+0178 C**                                                                  RE0744
+0179 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  RE0744
+0180 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          RE0744
+0181 C**                                                                  RE0744
+0182 C**   CALCULATE ACTUAL YEAR NUMBER.                                  RE0744
+0183 C           ZLYR      MULT 4         ZWRK3   30                      RE0744
+0184 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   RE0744
+0185 C                     Z-ADDZWRK3     ZYEAR   20                      RE0744
+0186 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           RE0744
+0187 C**                                                                  RE0744
+0188 C**   DETERMINE MONTH NUMBER.                                        RE0744
+0189 C**                                                                  RE0744
+0190 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         RE0744
+0191 C                     SETOF                     9293                 RE0744
+0192 C   91      ZDAYN1    COMP 59                     9293               RE0744
+0193 C   91N92   ZDAYN1    SUB  1         ZDAYN1                          RE0744
+0194 C**                                                                  RE0744
+0195 C**   CALCULATE MONTH NUMBER.                                        RE0744
+0196 C                     Z-ADD2         ZWRK2                           RE0744
+0197 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *RE0744
+0198 C           ZDAYN1    COMP ZMDY,ZWRK2             94                 RE0744
+0199 C  N94      ZWRK2     ADD  1         ZWRK2                           RE0744
+0200 C  N94                GOTO ZDTAG2                                    RE0744
+0201 C           ZWRK2     SUB  1         ZWRK2                           RE0744
+0202 C**                                                                  RE0744
+0203 C                     Z-ADDZWRK2     ZMTH    20       MONTH          RE0744
+0204 C**                                                                  RE0744
+0205 C**   DETERMINE DAY OF MONTH.                                        RE0744
+0206 C**                                                                  RE0744
+0207 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          RE0744
+0208 C           ZDAYN1    ADD  1         ZDAYN1                          RE0744
+0209 C**                                                                  RE0744
+0210 C**   CALCULATE DAY OF MONTH.                                        RE0744
+0211 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            RE0744
+0212 C**                                                                  RE0744
+0213 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       RE0744
+0214 C   93      ZDAY      ADD  1         ZDAY                            RE0744
+0215 C**                                                                  RE0744
+0216 C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 RE0744
+0217 C  N98                MOVELZDAY      ZWRK4   40                      RE0744
+0218 C   98                MOVE ZDAY      ZWRK4                           RE0744
+0219 C  N98                MOVE ZMTH      ZWRK4                           RE0744
+0220 C   98                MOVELZMTH      ZWRK4                           RE0744
+0221 C                     MOVELZWRK4     ZDATE                           RE0744
+0222 C                     MOVE ZYEAR     ZDATE                           RE0744
+0223 C**                                                                  RE0744
+0224 C**   FORMAT ALPHA DATE, DDMMMYY.                                    RE0744
+0225 C           ZDAY      COMP 10                     95                 RE0744
+0226 C                     MOVELZDAY      ZWRK5   5                       RE0744
+0227 C   95                MOVEL' '       ZWRK5                           RE0744
+0228 C                     MOVE ZMNM,ZMTH ZWRK5                           RE0744
+0229 C                     MOVELZWRK5     ZADATE                          RE0744
+0230 C                     MOVE ZYEAR     ZADATE                          RE0744
+0231 C**                                                                  RE0744
+0232 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*RE0744
+0233 C**                                                                  RE0744
+0234 C**                                                                  RE0744
+0235 C********************************************************************RE0744
+     C/SPACE 3                                                            S01117
+0497 C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+0988 C/EJECT                                                              S01117
+0236 O*E0744P1H**203   L1                                           S01124S01117
+0237 O*******OR**      OFNL1                                              S01117
+0238 O***********                        23 'REFERENCE RE0744'            S01117
+0236 ORE0744P1H  203   L1 50                                              S01117
+0237 O       OR        OFNL1 50                                           S01117
+0238 O                                   25 'REFERENCE RE0744P1'          S01117
+0239 O                         TITL      92                               RE0744
+0240 O                                  104 'DATE'                        RE0744
+0241 O                         RUNA     113                               RE0744
+0242 O                                  122 'PAGE'                        RE0744
+0243 O                         PAGE  Z  127                               RE0744
+0244 O********H**1     L1                                                 S01117
+0245 O*******OR**      OFNL1                                              S01117
+0244 O        H  1     L1 50                                              S01117
+0245 O       OR        OFNL1 50                                           S01117
+0246 O                                   72 'BASE RATE CHANGES - '        RE0744
+0247 O                                   87 'RETAIL ACCOUNTS'             RE0744
+0248 O***********                       106 'BRANCH'                      S01117
+0248 O                 88                97 'BRANCH'                      S01117
+0249 O***********              BRCD     110                               S01117
+0249 O                 88      BRCA     101                               S01117
+     O                 88               102 '-'                           S01117
+     O                 88      BRNM     132                               S01117
+0250 O********H**2     L1                                                 S01117
+0251 O*******OR**      OFNL1                                              S01117
+0250 O        H  2     L1 50                                              S01117
+0251 O       OR        OFNL1 50                                           S01117
+0252 O                                   72 '--------------------'        RE0744
+0253 O                                   87 '---------------'             RE0744
+0254 O********H**1     L1                                                 S01117
+0255 O*******OR**      OFNL1                                              S01117
+0254 O        H  1     L1 50                                              S01117
+0255 O       OR        OFNL1 50                                           S01117
+0256 O                                   85 'REPORT'                      RE0744
+0257 O                                  114 'PREVIOUS'                    RE0744
+0258 O********H**1     L1                                                 S01117
+0259 O*******OR**      OFNL1                                              S01117
+0258 O        H  1     L1 50                                              S01117
+0259 O       OR        OFNL1 50                                           S01117
+0260 O                                   84 'VALUE'                       RE0744
+0261 O                                   98 'VALUE'                       RE0744
+0262 O                                  111 'VALUE'                       RE0744
+0263 O********H**2     L1                                                 S01117
+0264 O*******OR**      OFNL1                                              S01117
+0263 O        H  2     L1 50                                              S01117
+0264 O       OR        OFNL1 50                                           S01117
+0265 O                                   18 'ACCOUNT NUMBER'              RE0744
+0266 O                                   36 'CUSTOMER'                    RE0744
+0267 O                                   57 'BASE'                        RE0744
+0268 O                                   71 'SPREAD'                      RE0744
+0269 O                                   83 'DATE'                        RE0744
+0270 O                                   97 'DATE'                        RE0744
+0271 O                                  110 'DATE'                        RE0744
+     O                 15               132 'OVERDRAFT RATE'              CRE001
+0272 O********D*21     01                                                 S01117
+0272 O        D 21     01 50                                              S01117
+0273 O                      N21ACNO      13                               RE0744
+0274 O                      N21CCY       23                               RE0744
+0275 O**********             21          17 '-'                                        RE0744 CGL029
+0276 O**********             21CNUM      10                                            RE0744 CGL029
+0277 O**********             21CCY       23                                            RE0744 CGL029
+0278 O**********             21ACOD      16                                            RE0744 CGL029
+0279 O**********             21ACSQ      19                                            RE0744 CGL029
+     O                       21CNUM       6                                                   CGL029
+     O                       21ACOD      17                                                   CGL029
+     O                       21          18 '-'                                               CGL029
+     O                       21ACSQ      20                                                   CGL029
+     O                       21CCY       24                                                   CGL029
+0280 O                         CRNM      48                               RE0744
+0281 O                       22          52 'DR'                          RE0744
+0282 O                      N22          52 'CR'                          RE0744
+0283 O                      N30BRTT      55                               RE0744
+0284 O                         RTSP      74 '  0 .       '                RE0744
+0285 O                       11          75 '+'                           RE0744
+0286 O                       12          75 '-'                           RE0744
+0287 O                         RVLDA     86                               RE0744
+0288 O                         VALDA    100                               RE0744
+0289 O                         LRCDA    113                               RE0744
+     O                    15   AODR     131 '  0 .       '                CRE001
+     O                    15 13         132 '+'                           CRE001
+     O                    15 14         132 '-'                           CRE001
+     O        D 1      01 16 50                                                               CRE073
+     O                       22           6 'DR'                                              CRE073
+     O                      N22           6 'CR'                                              CRE073
+     O                                   30 'CONTRACTUAL SPREAD/SIGN'                         CRE073
+     O                         CNSP      43 '  0 .       '                                    CRE073
+     O                         CNSG      45                                                   CRE073
+     O                                   61 'ROUNDING METHOD'                                 CRE073
+     O                         RDMT      69                                                   CRE073
+     O                                   87 'ROUNDING FRAC/DEC'                               CRE073
+     O                         RDFD      92                                                   CRE073
+0290 O********D*12     01N23                                              S01117
+0290 O        D 12     01N23 50                                           S01117
+0291 O                                  123 '***   INVESTIGATE   ***'     RE0744
+0292 O********T*22     L1 25                                              S01117
+0292 O        T 22     L1 25 50                                           S01117
+0292 O       AND       88NU7                                              S01117
+0293 O                                   61 'BRANCH TOTALS-'              RE0744
+0294 O********T**1     L1 25                                              S01117
+0294 O        T  1     L1 25 50                                           S01117
+0292 O       AND       88NU7                                              S01117
+0295 O                                   65 'NO OF RATE CHANGES'          RE0744
+0296 O***********              BRTOT 1B  71                               S01117
+0296 O                         BRTOT 1   71                               S01117
+1040 O        T 3      LR U7                                              S01117
+1041 O                                   55 '*** DATABASE ERROR ***'      S01117
+     O        T 3      L1 88 50                                           S01117
+     O       OR        LRN88 50                                           S01117
+     O                 88                66 '*** END OF REPORT FOR'       S01117
+     O                 88                74 ' BRANCH '                    S01117
+     O                 88      BRCA      77                               S01117
+     O                 88                81 ' ***'                        S01117
+0518 O                N88                76 '*** END OF REPORT ***'       S01117
+0297 O***  CONTROL REPORT                                                 RE0744
+0298 O********T**202   LR                                                 S01117
+0299 O***********                        23 'REFERENCE RE0744'            S01117
+0236 ORE0744AUT  202   LR                                                 S01117
+0299 O                                   25 'REFERENCE RE0744AU'          S01117
+0300 O                         TITL      92                               RE0744
+0301 O                                  104 'DATE'                        RE0744
+0302 O                         RUNA     113                               RE0744
+0303 O                                  122 'PAGE'                        RE0744
+0304 O***********              PAGE  Z  127                               S01117
+0304 O                         PAGE1 Z  127                               S01117
+0305 O        T  1     LR                                                 RE0744
+0306 O                                   72 'BASE RATE CHANGES - '        RE0744
+0307 O                                   87 'RETAIL ACCOUNTS'             RE0744
+0307 O                                  102 '   RUN CONTROLS'             S01117
+0308 O        T  2     LR                                                 RE0744
+0309 O                                   72 '--------------------'        RE0744
+0310 O                                   87 '---------------'             RE0744
+0311 O        T  215   LR                                                 RE0744
+0312 O                                   60 'FILE CONTROLS'               RE0744
+0313 O        T  2     LR                                                 RE0744
+0314 O                                   71 'SORTED BASE RATE CHANGES'    RE0744
+0315 O                                   76 ' FILE'                       RE0744
+0316 O        T  2     LR                                                 RE0744
+0317 O                                   65 'NO OF DETAIL RECORDS'        RE0744
+0318 O                         NORE  1   71                               RE0744
+0319 O********T**2     LR U8                                              S01117
+0319 O        T  2     LR U8NU7                                           S01117
+0320 O                                   44 'CALCULATED -'                RE0744
+0321 O                                   65 'NO OF DETAIL RECORDS'        RE0744
+0322 O                         RECRED1   71                               RE0744
+0323 O********T**1     LR U8                                              S01117
+0323 O        T  1     LR U8NU7                                           S01117
+0324 O                                   70 '***  OUT OF BALANCE  ***'    RE0744
+1040 O        T 3      LR U7                                              S01117
+1041 O                                   38 'DATABASE ERROR NO.-'         S01117
+1042 O                         DBASE     41                               S01117
+1043 O                                   49 'FILE-'                       S01117
+1044 O                         DBFILE    57                               S01117
+1045 O                                   64 'KEY-'                        S01117
+1046 O                         DBKEY     93                               S01117
+1040 O        T 22     LRNU7N25                                           S01117
+1041 O                                   76 '*** NO DETAILS TO REPORT'    S01117
+1042 O                                   80 ' ***'                        S01117
+0325 O********T** 30      LR                                              S01117
+0326 O***********                        72 '*** END OF REPORT ***'       S01117
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

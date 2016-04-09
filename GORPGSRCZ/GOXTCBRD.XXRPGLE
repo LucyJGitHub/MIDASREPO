@@ -1,0 +1,228 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOXTCBRD - Update Loan/Deposit Records on GOETRAPPD          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    xx    -  Function of Indicator                             *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR   -   Program exception error routine                  *
+      *  *INZSR  -   Initialisation Subroutine                        *
+      *  SETUP_TRAP- Subroutine To Setup Transaction Index Record     *
+      *  WRITE_TRAP- Subroutine To Write Transaction Index Record     *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+      **Terms Deals Detail file
+     FOT10LF    IF   E           K DISK    INFSR(*PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+ 
+     D EQDL          E DS                  EXTNAME(OSPF)
+ 
+     D I#RTCD          S              7
+     D I#ERMS          S             50
+     D I#LOC           S              4
+     D W#RTCD          S              7
+     D W#ERMS          S             50
+     D T_PRRN          S              5  0
+     D I#CUSTDEFLT     S              1
+ 
+      ** T R A N S A C T I O N    D E T A I L S
+     D T_TRAP        E DS                  EXTNAME(GPETRAPPD)
+      *Define Work Variables
+     D W_OTTDT         S              1
+     D W_OTCCY         S              3
+     D W_OTSDTE        S              7  0
+     D W_OTMDT         S              7  0
+      **
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: Entry           ¦
+      ** ¦ Parameters.                                                    ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *****************************************************************
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+     C                   PARM                    I#LOC
+     C                   PARM                    EQDL
+      *
+      ** Subroutine to retrieve deal type (OTTDT) from OTPF file
+      ** New subroutine is being added,
+      *
+     C                   EXSR      RTV_DEALTYP
+      *
+      ** Setup transaction index record
+      *
+     C                   EXSR      SETUP_TRAP
+      *
+      ** Write transaction index record
+      ** Commitment Cycle ID
+      *
+     C                   Z-ADD     0             T_CCID
+     C                   EXSR      WRITE_TRAP
+      *
+      ** Return
+      *
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SETUP_TRAP: Subroutine To Setup Transaction Index Record      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: GOSETCBRD                                             *
+      *****************************************************************
+     C     SETUP_TRAP    BEGSR
+      *
+     C                   CALL      'GOSETCBRD'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    EQDL
+     C                   PARM                    W_OTCCY
+     C                   PARM                    W_OTSDTE
+     C                   PARM                    W_OTMDT
+      *
+      ** Outputs
+      *
+     C                   PARM                    T_TRAP
+     C                   PARM      *ZERO         T_PRRN
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETCBRD'
+     C                   EXSR      *PSSR
+     C                   END
+      *
+     C                   ENDSR
+      /SPACE 5
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRITE_TRAP: Subroutine To Write Transaction Index Record      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: GOWRTTRAPE                                            *
+      *****************************************************************
+     C     WRITE_TRAP    BEGSR
+ 
+     C                   MOVEL     'Y'           I#CUSTDEFLT
+      *
+      ** Write transaction index record,
+      *
+     C                   CALL      'GOWRTTRAPE'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    I#LOC
+     C                   PARM                    I#CUSTDEFLT
+     C                   PARM                    T_TRAP
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWRTTRAPE'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDSR
+      *****************************************************************
+      ********************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * RTV_DEALTYP: RETRIEVE DEAL TYPE                               *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ********************************************************************
+     C     RTV_DEALTYP   BEGSR
+      *
+      **Using the Deal Ref number (OTDLR) Access the OT10LF file
+      *
+     C     OTKEY         KList
+     C                   KFld                    OSBRNM
+     C                   KFld                    OSDLP
+     C                   KFld                    OSDLR
+      *
+     C     OTKEY         CHAIN     OT10LF
+     C                   IF        %FOUND(OT10LF)
+      *
+     C                   EVAL      W_OTTDT = OTTDT
+     C                   EVAL      W_OTCCY = OTCCY
+     C                   EVAL      W_OTSDTE = OTSDTE
+     C                   EVAL      W_OTMDT = OTMDT
+      *
+     C                   ELSE
+     C                   EVAL      W_OTTDT = *BLANKS
+     C                   EVAL      W_OTCCY = *BLANKS
+     C                   EVAL      W_OTSDTE = *ZEROS
+     C                   EVAL      W_OTMDT = *ZEROS
+      *
+     C                   ENDIF
+      **
+     C                   ENDSR
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

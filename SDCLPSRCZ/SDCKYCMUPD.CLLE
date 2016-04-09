@@ -1,0 +1,139 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Update of KYC Messages from Compliance Wa')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - STANDING DATA MODULE                                */
+/*                                                                   */
+/*       SDKYCMUPD - Midas SD Update of KYC Messages from            */
+/*                   Compliance Watch                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CCB020             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG10603           Date 02Mar06              */
+/*                      BUG10603           Date 14Feb06              */
+/*                      BUG10092           Date 01Feb06              */
+/*                      CSD028  *CREATE    Date 22Aug05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       BUG10603 - (Reopen) Compliance Alert Changes for KYC        */
+/*       BUG10603 - Change Control for KYC                           */
+/*       BUG10092 - SDAULGL0 Status not updated                      */
+/*       CSD028 - KYC (Standing Data Authorisations )                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTNCDE &SBS &CUSNUM &KYCSTS &ALLKYC )
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CUSNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&KYCSTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ALLKYC) TYPE(*CHAR) LEN(5000)                              /*BUG10603*/
+             DCL        VAR(&PPGMN) TYPE(*CHAR) LEN(10) +
+                          VALUE('SDCKYCMUPD')                                           /*BUG10603*/
+             DCL        VAR(&PLTYP) TYPE(*CHAR) LEN(10)                                 /*BUG10603*/
+             DCL        VAR(&PLMSG) TYPE(*CHAR) LEN(60)                                 /*BUG10603*/
+             DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)                                  /*BUG10603*/
+/**********  DCL        VAR(&ALLKYC) TYPE(*CHAR) LEN(500) VALUE(' ') */                 /*BUG10603*/
+/**********  DCL        VAR(&ALLKYC) TYPE(*CHAR) LEN(5000) VALUE(' ')          /*BUG10603 BUG10603*/
+/**********  DCL        VAR(&POD) TYPE(*CHAR) LEN(1)                 */                 /*BUG10092*/
+/**********  DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)                                /*BUG10603*/
+/**********  DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                                   /*BUG10603*/
+/**********  DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)                          /*BUG10092 BUG10603*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)                                                   /*BUG10603*/
+                                                                                        /*BUG10603*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&PHASE)                                    /*BUG10603*/
+/**********  IF         COND(&PHASE *NE 'A') THEN(DO)                         */ /*BUG10603 CCB020*/
+             IF         COND((&PHASE *NE 'A') *AND +
+                            (&PHASE *NE 'G')) THEN(DO)                                    /*CCB020*/
+                CHGVAR     VAR(&RTNCDE) VALUE('*ERROR')                                 /*BUG10603*/
+                GOTO       CMDLBL(END)                                                  /*BUG10603*/
+             ENDDO                                                                      /*BUG10603*/
+                                                                                        /*BUG10603*/
+             CALL       PGM(SDKYCMUPD) PARM(&RTNCDE &CUSNUM &KYCSTS +
+                          &ALLKYC)                                                      /*BUG10603*/
+             CHGVAR     VAR(&PLMSG) VALUE('SDKYCMUPD completed.')                       /*BUG10603*/
+             CALL       PGM(SD000054) PARM(&PPGMN &PLTYP &PLMSG)                        /*BUG10603*/
+                                                                                        /*BUG10603*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*BUG10603*/
+                                                                                        /*BUG10603*/
+             GOTO       CMDLBL(END)                                                     /*BUG10603*/
+                                                                                        /*BUG10603*/
+/**********  RTVJOBA    TYPE(&JOBTYPE)                                                  /*BUG10603*/
+/**********  CHGJOB     SWS(XXXXXX00)                                                   /*BUG10603*/
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)           */        /*BUG10092 BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  CALL       PGM(UPC0014) PARM(&SBS)                                         /*BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&POD)                   */                 /*BUG10092*/
+/**********  IF         COND(&POD *NE 'A') THEN(DO)                  */                 /*BUG10092*/
+/**********     CHGVAR     VAR(&RTNCDE) VALUE('*ERROR')              */                 /*BUG10092*/
+/**********     GOTO       CMDLBL(END)                               */                 /*BUG10092*/
+/**********  ENDDO                                                   */                 /*BUG10092*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  CALL       PGM(SDCKYCMUP2) PARM(&RTNCDE &CUSNUM &KYCSTS +                  /*BUG10603*/
+/**********               &ALLKYC)                                             /*BUG10092 BUG10603*/
+/*********************************************************************/        /*BUG10092 BUG10603*/
+/**********  CALL       PGM(SDKYCMUPD) PARM(&RTNCDE &CUSNUM &KYCSTS +*/
+/**********               &ALLKYC)                                   */                 /*BUG10092*/
+/**********  CALL       PGM(UPC0014) PARM(&PREF)                               /*BUG10092 BUG10603*/
+/**********  RCLACTGRP (*ELIGIBLE)                                             /*BUG10092 BUG10603*/
+/**********  RCLRSC                                                            /*BUG10092 BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/***If*there*is*no*error,*end*program*********************************/                 /*BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  IF         COND(&RTNCDE *NE '          ') THEN(GOTO +                      /*BUG10603*/
+/**********               CMDLBL(ABNOR))                                                /*BUG10603*/
+/**********  ELSE       CMD(GOTO CMDLBL(END))                                           /*BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**Database*error*processing**/                                                         /*BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG10603*/
+/**********     RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)                            /*BUG10603*/
+/**********     ROLLBACK                                                                /*BUG10603*/
+/**********     SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +                    /*BUG10603*/
+/**********                  TOPGMQ(*EXT) TOMSGQ(MOPERQ)                                /*BUG10603*/
+/**********     GOTO       CMDLBL(END)                                                  /*BUG10603*/
+/**********  ENDDO                                                                      /*BUG10603*/
+ 
+ABNOR:
+/*/COPY WNCPYSRC,mmCnnnnERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM                                                                   /*BUG10603*/
+             CHGVAR     VAR(&PLTYP) VALUE('*ERROR')                                     /*BUG10603*/
+             CHGVAR     VAR(&PLMSG) VALUE('SDCKYCMUPD terminated abnormally.')          /*BUG10603*/
+             CALL       PGM(SD000054) PARM(&PPGMN &PLTYP &PLMSG)                        /*BUG10603*/
+                                                                                        /*BUG10603*/
+/**Abnormal*termination*-*batch*job**/                                                  /*BUG10603*/
+/*********************************************************************/                 /*BUG10603*/
+/**********  IF         COND(&JOBTYPE = '0') THEN(DO)                                   /*BUG10603*/
+/**********    SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +                 /*BUG10603*/
+/**********                 SDCKYCMUPD ended abnormally - see job log') +               /*BUG10603*/
+/**********                 TOMSGQ(MOPERQ)                                              /*BUG10603*/
+/**********    MONMSG     MSGID(CPF0000 MCH0000)                                        /*BUG10603*/
+/**********  ENDDO                                                                      /*BUG10603*/
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,822 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BIC Directory Details Enquiry')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - S.W.I.F.T Direct Link                                *
+      *                                                               *
+      *  MS0100 - BIC Directory Details Enquiry                       *
+      *                                                               *
+      *  Function:  This program displays BIC Directory Details.      *
+      *             The first screen allows the user to display       *
+      *             using SETLL for BIC Code and Branch and           *
+      *             QCLSCAN for Institution Name 1 and City.          *
+      *             The second screen displays all non-blank          *
+      *             details as held on MEBICDPD for the selected      *
+      *             record.                                           *
+      *             The inclusion/exclusion, sequencing and field     *
+      *             names are obtained from MEBICDPA which is         *
+      *             is initially derived from performing DSPFFD       *
+      *             to an output file and then copying *MAP *DROP     *
+      *             to MEBICDPA.                                      *
+      *                                                               *
+      *  Called By: Directly from MIDAS MENU                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. MD025126           Date 17Feb14               *
+      *  Prev Amend No. AR1071028A         Date 14Jan12               *
+      *                 AR1071028          Date 20Dec12               *
+      *                 CMS002  *CREATE    Date 28Sep12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD025126 - PF/MEBICFPD issue with SWIFT 2013/CFT050 -        *
+      *             conflict with CMS002 (Recompile)                  *
+      *  AR1071028A - Additional combination filtering                *
+      *  AR1071028 - Branch filtering not working                     *
+      *  CMS002 - BIC Directory Details Enquiry                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FMS0100DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     F                                        S0RRN KSFILE MS0100S0
+     F                                        S1RRN KSFILE MS0100S1
+     FMEBICDL2IF  E           K        DISK         KINFSR *PSSR
+     FMEBICFPDIF  E           K        DISK         KINFSR *PSSR
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   KC - F3  Exit
+      *   KL - F12 Previous
+      *
+      *   30 - S0 SFLDSPCTL
+      *   31 - S0 SFLDSP
+      *   32 - S0 SFLEND
+      *   33 - S0 SFLNXTCHG
+      *   39 - S0 ROLLUP
+      *
+      *   50 - S1 SFLDSPCTL
+      *   51 - S1 SFLDSP
+      *   52 - S1 SFLEND
+      *   59 - S1 ROLLUP
+      *
+      *-------------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *-------------------------------------------------------------------
+      *
+      ** File Information Data structure for Display file
+     IINFDS1      DS
+     I                                    B 378 3790INSFRC
+      *
+      ** Program status data structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Data Structure to pass parameters to Access programs
+     IAOFMTS    E DSDSFDY
+      *
+     ILDA       E DSLDA                         256
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     I              '. . . . . . . . . . -C         S1BUFF
+     I              '. . . . . . . . . . '
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *
+     C                     EXSR #INIT
+     C                     MOVE '1'       *INKE
+      *
+     C           *INKC     DOWEQ'0'
+      *
+      ** Initialize and Load subfile if *INKE has been set on
+      ** (First time through or change of SETLL fields)
+      *
+     C   KE                EXSR #INLZ0
+     C   KE                EXSR #LOAD0
+      *
+      ** Display screen
+      *
+     C                     EXSR #DISP0
+      *
+      ** Process screen if F3 not taken
+      *
+     C           *INKC     IFEQ '0'
+      *
+      ** Check if SETLL values changed
+      *
+     C           C0BICC    IFNE SVBICC
+     C           C0BICB    ORNE SVBICB
+     C           C0INS1    ORNE SVINS1
+     C           C0CITY    ORNE SVCITY
+     C                     MOVE '1'       *INKE
+     C                     MOVE C0BICC    SVBICC
+     C                     MOVE C0BICB    SVBICB
+     C                     MOVE C0INS1    SVINS1
+     C                     MOVE C0CITY    SVCITY
+     C                     ENDIF
+      *
+     C           *IN39     CASEQ'1'       #LOAD0           Rollup
+     C           *INKE     CASNE'1'       #READ0           Read
+     C                     ENDCS
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #INLZ0 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INLZ0    BEGSR
+      *
+      ** Clear subfile
+      *
+     C                     MOVEA'0000'    *IN,30
+     C                     WRITEMS0100C0
+     C                     MOVE '1'       *IN30
+      *
+     C                     Z-ADD0         S0RRN
+     C                     Z-ADD0         X0RRN
+      *
+     C           K0BICD    SETLLMEBICDL2
+     C                     READ MEBICDL2                 32
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #LOAD0 - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #LOAD0    BEGSR
+      *
+     C                     Z-ADD0         LINENO
+     C                     Z-ADD0         WBCBF                                           AR1071028A
+     C                     Z-ADDX0RRN     S0RRN
+      *
+      ** Reset position
+      *
+     C           *IN39     IFEQ '1'
+     C           K1BICD    CHAINMEBICDL2             90
+     C                     ENDIF
+      *
+      ** Load SFL page until SFL page full or end of file
+      *
+     C           *IN32     DOWEQ'0'
+     C           LINENO    ANDLE15
+      *
+      ** Check Select fields
+      *
+     C                     Z-ADD1         P1RSLT
+      *                                                                                    AR1071028
+     C                     Z-ADD1         P3RSLT                                          AR1071028A
+      *                                                                                   AR1071028A
+     C           SVBICB    IFNE *BLANKS                                                    AR1071028
+     C********** SVBICC    ANDEQ*BLANKS                                         AR1071028 AR1071028A
+     C           WBCBF     ANDEQ0                                                         AR1071028A
+     C                     CALL 'QCLSCAN'                                                  AR1071028
+     C                     PARM           BDBICB           Branch Code Name                AR1071028
+     C**********           PARM 35        P1LEN1           Length               AR1071028 AR1071028A
+     C                     PARM 3         P1LEN1           Length                         AR1071028A
+     C                     PARM           P1STRT           Start                           AR1071028
+     C                     PARM           SVBICB           Institution Name 1              AR1071028
+     C**********           PARM 35        P1LEN2           Length               AR1071028 AR1071028A
+     C                     PARM 3         P1LEN1           Length                         AR1071028A
+     C                     PARM           P1XLAT           Translate                       AR1071028
+     C                     PARM           P1TRIM           Trim                            AR1071028
+     C                     PARM           P1WILD           Wild                            AR1071028
+     C                     PARM           P1RSLT           Result                          AR1071028
+      *                                                                                   AR1071028A
+     C           SVBICC    IFNE *BLANKS                                                   AR1071028A
+     C                     Z-ADD1         WBCBF                                           AR1071028A
+     C                     ENDIF                                                          AR1071028A
+      *                                                                                   AR1071028A
+     C                     ENDIF                                                           AR1071028
+      *                                                                                    AR1071028
+     C           SVINS1    IFNE *BLANKS
+     C                     CALL 'QCLSCAN'
+     C                     PARM           BDINS1           Institution Name 1
+     C                     PARM 35        P1LEN1           Length
+     C                     PARM           P1STRT           Start
+     C                     PARM           SVINS1           Institution Name 1
+     C                     PARM 35        P1LEN2           Length
+     C                     PARM           P1XLAT           Translate
+     C                     PARM           P1TRIM           Trim
+     C                     PARM           P1WILD           Wild
+     C                     PARM           P1RSLT           Result
+     C                     ENDIF
+      *
+     C                     Z-ADD1         P2RSLT
+     C           SVCITY    IFNE *BLANKS
+     C                     CALL 'QCLSCAN'
+     C                     PARM           BDCITY           Institution Name 1
+     C                     PARM 35        P1LEN1           Length
+     C                     PARM           P1STRT           Start
+     C                     PARM           SVCITY           Institution Name 1
+     C                     PARM 20        P1LEN2           Length
+     C                     PARM           P1XLAT           Translate
+     C                     PARM           P1TRIM           Trim
+     C                     PARM           P1WILD           Wild
+     C                     PARM           P2RSLT           Result
+     C                     ENDIF
+      *
+      ** Write detail to subfile
+      *
+     C           P1RSLT    IFGE 1
+     C           P2RSLT    ANDGE1
+     C           P3RSLT    ANDGE1                                                         AR1071028A
+     C                     ADD  1         LINENO
+      *
+     C           LINENO    IFLE 15
+     C                     MOVE BDBICC    S0BICC           BIC Code
+     C                     MOVE BDBICB    S0BICB           BIC Branch
+     C                     MOVE BDINS1    S0INS1           BIC Inst Name 1
+     C                     MOVELBDCITY    S0CITY           BIC City
+     C                     MOVE *BLANK    S0SEL
+     C                     ADD  1         S0RRN      31
+     C                     WRITEMS0100S0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C           LINENO    IFLE 15
+     C                     READ MEBICDL2                 32
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Set Subfile Record Number and Save
+      *
+     C           X0RRN     ADD  1         C0SFRC
+     C                     Z-ADDS0RRN     X0RRN
+     C                     MOVE BDBICC    X0BICC
+     C                     MOVE BDBICB    X0BICB
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #DISP0 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DISP0    BEGSR
+      *
+      ** If no records displayed, output message
+      *
+     C           S0RRN     IFEQ 0
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     WRITEMS0100HH
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT0
+     C                     EXFMTMS0100C0
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Maintain subfile page
+      *
+     C           INSFRC    IFNE 0
+     C                     Z-ADDINSFRC    C0SFRC
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #READ0 - Read Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #READ0    BEGSR
+      *
+      ** Process each record selected until either all processed or F3 or
+      ** F12 taken
+      *
+     C           *IN31     IFEQ '1'                        B1
+     C                     READCMS0100S0                 90
+      *
+     C           *IN90     DOWEQ'0'                        B2
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C           K2BICD    CHAINMEBICDL2             99
+      *
+     C           *IN99     IFEQ '1'                        B3
+     C                     MOVEL'MEBICDL2'DBFILE
+     C                     MOVEL'001'     DBASE            ** DBERR 001 **
+     C                     MOVELS0BICC    DBKEY
+     C                     MOVE S0BICB    DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+     C           S0SEL     IFEQ 'E'
+     C                     EXSR #INLZ1
+     C                     EXSR #LOAD1
+     C                     EXSR #DISP1
+     C                     ENDIF                           E3
+      *
+     C                     MOVE ' '       S0SEL
+     C                     UPDATMS0100S0
+      *
+     C  NKL                READCMS0100S0                 90
+     C                     ENDDO                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #INLZ1 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INLZ1    BEGSR
+      *
+      ** Clear subfile
+      *
+     C                     MOVEA'0000'    *IN,50
+     C                     WRITEMS0100C1
+     C                     MOVE '1'       *IN50
+      *
+     C                     WRITEMS0100HH
+      *
+     C                     Z-ADD0         S1RRN
+      *
+     C           *LOVAL    SETLLMEBICFPD
+     C                     READ MEBICFPD                 52
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #LOAD1 - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #LOAD1    BEGSR
+      *
+      ** Load SFL page until end of file
+      *
+     C           *IN52     DOWEQ'0'
+      *
+      ** Set Line detail
+      *
+     C           MEXCL     IFEQ ' '
+     C                     EXSR #SETL1
+      *
+     C           S1FVAL    IFNE *BLANKS
+     C                     ADD  1         S1RRN      51
+     C                     WRITEMS0100S1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ MEBICFPD                 52
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #SETL1 - Write ubfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #SETL1    BEGSR
+      *
+     C                     MOVE *BLANKS   S1DESC
+     C                     MOVE *BLANKS   S1FVAL
+      *
+      ** Process for each of the fields on file
+      *
+     C           WHFLDE    IFEQ 'BDTAG'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDTAG     S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDMODF'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDMODF    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDBICC'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDBICC    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDBICB'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDBICB    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDINS1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDINS1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDINS2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDINS2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDINS3'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDINS3    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDBRC1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDBRC1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDBRC2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDBRC2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCITY'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCITY    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDSUBT'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDSUBT    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDADDS'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDADDS    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDXINF'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDXINF    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDAPH1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDAPH1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDAPH2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDAPH2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDAPH3'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDAPH3    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDAPH4'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDAPH4    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDZIP'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDZIP     S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDLOC1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDLOC1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDLOC2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDLOC2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDLOC3'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDLOC3    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCTY1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCTY1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCTY2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCTY2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPOBN'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPOBN    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPOB1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPOB1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPOB2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPOB2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPOB3'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPOB3    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPBC1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPBC1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDPBC2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDPBC2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDSRC'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDSRC     S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDSPCD'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDSPCD    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDNMFG'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDNMFG    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDUDAT'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDUDAT    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDORGK'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDORGK    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDKEY'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDKEY     S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCHIP'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCHIP    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDNATI'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDNATI    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDACTD'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDACTD    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDDACT'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDDACT    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDUMKY'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDUMKY    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDUSER'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDUSER    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRS1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRS1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRS2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRS2    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRS3'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRS3    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRS4'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRS4    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRD1'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRD1    S1FVAL
+     C                     ENDIF
+      *
+     C           WHFLDE    IFEQ 'BDCRD2'
+     C                     MOVELWHFTXT    S1DESC
+     C                     MOVELBDCRD2    S1FVAL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #DISP1 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DISP1    BEGSR
+      *
+      ** If no records displayed, output message
+      *
+     C           S1RRN     IFEQ 0
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMTMS0100C1
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+      *
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAPGRL
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * #INIT - Initial Program Subroutine                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      ** Define Key Lists
+      *
+     C           K0BICD    KLIST
+     C                     KFLD           C0BICC
+     C                     KFLD           C0BICB
+      *
+     C           K1BICD    KLIST
+     C                     KFLD           X0BICC
+     C                     KFLD           X0BICB
+      *
+     C           K2BICD    KLIST
+     C                     KFLD           S0BICC
+     C                     KFLD           S0BICB
+      *
+      ** Define all program work fields
+      *
+     C           *LIKE     DEFN BDBICC    X0BICC
+     C           *LIKE     DEFN BDBICB    X0BICB
+     C           *LIKE     DEFN S0RRN     X0RRN
+     C           *LIKE     DEFN C0BICC    SVBICC
+     C           *LIKE     DEFN C0BICB    SVBICB
+     C           *LIKE     DEFN C0INS1    SVINS1
+     C           *LIKE     DEFN C0CITY    SVCITY
+      *
+     C                     Z-ADD0         P1LEN1  30
+     C                     Z-ADD1         P1STRT  30
+     C                     Z-ADD0         P1LEN2  30
+     C                     Z-ADD0         P1RSLT  30
+     C                     Z-ADD0         P2RSLT  30
+     C                     Z-ADD0         P3RSLT  30                                      AR1071028A
+     C                     MOVE '1'       P1XLAT  1
+     C                     MOVE '1'       P1TRIM  1
+     C                     MOVE '?'       P1WILD  1
+      *
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+     C                     Z-ADD0         S0RRN   50
+     C                     Z-ADD0         S1RRN   50
+     C                     Z-ADD0         LINENO  20
+     C                     Z-ADD0         X       20
+     C                     Z-ADD0         POSN    20
+     C                     Z-ADD0         LNGTH   20
+     C                     Z-ADD0         WBCBF   10                                      AR1071028A
+      *
+      ** Set up copyright
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Get Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+     C                     MOVELPGM       ZAPGM
+      *
+      ** Set screen constants and output header
+      *
+     C                     MOVELPGM       SPGM
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+     C                     MOVELAGMRDT    SRUNA
+      *
+     C                     WRITEMS0100HH
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'MS0100'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *
+** CPY@
+(c) Misys International Banking Systems Ltd. 2012

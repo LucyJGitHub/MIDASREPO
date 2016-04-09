@@ -1,0 +1,612 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Credit audit list')
+     F********************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0520 - Portfolio Lending Audit List                        *
+     F*                                                               *
+     F*  Function:  This program produces a Portfolio Lending Audit   *
+     F*  (COB)      List report.                                      *
+     F*                                                               *
+     F*  Called By: LBC0520 - LB Portfolio Lending Audit List.        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 080381             DATE 19DEC94               *
+     F*  PREV AMEND NO. S01498             DATE 13JUL94               *
+     F*                 SA9018             DATE 13DEC90               *
+     F*                 R0712              DATE 13NOV90               *
+     F*                 R0565_LC           DATE 18OCT90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  080381 - Each credit group printed on a new page             *
+     F*  S01498 - Portfolio Lending Upgrade to Rel 10.                *
+     F*  SA9018 - REMOVE ATTACHED LIMIT                               *
+     F*  R0712  - REMOVE FILE CONTROLS FOR INSERTIONS                 *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS.*PREFIX*-*BJ***********************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F*****PORTFOLIO*LENDING*AUDIT*LIST*FILE*CONTROLS******************   S01498
+     F***LB0520AUO***E             62     PRINTER      KINFDS OVRFL2      S01498
+     F***********                                   KINFSR *PSSR          S01498
+     F*
+     F**   PORTFOLIO LENDING TRAILER. PREFIX - TR
+     FLBTRAIPDUF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****PORTFOLIO*LENDING*AUDIT*LIST********************************   S01498
+     F***LB0520P1O***E             61     PRINTER      KINFDS OVRFL1      S01498
+     F***********                                   KINFSR *PSSR          S01498
+     F*
+     F**   PORTFOLIO LENDING GROUPS. PREFIX - GP
+     FLBGROUL2IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   PORTFOLIO LENDING AUDIT LIST                                   S01498
+0017 FLB0520P1O   E             61     PRINTER      KINFDS SPOOL      UC  S01498
+     F*                                                                   S01498
+     F**   PORTFOLIO LENDING AUDIT LIST FILE CONTROLS                     S01498
+0017 FLB0520AUO   E             62     PRINTER      KINFDS SPOOLU         S01498
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F** 37 - Multibranching indicator                                    S01498
+     F** 50 - FILE INDICATOR ON SDBANKPD                                 *
+     F** 51 - FILE INDICATOR ON LBGROUL2                                 *
+     F** 52 - FILE INDICATOR ON LBTRAIPD                                 *
+     F** 55 TO 57 - *** DIFFERENCE *** INDICATORS ON RUN CONTROLS REPORT *
+     F** 58 - INSERT INDICATOR                                           *
+     F** 59 - AMEND INDICATOR                                            *
+     F** 60 - DELETE INDICATOR                                           *
+     F**    61 - OVERFLOW INDICATOR ON LB0520P1                          *
+     F**    62 - OVERFLOW INDICATOR ON LB0520AU                          *
+     F**    63 - Output 'NO DETAILS FOUND'                               *S01498
+     F**    64 - OPEN printer file LB0520P1                              *S01498
+     F**       U7, U8 - DATABASE ERROR HANDLING                          *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01498
+      **  Data structure for bank file                                    S01498
+      *                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+      **  Short data structure for access programs                        S01498
+      *                                                                   S01498
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     IPSDS       SDS
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *                                                                   S01498
+      **   File Information Data Structure                                S01498
+      *                                                                   S01498
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     I                                    B 188 1890WWOFL1                S01498
+     I                                    B 367 3680WWPTL1                S01498
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I                                    B 188 1890WWOFL2                S01498
+     I                                    B 367 3680WWPTL2                S01498
+     I*
+     I*****FILE*INFORMATION*DATA*STRUCTURE*****************************   S01498
+     I***OVRFL1******DS                                                   S01498
+     I*                                                                   S01498
+     I*****FOR*OVERFLOW************************************************   S01498
+     I***********                         B 188 1890WWOFL1                S01498
+     I***********                         B 367 3680WWPTL1                S01498
+     I*                                                                   S01498
+     I***OVRFL2******DS                                                   S01498
+     I*                                                                   S01498
+     I*****FOR*OVERFLOW************************************************   S01498
+     I***********                         B 188 1890WWOFL2                S01498
+     I***********                         B 367 3680WWPTL2                S01498
+     I*
+     IRUNDAT    E DS                                                      S01498
+     I**  Standard Data Area Layout for System flags and Run Date         S01498
+     I*                                                                   S01498
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I*
+     I**   LOCAL DATA AREA
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**   TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**        INDEX TO SUBROUTINES                                     *
+     C**       ----------------------                                    *
+     C**                                                                 *
+     C**  1.  #B     - MAIN REPORT PROCESSING                            *
+     C**  2.  #A     - ACCESSES SDBANKPD AND INITIALISES WORK FIELDS     *
+     C**  3.  #C     - TERMINATION PROCESSING                            *
+     C**  5.  #ZZZ   - DATABASE ERROR PRINT HANDLING (RUN CONTROLS)      *
+     C**  7.  #PSSR  - ERROR HANDLING SUBROUTINE                         *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B        - THIS SUBROUTINE PERFORMS MAIN PROCESSING            *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C**   READ INPUT FROM 'LBGROUL2'
+     C           *LOVAL    SETLLLBGROUL2
+     C                     READ LBGROUL2                 51
+     C*
+     C**   DO WHILE NOT EOF
+     C           *IN51     DOWEQ'0'
+     C*
+     C**   INITIALISE INSERT/AMEND/DELETE INDICATORS
+     C                     MOVEA'000'     *IN,58
+     C*
+     C**   IF DATE IS TODAY
+     C           BJRDNB    IFEQ GPLCD
+     C*
+     C**   IF RECORD DELETED ADD 1 TO DELETED RECORD COUNT
+     C**   IF RECORD INSERTED ADD 1 TO INSERTED RECORD COUNT
+     C**   IF RECORD AMENDED ADD 1 TO AMENDED RECORD COUNT
+     C           GPCHTP    IFEQ 'D'
+     C*
+     C                     ADD  1         WWCNTD
+     C*
+     C                     ELSE
+     C*
+     C           GPCHTP    IFEQ 'I'
+     C*
+     C                     ADD  1         WWCNTI
+     C*
+     C                     ELSE
+     C*
+     C           GPCHTP    IFEQ 'A'
+     C*
+     C                     ADD  1         WWCNTA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   SET ONE RECORD FOUND FLAG TO 'Y'
+     C                     MOVEL'Y'       WWDETR
+      ** OPEN detail printer file                                         S01498
+      *                                                                   S01498
+     C           *IN64     IFEQ *OFF                                      S01498
+     C                     OPEN LB0520P1                                  S01498
+     C                     MOVE *ON       *IN64                           S01498
+     C***********          END                                     S01498 080381
+      *                                                                   S01498
+      ** Ensure Report Spool File recorded by RCF                         S01498
+      *                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ                             S01498
+     C                     PARM *BLANKS   SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM1                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+      *                                                                   S01498
+     C                     WRITEHEADER1                                   S01498
+     C                     WRITEHEADER2                                   S01498
+     C                     END                                            080381
+     C*
+     C**   MOVE FILE FIELDS TO REPORT FIELDS
+     C                     MOVELGPLCGR    RRLCGR
+     C                     MOVELGPLCGN    RRLCGN
+     C                     Z-ADDGPLCGS    RRLCGS
+     C*****                MOVELGPATTI    RRATTI                          SA9018
+     C*
+     C**   IF CHANGE TYPE = I SETON INSERT INDICATOR
+     C**   IF CHANGE TYPE = A SETON AMEND INDICATOR
+     C**   IF CHANGE TYPE = D SETON DELETE INDICATOR
+     C           GPCHTP    IFEQ 'I'
+     C                     MOVE '1'       *IN58
+     C                     ELSE
+     C           GPCHTP    IFEQ 'A'
+     C                     MOVE '1'       *IN59
+     C                     ELSE
+     C           GPCHTP    IFEQ 'D'
+     C                     MOVE '1'       *IN60
+     C                     END
+     C                     END
+     C                     END
+     C                     Z-ADDGPTLUP    RRLCT
+     C*
+     C**   CHECK FOR OVERFLOW AND IF NECESSARY OUTPUT HEADINGS
+     C           WWOFL1    SUB  WWPTL1    WWLINE  20
+     C           WWLINE    IFLE 2
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C**   WRITE A DETAIL LINE TO THE REPORT
+     C                     WRITEDETAIL
+     C*
+     C                     END
+     C*
+     C**   READ NEXT ENTRY ON 'LBGROUL2'
+     C                     READ LBGROUL2                 51
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A        - THIS SUBROUTINE ACCESSES SDBANKPD FOR MAIN DETAILS  *
+     C**             AND INITIALISES WORK FIELDS ETC.                    *
+     C**                                                                 *
+     C** CALLS     - #ZZZ                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #A        BEGSR
+     C*
+      ***  Copyright Statement.                                           S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+      *                                                                   S01498
+      ** Define LDA                                                       S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD, INITIALISE COUNTERS
+     C                     Z-ADD*ZERO     WWCNTI  50
+     C                     Z-ADD*ZERO     WWCNTA  50
+     C                     Z-ADD*ZERO     WWCNTD  50
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'LB0520'  DBPGM
+     C                     MOVEL'LBGROUPD'WWFILE  8
+     C                     MOVEL*BLANKS   WWDETR  1
+     C                     OUT  LDA                                       S01498
+     C*
+     C**   SET OFF ALL INDIC1TORS
+     C                     MOVEA'000'     *IN,50
+     C                     MOVEA'0000000' *IN,55
+     C*                                                                   S01498
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN37                           S01498
+     C                     END                                            S01498
+     C*
+     C************ICD*RECORD*1*****************************************   S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 50               S01498
+     C*
+     C**   IF ICD 1 NOT FOUND THEN DB ERROR                               S01498
+     C************IN50     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C*
+      **  Access SDBANKPD for report title                                S01498
+      *                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*MSG   ' @RTCD   7                       S01498
+     C                     PARM '*FIRST ' @OPTN   7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+      *                                                                   S01498
+      ** Error                                                            S01498
+     C           @RTCD     IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE '001'     DBASE
+     C                     MOVE *BLANKS   DBFILE           ****************
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001 S01498
+     C                     MOVE 'SDBANKPD'DBFILE           *              S01498
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZZZ
+     C***********          ELSE                                           S01498
+     C                     END                                            S01498
+     C*
+     C************IN50     IFEQ '0'                                       S01498
+     C*
+     C*****WRITE*MAIN*HEADINGS********************************************S01498
+     C***********          WRITEHEADER1                                   S01498
+     C***********          WRITEHEADER2                                   S01498
+     C*
+     C***********          END                                            S01498
+     C*
+     C***********          END                                            S01498
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #C        - THIS SUBROUTINE PERFORMS TERMINATION PROCESSING     *
+     C**                                                                 *
+     C** CALLS     - #ZZZ                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #C        BEGSR
+     C*
+     C**   OUTPUT 'NO DATA TO REPORT' IF NECESSARY
+     C           WWDETR    IFNE 'Y'
+     C***********          WRITENODETAIL                                  S01498
+     C                     MOVE *ON       *IN63                           S01498
+     C                     END
+     C*
+     C**   CHECK FOR OVERFLOW AND IF NECESSARY OUTPUT HEADINGS
+     C           WWOFL1    SUB  WWPTL1    WWLINE  20
+     C           WWLINE    IFLE 2
+     C           *IN64     ANDEQ*ON                                       S01498
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C**   OUTPUT 'END OF REPORT'
+     C           *IN64     IFEQ *ON                                       S01498
+     C                     WRITETRAILER
+     C                     END                                            S01498
+     C*
+     C**   OUTPUT RUN CONTROLS AS NECESSARY
+     C           WWFILE    CHAINLBTRAIPD             52
+     C*
+     C           *IN52     IFEQ '1'
+     C           TRRECI    OREQ '*'
+     C*
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE '002'     DBASE
+     C                     MOVE *BLANKS   DBFILE           ****************
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR  002 S01498
+     C                     MOVE 'LBTRAIPD'DBFILE           *              S01498
+     C                     MOVEL*BLANKS   DBKEY            ****************
+     C                     MOVELWWFILE    DBKEY
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZZZ
+     C                     ELSE
+     C*
+     C           *IN52     IFEQ '0'
+     C           TRRECI    ANDEQ'T'
+     C*
+     C                     Z-ADDWWCNTI    RRNOIN
+     C                     Z-ADDWWCNTA    RRNOAM
+     C                     Z-ADDWWCNTD    RRNODL
+     C*
+     C**   CHECK FOR DIFFERENCE
+     C           RRNOIN    IFNE TRINS
+     C                     MOVE '1'       *IN55
+     C*****                MOVE '1'       *INU8                           R0712
+     C                     END
+     C*
+     C***        RRNOAM    IFNE TRAMD                                     R0565
+     C***                  MOVE '1'       *IN56                           R0565
+     C***                  MOVE '1'       *INU8                           R0565
+     C***                  END                                            R0565
+     C*
+     C           RRNODL    IFNE TRDEL
+     C                     MOVE '1'       *IN57
+     C*****                MOVE '1'       *INU8                           R0712
+     C                     END
+      *                                                                   S01498
+      ** Ensure Audit Spool File recorded by RCF                          S01498
+      *                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ     5                       S01498
+     C                     PARM *BLANK    @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+      **                                                                  S01498
+     C                     WRITEFCHEADER
+     C                     WRITEFCDETAIL
+     C***********          WRITEFCTRAILR                                  S01498
+      *                                                                   S01498
+      ** Output message to Audit report.                                  S01498
+     C           *IN63     IFEQ *ON                                       S01498
+     C                     WRITENODTLS                                    S01498
+     C                     MOVE *OFF      *IN63                           S01498
+     C                     END                                            S01498
+      *                                                                   S01498
+      ** Ensure Audit Spool File recorded by RCF                          S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ     5                       S01498
+     C                     PARM *BLANK    @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*
+     C**    IF FILE CONTROLS ARE NOT OUT OF BALANCE
+     C           *INU8     IFEQ '0'
+     C*
+     C                     Z-ADD*ZERO     TRINS
+     C                     Z-ADD*ZERO     TRAMD
+     C                     Z-ADD*ZERO     TRDEL
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVEL'A'       TRCHTP
+     C*
+     C                     UPDATLBTRAID0
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+      *                                                                   S01498
+      **  If no details to report                                         S01498
+      *                                                                   S01498
+     C           *IN63     IFEQ *ON                                       S01498
+     C                     WRITEFCHEADER                                  S01498
+     C                     WRITENODTLS                                    S01498
+     C                     MOVE *OFF      *IN63                           S01498
+     C                     END                                            S01498
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZZZ      - THIS SUBROUTINE PERFORMS DATABASE ERROR PRINT       *
+     C**             HANDLING (RUN CONTROLS)                             *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #C                                                  *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZZZ      BEGSR
+     C*
+     C**   OUTPUT HEADER, DATABASE ERROR FORMAT & 'END OF REPORT'
+      *                                                                   S01498
+      ** Ensure Audit Spool File recorded by RCF                          S01498
+      *                                                                   S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           SEQ     5                       S01498
+     C                     PARM *BLANK    @PARM   3                       S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C           *LOCK     IN   LDA                                       S01498
+      *                                                                   S01498
+      ** If an error occurred during ZSFILE processing,                   S01498
+      ** Return to the calling program.                                   S01498
+      *                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C                     WRITEFCHEADER
+     C                     WRITEFCDBERR
+     C           *IN64     IFEQ *ON                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     ENDIF                                          S01498
+     C                     EXSR *PSSR                                     S01498
+     C***********          WRITEFCTRAILR                                  S01498
+      *                                                                   S01498
+      **  Report if no details found                                      S01498
+     C           *IN63     IFEQ *ON                                       S01498
+     C                     WRITENODTLS                                    S01498
+     C                     MOVE *OFF      *IN63                           S01498
+     C                     END                                            S01498
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+     C**             HANDLING (RUN CONTROLS)                             *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C********************************************************************
+     C/EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

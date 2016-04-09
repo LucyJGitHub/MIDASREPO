@@ -1,0 +1,562 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Accounts not subject to fees Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE5318 - LIST OF ACCOUNTS NOT SUBJECT TO FEES                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413 *CREATE     Date 13Apr93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+     F*           PF/REACCJL1.                                        *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FREACCJL1IF  E           K        DISK
+     F*
+     FRE5318AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     FRE5318P1O   E             80     PRINTER      KINFDS SPOOL      UC
+     F*****************************************************************
+     F*                                                               *
+     F*    F U N C T I O N   O F   I N D I C A T O R S                *
+     F*                                                               *
+     F*   50 : Account details end of file indicator                  *
+     F*   80 : No trailer found for update                            *
+     F*   80 : No record on bank details extension file               *
+     F*   51 : Charge income account code not found                   *
+     F*   85 : Database error on SDCURRJ0 in SR/ZCCYKK                *
+     F*   90-99   Standard subroutines                                *
+     F*                                                               *
+     F*   U7&U8 : Database error                                      *
+     F*                                                               *
+     F*   LR :  end of program                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*      S U B R O U T I N E   I N D E X                          *
+     F*                                                               *
+     F*    *PSSR  - Data base error performing                        *
+     F*    #INIT  - Access file details                               *
+     F*                                                               *
+     F*****************************************************************
+     E/SPACE 3
+     E********************************************************************
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E**   For compilation  - copyright insertion
+     E                    CPY@    1   1 80
+     E********************************************************************
+      /EJECT
+     I********************************************************************
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I**   Local data area for data base errors:
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**   Data structure for the customer settlement account
+     IDSCUSA      DS
+     I**********                              1   60DSCNUM                                    CSD027
+     I                                        1   6 DSCNUM                                    CSD027
+     I                                        7   9 DSCCY
+     I**********                             10  130DSACOD                                    CGL029
+     I**********                             14  150DSACSQ                                    CGL029
+     I**********                             16  18 DSBRCA                                    CGL029
+     I                                       10  190DSACOD                                    CGL029
+     I                                       20  210DSACSQ                                    CGL029
+     I                                       22  24 DSBRCA                                    CGL029
+     I                                        1  100DSRIAC
+     I*
+     I**   File Information Data Structure
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**   Branch Details
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I**   Bank Details
+     ISDBANK    E DSSDBANKPD
+     I*
+     I**   Currency Details
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** First DS for access programs, Short data structure
+     IDSFDY     E DSDSFDY
+     I*
+     I** Second DS for access programs, Long data structure
+     IDSSDY     E DSDSSDY
+     I********************************************************************
+      /EJECT
+     C********************************************************************
+     C                     MOVEACPY@      @BIS   80
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C*
+     C**   Initial processing
+     C                     EXSR #INIT
+     C*
+     C**   Reading input file
+     C                     READ REACCJZ1                 50
+     C*
+     C           *IN50     IFEQ '1'
+     C                     SETON                     10
+     C                     OPEN RE5318P1
+     C                     WRITEHEADLI
+     C                     GOTO NODET
+     C                     END
+     C*
+     C**   Detail processing if end of file not reached
+     C*
+     C           *IN50     DOWEQ'0'                        *B1
+     C*
+     C** MULTIBRANCHING PROCESSING
+     C*
+     C           BRCA      IFNE BRCA#
+     C           *IN87     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     SETOF                     87
+     C                     END
+     C                     MOVE BRCA      BRCA#
+     C                     CLOSERE5318P1
+     C                     OPEN RE5318P1
+     C                     SETON                     87
+     C                     Z-ADD0         PAGE
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C** Retrieve Branch Name
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@BRCA     DBKEY            * DB ERROR 2  *
+     C                     Z-ADD2         DBASE            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     WRITEHEADLI
+     C                     WRITEHEADPN
+     C                     END
+     C*
+     C**   Access the currency code details if there is a change of
+     C**   currency code
+     C           WWCCY     IFNE CCY
+     C                     MOVE CCY       KKCCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM KKCCY     @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     MOVE CCY       WWCCY
+     C*
+     C**   DB error:
+     C           @RTCD     IFNE *BLANK                     *B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 06 *
+     C                     MOVEL@CYCD     DBKEY            ***************
+     C                     WRITEERRP1
+     C                     EXSR *PSSR
+     C                     END                             *E1
+     C*
+     C                     END
+     C*
+     C                     Z-ADDLDBL      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPLDBL
+     C*
+     C           NSTD      IFNE *ZEROS
+     C                     Z-ADDNSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPNSTD  7
+     C                     ELSE
+     C                     MOVE *BLANKS   PPNSTD
+     C                     END
+     C*
+     C                     WRITEDETAIL
+     C*
+     C           *IN80     IFEQ '1'                        *B2
+     C                     WRITEHEADLI
+     C                     WRITEHEADPN
+     C                     MOVE '0'       *IN80
+     C                     END                             *E2
+     C*
+     C**   Reading next record on input file
+     C                     READ REACCJZ1                 50
+     C*
+     C                     END                             *E1
+     C*
+     C**   Perform end processing
+     C*
+     C           NODET     TAG
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+     C                     ELSE
+     C                     WRITETRAILP1
+     C                     END
+     C                     MOVE 1         *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C**   #INIT - Subroutine to process data base error
+     C*
+     C**   Called by Main processing
+     C*
+     C**   Calls - *PSSR
+     C*
+     C*===================================================================
+     C           #INIT     BEGSR                           *#INIT BEGSR**
+     C*
+     C                     IN   RUNDAT
+     C           *LIKE     DEFN CCY       WWCCY            Currency code
+     C           *LIKE     DEFN CCY       KKCCY            Currency code
+     C                     MOVE 'J'       ZECODE
+     C*
+     C**   Prepare LDA:
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'RE5318'  DBPGM
+     C*
+     C* Get Installation Control Data Record
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* If error in access, abort program
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE             ************
+     C                     MOVEL'SDBANKPD'DBFILE            * DATABASE *
+     C                     MOVEL@OPTN     DBKEY             * ERROR 01 *
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     ENDSR                           *#INIT ENDSR *
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*                                                                  *
+     C**   *PSSR - Subroutine to process abnormal end of program         *
+     C*                                                                  *
+     C**   Called by : #INIT                                             *
+     C*                                                                  *
+     C**   Calls -                                                       *
+     C*                                                                  *
+     C********************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR BSR**
+     C*
+     C**   Dump and return to the calling program
+     C                     OPEN RE5318AU
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     WRITEHEADAU
+     C                     WRITEERRAU
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CLOSERE5318AU
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSRR ESR**
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C********************************************************************
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

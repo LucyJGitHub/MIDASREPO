@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Input cycle initiation - E FT')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC041110 -  Input Cycle Initiation GL                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RUN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTRN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get Modules Installed */
+ 
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+ 
+/* Get GLSTAT */
+ 
+             RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)
+ 
+/* If retail present, call GL2551 to update activity date fields */
+ 
+             IF         COND(%SST(&MMOD 16 1) *EQ 'Y') THEN(DO)
+ 
+               CALL       PGM(CB0812) PARM(&RUN &RTRN)
+               IF         COND(&RUN *EQ 'Y') THEN(DO)
+                  CALL PGM(GL2551)
+                  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                    SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                               MSGDTA(&MEM) TOMSGQ(MOPERQ)
+                    GOTO       CMDLBL(DBETAG)
+                  ENDDO
+               ENDDO
+ 
+             ENDDO
+ 
+             CHGVAR     VAR(%SUBSTRING(&GLSTAT 41 1)) VALUE('N')
+             CHGVAR     VAR(%SUBSTRING(&GLSTAT 43 11)) +
+                          VALUE('NNNNNN   NNNNN')
+             CHGVAR     VAR(%SUBSTRING(&GLSTAT 57 1)) VALUE('N')
+             CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)
+ 
+/* Successful completion */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Database error processing */
+ 
+DBETAG:
+ 
+/* Retrieve database error information from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+/* Abnormal error processing */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program SCC041110 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

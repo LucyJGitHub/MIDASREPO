@@ -1,0 +1,400 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Maintain all Portfolios in Base Ccy')
+     H**********                                                          S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                             *
+     F*                                                               *
+     F*  PM1134 - PM UPDATE ALL PORTFOLIOS IN BASE CURRENCY INDICATOR *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 01JUL96               *
+     F*                 085795             Date 23FEB95               *
+     F*                 S01486             DATE 05JUL94               *
+     F*                 S01313             DATE 27APR92               *
+     F*                 B08255             DATE 07OCT91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET / LIABILITY SPLIT         *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  085795 - No need of data base error when reading SDPLCSPD    *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  S01313 - CHANGES FOR PORTFOLIO PERFORMANCE                   *
+     F*  B08255 - SPEED UP COB BY SPLITTING TOTALLING FILES           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***PREFIX*:*BJ******************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***RECORD*ID*QB*****************************************************S01486
+     F***SDPLCSL4IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F** RECORD ID QA
+     FPMCPLTLLUF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** RECORD ID PN                                                     S01313
+     FPMPORTL1IF  E           K        DISK                               S01313
+     F                                              KINFSR *PSSR          S01313
+     F** RECORD ID QA                                                     S01313
+     FPMCPSPLLUF  E           K        DISK                               S01313
+     F            PMCPOSP0                          KRENAMEPMCPOSX0       S01313
+     F                                              KINFSR *PSSR          S01313
+     F** Record ID QA                                                     CPM005
+     FPMCPSPL8UF  E           K        DISK                               CPM005
+     F            PMCPOSP0                          KRENAMEPMCPOSL8       CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F** Record ID QA                                                     CPM005
+     FPMCPSPL9UF  E           K        DISK                               CPM005
+     F            PMCPOSP0                          KRENAMEPMCPOSL9       CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F** RECORD ID RR
+     FPM1134AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F********60*********FILE*READ*INDICATOR*ON*SDPLCSPD******************S01486
+     F*       61         FILE READ INDICATOR FOR PMCPLTLL
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  ..
+     F*       ..  62  63  64  65  66  67  68  69  70
+     F*       71  72  73  74  75  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  97  98  99
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA********UDS                            256                    S01486
+     I***********                           132 141 WWFILE                S01486
+     I***********                           142 170 WWKEY                 S01486
+     I***********                           171 180 WWPGM                 S01486
+     I***********                           181 1830WWASE                 S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY                 S01486
+     I                                      171 180 DBPGM                 S01486
+     I                                      181 1830DBASE                 S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I** EXTERNAL DS FOR PORTFOLIO MANAGEMENT CUSTOMER DETAILS            S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - MAINTAIN ALL PORTFOLIOS IN BASE CURRENCY INDICATOR    *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C** KEY LIST TO ACCESS LF/PMCPLTLL
+     C           KCPLT     KLIST
+     C**********           KFLD           WWCNUM  60                                          CSD027
+     C                     KFLD           WWCNUM  6                                           CSD027
+     C                     KFLD           WWPTFR  4
+     C                     KFLD           WWTDSS 10
+     C                     KFLD           WWTVDS  1
+     C*
+     C** PARTIAL KEY TO BE USED IN READ EQUAL OF LF/PMCPLTLL
+     C           KCPL1     KLIST
+     C                     KFLD           WWCNUM
+     C*                                                                   S01313
+     C** KEY LIST TO ACCESS LF/PMCPSPLL                                   S01313
+     C           KCPSP     KLIST                                          S01313
+     C**********           KFLD           WWCNUM  60                                   S01313 CSD027
+     C                     KFLD           WWCNUM  6                                           CSD027
+     C                     KFLD           WWPTFR  4                       S01313
+     C*
+     C                     EXSR #INIT
+     C*
+     C                     EXSR #P01
+      *
+      ** WRITE AUDIT REPORT
+      *
+     C                     WRITEPM1134PP
+     C                     WRITEDETAIL                                    S01486
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           **#INIT BSR**
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'PM1134'  DBPGM
+     C                     OUT  LDA                                       S01486
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** GET INSTALLATION CONTROL DATA RECORD 1
+      *
+     C************LOVAL    SETLLSDBANKL1                                  S01486
+     C***********          READ SDBANKL1                 76               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' PRTCD   7                       S01486
+     C                     PARM '*FIRST ' POPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+      *
+     C************IN76     IFEQ '1'                        - B1           S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **#INIT ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **#P01*****-*UPDATE*ALL*PORTFOLIOS*IN*BASE*CURRENCY*IND.*PMCPOSPP***S01486
+      * #P01     - UPDATE ALL PORTFOLIOS IN BASE CURRENCY IND. PMCPOSPD  *S01486
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           **#P01  BSR**
+      *
+      ***READ*ALL*RECORDS*FROM*SDPLCSL4***********************************S01486
+      *  READ ALL RECORDS FROM SDPLCSPD                                   S01486
+     C***********          READ SDPLCSL4                 60               S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD                           S01486
+     C                     PARM '*FIRST ' POPTN                           S01486
+     C                     PARM *BLANKS   PKEY   10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+      ***********                                                   S01486085795
+     C***********PRTCD     IFNE *BLANKS                             S01486085795
+     C************LOCK     IN   LDA                                 S01486085795
+     C***********          Z-ADD2         DBASE      ***************S01486085795
+     C***********          MOVEL'SDPLCSPD'DBFILE     **DB ERROR 02**S01486085795
+     C***********          MOVE *BLANKS   DBKEY      ***************S01486085795
+     C***********          OUT  LDA                                 S01486085795
+     C***********          EXSR *PSSR                               S01486085795
+     C***********          END                             - E1     S01486085795
+      *
+     C************IN60     DOWEQ'0'                                       S01486
+     C           PRTCD     DOWEQ*BLANKS                                   S01486
+     C           QBRECI    IFEQ 'D'                                       S01486
+     C           QBAPBC    ANDEQ'N'                                       S01486
+      *
+      ** OBTAIN DETAILS OF ALL PORTFOLIOS FORCUSTOMER
+     C                     MOVE QBCUST    WWCNUM
+     C                     MOVE *LOVAL    WWPTFR
+     C                     MOVE *LOVAL    WWTDSS
+     C                     MOVE *LOVAL    WWTVDS
+      *
+     C           KCPLT     SETLLPMCPLTLL
+     C           KCPL1     READEPMCPLTLL                 61
+     C           *IN61     DOWEQ'0'
+     C                     MOVE 'N'       QAAPBC
+     C                     UPDATPMCPOSP0
+     C                     ADD  1         RRNORE
+     C           KCPL1     READEPMCPLTLL                 61
+     C                     END
+     C                     END                                            S01486
+      *
+     C***********          READ SDPLCSL4                 60               S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD                           S01486
+     C                     PARM '*NEXT  ' POPTN                           S01486
+     C                     PARM *BLANKS   PKEY                            S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C                     END
+      *                                                                   S01313
+      ** PERFORM SIMILAR PROCESSING TO UPDATE PERFORMANCE REQUIRED        S01313
+      ***INDICATOR*ON*PMCPOSPP**************************************S01313S01486
+      ** INDICATOR ON PMCPOSPD                                            S01486
+     C                     READ PMPORTL1                 60               S01313
+      *                                                                   S01313
+     C           *IN60     DOWEQ'0'                                       S01313
+      *                                                                   S01313
+      ** OBTAIN DETAILS OF ALL PORTFOLIOS FORCUSTOMER                     S01313
+     C                     MOVE PNCNUM    WWCNUM                          S01313
+     C                     MOVE PNPTFR    WWPTFR                          S01313
+      *                                                                   S01313
+     C           KCPSP     SETLLPMCPSPLL                                  S01313
+     C           KCPSP     READEPMCPSPLL                 61               S01313
+     C           *IN61     DOWEQ'0'                                       S01313
+     C                     MOVE 'Y'       QAPFMR                          S01313
+     C                     UPDATPMCPOSX0                                  S01313
+     C                     ADD  1         RRNORE                          S01313
+     C           KCPSP     READEPMCPSPLL                 61               S01313
+     C                     END                                            S01313
+      *                                                                   S01313
+     C                     READ PMPORTL1                 60               S01313
+     C                     END                                            S01313
+      *                                                                   CPM005
+      **  Perform similar processing to update performance required       CPM005
+      **  indicator on PMCPOSPD for '9997', '9998' & '9999' portfolios    CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   PRTCD                           CPM005
+     C                     PARM '*FIRST'  POPTN                           CPM005
+     C                     PARM *BLANKS   PKEY                            CPM005
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           PRTCD     DOWEQ*BLANKS                                   CPM005
+      *                                                                   CPM005
+     C           QBRECI    IFEQ 'D'                                       CPM005
+      *                                                                   CPM005
+     C           QBPFM7    IFEQ 'Y'                                       CPM005
+     C           QBPFM8    OREQ 'Y'                                       CPM005
+     C           QBPFM9    OREQ 'Y'                                       CPM005
+      *                                                                   CPM005
+      **  Processing for '9997' portfolios                                CPM005
+      *                                                                   CPM005
+     C           QBPFM7    IFEQ 'Y'                                       CPM005
+     C                     MOVE QBCUST    WWCNUM                          CPM005
+     C                     MOVE '9997'    WWPTFR                          CPM005
+      *                                                                   CPM005
+     C           KCPSP     SETLLPMCPSPLL                                  CPM005
+     C           KCPSP     READEPMCPSPLL                 61               CPM005
+     C           *IN61     DOWEQ'0'                                       CPM005
+     C                     MOVE 'Y'       QAPFMR                          CPM005
+     C                     UPDATPMCPOSX0                                  CPM005
+     C                     ADD  1         RRNORE                          CPM005
+     C           KCPSP     READEPMCPSPLL                 61               CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      **  Processing for '9998' portfolio                                 CPM005
+      *                                                                   CPM005
+     C           QBPFM8    IFEQ 'Y'                                       CPM005
+     C                     MOVE QBCUST    WWCNUM                          CPM005
+      *                                                                   CPM005
+     C           WWCNUM    SETLLPMCPSPL8                                  CPM005
+     C           WWCNUM    READEPMCPSPL8                 61               CPM005
+     C           *IN61     DOWEQ'0'                                       CPM005
+     C                     MOVE 'Y'       QAPFM8                          CPM005
+     C                     UPDATPMCPOSL8                                  CPM005
+     C                     ADD  1         RRNORE                          CPM005
+     C           WWCNUM    READEPMCPSPL8                 61               CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      **  Processing for '9999' portfolio                                 CPM005
+      *                                                                   CPM005
+     C           QBPFM9    IFEQ 'Y'                                       CPM005
+     C                     MOVE QBCUST    WWCNUM                          CPM005
+      *                                                                   CPM005
+     C           WWCNUM    SETLLPMCPSPL9                                  CPM005
+     C           WWCNUM    READEPMCPSPL9                 61               CPM005
+     C           *IN61     DOWEQ'0'                                       CPM005
+     C                     MOVE 'Y'       QAPFM9                          CPM005
+     C                     UPDATPMCPOSL9                                  CPM005
+     C                     ADD  1         RRNORE                          CPM005
+     C           WWCNUM    READEPMCPSPL9                 61               CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     END                                            CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   PRTCD                           CPM005
+     C                     PARM '*NEXT'   POPTN                           CPM005
+     C                     PARM *BLANKS   PKEY                            CPM005
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM005
+     C                     END                                            CPM005
+      *
+     C                     ENDSR
+     C*****************************************************************   R00300
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - TO PROCESS ABNORMAL END OF PROGRAM                          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      *                                                                        *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK                                    S01486
+     C                     MOVE 'Y'       @RUN    1                       S01486
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     WRITEPM1134PP                                  S01486
+     C                     WRITEERRORAU                                   S01486
+     C                     END                                            S01486
+     C                     MOVE '1'       *INLR
+     C**
+     C                     DUMP
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

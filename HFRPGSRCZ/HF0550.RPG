@@ -1,0 +1,1866 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Input of scan parameters')
+/*OVRF*: CRTSRCPF QTEMP/JRNDUMMY                                    : *
+/*OVRF*: OVRDBF HFSCANL1 QTEMP/JRNDUMMY                             : *
+/*ADDF*: DLTF QTEMP/JRNDUMMY                                        : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0550 - HF Input of Scan Parameters                         *
+     F*                                                               *
+     F*  Function:  This program allows the definition of scan        *
+     F*  (I/C Int)  parameters to be used when looking at the journal *
+     F*             changes screen (HF0530).  A file name can be      *
+     F*             specified which will contain the scan conditions  *
+     F*             and can be retained for later use.                *
+     F*             Alternatively, *CURRENT can be specified and the  *
+     F*             scan conditions input will not be saved.          *
+     F*             The number of records to scan can be specified;   *
+     F*             this defaults to 500 if not entered.              *
+     F*                                                               *
+     F*  Called By: HF0530 - HF Display Changes in File               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 142222             DATE 19MAR99               *
+     F*  PREV AMEND NO. 092908             DATE 30APR96               *
+     F*                 083166             DATE  3APR96               *
+     F*                 087526             DATE 19OCT95               *
+     F*                 S01379             DATE 22SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  142222 - Remove validation for date formatting to ensure     *
+     F*           that all dates after 31DEC99 are displayed.         *
+     F*  092908 - Member name (FMM) was only 3A on command, causing   *
+     F*           scan to crash with member not found. Change CMD     *
+     F*           string to be 65 long and member name to be 12A      *
+     F*           including parentheses, and format the command in    *
+     F*           the array.                                          *
+     F*  083166 - Unable to determine the effect of using scan        *
+     F*           conditions on report and on screen.                 *
+     F*  087526 - DEFINING SCAN CONDITIONS COMES UP WITH MSG          *
+     F*           'THESE SCAN CONDITIONS BELONG TO A DIFF.USER'       *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FHF0550DFCF  E                    WORKSTN
+     F                                        RECNUMKSFILE HF0550F1
+     FHFSCANL1UF  E                    DISK                           UC
+     F                                              KRECNO X
+     FHFSCANL0IF  E           K        DISK                           UC
+     F                                              KINFDS SCNDS
+     F            HFSCANP0                          KRENAMESCANSFA
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  KL       F12 = CANCEL
+     F*  KN       F14 = DEFINITIONS
+     F*  KW       F22 = ACCEPT
+     F*
+     F*  02       SUBFILE DISPLAY INDICATOR
+     F*  03       SUBFILE DISPLAY CONTROL INDICATOR
+     F*  04       SUBFILE CLEAR INDICATOR
+     F*  06       SUBFILE INITIALIZE INDICATOR
+     F*  07       PROTECT AND/OR FIELD ON FIRST LINE OF SUBFILE
+     F*  08       SUBFILE END INDICATOR
+     F*  10       SFLNXTCHG INDICATOR
+     F*  18       SCREEN ERROR ON SECOND 'TEST' FIELD
+     F*  19       SCREEN ERROR ON FIRST 'VALUE' FIELD
+     F*  21       SCREEN ERROR ON 'AND/OR' FIELD
+     F*  22       SCREEN ERROR ON 'FIELD' FIELD
+     F*  23       SCREEN ERROR ON 'FILE' FIELD
+     F*  24       SCREEN ERROR ON FIRST 'TEST' FIELD
+     F*  25       SCREEN ERROR ON SECOND 'VALUE' FIELD
+     F*  31       PROTECT/NON-DISPLAY REVERS FIELD
+     F*  41       READ CHANGE INDICATOR ON SUBFILE
+     F*  44       SUBFILE RECORD READ
+     F*  50       FIRST SCREEN INDICATOR
+     F*  59       MESSAGE SUBFILE END INDICATOR
+     F*  80       GENERAL ERROR INDICATOR
+     F*  88       WORK INDICATOR
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  SUBFIL  -  FILL SUBFILE
+     F*  INSRT   -  VALIDATE SECOND SCREEN
+     F*  TESVA   -  TEST VALUE ENTERED
+     F*  INITVL  -  FILL AND VALIDATE FIRST SCREEN
+     F*  UPDATE  -  UPDATE PROCESSING
+     F*  PERMFL  -  FILL FIELD TEXT FOR JOURNAL CONTROL FIELDS
+     F*  CHKSEL  -  CHECK FOE SELECT/OMIT CRITERIA
+     F*  VAL40   -  VALIDATE VALUE ENTERED
+     F*  SBSTR   -  SET UP STRING FOR VALUE
+     F*  FORMP   -
+     F*  P0452   -
+     F*  L0CHK   -  OPEN FILE HFSCANL0
+     F*
+     F*  ZALIGN  -  VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS
+     F*  ZDATE1  -  CONVERT DATE TO MIDAS DAY NUMBER
+     F*  ZDATE2  -  CONVERT MIDAS DAY NUMBER TO DDMMYY FORMAT
+     F*
+     F*****************************************************************
+      /EJECT
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*-----------------------------------------------------------------
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    FIL       501 10               FILE ORIGIN
+     E                    FLD       501 10               FIELD NAMES.
+     E                    TXT       501 20               TEXT OF NAME
+     E                    BUF       501  5 0             BUFFER POSITION
+     E                    FLEN      501  5 0             BUFFER LENGTH N
+     E                    FLDT      501  1               TYPE OF FIELD
+     E                    FLDD      501  2 0             DEC.POSITIONS
+     E                    FLDP      501  2 0             DECIMAL POSITION
+     E                    OK        501  1               LINE DISPLAY Y/N
+     E                    ERR     1   3 80                MESSAGES
+     E                    VS         27  1               VALUE TABLE
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    NUMXX      16  1
+     E                    PT         27  1
+     E                    PT1        27  1
+     E                    PT2        27  1
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    BLK        16  1               BLANK SR. ARRAY
+     E                    BLKK       17  1               BLANK SR. ARRAY
+     E                    OVR     1   2 60
+     E*****************   CMD     1   1 56               COMMAND          092908
+     E                    CMD     1   1 65               COMMAND          092908
+      /EJECT
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I*
+     IPSDS       SDS
+     I** Program status data structure
+     I                                      244 246 DSWSID
+     I                                      254 263 DSUSER
+     ISCNDS       DS                            512
+     I                                       93 102 SCFIL
+     IINFDS#      DS                            512                       087526
+     I                                      369 369 FNCT                  087526
+     I            DS
+     I                                        1   8 PFIELD
+     I                                    P   1   10P1
+     I                                        1   1 P1B
+     I                                    P   1   20P2
+     I                                        2   2 P2B
+     I                                    P   1   30P3
+     I                                        3   3 P3B
+     I                                    P   1   40P4
+     I                                        4   4 P4B
+     I                                    P   1   50P5
+     I                                        5   5 P5B
+     I                                    P   1   60P6
+     I                                        6   6 P6B
+     I                                    P   1   70P7
+     I                                        7   7 P7B
+     I                                    P   1   80P8
+     I                                        8   8 P8B
+     ISRC2        DS
+     I                                        1  80 LOT
+     I                                        1   5 FILL
+     I                                        6   6 CARA
+     I                                        7   7 STERN
+     I                                       17  17 SELOM
+     I                                        8  49 FIL2
+     I                                       50  51 TES
+     I                                       52  53 FIL4
+     I                                       54  63 SCRFIL
+     I                                       64  79 FIL3
+     I                                       53  79 VA
+     I                                       54  570PST
+     I                                       59  620PEN
+     I                                       49  52 PERM
+      * FOR IST RECORD IN DDS
+     I                                        8  17 DDUSER
+     I                                       18  27 DDMBR
+     I                                       28  37 DDITEM
+     I                                       38  43 DDCREA
+     I                                       44  49 DDUSE
+     IJRN         DS                            256
+     I                                        2  11 USER
+     I                                       23  32 FILE
+     IJRN2        DS                            256
+     I                                       13  22 SCAOLD
+     I                                       23  280MAXSCN
+     INUM17X      DS                             17
+     I                                    P   1  160NUM17
+     I                                        1  170NUM170
+     I            DS                              6
+     I                                        1   60ZDAT6
+     I                                        1   6 ZDATX
+     IJODAT2      DS
+     I                                        1   2 D2
+     I                                        3   4 M2
+     I                                        5   6 Y2
+     IDAT2        DS
+     I                                        1   2 Y22
+     I                                        3   4 M22
+     I                                        5   6 D22
+     IJOTIM2      DS
+     I                                        1   20HOU
+     I                                        3   40MIN
+     I                                        5   60SEC
+     I            DS
+     I                                        1   10P1XX
+     I                                        1   1 P1X
+     I                                        1   30P3XX
+     I                                        1   3 P3X
+     I                                        1   50P5XX
+     I                                        1   5 P5X
+     I                                        1   70P7XX
+     I                                        1   7 P7X
+     I                                        1   90P9XX
+     I                                        1   9 P9X
+     I                                        1  110P11XX
+     I                                        1  11 P11X
+     I                                        1  130P13XX
+     I                                        1  13 P13X
+     I                                        1  150P15XX
+     I                                        1  15 P15X
+     I*
+     I            DS                                                      087526
+     I                                        1  80 STRING                087526
+     I                                       30  43 FMF                   087526
+     I*******************                    50  52 FMM                   092908
+     I                                       49  60 FMM                   092908
+     I            DS                                                      087526
+     I************************                1  56 CMD                   092908
+     I                                        1  65 CMD                   092908
+     I                                        6  19 CFMF                  087526
+     I************************               36  38 CFMM                  092908
+     I                                       36  47 CFMM                  092908
+     IRUNDAT    E DSRUNDAT
+     I*
+     I** Data Area giving Installation Control Details
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N N I N G    O F    M A I N    P R O G R A M
+     C*****************************************************************
+     C*
+     C** SET UP COPYRIGHT PARAMETER
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** READ IN INSTALLATION DATA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA
+     C*
+     C** Test Date Format for Standard Subroutines
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C                     MOVE DSWSID    SWSID
+     C                     MOVE DSUSER    SUSER
+     C*
+     C                     MOVEL'HF0550'  SPGMQ
+     C                     MOVE *BLANKS   SSFKY
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'HFMSGF'  WUMSGF 10
+      *
+      *     Entry parameter
+      *
+     C           *NAMVAR   DEFN           JRN
+     C           *LOCK     IN   *NAMVAR
+     C           *NAMVAR   DEFN           JRN2
+     C           *LOCK     IN   *NAMVAR
+     C           @OPEN0    IFNE 'OPEN'
+     C                     EXSR L0CHK
+     C                     MOVEL'OPEN'    @OPEN0  4
+     C                     END
+      *
+      * DUMMY CHAIN FOR COMPILE PURPOSES
+     C           JOOBJF    CHAINHFSCANL0             99
+     C           *ENTRY    PLIST
+     C                     PARM           FIL
+     C                     PARM           FLD
+     C                     PARM           TXT
+     C                     PARM           BUF
+     C                     PARM           FLEN
+     C                     PARM           FLDT
+     C                     PARM           FLDD
+     C                     PARM           FLDP
+     C                     PARM           OK
+     C                     PARM           RET     1
+     C           MAXSCN    IFEQ 0
+     C                     Z-ADD500       MAXSCN
+     C                     END
+      * HEXQ IS '
+     C                     BITON'123457'  HEXQ    1
+     C                     BITOF'06'      HEXQ
+     C                     Z-ADD0         X       20
+     C                     MOVELSCAOLD    SCAPAR
+     C                     MOVEL'N'       ONUP    1
+     C                     CLOSEHFSCANL0
+     C                     MOVEL*BLANKS   @OPEN0
+     C                     EXSR INITVL
+      * F12  ASKED?
+     C           RET       IFEQ '1'
+     C                     GOTO END
+     C                     END
+     C           VALID     IFEQ 'N'
+     C                     GOTO END
+     C                     END
+     C           SCAPAR    IFNE SCAOLD
+     C                     MOVEL'Y'       ONUP
+     C                     END
+     C                     MOVELSCAPAR    SCAOLD
+     C                     OUT  *NAMVAR
+      *
+     C                     Z-ADD1         RECNUM  20
+     C                     EXSR SUBFIL
+     C           RETVAL    TAG
+     C                     MOVE '1'       *IN,08
+     C                     MOVEA'11'      *IN,02
+     C                     WRITEHF0550F3
+     C                     EXSR INSRT
+     C*
+     C           RET       IFEQ '1'
+     C                     GOTO END
+     C                     END
+     C*                                                                   087526
+     C*****************    Z-ADD56        PLEN   155                      092908
+     C                     Z-ADD65        PLEN   155                      092908
+     C                     MOVELFMF       CFMF                            087526
+     C                     MOVELFMM       CFMM                            087526
+     C                     CALL 'QCMDEXC'                                 087526
+     C                     PARM           CMD                             087526
+     C                     PARM           PLEN                            087526
+     C*
+     C                     Z-ADD1         RECNUM  20
+      *
+     C           @OPEN0    IFNE 'OPEN'
+     C                     EXSR L0CHK
+     C                     MOVEL'OPEN'    @OPEN0
+     C                     END
+      *
+     C           SCFIL     IFNE 'QTEMP'
+     C                     MOVEL'Y'       ONUP
+     C                     END
+     C                     CLOSEHFSCANL0
+     C                     MOVEL*BLANKS   @OPEN0
+      * AT LEAST ONE UPDATE DONE, SCREEN OK AND F12   FOR RETURN ASKED
+      * : BUILD NEW LOG FILE FOR SCANNING
+     C           ONUP      IFEQ 'Y'
+     C           VALID     ANDEQ'Y'
+     C           *INKW     ANDEQ'1'
+     C                     EXSR CHKSEL
+      *
+      * Close the file if it is open
+     C           @OPEN1    IFEQ 'OPEN'
+     C                     CLOSEHFSCANL1
+     C                     END
+      *
+     C                     CALL 'HFC0550'
+     C                     PARM           SCAPAR                          083166
+      *
+      * Open the file if it was closed above
+     C           @OPEN1    IFEQ 'OPEN'
+     C                     OPEN HFSCANL1
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     GOTO END
+     C                     END
+      * NO UPDATE DONE, BUT SCREEN OK AND F12   ASKED
+     C           VALID     IFEQ 'Y'
+     C           *INKW     ANDEQ'1'
+     C                     SETON                     LR
+     C                     GOTO END
+     C                     END
+     C                     GOTO RETVAL
+     C           END       TAG
+      *
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE SUBFIL
+     C*****************************************************************
+     C*
+     C           SUBFIL    BEGSR
+      *
+     C           @OPEN1    IFNE 'OPEN'
+     C                     OPEN HFSCANL1
+     C                     MOVEL'OPEN'    @OPEN1  4
+     C                     END
+      *
+     C                     Z-ADD1         DSPREC  40
+     C                     MOVEA'00'      *IN,02
+     C                     SETON                     06
+     C                     WRITEHF0550C0
+     C                     WRITEHF0550F2
+     C                     CALL 'SCC0250'
+     C                     SETOF                     06
+     C                     Z-ADD4         XX      30
+     C                     Z-ADD37        X1      20
+     C           LOOPSB    TAG
+     C                     MOVEA'00000000'*IN,18
+     C                     MOVEL*BLANKS   AOR
+     C                     MOVEL*BLANKS   FILE
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   TEST1
+     C                     MOVEL*BLANKS   VAL1
+     C                     MOVEL*BLANKS   FTEX
+     C                     MOVEL*BLANKS   TEST2
+     C                     MOVEL*BLANKS   VAL2
+     C                     Z-ADDX1        Y       20
+     C           Y         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           STERN     IFEQ '*'
+     C                     GOTO ENDL
+     C                     END
+     C                     MOVELSCRFIL    FILE
+     C           RECNUM    IFNE 1
+     C           SELOM     IFEQ 'S'
+     C                     MOVEL'O'       AOR
+     C                     ELSE
+     C                     MOVEL'A'       AOR
+     C                     END
+     C                     END
+      *
+     C           XX        CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+      * THIS TREATMENT IN CASE OF BEFORE IMAGE IS COMMENT
+     C           STERN     IFEQ '*'
+     C                     ADD  1         XX
+     C           XX        CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C                     SUB  1         XX
+     C                     END
+      * SEARCH FOR FIELD NAME
+     C                     Z-ADD0         A       40
+     C           FILE      IFNE *BLANKS
+     C                     GOTO LSEA
+     C                     END
+      * it is a journal control field
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL*BLANKS   FTEX
+     C                     MOVELPERM      FIELD
+     C                     EXSR PERMFL
+     C                     GOTO SUITE
+      *
+     C           LSEA      TAG
+     C                     ADD  1         A
+     C           FLD,A     IFEQ *BLANKS
+     C                     MOVEL*BLANKS   FIELD
+     C                     MOVEL'.???'    FIELD
+     C                     MOVELERR,1     FTEX
+     C                     SETON                     2210
+     C                     MOVEL'HAF0115' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO SUITE
+     C                     END
+     C           FILE      IFNE FIL,A
+     C                     GOTO LSEA
+     C                     END
+     C           PST       IFNE BUF,A
+     C                     GOTO LSEA
+     C                     END
+     C                     MOVELFLD,A     FIELD
+     C                     MOVELTXT,A     FTEX
+     C           OK,A      IFEQ 'N'
+     C                     MOVELERR,2     FTEX
+     C                     END
+      *
+     C           SUITE     TAG
+     C                     ADD  1         Y
+     C           Y         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           FILE      IFEQ *BLANKS
+     C                     MOVEL'A'       FLDX    1
+     C                     ELSE
+     C                     MOVELFLDT,A    FLDX
+     C                     END
+      *
+     C           STERN     IFNE '*'
+     C                     MOVELTES       TEST1
+     C           FIELD     IFEQ '#DAT'
+     C                     MOVEAVA        PT1
+     C                     MOVEAPT1,2     JODAT2
+     C                     MOVEAD2        PT1,6
+     C                     MOVEAY2        PT1,2
+     C                     MOVEAPT1       VA
+     C                     END
+     C           FLDX      IFEQ 'D'
+     C           FLDX      OREQ 'P'
+     C           FLDX      OREQ 'S'
+     C                     MOVEAVA        PT1
+     C                     EXSR SBSTR
+     C                     SETON                     88
+     C           FLDX      IFEQ 'D'
+     C           FLDX      OREQ 'P'
+     C                     EXSR FORMP
+     C                     END
+     C           *IN88     IFEQ '1'
+     C                     MOVEAPT        ZFIELD
+     C           FLDP,A    IFGT FLEN,A
+     C           FLDX      ANDEQ'S'
+     C                     Z-ADDFLEN,A    CDP
+     C                     ELSE
+     C                     Z-ADDFLDP,A    CDP     20
+     C                     END
+     C                     EXSR P0452
+     C                     MOVEL*BLANKS   PT
+     C                     MOVEAZFIELD    PT
+     C                     MOVEAPT        VAL1
+     C                     END
+     C                     ELSE
+     C                     MOVELVA        VAL1
+     C                     END
+     C                     END
+      *
+     C                     ADD  1         Y
+     C           Y         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           STERN     IFNE '*'
+     C                     MOVELTES       TEST2
+     C           FLDX      IFEQ 'D'
+     C           FLDX      OREQ 'P'
+     C           FLDX      OREQ 'S'
+     C                     MOVEAVA        PT1
+     C                     EXSR SBSTR
+     C                     SETON                     88
+     C           FLDX      IFEQ 'D'
+     C           FLDX      OREQ 'P'
+     C                     EXSR FORMP
+     C                     END
+     C           *IN88     IFEQ '1'
+     C                     MOVEAPT        ZFIELD
+     C           FLDP,A    IFGT FLEN,A
+     C           FLDX      ANDEQ'S'
+     C                     Z-ADDFLEN,A    CDP
+     C                     ELSE
+     C                     Z-ADDFLDP,A    CDP     20
+     C                     END
+     C                     EXSR P0452
+     C                     MOVEL*BLANKS   PT
+     C                     MOVEAZFIELD    PT
+     C                     MOVEAPT        VAL2
+     C                     END
+     C                     ELSE
+     C                     MOVELVA        VAL2
+     C                     END
+     C                     END
+      *
+     C           ENDL      TAG
+      * IF FIRST LINE, THEN AOR INDICATOR IS NOT AVAILABLE
+     C           RECNUM    IFEQ 1
+     C                     SETON                     07
+     C                     ELSE
+     C                     SETOF                     07
+     C                     END
+      * CHECK FOR ANY CHARACTERS THAT CANNOT BE DISPLAYED
+     C                     MOVEAVAL1      PT
+     C                     EXSR VAL40
+     C   99                MOVELERR,3     VAL1
+     C   99                SETON                     19
+     C                     MOVEAVAL2      PT
+     C                     EXSR VAL40
+     C   99                MOVELERR,3     VAL2
+     C   99                SETON                     25
+     C           *IN25     IFEQ '1'
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+      *
+     C                     WRITEHF0550F1
+     C*
+     C                     ADD  1         RECNUM
+     C                     ADD  2         XX
+     C                     ADD  3         X1
+     C           X1        IFGT 84
+     C                     GOTO SBLEND
+     C                     END
+     C                     GOTO LOOPSB
+     C           SBLEND    TAG
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE INSRT
+     C*****************************************************************
+     C*
+     C           INSRT     BEGSR
+      *
+     C                     SETON                     80
+     C           *IN80     DOWEQ'1'
+     C                     WRITEHF0550C0
+     C                     EXFMTHF0550F2
+     C                     CALL 'SCC0250'
+     C                     SETOF                     80
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE '1'       RET
+     C                     SETON                     LR
+     C                     GOTO INSRTE
+     C                     END
+     C*
+     C                     MOVEA'000000'  *IN,20
+      *
+      *
+     C                     MOVEL'Y'       VALID
+     C                     MOVEA'0'       *IN,44
+      * CHECK SUBFILE
+     C                     READCHF0550F1                 41
+     C           *IN41     DOWEQ'0'                        B002
+     C                     MOVEA'000000'  *IN,18
+     C                     Z-ADD0         XX
+     C           RECNUM    IFEQ 1
+     C                     SETON                     07
+     C                     ELSE
+     C                     SETOF                     07
+     C                     END
+      * IF FIELD IS BLANKED OUT,NO SCAN CONDITION IS DEFINED ON
+      * THAT LINE
+     C           FIELD     IFEQ *BLANKS
+     C                     MOVEL*BLANKS   FTEX
+     C                     MOVEL*BLANKS   FILE
+     C                     MOVEL*BLANKS   VAL1
+     C                     MOVEL*BLANKS   VAL2
+     C                     MOVEL*BLANKS   TEST1
+     C                     MOVEL*BLANKS   TEST2
+     C                     MOVEL*BLANKS   AOR
+     C                     GOTO NOFIEL
+     C                     END
+      * FIND FIELD NAME
+     C           LOFI      TAG
+      * FIND WETHER IT IS A RESERVED WORD
+     C                     MOVELFIELD     FIELDX  1
+     C           FIELDX    IFEQ '#'
+     C           FIELD     IFEQ '#PGM'
+     C           FIELD     OREQ '#USR'
+     C           FIELD     OREQ '#JNA'
+     C           FIELD     OREQ '#OBJ'
+     C                     Z-ADD10        FLE
+     C                     MOVEL'A'       FLDX
+     C                     MOVEL*BLANKS   FILE
+     C                     ELSE
+     C           FIELD     IFEQ '#CID'
+     C                     Z-ADD10        FLE
+     C                     Z-ADD10        FDD
+     C                     Z-ADD0         FLP
+     C                     MOVEL'S'       FLDX
+     C                     MOVEL*BLANKS   FILE
+     C                     ELSE
+     C           FIELD     IFEQ '#DAT'
+     C           FIELD     OREQ '#TIM'
+     C           FIELD     OREQ '#NUM'
+     C                     Z-ADD6         FLE
+     C                     MOVEL'A'       FLDX
+     C                     MOVEL*BLANKS   FILE
+     C                     ELSE
+     C           FIELD     IFEQ '#REC'
+     C                     Z-ADD1         FLE
+     C                     MOVEL'A'       FLDX
+     C                     MOVEL*BLANKS   FILE
+     C                     ELSE
+     C                     SETON                     222380
+     C                     MOVEL'HAF0115' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C*
+     C                     MOVEL'HAF0099' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     EXSR PERMFL
+     C                     GOTO LOFIEN
+     C                     END
+      *
+     C                     ADD  1         XX
+     C           FLD,XX    IFEQ *BLANKS
+     C                     SETON                     222380
+     C                     MOVEL'HAF0115' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C*
+     C                     MOVEL'HAF0099' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO LOFIEN
+     C                     END
+      * THE RIGHT FILE NAME?
+     C           FLD,XX    IFNE FIELD
+     C                     GOTO LOFI
+     C                     END
+     C           FILE      IFEQ *BLANKS
+     C                     MOVELFIL,XX    FILE
+     C                     ELSE
+     C           FILE      IFNE FIL,XX
+     C                     GOTO LOFI
+     C                     END
+     C                     END
+     C                     MOVELTXT,XX    FTEX
+     C           OK,XX     IFEQ 'N'
+     C                     MOVELERR,2     FTEX
+     C                     END
+     C                     MOVELFLDT,XX   FLDX
+     C                     Z-ADDFLEN,XX   FLE     20
+     C                     Z-ADDFLDP,XX   FLP     20
+     C                     Z-ADDFLDD,XX   FDD     20
+      * AND/OR INDICATOR CHECKING STARTING ON 2ND LINE
+     C           LOFIEN    TAG
+     C           AOR       IFNE 'A'
+     C           AOR       ANDNE'O'
+     C           AOR       ANDNE' '
+     C           RECNUM    ANDNE1
+     C                     SETON                     2180
+     C                     MOVEL'HAF0114' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+      * TEST 'TEST'-VALUE
+     C           TEST1     IFNE 'EQ'
+     C           TEST1     ANDNE'NE'
+     C           TEST1     ANDNE'LT'
+     C           TEST1     ANDNE'NL'
+     C           TEST1     ANDNE'GT'
+     C           TEST1     ANDNE'NG'
+     C           TEST1     ANDNE'LE'
+     C           TEST1     ANDNE'GE'
+     C           TEST1     ANDNE'  '
+     C                     SETON                     2480
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C           TEST2     IFNE 'EQ'
+     C           TEST2     ANDNE'NE'
+     C           TEST2     ANDNE'LT'
+     C           TEST2     ANDNE'NL'
+     C           TEST2     ANDNE'GT'
+     C           TEST2     ANDNE'NG'
+     C           TEST2     ANDNE'LE'
+     C           TEST2     ANDNE'GE'
+     C           TEST2     ANDNE'  '
+     C                     SETON                     1880
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+      * ONE TEST CRITERIA MAY BE BLANK, BUT NOT BOTH
+     C           TEST1     IFEQ '  '
+     C           TEST2     ANDEQ'  '
+     C                     SETON                     182480
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     ELSE
+     C           TEST1     IFEQ '  '
+     C                     MOVEL*BLANKS   VAL1
+     C                     END
+     C           TEST2     IFEQ '  '
+     C                     MOVEL*BLANKS   VAL2
+     C                     END
+      * IF IT IS A JOURNAL CONTROL FIELD, ONLY THE BEFORE IMAGE
+      * MUST BE KEYED IN
+     C           FIELDX    IFEQ '#'
+     C           TEST1     ANDEQ'  '
+     C                     SETON                     1880
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C           FIELDX    IFEQ '#'
+     C           TEST2     ANDNE'  '
+     C                     SETON                     2480
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C                     END
+      * TEST ON VALUE
+     C           TEST1     IFNE '  '
+     C                     MOVEAVAL1      VS
+     C                     MOVELVAL1      ZDATE
+     C                     EXSR TESVA
+     C           OKS       IFNE 'Y'
+     C                     SETON                     1980
+     C                     MOVEL'HAF0113' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C                     MOVEAPT        PT1
+     C                     END
+      * TEST ON 2ND VALUE
+     C           TEST2     IFNE '  '
+     C                     MOVEAVAL2      VS
+     C                     MOVELVAL2      ZDATE
+     C                     EXSR TESVA
+     C           OKS       IFNE 'Y'
+     C                     SETON                     2580
+     C                     MOVEL'HAF0116' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C                     MOVEAPT        PT2
+     C                     END
+      * ANY ERROR FOUND?
+     C           NOFIEL    TAG
+     C           *IN18     IFEQ '1'
+     C           *IN19     OREQ '1'
+     C           *IN20     OREQ '1'
+     C           *IN21     OREQ '1'
+     C           *IN22     OREQ '1'
+     C           *IN23     OREQ '1'
+     C           *IN24     OREQ '1'
+     C           *IN25     OREQ '1'
+     C                     MOVEA'1'       *IN,10
+     C                     MOVEL'N'       VALID
+      * FIRST SUBFILE RECORD?
+     C           *IN44     IFEQ '0'
+     C                     Z-ADDRECNUM    DSPREC
+     C                     MOVEA'1'       *IN,44
+     C                     END
+      *
+     C                     ELSE
+     C                     EXSR UPDATE
+     C                     END
+      *
+     C                     UPDATHF0550F1
+     C                     MOVEA'0'       *IN,10
+     C                     READCHF0550F1                 41
+     C                     END
+     C                     END
+      *
+     C           INSRTE    TAG
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE TESVA
+     C*****************************************************************
+     C*
+      *
+      *  TEST IF VALUE ENTERED IS CORRECT
+     C           TESVA     BEGSR
+      * TEST FOR DATE FORMAT
+     C           FLDX      IFEQ 'D'
+     C                     EXSR ZDATE1
+     C  N99                MOVEL'Y'       OKS
+     C   99                MOVEL'N'       OKS
+     C  N99                MOVEL*BLANKS   ZFIELD
+     C  N99                MOVELZDAYNO    ZFIELD
+     C  N99                Z-ADD5         ZADIG
+     C  N99                Z-ADD0         ZADEC
+     C  N99                EXSR ZALIGN
+     C                     GOTO TSENEN
+     C                     END
+      * TEST FOR NUMERIC VALUE
+     C           FLDX      IFEQ 'P'
+     C           FLDX      OREQ 'S'
+     C                     GOTO NUMCHK
+     C                     END
+      * TEST FOR NON-NUMERIC VALUE
+     C                     Z-ADD0         QUOT    20
+     C                     Z-ADD1         X1
+     C                     Z-ADD0         LENFLD  20
+     C           VS,1      IFNE HEXQ
+     C                     MOVEL'N'       OKS
+     C                     GOTO TESEND
+     C                     END
+     C           TESVA1    TAG
+     C                     ADD  1         X1
+     C           X1        IFGT 27
+     C           QUOT      IFNE 1
+     C                     MOVEL'N'       OKS
+     C                     ELSE
+     C                     MOVEL'Y'       OKS
+     C                     END
+     C                     GOTO TESEND
+     C                     END
+     C           VS,X1     IFEQ HEXQ
+     C                     ADD  1         QUOT
+     C                     GOTO TESVA1
+     C                     END
+     C           VS,X1     IFNE ' '
+     C           QUOT      IFNE 0
+     C                     MOVEL'N'       OKS
+     C                     GOTO TESEND
+     C                     END
+     C                     ADD  1         LENFLD
+     C                     END
+     C                     GOTO TESVA1
+     C           NUMCHK    TAG
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVEAVS        ZFIELD
+     C           FDD       SUB  FLP       ZADIG
+     C                     Z-ADDFLP       ZADEC
+     C                     EXSR ZALIGN
+     C   99                MOVEL'N'       OKS
+     C  N99                MOVEL'Y'       OKS
+     C                     GOTO TSENEN
+     C           TESEND    TAG
+      * IS LENGTH OF ALPHA FIELD GREATER THAN BUFFER LENGTH?
+     C           LENFLD    IFGT FLE
+     C                     MOVEL'N'       OKS
+     C                     END
+      * CHECK IF DATE ENTERED IS VALID
+     C           FIELD     IFEQ '#DAT'
+     C                     MOVEAVS,2      ZDATEX  6        DEAL DATE
+     C                     MOVE ZDATEX    ZDATE
+     C                     EXSR ZDATE1
+     C   99                MOVEL'N'       OKS
+     C   99                GOTO TSENEN
+     C                     MOVE ZDATEX    JODAT2
+     C                     MOVEAD2        VS,6
+     C                     MOVEAY2        VS,2
+     C                     END
+      * CHECK IF TIME ENTERED IS VALID
+     C           FIELD     IFEQ '#TIM'
+     C                     MOVEAVS,2      JOTIM2
+     C           HOU       IFGT 23
+     C           MIN       ORGE 60
+     C           SEC       ORGE 60
+     C                     MOVEL'N'       OKS
+     C                     GOTO TSENEN
+     C                     END
+     C                     END
+      *
+      * CHECK IF RECN ENTERED IS VALID
+     C           FIELD     IFEQ '#REC'
+     C                     MOVELVS,2      RECMOD  1
+     C           RECMOD    IFNE 'I'
+     C           RECMOD    ANDNE'C'
+     C           RECMOD    ANDNE'R'
+     C                     MOVEL'N'       OKS
+     C                     GOTO TSENEN
+     C                     END
+     C                     END
+      *
+     C           TSENEN    TAG
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE INITVL
+     C*****************************************************************
+     C*
+      *
+      * SUBROUTINE FOR FIRST SCREEN
+     C           INITVL    BEGSR
+     C                     MOVEL' '       RET
+     C                     SETON                     50
+     C           RETRY     TAG
+     C                     MOVEL'N'       VALID
+     C                     MOVEA'00'      *IN,02
+     C                     WRITEHF0550F3
+     C                     WRITEHF0550C0
+     C                     EXFMTHF0550F4
+     C                     CALL 'SCC0250'
+      * ALWAYS WRITE DTAARA FOR NUMBER OF RECORDS TO SCAN
+     C           *INKL     IFEQ '1'
+     C                     OUT  *NAMVAR
+     C                     SETON                     LR
+     C                     MOVEL'1'       RET
+     C                     GOTO SREND
+     C                     END
+      *
+     C           @OPEN1    IFEQ 'OPEN'
+     C                     CLOSEHFSCANL1
+     C                     MOVEL*BLANKS   @OPEN1
+     C                     END
+      *
+     C                     MOVEL'0'       OKS     1
+     C                     MOVEL*BLANKS   STRING 80
+     C                     CALL 'HFC0551'
+     C                     PARM           SCAPAR
+     C                     PARM           OKS
+     C                     PARM           STRING
+      *
+     C           OKS       IFEQ '1'
+     C                     MOVEL'HAF0097' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO RETRY
+     C                     END
+     C           OKS       IFEQ '2'
+     C                     MOVEL'HAF0098' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO RETRY
+     C                     END
+     C           OKS       IFEQ '3'
+     C                     MOVEL'HAF0099' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO RETRY
+     C                     END
+      * IF OKS='9', THEN IT IS OK, BUT HFSCANL1 HAS BEEN RECREATED
+     C           *INKN     IFEQ '1'
+     C           FNCT      OREQ '1'                                       087526
+     C           OKS       IFEQ '9'
+     C                     MOVEL*BLANKS   SCAOLD
+     C                     END
+     C                     Z-ADD80        PLEN   155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           STRING
+     C                     PARM           PLEN
+      * UPDATE FIRST RECORD IN DDS FOR FURTHER USE
+      * NBAME OF USER/ITEM/DATE CREATED/LAST USED
+      *
+     C           @OPEN1    IFNE 'OPEN'
+     C                     OPEN HFSCANL1
+     C                     MOVEL'OPEN'    @OPEN1
+     C                     END
+      *
+     C                     Z-ADD1         X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C                     MOVELUDATE     DDUSE
+     C           DDCREA    IFEQ '000000'
+     C                     MOVELUDATE     DDCREA
+     C                     MOVELDSUSER    DDUSER
+     C                     MOVELFILE      DDITEM
+     C                     END
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+      *
+     C           @OPEN1    IFEQ 'OPEN'
+     C                     CLOSEHFSCANL1
+     C                     MOVEL*BLANKS   @OPEN1
+     C                     END
+      *
+     C                     SETOF                     2425
+     C                     MOVE 'Y'       VALID   1
+     C                     MOVEL'5'       RET
+     C                     END
+     C           SREND     TAG
+      * IF ENTER OR ANY OTHER CMD-KEY, THE LOOP IN DISPLAY
+     C           *INKN     IFNE '1'
+     C           *INKL     ANDNE'1'
+     C                     GOTO RETRY
+     C                     END
+     C                     SETOF                     50
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE UPDATE
+     C*****************************************************************
+     C*
+      *
+      * UPDATE PROCEDURE ACCORDING TO THE INPUT DONE
+      *
+     C           UPDATE    BEGSR
+      * CALCULATE THE REL.REC NUMBER FOR EACH ENTRY IN THE FILE
+     C           RECNUM    MULT 2         X
+     C                     ADD  2         X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+      * FIRST UPDATE THE SST FIELD
+      *IF FIELD IS BLANK, CHANGE LINE TO COMMENT, ELSE FILL IT IN
+     C           TEST1     IFEQ *BLANKS
+     C                     MOVEL'*'       STERN
+     C                     ELSE
+     C           FIELDX    IFEQ '#'
+     C                     Z-ADD1         PST
+     C                     Z-ADDFLE       PEN
+     C                     MOVELFIELD     PERM
+     C                     MOVEL' '       STERN
+     C                     ELSE
+     C                     Z-ADDBUF,XX    PST
+     C                     Z-ADDFLEN,XX   PEN
+     C                     MOVEL'BEFF'    PERM
+     C                     MOVEL' '       STERN
+     C                     END
+     C                     END
+     C           SRC2      IFNE SRCDTA
+     C                     MOVEL'Y'       ONUP
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      *   SECOND SST FIELD
+     C                     ADD  1         X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           TEST2     IFEQ *BLANKS
+     C                     MOVEL'*'       STERN
+     C                     ELSE
+     C                     Z-ADDBUF,XX    PST
+     C                     Z-ADDFLEN,XX   PEN
+     C                     MOVEL'AFTF'    PERM
+     C                     MOVEL' '       STERN
+     C                     END
+     C           SRC2      IFNE SRCDTA
+     C                     MOVEL'Y'       ONUP
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      * JOOBJ FIELD
+     C           RECNUM    MULT 3         X
+     C                     ADD  34        X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           FIELD     IFEQ *BLANKS
+     C                     MOVEL'*'       STERN
+     C                     ELSE
+     C           FILE      IFEQ *BLANKS
+     C                     MOVEL' '       STERN
+     C                     MOVEL'NE'      TES
+     C                     MOVEL*BLANKS   SCRFIL
+     C                     ELSE
+     C                     MOVELFILE      SCRFIL
+     C                     MOVEL' '       STERN
+     C                     END
+     C           AOR       IFEQ 'A'
+     C           AOR       OREQ ' '
+     C           RECNUM    ANDNE1
+     C                     MOVEL' '       SELOM
+     C                     ELSE
+     C                     MOVEL'S'       SELOM
+     C                     END
+     C                     END
+     C           SRC2      IFNE SRCDTA
+     C                     MOVEL'Y'       ONUP
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      * THE BEFORE IMAGE TEST
+     C                     ADD  1         X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           FIELD     IFEQ *BLANKS
+     C           TEST1     OREQ '  '
+     C                     MOVEL'*'       STERN
+     C                     ELSE
+     C                     MOVEL' '       STERN
+     C                     MOVELTEST1     TES
+     C           FLDX      IFEQ 'P'
+     C           FLDX      OREQ 'S'
+     C           FLDX      OREQ 'D'
+     C                     MOVEAPT1       VA
+     C                     ELSE
+     C           FIELDX    IFEQ '#'
+     C                     MOVEAVS        VA
+     C                     ELSE
+     C                     MOVELVAL1      VA
+     C                     END
+     C                     END
+     C                     END
+     C           SRC2      IFNE SRCDTA
+     C                     MOVEL'Y'       ONUP
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      *  THE AFTER IMAGE TEST
+     C                     ADD  1         X
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+     C           FIELD     IFEQ *BLANKS
+     C           TEST2     OREQ '  '
+     C                     MOVEL'*'       STERN
+     C                     ELSE
+     C                     MOVEL' '       STERN
+     C                     MOVELTEST2     TES
+     C           FLDX      IFEQ 'P'
+     C           FLDX      OREQ 'S'
+     C           FLDX      OREQ 'D'
+     C                     MOVEAPT2       VA
+     C                     ELSE
+     C                     MOVELVAL2      VA
+     C                     END
+     C                     END
+     C           SRC2      IFNE SRCDTA
+     C                     MOVEL'Y'       ONUP
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE PERMFL
+     C*****************************************************************
+     C*
+      * SUBROUTINE TO FILL FTEX FOR JOURNAL CONTROL FIELDS
+     C           PERMFL    BEGSR
+     C                     MOVEL*BLANKS   FTEX
+     C           FIELD     IFEQ '#PGM'
+     C                     MOVEL'Program' FTEX
+     C                     END
+     C           FIELD     IFEQ '#CID'
+     C                     MOVEL'Commit ' FTEX
+     C                     END
+     C           FIELD     IFEQ '#USR'
+     C                     MOVEL'User'    FTEX
+     C                     END
+     C           FIELD     IFEQ '#DAT'
+     C                     MOVEL'Date   ' FTEX
+     C                     END
+     C           FIELD     IFEQ '#TIM'
+     C                     MOVEL'Time   ' FTEX
+     C                     END
+     C           FIELD     IFEQ '#REC'
+     C                     MOVEL'Rec.mod' FTEX
+     C                     END
+     C           FIELD     IFEQ '#JNA'
+     C                     MOVEL'Job name'FTEX
+     C                     END
+     C           FIELD     IFEQ '#NUM'
+     C                     MOVEL'Job numb'FTEX
+     C                     END
+     C           FIELD     IFEQ '#OBJ'
+     C                     MOVEL'Object ' FTEX
+     C                     END
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE CHKSEL
+     C*****************************************************************
+     C*
+      * CHKSEL: CHECK IF THE FIRST JOOBJ ENTRY CONTAINS 'S'
+     C           CHKSEL    BEGSR
+     C                     Z-ADD34        X
+     C           SELTAG    TAG
+     C                     ADD  3         X
+      * NO SEL/OMIT CRITERIA FOUND AT ALL?
+     C           X         IFGT 84
+     C                     GOTO SELEND
+     C                     END
+      * READ ENTRY
+     C           X         CHAINHFSCANL1             99
+     C                     MOVELSRCDTA    SRC2
+      * CURRENT LINE NOT USED ?
+     C           STERN     IFEQ '*'
+     C                     GOTO SELTAG
+     C                     END
+      * LINE USED, BUT NOT WITH SEL/OMIT INDICATOR EQUAL 'S'
+     C           SELOM     IFNE 'S'
+     C                     MOVEL'S'       SELOM
+     C                     MOVELSRC2      SRCDTA
+     C                     UPDATJRNDUMMY
+     C                     END
+      * TRY NEXT ENTRY
+     C           SELEND    TAG
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE VAL40
+     C*****************************************************************
+     C*
+     C           VAL40     BEGSR
+     C                     SETOF                     99
+     C           1         DO   27        X2      20
+     C           PT,X2     IFLT ' '
+     C                     SETON                     99
+     C                     END
+     C                     END
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE SBSTR
+     C*****************************************************************
+     C*
+      *
+     C           SBSTR     BEGSR
+     C                     Z-ADD2         X2
+     C                     Z-ADD1         C       30
+     C                     MOVEA*BLANKS   PT
+     C           BTAG      TAG
+     C           C         IFGT FLEN,A
+     C                     GOTO BEND
+     C                     END
+     C                     MOVELPT1,X2    PT,C
+     C                     ADD  1         X2
+     C                     ADD  1         C
+     C                     GOTO BTAG
+     C           BEND      ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE FORMP
+     C*****************************************************************
+     C*
+     C**
+      *
+     C           FORMP     BEGSR
+     C                     MOVEAPT        PFIELD
+      *
+     C           FLEN,A    IFEQ 1
+     C                     TESTB'45'      P1B            88
+     C   88                TESTB'7'       P1B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP1        P1XX
+     C                     MOVEAP1X       PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 2
+     C                     TESTB'45'      P2B            88
+     C   88                TESTB'7'       P2B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP2        P3XX
+     C                     MOVEAP3X       PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 3
+     C                     TESTB'45'      P3B            88
+     C   88                TESTB'7'       P3B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP3        P5XX
+     C                     MOVEAP5X       PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 4
+     C                     TESTB'45'      P4B            88
+     C   88                TESTB'7'       P4B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP4        P7XX
+     C                     MOVEAP7X       PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 5
+     C                     TESTB'45'      P5B            88
+     C   88                TESTB'7'       P5B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP5        P9XX
+     C                     MOVEAP9X       PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 6
+     C                     TESTB'45'      P6B            88
+     C   88                TESTB'7'       P6B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP6        P11XX
+     C                     MOVEAP11X      PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFEQ 7
+     C                     TESTB'45'      P7B            88
+     C   88                TESTB'7'       P7B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP7        P13XX
+     C                     MOVEAP13X      PT
+     C                     END
+     C                     END
+      *
+     C           FLEN,A    IFGE 8
+     C                     TESTB'45'      P8B            88
+     C   88                TESTB'7'       P8B            88
+     C           *IN88     IFEQ '1'
+     C                     Z-ADDP8        P15XX
+     C                     MOVEAP15X      PT
+     C                     END
+     C                     END
+      *
+     C           FLDT,A    IFEQ 'D'
+     C           P5XX      ANDGT0
+     C***********P5XX      ANDLE10227                                     142222
+     C                     Z-ADDP5XX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     ZDAT6
+     C                     MOVEAZDATX     PT
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE P0452
+     C*****************************************************************
+     C*
+      *
+     C           P0452     BEGSR
+     C*
+     C                     MOVELZFIELD    ZF16   16
+     C                     MOVEAZF16      BLK
+     C                     MOVEA*BLANKS   BLKK
+      * FIND FIRST NON BLANK CHARACTER AT THE END
+     C                     Z-ADD16        D       30
+     C           RER       TAG
+     C           D         IFNE 1
+     C           BLK,D     IFEQ ' '
+     C                     SUB  1         D
+     C                     GOTO RER
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDD         C
+     C                     ADD  1         D
+     C           1         DO   CDP                        B1
+     C                     MOVE BLK,C     BLKK,D
+     C                     SUB  1         C
+     C                     SUB  1         D
+     C                     END                             E1
+     C           CDP       IFNE 0
+     C                     MOVE '.'       BLKK,D
+     C                     END
+     C                     SUB  1         D
+     C           C         IFNE 0
+     C           C         DOULT1                          B1
+     C                     MOVE BLK,C     BLKK,D
+     C                     SUB  1         C
+     C                     SUB  1         D
+     C                     END                             E1
+     C                     END                             E1
+      *
+     C                     Z-ADD1         C       30
+     C           C         DOWLT17                         B1
+     C           BLKK,C    ANDEQ'0'
+     C                     MOVE ' '       BLKK,C
+     C                     ADD  1         C
+     C                     END                             E1
+     C           C         IFNE 1
+     C           BLKK,C    IFEQ ' '
+     C           BLKK,C    OREQ ','
+     C                     SUB  1         C
+     C                     MOVEL'0'       BLKK,C
+     C                     END
+     C                     END
+     C                     MOVEABLKK      ZF17   17
+     C                     MOVE ZF17      ZFIELD 17
+     C*
+     C           P0452E    ENDSR
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE ZALIGN
+     C*****************************************************************
+     C*
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   20
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+      *
+     C           FIELD     IFNE '#CID'
+      *
+     C           FLDT,XX   IFEQ 'P'
+     C           FLDT,XX   OREQ 'D'
+     C                     Z-ADD0         NUM17
+     C                     MOVELZFIELD    #ZF16  16
+     C                     MOVE #ZF16     NUM17
+     C                     ELSE
+     C                     Z-ADD0         NUM170
+     C                     MOVELZFIELD    #ZF16  16
+     C                     MOVE ZFIELD    NUM170
+     C                     END
+      *
+     C                     ELSE
+     C                     Z-ADD0         NUM170
+     C                     MOVELZFIELD    #ZF16  16
+     C                     MOVE ZFIELD    NUM170
+     C                     END
+      *
+     C                     MOVEANUM17X    NUMXX
+     C                     MOVEA*BLANKS   PT
+      *
+     C           FIELD     IFEQ '#CID'
+     C           16        SUB  FLE       X1
+     C                     ELSE
+     C           16        SUB  FLEN,XX   X1
+     C                     END
+      *
+     C                     MOVELHEXQ      PT,1
+     C                     Z-ADD1         X2
+     C           OKLOOP    TAG
+     C                     ADD  1         X2      20
+     C                     ADD  1         X1
+     C           X1        IFLE 16
+     C                     MOVELNUMXX,X1  PT,X2
+     C                     GOTO OKLOOP
+     C                     END
+     C                     MOVELHEXQ      PT,X2
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+      /EJECT
+      *
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER.
+     C                     Z-ADD0         ZDAYNO  50
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C**
+     C**   ENSURE DAY IS VALID.
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C**                                                   PAST FEB, 93 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+      /EJECT
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   SUBROUTINE L0CHK
+     C*****************************************************************
+      *
+     C           L0CHK     BEGSR
+      *
+      * Override the file to the QTEMP version
+     C                     MOVELOVR,1     ZCMD
+     C                     CALL 'QCMDEXC'              9999
+     C                     PARM           ZCMD   60
+     C                     PARM 60        ZLEN   155
+      *
+      * Now try and open the file
+     C                     OPEN HFSCANL0               99
+      *
+      * If the open failed then file does not exist in QTEMP
+     C           *IN99     IFEQ '1'
+      *
+      * Delete the override
+     C                     MOVELOVR,2     ZCMD
+     C                     CALL 'QCMDEXC'              9999
+     C                     PARM           ZCMD
+     C                     PARM 60        ZLEN
+      *
+      * Now open the library list version of the file
+     C                     OPEN HFSCANL0
+      *
+     C                     END
+      *
+      ** Clear program of messages
+      *
+     C                     CALL 'SCC0250'
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+*******CPYF                QTEMP/JRNDUMMY     HFSCANL1 *REPLACE           092908
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ERR
+..field not found..
+..field is excluded
+>>cannot be displayed<<
+**   ZYDY - years in days cumulative, four year span
+0366073110961461
+**   ZMDY - months in days cumulative through year
+000031059090120151181212243273304334365
+**
+OVRDBF HFSCANL0 QTEMP/HFSCANL0
+DLTOVR HFSCANL0
+** CMD                                                                    087526
+CPYF                QTEMP/JRNDUMMY              HFSCANL1 *REPLACE         092908

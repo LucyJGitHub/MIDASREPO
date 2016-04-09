@@ -1,0 +1,2842 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer/Portfolio Cashflow')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0430 - CUSTOMER / PORTFOLIO CASHFLOW                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC003             Date 25Feb97               *
+      *                 111394             Date 28Nov96               *
+     F*                 S01486             DATE 28SEP94               *
+     F*                 58178              DATE 05JUL93               *
+     F*                 049467             DATE 28JAN93               *
+     F*                 35444      SL      DATE 20FEB92               *
+     F*                 B08252     DHW     DATE 13NOV91               *
+     F*                 001275     ADIF    DATE 13NOV91               *
+     F*                 B07930     DHW     DATE 06JUN91               *
+     F*                 R05864             DATE 04APR91               *
+     F*                 R00183             DATE 18FEB91               *
+     F*                 R00178             DATE 13FEB91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*         - Recompiled due to changes in PF/PMPORTPD.           *
+     F*  111394 - If no cashflow details are reported, P1 is not      *
+     F*           opened for next account officer                     *
+     F*  S01486 - PORTFOLIO MANAGEMENT UPGRADE TO R10                 *
+     F*  58178  - USE CORRECT DECIMAL PLACES FOR EDITING AMOUNTS      *
+     F*  35444  - PORTFOLIO CCY MISSING ON AUTOMATIC CASHFLOW REPORT  *
+     F*         - SOME LINES APPEARING SEVERAL TIMES                  *
+     F*  B08252 - MONITOR FOR WRITE ERROR ON REPORT                   *
+     F*  001275 - TRY TO OPEN AN OPENED PRTF                          *
+     F*         - TRY TO WRITE IN A CLOSED PRTF                       *
+     F*  B07930 - IF NO DETAILS TO BE OUTPUT TO REPT STILL WRITE TITL *
+     F*  R05864 - DO NOT OUTPUT PAGE WITH NO CASHFLOW DETAILS         *
+     F*  R00183 - CASHFLOW AMOUNT IN PORTFOLIO CURRENCY EDITED WITH   *
+     F*           INCORRECT DECIMAL PLACES                            *
+     F*  R00178 - The report doesn't show never the good format for   *
+     F*           the rate according the ranking sequence.            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PMCUSTPOIF**E                    DISK         KINFSR *PSSR       S01486
+     FPMCUSTQ0IF  E                    DISK         KINFSR *PSSR          S01486
+     F*      PREFIX AZ,BB, QB
+     F***PMCASHPOIF**E                    DISK         KINFSR *PSSR       S01486
+     FPMCASHQ0IF  E                    DISK         KINFSR *PSSR          S01486
+     F*      PREFIX AZ,BB, PN
+     F**
+     FPMEVNTL2IF  E           K        DISK         KINFSR *PSSR
+     F*      PREFIX Q9
+     FPMEVNTL3IF  E           K        DISK         KINFSR *PSSR
+     F            PMEVNTP0                          KRENAMEPMEVNTPX
+     F*      PREFIX Q9
+     F***PMCFMYPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMCFMYPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*      PREFIX QL
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01486
+     F**********PREFIX*BJ**********************************************   S01486
+     F****SDPLCSL2IF**E           K        DISK         KINFSR *PSSR      S01486
+     F**********PREFIX*QB**********************************************   S01486
+     F****SDCURRL0IF**E           K        DISK         KINFSR *PSSR      S01486
+     F**********PREFIX*A6**********************************************   S01486
+     F***SDACOFL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F**********PREFIX*AZ**********************************************   S01486
+     F***SDPORTPDIF**E                    DISK         KINFSR *PSSR       S01486
+     F**********PREFIX*P9**********************************************   S01486
+     F***PMPORTPPUF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPORTPDUF  E           K        DISK         KINFSR *PSSR          S01486
+     F*      PREFIX PN
+     F***TABLETJ*IF**E                    DISK         KINFSR *PSSR       S01486
+     F*
+     F***PMHSEXPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMHSEXPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*      PREFIX Q8
+     F***SDGELRPDIF**E                    DISK         KINFSR *PSSR       S01486
+     F**********PREFIX*BK**********************************************   S01486
+     F**
+     F***PM0430P1O***E                    PRINTER                     UC  S01486
+     FPM0430P1O   E                    PRINTER      KINFDS SPOOL      UC  S01486
+     FPM0430AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F**
+     F*==================================================================
+     F*                 FUNCTION OF INDICATORS
+     F*
+     F**  30      - OUTPUT MONTH ONLY ONCE PER CCY
+     F**  31      - OUTPUT YEAR ONLY ONCE PER CCY
+     F**  35      - 9997 ALREADY PRODUCED SO NO NEED FOR REPEAT
+     F*
+     F**  41      - PM0430P1 : EVENT DATE NOT PRINTED
+     F**  64      - 'DEFINED'/O.R. OR '*ALL'/O.R. OR C.O.B. DAILY DETAILS
+     F**  65      - 'DEFINED'/O.R. OR '*ALL'/O.R. OR C.O.B. MONTHLY DETAILS
+     F**  66      - 'DEFINED'/O.R. OR '*ALL'/O.R. OR C.O.B. YEARLY DETAILS
+     F**  67      - '9999', '9998', '9997' OR '&ALL'/O.R. DAILY DETAILS
+     F**  68      - '9999', '9998', '9997' OR '&ALL'/O.R. MONTHLY DETAILS
+     F**  69      - '9999', '9998', '9997' OR '&ALL'/O.R. YEARLY DETAILS
+     F**  70      - OVERFLOW INDICATOR
+     F*
+     F****71******-*ACCESS*SDBANKL1***********************************    S01486
+     F****72******-*ACCESS*SDPORTPD***********************************    S01486
+     F****73******-*ACCESS*PMCUSTPO*&*PMCASHPO************************    S01486
+     F****73******-*ACCESS*PMCUSTPO*&*PMCASHPO************************    S01486
+     F**  73      - ACCESS PMCUSTQ0 & PMCASHQ0                            S01486
+     F****74******-*ACCESS*SDCURRL0***********************************    S01486
+     F****75******-*ACCESS*PMHSEXPP***********************************    S01486
+     F****75******-*ACCESS*PMHSEXPP***********************************    S01486
+     F**  75      - ACCESS PMHSEXPD                                       S01486
+     F**  76      - ACCESS PMEVNTL3
+     F****77******-*ACCESS*PMCFMYPP***********************************    S01486
+     F****77******-*ACCESS*PMCFMYPP***********************************    S01486
+     F**  77      - ACCESS PMCFMYPD                                       S01486
+     F**  78      - ACCESS PMEVNTL2
+     F****79******-*ACCESS*PMPORTPP***********************************    S01486
+     F****79******-*ACCESS*PMPORTPP***********************************    S01486
+     F**  79      - ACCESS PMPORTPD                                       S01486
+     F****83******-*ACCESS*SDACOFL0***********************************    S01486
+     F****84******-*ACCESS*SDGELRPD***********************************    S01486
+     F****86******-*ACCESS*SDPLCSL2***********************************    S01486
+     F*
+     F****80******-*FIRST*RECORD*ON*FILES*PMCUSTPO*&*PMCASHPO*********    S01486
+     F**  80      - FIRST RECORD ON FILES PMCUSTQ0 & PMCASHQ0             S01486
+     F**  81      - FIRST RECORD ON FILE PMEVNTL3
+     F**  82      - FIRST RECORD ON FILE PMEVNTL2
+     F****85******-*END*OF*FILE*ON*PMCUSTPO*&*PMCASHPO****************    S01486
+     F**  85      - END OF FILE ON PMCUSTQ0 & PMCASHQ0                    S01486
+     F**  89      - PRTF OPENED
+     F*
+     F**  90      - ZFRQA  : SUBSTRACTION FOR CODES P,K,H & G DONE ONCE
+     F**  91      - ZFRQA  : CHECK FOR CODES B,P,K,H & G
+     F**  92      - ZFRQA  : CHECK FOR CODES B,P,K,H & G
+     F**  93      - ZFRQA  : ACCESS TABLETJF
+     F**  94      - ZFRQA  : CHECK IF DAY NUMBER IS HOLIDAY
+     F**  95      - ZFRQA  : DETERMINE HOLIDAY RECORD TYPE 'E'
+     F**  96      - ZFRQA  : DETERMINE HOLIDAY RECORD TYPE 'I'
+     F**  97      - ZFRQA  : CHECK FOR CURRENCY ON HOLIDAY
+     F**  98      - ZFRQA  : DATE FORMAT
+     F**          - ZDATE1 : DATE FORMAT
+     F**          - ZDATE2 : DATE FORMAT
+     F**  99      - ZFRQA   :
+     F**          - ZDATE1 :
+     F*
+     F****U1******-*OPENING*OF*PMCUSTPO*(ON*REQUEST*PROCESSING)*******    S01486
+     F****U2******-*OPENING*OF*PMCASHPO*(AUTOMATICALLY*DURING*COB)****    S01486
+     F**  U1      - OPENING OF PMCUSTQ0 (ON REQUEST PROCESSING)           S01486
+     F**  U2      - OPENING OF PMCASHQ0 (AUTOMATICALLY DURING COB)        S01486
+     F**  U8      - STANDARD RUN CONTROL ERROR
+     F**  U7 U8   - STANDARD DATABASE ERROR
+     F*
+     F**  LR      - LAST RECORD ON FILE
+     F*
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F*
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * --   --   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   --   --   --   --   --   --   -- *
+     F**      * 71   72   --   74   --   --   --   --   --   -- *
+     F**      * --   --   83   84   --   86   87   88   --   -- *
+     F**      * --   --   --   --   --   --   --   --   --      *
+     F**      ***************************************************
+     F*
+     F*==================================================================
+     F/EJECT
+     E*==================================================================
+     E*
+     E                    CPY@    1   1 80
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+     E***********         CMD     1   1 39               QCMDEXC ARRAY    S01486
+     E* ARRAY CONTENTS LINE DELETED AT BOTTOM OF THE PGM , CONTAINING :   S01486
+     E* OVRPRTF FILE(PM0430P1) SPLFNAME(PM0430P                           S01486
+     E*
+     E***********         TEXT    1   5 25               'ALL' TEXT ARRAY S01486
+     E* ARRAY CONTENTS LINES DELETED AT BOTTOM OF THE PGM , CONTAINING :  S01486
+     E* *ALL                                                              S01486
+     E* ALL ACCOUNT OFFICERS                                              S01486
+     E* ALL CUSTOMERS                                                     S01486
+     E* ALL PORTFOLIOS                                                    S01486
+     E* -*-                                                               S01486
+     E*
+      /COPY ZSRSRC,ZFRQAZ1
+     E**
+      /COPY ZSRSRC,ZSEDITZ1
+      /COPY ZSRSRC,ZHOLE                                                  S01486
+     E*
+     E*
+     E*==================================================================
+     E/EJECT
+     I*******************************************************************
+     I**  RENAME FIELDS IN PMPORTPP:
+     IPMPORTP0
+     I              PNCASN                          PXCASN
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I***LDA*****   UDS                            256                    S01486
+     I***********                           132 183 DBLOT                 S01486
+     I***********                           132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I** EXTERNAL DS FOR PM CUSTOMER DETAILS                              S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** EXTERNAL DS FOR PM ICD                                           S01486
+     ISDGELR    E DSSDGELRPD                                              S01486
+     I** EXTERNAL DS FOR GL ICD                                           S01486
+      *                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+      *                                                                   S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 367 3680LINE                  S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I                                    B 367 3680LINE1                 S01486
+     I*
+     I**  DATA AREA FOR CASHFLOW CONTROL DATES:
+     IPMSTAT      DS                            256
+     I                                        1   50WWEVTD
+     I                                        6  100WWRUNA
+     I                                       11  150WWEV60
+     I*
+     I**  DATA STRUCTURE FOR ZSEDIT:
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR ZOUT21:
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                       21  21 WWPLUS
+     I*
+     I**================================================================
+     I/EJECT
+      /COPY ZSRSRC,ZHOLI                                                  S01486
+      /COPY ZSRSRC,ZHOLDS                                                 S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      * #P1002   - PRODUCE AUTOMATIC CASHFLOW REPORT                     *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      * #W1002   - OUTPUT EVENT DETAILS                                  *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      * #P1003   - OPEN/CLOSE PRINTER FILE AND PRINT FX RATES            *
+      * ZSEDIT   - FORMAT NUMBER TO PRINT                                *
+      * ZFRQA    - DETERMINE NEXT ACCRUAL DATE                           *
+      * ZDATE2   - CONVERT DAY NUMBER TO DATE                            *
+      * ZDATE1   - CONVERT DATE TO DAY NUMBER                            *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      * #INIT    - INITAIL PROCESSING                                    *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * QCMDEXC  - CALL QCMDEXC TO OVERRIDE PRINTER FILE                 *
+      *                                                                  *
+      ********************************************************************
+     C*            MAIN PROGRAM  START
+     C**================================================================
+     C*
+     C**  DEFINE INPUT PARAMETER:
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM           WWACOF  4
+     C                     PARM           WWPNP8  6
+     C                     PARM           WWPREF  4
+     C                     PARM           WW60DD  1
+     C                     PARM           WWMOTT  1
+     C                     PARM           WWYETT  1
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMHSEXPP:
+     C           FXKEY     KLIST
+     C                     KFLD           A6CYCD
+     C                     KFLD           WWDATE
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMCFMYPP:
+     C           MYKEY     KLIST
+     C                     KFLD           WWCUST
+     C                     KFLD           WWPORT
+     C                     KFLD           WWMYIN
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMEVNTL2:
+     C           EVKEY     KLIST
+     C                     KFLD           QLCNUM
+     C                     KFLD           QLPTFR
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMPORTPP:
+     C           DFKEY     KLIST
+     C                     KFLD           WWCUSN
+     C                     KFLD           WWPRTF
+     C*
+     C**  INITIALIZATION:
+     C                     EXSR #INIT
+     C*
+     C**  IF U1 IS ON, PROCESS ON REQUEST CASHFLOW REPORT:
+     C           *INU1     IFEQ '1'                        - B1
+     C                     EXSR #P1001
+     C                     END                             - E1
+     C*
+     C**  IF U2 IS ON, PROCESS AUTOMATIC COB CASHFLOW REPORT:
+     C           *INU2     IFEQ '1'                        - B1
+     C                     EXSR #P1002
+     C                     END                             - E1
+     C*
+     C** TERMINATE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C*            MAIN PROGRAM END
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  - CALL QCMDEXC TO OVERRIDE PRINTER FILE                 *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      * #P1003   - OPEN/CLOSE PRINTER FILE AND PRINT FX RATES            *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCMD1   - COMMAND TO OVERRIDE PRINTER FILE                      *
+      * WWACOF   - ACCOUNT OFFICER PARAMETER                             *
+      * WWAVCD   - ACCOUNT OFFICER                                       *
+      * WWPREF   - PORTFOLIO REFERENCE                                   *
+      * WWCUSN   - CUSTOMER NUMBER                                       *
+      * WWPRTF   - PORTFOLIO REFERENCE                                   *
+      * WWAENB   - CUSTOMER NUMBER                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #P1001    BEGSR                           * #P1001 BGSR *
+     C*                                                    ***************
+     C**  INITIALISE 9997 RECORD INDICATOR:
+     C                     MOVE '0'       *IN35
+     C*
+     C**  READ RECORD FROM QRYF PMCUSTPO:
+     C***********          READ PMCUSTPO                 73               S01486
+     C                     READ PMCUSTQ0                 73               S01486
+     C*
+     C**  IF NO RECORD READ ON PMCUSTPO, OPEN PRTF AND WRITE
+     C**     HEADER DETAILS:
+     C           *IN73     IFEQ '1'                        - B1
+     C                     EXSR #W1006
+     C****                 CALL 'QCMDEXC'                                 B07930
+     C****                 PARM WWCMD1    QCAB   40                       B07930
+     C****                 PARM 40        QCAN   155                      B07930
+     C****                                                                B07930
+     C****                 OPEN PM0430P1                                  B07930
+     C****                 MOVE '1'       *IN89                           B07930
+     C****                 WRITEHEADRE                                    B07930
+     C****                                                                B07930
+     C****OUTPUT TEXT FOR 'ALL ACCOUNT OFFICERS', 'ALL CUSTOMERS'         B07930
+     C****AND 'ALL PORTFOLIOS':                                           B07930
+     C****       WWACOF    IFEQ '*ALL'                     - B2           B07930
+     C****                 MOVE TEXT,1    RRACOC                          B07930
+     C****                 MOVELTEXT,2    RRACON                          B07930
+     C****                 ELSE                            - X2           B07930
+     C****                 MOVELWWACOF    W1ACOF  2                       B07930
+     C****       W1ACOF    CHAINSDACOFL0             83                   B07930
+     C****                                                                B07930
+     C****       *IN83     IFEQ '1'                        - B3           B07930
+     C****                 Z-ADD1         DBASE            ***************B07930
+     C****                 MOVEL'SDACOFL0'DBFILE           * DB ERROR 01 *B07930
+     C****                 MOVELW1ACOF    DBKEY            ***************B07930
+     C****                 EXSR *PSSR                                     B07930
+     C****                 END                             - E3           B07930
+     C****                                                                B07930
+     C****                 MOVELAZACOC    RRACOC                          B07930
+     C****                 MOVELAZACON    RRACON                          B07930
+     C****                 END                             - E2           B07930
+     C****                                                                B07930
+     C****                 MOVE TEXT,1    RRCUST                          B07930
+     C****                 MOVELTEXT,3    RRCRNM                          B07930
+     C****                 MOVE TEXT,1    RRPORT                          B07930
+     C****                 MOVELTEXT,4    RRNARR                          B07930
+     C****                 MOVE TEXT,5    RRCURR                          B07930
+     C****                 WRITEACOFRE                                    B07930
+     C****                 WRITENOCARE                                    B07930
+     C****                 WRITEENDRE                                     B07930
+     C                     ELSE                            - X1
+     C*
+     C                     MOVE '1'       *IN80
+     C*
+     C*  READ UNTIL EOF ON PMCUSTPO
+     C*
+     C           *IN73     DOUEQ'1'                        - B2
+     C*
+     C**  GET CUSTOMER DETAILS:
+     C***********BBCUST    CHAINSDPLCSL2             86                   S01486
+     C***********                                                         S01486
+     C************IN86     IFEQ '1'                        - B1           S01486
+     C***********          Z-ADD7         DBASE            ***************S01486
+     C***********          MOVEL'SDPLCSL2'DBFILE           * DB ERROR 07 *S01486
+     C***********          MOVELBBCUST    DBKEY            ***************S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM BBCUST    P@KEY1 10                       S01486
+     C                     PARM           P@KYST  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD7         DBASE            ***************S01486
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 07 *S01486
+     C                     MOVELBBCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM BBCUST    P@KEY1 10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           BBDTDL    ORNE 0                                         S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD12        DBASE            ***************S01486
+     C                     MOVEL'SDPLCSPD'DBFILE           * DB ERROR 12 *S01486
+     C                     MOVELBBCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E1           S01486
+     C*
+     C**  IF A/C OFFICER CODE/PMCUSTPO HAS CHANGED, OUTPUT FX RATES
+     C**     AND OPEN AND CLOSE PRINTER FILE IF REQUIRED:
+     C           AZACOC    IFNE WWACOC                     - B3
+     C           WWCSFL    ANDEQ'Y'                                       R05864
+     C                     EXSR #P1003
+     C                     END                             - E3
+     C*
+     C**  IF PARAMETER "PORTFOLIO" PASSED TO PGM SET TO '9999' OR TO
+     C**     '*ALL', REPORT CASHFLOWS FOR '9999' PORTFOLIOS:
+     C           WWPREF    IFEQ '*ALL'                     - B3
+     C           WWPREF    OREQ '9999'
+     C                     MOVE '9999'    #WPTFR
+     C                     EXSR #P1004
+     C                     END                             - E3
+     C*
+     C**  IF PARAMETER "PORTFOLIO" PASSED TO PGM SET TO '9998' OR TO
+     C**     '*ALL' AND '9998' PORTFOLIO TO BE DISPLAYED,
+     C**     REPORT CASHFLOWS FOR '9998' PORTFOLIOS:
+     C           WWPREF    IFEQ '*ALL'                     - B3
+     C***********P9DP98    ANDEQ'Y'                                       S01486
+     C           FCDP98    ANDEQ'Y'                                       S01486
+     C           WWPREF    OREQ '9998'
+     C                     MOVE '9998'    #WPTFR
+     C                     EXSR #P1005
+     C                     END                             - E3
+     C*
+     C**  IF PARAMETER "PORTFOLIO" PASSED TO PGM REFERS TO DEFINED
+     C**     PORTFOLIO, OBTAIN PORTFOLIO DETAILS ON PMPORTPP
+     C**     WITH KEY OF CURRENT CUSTOMER & PORTFOLIO REFERENCE;
+     C**     REPORT CASHFLOWS FOR SELECTED PORTFOLIOS:
+     C           WWPREF    IFNE '*ALL'                     - B3
+     C           WWPREF    ANDNE'9999'
+     C           WWPREF    ANDNE'9998'
+     C           WWPREF    ANDNE'9997'
+     C**********           MOVE BBCUST    WWCUSN  60                                          CSD027
+     C                     MOVE BBCUST    WWCUSN  6                                           CSD027
+     C                     MOVE WWPREF    WWPRTF  4
+     C***********DFKEY     CHAINPMPORTPP             79                   S01486
+     C           DFKEY     CHAINPMPORTPD             79                   S01486
+     C*
+     C           *IN79     IFEQ '1'                        - B4
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVEL'PMPORTPD'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVEL' DFKEY ' DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     ELSE                            - X4
+     C                     MOVE PNPTFR    #WPTFR  4
+     C                     MOVE PNPTFN    #WPTFN 20
+     C                     EXSR #P1006
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C**  IF PARAMETER "PORTFOLIO" PASSED TO PGM SET TO '*ALL',
+     C**     OBTAIN PORTFOLIO DETAILS ON PMPORTPP WITH KEY OF CURRENT
+     C**     CUSTOMER:
+     C           WWPREF    IFEQ '*ALL'                     - B3
+     C**********           MOVE BBCUST    WWCUST  60                                          CSD027
+     C                     MOVE BBCUST    WWCUST  6                                           CSD027
+     C***********WWCUST    SETLLPMPORTPP                                  S01486
+     C***********          READ PMPORTPP                 79               S01486
+     C           WWCUST    SETLLPMPORTPD                                  S01486
+     C                     READ PMPORTPD                 79               S01486
+     C*
+     C**  DO WHILE RECORDS EXIST ON PMPORTPP FOR CUSTOMER, REPORT
+     C**     CASHFLOWS FOR SELECTED PORTFOLIO:
+     C           PNCNUM    DOWEQWWCUST                     - B4
+     C           *IN79     ANDEQ'0'
+     C                     MOVE PNPTFR    #WPTFR
+     C                     MOVE PNPTFN    #WPTFN
+     C                     EXSR #P1006
+     C***********          READ PMPORTPP                 79               S01486
+     C                     READ PMPORTPD                 79               S01486
+     C                     END                             - E4
+     C                     END                             - E3
+     C*
+     C**  IF PARAMETER "PORTFOLIO" PASSED TO PGM SET TO '9997'
+     C**  OR PARAMETER "PORTFOLIO" PASSED TO PGM SET TO '*ALL'
+     C**     & '9997' PORTFOLIO TO BE DISPLAYED,
+     C**     REPORT CASHFLOWS FOR '9997' PORTFOLIOS:
+     C           WWPREF    IFEQ '*ALL'                     - B3
+     C***********P9DP97    ANDEQ'Y'                                       S01486
+     C           FCDP97    ANDEQ'Y'                                       S01486
+     C           WWPREF    OREQ '9997'
+     C                     MOVE '9997'    #WPTFR
+     C***********          MOVE P9N997    #WPTFN                          S01486
+     C                     MOVE FCN997    #WPTFN                          S01486
+     C                     EXSR #P1006
+     C                     END                             - E3
+     C*
+     C                     MOVE AZACOC    WWACOC  2
+     C***********          READ PMCUSTPO                 73               S01486
+     C                     READ PMCUSTQ0                 73               S01486
+     C                     MOVE '0'       *IN80
+     C                     END                             - E2
+     C*
+     C**  AFTER ALL RECORDS HAVE BEEN PROCESSED OUTPUT FX RATES
+     C**  AND OPEN AND CLOSE PRINTER FILE IF REQUIRED:
+     C           WWCSFL    IFEQ 'Y'                                       R05864
+     C***********          MOVE AZPRTL    SAVPRT                          S01486
+     C                     MOVE *BLANKS   WWACOS                          S01486
+     C                     EXSR #P1003
+     C                     END                                            R05864
+     C***********WWCSFL    IFEQ 'Y'                                 B07930S01486
+     C****                 WRITEENDRE                                     B08252
+     C***********          WRITEENDRE                  70           B08252S01486
+     C***********          ELSE                                     B07930S01486
+     C           WWANYP    IFNE 'Y'                                       S01486
+     C                     EXSR #W1006                                    B07930
+     C                     END                                            B07930
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1002   - PRODUCE AUTOMATIC CASHFLOW REPORT                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  - CALL QCMDEXC TO OVERRIDE PRINTER FILE                 *
+      * #P1003   - OPEN/CLOSE PRINTER FILE AND PRINT FX RATES            *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      * ZFRQA    - DETERMINE NEXT ACCRUAL DATE                           *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCMD1   - COMMAND TO OVERRIDE PRINTER FILE                      *
+      * WWAVCD   - ACCOUNT OFFICER                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #P1002    BEGSR                           * #P1002 BGSR *
+     C*                                                    ***************
+     C**  READ RECORD FROM QRYF PMCASHPO:
+     C***********          READ PMCASHPO                 73               S01486
+     C                     READ PMCASHQ0                 73               S01486
+     C*
+     C****IF*NO*RECORD READ ON PMCASHPO, OPEN PRTF AND WRITE              S01486
+     C*******HEADER DETAILS:                                              S01486
+     C           *IN73     IFEQ '1'                        - B1
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD1    QCAB   40                       S01486
+     C***********          PARM 40        QCAN   155                      S01486
+     C***********                                                         S01486
+     C***********          OPEN PM0430P1                                  S01486
+     C***********          MOVE '1'       *IN89                           S01486
+     C***********          WRITEHEADRE                                    S01486
+     C***********                                                         S01486
+     C****OUTPUT*TEXT FOR 'ALL ACCOUNT OFFICERS', 'ALL CUSTOMERS'         S01486
+     C****AND*'ALL PORTFOLIOS':                                           S01486
+     C***********          MOVE TEXT,1    RRACOC                          S01486
+     C***********          MOVELTEXT,2    RRACON                          S01486
+     C***********          MOVE TEXT,1    RRCUST                          S01486
+     C***********          MOVELTEXT,3    RRCRNM                          S01486
+     C***********          MOVE TEXT,1    RRPORT                          S01486
+     C***********          MOVELTEXT,4    RRNARR                          S01486
+     C***********          MOVE TEXT,5    RRCURR                          S01486
+     C***********          WRITEACOFRE                                    S01486
+     C***********          WRITENOPORE                                    S01486
+     C***                  WRITEENDRE                                     B08252
+     C***********          WRITEENDRE                  70           B08252S01486
+     C                     WRITEPM0430F3                                  S01486
+     C*                                                                   S01486
+     C                     ELSE                            - X1
+     C*
+     C                     MOVE '1'       *IN80
+     C*
+     C*  READ UNTIL EOF ON PMCASHPO
+     C*
+     C           *IN73     DOUEQ'1'                        - B2
+     C*
+     C**  GET CUSTOMER DETAILS:
+     C***********BBCUST    CHAINSDPLCSL2             86                   S01486
+     C***********                                                         S01486
+     C************IN86     IFEQ '1'                        - B1           S01486
+     C***********          Z-ADD8         DBASE            ***************S01486
+     C***********          MOVEL'SDPLCSL2'DBFILE           * DB ERROR 08 *S01486
+     C***********          MOVELBBCUST    DBKEY            ***************S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM BBCUST    P@KEY1 10                       S01486
+     C                     PARM           P@KYST  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                    - B3           S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD8         DBASE            ***************S01486
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 08 *S01486
+     C                     MOVELBBCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM BBCUST    P@KEY1 10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                    - B3           S01486
+     C           BBDTDL    ORNE 0                                         S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD14        DBASE            ***************S01486
+     C                     MOVEL'SDPLCSPD'DBFILE           * DB ERROR 14 *S01486
+     C                     MOVELBBCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E3           S01486
+     C*
+     C**  IF A/C OFFICER CODE/PMCASHPO HAS CHANGED, OUTPUT FX RATES
+     C**     AND OPEN AND CLOSE PRINTER FILE IF REQUIRED:
+     C           AZACOC    IFNE WWACOC                     - B3
+     C           WWCSFL    ANDEQ'Y'                                       R05864
+     C                     EXSR #P1003
+     C                     END                             - E3
+     C*
+     C****REPORT*CASHFLOWS*FOR*SELECTED*PORTFOLIOS:******                 35444
+     C*   PRODUCE CASHFLOW AFTER CHAIN TO PMPORTPP (FOR PORTFOLIO CCY)    35444
+     C*********************MOVE PNPTFR    #WPTFR                          35444
+     C*********************MOVE PNPTFN    #WPTFN                          35444
+     C*********************EXSR #P1006                                    35444
+     C*
+     C**  DETERMINE NEXT ACCRUAL DATE:
+     C                     MOVE PNCASF    ZFREQ
+     C                     Z-ADDPNCASN    ZDAYNO
+     C                     Z-ADDPNCASD    ZMDAY
+     C                     MOVE BJLCCY    ZCCY
+     C                     MOVE *BLANKS   ZLOC                            S01486
+     C                     EXSR ZFRQA
+     C*
+     C**  UPDATE NEXT CASHFLOW DATE ON PMPORTPP:
+     C                     MOVE BBCUST    WWCUSN
+     C                     MOVE PNPTFR    WWPRTF
+     C***********DFKEY     CHAINPMPORTPP             79                   S01486
+     C           DFKEY     CHAINPMPORTPD             79                   S01486
+     C*
+     C           *IN79     IFEQ '1'                        - B3
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD10        DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 10 *S01486
+     C                     MOVEL'PMPORTPD'DBFILE           * DB ERROR 10 *S01486
+     C                     MOVEL' DFKEY ' DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C                     Z-ADDZDAYNO    PXCASN
+     C                     UPDATPMPORTP0
+     C*
+     C**  REPORT CASHFLOWS FOR SELECTED PORTFOLIOS:                       35444
+     C                     MOVE PNPTFR    #WPTFR                          35444
+     C                     MOVE PNPTFN    #WPTFN                          35444
+     C                     EXSR #P1006                                    35444
+     C*
+     C** READ NEXT RECORD ON PMCASHPO
+     C                     MOVE AZACOC    WWACOC
+     C***********          READ PMCASHPO                 73               S01486
+     C                     READ PMCASHQ0                 73               S01486
+     C                     MOVE '0'       *IN80
+     C                     END                             - E2
+     C*
+     C**  AFTER ALL RECORDS HAVE BEEN PROCESSED OUTPUT FX RATES
+     C**  AND OPEN AND CLOSE PRINTER FILE IF REQUIRED:
+     C           WWCSFL    IFEQ 'Y'                        - B2           R05864
+     C                     MOVE *BLANKS   WWACOS                          S01486
+     C                     EXSR #P1003
+     C                     END                             - E2           R05864
+     C*                                                                   001275
+     C***IF*PRINTER*FILE*CLOSED*,*OPEN*A*NEW*ONE******************  001275S01486
+     C***********                                                   001275S01486
+     C************IN89     IFEQ '0'                                 001275S01486
+     C***********          OPEN PM0430P1                            001275S01486
+     C***********          MOVE '1'       *IN89                     001275S01486
+     C***********          END                                      001275S01486
+     C****                 WRITEENDRE                                     B0852
+     C***********          WRITEENDRE                  70           B08252S01486
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1002 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      * #W1002   - OUTPUT EVENT DETAILS                                  *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WW60DD   - DAILY CASHFLOW DETAILS PARAMETER                      *
+      * WWAENB   - CUSTOMER NUMBER                                       *
+      * WWCACD   - CASHFLOW EVENT CONTROL DATE                           *
+      * WWCOBD   - DAILY TOTALS                                          *
+      * WWCUBD   - CUMULATIVE DAILY TOTALS                               *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWMOTT   - MONTHLY CASHFLOW DETAILS PARAMETER                    *
+      * WWPORT   - PORTFOLIO REFERENCE                                   *
+      * WWMYIN   - MONTH/YEAR END INDICATOR                              *
+      * WWNEMT   - MOTHLY/YEARLY TOTALS                                  *
+      * WWCMOT   - CUMULATIVE MONTHLY/YEARLY TOTALS                      *
+      * WWMYNO   - SAVED MONTH/YEAR VALUE                                *
+      * WWYETT   - YEARLY CASHFLOW DETAILS INDICATOR                     *
+      *                                                                  *
+      ********************************************************************
+     C           #P1004    BEGSR                           * #P1004 BGSR *
+     C*                                                    ***************
+     C**  IF DAILY CASHFLOW REPORT REQUIRED, ACCESS PMEVNTL3 WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER:
+     C           WW60DD    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C*
+     C**  INITIALISE TOTALS AND OVERFLOW INDICATOR
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN45
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C*
+     C           WWCUST    SETLLPMEVNTL3
+     C                     READ PMEVNTL3                 76
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R999    RRPORT                          S01486
+     C***********          MOVELP9N999    RRNARR                          S01486
+     C                     MOVELFCR999    RRPORT                          S01486
+     C                     MOVELFCN999    RRNARR                          S01486
+     C                     MOVELQBCSBY    RRCURR
+     C                     Z-ADDQBBYDP    WWPTDP  10
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEDAYRE                                     R05864
+     C*
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN81
+     C*
+     C                     MOVE Q9CNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           Q9EVTD    ANDLEWWFTD                                     R05864
+     C           *IN76     ANDNE'1'                                       R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEDAYRE                                     R05864
+     C                     END                             - E2           R05864
+     C*
+     C**  DO WHILE CUSTOMER ON PMEVNTL3 IS SAME AS CUSTOMER ON
+     C**     PMCUSTPO & EVENT DATE <= CASHFLOW EVENT CONTROL DATE.
+     C**     ON CHANGE OF EVENT DATE, OUTPUT DAILY AND CUMULATIVE
+     C**     TOTALS AND RESET DAILY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B2
+     C           Q9EVTD    ANDLEWWFTD
+     C           *IN76     ANDNE'1'
+     C*
+     C           Q9EVTD    IFNE W1EVTD                     - B3
+     C           *IN81     ANDEQ'0'
+     C           WWCOBD    ANDNE0
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD 130
+     C                     END                             - E3
+     C*
+     C                     EXSR #W1002
+     C                     MOVE '1'       *IN45
+     C*
+     C           Q9AMTR    IFEQ 'R'                        - B3
+     C                     ADD  Q9CUCA    WWCOBD
+     C                     ADD  Q9CUCA    WWCUBD 130
+     C                     ELSE                            - X3
+     C                     SUB  Q9CUCA    WWCOBD
+     C                     SUB  Q9CUCA    WWCUBD 130
+     C                     END                             - E3
+     C*
+     C                     MOVE Q9ECCY    WWECCY  3
+     C                     MOVE Q9EVTD    W1EVTD  60
+     C*
+     C                     READ PMEVNTL3                 76
+     C                     MOVE Q9CNUM    WWCNUM
+     C*
+     C           WWECCY    IFEQ Q9ECCY                     - B3
+     C                     MOVE '0'       *IN42
+     C                     ELSE                            - X3
+     C                     MOVE '1'       *IN42
+     C                     END                             - E3
+     C*
+     C                     MOVE '0'       *IN81
+     C                     END                             - E2
+     C*
+     C           WWCOBD    IFNE *ZERO                      - B2
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C*
+     C                     END                             - E2
+     C*****      *IN45     IFEQ '0'                        - B2           R05864
+     C*****                WRITENOCERE                                    R05864
+     C*****                END                             - E2           R05864
+     C                     END                             - E1
+     C*
+     C**  IF MONTHLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER, PORTFOLIO SET TO '9999'
+     C**     & MONTH/YEAR INDICATOR SET TO 'M':
+     C           WWMOTT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE '9999'    WWPORT  4
+     C                     MOVE 'M'       WWMYIN  1
+     C                     MOVE '0'       *IN70
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R999    RRPORT                          S01486
+     C***********          MOVELP9N999    RRNARR                          S01486
+     C                     MOVELFCR999    RRPORT                          S01486
+     C                     MOVELFCN999    RRNARR                          S01486
+     C*
+     C                     MOVELQBCSBY    RRCURR
+     C                     MOVELQBBYDP    WWPTDP
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEMONRE                                     R05864
+     C                     MOVE QLCNUM    WWCNUM  6
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9999'                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEMONRE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMCFMYPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                     - B2           R05864
+     C****       QLPTFR    ORNE '9999'                                    R05864
+     C****                 WRITENOMCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9999'                                    R05864
+     C*
+     C**  SAVE END OF MONTH DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO  50
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER FROM PMCUSTPO & '9999', MAINTAIN CUMULATIVE
+     C**     MONTHLY CASHFLOW TOTALS IN PORTFOLIO CURRENCY AND OUTPUT
+     C**     MONTHLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ'9999'
+     C           QLMYIN    ANDEQ'M'
+     C           *IN77     ANDNE'1'
+     C*   OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN30
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1003
+     C                     MOVE '0'       *IN30
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE MONTHLY CASHFLOW
+     C                     MOVEL'M'       MONYEA  1
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET MONTHLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C**  IF YEARLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER, PORTFOLIO SET TO '9999'
+     C**     & MONTH/YEAR INDICATOR SET TO 'Y':
+     C           WWYETT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE '9999'    WWPORT
+     C                     MOVE 'Y'       WWMYIN
+     C                     MOVE '0'       *IN70
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R999    RRPORT                          S01486
+     C***********          MOVELP9N999    RRNARR                          S01486
+     C                     MOVELFCR999    RRPORT                          S01486
+     C                     MOVELFCN999    RRNARR                          S01486
+     C*
+     C                     MOVELQBCSBY    RRCURR
+     C                     MOVELQBBYDP    WWPTDP
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEYEARE                                     R05864
+     C                     MOVE QLCNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9999'                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEYEARE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMCFMYPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                     - B2           R05864
+     C****       QLPTFR    ORNE '9999'                                    R05864
+     C****                 WRITENOYCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9999'                                    R05864
+     C*
+     C**  SAVE END OF YEAR DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER FROM PMCUSTPO & '9999', MAINTAIN CUMULATIVE
+     C**     YEARLY CASHFLOW TOTALS IN PORTFOLIO CURRENCY AND OUTPUT
+     C**     YEARLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ'9999'
+     C           QLMYIN    ANDEQ'Y'
+     C           *IN77     ANDNE'1'
+     C* OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN31
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1004
+     C                     MOVE '0'       *IN31
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE YEARLY CASHFLOW
+     C                     MOVEL'Y'       MONYEA
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET YEARLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1004 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      * #W1002   - OUTPUT EVENT DETAILS                                  *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WW60DD   - DAILY CASHFLOW DETAILS PARAMETER                      *
+      * WWAENB   - CUSTOMER NUMBER                                       *
+      * WWCACD   - CASHFLOW EVENT CONTROL DATE                           *
+      * WWCOBD   - DAILY TOTALS                                          *
+      * WWCUBD   - CUMULATIVE DAILY TOTALS                               *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWMOTT   - MONTHLY CASHFLOW DETAILS PARAMETER                    *
+      * WWPORT   - PORTFOLIO REFERENCE                                   *
+      * WWMYIN   - MONTH/YEAR END INDICATOR                              *
+      * WWNEMT   - MOTHLY/YEARLY TOTALS                                  *
+      * WWCMOT   - CUMULATIVE MONTHLY/YEARLY TOTALS                      *
+      * WWMYNO   - SAVED MONTH/YEAR VALUE                                *
+      * WWYETT   - YEARLY CASHFLOW DETAILS INDICATOR                     *
+      *                                                                  *
+      ********************************************************************
+     C           #P1005    BEGSR                           * #P1005 BGSR *
+     C*                                                    ***************
+     C**  IF DAILY CASHFLOW REPORT REQUIRED, ACCESS PMEVNTL3 WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER:
+     C           WW60DD    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C*
+     C**  INITIALISE TOTALS AND OVERFLOW INDICATOR
+     C                     MOVE '0'       *IN45
+     C                     MOVE '0'       *IN70
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C*
+     C           WWCUST    SETLLPMEVNTL3
+     C                     READ PMEVNTL3                 76
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R998    RRPORT                          S01486
+     C***********          MOVELP9N998    RRNARR                          S01486
+     C                     MOVELFCR998    RRPORT                          S01486
+     C                     MOVELFCN998    RRNARR                          S01486
+     C                     MOVELQBCSBY    RRCURR
+     C                     Z-ADDQBBYDP    WWPTDP
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEDAYRE                                     R05864
+     C*
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN81
+     C*                                                                   R05864
+     C                     MOVE Q9CNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           Q9EVTD    ANDLEWWFTD                                     R05864
+     C           *IN76     ANDNE'1'                                       R05864
+     C           Q9PTFR    ANDNE'9997'                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEDAYRE                                     R05864
+     C                     END                             - E2           R05864
+     C*
+     C**  DO WHILE CUSTOMER ON PMEVNTL3 IS SAME AS CUSTOMER ON
+     C**     PMCUSTPO & EVENT DATE <= CASHFLOW CONTROL DATE.
+     C**     ON CHANGE OF EVENT DATE, OUTPUT DAILY AND CUMULATIVE
+     C**     TOTALS AND RESET DAILY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B2
+     C           Q9EVTD    ANDLEWWFTD
+     C           *IN76     ANDNE'1'
+     C*
+     C           Q9EVTD    IFNE W1EVTD                     - B3
+     C           *IN81     ANDEQ'0'
+     C           WWCOBD    ANDNE0
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD
+     C                     END                             - E3
+     C*
+     C**  IF PORTFOLIO REFERENCE NOT '9997'
+     C**     OUTPUT CASHFLOW EVENT & ADD EVENT AMOUNT IN CUSTOMER CCY
+     C**     INTO DAILY AND CUMULATIVE TOTALS:
+     C           Q9PTFR    IFNE '9997'                     - B3
+     C                     EXSR #W1002
+     C                     MOVE '1'       *IN45
+     C*
+     C           Q9AMTR    IFEQ 'R'                        - B4
+     C                     ADD  Q9CUCA    WWCOBD
+     C                     ADD  Q9CUCA    WWCUBD
+     C                     ELSE                            - X4
+     C                     SUB  Q9CUCA    WWCOBD
+     C                     SUB  Q9CUCA    WWCUBD
+     C                     END                             - E4
+     C*
+     C                     MOVE Q9ECCY    WWECCY
+     C                     MOVE Q9EVTD    W1EVTD
+     C                     END                             - E3
+     C*
+     C                     READ PMEVNTL3                 76
+     C                     MOVE Q9CNUM    WWCNUM
+     C*
+     C           WWECCY    IFEQ Q9ECCY                     - B3
+     C                     MOVE '0'       *IN42
+     C                     ELSE                            - X3
+     C                     MOVE '1'       *IN42
+     C                     END                             - E3
+     C*
+     C                     MOVE '0'       *IN81
+     C                     END                             - E2
+     C*
+     C           WWCOBD    IFNE *ZERO                      - B2
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C                     END                             - E2
+     C*
+     C****       *IN45     IFEQ '0'                        - B2           R05864
+     C****                 WRITENOCERE                                    R05864
+     C****                                                                R05864
+     C****                 END                             - E2           R05864
+     C                     END                             - E1
+     C*
+     C**  IF MONTHLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER, PORTFOLIO SET TO '9998'
+     C**     & MONTH/YEAR INDICATOR SET TO 'M':
+     C           WWMOTT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE '9998'    WWPORT
+     C                     MOVE 'M'       WWMYIN
+     C                     MOVE '0'       *IN70
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R998    RRPORT                          S01486
+     C***********          MOVELP9N998    RRNARR                          S01486
+     C                     MOVELFCR998    RRPORT                          S01486
+     C                     MOVELFCN998    RRNARR                          S01486
+     C*
+     C                     MOVELQBCSBY    RRCURR
+     C                     MOVELQBBYDP    WWPTDP
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEMONRE                                     R05864
+     C*                                                                   R05864
+     C                     MOVE QLCNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9998'                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEMONRE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMCFMYPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                     - B2           R05864
+     C****       QLPTFR    ORNE '9998'                                    R05864
+     C****                 WRITENOMCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9998'                                    R05864
+     C*
+     C**  SAVE END OF MONTH DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO  50
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER FROM PMCUSTPO & '9998', MAINTAIN CUMULATIVE
+     C**     MONTHLY CASHFLOW TOTALS IN CUSTOMER CURRENCY AND OUTPUT
+     C**     MONTHLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ'9998'
+     C           QLMYIN    ANDEQ'M'
+     C           *IN77     ANDNE'1'
+     C* OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN30
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1003
+     C                     MOVE '0'       *IN30
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE MONTHLY CASHFLOW
+     C                     MOVEL'M'       MONYEA
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET MONTHLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C**  IF YEARLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER, PORTFOLIO SET TO '9998'
+     C**     & MONTH/YEAR INDICATOR SET TO 'Y':
+     C           WWYETT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE '9998'    WWPORT
+     C                     MOVE 'Y'       WWMYIN
+     C                     MOVE '0'       *IN70
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C***********          MOVELP9R998    RRPORT                          S01486
+     C***********          MOVELP9N998    RRNARR                          S01486
+     C                     MOVELFCR998    RRPORT                          S01486
+     C                     MOVELFCN998    RRNARR                          S01486
+     C*
+     C                     MOVELQBCSBY    RRCURR
+     C                     MOVELQBBYDP    WWPTDP
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEYEARE                                     R05864
+     C*                                                                   R05864
+     C                     MOVE QLCNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9998'                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEYEARE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMPORTPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                                    R05864
+     C****       QLPTFR    ORNE '9998'                                    R05864
+     C****                 WRITENOYCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ'9998'                                    R05864
+     C*
+     C**  SAVE END OF YEAR DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER FROM PMCUSTPO & '9998', MAINTAIN CUMULATIVE
+     C**     YEARLY CASHFLOW TOTALS IN CUSTOMER CURRENCY AND OUTPUT
+     C**     YEARLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ'9998'
+     C           QLMYIN    ANDEQ'Y'
+     C           *IN77     ANDNE'1'
+     C* OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN31
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1004
+     C                     MOVE '0'       *IN31
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE YEARLY CASHFLOW
+     C                     MOVEL'Y'       MONYEA
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET YEARLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1005 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * L DATE   -                                                       *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      * #W1002   - OUTPUT EVENT DETAILS                                  *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      * #P1002   - PRODUCE AUTOMATIC CASHFLOW REPORT                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WW60DD   - DAILY CASHFLOW DETAILS PARAMETER                      *
+      * WWCUSN   - CUSTOMER NUMBER                                       *
+      * WWPRTF   - PORTFOLIO REFERENCE                                   *
+      * WWCACD   - CASHFLOW EVENT CONTROL DATE                           *
+      * WWCOBD   - DAILY TOTALS                                          *
+      * WWCUBD   - CUMULATIVE DAILY TOTALS                               *
+      * WWECCY   - EVENT CURRENCY                                        *
+      * WWMOTT   - MONTHLY CASHFLOW DETAILS PARAMETER                    *
+      * WWAENB   - CUSTOMER NUMBER                                       *
+      * WWPORT   - PORTFOLIO REFERENCE                                   *
+      * WWMYIN   - MONTH/YEAR END INDICATOR                              *
+      * WWNEMT   - MOTHLY/YEARLY TOTALS                                  *
+      * WWCMOT   - CUMULATIVE MONTHLY/YEARLY TOTALS                      *
+      * WWMYNO   - SAVED MONTH/YEAR VALUE                                *
+      *                                                                  *
+      ********************************************************************
+     C           #P1006    BEGSR                           * #P1006 BGSR *
+     C*                                                    ***************
+     C**  IF DAILY CASHFLOW REPORT REQUIRED, ACCESS PMEVNTL2 WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER & PORTFOLIO PASSED TO
+     C**     ROUTINE:
+     C           WW60DD    IFEQ 'Y'                        - B1
+     C                     MOVELBBCUST    WWCUSN
+     C                     MOVEL#WPTFR    WWPRTF
+     C*
+     C**  INITIALISE TOTALS AND OVERFLOW INDICATOR
+     C                     MOVE '0'       *IN45
+     C                     MOVE '0'       *IN70
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C*
+     C           DFKEY     SETLLPMEVNTL2
+     C                     READ PMEVNTL2                 78
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C           #WPTFR    IFEQ '9997'
+     C                     MOVE QBCSBY    RRCURR
+     C                     Z-ADDQBBYDP    WWPTDP
+     C***********          MOVELP9R997    RRPORT                          S01486
+     C***********          MOVELP9N997    RRNARR                          S01486
+     C                     MOVELFCR997    RRPORT                          S01486
+     C                     MOVELFCN997    RRNARR                          S01486
+     C                     ELSE
+     C                     MOVELPNPTCY    RRCURR
+     C                     Z-ADDPNPCDP    WWPTDP
+     C                     MOVEL#WPTFR    RRPORT
+     C                     MOVEL#WPTFN    RRNARR
+     C                     END
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEDAYRE                                     R05864
+     C*
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN82
+     C*
+     C                     MOVE Q9CNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           Q9PTFR    ANDEQ#WPTFR                                    R05864
+     C           Q9EVTD    ANDLEWWFTD                                     R05864
+     C           *IN78     ANDNE'1'                                       R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEDAYRE                                     R05864
+     C                     END                             - E2           R05864
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO ON PMEVNTL2 EQUAL CUSTOMER
+     C**     & PORTFOLIO PASSED TO ROUTINE AND
+     C**     EVENT DATE <= CASHFLOW CONTROL DATE.
+     C**     ON CHANGE OF EVENT DATE, OUTPUT DAILY AND CUMULATIVE
+     C**     TOTALS AND RESET DAILY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B2
+     C           Q9PTFR    ANDEQ#WPTFR
+     C           Q9EVTD    ANDLEWWFTD
+     C           *IN78     ANDNE'1'
+     C*
+     C           Q9EVTD    IFNE W1EVTD                     - B3
+     C           *IN82     ANDEQ'0'
+     C           WWCOBD    ANDNE0
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD
+     C                     END                             - E3
+     C*
+     C**  OUTPUT CASHFLOW EVENT & ADD EVENT AMOUNT IN PORTFOLIO CCY
+     C**  INTO DAILY AND CUMULATIVE TOTALS:
+     C                     EXSR #W1002
+     C                     MOVE '1'       *IN45
+     C*
+     C           Q9AMTR    IFEQ 'R'                        - B3
+     C                     ADD  Q9PTFA    WWCOBD
+     C                     ADD  Q9PTFA    WWCUBD
+     C                     ELSE                            - X3
+     C                     SUB  Q9PTFA    WWCOBD
+     C                     SUB  Q9PTFA    WWCUBD
+     C                     END                             - E3
+     C*
+     C                     MOVE Q9ECCY    WWECCY
+     C                     MOVE Q9EVTD    W1EVTD
+     C*
+     C                     READ PMEVNTL2                 78
+     C                     MOVE Q9CNUM    WWCNUM
+     C*
+     C           WWECCY    IFEQ Q9ECCY                     - B3
+     C                     MOVE '0'       *IN42
+     C                     ELSE                            - X3
+     C                     MOVE '1'       *IN42
+     C                     END                             - E3
+     C*
+     C                     MOVE '0'       *IN82
+     C                     END                             - E2
+     C*
+     C           WWCOBD    IFNE *ZERO                      - B2
+     C           WWCUBD    ANDNE*ZERO
+     C                     EXSR #W1001
+     C*
+     C                     Z-ADD0         WWCOBD
+     C                     Z-ADD0         WWCUBD
+     C                     END                             - E2
+     C*
+     C****       *IN45     IFEQ '0'                        - B2           R05864
+     C****                 WRITENOCERE                                    R05864
+     C****                 END                             - E2           R05864
+     C                     END                             - E1
+     C*
+     C**  IF MONTHLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER & PORTFOLIO PASSED TO
+     C**     ROUTINE & MONTH/YEAR INDICATOR SET TO 'M':
+     C           WWMOTT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE #WPTFR    WWPORT
+     C                     MOVE 'M'       WWMYIN
+     C                     MOVE '0'       *IN70
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C*
+     C           EVKEY     SETLLPMEVNTL2
+     C                     READ PMEVNTL2                 78
+     C           #WPTFR    IFEQ '9997'
+     C                     MOVELQBCSBY    RRCURR
+     C                     MOVELQBBYDP    WWPTDP
+     C***********          MOVELP9R997    RRPORT                          S01486
+     C***********          MOVELP9N997    RRNARR                          S01486
+     C                     MOVELFCR997    RRPORT                          S01486
+     C                     MOVELFCN997    RRNARR                          S01486
+     C                     ELSE
+     C                     MOVELPNPTCY    RRCURR
+     C                     MOVELPNPCDP    WWPTDP
+     C                     MOVEL#WPTFR    RRPORT
+     C                     MOVEL#WPTFN    RRNARR
+     C                     END
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEMONRE                                     R05864
+     C*                                                                   R05864
+     C                     MOVE QLCNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ#WPTFR                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEMONRE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMCFMYPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                     - B2           R05864
+     C****       QLPTFR    ORNE #WPTFR                                    R05864
+     C****                 WRITENOMCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ#WPTFR                                    R05864
+     C*
+     C**  SAVE END OF MONTH DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO  50
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER & PORTFOLIO PASSED TO ROUTINE, MAINTAIN CUMULATIVE
+     C**     MONTHLY CASHFLOW TOTALS IN PORTFOLIO CURRENCY AND OUTPUT
+     C**     MONTHLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ#WPTFR
+     C           QLMYIN    ANDEQ'M'
+     C           *IN77     ANDNE'1'
+     C* OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN30
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C** AND CUSTOMER AND PORTFOLIO EQUAL TO THOSE PASSED TO ROUTINE...  35444
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           WWCNUM    ANDEQBBCUST                                   35444
+     C           QLPTFR    ANDEQ#WPTFR                                   35444
+     C           QLMYIN    ANDEQ'M'                                      35444
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1003
+     C                     MOVE '0'       *IN30
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE MONTHLY CASHFLOW
+     C                     MOVEL'M'       MONYEA
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET MONTHLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C*
+     C**  IF YEARLY CASHFLOW REPORT REQUIRED, ACCESS PMCFMYPP WITH
+     C**     PARTIAL KEY OF CURRENT CUSTOMER & PORTFOLIO PASSED TO
+     C**     ROUTINE & MONTH/YEAR INDICATOR SET TO 'Y':
+     C           WWMOTT    IFEQ 'Y'                        - B1
+     C                     MOVE BBCUST    WWCUST
+     C                     MOVE #WPTFR    WWPORT
+     C                     MOVE 'Y'       WWMYIN
+     C                     MOVE '0'       *IN70
+     C*
+     C***********MYKEY     SETLLPMCFMYPP                                  S01486
+     C***********          READ PMCFMYPP                 77               S01486
+     C           MYKEY     SETLLPMCFMYPD                                  S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     Z-ADD0         WWNEMT
+     C                     Z-ADD0         WWCMOT
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C*
+     C           EVKEY     SETLLPMEVNTL2
+     C                     READ PMEVNTL2                 78
+     C           #WPTFR    IFEQ '9997'
+     C                     MOVELQBCSBY    RRCURR
+     C                     Z-ADDQBBYDP    WWPTDP
+     C***********          MOVELP9R997    RRPORT                          S01486
+     C***********          MOVELP9N997    RRNARR                          S01486
+     C                     MOVELFCR997    RRPORT                          S01486
+     C                     MOVELFCN997    RRNARR                          S01486
+     C                     ELSE
+     C                     MOVELPNPTCY    RRCURR
+     C                     Z-ADDPNPCDP    WWPTDP
+     C                     MOVEL#WPTFR    RRPORT
+     C                     MOVEL#WPTFN    RRNARR
+     C                     END
+     C****                 WRITEHEADRE                                    R05864
+     C****                 WRITEACOFRE                                    R05864
+     C****                 WRITEYEARE                                     R05864
+     C*                                                                   R05864
+     C                     MOVE QLCNUM    WWCNUM
+     C*                                                                   R05864
+     C** IF RECORD READ FOR CUSTOMER OUPUT HEADER                         R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ#WPTFR                                    R05864
+     C                     EXSR #P1003                                    R05864
+     C                     WRITEHEADRE                                    R05864
+     C                     WRITEACOFRE                                    R05864
+     C                     WRITEYEARE                                     R05864
+     C                     END                             - E2           R05864
+     C****                                                                R05864
+     C****IF CUSTOMER & PORTFOLIO FROM PMCFMYPP DIFFERENT TO DETAILS      R05864
+     C****   USED TO ACCESS PMCFMYPP, OUTPUT 'NO DETAILS '                R05864
+     C****   MESSAGE:                                                     R05864
+     C****       WWCNUM    IFNE BBCUST                     - B2           R05864
+     C****       QLPTFR    ORNE #WPTFR                                    R05864
+     C****                 WRITENOYCRE                                    R05864
+     C****                 ELSE                            - X2           R05864
+     C           WWCNUM    IFEQ BBCUST                     - B2           R05864
+     C           QLPTFR    ANDEQ#WPTFR                                    R05864
+     C*
+     C**  SAVE END OF YEAR DATE FROM PMCFMYPP
+     C                     Z-ADDQLMYNO    WWMYNO
+     C*
+     C**  DO WHILE CUSTOMER & PORTFOLIO FROM PMCFMYPP EQUAL TO
+     C**     CUSTOMER & PORTFOLIO PASSED TO ROUTINE, MAINTAIN CUMULATIVE
+     C**     YEARLY CASHFLOW TOTALS IN PORTFOLIO CURRENCY AND OUTPUT
+     C**     YEARLY CASHFLOW TOTALS:
+     C           WWCNUM    DOWEQBBCUST                     - B3
+     C           QLPTFR    ANDEQ#WPTFR
+     C           QLMYIN    ANDEQ'Y'
+     C           *IN77     ANDNE'1'
+     C* OUTPUT DATE ONLY ONCE
+     C                     MOVE '1'       *IN31
+     C*
+     C** DO WHILE DATE READ IS EQUAL TO THE DATE SAVED ABOVE
+     C** AND CUSTOMER AND PORTFOLIO EQUAL TO THOSE PASSED TO ROUTINE...  35444
+     C           QLMYNO    DOWEQWWMYNO                     - B4
+     C           WWCNUM    ANDEQBBCUST                                   35444
+     C           QLPTFR    ANDEQ#WPTFR                                   35444
+     C           QLMYIN    ANDEQ'Y'                                      35444
+     C           *IN77     ANDNE'1'
+     C                     ADD  QLNEPT    WWNEMT 150
+     C                     ADD  QLNEPT    WWCMOT 150
+     C                     EXSR #W1004
+     C                     MOVE '0'       *IN31
+     C***********          READ PMCFMYPP                 77               S01486
+     C                     READ PMCFMYPD                 77               S01486
+     C                     MOVE QLCNUM    WWCNUM
+     C                     END                             - E4
+     C*
+     C** OUTPUT CUMULATIVE YEARLY CASHFLOW
+     C                     MOVEL'Y'       MONYEA
+     C                     EXSR #W1005
+     C*
+     C** RESET PORTFOLIO NET YEARLY TOTAL (WWNEMT)
+     C                     Z-ADD0         WWNEMT
+     C*
+     C** RESET SAVED DATE TO LAST DETAILS READ
+     C                     Z-ADDQLMYNO    WWMYNO
+     C                     END                             - E3
+     C*
+     C** RESET PORTFOLIO CUMULATIVE TOTAL (WWCMOT)
+     C                     Z-ADD0         WWCMOT
+     C                     END                             - E2
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * #P1006 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT NUMBER TO PRINT                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDECP   - PORTFOLIO CURRENCY DECIMAL PLACES                     *
+      * WWFD#1   - WORK FIELD 1                                          *
+      * WWFD#2   - WORK FIELD 2                                          *
+      * WWFD#3   - WORK FIELD 3                                          *
+      * WWFD#4   - WORK FIELD 4                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P1010    BEGSR
+     C*
+     C** USE EDITCODE 'J'
+     C                     MOVE 'J'       ZECODE
+     C*
+     C** EDIT AMOUNT ACCORDING TO THE PORTFOLIO CCY DECIMAL PLACES
+     C           WWDECP    IFEQ 0
+     C                     MOVE WWFD15    WWFD#1 150
+     C                     Z-ADDWWFD#1    ZFLD15
+     C                     END
+     C*
+     C           WWDECP    IFEQ 1
+     C                     MOVE WWFD15    WWFD#2 151
+     C                     Z-ADDWWFD#2    ZFLD15    H
+     C                     END
+     C*
+     C           WWDECP    IFEQ 2
+     C                     MOVE WWFD15    WWFD#3 152
+     C                     Z-ADDWWFD#3    ZFLD15    H
+     C                     END
+     C*
+     C           WWDECP    IFEQ 3
+     C                     MOVE WWFD15    WWFD#4 153
+     C                     Z-ADDWWFD#4    ZFLD15    H
+     C                     END
+     C*
+     C                     Z-ADD0         ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1002   - OUTPUT EVENT DETAILS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - CONVERT DAY NUMBER TO DATE                            *
+      * ZSEDIT   - FORMAT NUMBER TO PRINT                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPLUS   - '+' SIGN                                              *
+      *                                                                  *
+      ********************************************************************
+     C           #W1002    BEGSR                           * #W1002 BGSR *
+     C*                                                                ***
+     C                     MOVE 'Y'       WWCSFL                          R05864
+     C*                                                                ***
+     C**  WRITE NEW TITLES:
+     C           *IN70     IFEQ '1'                        - B1
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C                     WRITEDAYRE
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     END                             - E1
+     C*
+     C**  FORMAT DETAILS FOR OUTPUT:
+     C                     Z-ADDQ9EVTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RREVTD
+     C*
+     C                     MOVELQ9ECCY    RRECCY
+     C*
+     C**  ACCESS EVENT CURRENCY DECIMAL PLACES
+     C***********Q9ECCY    CHAINSDCURRL0             74                   S01486
+     C************IN74     IFEQ '1'                                       S01486
+     C***********          Z-ADD9         DBASE            ***************S01486
+     C***********          MOVEL'SDCURRL0'DBFILE           * DB ERROR 09 *S01486
+     C***********          MOVEL'Q9ECCY ' DBKEY            ***************S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM Q9ECCY    P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVELQ9ECCY    DBKEY                           S01486
+     C                     Z-ADD9         DBASE            ***************S01486
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 02 *S01486
+     C                     OUT  LDA                        ***************S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVELQ9T1XT    RRT1XT
+     C                     MOVELQ9T2XT    RRT2XT
+     C*
+     C                     MOVELQ9TTRF    RRTTRF
+     C                     MOVELQ9SEPR    RRSEPR
+     C*
+     C                     MOVELQ9ENAR    RRENAR
+     C*
+     C           Q9AMTR    IFEQ 'R'
+     C                     Z-ADDQ9ETAM    WWFD15
+     C                     ELSE
+     C                     Z-SUBQ9ETAM    WWFD15
+     C                     END
+     C                     Z-ADDA6NBDP    WWDECP
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK                     - B1
+     C                     MOVE '+'       ZOUT21
+     C                     END                             - E1
+     C                     MOVE ZOUT21    RRETAM
+     C*
+     C           #WPTFR    IFEQ '9997'                     - B1
+     C           #WPTFR    OREQ '9998'
+     C           #WPTFR    OREQ '9999'
+     C           Q9AMTR    IFEQ 'R'                        - B2
+     C                     Z-ADDQ9CUCA    WWFD15
+     C                     ELSE                            - X2
+     C                     Z-SUBQ9CUCA    WWFD15
+     C                     END                             - E2
+     C                     ELSE                            - X1
+     C           Q9AMTR    IFEQ 'R'                        - B2
+     C                     Z-ADDQ9PTFA    WWFD15
+     C                     ELSE                            - X2
+     C                     Z-SUBQ9PTFA    WWFD15
+     C                     END                             - E2
+     C                     END                             - E1
+     C*
+     C*******              Z-ADDWWPTDP    WWDECP                          R00183
+     C** SET DECIMAL PLACES TO PORTFOLIO OR CUSTOMER BASE CURRENCY DECS   R00183
+     C***********RRPORT    IFEQ P9R999                              R00183S01486
+     C***********RRPORT    OREQ P9R998                              R00183S01486
+     C***********RRPORT    OREQ P9R997                              R00183S01486
+     C           RRPORT    IFEQ FCR999                                    S01486
+     C           RRPORT    OREQ FCR998                                    S01486
+     C           RRPORT    OREQ FCR997                                    S01486
+     C                     Z-ADDQ9BYDP    WWDECP                          R00183
+     C                     ELSE                                           R00183
+     C                     Z-ADDQ9PCDP    WWDECP                          R00183
+     C                     END                                            R00183
+     C*                                                                   R00183
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK                     - B1
+     C                     MOVE '+'       ZOUT21
+     C                     END                             - E1
+     C                     MOVE ZOUT21    RREAPC
+     C*
+     C                     WRITEDTOTRE                 70
+     C                     MOVE '0'       *IN67
+     C*
+     C                     MOVE '0'       *IN41
+     C*                                                    ***************
+     C                     ENDSR                           * #W1002 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1001   - OUTPUT DAILY CUMULATIVE TOTALS                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFD15   - WORK FIELD                                            *
+      * WWDECP   - PORTFOLIO CURRENCY DECIMAL PLACES                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W1001    BEGSR                           * #W1001 BGSR *
+     C*                                                    ***************
+     C                     MOVELRREVTD    RREVTT
+     C                     MOVE 'Y'       WWCSFL                          R05864
+     C*
+     C**  WRITE NEW TITLES:
+     C           *IN70     IFEQ '1'                        - B1
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C                     WRITEDAYRE
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     Z-ADDWWCOBD    WWFD15 150
+     C*******              Z-ADDWWPTDP    WWDECP                          R00183
+     C** SET DECIMAL PLACES TO PORTFOLIO OR CUSTOMER BASE CURRENCY DECS   R00183
+     C***********RRPORT    IFEQ P9R999                              R00183S01486
+     C***********RRPORT    OREQ P9R998                              R00183S01486
+     C***********RRPORT    OREQ P9R997                              R00183S01486
+     C           RRPORT    IFEQ FCR999                                    S01486
+     C           RRPORT    OREQ FCR998                                    S01486
+     C           RRPORT    OREQ FCR997                                    S01486
+     C****                 Z-ADDQ9BYDP    WWDECP                    R0018358178
+     C                     Z-ADDQBBYDP    WWDECP                          58178
+     C                     ELSE                                           R00183
+     C****                 Z-ADDQ9PCDP    WWDECP                    R0018358178
+     C                     Z-ADDPNPCDP    WWDECP                          58178
+     C                     END                                            R00183
+     C*                                                                   R00183
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK                     - B1
+     C                     MOVE '+'       ZOUT21
+     C                     END                             - E1
+     C                     MOVE ZOUT21    RRCOBD
+     C*
+     C                     Z-ADDWWCUBD    WWFD15
+     C                     Z-ADDWWPTDP    WWDECP
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK                     - B1
+     C                     MOVE '+'       ZOUT21
+     C                     END                             - E1
+     C                     MOVE ZOUT21    RRCUBD
+     C*
+     C                     WRITEDCATRE                 70
+     C*
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN42
+     C*                                                    ***************
+     C                     ENDSR                           * #W1001 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1003   - OUTPUT MONTHLY TOTALS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - CONVERT DAY NUMBER TO DATE                            *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFD15   - WORK FIELD                                            *
+      * WWDECP   - PORTFOLIO CURRENCY DECIMAL PLACES                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W1003    BEGSR                           * #W1003 BGSR *
+     C*                                                                ***
+     C                     MOVE 'Y'       WWCSFL                          R05864
+     C*                                                                ***
+     C**  WRITE NEW TITLES:
+     C           *IN70     IFEQ '1'                        - B1
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C                     WRITEMONRE
+     C                     END                             - E1
+     C*
+     C**  FORMAT DETAILS FOR OUTPUT:
+     C**  DATE
+     C                     Z-ADDQLMYNO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRMYNO
+     C*   CASHFLOW CCY
+     C                     MOVE QLCCY     RRCFCY
+     C*   INCOMING AMOUNT
+     C                     Z-ADDQLICAS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C                     MOVE ZOUT21    RRICAS
+     C*   OUTGOING AMOUNT
+     C                     Z-ADDQLOCAS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C                     MOVE ZOUT21    RROCAS
+     C*   NET AMOUNT IN CASHFLOW CCY
+     C                     Z-ADDQLNECS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRNECS
+     C*   NET AMOUNT IN PORTFOLIO CCY
+     C                     Z-ADDQLNEPT    WWFD15
+     C*******              Z-ADDWWPTDP    WWDECP                          R00183
+     C** SET DECIMAL PLACES TO PORTFOLIO OR CUSTOMER BASE CURRENCY DECS   R00183
+     C***********RRPORT    IFEQ P9R999                              R00183S01486
+     C***********RRPORT    OREQ P9R998                              R00183S01486
+     C***********RRPORT    OREQ P9R997                              R00183S01486
+     C           RRPORT    IFEQ FCR999                                    S01486
+     C           RRPORT    OREQ FCR998                                    S01486
+     C           RRPORT    OREQ FCR997                                    S01486
+     C                     Z-ADDQBBYDP    WWDECP                          R00183
+     C                     ELSE                                           R00183
+     C                     Z-ADDPNPCDP    WWDECP                          R00183
+     C                     END                                            R00183
+     C*                                                                   R00183
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRNEPT
+     C*
+     C                     WRITEMCATRE                 70
+     C                     MOVE '0'       *IN68
+     C*                                                    ***************
+     C                     ENDSR                           * #W1003 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1004   - OUTPUT YEARLY TOTALS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - CONVERT DAY NUMBER TO DATE                            *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFD15   - WORK FIELD                                            *
+      * WWDECP   - PORTFOLIO CURRENCY DECIMAL PLACES                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W1004    BEGSR                           * #W1004 BGSR *
+     C*                                                    ***************
+     C**  WRITE NEW TITLES:
+     C           *IN70     IFEQ '1'                        - B1
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C                     WRITEYEARE
+     C                     END                             - E1
+     C*
+     C**  FORMAT DETAILS FOR OUTPUT:
+     C                     Z-ADDQLMYNO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRMYNY
+     C*   CASHFLOW CCY
+     C                     MOVE QLCCY     RRCFYR
+     C*   INCOMING AMOUNT
+     C                     Z-ADDQLICAS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C                     MOVE ZOUT21    RRICAY
+     C*   OUTGOING AMOUNT
+     C                     Z-ADDQLOCAS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C                     MOVE ZOUT21    RROCAY
+     C*   NET AMOUNT IN CASHFLOW CCY
+     C                     Z-ADDQLNECS    WWFD15
+     C                     Z-ADDQLCDP     WWDECP
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRNECY
+     C*   NET AMOUNT IN PORTFOLIO CCY
+     C                     Z-ADDQLNEPT    WWFD15
+     C*******              Z-ADDWWPTDP    WWDECP                          R00183
+     C** SET DECIMAL PLACES TO PORTFOLIO OR CUSTOMER BASE CURRENCY DECS   R00183
+     C***********RRPORT    IFEQ P9R999                              R00183S01486
+     C***********RRPORT    OREQ P9R998                              R00183S01486
+     C***********RRPORT    OREQ P9R997                              R00183S01486
+     C           RRPORT    IFEQ FCR999                                    S01486
+     C           RRPORT    OREQ FCR998                                    S01486
+     C           RRPORT    OREQ FCR997                                    S01486
+     C                     Z-ADDQBBYDP    WWDECP                          R00183
+     C                     ELSE                                           R00183
+     C                     Z-ADDPNPCDP    WWDECP                          R00183
+     C                     END                                            R00183
+     C*
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRNEPY
+     C*
+     C                     WRITEYCATRE                 70
+     C                     MOVE '0'       *IN69
+     C*                                                    ***************
+     C                     ENDSR                           * #W1004 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1005   - OUTPUT CUMULATIVE MONTHLY AND YEARLY TOTALS           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #P1010   - EDIT AMOUNTS FOR OUTPUT TO REPORT (SIGNED)            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1004   - REPORT CASHFLOWS FOR '9999' PORTFOLIO                 *
+      * #P1005   - REPORT CASHFLOWS FOR '9998' PORTFOLIO                 *
+      * #P1006   - REPORT CASHFLOWS FOR DEFINED PORTFOLIO                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFD15   - WORK FIELD                                            *
+      * WWDECP   - PORTFOLIO CURRENCY DECIMAL PLACES                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W1005    BEGSR                           * #W1005 BGSR *
+     C*                                                    ***************
+     C**  WRITE NEW TITLES:
+     C           *IN70     IFEQ '1'                        - B1
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C           MONYEA    IFEQ 'M'
+     C                     WRITEMONRE
+     C                     ELSE
+     C                     WRITEYEARE
+     C                     END                             - E1
+     C                     END                             - E1
+     C*
+     C                     Z-ADDWWNEMT    WWFD15 150
+     C                     Z-ADDWWPTDP    WWDECP  10
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRNEMT
+     C*
+     C                     Z-ADDWWCMOT    WWFD15
+     C                     Z-ADDWWPTDP    WWDECP
+     C                     EXSR #P1010
+     C           WWPLUS    IFEQ *BLANK
+     C                     MOVE '+'       ZOUT21
+     C                     END
+     C                     MOVE ZOUT21    RRCMOT
+     C*
+     C                     MOVE *BLANK    RRMNY1
+     C                     MOVE *BLANK    RRMNY2
+     C           MONYEA    IFEQ 'M'
+     C                     MOVE RRMYNO    RRMNY1
+     C                     MOVEL'  CUM TO'RRMNY2
+     C                     MOVE RRMYNO    RRMNY2
+     C                     ELSE
+     C                     MOVE RRMYNY    RRMNY1
+     C                     MOVEL'CUM TO'  RRMNY2
+     C                     MOVE RRMYNY    RRMNY2
+     C                     END                             - E1
+     C*
+     C                     WRITEMYCMTO                 70
+     C*
+     C*                                                    ***************
+     C                     ENDSR                           * #W1005 EDSR *
+     C*                                                    ***************
+      ********************************************************************B07930
+      /EJECT                                                              B07930
+      ********************************************************************B07930
+      *                                                                  *B07930
+      * #W1006   - WRITE EMPTY REPORT DETAILS                            *B07930
+      *                                                                  *B07930
+      * SUBROUTINE CALLS:                                                *B07930
+      *                                                                  *B07930
+      * SUBROUTINE CALLED FROM:                                          *B07930
+      ********************************************************************B07930
+     C*                                                                   B07930
+     C           #W1006    BEGSR                                          B07930
+     C*                                                                   001275
+     C           *IN89     IFEQ '1'                                       001275
+     C                     CLOSEPM0430P1                                  001275
+     C                     END                                            001275
+     C*                                                                   B07930
+     C***********          CALL 'QCMDEXC'                           B07930S01486
+     C***********          PARM WWCMD1    QCAB   40                 B07930S01486
+     C***********          PARM 40        QCAN   155                B07930S01486
+     C***********                                                   B07930S01486
+     C***********          OPEN PM0430P1                            B07930S01486
+     C***********          MOVE '1'       *IN89                     B07930S01486
+     C***********          WRITEHEADRE                              B07930S01486
+     C***********                                                   B07930S01486
+     C****OUTPUT*ACCOUNT OFFICER TEXT                               B07930S01486
+     C***********WWACOF    IFEQ '*ALL'                     - B1     B07930S01486
+     C***********          MOVE TEXT,1    RRACOC                    B07930S01486
+     C***********          MOVELTEXT,2    RRACON                    B07930S01486
+     C***********          ELSE                            - X1     B07930S01486
+     C***********          MOVELWWACOF    W1ACOF  2                 B07930S01486
+     C***********W1ACOF    CHAINSDACOFL0             83             B07930S01486
+     C***********                                                   B07930S01486
+     C************IN83     IFEQ '1'                        - B2     B07930S01486
+     C***********          Z-ADD1         DBASE            *********B07930S01486
+     C***********          MOVEL'SDACOFL0'DBFILE           * DB ERROB07930S01486
+     C***********          MOVELW1ACOF    DBKEY            *********B07930S01486
+     C***********          EXSR *PSSR                               B07930S01486
+     C***********          END                             - E2     B07930S01486
+     C***********                                                   B07930S01486
+     C***********          MOVELAZACOC    RRACOC                    B07930S01486
+     C***********          MOVELAZACON    RRACON                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C****OUTPUT*CUSTOMER TEXT                                      B07930S01486
+     C***********WWPNP8    IFEQ '*ALL'                     - B1     B07930S01486
+     C***********          MOVE TEXT,1    RRCUST                    B07930S01486
+     C***********          MOVELTEXT,3    RRCRNM                    B07930S01486
+     C***********                                                   B07930S01486
+     C***********          ELSE                            - X1     B07930S01486
+     C***********          MOVELBBCUST    RRCUST                    B07930S01486
+     C***********          MOVELBBCRNM    RRCRNM                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C****OUTPUT*PORTFOLIO TEXT                                     B07930S01486
+     C***********          MOVE TEXT,5    RRCURR                    B07930S01486
+     C***********WWPREF    IFEQ '*ALL'                     - B1     B07930S01486
+     C***********          MOVE TEXT,1    RRPORT                    B07930S01486
+     C***********          MOVELTEXT,4    RRNARR                    B07930S01486
+     C***********          END                                      B07930S01486
+     C***********                                                   B07930S01486
+     C***********WWPREF    IFEQ '9997'                     - B1     B07930S01486
+     C***********          MOVE P9R997    RRPORT                    B07930S01486
+     C***********          MOVELP9N997    RRNARR                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C***********WWPREF    IFEQ '9998'                     - B1     B07930S01486
+     C***********          MOVE P9R998    RRPORT                    B07930S01486
+     C***********          MOVELP9N998    RRNARR                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C***********WWPREF    IFEQ '9999'                     - B1     B07930S01486
+     C***********          MOVE P9R999    RRPORT                    B07930S01486
+     C***********          MOVELP9N999    RRNARR                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C***********WWPREF    IFNE '9999'                     - B1     B07930S01486
+     C***********WWPREF    ANDNE'9998'                              B07930S01486
+     C***********WWPREF    ANDNE'9997'                              B07930S01486
+     C***********WWPREF    ANDNE'*ALL'                              B07930S01486
+     C***********          MOVELWWPNP8    WWCUSN                    B07930S01486
+     C***********          MOVELWWPRTF    WWPREF                    B07930S01486
+     C***********DFKEY     CHAINPMPORTPP             83             B07930S01486
+     C***********                                                   B07930S01486
+     C************IN83     IFEQ '1'                        - B2     B07930S01486
+     C***********          Z-ADD1         DBASE            *********B07930S01486
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROB07930S01486
+     C***********          MOVELWWPNP8    DBKEY            *********B07930S01486
+     C***********          EXSR *PSSR                               B07930S01486
+     C***********          END                             - E2     B07930S01486
+     C***********                                                   B07930S01486
+     C***********          MOVELPNPTFR    RRPORT                    B07930S01486
+     C***********          MOVELPNPTFN    RRNARR                    B07930S01486
+     C***********          END                             - E1     B07930S01486
+     C***********                                                   B07930S01486
+     C***********          WRITEACOFRE                              B07930S01486
+     C***********          WRITENOCARE                              B07930S01486
+     C****                 WRITEENDRE                                     B08252
+     C***********          WRITEENDRE                  70           B08252S01486
+     C                     WRITEPM0430F2                                  S01486
+     C*                                                                   B07930
+     C                     ENDSR                                          B07930
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1003   - OPEN/CLOSE PRINTER FILE AND PRINT FX RATES            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **QCMDEXC**-*CALL*QCMDEXC*TO*OVERRIDE*PRINTER*FILE******************S01486
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      * #P1002   - PRODUCE AUTOMATIC CASHFLOW REPORT                     *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPRTL   - PRINTER LOCATION CODE                                 *
+      * WWCMD    - COMMAND TO OVERRIDE PRINTER FILE                      *
+      *                                                                  *
+      ********************************************************************
+     C           #P1003    BEGSR                           * #P1003 BGSR *
+     C*                                                    ***************
+     C****IF*THIS*IS*THE*FIRST*RECORD*PROCESSED,**********************    S01486
+     C*******OVERRIDE*THE*PRTF*TO*PM0430PNNN*(WHERE*NNN*IS*THE*PRINTER    S01486
+     C*******LOCATION*CODE)*AND*OPEN*PRINTER*FILE:********************    S01486
+     C*****      *IN89     IFEQ '1'                        - B1
+     C************IN89     IFEQ '0'                        - B1           S01486
+     C***********                                                         S01486
+     C***********          MOVELAZPRTL    WWPRTL                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN                            S01486
+     C***********          MOVELAZACOC    WWACOS  2                 R05864S01486
+     C***********                                                         S01486
+     C***********          OPEN PM0430P1                                  S01486
+     C***********          MOVE AZPRTL    SAVPRT                          S01486
+     C***********          MOVE '1'       *IN89                           S01486
+     C***********          ELSE                            - X1           S01486
+     C*
+     C*   IF ANY CASHFLOW DETAILS REPORTED FOR ACCOUNT OFFICER AND BREAK, S01486
+     C**     PRINT LIST OF FX RATES:
+     C           *IN89     IFEQ '1'                                       111394
+     C           WWCSFL    IFEQ 'Y'                        - B1           R05864
+     C           AZACOC    ANDNEWWACOS                                    R05864
+     C***********          MOVELAZACOC    WWACOS  2                 R05864S01486
+     C                     MOVE 'N'       WWCSFL  1                       R05864
+     C                     MOVE '1'       *IN70
+     C                     WRITEHEADRE                 70
+     C                     WRITERAHERE
+     C*
+     C**  SET FILE POINTER AND READ A RECORD FROM SDCURRL0:
+     C                     MOVE *LOVAL    A6CYCD
+     C***********A6CYCD    SETLLSDCURRL0                                  S01486
+     C***********          READ SDCURRL0                 74               S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C                     PARM           P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C**  DO WHILE NOT END OF FILE, OUTPUT DETAILS FOR FX RATES AND
+     C**  READ NEXT RECORD:
+     C************IN74     DOWEQ'0'                        - B2           S01486
+     C           P@RTCD    DOWEQ*BLANKS                    - B2           S01486
+     C*
+     C**  WRITE NEW TITLE FOR FX RATES:
+     C           *IN70     IFEQ '1'
+     C                     WRITEHEADRE
+     C                     WRITERAHERE
+     C                     END
+     C*
+     C***********FXKEY     SETGTPMHSEXPP                                  S01486
+     C***********          READPPMHSEXPP                 75               S01486
+     C           FXKEY     SETGTPMHSEXPD                                  S01486
+     C                     READPPMHSEXPD                 75               S01486
+     C*
+     C           *IN75     IFEQ '1'                        - B3
+     C           A6CYCD    ORNE Q8CCY                                     S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            ***************
+     C***********          MOVEL'PMHSEXPP'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVEL'PMHSEXPD'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVEL' FXKEY ' DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C** Stock data about current currency for the print of FX rates      R00178
+     C                     MOVE A6CYCD    ZCCYT   3                       R00178
+     C                     Z-ADDQ8SPOT    ZRATET 138                      R00178
+     C                     MOVE Q8MDV1    ZMDINT  1                       R00178
+     C                     Z-ADDA6RKSQ    ZRKSQT  30                      R00178
+     C*                                                                   R00178
+     C** If 'from' currency equal to 'TO' currency set amount in 'TO' currency
+     C** equal to amount in 'FROM' currency.                              R00178
+     C           ZCCYF     IFEQ ZCCYT                      *B3            R00178
+     C                     Z-ADD1         ZCRSRT 138                      R00178
+     C                     MOVE 'M'       ZCRSMD  1                       R00178
+     C                     ELSE                            *X3            R00178
+     C*                                                                   R00178
+     C** Initialize cross exchange rate                                   R00178
+     C                     Z-ADDZRATET    ZCRSRT                          R00178
+     C*                                                                   R00178
+     C** Select with the ranking sequence field the rate's format         R00178
+     C*                                                                   R00178
+     C           ZRKSQF    IFLT ZRKSQT                      *B4           R00178
+     C           ZCRSRT    ANDNE*ZEROS                                    R00178
+     C           1         DIV  ZCRSRT    ZCRSRT                          R00178
+     C           ZMDINT    IFEQ 'M'                          *B5          R00178
+     C                     MOVE 'D'       ZCRSMD                          R00178
+     C                     ELSE                              *X5          R00178
+     C                     MOVE 'M'       ZCRSMD                          R00178
+     C                     END                               *E5          R00178
+     C                     ELSE                             *X4           R00178
+     C                     MOVE ZMDINF    ZCRSMD                          R00178
+     C                     END                              *E4           R00178
+     C                     END                             *E3            R00178
+     C*                                                                   R00178
+     C** Output new data for the print of FX rates                        R00178
+     C                     MOVE A6CYCD    RRCCY                           R00178
+     C                     Z-ADDZCRSRT    RRSPOT                          R00178
+     C                     MOVE ZCRSMD    RRMDIN                          R00178
+     C*********************MOVE A6CYCD    RRCCY                           R00178
+     C*********************Z-ADDQ8SPOT    RRSPOT                          R00178
+     C*********************MOVE A6MDIN    RRMDIN                          R00178
+     C                     WRITERATERE                 70
+     C*
+     C***********          READ SDCURRL0                 74               S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*NEXT'   P@OPTN                          S01486
+     C                     PARM           P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C                     END                             - E2
+     C****                 WRITEENDRE                                     B08252
+     C                     WRITEENDRE                  70                 B08252
+     C                     CLOSEPM0430P1                                  S01486
+     C                     MOVE '0'       *IN89                           S01486
+     C***********          END                             - E2     R05864S01486
+     C***********          ELSE                            - X1     S01486111394
+     C                     END                                            111394
+     C                     END                                            111394
+     C*
+     C****IF*CHANGE*OF*PRINTER*LOCATION*CODE,**************************   S01486
+     C*******OUTPUT*END*OF*REPORT*COMMENT,*CLOSE*THE*OLD*PRTF,*********   S01486
+     C*******OVERRIDE*PRTF*TO*NEW*FILE*FOR*PRINTER*LOCATION*CODE,******   S01486
+     C*******OPEN*THE*NEW*PRTF:****************************************   S01486
+     C*                                                                   S01486
+     C*                                                                   S01486
+     C**  ELSE IF NOT OPENED,  OPEN NEW SPOOL FILE                        S01486
+     C*                                                                   S01486
+     C***********AZPRTL    IFNE SAVPRT                     - B2           S01486
+     C           *IN89     IFEQ *OFF                       - B2           S01486
+     C*****                WRITEENDRE                                     R05864
+     C*
+     C************IN89     IFEQ '1'                        - B3           S01486
+     C***********          CLOSEPM0430P1                                  S01486
+     C***********          MOVE '0'       *IN89                     001275S01486
+     C***********          END                             - E3           S01486
+     C***********                                                         S01486
+     C***********          MOVELAZPRTL    WWPRTL                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA                            S01486
+     C***********          PARM 43        QCAN                            S01486
+     C*
+     C                     OPEN PM0430P1
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM AZACOC    SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                        - B3           S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                    - E3           S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C                     MOVE AZACOC    RRACOF                          S01486
+     C                     MOVE AZACON    RRACNM                          S01486
+     C                     MOVE 'Y'       WWANYP  1                       S01486
+     C***********          MOVE AZPRTL    SAVPRT                          S01486
+     C                     MOVE '1'       *IN89
+     C                     MOVELAZACOC    WWACOS  2                       R05864
+     C                     END                             - E2
+     C*
+     C***********          END                             - E1           111394
+     C*                                                    ***************
+     C                     ENDSR                           * #P1003 EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZFRQAZ2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT                                                              S01486
+      /COPY ZSRSRC,ZACCH                                                  S01486
+      /EJECT                                                              S01486
+      /COPY ZSRSRC,ZCHKH                                                  S01486
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      * #P1003   - OPEN/CLOSE PRINTER FILE AND PRINT FX RATES            *
+      * #INIT    - INITAIL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*                                                    ***************
+     C**  If printer file is open, output database error reference        S01486
+     C*                                                                   S01486
+     C           *IN89     IFEQ '1'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C*
+     C**  PRINT DUMP AND CANCEL PROGRAM:
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*                                                    ***************
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITAIL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWEV60   - EVENT CONTROL DATE + 60                               *
+      * WWCACD   - CASHFLOW EVENT CONTROL DATE                           *
+      * WWCMD1   - COMMAND TO OVERRIDE PRINTER FILE                      *
+      * WWCMD    - COMMAND TO OVERRIDE PRINTER FILE                      *
+      * WWPRTL   - PRINTER LOCATION CODE                                 *
+      * WWDATE   - DATE                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           * #INIT BEGSR *
+     C*                                                    ***************
+     C**  PREPARE LDA:
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0430'  DBPGM
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN68
+     C                     MOVE '1'       *IN69
+     C*
+     C**  GET BANK DETAILS:
+     C***********1         SETLLSDBANKPD               71                 S01486
+     C***********          READ SDBANKPD                 71               S01486
+     C***********                                                         S01486
+     C************IN71     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 04 *
+     C                     MOVEL' NONE '  DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*                                                                   S01486
+     C**  WRITE AUDIT FILE HEADER                                         S01486
+     C*                                                                   S01486
+     C                     MOVE BJURPT    TITL                            S01486
+     C                     MOVE BJMRDT    RUNA                            S01486
+     C                     WRITEPM0430F0                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY                           S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   R00178
+     C**  GET BASE CURRENCY DETAILS:                                      R00178
+     C***********BJCYCD    CHAINSDCURRL0             74             R00178S01486
+     C***********                                                   R00178S01486
+     C************IN74     IFEQ '1'                        - B1     R00178S01486
+     C***********          Z-ADD11        DBASE            *********R00178S01486
+     C***********          MOVEL'SDCURRL0'DBFILE           * DB ERROR00178S01486
+     C***********          MOVELBJCYCD    DBKEY            *********R00178S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM BJCYCD    P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD11        DBASE            ***************S01486
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 11 *S01486
+     C                     MOVELBJCYCD    DBKEY            ***************S01486
+     C                     OUT  LDA                        ***************S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR                                     R00178
+     C                     END                             - E1           R00178
+     C*                                                                   R00178
+     C                     MOVE BJCYCD    ZCCYF   3                       R00178
+     C                     Z-ADDA6SPRT    ZRATEF 138                      R00178
+     C                     MOVE A6MDIN    ZMDINF  1                       R00178
+     C                     Z-ADDA6RKSQ    ZRKSQF  30                      R00178
+     C*                                                                   R00178
+     C*
+     C**  GET PORTFOLIO ICD:
+     C***********          READ SDPORTPD                 72               S01486
+     C***********                                                         S01486
+     C************IN72     IFEQ '1'                        - B1           S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'SDPORTPD'DBFILE           * DB ERROR 05 *
+     C                     MOVEL' NONE '  DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C**  GET GENERAL LEDGER ICD:
+     C***********          READ SDGELRPD                 84               S01486
+     C***********                                                         S01486
+     C************IN84     IFEQ '1'                        - B1           S01486
+     C**********           CALL 'AOGELRR0'                                S01486              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01486              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 06 *
+     C                     MOVEL' NONE '  DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     WRITEPM0430F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C                     Z-ADDBKAPDT    APDA    50
+     C*
+     C**  GET PMSTAT DETAILS:
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*
+     C** CASHFLOW CONTROL DATE
+     C                     Z-ADDWWEV60    WWFTD   50
+     C*
+     C****BUILT*COMMAND EXPRESSION FOR QCMDEXC:                           S01486
+     C***********          MOVELCMD,1     WWCMD1 40                       S01486
+     C***********          MOVE ')'       WWCMD1                          S01486
+     C***********                                                         S01486
+     C***********          MOVELCMD,1     WWCMD  43                       S01486
+     C***********          MOVE ')'       WWPRTL  4                       S01486
+     C*
+     C**  INITIALIZE SAVPRT & FIELD OF KLIST:
+     C***********          MOVE *LOVAL    SAVPRT  3                       S01486
+     C                     MOVE *BLANKS   WWACOC  2                       S01486
+     C                     Z-ADD99999     WWDATE  50
+     C*                                                    ***************
+     C                     ENDSR                           * #INIT ENDSR *
+     C*                                                    ***************
+     C*
+     C**=================================================================
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

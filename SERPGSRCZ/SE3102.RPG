@@ -1,0 +1,647 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Price Validation Purge')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3102 - EXTEL Price validation Purge.                       *
+     F*                                                               *
+     F*  Function: This program will purge all price validation       *
+     F*            details for securities that have been deleted.     *
+     F*                                                               *
+     F*  Called by: SEC3104 - EXTEL Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 14May01               *
+      *                 CAP060             Date 14May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 077947             DATE 30JUL96               *
+     F*                 052254             DATE 11JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 14NOV91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CSD006 - Market Data Feed (recompile)                        *
+      *  CAP060 - Midas APIs, Security Prices Full API (recompile)    *
+     F*  077947 - Remove file control check.                          *
+     F*         - If database error, output correct program name.     *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*
+     FEXVALD  IF  E                    DISK
+     FEXVALZ  IF  E                    DISK
+     FNEXVALD O   E                    DISK                      A
+     F            EXVALDF                           KRENAMENEXVALDF
+     F                                              KINFDS NEXDDS
+     F                                              KINFSR NEXDSR
+     FNEXVALZ O   E                    DISK                      A
+     F            EXVALZF                           KRENAMENEXVALZF
+     F                                              KINFDS NEXZDS
+     F                                              KINFSR NEXZSR
+     FSECTY   IF  E           K        DISK
+     FTABTB10 IF  E                    DISK
+     FSE3102AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10 - READ OPERATION TO TABTB10 FAILED.                      *
+     F*   20 - PF/EXVALD FAILED END OF FILE.                          *
+     F*   30 - CHAIN TO LF/SECTY FAILED.                              *
+     F*   50 - CHAIN TO PF/EXVALZ FAILED.                             *
+     F*   70 - FILE CONTROLS OUT OF BALANCE (LIVE RECORDS).           *
+     F*   75 - FILE CONTROLS OUT OF BALANCE (DELETED RECORDS).        *
+     F*   80 - FILE CONTROLS OUT OF BALANCE (TOTAL RECORDS).          *
+     F*   90 - ANY FILE CONTROLS ERROR.                               *
+     F*   LR - LAST RECORD HAS BEEN READ FROM PF/NEXCDB.              *
+     F*   U8 - FILE CONTROLS OUT OF BALANCE.                          *
+     F*U7,U8 & LR - DATABASE ERROR HAS OCCURRED.                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   CONTROL - PROGRAM CONTROLLING SUBROUTINE.                   *
+     F*   INIT    - PERFORM INITIAL PRODESSING.                       *
+     F*   DETAIL  - PRODESS ALL DETAILS FROM PF/EXVALD                *
+     F*   LIVREC  - PRODESS LIVE RECORDS FROM PF/EXVALD               *
+     F*   TRAIL   - PROCESS TRAILER RECORD FROM PF/EXVALZ             *
+     F*   FCERR   - FILE CONTROLS ERROR PROCESSING.                   *
+     F*   DBERR   - PROCESS DATABASE ERRORS.                          *
+     F*   NEXDSR  - EXCEPTION ERROR SR FOR PF/NEXVALD.                *
+     F*   NEXZSR  - EXCEPTION ERROR SR FOR PF/NEXVALZ.                *
+     F*   *PSSR   - PROGRAM EXCEPTION/ERROR SUBROUTINE.               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E*
+     E** Keys array for database error reporting.
+     E*
+     E                    CPY@    1   1 80
+     E                    KEY     1   2 29
+      /EJECT
+     ISECTYDF
+     I*
+     I** Fields renamed for input from LF/SECTY.
+     I*
+     I              SREF                            SSREF
+     I              LCD                             SLCD
+     I              CHTP                            SCHTP
+     I              TNLU                            STNLU
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** ERROR DATA STRUCTURE FOR LDA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     INEXDDS      DS                            366
+     I*
+     I** File information data structure for PF/EXVALD.
+     I*
+     INEXZDS      DS                            366
+     I*
+     I** File information data structure for PF/EXVALZ.
+     I*
+     IEPFDS       DS
+     I*
+     I** File information data structure used by error processing.
+     I*
+     I                                        1 256 EPFDS1
+     I                                      257 366 EPFDS2
+     I*
+     IEPPDS      SDS
+     I*
+     I** Program status data structure used by error processing.
+     I*
+     I                                        1  10 EPPP
+     I                                       81  90 EPPPL
+     I                                        1 253 EPPDS1
+     I                                      254 429 EPPDS2
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** CONTROL - PROGRAM CONTROLLING ROUTINE.                       *
+     C*                                                               *
+     C** PROGRAM FUNCTION :                                           *
+     C**         Inputs record from EXTEL price validation file       *
+     C**         PF/EXVALD, extracts the live records and outputs     *
+     C**         them to new EXTEL price validation file PF/NEXVALD.  *
+     C**         Checks for database errors and file controls errors  *
+     C**         using trailer record from PF/EXVALZ.                 *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**         Calls subroutines to perform initial processing,     *
+     C**           process details and calls trailer processing       *
+     C**           subroutine.                                        *
+     C*                                                               *
+     C** FIELDS IN   : NONE.                                          *
+     C*                                                               *
+     C** FIELDS OUT  : NONE.                                          *
+     C*                                                               *
+     C** CALLED FROM : NONE                                           *
+     C** CALLS       : INIT,DETAIL,TRAIL.                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Perform initial processing.
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Process all detail records on PF/EXVALD.
+     C*
+     C                     EXSR DETAIL
+     C*
+     C**  Process trailer record from PF/EXVALZ.
+     C*
+     C                     EXSR TRAIL
+     C*
+     C**  End of program.
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** INIT    - INITIAL PROCESSING SUBROUTINE.                     *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**           Chains to installation control file TABTB10 for    *
+     C**             run controls.Calls database error handling       *
+     C**             subroutine if record not found.                  *
+     C*                                                               *
+     C** FIELDS IN   : NONE.                                          *
+     C*                                                               *
+     C** FIELDS OUT  : DBFILE - Database file in error.               *
+     C**             : DBKEY  - Database file key.                    *
+     C**             : DBPGM  - Program with database error.          *
+     C**             : DBASE  - Database error number.                *
+     C*                                                               *
+     C** CALLED FROM : CONTROL                                        *
+     C** CALLS       : DBERR.                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C*
+     C** Obtain installation details.
+     C*
+     C           1         CHAINTABTB10F             10
+     C*
+     C** DATABASE ERROR 01  - NOT FOUND
+     C*
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBKEY
+     C***********          MOVEL'TABTB'   DBFILE  5        ***************S01117
+     C***********          MOVELKEY,1     DBKEY  29        * DB ERROR 01 *S01117
+     C***********          MOVEL'SE3102'  DBPGM   8        ***************S01117
+     C***********          Z-ADD1         DBASE   20                      S01117
+     C                     MOVEL'TABTB'   DBFILE           ***************S01117
+     C                     MOVELKEY,1     DBKEY            * DB ERROR 01 *S01117
+     C                     MOVEL'SE3102'  DBPGM            ***************S01117
+     C                     Z-ADD1         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Read record from PF/EXVALD
+     C*
+     C                     READ EXVALDF                  20
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** DETAIL    - PROCESSING FOR EACH DETAIL RECORD READ.          *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**          Identifies whether the record read in is a live     *
+     C**            or a deleted record and then performs processing  *
+     C**            accordingly.                                      *
+     C*                                                               *
+     C** FIELDS IN   : NONE.                                          *
+     C*                                                               *
+     C** FIELDS OUT  : TLNORE - Total number of records processed.    *
+     C**             : LVNORE - Number of live records processed.     *
+     C**             : DLNORE - Number of deleted records processed.  *
+     C*                                                               *
+     C** CALLED FROM : CONTROL                                        *
+     C** CALLS       : DBERR.                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR
+     C           *IN20     DOWEQ'0'
+     C*
+     C** If a deleted record, maintain deleted record count.
+     C*
+     C           RECI      IFEQ '*'
+     C                     ADD  1         DLNORE  70
+     C                     END
+     C*
+     C** If a live record, perform live record processing and
+     C**   maintain live record count.
+     C*
+     C           RECI      IFEQ 'D'
+     C                     EXSR LIVREC
+     C                     ADD  1         LVNORE  70
+     C                     END
+     C*
+     C** Maintain total record count.
+     C*
+     C                     ADD  1         TLNORE  70
+     C*
+     C** Read record from PF/EXVALD.
+     C*
+     C                     READ EXVALDF                  20
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** LIVREC    - PROCESSING FOR EACH LIVE DETAIL RECORD.          *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**           Write record to new EXTEL price validation record  *
+     C*                                                               *
+     C** FIELDS IN   : SESN   - Security shortname.                   *
+     C*                                                               *
+     C** FIELDS OUT  : NTNORE - New total number of records processed.*
+     C*                                                               *
+     C** CALLED FROM : DETAIL.                                        *
+     C** CALLS       : NEXDSR - Exception error handling subroutine.  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LIVREC    BEGSR
+     C*
+     C           SESN      CHAINSECTYDF              30
+     C*
+     C           *IN30     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C*
+     C                     ADD  1         NTNORE  70
+     C                     MOVEASTAMP,1   PRTMST           Default Timestamp                  CPK015
+     C                     WRITENEXVALDF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** TRAIL     - PROCESSING FOR TRAILER RECORD.                   *
+     C*                                                               *
+     C** SUBROUTINE FUNCTION :                                        *
+     C**           Check file controls for PF/EXVALD.                 *
+     C*                                                               *
+     C** FIELDS IN   : TLNORE - Total number of records processed.    *
+     C**             : LVNORE - Number of live records processed.     *
+     C**             : DLNORE - Number of deleted records processed.  *
+     C*                                                               *
+     C** FIELDS OUT  : DBFILE - Database file in error.               *
+     C**             : DBKEY  - Database file key.                    *
+     C**             : DBPGM  - Program with database error.          *
+     C**             : DBASE  - Database error number.                *
+     C*                                                               *
+     C** CALLED FROM : CONTROL.                                       *
+     C** CALLS       : DBERR.                                         *
+     C*              : FCERR.                                         *
+     C*              : NEXZSR - Exception error handling subroutine.  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TRAIL     BEGSR
+     C*
+     C** Read trailer record from PF/EXVALZ.
+     C*
+     C           1         CHAINEXVALZF              50
+     C*
+     C** DATABASE ERROR 02 - READ TO PF/EXVALZ FAILED.
+     C*
+     C           *IN50     IFEQ '1'
+     C           RECI      ORNE 'Z'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'EXVLZ'   DBFILE           ***************
+     C                     MOVELKEY,2     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'SE3102'  DBPGM            ***************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*                                                                   077947
+     C***If number of deleted records processed is not equal to that      077947
+     C**** read from the trailer, produce file controls error report.     077947
+     C***********NDEL      IFNE DLNORE                                    077947
+     C***********          SETON                     7590                 077947
+     C***********          END                                            077947
+     C*                                                                   077947
+     C***If number of live records processed is not equal to that         077947
+     C*****read from the trailer, produce file controls error report.     077947
+     C***********NORE      SUB  NDEL      NLRF    70                      077947
+     C***********NLRF      IFNE LVNORE                                    077947
+     C**************       SETON                     7090                 077947
+     C*************        END                                            077947
+     C*                                                                   077947
+     C***If total number of records processed is not equal to that        077947
+     C**** read from the trailer, produce file controls error report.     077947
+     C***********NORE      IFNE TLNORE                                    077947
+     C************         SETON                     8090                 077947
+     C************         END                                            077947
+     C*                                                                   077947
+     C***Move record counts into fields for report.                       077947
+     C************         Z-ADDNORE      WNORE   70                      077947
+     C************         Z-ADDNLRF      WNLRF   70                      077947
+     C************         Z-ADDNDEL      WNDEL   70                      077947
+     C*                                                                   077947
+     C***If no file controls or database errors ocurred, update new       077947
+     C*****trailer record on PF/NEXVALZ.                                  077947
+     C************IN70     IFEQ '0'                                       077947
+     C************IN75     ANDEQ'0'                                       077947
+     C************IN80     ANDEQ'0'                                       077947
+     C*
+     C*
+     C** Move new record counts to new trailer file.
+     C*
+     C************         Z-ADDLVNORE    NORE                            077947
+     C                     Z-ADDNTNORE    NORE                            077947
+     C                     Z-ADD0         NINS
+     C                     Z-ADD0         NDEL
+     C*
+     C                     WRITENEXVALZF
+     C*
+     C** Write run controls report.
+     C*
+     C                     WRITESE3102A1
+     C***********          WRITESE3102A3                                  E29170
+     C*
+     C***********          ELSE                                           077947
+     C***********                                                         077947
+     C***Write*file*out*of*balance*report.*******                         077947
+     C***********                                                         077947
+     C***********          EXSR FCERR                                     077947
+     C***********                                                         077947
+     C***********          END                                            077947
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************   077947
+     C***********                                                     *   077947
+     C***FCERR***-*FILE*CONTROLS*ERROR*HANDLING*SUBROUTINE.           *   077947
+     C***********                                                     *   077947
+     C*************Moves*file*name*into*locked*in*LDA*write*file      *   077947
+     C***************controls*report*sets*on*switch*U8.               *   077947
+     C***********                                                     *   077947
+     C***FIELDS*IN***:*NONE.                                          *   077947
+     C***********                                                     *   077947
+     C***FIELDS*OUT**:*U8*****-*File*controls*error*switch.           *   077947
+     C***********                                                     *   077947
+     C***CALLED*FROM*:*TRAIL.                                         *   077947
+     C***CALLS*******:*NONE.                                          *   077947
+     C**                                                              *   077947
+     C*****************************************************************   077947
+     C*                                                                   077947
+     C***********FCERR     BEGSR                                          077947
+     C*                                                                   077947
+     C****Write*to*file*controls*error*report.                            077947
+     C*                                                                   077947
+     C***********          MOVEL'SE3102'  DBPGM                           077947
+     C*                                                                   077947
+     C***********          SETON                     U8                   077947
+     C*                                                                   077947
+     C***********          WRITESE3102A1                                  077947
+     C***********          WRITESE3102A3                                  E29170
+     C*                                                                   077947
+     C***********          ENDSR                                          077947
+     C*                                                                   077947
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** DBERR   - DATABASE ERROR HANDLING SUBROUTINE.                *
+     C*                                                               *
+     C**         Moves database error fields into the locked in       *
+     C**           LDA, sets on database error switches and last      *
+     C**           record indicator,dumps and returns to the calling  *
+     C**           program.                                           *
+     C*                                                               *
+     C** FIELDS IN   : NONE.                                          *
+     C*                                                               *
+     C** FIELDS OUT  : DBFILE - Database file in error.               *
+     C**             : DBKEY  - Database file key.                    *
+     C**             : DBPGM  - Program with database error.          *
+     C**             : DBASE  - Database error number.                *
+     C**             : U7,U8&LR - Database error switches.            *
+     C*                                                               *
+     C** CALLED FROM : INIT,DETAIL                                    *
+     C** CALLS       : NONE.                                          *
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C**  Write to run controls and database error report.
+     C*
+     C                     WRITESE3102A1
+     C                     WRITESE3102A2
+     C***********          WRITESE3102A3                                  E29170
+     C*
+     C                     SETON                     U7U8LR
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** NEXDSR   - PF/NEXVALD EXCEPTION ERROR SUBROUTINE.            *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : NEXDDS - File information DS for PF/NEXVALD    *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : LIVREC                                         *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           NEXDSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE NEXDDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** NEXDSR   - PF/NEXVALZ EXCEPTION ERROR SUBROUTINE.            *
+     C*                                                               *
+     C**           Sets up fields and calls subroutine to process     *
+     C**             exception errors.                                *
+     C*                                                               *
+     C** FIELDS IN   : NEXZDS - File information DS for PF/NEXVALZ    *
+     C*                                                               *
+     C** FIELDS OUT  : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Error processing type flag.           *
+     C*                                                               *
+     C** CALLED FROM : TRAIL                                          *
+     C** CALLS       : *PSSR                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           NEXZSR    BEGSR
+     C*
+     C** Move file information DS to DS used in SR.
+     C**   Set indicator to file error.
+     C*
+     C                     MOVE NEXZDS    EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C*
+     C** Perform exception error handling subroutine.
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** *PSSR   - PROGRAM EXCEPTION ERROR SUBROUTINE.                *
+     C*                                                               *
+     C**           Calls programs to handle exception errors.         *
+     C*                                                               *
+     C** FIELDS IN   : EPFDS  - File information data structure.      *
+     C**             : EPFLAG - Exception error type flag.            *
+     C*                                                               *
+     C** FIELDS OUT  : NONE.                                          *
+     C*                                                               *
+     C** CALLED FROM : NEXDSR, NEXZSR                                 *
+     C** CALLS       : Programs - SDC2505, SDC2500.                   *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           EPSW      IFNE '1'
+     C                     MOVE '1'       EPSW    1
+     C*
+     C***If*exception*error*is*on*a*file*call*SDC2505.********************S01117
+     C***********                                                         S01117
+     C***********EPFLAG    IFNE 'F'                                       S01117
+     C**********           CALL 'SDC2505'
+     C**********           PARM           EPPDS1
+     C**********           PARM           EPPDS2
+     C***********                                                         S01117
+     C***if*exception*error*is*not*on*a*file*call*SDC2500.****************S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C**********           CALL 'SDC2500'
+     C**********           PARM           EPFDS1
+     C**********           PARM           EPFDS2
+     C**********           PARM           EPPP
+     C**********           PARM           EPPPL
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C*
+     C                     DUMP
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+      ***
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  Keys to database files for error reporting.
+'01        10' NOT FOUND
+RECORD NOT FOUND ON TRAILER

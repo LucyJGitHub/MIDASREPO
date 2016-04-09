@@ -1,0 +1,252 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAINSH - CALCULATE SE ACCRUED INTEREST - NON SCHULDSCHEIN             *
+     C*                                                                        *
+     C*  PURPOSE : TO CALCULATE SE ACCRUED INTEREST FOR                        *
+     C*            NON - SCHULDSCHEIN SECURITIES                               *
+     C*                                                                        *
+     C*  FILE USED                                                             *
+     C*       LF/SEEVNT: SECURITY EVENTS FILE OVERRIDEN IN CALLING PGM         *
+     C*       FIELDS TO BE RENAMED IN I SPECS:                                 *
+     C*         SNDT (SNDEVD) TO SDED                                          *
+     C*         SNET (SNDEVD) TO SDET                                          *
+     C*                                                                        *
+     C*  FILES NEEDED (THESE FILES AND DATA AREA MUST HAVE BEEN                *
+     C*                ACCESSED BEFORE THIS SUBROUTINE IS EXECUTED)            *
+     C*       LF/SECTY: SECURITIES                                             *
+     C*       LF/INVTP: INVESTMENT TYPES                                       *
+     C*       LF/SDCURRL0: CURRENCIES, FOR NOMINAL CURRENCY D.P.               *
+     C*       DTAARA/PMSTAT: FOR EVENT CONTROL DATE                            *
+     C*                                                                        *
+     C*  SUBROUTINES NEEDED                                                    *
+     C*       ZNCD MUST HAVE BEEN CALLED BEFORE CALLING THIS SUBROUTINE        *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAMTP  15 0     PRINCIPAL AMOUNT                                 *
+     C*       ZFMDAT  5 0     FROM DATE                                        *
+     C*       ZTODAT  5 0     TO DATE                                          *
+     C*       ZSSNM  10       SECURITY SHORTNAME                               *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZTOAI  15 0     TOTAL ACCRUED INTEREST                           *
+     C*       ZTOND   5 0     TOTAL NUMBER OF INTEREST DAYS                    *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*                                                                        *
+     C*  CALLS:  ZRATE, ZACCR                                                  *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C*                                                                        *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. 171874             Date 26Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01486             Date 11AUG94               *
+     C*                                                                        *
+     C*------------------------------------------------------------------------*
+     C*                                                                        *
+      *  171874 - Process the records form SNDEVD correctly.          *
+     C*  S01486 - Portfolio Management Upgrade to Release 10.                  *
+     C*                                                                        *
+     C**************************************************************************
+     C           ZAINSH    BEGSR                           *** ZAINSH ***
+     C*
+     C** DEFINE FIELDS
+     C                     Z-ADDZAMTP     ZAMTP  150
+     C                     Z-ADDZFMDAT    ZFMDAT  50
+     C                     Z-ADDZTODAT    ZTODAT  50
+     C                     MOVE ZSSNM     ZSSNM  10
+     C*
+     C** SET THE TOTAL ACCRUED INTEREST ZTOAI AND TOTAL NUMBER OF
+     C** INTEREST DAYS ZTOND EQUAL TO ZERO
+     C                     Z-ADD0         ZTOAI  150
+     C                     Z-ADD0         ZTOND   50
+     C                     Z-ADD0         ZSINP  150
+     C*
+     C** IF THE PRINCIPAL AMOUNT ZAMTP IS ZERO, EXIT THE PROCESS
+     C           ZAMTP     IFEQ 0
+     C                     GOTO EAINSH
+     C                     END
+     C*
+     C** SET THE FOLLOWING FIELDS FOR STANDARD SUBROUTINE ZRATE
+     C** SET ZPPCP EQUAL TO CPDP FROM LF/SECTY
+     C                     Z-ADDCPDP      ZPPCP
+     C** SET ZSFPP EQUAL TO SFPP FROM LF/SECTY
+     C                     Z-ADDSFPP      ZSFPP
+     C** SET ZSINP EQUAL TO SINP FROM LF/SECTY
+     C                     Z-ADDSINP      ZSINP
+     C** SET ZPPDI EQUAL TO PPDI FROM LF/SECTY
+     C                     MOVE PPDI      ZPPDI
+     C** SET ZCPNR EQUAL TO CPNR FROM LF/SECTY
+     C                     Z-ADDCPNR      ZCPNR
+     C** SET ZCFCT EQUAL TO CFCT FROM LF/SECTY
+     C                     Z-ADDCFCT      ZCFCT
+     C** SET ZPROT EQUAL TO PROT FROM LF/INVTP
+     C                     MOVE PROT      ZPROT
+     C*
+     C** SET THE FOLLOWING FIELDS FOR STANDARD SUBROUTINE ZACCR
+     C                     Z-ADDZAMTP     ZAMT
+     C**********           Z-ADDA6NBDP    CDP                             S01486
+     C                     Z-ADDA6NBDP    ZCDP                            S01486
+     C*
+     C** ACCESS LF/SEEVNT USING A KEY OF SECURITY ZSSNM, FROM DATE
+     C** ZFMDAT AND EVENT TYPE EQUAL TO 'CP'
+     C           KSEE      KLIST
+     C                     KFLD           ZSSNM
+     C                     KFLD           ZTYP
+     C                     KFLD           ZFMDAT
+     C*****                                                               B05982
+     C*****                MOVEL'CP'      ZTYP    2                       B05982
+     C*****      KSEE      CHAINSEEVNT               92                   B05982
+     C*****      *IN92     IFEQ '0'                                       B05982
+     C*****                                                               B05982
+     C***IF A LAST COUPON DATE EVENT IS READ ABOVE, (NOTE THAT ZFMDAT     B05982
+     C***WILL BE A COUPON DATE) THEN SET THE FIELDS USED BY ZRATE         B05982
+     C***AS FOLLOWS:                                                      B05982
+     C***SET ZCPNR EQUAL TO SNCR FROM LF/SEEVNT                           B05982
+     C****                 Z-ADDSNCR      ZCPNR                           B05982
+     C***SET ZCFCT EQUAL TO SNCF FROM LF/SEEVNT                           B05982
+     C****                 Z-ADDSNCF      ZCFCT                           B05982
+     C***SET ZPPCP EQUAL TO SNCP FROM LF/SEEVNT                           B05982
+     C****                 Z-ADDSNCP      ZPPCP                           B05982
+     C****                 END                                            B05982
+     C*                                                                   B05982
+     C** OTAIN INTEREST RATE AT START OF PERIOD BY READING DIARY EVENT    B05982
+     C** PRIOR TO FROM DATE                                               B05982
+     C                     MOVE 'IR'      ZTYP    2                       B05982
+     C           KSEE      SETGTSECET                                     B05982
+     C                     READPSECET                    92               B05982
+     C*                                                                   B05982
+     C           *IN92     IFEQ '0'                                       B05982
+     C           SDSN      ANDEQZSSNM                                     B05982
+     C           SDET      ANDEQZTYP                                      B05982
+     C           SDED      ANDLEZFMDAT                                    B05982
+     C                     Z-ADDSDNC      ZCPNR                           B05982
+     C                     END                                            B05982
+     C*                                                                   B05982
+     C** FOR PART PAYMENT OBTAIN PARTLY PAID PERCENTAGE AT START OF       B05982
+     C** PERIOD                                                           B05982
+     C           PPDI      IFEQ 'Y'                                       B05982
+     C                     MOVE 'PP'      ZTYP                            B05982
+     C           KSEE      SETGTSECET                                     B05982
+     C                     READPSECET                    92               B05982
+     C*                                                                   B05982
+     C           *IN92     IFEQ '0'                                       B05982
+     C           SDSN      ANDEQZSSNM                                     B05982
+     C           SDET      ANDEQZTYP                                      B05982
+     C           SDED      ANDLEZFMDAT                                    B05982
+     C                     Z-ADDSDTP      ZPPCP                           B05982
+     C                     END                                            B05982
+     C                     END                                            B05982
+     C*                                                                   B05982
+     C** FOR MORTGAGE BACKED SECURITIES OBTAIN CURRENT FACTOR AT START    B05982
+     C** OF PERIOD                                                        B05982
+     C           PROT      IFEQ '8'                                       B05982
+     C                     MOVE 'MP'      ZTYP                            B05982
+     C           KSEE      SETGTSECET                                     B05982
+     C                     READPSECET                    92               B05982
+     C*                                                                   B05982
+     C           *IN92     IFEQ '0'                                       B05982
+     C           SDSN      ANDEQZSSNM                                     B05982
+     C           SDET      ANDEQZTYP                                      B05982
+     C           SDED      ANDLEZFMDAT                                    B05982
+     C                     Z-ADDSDCP      ZCFCT                           B05982
+     C                     END                                            B05982
+     C                     END                                            B05982
+     C*                                                                   B05982
+     C** SET START OF INTEREST PERIOD DATE ZSDATE EQUAL TO THE FROM       B05982
+     C** DATE AND READ THROUGH THE EVENTS UP TO THE COUPON DATE           B05982
+     C                     Z-ADDZFMDAT    ZSDATE                          B05982
+     C                     MOVE *BLANKS   ZTYP                            B05982
+     C********   KSEE      SETGTSEEVNT                                    B05982
+     C********   ZSSNM     READESEEVNT                   92               B05982
+     C           KSEE      SETGTSECET                                     B05982
+     C           ZSSNM     READESECET                    92               B05982
+     C*
+     C** DO WHILE RECORDS ARE READ FROM LF/SEEVNT FOR THE SAME SECURITY
+     C** AND THE EVENT DATE SDED FROM LF/SEEVNT IS LESS THAN THE TO
+     C** DATE ZTODAT
+     C** Changes done to process all records from SECET                   171874
+     C           *IN92     DOWEQ'0'
+     C           SDED      ANDLTZTODAT
+     C***********SDED      ANDGEZFMDAT                                    171874
+     C*
+     C           SDED      IFGE ZFMDAT                                    171874
+      *                                                                   171874
+     C** IF THE EVENT HAS AN EVENT TYPE SDET EQUAL TO 'PP' 'MP' OR
+     C** 'IR'
+     C           SDET      IFEQ 'PP'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'IR'
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE ZEDATE EQUAL TO THE EVENT
+     C** DATE SDED FROM LF/SEEVNT
+     C                     Z-ADDSDED      ZEDATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD THE ACCRUED INTEREST ZACCRD FROM ZACCR TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI
+     C                     ADD  ZACCRD    ZTOAI
+     C*
+     C** ADD THE NUMBER OF DAYS ZDDAYS FROM ZACCR TO THE TOTAL NUMBER
+     C** OF INTEREST DAYS ZTOND
+     C                     ADD  ZDDAYS    ZTOND
+     C*
+     C** SET THE START OF INTEREST PERIOD DATE ZSDATE EQUAL TO THE
+     C** EVENT DATE SDED FROM LF/SEEVNT
+     C                     Z-ADDSDED      ZSDATE
+     C*
+     C** SET THE FOLLOWING FIELDS USED BY ZRATE AS FOLLOWS:
+     C** SET ZCPNR EQUAL TO SDNC OF LF/SEEVNT
+     C** SET ZCFCT EQUAL TO SDCP OF LF/SEEVNT
+     C** SET ZPPCP EQUAL TO SDTP OF LF/SEEVNT
+     C           SDET      IFEQ 'IR'                                      B05982
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END                                            B05982
+     C           SDET      IFEQ 'MP'                                      B05982
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END                                            B05982
+     C           SDET      IFEQ 'PP'                                      B05982
+     C                     MOVE SDTP      ZPPCP
+     C                     END                                            B05982
+     C                     END
+     C                     END                                            171874
+     C*
+     C** READ EQUAL FROM LF/SEEVNT WITH THE SECURITY SHORTNAME ZSSNM
+     C*********  ZSSNM     READESEEVNT                   92               B05982
+     C           ZSSNM     READESECET                    92               B05982
+     C                     END
+     C*
+     C** SET THE END OF INTEREST PERIOD DATE ZEDATE EQUAL TO THE TO
+     C** DATE ZTODAT
+     C                     Z-ADDZTODAT    ZEDATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZRATE TO GET THE EFFECTIVE
+     C** INTEREST RATE FOR THE PERIOD
+     C                     EXSR ZRATE
+     C*
+     C** EXECUTE STANDARD SUBROUTINE ZACCR TO CALCULATE THE INTEREST
+     C** FOR THE PERIOD
+     C                     EXSR ZACCR
+     C*
+     C** ADD THE ACCRUED INTEREST ZACCRD FROM ZACCR TO THE TOTAL
+     C** ACCRUED INTEREST ZTOAI
+     C                     ADD  ZACCRD    ZTOAI
+     C*
+     C** ADD THE NUMBER OF DAYS ZDDAYS FROM ZACCR TO THE TOTAL NUMBER
+     C** OF INTEREST DAYS ZTOND
+     C                     ADD  ZDDAYS    ZTOND
+     C*
+     C           EAINSH    ENDSR
+     C*****************************************************************

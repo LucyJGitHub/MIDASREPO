@@ -1,0 +1,402 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - Cust. Hold. Rpt Prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1990 - Customer Service Fees - Customer Holdings Report    *
+      *           Prompt                                              *
+      *                                                               *
+      *  Function: To prompt for Selected Customer range for the      *
+      *   (I/C)    reporting of extracted holdings.                   *
+      *                                                               *
+      *  Called by: FCC0203                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 30Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Webfacing Changes. Display customer number on the   *
+      *           From/To fields when chosen from List (?)            *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      *
+     FGL1990DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS#
+      **  Customer Holdings Report Prompt
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - F3                                                    *
+      *   12  - F12                                                   *
+      *   34  - Subfile clear indicator for error messages            *
+      *   21  - General work indicator                                *
+      *   51  - Customer number 1 error                               *
+      *   52  - Customer number 2 error                               *
+      *                                                               *
+      *   U7  - Database Error.                                       *
+      *   U8  - Database / Control Error                              *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRENTK - Enter key processing                                *
+      *  SRSMSG - Send message in Subfile message                     *
+      *                                                               *
+      *  *INZSR - Initial Processing                                  *
+      *  *PSSR  - DUMP program on error                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IINFDS#      DS
+      **  I/O Feedback Area: Workstation.
+      *
+     I                                      261 270 SWFMT
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access programs
+      *
+     IPPARM       DS                            100
+      **  Parameter Data
+      *
+     I                                        1   6 WCUST1
+     I                                        7  12 WCUST2
+      *
+     C/EJECT
+      *****************************************************************
+      *                 M A I N   P R O C E S S I N G                 *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *IN21     DOWEQ*OFF
+      *
+      **  Display Screen.
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTGL1990F0
+      *
+      **  Clear screen message file
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C                     MOVE *ON       *IN34
+     C                     WRITE#MSGCTL
+     C                     MOVE *OFF      *IN34
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVE *BLANKS   WCUST1
+     C                     MOVE *BLANKS   WCUST2
+     C                     MOVE 'E'       PCMD
+     C                     MOVE *ON       *IN21
+     C                     ELSE
+      *
+     C                     EXSR SRENTK
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *          E N D   O F   M A I N   P R O C E S S I N G          *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRENTK - Enter key processing                                *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : *PSSR Error processing                           *
+      *****************************************************************
+      *
+     C           SRENTK    BEGSR
+      *
+      **  Reset Data Items.
+      *
+     C                     MOVE 'N'       WWERR   1
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+      *
+     C           #0CUS1    IFNE *BLANKS
+      *
+      ** Access Customer Details file
+      *
+     C           #0CUS1    IFEQ '?'
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CUS1    PKEY1  10
+     C                     PARM           PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Check 'From' Customer Number entered
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN51
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CSF9901' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ELSE
+     C                     MOVELBBCUST    WCUST1  6
+     C                     MOVELBBCUST    #0CUS1                                              CAAA03
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C                     PARM '      '  PKEY1
+     C                     PARM           PKYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVELBBCUST    WCUST1
+     C                     MOVELBBCUST    #0CUS1
+     C                     ENDIF
+      *
+     C           #0CUS2    IFNE *BLANKS
+      *
+      ** Access Customer Details file
+      *
+     C           #0CUS2    IFEQ '?'
+     C                     MOVE 'Y'       WWERR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CUS2    PKEY1
+     C                     PARM           PKYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Check 'To' Customer Number entered
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN52
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CSF9902' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ELSE
+     C                     MOVELBBCUST    WCUST2  6
+     C                     MOVELBBCUST    #0CUS2                                              CAAA03
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*LAST  ' POPTN
+     C                     PARM '      '  PKEY1
+     C                     PARM           PKYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVELBBCUST    WCUST2
+     C                     MOVELBBCUST    #0CUS2                                              CAAA03
+     C                     ENDIF
+      *
+      ** Check if 'To' entry is lower than 'From'
+      *
+     C           #0CUS1    IFNE *BLANKS
+     C           #0CUS2    ANDNE*BLANKS
+     C           #0CUS2    ANDLT#0CUS1
+     C                     MOVE *ON       *IN51
+     C                     MOVE *ON       *IN52
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CSF9903' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C           WWERR     IFEQ 'N'
+     C                     MOVE *ON       *IN21
+     C                     MOVE ' '       PCMD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRSMSG - Send message in Subfile message                      *
+      *   ------                                                      *
+      * Called by : SRENTK                                            *
+      * Calls     : SNDERMSG                                          *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   -------                                                     *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      **  Obtain default message file.
+      *
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+      **  Clear screen message file
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PBRCA   3
+     C                     PARM           PPARM 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVE 'SDBANKPD'DBFILE    P      * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ************
+     C                     MOVEL'GL1990'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELUSER      #0USER
+     C                     MOVE BJMRDT    #0RUNA
+     C                     MOVELWSID      #0WSID
+      *
+      **  Cleanup values from previous call.
+      *
+     C                     MOVE *BLANK    WCUST1
+     C                     MOVE *BLANK    WCUST2
+     C                     MOVE *OFF      *IN21
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN52
+     C                     MOVE *OFF      *INKC
+      *
+      ** Initialise message file
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine - automatically called     *
+      *  ------                                                       *
+      *  Called by: Database error processing                         *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     ROLBK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE 'E'       PCMD
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

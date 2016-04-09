@@ -1,0 +1,1490 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Create temporary fees actions file')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE1070 - Temporary Fees Actions File for Fees Computation    *
+      *                                                               *
+      *  Function: This program reads through all the facility hist.  *
+      *            amount records for each facility and write a re-   *
+      *            cord to PF/LEFEETPD.                               *
+      *                                                               *
+      *  Called By: RPG/LE1069                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 240697             Date 06Mar15               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG22553           Date 29Jun09               *
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247959             Date 22May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 207963             Date 06Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204669             Date 24Apr02               *
+      *                 204795             Date 24Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 194912             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CLE014             Date 20Mar01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CLE009  *CREATE    Date 23Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  240697 - Recompiled due to changed LF/LEFCAML8.              *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG22553 - LE1070 104300 tried to divide by zero             *
+      *  CSC042 - Close of Business Performance Enhancements          *
+      *           Only call LE1070 for the specific facility          *
+      *           for which the history needs to be extracted.        *
+      *  247959 - Re-build LEFEETPD only for affected facilities.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager.                                *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  207963 - Recompiled due to changes in LF/LEFCAML8.           *
+      *  204669 - Past Due actions were added to LEFCAML8 for FCAC.   *
+      *           This program should not process them.               *
+      *  204795 - Recompiled due to change in LF/LEFCAML8             *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  194912 - Change multi-ccy action from 'ST' to 'MC'           *
+      *  CLE014 - Customer Driven Lending Enhancements                *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CLE009 - New Program                                         *
+      *                                                               *
+      *****************************************************************
+     F*
+     FLEFCAML8IF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS FSDS1
+      ** Facility Activity
+      *
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      ** Customer Lending Facility
+      *
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR          CLE014
+     F            CLOANHHF                          KIGNORE               CLE014
+     F            CLOANCKF                          KIGNORE               CLE014
+     F            CLOANZ1F                          KIGNORE               CLE014
+      ** Loans File                                                       CLE014
+      *                                                                   CLE014
+     FLEFCLTLDIF  E           K        DISK         KINFSR *PSSR                              CSC042
+     F            FCLTYFMF                          KRENAMEFCLTYCA                            CSC042
+      * Credit Agreement Facilities                                                           CSC042
+      *                                                                                       CSC042
+     FLEFCLTLEIF  E           K        DISK         KINFSR *PSSR                              CSC042
+     F            FCLTYFMF                          KRENAMEFCLTYTR                            CSC042
+      * Tranche Facilities by Credit Agreement                                                CSC042
+      *                                                                                       CSC042
+     FLEFEETPDO   E                    DISK         KINFSR *PSSR
+      ** Temporary Activity File for Fees
+      *
+     FLEFEECL0UF  E           K        DISK         KINFSR *PSSR A        CLE014
+      ** Temporary Credit Agreement Acitvity for Fees                     CLE014
+      *                                                                   CLE014
+     FSDCURRPDIF  E                    DISK
+      ** Midas SD Currency Codes
+      *
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*   20  - Work indicator                                        *
+     F*   70  - Read Indicator (FCLTY)                                *
+     F*   71  - Read Indicator (LEFCAML8)                             *
+      *   72  - Read Indicator (LEFEECL0)                             *   CLE014
+     F*   80  - Read Indicator (SDCURRPD)                             *
+     F*   89  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRFRMT - To format fields for LEFEETPD file                  *
+     F*  SRCVAM - To convert amount                                   *
+     F*  SRNEWF - To look after new facilities                        *
+     F*  SRFEEC - To format fields for LEFEECPD file                  *   CLE014
+     F*  INIT   - Initialisation Subroutine                           *
+     F*  DBERR  - To perform database error processing                *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    COD       150  3   CYD    15   CCY DETAILS
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    POWR    1   7  7 3             POWER ARRAY
+      *
+     IFSDS1       DS
+      ** File status(LEFCAML8) data structure - record format
+     I                                     *RECORD  FREC1
+      *
+      *
+     I            DS
+      * DEFINE CURRENCY INFORMATION
+      *
+     I                                        1  15 CYDDS
+     I                                        1  138WWSPR
+      ** Facility Spot Rate
+     I                                       14  140WWFDP
+      ** Facility Decimal Places
+     I                                       15  15 WWMDV
+      ** Facility Mult/Div Indicator
+      *
+     I            DS
+      * Data Structure for Facility Number
+      *
+     I                                        1   3 WFACT
+     I                                        4   5 WSQNO
+     I                                        1   50FACL
+      *                                                                   CLE014
+      ** Data structure for Credit Agreement Facility                     CLE014
+      *                                                                   CLE014
+     I            DS                                                      CLE014
+     I                                        1   50CAFTFN                CLE014
+     I                                        1   30CAFT                  CLE014
+     I                                        4   50CAFN                  CLE014
+      *                                                                   CLE014
+      ** Data structure for Credit Agreement Facility Number/Type         CLE014
+      *                                                                   CLE014
+     I            DS                                                      CLE014
+     I                                        1   50WKCFFC                CLE014
+     I                                        1   30KFACT                 CLE014
+     I                                        4   50KFCNO                 CLE014
+      *
+      *
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     IRUNDAT    E DSRUNDAT
+      * RUNDAT DATA AREA
+      *
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  EXTERNAL DS FOR CUSTOMER DETAILS
+      *
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     C/EJECT
+      *
+     C*****************************************************************
+     C*  MAIN PROCESSING
+     C*****************************************************************
+     C           WFIRST    IFNE 'Y'                                                           CSC042
+     C                     EXSR INIT
+     C                     MOVE 'Y'       WFIRST                                              CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      **Perform initial processing
+      *
+     C**********           READ FCLTY                    70                                   247959
+     C**********           MOVEL'A'       ##RCDT  1                                    247959 CSC042
+     C********** WKFAC     CHAINFCLTY                70                                247959 CSC042
+      ** Read first Facility
+      *
+     C                     MOVE *BLANKS   SVCANM  6                                           CSC042
+     C                     Z-ADD0         SVFACL  50                                          CSC042
+     C                     MOVELEXCNUM    KXCNUM                                              CSC042
+     C                     MOVELEXFACL    KXFACT                                              CSC042
+     C                     MOVE EXFACL    KXFACN                                              CSC042
+      *                                                                                       CSC042
+     C           KEXFC1    SETLLFCLTY                                                         CSC042
+     C           KEXFC1    READEFCLTY                    70                                   CSC042
+      *                                                                                       CSC042
+      ** If Tranche, process details for Credit Agreement                                     CSC042
+      *                                                                                       CSC042
+     C           *IN70     IFEQ '0'                                                           CSC042
+     C           TRCA      ANDEQ'TR'                                                          CSC042
+     C                     MOVE CANM      KXCNUM                                              CSC042
+     C                     Z-ADDCAFT      KXFACT                                              CSC042
+     C                     Z-ADDCAFN      KXFACN                                              CSC042
+      *                                                                                       CSC042
+     C           KEXFC1    SETLLLEFCLTLD                                                      CSC042
+     C           KEXFC1    READELEFCLTLD                 70                                   CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+     C********** *IN70     DOWEQ*OFF                                                          247959
+     C********** *IN70     IFEQ *OFF                                                   247959 CSC042
+     C           *IN70     DOWEQ*OFF                                                          CSC042
+      ** Do while there are facilities within File FCLTY
+      *
+     C                     Z-ADD1         X
+     C           FCCY      LOKUPCOD,X                    20
+     C                     MOVE CYD,X     CYDDS
+     C                     Z-ADDWWFDP     FCDP    10
+     C                     Z-ADDWWSPR     FSPRT  138
+     C                     MOVE WWMDV     FMDIN   1
+      ** Retrieve Decimal Places, Spot Rate and Mult/Div Indicator
+      ** for the Facility Currency.
+      *
+     C                     MOVE FACT      WFACT
+     C                     MOVE FCNO      WSQNO
+      ** Set Key List to Read Facility Details on FACHSAL1
+      *
+     C                     MOVE RVCR      @RV     1
+      ** Save Revolving Credit Indicator
+     C                     MOVE BRCA      FCBRCA
+      ** Branch Code
+     C**********           Z-ADDCNUM      FCCNUM                                              CSD027
+     C                     MOVE CNUM      FCCNUM                                              CSD027
+      ** Customer Number
+     C                     Z-ADDFACL      FCFCTY
+      ** Facility Number
+      *
+     C           ORED      IFEQ BJRDNB
+      ** If Facitity entered today
+     C                     EXSR SRNEWF
+     C                     MOVE 'N'       WKFIRS  1
+     C                     ELSE
+     C                     MOVE 'Y'       WKFIRS
+     C                     ENDIF
+      *
+     C           KLEFC     CHAINLEFCAML8             71
+      ** Read first Detail Record for this Facility
+      *
+      *
+     C           *IN71     DOWEQ*OFF
+      ** Do while there are detail for this facilty on file FACHSAL1
+      *
+     C           WKFIRS    IFEQ 'Y'
+     C                     Z-ADDFACFAM    SVCFAM 130
+     C                     Z-ADDFADRAM    SVDRAM 150
+     C                     Z-ADDFAUNDR    SVUNDR 150
+     C                     MOVE 'N'       WKFIRS
+     C                     ELSE
+     C                     Z-ADDFCCFAM    SVCFAM
+     C                     Z-ADDFCDRAM    SVDRAM
+     C                     Z-ADDFCUNDR    SVUNDR
+     C                     ENDIF
+      *
+      ** Save Fac. Amount, Drawn Amount, Undrawn Amount & Midas Day
+      *
+     C                     Z-ADD0         WKCFAM 130
+     C                     Z-ADD0         WKDRAM 150
+     C                     Z-ADD0         WKUNDR 150
+     C                     Z-ADD0         WKAMT
+      ** Initialisation Working Fields
+      *
+     C                     EXSR SRFRMT
+      ** Format fields for Output File LEFEETPD
+      *
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           TRCA      ANDNE'CA'                                      CLE014
+     C           CLE014    OREQ 'N'                                       CLE014
+     C                     WRITELEFEETD0
+      ** Write Out Facility Activities to Temporary File LEFEETPD
+      *
+     C                     ELSE                                           CLE014
+     C**********           Z-ADDFCCNUM    CFCNUM                                       CLE014 CSD027
+     C                     MOVE FCCNUM    CFCNUM                                              CSD027
+     C                     Z-ADDFCFCTY    CFFCTY                          CLE014
+     C                     Z-ADDFCCFAM    CFCFAM                          CLE014
+     C                     Z-ADDFCDRAM    CFDRAM                          CLE014
+     C                     Z-ADDFCUNDR    CFUNDR                          CLE014
+     C                     MOVE FCRCIN    CFRCIN                          CLE014
+     C                     MOVE *BLANKS   CFTRRC                          CLE014
+     C                     EXSR SRFEEC                                    CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           KLEFC     READELEFCAML8                 71
+      ** Read next Detail Record for the same Facility.
+      *
+     C           *IN71     DOWEQ*OFF
+     C           FREC1     ANDNE'FACHISAF'
+      ** Do while there are Activities records for this Activity Date.
+      *
+     C                     MOVE 'N'       WKPROC  1
+      ** WKPROC will be set to 'Y' for the records which need to be
+      ** Written out to LEFEETPD.
+      *
+     C           FREC1     IFEQ 'LEFCAMPF'
+     C           TLCD      ANDEQAGRDNB
+      ** File Record is Facility Amendment & Changed date=today
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF
+      *
+     C           FREC1     IFEQ 'LOAMSDKF'
+     C           AMTP      ANDNE'PD'                                                          204669
+     C           LCD       ANDEQAGRDNB
+      ** File Record is Loan Amendment & changed date = today
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF
+      *
+     C           FREC1     IFEQ 'CLOANCL1'
+     C           FAPART    ANDNE'P'
+     C           FAPART    ANDNE'I'
+     C           FAPART    ANDNE'S'                                                           CLE106
+     C           FAPART    ANDNE'R'                                                           CLE106
+     C           LCD       ANDEQAGRDNB
+      ** File Record is Loan for Prime Facility and Participant Indic.
+      ** is not Participant and not Internal & changed date = today.
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF
+      *
+     C           FREC1     IFEQ 'CLOANCL2'
+     C********** FAPART    ANDEQ'P'                                                           CLE106
+     C           LCD       ANDEQAGRDNB
+     C           FAPART    IFEQ 'P'                                                           CLE106
+     C           FAPART    OREQ 'S'                                                           CLE106
+     C           FAPART    OREQ 'R'                                                           CLE106
+      ** File Record is Loan for Participant Facility and Participant
+      ** Indicator is Participant & changed date = today.
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF                                                              CLE106
+     C                     ENDIF
+      *
+     C           FREC1     IFEQ 'CLOANCL2'
+     C           FAPART    ANDEQ'I'
+     C           LCD       ANDEQAGRDNB
+      ** File Record is Loan for Participant Facility and Participant
+      ** Indicator is Internal & changed date = today.
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF
+      *                                                                   CLE014
+      ** File Record is for future-valued maturity date of loans          CLE014
+      ** of the Prime Facility                                            CLE014
+      *                                                                   CLE014
+     C           FREC1     IFEQ 'CLOANCL3'                                CLE014
+     C           LCD       ANDEQAGRDNB                                    CLE014
+     C                     MOVE 'Y'       WKPROC                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+      ** File Record is for future-valued maturity date of loans          CLE014
+      ** of the Participant Facility                                      CLE014
+      *                                                                   CLE014
+     C           FREC1     IFEQ 'CLOANCL4'                                CLE014
+     C           LCD       ANDEQAGRDNB                                    CLE014
+     C                     MOVE 'Y'       WKPROC                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           FREC1     IFEQ 'CLOANCL5'                                CLE014
+     C           LCD       ANDEQAGRDNB                                    CLE014
+     C                     MOVE 'Y'       WKPROC                          CLE014
+     C                     ENDIF                                          CLE014
+      *
+     C           FREC1     IFEQ 'LEMNFUPF'
+     C           TLCD      ANDEQAGRDNB
+      ** File Record is Manual Utilisation & changed date = today.
+     C                     MOVE 'Y'       WKPROC
+     C                     ENDIF
+      *
+      *
+     C           WKPROC    IFEQ 'Y'
+     C                     EXSR SRFRMT
+      ** Format fields for Output File LEFEETPD
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           TRCA      ANDNE'CA'                                      CLE014
+     C           CLE014    OREQ 'N'                                       CLE014
+     C                     WRITELEFEETD0
+      ** Write record to temporary file LEFEETPD
+     C                     ELSE                                           CLE014
+     C                     MOVE FCRCIN    CFRCIN                          CLE014
+     C                     EXSR SRFEEC                                    CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+      ** Output the credit agreement details if the facility is a         CLE014
+      ** tranche                                                          CLE014
+      *                                                                   CLE014
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           TRCA      ANDEQ'TR'                                      CLE014
+     C                     Z-ADD*ZEROS    CFCFAM                          CLE014
+     C                     Z-ADD*ZEROS    CFDRAM                          CLE014
+     C                     Z-ADD*ZEROS    CFUNDR                          CLE014
+     C           WKAMTP    IFEQ 'RC'                                      CLE014
+     C                     MOVE FCRCIN    CFTRRC                          CLE014
+     C                     ELSE                                           CLE014
+     C                     MOVE RVCR      CFTRRC                          CLE014
+     C                     ENDIF                                          CLE014
+     C                     MOVE *BLANKS   CFRCIN                          CLE014
+     C**********           Z-ADDCANM      CFCNUM                                       CLE014 CSD027
+     C                     MOVE CANM      CFCNUM                                              CSD027
+     C                     Z-ADDCAFTFN    CFFCTY                          CLE014
+     C                     EXSR SRFEEC                                    CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C                     ENDIF
+      *
+     C           KLEFC     READELEFCAML8                 71
+      ** Read next Facility Activity Record for this Activity Date.
+      *
+     C                     ENDDO
+     C                     ENDDO
+     C**********           READ FCLTY                    70                                   247959
+      *                                                                                       CSC042
+      * If last record read (ie first record) was Credit Agreement, now access tranches       CSC042
+      *                                                                                       CSC042
+     C           TRCA      IFEQ 'CA'                                                          CSC042
+     C                     MOVE CNUM      SVCANM                                              CSC042
+     C           FACT      MULT 100       SVFACL                                              CSC042
+     C                     ADD  FCNO      SVFACL                                              CSC042
+     C                     MOVE 'TR'      TRCA                                                CSC042
+     C           KEXFC1    SETLLLEFCLTLE                                                      CSC042
+     C                     ENDIF                                                              CSC042
+      *                                                                                       CSC042
+      * Read either tranches or plain facility                                                CSC042
+     C           TRCA      IFEQ 'TR'                                                          CSC042
+     C           KEXFC1    READELEFCLTLE                 70                                   CSC042
+     C           KEXFC1    READELEFCLTLE                 70                                   CSC042
+     C                     ELSE                                                               CSC042
+     C           KEXFC1    READEFCLTY                    70                                   CSC042
+     C                     ENDIF                                                              CSC042
+      ** Read next Facility
+      *
+     C**********           ENDDO                                                              247959
+     C                     ENDDO                                                              CSC042
+     C**********           ENDIF                                                       247959 CSC042
+      *                                                                   CLE014
+     C           CLE014    IFEQ 'Y'                                       CLE014
+      *                                                                   CLE014
+      ** Output the Tranche Revolving Credit indicator                    CLE014
+      *                                                                   CLE014
+     C********** *LOVAL    SETLLLEFEECL0                                               CLE014 CSC042
+     C**********           READ LEFEECL0                 72                            CLE014 CSC042
+     C           KEXFC2    SETLLLEFEECL0                                                      CSC042
+     C           KEXFC2    READELEFEECL0                 72                                   CSC042
+     C           *IN72     DOWEQ*OFF                                      CLE014
+     C********** CFLOAN    IFNE *ZEROS                                                 CLE014 CLE148
+     C**********           Z-ADDCFLOAN    KLOAN                                        CLE014 CLE148
+     C           CFLOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVELCFLOAN    KLOAN                                               CLE148
+     C           KCLOAN    CHAINCLOAN                73                   CLE014
+     C                     MOVE FCUS      KCNUM                           CLE014
+     C                     MOVE FTYP      KFACT                           CLE014
+     C                     MOVE FSEQ      KFCNO                           CLE014
+     C           KFCLTY    CHAINFCLTY                73                   CLE014
+     C                     MOVE RVCR      CFTRRC                          CLE014
+     C                     UPDATLEFEECD0                                  CLE014
+     C                     ENDIF                                          CLE014
+     C**********           READ LEFEECL0                 72                            CLE014 CSC042
+     C           KEXFC2    READELEFEECL0                 72                                   CSC042
+     C                     ENDDO                                          CLE014
+      *                                                                   CLE014
+      ** Do the processing for the Credit Agreement Facilities            CLE014
+      *                                                                   CLE014
+     C********** *LOVAL    SETLLLEFEECL0                                               CLE014 CSC042
+     C**********           READ LEFEECL0                 72                            CLE014 CSC042
+     C           KEXFC2    SETLLLEFEECL0                                                      CSC042
+     C           KEXFC2    READELEFEECL0                 72                                   CSC042
+      *                                                                   CLE014
+      ** Read through the Credit Agreement extract file                   CLE014
+      *                                                                   CLE014
+     C           *IN72     DOWEQ*OFF                                      CLE014
+      *                                                                   CLE014
+      ** Format fields to LEFEETPD                                        CLE014
+      *                                                                   CLE014
+     C**********           Z-ADDCFCNUM    FCCNUM                                       CLE014 CSD027
+     C                     MOVE CFCNUM    FCCNUM                                              CSD027
+     C                     Z-ADDCFFCTY    FCFCTY                          CLE014
+     C                     MOVE 'Y'       WKCAUD                          CLE014
+      *                                                                   CLE014
+     C           CFCNUM    IFNE WKCFCN                                    CLE014
+     C           CFFCTY    ORNE WKCFFC                                    CLE014
+     C**********           Z-ADDCFCNUM    KCNUM                                        CLE014 CSD027
+     C**********           Z-ADDCFCNUM    WKCFCN  60                                   CLE014 CSD027
+     C                     MOVE CFCNUM    KCNUM                                               CSD027
+     C                     MOVE CFCNUM    WKCFCN  6                                           CSD027
+     C                     Z-ADDCFFCTY    WKCFFC                          CLE014
+     C                     MOVE 'Y'       WFIRST  1                       CLE014
+     C                     ELSE                                           CLE014
+     C                     MOVE 'N'       WFIRST                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           WFIRST    IFEQ 'Y'                                       CLE014
+      *                                                                   CLE014
+     C           KFCLTY    CHAINFCLTY                70                   CLE014
+      *                                                                   CLE014
+     C                     MOVE RVCR      WRVCR   1                       CLE014
+     C           CFCFAM    IFEQ *ZEROS                                    CLE014
+     C           CFDRAM    ANDEQ*ZEROS                                    CLE014
+     C           CFUNDR    ANDEQ*ZEROS                                    CLE014
+     C                     EXSR SRNEWF                                    CLE014
+     C                     MOVE *BLANKS   WKCAUD                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+      ** Save amounts                                                     CLE014
+      *                                                                   CLE014
+     C                     Z-ADDCFCFAM    SVCFAM                          CLE014
+     C                     Z-ADDCFDRAM    SVDRAM                          CLE014
+     C                     Z-ADDCFUNDR    SVUNDR                          CLE014
+     C                     ELSE                                           CLE014
+     C                     Z-ADDFCCFAM    SVCFAM                          CLE014
+     C                     Z-ADDFCDRAM    SVDRAM                          CLE014
+     C                     Z-ADDFCUNDR    SVUNDR                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+      ** Initialise Work fields                                           CLE014
+      *                                                                   CLE014
+     C                     Z-ADD0         WKCFAM                          CLE014
+     C                     Z-ADD0         WKDRAM                          CLE014
+     C                     Z-ADD0         WKUNDR                          CLE014
+     C                     Z-ADDCFAAMT    WKAMT                           CLE014
+     C                     MOVE CFACTN    WKAMTP                          CLE014
+      *                                                                   CLE014
+      ** Format fields for output                                         CLE014
+      *                                                                   CLE014
+     C                     EXSR SRFRMT                                    CLE014
+      *                                                                   CLE014
+     C                     MOVE CFRECI    FCRECI                          CLE014
+     C                     MOVE CFBRCA    FCBRCA                          CLE014
+     C                     Z-ADDCFADAT    FCADAT                                              CSC042
+     C**********           Z-ADDCFLOAN    FCLOAN                                       CLE014 CLE148
+     C                     MOVELCFLOAN    FCLOAN                                              CLE148
+     C                     MOVE CFACTN    FCACTN                          CLE014
+     C                     MOVE WRVCR     FCRCIN                          CLE014
+     C                     Z-ADDCFAAMT    FCAAMT                          CLE014
+     C                     Z-ADDCFUSEQ    FCUSEQ                          CLE014
+      *                                                                   CLE014
+      ** Write to LEFEETPD                                                CLE014
+      *                                                                   CLE014
+     C                     WRITELEFEETD0                                  CLE014
+      *                                                                   CLE014
+      ** Read next record                                                 CLE014
+      *                                                                   CLE014
+     C**********           READ LEFEECL0                 72                            CLE014 CSC042
+     C           KEXFC2    READELEFEECL0                 72                                   CSC042
+     C                     ENDDO                                          CLE014
+      *                                                                   CLE014
+     C                     ENDIF                                          CLE014
+      *
+     C**********           SETON                         LR                                   CSC042
+     C                     RETRN
+      ** End Program
+      *
+      *****************************************************************
+      *
+      *    SRFRMT - Format Fields for LEFEETPD file
+      *
+      *    CALLED BY: MAIN    - Main Processing
+      *    CALLS    : SRCVAM  - Convert Amount
+      *
+      ********************************************************************
+      *
+     C           SRFRMT    BEGSR
+      *
+     C                     MOVE 'D'       FCRECI
+      ** Set Record Identifier to Live
+      *
+     C**********           MOVE 'N'       FCRCIN                          CLE014
+     C                     MOVE @RV       FCRCIN                          CLE014
+      *
+      *===FACILITY HYSTORY=====
+     C           FREC1     IFEQ 'FACHISAF'
+      ** If File Record is Facility History
+     C                     Z-ADDFADATE    FCADAT
+      ** Set Action date to Activity Date
+     C                     MOVE FCCY      WKCCY   3
+      ** Set Work Currency to Facility Currency
+     C                     Z-ADDFAAAMT    WKAMT  180
+      ** Set Work Amount to Amount of Action
+     C                     MOVE FAACTN    FCACTN
+      ** Set Action type to Action
+     C                     MOVE FAACTN    WKAMTP  2
+      ** Set Work Amendment Type to Action
+     C                     ENDIF
+      *
+      *
+      *===LOAN AMENDMENT=======
+     C           FREC1     IFEQ 'LOAMSDKF'
+     C           AMTP      ANDNE'PD'                                                          204669
+      ** If File record is Loan Amendment
+     C                     Z-ADDVDAT      FCADAT
+      ** Set Action date to Value Date
+     C                     MOVE CCY       WKCCY
+      ** Set Work Currency to Currency
+     C                     Z-ADDTAMT      WKAMT
+      ** Set Work Amount to total amount
+     C           AMTP      IFEQ 'MR'
+      ** If Amendment Type is Manual Repayment
+     C           AMTP      OREQ 'RE'
+     C           REPT      ANDEQ1
+      ** Or Amendment Typ is Repayment Schedule and Repayment Type is 1
+     C           AMTP      OREQ 'RE'
+     C           REPT      ANDEQ2
+      ** Or Amendment Typ is Repayment Schedule and Repayment Type is 2
+     C                     Z-ADDPRAM      WKAMT
+      ** Set Work amount to Principal Amount
+     C                     ENDIF
+     C                     MOVE AMTP      FCACTN
+      ** Set Action type to Amendment Type
+     C                     MOVE AMTP      WKAMTP
+      ** Set Work Amendment Type to Amendment Type
+     C                     ENDIF
+      *
+      *
+      *===FACILITY AMENDMENT===
+     C           FREC1     IFEQ 'LEFCAMPF'
+      ** If File Record is Facility Amendment
+     C                     Z-ADDVLDT      FCADAT
+      ** Set Action date to Value Date
+     C                     MOVE ACCY      WKCCY
+      ** Set Work Currency to Amendment Currency
+     C                     Z-ADDAAMT      WKAMT
+      ** Set Work Amount to Amendment Amount
+     C                     MOVE FATP      FCACTN
+      ** Set Action type to Facility Type
+     C                     MOVE FATP      WKAMTP
+      ** Set Work Amendment Type to Facility Amendment Type
+     C                     ENDIF
+      *
+      *
+      *===LOAN FOR PRIME FAC. & FOR PARTICIPANT FAC.=====
+     C           FREC1     IFEQ 'CLOANCL1'
+     C           FREC1     OREQ 'CLOANCL2'
+      ** If File Record is Loan for Prime or for Participant Facility
+     C                     Z-ADDVDAT      FCADAT
+      ** Set Action date to Value date
+     C                     MOVE CCY       WKCCY
+      ** Set Work Currency to Currency
+     C                     Z-ADDCPAM      WKAMT
+      ** Set Work Amount to Current Principal Amount
+     C           RECI      IFEQ 'R'
+      ** If Record Identifier is reverse
+     C                     MOVE 'RV'      FCACTN
+      ** Set Action type to Loan Reversal
+     C                     ELSE
+     C                     MOVE 'ST'      FCACTN
+      ** Set Action type to Start of Loan
+     C                     ENDIF
+     C                     MOVE FCACTN    WKAMTP
+      ** Set Work Amendment Type to Action Type
+     C                     ENDIF
+      *                                                                   CLE014
+     C           FREC1     IFEQ 'CLOANCL3'                                CLE014
+     C           FREC1     OREQ 'CLOANCL4'                                CLE014
+      *                                                                   CLE014
+      ** Set Action date to Interest accrual control date                 CLE014
+      *                                                                   CLE014
+     C                     Z-ADDIACD      FCADAT                          CLE014
+      *                                                                   CLE014
+      ** Set work currency to currency                                    CLE014
+      *                                                                   CLE014
+     C                     MOVE CCY       WKCCY                           CLE014
+      *                                                                   CLE014
+      ** Set Work amount to current principal amount                      CLE014
+      *                                                                   CLE014
+     C                     Z-ADDCPAM      WKAMT                           CLE014
+      *                                                                   CLE014
+      ** Set Action tyoe to Loan Reversal or Start of Loan                CLE014
+      *                                                                   CLE014
+     C           RECI      IFEQ 'R'                                       CLE014
+     C                     MOVE 'RV'      FCACTN                          CLE014
+     C                     ELSE                                           CLE014
+     C                     MOVE 'ST'      FCACTN                          CLE014
+     C                     ENDIF                                          CLE014
+     C                     MOVE FCACTN    WKAMTP                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           FREC1     IFEQ 'CLOANCL5'                                CLE014
+      *                                                                   CLE014
+      ** Set Action date to Next repayment date                           CLE014
+      *                                                                   CLE014
+     C                     Z-ADDNRPD      FCADAT                          CLE014
+      *                                                                   CLE014
+      ** Set work currency to currency                                    CLE014
+      *                                                                   CLE014
+     C                     MOVE CCY       WKCCY                           CLE014
+      *                                                                   CLE014
+      ** Set Work amount to rebate amount                                 CLE014
+      *                                                                   CLE014
+     C                     Z-ADDRAMT      WKAMT                           CLE014
+      *                                                                   CLE014
+      ** Set Action tyoe to Loan Reversal or Start of Loan                CLE014
+      *                                                                   CLE014
+     C           RECI      IFEQ 'R'                                       CLE014
+     C                     MOVE 'RV'      FCACTN                          CLE014
+     C                     ELSE                                           CLE014
+     C                     MOVE 'ST'      FCACTN                          CLE014
+     C                     ENDIF                                          CLE014
+     C                     MOVE FCACTN    WKAMTP                          CLE014
+     C                     ENDIF                                          CLE014
+      *
+      *
+     C*===MANUAL UTILISATION===
+     C           FREC1     IFEQ 'LEMNFUPF'
+      ** If File record is Manual Utilisation
+     C                     Z-ADDSTDT      FCADAT
+      ** Set Action date to Start Date
+     C                     MOVE UCCY      WKCCY
+      ** Set Work Currency to Utilisation Currency
+     C                     Z-ADDUAMT      WKAMT
+      ** Set Work Amount to Utilisation Amount
+     C           RECI      IFEQ 'R'
+      ** If Record Identifier is Reverse
+     C                     MOVE 'UE'      FCACTN
+      ** Set Action type to Utilisation Expiry
+     C                     ELSE
+     C           CHTP      IFEQ 'I'
+      ** If Last Change Type is Insert
+     C                     MOVE 'US'      FCACTN
+      ** Set Action Type to Utilisation Start
+     C                     ELSE
+     C           CHTP      IFEQ 'A'
+      ** If Last Change Type is Amend
+     C           PUAM      IFGT UAMT
+      ** If Previous Util. Amount is greater than Util. Amount
+     C                     MOVE 'UD'      FCACTN
+      ** Set Action Type to Utilisation Decrease
+     C           PUAM      SUB  UAMT      WKAMT
+      ** Set Work Amount to Previous Util. Amount minus Util. Amount
+     C                     ELSE
+     C                     MOVE 'UI'      FCACTN
+      ** Set Action Type to Utilisation Increase
+     C           UAMT      SUB  PUAM      WKAMT
+      ** Set Work Amount to Util. Amount minus Previous Util. Amount
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE FCACTN    WKAMTP
+      ** Set Work Amendment Type to Action Type
+     C                     ENDIF
+      * ======================
+      *
+     C                     EXSR SRCVAM
+      ** Convert Amount
+      *
+     C                     Z-ADDWKAMT     FCAAMT
+      ** Set Amount to work Amount
+      *
+      *
+     C           FREC1     IFEQ 'LEMNFUPF'
+      ** If File Record is Manual Utilisation
+     C           FREC1     OREQ 'LEFCAMPF'
+      ** Or Facility Amendment
+     C**********           Z-ADD0         FCLOAN                                              CLE148
+     C                     MOVEL*BLANKS   FCLOAN                                              CLE148
+     C                     Z-ADDSQNO      FCUSEQ
+      ** Set Utilisation Sequence Number to FCUSEQ
+     C                     ELSE
+     C           FREC1     IFEQ 'FACHISAF'
+      ** If File Record is Facility History
+     C**********           Z-ADDFALOAN    FCLOAN                                              CLE148
+     C                     MOVELFALOAN    FCLOAN                                              CLE148
+      ** Set Loan Number to FALOAN
+     C                     ELSE
+      ** If File Record is not Manual Utilisation or Facility History
+     C**********           Z-ADDLNRF      FCLOAN                                              CLE148
+     C                     MOVELLNRF      FCLOAN                                              CLE148
+      ** Set Loan Number to LNRF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C           FREC1     IFEQ 'FACHISAF'
+      ** If File Record is Facility History
+     C                     Z-ADDFACFAM    FCCFAM
+      ** Set Facility Amount
+     C                     Z-ADDFADRAM    FCDRAM
+      ** Set Drawn Amount
+     C                     Z-ADDFAUNDR    FCUNDR
+      ** Set UnDrawn Amount
+     C                     Z-ADDFASQNO    FCUSEQ
+      ** Set Utilisation Sequence Number to Generation Sequence Nbr
+     C                     ENDIF
+      *
+      *
+     C           WKAMTP    IFEQ 'RC'
+      ** If Work Amendment Type is Revolving Credit
+     C                     MOVE FARCIN    FCRCIN
+      ** Set Revolving credit Indicator
+     C                     ENDIF
+      *
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           TRCA      ANDNE'CA'                                      CLE014
+     C           WKCAUD    ANDEQ*BLANKS                                   CLE014
+     C           CLE014    OREQ 'Y'                                       CLE014
+     C           WKCAUD    ANDEQ'Y'                                       CLE014
+     C           CLE014    OREQ 'N'                                       CLE014
+      *                                                                   CLE014
+      ** Set the revolving credit indicator                               CLE014
+      *                                                                   CLE014
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           WRVCR     ANDEQ'T'                                       CLE014
+     C                     MOVE CFTRRC    @RV                             CLE014
+     C                     ENDIF                                          CLE014
+      *
+      *===UTILISATION START, UTILISATION INCREASE======
+     C           WKAMTP    IFEQ 'US'
+     C           WKAMTP    OREQ 'UI'
+     C                     ADD  WKAMT     WKDRAM
+      ** Add Work Amount to Work Drawn Amount
+     C                     SUB  WKAMT     WKUNDR
+      ** Subtract Work Amount from Work UnDrawn Amount
+     C                     ENDIF
+      *
+      *
+      *===UTILISATION DECREASE , UTILISATION EXPIRY======
+     C           WKAMTP    IFEQ 'UD'
+     C           WKAMTP    OREQ 'UE'
+     C                     SUB  WKAMT     WKDRAM
+      ** Subtract Work Amount from Work Drawn Amount
+     C           @RV       IFEQ 'Y'
+     C                     ADD  WKAMT     WKUNDR
+      ** Add Work Amount to Work UnDrawn Amount
+     C                     ELSE
+     C                     SUB  WKAMT     WKCFAM
+      ** Subtract Work Amount from Work Facility Amount
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      *===WRITE-OFF, REPAYMENT, MATURITY, MANUAL REPAYMENT=====
+     C           WKAMTP    IFEQ 'WO'
+     C           WKAMTP    OREQ 'RE'
+     C           WKAMTP    OREQ 'MT'
+     C           WKAMTP    OREQ 'MR'
+     C                     SUB  WKAMT     WKDRAM
+      ** Subtract Work Amount from Work Drawn Amount
+     C           @RV       IFEQ 'Y'
+      ** If Saved Revolving Credit is Yes
+     C                     ADD  WKAMT     WKUNDR
+      ** Add Work Amount to Work UnDrawn Amount
+     C                     ELSE
+     C           GASS      IFNE 'A'
+      ** If Generated by Assignement
+     C                     SUB  WKAMT     WKCFAM
+      ** Subtract Work Amount from Work Facility Amount
+     C                     ELSE
+     C                     ADD  WKAMT     WKUNDR
+      ** Add Work Amount to Work UnDrawn Amount
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+      *===INTEREST CAPITALISATION, PRINCIPAL INCREASE, LOAN START====
+      ** Or Charges added on, if CLE028 is installed                                          CLE028
+      *                                                                                       CLE028
+     C           WKAMTP    IFEQ 'IC'
+     C           WKAMTP    OREQ 'PI'
+     C           WKAMTP    OREQ 'ST'
+     C           WKAMTP    OREQ 'MC'                                                          194912
+     C           WKAMTP    OREQ 'CH'                                                          CLE028
+     C           CLE028    ANDEQ'Y'                                                           CLE028
+     C                     ADD  WKAMT     WKDRAM
+      ** Add Work Amount to Work Drawn Amount
+     C                     SUB  WKAMT     WKUNDR
+      ** Subtract Work Amount from Work Undrawn Amount
+     C                     ENDIF
+      *                                                                                       CLE023
+      ** If CLE023 is installed, process rollover record. Rollover                            CLE023
+      ** record must not affect the facility amount, only the Drawn                           CLE023
+      ** and Undrawn amounts.                                                                 CLE023
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C           WKAMTP    ANDEQ'RO'                                                          CLE023
+     C                     SUB  WKAMT     WKDRAM                                              CLE023
+     C                     ADD  WKAMT     WKUNDR                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *
+      *
+      *===LOAN REVERSAL=============================
+     C           WKAMTP    IFEQ 'RV'
+     C                     SUB  WKAMT     WKDRAM
+      ** Subtract Work Amount from Work Drawn Amount
+     C                     ADD  WKAMT     WKUNDR
+      ** Add Work Amount to Work UnDrawn Amount
+     C                     ENDIF
+      *
+      *
+      *===FACILITY INCREASE=============================
+     C           WKAMTP    IFEQ 'FI'
+     C                     ADD  WKAMT     WKUNDR
+      ** Add Work Amount to Work UnDrawn Amount
+     C                     ADD  WKAMT     WKCFAM
+      ** Add Work Amount to Work Facility Amount
+     C                     ENDIF
+      *
+      *
+      *===FACILITY DECREASE=============================
+     C           WKAMTP    IFEQ 'FD'
+     C                     SUB  WKAMT     WKUNDR
+      ** Substract Work Amount from Work UnDrawn Amount
+     C                     SUB  WKAMT     WKCFAM
+      ** Subtract Work Amount from Work Facility Amount
+     C                     ENDIF
+      *                                                                   CLE014
+     C                     ENDIF                                          CLE014
+      *
+      *
+      *===REVOLVING CREDIT CHANGE=======================
+     C           WKAMTP    IFEQ 'RC'
+     C                     MOVE FCRCIN    @RV
+      ** Save Revolving Credit indicator
+     C                     Z-ADDSVCFAM    FCCFAM
+      ** Set work Facility Amount to Saved Facility amount
+     C                     Z-ADDSVDRAM    FCDRAM
+      ** Set Drawn Amount to Saved Drawn amount
+     C                     Z-ADDSVUNDR    FCUNDR
+      ** Set UnDrawn Amount to Saved UnDrawn amount
+      *
+     C                     ELSE
+      *
+     C           SVCFAM    ADD  WKCFAM    FCCFAM
+      ** Set Fac. Amount to Saved Fac. Amount Plus Work Fac. Amount
+     C           SVDRAM    ADD  WKDRAM    FCDRAM
+      ** Set Drawn Amount to Saved Drawn Amount Plus Work Drawn Amount
+     C           FCADAT    IFLT BJRDNB
+     C           SVUNDR    ADD  WKUNDR    FCUNDR
+      ** Set Undrawn Amt to Saved Undrawn Amt minus Work undrawn Amt
+     C                     ELSE
+     C           FCCFAM    SUB  FCDRAM    FCUNDR
+      ** Set Undrawn Amt to Facility Amount minus Drawn Amount
+     C                     ENDIF
+     C                     ENDIF
+      *=============================
+      *
+     C           FCCFAM    IFLT *ZERO
+      ** If Facility Amount is Negative
+     C                     Z-ADD*ZERO     FCCFAM
+      ** Set Facility Amount To Zero
+     C                     ENDIF
+      *
+      *
+     C*===FACILITY REACTIVATION=========================
+     C           WKAMTP    IFEQ 'FR'
+     C                     Z-ADDFCAAMT    FCUNDR
+      ** Set Undrawn Amount to Action Amount
+     C                     Z-ADDFCAAMT    FCCFAM
+      ** Set Facility Amount to Action Amount
+     C                     Z-ADD*ZERO     FCDRAM
+      ** Set Drawn Amount to Zero
+     C                     ENDIF
+      *
+      *
+      *===F. REACTIVATION, F. TYPE CHANGE, F. EXPIRY, F. CLOSURE====
+     C           WKAMTP    IFEQ 'FR'
+     C           WKAMTP    OREQ 'TC'
+     C           WKAMTP    OREQ 'FE'
+     C           WKAMTP    OREQ 'FC'
+     C                     Z-ADD*ZERO     WKCFAM
+      ** Set Work Facility Amount to Zero
+     C                     Z-ADD*ZERO     WKDRAM
+      ** Set Work Drawn Amount to Zero
+     C                     Z-ADD*ZERO     WKUNDR
+      ** Set Work Undrawn Amount to Zero
+     C                     ENDIF
+      *
+      *
+      *===REVOLVING CREDIT CHANGE======================
+     C           WKAMTP    IFEQ 'RC'
+     C                     Z-ADD*ZERO     WKUNDR
+      ** Set Work Undrawn Amount to Zero
+     C                     ENDIF
+      *
+      *
+      *===FACILITY INCREADSE, FACILITY INCREASE=======
+     C           WKAMTP    IFEQ 'FI'
+     C           WKAMTP    OREQ 'FD'
+     C                     Z-ADDFCCFAM    SVCFAM
+      ** Set Saved Facility Amount to Facility amount
+     C                     Z-ADDFCDRAM    SVDRAM
+      ** Set Saved Drawn Amount to Drawn amount
+     C                     Z-ADD*ZERO     WKCFAM
+      ** Set Work Facility Amount to Zero
+     C******               Z-ADD*ZERO     WKDRAM
+      ** Set Work Drawn Amount to Zero
+     C******               Z-ADD*ZERO     WKUNDR
+      ** Set Work Drawn Amount to Zero
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      *    SRCVAM - Convert Amount
+      *
+      *    CALLED BY: SRFRMT  - Format fields for LEFEETPD
+      *    CALLS    :
+      *
+      ********************************************************************
+      *
+     C           SRCVAM    BEGSR
+      *
+     C           FCCY      IFNE WKCCY
+      ** If Facility currency is not the same as the work currency
+      *
+     C                     Z-ADD1         X
+     C           WKCCY     LOKUPCOD,X                    20
+     C                     MOVE CYD,X     CYDDS
+     C                     Z-ADDWWFDP     WKCDP   10
+     C                     Z-ADDWWSPR     WKSPRT 138
+     C                     MOVE WWMDV     WKMDIN  1
+      ** Retrieve Decimal Places, Spot Rate and Mult/Div Indicator
+      ** for the Work Currency.
+      *
+     C           FCCY      IFNE BJCYCD
+      ** If Facility Currency is different to Base Currency
+      *
+     C           FMDIN     IFEQ 'M'
+      ** If Multiply/Divide Indicator is Multiply
+     C                     MOVE 'D'       WFMIN   1
+      ** Set Work Mult/Div indicator to divide
+     C                     ELSE
+     C                     MOVE 'M'       WFMIN
+      ** Set Work Mult/Div indicator to multiply
+     C                     ENDIF
+      *
+      *
+     C           FMDIN     IFEQ 'M'
+     C           WKMDIN    ANDEQ'M'
+      ** If Facility Mult/Div Ind. & Work Mult/Div Ind. are Multiply
+     C           FMDIN     OREQ 'D'
+     C           WKMDIN    ANDEQ'D'
+      ** Or if they are Divide
+     C           FSPRT     DIV  WKSPRT    WRATE  138
+      ** Set rate to Facility Spot Rate divide by Work Spot Rate
+     C                     ELSE
+     C           FSPRT     MULT WKSPRT    WRATE
+      ** Set rate to Facility Spot Rate multiply by Work Spot Rate
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WFLAG   1
+      *
+     C                     ELSE
+      ** If Facility Currency is equal to Base Currency
+      *
+     C                     Z-ADDWKSPRT    WRATE
+      ** Set Rate to work Spot Rate
+      *
+     C           WKMDIN    IFEQ 'M'
+      ** If Work Mult/Div Indicator is Multiply
+     C                     MOVE 'M'       WFMIN
+      ** Set Work Mult/Div Indicator to Multiply
+     C                     MOVE 'N'       WFLAG
+     C                     ELSE
+     C                     MOVE 'D'       WFMIN
+      ** Set Work Mult/Div Indicator to Divide
+     C                     MOVE 'Y'       WFLAG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           FCDP      SUB  WKCDP     DP      10
+      ** Set dec. places to Facility dec. places minus Work dec. places
+     C                     ADD  4         DP
+      *
+     C           WFLAG     IFEQ 'Y'
+     C           WFMIN     IFEQ 'D'
+      ** If Work Mult/Div is Divide
+     C           WRATE     DIV  POWR,DP   WEXRT  138
+      ** Set exchange Rate to Rate divided by dec. places member of
+      ** Power array
+     C           WEXRT     IFGT 0                                                           BUG22553
+     C           1         DIV  WEXRT     WEXRT
+     C                     ENDIF                                                            BUG22553
+      ** Inverse Exchange Rate
+     C                     ELSE
+     C           WRATE     MULT POWR,DP   WEXRT
+      ** Set exchange rate to rate mult. by dec. places member of
+      ** Power array
+     C                     ENDIF
+      *
+     C                     ELSE
+      ** If Flag WFLAG is 'N'
+     C           WRATE     MULT POWR,DP   WEXRT
+      ** Set exchange rate to rate mult. by dec. places member of
+      ** Power array
+      *
+     C                     ENDIF
+      *
+     C                     MULT WEXRT     WKAMT
+      ** Set work Amount to Work amount mult. by Exchange Rate
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      *****************************************************************
+      *
+      *    SRNEWF - New Facility
+      *
+      *    CALLED BY: MAIN
+      *    CALLS    :
+      *
+      ********************************************************************
+      *
+     C           SRNEWF    BEGSR
+      *
+     C**********           Z-ADD0         FCLOAN                                              CLE148
+     C                     MOVEL*BLANKS   FCLOAN                                              CLE148
+      ** Set Loan Number to zero
+     C                     Z-ADDDTAP      FCADAT
+      ** Set Action date to Today's Date
+     C                     Z-ADDFAMT      FCCFAM
+      ** Set Facility Amount(LEFEETPD) to Facility Amount(FCLTY)
+     C                     Z-ADD0         FCDRAM
+      ** Set Drawn Amount to zero
+     C                     Z-ADDFAMT      FCUNDR
+      ** Set Undrawn Amount to facility Amount
+     C                     MOVE 'FS'      FCACTN
+      ** Set Action type to Facility Start
+     C                     Z-ADD0         FCUSEQ
+      ** Set Utilisation Sequence Number to zero
+     C                     Z-ADDFAMT      FCAAMT
+      ** Set Action Amount to Facility Amount
+     C                     Z-ADDFAMT      WKAMT
+      ** Set Work amount to Facility Amount
+     C*
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C           TRCA      ANDNE'CA'                                      CLE014
+     C           CLE014    OREQ 'N'                                       CLE014
+     C*
+     C                     WRITELEFEETD0
+      ** Write Out Facility to Temporary File LEFEETPD
+     C*
+     C                     ELSE                                           CLE014
+     C**********           Z-ADDFCCNUM    CFCNUM                                       CLE014 CSD027
+     C                     MOVE FCCNUM    CFCNUM                                              CSD027
+     C                     Z-ADDFCFCTY    CFFCTY                          CLE014
+     C                     Z-ADDFCCFAM    CFCFAM                          CLE014
+     C                     Z-ADDFCDRAM    CFDRAM                          CLE014
+     C                     Z-ADDFCUNDR    CFUNDR                          CLE014
+     C                     MOVE FCRCIN    CFRCIN                          CLE014
+     C                     MOVE *BLANKS   CFTRRC                          CLE014
+     C                     EXSR SRFEEC                                    CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT                                                              CLE014
+      *****************************************************************   CLE014
+      *                                                               *   CLE014
+      *  SRMOVE - Subroutine to write to LEFEECPD                     *   CLE014
+      *                                                               *   CLE014
+      *  Called By: Main Processing                                   *   CLE014
+      *                                                               *   CLE014
+      *  Calls:     None                                              *   CLE014
+      *                                                               *   CLE014
+      *****************************************************************   CLE014
+     C           SRFEEC    BEGSR                                          CLE014
+      *                                                                   CLE014
+     C                     MOVE FCRECI    CFRECI                          CLE014
+     C                     MOVE FCBRCA    CFBRCA                          CLE014
+     C                     Z-ADDFCADAT    CFADAT                          CLE014
+     C**********           Z-ADDFCLOAN    CFLOAN                                       CLE014 CLE148
+     C                     MOVELFCLOAN    CFLOAN                                              CLE148
+     C                     MOVE FCACTN    CFACTN                          CLE014
+     C                     Z-ADDFCAAMT    CFAAMT                          CLE014
+     C                     Z-ADDFCUSEQ    CFUSEQ                          CLE014
+     C                     WRITELEFEECD0                                  CLE014
+      *                                                                   CLE014
+     C                     ENDSR                                          CLE014
+      *****************************************************************   CLE014
+      /EJECT                                                              CLE014
+     C*****************************************************************
+     C*
+     C***  INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: ZDATE2,*PSSR,DBERR
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C********** *ENTRY    PLIST                                                       247959 CSC042
+     C**********           PARM           ##CNUM  60                                   247959 CSC042
+     C**********           PARM           ##CNUM  6                                           CSC042
+     C**********           PARM           ##FACT  30                                   247959 CSC042
+     C**********           PARM           ##FCNO  20                                   247959 CSC042
+     C*                                                                                       CSC042
+     C           *ENTRY    PLIST                                                              CSC042
+     C                     PARM           EXCNUM                                              CSC042
+     C                     PARM           EXFACL                                              CSC042
+     C*                                                                                       CSC042
+     C           *LIKE     DEFN CNUM      EXCNUM                                              CSC042
+     C           *LIKE     DEFN FACL      EXFACL                                              CSC042
+     C*                                                                                       247959
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C*
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'LE1070'  DBPGM
+     C*
+     C*
+     C*
+     C***  ACCESS BANK DETAILS FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBERR 1
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'LE1070'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     ENDIF
+     C*
+     C* READ IN INFORMATION FOR DEALING CURRENCIES.
+     C* STORE IN ARRAY/DATASTRUCTURE.
+     C*
+     C                     MOVE *BLANK    WWMDV
+     C                     Z-ADD0         WWSPR
+     C                     Z-ADD0         WWFDP
+     C                     Z-ADD0         X       30
+     C           *IN80     DOWEQ'0'
+     C                     READ SDCURRPD                 80
+     C           *IN80     IFEQ '0'
+     C           A6DLCI    ANDEQ'Y'
+     C                     ADD  1         X
+     C*
+     C                     MOVE A6CYCD    COD,X
+     C                     MOVELA6SPRT    WWSPR            SPOT RATE
+     C                     MOVE A6NBDP    WWFDP            DEC.PLACES
+     C                     MOVE A6MDIN    WWMDV            MULT/DIV
+     C                     MOVE CYDDS     CYD,X
+     C                     ENDIF
+     C                     ENDDO
+      *                                                                   CLE014
+      ** Check if CLE014 is installed                                     CLE014
+      *                                                                   CLE014
+     C                     MOVE 'N'       CLE014  1                       CLE014
+     C                     CALL 'AOSARDR0'                                CLE014
+     C                     PARM *BLANKS   PRTCD   7                       CLE014
+     C                     PARM '*VERIFY' POPTN   7                       CLE014
+     C                     PARM 'CLE014'  PSARD   6                       CLE014
+      *                                                                   CLE014
+     C           PRTCD     IFEQ *BLANKS                                   CLE014
+     C                     MOVE 'Y'       CLE014                          CLE014
+     C                     ELSE                                           CLE014
+     C           PRTCD     IFNE '*NRF   '                                 CLE014
+      *                                                                   CLE014
+      ** Call to program ended in error                                   CLE014
+      *                                                                   CLE014
+     C           *LOCK     IN   LDA                                       CLE014
+     C                     MOVEL'CLE014'  DBKEY                           CLE014
+     C                     MOVE 'SCSARDPD'DBFILE                          CLE014
+     C                     Z-ADD002       DBASE                           CLE014
+     C                     MOVEL'LE1070'  DBPGM     P                     CLE014
+     C                     OUT  LDA                                       CLE014
+     C                     EXSR *PSSR                                     CLE014
+     C                     EXSR DBERR                                     CLE014
+     C                     ENDIF                                          CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                                       CLE023
+      ** Access SAR details to see if CLE023 is installed                                     CLE023
+      *                                                                                       CLE023
+     C                     MOVE 'N'       CLE023  1                                           CLE023
+     C                     CALL 'AOSARDR0'                                                    CLE023
+     C                     PARM *BLANKS   PRTCD                                               CLE023
+     C                     PARM '*VERIFY' POPTN                                               CLE023
+     C                     PARM 'CLE023'  PSARD                                               CLE023
+      *                                                                                       CLE023
+     C           PRTCD     IFEQ *BLANKS                                                       CLE023
+     C                     MOVE 'Y'       CLE023                                              CLE023
+     C                     ELSE                                                               CLE023
+     C           PRTCD     IFNE '*NRF   '                                                     CLE023
+      *                                                                                       CLE023
+      ** Call to program ended in error                                                       CLE023
+      *                                                                                       CLE023
+     C           *LOCK     IN   LDA                                                           CLE023
+     C                     MOVEL'CLE023'  DBKEY                                               CLE023
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE023
+     C                     Z-ADD003       DBASE                                               CLE023
+     C                     MOVEL'LE1070'  DBPGM     P                                         CLE023
+     C                     OUT  LDA                                                           CLE023
+     C                     EXSR *PSSR                                                         CLE023
+     C                     EXSR DBERR                                                         CLE023
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE028
+      ** Check if CLE028 is installed                                                         CLE028
+      *                                                                                       CLE028
+     C                     MOVE 'N'       CLE028  1                                           CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD                                               CLE028
+     C                     PARM '*VERIFY' POPTN                                               CLE028
+     C                     PARM 'CLE028'  PSARD                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028                                              CLE028
+     C                     ELSE                                                               CLE028
+     C           PRTCD     IFNE '*NRF   '                                                     CLE028
+      *                                                                                       CLE028
+      ** Call to program ended in error                                                       CLE028
+      *                                                                                       CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'CLE028'  DBKEY                                               CLE028
+     C                     MOVE 'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD003       DBASE                                               CLE028
+     C                     MOVEL'LE1070'  DBPGM     P                                         CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     EXSR DBERR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C*
+     C*
+     C           KLEFC     KLIST
+     C** Define Key List for LEFCAML8( Facility Activity )
+     C                     KFLD           CNUM             Cust Nbr
+     C                     KFLD           FACL             Facility
+      *                                                                   CLE014
+      ** Key List for FCLTY                                               CLE014
+      *                                                                   CLE014
+     C           KFCLTY    KLIST                                          CLE014
+     C**********           KFLD           KCNUM   60                                   CLE014 CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KFACT   30                      CLE014
+     C                     KFLD           KFCNO   20                      CLE014
+     C                     KFLD           KRCTP   1                       CLE014
+      *                                                                   CLE014
+      ** Key List for CLOAN                                               CLE014
+      *                                                                   CLE014
+     C           KCLOAN    KLIST                                          CLE014
+     C**********           KFLD           KLOAN   60                                   CLE014 CLE148
+     C                     KFLD           KLOAN   6                                           CLE148
+     C                     KFLD           KRCDT   1                       CLE014
+      *                                                                   CLE014
+      ** Initialise Credit Agreement Update Flag                          CLE014
+      *                                                                   CLE014
+     C                     MOVE *BLANKS   WKCAUD  1                       CLE014
+     C                     MOVE 'A'       KRCTP                           CLE014
+     C                     MOVE 'A'       KRCDT                           CLE014
+     C*
+      ** Key*List for FCLTY                                                            247959 CSC042
+     C********** WKFAC     KLIST                                                       247959 CSC042
+     C**********           KFLD           ##CNUM                                       247959 CSC042
+     C**********           KFLD           ##FACT                                       247959 CSC042
+     C**********           KFLD           ##FCNO                                       247959 CSC042
+     C**********           KFLD           ##RCDT                                       247959 CSC042
+     C*
+      ** Key List for Facility details to extract                                             CSC042
+      *                                                                                       CSC042
+     C           KEXFC1    KLIST                                                              CSC042
+     C                     KFLD           KXCNUM  6                                           CSC042
+     C                     KFLD           KXFACT  30                                          CSC042
+     C                     KFLD           KXFACN  20                                          CSC042
+      *                                                                                       CSC042
+     C           KEXFC2    KLIST                                                              CSC042
+     C                     KFLD           KXCNUM  6                                           CSC042
+     C                     KFLD           KXFACL  50                                          CSC042
+      *                                                                                       CSC042
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  DBERR SUBROUTINE TO PERFORM DATABASE ERROR PROCESSING
+     C*
+     C***  CALLED FROM: INIT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

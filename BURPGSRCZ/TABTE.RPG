@@ -1,0 +1,438 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU A/c Codes BackGnd Upd')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABTE - BACKGROUND UPDATE OF ACCOUNTS FILES                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 057301             Date 30Jun93               *
+      *                 S01267             Date 17Jul90               *
+     F*     PREV AMEND NO. S01230             DATE 07/11/89        S01229*S01230
+     F*     PREV AMEND NO. S01229             DATE 19/10/89        S01229*S01230
+     F*     PREV AMEND NO. E17596             DATE 20/03/89              *S01229
+     F*                                                                  *
+     F********************************************************************
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     057301  - 'CREDIT INT. ACCRUAL DR.' AND 'CREDIT INT.
+     F*               ACCRUAL CR.' SHOULD SWAP PLACES ON THE PARAMETER
+     F*               LIST SO THAT IT MATCHS THE ORDER IN WHICH
+     F*               SD0031R IS PASSING THEM.
+     F*     S01267  - MIS DEVELOPMENT - BSPL FIELDS REMOVED               S01267
+     F*     S01230  - STANDARDISE PROGRAMS                         S01229 S01230
+     F*     E17596  - RECOMPILED FOR NEW VERSION OF TABLETXL             *
+     F*     S01229  - SYNON FIELD NAME CHANGES                           *S01229
+     F********************************************************************
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABLETV FAILED/ERROR                         *
+     F*       31      ERROR ON TABTE10/20 FILE                           *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABTE10 UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABTE20 UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C*********************PARM           WACOD   4        Account code   S01229
+     C**********           PARM           WACCD   4        Account code                S01229 CGL029
+     C                     PARM           WACCD  10                                           CGL029
+     C*********************PARM           WBSCR   4        Balance Sheet CS01229
+     C*********************PARM           WBSC1   4        Balance Sheet  S01267
+     C*********************PARM           WBSCR1  4        Balance Sheet CS01229
+     C*********************PARM           WBSC2   4        Balance Sheet  S01267
+     C*********************PARM           WBSCR2  4        Balance Sheet CS01229
+     C*********************PARM           WBSC3   4        Balance Sheet  S01267
+     C*********************PARM           WBSDR   4        Balance Sheet DS01229
+     C*********************PARM           WBSD1   4        Balance Sheet  S01267
+     C*********************PARM           WBSDR1  4        Balance Sheet DS01229
+     C*********************PARM           WBSD2   4        Balance Sheet  S01267
+     C*********************PARM           WBSDR2  4        Balance Sheet DS01229
+     C*********************PARM           WBSD3   4        Balance Sheet  S01267
+     C*********************PARM           WPLCR   4        Profit & Loss CS01229
+     C*********************PARM           WPLC1   4        Profit & Loss  S01267
+     C*********************PARM           WPLCR1  4        Profit & Loss CS01229
+     C*********************PARM           WPLC2   4        Profit & Loss  S01267
+     C*********************PARM           WPLCR2  4        Profit & Loss CS01229
+     C*********************PARM           WPLC3   4        Profit & Loss  S01267
+     C*********************PARM           WPLDR   4        Profit & Loss DS01229
+     C*********************PARM           WPLD1   4        Profit & Loss  S01267
+     C*********************PARM           WPLDR1  4        Profit & Loss DS01229
+     C*********************PARM           WPLD2   4        Profit & Loss  S01267
+     C*********************PARM           WPLDR2  4        Profit & Loss DS01229
+     C*********************PARM           WPLD3   4        Profit & Loss  S01267
+     C*********************PARM           WCIAC   4        Credit Int. Acc057301
+     C*********************PARM           WCIAD   4        Credit Int. Acc057301
+     C**********           PARM           WCIAD   4        Credit Int. Acc             057301 CGL029
+     C**********           PARM           WCIAC   4        Credit Int. Acc             057301 CGL029
+     C**********           PARM           WDIAC   4        Debt Interest A                    CGL029
+     C**********           PARM           WDIAD   4        Debt Interest A                    CGL029
+     C                     PARM           WCIAD  10                                           CGL029
+     C                     PARM           WCIAC  10                                           CGL029
+     C                     PARM           WDIAC  10                                           CGL029
+     C                     PARM           WDIAD  10                                           CGL029
+     C*********************PARM           WCAPC   4        Interest CapitaS01229
+     C**********           PARM           WICIC   4        Interest Capita             S01229 CGL029
+     C                     PARM           WICIC  10                                           CGL029
+     C*********************PARM           WCAPD   4        Interest CapitaS01229
+     C**********           PARM           WICID   4        Interest Capita             S01229 CGL029
+     C                     PARM           WICID  10                                           CGL029
+     C                     PARM           WLCD    50       Last Change Dat
+     C*********************PARM           WCHTP   1        Type of Last ChS01229
+     C                     PARM           WTYLC   1        Type of Last ChS01229
+     C*********************PARM           WATYP   1        Account type   S01229
+     C                     PARM           WACTY   1        Account type   S01229
+     C*********************PARM           WACKN  25        Account Code NaS01229
+     C                     PARM           WACCN  25        Account Code NaS01229
+     C*********************PARM           WSHLC   50       Stat Returns BSS01229
+     C                     PARM           WSRLC   50       Stat Returns BSS01229
+     C*********************PARM           WSHFC   50       Stat Returns BSS01229
+     C                     PARM           WSRFC   50       Stat Returns BSS01229
+     C*********************PARM           WTITO   1        Title Only IndiS01229
+     C                     PARM           WTOIN   1        Title Only IndiS01229
+     C                     PARM           WRPCD  100       Reporting Code
+     C*********************PARM           WACCS   2        Account SectionS01229
+     C                     PARM           WACSC   2        Account SectionS01229
+     C*********************PARM           WSTYP   1        Account Sub-typS01229
+     C                     PARM           WACST   1        Account Sub-typS01229
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*
+     C           *LIKE     DEFN ACOD      KACOD            KEY TO FILE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO TABTE10 TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C***********WCHTP*****IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C*********************MOVE WACOD     KACOD                           S01229
+     C                     MOVE WACCD     KACOD                           S01229
+     C           KACOD     CHAINTABTE10              30    CHAIN FAILED
+     C*
+     C  N30      KACOD     CHAINTABTE20              30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD30        RECT
+     C                     Z-ADD1         SREC
+      *
+     C*********************MOVE WACOD     ACOD                            S01229
+     C                     MOVE WACCD     ACOD                            S01229
+     C*********************MOVE WBSCR     BSCR                            S01229
+     C*********************MOVE WBSC1     BSCR                            S01267
+     C*********************MOVE WBSCR1    BSCR1                           S01229
+     C*********************MOVE WBSC2     BSCR1                           S01267
+     C*********************MOVE WBSCR2    BSCR2                           S01229
+     C*********************MOVE WBSC3     BSCR2                           S01267
+     C*********************MOVE WBSDR     BSDR                            S01229
+     C*********************MOVE WBSD1     BSDR                            S01267
+     C*********************MOVE WBSDR1    BSDR1                           S01229
+     C*********************MOVE WBSD2     BSDR1                           S01267
+     C*********************MOVE WBSDR2    BSDR2                           S01229
+     C*********************MOVE WBSD3     BSDR2                           S01267
+     C*********************MOVE WPLCR     PLCR                            S01229
+     C*********************MOVE WPLC1     PLCR                            S01267
+     C*********************MOVE WPLCR1    PLCR1                           S01229
+     C*********************MOVE WPLC2     PLCR1                           S01267
+     C*********************MOVE WPLCR2    PLCR2                           S01229
+     C*********************MOVE WPLC3     PLCR2                           S01267
+     C*********************MOVE WPLDR     PLDR                            S01229
+     C*********************MOVE WPLD1     PLDR                            S01267
+     C*********************MOVE WPLDR1    PLDR1                           S01229
+     C*********************MOVE WPLD2     PLDR1                           S01267
+     C*********************MOVE WPLDR2    PLDR2                           S01229
+     C*********************MOVE WPLD3     PLDR2                           S01229
+     C                     MOVE WCIAC     CIAC
+     C                     MOVE WCIAD     CIAD
+     C                     MOVE WDIAC     DIAC
+     C                     MOVE WDIAD     DIAD
+     C*********************MOVE WCAPC     CAPC                            S01229
+     C                     MOVE WICIC     CAPC                            S01229
+     C*********************MOVE WCAPD     CAPD                            S01229
+     C                     MOVE WICID     CAPD                            S01229
+     C*********************MOVE WATYP     ATYP                            S01229
+     C                     MOVE WACTY     ATYP                            S01229
+     C*********************MOVE WACKN     ACKN                            S01229
+     C                     MOVE WACCN     ACKN                            S01229
+     C*********************Z-ADDWSHLC     SHLC                            S01229
+     C                     Z-ADDWSRLC     SHLC                            S01229
+     C*********************Z-ADDWSHFC     SHFC                            S01229
+     C                     Z-ADDWSRFC     SHFC                            S01229
+     C*********************MOVE WTITO     TITO                            S01229
+     C                     MOVE WTOIN     TITO                            S01229
+     C                     Z-ADDWRPCD     RPCD
+     C*********************MOVE WACCS     ACCS                            S01229
+     C                     MOVE WACSC     ACCS                            S01229
+     C*********************MOVE WSTYP     STYP                            S01229
+     C                     MOVE WACST     STYP                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETABTE10F               31   ERROR
+     C                     Z-ADD2         SREC
+     C  N31                WRITETABTE20F               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATTABTE10F               31   ERROR
+     C                     Z-ADD2         SREC
+     C  N31                UPDATTABTE20F               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP*****IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C*********************MOVE WACOD     KACOD                           S01229
+     C                     MOVE WACCD     KACOD                           S01229
+     C           KACOD     CHAINTABTE10F             30    CHAIN FAILED
+     C  N30      KACOD     CHAINTABTE20F             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD30        RECT
+     C                     Z-ADD1         SREC
+      *
+     C*********************MOVE WACOD     ACOD                            S01229
+     C                     MOVE WACCD     ACOD                            S01229
+     C*********************MOVE WBSCR     BSCR                            S01229
+     C*********************MOVE WBSC1     BSCR                            S01267
+     C*********************MOVE WBSCR1    BSCR1                           S01229
+     C*********************MOVE WBSC2     BSCR1                           S01267
+     C*********************MOVE WBSCR2    BSCR2                           S01229
+     C*********************MOVE WBSC3     BSCR2                           S01267
+     C*********************MOVE WBSDR     BSDR                            S01229
+     C*********************MOVE WBSD1     BSDR                            S01267
+     C*********************MOVE WBSDR1    BSDR1                           S01229
+     C*********************MOVE WBSD2     BSDR1                           S01267
+     C*********************MOVE WBSDR2    BSDR2                           S01229
+     C*********************MOVE WBSD3     BSDR2                           S01267
+     C*********************MOVE WPLCR     PLCR                            S01229
+     C*********************MOVE WPLC1     PLCR                            S01267
+     C*********************MOVE WPLCR1    PLCR1                           S01229
+     C*********************MOVE WPLC2     PLCR1                           S01267
+     C*********************MOVE WPLCR2    PLCR2                           S01229
+     C*********************MOVE WPLC3     PLCR2                           S01267
+     C*********************MOVE WPLDR     PLDR                            S01229
+     C*********************MOVE WPLD1     PLDR                            S01267
+     C*********************MOVE WPLDR1    PLDR1                           S01229
+     C*********************MOVE WPLD2     PLDR1                           S01267
+     C*********************MOVE WPLDR2    PLDR2                           S01229
+     C*********************MOVE WPLD3     PLDR2                           S01267
+     C                     MOVE WCIAC     CIAC
+     C                     MOVE WCIAD     CIAD
+     C                     MOVE WDIAC     DIAC
+     C                     MOVE WDIAD     DIAD
+     C*********************MOVE WCAPC     CAPC                            S01229
+     C                     MOVE WICIC     CAPC                            S01229
+     C*********************MOVE WCAPD     CAPD                            S01229
+     C                     MOVE WICID     CAPD                            S01229
+     C*********************MOVE WATYP     ATYP                            S01229
+     C                     MOVE WACTY     ATYP                            S01229
+     C*********************MOVE WACKN     ACKN                            S01229
+     C                     MOVE WACCN     ACKN                            S01229
+     C*********************Z-ADDWSHLC     SHLC                            S01229
+     C                     Z-ADDWSRLC     SHLC                            S01229
+     C*********************Z-ADDWSHFC     SHFC                            S01229
+     C                     Z-ADDWSRFC     SHFC                            S01229
+     C*********************MOVE WTITO     TITO                            S01229
+     C                     MOVE WTOIN     TITO                            S01229
+     C                     Z-ADDWRPCD     RPCD
+     C*********************MOVE WACCS     ACCS                            S01229
+     C                     MOVE WACSC     ACCS                            S01229
+     C*********************MOVE WSTYP     STYP                            S01229
+     C                     MOVE WACST     STYP                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABTE10F               30  ERROR
+     C                     Z-ADD2         SREC
+     C  N30                UPDATTABTE20F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABTE10
+     C*
+     C***********WCHTP*****IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C*********************MOVE WACOD     KACOD                           S01229
+     C                     MOVE WACCD     KACOD                           S01229
+     C           KACOD     CHAINTABTE10F             30    CHAIN FAILED
+     C  N30      KACOD     CHAINTABTE20F             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     Z-ADD1         SREC
+     C                     UPDATTABTE10F               30  ERROR
+     C                     Z-ADD2         SREC
+     C  N30                UPDATTABTE20F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABTE10 UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '30'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         IACC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP*****IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C***********WCHTP*****IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP*****IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           graS01230
+(c) Misys International Banking Systems Ltd. 2001

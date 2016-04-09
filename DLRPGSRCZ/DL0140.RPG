@@ -1,0 +1,1520 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Projected nostro balances enquiry')
+0002 F*****************************************************************
+     F*  Midas - Dealing Module                                       *
+0004 F*                                                               *
+0005 F*       DL0140 - PROJECTED NOSTRO BALANCES ENQUIRY.             *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG2523            Date 12May04               *
+      *                 BUG2120            Date 03May04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 182579             Date 04Oct01               *
+      *                 173147             Date 04Oct01               *
+      *                 193056             Date 10May01               *
+      *                 193052             Date 10May01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192194             Date 10May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 162211             Date 28Mar00               *
+     F*                 108074             Date 28Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 145302             Date 28Apr99               *
+     F*                 098612             Date 10Feb98               *
+     F*                 091890             DATE 22FEB96               *  *
+     F*                 089316             DATE 21FEB96                  *
+     F*                      077563             DATE 06JUN95             *
+     F*                      LN0732             DATE 12SEP90             *BHF303
+     F*                      BHF303             DATE 08AUG90             *BHF303
+0008 F*                      S01199             DATE 26FEB90             *S01127
+     F*                      E202               DATE 18JAN90             *
+     F*                      E113               DATE 27NOV89             *
+     F*                      E00044             DATE 14NOV89             *
+     F*                      S01195             DATE 09/05/89            *S01195
+     F*                      S01117             DATE 28/04/89            *S01117
+     F*                      S01194             DATE 28/04/89            *S01194
+0008 F*                      S01127             DATE 29/09/87            *S01127
+     F*                      E10185             DATE 22/01/87            *
+0009 F*                      E80840             DATE 11/06/86            *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG2523 - PRONOM1 opened twice causing database error.       *
+      *  BUG2120 - Enquiry screen partially displayed in webfacing    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197434 - Array index error on SF0021. Increase maximum
+      *           number of branches from 100 to 900.
+     F*  182579 - *IN55 needs initialising in case of non active         *
+     F*           PRONO record read. IN05 off.                           *
+     F*  173147 - Wrong projected nostro balances and dates are          *
+     F*           displayed in the enquiry screen. Initialise array.     *
+     F*  193056 - OPEN OF PRONOM1 NOT CONDITIONED BY U1                  *
+     F*  193052 - Close file wrongly placed by fix 098612                *
+      *  192194 - Clear temporary array DAT1 everytime a new currency or *
+      *           or branch is enquired.                                 *
+     F*  162211 - The enquiry does not function properly : Dates do not  *
+     F*           correspond with balances for some records, while       *
+     F*           others have dates missing .                            *
+     F*           If a given ccy has different loc wich gives diff wrk   *
+     F*           dates, then display the first five wrk dates for the   *
+     F*           ccy with the correct balances based on prono balances. *
+     F*  108074 - Remove 'COMPLETE' message as it causes problems        *
+     F*           if the client has GUI.                                 *
+     F*  145302 - OPEN FILE IF *IN19 IS ON.                           *
+     F*  098612 - End of center restart locks. The OPEN and CLOSE     *
+     F*           operations for the file PRONOM1 were done before    *
+     F*           and after the READ operation respectively to        *
+     F*           prevent the locking of the files.                   *
+     F*       091890 - Allow the use of the ROLLDOWN and TAB keys.       *
+     F*                Allow the branch to be changed.                   *
+     F*       089316 - The Branch field is overwritten when rolling      *
+     F*                up to next screen.                                *
+     F*       077563 - If a DBE occured in an FF/EOC, reopen was not     *
+     F*                possible because PF/PRONOM1 was allocated.        *
+     F*                (originally wrongly annotated as 077653)          *
+     F*       LN0732 - PROGRAM SENDING SPURIOUS MESSAGES B'COS           *
+     F*                OF ACCESS PROGRAM PARAMETERS                      *
+     F*       BHF303 - ONLY SHOW UNALLOCATED AMOUNT ON ALL                BHF303
+     F*                BRANCHES SELECTION                                 BHF303
+     F*       S01199 - RECOMPILE FOR ABS HELP SYSTEM
+     F*       E202   - PARIBAS FIELD BNBRCD REDUNDANT                    *
+     F*       E113   - UNALLOCATED NOSTRO CANNOT BE ON HOLIDAY           *
+     F*       E00044 - PROCESSING OF REQUEST FOR 'ALL' BRANCHES
+     F*                AND USING DEFAULT BRANCH IF NOT ENTERED
+     F*       S01195 - NEW HOLIDAY PROCESSING                            *S01117
+     F*       S01117 - MULTI-BRANCHING                                   *S01117
+     F*       S01194 - STANDING DATA CHANGES.                            *S01117
+     F*       S01127 - FF ADD BALANCE FIELDS FROM PRONOM1 TO BALANCES    *S01127
+     F*                DISPLAYED IF FF MODULE PRESENT ( U1 = 1)          *S01127
+     F*                                                                  *S01127
+     F*       E10185 - NOSTRO NUMBERS DO NOT APPEAR CORRECTLY ON SCREEN  *E10185
+     F*                DUE TO INCORRECT OUTPUT SPECS.                    *E10185
+0010 F********************************************************************
+0011 F* 01            WRKSTN FILE - INITIAL SCREEN
+0012 F* 02                        - CATCH-ALL
+0013 F**03************TABLE*FILE**-*INSTALLATION*CONTROL*DATA*RECORD*1
+0014 F**04************************-*CCY*RECORD*1
+0015 F* 05            PRONO FILE  - ACTIVE DETAIL RECORD
+0034 F* 06   USED TO CONDITION FIRST TIME PASS THROUGH RPG CALC CYCLE
+0035 F* 07   SET ON IF ERROR DURING READ FROM THE WORK STATION
+     F**09***TABLE*FILE*I.C.D.*RECORD*2                                   S01117
+     F**10***BRANCH*CODE*TABLE*FILE                                       S01117
+     F**11***NOSTRO*BRANCH*CODE*TABLE*FILE                                S01117
+     F* 11   NOSTRO BRANCH CODE FILE                                      S01117
+0016 F*    19         18 DETAIL LINES OUTPUT TO SCREEN
+0017 F*    21         INVALID CCY CODE
+0018 F*    22         VALID NOSTRO RECORD FOUND / EXCEPTION OUTPUT TO SCRN
+0019 F*    23         ALL FIVE NOSTRO DATES READ AND AMENDED FOR SCREEN
+0020 F*    24         OUTPUT INITIAL SCREEN AT DETAIL TIME
+0021 F*    25         OUTPUT TITLES TO SCREEN AT EXCEPTION TIME
+0022 F*    26         FIRST CYCLE CALCULATIONS PERFORMED
+0023 F*****28*********UNALLOCATED NOSTRO CODE DETECTED                    E80840
+0024 F*    29         OUTPUT TITLE FIELDS ON FULL SCREEN
+0025 F*    30         CCY HAS NO DECIMAL POSITIONS
+0026 F*    31                 ONE DECIMAL POSITION
+0027 F*    32                 TWO DECIMAL POSITIONS
+0028 F*    33                 THREE DECIMAL POSITIONS
+     F*    34         OUTPUT INITIAL SCREEN
+0028 F*    36         PROTECT BRANCH   INPUT FIELD                        S01117
+0028 F*****37*********CHAIN*TO*BRANCH*TABLE*FILE                          S01117
+0028 F*    38         HEADING PROMPT INDICATOR                            S01117
+0028 F*    39         ERROR ON BRANCH INPUT FIELD                         S01117
+0028 F*    40         ERROR ON CURRENCY INPUT FIELD                       S01117
+0029 F*    50         END OF FILE REACHED ON PRONO READ OPERATION
+     F*    51         SETLL AND READE ON PRONOM1 (FF CHANGE)              S01127
+     F*    52  READ PRONO AND REC FOUND CORRESPONDING TO ENQUIRED CCY     162211
+     F*    53  USED TO ADD EXISTING WRK DAYS ON PRONO FOR # LOC FOR CCY . 162211
+     F*    54  USED TO TARGET BAL DATE IF EQ TO FIRST FIVE WRK DAYS .     162211
+     F*    55  REC FOUND CORRESPONDING TO ENQUIRED CCY ON PRONO .         162211
+     F*    61         REVERSE IMAGE FOR FIRST DATE IF HOLIDAY             S01195
+     F*    62         REVERSE IMAGE FOR SECOND DATE IF HOLIDAY            S01195
+     F*    63         REVERSE IMAGE FOR THIRD DATE IF HOLIDAY             S01195
+     F*    64         REVERSE IMAGE FOR FOURTH DATE IF HOLIDAY            S01195
+     F*    65         REVERSE IMAGE FOR FIFTH DATE IF HOLIDAY             S01195
+     F*    66         REQUEST FOR ALL BRANCHES                            E00044
+0030 F*    80         NON-DISPLAY INDICATOR FOR ERROR MESSAGES/CODES
+0031 F*    86         END OF JOB INDICATOR
+0032 F*    90-99      STANDARD SUB-ROUTINE INDICATORS
+     F*
+     F*    KC         COMMAND 3 TO END PROGRAM
+     F*
+0033 F********************************************************************
+0036 F*L0140FMCF**F******99************WORKSTN      KPASS  *NOIND         S01117
+0036 F*DL0140FMCF  F    114            WORKSTN      KSLN   LINE    S01117 091890
+0036 F*DL0140FMCF**F     117            WORKSTN      KSLN   LINE           091890            BUG2120
+0036 FDL0140FMCF  E                    WORKSTN                                               BUG2120
+     F                                        RRN   KSFILE DL0140F2                          BUG2120
+0038 F*****************                             KSLN   LINE           S01117
+0039 F*ABLE***IF**F******96*12AI*****2*DISK                               S01194
+0040 FPRONO   IF  F     128  5AI     2 DISK
+0040 F*PRONOM1*IF**E           K        DISK                    U1 S01127 077563
+     FPRONOM1 IF  E           K        DISK                           UC  077563
+     E                    CPY@    1   1 80
+0041 E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+0042 E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+0043 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0044 E                    PNB         5 15 0             PROJ.NOSTRO  BALS
+0045 E                    PNX         5 10 0             BALS IN 1000'S
+0046 E                    PND         5  5 0             PRONO BAL. DATES
+0047 E                    PNA         5  7               PRONO ALPHA DATES
+0047 E                    PNN         5  2               PROJ.NOSTRO NOS  091890
+     E                    DAT1       25  5 0             WRK DAYS IN PRONO162211
+     E                    DAT         5  5 0             FIRST 5 WRK DAYS 162211
+     E                    PNBT        5 15 0             BALANCES FOR DAT 162211
+0048 E*******             MSG     3   5 25               MESSAGE ARRAY    E80840
+0048 E*******             MSG     3   4 25               MESSAGE ARRAY    S01117
+0048 E                    MSG     1   7 45               MESSAGE ARRAY    S01117
+     E**********          ZBR       100  3               SPF USER/BRS                  S01117 197434
+     E                    ZBR       900  3               SPF USER/BRS                         197434
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E**                                                                  S01117
+0049 I*L0140FMNS**01***2*CS***3*CF                                        S01117
+     I*****************                       1   1 *IN08                 S01117
+0050 I*****************                       2   3 SRNID                 S01117
+0051 I*****************                       4   6 CCYCD           21    S01117
+     I*****************                       7   9 SBRCA                 S01117
+0052 I*****************                       2   6 LOTSF                 S01117
+0049 I*DL0140FMNS**01   1 CS   2 CF                                                   S01117 BUG2120
+0050 I**********                              1   2 SRNID                             S01117 BUG2120
+0051 I**********                              3   5 CCYCD           21                S01117 BUG2120
+     I**********                              6   8 SBRCA                             S01117 BUG2120
+0053 I********NS**02                                                                         BUG2120
+0055 I*****************                                                   S01194
+0055 I*****************                                                   S01194
+0054 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.               S01194
+0055 I*****************                                                   S01194
+0056 I*ABLE***NS**03***2*C0***3*C1**12*C1                                 S01194
+0057 I*******AND******13*C0                                               S01194
+0058 I*****************                       1   1 RECI                  S01194
+0059 I*****************                       2   30RECT                  S01194
+0060 I*****************                      12  130RCDE                  S01194
+0061 I*****************                      14  66 TITL                  S01194
+0062 I*****************                      67  67 DATF                  S01194
+0063 I*****************                      68  700DFBR                  S01194
+0064 I*****************                      74  74 MODI1                 S01194
+0065 I*****************                      75  75 MODI2                 S01194
+0066 I*****************                      76  76 MODI3                 S01194
+0067 I*****************                   P  77  790RUND                  S01194
+0068 I*****************                      80  86 RUNA                  S01194
+0069 I*****************                      87  870SFLG                  S01194
+0070 I*****************                   P  90  920LCD                   S01194
+0071 I*****************                      93  93 CHTP                  S01194
+0072 I*****************                   P  94  960TNLU                  S01194
+0073 I*****************                                                   S01194
+0074 I********NS**04***1*CD***2*C2***3*C0                                 S01194
+0075 I*******AND******13*C1                                               S01194
+0076 I*****************                       1   1 RECI                  S01194
+0077 I*****************                       2   30RECT                  S01194
+0078 I*****************                      10  12 CCY                   S01194
+0079 I*****************                      13  130SREC                  S01194
+0080 I*****************                      14  27 CCNM                  S01194
+0081 I*****************                   P  28  348SPOT                  S01194
+0082 I*****************                      38  380CDP                   S01194
+0083 I*****************                      39  390TNOT                  S01194
+0084 I*****************                      40  40 DCCY                  S01194
+0085 I*****************                                                   S01194
+0073 I*****************                                            S01117 S01194
+0073 I*****TABLE*FILE*I.C.D*RECORD*2                               S01117 S01194
+0085 I*****************                                            S01117 S01194
+0074 I********NS**09***1*CD***2*C0***3*C1                          S01117 S01194
+0075 I*******AND******12*C1                                        S01117 S01194
+     I*****************                       1   1 RECI           S01117 S01194
+     I*****************                       2   30RECT           S01117 S01194
+     I*****************                       4  11 ZZ008          S01117 S01194
+     I*****************                      12  130RCDE           S01117 S01194
+     I*****************                      53  53 MBIN           S01117 S01194
+0095 I*****************                                            S01117 S01194
+0094 I*****TABLE*FILE*-*BRANCH*CODES*RECORD.                       S01117 S01194
+0095 I*****************                                            S01117 S01194
+0096 I********NS**10***1*CD***2*C1***3*C0                          S01117 S01194
+0097 I*****************                       1   1 RECI           S01117 S01194
+0098 I*****************                       2   30RECT           S01117 S01194
+0099 I*****************                      11  13 BRCA           S01117 S01194
+0100 I*****************                      14  43 BRNM           S01117 S01194
+0101 I*****************                      44  490BICN           S01117 S01194
+0102 I*****************                      50  51 LOCC           S01117 S01194
+0103 I*****************                      52  54 CMPYM          S01117 S01194
+0104 I*****************                   P  90  920LCD            S01117 S01194
+0105 I*****************                      93  93 CHTP           S01117 S01194
+0106 I*****************                   P  94  960TNLU           S01117 S01194
+0085 I*****************                                                   S01194
+0094 I*****NOSTRO*-*BRANCH*CODE*FILE                               S01117 S01194
+0095 I*****************                                            S01117 S01194
+0096 I********NS**11***1*CD                                        S01117 S01194
+0097 I*****************                       1   1 RECI           S01117 S01194
+0098 I*****************                       2   30RECT           S01117 S01194
+0099 I*****************                      67  69 BRCA           S01117 S01194
+0129 I*****************                                            S01117 S01194
+0094 I*****SD*INSTALLATION*CONTROL*RECORD                          S01117 S01194
+0095 I*****************                                            S01117 S01194
+0102 I********NS**10***1*CD***2*C0***3*C1                          S01117 S01194
+0103 I*******AND******12*C4                                        S01117 S01194
+0097 I*****************                       1   1 RECI           S01117 S01194
+0098 I*****************                       2  13 RKEY           S01117 S01194
+0099 I*****************                      36  38 TRBR           S01117 S01194
+0085 I****CATCHALL*****                                                   S01194
+0086 I********NS*******                                                   S01194
+0095 I*                                                                   S01194
+0088 IPRONO   NS  05   1 CD
+0089 I                                        1   1 RECI
+0090 I                                        2   4 CCY
+0091 I                                        5   60NOSN
+0092 I                                    P   7  46 PNB
+0093 I                                    P  47  61 PND
+0094 I**********                             62  670CNUM                                      CSD027
+0094 I                                       62  67 CNUM                                      CSD027
+0095 I                                       68  77 CSNM
+0096 I                                    P 126 1280TNLU
+0097 I        NS
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I**
+     I**  EXTERNAL DATA AREA OF BRANCHES FOR THIS USER, TOP DOWN          S01117
+     IZBRU        DS                                                      S01117
+     I                                        1   1 ZCHB                  S01117
+     I                                        2   4 ZIN                   S01117
+     I                                        5 154 ZBR1                  S01117
+     I                                      155 304 ZBR2                  S01117
+     IZBRU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 1                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR11                                     197434
+     I                                      256 510 ZBR12                                     197434
+     I                                      511 765 ZBR13                                     197434
+     I                                      7661020 ZBR14                                     197434
+     I                                     10211275 ZBR15                                     197434
+     I                                     12761530 ZBR16                                     197434
+     I                                     15311785 ZBR17                                     197434
+     I                                     17861998 ZBR18                                     197434
+     IZBRU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 2                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR21                                     197434
+     I                                      256 402 ZBR22                                     197434
+     I****KEY*FOR*NOSTRO*CODE*TABLE*FILE                           S01117 S01194
+     I************DS***                                            S01117 S01194
+     I*****************                       1  12 NOSKEY         S01117 S01194
+     I*****************                       1   2 INDEX          S01117 S01194
+     I*****************                       8  10 CCY            S01117 S01194
+     I*****************                      11  120NOSN           S01117 S01194
+     I*                                                                   S01194
+     IRUNDAT      DS                             13                       S01194
+     I* DATA STRUCTURE FOR RUNDATE                                        S01194
+     I                                    P   8  100@RUND                 S01194
+     I                                       12  12 DATF                  S01194
+     I                                       13  13 MBIN                  S01194
+      *
+     IZMUSER      DS                             17                       E00044
+     I                                       11  13 BRC                   E00044
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** External DS for BANK Details                                     S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I** External DS for Currency Details                                 S01194
+     I*                                                                   S01194
+     ISDNOST    E DSSDNOSTPD                                              S01194
+     I** External DS for Nostro Details                                   S01194
+     I*                                                                   S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01194
+     I** External DS for Branch Details                                   S01194
+     I*                                                                   S01194
+     ISDDEAL    E DSSDDEALPD                                              S01194
+     I              QQACCD                          QQACC1                                    CGL029
+     I** External DS for Dealing Data                                     S01194
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     ICUSSN       DS                                                      S01194
+     I** DS FOR CUSTOMER SHORTNAME TO OBTAIN LOCATION                     S01194
+     I                                        1   6 CSSNM                 S01194
+     I                                        7   9 LOC                   S01194
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C*****************************************************************   S01117
+      *                                                                   S01127
+      * PRONOM1 KEY LIST                                                  S01127
+      *                                                                   S01127
+     C           PKEY      KLIST                                          S01127
+     C                     KFLD           CCY                             S01127
+     C                     KFLD           NOSN                            S01127
+     C**
+     C**  GET ZMUSER TO ACCESS DEFAULT BRANCH.                            E00044
+     C**                                                                  E00044
+     C           *NAMVAR   DEFN           ZMUSER                          E00044
+     C                     IN   ZMUSER                                    E00044
+     C                     UNLCKZMUSER                                    E00044
+     C*                                                                   089316
+     C** Save the branch field.                                           089316
+     C*                                                                   089316
+     C                     MOVE SBRCA     @BRCA   3                       089316
+     C**
+     C***06*****           READ DL0140FM                 07                                  BUG2120
+     C*                                                                   089316
+     C*                                                                   089316
+     C** Restore the branch field for next screen.                        089316
+     C*                                                                   089316
+     C           LINE      IFEQ 19                                        089316
+     C           *IN08     ANDEQ*ON                                       091890
+     C                     ADD  1         W0SCR                           091890
+     C                     MOVE @BRCA     SBRCA                           089316
+     C                     ENDIF                                          089316
+     C*                                                                   091890
+     C** Reset indicators after an error on the first screen              091890
+     C*                                                                   091890
+     C           W0FLG     IFEQ 'Y'                                       091890
+     C           *IN08     ANDEQ*ON                                       091890
+     C           W0SCR     ANDEQ1                                         091890
+     C           W0SCR     ADD  1         S       30                      091890
+     C                     ADD  1         W0SCR                           091890
+     C                     MOVE @BRCA     SBRCA                           091890
+     C                     MOVE *ON       *IN19                           091890
+     C                     ENDIF                                          091890
+0098 C**
+0100 C  N06                SETON                     0602
+0101 C                     SETOF                     0734
+0102 C   26                GOTO FIRST
+0103 C**
+     C                     MOVEACPY@      BIS@   80
+      *
+0104 C**   FIRST CYCLE PROCESSING.
+     C*******              SETON                     342680                                  BUG2120
+     C                     SETON                     2680                                    BUG2120
+     C                     SETOF                     21
+     C*                                                                   091890
+     C** Initialise the screen counter                                    091890
+     C                     Z-ADD1         W0SCR   30                      091890
+0106 C*****************    EXSR ZSYSTM                                    S01194
+     C*****GET*I.C.D.*RECORDS                                       S01117S01194
+     C**   GET STANDING DATA RECORDS                                      S01194
+     C                     EXSR ACCICD                                    S01194
+     C*                                                                   E202
+     C**   ACCESS BANK DETAILS                                            E202
+     C                     CALL 'AOBANKR0'                                E202
+     C                     PARM '*DBERR  '@RTCD   7                       E202
+     C                     PARM '*FIRST  '@OPTN   7                       E202
+     C           SDBANK    PARM SDBANK    DSFDY                           E202
+     C*                                                                   E202
+0107 C**   SET UP WORK FIELDS.
+     C*********************MOVE '70'      INDEX                    S01117 S01194
+0108 C                     MOVE '1'       WRK4    4
+0109 C*********************MOVE ' '       BLNK25 25                       S01117
+0109 C                     MOVE ' '       BLNK45 45                       S01117
+0110 C                     Z-ADD0         X       20     25
+0111 C**   SET UP SCREEN ID.
+0112 C                     MOVE 'SF'      SRNID   2
+ 113 C*
+     C/COPY WNCPYSRC,DL0140C001
+     C                     EXSR TIME
+0113 C*
+     C                     WRITEDL0140F1                                                     BUG2120
+      *                                                                                      BUG2120
+0114 C                     GOTO FINEND
+0115 C*
+0116 C           FIRST     TAG                             ** FIRST TAG **
+0117 C**   RE-SET INDICATORS.
+0118 C                     SETON                     2980
+0119 C                     SETOF                     222550
+0120 C                     SETOF                     2438                 S01117
+     C                     SETOF                     21                                      BUG2120
+0120 C*********************SETOF                     24                   S01117
+0122 C*********************MOVE BLNK25    MSSGE  25                       S01117
+0121 C**   RE-SET LINE COUNT AND MESSAGE FIELD.
+0122 C***********          MOVE BLNK45    MSSGE  45                       S01117             BUG2120
+0122 C                     MOVE BLNK45    MSSGE                                              BUG2120
+     C                     MOVE *BLANKS   DAT1                            192194
+0123 C                     Z-ADD1         LINE    20
+0124 C**N08                MOVE '      '  PROKEY                          091890
+0124 C  N08N09             MOVE '      '  PROKEY                          091890
+     C*                                                                   091890
+     C** Initialise screen counter, Projected Nostros Number array        091890
+     C** and second screen flag                                           091890
+     C           *IN08     IFEQ *OFF                                      091890
+     C           *IN09     ANDEQ*OFF                                      091890
+     C                     Z-ADD1         W0SCR                           091890
+     C                     MOVE 'N'       W0FLG   1                       091890
+     C                     MOVEA*BLANKS   PNN,1                           091890
+     C                     ENDIF                                          091890
+      *                                                                   091890
+0125 C**   RE-SET CALCULATED ARRAY ELEMENTS TO ZERO.
+0126 C                     Z-ADD0         PNX
+0127 C**   CHECK FOR COMMAND KEY.
+0128 C*
+0129 C   KC                SETON                     LR
+0130 C   KC                GOTO FINEND
+0131 C**
+0132 C**   CMD/8 ONLY VALID WHEN PREVIOUS SCREEN FULL.
+0133 C**
+0134 C  N08 19             SETOF                     19
+0135 C**N08****************GOTO NOCMD                                     091890
+0135 C  N08N09             GOTO NOCMD                                     091890
+0136 C*
+0137 C**   SECOND SCREEN OF NOSTRO DETAILS REQUESTED.
+0138 C   19                GOTO CONTD
+     C*                                                                   091890
+     C** If ROLLDOWN pressed after first screen, subtract 1 from          091890
+     C** screen counter.                                                  091890
+     C           *IN09     IFEQ *ON                                       091890
+     C           W0SCR     ANDGT1                                         091890
+     C                     SUB  1         W0SCR                           091890
+     C                     MOVE PNN,W0SCR PROKEY                          091890
+     C                     GOTO POSN                                      091890
+     C                     ENDIF                                          091890
+     C*                                                                   091890
+0139 C                     MOVELMSG,1     MSSGE
+0140 C                     SETON                     24
+0141 C                     SETOF                     80
+0142 C                     GOTO ENDR
+0143 C*
+0144 C           NOCMD     TAG                             ** NOCMD TAG **
+0145 C*
+0146 C**   GET PRONO DETAIL RECORD USING CCY ENTERED.
+     C   U1                OPEN PRONOM1                                   077563
+0147 C   21                GOTO CCYR
+0148 C*****CHAIN*TO*CCY*RECORD*ON*TABLE*FILE.                             S01194
+0149 C*****************    MOVEL'20      'TABKEY 12                       S01194
+0150 C*****************    MOVELCCYCD     WRK4                            S01194
+0151 C*****************    MOVE WRK4      TABKEY                          S01194
+0152 C*****************    SETOF                     0304                 S01194
+0153 C***********TABKEY    CHAINTABLE                21                   S01194
+     C*                                                                   S01194
+     C** GET CURRENCY DETAILS                                             S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C*****************    PARM '*MSG   ' @RTCD   7                 S01194LN0732
+     C                     PARM *BLANKS   @RTCD   7                       LN0732
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM CCYCD     @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C***********          PARM           SDCURR                          S01194
+     C* CHECK CURRENCY FOUND                                              S01194
+     C           @RTCD     IFEQ *BLANKS                                   S01194
+      * PROCESS FOR USE OF ?                                              S01194
+     C                     MOVELA6CYCD    CCYCD                           S01194
+     C                     SETOF                     21                   S01194
+     C                     GOTO CHKDEC                                    S01194
+     C                     ELSE                                           S01194
+     C                     SETON                     21                   S01194
+     C                     END                                            S01194
+0154 C*****VALID*CCY*RECORD*FOUND.                                        S01194
+0155 C***04************    GOTO CHKDEC                                    S01194
+0156 C*****CCY*NOT*ON*TABLE*FILE.                                         S01194
+0156 C*    CCY NOT ON FILE.                                               S01194
+0157 C           CCYR      TAG                             ** CCYR TAG  **
+     C*********************SETON                     3425                 S01117
+0159 C*********************SETOF                     2980                 S01117
+     C                     SETON                     342540               S01117
+0159 C                     SETOF                     298039               S01117
+     C                     SETOF                     38                   S01117
+     C                     SETOF                     24                                      BUG2120
+0160 C                     MOVELMSG,3     MSSGE
+0161 C                     GOTO ENDR
+0162 C**
+0163 C**   CHECK NO. OF DECIMALS FOR CCY.
+0164 C           CHKDEC    TAG                             **CHKDEC TAG **
+0165 C*********************SETOF                     33                   S01117
+0165 C                     SETOF                     3340                 S01117
+0166 C***********CDP*******COMP 1                    323031               S01194
+0167 C***32******CDP*******COMP 2                    33  32               S01194
+0166 C           A6NBDP    COMP 1                    323031               S01194
+0167 C   32      A6NBDP    COMP 2                    33  32               S01194
+0168 C*
+     C**N22****************GOTO END1                                      S01117
+0168 C*
+     C**   IF MULTI-BRANCH INDICATOR IS (Y-YES) PERFORM VALIDATION        S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C*                                                                   S01117
+     C**   CHECK IF USER IS AUTHORISED TO ACCESS ALL BRANCHES             S01117
+     C*                                                                   S01117
+     C           SBRCA     IFEQ *BLANK                                    S01117
+     C           ZCHB      IFNE 'Y'                                       S01117
+0160 C                     MOVE MSG,5     MSSGE                           S01117
+     C                     SETOF                     24                                      BUG2120
+     C                     SETON                     3425                 S01117
+0159 C                     SETOF                     2980                 S01117
+     C                     MOVE '1'       *IN21                           S01117
+     C                     GOTO ENDR                                      S01117
+     C                     ELSE                                           S01117
+     C                     MOVE BRC       SBRCA                           E00044
+     C                     MOVE '0'       *IN21                           S01117
+     C                     MOVE '1'       *IN38                           E00044
+     C                     GOTO POSN                                      E00044
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**   CHECK IF BRANCH ENTERED IS VALID AND IF THE USER IS            S01117
+     C**   AUTHORISED TO ACCESS                                           S01117
+     C*                                                                   S01117
+     C           SBRCA     IFNE *BLANK                                    S01117
+      *
+     C           SBRCA     IFNE 'ALL'                                     E00044
+     C                     MOVE SBRCA     ZBRCDX                          S01117
+     C                     ELSE                                           E00044
+     C                     MOVE '1'       *IN66                           E00044
+     C                     GOTO POSN                                      E00044
+     C                     END                                            E00044
+      *
+     C                     EXSR VLBRCD                                    S01117
+     C                     MOVE '1'       *IN38                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '0'       *IN38                           S01117
+     C                     MOVEA'00'      *IN,96                          S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C           *IN96     IFEQ '1'                        INVALID BRANCH S01117
+0159 C           *IN97     OREQ '1'                        NOT AUTHORISED S01117
+0160 C   96                MOVE MSG,6     MSSGE                           S01117
+0160 C   97                MOVE MSG,7     MSSGE                           S01117
+     C                     SETOF                     24                                      BUG2120
+     C                     SETON                     342539               S01117
+0159 C                     SETOF                     2980                 S01117
+     C                     MOVE '1'       *IN21                           S01117
+     C                     GOTO ENDR                                      S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '0'       *IN21                           S01117
+     C                     MOVE '0'       *IN39                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           POSN      TAG                                                               BUG2523
+     C                     MOVE '1'       *IN71                                              BUG2120
+     C                     WRITEDL0140F3                                                     BUG2120
+     C                     MOVE '0'       *IN71                                              BUG2120
+      *                                                                                      BUG2120
+0174 C********** POSN      TAG                             ** POSN TAG  **E00044             BUG2523
+      *
+     C**   POSITION DATA BASE CURSOR USING CURRENCY ENTERED               S01117
+     C*                                                                   S01117
+0169 C                     MOVELCCYCD     PROKEY  5
+     C*                                                                   BHF303
+     C*****IF MULTIBRANCHING IS ON ONLY PROCESS UNALLOCATED
+     C*****AMOUNT WHEN ALL BRANCHES OPTION HAS BEEN TAKEN                 BHF303
+     C*                                                                   BHF303
+     C           MBIN      IFEQ 'Y'                                       BHF303
+     C           SBRCA     ANDNE'ALL'                                     BHF303
+     C                     MOVE '01'      PROKEY                          BHF303
+     C                     END                                            BHF303
+     C*                                                                   BHF303
+     C** Read through PRONO to get the first five wrk days on the whole   162211
+     C** file .                                                           162211
+     C*                                                                   162211
+     C** Set pointer at first rec for enquired ccy .                      162211
+     C           PROKEY    SETLLPRONO                                     162211
+      *                                                                   173147
+      ** Clear array DAT1                                                 173147
+      *                                                                   173147
+     C                     CLEARDAT1                                      173147
+     C*                                                                   162211
+     C** Read first record .                                              162211
+     C                     READ PRONO                    52               162211
+      *                                                                   182579
+     C                     MOVE '0'       *IN55                           182579
+     C   05      CCYCD     COMP CCY                      55               162211
+     C*                                                                   162211
+     C** Seton *IN52 when no rec found for ccy enquired                   162211
+     C  N55                SETON                     52                   162211
+     C*                                                                   162211
+     C** Initialise index Y for data array DAT1                           162211
+     C                     Z-ADD1         Y       20                      162211
+     C*                                                                   162211
+     C** Read all records sequencially until no rec found for ccy         162211
+     C*                                                                   162211
+     C           *IN52     DOWEQ*OFF                       DOLOOP1        162211
+     C*                                                                   162211
+     C** Initialise index X to read the 5 wrk days stored in array PND    162211
+     C                     Z-ADD1         X       20                      162211
+     C** Add any wrk days different for each rec 5 (max five dates/rec)   162211
+     C** to array date DAT1                                               162211
+     C*                                                                   162211
+     C           X         DOWLT6                                         162211
+     C                     MOVEAPND,X     TEMP    50                      162211
+     C           TEMP      LOKUPDAT1                     53               162211
+     C           *IN53     IFEQ *OFF                                      162211
+     C                     MOVELTEMP      DAT1,Y                          162211
+     C                     ADD  1         Y                               162211
+     C                     ENDIF                                          162211
+     C                     ADD  1         X                               162211
+     C                     ENDDO                                          162211
+     C*                                                                   162211
+     C** Read the next rec on PRONO                                       162211
+     C                     READ PRONO                    52               162211
+      *                                                                   182579
+     C                     MOVE '0'       *IN55                           182579
+     C   05      CCYCD     COMP CCY                      55               162211
+     C  N55                SETON                     5255                 162211
+     C                     ENDDO                           ENDDOLOOP1     162211
+     C*                                                                   162211
+     C** Process of retrieving the first five wrk days for ccy            162211
+     C** from DAT1 into DAT, done only if there was at least one rec      162211
+     C** found on file (*IN55 *ON)                                        162211
+     C*                                                                   162211
+     C           *IN55     IFEQ *ON                        IFLOOP1        162211
+     C*                                                                   162211
+     C** Initialise Zer pointer,index Y and *IN55                         162211
+     C                     MOVE *OFF      *IN55                           162211
+     C                     Z-ADD0         ZER     50                      162211
+     C                     Z-ADD1         Y                               162211
+     C*                                                                   162211
+     C           ZER       LOKUPDAT1,Y                   53               162211
+     C           *IN53     DOWEQ*ON                                       162211
+     C                     MOVEL99999     DAT1,Y                          162211
+     C           ZER       LOKUPDAT1,Y                   53               162211
+     C                     ENDDO                                          162211
+     C*                                                                   162211
+     C** Sort data array to eliminate all unwanted entries                162211
+     C                     SORTADAT1                                      162211
+     C** DAT array contains only the first 5 wrk days for enquired ccy    162211
+     C                     MOVEADAT1      DAT                             162211
+     C*                                                                   162211
+     C                     Z-ADD1         X                               162211
+     C**   CONVERT EACH DATE IN RANGE TO DATE FORMAT.                     162211
+     C           DATE      TAG                             ** DATE TAG  **162211
+     C*                                                                   162211
+     C                     Z-ADDDAT,X     ZDAYNO                          162211
+     C                     EXSR ZDATE2                                    162211
+     C                     MOVE ZADATE    PNA,X                           162211
+     C**   CHECK WHETHER ALL FIVE DATES READ.                             162211
+     C           X         COMP 5                        23               162211
+     C  N23      X         ADD  1         X                               162211
+     C  N23                GOTO DATE                                      162211
+     C                     ENDIF                           ENDIFLOOP1     162211
+     C*                                                                   162211
+0170 C           PROKEY    SETLLPRONO
+0171 C*
+0172 C                     SETON                     2425
+0173 C**   SET UP LOOP TO READ EACH PRONO RECORD
+0174 C           READ      TAG                             ** READ TAG  **
+0175 C*********************SETOF                     0522                 S01117
+0175 C                     SETOF                     052211               S01117
+0176 C                     READ PRONO                    50
+0177 C**   CHECK THAT CCY ON RECORD ALSO THAT ON SCREEN.
+0178 C   05      CCYCD     COMP CCY                      22
+     C           *IN19     IFEQ '1'                                                          BUG2120
+     C                     MOVE '0'       *IN50                                              BUG2120
+     C                     ENDIF                                                             BUG2120
+0179 C  N22 19             SETOF                     19
+     C  N22                GOTO END1                                      S01117
+     C*                                                                   S01117
+     C*****ACCESS*NOSTRO*CODE*TABLE*FILE*AND*PROCESS*ONLY*RECORDS*FOR     S01194
+0177 C*****BRANCH*ENTERED.                                         S01117 S01194
+     C*****************                                            S01117 S01194
+     C***********NOSKEY    CHAINTABLE                37            S01117 S01194
+     C***37************    MOVE *BLANK    BRCA                     S01117 S01194
+     C*                                                            S01117 S01194
+     C** GET NOSTRO DETAILS                                               S01194
+     C                     MOVELNOSN      @KEYE   2                       S01194
+     C*                                                                   S01194
+     C                     CALL 'AONOSTR0'                                S01194
+     C*****************    PARM '*MSG   ' @RTCD                     S01194LN0732
+     C                     PARM *BLANKS   @RTCD                           LN0732
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM *BLANKS   @KEYA   6                       S01194
+     C                     PARM CCY       @KEYB   3                       S01194
+     C**********           PARM *BLANKS   @KEYC   4                                    S01194 CGL029
+     C                     PARM *BLANKS   @KEYC  10                                           CGL029
+     C                     PARM *BLANKS   @KEYD   2                       S01194
+     C                     PARM           @KEYE                           S01194
+     C                     PARM *BLANKS   @KEYF   3                       S01194
+     C                     PARM *BLANKS   @KEYG  10                       S01194
+     C                     PARM *BLANKS   @KEYH   1                       S01194
+     C           SDNOST    PARM SDNOST    DSFDY                           S01194
+     C************         PARM           SDNOST                          S01194
+     C* CHECK NOSTRO FOUND                                                S01194
+     C           @RTCD     IFEQ *BLANKS                                   S01194
+     C                     SETON                     11                   S01194
+     C                     SETOF                     37                   S01194
+     C                     EXSR HOLP                                      S01195
+     C                     ELSE                                           S01194
+      * PROCESSING FOR UNALLOCATED NOSTRO '00'
+     C                     SETON                     37                   S01194
+     C                     MOVE *BLANK    A7BRCD                          S01194
+     C                     SETOF                     616263               E113
+     C                     SETOF                     6465                 E113
+     C                     END                                            S01194
+     C*                                                                   S01195
+     C           MBIN      IFEQ 'Y'                                       E00044
+      *
+     C           SBRCA     IFNE *BLANK                                    S01117
+     C           SBRCA     ANDNE'ALL'                                     E00044
+     C***11******BRCA******COMP SBRCA                    37        S01117 S01194
+     C   11      A7BRCD    COMP SBRCA                    37               S01194
+     C  N37                GOTO READ                                      S01117
+     C                     END                                            S01117
+      *
+     C                     END                                            E00044
+     C*                                                                   S01117
+0181 C**   SECOND SCREEN REQUIRED FOR FURTHER DETAILS.
+0182 C***19*****           GOTO FINEND                                                       BUG2120
+0183 C**   SECOND SCREEN REQUESTED.
+0184 C           CONTD     TAG                             ** CONTD TAG **
+0185 C   19                SETON                     222425
+0186 C**   RECORD FOUND-CONVERT DATA FOR SCREEN OUTPUT.
+      *                                                                                       193052
+     C           *INU1     IFEQ *ON                                                           193052
+     C                     CLOSEPRONOM1                                                       193052
+     C                     END                                                                193052
+      *                                                                                       193052
+0187 C                     EXSR SCFILL
+      *                                                                                       193052
+     C                     MOVE NOSN      NOSTNO                                             BUG2120
+     C                     MOVE CSNM      NOSSNM                                             BUG2120
+     C                     MOVE A7BRCD    A8DSNB                                             BUG2120
+      *                                                                                      BUG2120
+     C                     MOVE PNX,1     BAL1                                               BUG2120
+     C                     MOVE PNX,2     BAL2                                               BUG2120
+     C                     MOVE PNX,3     BAL3                                               BUG2120
+     C                     MOVE PNX,4     BAL4                                               BUG2120
+     C                     MOVE PNX,5     BAL5                                               BUG2120
+      *                                                                                      BUG2120
+     C                     Z-ADDLINE      RRN                                                BUG2120
+     C                     WRITEDL0140F2                                                     BUG2120
+     C           *INU1     IFEQ *ON                                                           193056
+     C                     OPEN PRONOM1                                                       193052
+     C                     END                                                                193056
+0188 C*
+0189 C*****OUTPUT TO SCREEN.                                                                 BUG2120
+0190 C**********           EXSR TIME                                                         BUG2120
+0191 C**********           EXSR EXCPTN                                                       BUG2120
+     C*                                                                   091890
+     C** Store the Nostro Number of the first record on the screen.       091890
+     C*                                                                   091890
+     C           LINE      IFEQ 1                                         091890
+     C                     Z-ADDW0SCR     S                               091890
+     C           PNN,S     IFEQ *BLANKS                                   091890
+     C                     MOVE NOSN      PNN,S                           091890
+     C                     ENDIF                                          091890
+     C                     ENDIF                                          091890
+     C*                                                                   091890
+0192 C**   UPDATE LINE COUNT.
+0193 C           LINE      ADD  1         LINE         2524
+0194 C*
+0195 C**   CHECK FOR FULL SCREEN.
+0196 C           LINE      COMP 19                       19
+     C*                                                                   091890
+     C** Set on flag to indicate a second screen of Nostros.              091890
+     C           *IN19     IFEQ *ON                                       091890
+     C                     MOVE 'Y'       W0FLG                           091890
+     C                     ENDIF                                          091890
+     C*                                                                   091890
+0197 C**   LOOP BACK TO READ NEXT PRONO RECORD.
+     C           *IN19     IFEQ '0'                                                          BUG2120
+0198 C                     GOTO READ
+     C                     ENDIF                                                             BUG2120
+0199 C*
+0200 C**   ALL NOSTRO RECORDS FOR ENTERED CCY READ.
+0201 C           END1      TAG                             **  END1 TAG **
+0202 C  N25                SETON                     24
+0203 C  N25                MOVELMSG,4     MSSGE
+0204 C**   NO NOSTRO RECORDS FOUND.
+0205 C   25                SETOF                     21
+0206 C   25                SETON                     29
+0207 C   25                MOVELMSG,2     MSSGE
+     C           *IN25     IFEQ '1'                                                          BUG2120
+     C                     SETOF                     24                                      BUG2120
+     C                     ENDIF                                                             BUG2120
+0208 C***********          SETOF                     80                   108074
+0208 C   25                SETOF                     80                   108074
+     C           *IN29     IFEQ '1'                                                          BUG2120
+      *                                                                                      BUG2120
+     C                     MOVE SBRCA     SBCA                                               BUG2120
+     C                     MOVE PNA,1     TODAY                                              BUG2120
+     C                     MOVE PNA,2     TODAY1                                             BUG2120
+     C                     MOVE PNA,3     TODAY2                                             BUG2120
+     C                     MOVE PNA,4     TODAY3                                             BUG2120
+     C                     MOVE PNA,5     TODAY4                                             BUG2120
+      *                                                                                      BUG2120
+     C                     ENDIF                                                             BUG2120
+0209 C*
+0210 C**   SCREEN FULL OR ERROR CONDITION FOUND.
+0211 C           ENDR      TAG                             **  ENDR TAG **
+0212 C                     EXSR TIME
+0213 C**********           EXSR EXCPTN                                                       BUG2120
+     C                     WRITEDL0140F1                                                     BUG2120
+     C           *IN24     IFEQ '0'                                                          BUG2120
+     C           *IN25     IFEQ '0'                                                          BUG2120
+     C                     WRITEDL0140F3                                                     BUG2120
+     C                     ELSE                                                              BUG2120
+      *                                                                                      BUG2120
+      ** Clears the screen when having errors                                                BUG2120
+      *                                                                                      BUG2120
+     C                     WRITEDL0140F5                                                     BUG2120
+     C                     ENDIF                                                             BUG2120
+     C                     ELSE                                                              BUG2120
+     C                     WRITEDL0140F3                                                     BUG2120
+     C                     ENDIF                                                             BUG2120
+0214 C*
+0215 C           FINEND    TAG                             ** FINEND TAG *
+      *                                                                                      BUG2120
+     C                     EXFMTDL0140F4                                                     BUG2120
+      *                                                                                      BUG2523
+     C           *INU1     IFEQ '1'                                                          BUG2523
+     C                     CLOSEPRONOM1                                                      BUG2523
+     C                     ENDIF                                                             BUG2523
+      *                                                                                      BUG2523
+     C           *IN19     IFEQ '1'                                                          BUG2120
+     C           *INKC     ANDNE'1'                                                          BUG2120
+     C                     SETOF                     19                                      BUG2120
+     C                     GOTO READ                                                         BUG2120
+     C                     ENDIF                                                             BUG2120
+      *                                                                                      BUG2120
+     C   KC                SETON                     LR                                      BUG2120
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0217 C*****SUB-ROUTINE TO OUTPUT DATA TO SCREEN                                              BUG2120
+0218 C**********                                                                             BUG2120
+0219 C********** EXCPTN    BEGSR                           **EXCPTN SUBR**                   BUG2120
+0220 C**********                                                                             BUG2120
+     C***U1*****           CLOSEPRONOM1                                               077563 BUG2120
+     C**********                                                                      077563 BUG2120
+0221 C**********           EXCPT                                                             BUG2120
+0222 C*****RE-SET INDICATORS.                                                                BUG2120
+0223 C**********           SETOF                     0522                                    BUG2120
+0224 C**********                                                                             BUG2120
+0225 C**********           ENDSR                                                             BUG2120
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0227 C**   SUB-ROUTINE TO CONVERT FILE DATA FOR SCREEN OUTPUT.
+0228 C**
+0229 C           SCFILL    BEGSR                           **SCFILL SUBR**
+0230 C*
+0231 C*****CHECK FOR UNALLOCATED NOSTRO CODE.                             E80840
+0232 C*****      NOSN      COMP 00                       28               E80840
+0233 C***28                MOVELMSG,5     UNALL  11                       E80840
+0234 C*
+0235 C***********          Z-ADD1         X                               162211
+0236 C*****CONVERT*EACH*DATE*IN*RANGE TO DATE FORMAT.                     162211
+0237 C***********DATE      TAG                             ** DATE TAG  **162211
+0238 C**                                                                  162211
+0239 C***********          Z-ADDPND,X     ZDAYNO                          162211
+0240 C***********          EXSR ZDATE2                                    162211
+0241 C***********          MOVE ZADATE    PNA,X                           162211
+0242 C*****CHECK*WHETHER*ALL*FIVE*DATES READ.                             162211
+0243 C***********X         COMP 5                        23               162211
+0244 C**N23******X         ADD  1         X                               162211
+0245 C**N23******          GOTO DATE                                      162211
+0246 C**                                                                  162211
+      *                                                                   162211
+      ** This conversion date process above is not needed as it is done   162211
+      ** only once valid for the ccy .                                    162211
+      *                                                                   162211
+      *                                                                   S01127
+      * IF FF MODULE PRESENT U1 = 1                                       S01127
+      * CHECK PRONOM1 FOR ANY 'CHANGE' RECORDS                            S01127
+      * IF RECORD(S) FOUND ADD AMOUNTS TO BALANCES BEFORE DISPLAYING      S01127
+      * NOSTRO BALANCE                                                    S01127
+      *                                                                   S01127
+     C           *INU1     IFEQ '1'                                       S01127
+     C*********************OPEN PRONOM1                            098612 145302
+     C   19                OPEN PRONOM1                                   145302
+     C           PKEY      SETLLPRONOM1                51                 S01127
+     C           *IN51     DOWEQ'0'                                       S01127
+     C           PKEY      READEPRONOM1                  51               S01127
+     C           *IN51     IFEQ '0'                                       S01127
+     C           RECI      ANDNE'*'                                       S01127
+     C                     ADD  PNBL      PNB                             S01127
+     C                     END                                            S01127
+     C                     END                                            S01127
+     C                     CLOSEPRONOM1                                                       193052
+     C                     END                                            S01127
+     C*********************CLOSEPRONOM1                            098612 145302
+     C   19                CLOSEPRONOM1                                   145302
+     C/COPY WNCPYSRC,DL0140C002
+     C*                                                                   162211
+     C** Initialise indexes for each new rec read fronm PRONO             162211
+     C                     Z-ADD1         X                               162211
+     C                     Z-ADD1         Y                               162211
+     C*                                                                   162211
+     C** Initialise balance array for output screen                       162211
+     C                     Z-ADD0         PNBT                            162211
+     C*                                                                   162211
+     C** Get the 5 balances corresponding to the five wrk days from PNA   162211
+     C*                                                                   162211
+     C           X         DOWLT6                          DOLOOP1        162211
+     C*                                                                   162211
+     C** Z is an index used to move the previous balance when balance     162211
+     C** date is ahead of the next WRK day on DAT                         162211
+     C           X         SUB  1         Z       20                      162211
+     C*                                                                   162211
+     C           PND,X     LOKUPDAT,Y                    54               162211
+     C*                                                                   162211
+     C** Bal wrk date is found on DAT(first five wrk dates for ccy)       162211
+     C*                                                                   162211
+     C           *IN54     IFEQ *ON                        IFLOOP1        162211
+     C*                                                                   162211
+     C** Move the bal to the screen bal corresponding to the wrk date     162211
+     C** on DAT                                                           162211
+     C                     MOVEAPNB,X     FIELD  150                      162211
+     C                     MOVELFIELD     PNBT,Y                          162211
+     C*                                                                   162211
+     C** Decrement index Y to read all records until Y is eq X            162211
+     C                     SUB  1         Y                               162211
+     C*                                                                   162211
+     C           Y         DOWGEX                          DOLOOP2        162211
+     C*                                                                   162211
+     C** Move only balances for wrk days not already done(PNBT#0)         162211
+     C           PNBT,Y    IFEQ 0                          IFLOOP2        162211
+     C*                                                                   162211
+     C** Move bal if bal date is the first on PRONO rec                   162211
+     C** Prev bal is unknown, just use first available bal on file        162211
+     C           X         IFEQ 1                                         162211
+     C                     MOVEAPNB,X     FIELD                           162211
+     C                     MOVELFIELD     PNBT,Y                          162211
+     C*                                                                   162211
+     C** Move prev bal as bal date is ahead of next wrk date on DAT       162211
+     C                     ELSE                                           162211
+     C                     MOVEAPNB,Z     FIELD                           162211
+     C                     MOVELFIELD     PNBT,Y                          162211
+     C                     ENDIF                                          162211
+     C*                                                                   162211
+     C                     ENDIF                           ENDIFLOOP2     162211
+     C*                                                                   162211
+     C** Decrement index to move the prev bal to all wrk dates between    162211
+     C** the bal date read and the hit wrk date on DAT                    162211
+     C                     SUB  1         Y                               162211
+     C*                                                                   162211
+     C                     ENDDO                           ENDDOLOOP2     162211
+     C*                                                                   162211
+     C                     Z-ADD1         Y                               162211
+     C                     ADD  1         X                               162211
+     C*                                                                   162211
+     C** Bal wrk date is not found on DAT(first five wrk dates for ccy)   162211
+     C*                                                                   162211
+     C                     ELSE                            ELSELOOP1      162211
+     C*                                                                   162211
+     C** Initialise index Y to 5 to read backward until last bal date     162211
+     C                     Z-ADD5         Y                               162211
+     C*                                                                   162211
+     C           Y         DOWGEX                          DOLOOP2        162211
+     C*                                                                   162211
+     C** Only write balances for non processed rec files (PNBT#0)         162211
+     C*                                                                   162211
+     C           PNBT,Y    IFEQ 0                          IFLOOP2        162211
+     C*                                                                   162211
+     C** Write the first rec bal if first rec read as no prev bal is known162211
+     C           X         IFEQ 1                                         162211
+     C                     MOVEAPNB,X     FIELD                           162211
+     C                     MOVELFIELD     PNBT,Y                          162211
+     C                     ELSE                                           162211
+     C*                                                                   162211
+     C** Write the prev bal as there is no bal for the remaining wrk days 162211
+     C** on DAT(First five wrk days for CCY on PRONOPN)                   162211
+     C                     MOVEAPNB,Z     FIELD                           162211
+     C                     MOVELFIELD     PNBT,Y                          162211
+     C                     END                                            162211
+     C*                                                                   162211
+     C                     END                             ENDIFLOOP2     162211
+     C*                                                                   162211
+     C** Decrement index Y to move bal for remaining wrk dates not done   162211
+     C                     SUB  1         Y                               162211
+     C                     ENDDO                           ENDDOLOOP2     162211
+     C*                                                                   162211
+     C** Z-add6 to X to exit loop                                         162211
+     C                     Z-ADD6         X                               162211
+     C                     ENDIF                           ENDIFLOOP1     162211
+     C*                                                                   162211
+     C                     ENDDO                           ENDDOLOOP1     162211
+     C*                                                                   162211
+     C** Initialise indicator                                             162211
+     C                     MOVE *OFF      *IN54                           162211
+     C*                                                                   162211
+     C**   NOSTRO AMOUNTS DISPLAYED ON SCREEN IN THOUSANDS.               162211
+     C*                                                                   162211
+     C   30      PNBT      DIV  1000      PNX       H                     162211
+     C   31      PNBT      DIV  10000     PNX       H                     162211
+     C   32      PNBT      DIV  100000    PNX       H                     162211
+     C   33      PNBT      DIV  1000000   PNX       H                     162211
+0246 C*****NOSTRO*AMOUNTS*DISPLAYED*ON*SCREEN*IN*THOUSANDS.               162211
+0247 C*                                                                   162211
+0248 C***30******PNB       DIV  1000      PNX       H                     162211
+0249 C***31******PNB       DIV  10000     PNX       H                     162211
+0250 C***32******PNB       DIV  100000    PNX       H                     162211
+0251 C***33******PNB       DIV  1000000   PNX       H                     162211
+0252 C*
+0253 C                     ENDSR
+     C*****************************************************************   S01117
+      /EJECT                                                              S01195
+     C*****************************************************************   S01195
+     C**                                                                  S01195
+     C**   HOLP SR. TO CHECK FOR HOLIDAYS AT NOSTRO LOCATIONS.            S01195
+     C**                                                                  S01195
+     C**   THE REVERSE IMAGE INDICATORS ARE SETON IF IT IS A HOLIDAY      S01195
+     C**                                                                  S01195
+     C           HOLP      BEGSR                           *** HOLP ***   S01195
+     C**                                                                  S01195
+     C                     SETOF                     616263               S01195
+     C                     SETOF                     6465                 S01195
+     C                     MOVE A7NOSN    CUSSN                           S01195
+     C*************        MOVE A7CSSN    CUSSN                           S01195
+     C                     MOVE LOC       ZLOC                            S01195
+     C                     MOVE A7CYCD    ZCCY                            S01195
+     C                     Z-ADD1         X                               S01195
+     C**                                                                  S01195
+     C           X         DOWLT6                          B001           S01195
+     C                     Z-ADDPND,X     ZDAYNO            **1           S01195
+     C                     EXSR ZCHKH                       **1           S01195
+     C           ZIND      IFEQ 'H'                        B002           S01195
+     C           X         ADD  60        XA      20        **2           S01195
+     C                     MOVE '1'       *IN,XA            **2           S01195
+     C                     END                             E002           S01195
+     C                     ADD  1         X                 **1           S01195
+     C                     END                             E001           S01195
+     C*                                                                   S01195
+     C                     ENDSR                                          S01195
+     C**                                                                  S01195
+     C*****************************************************************   S01195
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0255 C**
+0256 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0257 C**
+0258 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0259 C**
+0260 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0261 C**
+0262 C**   CLEAR DATE FIELDS.
+0263 C                     Z-ADD0         ZDATE   60
+0264 C                     MOVEL'       ' ZADATE  7
+0265 C**
+0266 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0267 C                     Z-ADDZDAYNO    ZDAYNO  50
+0268 C**
+0269 C**   DETERMINE YEAR NUMBER.
+0270 C**
+0271 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0272 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0273 C   99                GOTO ZDEND2
+0274 C**
+0275 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0276 C           ZDAYN1    DIV  1461      ZLYR    20
+0277 C                     MVR            ZDAYN1           SAVE REMAINING
+0278 C**                                                   DAYS
+0279 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0280 C                     Z-ADD1         ZWRK2   20
+0281 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0282 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0283 C  N90      ZWRK2     ADD  1         ZWRK2
+0284 C  N90                GOTO ZDTAG1
+0285 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0286 C**
+0287 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0288 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0289 C**
+0290 C**   CALCULATE ACTUAL YEAR NUMBER.
+0291 C           ZLYR      MULT 4         ZWRK3   30
+0292 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0293 C                     Z-ADDZWRK3     ZYEAR   20
+0294 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0295 C**
+0296 C**   DETERMINE MONTH NUMBER.
+0297 C**
+0298 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0299 C                     SETOF                     9293
+0300 C   91      ZDAYN1    COMP 59                     9293
+0301 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0302 C**
+0303 C**   CALCULATE MONTH NUMBER.
+0304 C                     Z-ADD2         ZWRK2
+0305 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0306 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0307 C  N94      ZWRK2     ADD  1         ZWRK2
+0308 C  N94                GOTO ZDTAG2
+0309 C           ZWRK2     SUB  1         ZWRK2
+0310 C**
+0311 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0312 C**
+0313 C**   DETERMINE DAY OF MONTH.
+0314 C**
+0315 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0316 C           ZDAYN1    ADD  1         ZDAYN1
+0317 C**
+0318 C**   CALCULATE DAY OF MONTH.
+0319 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0320 C**
+0321 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0322 C   93      ZDAY      ADD  1         ZDAY
+0323 C**
+0324 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0325 C  N98                MOVELZDAY      ZWRK4   40
+0326 C   98                MOVE ZDAY      ZWRK4
+0327 C  N98                MOVE ZMTH      ZWRK4
+0328 C   98                MOVELZMTH      ZWRK4
+0329 C                     MOVELZWRK4     ZDATE
+0330 C                     MOVE ZYEAR     ZDATE
+0331 C**
+0332 C**   FORMAT ALPHA DATE, DDMMMYY.
+0333 C           ZDAY      COMP 10                     95
+0334 C                     MOVELZDAY      ZWRK5   5
+0335 C   95                MOVEL' '       ZWRK5
+0336 C                     MOVE ZMNM,ZMTH ZWRK5
+0337 C                     MOVELZWRK5     ZADATE
+0338 C                     MOVE ZYEAR     ZADATE
+0339 C**
+0340 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0341 C**
+0342 C**
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0344 C**   SUB-ROUTINE TO PICK UP CORRECT TIME.
+0345 C*
+0346 C           TIME      BEGSR                           ** TIME SUBR **
+0347 C*
+0348 C                     TIME           MTIME   60
+0349 C*
+0350 C                     ENDSR
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0352 C*****************                                                   S01194
+0353 C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.   S01194
+0354 C*****************                                                   S01194
+0355 C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0356 C*****************                                                   S01194
+0357 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.                    S01194
+0358 C*****************    MOVEL'01      'ZTABKY 12                       S01194
+0359 C*****************    MOVE '  10'    ZTABKY                          S01194
+0360 C*****************                                                   S01194
+0361 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0362 C**N99******RECI**    COMP 'D'                  9999  ON, IS DELETED S01194
+0363 C*****************                                                   S01194
+0364 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.                    S01194
+0365 C***********DATF**    COMP 'M'                      98MMDDYY, 98 ON  S01194
+0366 C*****************                                                   S01194
+0367 C*****************    ENDSR                                          S01194
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0352 C**                                                                  S01117
+0353 C*****ACCICD*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECOS01117S01194
+     C**                                                                  S01194
+     C**   ACCICD SR. TO READ DATA AREA RUNDAT FOR DATE FORMAT AND        S01194
+     C**              CALL DEALING DATA ACCESS OBJECT.                    S01194
+0354 C**                                                                  S01117
+     C           ACCICD    BEGSR                           **  ACCICD **  S01117
+     C*                                                                   S01194
+     C** GET RUN DATE FROM DATA AREA - RUNDATE                            S01194
+     C*                                                                   S01194
+     C                     IN   RUNDAT                                    S01194
+     C           *NAMVAR   DEFN           RUNDAT                          S01194
+     C**                                                                  S01194
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C*                                                                   S01194
+0148 C*****BUILD*KEY*AND*ACCESS*I.C.D.*REC*2*TABLE*FILE.           S01117 S01194
+0366 C*****************                                            S01117 S01194
+0149 C*****************    MOVEL'01      'ZTABKY                   S01117 S01194
+0150 C*****************    MOVE '  11'    ZTABKY                   S01117 S01194
+0361 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+     C*****************                                            S01117 S01194
+0148 C*****BUILD*KEY*AND*ACCESS*INSTALLATION*CONTROL*RECORD        S01117 S01194
+0150 C*****************    MOVE '  40'    ZTABKY                   S01117 S01194
+0361 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+     C*                                                                   S01194
+     C** CALL DEALING DATA ACCESS OBJECT                                  S01194
+     C*                                                                   S01194
+     C**********           CALL 'AODEALR0'                                S01194              CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C********** SDDEAL    PARM SDDEAL    DSFDY                           S01194              CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C************         PARM           SDDEAL                          S01194
+     C*                                                                   S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     MOVEL'SDDEALPD'DBFILE 10        ************   S01194
+     C                     MOVEL'01'      DBASE   3        * DBERR 01 *   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO FINEND                                    S01194
+     C                     END                                            S01194
+     C*
+     C**   IF MULTI-BRANCH FLAG IS 'Y-yes' GET USERS VALID BRANCHES       S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     EXSR ZSPFB                                     S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '1'       *IN36            PROTECT BRANCH S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+0367 C                     ENDSR                                          S01117
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+     C**  P/ZSPFB STD SR TO MAKE SPF USER/BKG.BRS AVAILABLE TO PGM        S01117
+     C**    INPUT FROM EXT.DTAARA- ZBR1 & 2,UP TO 100 BRANCHES,TOP DOWN   S01117
+     C**                           ZIN, INDEX OF LOWEST ENTRY FOR ARRAY   S01117
+     C**    OUTPUT - ZBR  ARRAY, TOP DOWN                                 S01117
+     C**             U, EQ ZIN                                            S01117
+     C**                                                                  S01117
+     C           ZSPFB     BEGSR                           **  ZSPFB **   S01117
+     C           *NAMVAR   DEFN           ZBRU                            S01117
+     C                     IN   ZBRU                                      S01117
+     C                     MOVEAZBR1      ZBR,1                           S01117
+     C                     MOVEAZBR2      ZBR,51                          S01117
+     C                     MOVE ZIN       U       30                      S01117
+      *                                                                                       197434
+      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU1                                               197434
+     C                     IN   ZBRU1                                                         197434
+     C                     Z-ADD101       W       30                                          197434
+     C                     MOVEAZBR11     ZBR,W                                               197434
+     C                     Z-ADD186       W                                                   197434
+     C                     MOVEAZBR12     ZBR,W                                               197434
+     C                     Z-ADD271       W                                                   197434
+     C                     MOVEAZBR13     ZBR,W                                               197434
+     C                     Z-ADD356       W                                                   197434
+     C                     MOVEAZBR14     ZBR,W                                               197434
+     C                     Z-ADD441       W                                                   197434
+     C                     MOVEAZBR15     ZBR,W                                               197434
+     C                     Z-ADD526       W                                                   197434
+     C                     MOVEAZBR16     ZBR,W                                               197434
+     C                     Z-ADD611       W                                                   197434
+     C                     MOVEAZBR17     ZBR,W                                               197434
+     C                     Z-ADD696       W                                                   197434
+     C                     MOVEAZBR18     ZBR,W                                               197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU2                                               197434
+     C                     IN   ZBRU2                                                         197434
+     C                     Z-ADD767       W                                                   197434
+     C                     MOVEAZBR21     ZBR,W                                               197434
+     C                     Z-ADD852       W                                                   197434
+     C                     MOVEAZBR22     ZBR,W                                               197434
+      *                                                                                       197434
+     C                     ENDSR                                          S01117
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+     C**   SUBROUTINE VLBRCD                                              S01117
+     C**   -----------------                                              S01117
+     C**   VALIDATES BRANCH CODE FOR TRADING FUNCTIONS,USER               S01117
+     C**                                                                  S01117
+     C**      VARIABLES -                                                 S01117
+     C**   INPUT - ZBRCDX,SCREEN FIELD, ALPHA                             S01117
+     C**   KNOWN - BNDSNB,TRADING BRANCH, DEALING DATA                    S01117
+     C**           MBIN,MULTIBRANCHING IND, RUNDAT                        S01117
+     C**           ZBR ,ARRAY OF VALID BRANCHES FOR USER, FROM SPF        S01117
+     C**           U,   LOWEST ENTRY IN ZBR ARRAY (3,0)                   S01117
+     C**   OUTPUT- ZBRCDX,AS INPUT OR A DEFAULT                           S01117
+     C**           ERROR CONDITIONS FOR                                   S01117
+     C**             1. 94 -NO DEFAULT TR BR AVAILABLE,MANDATORY INPUT    S01117
+     C**             2. 95 -MUST EQUAL TRADING DFT BR IF MBIN IS N        S01117
+     C**             3. 96 -NOT VALID BR CODE ON BRANCHES TABLE           S01117
+     C**             4. 97 -NOT VALID BRANCH CODE FOR USER                S01117
+     C**                99 -ANY OF THESE CONDITIONS                       S01117
+     C**                                                                  S01117
+     C           VLBRCD    BEGSR                            ** VLBRCD **  S01117
+     C                     SETOF                     909495               S01117
+     C                     SETOF                     969799               S01117
+     C*                                                                   E202
+     C** SET UP TRBRX WITH SINGLE BRANCH IF NOT MULTIBRANCHED,            E202
+     C** ELSE DEFAULT BRANCH FOR USER                                     E202
+     C*****                MOVE BNBRCD    TRBRX   3                S01117 E202
+     C           MBIN      IFEQ 'N'                                       E202
+     C                     MOVE BJSBRC    TRBRX   3                       E202
+     C                     ELSE                                           E202
+     C                     MOVE BRC       TRBRX                           E202
+     C                     END                                            E202
+     C**                                                                  S01117
+     C**  IF BLANK                                                        S01117
+     C           ZBRCDX    IFEQ '   '                                     S01117
+     C           SBRCA     IFEQ '   '                                     S01117
+     C                     SETON                     94                   S01117
+     C                     GOTO VBRCD9                                    S01117
+     C                     ELSE                                           S01117
+     C                     MOVE TRBRX     ZBRCDX  3                       S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C**                                                                  S01117
+     C**  IF NOT BLANK, VALIDATE VALUE ENTERED                            S01117
+     C**  IF NOT MULTIBRANCH, MUST EQUAL TRADING DFT BRANCH               S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C           ZBRCDX    IFNE TRBRX                                     S01117
+     C                     SETON                     95                   S01117
+     C                     GOTO VBRCD9                                    S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C** GET BRANCH DETAILS                                               S01117
+     C**********           CALL 'AOBRCHR0'                                S01117              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C*****************    PARM '*MSG   ' @RTCD                     S01117LN0732
+     C                     PARM *BLANKS   @RTCD                           LN0732
+     C                     PARM '*KEY   ' @OPTN                           S01117
+     C                     PARM ZBRCDX    @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01194              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*************        PARM           SDBRCH                          S01117
+     C* CHECK BRANCH FOUND                                                S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     96                   S01117
+     C                     GOTO VBRCD9                                    S01117
+     C                     ELSE                                           S01117
+     C* PROCESS FOR ?                                                     S01117
+     C                     MOVELA8BRCD    SBRCA                           S01117
+     C                     MOVELA8BRCD    ZBRCDX                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  IF MBIN = Y                                                     S01117
+     C**  BRANCH INPUT OR DEFAULT MUST BE VALID FOR USER                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     Z-ADDU         V       30     97 ON IF ZERO    S01117
+     C**  DO NOT DO LOKUP IF NO BRANCHES PRESENT                          S01117
+     C           *IN97     IFNE '1'                                       S01117
+     C           ZBRCDX    LOKUPZBR,V                    90               S01117
+     C           *IN90     IFNE '1'                                       S01117
+     C                     SETON                     97                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C           VBRCD9    ENDSR                                          S01117
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C****************************************************************    S01117
+0368 C**
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+0369 C**
+     C********************************************************************S01194
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+0370 C********************************************************************
+0371 O*DL0140FME****    25                                                                   BUG2120
+     O***************          *IN21      1                               S01117
+     O***************          *IN29      2                               S01117
+     O***************          *IN80      3                               S01117
+0373 O***************          SRNID      5                               S01117
+0374 O***************          CCNM      19                               S01117
+0375 O***************          MTIME     27 '  .  .  '                    S01117
+0376 O***************          WSID      30                               S01117
+0377 O***************          PNA,1     37                               S01117
+0378 O***************          PNA,2     44                               S01117
+0379 O***************          PNA,3     51                               S01117
+0380 O***************          PNA,4     58                               S01117
+0381 O***************          PNA,5     65                               S01117
+0382 O***************          MSSGE     94                               S01117
+0383 O***************          CCYCD     97                               S01117
+      **********                                                                             BUG2120
+0372 O**********                         K8 'DL0140F1'                                       BUG2120
+0373 O**********               SRNID      2                                           S01117 BUG2120
+     O**********               SBRCA      5                                           S01117 BUG2120
+0374 O*****************        CCNM      23                        S01117 S01194
+     O**********               A6CYNM    19                                           S01194 BUG2120
+0375 O**********               MTIME     27 '  .  .  '                                S01117 BUG2120
+0376 O**********               WSID      30                                           S01117 BUG2120
+0377 O**********               PNA,1     37                                           S01117 BUG2120
+0378 O**********               PNA,2     44                                           S01117 BUG2120
+0379 O**********               PNA,3     51                                           S01117 BUG2120
+0380 O**********               PNA,4     58                                           S01117 BUG2120
+0381 O**********               PNA,5     65                                           S01117 BUG2120
+0382 O**********               MSSGE    110                                           S01117 BUG2120
+0382 O**********               CCYCD    113                                           S01117 BUG2120
+     O**********               SBRCA    116                                           091890 BUG2120
+0384 O**********                                                                             BUG2120
+0385 O********E*       22                                                                    BUG2120
+0386 O****************                   K8 'DL0140F2'                    S01117
+0387 O****************         NOSN       2                               E10185
+0388 O****************         CSNM      13                               E10185
+0389 O*****                  28UNALL     13                               E80840
+0390 O****************         PNX,1 L   24                               E10185
+W20  O****************         PNX,2 L   35                               E10185
+0392 O****************         PNX,3 L   46                               E10185
+0393 O****************         PNX,4 L   57                               E10185
+0394 O****************         PNX,5 L   68                               E10185
+     O****************         *IN21      1                               S01117
+0387 O****************         NOSN       3                               S01117
+0388 O****************         CSNM      14                               S01117
+0390 O****************         PNX,1 L   25                               E10185
+0391 O****************         PNX,2 L   36                               E10185
+0392 O****************         PNX,3 L   47                               E10185
+0393 O****************         PNX,4 L   58                               E10185
+0394 O****************         PNX,5 L   69                               E10185
+0386 O**********                         K8 'DL0140F2'                                S01117 BUG2120
+0387 O**********               NOSN       2                                           S01117 BUG2120
+0388 O**********               CSNM      13                                           S01117 BUG2120
+     O*****************        BRCA      17                        S01117 S01194
+     O**********               A7BRCD    16                                           S01194 BUG2120
+0390 O**********               PNX,1 L   27                                           E10185 BUG2120
+0391 O**********               PNX,2 L   38                                           E10185 BUG2120
+0392 O**********               PNX,3 L   49                                           E10185 BUG2120
+0393 O**********               PNX,4 L   60                                           E10185 BUG2120
+0394 O**********               PNX,5 L   71                                           E10185 BUG2120
+0395 O**********                                                                             BUG2120
+     O********D*       24N34                                                                 BUG2120
+0397 O****************                   K8 'DL0140F3'                    S01117
+     O****************         *IN80      1                               S01117
+     O****************         *IN21      2                               S01117
+0398 O****************         SRNID      4                               S01117
+0399 O****************         MSSGE     33                               S01117
+0400 O****************         CCYCD     36                               S01117
+0397 O**********                         K8 'DL0140F3'                                       BUG2120
+0398 O**********               SRNID      2                                           S01117 BUG2120
+0399 O**********               MSSGE     47                                           S01117 BUG2120
+0400 O**********               CCYCD     50                                           S01117 BUG2120
+     O**********               SBRCA     53                                           S01117 BUG2120
+     O********D*       34                                                                    BUG2120
+     O****************                   K8 'DL0140F4'                    S01117
+     O****************         *IN80      1                               S01117
+     O****************         *IN21      2                               S01117
+     O****************         SRNID      4                               S01117
+     O****************         MTIME     12 '  .  .  '                    S01117
+     O****************         WSID      15                               S01117
+     O****************         MSSGE     44                               S01117
+     O****************         CCYCD     47                               S01117
+     O**********                         K8 'DL0140F4'                                       BUG2120
+     O**********               SRNID      2                                           S01117 BUG2120
+     O**********               MTIME     10 '  .  .  '                                S01117 BUG2120
+     O**********               WSID      13                                           S01117 BUG2120
+     O**********               MSSGE     58                                           S01117 BUG2120
+     O**********               CCYCD     61                                           S01117 BUG2120
+     O**********               SBRCA     64                                           S01117 BUG2120
+     O* NEW/UNALLOC MESSAGE REMOVED FROM MSG ARRAY                        E80840
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   MSG
+*           INVALID COMMAND KEY             *                             S01117
+*            NEW CURRENCY CODE              *                             S01117
+*          INVALID CURRENCY CODE            *                             S01117
+*               COMPLETE                    *                             S01117
+ USER NOT AUTHORISED TO BANK LEVEL FUNCTIONS                              S01117
+*           INVALID BRANCH CODE             *                             S01117
+*      USER NOT AUTHORISED TO BRANCH        *                             S01117

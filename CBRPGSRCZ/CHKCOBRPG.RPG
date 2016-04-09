@@ -1,0 +1,1110 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CCB024
+/*STD *  RPGSQL                                                       *                       CCB024
+/*EXI *  TEXT('Midas CB Program to validate COB files')               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CHKCOBRPG - PROGRAM TO CHECK VALIDITY OF COB FILES           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CCB020C            Date 16May13               *
+      *  Prev Amend No. CCB024             Date 06Aug12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01417             DATE 07JUL93               *
+     F*                 E39976             DATE 30APR92               *
+     F*                 E27972             DATE 03SEP91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *   CCB020C - COB Restructure - Secondary COB Infrastructure    *
+      *   CCB024 - COB Restructure - COB Tuning                       *
+      *   CCB020 - COB Restructure - Secondary COB Infrastructure     *
+     F*   S01417 - Alter Report 'CHKCOBP1' processing.                *   S01417
+     F*            Update 'CHKCMPD2' No-Outstanding-Dependencies      *   S01417
+     F*                when not accurate.                             *   S01417
+     F*            Add code to call RPG Prog 'CB9010', which          *   S01417
+     F*            checks Dependencies file for Dependency Loops.     *   S01417
+     F*                If one occurs PGM CB9010 produces a report     *   S01417
+     F*                (CB9010P1) and this PGM reports its existence. *   S01417
+     F*                                                               *
+     F*   E39976 - Performance fix. Stop pgm doing OPEN and CLOSE     *
+     F*            of logical file to reposition file cursor to the   *
+     F*            beginning of file. Use *LOVAL SETLL as this amounts*
+     F*            to the same but with approx 75% time saving.       *
+     F*            e.g. Without fix time to run 2mins 42secs          *
+     F*                 With fix time to run    0mins 39secs          *
+     F*                                                               *
+     F*  E27972  -  IF THE NUMBER OF OUTSTANDING DEPENDENCIES         *
+     F*             DEFINED ON THE COMPONENTS FILE IS ZERO THEN       *
+     F*             WRITE THE DETAILS OF THE DISCREPANCY TO THE       *
+     F*             REPORT.                                           *
+     F*             A SECOND PHASE OF THIS FIX WAS DONE ON 20OCT91    *
+     F*             AFTER RECEIVING NEW DETAILS FROM GREG.            *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+      /SPACE 2
+     FCHKCOBP1O   E                    PRINTER      KINFDS PIDS
+     FCBMEXCL2IF  E           K        DISK
+     FCBMDCNL1IF  E           K        DISK
+     FCHKDPRL1IF  E           K        DISK
+     FCHKCMPL2UF  E           K        DISK
+     FCHKDPRL2UF  E           K        DISK
+     F*CHKCMPL1UF*E***********K        DISK                           UC  E39976
+     FCHKCMPL1UF  E           K        DISK                               E39976
+     F*
+     F/EJECT
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    31      COMPONENT DEFINED ON DEPENDENCY NOT FOUND
+     F*    32      NO RECORDS AFTER OPEN AND CLOSE OF COMPONENT FILE
+     F*    33      NO DEPENDENCIES FOUND FOR COMPONENT
+     F*    34      COBBEGIN COMPONENT NOT FOUND
+     F*    35      NO RECORDS ON MUTUALLY EXCLUSIVE COMPONENT FILE
+     F*            WHEN FLAG IS Y ON COMPONENTS FILE
+     F*    36      NO RECORDS ON MODULE CONDITIONS FILE
+     F*            WHEN FLAG IS Y ON COMPONENTS FILE
+     F*    41      END OF FILE ON COMPONENTS FILE
+     F*    42      END OF FILE ON DEPENDENCIES FILE
+     F*    51      END OF FILE ON COMPONENTS FILE
+     F*    52      END OF FILE ON DEPENDENCIES FILE
+     F*    62      CONTROL OF PRINTER OUTPUT FOR DEPCON SUBROUTINE
+     F*    85      SET ON WHEN FIRST HEADING WRITTEN
+     F*
+     F*    LR      LAST RECORD INDICATOR
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/EJECT
+      /SPACE 2
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    CMD    80  80  1                                S01417
+     E** COMMAND ARRAY                                                    S01417
+     E*                                                                   S01417
+     E                    LIBX       10  1                                S01417
+     E                    LIBY       10  1                                S01417
+     E** ARRAYS TO SET UP LIBRARY NAME IN CORRECT POSITION                S01417
+     E*                                                                   S01417
+     E********************@CN     1   1 25                                S01417
+     E** ARRAY OF ODD NAMES
+     E*
+     E/EJECT
+      /SPACE 2
+     I*
+     ICHKCMPD1
+     I              DHCOTT                          D1COTT
+     I              DHCSEQ                          D1CSEQ
+     I              DHCSTS                          D1CSTS
+     I              DHCSHP                          D1CSHP
+     I              DHCEPY                          D1CEPY
+     I              DHCTSL                          D1CTSL
+     I              DHCFOB                          D1CFOB
+     I              DHCTXT                          D1CTXT
+     I              DHCPRM                          D1CPRM
+     I              DHCRQD                          D1CRQD
+     I              DHCMOD                          D1CMOD
+     I              DHCEMI                          D1CEMI
+     I              DHCRES                          D1CRES
+     I              DHCODP                          D1CODP
+     I              DHCMEF                          D1CMEF
+     I              DHCFRQ                          D1CFRQ
+     I              DHCSDE                          D1CSDE
+     I              DHCSTI                          D1CSTI
+     I              DHCEDE                          D1CEDE
+     I              DHCETI                          D1CETI
+     I              DHCHTB                          D1CHTB
+     I              DHCHTA                          D1CHTA
+     I              DHCFAL                          D1CFAL
+     I*
+     ICHKCMPD2
+     I              DHCOTT                          D2COTT
+     I              DHCSEQ                          D2CSEQ
+     I              DHCSTS                          D2CSTS
+     I              DHCSHP                          D2CSHP
+     I              DHCEPY                          D2CEPY
+     I              DHCTSL                          D2CTSL
+     I              DHCFOB                          D2CFOB
+     I              DHCTXT                          D2CTXT
+     I              DHCPRM                          D2CPRM
+     I              DHCRQD                          D2CRQD
+     I              DHCMOD                          D2CMOD
+     I              DHCEMI                          D2CEMI
+     I              DHCRES                          D2CRES
+     I              DHCODP                          D2CODP
+     I              DHCMEF                          D2CMEF
+     I              DHCFRQ                          D2CFRQ
+     I              DHCSDE                          D2CSDE
+     I              DHCSTI                          D2CSTI
+     I              DHCEDE                          D2CEDE
+     I              DHCETI                          D2CETI
+     I              DHCHTB                          D2CHTB
+     I              DHCHTA                          D2CHTA
+     I              DHCFAL                          D2CFAL
+     I*
+     I/EJECT
+      /SPACE 2
+     ICHKDPRD1
+     I              DIDSON                          D1DSON
+     I              DIDSOS                          D1DSOS
+     I              DIDRUN                          D1DRUN
+     I              DIDDON                          D1DDON
+     I              DIDDOS                          D1DDOS
+     I              DICDST                          D1CDST
+     I*
+     ICHKDPRD2
+     I              DIDSON                          D2DSON
+     I              DIDSOS                          D2DSOS
+     I              DIDRUN                          D2DRUN
+     I              DIDDON                          D2DDON
+     I              DIDDOS                          D2DDOS
+     I              DICDST                          D2CDST
+     I*
+     IPIDS        DS
+     I                                    B 367 3680PRTLN1
+     I** PRINTER FILE DATA STRUCTURE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     IDEPCNT      DS                       5000                                               CCB024
+     I                                        1  10 D3COTT                                    CCB024
+     I                                       11  15 D3CSEQ                                    CCB024
+     I                                       16  65 D3CDSC                                    CCB024
+     I                                       66  68 D3DPCT                                    CCB024
+     I*
+     I/EJECT
+      /SPACE 2
+     C*****************************************************************
+     C*
+     C** DEFINE KEY LISTS
+     C*
+     C           COMKY1    KLIST
+     C                     KFLD           D1COTT
+     C                     KFLD           D1CSEQ
+     C*
+     C           COMKY2    KLIST
+     C                     KFLD           D2COTT
+     C                     KFLD           D2CSEQ
+     C*
+     C           DEPKEY    KLIST
+     C                     KFLD           D2DSON
+     C                     KFLD           D2DSOS
+     C*                                                                   S01417
+     C           *ENTRY    PLIST                                          S01417
+     C                     PARM           NOTVAL  1                       S01417
+     C                     PARM           LIBR   10                       S01417
+     C*                                                                   S01417
+     C/EJECT
+      /SPACE 2
+     C** CHECK WHETHER THE NUMBER OF OUTSTANDING DEPENDENCIES
+     C** DEFINED ON THE COMPONENTS FILE AND THE ACTUAL NUMBER
+     C** OF DEPENDENCIES DEFINED ON THE DEPENDENCY FILE IS CORRECT
+     C** FOR ALL COMPONENTS
+     C*
+     C                     EXSR DEPCON
+     C                     EXSR DEPMAX                                                        CCB024
+     C*                                                                   S01417
+     C**  USE QCMDEXC TO COPY THE CORRECTED COMPONENTS FILE               S01417
+     C*                                                                   S01417
+     C                     MOVE *BLANKS   WCMD                            S01417
+     C                     MOVEALIBR      LIBX                            S01417
+     C                     MOVEA*BLANKS   LIBY,1                          S01417
+     C                     Z-ADD10        X       20                      S01417
+     C                     Z-ADD10        Y       20                      S01417
+     C           X         DOWNE0                                         S01417
+     C           LIBX,X    IFNE ' '                                       S01417
+     C                     MOVEALIBX,X    LIBY,Y                          S01417
+     C                     SUB  1         Y                               S01417
+     C                     END                                            S01417
+     C                     SUB  1         X                               S01417
+     C                     END                                            S01417
+     C*                                                                   S01417
+     C                     MOVEALIBY      CMD,32                          S01417
+     C                     MOVEACMD       WCMD                            S01417
+     C                     CALL 'QCMDEXC'                                 S01417
+     C                     PARM           WCMD   80                       S01417
+     C                     PARM 80        WLEN   155                      S01417
+     C*
+     C                     MOVE *BLANKS   NOTVAL                          S01417
+     C*                                                                   S01417
+     C                     CALL 'CB9010'                                  S01417
+     C                     PARM           NOTVAL                          S01417
+     C*                                                                   S01417
+     C           NOTVAL    IFEQ 'L'                                       S01417
+     C           *IN85     IFEQ '0'                                       S01417
+     C                     EXSR HDRLIN                                    S01417
+     C                     END                                            S01417
+     C                     WRITELOOPFND                                   S01417
+     C                     MOVE 'Y'       NOTVAL                          S01417
+     C                     END                                            S01417
+     C*                                                                   S01417
+     C           NOTVAL    IFEQ 'Y'                                       S01417
+     C                     SETON                     U7U8                 S01417
+     C                     END                                            S01417
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C*
+     C                     EXSR SETUP
+     C*
+     C** READ COMPONENTS FILE ON NO OF OUTSTANDING DEPENDENCIES = 0
+     C***PERFORM*CLOSE*AND*OPEN*OF*FILE*TO*ENSURE*ALL*RECORDS*ACCESSED****E39976
+     C** Set lower limits to the the start of the file to ensure all      E39976
+     C** records accessed.                                                E39976
+     C*                                                                   E39976
+     C*********************CLOSECHKCMPL1                                  E39976
+     C*********************OPEN CHKCMPL1                                  E39976
+     C           *LOVAL    SETLLCHKCMPL1                                  E39976
+     C                     READ CHKCMPD1                 32
+     C*
+     C/EJECT
+      /SPACE 2
+     C** DO WHILE RECORDS FOUND ON COMPONENTS FILE
+     C*
+     C           *IN32     DOWEQ'0'
+     C*
+     C** ACCESS ALL DEPENDS-ON COMPONENTS FOR THIS COMPONENT
+     C*
+     C           COMKY1    SETLLCHKDPRD2
+     C           COMKY1    READECHKDPRD2                 33
+     C*
+     C** IF COMPONENT FOUND WAS 'COBEND' THEN THE
+     C** COMPONENTS FILE HAS BEEN READ.
+     C** 1 - UPDATE 'COBEND' COMPONENT RECORD TO COMPLETE
+     C***2*-*PERFORM*PROCESSING*TO*CHECK*WHICH*RECORDS*ARE*COMPLETE       S01417
+     C** 2 - WRITE END OF REPORT DETAILS AND EXIT PROGRAM                 S01417
+     C*
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C********** D1COTT    IFEQ 'COBEND'                                                      CCB020
+     C           D1COTT    IFEQ SCOBFI                                                        CCB020
+     C*
+     C                     MOVE 'C'       D1CSTS
+     C                     EXCPTCOMSTS
+     C*
+     C*********************EXSR*VALCMP                                    S01417
+     C*
+     C** IF NO REPORT HAS BEEN WRITTEN                                    S01417
+     C** THEN WRITE THE NO ERRORS LINE                                    S01417
+     C*                                                                   S01417
+     C           *IN85     IFEQ '0'                                       S01417
+     C                     EXSR HDRLIN                                    S01417
+     C                     WRITENODTRP                                    S01417
+     C                     EXSR DEPRPT                                                        CCB024
+     C                     END                                            S01417
+     C*                                                                   S01417
+     C** WRITE END OF REPORT LINE                                         S01417
+     C*                                                                   S01417
+     C                     WRITERPTEND                                    S01417
+     C                     SETON                     LR                   S01417
+     C                     RETRN                                          S01417
+     C*                                                                   S01417
+     C                     END
+     C*
+     C** IF THE COMPONENT IS NOT FOUND AS A DEPENDED-ON
+     C** COMPONENT IN THE DEPENDENCIES FILE THEN
+     C** WRITE ERROR REPORT LINE AND END THE PROGRAM
+     C*
+     C           *IN33     IFEQ '1'
+     C                     EXSR RPTLIN                                 ***
+     C                     EXSR ENDPGM
+     C                     END
+     C*
+     C/EJECT
+      /SPACE 2
+     C** WHILE DEPENDENCIES EXIST ACCESS THE
+     C** COMPONENTS FILE FOR EACH DEPENDS-ON COMPONENT
+     C*
+     C           *IN33     DOWEQ'0'
+     C*
+     C           DEPKEY    CHAINCHKCMPD2             31
+     C*
+     C** IF THE DEPENDS-ON COMPONENTS DOES NOT EXIST
+     C** THEN WRITE ERROR REPORT LINE AND EXIT PROGRAM
+     C*
+     C           *IN31     IFEQ '1'
+     C                     EXSR RPTLIN                                 ***
+     C                     EXSR ENDPGM                                 ***
+     C                     END
+     C*
+     C** IF THE MUTUALLY EXCLUSIVE COMPONENTS FLAG IS 'Y' CHECK THAT
+     C** A RECORD EXISTS ON THE MUTUALLY EXCLUSIVE COMPONENTS FILE
+     C*
+     C           D2CMEF    IFEQ 'Y'
+     C*
+     C                     EXSR MEXCHK
+     C*
+     C                     END
+     C*
+     C** IF THE MODULE CONDITIONS FLAG IS 'Y' CHECK THAT
+     C** A RECORD EXISTS ON THE MODULE CONDITIONS FILE
+     C*
+     C           D2CEMI    IFEQ 'Y'
+     C*
+     C                     EXSR MDCCHK
+     C*
+     C                     END
+      *                                                                                      CCB020C
+     C                     SETOF                     4041                                    CCB020C
+     C                     MOVELD2DDOS    W#DDOS  1                                          CCB020C
+     C                     MOVELD2DSOS    W#DSOS  1                                          CCB020C
+     C                     MOVELD1CSEQ    W#CSEQ  1                                          CCB020C
+      *                                                                                      CCB020C
+      ** Secondary CoB component has an incorrect dependency                                 CCB020C
+      ** with Main CoB component                                                             CCB020C
+      *                                                                                      CCB020C
+     C           W#DDOS    IFEQ '2'                                                          CCB020C
+     C           W#DSOS    ANDNE'2'                                                          CCB020C
+     C                     SETON                     40U7U8                                  CCB020C
+     C                     MOVELD2DDON    P#DDON                                             CCB020C
+     C                     MOVELD2DDOS    P#DDOS                                             CCB020C
+     C                     MOVELD2DSON    P#DSON                                             CCB020C
+     C                     MOVELD2DSOS    P#DSOS                                             CCB020C
+     C                     EXSR RPTLIN                                                       CCB020C
+     C                     SETOF                     40                                      CCB020C
+     C                     ENDIF                                                             CCB020C
+      *                                                                                      CCB020C
+      ** NWD CoB component cannot have a sequence number                                     CCB020C
+      ** beginning with '2'                                                                  CCB020C
+      *                                                                                      CCB020C
+     C           D1CFRQ    IFEQ '39'                                                         CCB020C
+     C           W#CSEQ    ANDEQ'2'                                                          CCB020C
+     C                     MOVELD1COTT    P#COTT                                             CCB020C
+     C                     MOVELD1CSEQ    P#CSEQ                                             CCB020C
+     C                     SETON                     41U7U8                                  CCB020C
+     C                     EXSR RPTLIN                                                       CCB020C
+     C                     SETOF                     41                                      CCB020C
+     C                     ENDIF                                                             CCB020C
+     C*
+     C** COMPLETE THE DEPENDENCY AS THOUGH THE COMPONENT HAD RUN
+     C*
+     C                     EXSR CMPDEP
+     C*
+     C** READ ANY FURTHER DEPENDENCIES FOR THIS COMPONENT
+     C*
+     C           COMKY1    READECHKDPRD2                 33
+     C*
+     C                     END
+     C/EJECT
+      /SPACE 2
+     C*
+     C** WHEN DEPENDENCIES HAVE BEEN COMPLETED
+     C** UPDATE THE COMPONENT TO BE COMPLETE
+     C*
+     C                     MOVE 'C'       D1CSTS
+     C                     EXCPTCOMSTS
+     C*
+     C** READ COMPONENTS FILE ON NO OF OUTSTANDING DEPENDENCIES = 0
+     C***PERFORM*CLOSE*AND*OPEN*OF*FILE*TO*ENSURE*ALL*RECORDS*ACCESSED****E39976
+     C** Set lower limits to the the start of the file to ensure all      E39976
+     C** records accessed.                                                E39976
+     C*                                                                   E39976
+     C*********************CLOSECHKCMPL1                                  E39976
+     C*********************OPEN CHKCMPL1                                  E39976
+     C           *LOVAL    SETLLCHKCMPL1                                  E39976
+     C                     READ CHKCMPD1                 32
+     C                     END
+     C*
+     C***IF*NO*FURTHER*RECORDS*TO*BE*CHECKED*PERFORM                      S01417
+     C***PROCESSING*TO*CHECK*WHICH*RECORDS*ARE*COMPLETE                   S01417
+     C*                                                                   S01417
+     C*********************EXSR*VALCMP                                    S01417
+     C*                                                                   S01417
+     C                     SETON                         LR               S01417
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** INDEX OF SUBROUTINES
+     C*
+     C** CMPDEP - COMPLETE THE DEPENDENCY AS THOUGH THE COMPONENT HAD
+     C**          RUN
+     C** HDRLIN - SUBROUTINE TO WRITE REPORT HEADER LINE
+     C***COMWRT*-*SUBROUTINE*TO*WRITE*COMPONENTS*NOT                      S01417
+     C************SET*TO*COMPLETE*WITHIN*PROCESSING                       S01417
+     C***DEPWRT*-*SUBROUTINE*TO*WRITE*DEPENDENCIES*NOT                    S01417
+     C************SET*TO*COMPLETE*BY*PROCESSING*TO*REPORT                 S01417
+     C** DEPCON - SUBROUTINE TO CHECK DEPENDENCY FILE CONFLICT
+     C** MEXCHK - SUBROUTINE TO CHECK WHETHER MUTUALLY EXCLUSIVE
+     C**          COMPONENTS EXIST ON FILE CBMEXCL1 IF FLAG HAS
+     C**          BEEN SET TO 'Y' ON THE COMPONENTS FILE
+     C** MDCCHK - SUBROUTINE TO CHECK WHETHER RECORDS EXIST ON THE
+     C**          MODULE CONDITIONS FILE CBMDCNL1 IF FLAG HAS
+     C**          BEEN SET TO 'Y' ON THE COMPONENTS FILE
+     C** SETUP  - SUBROUTINE TO INITIALISE PROGRAM
+     C** RPTLIN - SUBROUTINE TO WRITE A REPORT LINE
+     C***VALCMP*-*CHECK*WHICH*COMPONENTS*HAVE*COMPLETED*AND               S01417
+     C************REPORT*ANY*WHICH*WERE*NOT*COMPLETED.                    S01417
+     C************THEN*TERMINATE*THE*PROGRAM.                             S01417
+     C** ENDPGM - SUBROUTINE USED TO END THE PROGRAM
+     C*
+     C********************************************************************
+     C/EJECT
+      /SPACE 2
+      *****************************************************************                       CCB024
+      *                                                               *                       CCB024
+      * *INZSR - Initial Routine                                      *                       CCB024
+      * Called By: Program Start                                      *                       CCB024
+      * Calls: None                                                   *                       CCB024
+      *                                                               *                       CCB024
+      *****************************************************************                       CCB024
+     C           *INZSR    BEGSR                                                              CCB024
+     C                     Z-ADD0         ROWCTR 100                                          CCB024
+     C                     Z-ADD5000      ARRSZ   50                                          CCB024
+     C           *LIKE     DEFN ARRSZ     IX                                                  CCB024
+     C                     Z-ADD40        CMPLMT  20                                          CCB024
+      *                                                                                       CCB024
+      ** Prepare SQL statements and cursor fetch                                              CCB024
+      *                                                                                       CCB024
+     C/EXEC SQL                                                                               CCB024
+     C+ declare DepCsr insensitive scroll cursor for                                          CCB024
+     C+ select  DHCOTT                                                                        CCB024
+     C+        ,DHCSEQ                                                                        CCB024
+     C+        ,DHCTXT                                                                        CCB024
+     C+        ,DHCODP                                                                        CCB024
+     C+ from CHKCMPPD                                                                         CCB024
+     C+ where DHCODP > :CMPLMT                                                                CCB024
+     C+ order by  DHCOTT                                                                      CCB024
+     C+          ,DHCSEQ                                                                      CCB024
+     C+ optimize for 100 rows                                                                 CCB024
+     C/END-EXEC                                                                               CCB024
+     C                     ENDSR                                                              CCB024
+      /EJECT                                                                                  CCB024
+      /SPACE 2                                                                                CCB024
+     C*
+     C** CMPDEP
+     C*
+     C** COMPLETE THE DEPENDENCY AS THOUGH THE COMPONENT HAD RUN
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           CMPDEP    BEGSR
+     C*
+     C** SUBTRACT ONE FROM NO OF OUTSTANDING DEPENDENCIES FOR
+     C** THE DEPENDS-ON COMPONENT AND UPDATE THE COMPONENTS FILE
+     C*
+     C                     SUB  1         D2CODP
+     C                     EXCPTCOMODP
+     C*
+     C** UPDATE THE DEPENDENCY RECORD BEING CHECKED TO COMPLETE
+     C*
+     C                     MOVE 'C'       D2CDST
+     C                     EXCPTDEPSTS
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** HDRLIN
+     C*
+     C** SUBROUTINE TO WRITE REPORT HEADER LINE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           HDRLIN    BEGSR
+     C*
+     C** WRITE THE REPORT HEADING TO THE REPORT
+     C** SET ON INDICATOR TO CONFIRM FIRST PAGE WRITTEN
+     C*
+     C                     WRITERPTHDG
+     C                     SETON                     85
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C***********                                                         S01417
+     C***COMWRT                                                           S01417
+     C***********                                                         S01417
+     C***SUBROUTINE*TO*WRITE*COMPONENTS*NOT                               S01417
+     C***SET*TO*COMPLETE*WITHIN*PROCESSING                                S01417
+     C***********                                                         S01417
+     C***CALLS*SUBROUTINE*-*HDRLIN                                        S01417
+     C***********                                                         S01417
+     C********************************************************************S01417
+     C***********                                                         S01417
+     C***********COMWRT    BEGSR                                          S01417
+     C***********                                                         S01417
+     C***SET*POINTER*TO*BEGINING*OF*FILE*AND*READ*ALL*RECORDS             S01417
+     C***********                                                         S01417
+     C************LOVAL    SETLLCHKCMPD2                                  S01417
+     C***********          READ CHKCMPD2                 41               S01417
+     C***********                                                         S01417
+     C************IN41     DOWEQ'0'                                       S01417
+     C***********                                                         S01417
+     C***IF*COMPONENT*WAS*NOT*SET*TO*COMPLETE*BY                          S01417
+     C***THE*PROCESSING*THEN*WRITE*A*LINE*TO*THE*REPORT                   S01417
+     C***********                                                         S01417
+     C***********D2CSTS    IFNE 'C'                                       S01417
+     C***********                                                         S01417
+     C***IF*WRITING*FIRST*PAGE*OR*AT*BOTTOM*OF*PAGE                       S01417
+     C***WRITE*A*NEW*HEADING                                              S01417
+     C***********                                                         S01417
+     C************IN85     IFEQ '0'                                       S01417
+     C***********PRTLN1    ORGE 56                                        S01417
+     C***********          EXSR HDRLIN                                    S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***WRITE*COMPONENT*IS*INCOMPLETE*LINE                               S01417
+     C***********                                                         S01417
+     C***********          WRITEINCCMP                                    S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***********          READ CHKCMPD2                 41               S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***********          ENDSR                                          S01417
+     C***********                                                         S01417
+     C/EJECT                                                              S01417
+      /SPACE 2                                                            S01417
+     C********************************************************************S01417
+     C***********                                                         S01417
+     C***DEPWRT                                                           S01417
+     C***********                                                         S01417
+     C***SUBROUTINE*TO*WRITE*DEPENDENCIES*NOT                             S01417
+     C***SET*TO*COMPLETE*BY*PROCESSING*TO*REPORT                          S01417
+     C***********                                                         S01417
+     C***CALLS*SUBROUTINE*-*HDRLIN                                        S01417
+     C***********                                                         S01417
+     C********************************************************************S01417
+     C***********                                                         S01417
+     C***********DEPWRT    BEGSR                                          S01417
+     C***********                                                         S01417
+     C***SET*POINTER*TO*BEGINING*OF*FILE*AND*READ*ALL*RECORDS             S01417
+     C***********                                                         S01417
+     C************LOVAL    SETLLCHKDPRD2                                  S01417
+     C***********          READ CHKDPRD2                 42               S01417
+     C***********                                                         S01417
+     C************IN42     DOWEQ'0'                                       S01417
+     C***********                                                         S01417
+     C***IF*DEPENDENCY*WAS*NOT*SET*TO*COMPLETE*BY                         S01417
+     C***THE*PROCESSING*THEN*WRITE*A*LINE*TO*THE*REPORT                   S01417
+     C***********                                                         S01417
+     C***********D2CDST    IFNE 'C'                                       S01417
+     C***********                                                         S01417
+     C***IF*WRITING*FIRST*PAGE*OR*AT*BOTTOM*OF*PAGE                       S01417
+     C***WRITE*A*NEW*HEADING                                              S01417
+     C***********                                                         S01417
+     C************IN85     IFEQ '0'                                       S01417
+     C***********PRTLN1    ORGE 56                                        S01417
+     C***********          EXSR HDRLIN                                    S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***WRITE*DEPENDENCY*IS*INCOMPLETE*LINE                              S01417
+     C***********                                                         S01417
+     C***********          WRITEINCDPR                                    S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***********          READ CHKDPRD2                 42               S01417
+     C***********          END                                            S01417
+     C***********                                                         S01417
+     C***********          ENDSR                                          S01417
+     C***********                                                         S01417
+     C/EJECT                                                              S01417
+      /SPACE 2                                                            S01417
+     C********************************************************************
+     C*
+     C** DEPCON
+     C*
+     C** SUBROUTINE TO REPORT CONFLICT BETWEEN THE NUMBER OF
+     C** OUTSTANDING DEPENDENCIES DEFINED ON THE COMPONENTS FILE AND
+     C** THE ACTUAL NUMBER OF DEPENDENCIES DEFINED ON THE
+     C** DEPENDENCY FILE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DEPCON    BEGSR
+     C*
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** SET COUNT TO ZERO
+     C*
+     C                     Z-ADD0         NREC
+     C*
+     C** READ COMPONENTS FILE
+     C*
+     C                     READ CHKCMPD2                 51
+     C*
+     C** DO WHILE RECORDS FOUND ON COMPONENTS FILE
+     C*
+     C           *IN51     DOWEQ'0'
+     C*
+     C** READ AND COUNT ALL DEPENDENCY RECORDS FOR EACH COMPONENT
+     C*
+     C           COMKY2    SETLLCHKDPRD1
+     C           COMKY2    READECHKDPRD1                 52
+     C           *IN52     DOWEQ'0'
+     C                     ADD  1         NREC
+     C           COMKY2    READECHKDPRD1                 52
+     C                     END
+     C*
+     C***IF*THE*COUNT*IS*NOT*EQUAL*TO*THE*NUMBER*OF*OUTSTANDING*****      E27972
+     C***DEPENDENCIES*DEFINED*ON*THE*COMPONENTS*FILE*WRITE*THE******      E27972
+     C***DETAILS*OF*THE*DISREPANCY*TO*THE*REPORT********************      E27972
+     C*                                                                   E27972
+     C** IF THE COUNT IS NOT EQUAL TO THE NUMBER OF OUTSTANDING           E27972
+     C** DEPENDENCIES OR THE NUMBER OF OUTSTANDING DEPENDENCIES           E27972
+     C** DEFINED ON THE COMPONENTS FILE IS ZERO AND IT IS NOT THE         E27972
+     C** DUMMY COMPONENT 'COBBEGIN' THE WRITE DETAILS OF THE              E27972
+     C** DISCREPANCY TO THE REPORT.                                       E27972
+     C*
+     C           NREC      IFNE D2CODP                                    E27972
+     C*
+     C***********D2COTT****ORNE*'COBBEGIN'                          E27972S01417
+     C***********D2CODP****ANDEQ0                                   E27972S01417
+     C*
+     C*          D2COTT    ANDNE'COBBEGIN'                                S01417
+     C*
+     C** IF WRITING FIRST PAGE OR AT BOTTOM OF PAGE WRITE
+     C** A NEW HEADING AND SET ON REPORT WRITTEN INDICATOR
+     C*
+     C           *IN85     IFEQ '0'
+     C           PRTLN1    ORGE 56
+     C                     EXSR HDRLIN
+     C                     END
+     C*
+     C***IF*NO*RECORDS*WERE*FOUND*ON*THE*DEPENDENCIES*FILE***********     S01417
+     C***THEN*SET*OUTPUT*LINE*INDICATOR*ON*AND*END*THE*PROGRAM*******     S01417
+     C*                                                                   S01417
+     C***********NREC      IFEQ 0                                         S01417
+     C*********************SETON                     62                   S01417
+     C*********************WRITEDEPER1                             E27972 S01417
+     C*********************EXSR ENDPGM                             E27972 S01417
+     C*********************END                                            S01417
+     C******                                                              S01417
+     C*********************WRITEDEPER1                                    S01417
+     C******                                                              S01417
+     C** IF NUMBER OF OUTSTANDING DEPENDENCIES DEFINED ON COMPONENTS      S01417
+     C** FILE IS ZERO, SET ON OUTPUT LINE INDICATOR                       S01417
+     C*                                                                   S01417
+     C           D2CODP    IFEQ 0                                         S01417
+     C                     SETON                     62                   S01417
+     C                     ELSE                                           S01417
+     C                     SETOF                     62                   S01417
+     C                     END                                            S01417
+     C*                                                                   S01417
+     C** IF NO RECORDS WERE FOUND ON THE DEPENDENCIES FILE,               S01417
+     C** READ NEXT COMPONENT RECORD, RESET THE COUNT                      S01417
+     C*                                                                   S01417
+     C           NREC      IFEQ 0                                         S01417
+     C                     WRITEDEPER1                                    S01417
+     C                     READ CHKCMPD2                 51               S01417
+     C                     Z-ADD*ZEROS    NREC    50                      S01417
+     C                     ITER                                           S01417
+     C                     END                                            S01417
+     C*                                                                   S01417
+     C                     WRITEDEPER1                                    S01417
+     C*                                                                   S01417
+     C** UPDATE COMPONENTS FILE 'NO. OUTSTANDING DEPENDENCIES'            S01417
+     C*                                                                   S01417
+     C                     MOVE NREC      D2CODP                          S01417
+     C                     EXCPTCOMODP                                    S01417
+     C*
+     C           COMKY2    SETLLCHKDPRD1
+     C           COMKY2    READECHKDPRD1                 52
+     C           *IN52     DOWEQ'0'
+     C*
+     C** IF WRITING FIRST PAGE OR AT BOTTOM OF PAGE WRITE
+     C** A NEW HEADING AND SET ON REPORT WRITTEN INDICATOR
+     C*
+     C           *IN85     IFEQ '0'
+     C           PRTLN1    ORGE 56
+     C                     EXSR HDRLIN
+     C                     END
+     C*
+     C                     WRITEDEPER2
+     C           COMKY2    READECHKDPRD1                 52
+     C                     END
+     C*
+     C*********************WRITEDEPER3                                    S01417
+     C*
+     C                     END
+     C*
+     C** READ NEXT COMPONENT RECORD, RESET THE COUNT
+     C** AND SET OFF THE OUTPUT LINE INDICATOR
+     C*
+     C                     READ CHKCMPD2                 51
+     C                     Z-ADD0         NREC    50
+     C                     SETOF                     62
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+      *****************************************************************                       CCB024
+      *                                                               *                       CCB024
+      * DEPMAX - Prepare report on components w/ many predecessors    *                       CCB024
+      * Called By: Main Routine                                       *                       CCB024
+      * Calls: None                                                   *                       CCB024
+      *                                                               *                       CCB024
+      *****************************************************************                       CCB024
+     C           DEPMAX    BEGSR                                                              CCB024
+      *                                                                                       CCB024
+     C/EXEC SQL                                                                               CCB024
+     C+ open DepCsr                                                                           CCB024
+     C/END-EXEC                                                                               CCB024
+      *                                                                                       CCB024
+     C/EXEC SQL                                                                               CCB024
+     C+ get diagnostics :ROWCTR = DB2_NUMBER_ROWS                                             CCB024
+     C/END-EXEC                                                                               CCB024
+      *                                                                                       CCB024
+     C           ROWCTR    IFGT ARRSZ                                                         CCB024
+     C                     Z-ADDARRSZ     ROWCTR                                              CCB024
+     C                     ENDIF                                                              CCB024
+      *                                                                                       CCB024
+     C/EXEC SQL                                                                               CCB024
+     C+ fetch next from DepCsr                                                                CCB024
+     C+ for :ROWCTR rows into :DEPCNT                                                         CCB024
+     C/END-EXEC                                                                               CCB024
+      *                                                                                       CCB024
+     C/EXEC SQL                                                                               CCB024
+     C+ close DepCsr                                                                          CCB024
+     C/END-EXEC                                                                               CCB024
+      *                                                                                       CCB024
+     C                     MOVE *OFF      *IN37                                               CCB024
+     C           ROWCTR    IFGT 0                                                             CCB024
+     C                     MOVE *ON       *IN37                                               CCB024
+     C                     ENDIF                                                              CCB024
+     C                     ENDSR                                                              CCB024
+      /EJECT                                                                                  CCB024
+      *****************************************************************                       CCB024
+      *                                                               *                       CCB024
+      * DEPRPT - Report on components with many predecessors          *                       CCB024
+      * Called By: Main Routine                                       *                       CCB024
+      * Calls: None                                                   *                       CCB024
+      *                                                               *                       CCB024
+      *****************************************************************                       CCB024
+     C           DEPRPT    BEGSR                                                              CCB024
+      *                                                                                       CCB024
+     C           *IN37     IFEQ *ON                                                           CCB024
+      *                                                                                       CCB024
+      ** Begin writing on report if there are dependencies                                    CCB024
+      ** above component limit CMPLMT                                                         CCB024
+      *                                                                                       CCB024
+     C                     Z-ADD1         IX                                                  CCB024
+     C           IX        DOWLEROWCTR                                                        CCB024
+      *                                                                                       CCB024
+     C           IX        OCUR DEPCNT                                                        CCB024
+      *                                                                                       CCB024
+     C           PRTLN1    IFGE 56                                                            CCB024
+     C                     EXSR HDRLIN                                                        CCB024
+     C                     ENDIF                                                              CCB024
+      *                                                                                       CCB024
+     C                     WRITEMODEL                                                         CCB024
+     C                     ADD  1         IX                                                  CCB024
+     C                     ENDDO                                                              CCB024
+      *                                                                                       CCB024
+     C                     ENDIF                                                              CCB024
+      *                                                                                       CCB024
+     C                     ENDSR                                                              CCB024
+      *****************************************************************                       CCB024
+      /EJECT                                                                                  CCB024
+     C********************************************************************
+     C*
+     C** MEXCHK
+     C*
+     C** SUBROUTINE TO CHECK WHETHER MUTUALLY EXCLUSIVE
+     C** COMPONENTS EXIST ON FILE CBMEXCL1 IF FLAG HAS
+     C** BEEN SET TO 'Y' ON THE COMPONENTS FILE
+     C*
+     C** CALLS SUBROUTINES - RPTLIN
+     C*
+     C********************************************************************
+     C*
+     C           MEXCHK    BEGSR
+     C*
+     C           DEPKEY    CHAIN@MEXCG8              35
+     C*
+     C** IF NO RECORD IS FOUND THEN WRITE ERROR
+     C** REPORT LINE AND CONTINUE PROCESSING
+     C*
+     C           *IN35     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     EXSR RPTLIN
+     C                     SETOF                     35
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** MDCCHK
+     C*
+     C** SUBROUTINE TO CHECK WHETHER RECORDS EXIST ON THE
+     C** MODULE CONDITIONS FILE CBMDCNL1 IF FLAG HAS
+     C** BEEN SET TO 'Y' ON THE COMPONENTS FILE
+     C*
+     C** CALLS SUBROUTINES - RPTLIN
+     C*
+     C********************************************************************
+     C*
+     C           MDCCHK    BEGSR
+     C*
+     C           DEPKEY    CHAIN@DJREGN              36
+     C*
+     C** IF NO RECORD IS FOUND THEN WRITE ERROR
+     C** REPORT LINE AND CONTINUE PROCESSING
+     C*
+     C           *IN36     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     EXSR RPTLIN
+     C                     SETOF                     36
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** SETUP
+     C*
+     C** SUBROUTINE TO INITIALISE PROGRAM
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           SETUP     BEGSR
+     C*
+     C** SET UP KEY FOR CHAIN TO COMPONENTS FILE TO CHECK
+     C** THAT DUMMY COMPONENT 'COBBEGIN' EXISTS IN FILE
+     C*
+     C                     MOVEL'COBBEGIN'D1COTT
+     C                     MOVEL'00001'   D1CSEQ
+     C*
+     C           COMKY1    CHAINCHKCMPD2             34
+     C*
+     C** IF 'COBBEGIN' IS NOT FOUND THEN WRITE
+     C** ERROR REPORT LINE AND END THE PROGRAM
+     C*
+     C           *IN34     IFEQ '1'
+     C                     EXSR RPTLIN
+     C                     EXSR ENDPGM
+     C                     END
+     C*
+     C** REMOVE COMPLETED STATUS FROM 'COBBEGIN'
+     C** TO ALLOW PROGRAM TO WORK
+     C*
+     C                     MOVE ' '       D2CSTS
+     C                     EXCPTBEGSTS
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** RPTLIN
+     C*
+     C** SUBROUTINE TO WRITE A REPORT LINE
+     C*
+     C** CALLS SUBROUTINE - HDRLIN
+     C*
+     C********************************************************************
+     C*
+     C           RPTLIN    BEGSR
+     C*
+     C** IF WRITING FIRST PAGE OR AT BOTTOM OF PAGE
+     C** WRITE A NEW HEADING
+     C*
+     C           *IN85     IFEQ '0'
+     C           PRTLN1    ORGE 56
+     C                     EXSR HDRLIN
+     C                     END
+     C*
+     C** IF AN ERROR HAS OCCURRED WITHIN THE COMPONENT
+     C** OR DEPENDENCIES FILES THEN WRITE THE
+     C** APPROPRIATE COMPONENT ERROR MESSAGE
+     C*
+     C           *IN31     IFEQ '1'
+     C           *IN32     OREQ '1'
+     C           *IN33     OREQ '1'
+     C           *IN34     OREQ '1'
+     C           *IN40     OREQ '1'                                                          CCB020C
+     C           *IN41     OREQ '1'                                                          CCB020C
+     C                     WRITECMPERR
+     C                     END
+     C*
+     C** IF A MUTUALLY EXCLUSIVE FILE ERROR THEN WRITE ERROR MESSAGE
+     C*
+     C           *IN35     IFEQ '1'
+     C                     WRITEMUTERR
+     C                     END
+     C*
+     C** IF A MODULE CONDTION FILE ERROR THEN WRITE ERROR MESSAGE
+     C*
+     C           *IN36     IFEQ '1'
+     C                     WRITEMDCERR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     C********************************************************************S01417
+     C*********************                                               S01417
+     C***VALCMP************                                               S01417
+     C*********************                                               S01417
+     C***CHECK*WHICH*COMPONENTS HAVE COMPLETED AND                        S01417
+     C***REPORT*ANY*WHICH*WERE NOT COMPLETED.                             S01417
+     C***THEN*TERMINATE*THE PROGRAM.                                      S01417
+     C*********************                                               S01417
+     C***CALLS*SUBROUTINES*- COMWRT                                       S01417
+     C*********************- DEPWRT                                       S01417
+     C*********************                                               S01417
+     C********************************************************************S01417
+     C*********************                                               S01417
+     C***********VALCMP****BEGSR                                          S01417
+     C*********************                                               S01417
+     C***CALL*PROGRAM*TO*CHECK COMPLETE RECORDS IN VALIDATED FILES        S01417
+     C*********************                                               S01417
+     C*********************CALL @CN,1                                     S01417
+     C*********************PARM           NOCC    90                      S01417
+     C*********************PARM           NOCD    90                      S01417
+     C*********************                                               S01417
+     C***IF*NUMBER*OF*RECORDS COPIED IS NOT ZERO REPORT AS AN ERROR       S01417
+     C*********************                                               S01417
+     C***********NOCC******IFNE 0                                         S01417
+     C***********NOCD******ORNE*0                                         S01417
+     C*********************                                               S01417
+     C***IF*WRITING*FIRST*PAGE OR AT BOTTOM OF PAGE                       S01417
+     C***WRITE*A*NEW*HEADING                                              S01417
+     C*********************                                               S01417
+     C************IN85*****IFEQ '0'                                       S01417
+     C***********PRTLN1****ORGE 56                                        S01417
+     C*********************EXSR HDRLIN                                    S01417
+     C*********************END                                            S01417
+     C*********************                                               S01417
+     C*********************WRITEINCHDR                                    S01417
+     C*********************SETON                     U7U8                 S01417
+     C*********************                                               S01417
+     C***IF*NUMBER*OF*COMPLETED COMPONENTS RETURNED IS NOT ZERO           S01417
+     C***THEN*WRITE*DETAILS OF THESE COMPONENTS TO THE REPORT             S01417
+     C*********************                                               S01417
+     C***********NOCC******IFNE 0                                         S01417
+     C*********************EXSR COMWRT                                    S01417
+     C*********************END                                            S01417
+     C*********************                                               S01417
+     C**ZIF*NUMBER*OF*COMPLETED DEPENDENCIES RETURNED IS NOT ZERO         S01417
+     C***THEN*WRITE*DETAILS OF THESE COMPONENTS TO THE REPORT             S01417
+     C*********************                                               S01417
+     C***********NOCD******IFNE 0                                         S01417
+     C*********************EXSR DEPWRT                                    S01417
+     C*********************END                                            S01417
+     C*********************                                               S01417
+     C*********************END                                            S01417
+     C*********************                                               S01417
+     C***IF*NO*REPORT*HAS*BEEN WRITTEN                                    S01417
+     C***THEN*WRITE*THE*NO*ERRORS LINE                                    S01417
+     C*********************                                               S01417
+     C************IN85*****IFEQ '0'                                       S01417
+     C*********************EXSR HDRLIN                                    S01417
+     C*********************WRITENODTRP                                    S01417
+     C*********************END                                            S01417
+     C*********************                                               S01417
+     C***WRITE*END*OF*REPORT LINE                                         S01417
+     C*********************                                               S01417
+     C*********************WRITERPTEND                                    S01417
+     C*********************SETON                     LR                   S01417
+     C*********************RETRN                                          S01417
+     C*********************                                               S01417
+     C*********************ENDSR                                          S01417
+     C*********************                                               S01417
+     C/EJECT
+      /SPACE 2
+     C********************************************************************
+     C*
+     C** ENDPGM
+     C*
+     C** SUBROUTINE USED TO END THE PROGRAM
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           ENDPGM    BEGSR
+     C*
+     C** WRITE END OF REPORT LINE
+     C*
+     C                     WRITERPTEND
+     C*
+     C** SETON INDICATORS U7 U8 LR
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C** RETURN TO CALLING PROGRAM
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      /SPACE 2
+     O*
+     O** UPDATE OF CHKDPRL2 - DEPENDENCY STATUS FIELD
+     OCHKDPRD2E                DEPSTS
+     O                         D2CDST
+     O*
+     O** UPDATE OF CHKCMPL2 - OUTSTANDING DEPENDENCIES FIELD
+     OCHKCMPD2E                COMODP
+     O                         D2CODP
+     O*
+     O** UPDATE OF CHKCMPL1 - COMPONENT STATUS FIELD
+     OCHKCMPD1E                COMSTS
+     O                         D1CSTS
+     O*
+     O** UPDATE OF CHKCMPL2 - COMPONENT STATUS FIELD TO BLANK
+     O**                      FOR COBBEGIN
+     OCHKCMPD2E                BEGSTS
+     O                         D2CSTS
+     O*
+     O** N.B. These Commented Out Lines Were Previously Array Values.     S01417
+     O** They have been moved from correct position to enable Syntax.     S01417
+     O****@CN**************                                               S01417
+     O*CHKCOBCL2***********                                               S01417
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  CMD
+CPYF FROMFILE(CHKCMPPD) TOFILE(          /CBCMPNPD) MBROPT(*REPLACE)

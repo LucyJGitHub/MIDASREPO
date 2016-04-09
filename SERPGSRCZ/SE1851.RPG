@@ -1,0 +1,1476 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security Certificate Units Maint')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1851 - SECURITY CERTIFICATES UNITS MAINTENANCE             *
+     F*                                                               *
+     F*  Function: This program allows the maintenance and validation *
+     F*   (I/C)    of Security Certificates Units details.            *
+     F*                                                               *
+     F*  Called By: SEC02 - Input Cycle Processing                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 066915             Date 14Feb94               *
+      *                 S01401             Date 16Jun93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9 by GEMS 052254.                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature: New program           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE1851DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        DD1RRNKSFILE SE1851S1
+     F                                        DD2RRNKSFILE SE1851S2
+     F                                              KINFDS ERF1DS
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FSECRUNL1UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KINFDS ERF2DS
+     F                                              KCOMIT
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    21  - Subfile 1 Chain/Read Control                         *
+     F*    22  - Subfile 2 Chain/Read Control                         *
+     F*    23  - SECRUNL1 Control                                     *
+     F*    25  - SECTY Control                                        *
+     F*    26  - SECRUNL1 Control - write                             *
+     F*    40  - Indicator for SFLEND in Message subfile              *
+     F*    42  - Rollup                                               *
+     F*    43  - SFLDSP control for SE1851DF                          *
+     F*    44  - SFLDSPCTL control for SE1851DF                       *
+     F*    45  - SFLCLR control for SE1851DF                          *
+     F*    46  - SFLEND control for SE1851DF                          *
+     F*    47  - SFLNXTCHG control for SE1851DF                       *
+     F*    50  - Error on Action                                      *
+     F*    51  - Error indicator                                      *
+     F*    54  - Error on Security Reference                          *
+     F*    55  - Error on Series                                      *
+     F*    56  - Error on Unit Size                                   *
+     F*    57  - Error indicator                                      *
+     F*    58  - Work indicator                                       *
+     F*    59  - Work indicator                                       *
+     F*    60  - work indicator                                       *
+     F*    64  - Work indicator                                       *
+     F*    65  - Work indicator                                       *
+     F*    70  - Subfile control                                      *
+     F*    81  - Control on call to DBERRCTL                          *
+     F*                                                               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*    KC  - F3 to End                                            *
+     F*    KI  - Go to Add mode                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  CHGSCN - Change Screen Processing                            *
+     F*  DSPCHG - Display Change Screen                               *
+     F*  VLDCHG - Validate Change Screen                              *
+     F*  PRCAMD - Process Amend/Delete                                *
+     F*  NXTSCN - Determine Next Screen                               *
+     F*  SFLCHG - Load Page of Change Screen Subfile                  *
+     F*  INPSCN - Input Screen Processing                             *
+     F*  VLDINP - Validate Input Screen                               *
+     F*  PRCINS - Process Insert                                      *
+     F*  SFLINP - Load Page of Input Screen Subfile                   *
+     F*  DSPADD - Display Add Screen                                  *
+     F*                                                               *
+     F*  SNDMSG - Send Message to Program Message Queue               *
+     F*  *PSSR  - Error Handling Subroutine                           *
+     F*  XTNLU1 - Fetch next available transaction number             *
+     F*                                                               *
+     F*  ZALIGN - Validate and right-align numeric fields             *
+     F*  ZEDIT  - Insert decimal point into a numeric field and blank *
+     F*           out leading zeros                                   *
+     F*                                                               *
+     F*  ZA0250 - Clear program message queue                         *
+     F*  ZA0340 - Send a message to the program message queue         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZEDITZ1
+     E                    ALPNU  36  36  1               ALPHANUMERICS
+     I/SPACE 3
+     IPSDS       SDS
+      ***  Program Status Data Structure.
+     I                                      244 253 DDWSID
+     I                                      254 263 USER
+      *
+     IERF1DS      DS
+      ***  Display File Information Data Structure.
+     I                                    B 378 3790WSDSRN
+      *
+     IERF2DS      DS
+      ***  File Information Data Structure.
+     I                                     *STATUS  STATUS
+     I*
+     IDSFDY     E DSDSFDY
+     I** First Data Structure for Access Objects
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      *
+     IWWDATE      DS
+      ***  Day, Month and Year of Last Update.
+     I                                        1   7 WWDAT
+     I                                        1   20CUDLUP
+     I                                        3   5 CUMLUP
+     I                                        6   70CUYLUP
+      *
+     ICMTTXT      DS
+      ***  Data Structure to Provide Text on Commit Entry in Journal.
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 ACTCDX
+     I                                       35  42 USIDX
+     I                                       43  48 DD3CNN
+     I                                       49  55 DD3SD
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Do While Command 3 not pressed.
+      *
+     C           *INKC     DOWEQ'0'
+      *
+     C           WWSCID    CASEQ'CHANGE'  CHGSCN
+     C           WWSCID    CASEQ'INPUT '  INPSCN
+     C                     END
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Define Keylists.
+      *
+      ***  Security Certificates Units Details - Main Key.
+      *
+     C           KCRUN1    KLIST
+     C                     KFLD           WWSREF
+     C                     KFLD           WWSERI
+      *
+      ***  Key required for Rollup.
+      *
+     C           KCRUN2    KLIST
+     C                     KFLD           WWKY21
+     C                     KFLD           WWKY22
+      *
+      ***  Set Initial Screen Id to 'CHANGE'.
+      *
+     C                     MOVE 'CHANGE'  WWSCID  6
+      *
+      ***  Set fields for Commitment.
+      *
+     C                     MOVEL'SE'      MDID
+     C                     MOVEL'SE1851'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELUSER      USIDX
+     C                     CLEARACTCDX
+      *
+      ***  Define and Initialise Work Fields.
+      *
+     C           *LIKE     DEFN FNATN     WWDSTN
+     C           *LIKE     DEFN DD1RRN    WWSTR1
+     C           *LIKE     DEFN CUSREF    WWSREF
+     C           *LIKE     DEFN CUSERI    WWSERI
+     C           *LIKE     DEFN CUCHTP    WWCHTP
+     C           *LIKE     DEFN CUUNIT    WWZERO
+     C           *LIKE     DEFN CUSREF    WWKY21
+     C           *LIKE     DEFN CUSERI    WWKY22
+      *
+     C                     MOVE 'Y'       WWVALD  1
+     C                     MOVE 'N'       WWUPDR  1
+     C                     MOVE 'N'       WWTAMD  1
+     C                     MOVE 'N'       WWTDEL  1
+     C                     MOVE 'N'       WWTINS  1
+      *
+     C                     Z-ADD0         WWSFLC  40
+     C                     Z-ADD0         WWSFRN  40
+     C                     Z-ADD0         WWFRRN  40
+      *
+     C                     CLEARDDUNDR
+      *
+     C                     Z-ADD8         ZADIG
+     C                     Z-ADD0         ZADEC
+      *
+      ***  Access SDBANKPD for Run Date and Title.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Initialise Screen Message Queue.
+      *
+     C                     MOVEL'*'       DDPGMQ
+      *
+      ***  Set On Subfile End Indicator.
+      *
+     C                     SETON                     40
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CHGSCN
+      *****************************************************************
+      *                                                               *
+      *  CHGSCN - Subroutine to handle the Change Screen Processing.  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  SFLCHG - Load Page of Change Screen Subfile                  *
+      *  DSPCHG - Display Change Screen                               *
+      *  VLDCHG - Validate Change Screen                              *
+      *  PRCAMD - Process Amend/Delete                                *
+      *  NXTSCN - Determine Next Screen                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGSCN    BEGSR                           *** CHGSCN ***
+      *
+      ***  Access Security Certificates Units File.
+      *
+     C           *LOVAL    SETLLSECRUNL1
+     C                     READ SECRUNL1                 23
+      *
+      ***  Load a Page of Subfile Records.
+      *
+     C                     SETON                     70
+     C                     EXSR SFLCHG
+      *
+      ***  Clear Screen Review From fields.
+      *
+     C                     CLEARDD1SEC
+     C                     CLEARDD1SRS
+      *
+      ***  Do While Command 3 not pressed and Screen in CHANGE Mode.
+      *
+     C           *INKC     DOWEQ'0'
+     C           WWSCID    ANDEQ'CHANGE'
+      *
+      ***  Display Change Screen.
+      *
+     C                     EXSR DSPCHG
+      *
+      ***  If Command 3 not pressed.
+      *
+     C           *INKC     IFEQ '0'
+      *
+      ***  Handle Rollup.
+      *
+     C           *IN42     IFEQ '1'
+      *
+      ***  Access SECRUNL1 for Last Record read.
+      *
+     C           KCRUN2    CHAINSECRUNL1             23
+      *
+      ***  Load next Page of Change Screen Subfile.
+      *
+     C                     SETON                     70
+     C                     EXSR SFLCHG
+      *
+      ***  Command 9 or ENTER.
+     C                     ELSE
+      *
+      ***  Validate Change Screen.
+      *
+     C                     EXSR VLDCHG
+      *
+      ***  If valid and any records Amended or marked for Deletion then
+      ***  perform Update of LF/SECRUNL1.
+      *
+     C           WWVALD    IFEQ 'Y'
+     C           WWUPDR    ANDEQ'Y'
+     C                     EXSR PRCAMD
+     C                     END
+      *
+      ***  If Validation and File Updates were successful, determine
+      ***  the next Screen.
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     EXSR NXTSCN
+     C                     END
+      *
+      ***  End of If/Else *IN42 = '1'.
+     C                     END
+      ***  End of If Command 3 not pressed.
+     C                     END
+      ***  End of Do While Command 3 not pressed and in CHANGE Mode.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DSPCHG
+      *****************************************************************
+      *                                                               *
+      *  DSPCHG - Subroutine to do Display the Change Screen.         *
+      *                                                               *
+      *  Called By: CHGSCN                                            *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPCHG    BEGSR                           *** DSPCHG ***
+      *
+      ***  Write Change Screen Footer Format.
+      *
+     C                     WRITESE1851F1
+      *
+      ***  Write Change Screen Control Format.
+      *
+     C                     WRITESE1851C1
+      *
+      ***  If Errors exist, Display Message Subfile.
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE1851C3
+     C                     END
+      *
+      ***  Read Change Screen Control Format.
+      *
+     C                     READ SE1851C1                 21
+      *
+      ***  Store Relative Record Number of Subfile.
+      *
+     C           WSDSRN    IFEQ 0
+     C                     Z-ADDDD1RRN    WWSTR1
+     C                     ELSE
+     C                     Z-ADDWSDSRN    WWSTR1
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/VLDCHG
+      *****************************************************************
+      *                                                               *
+      *  VLDCHG - Subroutine to Validate Change Screen.               *
+      *                                                               *
+      *  Called By: CHGSCN                                            *
+      *  Calls    :                                                   *
+      *  ZEDIT  - Insert decimal point into a numeric field and blank *
+      *           out leading zeros                                   *
+      *  SNDMSG - Send Message to Program Message Queue               *
+      *  ZALIGN - Validate and right-align numeric fields             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VLDCHG    BEGSR                           *** VLDCHG ***
+      *
+      ***  Clear Screen Message Queue.
+     C                     CALL 'ZA0250'
+      *
+      ***  Set Off Error Indicators
+      *
+     C                     SETOF                     5051
+     C                     SETOF                     5764
+      *
+      ***  Set off Update Required Flag and Set On Valid Flag.
+      *
+     C                     MOVE 'N'       WWUPDR
+     C                     MOVE 'Y'       WWVALD
+      *
+      ***  Validate Subfile fields if blank Subfile not displayed.
+      *
+     C           *IN43     IFEQ '1'
+      *
+      ***  Read First Changed record.
+      *
+     C                     READCSE1851S1                 21
+      *
+      ***  Set On SFLNXTCHG Indicator (also processed for File Update).
+      *
+     C                     SETON                     47
+      *
+      ***  Do While Changed records exist.
+      *
+     C           *IN21     DOWEQ'0'
+      *
+      ***  Set Off Error Indicators.
+      *
+     C                     SETOF                     5051
+      *
+      ***  Set up Hidden Unit Size field.
+      *
+     C                     MOVE DD1SRF    WWSREF
+     C                     MOVE DD1SER    WWSERI
+     C           KCRUN1    CHAINSECRUNL1             23
+     C                     MOVE CUUNIT    HH1USZ
+      *
+     C                     CLEARZFIELD
+     C                     MOVELHH1USZ    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    HH1USZ
+      *
+      ***  If Action is non-blank or Unit Size has changed.
+      *
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1USZ    ORNE HH1USZ
+      *
+      ***  Set On Update Required Flag.
+      *
+     C                     MOVE 'Y'       WWUPDR
+      *
+      ***  Action - If entered, must be = 'D'.
+      *
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1ACT    ANDNE'D'
+     C                     SETON                     50
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3001' ZAMSID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ***  Unit Size may not be altered if record is marked for Delete.
+      *
+     C           DD1ACT    IFEQ 'D'
+     C           DD1USZ    ANDNEHH1USZ
+     C                     SETON                     5051
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3003' ZAMSID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ***  If Unit Size has changed.
+      *
+     C           DD1USZ    IFNE HH1USZ
+      *
+      ***  Unit Size must be numeric and Greater than zero.
+      *
+     C                     CLEARZFIELD
+     C                     MOVELDD1USZ    ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WWZFLD  8
+     C                     MOVELWWZFLD    WWZERO
+      *
+     C           WWZERO    IFEQ 0
+     C                     SETON                     65
+     C                     END
+     C                     EXSR ZEDIT
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN65     OREQ '1'
+     C                     SETON                     51
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3002' ZAMSID
+     C                     SETOF                     65
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    DD1USZ
+     C                     END
+      *
+     C                     END
+      *
+      ***  Store RRN of First Record in Error.
+      *
+     C           WWVALD    IFEQ 'N'
+     C           *IN64     ANDEQ'0'
+     C                     Z-ADDDD1RRN    WWFRRN
+     C                     SETON                     64
+     C                     END
+      *
+      ***  End of If Action non-blank or Unit Size changed.
+     C                     END
+      *
+      ***  Update Subfile.
+     C                     UPDATSE1851S1
+      *
+      ***  Read next Changed record.
+      *
+     C                     READCSE1851S1                 21
+      *
+      ***  End of Do While Changed records exist.
+     C                     END
+      *
+      ***  Set Off Subfile Next Chnage Indicator.
+      *
+     C                     SETOF                     47
+      *
+      ***  If Error on Subfile - Reload RRN of first Record in Error.
+      *
+     C           *IN64     IFEQ '1'
+     C                     Z-ADDWWFRRN    DD1RRN
+      *
+      ***  Else no Error so Display same Subfile Page.
+      *
+     C                     ELSE
+     C                     Z-ADDWWSTR1    DD1RRN
+     C                     END
+      *
+      ***  End of Subfile Validation If blank Subfile not displayed.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PRCAMD
+      *****************************************************************
+      *                                                               *
+      *  PRCAMD - Subroutine to Process Amend/Delete.                 *
+      *                                                               *
+      *  Called By: CHGSCN                                            *
+      *  Calls    : None.                                             *
+      *  XTNLU1 - Fetch next available transaction number             *
+      *  SNDMSG - Send Message to Program Message Queue               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRCAMD    BEGSR                           *** PRCAMD ***
+      *
+      ***  Read first changed record.
+      *
+     C                     READCSE1851S1                 21
+      *
+      ***  Do While Not End of Subfile.
+      *
+     C           *IN21     DOWEQ'0'
+      *
+     C                     SETOF                     57
+      *
+      ***  If record changed.
+      *
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1USZ    ORNE HH1USZ
+      *
+      ***  Get Transaction Number of Last Update.
+      *
+     C                     EXSR XTNLU1
+      *
+      ***  Access SECRUNL1.
+     C                     MOVE DD1SRF    WWSREF
+     C                     MOVE DD1SER    WWSERI
+     C           KCRUN1    CHAINSECRUNL1             23
+      *
+      ***  If Transaction Number of Last Update has changed.
+      *
+     C           CUTNLU    IFNE HHTNLU
+      *
+      ***  Update Subfile record fields with values from SECRUNL1.
+      *
+     C                     MOVE CUSREF    DD1SRF
+     C                     MOVE CUSERI    DD1SER
+     C                     MOVE CUUNIT    DD1USZ
+     C                     MOVE CUTNLU    HHTNLU
+      *
+      ***  Highlight Input Capable fields and Set On SFLNXTCHG Ind.
+      *
+     C                     SETON                     505147
+      *
+      ***  Format Error Message (Record Updated by another Workstation)
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3004' ZAMSID
+     C                     EXSR SNDMSG
+      *
+      ***  Release record.
+     C                     EXCPTSECRUC
+      *
+     C                     UPDATSE1851S1
+      *
+      ***  Else TNLU not changed, so Update record.
+      *
+     C                     ELSE
+      *
+      ***  If Action = blanks, Amendment required.
+      *
+     C           DD1ACT    IFEQ *BLANKS
+      *
+     C                     MOVE 'D'       CURECI
+     C                     MOVE BJMRDT    WWDAT
+     C                     TIME           CUTLUP
+      *
+      ***  Store Action for Update of Trailer File.
+      *
+     C                     MOVE 'AMEND'   WWACTN  6
+      *
+     C           CULCD     IFNE BJRDNB
+     C                     MOVE 'A'       CUCHTP
+      *
+      ***  Else record Inserted or Amended today.
+      *
+     C                     ELSE
+     C                     MOVE 'Y'       WWTAMD
+     C                     END
+      *
+     C                     Z-ADDBJRDNB    CULCD
+     C                     Z-ADDWWDSTN    CUTNLU
+     C                     Z-ADDWWDSTN    HHTNLU
+     C                     MOVELDD1USZ    CUUNIT
+      *
+     C                     UPDATSECRUNF1
+     C                     UPDATSE1851S1
+      *
+      ***  Set up Hidden Unit Size field.
+      *
+     C                     MOVE DD1USZ    HH1USZ
+      *
+      ***  Else Delete record.
+     C                     ELSE
+     C                     MOVE 'DELETE'  WWACTN
+      *
+      ***  If record already Amended or Deleted today.
+      *
+     C           CULCD     IFEQ BJRDNB
+     C                     MOVE 'Y'       WWTDEL
+     C                     MOVE CUCHTP    WWCHTP
+     C                     END
+      *
+     C                     MOVE '*'       CURECI
+     C                     Z-ADDWWDSTN    CUTNLU
+     C                     MOVE 'D'       CUCHTP
+     C                     Z-ADDBJRDNB    CULCD
+     C                     TIME           CUTLUP
+      *
+     C                     UPDATSECRUNF1
+      *
+     C                     SETON                     57
+     C                     MOVE 'D'       DD1STS
+     C                     CLEARDD1ACT
+     C                     UPDATSE1851S1
+      *
+      ***  Commit Updates to File.
+      *
+     C                     TIME           MTIME
+     C           CMTTXT    COMIT
+      *
+      ***  End of If Amend Else Delete.
+     C                     END
+      ***  End of If/Else TNLU changed.
+     C                     END
+      ***  End of If record changed.
+     C                     END
+      *
+      ***  Read next changed record.
+      *
+     C                     READCSE1851S1                 21
+      *
+      ***  End of Do While Not End of Subfile.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/NXTSCN
+      *****************************************************************
+      *                                                               *
+      *  NXTSCN - Subroutine to Determine Next Screen.                *
+      *                                                               *
+      *  Called By: CHGSCN                                            *
+      *  Calls    :                                                   *
+      *  SFLCHG - Load Page of Change Screen Subfile                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           NXTSCN    BEGSR                           *** NXTSCN ***
+      *
+      ***  If Command 9 pressed, Display Add Screen.
+      *
+     C           *INKI     IFEQ '1'
+     C                     MOVE 'INPUT '  WWSCID
+      *
+      ***  Else ENTER Pressed.
+     C                     ELSE
+     C                     MOVE 'CHANGE'  WWSCID
+      *
+      ***  If either Review From field is non-blank, rebuild Subfile
+      ***  starting from Review From fields.
+      *
+     C           DD1SEC    IFNE *BLANKS
+     C           DD1SRS    ORNE *BLANKS
+      *
+     C                     MOVE DD1SEC    WWKY21
+     C                     MOVE DD1SRS    WWKY22
+     C           KCRUN2    SETLLSECRUNL1
+     C                     READ SECRUNL1                 23
+      *
+     C                     SETON                     70
+     C                     EXSR SFLCHG
+      *
+     C                     CLEARDD1SEC
+     C                     CLEARDD1SRS
+      *
+     C                     END
+      *
+      ***  End of If Command 9/Else ENTER pressed.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SFLCHG
+      *****************************************************************
+      *                                                               *
+      *  SFLCHG - Subroutine to load a Page of Change Screen Subfile. *
+      *                                                               *
+      *  Called By: CHGSCN, NXTSCN                                    *
+      *  Calls    :                                                   *
+      *  ZEDIT  - Insert decimal point into a numeric field and blank *
+      *           out leading zeros                                   *
+      *  SNDMSG - Send Message to Program Message Queue               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFLCHG    BEGSR                           *** SFLCHG ***
+      *
+      ***  If required, Initialise Variables and Clear Subfile.
+      *
+     C           *IN70     IFEQ '1'
+     C                     CLEARDD1RRN
+     C                     CLEARWWSFRN
+     C                     CLEARWWSFLC
+     C                     SETOF                     4647
+      *
+      ***  Clear Change Screen Subfile.
+      *
+     C                     SETOF                     4344
+     C                     SETON                     45
+     C                     WRITESE1851C1
+     C                     SETON                     4344
+     C                     SETOF                     45
+     C                     SETOF                     70
+     C                     END
+      *
+     C                     SETOF                     5051
+     C                     Z-ADDWWSFRN    DD1RRN
+      *
+      ***  Do While Not EOF and 13 records not yet loaded.
+      *
+     C           *IN23     DOWEQ'0'
+     C           WWSFLC    ANDLT13
+      *
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         WWSFRN
+     C                     ADD  1         DD1RRN
+      *
+      ***  If record is deleted, protect the fields.
+      *
+     C           CURECI    IFEQ '*'
+     C                     SETON                     57
+     C                     MOVE 'D'       DD1STS
+     C                     ELSE
+     C                     SETOF                     57
+     C                     CLEARDD1STS
+     C                     END
+      *
+     C                     CLEARDD1ACT
+     C                     MOVE CUSREF    DD1SRF
+     C                     MOVE CUSERI    DD1SER
+     C                     Z-ADDCUTNLU    HHTNLU
+     C                     MOVE CUUNIT    DD1USZ
+      *
+      ***  Blank out leading zeros in Unit Size field.
+      *
+     C                     CLEARZFIELD
+     C                     MOVELDD1USZ    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    DD1USZ
+      *
+      ***  Write the Subfile record.
+      *
+     C                     WRITESE1851S1
+      *
+      ***  Read next record on SECRUNL1.
+      *
+     C                     READ SECRUNL1                 23
+      *
+      ***  Store Key fields for CHAIN to SECRUNL1.
+      *
+     C                     MOVE CUSREF    WWKY21
+     C                     MOVE CUSERI    WWKY22
+      *
+      ***  End of Do While Not EOF and 13 records not yet loaded.
+     C                     END
+      *
+     C           *IN23     IFEQ '0'
+     C                     EXCPTSECRUC
+     C                     END
+      *
+      ***  Initialise Counter.
+     C                     CLEARWWSFLC
+      *
+      ***  If EOF, Set On the SFLEND Indicator.
+      *
+     C           *IN23     IFEQ '1'
+     C                     SETON                     46
+     C                     END
+      *
+      ***  If no records written to Subfile.
+      *
+     C           WWSFRN    IFEQ 0
+     C                     MOVEL'SEW3008' ZAMSID
+     C                     EXSR SNDMSG
+     C                     MOVE 'N'       WWVALD
+     C                     SETOF                     43
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/INPSCN
+      *****************************************************************
+      *                                                               *
+      *  INPSCN - Subroutine to do Input Screen Processing.           *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *  Calls    : None.                                             *
+      *  SFLINP - Load Page of Input Screen Subfile                   *
+      *  DSPADD - Display Add Screen                                  *
+      *  VLDINP - Validate Input Screen                               *
+      *  PRCINS - Process Insert                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INPSCN    BEGSR                           *** INPSCN ***
+      *
+      ***  Load a blank Page of Subfile records.
+      *
+     C                     SETON                     70
+     C                     EXSR SFLINP
+      *
+      ***  Do While Command 3 not pressed and Screen in INPUT Mode.
+      *
+     C           *INKC     DOWEQ'0'
+     C           WWSCID    ANDEQ'INPUT '
+      *
+      ***  Display Add Screen.
+     C                     EXSR DSPADD
+      *
+      ***  If Command 3 not pressed.
+      *
+     C           *INKC     IFEQ '0'
+      *
+      ***  If Rollup, Load next Page of Add Screen Subfile.
+      *
+     C           *IN42     IFEQ '1'
+     C                     SETON                     70
+     C                     EXSR SFLINP
+      *
+      ***  Else Validate Input Screen.
+      *
+     C                     ELSE
+     C                     EXSR VLDINP
+      *
+      ***  If valid and at least one record was Input, process Insert.
+      *
+     C           WWVALD    IFEQ 'Y'
+     C           WWUPDR    ANDEQ'Y'
+     C                     EXSR PRCINS
+     C                     END
+      *
+      ***  If Valid so far.
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     SETON                     70
+      *
+      ***  If Command 9 pressed, Display Change Screen.
+      *
+     C           *INKI     IFEQ '1'
+     C                     MOVE 'CHANGE'  WWSCID
+      *
+      ***  Else Display blank Input Screen.
+      *
+     C                     ELSE
+     C                     EXSR SFLINP
+     C                     END
+      *
+     C                     END
+      ***  End of If/Else *IN42 = '1'.
+     C                     END
+      ***  End of If Command 3 not pressed.
+     C                     END
+      ***  End of Do While Command 3 not pressed and in INPUT Mode.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/VLDINP
+      *****************************************************************
+      *                                                               *
+      *  VLDINP - Subroutine to Validate the Input Screen.            *
+      *                                                               *
+      *  Called By: INPSCN                                            *
+      *  Calls    :                                                   *
+      *  SNDMSG - Send Message to Program Message Queue               *
+      *  ZALIGN - Validate and right-align numeric fields             *
+      *  ZEDIT  - Insert decimal point into a numeric field and blank *
+      *           out leading zeros                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VLDINP    BEGSR                           *** VLDINP ***
+      *
+      ***  Clear Screen Message Queue.
+     C                     CALL 'ZA0250'
+      *
+      ***  Set Off Update Required Flag and Set On Valid Flag.
+      *
+     C                     MOVE 'N'       WWUPDR
+     C                     MOVE 'Y'       WWVALD
+     C                     SETOF                     545556
+     C                     SETOF                     64
+      *
+      ***  Validate Subfile records.
+      *
+      ***  Read first changed record.
+      *
+     C                     READCSE1851S2                 21
+      *
+      ***  Do While Changed records exist.
+      *
+     C           *IN21     DOWEQ'0'
+      *
+      ***  Set Off Error and SFLNXTCHG Indicators.
+      *
+     C                     SETOF                     545556
+     C                     SETOF                     47
+      *
+      ***  If record is non-blank.
+      *
+     C           DD2SRF    IFNE *BLANKS
+     C           DD2SER    ORNE *BLANKS
+     C           DD2USZ    ORNE *BLANKS
+      *
+      ***  Set On SFLNXTCHG Indicator and Update Required Flag.
+      *
+     C                     SETON                     47
+     C                     MOVE 'Y'       WWUPDR
+      *
+      ***  Values must be entered for all fields.
+      *
+     C           DD2SRF    IFEQ *BLANKS
+     C           DD2SER    OREQ *BLANKS
+     C           DD2USZ    OREQ *BLANKS
+      *
+     C                     SETON                     545556
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3005' ZAMSID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ***  Security Reference.
+      *
+     C           DD2SRF    CHAINSECTY                25
+     C           *IN25     IFEQ '1'
+     C                     SETON                     54
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3006' ZAMSID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ***  Series.
+     C                     MOVELDD2SER    WWLEFT  1
+     C                     MOVE DD2SER    WWRGHT  1
+      *
+     C           DD2SER    IFEQ '  '
+     C                     SETON                     60
+     C                     GOTO VLDIN0
+     C                     END
+      *
+     C           WWLEFT    IFEQ ' '
+     C                     MOVE WWRGHT    WWLEFT
+     C                     SETON                     58
+     C                     END
+      *
+     C           WWLEFT    LOKUPALPNU                    59
+     C           *IN59     IFEQ '0'
+     C                     SETON                     60
+     C                     SETOF                     58
+     C                     GOTO VLDIN0
+     C                     ELSE
+      *
+     C           *IN58     IFEQ '1'
+     C                     MOVELWWLEFT    DD2SER
+     C                     MOVE ' '       DD2SER
+     C                     SETOF                     58
+     C                     GOTO VLDIN0
+     C                     END
+      *
+     C           WWRGHT    IFEQ ' '
+     C                     GOTO VLDIN0
+     C                     END
+      *
+     C           WWRGHT    LOKUPALPNU                    59
+     C           *IN59     IFEQ '0'
+     C                     SETON                     60
+     C                     GOTO VLDIN0
+     C                     END
+      *
+     C                     END
+      *
+     C           VLDIN0    TAG                             *** VLDIN0 ***
+      *
+     C           *IN60     IFEQ '1'
+     C                     SETON                     55
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3007' ZAMSID
+     C                     SETOF                     60
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ***  Unit Size must be numeric and Greater than zero.
+      *
+     C                     CLEARZFIELD
+     C                     MOVELDD2USZ    ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WWZFLD
+     C                     MOVELWWZFLD    WWZERO
+      *
+     C           WWZERO    IFEQ 0
+     C                     SETON                     65
+     C                     END
+     C                     EXSR ZEDIT
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN65     OREQ '1'
+     C                     SETON                     56
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3002' ZAMSID
+     C                     SETOF                     65
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE ZFIELD    DD2USZ
+     C                     END
+      *
+      ***  Error if live record already exists.
+      *
+     C                     MOVE DD2SRF    WWSREF
+     C                     MOVE DD2SER    WWSERI
+     C           KCRUN1    CHAINSECRUNL1             23
+      *
+     C           *IN23     IFEQ '0'
+      *
+     C           CURECI    IFNE '*'
+     C                     SETON                     545556
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3009' ZAMSID
+     C                     EXSR SNDMSG
+      *
+      ***  Else record on file, but logically Deleted - save TNLU.
+      *
+     C                     ELSE
+     C                     Z-ADDCUTNLU    HH2NLU
+     C                     END
+      *
+     C                     END
+      *
+      ***  Store RRN of first record in error.
+      *
+     C           WWVALD    IFEQ 'N'
+     C           *IN64     ANDEQ'0'
+     C                     Z-ADDDD2RRN    WWFRRN
+     C                     SETON                     64
+     C                     END
+      *
+      ***  End of If record is non-blank.
+     C                     END
+      *
+      ***  Update Subfile.
+     C                     UPDATSE1851S2
+      *
+      ***  Read next changed record.
+      *
+     C                     READCSE1851S2                 21
+      *
+      ***  End of Do While Changed records exist.
+     C                     END
+      *
+      ***  Set Off SFLNXTCHG Indicator.
+      *
+     C                     SETOF                     47
+      *
+      ***  If Error, reload RRN of first record in Error.
+      *
+     C           *IN64     IFEQ '1'
+     C                     Z-ADDWWFRRN    DD2RRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PRCINS
+      *****************************************************************
+      *                                                               *
+      *  PRCINS - Subroutine to Process an Insert.                    *
+      *                                                               *
+      *  Called By: INPSCN                                            *
+      *  Calls    :                                                   *
+      *  XTNLU1 - Fetch next available transaction number             *
+      *  SNDMSG - Send Message to Program Message Queue               *
+      *  *PSSR  - Error Handling Subroutine                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRCINS    BEGSR                           *** PRCINS ***
+      *
+      ***  Read First Changed record.
+      *
+     C                     READCSE1851S2                 21
+      *
+      ***  Do While Changed records exist.
+      *
+     C           *IN21     DOWEQ'0'
+      *
+      ***  Get Transaction Number of Last Update.
+      *
+     C                     EXSR XTNLU1
+      *
+      ***  Access SECRUNL1.
+     C                     MOVE DD2SRF    WWSREF
+     C                     MOVE DD2SER    WWSERI
+     C           KCRUN1    CHAINSECRUNL1             23
+      *
+      ***  Set up Day, Month, Year of Last Update.
+      *
+     C                     MOVE BJMRDT    WWDAT
+      *
+      ***  If a record already exists.
+      *
+     C           *IN23     IFEQ '0'
+      *
+      ***  If TNLU has changed.
+      *
+     C           CUTNLU    IFNE HH2NLU
+      *
+      ***  Highlight Input Capable fields and Set On SFLNXTCHG Ind.
+      *
+     C                     SETON                     545556
+     C                     SETON                     47
+      *
+      ***  Update Subfile with values from File.
+      *
+     C                     MOVELCUSREF    DD2SRF
+     C                     MOVELCUSERI    DD2SER
+     C                     MOVELCUUNIT    DD2USZ
+     C                     Z-ADDCUTNLU    HH2NLU
+      *
+     C                     UPDATSE1851S2
+      *
+      ***  Load Message and Release record.
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3009' ZAMSID
+     C                     EXSR SNDMSG
+      *
+     C                     EXCPTSECRUC
+      *
+      ***  Record already exists and Deleted today, so Update record.
+      *
+     C                     ELSE
+     C                     MOVE 'INSERT'  WWACTN
+      *
+     C           CULCD     IFEQ BJRDNB
+     C                     MOVE 'Y'       WWTINS
+     C                     END
+      *
+     C                     MOVEL'D'       CURECI
+     C                     MOVELDD2SRF    CUSREF
+     C                     MOVELDD2SER    CUSERI
+     C                     MOVELDD2USZ    CUUNIT
+     C                     Z-ADDWWDSTN    CUTNLU
+     C                     MOVE 'I'       CUCHTP
+     C                     Z-ADDBJRDNB    CULCD
+     C                     TIME           CUTLUP
+      *
+     C                     UPDATSECRUNF1
+      *
+      ***  End of If TNLU has changed.
+     C                     END
+      *
+      ***  Else record does not exist.
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'INSERT'  WWACTN
+     C                     MOVEL'D'       CURECI
+     C                     MOVELDD2SRF    CUSREF
+     C                     MOVELDD2SER    CUSERI
+     C                     MOVELDD2USZ    CUUNIT
+     C                     Z-ADDWWDSTN    CUTNLU
+     C                     MOVE 'I'       CUCHTP
+     C                     Z-ADDBJRDNB    CULCD
+     C                     TIME           CUTLUP
+      *
+     C                     WRITESECRUNF1               26
+      *
+      ***  If Duplicate Key Error.
+      *
+     C           *IN26     IFEQ '1'
+      *
+     C           STATUS    IFEQ 01021
+      *
+      ***  Clear Messages caused by STATUS Error.
+     C                     CALL 'ZA0250'
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SEW3009' ZAMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      ***  End of If/Else a record already exists.
+     C                     END
+      *
+      ***  Commit Updates to File.
+      *
+     C                     TIME           MTIME
+     C           CMTTXT    COMIT
+      *
+      ***  Read next changed record.
+      *
+     C                     READCSE1851S2                 21
+      *
+      ***  End of Do While Changed records exist.
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SFLINP
+      *****************************************************************
+      *                                                               *
+      *  SFLINP - Subroutine to Load a Page of Input Screen Subfile.  *
+      *                                                               *
+      *  Called By: INPSCN                                            *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFLINP    BEGSR                           *** SFLINP ***
+      *
+      ***  If required, Initialise Variables and Clear Subfile.
+      *
+     C           *IN70     IFEQ '1'
+     C                     CLEARDD2RRN
+     C                     CLEARWWSFRN
+     C                     CLEARWWSFLC
+     C                     SETOF                     4647
+     C                     SETOF                     4344
+     C                     SETON                     45
+     C                     WRITESE1851C2
+     C                     SETON                     4344
+     C                     SETOF                     45
+     C                     SETOF                     70
+     C                     END
+      *
+     C                     SETOF                     545556
+     C                     Z-ADDWWSFRN    DD2RRN
+      *
+      ***  Do While 13 blank records not yet loaded.
+      *
+     C           WWSFLC    DOWLT13
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         WWSFRN
+     C                     ADD  1         DD2RRN
+     C                     CLEARDD2SRF
+     C                     CLEARDD2SER
+     C                     CLEARDD2USZ
+      *
+      ***  Write a Subfile record.
+      *
+     C                     WRITESE1851S2
+     C                     END
+      *
+      ***  Initialise Counter.
+     C                     CLEARWWSFLC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DSPADD
+      *****************************************************************
+      *                                                               *
+      *  DSPADD - Subroutine to do Display the Add Screen.            *
+      *                                                               *
+      *  Called By: INPSCN                                            *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPADD    BEGSR                           *** DSPADD ***
+      *
+      ***  Write Input Screen Footer Format.
+      *
+     C                     WRITESE1851F2
+      *
+      ***  Write Input Screen Control Format.
+      *
+     C                     WRITESE1851C2
+      *
+      ***  If Errors exist, Display Message Subfile.
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE1851C3
+     C                     END
+      *
+      ***  Read Input Screen Control Format.
+      *
+     C                     READ SE1851C2                 22
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SNDMSG
+      *****************************************************************
+      *                                                               *
+      *  SNDMSG - Send Message to Program's Message Queue.            *
+      *                                                               *
+      *  Called By: VLDCHG, PRCAMD, VLDINP, PRCINS                    *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SNDMSG    BEGSR                           *** SNDMSG ***
+      *
+      ** Send specified message from specified message file to program
+      ** message queue; then clear message id and message file
+     C                     CALL 'ZA0340'
+     C                     PARM 'SEUSRMSG'ZAMSGF 10
+     C                     PARM           ZAMSID 10
+      *
+     C                     MOVEL*BLANK    ZAMSID
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Handling Subroutine.                  *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SE1851'  DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C** Call standard DB error handler
+     C                     ROLBK
+     C                     CALL 'DBERRCTL'             81
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/XTNLU1
+      *****************************************************************
+      *                                                               *
+      *  XTNLU1 - Retrieve/Update Transaction Number of Last Update.  *
+      *           (Based on Standard Subroutine ZTNLU1.)              *
+      *                                                               *
+      *  Called By: PRCAMD, PRCINS                                    *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XTNLU1    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZALIGN
+     C/COPY ZSRSRC,ZALIGNZ2
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+     O/EJECT
+      *
+      ***  Release SECRUNL1 record.
+      *
+     OSECRUNF1E                SECRUC
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ALPNU
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ

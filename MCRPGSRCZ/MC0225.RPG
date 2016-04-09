@@ -1,0 +1,2085 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Opening balance maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module                         *
+     F*                                                               *
+     F*  MC0225 - Opening Balance Maintenance                         *
+     F*                                                               *
+     F*  Function: This program is called from the Recreate           *
+     F*  (I/C Int) Management Accounts function when opening balances *
+     F*            cannot be taken from the previous period           *
+     F*            and movements and opening balances have been       *
+     F*            extracted. This program displays the extracted     *
+     F*            records for amendment then outputs the amended     *
+     F*            values to file.                                    *
+     F*                                                               *
+     F*  Called by: MCC0225 - Opening Balance Maintenance control     *
+     F*                      Initial Screen                           *
+     F*                                                               *
+     F*  Calls: AOHBCGR0 - Access group details                       *
+     F*         AOCURRR0 - Access currency details                    *
+     F*         AOPRFCR0 - Access profit centre details               *
+     F*         AOBOOKR0 - Access book details                        *
+     F*         AOCUSTR0 - Access customer details                    *
+     F*         AOMMODR0 - Access customer details                    *                       174435
+     F*                                                               *
+     F*  Parameters: 1A Group code                                    *
+     F*              4A Period year (CCYY)                            *
+     F*              2A Period number                                 *
+     F*              1A Return code                                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 210286             Date 27Mar03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+     F*                 174435             DATE 31Jan00               *
+     F*                 117247             DATE 31Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 051861             DATE 04MAR93               *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  210286 - Changed the error message to 'Profit Centre/Book    *
+      *           Code combination already exists.' to indicate more  *
+      *           descriptively that there is a duplicate Profit      *
+      *           Centre/ Book Code combination being added.          *
+     F*  CSD006 - Use long DS with SDCURRPD.                          *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  174435 - Automatic assignment of unallocated balances        *
+     F*  117247 - Devise/Session error caused by Zero Subfile posn.   *
+     F*  051861 - Devise/Session error caused by Zero Subfile posn.   *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE
+      * Opening Balance Maintenance screen
+     FMC0225DFCF  E                    WORKSTN
+     F                                              KINFDS INFDF
+     F                                        SFK1  KSFILE SFL1
+     F                                        SFK2  KSFILE SFL2
+     F                                        SFK3  KSFILE SFL3
+      /SPACE
+      * Account Opening Balances
+     FGLOPBLPDUF  E                    DISK
+     F            GLMOVEPDF                         KRENAMEOPBLDF
+      /SPACE
+      * Account Movements (Input)
+     FGLMOVEL1IF  E           K        DISK
+     F                                              KINFDS INFL1
+     F            GLMOVEPDF                         KRENAMEMOVEL1
+      /SPACE
+      **Account*Movements*(Update)**********************************************              174435
+      * Account Movements (Update individual records)                                         174435
+     FGLMOVEPDUF  E                    DISK                      A
+     F                                              KINFDS INFMV
+     F            GLMOVEPDF                         KRENAMEMOVEDF
+      * Account Movements (Update for automatic allocation)                                   174435
+     FGLMOVEL2UF  E           K        DISK                      A                            174435
+     F            GLMOVEPDF                         KRENAMEMOVEL2                             174435
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  Error - Selection field on subfile 1                  *
+      *  11  -  Error - Opening balance on subfile 2                  *
+      *  12  -  Error - Profit centre                                 *
+      *  13  -  Error - Book code                                     *
+      *  14  -  Error - Transaction type                              *
+      *  15  -  Error - Transaction sub-type                          *
+      *  16  -  Error - Associated customer                           *
+      *  17  -  Error - Opening balance on subfile 3                  *
+      *  20  -  Exit Auto assignment of unallocated balances          *                       174435
+      *  21  -  F17 Automatic allocation of Unallocated balances(SFL1)*                       174435
+      *  22  -  F12 (previous screen) - subfile 2                     *
+      *  23  -  F12 (previous screen) - subfile 3                     *
+      *  24  -  F12 (previous screen) - auto allocation               *                       174435
+      *  25  -  Confirm allocation                                    *                       174435
+      *  30  -  Display Assignment Field (Auto allocation)            *                       174435
+      *  31  -  Display Profit Cen Field (Auto allocation)            *                       174435
+      *  32  -  Display Assignment ICD (Auto allocation)              *                       174435
+      *  33  -  Display Assignment USER (Auto allocation)             *                       174435
+      *  34  -  Confirmation display                                  *                       174435
+      *  35  -  Confirmated display                                   *                       174435
+      *  40  -  Highlight subfile 1 record (amount non-zero)          *
+      * N41  -  Display all accounts on subfile 1                     *
+      *  41  -  Display unallocated a/c's on subfile 1 (non-zero amts)*
+      *  50  -  Work indicator                                        *
+      *  51  -  Work indicator                                        *
+      *  52  -  Work indicator                                        *
+      *  53  -  Work indicator                                        *
+      *  60  -  Enable ROLLUP                                         *
+      *  61  -  ROLLUP requested                                      *
+      *  70  -  Do not display branch code, field is not analysed     *
+      *  71  -  Do not display currency, field is not analysed        *
+      *  72  -  Do not display a/c code, field is not analysed        *
+      *  73  -  Do not display customer no., field is not analysed    *
+      *  74  -  Do not display a/c sequence, field is not analysed    *
+      *  75  -  Do not display profit centre, field is not analysed   *
+      *  76  -  Do not display book code, field is not analysed       *
+      *  77  -  Do not display trans. type, field is not analysed     *
+      *  78  -  Do not display trans. sub-type, field is not analysed *
+      *  79  -  Do not display assc. customer, field is not analysed  *
+      *  80  -  SFLNXTCHG subfile 1                                   *
+      *  81  -  SFLCLR subfile 1                                      *
+      *  82  -  SFLDSP subfile 1                                      *
+      *  84  -  SFLCLR subfile 2                                      *
+      *  85  -  SFLDSP subfile 2                                      *
+      *  86  -  SFLNXTCHG subfile 3                                   *
+      *  87  -  SFLCLR subfile 3                                      *
+      *  88  -  ROLLUP requested on subfile 3                         *
+      *  90  -  Work indicator                                        *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  DISP1   -  Display subfile 1                                 *
+      *  DFTMOV  -  Assignment options for unassigned balances on F17 *                       174435
+      *  ICDMOV  -  Assign PRFC using ICD file                        *                       174435
+      *  USRMOV  -  Assign PRFC which is User defined                 *                       174435
+      *  MOVE    -  Move unallocated balances to move file (GLMOVEPD) *                       174435
+      *  VAL1    -  Validate subfile 1                                *
+      *  SETUP1  -  Set up subfile 1 (opening balance details)        *
+      *  ROLLUP  -  Create a page of subfile 1 records                *
+      *  SETUP2  -  Set up subfile2 (amend movement records)          *
+      *  DISP2   -  Display subfile 2                                 *
+      *  VAL2    -  Validate subfile 2                                *
+      *  AMDMOV  -  Amend movement records on GLMOVEPD                *
+      *  SETUP3  -  Set up subfile 3 (add movement records)           *
+      *  DISP3   -  Display subfile 3                                 *
+      *  WRITE3  -  Write a page of blank subfile 3 records           *
+      *  VAL3    -  Validate subfile 3                                *
+      *  ADDMOV  -  Add movement records to GLMOVEPD                  *
+      *  CHKF10  -  F10 (cancel) processing                           *
+      *  DBERR   -  Error processing                                  *
+      *  #FMTBL  -  Format 19,0 field for output to screen            *
+      *  #VALBL  -  Validate 19,0 field                               *
+      *  ZASNMS  -  Send message to program message queue             *
+      *  MSGSUB  -  Set up message subfile                            *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+     E                    #F         21  1               Amount format
+     E                    #V1        21  1               Amount validate
+     E                    #V2        21  1               Amount validate
+      /SPACE 3
+     IDSHBCG    E DSGLHBCGPD
+      * Data structures for access programs
+     ISDMMOD    E DSSDMMODPD                                                                  174435
+      * External DS for MIDAS module details                                                  174435
+     IDSCURR    E DSSDCURRPD
+     IDSPRFC    E DSSDPRFCPD
+     IDSBOOK    E DSSDBOOKPD
+     IDSCUST    E DSSDCUSTPD
+     ISDPCAC    E DSSDPCACPD                                                                  174435
+      **   Profit Centre Accounting details                                                   174435
+     IRUNDAT    E DS
+      * Run Date DS
+     IDSFDY     E DSDSFDY
+      * First DS for Access Programs, Short Data Structure
+     IDSSDY     E DSDSSDY                                                 176443
+      **  Second DS for access programs, Long Data Structure              176443
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+     IPSDS       SDS
+      * Program Status DS
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     IINFDF       DS
+      * Screen INFDS for lowest subfile RRN on display
+     I                                    B 378 3790#SFREC
+      *
+     IINFL1       DS
+      * INFDS for GLMOVEL1 for RRN
+     I                                    B 397 4000#L1RRN
+      *
+     IINFMV       DS
+      * INFDS for GLMOVEPD for RRN
+     I                                    B 397 4000#MVRRN
+      *
+     I            DS
+      * DSs for balance formatting
+     I                                        1  190#FIN
+     I                                        1  19 #F0
+     I                                        1  18 #F1I
+     I                                       19  19 #F1D
+     I                                        1  17 #F2I
+     I                                       18  19 #F2D
+     I                                        1  16 #F3I
+     I                                       17  19 #F3D
+     I#FOUT       DS                             21
+     I                                        1  21 #F
+      *
+     I***POSP1**     DS                             18                                        CGL029
+     IPOSP1       DS                             24                                           CGL029
+      * DSs for subfile positioning
+     I                                        1   3 BRCAP1
+     I                                        4   6 CCYP1
+     I**********                              7  100ACODP1                                    CGL029
+     I**********                             11  160CNUMP1                                    CGL029
+     I**********                             17  180ACSQP1                                    CGL029
+     I                                        7  160ACODP1                                    CGL029
+     I**********                             17  220CNUMP1                             CGL029 CSD027
+     I                                       17  22 CNUMP1                                    CSD027
+     I                                       23  240ACSQP1                                    CGL029
+      *                                                                                       CGL029
+     I***POSF1**     DS                             18                                        CGL029
+     IPOSF1       DS                             24                                           CGL029
+     I                                        1   3 BRCAF1
+     I                                        4   6 CCYF1
+     I**********                              7  100ACODF1                                    CGL029
+     I**********                             11  160CNUMF1                                    CGL029
+     I**********                             17  180ACSQF1                                    CGL029
+     I                                        7  160ACODF1                                    CGL029
+     I**********                             17  220CNUMF1                             CGL029 CSD027
+     I                                       17  22 CNUMF1                                    CSD027
+     I                                       23  240ACSQF1                                    CGL029
+     IPOSP2       DS                             31
+     I                                        1   3 PRFCP2
+     I                                        4   5 BOOKP2
+     I                                        6  15 TTYPP2
+     I                                       16  250TSTPP2
+     I**********                             26  310ASCUP2                                    CSD027
+     I                                       26  31 ASCUP2                                    CSD027
+     IPOSS2       DS                             31
+     I                                        1   3 PRFCS2
+     I                                        4   5 BOOKS2
+     I                                        6  15 TTYPS2
+     I                                       16  250TSTPS2
+     I**********                             26  310ASCUS2                                    CSD027
+     I                                       26  31 ASCUS2                                    CSD027
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      /SPACE
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPC   2        Group code
+     C                     PARM           XPERY   4        Period year
+     C                     PARM           XPERN   2        Period number
+     C                     PARM           XRETC   1        Return code
+      /SPACE
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      /SPACE
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      /SPACE
+      * In the Dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      /SPACE
+      * Move run date (alpha) to screen field for display
+     C                     MOVELAGMRDT    SMRDT
+      /SPACE
+      * Set up message subfile
+     C                     EXSR MSGSUB
+      /SPACE
+      * Check that the group code is valid
+      * Error if not found
+     C                     CALL 'AOHBCGR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM XGRPC     P@HBCG  2
+     C           DSHBCG    PARM DSHBCG    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B001
+     C                     MOVEL'AOHBCGR0'#FILE            ************
+     C                     Z-ADD1         #BASE            * Error 01 *
+     C                     MOVELXGRPC     #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E001
+      /SPACE
+     C**  Check if Analytical Accounting is installed.                                        174435
+     C*                                                                                       174435
+     C                     CALL 'AOMMODR0'                                                    174435
+     C                     PARM '*DBERR ' P@RTCD                                              174435
+     C                     PARM '*FIRST ' P@OPTN                                              174435
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               174435
+     C*                                                                                       174435
+     C** IF Analytical Accounting installed get PCA ICD details                               174435
+     C*                                                                                       174435
+     C           BGN0ST    IFEQ 'Y'                        --- B001                           174435
+     C                     CALL 'AOPCACR0'                                                    174435
+     C                     PARM *BLANKS   P@RTCD                                              174435
+     C                     PARM '*FIRST'  P@OPTN                                              174435
+     C           SDPCAC    PARM SDPCAC    DSFDY                                               174435
+      *                                                                                       174435
+      **  If no PCA details, issue error                                                      174435
+      *                                                                                       174435
+     C           P@RTCD    IFNE *BLANKS                    --- B002                           174435
+     C                     MOVEL'SDPCACPD'#FILE            ************                       174435
+     C                     Z-ADD13        #BASE            * Error 13 *                       174435
+     C                     MOVELP@OPTN    #KEY             ************                       174435
+     C                     EXSR DBERR                                                         174435
+     C                     ENDIF                           --- E002                           174435
+     C                     ENDIF                           --- E001                           174435
+      *                                                                                       174435
+      /SPACE                                                                                  174435
+      * Set non-display indicators according to values in analysis
+      * fields
+     C           HCABAC    COMP *BLANKS                  72
+     C           HCABCY    COMP *BLANKS                  71
+     C           HCABBR    COMP *BLANKS                  70
+     C           HCABCU    COMP *BLANKS                  73
+     C           HCABAS    COMP *BLANKS                  74
+     C           HCABPC    COMP *BLANKS                  75
+     C           HCABBK    COMP *BLANKS                  76
+     C           HCABTT    COMP *BLANKS                  77
+     C           HCABTS    COMP *BLANKS                  78
+     C           HCASCU    COMP *BLANKS                  79
+      /SPACE
+      * Set highest relative record number for SR/SETUP1
+     C                     Z-ADD0         SRRN1H  50
+      /SPACE
+      * Display all a/cs
+     C                     SETOF                     41
+      /SPACE
+      * Set up subfile 1 (Opening Balance Selection)
+     C                     EXSR SETUP1
+      /SPACE
+      * Display/validate subfile 1
+     C                     EXSR DISP1
+      /SPACE
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR           *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DISP1 - SR to display/validate subfile 1, Opening Balance    *
+      *          Selection                                            *
+      *                                                               *
+      *****************************************************************
+     C           DISP1     BEGSR
+      /SPACE
+      * Repeat until F3 pressed
+     C           *INKC     DOUEQ'1'                        --- B001
+      /SPACE
+      * Repeat none of F5, F11 or ROLLUP requested
+     C           *INKE     DOUEQ'0'                        --- B002
+     C           *INKK     ANDEQ'0'
+     C           *IN61     ANDEQ'0'
+     C                     WRITESFLCTLM
+     C                     WRITEFOOT1
+     C                     EXFMTSFLCTL1
+      /SPACE
+      * If F5 or F11, reset RRN for SETUP1, toggle *IN41 (if F11)
+      * and reset subfile
+     C           *INKE     IFEQ '1'                        --- B003
+     C           *INKK     OREQ '1'
+     C                     Z-ADD0         SRRN1H
+     C                     Z-ADD0         SFK1                                                174435
+     C   KK      *IN41     COMP '0'                      41 0 -> 1, 1 -> 0
+     C                     EXSR SETUP1
+     C                     END                             --- E003
+      /SPACE
+      * If ROLLUP requested, display new page
+     C   61                EXSR ROLLUP
+     C                     END                             --- E002
+      /SPACE
+      **If*F3*not*pressed,*perform*F10*check*then*validate**********************              174435
+      * If F3 (Exit) not pressed, and F17(Auto assignment) pressed,                           174435
+      * then perform the auto assignment SR (AUTMOV)                                          174435
+      * else perform F10 check then validate                                                  174435
+     C           *INKC     IFEQ '0'                        --- B002
+     C           *IN21     IFEQ '1'                        --- B003                           174435
+     C                     EXSR AUTMOV                                                        174435
+     C                     MOVE *OFF      *IN41                                               174435
+     C                     MOVE *OFF      *IN21                                               174435
+     C                     MOVE *OFF      *INKC                                               174435
+     C                     Z-ADD0         SFK1                                                174435
+     C                     Z-ADD0         SRRN1H  50                                          174435
+     C                     EXSR SETUP1                                                        174435
+     C                     ENDIF                           --- E003                           174435
+     C                     EXSR CHKF10
+     C                     EXSR VAL1
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************                       174435
+      *                                                               *                       174435
+      *  AUTMOV - SR to select method of Auto allocation              *                       174435
+      *              when F17 is pressed                              *                       174435
+      *                                                               *                       174435
+      *****************************************************************                       174435
+     C           AUTMOV    BEGSR                                                              174435
+     C* Clear messages from program message queue                                             174435
+     C                     CALL 'Y2CLMSC'                                                     174435
+     C                     PARM SPGMQ     ZAPGM                                               174435
+     C                     PARM '*SAME'   ZAPGRL                                              174435
+     C/SPACE                                                                                  174435
+     C           *IN20     DOWEQ*OFF                       --- B001                           174435
+     C* Clear screen PRFC field                                                               174435
+     C                     MOVE *BLANKS   APRFC                                               174435
+     C* Switch on Indicators for initial selection screen for Auto alloc                      174435
+     C                     SETON                     303233                                   174435
+     C                     SETOF                     31                                       174435
+     C* Display option screen                                                                 174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     EXFMTMC0225F1                                                      174435
+     C* Clear messages from program message queue                                             174435
+     C                     CALL 'Y2CLMSC'                                                     174435
+     C                     PARM SPGMQ     ZAPGM                                               174435
+     C                     PARM '*SAME'   ZAPGRL                                              174435
+     C* OPTION RETURNS                                                                        174435
+     C                     SELEC                                                              174435
+     C           ASSTYP    WHEQ '1'                        --- B002                           174435
+     C                     EXSR ICDMOV                                                        174435
+     C           ASSTYP    WHEQ '2'                                                           174435
+     C                     EXSR USRMOV                                                        174435
+     C                     ENDSL                           --- E002                           174435
+     C                     ENDDO                           --- E001                           174435
+     C                     MOVE *OFF      *IN20                                               174435
+     C                     ENDSR                                                              174435
+      *****************************************************************                       174435
+      *                                                               *                       174435
+      *  ICDMOV - SR to Allocate the unallocated balances directly    *                       174435
+      *              using ICD default profit centre                  *                       174435
+      *                                                               *                       174435
+      *****************************************************************                       174435
+     C           ICDMOV    BEGSR                                                              174435
+     C*                                                                                       174435
+      * If Analytical accounting is switched off write error                                  174435
+     C           BGN0ST    IFEQ 'N'                        --- B001                           174435
+     C                     MOVE 'GLX0417' ZAMSID                                              174435
+     C                     EXSR ZASNMS                                                        174435
+     C*                                                                                       174435
+     C                     ELSE                            --- X001                           174435
+     C* Switch on Indicators for ICD Selection screen                  c                      174435
+     C                     SETON                     313234                                   174435
+     C                     SETOF                     3033                                     174435
+      *  Profit centre is Blank, so the Unallocated Profit Centre                             174435
+      *  from ICD is moved into the screen allocation profit centre                           174435
+     C*                                                                                       174435
+     C                     MOVE FTUAPC    APRFC                                               174435
+     C* Display screen for ICD allocation                                                     174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     WRITEMC0225F1                                                      174435
+     C                     EXFMTMC0225F2                                                      174435
+     C           *IN25     IFEQ *ON                        --- B002                           174435
+     C*                                                                                       174435
+     C* Assign balances using default profit centre                                           174435
+     C                     EXSR MOVE                                                          174435
+     C* Switch on Indicators for User Confirmation                                            174435
+     C                     SETON                     313335                                   174435
+     C                     SETOF                     303234                                   174435
+     C* Display screen for User allocation confirmation                                       174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     WRITEMC0225F1                                                      174435
+     C                     EXFMTMC0225F2                                                      174435
+     C                     SETOF                     35                                       174435
+     C*                                                                                       174435
+     C                     ENDIF                           --- E002                           174435
+     C                     ENDIF                           --- E001                           174435
+     C                     ENDSR                                                              174435
+      *****************************************************************                       174435
+      *                                                               *                       174435
+      *  USRMOV - SR to Allocate the unallocated balances directly    *                       174435
+      *              using a user defined profit centre               *                       174435
+      *                                                               *                       174435
+      *****************************************************************                       174435
+     C           USRMOV    BEGSR                                                              174435
+     C                     SETON                     12                                       174435
+     C* Loop while not valid Profit centre and Previous screen not                            174435
+     C* requested or exit                                                                     174435
+     C           *IN12     DOWEQ*ON                        --- B001                           174435
+     C* Clear screen PRFC field                                                               174435
+     C                     SETOF                     1226                                     174435
+     C                     MOVE *BLANKS   APRFC                                               174435
+     C* Switch on Indicators for User Selection screen                                        174435
+     C                     SETON                     3133                                     174435
+     C                     SETOF                     303234                                   174435
+     C                     SETOF                     35                                       174435
+     C* Display screen for User allocation                                                    174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     EXFMTMC0225F1                                                      174435
+     C           *IN20     IFEQ *ON                        --- B002                           174435
+     C                     SETOF                     12                                       174435
+     C                     MOVE *BLANKS   APRFC                                               174435
+     C                     ENDIF                           --- E002                           174435
+     C           *IN24     IFEQ *ON                        --- B002                           174435
+     C                     SETOF                     12                                       174435
+     C                     MOVE *BLANKS   APRFC                                               174435
+     C                     ENDIF                           --- E002                           174435
+     C* Validate profit centre via access object, if entered                                  174435
+     C* If error send message                                                                 174435
+     C           APRFC     IFNE *BLANKS                    --- B002                           174435
+     C                     CALL 'AOPRFCR0'                                                    174435
+     C                     PARM *BLANKS   P@RTCD                                              174435
+     C                     PARM '*KEY   ' P@OPTN                                              174435
+     C           APRFC     PARM APRFC     P@PRFC  4                                           174435
+     C           DSPRFC    PARM DSPRFC    DSFDY                                               174435
+     C           P@RTCD    IFNE *BLANKS                    --- B003                           174435
+     C                     SETON                     12                                       174435
+     C                     MOVE 'GLX0377' ZAMSID                                              174435
+     C                     EXSR ZASNMS                                                        174435
+     C                     ELSE                            --- X003                           174435
+     C* Clear messages from program message queue                                             174435
+     C                     CALL 'Y2CLMSC'                                                     174435
+     C                     PARM SPGMQ     ZAPGM                                               174435
+     C                     PARM '*SAME'   ZAPGRL                                              174435
+     C* Switch on Indicators for User Confirmation                                            174435
+     C                     SETON                     313334                                   174435
+     C                     SETOF                     3032                                     174435
+     C* Display screen for User allocation confirmation                                       174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     WRITEMC0225F1                                                      174435
+     C                     EXFMTMC0225F2                                                      174435
+     C*                                                                                       174435
+     C           *IN20     IFEQ *ON                        --- B004                           174435
+     C                     SETOF                     12                                       174435
+     C                     ENDIF                           --- E004                           174435
+     C           *IN24     IFEQ *ON                        --- B004                           174435
+     C                     SETON                     12                                       174435
+     C                     SETOF                     34                                       174435
+     C                     MOVEL*BLANKS   APRFC                                               174435
+     C                     ENDIF                           --- E004                           174435
+     C* If Profit centre is confirmed                                                         174435
+     C           *IN25     IFEQ *ON                        --- B004                           174435
+     C* Assign balances using User profit centre                                              174435
+     C                     EXSR MOVE                                                          174435
+     C* Switch on Indicators for User Confirmation                                            174435
+     C                     SETON                     313335                                   174435
+     C                     SETOF                     303234                                   174435
+     C* Display screen for User allocation confirmation                                       174435
+     C                     WRITEMC0225FT                                                      174435
+     C                     WRITESFLCTLM                                                       174435
+     C                     WRITEMC0225F0                                                      174435
+     C                     WRITEMC0225F1                                                      174435
+     C                     EXFMTMC0225F2                                                      174435
+     C                     SETOF                     35                                       174435
+     C           *IN20     IFEQ *ON                        --- B005                           174435
+     C                     SETOF                     12                                       174435
+     C                     ENDIF                           --- E005                           174435
+     C                     ENDIF                           --- E004                           174435
+     C                     ENDIF                           --- E003                           174435
+     C*                                                                                       174435
+     C                     ENDIF                           --- E002                           174435
+     C                     ENDDO                           --- E001                           174435
+     C                     ENDSR                                                              174435
+      *****************************************************************                       174435
+      *                                                               *                       174435
+      *  MOVE - SR to Allocate the unallocated balances to the        *                       174435
+      *              chosen Profit Centre                             *                       174435
+      *                                                               *                       174435
+      *****************************************************************                       174435
+     C           MOVE      BEGSR                                                              174435
+      *                                                                                       174435
+      * - Read file sequentially from beginning                                               174435
+     C           1         SETLLOPBLDF                                                        174435
+     C                     Z-ADD0         SRRN1H                                              174435
+      * Read file, set up record to write                                                     174435
+     C           *IN50     DOUEQ'1'                        --- B001                           174435
+     C                     READ OPBLDF                   50                                   174435
+     C           *IN50     IFEQ '0'                        --- B002                           174435
+     C                     ADD  1         SRRN1H                                              174435
+     C           PAMT      IFNE 0                          --- B003                           174435
+      *  The User Profit Centre is moved to the field PRFC                                    174435
+     C                     MOVE APRFC     PRFC                                                174435
+      *                                                                                       174435
+      **  Move PAMT to working field                                                          174435
+     C                     Z-ADDPAMT      WPAMT  190                                          174435
+      * Create key list to allow chain on the Movements file so it can be                     174435
+      * update                                                                                174435
+      *                                                                                       174435
+     C           L2KY      KLIST                                                              174435
+     C                     KFLD           BRCA                                                174435
+     C                     KFLD           CCY                                                 174435
+     C                     KFLD           ACOD                                                174435
+     C                     KFLD           CNUM                                                174435
+     C                     KFLD           ACSQ                                                174435
+     C                     KFLD           PRFC                                                174435
+     C/SPACE                                                                                  174435
+     C* Read all records for key                                                              174435
+     C           L2KY      CHAINMOVEL2               52                                       174435
+     C*                                                                                       174435
+     C**  If the profit centre exists already then add the posting                            174435
+     C*   amount to the current value and update the record                                   174435
+     C*                                                                                       174435
+     C           *IN52     IFEQ '0'                        --- B004                           174435
+     C           PAMT      ADD  WPAMT     PAMT                                                174435
+     C                     UPDATMOVEL2                                                        174435
+     C*                                                                                       174435
+     C**  Move PAMT to working field and set reset the Opening bal.                           174435
+     C*   to zero                                                                             174435
+     C                     ELSE                            --- X004                           174435
+     C                     Z-ADDWPAMT     PAMT                                                174435
+     C                     WRITEMOVEL2                                                        174435
+     C                     ENDIF                           --- E004                           174435
+     C* Get opening balance record and make = 0                                               174435
+     C           SRRN1H    CHAINOPBLDF               53                                       174435
+     C           *IN53     IFEQ '1'                        --- B004                           174435
+     C                     MOVEL'GLOPBLPD'#FILE            ************                       174435
+     C                     Z-ADD7         #BASE            * Error 07 *                       174435
+     C                     MOVELSRRN1H    #KEY             ************                       174435
+     C                     EXSR DBERR                                                         174435
+     C                     END                             --- E004                           174435
+     C                     Z-ADD0         PAMT                                                174435
+     C                     UPDATOPBLDF                                                        174435
+     C                     END                             --- E003                           174435
+     C                     END                             --- E002                           174435
+     C                     END                             --- E001                           174435
+     C                     Z-ADD0         SRRN1H                                              174435
+     C                     Z-ADD1         SPOSN1                                              174435
+     C/SPACE                                                                                  174435
+     C                     ENDSR                                                              174435
+      *****************************************************************
+      *                                                               *
+      *  VAL1 - SR to validate subfile 1, Opening Balance Selection   *
+      *                                                               *
+      *****************************************************************
+     C           VAL1      BEGSR
+      /SPACE
+      * Display 'no records to display' message if no records
+     C           *IN82     IFEQ '0'                        --- B001
+     C                     MOVE 'GLX0372' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVAL1
+     C                     END                             --- E001
+      /SPACE
+      * Reset screen position to 0. This will act as an error flag.
+     C                     Z-ADD0         SPOSN1
+      /SPACE
+      * Read changed subfile records.
+     C           *IN51     DOUEQ'1'                        --- B001
+     C                     READCSFL1                     51
+     C           *IN51     IFEQ '0'                        --- B002
+      /SPACE
+      * Error if field is not 'A' or blank.
+     C           SACTN     IFEQ *BLANKS                    --- B003
+     C                     SETOF                     10  80
+     C           SAM1N     COMP 0                    4040
+     C                     UPDATSFL1
+      /SPACE
+     C                     ELSE                            --- X003
+     C           SACTN     IFNE 'A'                        --- B004
+     C                     SETON                     10  80
+     C           SAM1N     COMP 0                    4040
+     C           SPOSN1    IFEQ 0                          --- B005
+     C                     Z-ADDSFK1      SPOSN1
+     C                     MOVE 'GLX0374' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             --- E005
+     C                     UPDATSFL1
+      /SPACE
+      * Perform amend processing if selection is 'A'.
+     C                     ELSE                            --- X004
+     C                     Z-ADD#SFREC    #SFRC2  40       Save RRN
+     C                     EXSR SETUP2
+     C                     EXSR DISP2
+      /SPACE
+     C           SFK1      CHAINSFL1                 51
+      /SPACE
+     C           *IN51     IFEQ '1'                        --- B005
+     C                     MOVEL'SFL1'    #FILE            ************
+     C                     Z-ADD2         #BASE            * Error 02 *
+     C                     MOVELSFK1      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E005
+      /SPACE
+     C                     SETOF                     10  80
+     C                     MOVEL*BLANKS   SACTN
+     C                     MOVELSAM2C     SAM1
+     C                     Z-ADDSAM2CN    SAM1N      4040
+     C                     UPDATSFL1
+     C                     Z-ADD#SFRC2    #SFREC           Restore RRN
+     C                     END                             --- E004
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Exit here if position set (error found)
+     C           SPOSN1    CABNE0         EVAL1
+      /SPACE                                                              051861
+      * Set position if not set                                           051861
+     C           #SFREC    IFEQ 0                                         051861
+     C                     Z-ADD1         #SFREC                          051861
+     C                     END                             --- E001       051861
+      /SPACE
+      * If position fields are not set, set position to position from
+      * INFDS and exit.
+     C           SBRCAP    IFEQ *BLANKS                    --- B001
+     C           SCCYP     ANDEQ*BLANKS
+     C           SACODP    ANDEQ0
+     C********** SCNUMP    ANDEQ0                                                             CSD027
+     C           SCNUMP    ANDEQ*BLANKS                                                       CSD027
+     C           SACSQP    ANDEQ0
+     C                     Z-ADD#SFREC    SPOSN1
+     C                     GOTO EVAL1
+     C                     END                             --- E001
+      /SPACE
+      * Position processing
+      * - Place positioner fields in data structure
+     C                     MOVELSBRCAP    BRCAP1
+     C                     MOVELSCCYP     CCYP1
+     C                     Z-ADDSACODP    ACODP1
+     C**********           Z-ADDSCNUMP    CNUMP1                                              CSD027
+     C                     MOVE SCNUMP    CNUMP1                                              CSD027
+     C                     Z-ADDSACSQP    ACSQP1
+      /SPACE
+      * - Save highest RRN in case search fails
+     C                     Z-ADDSRRN1H    @RRN1H  50
+      /SPACE
+      * - Read file sequentially from beginning
+     C           1         SETLLOPBLDF
+     C                     Z-ADD0         SRRN1H
+     C           *IN50     DOUEQ'1'                        --- B001
+     C                     READ OPBLDF                   50
+     C           *IN50     IFEQ '0'                        --- B002
+     C                     ADD  1         SRRN1H
+      /SPACE
+      * - Place file fields in data structure if corresponding position
+      *   field entered
+     C           SBRCAP    IFNE *BLANKS                    --- B003
+     C                     MOVELBRCA      BRCAF1
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   BRCAF1
+     C                     END                             --- E003
+     C           SCCYP     IFNE *BLANKS                    --- B003
+     C                     MOVELCCY       CCYF1
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   CCYF1
+     C                     END                             --- E003
+     C           SACODP    IFNE 0                          --- B003
+     C                     Z-ADDACOD      ACODF1
+     C                     ELSE                            --- X003
+     C                     Z-ADD0         ACODF1
+     C                     END                             --- E003
+     C********** SCNUMP    IFNE 0                          --- B003                           CSD027
+     C**********           Z-ADDCNUM      CNUMF1                                              CSD027
+     C           SCNUMP    IFNE *BLANKS                    --- B003                           CSD027
+     C                     MOVE CNUM      CNUMF1                                              CSD027
+     C                     ELSE                            --- X003
+     C**********           Z-ADD0         CNUMF1                                              CSD027
+     C                     MOVE *BLANKS   CNUMF1                                              CSD027
+     C                     END                             --- E003
+     C           SACSQP    IFNE 0                          --- B003
+     C                     Z-ADDACSQ      ACSQF1
+     C                     ELSE                            --- X003
+     C                     Z-ADD0         ACSQF1
+     C                     END                             --- E003
+      /SPACE
+      * If match found, store position and exit loop
+     C           POSP1     IFEQ POSF1                      --- B003
+     C                     Z-ADDSRRN1H    SPOSN1
+     C                     SETON                     50
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * If position field not set, display 'not found' message,
+      * else reset subfile
+     C           SPOSN1    IFEQ 0                          --- B001
+     C                     Z-ADD@RRN1H    SRRN1H
+     C                     Z-ADD#SFREC    SPOSN1
+     C                     MOVE 'GLX0380' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            --- X001
+     C                     SUB  1         SRRN1H
+     C                     EXSR SETUP1
+     C                     END                             --- E001
+      /SPACE
+     C           EVAL1     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETUP1 - SR to set up subfile 1, Opening Balance Selection   *
+      *                                                               *
+      *****************************************************************
+     C           SETUP1    BEGSR
+      /SPACE
+      * Clear screen
+     C                     WRITEDUMMY
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+      * Clear the subfile
+     C                     SETON                     81
+     C                     SETOF                     82
+     C                     WRITESFLCTL1
+     C                     SETOF                     81
+      /SPACE
+      * Initialize highest subfile key
+     C                     Z-ADD0         SFK1H   40
+      /SPACE
+      * Initialize header fields
+     C                     MOVELXGRPC     SGRPC
+     C                     MOVELXPERY     SPERY
+     C                     MOVELXPERN     SPERN
+     C                     MOVEL*BLANKS   SBRCAP
+     C                     MOVEL*BLANKS   SCCYP
+     C                     Z-ADD0         SACODP
+     C**********           Z-ADD0         SCNUMP                                              CSD027
+     C                     MOVE *BLANKS   SCNUMP                                              CSD027
+     C                     Z-ADD0         SACSQP
+      /SPACE
+      * Call SR/ROLLUP to produce first page of records
+     C                     EXSR ROLLUP
+      /SPACE
+      * If records written, enable SFLDSP, else send error message
+     C           SFK1      IFGT 0                          --- B001
+     C                     SETON                     82
+     C                     ELSE                            --- X001
+     C                     MOVE 'GLX0372' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ROLLUP - SR to set up a page of subfile 1 records            *
+      *                                                               *
+      *****************************************************************
+     C           ROLLUP    BEGSR
+      /SPACE
+      * Reset currency change detect field
+     C                     MOVEL'***'     @CCY    3
+      /SPACE
+      * Set position to highest current record + 1
+     C           SFK1H     ADD  1         SPOSN1
+      /SPACE
+      * Set position on opening balance file
+     C           SRRN1H    SETGTOPBLDF
+      /SPACE
+      * Reset indicators, selection field on subfile
+     C                     SETOF                     10  80
+     C                     MOVEL*BLANKS   SACTN
+      /SPACE
+      * Reset iteration count (@I) and write count (@W)
+     C                     Z-ADD0         @I      50
+     C                     Z-ADD0         @W      50
+      /SPACE
+      * Read file, set up subfile records
+     C           *IN50     DOUEQ'1'                        --- B001
+     C           @W        ORGE 13
+     C           SFK1      OREQ 9999
+     C                     READ OPBLDF                   50
+     C           *IN50     IFEQ '0'                        --- B002
+      /SPACE
+     C                     ADD  1         @I
+     C           SRRN1H    ADD  @I        SRRN1
+      /SPACE
+     C           *IN41     IFEQ '0'                        --- B003
+     C           *IN41     OREQ '1'
+     C           PAMT      ANDNE0
+      /SPACE
+     C  N70                MOVELBRCA      SBRCA
+     C   70                MOVEL*BLANKS   SBRCA
+     C  N71                MOVELCCY       SCCY
+     C   71                MOVEL*BLANKS   SCCY
+     C  N72                Z-ADDACOD      SACOD
+     C   72                Z-ADD0         SACOD
+     C**N73*****           Z-ADDCNUM      SCNUM                                               CSD027
+     C***73*****           Z-ADD0         SCNUM                                               CSD027
+     C  N73                MOVE CNUM      SCNUM                                               CSD027
+     C   73                MOVE *BLANKS   SCNUM                                               CSD027
+     C  N74                Z-ADDACSQ      SACSQ
+     C   74                Z-ADD0         SACSQ
+      /SPACE
+      * Get decimal places for currency from access object and store
+      * (if currency has changed)
+     C           @CCY      IFEQ '***'                      --- B004
+     C           @CCY      ORNE SCCY
+     C                     MOVELSCCY      @CCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM SCCY      P@CURR  3
+     C********** DSCURR    PARM DSCURR    DSFDY                                 CSD006
+     C           DSCURR    PARM DSCURR    DSSDY                                 CSD006
+     C           P@RTCD    IFNE *BLANKS                    --- B005
+     C                     MOVEL'AOCURRR0'#FILE            ************
+     C                     Z-ADD3         #BASE            * Error 03 *
+     C                     MOVELSCCY      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E005
+     C                     END                             --- E004
+     C                     Z-ADDA6NBDP    SDPS
+      /SPACE
+      * Set up hidden fields for WRITE of GLMOVEPD records
+     C                     Z-ADDEVDT      SEVDT
+     C                     Z-ADDVOIN      SVOIN
+     C                     MOVELGETP      SGETP
+     C                     MOVELACSC      SACSC
+     C                     Z-ADDCPNB      SCPNB
+     C                     Z-ADDPDTM      SPDTM
+      /SPACE
+      * Format balance for output via SR/#FMTBL
+     C                     Z-ADDPAMT      SAM1N      4040
+     C                     Z-ADDSAM1N     #FIN
+     C                     Z-ADDSDPS      #FDP    10
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM1
+      /SPACE
+      * Increment write count and subfile key
+     C                     ADD  1         @W
+     C           SFK1H     ADD  @W        SFK1    40
+      /SPACE
+      * Write record
+     C                     WRITESFL1
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Save highest key and RRN
+     C                     Z-ADDSFK1      SFK1H   40
+     C                     Z-ADDSRRN1     SRRN1H
+      /SPACE
+      * Send message if maximum subfile size reached
+     C           SFK1      IFEQ 9999                       --- B001
+     C                     MOVE 'GLX0382' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             --- E001
+      /SPACE
+      * Enable ROLLUP if more records to display (check for non-zero
+      * balance if unallocated only being displayed)
+     C                     SETOF                     60
+     C           *IN50     IFEQ '0'                        --- B001
+     C           SFK1      ANDNE9999
+     C           *IN41     IFEQ '0'                        --- B002
+     C                     READ OPBLDF                   50
+     C                     ELSE                            --- X002
+     C           *IN50     DOUEQ'1'                        --- B003
+     C           PAMT      ORNE 0
+     C                     READ OPBLDF                   50
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C  N50                SETON                     60
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETUP2 - SR to set up subfile 2, Amend Opening Balance       *
+      *                                                               *
+      *****************************************************************
+     C           SETUP2    BEGSR
+      /SPACE
+      * Clear screen
+     C                     WRITEDUMMY
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+      * Clear the subfile
+     C                     SETON                     84
+     C                     SETOF                     85
+     C                     WRITESFLCTL2
+     C                     SETOF                     84
+      /SPACE
+      * Initialize subfile key and position
+     C                     Z-ADD0         SFK2    40
+     C                     Z-ADD1         SPOSN2
+      /SPACE
+      * Initialize and format residual balance
+     C                     Z-ADDSAM1N     SAM2CN 190
+     C                     Z-ADDSAM2CN    #FIN
+     C                     Z-ADDSDPS      #FDP
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM2C
+      /SPACE
+      * Initialize header fields
+     C                     MOVEL*BLANKS   SPRFCP
+     C                     MOVEL*BLANKS   SBOOKP
+     C                     MOVEL*BLANKS   STTYPP
+     C                     MOVEL*BLANKS   STSTPP
+     C***********          Z-ADD0         SASCUP                                              CSD027
+     C                     MOVE *BLANKS   SASCUP                                              CSD027
+      /SPACE
+      * Initialize subfile indicators
+     C                     SETOF                     11
+      /SPACE
+      * Set lower limit on movements file
+     C           L1KY      KLIST
+     C                     KFLD           SBRCA
+     C                     KFLD           SCCY
+     C                     KFLD           SACOD
+     C                     KFLD           SCNUM
+     C                     KFLD           SACSQ
+     C           L1KY      SETLLMOVEL1
+      /SPACE
+      * Read all records for key, set up subfile records
+     C           *IN52     DOUEQ'1'                        --- B001
+     C           L1KY      READEMOVEL1                   52
+     C           *IN52     IFEQ '0'                        --- B002
+     C           PRFC      IFNE *BLANKS                    --- B003
+     C           BOKC      ORNE *BLANKS
+     C           OTTP      ORNE *BLANKS
+     C           OTST      ORNE *BLANKS
+     C********** ASOC      ORNE 0                                                             CSD027
+     C           ASOC      ORNE *BLANKS                                                       CSD027
+     C  N75                MOVELPRFC      SPRFC
+     C   75                MOVEL*BLANKS   SPRFC
+     C  N76                MOVELBOKC      SBOOK
+     C   76                MOVEL*BLANKS   SBOOK
+     C  N77                MOVELOTTP      STTYP
+     C   77                MOVEL*BLANKS   STTYP
+     C  N78                MOVELOTST      STSTP
+     C   78                MOVEL*BLANKS   STSTP
+     C**N79*****           Z-ADDASOC      SASCU                                               CSD027
+     C***79*****           Z-ADD0         SASCU                                               CSD027
+     C  N79                MOVE ASOC      SASCU                                               CSD027
+     C   79                MOVE *BLANKS   SASCU                                               CSD027
+      /SPACE
+      * Format balance for output via SR/#FMTBL
+     C                     Z-ADDPAMT      SAM2SN
+     C                     Z-ADDSAM2SN    #FIN
+     C                     Z-ADDSDPS      #FDP
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM2S
+      /SPACE
+      * Set up RRN from INFDS
+     C                     Z-ADD#L1RRN    SRRN2
+      /SPACE
+      * Increment key and write record
+     C                     ADD  1         SFK2
+     C                     WRITESFL2
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * If records written, enable SFLDSP, else send error message
+     C           SFK2      IFGT 0                          --- B001
+     C                     SETON                     85
+     C                     ELSE                            --- X001
+     C                     MOVE 'GLX0372' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             --- E001
+      /SPACE
+      * Store highest subfile relative record numbers
+     C                     Z-ADDSFK2      SFK2H   40
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DISP2 - SR to display/validate subfile 2, Amend Opening      *
+      *          Balance                                              *
+      *                                                               *
+      *****************************************************************
+     C           DISP2     BEGSR
+      /SPACE
+      * Repeat until F12 pressed
+     C           *IN22     DOUEQ'1'                        --- B001
+     C                     WRITESFLCTLM
+     C                     WRITEFOOT2
+     C                     EXFMTSFLCTL2
+      /SPACE
+      * If F9 pressed, setup and display subfile 3, 'Add Opening Balances'
+     C           *INKI     IFEQ '1'                        --- B002
+     C                     Z-ADD#SFREC    #SFRC3  40
+     C                     EXSR SETUP3
+     C                     EXSR DISP3
+     C                     Z-ADD#SFRC3    #SFREC
+     C           #SFREC    IFEQ 0                          --- B003
+     C                     Z-ADD1         #SFREC
+     C                     END                             --- E003
+     C                     END                             --- E002
+      /SPACE
+      * Perform F10 check
+     C                     EXSR CHKF10
+      /SPACE
+      * Validate subfile 2
+     C                     EXSR VAL2
+     C                     END                             --- E001
+      /SPACE
+      * Amend movement records
+     C                     EXSR AMDMOV
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VAL2 - SR to validate subfile 2, Amend Opening Balance       *
+      *                                                               *
+      *****************************************************************
+     C           VAL2      BEGSR
+      /SPACE
+      * Display 'no records to display' message if no records
+     C           *IN85     IFEQ '0'                        --- B001
+     C                     MOVE 'GLX0372' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EVAL2
+     C                     END                             --- E001
+      /SPACE
+      * Position processing - if no position fields are set, set the
+      * position work field to current rec. Else set it to 0 to show that
+      * positioning is required.
+     C           SPRFCP    IFEQ *BLANKS                    --- B001
+     C           SBOOKP    ANDEQ*BLANKS
+     C           STTYPP    ANDEQ*BLANKS
+     C           STSTPP    ANDEQ*BLANKS
+     C***********SASCUP    ANDEQ0                                                             CSD027
+     C           SASCUP    ANDEQ*BLANKS                                                       CSD027
+     C                     Z-ADD#SFREC    WPOSN2  40
+     C                     ELSE                            --- X001
+     C                     Z-ADD0         WPOSN2
+      /SPACE
+      * Reset subfile position fields in DS
+     C                     MOVELSPRFCP    PRFCP2
+     C                     MOVELSBOOKP    BOOKP2
+     C                     MOVELSTTYPP    TTYPP2
+     C                     MOVELSTSTPP    TSTPP2
+     C**********           Z-ADDSASCUP    ASCUP2                                              CSD027
+     C                     MOVE SASCUP    ASCUP2                                              CSD027
+     C                     END                             --- E001
+      /SPACE
+      * Reset subfile position field. A value of 0 in this field
+      * is used as a flag to show that a validation error has not yet
+      * been found.
+     C                     Z-ADD0         SPOSN2
+      /SPACE
+      * Read all of subfile. Validate balance, error if incorrect,
+      * format if correct.
+      * Check for match on position fields if positioning required.
+     C           1         DO   SFK2H     SFK2             --- B001
+     C           SFK2      CHAINSFL2                 52
+     C           *IN52     IFEQ '1'                        --- B002
+     C                     MOVEL'SFL2'    #FILE            ************
+     C                     Z-ADD4         #BASE            * Error 04 *
+     C                     MOVELSFK2      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+      /SPACE
+      * Validate balance
+     C                     SETOF                     11
+     C                     MOVELSAM2S     #VIN
+     C                     Z-ADDSDPS      #VDP    10
+     C                     EXSR #VALBL
+     C           #VERR     IFEQ 'Y'                        --- B002
+     C                     SETON                     11
+     C           SPOSN2    IFEQ 0                          --- B003
+     C                     Z-ADDSFK2      SPOSN2
+     C                     END                             --- E003
+     C                     MOVE 'GLX0376' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            --- X002
+      /SPACE
+      * Update residual balance and format changed balance
+     C                     ADD  SAM2SN    SAM2CN
+     C                     SUB  #VOUT     SAM2CN
+     C                     Z-ADD#VOUT     SAM2SN
+     C                     Z-ADDSAM2SN    #FIN
+     C                     Z-ADDSDPS      #FDP
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM2S
+     C                     END                             --- E002
+     C                     UPDATSFL2
+      /SPACE
+      * Position processing - Move subfile fields into DS for comparison
+     C           WPOSN2    IFEQ 0                          --- B002
+     C           SPOSN2    ANDEQ0
+     C           SPRFCP    IFNE *BLANKS                    --- B003
+     C                     MOVELSPRFC     PRFCS2
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   PRFCS2
+     C                     END                             --- E003
+     C           SBOOKP    IFNE *BLANKS                    --- B003
+     C                     MOVELSBOOK     BOOKS2
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   BOOKS2
+     C                     END                             --- E003
+     C           STTYPP    IFNE *BLANKS                    --- B003
+     C                     MOVELSTTYP     TTYPS2
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   TTYPS2
+     C                     END                             --- E003
+     C           STSTPP    IFNE *BLANKS                    --- B003
+     C                     MOVELSTSTP     TSTPS2
+     C                     ELSE                            --- X003
+     C                     MOVEL*BLANKS   TSTPS2
+     C                     END                             --- E003
+     C***********SASCUP    IFNE 0                          --- B003                           CSD027
+     C           SASCUP    IFNE *BLANKS                    --- B003                           CSD027
+     C**********           Z-ADDSASCU     ASCUS2                                              CSD027
+     C                     MOVE SASCU     ASCUS2                                              CSD027
+     C                     ELSE                            --- X003
+     C**********           Z-ADD0         ASCUS2                                              CSD027
+     C                     MOVE *BLANKS   ASCUS2                                              CSD027
+     C                     END                             --- E003
+      /SPACE
+      * If match found, store subfile position
+     C           POSP2     IFEQ POSS2                      --- B003
+     C                     Z-ADDSFK2      WPOSN2
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE                                                              117247
+      * Set position if not set                                           117247
+     C           #SFREC    IFEQ 0                          --- B001       117247
+     C                     Z-ADD1         #SFREC                          117247
+     C                     END                             --- E001       117247
+      * If no validation error, then if position field is still
+      * 0 display 'not found' message, else position subfile.
+     C           SPOSN2    IFEQ 0                          --- B001
+     C           WPOSN2    IFEQ 0                          --- B002
+     C                     Z-ADD#SFREC    SPOSN2
+     C                     MOVE 'GLX0380' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            --- X002
+     C                     Z-ADDWPOSN2    SPOSN2
+     C                     END                             --- E002
+      /SPACE
+      * If validation error set off F12 indicator, so that user
+      * must correct error before exiting screen
+     C                     ELSE                            --- X001
+     C                     MOVEL'0'       *IN22
+     C                     END                             --- E001
+      /SPACE
+      * Format residual balance
+     C                     Z-ADDSAM2CN    #FIN
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM2C
+      /SPACE
+     C           EVAL2     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AMDMOV - SR to amend GLMOVEPD records using subfile 2        *
+      *                                                               *
+      *****************************************************************
+     C           AMDMOV    BEGSR
+      /SPACE
+      * Read all records in subfile 2
+     C           1         DO   SFK2H     SFK2             --- B001
+     C           SFK2      CHAINSFL2                 52
+     C           *IN52     IFEQ '1'                        --- B002
+     C                     MOVEL'SFL2'    #FILE            ************
+     C                     Z-ADD5         #BASE            * Error 05 *
+     C                     MOVELSFK2      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+      /SPACE
+      * Get associated movement record
+     C           SRRN2     CHAINMOVEDF               52
+     C           *IN52     IFEQ '1'                        --- B002
+     C                     MOVEL'GLMOVEPD'#FILE            ************
+     C                     Z-ADD6         #BASE            * Error 06 *
+     C                     MOVELSRRN2     #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+      /SPACE
+      * Update balance on movement
+     C                     Z-ADDSAM2SN    PAMT
+     C                     UPDATMOVEDF
+      /SPACE
+     C                     END                             --- E001
+      /SPACE
+      * Get associated opening balance record and update balance
+     C           SRRN1     CHAINOPBLDF               52
+     C           *IN52     IFEQ '1'                        --- B001
+     C                     MOVEL'GLOPBLPD'#FILE            ************
+     C                     Z-ADD7         #BASE            * Error 07 *
+     C                     MOVELSRRN1     #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E001
+     C                     Z-ADDSAM2CN    PAMT
+     C                     UPDATOPBLDF
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETUP3 - SR to set up subfile 3, Add Opening Balance         *
+      *                                                               *
+      *****************************************************************
+     C           SETUP3    BEGSR
+      /SPACE
+      * Clear screen
+     C                     WRITEDUMMY
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+      * Clear the subfile
+     C                     SETON                     87
+     C                     WRITESFLCTL3
+     C                     SETOF                     87
+      /SPACE
+      * Initialize highest subfile RRN field
+     C                     Z-ADD0         SFK3H   40
+      /SPACE
+      * Initialize balance remainder
+     C                     Z-ADDSAM2CN    SAM3CN 190
+     C                     MOVELSAM2C     SAM3C
+      /SPACE
+      * Write a page of subfile 3 records
+     C                     EXSR WRITE3
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DISP3 - SR to display/validate subfile 3, Add Opening Balance*
+      *                                                               *
+      *****************************************************************
+     C           DISP3     BEGSR
+      /SPACE
+      * Repeat until F12 pressed
+     C           *IN23     DOUEQ'1'                        --- B001
+      /SPACE
+      * If ROLLUP requested, add a new page and redisplay
+     C           *IN88     DOUEQ'0'                        --- B002
+     C                     WRITESFLCTLM
+     C                     WRITEFOOT3
+     C                     EXFMTSFLCTL3
+     C   88                EXSR WRITE3
+     C                     END                             --- E002
+      /SPACE
+      * Perform F10 check
+     C                     EXSR CHKF10
+      /SPACE
+      * Validate
+     C                     EXSR VAL3
+     C                     END                             --- E001
+      /SPACE
+      * Add new movement records
+     C                     EXSR ADDMOV
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+      * Clear screen
+     C                     WRITEDUMMY
+      /SPACE
+      * Reset balance remainder on screen 2
+     C                     Z-ADDSAM3CN    SAM2CN
+     C                     MOVELSAM3C     SAM2C
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WRITE3 - Write a page of blank subfile 3 records             *
+      *                                                               *
+      *****************************************************************
+     C           WRITE3    BEGSR
+      /SPACE
+      * Initialize fields, indicators
+     C                     Z-ADD0         SPOSN3
+     C                     SETOF                     121314
+     C                     SETOF                     151617
+     C                     SETOF                     86
+     C                     MOVEL*BLANKS   SPRFC3
+     C                     MOVEL*BLANKS   SBOOK3
+     C                     MOVEL*BLANKS   STTYP3
+     C                     MOVEL*BLANKS   STSTP3
+     C**********           Z-ADD0         SASCU3                                              CSD027
+     C                     MOVE *BLANKS   SASCU3                                              CSD027
+     C                     MOVEL*BLANKS   SAM3S
+     C                     Z-ADD0         SAM3SN
+      /SPACE
+      * Set subfile key to previous highest value
+     C                     Z-ADDSFK3H     SFK3    40
+      /SPACE
+      * Write a page of records, set position to number of first record
+     C           1         DO   10                         --- B001
+     C                     ADD  1         SFK3
+     C                     WRITESFL3
+     C           SPOSN3    IFEQ 0                          --- B002
+     C                     Z-ADDSFK3      SPOSN3
+     C                     Z-ADDSFK3      #SFRC4  40
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Save new highest record number
+     C                     Z-ADDSFK3      SFK3H
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VAL3 - SR to validate subfile 3, Add Opening Balance         *
+      *                                                               *
+      *****************************************************************
+     C           VAL3      BEGSR
+      /SPACE
+      * Reset subfile position (in this subroutine a value of 0 in this
+      * field is used as a flag to show that no errors have occurred).
+     C                     Z-ADD0         SPOSN3
+      /SPACE
+      * Read and validate changed subfile records
+     C           *IN53     DOUEQ'1'                        --- B001
+     C                     READCSFL3                     53
+     C           *IN53     IFEQ '0'                        --- B002
+      /SPACE
+      * Record found, reset indicators
+     C                     SETOF                     121314
+     C                     SETOF                     151617
+     C                     SETOF                     86
+      /SPACE
+      * Validate profit centre via access object, if entered
+      * If error send message, set subfile position if not already set
+     C           SPRFC3    IFNE *BLANKS                    --- B003
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C           SPRFC3    PARM SPRFC3    P@PRFC  4
+     C           DSPRFC    PARM DSPRFC    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B004
+     C                     SETON                     12  86
+     C                     MOVE 'GLX0377' ZAMSID
+     C                     EXSR ZASNMS
+     C           SPOSN3    IFEQ 0                          --- B005
+     C                     Z-ADDSFK3      SPOSN3
+     C                     END                             --- E005
+     C                     END                             --- E004
+     C                     END                             --- E003
+      /SPACE
+      * Validate book code via access object, if entered
+      * If error send message, set subfile position if not already set
+     C           SBOOK3    IFNE *BLANKS                    --- B003
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C           SBOOK3    PARM SBOOK3    P@BOOK  2
+     C           DSBOOK    PARM DSBOOK    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B004
+     C                     SETON                     13  86
+     C                     MOVE 'GLX0378' ZAMSID
+     C                     EXSR ZASNMS
+     C           SPOSN3    IFEQ 0                          --- B005
+     C                     Z-ADDSFK3      SPOSN3
+     C                     END                             --- E005
+     C                     END                             --- E004
+     C                     END                             --- E003
+      /SPACE
+      * Validate associated customer via access object, if entered
+      * If error send message, set subfile position if not already set
+     C********** SASCU3    IFNE 0                          --- B003                           CSD027
+     C           SASCU3    IFNE *BLANKS                    --- B003                           CSD027
+     C                     MOVEL*BLANKS   P@CUST 10
+     C                     MOVELSASCU3    P@CUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           P@CUST
+     C                     PARM *BLANKS   P@KYST  7
+     C***********DSCUST    PARM DSCUST    DSFDY                           176443
+     C           DSCUST    PARM DSCUST    DSSDY                           176443
+     C           P@RTCD    IFNE *BLANKS                    --- B004
+     C                     SETON                     16  86
+     C                     MOVE 'GLX0379' ZAMSID
+     C                     EXSR ZASNMS
+     C           SPOSN3    IFEQ 0                          --- B005
+     C                     Z-ADDSFK3      SPOSN3
+     C                     END                             --- E005
+     C                     ELSE
+     C                     MOVELP@CUST    SASCU3
+     C                     END                             --- E004
+     C                     END                             --- E003
+      /SPACE
+      * Validate opening balance
+      * If error send message, set subfile position if not already set
+      * If no error, format amount
+     C                     MOVELSAM3S     #VIN
+     C                     Z-ADDSDPS      #VDP
+     C                     EXSR #VALBL
+     C           #VERR     IFEQ 'Y'                        --- B003
+     C                     SETON                     17  86
+     C                     MOVE 'GLX0376' ZAMSID
+     C                     EXSR ZASNMS
+     C           SPOSN3    IFEQ 0                          --- B004
+     C                     Z-ADDSFK3      SPOSN3
+     C                     END                             --- E004
+     C                     ELSE                            --- X003
+      /SPACE
+      * Update residual balance and format changed amount
+     C                     ADD  SAM3SN    SAM3CN
+     C                     Z-ADD#VOUT     SAM3SN
+     C                     SUB  SAM3SN    SAM3CN
+     C                     Z-ADDSAM3SN    #FIN
+     C                     Z-ADDSDPS      #FDP
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM3S
+     C                     END                             --- E003
+      /SPACE
+      * If opening balance valid and non-zero, at least 1 other field
+      * must be entered.
+     C           *IN17     IFEQ '0'                        --- B003
+     C           SAM3SN    ANDNE0
+     C           SPRFC3    ANDEQ*BLANKS
+     C           SBOOK3    ANDEQ*BLANKS
+     C           STTYP3    ANDEQ*BLANKS
+     C           STSTP3    ANDEQ*BLANKS
+     C********** SASCU3    ANDEQ0                                                             CSD027
+     C           SASCU3    ANDEQ*BLANKS                                                       CSD027
+     C                     SETON                     17  86
+     C                     MOVE 'GLX0382' ZAMSID
+     C                     EXSR ZASNMS
+     C           SPOSN3    IFEQ 0                          --- B004
+     C                     Z-ADDSFK3      SPOSN3
+     C                     END                             --- E004
+     C                     END                             --- E003
+      /SPACE
+      * Update the subfile with new indicator settings
+     C                     UPDATSFL3
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Update the remaining balance
+     C                     Z-ADDSAM3CN    #FIN
+     C                     Z-ADDSDPS      #FDP
+     C                     EXSR #FMTBL
+     C                     MOVEL#FOUT     SAM3C
+      /SPACE
+      * If no errors so far, check for duplicates in subfile 2, or
+      * previous subfile 3 records.
+     C           SPOSN3    IFEQ 0                          --- B001
+      /SPACE
+      * Read all records in subfile 3, checking those for which
+      * data has been entered.
+     C           1         DO   SFK3H     SFK3             --- B002
+     C           SFK3      CHAINSFL3                 53
+     C           *IN53     IFEQ '1'                        --- B003
+     C                     MOVEL'SFL3'    #FILE            ************
+     C                     Z-ADD8         #BASE            * Error 08 *
+     C                     MOVELSFK3      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E003
+     C           SPRFC3    IFNE *BLANKS                    --- B003
+     C           SBOOK3    ORNE *BLANKS
+     C           STTYP3    ORNE *BLANKS
+     C           STSTP3    ORNE *BLANKS
+     C********** SASCU3    ORNE 0                                                             CSD027
+     C           SASCU3    ORNE *BLANKS                                                       CSD027
+      /SPACE
+      * Save the subfile 3 fields
+     C                     MOVELSPRFC3    @PRFC   4
+     C                     MOVELSBOOK3    @BOOK   2
+     C                     MOVELSTTYP3    @TTYP  10
+     C                     MOVELSTSTP3    @TSTP  10
+     C**********           Z-ADDSASCU3    @ASCU   60                                          CSD027
+     C                     MOVE SASCU3    @ASCU   6                                           CSD027
+     C                     Z-ADDSFK3      @SFK3   40
+      /SPACE
+      * For each subfile 3 entered, compare all subfile 2 records
+     C           1         DO   SFK2H     SFK2             --- B004
+     C           SFK2      CHAINSFL2                 52
+     C           *IN52     IFEQ '1'                        --- B005
+     C                     MOVEL'SFL2'    #FILE            ************
+     C                     Z-ADD9         #BASE            * Error 09 *
+     C                     MOVELSFK2      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E005
+      /SPACE
+      * If match found, store position of SFL3 record and set key values
+      * to high values to exit loops
+     C           @PRFC     IFEQ SPRFC                      --- B005
+     C           @BOOK     ANDEQSBOOK
+     C           @TTYP     ANDEQSTTYP
+     C           @TSTP     ANDEQSTSTP
+     C           @ASCU     ANDEQSASCU
+     C                     Z-ADDSFK3      SPOSN3           Store position
+     C                     Z-ADDSFK3H     SFK3             Exit loop 002
+     C                     Z-ADDSFK2H     SFK2             Exit loop 004
+     C                     END                             --- E005
+     C                     END                             --- E004
+      /SPACE
+      * At this point SFL2 has been checked. If no duplicates found
+      * so far, check preceding SFL3 records.
+     C           @SFK3     SUB  1         WSFK3H  40       Previous RRN
+     C           1         DO   WSFK3H    SFK3             --- B004
+     C           SFK3      CHAINSFL3                 53
+     C           *IN53     IFEQ '1'                        --- B005
+     C                     MOVEL'SFL3'    #FILE            ************
+     C                     Z-ADD10        #BASE            * Error 10 *
+     C                     MOVELSFK3      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E005
+      /SPACE
+      * If match found, store position of SFL3 record and set key values
+      * to high values to exit loop
+     C           @PRFC     IFEQ SPRFC3                     --- B005
+     C           @BOOK     ANDEQSBOOK3
+     C           @TTYP     ANDEQSTTYP3
+     C           @TSTP     ANDEQSTSTP3
+     C           @ASCU     ANDEQSASCU3
+     C                     Z-ADD@SFK3     SPOSN3           Store position
+     C                     Z-ADDWSFK3H    SFK3             Exit loop 004
+     C                     END                             --- E005
+     C                     END                             --- E004
+      /SPACE
+      * If error found, send message and set subfile 3 key to high value
+      * to exit loop, else reset subfile 3 key to saved value
+     C           SPOSN3    IFNE 0                          --- B004
+     C           SPOSN3    CHAINSFL3                 53
+     C           *IN53     IFEQ '1'                        --- B005
+     C                     MOVEL'SFL3'    #FILE            ************
+     C                     Z-ADD11        #BASE            * Error 11 *
+     C                     MOVELSPOSN3    #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E005
+     C                     SETON                     121314
+     C                     SETON                     151617
+     C                     SETON                     86
+     C                     UPDATSFL3
+     C**********           MOVE 'GLX0381' ZAMSID                                              210286
+     C                     MOVE 'GLX0420' ZAMSID                                              210286
+     C                     EXSR ZASNMS
+     C                     ELSE                            --- X004
+     C                     Z-ADD@SFK3     SFK3
+     C                     END                             --- B004
+      /SPACE
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * If subfile position not set at the end of this, reset to current
+     C           SPOSN3    IFEQ 0                          --- B001
+     C                     Z-ADD#SFRC4    SPOSN3
+     C                     ELSE                            --- X001
+      /SPACE
+      * If error, set F12 flag off, so that user cannot exit
+     C                     MOVEL'0'       *IN23
+     C                     END                             --- E001
+      /SPACE
+     C           EVAL3     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ADDMOV - SR to add GLMOVEPD records using subfile 3          *
+      *                                                               *
+      *****************************************************************
+     C           ADDMOV    BEGSR
+      /SPACE
+      * Read all records in subfile 3
+     C           1         DO   SFK3H     SFK3             --- B001
+     C           SFK3      CHAINSFL3                 53
+     C           *IN53     IFEQ '1'                        --- B002
+     C                     MOVEL'SFL3'    #FILE            ************
+     C                     Z-ADD12        #BASE            * Error 12 *
+     C                     MOVELSFK3      #KEY             ************
+     C                     EXSR DBERR
+     C                     END                             --- E002
+      /SPACE
+      * If fields entered, then write a new movement record
+     C           SPRFC3    IFNE *BLANKS                    --- B002
+     C           SBOOK3    ORNE *BLANKS
+     C           STTYP3    ORNE *BLANKS
+     C           STSTP3    ORNE *BLANKS
+     C********** SASCU3    ORNE 0                                                             CSD027
+     C           SASCU3    ORNE *BLANKS                                                       CSD027
+     C                     MOVELSBRCA     BRCA
+     C                     MOVELSCCY      CCY
+     C                     Z-ADDSACOD     ACOD
+     C**********           Z-ADDSCNUM     CNUM                                                CSD027
+     C                     MOVE SCNUM     CNUM                                                CSD027
+     C                     Z-ADDSACSQ     ACSQ
+     C                     MOVELSPRFC3    PRFC
+     C                     MOVELSBOOK3    BOKC
+     C                     MOVELSTTYP3    OTTP
+     C                     MOVELSTSTP3    OTST
+     C**********           Z-ADDSASCU3    ASOC                                                CSD027
+     C                     MOVE SASCU3    ASOC                                                CSD027
+     C                     Z-ADDSEVDT     EVDT
+     C                     Z-ADDSVOIN     VOIN
+     C                     MOVELSGETP     GETP
+     C                     MOVELSACSC     ACSC
+     C                     Z-ADDSCPNB     CPNB
+     C                     Z-ADDSPDTM     PDTM
+     C                     Z-ADDSAM3SN    PAMT
+     C                     WRITEMOVEDF
+      /SPACE
+      * Write a new subfile 2 record
+     C                     SETOF                     11
+     C                     SETON                     85
+     C                     MOVELSPRFC3    SPRFC
+     C                     MOVELSBOOK3    SBOOK
+     C                     MOVELSTTYP3    STTYP
+     C                     MOVELSTSTP3    STSTP
+     C**********           Z-ADDSASCU3    SASCU                                               CSD027
+     C                     MOVE SASCU3    SASCU                                               CSD027
+     C                     Z-ADDSAM3SN    SAM2SN
+     C                     MOVELSAM3S     SAM2S
+     C                     Z-ADD#MVRRN    SRRN2
+     C                     ADD  1         SFK2H
+     C                     Z-ADDSFK2H     SFK2
+     C                     WRITESFL2
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHKF10 - F10 processing                                      *
+      *                                                               *
+      *****************************************************************
+     C           CHKF10    BEGSR
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      /SPACE
+      * F10 flag takes 2 values: blank - F10 not pressed
+      *                         'N' - F10 pressed, needs confirmation
+      *                          (send message to request confirmation)
+      * Exit if flag set and confirmation received
+     C           *INKJ     IFEQ '0'                        --- B001
+     C                     MOVEL*BLANKS   F10CNF  1
+     C                     ELSE                            --- X001
+     C           F10CNF    IFEQ *BLANKS                    --- B002
+     C                     MOVEL'N'       F10CNF
+     C                     MOVE 'GLX0373' ZAMSID           Confirm F10
+     C                     EXSR ZASNMS
+     C                     ELSE                            --- X002
+     C                     MOVEL'C'       XRETC
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR  - Error handling
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      /SPACE
+     C           *LIKE     DEFN DBFILE    #FILE
+     C           *LIKE     DEFN DBASE     #BASE
+     C           *LIKE     DEFN DBKEY     #KEY
+      /SPACE
+     C           *LOCK     IN   LDA
+     C                     MOVEL#FILE     DBFILE
+     C                     Z-ADD#BASE     DBASE
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL'MC0225'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVEL'Y'       XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #FMTBL - SR to format opening balance                        *
+      *           Input - #FIN  19,0 amount to be formatted           *
+      *                   #FDP  1,0 decimal places to use             *
+      *           Output- #FOUT  21A formatted field (decimal point,  *
+      *                          no commas, trailing '-' if needed)   *
+      *                                                               *
+      *****************************************************************
+     C           #FMTBL    BEGSR
+      /SPACE
+      * Clear the output field
+     C                     MOVEL*BLANKS   #FOUT
+      /SPACE
+      * Set the sign of the amount
+     C           #FIN      IFLT 0                          --- B001
+     C                     Z-SUB#FIN      #FIN
+     C                     MOVEL'-'       #F,21
+     C                     END                             --- E001
+      /SPACE
+      * Place integer and decimal parts in array, according to
+      * decimal places.
+     C           #FDP      IFEQ 0                          --- B001
+     C                     MOVEL'0'       #F,1
+     C                     MOVEA#F0       #F,2
+     C                     Z-ADD19        #FEND   30
+     C                     END                             --- E001
+     C           #FDP      IFEQ 1                          --- B001
+     C                     MOVEA#F1I      #F,1
+     C                     MOVEL'.'       #F,19
+     C                     MOVEA#F1D      #F,20
+     C                     Z-ADD17        #FEND
+     C                     END                             --- E001
+     C           #FDP      IFEQ 2                          --- B001
+     C                     MOVEA#F2I      #F,1
+     C                     MOVEL'.'       #F,18
+     C                     MOVEA#F2D      #F,19
+     C                     Z-ADD16        #FEND
+     C                     END                             --- E001
+     C           #FDP      IFEQ 3                          --- B001
+     C                     MOVEA#F3I      #F,1
+     C                     MOVEL'.'       #F,17
+     C                     MOVEA#F3D      #F,18
+     C                     Z-ADD15        #FEND
+     C                     END                             --- E001
+      /SPACE
+      * Remove leading zeros. Read through array from position 1,
+      * replace '0's with blanks, set index to 1 + end value to
+      * end loop when non-zero element found.
+     C           1         DO   #FEND     #       30       --- B001
+     C           #F,#      IFEQ '0'                        --- B002
+     C                     MOVEL*BLANKS   #F,#
+     C                     ELSE                            --- X002
+     C           #FEND     ADD  1         #
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #VALBL - SR to validate opening balance                      *
+      *           Input - #VIN   21A field to be formatted (may       *
+      *                   contain decimal point and trailing +/-)     *
+      *                   #VDP   1,0 Decimal places to use            *
+      *                   #VOUT  19,0 amount (if valid)               *
+      *                   #VERR  1A (Y if error, else blank)          *
+      *                                                               *
+      *****************************************************************
+     C           #VALBL    BEGSR
+      /SPACE
+      * Reset error flag
+     C                     MOVEL*BLANKS   #VERR   1
+      /SPACE
+      * Move input field to work array #V1, add leading zeros if needed
+      * (NB this means blank fields will be interpreted as zero)
+     C                     MOVEA#VIN      #V1,1
+     C           1         DO   21        #V      30       --- B001
+     C           #V1,#V    IFEQ *BLANKS                    --- B002
+     C                     MOVEL'0'       #V1,#V
+     C                     ELSE                            --- X002
+     C                     Z-ADD22        #V
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Find last non-blank position in array, store in #V
+     C                     Z-ADD21        #V
+     C           *IN90     DOUEQ'1'                        --- B001
+     C           #V1,#V    COMP *BLANKS              9090
+     C  N90                SUB  1         #V
+     C                     END                             --- E001
+      /SPACE
+      * Last position may be sign (+ or -), adjust accordingly
+     C                     Z-ADD1         #VSIGN  10
+     C           #V1,#V    IFEQ '+'                        --- B001
+     C                     MOVEL*BLANKS   #V1,#V
+     C                     SUB  1         #V
+     C                     END                             --- E001
+     C           #V1,#V    IFEQ '-'                        --- B001
+     C                     MOVEL*BLANKS   #V1,#V
+     C                     SUB  1         #V
+     C                     Z-SUB1         #VSIGN
+     C                     END                             --- E001
+      /SPACE
+      * Error if last position is 0
+     C           #V        IFEQ 0                          --- B001
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     END                             --- E001
+      /SPACE
+      * Last position may be '.', adjust accordingly
+     C           #V1,#V    IFEQ '.'                        --- B001
+     C                     MOVEL*BLANKS   #V1,#V
+     C                     SUB  1         #V
+     C                     END                             --- E001
+      /SPACE
+      * Error if last position is 0
+     C           #V        IFEQ 0                          --- B001
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     END                             --- E001
+      /SPACE
+      * Right-adjust amount into array #V2, add leading zeros
+     C                     MOVEA*ZEROS    #V2,1
+     C           22        SUB  #V        #V
+     C                     MOVEA#V1,1     #V2,#V
+      /SPACE
+      * Scan right-adjusted amount. Should only contain characters
+      * '0'-'9' and '.'. Only one decimal point allowed (store position
+      * in #VPDP, value 22 in #VPDP means no decimal point).
+      * Store position of first non-zero character in #VPNZ (22 means
+      * no non-zero characters).
+     C                     Z-ADD22        #VPDP   30
+     C                     Z-ADD22        #VPNZ   30
+     C           1         DO   21        #V               --- B001
+     C           #V2,#V    IFEQ '.'                        --- B002
+     C           #VPDP     IFEQ 22                         --- B003
+     C                     Z-ADD#V        #VPDP
+     C                     ELSE                            --- X003
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     END                             --- E003
+     C                     ELSE                            --- X002
+     C           #V2,#V    IFLT '0'                        --- B003
+     C           #V2,#V    ORGT '9'
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     ELSE                            --- X003
+     C           #V2,#V    IFGT '0'                        --- B004
+     C           #VPNZ     ANDEQ22
+     C                     Z-ADD#V        #VPNZ
+     C                     END                             --- X004
+     C                     END                             --- E003
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Calculate lowest postion possible in array for decimal point
+     C           21        SUB  #VDP      #VLDP   30
+      /SPACE
+      * Error if decimal point before lowest position
+     C           #VPDP     IFLT #VLDP                      --- B001
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     END                             --- E001
+      /SPACE
+      * Calculate number of non-zero characters before decimal point
+      * (store in #V). Error if it exceeds number possible for requested
+      * decimal places (calculated and held in #VMXN)
+     C           #VPDP     SUB  #VPNZ     #V
+     C           19        SUB  #VDP      #VMXN   30
+     C           #V        IFGT #VMXN                      --- B001
+     C                     MOVEL'Y'       #VERR
+     C                     GOTO #VLEND
+     C                     END                             --- E001
+      /SPACE
+      * Move array #V2 back into #V1, overwriting decimal point if it
+      * exists
+     C           #VPDP     IFEQ 22                         --- B001
+     C                     MOVEA#V2,1     #V1,1
+     C                     ELSE                            --- X001
+     C                     MOVEA*ZEROS    #V1,1
+     C                     MOVEA#V2,1     #V1,2
+     C           #VPDP     ADD  1         #V
+     C           #VPDP     IFLT 22                         --- B002
+     C                     MOVEA#V2,#V    #V1,#V
+     C                     END                             --- E002
+     C                     END                             --- E001
+      /SPACE
+      * Move array #V1 back into #V2, adjusting for difference between
+      * maximum dp's possible and number entered (allow for case where
+      * no dp's entered)
+     C           #VPDP     IFEQ 22                         --- B001
+     C           #VDP      ADD  1         #V
+     C                     ELSE                            --- X001
+     C           #VPDP     SUB  #VLDP     #V
+     C                     ADD  1         #V
+     C                     END                             --- E001
+     C                     MOVEA*ZEROS    #V2,1
+     C                     MOVEA#V1,#V    #V2,1
+      /SPACE
+      * Move array #V2 to numeric field, using original input field
+      * as a work field
+     C                     MOVEA#V2,1     #VIN   21
+     C                     MOVE #VIN      #VOUT
+      /SPACE
+      * Ensure sign is correct
+     C                     MULT #VSIGN    #VOUT  190
+      /SPACE
+     C           #VLEND    ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SR TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE         *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      /SPACE
+      * Declare message file name
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      /SPACE
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      /SPACE
+     C                     MOVEL*BLANKS   ZAMSDA
+      /SPACE
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MSGSUB - SR SETUP MESSAGE SUBFILE                            *
+      *                                                               *
+      *****************************************************************
+     C           MSGSUB    BEGSR
+      /SPACE
+      * Clear all fields to send messages to message queue
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      /SPACE
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0225'  SPGMQ
+      /SPACE
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      /SPACE
+     C                     ENDSR
+      /SPACE 3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

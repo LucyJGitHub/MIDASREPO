@@ -1,0 +1,201 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB COB component text summary report')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB0250 - CLOSE OF BUSINESS COMPONENT SUMMARY REPORT          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No.                    DATE 00/00/00              *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *                                                               *
+     F*****************************************************************
+     FCBCMPNL1IF  E           K        DISK
+     FCB0250P1O   E                    PRINTER
+     F                                              KINFDS PRINT
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    50      READ FAIL/NO RECORDS FOUND ON CBCMPNL1
+     F*
+     F*       LR   LAST RECORD INDICATOR
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I**     LOCAL DATA AREA
+     IPRINT       DS
+     I                                    B 367 3680LINE
+     I** DATA STRUCTURE FOR LINE VARIABLE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I*****************************************************************
+     I/EJECT
+     C*
+     C** SET UP PROGRAM NAME FOR DATABASE ERRORS
+     C*
+     C                     MOVEL'CB0250  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** IF ERROR FOUND BY ACCESS OBJECT EXIT
+     C** PROGRAM VIA DATABASE ERROR SUBROUTINE
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     MOVEL'AOBNK'   DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** WRITE REPORT HEADING AND SUB- HEADING LINES
+     C*
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C*
+     C** READ COMPONENT DETAILS FILE
+     C*
+     C                     READ CBCMPNL1                 50
+     C*
+     C** IF NO RECORD FOUND ON CBCMPNL1
+     C** EXIT USING DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'CMPL1'   DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE RECORDS FOUND ON CBCMPNL1
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C** IF PRINTER IS ON LINE 56 OR BELOW START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** WRITE DETAIL AND PARAMETER LINES UNLESS DUMMY COMPONENTS
+      ** COBBEGIN or SCOBFINISH which do not require reporting                                CCB020
+     C***COBBEGIN*OR*COBEND*WHICH*DO*NOT*REQUIRE*REPORTING*************                       CCB020
+     C*
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C           DHCOTT    IFNE 'COBBEGIN'
+     C********** DHCOTT    ANDNE'COBEND'                                                      CCB020
+     C           DHCOTT    ANDNESCOBFI                                                        CCB020
+     C*
+     C                     WRITEDETLIN
+     C                     WRITEPRMLIN
+     C*
+     C                     END
+     C*
+     C** READ COMPONENTS FILE CBCMPNL1 FOR NEXT RECORD
+     C*
+     C                     READ CBCMPNL1                 50
+     C*
+     C                     END
+     C*
+     C** WRITE END OF REPORT LINE
+     C*
+     C                     WRITERPTEND
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** WRITE DATABASE ERROR ON NEW PAGE
+     C*
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C*
+     C** OUTPUT DATA BASE ERROR MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITEDBELIN
+     C*
+     C** OUTPUT 'END OF REPORT' MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITERPTEND
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

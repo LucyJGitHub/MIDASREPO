@@ -1,0 +1,46 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  TEXT('TAKE-ON - Initialise New Fields on SDACUSPD')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  SDCLE13402 - Initialise New Field on SDACUSPD                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CGL132             Date 01May13               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Master (Recompile)                 *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+      ** Midas SD Additional customer details
+     FSDACUSL1  UP   E           K DISK
+      *
+      *****************************************************************
+     D/EJECT
+      *****************************************************************
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+     D DSLoop          S              9  0 INZ
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * Main Processing Control
+      *****************************************************************
+      ** Initialise Miscellaneous Values.
+ 
+     C                   EVAL      E5PDCU      = 'N'
+ 
+      ** Update Customer Details
+ 
+     C                   UPDATE(E) @ACUSL1

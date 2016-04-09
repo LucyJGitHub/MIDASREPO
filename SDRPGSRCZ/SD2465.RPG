@@ -1,0 +1,294 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Basic Rate Tax Control List')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Standing Data Module
+     F*                                                                  *
+     F*     SD2465  -  BRT CONTROL DATA AUDIT LIST                       *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01383             Date 27APR92               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01383  -  BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSDBRTDL1IF  E           K        DISK
+     FSD2465P1O   E                    PRINTER
+     F                                              KINFDS SPOOL
+      /EJECT
+      ***************************************************************** **
+      **                                                                **
+      **    F U N C T I O N   O F   I N D I C A T O R S                 **
+      **    ~~~~~~~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~                 **
+      **                                                                **
+      **        01          CHAIN FAIL, FILE SDBRTDPD                   **
+      **        LR          END OF PROGRAM                              **
+      **                                                                **
+      ***************************************************************** **
+      *
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*  DS FOR LINE NO. TO HANDLE OVERFLOW
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+     I**  EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     I**
+     I**
+      *
+      *  ERROR DATA STRUCTURE FOR LDA
+      *
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+     C***************************************************************
+      *                                                             *
+      *   DETAIL PROCESSING                                         *
+      *                                                             *
+      *   CALLS  INIT   -  INITIAL PROCESSING                       *
+      *          ZDATE2 -  CONVERTS DATE TO NO. DAYS                *
+      *                                                             *
+      ***************************************************************
+      *
+      ** PERFORM INITIAL PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      * READ RECORD FROM SDBRTDPD
+      *
+     C           KRECI     CHAINSDBRTDD0             01
+      *
+      * IF NO RECORD ON FILE - DATABASE ERROR
+      *
+     C           *IN01     IFEQ '1'                        B1
+     C                     MOVEL'SD2465'  #PGM              1
+     C                     MOVEL'SDBRTDPD'#FILE            ***************
+     C                     MOVEL'D'       #KEY             * DB ERROR 002*
+     C                     MOVE '002'     #BASE            ***************
+     C                     EXSR DBERR                       1
+     C                     END                             E1
+      *
+      ** CHECK RUN TYPE PARAMETER & LAST CHANGE DATE
+      *
+     C           RTYP      IFNE 'R'                        B1
+     C           LCD       ANDNEBJRDNB                      1
+     C                     RETRN                            1
+     C                     END                             E1
+      *
+      * REFORMAT DATE TO OUTPUT TO PRINT FILE
+      *
+     C                     Z-ADDDEFF      ZDAYNO
+     C                     EXSR ZDATE2
+     C           ZDAYNO    IFNE *ZERO                      B1
+     C                     MOVE ZADATE    DEFFA             1
+     C                     END                             E1
+      *
+     C                     WRITEFMTP101
+     C                     WRITEFMTP102
+     C                     SETON                     LR
+      *
+      /EJECT
+      **********************************************************
+      *                                                        *
+      *         I N D E X   O F   S U B R O U T I N E S        *
+      *         ~~~~~~~~~   ~~~   ~~~~~~~~~~~~~~~~~~~~~        *
+      *                                                        *
+      *          INIT   - INITIAL PROCESSING                   *
+      *          RCF    - REGISTER SPOOL FILE ENTRY            *
+      *          ZDATE2 - REFORMAT DATE                        *
+      *          DBERR  - DEFAULT ERROR HANDLING               *
+      *                                                        *
+      *                                                        *
+      **********************************************************
+      *
+      *
+      **********************************************************
+      *                                                        *
+      *   INIT - INITIAL PROCESSING                            *
+      *                                                        *
+      *   CALLED BY :  MAIN PROCESS                            *
+      *                                                        *
+      *   CALLS     :  RCF                                     *
+      *                ZDATE2                                  *
+      *                DBERR                                   *
+      *                                                        *
+      **********************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVE 'D'       KRECI   1
+      *
+      ** SETUP FIELDS FOR LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SD2465'  #PGM
+     C*
+     C* READ IN RUN TYPE PARAMETER
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RTYP    1
+     C                     PARM           SEQ     5
+     C**
+     C** REGISTER SPOOL ENTRY
+     C**
+     C                     EXSR RCF
+     C*
+     C** READ SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** IF RECORD NOT FOUND/NOT LIVE - DATABASE ERROR
+      *
+     C           @RTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'#FILE            ***************
+     C                     MOVEL@OPTN     #KEY             * DB ERROR 001*
+     C                     MOVE '001'     #BASE            ***************
+     C                     EXSR DBERR                       1
+     C                     END                             E1
+     C*
+     C           BJDFIN    COMP 'M'                      98* DATE FORMAT
+      **
+     C*  Fetch and reformat Run date for calculating tax year
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     YY      20
+     C                     MOVELZDATE     WRK4    40
+     C*
+     C           *IN98     IFEQ '0'
+     C                     MOVELWRK4      DD      20
+     C                     MOVE WRK4      MM      20
+     C                     ELSE
+     C                     MOVE WRK4      DD
+     C                     MOVELWRK4      MM
+     C                     END
+     C*
+     C*  Calculate Current & Next tax year from Run date
+     C*
+     C           MM        IFLE 03
+     C           MM        ANDGE01
+     C           MM        OREQ 04
+     C           DD        ANDLE05
+     C           YY        ADD  1         NXTY
+     C                     Z-ADDYY        THTY
+     C*
+     C                     ELSE
+     C           YY        ADD  2         NXTY
+     C           YY        ADD  1         THTY
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+      *
+      **********************************************************
+      /EJECT
+      *****************************************************************
+      **
+      **    DEFAULT ERROR HANDLING
+      **
+      **    CALLED FROM:  anywhere
+      **    CALLS:        returns.
+      **
+     C           DBERR     BEGSR                                       ***
+      **
+     C                     SETON                       U7U8LR
+      **
+     C           *LOCK     IN   LDA
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C           *LIKE     DEFN DBFILE    #FILE
+     C           *LIKE     DEFN DBPGM     #PGM
+      **
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C                     MOVEL#BASE     DBASE
+     C                     OUT  LDA
+      **
+     C                     WRITEFMTP101
+     C                     WRITEFMTP103
+     C                     DUMP
+     C                     RETRN
+      **
+     C                     ENDSR
+      **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCF -- SUBROUTINE TO REGISTER SPOOL FILE ENTRY WITH RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCF       BEGSR                            ** RCF   **
+     C*
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

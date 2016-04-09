@@ -1,0 +1,104 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DBA FT Format BIC Code Details')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0061 - Display BIC Details on Payment Authorisation        *
+      *                                                               *
+      *  Function:  This program displays all restricted account      *
+      *                                                               *
+      *  Called By: Directly from FT0060                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CFT123  *CREATE    Date 28Sep12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT123 - FT OPAY Authorization - Display BIC Details         *
+      *                                                               *
+      *****************************************************************
+     F/COPY FTCPYSRC,SFTSWFTF
+     E                    @STK       20 10
+     E/COPY FTCPYSRC,SFTSWFTE
+     E/COPY FTCPYSRC,SFTVALCS
+     ISDCNST    E DSSDCNSTPD
+     ISDCUST    E DSSDCUSTPD
+     IMEBICD    E DSMEBICDPD
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0INP1 35
+     C                     PARM           P0INP2 35
+     C                     PARM           P0DSP1 35
+     C                     PARM           P0DSP2 35
+     C                     PARM           P0DSP3 35
+     C                     PARM           P0DSP4 35
+     C                     PARM           P0DSP5 35
+     C                     PARM           P0FLDS  10
+      *
+     C                     MOVE *BLANKS   CLSWTK 12
+     C                     MOVE *BLANKS   ##CSID
+     C                     MOVEA'00'      *IN,31
+     C           P0INP2    IFEQ *BLANKS
+     C                     MOVELP0INP1    CLSWTK
+     C                     ELSE
+     C                     MOVELP0INP2    CLSWTK
+     C                     ENDIF
+      *
+      ** Call standard processing to determine if SWIFT address and retrieve details
+      *
+     C                     EXSR SWIFT
+      *
+      ** If details found, place in display fields
+      *
+     C           ##CSID    IFEQ 'Y'                        B1
+     C           *IN31     ANDEQ'0'
+     C           *IN32     ANDEQ'0'
+      *
+      ** INP1 contains the BIC Code
+      *
+     C           P0INP2    IFEQ *BLANKS                    B2
+      *
+      ** Three fields available
+      *
+     C           P0FLDS    IFEQ 3                          B3
+     C                     MOVE BDINS1    P0DSP2
+     C                     MOVE BDCITY    P0DSP3
+     C                     MOVE BDAPH1    P0DSP4
+     C                     ENDIF                           E3
+      *
+      ** Four fields available
+      *
+     C           P0FLDS    IFEQ 4                          B3
+     C                     MOVE BDINS1    P0DSP2
+     C           BDINS2    IFNE *BLANKS                    B4
+     C                     MOVE BDINS2    P0DSP3
+     C                     MOVE BDCITY    P0DSP4
+     C                     MOVE BDAPH1    P0DSP5
+     C                     ELSE                            X4
+     C                     MOVE BDCITY    P0DSP3
+     C                     MOVE BDAPH1    P0DSP4
+     C           BDAPH2    IFNE *BLANKS                    B5
+     C                     MOVE BDAPH2    P0DSP5
+     C                     ELSE                            X5
+     C                     MOVE BDCTY1    P0DSP5
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+      *
+     C                     ELSE                            E2
+      *
+      ** INP2 contains the BIC Code
+      *
+     C                     MOVE BDINS1    P0DSP3
+     C                     MOVE BDCITY    P0DSP4
+     C                     MOVE BDAPH1    P0DSP5
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     RETRN
+      *
+     C/COPY FTCPYSRC,SFTSWFTC

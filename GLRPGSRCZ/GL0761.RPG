@@ -1,0 +1,3033 @@
+     H        1                                                           GL0761
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Balance sheet / profit and loss reporting')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas General Ledger Module                                  *
+     F*                                                               *
+     F*  GL0761 - Balance Sheet Profit & Loss Reporting               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. 230422             Date 31Oct14               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 194565             Date 17Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 178596             Date 12May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124974             Date 23Jun99               *
+      *                 156131             DATE 08Mar99               *
+      *                 CSD005             Date 10MAR99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                 149862             DATE 17Dec98               *
+     F*                 124974             DATE 20May98               *
+      *                 CEU011             Date 11Mar98               *
+     F*                 097542             DATE 06Feb98               *
+      *                 090651             Date 24Jun96               *
+     F*                 S01408             DATE 10APR95               *
+     F*                 074474             DATE 12OCT94               *
+     F*                 061372             DATE 15FEB94               *
+     F*                 061373             DATE 15FEB94               *
+     F*                 048916             DATE 09JUL93               *
+     F*                 052437             DATE 18MAR93               *
+     F*                 S10736             DATE 10OCT92               *
+     F*                 E31298             DATE 15SEP92               *
+     F*                 E42869             DATE 08APR92               *
+     F*                 E38276             DATE 08APR92               *
+     F*                 E29984             DATE 22OCT91               *
+     F*                 E28177             DATE 19SEP91               *
+     F*                 RT0086             DATE 15MAY91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  230422 - Incorrect date in 'As at".                          *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  194565 - Consolidated Euro report has misplaced totals. Also *
+     F*           allow 'N' option for Report BSPL/account codes      *
+     F*           option by leaving processing to omit BSPL code out  *
+     F*           of array until before array is written to file. Also*
+     F*           corrected Euro conversion of rounded currencys that *
+     F*           have no decimal places                              *
+      *  178596 - Changes to P02 subroutine, so that *BLANKS are      *
+      *           assigned to G4RSCD as its' initial value. Also      *
+      *           change IF statement in same program to check for    *
+      *           *BLANKS rather than 0000.                           *
+     F*  124974 - Fix to allow new heading when report called from    *
+     F*           I/C menu option.                                    *
+     F*  156131 - Consolidated Euro report: 1) Total in wrong place   *
+     F*           on Balance Sheet for BSPL code with same level as   *
+     F*           previous BSPL code. 2) Profit & Loss report in      *
+     F*           wrong order due to incorrect positioning of file    *
+     F*           SDREPCL0 so that array is not set up in SR/LDBSPL.  *
+      *  CSD005 - Standing Data Account Narrative. If swichable featur*
+      *           is active thw current account description           *
+      *           is replaced with the account narrative.             *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  149862 - Consolidated Euro report: 1) Overflow error. 2) Ccy *
+     F*           heading not cleared before set up. 3) Incorrect     *
+     F*           sub-heading caused by IN1 array setting wrong inds. *
+     F*           4) Amounts sometimes incorrect as wrong index used. *
+     F*           5) Consolidated report in incorrect order and       *
+     F*           categories not used by EMU ccys reported.           *
+     F*  124974 - BSPL report does not have the heading for each      *
+     F*           stage reported, e.g. 'AFTER FINAL POST'.  Applied   *
+     F*           fix 063148 and 081225.                              *
+      *  CEU011 - EMU Position/Risk Reporting                         *
+     F*  097542 - Next Event Control date reported in I/C, as 'AS AT' *
+     F*           date, instead of today's date. Amend program to     *
+     F*           show date and time of Input Cycle report.           *
+     F*  090651 - Zero balance still printed on the report even if    *
+     F*           the 'Print Zero Balance' option is set to 'N'.      *
+     F*  S01408 - Core hook GL0761CPLT added                          *
+     F*         - Core hook GL0761CCPG added                          *
+     F*         - Core hook GL0761CCP1 added                          *
+     F*         - Core hook GL0761IIPG added                          *
+     F*  074474 - When sublevel total has been output, output a blank *
+     F*           line before writing the next detail record.         *
+     F*  061372 - Database error in file GL0765, key CUHSPD1, at 006. *
+     F*           ASAT from GLSTAT passed to this pgm is all zeroes,  *
+     F*           causing the problem later in AO/AOCUHSRO where it   *
+     F*           SETLL LF/SDCUHSL2 with CCY and DATE=0. Error occurs *
+     F*           bec. LF/SDCUHSL@ is keyed by CCY (ascending) and    *
+     F*           HIDT (descending). Move RUND instead of ASAT to     *
+     F*           DAT1 and DAT2 when ASAT is zero.                    *
+     F*  061373 - Ensure that report GL0761P1 does not show the       *
+     F*           misleading date 1JAN72, which is day 1 of Midas.    *
+     F*           Also, check ASAT for zeroes as well as blanks.      *
+     F*  048916 - Print 'END OF BRANCH/COMPANY REPORT' at end         *
+     F*  052437 - Print BR/CO/CONSOLIDATED heading for MGMT ACCTS     *
+     F*  S10736 - Management Accounts report                          *
+     F*  E31298 - Print currency type selected as well as             *
+     F*           the currency name                                   *
+     F*  E42869 - CALCULATION SHOULD BE DEPENDANT ON MULT/DIV IND     *
+     F*  E38276 - Array index error when no input and                 *
+     F*           print zero balances option selected                 *
+     F*  E29984 - E28177 DID NOT ALWAYS WORK                          *
+     F*  E28177 - Add Option to print zero Balances.                  *
+     F*  RT0086 - DO NOT PRINT 'END OF REPORT' ON AU.                 *
+     F*                                                               *
+     F*                                                               *
+     F*   *** WARNING  THIS PROGRAM USES AN 'OPEN QUERY FILE' ***     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FGL0761P1O   E                    PRINTER      KINFDS SPOOL      UC
+     FGL0761AUO   E                    PRINTER      KINFDS SPOOLU
+     F/COPY WNCPYSRC,GL0761F001
+     FGLBSRPPDIP  E           K        DISK
+     F/COPY WNCPYSRC,GL0761F002
+     F*SDCURRL1IF**E***********K        DISK                              S10736
+     FSDREPCL0IF  E           K        DISK
+     FSDACODL1IF  E           K        DISK
+     F/COPY WNCPYSRC,GL0761F003
+     F*
+     F* 01            GL BALANCE SHEET REPORT RECORD READ
+     F*    10         FIRST CYCLE PROCESS
+     F*    11         OVERFLOW ON PRINTER P1
+     F*    15         EOF ON SDREPCL0
+     F*    21         CREDIT LEDGER BALANCE
+     F*    22         DEBIT LEDGER BALANCE
+     F*       40      END OF FILE ON READ OF SDCURRL1
+     F*       41      SUCCESSFUL LOKUP
+     F*       50      ROUNDING REQUIRED
+     F*       51      REPORT IN ACTUAL CURRENCY
+     F*       53      END OF REPORT FOR SYS/CO/BR/CUR
+     F*       60      REPORT BALANCE SHEET DIFFERECE
+     F*       61      LEVEL 1 REPORT CODE
+     F*       62      LEVEL 2 REPORT CODE
+     F*       63      LEVEL 3 REPORT CODE
+     F*       64      LEVEL 4 REPORT CODE
+     F*       65      LEVEL 5 REPORT CODE
+     F*       66      LEVEL 6 REPORT CODE
+     F*       67      LEVEL 7 REPORT CODE
+     F*       68      LEVEL 8 REPORT CODE
+     F*       69      LEVEL 9 REPORT CODE
+     F*       70      PRINT TOTAL NARRATIVE
+     F*       71      PRINT AMOUNT
+     F*       72      REPORT FOR SINGLE BRANCH SYSTEM
+     F*       73      REPORT BRANCH
+     F*       74      REPORT COMPANY
+     F*       75      REPORT CONSOLIDATED
+     F*       76      MANAGEMENT ACCOUNTS REPORTING
+     F*       77      BALANCES REPORT (NOT MOVEMENTS/AVERAGES)
+     F*       78      SWITCHABLE FEATURE-ACCOUNT NARRATIVE                CSD005
+     F*       80      REPORT BSPL/ACCOUNT CODES
+     F*       81      REPORT FIRST LEVEL
+     F*          U7+U8DATABASE ERROR
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    POWER   1   7  7 3             POWER ARRAY
+     E************        NAR     1  22 30               NARRATIVES       S10736
+     E/COPY WNCPYSRC,GL0761E002
+     E***********         NAR     1  24 30               NARRATIVESS10736 CEU011
+     E                    NAR     1  25 30               NARRATIVES       CEU011
+     E/COPY WNCPYSRC,GL0761E003
+     E********************ANAR    1   5 35               ADD NARRATIVE    124974
+     E                    ANAR    1   6 35               ADD NARRATIVE    124974
+     E/COPY WNCPYSRC,GL0761E004
+     E                    TABSEC  1   8  2   TABSED 30   SECTIONS
+     E***********         CUR       150  3               CURRENCY CODES   S10736
+     E***********         RATE      150 15 8             CONVERSION RATES S10736
+     E***********         MD        150  1               MULT/DIV IND(M/D)S10736
+     E***********         CDP       150  1 0             CURRENCY DEC.PLS.S10736
+     E                    FLG        20  1               LEVEL FLAGS
+     E********            NAM        20 47               LEVEL NAMES      CSD005
+     E                    NAM        20 72               LEVEL NAMES      CSD005
+     E                    NAMB       20 72               LEVEL NAMES      194565
+     E                    TOT        20 15 0             LEVEL TOTALS
+     E/COPY WNCPYSRC,GL0761E005
+     E                    ULIN       51  1               UNDERLINES
+     E                    W           8 12               WORK ARRAY       S10736
+     E                    S           8 12               SORTED           S10736
+     E                    A           9  1               ANALYSIS         S10736
+     E**********          ENAM      900 47                          CEU011CSD005
+ad   E                    ENAM      900 72                                CSD005
+     E***********         TBSP        9 47                         149862 194565
+     E                    TBSP        9 72                                194565
+     E                    ERAM      900 15 0                              CEU011
+     E                    ETAM      900 15 0                              CEU011
+     E                    IN1       900 12                                CEU011
+     E                    IN2       900  1                                CEU011
+     E                    IN3       900  2                                CEU011
+     E                    PRIN      900  1                                149862
+      /SPACE
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY WNCPYSRC,GL0761E001
+     E                    U       1   9 12               UNSORTED         S10736
+     E*****************************************************************
+     E/EJECT
+     I*
+     IGLBSRPF     01
+     I**********                                    GLENTYL2              S10736
+     I**********                                    GLCCY L1              S10736
+     I                                              GLENTYL3              S10736
+     I                                              GLENT2L2              S10736
+     I                                              GLCCY L1              S10736
+     I                                              GLRSCD
+     I                                              GLLDBL      2221
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE FOR P1 FILE
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE FOR AU FILE
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+     I/COPY WNCPYSRC,GL0761I001
+     I*                                                                   097542
+     I**   MIDAS PHASE DATA AREA                                          097542
+     I***MPHAS       DS                                                                097542 CCB020
+     I**********                              1   1 MPHASE                             097542 CCB020
+      *                                                                                       230422
+      **   MIDAS RR RESTART RECOVERY DATA AREA                                                230422
+     IJNSTAT    E DSJNSTAT                                                                    230422
+     I**
+     I**   DEFINE EXTERNAL DS OVER DATA AREAS
+     I**
+     ILDA       E DSLDA
+     I*    LOCAL DATA AREA
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL0761IIPG                                           S01408
+     I*                                                                   S01408
+     I*
+     IRUNDT     E DSRUNDAT
+     I*    RUN DATE DATA AREA
+     I**
+     I**   DEFINE EXTERNAL DS OVER DUMMY PHYSICAL FILES
+     I**
+     ISDBANK    E DSSDBANKPD
+     I*    BANK DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*    CURRENCY CODE
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*    BRANCH CODE DETAILS
+     I*
+     ISDCOMP    E DSSDCOMPPD
+     I*    COMPANY CODE DETAILS
+     I*
+     ISDRPST    E DSSDRPSTPD
+     I*    REPORTING SETS
+     I*
+     IGLHBCG    E DSGLHBCGPD                                              S10736
+     I**  HISTORIC BALANCE CONTROL GROUPS                                 S10736
+     I*
+     ISDGELR    E DSSDGELRPD                                              CEU011
+      **  General Ledger Details                                          CEU011
+      *                                                                   CEU011
+     ISCSARD    E DSSCSARDPD                                              CEU011
+      **  Switchable Features  File                                       CEU011
+      *                                                                   CEU011
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I            DS
+     I* DS TO CONVERT NAM ARRAY FOR DISPLAY FILE
+     I**********                              1 940 NAM                   CSD005
+     I**********                              1  47 NAM1                  CSD005
+     I**********                             48  94 NAM2                  CSD005
+     I**********                             95 141 NAM3                  CSD005
+     I**********                            142 188 NAM4                  CSD005
+     I**********                            189 235 NAM5                  CSD005
+     I**********                            236 282 NAM6                  CSD005
+     I**********                            283 329 NAM7                  CSD005
+     I**********                            330 376 NAM8                  CSD005
+     I**********                            377 423 NAM9                  CSD005
+     I**********                            424 470 NAM10                 CSD005
+     I**********                            471 517 NAM11                 CSD005
+     I**********                            518 564 NAM12                 CSD005
+     I**********                            565 611 NAM13                 CSD005
+     I**********                            612 658 NAM14                 CSD005
+     I**********                            659 705 NAM15                 CSD005
+     I**********                            706 752 NAM16                 CSD005
+     I**********                            753 799 NAM17                 CSD005
+     I**********                            800 846 NAM18                 CSD005
+     I**********                            847 893 NAM19                 CSD005
+     I**********                            894 940 NAM20                 CSD005
+     I*                                                                   CSD005
+     I* DS TO CONVERT NAM ARRAY FOR DISPLAY FILE                          CSD005
+     I                                        11440 NAM                   CSD005
+     I                                        1  72 NAM1                  CSD005
+     I                                       73 144 NAM2                  CSD005
+     I                                      145 216 NAM3                  CSD005
+     I                                      217 288 NAM4                  CSD005
+     I                                      289 360 NAM5                  CSD005
+     I                                      361 432 NAM6                  CSD005
+     I                                      433 504 NAM7                  CSD005
+     I                                      505 550 NAM8                  CSD005
+     I                                      551 576 DUM1                  CSD005
+     I                                      577 618 NAM9                  CSD005
+     I                                      619 648 DUM2                  CSD005
+     I                                      649 720 NAM10                 CSD005
+     I                                      721 792 NAM11                 CSD005
+     I                                      793 864 NAM12                 CSD005
+     I                                      865 936 NAM13                 CSD005
+     I                                      9371008 NAM14                 CSD005
+     I                                     10091080 NAM15                 CSD005
+     I                                     10811152 NAM16                 CSD005
+     I                                     11531224 NAM17                 CSD005
+     I                                     12251296 NAM18                 CSD005
+     I                                     12971368 NAM19                 CSD005
+     I                                     13691440 NAM20                 CSD005
+     I*                                                                   CSD005
+     I            DS                                                      S10736
+     I* DS TO MOVE LARGE ENTITY FROM FILE TO REPORT HEADER FIELD          S10736
+     I                                        1  96 GLENT2                S10736
+     I                                        1  96 PRENT2                S10736
+     I            DS                                                      S10736
+     I* DS TO MOVE 'ANALYSE BY' TEXT TO AUDIT PRINT                       S10736
+     I                                        1  96 LEHDS                 S10736
+     I                                        1  12 LEH1                  S10736
+     I                                       13  24 LEH2                  S10736
+     I                                       25  36 LEH3                  S10736
+     I                                       37  48 LEH4                  S10736
+     I                                       49  60 LEH5                  S10736
+     I                                       61  72 LEH6                  S10736
+     I                                       73  84 LEH7                  S10736
+     I                                       85  96 LEH8                  S10736
+      /SPACE
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY WNCPYSRC,GL0761I002
+     I*****************************************************************
+      /EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           SEQNO   5        RCF seq. number
+     C                     PARM           LEVEL   1        Level number
+     C                     PARM           ENTTY   3        Entity or ALL
+     C                     PARM           CTYP    1        Currency type
+     C                     PARM           RSNO    1        Report Set Num.
+     C                     PARM           RPLVL   1        Report Level
+     C                     PARM           RPCD    1        Report Codes?
+     C                     PARM           RSRCE   1        Report Source
+     C                     PARM           ROUD    1        Rounding
+     C                     PARM           ZERO    1        Report All Codes
+     C                     PARM           ASAT   10        As at Dates
+     C                     PARM           MCGRP   2        Control Grp    S10736
+     C                     PARM           MCRPNC  4        Rel. Per. No   S10736
+     C                     PARM           MCTRM   1        Term           S10736
+     C                     PARM           MCTYP   1        Type           S10736
+     C                     PARM           MCANL   9        Analysis by    S10736
+     C                     PARM           @RUNC   5        Comp.Seq.No.   124974
+     C                     PARM           WCOB    4        Midas System Phase                 CCB020
+     C/COPY WNCPYSRC,GL0761C018
+     C*
+     C** Key List for SDREPCL0
+     C*
+     C           RPKEY1    KLIST
+     C                     KFLD           RSNO
+     C                     KFLD           RPRSCD
+     C*
+     C           RPKEY2    KLIST
+     C                     KFLD           RSNO
+     C*
+     C           ACKEY1    KLIST
+     C                     KFLD           RPRSCD
+     C*
+     C** Define RUNDT and LDA Dtaaras
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C********** *NAMVAR   DEFN           MPHAS                                        097542 CCB020
+     C**********           IN   MPHAS                                                  097542 CCB020
+     C           *NAMVAR   DEFN           JNSTAT                                              230422
+     C                     IN   JNSTAT                                                        230422
+     C/COPY WNCPYSRC,GL0761C049
+     C*
+     C** Define work fields
+     C*
+     C           *LIKE     DEFN GLRSCD    SRSCD
+     C           *LIKE     DEFN A6NBDP    RCDP
+     C           *LIKE     DEFN A5ACSC    SACSC
+     C           *LIKE     DEFN GLLDBL    RBAL                            S10736
+     C/COPY WNCPYSRC,GL0761C050
+     C*
+      *****************************************************************
+     C*
+     C**  First Cycle Processing
+     C*
+     C           *IN10     IFEQ '0'                         B001
+     C                     EXSR P01
+     C                     MOVE '1'       *IN10
+     C*
+     C**  Open P1 Print file for Consolidated
+     C*
+     C           LEVEL     IFEQ 'S'                         B002
+     C                     MOVE *BLANKS   WENTY   3
+     C                     END                              E002
+     C*
+     C**  Open P1 Print file for Single Branch System Report
+     C*
+     C           LEVEL     IFEQ ' '                         B002
+     C                     MOVE *BLANKS   WENTY
+     C*
+     C                     END                              E002
+     C                     END                              E001
+     C*
+     C**  Change of Entity
+     C**  (L3 on instead of L2)                                           S10736
+     C*
+     C*****      *INL2     IFEQ '1'                         B001          S10736
+     C           *INL3     IFEQ '1'                         B001          S10736
+     C/COPY WNCPYSRC,GL0761C027
+     C*
+     C**  Get COMPANY Name
+     C*
+     C           LEVEL     IFEQ 'C'                         B002
+     C                     EXSR ACCOMP
+     C/COPY WNCPYSRC,GL0761C009
+     C                     END                              E002
+     C*
+     C**  Get BRANCH Name
+     C*
+     C           LEVEL     IFEQ 'B'                         B002
+     C                     EXSR ACBRCH
+     C/COPY WNCPYSRC,GL0761C010
+     C                     END                              E002
+     C*
+     C**  Get CURRENCY Name
+     C*
+     C           CTYP      IFEQ 'A'                         B002
+     C           CEU011    OREQ 'Y'                                       CEU011
+     C                     MOVE GLCCY     @CURR                           S10736
+     C                     EXSR ACCURR
+     C                     END                              E002
+     C/COPY WNCPYSRC,GL0761C051
+     C*
+     C**  Open a New Print file for the entity
+     C*
+     C                     EXSR P1OPEN
+     C/COPY WNCPYSRC,GL0761C052
+     C                     END                              E001
+     C*
+     C**  Change of CURRENCY
+     C*
+     C           *INL1     IFEQ '1'                         B001
+     C           *INL3     ANDEQ'0'                                       S10736
+     C************INL2     ANDEQ'0'                                       S10736
+     C***********CTYP      ANDEQ'A'                                       S10736
+     C           CTYP      IFEQ 'A'                         B002          S10736
+     C           CEU011    OREQ 'Y'                                       CEU011
+     C*
+     C**  Get CURRENCY Name
+     C*
+     C                     MOVE GLCCY     @CURR                           S10736
+     C                     EXSR ACCURR
+     C*
+     C** Report Currency Header
+     C*
+     C***********          MOVE A6CYNM    RPCCY                           E31298
+     C***********          Z-ADDA6NBDP    RCDP                            E31298
+     C*
+     C** Start a new page for Currency
+     C*
+     C                     EXSR P05
+     C                     ELSE                             X002          S10736
+     C/COPY WNCPYSRC,GL0761C053
+     C*                                                                   S10736
+     C** Start a new page for Large Entity                                S10736
+     C*                                                                   S10736
+     C           *INL2     IFEQ '1'                         B003          S10736
+     C                     EXSR P05                                       S10736
+     C                     END                              E003          S10736
+     C                     END                              E002          S10736
+     C                     END                              E001          S10736
+     C*
+     C**  On Change of BSPL Code
+     C**     Print previous totals and New Level Headings
+     C*
+     C           GLRSCD    IFNE SRSCD                       B001
+     C           RSNO      IFNE 'C'                         B002
+     C                     EXSR P02
+     C                     ELSE                             X002
+     C                     EXSR P03
+     C                     END                              E002
+     C                     END                              E001
+     C*
+     C/COPY WNCPYSRC,GL0761C001
+     C** If Report not in Original Currency
+     C**   Convert Ledger Balance into reporting Currency Balance
+     C*
+     C           CTYP      IFNE 'A'                         B001
+     C           CEU011    ANDEQ'N'                                       CEU011
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0761CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     EXSR CCYCNV                                    S10736
+     C*                                                                   S10736
+     C***********          Z-ADD1         Y                               S10736
+     C***********GLCCY     LOKUPCUR,Y                    42               S10736
+     C***********                                                         S10736
+     C****If*Currency found                                               S10736
+     C***********                                                         S10736
+     C************IN42     IFEQ '1'                         B002          S10736
+     C***********                                                         S10736
+     C***********MD,Y      IFEQ 'D'                         B003          S10736
+     C***********GLLDBL    DIV  RATE,Y    RBAL   150H                     S10736
+     C***********          ELSE                             X003          S10736
+     C***********GLLDBL    MULT RATE,Y    RBAL      H                     S10736
+     C***********          END                              E003          S10736
+     C***********                                                         S10736
+     C*****Else*Currency not Found                                        S10736
+     C***********                                                         S10736
+     C***********          ELSE                             X002          S10736
+     C***********          Z-ADDGLLDBL    RBAL                            S10736
+     C***********          END                              E002          S10736
+     C*
+     C**   Else Report in Original Currency
+     C*
+     C                     ELSE                             X001
+     C/COPY WNCPYSRC,GL0761C033
+     C                     Z-ADDGLLDBL    RBAL
+     C/COPY WNCPYSRC,GL0761C002
+     C                     END                              E001
+     C*                                                                   S10736
+     C**   Convert Weighted Balance to Average balance                    S10736
+     C*                                                                   S10736
+     C           MCTYP     IFEQ 'A'                         B001          S10736
+     C/COPY WNCPYSRC,GL0761C003
+     C                     DIV  DAYS      RBAL      H                     S10736
+     C/COPY WNCPYSRC,GL0761C004
+     C                     END                              E001          S10736
+     C*
+     C**   Accumulate Ledger Balances in report currency
+     C*
+     C                     Z-ADDLV        I
+     C*
+     C           I         DOULTFL                          B001
+     C*
+     C**   Reverse sign of amounts for Profit & Loss report
+     C/COPY WNCPYSRC,GL0761C019
+     C*
+     C           G5BALS    IFEQ 'P'                         B002
+     C                     SUB  RBAL      TOT,I
+     C                     ELSE                             X002
+     C                     ADD  RBAL      TOT,I
+     C                     END                              E002
+     C/COPY WNCPYSRC,GL0761C020
+     C*
+     C                     MOVE '1'       FLG,I
+     C                     SUB  1         I
+     C                     MOVE '0'       *IN70
+     C                     END                              E001
+     C*
+     C**   Count records read
+     C*
+     C           *IN01     IFEQ '1'                         B001
+     C           NRRD      ADD  1         NRRD
+     C                     SETOF                     3334
+     C*
+     C**   Convert Balance for Hash Totals
+     C*
+     C           GLLDBL    DIV  1000      ZZAMT
+     C   21                Z-SUBZZAMT     ZZAMT
+     C*
+     C**   Accumulate DEBIT and CREDIT Hash Totals.
+     C*
+     C   21                Z-ADDHWNCR     ZZTOTI 150
+     C   21                Z-ADDHDCCR     ZZTOTD  30
+     C   22                Z-ADDHWNDR     ZZTOTI
+     C   22                Z-ADDHDCDR     ZZTOTD
+     C*
+     C**   Add amount ZZAMT to Hash total ZZTOTI/ZZTOTD
+     C**   Define input fields
+     C*
+     C                     Z-ADDZZAMT     ZZAMT  153
+     C*
+     C**   Ensure ZZAMT is positive
+     C*
+     C           ZZAMT     IFLT 0                           B002
+     C                     Z-SUBZZAMT     ZZAMT
+     C                     END                              E002
+     C*
+     C**   Split amount into integer and Decimal
+     C*
+     C                     Z-ADDZZAMT     ZZAMTI 150
+     C                     MOVE ZZAMT     ZZAMTD  30
+     C*
+     C**   Add Decimal part and check for carry
+     C*
+     C                     ADD  ZZAMTD    ZZTOTD  30
+     C           ZZTOTD    IFLT ZZAMTD                      B002
+     C                     ADD  1         ZZAMTI
+     C                     END                              E002
+     C*
+     C**   Add integer part
+     C*
+     C                     ADD  ZZAMTI    ZZTOTI 150
+     C   21                Z-ADDZZTOTI    HWNCR  150
+     C   21                Z-ADDZZTOTD    HDCCR   30
+     C   22                Z-ADDZZTOTI    HWNDR  150
+     C   22                Z-ADDZZTOTD    HDCDR   30
+     C*
+     C                     END                              E001
+     C*
+     C**   TOTAL TIME CALCULATIONS
+     C*
+     C** Write Audit file Header, if not done
+     C*
+     CLR         *IN10     IFEQ '0'
+     CLR         *INU8     ANDEQ'0'
+     CLR                   EXSR P01
+     C/COPY WNCPYSRC,GL0761C028
+     CLR                   END
+     C*
+     CL1         CTYP      IFEQ 'A'
+     CL1         CEU011    OREQ 'Y'                                       CEU011
+     C/COPY WNCPYSRC,GL0761C054
+     C*                                                                   E29984
+     CL1         ZERO      IFEQ 'Y'                                       E29984
+     CL1         *IN10     ANDEQ'1'                                       E38276
+     C*                                                                   E29984
+     C**  On Change of Currency and Zero Balances to print                E29984
+     C**     Print last total, and remaining Headings                     E29984
+     C*                                                                   E29984
+     CL1                   MOVE *HIVAL    GLRSCD                          E29984
+     CL1         RSNO      IFNE 'C'                                       E29984
+     CL1                   EXSR P02                                       E29984
+     CL1                   ELSE                                           E29984
+     CL1                   EXSR P03                                       E29984
+     CL1                   END                                            E29984
+     CL1                   END                                            E29984
+     C*                                                                   E29984
+     C**     Print final total and balancing item                         E29984
+     C*                                                                   E29984
+     C/COPY WNCPYSRC,GL0761C055
+     CL1                   Z-ADDFL        LV
+     CL1                   MOVE '1'       *IN53
+     CL1                   EXSR P04
+     CL1                   END
+     C/COPY WNCPYSRC,GL0761C056
+     C*
+     CL2         ZERO      IFEQ 'Y'                                       E29984
+     CL2         CTYP      ANDNE'A'                                       E29984
+     CL2         CEU011    ANDEQ'N'                                       CEU011
+     CL2         *IN10     ANDEQ'1'                                       E38276
+     C/COPY WNCPYSRC,GL0761C057
+     C*                                                                   E29984
+     C**  On Change of Entity and Zero Balances to print                  E29984
+     C**     Print last total, and remaining Headings                     E29984
+     C*                                                                   E29984
+     CL2                   MOVE *HIVAL    GLRSCD                          E29984
+     CL2         RSNO      IFNE 'C'                                       E29984
+     CL2                   EXSR P02                                       E29984
+     CL2                   ELSE                                           E29984
+     CL2                   EXSR P03                                       E29984
+     CL2                   END                                            E29984
+     CL2                   END                                            E29984
+     C*                                                                   E29984
+     C**     Print final total and balancing item                         E29984
+     C*                                                                   E29984
+     C/COPY WNCPYSRC,GL0761C058
+     CL2                   Z-ADDFL        LV
+     CL2                   MOVE '1'       *IN53
+     CL2                   EXSR P04
+     C*
+     C**   LAST RECORD CALCS
+     C*
+     C/COPY WNCPYSRC,GL0761C029
+     CLR         @P1OPN    IFEQ 'Y'
+     CLR                   Z-ADD2         RQLN
+     CLR         CEU011    IFEQ 'Y'                                       CEU011
+     CLR                   EXSR SREUCP                                    CEU011
+     CLR                   END                                            CEU011
+     CLR                   EXSR OFL1
+     CLR                   WRITEW03
+     CLR                   CLOSEGL0761P1
+     CLR                   END
+     C*
+     C/COPY WNCPYSRC,GL0761C043
+     CLR         END       TAG                             *  END  TAG
+     C*
+     C** Write File Control Totals
+     C*
+     CLR                   WRITEGL0761AD
+     C*
+     C** Write 'No Details to Report' if no details found
+     C*
+     CLR         *IN10     IFEQ '0'
+     CLR         *INU8     ANDEQ'0'
+     CLR                   WRITEGL0761AN
+     CLR                   END
+     C*
+     C***Write 'End of Report'                                            RT0086
+     C*****                                                               RT0086
+     C*LR**                WRITEGL0761AT                                  RT0086
+     C*
+     C** Ensure spool file recorded by RCF
+     C*
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQNO
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     C*
+     C**  Error during ZSFILE Processing DUMP and Return to Calling prog
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     CLR                   EXSR DBERR
+     CLR                   END
+     C**
+     C/COPY WNCPYSRC,GL0761C034
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C* INDEX OF SUBROUTINES
+     C*
+     C* ACCURR - Access the Currency Codes file
+     C* ACBRCH - Access the Branch Codes file
+     C* ACCOMP - Access the Company Codes file
+     C* CCYCNV - Convert Currency amount to reporting Currency
+     C* P1OPEN - Opens Detail Print files
+     C* P01    - Initial Processing
+     C* P02    - Process SDREPCPD records at level break
+     C* P03    - Process SDACODPD records at level break
+     C* P04    - Print Detail and Total lines
+     C* P05    - Initialise a new report
+     C* P06    - Print Level Headings
+     C* P07    - Obtain 'Large' Entity Headings for Management Accounts   S10736
+     C* OFL1   - Print Headings on page Overflow
+     C* DBERR  - Database errors
+     C* *PSSR  - Program errors
+     C*
+     C********************************************************************
+     C*
+     C*  ACCURR --- Subroutine to Access the Currency Codes file
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: AOCURRR0, DBERR
+     C*
+     C********************************************************************
+     C*
+     C           ACCURR    BEGSR
+     C*
+     C/COPY WNCPYSRC,GL0761C044
+     C                     MOVE *BLANKS   RPCCY                           E31298
+     C**   Use Access program to read Currency file
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C***********          MOVE *BLANKS   @CURR                           S10736
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C***********          PARM GLCCY     @CURR   3                       S10736
+     C                     PARM           @CURR   3                       S10736
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C***********          MOVE A6CYNM    RPCCY                           E31298
+     C/COPY WNCPYSRC,GL0761C045
+     C                     MOVELA6CYNM    RPCCY                           E31298
+     C                     MOVELA6INCY    INCY    1                       CEU011
+     C/COPY WNCPYSRC,GL0761C017
+     C           RPCCY     CAT  NAR,03:3  RPCCY                           E31298
+     C/COPY WNCPYSRC,GL0761C011
+     C                     Z-ADDA6NBDP    RCDP
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                    *
+     C                     MOVEL'GL0761'  DBPGM            ************
+     C                     MOVEL'005'     DBASE            * DBERR 005 *
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C***********          MOVELGLCCY     DBKEY                           S10736
+     C                     MOVEL@CURR     DBKEY                           S10736
+     C                     OUT  LDA
+     C*
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  ACBRCH --- Subroutine to Access the Branch Codes file
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: AOBRCHR0, DBERR
+     C*
+     C********************************************************************
+     C*
+     C           ACBRCH    BEGSR
+     C*
+     C**   Use Access program to read Branch file
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   @DSNB
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM GLENTY    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C                     MOVE A8BRCD    WENTY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                    *
+     C                     MOVEL'GL0761'  DBPGM            ************
+     C                     MOVEL'004'     DBASE            * DBERR 004 *
+     C                     MOVEL'SDBRCHPD'DBFILE           *************
+     C                     MOVELGLENTY    DBKEY
+     C                     OUT  LDA
+     C*
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C/COPY WNCPYSRC,GLH00669
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  ACCOMP --- Subroutine to Access the Company Codes file
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: AOCOMPR0, DBERR
+     C*
+     C********************************************************************
+     C*
+     C           ACCOMP    BEGSR
+     C*
+     C**   Use Access program to read Company file
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   @CENB
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM GLENTY    @CENB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C                     MOVE GLENTY    WENTY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                    *
+     C                     MOVEL'GL0761'  DBPGM            ************
+     C                     MOVEL'003'     DBASE            * DBERR 003 *
+     C                     MOVEL'SDCOMPPD'DBFILE           *************
+     C                     MOVEL@CENB     DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  CCYCNV --- Subroutine to Convert an Amount to the Reporting
+     C*             Currency using Historic Spot Rates
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: GL0765, DBERR
+     C*
+     C********************************************************************
+     C*
+     C           CCYCNV    BEGSR
+     C*
+     C**   Use Access program to read Currency file
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C/COPY WNCPYSRC,GL0761C005
+     C                     CALL 'GL0765'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM GLCCY     @CUR1   3
+     C                     PARM           @CUR2   3                       S10736
+     C                     PARM DAT2      @DATE   50                      S10736
+     C           RBAL      PARM GLLDBL    @AMT   190                      S10736
+     C/COPY WNCPYSRC,GL0761C006
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                    *
+     C                     MOVEL'GL0761'  DBPGM            ************
+     C                     MOVEL'006'     DBASE            * DBERR 006 *
+     C                     MOVEL'GL0765'  DBFILE           *************
+     C                     MOVEL@RTCD     DBKEY                           S10736
+     C                     OUT  LDA
+     C*
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P1OPEN --- Subroutine to Open Detail Print files
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: ZSFILE, DBERR, P05
+     C*
+     C********************************************************************
+     C*
+     C           P1OPEN    BEGSR
+     C*
+     C** Close Previous GL0761P1 if Open
+     C*
+     C           @P1OPN    IFEQ 'Y'
+     C                     WRITEW03
+     C                     CLOSEGL0761P1
+     C                     END
+     C*
+     C** Open file GL0761P1
+     C*
+     C                     OPEN GL0761P1
+     C                     MOVE 'Y'       @P1OPN  1
+     C*
+     C** Ensure spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C** Call ZSFILE for GL0761P1
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM WENTY     ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C/COPY WNCPYSRC,GL0761C046
+     C** If error in ZSFILE, produce audit report.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Initialise new Report fields
+     C*
+     C                     EXSR P05
+     C*
+     C                     ENDSR                           ** P1OPEN **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P01 --- Subroutine to handle Initial Processing
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C***CALLS: AOBANKR0, AORPSTR0, DBERR***********************          S10736
+     C*  CALLS: AOBANKR0, AORPSTR0, DBERR, P07                            S10736
+     C*
+     C********************************************************************
+     C*
+     C           P01       BEGSR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0761'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,GL0761C030
+     C*                                                                   S10736
+     C** If Management Accounts report set indicator to print 'large'     S10736
+     C** entity heading & to print extra audit information                S10736
+     C*                                                                   S10736
+     C           MCGRP     IFNE *BLANKS                    B001           S10736
+     C                     MOVE '1'       *IN76                           S10736
+     C                     END                             E002           S10736
+     C*
+     C** Setup First and Base level numbers for shifting
+     C** report narratives dependant upon level requested
+     C*
+     C                     MOVE RPLVL     RL      10
+     C           9         SUB  RL        BL      10
+     C           10        SUB  RL        FL      10
+     C** 'Figures are reported in'
+     C                     MOVELNAR,2     RPOP1
+     C/COPY WNCPYSRC,GL0761C061
+     C*
+     C** Read Bank details via Access program
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0761'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'001'     DBASE            * DBERR 001 *
+     C                     MOVEL@OPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Get BSPL Set Name for report title
+     C*
+     C           RSNO      IFEQ 'C'                         B001
+     C* 'CHART OF ACCOUNTS REPORT'
+     C                     MOVELNAR,1     G5RSNM
+     C                     ELSE
+     C*
+     C** Get BSPL Set Name via Access program
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   @AJCD
+     C                     CALL 'AORPSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RSNO      @AJCD   1
+     C           SDRPST    PARM SDRPST    DSFDY
+     C*
+     C** If record not found, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS                     B002
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0761'  DBPGM
+     C                     MOVEL'SDRPSTPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVELRSNO      DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END                              E002
+     C                     END                              E001
+      *                                                                   CEU011
+     C*                                                                   124974
+     C** Display extra headers                                            124974
+     C*                                                                   124974
+     C                     MOVE *BLANKS   ADDHED                          124974
+     C/COPY WNCPYSRC,GL0761C022
+     C           @RUNC     IFEQ '10002'                                   124974
+     C                     MOVEAANAR,1    ADDHED                          124974
+     C                     END                                            124974
+     C           @RUNC     IFEQ '10003'                                   124974
+     C                     MOVEAANAR,2    ADDHED                          124974
+     C                     END                                            124974
+     C           @RUNC     IFEQ '10005'                                   124974
+     C                     MOVEAANAR,3    ADDHED                          124974
+     C                     END                                            124974
+     C           @RUNC     IFEQ '10004'                                   124974
+     C                     MOVEAANAR,4    ADDHED                          124974
+     C                     END                                            124974
+     C           @RUNC     IFEQ '10006'                                   124974
+     C                     MOVEAANAR,5    ADDHED                          124974
+     C                     END                                            124974
+      * Next 3 lines added under 124974 23/6/99                           124974
+     C           @RUNC     IFEQ '10001'                                   124974
+     C                     MOVEAANAR,6    ADDHED                          124974
+     C                     END                                            124974
+      ** Check if Position/Risk Enquiries & Reports switchable            CEU011
+      ** feature is on.                                                   CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM '       ' WLRTCD  7                       CEU011
+     C                     PARM '*VERIFY' WLOPTN  7                       CEU011
+     C                     PARM 'CEU011'  @SARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           WLRTCD    IFEQ *BLANKS                                   CEU011
+     C           CTYP      ANDEQ'E'                                       CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE 'N'       CEU011                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     Z-ADD0         E       30                      CEU011
+      *                                                                   CEU011
+     C           WLRTCD    IFNE *BLANKS                                   CEU011
+     C           WLRTCD    ANDNE'*NRF   '                                 CEU011
+      *                                                                   CEU011
+      ** Call to program ended in error                                   CEU011
+      *                                                                   CEU011
+     C           *LOCK     IN   LDA                                       CEU011
+     C                     MOVEL'GL0761'  DBPGM                           CEU011
+     C                     MOVEL'CEU011'  DBKEY            *************  CEU011
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERR 008 *  CEU011
+     C                     MOVEL'008'     DBASE            *************  CEU011
+     C                     OUT  LDA                                       CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+     C/COPY WNCPYSRC,GL0761C035
+      *                                                                   CSD005
+      *** Obtain switchable feature CSD005 status.                        CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @SARD   6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN78                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN78                           CSD005
+     C                     OTHER                                          CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     MOVEL'011'     DBASE             *DBERROR 011* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR *PSSR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *                                                                   CEU011
+      ** Retrieve general ledger details                                  CEU011
+      *                                                                   CEU011
+     C**********           CALL 'AOGELRR0'                                CEU011              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*FIRST ' @OPTN                           CEU011
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU011              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           *LOCK     IN   LDA                                       CEU011
+     C                     MOVEL'GL0761'  DBPGM                           CEU011
+     C                     MOVEL'SDGELRPD'DBFILE           *************  CEU011
+     C                     MOVEL'007'     DBASE            * DBERR 007 *  CEU011
+     C                     MOVEL'*FIRST'  DBKEY            *************  CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+     C*
+     C** Set Indicator to report BSPL/Account Codes
+     C*
+     C           RPCD      IFEQ 'Y'
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*                                                                   149862
+     C** If CEU011 is switched on, load Consolidation array with          149862
+     C** BSPL Codes or Account Codes depending on the request.            149862
+     C*                                                                   149862
+     C           CEU011    IFEQ 'Y'                                       149862
+      *                                                                   149862
+     C           RSNO      IFNE 'C'                                       149862
+     C                     EXSR LDBSPL                                    149862
+     C                     ELSE                                           149862
+     C                     EXSR LDACCD                                    149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C                     ENDIF                                          149862
+     C*
+     C** Generate underline for Report Name
+     C*
+     C                     MOVEAG5RSNM    ULIN
+     C***********          Z-ADD31        X                               S10736
+     C                     Z-ADD31        X       30                      S10736
+     C           ULIN,X    DOUNE' '                         B001
+     C           X         OREQ 1
+     C                     SUB  1         X
+     C                     END                              B001
+     C*
+     C                     MOVEA*ALL'-'   ULIN
+     C                     ADD  1         X
+     C                     MOVEA*BLANK    ULIN,X
+     C                     MOVEAULIN      NMUL
+     C/COPY WNCPYSRC,GL0761C021
+     C*
+     C** Generate Report Date Narratives
+     C*
+     C** Build period narrative
+     C*
+     C                     MOVEL'For'     PRTDT
+     C*                                                                   061373
+     C** Move ASAT to a numeric field to check for zeroes.                061373
+     C*                                                                   061373
+     C                     MOVE ASAT      ASATN  100                      061373
+     C*
+     C** If As at Dates are blank use the run date
+     C           ASAT      IFEQ *BLANK                      B001
+     C           ASATN     OREQ *ZEROS                                    061373
+     C                     MOVE BJMRDT    ZADATE
+     C*                                                                   061372
+     C** Use rundate for ASAT being zeroes.                               061372
+     C*                                                                   061372
+     C                     MOVE BJRDNB    DAT1                            061372
+     C                     MOVE BJRDNB    DAT2                            061372
+     C*
+     C* Otherwise separate FROM and TO dates
+     C                     ELSE                             X001
+     C                     MOVELASAT      DAT2    50
+     C                     MOVE ASAT      DAT1    50
+     C           DAT2      SUB  DAT1      DAYS    50                      S10736
+     C                     ADD  1         DAT1
+     C*
+     C** if Only one date entered make the other equal
+     C           DAT1      IFEQ 0                           B002
+     C                     Z-ADDDAT2      DAT1
+     C                     ELSE                             X002
+     C           DAT2      IFEQ 0                           B003
+     C                     Z-ADDDAT1      DAT2
+     C                     END                              E003
+     C                     END                              E002
+     C*
+     C*                                                                   097542
+     C** When reporting upon the Financial Accounts, the 'TO' date        097542
+     C** may have been set to the Event control date for tonight's        097542
+     C** reporting. The 'TO' date should be set to run date if:           097542
+     C*      1)  Report is run in I/C                                     097542
+     C*      2)  Balances from ACCNTAB (Man Accts group os blank          097542
+     C*      3)  Balances to be reported (SRCE = 'Y')                     097542
+     C*                                                                   097542
+     C********** MPHASE    IFEQ 'A'                         B002                       097542 CCB020
+     C           WCOB      IFEQ '*NO'                                                         CCB020
+     C           RSRCE     ANDEQ'Y'                                       097542
+     C           MCGRP     ANDEQ'  '                                      097542
+     C           DAT2      ANDGTBJRDNB                                    097542
+     C                     Z-ADDBJRDNB    DAT2                            097542
+     C                     END                              E002          097542
+     C** If movements are over none working days
+     C** Build from and to date narrative
+     C           DAT1      IFNE DAT2                        B002
+     C           DAT1      ANDNE0
+     C                     MOVE DAT1      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVEL'From'    PRTDT
+     C                     MOVELZADATE    PRDT   30
+     C           PRDT      CAT  'to':1    PRDT
+     C                     END                              E002
+     C*
+     C           MCGRP     IFEQ '  '                        B002                              230422
+     C           RSRCE     ANDEQ'Y'                                                           230422
+     C           WCOB      IFEQ '*NO'                       B003                              230422
+     C                     MOVE PRUN      ZDAYNO                                              230422
+     C                     ELSE                             X003                              230422
+     C                     MOVE BJRDNB    ZDAYNO                                              230422
+     C                     END                              E003                              230422
+     C                     ELSE                             X002                              230422
+     C                     MOVE DAT2      ZDAYNO
+     C                     END                              E002                              230422
+     C/COPY WNCPYSRC,GL0761C007
+     C                     EXSR ZDATE2
+     C                     END                              E001
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0761CCPG                                           S01408
+     C*                                                                   S01408
+     C*
+     C** For Balance Sheet
+     C*
+     C           G5BALS    IFNE 'P'                         B001
+     C*
+     C** For Y-T-D or Daily figures
+     C*
+     C           RSRCE     IFEQ 'Y'                         B002
+     C                     MOVEL'As at'   PRTDT
+     C/COPY WNCPYSRC,GL0761C059
+     C                     ELSE                             X002
+     C*
+     C** Build PRTDT for Daily Movements reporting
+     C*
+     C* if dates different PRTDT = 'Movements From DDMMMYY to'
+     C* otherwise, PRTDT = 'Movements For'
+     C*
+     C           MCTYP     IFEQ 'A'                         B003          S10736
+     C                     MOVELNAR,23    PRTDT                           S10736
+     C                     ELSE                             X003          S10736
+     C           NAR,17    CAT  PRTDT:1   PRTDT
+     C                     END                              E003          S10736
+     C           PRTDT     CAT  PRDT:1    PRTDT
+     C                     END                              E002
+     C*
+     C** ELSE for Profit & Loss Report
+     C*
+     C                     ELSE                             X001
+     C*
+     C** For Y-T-D or Daily figures
+     C*
+     C           RSRCE     IFEQ 'Y'                         B002
+     C                     MOVEL'Year to' PRTDT
+     C                     ELSE                             X002
+     C*
+     C** Build PRTDT for Daily P & L reporting
+     C*
+     C* if dates different PRTDT = 'From DDMMMYY to'
+     C* otherwise, PRTDT = 'For'
+     C*                                                                   S10736
+     C           MCTRM     IFNE ' '                         B003          S10736
+     C                     MOVELNAR,24    PRTDT                           S10736
+     C                     ELSE                             X003          S10736
+     C*
+     C           PRTDT     CAT  PRDT:1    PRTDT
+     C                     END                              E003          S10736
+     C                     END                              E002
+     C*
+     C                     END                              E001
+     C*
+     C           PRTDT     CAT  ZADATE:1  PRTDT
+     C*
+     C***************************************************************
+     C*  Set Type  Daily  >1 day  Period narrative
+     C*
+     C*     B       N       N     As at DDMMMYY
+     C*     B       Y       N     Movements For DDMMMYY
+     C*     B       Y       Y     Movements from DDMMMYY to DDMMMYY
+     C*     P       N       N     Year to DDMMMYY
+     C*     P       Y       N     For DDMMMYY
+     C*     P       Y       Y     From DDMMMYY to DDMMMYY
+     C***************************************************************
+     C*
+     C** Generate underline for Period Date
+     C*
+     C                     MOVEA*ALL' '   ULIN
+     C                     MOVEAPRTDT     ULIN
+     C                     Z-ADD51        X
+     C           ULIN,X    DOUNE' '                         B001
+     C           X         OREQ 1
+     C                     SUB  1         X
+     C                     END                              E001
+     C*
+     C                     MOVEA*ALL'-'   ULIN
+     C                     ADD  1         X
+     C                     MOVEA*BLANK    ULIN,X
+     C                     MOVEAULIN      DTUL
+     C************                                                        S10736
+     C***Load*Currency Array if conversion to a Reporting Currency Req'd  S10736
+     C************                                                        S10736
+     C***********CTYP      IFNE 'A'                         B001          S10736
+     C************                                                        S10736
+     C***Position*Currency file to start of file                          S10736
+     C************                                                        S10736
+     C************         MOVE *BLANKS   W@CCYK  3                       S10736
+     C************         MOVE '0'       *IN40                           S10736
+     C************         Z-ADD0         X       30                      S10736
+     C************         Z-ADD0         Y       30                      S10736
+     C************                                                        S10736
+     C***********W@CCYK    SETLLSDCURRL1             40                   S10736
+     C************                                                        S10736
+     C************         READ SDCURRL1                 40               S10736
+     C************                                                        S10736
+     C****Loop*to*read All Currency records on SDCURRL0                   S10736
+     C************                                                        S10736
+     C************IN40     DOUEQ'1'                         B002          S10736
+     C************                                                        S10736
+     C***Save*currency fields into Currency Arrays                        S10736
+     C************                                                        S10736
+     C************         ADD  1         X                               S10736
+     C************         MOVE A6CYCD    CUR,X                           S10736
+     C************         MOVE A6MDIN    MD,X                            S10736
+     C************         Z-ADDA6SPRT    RATE,X                          S10736
+     C************         Z-ADDA6NBDP    CDP,X                           S10736
+     C************                                                        S10736
+     C***Save*Reporting Currency Name, Head Office Currency               S10736
+     C************                                                        S10736
+     C***********CTYP      IFEQ 'H'                         B003          S10736
+     C***********BJHOCY    ANDEQA6CYCD                                    S10736
+     C************         MOVE A6CYNM    RPCCY                           E31298
+     C************         MOVELA6CYNM    RPCCY                     E31298S10736
+     C***********RPCCY     CAT  NAR,04:3  RPCCY                     E31298S10736
+     C************         Z-ADDA6NBDP    RCDP                            S10736
+     C************         Z-ADDX         Y                               S10736
+     C***********RPOP1     CAT  NAR,4:1   RPOP1                           S10736
+     C************                                                        S10736
+     C***Local*Currency                                                   S10736
+     C************                                                        S10736
+     C************         ELSE                                           S10736
+     C***********CTYP      IFEQ 'L'                         B004          S10736
+     C***********BJLCCY    ANDEQA6CYCD                                    S10736
+     C************         MOVE A6CYNM    RPCCY                           E31298
+     C************         MOVELA6CYNM    RPCCY                     E31298S10736
+     C***********RPCCY     CAT  NAR,05:3  RPCCY                     E31298S10736
+     C************         Z-ADDA6NBDP    RCDP                            S10736
+     C************         Z-ADDX         Y                               S10736
+     C***********RPOP1     CAT  NAR,5:1   RPOP1                           S10736
+     C************                                                        S10736
+     C***Base*Currency                                                    S10736
+     C************                                                        S10736
+     C************         ELSE                                           S10736
+     C***********CTYP      IFEQ 'B'                         B005          S10736
+     C***********BJCYCD    ANDEQA6CYCD                                    S10736
+     C************         MOVE A6CYNM    RPCCY                           E31298
+     C************         MOVELA6CYNM    RPCCY                     E31298S10736
+     C***********RPCCY     CAT  NAR,06:3  RPCCY                     E31298S10736
+     C************         Z-ADDA6NBDP    RCDP                            S10736
+     C************         Z-ADDX         Y                               S10736
+     C***********RPOP1     CAT  NAR,6:1   RPOP1                           S10736
+     C************         END                              E005          S10736
+     C************                                                        S10736
+     C************         END                              E004          S10736
+     C************         END                              E003          S10736
+     C************         READ SDCURRL1                 40               S10736
+     C************                                                        S10736
+     C************         END                              E002          S10736
+     C************                                                        S10736
+     C***Convert*Base rates to Reporting rates                            S10736
+     C************                                                        S10736
+     C***********Y         IFNE *ZERO                       B002          S10736
+     C************         Z-ADD0         Z       30                      S10736
+     C***********Z         DOWLTX                           B003          S10736
+     C************                                                        S10736
+     C************         ADD  1         Z                               S10736
+     C************                                                        S10736
+     C****Calculate Conversion Rate                                       S10736
+     C************                                                        S10736
+     C***********MD,Z      IFEQ MD,Y                        B004          S10736
+     C************         DIV  RATE,Y    RATE,Z    H                     S10736
+     C************         ELSE                                           S10736
+     C************         MULT RATE,Y    RATE,Z    H                     S10736
+     C************         END                              E004          S10736
+     C************                                                        S10736
+     C***Adjust*conversion rate for Currency Decimal Places            BY S10736
+     C************                                                        S10736
+     C***********CDP,Z     ADD  4         ZPX     10                      S10736
+     C************         SUB  CDP,Y     ZPX                             S10736
+     C***********MD,Z      IFEQ 'D'                         B001    E42869S10736
+     C************         MULT POWER,ZPX RATE,Z                          S10736
+     C************         ELSE                             X001    E42869S10736
+     C************         DIV  POWER,ZPX RATE,Z                    E42869S10736
+     C************         END                              E001    E42869S10736
+     C************                                                        S10736
+     C************         END                              E003          S10736
+     C************         END                              E002          S10736
+     C*                                                                   S10736
+     C*  Access Reporting Currency details                                S10736
+     C*                                                                   S10736
+     C           CTYP      IFNE 'A'                         B001          S10736
+     C           CEU011    ANDEQ'N'                                       CEU011
+     C*                                                                   S10736
+     C           CTYP      IFEQ 'H'                         B002          S10736
+     C                     MOVE BJHOCY    @CURR                           S10736
+     C           RPOP1     CAT  NAR,4:1   RPOP1                           S10736
+     C                     ELSE                             X002          S10736
+     C           CTYP      IFEQ 'L'                         B003          S10736
+     C                     MOVE BJLCCY    @CURR                           S10736
+     C           RPOP1     CAT  NAR,5:1   RPOP1                           S10736
+     C                     ELSE                             X003          S10736
+     C           CTYP      IFEQ 'B'                         B004          S10736
+     C                     MOVE BJCYCD    @CURR                           S10736
+     C           RPOP1     CAT  NAR,6:1   RPOP1                           S10736
+     C/COPY WNCPYSRC,GL0761C012
+     C                     END                              E004          S10736
+     C                     END                              E003          S10736
+     C                     END                              E002          S10736
+     C*                                                                   S10736
+     C/COPY WNCPYSRC,GL0761C013
+     C                     EXSR ACCURR                                    S10736
+     C                     MOVE @CURR     @CUR2                           S10736
+     C/COPY WNCPYSRC,GL0761C014
+     C*                                                                   S10736
+     C                     MOVE *BLANKS   RPCCY                           S10736
+     C                     MOVELA6CYNM    RPCCY                           S10736
+     C*                                                                   S10736
+     C           CTYP      IFEQ 'H'                         B002          S10736
+     C           RPCCY     CAT  NAR,4:3   RPCCY                           S10736
+     C                     ELSE                             X002          S10736
+     C           CTYP      IFEQ 'L'                         B003          S10736
+     C           RPCCY     CAT  NAR,5:3   RPCCY                           S10736
+     C                     ELSE                             X003          S10736
+     C           CTYP      IFEQ 'B'                         B004          S10736
+     C           RPCCY     CAT  NAR,6:1   RPCCY                           S10736
+     C                     END                              E004          S10736
+     C                     END                              E003          S10736
+     C                     END                              E002          S10736
+     C/COPY WNCPYSRC,GL0761C031
+     C*
+     C                     ELSE                             X001
+     C*
+     C** ELSE report in Actual Currency
+     C*
+     C           RPOP1     CAT  NAR,3:1   RPOP1
+     C                     MOVE '1'       *IN51
+     C                     END                              E001
+     C*
+     C** Build narrative for Entity being processed
+     C*
+     C           ENTTY     IFEQ '   '
+     C                     MOVE 'ALL'     ENTTY
+     C                     END
+     C                     MOVELENTTY     RPOP2
+     C*
+     C** Omit entity narrative, 'at detail level'
+     C*
+     C           LEVEL     IFEQ ' '                         B001
+     C                     MOVELNAR,15    RPOP2
+     C                     MOVE '1'       *IN72
+     C*
+     C                     ELSE                             X001
+     C** Consolidated report has been selected at detail level
+     C           LEVEL     IFEQ 'S'                         B002
+     C                     MOVELNAR,11    RPOP2
+     C           RPOP2     CAT  NAR,16:1  RPOP2
+     C                     MOVE '1'       *IN75
+     C*
+     C                     ELSE                             X002
+     C*
+     C** Companies have/Company has been selected at detail level
+     C*
+     C           LEVEL     IFEQ 'C'                         B003
+     C           ENTTY     IFEQ 'ALL'                       B004
+     C           RPOP2     CAT  NAR,10:1  RPOP2
+     C                     ELSE                             X004
+     C           RPOP2     CAT  NAR,8:1   RPOP2
+     C                     END                              E004
+     C*
+     C           RPOP2     CAT  NAR,16:1  RPOP2
+     C                     MOVE '1'       *IN74
+     C*
+     C                     ELSE                             X003
+     C*
+     C** Branches have/Branch has been selected at detail level
+     C*
+     C           LEVEL     IFEQ 'B'                         B004
+     C*
+     C           ENTTY     IFEQ 'ALL'                       B005
+     C           RPOP2     CAT  NAR,9:1   RPOP2
+     C                     ELSE                             X005
+     C           RPOP2     CAT  NAR,7:1   RPOP2
+     C                     END                              E005
+     C*
+     C           RPOP2     CAT  NAR,16:1  RPOP2
+     C                     MOVE '1'       *IN73
+     C                     END                              E004
+     C                     END                              E003
+     C*
+     C                     END                              E002
+     C                     END                              E001
+     C*
+     C           RPOP2     CAT  RPLVL:1   RPOP2
+     C*
+     C**  Build Narrative for Rounding Processing
+     C*
+     C           ROUD      IFEQ 'T'                         B001
+     C** rounded to the nearest Thousand
+     C           RPOP1     CAT  NAR,12:1  RPOP1
+     C           RPOP1     CAT  NAR,14:1  RPOP1
+     C* Report heading for amount 'Thousands'
+     C                     MOVELNAR,14    SCALE   9
+     C                     MOVE 's'       SCALE
+     C                     MOVE '1'       *IN50
+     C                     END                              E001
+     C*
+     C           ROUD      IFEQ 'U'                         B001
+     C** rounded to the nearest Unit
+     C           RPOP1     CAT  NAR,12:1  RPOP1
+     C           RPOP1     CAT  NAR,13:1  RPOP1
+     C                     MOVE '1'       *IN50
+     C                     END                              E001
+     C           MCGRP     IFNE *BLANKS                     B001          S10736
+     C*                                                                   S10736
+     C** Move parameters to audit print fields                            S10736
+     C                     MOVE *BLANKS   PRGRP                           S10736
+     C                     MOVE *BLANKS   PRRPNC                          S10736
+     C                     MOVE *BLANKS   PRTRM                           S10736
+     C                     MOVE *BLANKS   PRTYP                           S10736
+     C                     MOVELMCGRP     PRGRP                           S10736
+     C                     MOVELMCRPNC    PRRPNC                          S10736
+     C           MCTRM     IFEQ 'D'                         B002          S10736
+     C                     MOVEL'Period'  PRTRM                           S10736
+     C                     END                              E002          S10736
+     C           MCTRM     IFEQ 'Y'                         B002          S10736
+     C                     MOVEL'Yearly'  PRTRM                           S10736
+     C                     END                              E002          S10736
+     C           MCTRM     IFEQ '1'                         B002          S10736
+     C                     MOVEL'Term 1'  PRTRM                           S10736
+     C                     END                              E002          S10736
+     C           MCTRM     IFEQ '2'                         B002          S10736
+     C                     MOVEL'Term 2'  PRTRM                           S10736
+     C                     END                              E002          S10736
+     C*                                                                   S10736
+     C           MCTYP     IFEQ 'B'                         B002          S10736
+     C                     MOVEL'Balances'PRTYP                           S10736
+     C                     END                              E002          S10736
+     C           MCTYP     IFEQ 'A'                         B002          S10736
+     C                     MOVEL'Averages'PRTYP                           S10736
+     C                     END                              E002          S10736
+     C           MCTYP     IFEQ 'M'                         B002          S10736
+     C                     MOVEL'Movement'PRTYP                           S10736
+     C                     MOVE 's'       PRTYP                           S10736
+     C                     END                              E002          S10736
+      * If Movements or Averages set up term & type for display in        S10736
+      * report heading                                                    S10736
+     C                     MOVE '0'       *IN77                           S10736
+     C                     MOVE *BLANKS   TRMTYP                          S10736
+     C           MCTYP     IFEQ 'B'                         B002          S10736
+     C                     MOVE '1'       *IN77                           S10736
+     C                     ELSE                             X002          S10736
+     C                     MOVELPRTRM     TRMTYP                          S10736
+     C           TRMTYP    CAT  PRTYP:1   TRMTYP                          S10736
+      *                                                                   S10736
+     C                     END                              E002          S10736
+      * Retrieve Control Group description                                S10736
+     C                     CALL 'AOHBCGR0'                                S10736
+     C                     PARM *BLANKS   P@RTCD  7                       S10736
+     C                     PARM '*KEY   ' P@OPTN  7                       S10736
+     C                     PARM MCGRP     P@HBCG  2                       S10736
+     C           GLHBCG    PARM GLHBCG    DSFDY                           S10736
+     C                     MOVE *BLANKS   PRCGDS                          S10736
+     C                     MOVELHCCGDS    PRCGDS                          S10736
+      *                                                                   S10736
+      * Obtain 'Large' Entity Headings for Report & set up entity field   S10736
+      * for Audit Report                                                  S10736
+     C                     EXSR P07                                       S10736
+      *                                                                   S10736
+     C                     END                              E001          S10736
+     C*                                                                   048916
+     C** Build 'End of Report' Narrative                                  048916
+     C*                                                                   048916
+     C           '*** End' CAT  'of':1    EOR                             048916
+     C*                                                                   048916
+     C           LEVEL     IFEQ 'B'                         B001          048916
+     C           EOR       CAT  'Branch':1EOR                             048916
+     C                     END                              E001          048916
+     C*                                                                   048916
+     C           LEVEL     IFEQ 'C'                         B001          048916
+     C           EOR       CAT  'Compan':1EOR                             048916
+     C           EOR       CAT  'y':0     EOR                             048916
+     C                     END                              E001          048916
+     C*                                                                   048916
+     C           EOR       CAT  'Report':1EOR                             048916
+     C           EOR       CAT  '***':1   EOR                             048916
+     C*
+     C** Write Audit file Headings
+     C*
+     C/COPY WNCPYSRC,GL0761C060
+     C                     WRITEGL0761AH
+     C*
+     C                     ENDSR                           ** P01   **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P02    --- Subroutine to process SDREPCPD records
+     C*             on change of Company/Branch/Currency/BSPL code
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: P04, P06
+     C*
+     C********************************************************************
+     C*
+     C           P02       BEGSR
+     C*
+     C**  Load BSPL codes for Higher Levels up to current record
+     C*
+     C                     MOVE '0'       *IN15
+     C***********          MOVE '0000'    G4RSCD                          178596
+     C                     MOVE *BLANKS   G4RSCD                          178596
+     C*
+     C           G4RSCD    DOWLTGLRSCD                      B001
+     C           *IN15     ANDEQ'0'
+     C*
+     C           RPKEY2    READESDREPCL0                 15
+     C*
+     C                     Z-ADD0         LV
+     C                     MOVE G4LVNB    LV
+     C                     ADD  BL        LV
+     C*
+     C**  Print Totals if higher level found
+     C*
+     C           LV        IFLE PLVNB                       B002
+     C           *IN15     ANDEQ'0'                                       E29984
+     C                     EXSR P04
+     C                     END                              E002
+     C*
+     C**  Load intervening BSPL codes
+     C*
+     C***********G4RSCD    IFNE '0000'                             E29984 178596
+     C           G4RSCD    IFNE *BLANKS                                   178596
+     C                     MOVE G4RSCD    WKNAR
+     C                     END                                            E29984
+     C                     MOVEA*BLANK    NAM,LV
+     C*
+     C***Add*BSPL*code*if*requested*to*report*narrative****************   194565
+     C*
+     C********** *IN80     IFEQ '1'                         B002          194565
+     C           WKNAR     CAT  '-':1     NAM,LV
+     C           NAM,LV    CAT  G4RPNA:1  NAM,LV
+     C**********           ELSE                             X002          194565
+     C**********           MOVELG4RPNA    NAM,LV                          194565
+     C**********           END                              E002          194565
+     C/COPY WNCPYSRC,GL0761C032
+     C*                                                                   E28177
+     C**  If required, Print zero Balances for Report Codes that          E28177
+     C**  do not have any detail records.                                 E28177
+     C*                                                                   E28177
+     C           ZERO      IFEQ 'Y'                         B002          E28177
+     C**                                                                  E28177
+     C**  Set off *IN70 to print detail line next time through P04        E28177
+     C                     MOVE '0'       *IN70                           E28177
+     C**                                                                  E28177
+     C**  Print Level Headings if any, before detail line                 E28177
+     C                     EXSR P06                                       E28177
+     C                     END                              E002          E28177
+     C*                                                                   E28177
+     C                     END                              E001
+     C*
+     C** Print Previous Level headings
+     C*
+     C                     EXSR P06
+     C*
+     C                     ENDSR                           ** P02   **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P03    --- Subroutine to process SDACODPD records
+     C*             on change of Entity/Currency/BSPL code
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C*  CALLS: P04, P06
+     C*
+     C********************************************************************
+     C*
+     C           P03       BEGSR
+     C*
+     C**  Load BSPL codes for Higher Levels up to current record
+     C*
+     C                     MOVE '0'       *IN15
+     C**********           MOVE '    '    A5ACCD                                              CGL029
+     C                     MOVE *BLANKS   A5ACCD                                              CGL029
+     C*
+     C           A5ACCD    DOWLTGLRSCD                      B001
+     C           *IN15     ANDEQ'0'
+     C*
+     C                     READ SDACODL1                 15
+     C*
+     C**  Set up Dummy report levels for Account Codes
+     C*
+     C           A5TOIN    IFEQ 'Y'                         B002
+     C*
+     C           A5ACSC    IFNE SACSC                       B003
+     C                     Z-ADD1         LV
+     C                     ELSE                             X003
+     C                     Z-ADD2         LV
+     C                     END                              E003
+     C*
+     C                     ELSE                             X002
+     C                     Z-ADD3         LV
+     C                     END                              E002
+     C*
+     C                     ADD  BL        LV
+     C*
+     C**  Print Totals if Higher level found
+     C*
+     C           LV        IFLE PLVNB                       B002
+     C           *IN15     ANDEQ'0'                                       E29984
+     C                     EXSR P04
+     C                     END                              E002
+     C*
+     C**  Load intervening BSPL codes
+     C*
+     C                     MOVE *BLANK    NAM,LV
+     C********** A5ACCD    IFNE '    '                                                 E29984 CGL029
+     C**********           MOVE A5ACCD    WKNAR   4                                           CGL029
+     C           A5ACCD    IFNE *BLANKS                                                       CGL029
+     C                     MOVE A5ACCD    WKNAR  10                                           CGL029
+     C                     END                                            E29984
+     C*
+     C***Add*BSPL*code*if*requested*to*report*narrative****************   194565
+     C** Use either current account description or account narrative      CSD005
+     C** feature if switch CSD005 is on.                                  CSD005
+     C*
+     C********** *IN80     IFEQ '1'                         B002          194565
+     C           WKNAR     CAT  '-':1     NAM,LV
+     C           *IN78     IFEQ *ON                                       CSD005
+     C           NAM,LV    CAT  A5NARR:1  NAM,LV                          CSD005
+     C                     ELSE                                           CSD005
+     C           NAM,LV    CAT  A5ACCN:1  NAM,LV
+     C                     ENDIF                                          CSD005
+     C**********           ELSE                             X002          194565
+     C********** *IN78     IFEQ *ON                                CSD005 194565
+     C**********           MOVELA5NARR    NAM,LV                   CSD005 194565
+     C**********           ELSE                                    CSD005 194565
+     C**********           MOVELA5ACCN    NAM,LV                          194565
+     C**********           ENDIF                                   CSD005 194565
+     C**********           END                              E002          194565
+     C*
+     C** Get Account Section Name
+     C*
+     C           LV        IFEQ FL                          B002
+     C           A5ACSC    LOKUPTABSEC    TABSED         41
+     C           *IN41     IFEQ '1'                         B003
+     C                     ADD  1         LV
+     C                     MOVE NAM,FL    NAM,LV
+     C                     MOVE *BLANKS   NAM,FL                          S10736
+     C                     MOVELTABSED    NAM,FL
+     C                     END                              E003
+     C*
+     C                     MOVE A5ACSC    SACSC
+     C                     END                              E002
+     C*                                                                   E28177
+     C**  If required, Print zero Balances for Account Codes that         E28177
+     C**  do not have any detail records.                                 E28177
+     C*                                                                   E28177
+     C           ZERO      IFEQ 'Y'                         B002          E28177
+     C**                                                                  E28177
+     C**  Set off *IN70 to print detail line next time through P04        E28177
+     C                     MOVE '0'       *IN70                           E28177
+     C**                                                                  E28177
+     C**  Print Level Headings if any, before detail line                 E28177
+     C                     EXSR P06                                       E28177
+     C                     END                              E002          E28177
+     C*                                                                   E28177
+     C                     END                              E001
+     C*
+     C** Print Previous Level headings
+     C*
+     C                     EXSR P06
+     C*
+     C                     ENDSR                           ** P03   **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P04 --- Subroutine to Print Detail and Total lines
+     C*
+     C*  CALLED FROM: Main, P02, P03
+     C*
+     C*  CALLS: OFL1
+     C*
+     C********************************************************************
+     C*
+     C           P04       BEGSR
+     C*
+     C**  Print Total lines for levels greater than current
+     C*
+     C                     MOVE '1'       *IN71
+     C                     MOVE '0'       *IN81
+     C                     Z-ADD9         I       20
+     C*
+     C           I         DOWGELV                          B001
+     C***********I         ADD  60        Z                               S10736
+     C           I         ADD  60        Z       30                      S10736
+     C                     MOVEA'1'       *IN,Z
+     C*
+     C**  Print one detail followed by level totals
+     C*
+     C           FLG,I     IFNE *BLANKS                     B002
+     C           NAM,I     ANDNE*BLANKS
+     C           ZERO      OREQ 'Y'                                       E28177
+     C           NAM,I     ANDNE*BLANKS                                   E28177
+     C*
+     C** If Total line is to be printed add '- TOTAL' to Title
+     C*
+     C           *IN70     IFEQ '1'                         B003
+     C           NAM,I     CAT  NAR,18:1  NAM,I
+     C                     END                              E003
+     C*
+     C** Format amount to be reported
+     C*
+     C           ROUD      IFEQ 'T'                         B003
+     C                     DIV  1000      TOT,I     H
+     C/COPY WNCPYSRC,GL0761C036
+     C                     END                              E003
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0761CPLT                                           S01408
+     C*                                                                   S01408
+     C** If Rounding Reqested
+     C*
+     C           ROUD      IFEQ 'T'                         B003
+     C           ROUD      OREQ 'U'
+     C***********4         SUB  RCDP      Y                               S10736
+     C           4         SUB  RCDP      Y       30                      S10736
+     C           TOT,I     MULT POWER,Y   TOT,I     H
+     C/COPY WNCPYSRC,GL0761C037
+     C                     Z-ADD0         ZDECS
+     C*
+     C** Otherwise, no rounding
+     C*
+     C                     ELSE                             X003
+     C                     Z-ADDRCDP      ZDECS
+     C                     END                              E003
+     C*
+     C** Accumulate Balance Sheet totals for Differences
+     C**   For First Level totals
+     C*
+     C           FL        IFEQ I                           B003
+     C                     MOVE '1'       *IN81
+     C                     SUB  TOT,I     BSRDF  150
+     C/COPY WNCPYSRC,GL0761C048
+     C*
+     C**  Report Balance Sheet Difference
+     C**    If Balance sheet is being produced
+     C**    and Last Level 1 total is to be printed
+     C*
+     C           G5BALS    IFEQ 'B'                         B004
+     C           *IN53     ANDEQ'1'
+     C           BSRDF     ANDNE*ZERO
+     C                     MOVE '1'       *IN60
+     C                     MOVE NAM,I     NAM,20
+     C                     MOVE *BLANKS   NAM,1
+     C*
+     C** Build Balancing item narrative
+     C*
+     C           *IN50     IFEQ '1'                         B005
+     C* 'Balancing item due to Rounding'
+     C           NAR,19    CAT  NAR,20:1  NAM,I
+     C                     ELSE                             X005
+     C           *IN51     IFEQ '1'                         B006
+     C* 'Balancing item due to OUT OF BALANCE'
+     C           NAR,19    CAT  NAR,21:1  NAM,I
+     C                     ELSE                             X006
+     C* 'Balancing item due to Currency conversion
+     C           NAR,19    CAT  NAR,22:1  NAM,I
+     C                     END                              E006
+     C                     END                              E005
+     C*
+     C                     MOVE '0'       *IN81
+     C                     Z-ADDBSRDF     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RAMT
+     C/COPY WNCPYSRC,GL0761C038
+     C*
+     C** Print Page Headings, if Page Overflowed
+     C*
+     C                     Z-ADD6         RQLN
+     C                     EXSR OFL1
+     C*
+     C*                                                                   194565
+     C** If only narrative is requested then blank out BSPL code          194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE *BLANKS   NAMB,I                          194565
+     C                     MOVE NAM,I     NAMB,I                          194565
+     C                     MOVE *BLANKS   WBLANK  7                       194565
+     C                     MOVEAWBLANK    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C*                                                                   194565
+     C                     WRITEW02
+     C*                                                                   194565
+     C** Put BSPL code back in array                                      194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE NAMB,I    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C/COPY WNCPYSRC,GL0761C023
+     C                     ADD  BSRDF     TOT,I
+     C/COPY WNCPYSRC,GL0761C039
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C           INCY      ANDEQ'Y'                                       149862
+     C           CEU011    OREQ 'Y'                                       149862
+     C           GLCCY     ANDEQBKEURO                                    149862
+     C                     Z-ADD1         N       30                      CEU011
+     C           NAM,I     LOKUPENAM,N                   12               CEU011
+     C           *IN12     IFEQ '0'                                       CEU011
+     C                     ADD  1         E                               CEU011
+     C                     MOVE NAM,I     ENAM,E                          CEU011
+     C***********          MOVEA*IN,60    IN1,E                    CEU011 149862
+     C                     MOVEA*IN,60    @WRK12 12                       149862
+     C                     MOVE @WRK12    IN1,E                           149862
+     C                     MOVE *IN53     IN2,E                           CEU011
+     C***********          MOVEA*IN,81    IN3,E                    CEU011 149862
+     C                     MOVEA*IN,81    @WRK02  2                       149862
+     C                     MOVE @WRK02    IN3,E                           149862
+     C                     MOVE 'Y'       PRIN,E                          149862
+     C                     Z-ADDE         N                               149862
+     C                     ELSE                                           149862
+     C                     MOVEA*IN,60    @WRK12                          149862
+     C                     MOVE @WRK12    IN1,N                           149862
+     C                     MOVE *IN53     IN2,N                           149862
+     C                     MOVEA*IN,81    @WRK02                          149862
+     C                     MOVE @WRK02    IN3,N                           149862
+     C                     MOVE 'Y'       PRIN,N                          149862
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           GLCCY     IFNE BKEURO                                    CEU011
+     C           INCY      ANDEQ'Y'                                       CEU011
+      *                                                                   CEU011
+     C                     Z-ADDBSRDF     PFRAM  183                      CEU011
+     C                     Z-ADD9         DBASE                           CEU011
+     C                     EXSR SREURO                                    CEU011
+     C                     Z-ADDPOUTA     WRAM   150                      CEU011
+     C                     ADD  WRAM      ERAM,N                          CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           GLCCY     IFEQ BKEURO                                    CEU011
+     C**********           ADD  BSRDF     ERAM,E                   CEU011 149862
+     C                     ADD  BSRDF     ERAM,N                          149862
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C*                                                                   074474
+     C** Check if sublevel total is output                                074474
+     C*                                                                   074474
+     C           *IN70     IFEQ '1'                                       074474
+     C           *IN60     IFEQ '0'                                       074474
+     C                     MOVE '1'       *IN82                           074474
+     C                     END                                            074474
+     C                     ELSE                                           074474
+     C                     MOVE '0'       *IN82                           074474
+     C                     END                                            074474
+     C*                                                                   074474
+     C                     MOVE '0'       *IN60
+     C                     MOVE '1'       *IN81
+     C                     MOVE NAM,20    NAM,I
+     C                     Z-ADD0         BSRDF
+     C                     END                              E004
+     C*
+     C                     END                              E003
+     C*                                                                   090651
+     C** Do not print any zero computed detail amounts if 'Print Zero     090651
+     C** Balance' is set to 'N'.                                          090651
+     C*                                                                   090651
+     C           ZERO      IFEQ 'N'                                       090651
+     C           TOT,I     ANDEQ0                                         090651
+     C           *IN70     ANDEQ'0'                                       090651
+     C*                                                                   090651
+     C                     ELSE                                           090651
+     C*
+     C**  Report Detail or Level Total
+     C*
+     C                     Z-ADDTOT,I     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RAMT
+     C                     MOVE ZOUT21    TAMT
+     C*
+     C/COPY WNCPYSRC,GL0761C040
+     C** Print Page Headings, if Page Overflowed
+     C*
+     C           *IN81     IFEQ '1'                         B003
+     C******************** Z-ADD6         RQLN ************************** S10736
+     C                     Z-ADD5         RQLN                            S10736
+     C                     ELSE                             X003
+     C                     Z-ADD3         RQLN
+     C                     END                              E003
+     C                     EXSR OFL1
+     C*                                                                   194565
+     C** If only narrative is requested then blank out BSPL code          194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE *BLANKS   NAMB,I                          194565
+     C                     MOVE NAM,I     NAMB,I                          194565
+     C                     MOVE *BLANKS   WBLANK  7                       194565
+     C                     MOVEAWBLANK    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C*
+     C                     WRITEW02
+     C/COPY WNCPYSRC,GL0761C041
+     C*                                                                   194565
+     C** Put BSPL code back in array                                      194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE NAMB,I    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C/COPY WNCPYSRC,GL0761C024
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C           INCY      ANDEQ'Y'                                       149862
+     C           CEU011    OREQ 'Y'                                       149862
+     C           GLCCY     ANDEQBKEURO                                    149862
+     C                     Z-ADD1         N                               CEU011
+     C           NAM,I     LOKUPENAM,N                   12               CEU011
+     C           *IN12     IFEQ '0'                                       CEU011
+     C                     ADD  1         E                               CEU011
+     C                     MOVE NAM,I     ENAM,E                          CEU011
+     C***********          MOVEA*IN,60    IN1,E                    CEU011 149862
+     C                     MOVEA*IN,60    @WRK12                          149862
+     C                     MOVE @WRK12    IN1,E                           149862
+     C                     MOVE *IN53     IN2,E                           CEU011
+     C                     MOVEA*IN,81    @WRK02                          149862
+     C                     MOVEA@WRK02    IN3,E                           149862
+     C***********          MOVEA*IN,81    IN3,E                    CEU011 149862
+     C                     MOVE 'Y'       PRIN,E                          149862
+     C                     Z-ADDE         N                               149862
+     C                     ELSE                                           149862
+     C                     MOVEA*IN,60    @WRK12                          149862
+     C                     MOVE @WRK12    IN1,N                           149862
+     C                     MOVE *IN53     IN2,N                           149862
+     C                     MOVEA*IN,81    @WRK02                          149862
+     C                     MOVEA@WRK02    IN3,N                           149862
+     C                     MOVE 'Y'       PRIN,N                          149862
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           GLCCY     IFNE BKEURO                                    CEU011
+     C           INCY      ANDEQ'Y'                                       CEU011
+      *                                                                   CEU011
+     C                     Z-ADDTOT,I     PFRAM                           CEU011
+     C                     Z-ADD10        DBASE                           CEU011
+     C                     EXSR SREURO                                    CEU011
+      *                                                                   CEU011
+     C                     Z-ADDPOUTA     WTAMT  150                      CEU011
+      *                                                                   CEU011
+     C           *IN71     IFEQ '1'                                       CEU011
+     C           *IN81     IFEQ '0'                                       CEU011
+     C                     ADD  WTAMT     ERAM,N                          CEU011
+     C                     ELSE                                           CEU011
+     C                     ADD  WTAMT     ETAM,N                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           GLCCY     IFEQ BKEURO                                    CEU011
+     C           *IN71     IFEQ '1'                                       CEU011
+     C           *IN81     IFEQ '0'                                       CEU011
+     C                     ADD  TOT,I     ERAM,N                          CEU011
+     C                     ELSE                                           CEU011
+     C                     ADD  TOT,I     ETAM,N                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C*                                                                   074474
+     C** Check if sublevel total is output                                074474
+     C*                                                                   074474
+     C           *IN70     IFEQ '1'                                       074474
+     C           *IN60     IFEQ '0'                                       074474
+     C                     MOVE '1'       *IN82                           074474
+     C                     END                                            074474
+     C                     ELSE                                           074474
+     C                     MOVE '0'       *IN82                           074474
+     C                     END                                            074474
+     C*                                                                   090651
+     C                     END                                            090651
+     C*
+     C** Next time through loop print Level Total lines
+     C*
+     C                     MOVE '1'       *IN70
+     C                     END                              E002
+     C*
+     C** Clear printed fields
+     C*
+     C                     MOVEA*BLANKS   FLG,I
+     C                     MOVEA*BLANKS   NAM,I
+     C                     MOVEA*ZEROS    TOT,I
+     C/COPY WNCPYSRC,GL0761C042
+     C                     MOVE '0'       *IN81
+     C                     MOVEA'0'       *IN,Z
+     C*
+     C                     SUB  1         I
+     C                     END                              E001
+     C*
+     C** Set Previous level to earliest unprinted level
+     C*
+     C                     Z-ADDLV        PLVNB
+     C*
+     C                     ENDSR                           ** P04   **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P05 --- Subroutine to Initialise a New Report
+     C*
+     C*  CALLED FROM: Main, P1OPEN
+     C*
+     C*  CALLS: None
+     C*
+     C********************************************************************
+     C*
+     C           P05       BEGSR                           ** P05 **
+     C*
+     C**  Initialize Fields
+     C*
+     C                     MOVE '0'       *IN53
+     C                     Z-ADDFL        LV      20
+     C                     Z-ADDFL        PLVNB   20
+     C*
+     C**  Set SDREPCL0 and SDACODL1 to begining  of Report Set
+     C*
+     C**********           MOVE *BLANKS   RPRSCD  4                                           CGL029
+     C                     MOVE *BLANKS   RPRSCD 10                                           CGL029
+     C                     MOVE *BLANKS   SACSC
+     C                     MOVE *BLANKS   SRSCD
+     C*
+     C           RPKEY1    SETLLSDREPCL0                 15
+     C*
+     C           ACKEY1    SETLLSDACODL1                 15
+     C*
+     C** Print Page Headings
+     C*
+     C                     WRITEW01
+     C/COPY WNCPYSRC,GL0761C047
+     C*
+     C                     ENDSR                           ** P05 **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  P06    --- Subroutine to Print Level Headings
+     C*
+     C*  CALLED FROM: P02, P03
+     C*
+     C*  CALLS: OFL1
+     C*
+     C********************************************************************
+     C*
+     C           P06       BEGSR
+     C*
+     C**  Print Earlier Level Headings as totals printed in P04
+     C*
+     C                     Z-ADDPLVNB     I
+     C*
+     C           I         DOWLTLV                          B001
+     C           I         ANDLT9
+     C           60        ADD  I         Z
+     C                     MOVEA'1'       *IN,Z
+     C*
+     C           NAM,I     IFNE *BLANKS                     B002
+     C                     MOVEA'00'      *IN,70
+     C*
+     C** Print Page Headings, if Page Overflows
+     C*
+     C           LV        SUB  I         RQLN    20
+     C***********          MULT 2         RQLN                            S10736
+     C                     MULT 3         RQLN                            S10736
+     C                     ADD  3         RQLN
+     C                     EXSR OFL1
+     C*                                                                   194565
+     C** If only narrative is requested then blank out BSPL code          194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE *BLANKS   NAMB,I                          194565
+     C                     MOVE NAM,I     NAMB,I                          194565
+     C                     MOVE *BLANKS   WBLANK  7                       194565
+     C                     MOVEAWBLANK    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C*
+     C                     WRITEW02
+     C*                                                                   194565
+     C** Put BSPL back in array                                           194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE NAMB,I    NAM,I                           194565
+     C                     ENDIF                                          194565
+     C           CEU011    IFEQ 'Y'                                       149862
+     C           INCY      ANDEQ'Y'                                       149862
+     C           CEU011    OREQ 'Y'                                       149862
+     C           GLCCY     ANDEQBKEURO                                    149862
+      *                                                                   149862
+     C                     Z-ADD1         N       30                      CEU011
+     C           NAM,I     LOKUPENAM,N                   12               CEU011
+     C           *IN12     IFEQ '0'                                       CEU011
+     C                     ADD  1         E                               CEU011
+     C                     MOVE NAM,I     ENAM,E                          CEU011
+     C***********          MOVEA*IN,60    IN1,E                    CEU011 149862
+     C                     MOVEA*IN,60    @WRK12                          149862
+     C                     MOVE @WRK12    IN1,E                           149862
+     C                     MOVE *IN53     IN2,E                           CEU011
+     C***********          MOVEA*IN,81    IN3,E                    CEU011 149862
+     C                     MOVEA*IN,81    @WRK02                          149862
+     C                     MOVE @WRK02    IN3,E                           149862
+     C                     MOVE 'Y'       PRIN,E                          149862
+     C                     ELSE                                           149862
+     C                     MOVEA*IN,60    @WRK12                          149862
+     C                     MOVE @WRK12    IN1,N                           149862
+     C                     MOVE *IN53     IN2,N                           149862
+     C                     MOVEA*IN,81    @WRK02                          149862
+     C                     MOVE @WRK02    IN3,N                           149862
+     C                     MOVE 'Y'       PRIN,N                          149862
+     C                     ENDIF                                          CEU011
+      *                                                                   149862
+     C                     ENDIF                                          149862
+     C*                                                                   074474
+     C** Check if sublevel total is output                                074474
+     C*                                                                   074474
+     C           *IN70     IFEQ '1'                                       074474
+     C           *IN60     IFEQ '0'                                       074474
+     C                     MOVE '1'       *IN82                           074474
+     C                     END                                            074474
+     C                     ELSE                                           074474
+     C                     MOVE '0'       *IN82                           074474
+     C                     END                                            074474
+     C*                                                                   074474
+     C                     END                              E002
+     C*
+     C                     MOVEA'0'       *IN,Z
+     C                     ADD  1         I
+     C*
+     C                     END                              E001
+     C*
+     C** Save Report Level and BSPL Code
+     C*
+     C                     Z-ADDLV        PLVNB
+     C                     MOVE GLRSCD    SRSCD
+     C*
+     C                     ENDSR                           ** P06   **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************S10736
+     C*                                                                   S10736
+     C*  P07 --- Subroutine to Obtain 'Large' Entity Headings for         S10736
+     C*          Management Accounts                                      S10736
+     C*                                                                   S10736
+     C*  CALLED FROM: P01                                                 S10736
+     C*                                                                   S10736
+     C*  CALLS: None                                                      S10736
+     C*                                                                   S10736
+     C********************************************************************S10736
+     C*                                                                   S10736
+     C           P07       BEGSR                           ** P07 **      S10736
+     C*                                                                   S10736
+     C** Non output of Branch, Company or Consolidated on report          S10736
+     C*                                                                   S10736
+     C************         MOVE '0'       *IN73                     S10736052437
+     C************         MOVE '0'       *IN74                     S10736052437
+     C************         MOVE '0'       *IN75                     S10736052437
+     C*                                                                   S10736
+     C**  Retrieve Large Entity headings from array U using MCANL to      S10736
+     C**  determine the order & headings required                         S10736
+     C*                                                                   S10736
+     C                     MOVEAMCANL     A                               S10736
+      *                                                                   S10736
+     C           1         DO   9         K       20       -- B001        S10736
+     C           A,K       IFNE *BLANKS                    -- B002        S10736
+     C                     MOVE A,K       J       10                      S10736
+     C                     ADD  1         J                               S10736
+     C                     MOVELU,K       W,J                             S10736
+     C                     END                             -- E002        S10736
+     C                     END                             -- E001        S10736
+      *                                                                   S10736
+     C                     Z-ADD0         J                               S10736
+     C           1         DO   8         K                -- B001        S10736
+     C           W,K       IFNE *BLANKS                    -- B002        S10736
+     C                     ADD  1         J                               S10736
+     C                     MOVELW,K       S,J                             S10736
+     C                     END                             -- E002        S10736
+     C                     END                             -- E001        S10736
+      *                                                                   S10736
+     C                     MOVEAS         LEH                             S10736
+      *                                                                   S10736
+      * Remove blanks from large entity heading for Audit print           S10736
+      *                                                                   S10736
+     C                     MOVEAS         LEHDS                           S10736
+      *                                                                   S10736
+     C                     MOVELLEH1      AULEH                           S10736
+     C           AULEH     CAT  LEH2:2    AULEH                           S10736
+     C           AULEH     CAT  LEH3:2    AULEH                           S10736
+     C           AULEH     CAT  LEH4:2    AULEH                           S10736
+     C           AULEH     CAT  LEH5:2    AULEH                           S10736
+     C           AULEH     CAT  LEH6:2    AULEH                           S10736
+     C           AULEH     CAT  LEH7:2    AULEH                           S10736
+     C           AULEH     CAT  LEH8:2    AULEH                           S10736
+     C*                                                                   S10736
+     C                     ENDSR                           ** P07 **      S10736
+     C*                                                                   S10736
+     C********************************************************************S10736
+     C/EJECT                                                              S10736
+     C********************************************************************
+     C*
+     C*  OFL1  --- Subroutine to Handle Printer Overflow
+     C*
+     C*  CALLED FROM: P04, P06
+     C*
+     C*  CALLS: None
+     C*
+     C********************************************************************
+     C*
+     C           OFL1      BEGSR
+     C*
+     C** Print Page Headings, if Page Overflowed
+     C*
+     C           OFLLN     SUB  PRTLN     RMLN    20
+     C*
+     C**  Adjust space after if level 1 total at end of page
+     C*
+     C           RQLN      IFGE RMLN                        B001
+     C           *IN81     ANDEQ'1'
+     C*********  *IN53     ANDEQ'0'  ***********************************  S10736
+     C           *IN71     ANDEQ'1'
+     C                     Z-ADD3         RQLN
+     C/COPY WNCPYSRC,GL0761C015
+     C                     MOVE '1'       *IN53
+     C/COPY WNCPYSRC,GL0761C016
+     C                     END                              E001
+     C*
+     C           RQLN      IFGE RMLN                        B001
+     C                     WRITEW01
+     C                     END                              E001
+     C*
+     C                     ENDSR                           ** OFL1  **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  DBERR --- Subroutine to handle Data base errors
+     C*
+     C*  CALLED FROM: After Data base error
+     C*
+     C*  CALLS: ZSFILE, *PSSR
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Read database error details from LDA
+     C*
+     C                     IN   LDA
+     C*
+     C** Write Audit file Headings if not already done
+     C*
+     C           *IN10     IFEQ '0'
+     C                     WRITEGL0761AH
+     C                     END
+     C*
+     C** Write database error details
+     C*
+     C                     WRITEGL0761AE
+     C*
+     C***Write 'End of Report'                                            RT0086
+     C*****                                                               RT0086
+     C*****                WRITEGL0761AT                                  RT0086
+     C*
+     C** Ensure spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C** Set on database error indicators DUMP and exit program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ENDSR                           ** DBERR **
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C*  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/EJECT                                                              CEU011
+      *****************************************************************   CEU011
+      *                                                               *   CEU011
+      *  SREUCP -  Subroutine to genearte Consolidated Euro Position  *   CEU011
+      *            Report                                             *   CEU011
+      *                                                               *   CEU011
+      *  CALL BY: -  Main Program                                     *   CEU011
+      *                                                               *   CEU011
+      *****************************************************************   CEU011
+      *                                                                   CEU011
+     C           SREUCP    BEGSR                                          CEU011
+     C                     Z-ADD0         E       30                      CEU011
+     C                     MOVE '0'       *IN16                           CEU011
+     C********** E         DOWLT300                                CEU011 149862
+     C           E         DOWLT900                                       149862
+     C                     ADD  1         E                               CEU011
+     C           *IN16     IFEQ '0'                                       CEU011
+     C                     MOVE '1'       *IN16                           CEU011
+     C                     CLEARRPCCY                                     149862
+     C                     MOVELNAR,25    RPCCY                           CEU011
+     C                     WRITEW01                                       CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           ENAM,E    IFNE *BLANKS                                   CEU011
+     C********** E         ANDLE300                                CEU011 149862
+     C           E         ANDLE900                                       149862
+     C           PRIN,E    ANDEQ'Y'                                       149862
+     C**********           MOVEAIN1,E     *IN,60                   CEU011 149862
+     C                     MOVEAIN1,E     @WK12  12                       149862
+     C                     MOVEA@WK12     *IN,60                          149862
+     C**********           MOVEAIN3,E     *IN,81                   CEU011 149862
+     C                     MOVELIN3,E     *IN81                           149862
+     C                     MOVE IN3,E     *IN82                           149862
+     C           *IN61     IFEQ '1'                                       CEU011
+     C                     MOVE 61        V       30                      CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN62     IFEQ '1'                                       CEU011
+     C                     MOVE 62        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN63     IFEQ '1'                                       CEU011
+     C                     MOVE 63        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN64     IFEQ '1'                                       CEU011
+     C                     MOVE 64        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN65     IFEQ '1'                                       CEU011
+     C                     MOVE 65        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN66     IFEQ '1'                                       CEU011
+     C                     MOVE 66        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN67     IFEQ '1'                                       CEU011
+     C                     MOVE 67        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN68     IFEQ '1'                                       CEU011
+     C                     MOVE 68        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           *IN69     IFEQ '1'                                       CEU011
+     C                     MOVE 69        V                               CEU011
+     C                     ENDIF                                          CEU011
+     C           V         SUB  60        V                               CEU011
+      *                                                                   CEU011
+     C                     MOVEAENAM,E    NAM,V                           CEU011
+      *                                                                   CEU011
+     C                     MOVEAERAM,E    ZFLD15                          CEU011
+     C                     MOVE 'J'       ZECODE                          CEU011
+     C                     EXSR ZSEDIT                                    CEU011
+     C                     MOVE ZOUT21    RAMT                            CEU011
+      *                                                                   CEU011
+     C                     MOVEAETAM,E    ZFLD15                          CEU011
+     C                     MOVE 'J'       ZECODE                          CEU011
+     C                     EXSR ZSEDIT                                    CEU011
+     C                     MOVE ZOUT21    TAMT                            CEU011
+      *                                                                   CEU011
+     C/COPY WNCPYSRC,GL0761C026
+     C           *IN81     IFEQ '1'                                       149862
+     C                     Z-ADD5         RQLN                            149862
+     C                     ELSE                                           149862
+     C                     Z-ADD3         RQLN                            149862
+     C                     ENDIF                                          149862
+     C                     EXSR OFL1                                      CEU011
+     C*                                                                   194565
+     C** If only narrative is requested then blank out BSPL code          194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE *BLANKS   WBLANK  7                       194565
+     C                     MOVE NAM,V     NAMB,V                          194565
+     C                     MOVEAWBLANK    NAM,V                           194565
+     C                     ENDIF                                          194565
+     C*                                                                   194565
+     C                     WRITEW02                                       CEU011
+     C*                                                                   194565
+     C** Put BSPL code back in array                                      194565
+     C*                                                                   194565
+     C           *IN80     IFEQ '0'                                       194565
+     C                     MOVE NAMB,V    NAM,V                           194565
+     C                     ENDIF                                          194565
+     C/COPY WNCPYSRC,GL0761C025
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     MOVEA'00000000'*IN,60                          CEU011
+     C                     MOVEA'00000'   *IN,67                          CEU011
+     C                     MOVEA'00'      *IN,81                          CEU011
+     C                     MOVE *BLANKS   NAM                             CEU011
+     C                     MOVE *BLANKS   RAMT                            CEU011
+     C                     MOVE *BLANKS   TAMT                            CEU011
+     C                     ENDDO                                          CEU011
+     C                     ENDSR                                          CEU011
+      ******************************************************************* CEU011
+     C/EJECT                                                              CEU011
+      *****************************************************************   CEU011
+      *                                                               *   CEU011
+      *  SREURO -  Subroutine that converts 'in' currency amount      *   CEU011
+      *            to Euro equivalent.                                *   CEU011
+      *                                                               *   CEU011
+      *****************************************************************   CEU011
+      *                                                                   CEU011
+     C           SREURO    BEGSR                                          CEU011
+     C                     MOVE *BLANKS   PRTCD   7                       CEU011
+     C                     MOVE GLCCY     PFRCY   3                       CEU011
+     C                     MOVE BKEURO    PTOCY   3                       CEU011
+      *                                                                   194565
+      ** If currency has no decimal places and amount has been subjected  194565
+      ** to rounding then need to divide by 100 due to EUR having 2       194565
+      ** decimal places.                                                  194565
+      *                                                                   194565
+     C           A6NBDP    IFEQ 0                                         194565
+     C           ROUD      ANDNE' '                                       194565
+     C                     DIV  100       PFRAM                           194565
+     C                     ENDIF                                          194565
+      *                                                                   CEU011
+     C                     CALL 'EU0200'                                  CEU011
+     C                     PARM           PRTCD   7                       CEU011
+     C                     PARM           PFRAM  183                      CEU011
+     C                     PARM           PFRCY   3                       CEU011
+     C                     PARM           PTOCY   3                       CEU011
+     C                     PARM           POUTA  150                      CEU011
+     C                     PARM           PINTA  183                      CEU011
+     C                     PARM           PEXRT  159                      CEU011
+     C                     PARM           PMDIN   1                       CEU011
+      *                                                                   CEU011
+     C           PRTCD     IFNE *BLANKS                                   CEU011
+     C                     MOVEL'*CALL   'DBFILE                          CEU011
+     C                     MOVEL'EU0200  'DBKEY             ************  CEU011
+     C                     Z-ADDDBASE     DBASE             * DBERR NN *  CEU011
+     C                     EXSR *PSSR                       ************  CEU011
+     C                     END                                            CEU011
+      *                                                                   CEU011
+     C                     ENDSR                                          CEU011
+      *****************************************************************   CEU011
+     C/EJECT                                                              149862
+      *****************************************************************   149862
+      *                                                               *   149862
+      *  LDBSPL -  Subroutine that loads the BSPL reporting number    *   149862
+      *            requested to the Consolidated Euro BSPL array      *   149862
+      *                                                               *   149862
+      *****************************************************************   149862
+      *                                                                   149862
+     C           LDBSPL    BEGSR                                          149862
+      *                                                                   149862
+      ** Initialise array index                                           149862
+      *                                                                   149862
+     C                     Z-ADD1         L       30                      149862
+      *                                                                   149862
+      ** Read through BPSL reporting codes choosing only the              149862
+      ** selected reporting code                                          149862
+      *                                                                   149862
+     C********** *LOVAL    SETLLSDREPCL0                           149862 156131
+     C                     MOVE *BLANKS   RPRSCD                          156131
+     C           RPKEY1    SETLLSDREPCL0                                  156131
+     C           RPKEY2    READESDREPCL0                 15               149862
+      *                                                                   149862
+      ** Initialise Total line index                                      149862
+      *                                                                   149862
+     C           *IN15     IFEQ '0'                                       149862
+      *                                                                   149862
+     C                     MOVE G4LVNB    P       10                      149862
+     C                     MOVE G4LVNB    NLEV    10                      149862
+     C**********           MOVE G4RSCD    WKNAR                    149862 156131
+     C********** *IN80     IFEQ '1'                                149862 156131
+     C********** WKNAR     CAT  '-':1     TBSP,P                   149862 156131
+     C********** TBSP,P    CAT  G4RPNA:1  TBSP,P                   149862 156131
+     C**********           ELSE                                    149862 156131
+     C**********           MOVELG4RPNA    TBSP,P                   149862 156131
+     C**********           ENDIF                                   149862 156131
+     C********** TBSP,P    CAT  NAR,18:1  TBSP,P                   149862 156131
+      *                                                                   149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C           *IN15     DOWEQ'0'                                       149862
+     C                     MOVE G4RSCD    WKNAR                           149862
+      *                                                                   149862
+      ** Check if change in reporting level                               149862
+      ** If previous level is less than current level, load totals        149862
+      ** array.                                                           149862
+      *                                                                   149862
+     C********** P         IFLT NLEV                               149862 156131
+     C           P         IFLE NLEV                                      156131
+      *                                                                   149862
+     C                     Z-ADDNLEV      P                               149862
+     C                     MOVE *BLANKS   TBSP,P                          156131
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     TBSP,P                          149862
+     C           TBSP,P    CAT  G4RPNA:1  TBSP,P                          149862
+     C**********           ELSE                                    149862 194565
+     C**********           MOVELG4RPNA    TBSP,P                   149862 194565
+     C**********           ENDIF                                   149862 194565
+     C           TBSP,P    CAT  NAR,18:1  TBSP,P                          149862
+      *                                                                   149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      ** If previous leve is greater than the current level, load         149862
+      ** the totals array to BSPL array.                                  149862
+      *                                                                   149862
+     C           P         IFGT NLEV                                      149862
+      *                                                                   149862
+      ** Blank out current level, as this will not be placed in the       149862
+      ** BSPL array yet.                                                  149862
+      *                                                                   149862
+     C                     MOVE *BLANKS   TBSP,P                          149862
+      *                                                                   149862
+     C           P         SUB  1         Q       10                      149862
+     C           Q         DOWGENLEV                                      149862
+      *                                                                   149862
+     C                     MOVE TBSP,Q    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     MOVE *BLANKS   TBSP,Q                          149862
+     C                     ADD  1         L                               149862
+     C                     SUB  1         Q                               149862
+      *                                                                   149862
+     C                     ENDDO                                          149862
+      *                                                                   149862
+      ** Initialise total array with current level and current BSPL       149862
+      ** Codes                                                            149862
+      *                                                                   149862
+     C                     Z-ADDNLEV      P                               149862
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     TBSP,P                          149862
+     C           TBSP,P    CAT  G4RPNA:1  TBSP,P                          149862
+     C**********           ELSE                                    149862 194565
+     C**********           MOVELG4RPNA    TBSP,P                   149862 194565
+     C**********           ENDIF                                   149862 194565
+     C           TBSP,P    CAT  NAR,18:1  TBSP,P                          149862
+      *                                                                   149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      *                                                                   149862
+      ** Load necessary narratives to array                               149862
+      *                                                                   149862
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     ENAM,L                          149862
+     C           ENAM,L    CAT  G4RPNA:1  ENAM,L                          149862
+     C**********           ELSE                                    149862 194565
+     C**********           MOVELG4RPNA    ENAM,L                   149862 194565
+     C**********           ENDIF                                   149862 194565
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+      *                                                                   149862
+      ** Read next record                                                 149862
+      *                                                                   149862
+     C           RPKEY2    READESDREPCL0                 15               149862
+      *                                                                   149862
+     C           *IN15     IFEQ '0'                                       149862
+     C                     MOVE G4LVNB    NLEV                            149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C                     ENDDO                                          149862
+      *                                                                   149862
+      ** Load remaining totals in the totals array to the BSPL array      149862
+      *                                                                   149862
+     C                     Z-ADDNLEV      Q                               149862
+     C           Q         DOWGE1                                         149862
+      *                                                                   149862
+     C                     MOVE TBSP,Q    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     MOVE *BLANKS   TBSP,Q                          149862
+     C                     ADD  1         L                               149862
+     C                     SUB  1         Q                               149862
+      *                                                                   149862
+     C                     ENDDO                                          149862
+      *                                                                   149862
+     C           L         SUB  1         E                               149862
+     C           *LOVAL    SETLLSDREPCL0                                  149862
+     C                     SETOF                     15                   149862
+      *                                                                   149862
+     C                     ENDSR                                          149862
+      *****************************************************************   149862
+     C/EJECT                                                              149862
+      *****************************************************************   149862
+      *                                                               *   149862
+      *  LDACCD -  Subroutine that loads the Account Codes as         *   149862
+      *            requested to the Consolidated Euro BSPL array      *   149862
+      *                                                               *   149862
+      *****************************************************************   149862
+      *                                                                   149862
+     C           LDACCD    BEGSR                                          149862
+      *                                                                   149862
+      ** Initialise array index and Account Section Field                 149862
+      *                                                                   149862
+     C                     Z-ADD1         L       30                      149862
+     C                     MOVE *BLANKS   SACSC                           149862
+     C                     MOVE 'N'       PTOIN   1                       149862
+      *                                                                   149862
+      ** Read through Account Codes File                                  149862
+      *                                                                   149862
+     C           *LOVAL    SETLLSDACODL1                                  149862
+     C                     READ SDACODL1                 15               149862
+     C           *IN15     IFEQ '0'                                       149862
+     C                     MOVE A5TOIN    PTOIN                           149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C           *IN15     DOWEQ'0'                                       149862
+      *                                                                   149862
+      ** Load necessary narratives to array                               149862
+      *                                                                   149862
+     C           A5ACSC    IFNE SACSC                                     149862
+     C           A5TOIN    ANDEQ'Y'                                       149862
+      *                                                                   149862
+      ** At change in Account section, move everything in the totals      149862
+      ** array to BSPL array                                              149862
+      *                                                                   149862
+     C           TBSP,2    IFNE *BLANKS                                   149862
+     C                     MOVE TBSP,2    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+     C                     MOVE *BLANKS   TBSP,2                          149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C           TBSP,1    IFNE *BLANKS                                   149862
+     C                     MOVE TBSP,1    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+     C                     MOVE *BLANKS   TBSP,1                          149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      ** Load Account Section Name to BSPL array.                         149862
+      *                                                                   149862
+     C           A5ACSC    LOKUPTABSEC    TABSED         41               149862
+     C           *IN41     IFEQ '1'                                       149862
+     C                     MOVELTABSED    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+      *                                                                   149862
+      ** Loan Account Section Name with Total to totals array             149862
+      *                                                                   149862
+     C                     MOVELTABSED    TBSP,1                          149862
+     C           TBSP,1    CAT  NAR,18:1  TBSP,1                          149862
+     C                     ENDIF                                          149862
+     C                     MOVE A5ACSC    SACSC                           149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      ** Load title only account codes in totals element 2                149862
+      *                                                                   149862
+     C           A5TOIN    IFEQ 'Y'                                       149862
+     C           PTOIN     ANDEQ'Y'                                       149862
+     C                     MOVE *BLANKS   TBSP,2                          149862
+     C                     MOVE A5ACCD    WKNAR                           149862
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     TBSP,2                          149862
+     C           *IN78     IFEQ *ON                                       CSD005
+     C           TBSP,2    CAT  A5NARR:1  TBSP,2                          CSD005
+     C                     ELSE                                           CSD005
+     C           TBSP,2    CAT  A5ACCN:1  TBSP,2                          149862
+     C                     ENDIF                                          CSD005
+     C**********           ELSE                                    149862 194565
+     C********** *IN78     IFEQ *ON                                CSD005 194565
+     C**********           MOVELA5NARR    TBSP,2                   CSD005 194565
+     C**********           ELSE                                    CSD005 194565
+     C**********           MOVELA5ACCN    TBSP,2                   149862 194565
+     C**********           ENDIF                                   CSD005 194565
+     C**********           ENDIF                                   149862 194565
+     C           TBSP,2    CAT  NAR,18:1  TBSP,2                          149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      ** Load totals element 2 to BSPL array if previous TOIN is N        149862
+      *                                                                   149862
+     C           A5TOIN    IFEQ 'Y'                                       149862
+     C           PTOIN     ANDEQ'N'                                       149862
+      *                                                                   149862
+     C           TBSP,2    IFNE *BLANKS                                   149862
+     C                     MOVE TBSP,2    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+     C                     MOVE *BLANKS   TBSP,2                          149862
+      *                                                                   149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+      ** Load new Account Code total in totals element 2                  149862
+      *                                                                   149862
+     C                     MOVE A5ACCD    WKNAR                           149862
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     TBSP,2                          149862
+     C           *IN78     IFEQ *ON                                       CSD005
+     C           TBSP,2    CAT  A5NARR:1  TBSP,2                          CSD005
+     C                     ELSE                                           CSD005
+     C           TBSP,2    CAT  A5ACCN:1  TBSP,2                          149862
+     C                     ENDIF                                          CSD005
+     C**********           ELSE                                    149862 194565
+     C********** *IN78     IFEQ *ON                                CSD005 194565
+     C**********           MOVELA5NARR    TBSP,2                   CSD005 194565
+     C**********           ELSE                                    CSD005 194565
+     C**********           MOVELA5ACCN    TBSP,2                   149862 194565
+     C**********           ENDIF                                   CSD005 194565
+     C**********           ENDIF                                   149862 194565
+     C           TBSP,2    CAT  NAR,18:1  TBSP,2                          149862
+      *                                                                   149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C                     MOVE A5ACCD    WKNAR                           149862
+     C********** *IN80     IFEQ '1'                                149862 194565
+     C           WKNAR     CAT  '-':1     ENAM,L                          149862
+     C           *IN78     IFEQ *ON                                       CSD005
+     C           ENAM,L    CAT  A5NARR:1  ENAM,L                          CSD005
+     C                     ELSE                                           CSD005
+     C           ENAM,L    CAT  A5ACCN:1  ENAM,L                          149862
+     C                     ENDIF                                          CSD005
+     C**********           ELSE                                    149862 194565
+     C********** *IN78     IFEQ *ON                                CSD005 194565
+     C**********           MOVELA5NARR    ENAM,L                   CSD005 194565
+     C**********           ELSE                                    CSD005 194565
+     C**********           MOVELA5ACCN    ENAM,L                   149862 194565
+     C**********           ENDIF                                   CSD005 194565
+     C**********           ENDIF                                   149862 194565
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+      *                                                                   149862
+     C                     MOVE A5TOIN    PTOIN                           149862
+      *                                                                   149862
+      ** Read next record                                                 149862
+      *                                                                   149862
+     C                     READ SDACODL1                 15               149862
+      *                                                                   149862
+     C                     ENDDO                                          149862
+      *                                                                   149862
+      ** Move everything in the total array to BSPL array                 149862
+      *                                                                   149862
+     C           TBSP,2    IFNE *BLANKS                                   149862
+     C                     MOVE TBSP,2    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+     C                     MOVE *BLANKS   TBSP,2                          149862
+     C                     ENDIF                                          149862
+     C           TBSP,1    IFNE *BLANKS                                   149862
+     C                     MOVE TBSP,1    ENAM,L                          149862
+     C                     MOVE 'N'       PRIN,L                          149862
+     C                     ADD  1         L                               149862
+     C                     MOVE *BLANKS   TBSP,1                          149862
+     C                     ENDIF                                          149862
+      *                                                                   149862
+     C           L         SUB  1         E                               149862
+     C           *LOVAL    SETLLSDACODL1                                  149862
+      *                                                                   149862
+     C                     ENDSR                                          149862
+      *****************************************************************   149862
+     C/EJECT
+     C/COPY WNCPYSRC,GL0761C008
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  NAR
+GL A/C CODE BALANCES REPORT
+Figures are reported in
+Actual Currency
+H.O. Currency
+Local Currency
+Base Currency
+Branch has
+Company has
+Branches have
+Companies have
+The Consolidated report has
+rounded to the nearest
+Unit
+Thousand
+at detail level
+been selected at detail level
+Movements
+- TOTAL
+Balancing item due to
+Rounding
+OUT OF BALANCE
+Currency conversion
+Averages for
+For the Period
+Consolidated Euro Currency                                                CEU011
+     X/COPY WNCPYSRC,GL0761X002
+** ANAR                                                                   124974
+     X/COPY WNCPYSRC,GL0761X001
+- After Daily Post                                                        124974
+- After Spot Revaluation                                                  124974
+- After Foreign Currency Transfer                                         124974
+- After Base Currency Transfer                                            124974
+- After Final Post                                                        124974
+- During Input Cycle                                                      124974
+** TABSEC/TABSED
+ASASSET SECTION
+LILIABILITY SECTION
+ININCOME SECTION
+EXEXPENSE SECTION
+COCONTROL SECTION
+CNCONTINGENT SECTION
+MEMEMORANDUM SECTION
+TRTRADE SECTION
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** U - Unsorted headers
+Currency                                                                  S10736
+Branch                                                                    S10736
+Customer                                                                  S10736
+A/c Seq                                                                   S10736
+Profit Ctr                                                                S10736
+Book Code                                                                 S10736
+Trans Type                                                                S10736
+Trans Styp                                                                S10736
+Assoc Cust                                                                S10736

@@ -1,0 +1,1207 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CSD053
+/*STD *  RPGBNOCVT                                                    *                       CSD053
+/*EXS *  RPGCVTOPT1                                                   *                       CSD053
+/*EXI *  TEXT('Midas CG UDC Summary of Correspond. Items Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG5410 - Summary of Correspondence Items Report              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Function:  This program produces a summary report of         *
+      *             correspondence items in the extract file.         *
+      *                                                               *
+      *  Called By: CGC5410 - Print Summary of Correspondence Items - *
+      *                        Extract                                *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD053             Date 01Jun06               *
+      *                 226537             Date 07Jul05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 089984             Date 06Jly95               *
+      *                 088008             Date 18May95               *
+      *                 086662             DATE 25APR95               *
+      *                 086136             DATE 20MAR95               *
+      *                 086136             DATE 08MAR95               *
+      *                 S01552             DATE 26JAN95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
+      *           (Recompile)                                         *
+      *  226537 - Scheduled Print Date printed incorrectly. Display   *
+      *           date or appropriate description for value on file.  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  089984 - Errors in report                                    *
+      *  088008 - Print last confirmation                             *
+      *  086662 - Add correspondence type to selection criteria       *
+      *  086136 - 086136 needs amendment as if the data comes from    *
+      *           CGXDCRPD 'Scheduled drop date' should be displayed  *
+      *           on the report.                                      *
+      *  086136 - SR/CNVDAT converts zero dates to 31DEC71.Where there*
+      *           is no date move blanks to the output field.         *
+      *           'Scheduled drop date' should be 'Retention Period'  *
+      *           and be a number of days as opposed to a date.       *
+      *  S01552 - Created for User Defined Correspondence             *
+      *                                                               *
+      *****************************************************************
+     FCGUDCRPDIF  E           K        DISK         KINFSR SRFILE     UC
+     F*** Correspondence Reference Details Extract
+     F*
+     FCGXDCRPDIF  E           K        DISK         KINFSR SRFILE     UC
+     F            @UDCRPD                           KRENAME@XDCRPD
+     F*** Correspondence Reference Details Extract - Archive
+     F*
+     F*GISTSL0IF  E           K        DISK         KINFSR SRFILE         089984
+     F*** Item Status Description
+     F*
+     FCGCORRL0IF  E           K        DISK         KINFSR SRFILE
+     F*** Correspondent Details
+     F*
+     FCG5410P1O   E                    PRINTER      KINFDS SPOOLP     UC
+      *
+      *****************************************************************
+      *                                                               *
+      * FUNCTION OF INDICATORS                                        *
+      *                                                               *
+      * 87               Chain fail on CGISTSL0                       *
+      * 88               Chain fail on CGCORRL0                       *
+      * 89               End of file/Chain fail on CGUDCRPD/CGXDCRPD  *
+      *                                                               *
+      *****************************************************************
+     E*
+     E*** Copyright Array
+     E                    ACT@    1   1 80
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+      /EJECT
+     I*** Copyright Insertion
+     ICPYR        DS
+     I                                        1  80 CPY@
+     I*
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+     I                                    B 367 3680LINE                  E39480
+     I**  Spool file information data structure
+     I*
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I**  RUNDAT data area data structure (date format -ddmmmyy)
+     I*
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     IP#PARM      DS                            100
+     I**  DS for data from RCF Parm
+     I                                        1  10 PSUSER
+     I                                       11  20 PSDCOR
+     I                                       21  21 PSPRIM
+     I                                       22  31 PSPTYP
+     I                                       32  41 PSPSTP
+     I                                       42  460##FRDT
+     I                                       47  510##TODT
+     I                                       52  53 PSLGID
+     I                                       72  75 PSSTS1
+     I                                       76  79 PSSTS2
+     I                                       80  83 PSSTS3
+     I                                       84  87 PSSTS4
+     I                                       88  91 PSSTS5
+     I                                       92  92 PSATRM
+     I                                       93  93 PSPPFN
+     I                                       94  94 PSARCH
+     I                                       95  95 PSSUMM
+     I                                       96  96 PSCOT                 086662
+     I                                       97  97 PSPLST                088008
+     I*
+     I*** Item Description constant
+     I              '<Description not fou-C         ##IDES
+     I              'nd'
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*** Bank details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*** Bank details
+     I*
+     IDSFDY     E DSDSFDY
+     I*** First data structure for access program, Short data structure
+     I*
+     I*** CG Audit Report Data Structure
+     I/COPY CGCPYSRC,CGAUDTI
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*
+     C*****************************************************************
+     C/EJECT
+      /TITLE   CALCULATION SPECIFICATIONS
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C*** Main processing
+     C                     EXSR MAIN
+     C*
+     C                     EXSR FINAL
+     C*
+     C*** End program
+     C                     SETON                         LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* INIT   -  Initial processing                                  *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: AOBANKR0(pgm), RECONE                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'INIT'    @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Parameters list
+     C           *ENTRY    PLIST
+     C                     PARM           P#RSEQ  5
+     C                     PARM           P#RLVL  1
+     C                     PARM           P#BRCH  3
+     C                     PARM           P#PARM
+     C                     PARM           P#ARCH  1
+      *                                                                   086136
+      **                                                                  086136
+     C           P#ARCH    IFEQ 'A'                                       086136
+     C                     SETON                     86                   086136
+     C                     ELSE                                           086136
+     C                     SETOF                     86                   086136
+     C                     ENDIF                                          086136
+     C*
+     C**  Open files.
+     C           P#ARCH    IFEQ 'A'
+     C                     OPEN CGXDCRPD
+     C                     ELSE
+     C                     OPEN CGUDCRPD
+     C                     ENDIF
+     C*
+     C*** Access dataarea RUNDAT for run date and multibranch indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+     C***   If dataarea not found perform database error processing
+     C           RDAT      IFEQ *BLANKS
+     C                     MOVEL'RUNDAT  'W0FILE           **************
+     C                     MOVEL'ONLY    'W0KEY            *DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           **************
+     C                     MOVEL'MEM5002' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C*** Read in Installation Data
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBMSG  '##RTCD
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*** Error handling for access object
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'AOBANKR0'W0FILE           **************
+     C                     MOVEL'*FIRST  'W0KEY            *DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           **************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C*** Get the first record
+     C                     EXSR RECONE
+     C*
+     C*
+     C           *LIKE     DEFN DRBRCA    ##PBRC
+     C           *LIKE     DEFN DRBRCA    ##BRCD
+     C           *LIKE     DEFN DRBRCA    ##BRC
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* FINAL  -  Final processing                                    *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: SRAUDT                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FINAL     BEGSR
+     C*
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'FINAL'   @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Print End of Report message
+     C           ##DREC    IFGT 0
+     C                     WRITEP1ENDB
+     C                     ENDIF
+     C*
+     C*** Close print file
+     C                     CLOSECG5410P1
+     C*
+     C*** Audit Report
+     C                     EXSR SRAUDT
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN  -  Main processing                                      *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: SYSLVL, ALLBCH, SNGBCH                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C           MAIN      BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Not end of file
+     C           *IN89     DOWEQ*OFF
+     C*
+     C*
+     C                     SELEC
+     C*
+     C*** Level selected is SYSTEM
+     C           P#RLVL    WHEQ 'S'
+     C                     EXSR SYSLVL
+     C*
+     C*** Level selected is BRANCH
+     C*** and selected branch is ALL
+     C           P#RLVL    WHEQ 'B'
+     C           P#BRCH    ANDEQ'ALL'
+     C                     EXSR ALLBCH
+     C*
+     C*** Level selected is BRANCH
+     C*** and selected branch is not ALL
+     C           P#RLVL    WHEQ 'B'
+     C           P#BRCH    ANDNE'ALL'
+     C                     EXSR SNGBCH
+     C                     ENDSL
+     C*
+     C                     ENDDO
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* SYSLVL - System Level report processing                       *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: SPLF, PRTSEL, RTVBRC, PRTDET                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SYSLVL    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SYSLVL'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*
+     C*** Print selection page
+     C                     EXSR PRTSEL
+     C*
+     C*** Retrieve Branch Details
+     C                     MOVE DRBRCA    ##BRC
+     C                     EXSR RTVBRC
+     C*** Print Header
+     C                     EXSR PRTHED
+     C                     MOVE DRBRCA    ##PBRC
+     C*
+     C*
+     C*** Print Items
+     C*** Until End of File
+     C           *IN89     DOWEQ*OFF
+      *                                                                   086662
+      **  Apply selection for correspsondent type here as opposed to in   086662
+      **  the OPNQRYF in CGC5410.                                         086662
+     C           PSCOT     IFEQ 'T'                                       086662
+     C           *LIKE     DEFN PSDCOR    W0CTYP                          086662
+     C                     MOVELPSDCOR    W0CTYP                          086662
+     C*                                                                   086662
+     C           DRDCOR    CHAINCGCORRL0             88                   086662
+     C           *IN88     IFEQ *ON                                       086662
+     C                     MOVEL'CGCORRL0'W0FILE           ************** 086662
+     C                     MOVELDRDCOR    W0KEY            *DB ERROR 07 * 086662
+     C                     Z-ADD7         W0ERNB           ************** 086662
+     C                     MOVEL'MEM5004' W0MSGD                          086662
+     C                     MOVEL'MIDAS  ' W0MSGF                          086662
+     C                     EXSR SRERR                                     086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+     C           W0CTYP    IFNE *BLANKS                                   086662
+     C           W0CTYP    ANDNECDCTYP                                    086662
+     C                     GOTO NXTREC                                    086662
+     C                     ENDIF                                          086662
+     C                     ENDIF                                          086662
+     C*
+     C***   Increment the count of records read
+     C                     ADD  1         ##DREC  50
+     C*
+     C***   On change of branch or full page
+     C           DRBRCA    IFNE ##PBRC
+     C           LINE      ORGT 55
+     C*
+     C***     Change of Branch So retrieve branch details
+     C           DRBRCA    IFNE ##PBRC
+     C***       Print 'End of Branch'
+     C                     WRITEP1ENDA
+     C***       Retrieve branch details
+     C                     MOVE DRBRCA    ##BRC
+     C                     EXSR RTVBRC
+     C                     ENDIF
+     C***     Print Header
+     C                     EXSR PRTHED
+     C                     MOVE DRBRCA    ##PBRC
+     C*
+     C                     ENDIF
+     C*
+     C***   Print Item
+     C                     EXSR PRTDET
+      *                                                                   086662
+     C           NXTREC    TAG                                            086662
+     C*
+     C***   Access Correspondence Reference File
+     C           P#ARCH    IFEQ 'A'
+     C                     READ CGXDCRPD                 89
+     C                     ELSE
+     C                     READ CGUDCRPD                 89
+     C                     ENDIF
+     C*
+     C*
+     C                     ENDDO
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* ALLBCH - All Branch report processing                         *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: SPLF, PRTSEL, RTVBRC, PRTDET                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ALLBCH    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'ALLBCH'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*
+     C*** Retrieve Branch Details
+     C                     MOVE DRBRCA    ##BRC
+     C                     EXSR RTVBRC
+     C*
+     C*** Print selection page
+     C                     EXSR PRTSEL
+     C*
+     C*** Print Header
+     C                     EXSR PRTHED
+     C*
+     C*** Previous branch code
+     C                     MOVE DRBRCA    ##PBRC
+     C*
+     C*
+     C*** Print Items
+     C*** Until End of File
+     C           *IN89     DOWEQ*OFF
+      *                                                                   086662
+      **  Apply selection for correspsondent type here as opposed to in   086662
+      **  the OPNQRYF in CGC5410.                                         086662
+     C           PSCOT     IFEQ 'T'                                       086662
+     C                     MOVELPSDCOR    W0CTYP                          086662
+     C                     ENDIF                                          086662
+     C*                                                                   086662
+     C           DRDCOR    CHAINCGCORRL0             88                   086662
+     C           *IN88     IFEQ *ON                                       086662
+     C                     MOVEL'CGCORRL0'W0FILE           ************** 086662
+     C                     MOVELDRDCOR    W0KEY            *DB ERROR 08 * 086662
+     C                     Z-ADD8         W0ERNB           ************** 086662
+     C                     MOVEL'MEM5004' W0MSGD                          086662
+     C                     MOVEL'MIDAS  ' W0MSGF                          086662
+     C                     EXSR SRERR                                     086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+     C           W0CTYP    IFNE *BLANKS                                   086662
+     C           CDRTYP    ANDEQ'T'                                       086662
+     C           W0CTYP    ANDNECDCTYP                                    086662
+     C                     GOTO NXTRE1                                    086662
+     C                     ENDIF                                          086662
+     C*
+     C***   Increment the count of records read
+     C                     ADD  1         ##DREC  50
+     C*
+     C***   On change of branch or full page
+     C           DRBRCA    IFNE ##PBRC
+     C           LINE      ORGT 55
+     C*
+     C***     Change of Branch So retrieve branch details
+     C           DRBRCA    IFNE ##PBRC
+     C*
+     C***       Print 'End of Branch'
+     C                     WRITEP1ENDA
+     C***       Open spool file for next branch and log to RCF
+     C                     CLOSECG5410P1
+     C                     OPEN CG5410P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     MOVE DRBRCA    ZSENTY
+     C                     EXSR SPLF
+     C***       Retrieve Branch Details
+     C                     MOVE DRBRCA    ##BRC
+     C                     EXSR RTVBRC
+     C***       Print selection page
+     C                     EXSR PRTSEL
+     C                     ENDIF
+     C***     Print Header
+     C                     EXSR PRTHED
+     C                     MOVE DRBRCA    ##PBRC
+     C*
+     C                     ENDIF
+     C*
+     C***   Print Item
+     C                     EXSR PRTDET
+      *                                                                   086662
+     C           NXTRE1    TAG                                            086662
+     C*
+     C***   Access Correspondence Reference File
+     C           P#ARCH    IFEQ 'A'
+     C                     READ CGXDCRPD                 89
+     C                     ELSE
+     C                     READ CGUDCRPD                 89
+     C                     ENDIF
+     C*
+     C*
+     C                     ENDDO
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* SNGBCH - Single Branch report processing                      *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: SPLF, PRTSEL, PRTDET                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SNGBCH    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SNGBCH'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*
+     C*** Retrieve Branch Details
+     C                     MOVE DRBRCA    ##BRC
+     C                     EXSR RTVBRC
+     C*
+     C*** Print selection page
+     C                     EXSR PRTSEL
+     C*
+     C*** Print Header
+     C                     EXSR PRTHED
+     C*
+     C*
+     C*** Print Items
+     C*** Until End of File
+     C           *IN89     DOWEQ*OFF
+      *                                                                   086662
+      **  Apply selection for correspsondent type here as opposed to in   086662
+      **  the OPNQRYF in CGC5410.                                         086662
+     C           PSCOT     IFEQ 'T'                                       086662
+     C                     MOVELPSDCOR    W0CTYP                          086662
+     C*                                                                   086662
+     C           DRDCOR    CHAINCGCORRL0             88                   086662
+     C           *IN88     IFEQ *ON                                       086662
+     C                     MOVEL'CGCORRL0'W0FILE           ************** 086662
+     C                     MOVELDRDCOR    W0KEY            *DB ERROR 09 * 086662
+     C                     Z-ADD9         W0ERNB           ************** 086662
+     C                     MOVEL'MEM5004' W0MSGD                          086662
+     C                     MOVEL'MIDAS  ' W0MSGF                          086662
+     C                     EXSR SRERR                                     086662
+     C                     ENDIF                                          086662
+      *                                                                   086662
+     C           W0CTYP    IFNE *BLANKS                                   086662
+     C           W0CTYP    ANDNECDCTYP                                    086662
+     C                     GOTO NXTRE2                                    086662
+     C                     ENDIF                                          086662
+     C                     ENDIF                                          086662
+     C*
+     C***   Increment the count of records read
+     C                     ADD  1         ##DREC  50
+     C*
+     C***   On Full page
+     C           LINE      IFGT 55
+     C***     Print Header
+     C                     EXSR PRTHED
+     C                     ENDIF
+     C*
+     C***   Print Item
+     C                     EXSR PRTDET
+      *                                                                   086662
+     C           NXTRE2    TAG                                            086662
+     C*
+     C***   Access Correspondence Item File
+     C           P#ARCH    IFEQ 'A'
+     C                     READ CGXDCRPD                 89
+     C                     ELSE
+     C                     READ CGUDCRPD                 89
+     C                     ENDIF
+     C*
+     C*
+     C                     ENDDO
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* PRTDET - Print Detail Record                                  *
+     C*                                                               *
+     C* Called by: SYSLVL, ALLBCH, SNGBCH                             *
+     C*                                                               *
+     C* Calls: SRERR, CNVDAT                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRTDET    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'PRTDET'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Set up Fields
+     C*
+     C***   Destination Correspondent Code
+     C                     MOVE DRDCOR    PPDCOR
+     C*
+     C***   Destination Correspondent Name
+     C           DRDCOR    CHAINCGCORRL0             88
+     C           *IN88     IFEQ *ON
+     C                     MOVEL'CGCORRL0'W0FILE           **************
+     C                     MOVELDRDCOR    W0KEY            *DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           **************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVE CDCORN    PPDCRN
+     C*
+     C***   Primary Correspondent is Destination Correspondent?
+     C           DRPCOR    IFEQ *BLANKS
+     C***     Yes
+     C                     MOVE DRDCOR    PPPCOR
+     C******************** MOVE CDCORN    PPPCRN                          089984
+     C*
+     C                     ELSE
+     C***     No
+     C***     Primary Correspondent Code
+     C                     MOVE DRPCOR    PPPCOR
+     C*
+     C***     Primary Correspondent Name
+     C           DRPCOR    CHAINCGCORRL0             88
+     C           *IN88     IFEQ *ON
+     C                     MOVEL'CGCORRL0'W0FILE           **************
+     C                     MOVELDRPCOR    W0KEY            *DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           **************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C******************** MOVE CDCORN    PPPCRN                          089984
+     C                     ENDIF
+     C*
+     C***   Print Item Type and Subtype
+     C                     MOVE DRPTYP    PPPTYP
+     C                     MOVE DRPSTP    PPPSTP
+      *                                                                   089984
+     C                     MOVELDRITEM    PPITEM                          089984
+      *                                                                   089984
+     C*
+     C***   Midas Transaction Reference
+     C                     MOVE DRMTRN    PPMTRN
+     C*
+     C***   Account
+     C                     MOVE DRMACT    PPMACT
+     C*
+     C***   Item Status Code
+     C                     MOVE DRISTS    PPISTS
+     C*
+     C***   Item Status Description
+      *********                                                           089984
+     C*********  DRISTS    CHAINCGISTSL0             87                   089984
+     C*********  *IN87     IFEQ *ON                                       089984
+     C*********            MOVEL##IDES    PPIDES                          089984
+     C*********            ELSE                                           089984
+     C*********                                                           089984
+     C*********            MOVE ISDESC    PPIDES                          089984
+     C*********            ENDIF                                          089984
+     C*
+     C***   Generation Date
+     C           DRRDNB    IFNE *ZEROS                                    086136
+     C                     MOVE DRRDNB    #ZDAYN
+     C                     EXSR CNVDAT
+     C                     MOVE #ZDATA    PPARDT
+     C                     ELSE                                           086136
+     C                     MOVE *BLANKS   PPARDT                          086136
+     C                     ENDIF                                          086136
+     C*
+     C***   Scheduled Print Date
+     C                     SELEC                                                              226537
+     C           DRPRTD    WHGT 0                                                             226537
+     C********** DRPRTD    IFNE *ZEROS                                                 086136 226537
+     C                     MOVE DRPRTD    #ZDAYN
+     C                     EXSR CNVDAT
+     C                     MOVE #ZDATA    PPPRTD
+     C           DRPRTD    WHEQ 0                                                             226537
+     C                     MOVEL'IMED   ' PPPRTD                                              226537
+     C           DRPRTD    WHEQ -1                                                            226537
+     C                     MOVEL'HOLD   ' PPPRTD                                              226537
+     C                     OTHER                                                              226537
+     C                     MOVEL'Unknown' PPPRTD                                              226537
+     C                     ENDSL                                                              226537
+     C**********           ELSE                                                        086136 226537
+     C**********           MOVE *BLANKS   PPPRTD                                       086136 226537
+     C**********           ENDIF                                                       086136 226537
+     C*
+     C******Scheduled*Drop*Date                                           086136
+     C***   Retention period                                              086136
+     C***********          MOVE DRDDAT    #ZDAYN                          086136
+     C***********          EXSR CNVDAT                                    086136
+     C***********          MOVE #ZDATA    PPDDAT                          086136
+     C           P#ARCH    IFEQ 'C'                                       086136
+     C                     Z-ADDDRDDAT    PPDDAT                          086136
+     C                     ELSE                                           086136
+     C           DRDDAT    IFEQ *ZEROS                                    086136
+     C                     MOVE *BLANKS   P1DDAT                          086136
+     C                     ELSE                                           086136
+     C                     MOVE DRDDAT    #ZDAYN                          086136
+     C                     EXSR CNVDAT                                    086136
+     C                     MOVE #ZDATA    P1DDAT                          086136
+     C                     ENDIF                                          086136
+     C                     ENDIF                                          086136
+     C*
+     C***   Language Id.
+     C                     MOVE DRLGID    PPLGID
+     C*
+     C*** Print the record
+     C***   Summary
+     C           PSSUMM    IFEQ 'Y'
+     C                     WRITEP1DETS
+     C*
+     C                     ELSE
+     C***   Detail
+     C                     WRITEP1RULE
+     C                     WRITEP1DETL
+     C***   Force overflow for detail report
+     C           LINE      IFGT 45
+     C                     ADD  11        LINE
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* PRTSEL - Print Selection Page                                 *
+     C*                                                               *
+     C* Called by: SYSLVL, ALLBCH, SNGBCH                             *
+     C*                                                               *
+     C* Calls: CNVDAT                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRTSEL    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'PRTSEL'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Setup dates
+     C*
+     C***   From Date
+     C           ##FRDT    IFNE *ZEROS                                    086136
+     C                     MOVE ##FRDT    #ZDAYN
+     C                     EXSR CNVDAT
+     C                     MOVE #ZDATA    PSFRDT
+     C                     ELSE                                           086136
+     C                     MOVE *BLANKS   PSFRDT                          086136
+     C                     ENDIF                                          086136
+     C*
+     C***   To Date
+     C           ##TODT    IFNE *ZEROS                                    086136
+     C                     MOVE ##TODT    #ZDAYN
+     C                     EXSR CNVDAT
+     C                     MOVE #ZDATA    PSTODT
+     C                     ELSE                                           086136
+     C                     MOVE *BLANKS   PSTODT                          086136
+     C                     ENDIF                                          086136
+      *                                                                   086662
+      **  Ascertain whether Correspondent or Correspondent type.          086662
+     C           PSCOT     IFEQ 'T'                                       086662
+     C           *LIKE     DEFN PSDCOR    W1DCOR                          086662
+     C                     MOVELPSDCOR    W1DCOR                          086662
+     C                     MOVELPSDCOR    PSCTYP                          086662
+     C                     MOVE *BLANKS   PSDCOR                          086662
+     C                     ENDIF                                          086662
+     C*
+     C*** Print selections
+     C                     WRITEP1SELEC
+     C*
+     C*** Reset                                                           086662
+     C                     MOVELW1DCOR    PSDCOR                          086662
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* PRTHED - Print Header                                         *
+     C*                                                               *
+     C* Called by: SYSLVL, ALLBCH, SNGBCH                             *
+     C*                                                               *
+     C* Calls: CNVDAT                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRTHED    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'PRTHED'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*
+     C                     SELEC
+     C           PSSUMM    WHEQ 'Y'
+     C*** Summary Report Headings
+     C                     WRITEP1HEADA
+     C                     WRITEP1HEADB
+     C                     WRITEP1RULE
+     C*
+     C                     OTHER
+     C*** Detail Report Headings
+     C                     WRITEP1HEADA
+     C*
+     C                     ENDSL
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* RTVBRC - Retrieve the Branch Details                          *
+     C*                                                               *
+     C* Called by: SYSLVL, ALLBCH                                     *
+     C*                                                               *
+     C* Calls: AOBRCHR0(pgm), SRERR                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RTVBRC    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'RTVBRC'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Retrieve Branch Details
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*KEY    '##OPTN  7
+     C                     PARM ##BRC     ##BRCD
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C***   Error handling for access object
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'AOBRCHR0'W0FILE           **************
+     C                     MOVEL##BRC     W0KEY            *DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           **************
+     C                     MOVEL'MEM5001' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVELA8BRNM    PPBRNM
+     C                     MOVELDRBRCA    PPBRCD
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* CNVDAT - Convert Day Number                                   *
+     C*                                                               *
+     C* Called by: SYSLVL, PRTDET                                     *
+     C*                                                               *
+     C* Calls: ZA0140(pgm)                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CNVDAT    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'CNVDAT'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C                     CALL 'ZA0140'
+     C                     PARM           #ZDAYN  50
+     C                     PARM DATF      #ZDFMT  1
+     C                     PARM           #ZDATE  60
+     C                     PARM           #ZDATA  7
+     C                     PARM           SSRTN   1
+     C                     PARM           SSDAT8  80
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* RECONE -  Get the First Record                                *
+     C*                                                               *
+     C* Called by: INIT                                               *
+     C*                                                               *
+     C* Calls: SPLF, CNVDAT                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RECONE    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'RECONE'  @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*** Access Correspondence Item File
+     C           P#ARCH    IFEQ 'A'
+     C                     READ CGXDCRPD                 89
+     C                     ELSE
+     C                     READ CGUDCRPD                 89
+     C                     ENDIF
+     C*
+     C*** Open report and log to RCF
+     C                     OPEN CG5410P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C           P#RLVL    IFEQ 'S'
+     C                     MOVE *BLANKS   ZSENTY
+     C                     ELSE
+     C                     MOVE DRBRCA    ZSENTY
+     C                     ENDIF
+     C                     EXSR SPLF
+     C*
+     C*** No records to be printed
+     C           *IN89     IFEQ *ON
+     C*
+     C***   Print selection page and 'no records'
+     C                     EXSR PRTSEL
+     C                     WRITEP1NOREC
+     C*
+     C                     ENDIF
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* SPLF   -  Log Spool File to RCF via ZSFILE                    *
+     C*                                                               *
+     C* Called by: INIT                                               *
+     C*                                                               *
+     C* Calls: ZSFILE(pgm), *PSSR                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SPLF      BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SPLF'    @STK,Q
+     C*
+     C*................................................................
+     C*
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM P#RSEQ    ZSSEQ   5
+     C                     PARM           ZSENTY  3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVEL'ZSFILE  'W0FILE           **************
+     C                     MOVEL'ONLY    'W0KEY            *DB ERROR 06 *
+     C                     Z-ADD6         W0ERNB           **************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* SRAUDT -  Audit Report Processing                             *
+     C*                                                               *
+     C* Called by: FINAL                                              *
+     C*                                                               *
+     C* Calls: CGZAUDIT(pgm)                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR
+     C*
+     C*** Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C*................................................................
+     C*
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG5410AU'I#SPLN
+     C                     MOVEL'CG5410  'I#REF
+     C                     MOVE 'CGD1777' I#TITL
+     C                     MOVE 'CGD1778' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C**  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG5410  'I#REF
+     C                     MOVE 'CGD1777' I#TITL
+     C                     MOVE 'CGD1778' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C           P#ARCH    IFEQ 'A'
+     C                     MOVEL'CGXDCRPD'I#SUB
+     C                     ELSE
+     C                     MOVEL'CGUDCRPD'I#SUB
+     C                     ENDIF
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG5410  'I#REF
+     C                     MOVE 'CGD1777' I#TITL
+     C                     MOVE 'CGD1778' I#TUL
+     C                     MOVEL'CAD1008' I#TEXT
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C*
+     C*
+     C*................................................................
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001

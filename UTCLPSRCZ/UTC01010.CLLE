@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Stack Generation Startup')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01010 - Midas UT Stack Generation Startup                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBS &SYSTEM &OBJNAM)
+ 
+             DCL        VAR(&LIBS) TYPE(*CHAR) LEN(2502)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OBJNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBLST) TYPE(*CHAR) LEN(2500)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&STATCHK) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(4 0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Flag Stack Generation as running */
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (3 1)) VALUE(' ')
+ 
+/** Call Stack Generation Components */
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (1 2)) VALUE('  ')
+ 
+             SBMJOB     CMD(CALL PGM(UTC01001) PARM(&LIBS &SYSTEM +
+                          &OBJNAM)) JOB(GENEMSTK01) JOBD(QDFTJOBD) +
+                          JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+ 
+             SBMJOB     CMD(CALL PGM(UTC01002) PARM(&LIBS &SYSTEM)) +
+                          JOB(GENEMSTK02) JOBD(QDFTJOBD) +
+                          JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+ 
+CHK0102:
+             DLYJOB     DLY(300)
+             RTVDTAARA  DTAARA(UTSGSTAT (1 2)) RTNVAR(&STAT)
+             IF         COND(&STAT *NE 'YY') THEN(GOTO CMDLBL(CHK0102))
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (1 2)) VALUE('  ')
+ 
+/** Call Stack Generation Engine  */
+ 
+             SBMJOB     CMD(CALL PGM(UTC01011) PARM(&OBJNAM)) +
+                          JOB(GENEMSTK03) JOBD(QDFTJOBD) +
+                          JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+ 
+CHK03:
+             DLYJOB     DLY(900)
+             RTVDTAARA  DTAARA(UTSGSTAT (2 1)) RTNVAR(&STATCHK)
+             IF         COND(&STATCHK *NE 'Y') THEN(GOTO CMDLBL(CHK03))
+ 
+/** Retrieve number of libraries entered to be added */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&LIBS 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+             CHGVAR     VAR(&LIBCNT) VALUE(&NBR * 10)
+ 
+/** Pass libraries to Source Parser */
+ 
+             CHGVAR     VAR(&LIBLST) VALUE(*BLANKS)
+             CHGVAR     VAR(&LIBLST) VALUE(%SST(&LIBS 3 &LIBCNT))
+ 
+/** Call Source Parser */
+ 
+             SBMJOB     CMD(CALL PGM(UTC1003) PARM(&LIBLST)) +
+                          JOB(GENEMSTK04) JOBD(QDFTJOBD) +
+                          JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+ 
+CHK04:
+             DLYJOB     DLY(900)
+             RTVDTAARA  DTAARA(UTSGSTAT (1 1)) RTNVAR(&STATCHK)
+             IF         COND(&STATCHK *NE 'Y') THEN(GOTO CMDLBL(CHK04))
+ 
+/** Generate reports */
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (1 2)) VALUE('  ')
+ 
+             SBMJOB     CMD(CALL PGM(UT00100401)) JOB(GENEMSTK05) +
+                          JOBD(QDFTJOBD) JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+             SBMJOB     CMD(CALL PGM(UT00100402)) JOB(GENEMSTK06) +
+                          JOBD(QDFTJOBD) JOBQ(MIDASJOBQ) LOGCLPGM(*YES)
+ 
+CHK0506:
+             DLYJOB     DLY(900)
+             RTVDTAARA  DTAARA(UTSGSTAT (1 2)) RTNVAR(&STAT)
+             IF         COND(&STAT *NE 'YY') THEN(GOTO CMDLBL(CHK0506))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GENEMSTK ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Flag Stack Generation as finished then end program */
+ 
+ENDPGM:
+ 
+             CHGDTAARA  DTAARA(UTSGSTAT (3 1)) VALUE('Y')
+             ENDPGM

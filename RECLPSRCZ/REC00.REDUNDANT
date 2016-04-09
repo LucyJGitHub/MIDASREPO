@@ -1,0 +1,257 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Retail Module                               */
+/*                                                                   */
+/*       REC00 - INITIAL FILE SETUP                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CAP187             Date 21Aug09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CCB002             DATE 30AUG96              */
+/*                      S01408             DATE 10OCT95              */
+/*                      052438                  28SEP93              */
+/*                      S01413             DATE 13APR93              */
+/*                      E18764                  19JUN89              */
+/*                      S01154                  18MAY88              */
+/*                      E81036                  27JUL87              */
+/*                      E10109                  03DEC86              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CAP187  -  Document Linkage (Recompile)                     */
+/*       CCB002  -  COB Performance Enhancements                     */
+/*                  Access now via access object                     */
+/*                  RE0005 now uses an access object for update.     */
+/*                  Initialisation of MEMOS & call of REC05 removed. */
+/*       S01408  -  Apply Core Hook REC00MPS                         */
+/*       052438  -  Should not refer to REHISDD                      */
+/*       S01413  -  Retail 3 Incorporation                           */
+/*       E18674  -  JOB SWITCHES RESET TO ALLOW RESTART.             */
+/*       S01154  -  CHANGES FOR REAL-TIME STATEMENTS.                */
+/*       E81036  -  PROGRAM WAS CHECKING FOR WRONG PHASE IN MPHAS,   */
+/*                  F  INSTEAD OF  D.                                */
+/*       E10109  -  PROGRAM NOW REFERS TO REHISDD INSTEAD OF THE     */
+/*                  OLD REDUNDANT RETAIL HISTORY FILES               */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+/************DCL        VAR(&MSG) TYPE(*CHAR) LEN(130)                /*S01413*/
+             DCL        VAR(&BLANK) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RESTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&GLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&WWERR) TYPE(*CHAR) LEN(1) VALUE(' ')     /*S01413*/
+             DCL        VAR(&TEXT)    TYPE(*CHAR)  LEN(160)           /*S01413*/
+/*/COPY WNCPYSRC,REC00001                                            */
+             MONMSG     MSGID(CPF0000 MCH0000 CPI0000 RPG0000) +
+                          EXEC(GOTO CMDLBL(ABNORMAL))                 /*S01413*/
+/**/
+             RTVDTAARA  DTAARA(RESTAT *ALL) RTNVAR(&RESTAT)
+             RTVDTAARA  DTAARA(MPHAS *ALL) RTNVAR(&MPHAS)
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+             RTVDTAARA  DTAARA(GLSTAT *ALL) RTNVAR(&GLSTAT)
+/**/
+             CHGJOB     SWS(00000000)                                 /*E18674*/
+/**/
+/************SNDPGMMSG  MSG('Initial Retail II File Set Up') +
+                          TOMSGQ(MOPERQ)*/                            /*S01413*/
+             SNDPGMMSG  MSG('Initial Retail File Set Up') +
+                          TOMSGQ(MOPERQ)                              /*S01413*/
+/**/
+/* CHECK FOR OTHER MODULES AND EOD PHASE */
+/*           IF         COND(&MPHAS *NE 'F') THEN(DO)*/               /*E81036*/
+             IF         COND(&MPHAS *NE 'D') THEN(DO)                 /*E81036*/
+/**************CHGVAR     VAR(&MSG) VALUE('RETAIL II FILES CANNOT BE SET +
+                      UP (Incorrect phase) - Abnormal termination')*/ /*S01413*/
+                CHGVAR     VAR(&TEXT) VALUE('Retail files cannot be +
+                             set up due to MPHAS incorrect phase. +
+                             Abnormal termination.')                  /*S01413*/
+               GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+/**/
+             IF         COND(&SDSTAT *EQ &BLANK) THEN(DO)
+/************CHGVAR     VAR(&MSG) VALUE('RETAIL II FILES CANNOT BE SET +
+                          UP (STANDING DATA NOT PRESENT) - Abnormal +
+                          termination')                           */  /*S01413*/
+             CHGVAR     VAR(&TEXT) VALUE('Retail files cannot be +
+                          set up as Standing Data not present. +
+                          Abnormal termination.')                     /*S01413*/
+                GOTO ABNORMAL
+             ENDDO
+/**/
+             IF         COND(&GLSTAT *EQ &BLANK) THEN(DO)
+/************CHGVAR     VAR(&MSG) VALUE('RETAIL II FILES CANNOT BE SET +
+                          UP (GENERAL LEDGER NOT PRESENT) - Abnormal +
+                          termination')                            */ /*S01413*/
+             CHGVAR     VAR(&TEXT) VALUE('Retail files cannot be +
+                          set up as General Ledger not present. +
+                          Abnormal termination.')                     /*S01413*/
+                GOTO ABNORMAL
+             ENDDO
+/**/
+             IF         COND(%SUBSTRING(&RESTAT 1 6) *EQ '      ') +
+                          THEN(DO)
+/**/
+/*           RENAME RETAIL2 FILES WITH IDENTICAL NAMES IN RETAIL1    */
+/**/
+/**/
+/**/
+                CLRPFM     FILE(RTHH)
+/**/
+/**/
+                CLRPFM      FILE(REINTA)
+                CLRPFM      FILE(REINTD)
+                CLRPFM      FILE(REINTZ)
+                CLRPFM      FILE(RETRGA)
+                CLRPFM      FILE(RETRGD)
+                CLRPFM      FILE(RETRGZ)
+                CLRPFM      FILE(RECRGA)
+                CLRPFM      FILE(RECRGD)
+                CLRPFM      FILE(RECRGZ)
+                CLRPFM      FILE(RECCYA)
+                CLRPFM      FILE(RECCYD)
+                CLRPFM      FILE(RECCYZ)
+                CLRPFM      FILE(REDEFA)
+                CLRPFM      FILE(REDEFD)
+                CLRPFM      FILE(REDEFZ)
+                CLRPFM      FILE(REACRA)
+                CLRPFM      FILE(REACRD)
+                CLRPFM      FILE(REACRZ)
+                CLRPFM      FILE(REIACA)
+                CLRPFM      FILE(REIACD)
+                CLRPFM      FILE(REIACZ)
+                CLRPFM      FILE(SRECA)
+                CLRPFM      FILE(SRECS)
+                CLRPFM      FILE(SRECZ)
+/*              CLRPFM      FILE(REHISA)         */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB1)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB2)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB3)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB4)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB5)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB6)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB7)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB8)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISB9)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISM)         */                   /*E10109*/
+/*              CLRPFM      FILE(REHISP)         */                   /*E10109*/
+/*              CLRPFM      FILE(REHISR1)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISR2)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISR3)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISR4)        */                   /*E10109*/
+/*              CLRPFM      FILE(REHISS)         */                   /*E10109*/
+/*              CLRPFM      FILE(REHISDD)        */                   /*052438*/
+/*              CLRPFM      FILE(REHISZ)         */                   /*S01413*/
+                CLRPFM      FILE(GEICHH)
+                CLRPFM      FILE(GEICPD)
+                CLRPFM      FILE(GEICZZ)
+                CLRPFM      FILE(CLEARHH)
+                CLRPFM      FILE(CLEARPD)
+                CLRPFM      FILE(CLEARZZ)
+/**/
+                CLRPFM      FILE(HELDIHA)
+                CLRPFM      FILE(HELDIHB)
+                CLRPFM      FILE(HELDIHC)
+                CLRPFM      FILE(CUSEXH1)
+                CLRPFM      FILE(CUSEXCE)
+                CLRPFM      FILE(CUSEXZ1)
+                CLRPFM      FILE(STOPCSC)
+                CLRPFM      FILE(STOPCSD)
+                CLRPFM      FILE(STOPCSE)
+                CLRPFM      FILE(STANDSA)
+                CLRPFM      FILE(STANDSB)
+                CLRPFM      FILE(STANDSC)
+/**/
+                CLRPFM      FILE(MEMOS)
+/**/                                                                  /*S01154*/
+/*              S01154 --- CLEAR NEW FILE RSACMTPD */                 /*S01154*/
+/**/                                                                  /*S01154*/
+/*/COPY WNCPYSRC,REC00002                                            */
+                CLRPFM      FILE(RSACMTPD)                            /*S01154*/
+ 
+/*/COPY WNCPYSRC,REC00MPS                                          */ /*S01408*/
+ 
+/**/
+             CHGDTAARA  DTAARA(RESTAT) VALUE('001000NNNNNOLDNNONE  NN')
+             CHGDTAARA  DTAARA(CEXNO) VALUE('0000')                   /*S01413*/
+/**/
+/***************INZPFM     FILE(MEMOS) TOTRCDS(1000)              */  /*CCB002*/
+/**/
+             OVRDBF     FILE(TABLE) TOFILE(TABRE2)
+                CALL       PGM(RE0005) /* INITIALISE HEADERS & TRAILERS */
+             DLTOVR     FILE(TABLE)
+/***************CALL       PGM(REC05)                             */  /*CCB002*/
+/***************IF   COND(%SWITCH(XXXXXXX0)) THEN(SNDPGMMSG +
+                     MSG('RETAIL II FILES SET UP') TOMSGQ(MOPERQ))*/  /*S01413*/
+                IF   COND(%SWITCH(XXXXXXX0)) THEN(SNDPGMMSG +
+                     MSG('Retail Files Set-up') TOMSGQ(MOPERQ))       /*S01413*/
+                ELSE       CMD(DO)                                    /*S01413*/
+                CHGVAR     VAR(&TEXT) VALUE('Database error occurred +
+                             during processing. See joblog.')         /*S01413*/
+                GOTO       CMDLBL(ABNORMAL)                           /*S01413*/
+                ENDDO                                                 /*S01413*/
+/* */                                                                 /*S01413*/
+/* SETUP TABLEV4, TABTBRE, SCSARDPD AND SDMREFPD */                   /*S01413*/
+             CHKOBJ     OBJ(TABLEV4) OBJTYPE(*FILE)                   /*S01413*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BYPASS))      /*S01413*/
+             CHKOBJ     OBJ(TABTBRE) OBJTYPE(*FILE)                   /*S01413*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BYPASS))      /*S01413*/
+                                                                      /*S01413*/
+             CHKOBJ     OBJ(RETSETUP) OBJTYPE(*PGM)                   /*S01413*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                       /*S01413*/
+             CHGVAR     VAR(&TEXT) VALUE('Unable to setup Customer +
+                          Group file and Retail table file. +
+                          Cause : Program RETSETUP missing.')         /*S01413*/
+                GOTO       CMDLBL(ABNORMAL)                           /*S01413*/
+             ENDDO                                                    /*S01413*/
+             CALL       PGM(RETSETUP) PARM(&WWERR)                    /*S01413*/
+             IF         COND(&WWERR *NE ' ') THEN(DO)                 /*S01413*/
+                CHGVAR     VAR(&TEXT) VALUE('Database error occurred +
+                             during processing. See joblog.')         /*S01413*/
+                GOTO       CMDLBL(ABNORMAL)                           /*S01413*/
+             ENDDO                                                    /*S01413*/
+BYPASS:                                                               /*S01413*/
+             ENDDO
+/**/
+/************ELSE       CMD(SNDPGMMSG MSG('RETAIL II FILES ALREADY +
+                          EXIST') TOMSGQ(MOPERQ))                 */  /*S01413*/
+             ELSE       CMD(DO)                                       /*S01413*/
+             CHGVAR     VAR(&TEXT) VALUE('Component has already been +
+                          run. Retail files exist.')                  /*S01413*/
+             GOTO       CMDLBL(ENDPGM)                                /*S01413*/
+             ENDDO                                                    /*S01413*/
+             GOTO       CMDLBL(ENDPGM)
+/**/
+/*NORMAL:****SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ)     */  /*S01413*/
+ABNORMAL:                                                             /*S01413*/
+/**/                                                                  /*S01413*/
+             IF         COND(&TEXT *EQ ' ') THEN(CHGVAR VAR(&TEXT) +
+                          VALUE('General error has occured during +
+                          process. Check joblog before trying your +
+                          request again.'))                           /*S01413*/
+/**/                                                                  /*S01413*/
+             SNDPGMMSG  MSG(&TEXT) TOPGMQ(*EXT) TOMSGQ(MOPERQ)        /*S01413*/
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ENDPGM:      ENDPGM

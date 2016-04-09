@@ -1,0 +1,733 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility history audit report')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  RPG/LE3180 - Facility History Audit Report                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. AR1092610          Date 26Feb13               *
+      *  Prev Amend No. CLE075AT           Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 216315             Date 06Jun06               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. CLE042             Date 06Sep05               *
+      *                 209593             Date 17Sep02               *
+      *                 208182             Date 29Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196768 *CREATE     Date 20May02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1092610 - Error in printer outputs. Amended program to use *
+      *              a different indicator.                           *
+      *  CLE075AT - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  216315    I/O error when outputting DETAIL2 as there is no   *
+      *            overflow check.                                    *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  209593    Only check revolving credit indicator if facility  *
+      *            was found on FACHISA. Error was that when LE3180   *
+      *            was called during input cycle, any new facilities  *
+      *            were reported with a revolving credit difference.  *
+      *  208182    CAMD should not be used for comparison as there    *
+      *            are several reasons (eg: Parts Sold, Forward       *
+      *            Valued Loans valued tomorrow) why it will be out   *
+      *            of step with the history. Just compare with OAM1.  *
+      *  196768    This is an integrity checker to run every night.   *
+      *            It produces three reports to identify facilities   *
+      *            with incorrect revolving credit indicator or a     *
+      *            difference in the facility amount or drawn amount  *
+      *            between FACHISA and FCLTY.                         *
+      *                                                               *
+      *****************************************************************
+     FFCLTY1  IF  E           K        DISK
+     FHISUPD  IF  E           K        DISK
+     F            HISACTF                           KIGNORE
+     FLEPFHAPDIF  E           K        DISK
+     FSDCURRL1IF  E           K        DISK                                                 CLE075AT
+     FLETFHAPDO   E           K        DISK
+     FLE3180P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     FLE3180P2O   E                    PRINTER      KINFDS SPOOL2     UC
+     FLE3180P4O   E                    PRINTER      KINFDS SPOOL4     UC
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FUNCTION OF INDICATORS                                       *
+      *                                                               *
+      *   12 -  No Details to Report about incorrect amounts.         *
+      *   13 -  No Details to Report about incorrect revolving credit *
+      *   14 -  Needs investigation as difference has appeared before *
+      *   15 -  Needs investigation as Revolving Credit Indicator.    *
+      *   18 -  EOF of SDCURRPD caching                               *                    AR1092610
+      *   60 -  0 decimal place                                       *
+      *   61 -  1 decimal place                                       *
+      *   62 -  2 decimal places                                      *
+      *   63 -  3 decimal places                                      *
+      *   80 -  EOF in FCLTY1                                         *
+      *   83 -  no record found in READP for FACHISA                  *
+      *   84 -  EOF in READE to FACHISA                               *
+      *   85 -  Chain to LEPFHAPD failed                              *
+      *   86 -  Chain to matured loans file failed                    *
+      *   88 -  Additional EOF in READE to FACHISA                    *
+      *****************************************************************
+      *
+     E                    ERR         5  1  A            Error Codes
+     E                    CPY@    1   1 80
+     E                    #CCY      250  3               Currency Codes Array               CLE075AT
+      *
+     IRUNDAT    E DS
+      **  DATA AREA RUNDAT
+     I              AGMRDT                          DATE
+     I              AGRDNB                          RDNB
+     I              AGMBIN                          MBIN
+      *
+     ILDA         DS                            256
+      *
+      ** Local Data Area for Database Error Details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I***SDCURR*   E DSSDCURRPD                                                             CLE075AT
+     ISDCURR    E DSSDCURRPD                250                                             CLE075AT
+      *
+      ** Bank details and rundate
+      *
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+      *
+      ** Data structure for Access Program
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNU1
+     I                                    B 188 1890OFFLN1
+     I                                    B 367 3680CURLIN
+     ISPOOL2      DS
+     I                                       83  92 SFIL2
+     I                                    B 123 1240SFNU2
+     I                                    B 188 1890OFFLN2
+     I                                    B 367 3680CURLI2
+     ISPOOL4      DS
+     I                                       83  92 SFIL4
+     I                                    B 123 1240SFNU4
+     I                                    B 188 1890OFFLN4
+     I                                    B 367 3680CURLI4
+      *
+     IOUTERR      DS                              5
+     I                                        1   50ERROUT
+     I                                        1   1 ERR1
+     I                                        2   2 ERR2
+     I                                        3   3 ERR3
+     I                                        4   4 ERR4
+     I                                        5   5 ERR5
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     OPEN LE3180P1
+     C                     Z-ADDSFNU1     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   RENT
+     C                     PARM           SFIL1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** Check for error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN LE3180P2
+     C                     Z-ADDSFNU2     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   RENT
+     C                     PARM           SFIL2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** Check for error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN LE3180P4
+     C                     Z-ADDSFNU4     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   RENT
+     C                     PARM           SFIL4
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** Check for error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Parameter Entry List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           ROUNDP  2
+      *
+      ** Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE '0'       *IN16
+      *
+     C           KEY001    KLIST
+     C                     KFLD           HBRCA
+     C                     KFLD           CNUM
+     C                     KFLD           WFACT
+      *
+     C           KEY002    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           FACNUM
+     C                     KFLD           FAFCTY
+      *
+     C           KEY004    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           FACNUM
+     C                     KFLD           FAFCTY
+      *
+     C                     MOVE '0'       *IN12
+     C                     Z-ADD0         FACAUD  50
+     C                     Z-ADD0         BFCAUD  50
+     C                     Z-ADD0         FACERR  50
+     C                     Z-ADD0         REVERR  50
+     C                     Z-ADD0         WCFAM  150
+     C                     Z-ADD0         WDRAM  150
+     C                     Z-ADD0         WUNDR  150
+     C                     Z-ADD0         WUNDR  150
+     C                     MOVE ROUNDP    ROUND   20
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY
+     C                     MOVEL'LE3180 ' DBPGM
+     C                     MOVE '  '      DBPGM            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'001'     DBASE            *************
+     C                     OUT  LDA
+     C                     WRITEHEADER1
+     C                     WRITEDBERROR1
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     READ FCLTY1                   80
+     C                     MOVE BRCA      PREBRC  3        Previous Branch
+     C                     MOVE BRCA      FIRBRC  3        First Branch
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+      *
+     C           *IN80     DOWEQ'0'
+      *
+      ** If Multibranching environment, check for new branch:
+     C           BRCA      IFNE PREBRC
+     C           MBIN      ANDEQ'Y'
+      *
+     C                     EXSR SRBRCH                     Branch Change
+     C                     MOVE BRCA      PREBRC  3        Previous Branch
+      *
+     C                     ENDIF
+      *
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         FACAUD           No of facilitys
+     C                     ADD  1         BFCAUD           No in Branch
+     C                     MOVE BRCA      HBRCA   3
+     C                     MOVELFACT      WFACT   50
+     C                     MOVE FCNO      WFACT
+     C                     MOVE ' '       DRAWER
+     C                     MOVE ' '       FAMTER  1
+     C                     MOVE ' '       REVCER  1
+     C                     Z-ADD1         X       10
+     C                     CLEARERR                        Clear Err array
+      *
+      ** Execute subroutine SRFAMT, to check if the facility
+      ** amount and the drawn amount on the history file
+      ** FACHISA reconcile with the facility details on FCLTY.
+      *
+     C                     EXSR SRFAMT
+      *
+      ** Execute subroutine SRREVC, to check if the revolving credit
+      ** indicator on the history is correct.
+      *
+     C                     EXSR SRREVC
+      *
+      ** If facility has any errors, write summary report:
+     C           DRAWER    IFEQ 'Y'
+     C           FAMTER    OREQ 'Y'
+     C           REVCER    OREQ 'Y'
+      *
+      * Call subroutine to output facility details to file LEPFHAPD
+      * & check severity of error - has it occurred before?
+     C                     MOVE *OFF      *IN14
+     C                     EXSR SRPREE                     Previous errors
+      *
+     C                     ADD  1         FACERR
+     C                     MOVEAERR,1     ERR1             Print Err Codes
+     C                     MOVEAERR,2     ERR2             Print Err Codes
+     C                     MOVEAERR,3     ERR3             Print Err Codes
+     C                     Z-ADD2         RQDLI4  20
+     C           OFFLN4    SUB  CURLI4    AVALI4  20
+     C           AVALI4    IFLT RQDLI4
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL4
+     C                     ENDIF
+      *
+     C                     ENDIF
+      ** Get next facility to check:
+     C                     READ FCLTY1                   80
+     C                     ENDDO
+      *
+      ** Write Footer.
+      *
+     C           ENDPGM    TAG
+     C           FACERR    IFEQ 0
+     C                     MOVE '1'       *IN12
+     C                     ENDIF
+      *
+      *
+      ** If Multibranching environment, check for new branch:
+     C           BRCA      IFNE PREBRC
+     C           BRCA      ANDNEFIRBRC
+     C           MBIN      ANDEQ'Y'
+     C                     EXSR SRBRCH                     Branch Change
+     C                     ENDIF
+      *
+     C                     Z-ADD10        RQDLIN  20
+     C           OFFLN1    SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     ENDIF
+      *
+     C                     WRITETRAILER1
+      *
+     C                     Z-ADD10        RQDLI2  20
+     C           OFFLN2    SUB  CURLI2    AVALI2  20
+     C           AVALI2    IFLT RQDLI2
+     C                     ADD  1         PAGE2
+     C                     WRITEHEADER2
+     C                     ENDIF
+      *
+     C                     WRITETRAILER2
+      *
+     C                     Z-ADD10        RQDLI4
+     C           OFFLN4    SUB  CURLI4    AVALI4  20
+     C           AVALI4    IFLT RQDLI4
+     C                     ADD  1         PAGE4
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITETRAILER4
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle error conditions                *
+      *                                                               *
+      *  Called from:  After abnormal operation occurs                *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRBRCH - Subroutine to handle Change of Branch               *
+      *                                                               *
+      *  Called from:  Main Processing                                *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR
+      *
+      * Check there's enough room on LE3180P1 to print branch results:
+     C                     Z-ADD9         RQDLIN
+     C           OFFLN1    SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     ENDIF
+      *
+      * Check there's enough room on LE3180P2 to print branch results:
+     C                     Z-ADD9         RQDLI2
+     C           OFFLN2    SUB  CURLI2    AVALI2  20
+     C           AVALI2    IFLT RQDLI2
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER2
+     C                     ENDIF
+      *
+      * Check that there's enough room to print the branch results:
+     C                     Z-ADD9         RQDLI4
+     C           OFFLN4    SUB  CURLI4    AVALI4  20
+     C           AVALI4    IFLT RQDLI4
+     C                     ADD  1         PAGE4
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     WRITEBRCHEN1
+     C                     WRITEBRCHEN2
+     C                     WRITEBRCHEN4
+      *
+     C           *IN80     IFNE *ON
+     C                     ADD  1         PAGE
+     C                     ADD  1         PAGE2
+     C                     ADD  1         PAGE4
+     C                     Z-ADD0         BFCAUD
+     C                     Z-ADD0         BFCER1
+     C                     Z-ADD0         BFCER2
+     C                     Z-ADD0         BFCER4
+     C                     MOVE BRCA      PREBRC
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      *                                                               *
+      *  SRFAMT - Subroutine to check integrity of drawn amount       *
+      *           and facility amount.                                *
+      *                                                               *
+      *  CALLED FROM:  Main Processing                                *
+      *                                                               *
+      *  CALLS:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRFAMT    BEGSR
+      *
+      * Read last record for this facility in FACHISA (history file):
+     C           KEY001    SETGTFACHISAF
+     C                     READPFACHISAF                 83
+      *
+      * Get drawn amount from FCLTYFN (facility details file):
+      **Only*report*drawn*amount*difference*if*neither*****                                   208182
+      **OAM1*nor*CAMD*match*the*drawn*amount*on*FACHISA:***                                   208182
+      * Check OAM1 against drawn amount from Facility History record                          208182
+     C********** RVCR      IFEQ 'Y'                                                           208182
+     C**********           Z-ADDCAMD      OAMT   150                                          208182
+     C**********           Z-ADDOAM1      OTHAMT 150                                          208182
+     C**********           ELSE                                                               208182
+     C                     Z-ADDOAM1      OAMT   150
+     C**********           Z-ADDCAMD      OTHAMT                                              208182
+     C**********           ENDIF                                                              208182
+      *
+      *
+     C           FACNUM    IFEQ CNUM
+     C           FAFCTY    ANDEQWFACT
+     C                     Z-ADD0         DIFFAM 150
+     C                     Z-ADD0         DIFOAM 150
+      *
+      **If*FADRAM*NE*OAMT,*check*if*it*matches*other*amount*instead:***                       208182
+     C********** FADRAM    IFNE OAMT                                                          208182
+     C********** FADRAM    ANDEQOTHAMT                                                        208182
+     C**********           Z-ADDOTHAMT    OAMT   150                                          208182
+     C**********           ENDIF                                                              208182
+      *
+     C           FADRAM    IFNE OAMT
+     C           FADRAM    SUB  OAMT      DIFOAM
+     C           DIFOAM    IFLT 0
+     C                     Z-SUBDIFOAM    DIFOAM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FACFAM    IFNE FAMT
+     C           FACFAM    SUB  FAMT      DIFFAM
+     C           DIFFAM    IFLT 0
+     C                     Z-SUBDIFFAM    DIFFAM
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If the difference between the facility amounts or the
+      * drawn amounts exceeds the allowed rounding error,
+      * this facility should appear on report LE3180P1:
+     C           DIFOAM    IFGT ROUND
+     C                     MOVE 'Y'       DRAWER  1        Drawn in Error
+     C                     MOVE 'A'       ERR,X            Drawn in Error
+     C                     ENDIF
+     C                     ADD  1         X
+      *
+     C           DIFFAM    IFGT ROUND
+     C                     MOVE 'Y'       FAMTER  1        Fac Amount Err
+     C                     MOVE 'B'       ERR,X            Fac Amount Err
+     C                     ENDIF
+     C                     ADD  1         X
+      *
+     C           DRAWER    IFEQ 'Y'
+     C           FAMTER    OREQ 'Y'
+     C                     ADD  1         FAMERR  50
+     C                     ADD  1         BFCER1  50
+     C                     ADD  1         BFCER4  50
+      *
+      ** Get Number of decimal places for output of amount fields.
+      *
+     C                     EXSR SRDEC
+      *
+      ** Move amount values into corresponding display fields.
+      *
+     C                     EXSR SRDISP
+      *
+     C                     Z-ADD2         RQDLIN
+     C           OFFLN1    SUB  CURLIN    AVALIN  20
+     C           AVALIN    IFLT RQDLIN
+     C                     ADD  1         PAGE
+     C                     WRITEHEADER1
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRREVC - Checks for an incorrect revolving credit indicator. *
+      *                                                               *
+      *  Called from:  Main Processing                                *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREVC    BEGSR
+     C                     MOVE *OFF      *IN15
+     C           FACNUM    IFEQ CNUM                                                          209593
+     C           FAFCTY    ANDEQWFACT                                                         209593
+     C           FARCIN    IFNE RVCR
+     C                     MOVE 'Y'       REVCER           Rev. Cred. Err.
+     C                     ADD  1         REVERR           Rev. Cred. Err.
+     C                     ADD  1         BFCER2           Rev. Cred. Err.
+     C                     ADD  1         BFCER4           Rev. Cred. Err.
+     C                     MOVE 'C'       ERR,X            Drawn in Error
+     C                     MOVE *ON       *IN15
+      *                                                                                       216315
+     C                     Z-ADD2         RQDLIN                                              216315
+     C           OFFLN2    SUB  CURLI2    AVALIN                                              216315
+     C           AVALIN    IFLT RQDLIN                                                        216315
+     C                     ADD  1         PAGE                                                216315
+     C                     WRITEHEADER2                                                       216315
+     C                     ENDIF                                                              216315
+      *                                                                                       216315
+     C                     WRITEDETAIL2
+     C                     ENDIF
+     C                     ADD  1         X
+     C                     ENDIF                                                              209593
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDEC - Subroutine to determine number of decimal places     *
+      *                                                               *
+      *  CALLED FROM:  Main Processing                                *
+      *                                                               *
+      *  CALLS: AOCURRR0                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRDEC     BEGSR
+      *                                                                                     CLE075AT
+     C                     Z-ADDCURARR    A                                                 CLE075AT
+     C           FCCY      LOKUP#CCY,A                   48                                 CLE075AT
+     C           *IN48     IFEQ '1'                                                         CLE075AT
+     C           A         OCUR SDCURR                                                      CLE075AT
+     C                     ELSE                                                             CLE075AT
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FCCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3180'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD002       DBASE            * DBERR 002*
+     C                     MOVELFCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDIF                                                            CLE075AT
+      *
+     C                     MOVEA'0000'    *IN,60
+     C           A6NBDP    IFEQ 0
+     C                     MOVE '1'       *IN60
+     C                     ENDIF
+     C           A6NBDP    IFEQ 1
+     C                     MOVE '1'       *IN61
+     C                     ENDIF
+     C           A6NBDP    IFEQ 2
+     C                     MOVE '1'       *IN62
+     C                     ENDIF
+     C           A6NBDP    IFEQ 3
+     C                     MOVE '1'       *IN63
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRDISP - Subroutine to display amounts with correct decimal  *
+      *           places.                                             *
+      *                                                               *
+      *  Called from:  Main Program                                   *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRDISP    BEGSR
+     C           *IN60     IFEQ '1'
+     C                     MOVE FADRAM    SFDRM0
+     C                     MOVE FACFAM    SFCAM0
+     C                     MOVE OAMT      SOAM10
+     C                     MOVE FAMT      SFAMT0
+     C                     MOVE DIFOAM    DIFOA0
+     C                     MOVE DIFFAM    DIFAM0
+     C                     ENDIF
+     C           *IN61     IFEQ '1'
+     C                     MOVE FADRAM    SFDRM1
+     C                     MOVE FACFAM    SFCAM1
+     C                     MOVE OAMT      SOAM11
+     C                     MOVE FAMT      SFAMT1
+     C                     MOVE DIFOAM    DIFOA1
+     C                     MOVE DIFFAM    DIFAM1
+     C                     ENDIF
+     C           *IN62     IFEQ '1'
+     C                     MOVE FADRAM    SFDRM2
+     C                     MOVE FACFAM    SFCAM2
+     C                     MOVE OAMT      SOAM12
+     C                     MOVE FAMT      SFAMT2
+     C                     MOVE DIFOAM    DIFOA2
+     C                     MOVE DIFFAM    DIFAM2
+     C                     ENDIF
+     C           *IN63     IFEQ '1'
+     C                     MOVE FADRAM    SFDRM3
+     C                     MOVE FACFAM    SFCAM3
+     C                     MOVE OAMT      SOAM13
+     C                     MOVE FAMT      SFAMT3
+     C                     MOVE DIFOAM    DIFOA3
+     C                     MOVE DIFFAM    DIFAM3
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  SRPREE - Subroutine to store details of facilities with      *
+      *           errors, and check if errors have occurred before.   *
+      *                                                               *
+      *  Called from:  Main Processing                                *
+      *                                                               *
+      *  Calls: Nothing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREE    BEGSR
+      * Check if there is already a record on LEPFHAPD:
+     C           KEY004    CHAINLEPFHAPD             85
+     C           *IN85     IFEQ *OFF
+      * Record found - is it the same type of error?
+     C           DUPERA    IFEQ ERR,1
+     C           DUPERA    ANDNE*BLANKS
+     C           DUPERB    OREQ ERR,2
+     C           DUPERB    ANDNE*BLANKS
+     C           DUPERC    OREQ ERR,3
+     C           DUPERC    ANDNE*BLANKS
+      * Report as a possible error which needs investigation.
+     C                     MOVE *ON       *IN14
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE BRCA      DUPBRC
+     C**********           Z-ADDFACNUM    DUPNUM                                              CSD027
+     C                     MOVE FACNUM    DUPNUM                                              CSD027
+     C                     Z-ADDFAFCTY    DUPFAC
+     C                     MOVE ERR,1     DUPERA
+     C                     MOVE ERR,2     DUPERB
+     C                     MOVE ERR,3     DUPERC
+     C                     Z-ADDRDNB      DUPDAT
+     C                     WRITELETFHAD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *                     CLE075AT
+      *  *INZSR - Initial Subroutine                                  *                     CLE075AT
+      *                                                               *                     CLE075AT
+      *****************************************************************                     CLE075AT
+     C           *INZSR    BEGSR                                                            CLE075AT
+      *                                                                                     CLE075AT
+      ** Full Cache SDCURRPD                                                                CLE075AT
+      *                                                                                     CLE075AT
+     C           *LOVAL    SETLLSDCURRL1                                                    CLE075AT
+     C                     Z-ADD250       A       30                                        CLE075AT
+     C           A         OCUR SDCURR                                                      CLE075AT
+     C**********           READ SDCURRL1                 13                       CLE075AT AR1092610
+     C                     READ SDCURRL1                 18                                AR1092610
+     C                     MOVE A6CYCD    #CCY,A                                            CLE075AT
+     C********** *IN13     DOWEQ'0'                                               CLE075AT AR1092610
+     C           *IN18     DOWEQ'0'                                                        AR1092610
+     C                     SUB  1         A                                                 CLE075AT
+     C           A         OCUR SDCURR                                                      CLE075AT
+     C**********           READ SDCURRL1                 13                       CLE075AT AR1092610
+     C                     READ SDCURRL1                 18                                AR1092610
+     C                     MOVE A6CYCD    #CCY,A                                            CLE075AT
+     C                     ENDDO                                                            CLE075AT
+     C                     Z-ADDA         CURARR  30                                        CLE075AT
+      *                                                                                     CLE075AT
+     C                     ENDSR                                                            CLE075AT
+      *****************************************************************                     CLE075AT
+      *
+** CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2002

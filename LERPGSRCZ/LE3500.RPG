@@ -1,0 +1,2421 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Facility currency conversion maintenance')    *
+      *****************************************************************
+      *
+      *  Midas   -  Lending Module
+      *
+      *  LE3500  -  Facility Currency Conversion Maintenance.
+      *
+      *  Function:  This program enables the maintenance of the
+      *             selection criteria for facilities which are
+      *             to be converted into the Euro currency
+      *             during the next COB.
+      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190014             Date 16May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180573             Date 21Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 153979             Date 11Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 154313             Date 07May99               *
+      *                 148063             Date 18NOV98               *
+      *                 143509             Date 27Sep98               *
+      *                 CEU021  *CREATE    Date 01May98               *
+      *                                    Date                       *
+      *
+      *-------------------------------------------------------------------
+      *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  190014 - Allow 'ALL' to be entered in branch and customer    *
+      *           fields.  Also amended validations for fix 148063.   *
+      *  180573 - Original message IDs have subsequently been over-   *
+      *           written for new programs.                           *
+      *  153979 - Only display 'Generate Account Key' and 'Start Date *
+      *           of Generate A/C Key' if CLE007 is switched ON.      *
+      *  154313 - Message that facility does not exist, when it does. *
+      *  148063 - verify if facility already requested for conversion *
+      *           or already converted.                               *
+      *  143509 - F5/Refresh not working properly                     *
+      *  CEU021 - EMU LE Facility Currency Conversion
+      *
+      *****************************************************************
+      *  Indicator    Description
+      *  ¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯
+      *  01 - 19      Input Control.
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)
+      *   20          Record Not Found
+      *   21          File Error Occurred
+      *   22          Start/End Of File Reached
+      *   25          Lookup/Scan.
+      *  30 - 39      Program Work Indicators
+      *  40 - 49      Output Control.
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)
+      *   84          CLE007 switched ON.                                 153979
+      *  90 - 99      Error Control.
+      *
+      *-------------------------------------------------------------------
+      *  Routine      Description
+      *  ¯¯¯¯¯¯¯      ¯¯¯¯¯¯¯¯¯¯¯
+      *  PFKEXT       Process Function Key 03 (Exit)
+      *  PFKPRM       Process Function Key 04 (Prompt)
+      *  PFKREF       Process Function Key 05 (Refresh)
+      *  PFKPRV       Process Function Key 12 (Previous Screen)
+      *
+      *  PDFC1        Process Display Format - Subfile Control (C1)
+      *  PDFS1        Process Display Format - Subfile (S1)
+      *  PDFD1        Process Display Format - Detail (D1)
+      *  XSDFS1       Set Display Format - Subfile (S1)
+      *  XSDFD1       Set Display Format - Detail (D1)
+      *  XVDFC1       Validate Display Format - Subfile Control (C1)
+      *  XVDFD1       Validate Display Format - Detail Screen (D1)
+      *
+      *  XRFAC        Retrieve Facility Criteria Details
+      *  XRBRCH       Retrieve Branch Details
+      *  XRCCY        Retrieve Currency Details
+      *  XRFDTL       Retrieve Facility Details
+      *  XRCUST       Retrieve Customer Details
+      *
+      *  XCPMSQ       Clear Messages from Program Message Queue
+      *  XSPMSQ       Send Messages to Program Message Queue
+      *
+      *  *INZSR       Initial Routine
+      *  @DEFN        Definition Routine (Not Called)
+      *  *PSSR        Program Error Routine
+      *-------------------------------------------------------------------
+      *  File         Description
+      *  ¯¯¯¯         ¯¯¯¯¯¯¯¯¯¯¯
+      *  LE3500DF     Facility Currency Conversion Maintenance Display ty
+      *  LEFCONL0     Midas LE Facility Cy Conv. Selection By Reference
+      *===================================================================
+     F/EJECT
+      *===================================================================
+     FLE3500DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS D@WKS
+     F                                        SCRRN1KSFILE LE3500S1
+      *
+     FLEFCUPL4IF  E           K        DISK         KINFSR *PSSR                             148063
+     FFCLTY0  IF  E           K        DISK         KINFSR *PSSR                             148063
+     FLEFCONL0UF  E           K        DISK         KINFSR *PSSR A
+     FFDMNTHLLIF  E           K        DISK         KINFSR *PSSR      UC
+      *===================================================================
+     E/EJECT
+      *===================================================================
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80               Object Copyright
+      *===================================================================
+     I/EJECT
+      *===================================================================
+     IPSDS       SDS
+     I                                        1  10 D@PGMN
+      * Program Information Area.
+     I                                      244 253 D@JNAM
+      * Workstation Device Feedback.
+     I                                      254 263 D@USRI
+      * Workstation User
+      *-------------------------------------------------------------------
+     ID@WKS       DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                      261 270 D@FMTN
+      *-------------------------------------------------------------------
+     ILDA       E DSLDA                         256
+      * Dataarea: Local Data Area.
+      *-------------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure.
+      *-------------------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      *Second DS for Access Programs, long data structure.
+      *-------------------------------------------------------------------
+     IDSBANK    E DSSDBANKPD
+      * Definition: Bank Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSGELR    E DSSDGELRPD
+      * Definition: General Ledger Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSBRCH    E DSSDBRCHPD
+      * Branch Details
+      *-------------------------------------------------------------------
+     IDSCURR    E DSSDCURRPD
+      * Definition: Currencies Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      * Customer Details
+      *-------------------------------------------------------------------
+     IDSFACT    E DSSDFACTPD
+      * Customer Details
+      *-------------------------------------------------------------------
+     IDSSARD    E DSSCSARDPD                                              153979
+      * Definition: Switchable Features Accessed Via Access Program.      153979
+      *-------------------------------------------------------------------153979
+     IDSDF10      DS                             10
+      * Datastructure: Key List of Position File (LEFCONL0)
+     I                                        1  10 FCREFR
+      *-------------------------------------------------------------------
+     IDSSKEY      DS                             10
+      * Datastructure: Subfile Start Key
+     I                                        1  10 KSRFN
+      *-------------------------------------------------------------------
+     IDSEKEY      DS                             10
+      * Datastructure: Subfile End Key
+     I                                        1  10 KERFN
+     IDSKITE      DS                             10
+      * Datastructure: Key - LEFCONL0
+     I                                        1  10 KREFR
+      *-------------------------------------------------------------------
+      * Display Constants.
+      *
+     I              'All Branches'        C         N@BRCH
+     I              'All Customers'       C         N@CUST
+      *===================================================================
+     C/EJECT
+      *===================================================================
+      * Main Processing Control.
+      *
+      *-------------------------------------------------------------------
+      * Process Conversion Selections.
+      *
+     C           *INLR     DOWEQ'0'                        DoWhile Not End
+     C                     EXSR XCPMSQ                      Clear Msgq
+      *
+     C           *INKC     CASEQ*ON       PFKEXT            -Proc F3 Key
+     C           *INKE     CASEQ*ON       PFKREF            -Proc F5 Key
+     C           *INKL     CASEQ*ON       PFKPRV            -Proc F12 Key
+     C           D@FMTN    CASEQ'LE3500C1'PDFC1             -Proc SubflCtl
+     C           D@FMTN    CASEQ'LE3500D1'PDFD1             -Proc Detail
+     C                     CAS            XSDFS1            -Set Subfile
+     C                     ENDCS                            End Casentry
+      *
+     C  NLR                READ LE3500DF                 LR Rtv Record
+     C                     ENDDO                           End DoWhile
+      *===================================================================
+     C/EJECT
+     C           PFKEXT    BEGSR
+      *===================================================================
+      * PFKEXT: Process Function Key - Exit.
+      *
+      *-------------------------------------------------------------------
+      * Set On LR
+      *
+     C                     MOVE *ON       *INLR            Set LR
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           PFKREF    BEGSR
+      *===================================================================
+      * PFKREF: Process Function Key - Refresh Screen.
+      *
+      *-------------------------------------------------------------------
+      * Refresh Details Display.
+      *
+     C                     EXSR XCPMSQ                     Clear Msgq
+      *
+     C                     SELEC                           Select:
+     C           D@FMTN    WHEQ 'LE3500C1'                 When Sub Dsp
+     C                     MOVE *BLANKS   WKOPTN            Clr Option
+     C                     MOVE *BLANKS   SCOPTN            Clr Option    143509
+     C                     EXSR XSDFS1                      Set Dsp Sub
+      *
+     C           WKOPTN    WHEQ 'A '                       When Amend
+     C           WKOPTN    OREQ ' A'                       Or Amend
+     C           WKOPTN    OREQ 'E '                       Or Enquiry
+     C           WKOPTN    OREQ ' E'                       Or Enquiry
+     C                     MOVE FCREFR    KREFR             Set Reference
+     C                     EXSR XRFAC                       Rtv Criteria
+     C                     MOVE FCREFR    S2REFR            Set Reference
+     C                     MOVE FCBRCA    S2BRCA            Set Brch Code
+     C********** FCCNUM    IFEQ 0                           If Non Specifc                    CSD027
+     C           FCCNUM    IFEQ *BLANKS                     If Non Specifc                    CSD027
+     C                     MOVEL'ALL'     S2CNUM    P        Set Cust ALL
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C                     ELSE                             Else
+     C                     MOVELFCCNUM    S2CNUM    P        Set Customer
+     C                     MOVE FCCNUM    S2CUST             Set Customer
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCCCY     S2CCY             Set Currency
+     C           FCFACT    IFEQ 0                           If Non Specifc
+     C                     MOVE *BLANKS   S2FACT             Clr Fac Type
+     C                     ELSE                             Else
+     C                     MOVE FCFACT    S2FACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           FCFCNO    IFEQ 0                           If Non Specifc
+     C                     MOVE *BLANKS   S2FCNO             Clr Fac Type
+     C                     ELSE                             Else
+     C                     MOVE FCFCNO    S2FCNO             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCGEAK    S2GEAK            Set Acc Keys
+     C                     MOVE FCGADT    ZDAYNO            Set Days
+     C                     EXSR ZDATE2                      Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT            Set Date
+     C                     ELSE                             Set Date
+     C                     MOVE *BLANKS   S2GADT            Set Date
+     C                     ENDIF                            Set Date
+     C                     MOVE FCDESC    S2DESC            Set Desc
+     C                     EXSR XCPMSQ                      Clear Msgq
+     C                     MOVEA'1'       *IN,76            Set Protect
+     C           WKOPTN    IFEQ 'E '                                      143509
+     C           WKOPTN    OREQ ' E'                                      143509
+     C                     MOVEL'1'       *IN77             Set Protect   143509
+     C                     ENDIF                                          143509
+     C                     EXSR XSDFD1                      Set/Dsp Dtl
+     C                     MOVE *BLANKS   SCOPTN            Clr Option
+      *
+     C           WKOPTN    WHEQ 'I '                       When Insert
+     C           WKOPTN    OREQ ' I'                       Or Insert
+     C                     EXSR XRFAC                       Rtv Criteria
+     C           *IN20     IFEQ *OFF                        If Found
+     C                     MOVEL'LEF0303' WKMSID             Set Err Msg
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVEA'11'      *IN,54             Set Err Ind
+     C                     ELSE                             Else
+      *
+     C***********          MOVE *BLANKS   S2REFR             Clr Ref      143509
+     C                     MOVE *BLANKS   S2BRCA             Clr Brch Cde
+     C                     MOVE *BLANKS   S2CNUM             Clr Customer
+     C                     MOVE *BLANKS   S2CUST             Clr Customer
+     C                     MOVE *BLANKS   S2CCY              Clr Currency
+     C                     MOVE *BLANKS   S2FACT             Clr Fac Type
+     C                     MOVE *BLANKS   S2FCNO             Clr Fac Seq
+     C                     MOVE *BLANKS   S2GEAK             Clr Acc Keys
+     C                     MOVE *BLANKS   S2GADT             Clr StartDat
+     C                     MOVE *BLANKS   S2DESC             Clr Desc
+     C                     EXSR XCPMSQ                       Clear Msgq
+     C                     MOVE '1'       *IN76              Set Protect
+     C                     EXSR XSDFD1                       Process Detl
+     C                     MOVE *BLANKS   SCOPTN             Clr Option
+     C                     ENDIF                            End If
+      *
+     C                     ENDSL                           End Select
+      *===================================================================
+     C                     ENDSR
+     C/SPACE 5
+     C           PFKPRV    BEGSR
+      *===================================================================
+      * PFKPRV: Process Function Key - Previous Screen.
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     EXSR XCPMSQ                     Clear Msgq
+     C                     WRITELE3500F1                   Wrt Footer
+     C                     WRITEMSGCTL                     Wrt Msg Ctl
+     C                     WRITELE3500C1                   Wrt Subfl Ctl
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           PDFC1     BEGSR
+      *===================================================================
+      * PDFC1: Process Display Format - Subfile Control (C1).
+      *
+      *-------------------------------------------------------------------
+      * Process Criteria Selection Subfile
+      *
+     C                     SELEC                           Select:
+      *
+     C           SCOPTN    WHNE *BLANKS                    When Sfl Ctl Op
+      *
+     C           SCOPTN    IFEQ 'A '                        If Amend
+     C           SCOPTN    OREQ ' A'                        Or Amend
+     C           SCOPTN    OREQ 'D '                        Or Delete
+     C           SCOPTN    OREQ ' D'                        Or Delete
+     C           SCOPTN    OREQ 'E '                        Or Enquire
+     C           SCOPTN    OREQ ' E'                        Or Enquire
+     C           SCOPTN    OREQ 'I '                        Or Insert
+     C           SCOPTN    OREQ ' I'                        Or Insert
+     C           SCOPTN    OREQ 'DF'                        Or Display Fac
+     C                     EXSR XVDFC1                       Validate Inp
+     C                     ELSE                             Else
+      *
+     C                     MOVE *ON       *IN71              Set Err Ind
+     C                     ADD  1         WKERR              Adj Errs
+     C***********          MOVEL'LEF0296' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0316' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Process Err
+     C                     WRITELE3500F1                     Wrt Footer
+     C                     WRITEMSGCTL                       Wrt Msg Ctl
+     C                     WRITELE3500C1                     Wrt SubF Cntl
+     C                     ENDIF                            End If
+      *
+     C           SCPOS1    WHNE *BLANKS                    When Pos Exists
+     C                     EXSR XVDFC1                      Validate Input
+     C           WKERR     IFEQ *ZERO                       If Error
+     C                     EXSR XSDFS1                       Set/Dsp Subfl
+     C                     ENDIF                            End If
+      *
+     C           *IN01     WHEQ *ON                        When Page Down
+     C           *IN02     OREQ *ON                        Or   Page Up
+     C                     EXSR XSDFS1                      Set/Dsp Subfl
+      *
+     C           *IN82     WHEQ *OFF                       When Sfl Opt
+     C                     EXSR PDFS1                       Proc Subfl
+     C                     ENDSL                           End Select
+      *
+     C                     CLEARWKERR                      Clr Err Field
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           PDFD1     BEGSR
+      *===================================================================
+      * PDFD1: Process Display Format - Detail (D1).
+      *
+      *-------------------------------------------------------------------
+      * Process Detail Screen.
+      *
+     C                     MOVEA'00000000'*IN,53           Set Err Inds
+     C                     MOVEA'000000'  *IN,61           Set Err Inds
+     C                     MOVEA'00'      *IN,73           Set Err Inds
+     C                     MOVEA'000'     *IN,78           Set PC Inds
+     C                     MOVE *BLANKS   WKMSID           Clr Err Msg
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * If Amend or Insert, Validate Input
+      *
+     C                     SELEC                           Select:
+     C           WKOPTN    WHEQ 'A '                       When Amend
+     C           WKOPTN    OREQ ' A'                       Or Amend
+     C           WKOPTN    OREQ 'I '                       Or Insert
+     C           WKOPTN    OREQ ' I'                       Or Insert
+     C                     EXSR XVDFD1                      Validate Input
+      *
+     C                     ENDSL                           End Select
+      * If Insert Write Details
+      *
+     C           WKOPTN    IFEQ 'I '                       If Insert
+     C           WKERR     ANDEQ0                          And No Error
+     C           WKOPTN    OREQ ' I'                       Or Insert
+     C           WKERR     ANDEQ0                          And No Error
+     C                     MOVE S2REFR    FCREFR            Set Ref
+     C                     MOVE S2BRCA    FCBRCA            Set Brch Code
+     C           S2CNUM    IFEQ 'ALL'                       If ALL Cust
+     C           S2CNUM    OREQ *BLANKS                     Or Blanks
+     C**********           Z-ADD0         FCCNUM             Reset Cust                       CSD027
+     C                     MOVE *BLANKS   FCCNUM             Reset Cust                       CSD027
+     C                     ELSE                             Else
+     C                     MOVE S2CUST    FCCNUM             Set Customer
+     C                     ENDIF                            End If
+      *
+     C                     MOVE S2CCY     FCCCY             Set Currency
+     C           S2FACT    IFEQ *BLANKS                     If Non Specifc
+     C                     Z-ADD0         FCFACT             Reset FacType
+     C                     ELSE                             Else
+     C                     MOVE S2FACT    FCFACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           S2FCNO    IFEQ *BLANKS                     If Non Specifc
+     C                     Z-ADD0         FCFCNO             Reset Fac No
+     C                     ELSE                             Else
+     C                     MOVE S2FCNO    FCFCNO             Set Fac No
+     C                     ENDIF                            End If
+      *
+     C                     MOVE S2GEAK    FCGEAK            Set Gen A/c Ky
+     C                     MOVE S2GADT    ZDATE             Set Date
+      *
+      * Convert DDMMYY/MMDDYY date to day number and validate
+     C                     EXSR ZDATE1                     Check Screen Da
+      *
+     C                     Z-ADDZDAYNO    FCGADT            Set Date
+     C                     MOVE S2DESC    FCDESC            Set Desc
+     C                     MOVE *BLANKS   WKOPTN            Clr Option
+     C                     EXSR XWFAC                       Insert Rec
+      *
+     C                     EXSR XWSLCR                      Wrt Gen A/cs
+      *
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If Amend, Update Details
+      *
+     C           WKOPTN    IFEQ 'A '                       If Amend
+     C           WKERR     ANDEQ0                          And No Error
+     C           WKOPTN    OREQ ' A'                       Or Amend
+     C           WKERR     ANDEQ0                          And No Error
+     C                     MOVE S2REFR    FCREFR            Set Reference
+     C                     MOVE S2BRCA    FCBRCA            Set Brch Code
+     C           S2CNUM    IFEQ 'ALL'                       If ALL Cust
+     C           S2CNUM    OREQ *BLANKS                     Or Blanks
+     C**********           Z-ADD0         FCCNUM             Reset Cust                       CSD027
+     C                     MOVE *BLANKS   FCCNUM             Reset Cust                       CSD027
+     C                     ELSE                             Else
+     C                     MOVE S2CUST    FCCNUM             Set Customer
+     C                     ENDIF                            End If
+      *
+     C                     MOVE S2CCY     FCCCY             Set Currency
+     C           S2FACT    IFEQ *BLANKS                     If Non Specifc
+     C                     Z-ADD0         FCFACT             Reset FacType
+     C                     ELSE                             Else
+     C                     MOVE S2FACT    FCFACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           S2FCNO    IFEQ *BLANKS                     If Non Specifc
+     C                     Z-ADD0         FCFCNO             Reset Fac No
+     C                     ELSE                             Else
+     C                     MOVE S2FCNO    FCFCNO             Set Fac No
+     C                     ENDIF                            End If
+      *
+     C                     MOVE S2GEAK    FCGEAK            Set Gen A/C Ky
+     C                     MOVE S2GADT    ZDATE             Set Date
+      *
+      * Convert DDMMYY/MMDDYY date to day number and validate
+     C                     EXSR ZDATE1                     Check Screen Da
+      *
+      ** Call to program ended in error.
+      *
+     C                     Z-ADDZDAYNO    FCGADT            Set Date
+     C                     MOVE S2DESC    FCDESC            Set Desc
+     C                     MOVE *BLANKS   WKOPTN            Clr Option
+     C                     EXSR XUFAC                       Update Rec
+      *
+     C                     EXSR XDSLCR                      Del Gen A/cs
+      *
+     C                     EXSR XWSLCR                      Wrt Gen A/cs
+      *
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If Delete, Remove Details
+      *
+     C           WKOPTN    IFEQ 'D '                       If Delete
+     C           *INKJ     ANDEQ*ON                        Or Delete
+     C           WKOPTN    OREQ ' D'                       Or Delete
+     C           *INKJ     ANDEQ*ON                        Or Delete
+     C                     MOVE *BLANKS   WKOPTN            Clr Option
+     C                     EXSR XDFAC                        Delete Rec
+      *
+     C                     EXSR XDSLCR                      Del Gen A/cs
+      *
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If there are options queued on the subfile,
+      * validate them, set screen data items and display detail screen.
+      * Otherwise, redisplay selection list.
+      *
+     C           WKERR     IFEQ 0                          If No Errors
+     C           *IN22     IFEQ *OFF                        If Records Fnd
+     C                     READCLE3500S1                 22  Rtv Record
+     C                     ENDIF                            End If
+      *
+     C           *IN22     DOWEQ*OFF                        DoWhile
+     C           S1OPTN    ANDEQ*BLANKS                     And Option Blk
+     C                     MOVE *OFF      *IN70              Reset Err Ind
+     C                     UPDATLE3500S1                     Upd Record
+     C                     READCLE3500S1                 22  Rtv Record
+     C                     ENDDO                            End Do
+      *-------------------------------------------------------------------
+      * For all records which have been selected with a valid option,
+      * set screen data items and display the detail screen
+      * Otherwise, redisplay selection list.
+      *
+     C                     SELEC                            Select:
+     C           *IN22     WHEQ *ON                         When Not Found
+     C                     EXSR XSDFS1                       Wrt Subfile
+      *
+     C           S1OPTN    WHEQ 'E '                        When Display
+     C           S1OPTN    OREQ ' E'                        Or Display
+     C                     MOVE S1OPTN    WKOPTN             Set Option
+     C                     MOVE *BLANKS   S1OPTN             Clr Option
+     C                     UPDATLE3500S1                     Upd Record
+     C                     MOVELS1REFR    KREFR              Set Reference
+     C                     EXSR XRFAC                        Rtv Criteria
+     C                     MOVE FCREFR    S2REFR             Set Reference
+     C                     MOVE FCBRCA    S2BRCA             Set Brch Code
+     C********** FCCNUM    IFEQ 0                            If Non Specif                    CSD027
+     C           FCCNUM    IFEQ *BLANKS                      If Non Specif                    CSD027
+     C                     MOVEL'ALL'     S2CNUM    P         Set to ALL
+     C                     MOVE *BLANKS   S2CUST              Clr Cust
+     C                     ELSE                              Else
+     C                     MOVELFCCNUM    S2CNUM    P         Set Customer
+     C                     MOVE FCCNUM    S2CUST    P         Set Customer
+     C                     ENDIF                             End If
+     C                     MOVE FCCCY     S2CCY              Set Currency
+     C           FCFACT    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FACT              Clr Fac Type
+     C                     ELSE                              Else
+     C                     MOVE FCFACT    S2FACT              Set Fac Type
+     C                     ENDIF                             End If
+      *
+     C           FCFCNO    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FCNO              Clr Fac No
+     C                     ELSE                              Else
+     C                     MOVE FCFCNO    S2FCNO              Set Fac No
+     C                     ENDIF                             End If
+      *
+     C                     MOVE FCGEAK    S2GEAK             Set Gen Key
+     C                     MOVE FCGADT    ZDAYNO             Set Days
+     C                     EXSR ZDATE2                       Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT             Set Date
+     C                     ELSE                              Set Date
+     C                     MOVE *BLANKS   S2GADT             Set Date
+     C                     ENDIF                             Set Date
+     C                     MOVE FCDESC    S2DESC             Set Desc
+      *
+     C                     EXSR XCPMSQ                       Clear Magq
+     C                     MOVEA'11'      *IN,76             Set Protect
+     C                     EXSR XSDFD1                       Set/Dsp Dtl
+      *
+     C           S1OPTN    WHEQ 'A '                        When Display
+     C           S1OPTN    OREQ ' A'                        Or Display
+     C                     MOVE S1OPTN    WKOPTN             Set Option
+     C                     MOVE *BLANKS   S1OPTN             Clr Option
+     C                     UPDATLE3500S1                     Upd Record
+     C                     MOVELS1REFR    KREFR              Set Reference
+     C                     EXSR XRFAC                        Rtv Criteria
+     C                     MOVE FCREFR    S2REFR             Set Ref
+     C                     MOVE FCBRCA    S2BRCA             Set Brch
+     C********** FCCNUM    IFEQ 0                            If Non Specif                    CSD027
+     C           FCCNUM    IFEQ *BLANKS                      If Non Specif                    CSD027
+     C                     MOVEL'ALL'     S2CNUM    P         Set to ALL
+     C                     MOVE *BLANKS   S2CUST              Clr Cust
+     C                     ELSE                              Else
+     C                     MOVELFCCNUM    S2CNUM    P         Set Customer
+     C                     MOVE FCCNUM    S2CUST              Set Customer
+     C                     ENDIF                             End If
+      *
+     C                     MOVE FCCCY     S2CCY              Set Ccy
+     C           FCFACT    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FACT              Clr Fac Type
+     C                     ELSE                              Else
+     C                     MOVE FCFACT    S2FACT              Set Fac Type
+     C                     ENDIF                             End If
+      *
+     C           FCFCNO    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FCNO              Clr Fac No
+     C                     ELSE                              Else
+     C                     MOVE FCFCNO    S2FCNO              Set Fac No
+     C                     ENDIF                             End If
+      *
+     C                     MOVE FCGEAK    S2GEAK             Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO             Set Days
+     C                     EXSR ZDATE2                       Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT             Set Date
+     C                     ELSE                              Set Date
+     C                     MOVE *BLANKS   S2GADT             Set Date
+     C                     ENDIF                             Set Date
+     C                     MOVE FCDESC    S2DESC             Set Desc
+      *
+     C                     EXSR XCPMSQ                       Clear Msg q
+     C                     MOVE *ON       *IN76              Set Prote ct
+     C                     EXSR XSDFD1                       Set/Dsp D tl
+      *
+     C           S1OPTN    WHEQ 'D '                        When Delete
+     C           S1OPTN    OREQ ' D'                        Or Delete
+     C                     MOVE S1OPTN    WKOPTN             Set Option
+     C                     MOVE *BLANKS   S1OPTN             Clr Option
+     C                     UPDATLE3500S1                     Upd Record
+     C                     MOVELS1REFR    KREFR              Set Reference
+     C                     EXSR XRFAC                        Rtv Criteria
+     C                     MOVEA'111'     *IN,75             Set Msg/Prt
+     C                     MOVE FCREFR    S2REFR             Set Reference
+     C                     MOVE FCBRCA    S2BRCA             Set Brch Code
+     C********** FCCNUM    IFEQ 0                            If Non Specif                    CSD027
+     C           FCCNUM    IFEQ *BLANKS                      If Non Specif                    CSD027
+     C                     MOVEL'ALL'     S2CNUM    P         Set to ALL
+     C                     MOVE *BLANKS   S2CUST              Clr Cust
+     C                     ELSE                              Else
+     C                     MOVELFCCNUM    S2CNUM    P         Set Customer
+     C                     MOVE FCCNUM    S2CUST    P         Set Customer
+     C                     ENDIF                             End If
+      *
+     C                     MOVE FCCCY     S2CCY              Set Currency
+     C           FCFACT    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FACT              Clr Fac Type
+     C                     ELSE                              Else
+     C                     MOVE FCFACT    S2FACT              Set Fac Type
+     C                     ENDIF                             End If
+      *
+     C           FCFCNO    IFEQ 0                            If Non Specif
+     C                     MOVE *BLANKS   S2FCNO              Clr Fac No
+     C                     ELSE                              Else
+     C                     MOVE FCFCNO    S2FCNO              Set Fac No
+     C                     ENDIF                             End If
+      *
+     C                     MOVE FCGEAK    S2GEAK             Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO             Set Days
+     C                     EXSR ZDATE2                       Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT             Set Date
+     C                     ELSE                              Set Date
+     C                     MOVE *BLANKS   S2GADT             Set Date
+     C                     ENDIF                             Set Date
+     C                     MOVE FCDESC    S2DESC             Set Desc
+     C                     EXSR XSDFD1                       Set Details
+      *
+     C                     OTHER                            Otherwise
+     C                     MOVE *ON       *IN70              Set Err Ind
+     C                     UPDATLE3500S1                     Upd Record
+     C***********          MOVEL'LEF0296' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0316' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     WRITELE3500F1                     Wrt Footer
+     C                     WRITEMSGCTL                       Wrt Msg Ctl
+     C                     WRITELE3500C1                     Wrt SubF Cntl
+     C                     ENDSL                            End Select
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XVDFD1    BEGSR
+      *===================================================================
+      * XVDFD1: Validate Detail Screen Input
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     Z-ADD0         WKERR            Reset Err Flag
+     C           '?'       SCAN S2BRCA:1  QUES1   10       Redisp if'?'
+     C           '?'       SCAN S2CNUM:1  QUES2   10       Redisp if'?'
+     C           '?'       SCAN S2CCY:1   QUES3   10       Redisp if'?'
+     C           '?'       SCAN S2FACT:1  QUES4   10       Redisp if'?'
+     C           QUES1     ADD  QUES2     WKERR            Redisp if'?'
+     C           QUES3     ADD  WKERR     WKERR            Redisp if'?'
+     C           QUES4     ADD  WKERR     WKERR            Redisp if'?'
+      *-------------------------------------------------------------------
+      * Reference Must Be Entered.
+      *
+     C           QUES1     IFEQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C           S2REFR    IFEQ *BLANKS                    If Acc Officer
+     C                     ADD  1         WKERR             Adj Errs
+     C                     MOVE *ON       *IN72             Set Err Ind
+     C                     ENDIF                           End If
+     C                     ENDIF
+      *-------------------------------------------------------------------
+      * 'Branch Code', if entered, must be a valid Branch
+      *
+     C           QUES1     IFEQ 1
+     C           QUES1     OREQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C                     SELEC                           Select:
+      *
+     C*****      S2BRCA    WHEQ 'ALL'                      When All                           148063
+     C*****                MOVELN@BRCH    S2BRNM    P       Set Desc                          148063
+     C           S2BRCA    WHEQ 'ALL'                                                         190014
+     C                     MOVELN@BRCH    S2BRNM    P                                         190014
+      *
+     C           S2BRCA    WHNE *BLANKS                    When Not Blank
+     C           S2BRCA    ANDNE'ALL'                      And Not ALL
+     C                     MOVELS2BRCA    WKBRCH            Set Branch
+     C                     EXSR XRBRCH                      Rtv A/c Rcd
+      *
+     C           P@RTCD    IFEQ '*NRF    '                  If Not Found
+     C                     MOVE *BLANKS   S2BRNM             Clr Desc
+     C***********          MOVEL'LEF0298' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0318' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN73              Set Err Ind
+      *
+     C                     ELSE                             Else
+     C                     MOVELA8BRCD    S2BRCA    P        Set Brch Code
+     C                     MOVELA8BRNM    S2BRNM    P        Set Desc
+     C                     ENDIF                            End If
+      *
+     C           S2BRCA    WHEQ *BLANKS                    When Brch Blnk
+     C******               MOVEL'ALL'     S2BRCA    P       Set Brch ALL                      148063
+     C*****                MOVELN@BRCH    S2BRNM    P       Set Name ALL                      148063
+     C                     MOVEL'ALL'     S2BRCA    P                                         190014
+     C                     MOVELN@BRCH    S2BRNM    P                                         190014
+     C**********           MOVE *BLANKS   S2BRCA             Clr Desc                  148063 190014
+     C***********          MOVEL'LEF0298' WKMSID             Set Err Msg               148063 180573
+     C**********           MOVEL'LEF0318' WKMSID             Set Err Msg               180573 190014
+     C**********           EXSR XSPMSQ                       Snd Err Msg               148063 190014
+     C**********           ADD  1         WKERR              Adj Errs                  148063 190014
+     C**********           MOVE *ON       *IN73              Set Err Ind               148063 190014
+     C                     ENDSL                           End Select
+     C                     ENDIF
+      *-------------------------------------------------------------------
+      * 'Customer', if entered, must be a valid Customer
+      *
+     C           QUES2     IFEQ 1
+     C           QUES1     OREQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C                     SELEC                           Select:
+     C           S2CNUM    WHEQ *BLANKS                    When Cust Blank
+     C********** S2CNUM    OREQ 'ALL'                      OR EQUAL ALL               148063  190014
+     C****                 MOVEL'ALL'     S2CNUM    P       Set Cust No                      148063
+     C****                 MOVELN@CUST    S2CNAM    P       Set Cust Name                    148063
+     C                     MOVEL'ALL'     S2CNUM    P                                         190014
+     C                     MOVELN@CUST    S2CNAM    P                                         190014
+     C**********           MOVE *BLANKS   S2CNAM             Clr Cust Name             148063 190014
+     C                     MOVE *BLANKS   S2CUST            Clr Cust
+     C***********          MOVEL'LEF0299' WKMSID             Set Err Msg               148063 180573
+     C**********           MOVEL'LEF0319' WKMSID             Set Err Msg               180573 190014
+     C**********           EXSR XSPMSQ                       Snd Err Msg               148063 190014
+     C**********           ADD  1         WKERR              Adj Errs                  148063 190014
+     C**********           MOVE *ON       *IN74              Set Err Ind               148063 190014
+      *
+     C********** S2CNUM    WHEQ 'ALL   '                   When Cust All                      148063
+     C**********           MOVELN@CUST    S2CNAM    P       Set Cust Name                     148063
+     C**********           MOVE *BLANKS   S2CUST            Clr Cust                          148063
+     C           S2CNUM    WHEQ 'ALL   '                                                      190014
+     C                     MOVELN@CUST    S2CNAM    P                                         190014
+     C                     MOVE *BLANKS   S2CUST                                              190014
+      *
+     C           S2CNUM    WHNE *BLANKS                    When Cust Blank
+     C           S2CNUM    ANDNE'ALL   '                   And Not All
+     C                     MOVELS2CNUM    WKCUST            Set Cust
+     C                     EXSR XRCUST                      Process Cust
+      *
+     C           P@RTCD    IFEQ '*NRF   '                   If Not Found
+     C           P@RTCD    OREQ '*KEY   '                                                     190014
+     C                     MOVE *BLANKS   S2CNAM             Clr Cust Name
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C***********          MOVEL'LEF0299' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0319' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN74              Set Err Ind
+     C                     ELSE                             Else
+     C                     MOVELBBCRNM    S2CNAM    P        Set Cust Name
+     C                     MOVELBBCUST    S2CUST             Set Cust
+     C                     MOVELBBCUST    S2CNUM    P        Set Cust
+     C                     ENDIF                            End If
+      *
+     C                     ENDSL                           End Select
+     C                     ENDIF
+      *
+      *-------------------------------------------------------------------
+      * 'Currency', must be a valid Currency
+      *
+     C           QUES3     IFEQ 1
+     C           QUES1     OREQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C           S2CCY     IFEQ BKEURO                     If Ccy Euro
+     C                     MOVE *BLANKS   S2CYNM            Clr Ccy Desc
+     C                     MOVEL'LEF0307' WKMSID            Set Err Msg
+     C                     EXSR XSPMSQ                      Snd Err Msg
+     C                     ADD  1         WKERR             Adj Errs
+     C                     MOVE *ON       *IN53             Set Err Ind
+     C                     ELSE                            Else
+      *
+     C                     MOVELS2CCY     WKCURR            Set Currency
+     C                     EXSR XRCCY                       Validate Ccy
+      *
+     C           P@RTCD    IFEQ '*NRF   '                   If Error
+     C                     MOVE *BLANKS   S2CYNM             Clr Ccy Desc
+     C***********          MOVEL'LEF0300' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0320' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN53              Set Err Ind
+     C                     ELSE                             Else
+     C                     MOVELA6CYCD    S2CCY               Set Ccy
+     C                     MOVELA6CYNM    S2CYNM              Set Desc
+      *
+     C           P@RTCD    IFNE '*NOSEL '                   If Error
+     C           A6INCY    IFEQ 'Y'                          If In Ccy
+     C           A6TPSD    ANDLEBJRDNB                       And TransDat
+     C                     MOVELA6CYCD    S2CCY               Set Ccy
+     C                     MOVELA6CYNM    S2CYNM              Set Desc
+     C                     ELSE                              Else
+      *
+     C           A6INCY    IFEQ 'Y'                           If In Ccy
+     C                     MOVE *BLANKS   S2CYNM               Clr Desc
+     C                     MOVEL'LEF0308' WKMSID               Set Err Msg
+     C                     EXSR XSPMSQ                         Snd Err Msg
+     C                     ADD  1         WKERR                Adj Errs
+     C                     MOVE *ON       *IN53                Set Err Ind
+     C                     ELSE                               Else
+      *
+     C                     MOVE *BLANKS   S2CYNM               Clr Desc
+     C                     MOVEL'LEF0309' WKMSID               Set Err Msg
+     C                     EXSR XSPMSQ                         Snd Err Msg
+     C                     ADD  1         WKERR                Adj Errs
+     C                     MOVE *ON       *IN53                Set Err Ind
+     C                     ENDIF                              End If
+      *
+     C                     ENDIF                             End If
+     C                     ENDIF
+      *
+     C                     ENDIF                            End If
+      *
+     C                     ENDIF                           End If
+     C                     ENDIF
+      *-------------------------------------------------------------------
+      * 'Facility', if entered, must be a valid facility
+      *
+     C           S2FACT    IFNE *BLANKS                    If Fac Type
+     C                     MOVE S2FACT    WKFACT  3         Set Facility
+     C                     EXSR XRFDTL                      Rtv Facility
+      *
+     C           P@RTCD    IFEQ '*NRF   '                   If Not Found
+     C                     MOVEL'LEF0301' WKMSID             Set Err Msg
+     C                     EXSR XSPMSQ                       Pocess Msg Q
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN78              Set Err Ind
+     C**                   ELSE                             Else                            148063
+     C***                  MOVELAMFCNM    S2FCNM    P        Set Fac Name                   148063
+     C***                  MOVELAMFCTY    S2FACT    P        Set Fac Name                   148063
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * 'Facility No.' must be a number between 1 and 99
+      *
+     C                     SELEC                           Select:
+     C           S2FCNO    WHNE *BLANKS                    When Seq
+     C           S2FCNO    IFLT '01'                        If < 01
+     C           S2FCNO    ORGT '99'                        Or > 99
+     C                     MOVEL'LEF0302' WKMSID             Set Err Msg
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN79              Set Err Ind
+     C                     ENDIF                            End If
+     C                     ENDSL                           End Select
+      *-------------------------------------------------------------------                  148063
+      * Verify if this is a live facility                                                   148063
+      *                                                                                     148063
+     C           S2BRCA    IFNE 'ALL'                                                         190014
+     C                     MOVE S2BRCA    SBRCA                                             148063
+     C                     ELSE                                                               190014
+     C                     MOVE *BLANKS   SBRCA                                               190014
+     C                     ENDIF                                                              190014
+     C           S2CNUM    IFNE 'ALL'                                                         190014
+     C                     MOVELS2CNUM    SCUST                                             148063
+     C                     ELSE                                                               190014
+     C**********           Z-ADD0         SCUST                                        190014 CSD027
+     C                     MOVE *BLANKS   SCUST                                               CSD027
+     C                     ENDIF                                                              190014
+     C                     MOVE S2CCY     SCCCY                                             148063
+      **   Use facility type and sequence number to find correct facility 154313
+     C                     MOVE S2FACT    SFACT                           154313
+     C           S2FCNO    IFNE *BLANK                                                        190014
+     C                     MOVE S2FCNO    SFCNO                           154313
+     C                     ELSE                                                               190014
+     C                     Z-ADD0         SFCNO                                               190014
+     C                     ENDIF                                                              190014
+     C           KFCLT     SETLLFCLTY0                                                      148063
+     C           *IN80     DOWEQ'0'                                                           190014
+     C           S2BRCA    IFNE 'ALL'                                                         190014
+     C           S2CNUM    ANDNE'ALL'                                                         190014
+     C           S2FACT    ANDNE*BLANK                                                        190014
+     C           S2FCNO    ANDNE*BLANK                                                        190014
+     C           KFCLT     READEFCLTY0                   80                                 148063
+     C                     ELSE                                                               190014
+     C                     READ FCLTY0                   80                                   190014
+     C                     ENDIF                                                              190014
+     C                     MOVE 'Y'       WMATCH  1                                           190014
+     C           S2BRCA    IFNE 'ALL'                                                         190014
+     C           S2BRCA    ANDNEBRCA                                                          190014
+     C                     MOVE 'N'       WMATCH                                              190014
+     C                     ENDIF                                                              190014
+     C           S2CNUM    IFNE 'ALL'                                                         190014
+     C           SCUST     ANDNECNUM                                                          190014
+     C                     MOVE 'N'       WMATCH                                              190014
+     C                     ENDIF                                                              190014
+     C           S2CCY     IFNE FCCY                                                          190014
+     C                     MOVE 'N'       WMATCH                                              190014
+     C                     ENDIF                                                              190014
+     C           S2FACT    IFNE *BLANKS                                                       190014
+     C           SFACT     ANDNEFACT                                                          190014
+     C                     MOVE 'N'       WMATCH                                              190014
+     C                     ENDIF                                                              190014
+     C           S2FCNO    IFNE *BLANKS                                                       190014
+     C           SFCNO     ANDNEFCNO                                                          190014
+     C                     MOVE 'N'       WMATCH                                              190014
+     C                     ENDIF                                                              190014
+     C           WMATCH    IFEQ 'Y'                                                           190014
+     C                     LEAVE                                                              190014
+     C                     ENDIF                                                              190014
+     C                     ENDDO                                                              190014
+     C           *IN80     IFEQ '0'                           FACILITY EXIST                148063
+     C********** FCCY      IFEQ BKEURO                        FACILITY ALREADY IN EURO 148063 190014
+     C**********           ADD  1         WKERR               Adj Errs                 148063 190014
+     C***********          MOVEL'LEF0312' WKMSID              Set Err Msg              148063 180573
+     C**********           MOVEL'LEF0321' WKMSID              Set Err Msg              180573 190014
+     C**********           EXSR XSPMSQ                        Snd Err Msg              148063 190014
+     C**********           MOVE *ON       *IN53               Set Err Ind              148063 190014
+     C**********           MOVE *ON       *IN78               Set Err Ind              148063 190014
+     C**********           MOVE *ON       *IN79               Set Err Ind              148063 190014
+     C**********           ENDIF                                                       148063 190014
+     C********** S2CCY     IFNE FCCY                          EXIST BUT NOT WITH THIS  148063 190014
+     C**********           ADD  1         WKERR               Adj Errs                 148063 190014
+     C**********           MOVEL'LEF0314' WKMSID              Set Err Msg              148063 190014
+     C**********           EXSR XSPMSQ                        Snd Err Msg              148063 190014
+     C**********           MOVE *ON       *IN53               Set Err Ind              148063 190014
+     C**********           MOVE *ON       *IN78               Set Err Ind              148063 190014
+     C**********           MOVE *ON       *IN79               Set Err Ind              148063 190014
+     C**********           ENDIF                                                       148063 190014
+      * Verify if this Facility ccy conversion was not already requested today                148063
+      *                                                                                       190014
+     C**********           MOVELS2FACT    SFACT                                        148063 190014
+     C**********           MOVELS2FCNO    SFCNO                                        148063 190014
+      *                                                                                       148063
+      ** Checking should only be made if all fields are entered.                              190014
+      *                                                                                       190014
+     C********** SFACT     IFEQ FACT                         FACILITY INPUT            148063 190014
+     C********** SFCNO     ANDEQFCNO                                                   148063 190014
+     C           S2FACT    IFNE *BLANKS                                                       190014
+     C           S2FCNO    ANDNE*BLANKS                                                       190014
+     C           S2BRCA    ANDNE'ALL'                                                         190014
+     C           S2CNUM    ANDNE'ALL'                                                         190014
+     C           KFCON     SETLLLEFCUPL4                                                    148063
+     C           KFCON     READELEFCUPL4                 80                                 148063
+     C           *IN80     IFEQ '0'                                                         148063
+     C           S2CCY     ANDEQFSOCCY                                                      148063
+     C                     ADD  1         WKERR               Adj Errs                      148063
+     C***********          MOVEL'LEF0313' WKMSID              Set Err Msg              148063 180573
+     C                     MOVEL'LEF0322' WKMSID              Set Err Msg                     180573
+     C                     EXSR XSPMSQ                        Snd Err Msg                   148063
+     C                     MOVE *ON       *IN74               Set Err Ind                   148063
+     C                     MOVE *ON       *IN53               Set Err Ind                   148063
+     C                     MOVE *ON       *IN78               Set Err Ind                   148063
+     C                     MOVE *ON       *IN79               Set Err Ind                   148063
+     C                     END                                                              148063
+     C                     ELSE                                                             148063
+     C           S2FACT    IFEQ *BLANK                        FACILITY NOT INPUT            148063
+     C           S2FCNO    OREQ *BLANK                                                      148063
+     C           S2BRCA    OREQ 'ALL'                                                         190014
+     C           S2CNUM    OREQ 'ALL'                                                         190014
+     C                     MOVE *BLANKS   WKREFR                                              190014
+     C           WKREFR    SETLLLEFCONL0                                                      190014
+     C                     READ LEFCONL0                 80                                   190014
+     C           *IN80     DOWEQ'0'                           FACILITY EXIST : BRCH/CUST/CCY148063
+     C********** S2CCY     ANDEQFCCY                                                   148063 190014
+     C**********           MOVE FACT      S2FACT                                       148063 190014
+     C**********           MOVE FCNO      S2FCNO                                       148063 190014
+      ********************************************************************             148063 190014
+      **Verify*if*this*Facility*ccy*conversion*was*not*already*requested*today         148063 190014
+      ********************************************************************             148063 190014
+     C**********           MOVELS2FACT    SFACT                                        148063 190014
+     C**********           MOVELS2FCNO    SFCNO                                        148063 190014
+     C********** KFCON     SETLLLEFCUPL4                                               148063 190014
+     C********** KFCON     READELEFCUPL4                 80                            148063 190014
+     C           *IN80     IFEQ '0'                                                         148063
+     C********** S2CCY     ANDEQFSOCCY                                                 148063 190014
+     C           S2CCY     ANDEQFCCCY                                                         190014
+     C                     MOVE 'Y'       WEXST   1                                           190014
+     C           S2BRCA    IFNE FCBRCA                                                        190014
+     C           FCBRCA    ANDNE'ALL'                                                         190014
+     C                     MOVE 'N'       WEXST                                               190014
+     C                     ENDIF                                                              190014
+     C           SCUST     IFNE FCCNUM                                                        190014
+     C********** FCCNUM    ANDNE0                                                      190014 CSD027
+     C           FCCNUM    ANDNE*BLANKS                                                       CSD027
+     C           WEXST     ANDEQ'Y'                                                           190014
+     C                     MOVE 'N'       WEXST                                               190014
+     C                     ENDIF                                                              190014
+     C           SFACT     IFNE FCFACT                                                        190014
+     C           FCFACT    ANDNE0                                                             190014
+     C           WEXST     ANDEQ'Y'                                                           190014
+     C                     MOVE 'N'       WEXST                                               190014
+     C                     ENDIF                                                              190014
+     C           SFCNO     IFNE FCFCNO                                                        190014
+     C           FCFCNO    ANDNE0                                                             190014
+     C           WEXST     ANDEQ'Y'                                                           190014
+     C                     MOVE 'N'       WEXST                                               190014
+     C                     ENDIF                                                              190014
+     C           WEXST     IFEQ 'Y'                                                           190014
+     C                     ADD  1         WKERR               Adj Errs                      148063
+     C***********          MOVEL'LEF0313' WKMSID              Set Err Msg              148063 180573
+     C                     MOVEL'LEF0322' WKMSID              Set Err Msg                     180573
+     C                     EXSR XSPMSQ                        Snd Err Msg                   148063
+     C                     MOVE *ON       *IN74               Set Err Ind                   148063
+     C                     MOVE *ON       *IN53               Set Err Ind                   148063
+     C                     MOVE *ON       *IN78               Set Err Ind                   148063
+     C                     MOVE *ON       *IN79               Set Err Ind                   148063
+     C                     LEAVE                                                              190014
+     C                     ENDIF                                                              190014
+     C                     ENDIF                                                            148063
+     C********** KFCLT     READEFCLTY0                   80                           148063  190014
+     C                     READ LEFCONL0                 80                                   190014
+     C                     ENDDO                                                            148063
+     C           WKOPTN    IFEQ 'A '                                                          190014
+     C           WKOPTN    OREQ ' A'                                                          190014
+     C           KLEFC     SETLLLEFCONL0                   Postn File                         190014
+     C           KLEFC     READELEFCONL0                 80                                   190014
+     C                     ENDIF                                                              190014
+      *                                                                                       190014
+      ** Check if selection results are not already in file.                                  190014
+      *                                                                                       190014
+     C           WEXST     IFEQ 'N'                                                           190014
+     C           *LOVAL    SETLLFCLTY0                                                        190014
+     C                     READ FCLTY0                   80                                   190014
+     C           *IN80     DOWEQ'0'                                                           190014
+     C                     MOVE '0'       *IN30                                               190014
+     C                     MOVE BRCA      SBRCA                                               190014
+     C           S2CCY     IFNE FCCY                                                          190014
+     C                     MOVE '1'       *IN30                                               190014
+     C                     ENDIF                                                              190014
+     C           S2CNUM    IFEQ 'ALL'                                                         190014
+     C           SCUST     OREQ CNUM                                                          190014
+     C**********           Z-ADDCNUM      SCUST                                        190014 CSD027
+     C                     MOVE CNUM      SCUST                                               CSD027
+     C                     ELSE                                                               190014
+     C                     MOVE '1'       *IN30                                               190014
+     C                     ENDIF                                                              190014
+     C           S2FACT    IFEQ *BLANK                                                        190014
+     C           SFACT     OREQ FACT                                                          190014
+     C                     Z-ADDFACT      SFACT                                               190014
+     C                     ELSE                                                               190014
+     C                     MOVE '1'       *IN30                                               190014
+     C                     ENDIF                                                              190014
+     C           S2FCNO    IFEQ *BLANK                                                        190014
+     C           SFCNO     OREQ FCNO                                                          190014
+     C                     Z-ADDFCNO      SFCNO                                               190014
+     C                     ELSE                                                               190014
+     C                     MOVE '1'       *IN30                                               190014
+     C                     ENDIF                                                              190014
+     C           *IN30     CABEQ'1'       NXTRD                                               190014
+     C           KFCLT     SETLLLEFCUPL4                                                      190014
+     C           KFCLT     READELEFCUPL4                 23                                   190014
+     C           *IN23     IFEQ '1'                                                           190014
+     C                     LEAVE                                                              190014
+     C                     ENDIF                                                              190014
+     C           NXTRD     TAG                                                                190014
+     C                     READ FCLTY0                   80                                   190014
+     C           *IN80     IFEQ '1'                                                           190014
+     C                     ADD  1         WKERR               Adj Errs                        190014
+     C                     MOVEL'LEF0322' WKMSID                                              190014
+     C                     EXSR XSPMSQ                                                        190014
+     C                     MOVE *ON       *IN74                                               190014
+     C                     MOVE *ON       *IN53                                               190014
+     C                     MOVE *ON       *IN78                                               190014
+     C                     MOVE *ON       *IN79                                               190014
+     C                     LEAVE                                                              190014
+     C                     ENDIF                                                              190014
+     C                     ENDDO                                                              190014
+     C                     ENDIF                                                              190014
+     C                     ENDIF                                                            148063
+     C********** SFACT     IFNE FACT                          FACILITY NOT FOUND       148063 190014
+     C********** SFCNO     ORNE FCNO                                                   148063 190014
+     C**********           ADD  1         WKERR               Adj Errs                 148063 190014
+     C**********           MOVEL'LEF0315' WKMSID              Set Err Msg              148063 190014
+     C**********           EXSR XSPMSQ                        Snd Err Msg              148063 190014
+     C**********           MOVE *ON       *IN78               Set Err Ind              148063 190014
+     C**********           MOVE *ON       *IN79               Set Err Ind              148063 190014
+     C**********           ENDIF                                                       148063 190014
+     C                     ENDIF                                                            148063
+     C                     ELSE                               FACILITY NOT EXIST            148063
+     C           S2CCY     IFNE *BLANKS                                                       190014
+     C                     ADD  1         WKERR               Adj Errs                      148063
+     C                     MOVEL'LEF0315' WKMSID              Set Err Msg                   148063
+     C                     EXSR XSPMSQ                        Snd Err Msg                   148063
+     C                     MOVE *ON       *IN73               Set Err Ind                   148063
+     C                     MOVE *ON       *IN74               Set Err Ind                   148063
+     C                     MOVE *ON       *IN53               Set Err Ind                   148063
+     C                     MOVE *ON       *IN78               Set Err Ind                   148063
+     C                     MOVE *ON       *IN79               Set Err Ind                   148063
+     C                     ENDIF                                                              190014
+     C                     ENDIF                                                            148063
+      *                                                                                     148063
+      *-------------------------------------------------------------------
+      * 'Generate Account Key' must be 'Y' or 'N'.
+      *
+     C           QUES1     IFEQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C           S2GEAK    IFEQ *BLANKS                    If A/c Key
+     C                     MOVE 'N'       S2GEAK            Set To 'N'
+     C                     ENDIF                           End If
+      *
+     C           S2GEAK    IFEQ 'Y'                        If A/c Key 'Y'
+     C           S2GEAK    OREQ 'N'                        Or A/c Key 'N'
+     C                     ELSE                            Else
+     C                     MOVEL'LEF0306' WKMSID            Set Err Msg
+     C                     EXSR XSPMSQ                      Snd Err Msg
+     C                     ADD  1         WKERR             Adj Errs
+     C                     MOVE *ON       *IN57             Set Err Ind
+     C                     ENDIF                           End If
+     C                     ENDIF
+      *-------------------------------------------------------------------
+      * 'Generate a/c Key Start Date', must be a valid
+      *
+     C           QUES1     IFEQ 0
+     C           QUES2     ANDEQ0
+     C           QUES3     ANDEQ0
+     C           QUES4     ANDEQ0
+     C           *IN57     IFEQ *OFF                       If GEAK ok
+      *
+     C           S2GEAK    IFEQ 'N'                         If A/c Ind N
+      *
+     C           S2GADT    IFEQ *BLANKS                      If Date Blank
+     C                     ELSE                              Else
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVEL'LEF0305' WKMSID              Set Err Msg
+     C                     EXSR XSPMSQ                        Snd Err Msg
+     C                     MOVE *ON       *IN59               Set Err Ind
+     C                     ENDIF                             End If
+      *
+     C                     ELSE                             Else
+      *
+     C           S2GADT    IFEQ *BLANK                       If Date Blank
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVEL'LEF0305' WKMSID              Set Err Msg
+     C                     EXSR XSPMSQ                        Snd Err Msg
+     C                     MOVE *ON       *IN59               Set Err Ind
+     C                     ELSE                              Else
+      *
+     C                     MOVE S2GADT    ZDATE
+      *
+      * Convert DDMMYY/MMDDYY date to day number and validate
+     C                     EXSR ZDATE1                     Check Screen Da
+      *
+      ** If date is not valid then do error processing
+      *
+     C           *IN99     IFEQ *ON
+     C                     ADD  1         WKERR                Adj Errs
+     C                     MOVEL'LEF0305' WKMSID               Set Err Msg
+     C                     EXSR XSPMSQ                         Snd Err Msg
+     C                     MOVE *ON       *IN59                Set Err Ind
+     C                     ELSE                               Else
+      *
+     C           ZDAYNO    IFGE A6TPSD                         If GE TrnDt
+     C           ZDAYNO    ANDLEBJRDNB                         And LE RnDt
+     C                     ELSE                                Else
+      *
+     C           ZDAYNO    IFGE A6TPSD                          If GE TrnD
+     C                     ADD  1         WKERR                  Adj Errs
+     C                     MOVEL'LEF0310' WKMSID                 Set ErrMs
+     C                     EXSR XSPMSQ                           Snd ErrMs
+     C                     MOVE *ON       *IN59                  Set ErrIn
+     C                     ELSE                                 Else
+      *
+     C                     ADD  1         WKERR                  Adj Errs
+     C                     MOVEL'LEF0311' WKMSID                 Set ErrMs
+     C                     EXSR XSPMSQ                           Snd ErrMs
+     C                     MOVE *ON       *IN59                  Set ErrIn
+     C                     ENDIF                                End If
+      *
+     C                     ENDIF                               End If
+      *
+     C                     ENDIF                              End If
+      *
+     C                     ENDIF                             End If
+      *
+     C                     ENDIF                            End If
+      *
+     C                     ENDIF                           End If
+     C                     ENDIF
+      *-------------------------------------------------------------------
+      * If there are any errors, redisplay detail screen,
+      * otherwise update the file and return to subfile screen.
+      *
+     C           WKERR     IFGT 0                          If Errors Found
+     C           QUES1     ORNE 0
+     C           QUES2     OREQ 0
+     C           QUES3     OREQ 0
+     C           QUES4     OREQ 0
+     C                     MOVE *ON       *IN76             Set Protect
+     C                     EXSR XSDFD1                      Set Dtl Scr
+     C                     ENDIF                           End If
+     C                     Z-ADD0         QUES1            Reset '?'
+     C                     Z-ADD0         QUES2            Reset '?'
+     C                     Z-ADD0         QUES3            Reset '?'
+     C                     Z-ADD0         QUES4            Reset '?'
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           PDFS1     BEGSR
+      *===================================================================
+      * PDFS1: Process Display Format - Subfile (S1).
+      *
+      *-------------------------------------------------------------------
+      * Reset the error indicator and update the subfile for any records
+      * which were in error but which now have a blank Option.
+      *
+     C                     READCLE3500S1                 22Rtv Record
+      *
+     C           *IN22     DOWEQ*OFF                       DoWhile Records
+     C           S1OPTN    ANDEQ*BLANKS                    And Option Blk
+     C                     MOVE *OFF      *IN70             Reset Err Ind
+     C                     UPDATLE3500S1                    Upd Record
+     C                     READCLE3500S1                 22 Rtv Record
+     C                     ENDDO                           End Do
+      *-------------------------------------------------------------------
+      * For all records which have been selected with a valid option (E),
+      * set screen data items and display the detail screen
+      * Otherwise, redisplay selection list.
+      *
+     C                     SELEC                           Select:
+     C           *IN22     WHEQ *ON                        When Not Found
+     C                     EXSR XSDFS1                      Wrt Subfile
+      *
+     C           S1OPTN    WHEQ 'E '                       When Enquire
+     C           S1OPTN    OREQ ' E'                       Or Enquire
+     C                     MOVE S1OPTN    WKOPTN            Set Option
+     C                     MOVE *BLANKS   S1OPTN            Clr Option
+     C                     UPDATLE3500S1                    Upd Record
+     C                     MOVE *ON       *IN77             Set Protect
+     C                     MOVELS1REFR    KREFR             Set Reference
+     C                     EXSR XRFAC                       Rtv Criteria
+     C                     MOVE FCREFR    S2REFR            Set Reference
+     C                     MOVE FCBRCA    S2BRCA            Set Brch Code
+     C********** FCCNUM    IFEQ 0                           If Non Specif                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                     If Non Specif                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P        Set to ALL
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C                     ELSE                             Else
+     C                     MOVELFCCNUM    S2CNUM    P        Set Customer
+     C                     MOVE FCCNUM    S2CUST             Set Customer
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCCCY     S2CCY             Set Currency
+     C           FCFACT    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FACT             Clr Fac Type
+     C                     ELSE                             Else
+     C                     MOVE FCFACT    S2FACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           FCFCNO    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FCNO             Clr Fac No
+     C                     ELSE                             Else
+     C                     MOVE FCFCNO    S2FCNO             Set Fac No
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCGEAK    S2GEAK            Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO            Set Days
+     C                     EXSR ZDATE2                      Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT            Set Date
+     C                     ELSE                             Set Date
+     C                     MOVE *BLANKS   S2GADT            Set Date
+     C                     ENDIF                            Set Date
+     C                     MOVE FCDESC    S2DESC            Set Desc
+     C                     EXSR XCPMSQ                      Clr MsgQ
+     C                     MOVEA'11'      *IN,76            Set Protect
+     C                     EXSR XSDFD1                      Set/Dsp Dtl
+      *
+     C           S1OPTN    WHEQ 'A '                       When Amend
+     C           S1OPTN    OREQ ' A'                       Or Amend
+     C                     MOVELS1REFR    KREFR             Set Reference
+     C                     EXSR XRFAC                       Rtv Criteria
+     C                     MOVE S1OPTN    WKOPTN            Set Option
+     C                     MOVE *BLANKS   S1OPTN            Clr Option
+     C                     UPDATLE3500S1                    Upd Record
+     C                     MOVE FCREFR    S2REFR            Set Reference
+     C                     MOVE FCBRCA    S2BRCA            Set Brch Code
+     C********** FCCNUM    IFEQ 0                           If Non Specif                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                     If Non Specif                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P        Set to ALL
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C                     ELSE                             Else
+     C                     MOVELFCCNUM    S2CNUM    P        Set Customer
+     C                     MOVE FCCNUM    S2CUST             Set Cust
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCCCY     S2CCY             Set Currency
+     C           FCFACT    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FACT             Clr Fac Type
+     C                     ELSE                             Else
+     C                     MOVE FCFACT    S2FACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           FCFCNO    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FCNO             Clr Fac No
+     C                     ELSE                             Else
+     C                     MOVE FCFCNO    S2FCNO             Set Fac No
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCGEAK    S2GEAK            Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO            Set Days
+     C                     EXSR ZDATE2                      Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT            Set Date
+     C                     ELSE                             Set Date
+     C                     MOVE *BLANKS   S2GADT            Set Date
+     C                     ENDIF                            Set Date
+     C                     MOVE FCDESC    S2DESC            Set Desc
+     C                     EXSR XCPMSQ                      Clr MsgQ
+     C                     MOVE *ON       *IN76             Set Protect
+     C                     EXSR XSDFD1                      Set/Dsp Dtl
+      *
+     C           S1OPTN    WHEQ 'D '                       When Delete
+     C           S1OPTN    OREQ ' D'                       Or Delete
+     C                     MOVELS1REFR    KREFR             Set Reference
+     C                     EXSR XRFAC                       Rtv Criteria
+     C                     MOVE S1OPTN    WKOPTN            Set Option
+     C                     MOVE *BLANKS   S1OPTN            Clr Option
+     C                     UPDATLE3500S1                    Upd Record
+     C                     MOVE FCREFR    S2REFR            Set Reference
+     C                     MOVE FCBRCA    S2BRCA            Set Brch Code
+     C********** FCCNUM    IFEQ 0                           If Non Specif                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                     If Non Specif                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P        Set to ALL
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C                     ELSE                             Else
+     C                     MOVELFCCNUM    S2CNUM    P        Set Customer
+     C                     MOVE FCCNUM    S2CUST             Set Cust
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCCCY     S2CCY             Set Currency
+     C           FCFACT    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FACT             Clr Fac Type
+     C                     ELSE                             Else
+     C                     MOVE FCFACT    S2FACT             Set Fac Type
+     C                     ENDIF                            End If
+      *
+     C           FCFCNO    IFEQ 0                           If Non Specif
+     C                     MOVE *BLANKS   S2FCNO             Clr Fac No
+     C                     ELSE                             Else
+     C                     MOVE FCFCNO    S2FCNO             Set Fac No
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCGEAK    S2GEAK            Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO            Set Days
+     C                     EXSR ZDATE2                      Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT            Set Date
+     C                     ELSE                             Set Date
+     C                     MOVE *BLANKS   S2GADT            Set Date
+     C                     ENDIF
+     C                     MOVE FCDESC    S2DESC            Set Desc
+     C                     MOVEA'111'     *IN,75            Set Protect
+     C                     EXSR XSDFD1                      Set Dsp/Ctl
+      *
+     C           S1OPTN    WHEQ 'DF'                       When Dsp Fac
+     C                     MOVE S1OPTN    WKOPTN            Set Option
+     C                     MOVE *BLANKS   S1OPTN            Clr Option
+     C                     UPDATLE3500S1                    Upd Record
+     C                     EXSR XDSFAC                      Call Dsp Fac
+     C                     EXSR XSDFS1                      Wrt Subfile
+      *
+     C                     OTHER                           Otherwise
+     C                     MOVE *ON       *IN70             Set Err Ind
+     C                     UPDATLE3500S1                    Upd Record
+     C***********          MOVEL'LEF0296' WKMSID            Set Err Msg                       180573
+     C                     MOVEL'LEF0316' WKMSID            Set Err Msg                       180573
+     C                     EXSR XSPMSQ                      Snd Err Msg
+     C                     WRITELE3500F1                    Wrt Footer
+     C                     WRITEMSGCTL                      Wrt Msg Ctl
+     C                     WRITELE3500C1                    Wrt SubF Cntl
+     C                     ENDSL                           End Select
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XVDFC1    BEGSR
+      *===================================================================
+      * XVDFC1: Validate Input to Subfile Control Screen (C1)
+      *
+     C                     Z-ADD0         WKERR   50       Reset Errs
+     C                     MOVEA'00'      *IN,54           Set Inds
+      *
+     C           SCOPTN    IFNE *BLANKS                    If Option
+     C                     SELEC                            Select:
+      *
+     C           SCPOS1    WHEQ *BLANKS                     When No Ref
+     C***********          MOVEL'LEF0297' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0317' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Snd Err Msg
+     C                     ADD  1         WKERR              Adj Errs
+     C                     MOVE *ON       *IN54              Set Err Ind
+      *
+     C           SCOPTN    WHEQ 'E '                        When Enquire
+     C           SCOPTN    OREQ ' E'                        Or Enquire
+     C                     MOVELSCPOS1    KREFR              Set Reference
+     C                     EXSR XRFAC                        Rtv Criteria
+     C           *IN20     IFEQ *ON                          If Not Found
+     C***********          MOVEL'LEF0297' WKMSID              Set Err Msg                     180573
+     C                     MOVEL'LEF0317' WKMSID              Set Err Msg                     180573
+     C                     EXSR XSPMSQ                        Snd Err Msg
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVEA'11'      *IN,54              Set Err Ind
+     C                     ELSE                              Else
+      *
+     C                     MOVE FCREFR    S2REFR              Set Ref
+     C                     MOVE FCBRCA    S2BRCA              Set Brch
+     C********** FCCNUM    IFEQ 0                             If Non Spec                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                       If Non Spec                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P          Set to ALL
+     C                     MOVE *BLANKS   S2CUST               Clr Cust
+     C                     ELSE                               Else
+     C                     MOVELFCCNUM    S2CNUM    P          Set Cust
+     C                     MOVE FCCNUM    S2CUST               Set Cust
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCCCY     S2CCY               Set Ccy
+     C           FCFACT    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FACT               Clr Fac Typ
+     C                     ELSE                               Else
+     C                     MOVE FCFACT    S2FACT               Set Fac Typ
+     C                     ENDIF                              End If
+      *
+     C           FCFCNO    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FCNO               Clr Fac No
+     C                     ELSE                               Else
+     C                     MOVE FCFCNO    S2FCNO               Set Fac No
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCGEAK    S2GEAK              Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO              Set Days
+     C                     EXSR ZDATE2                        Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT              Set Date
+     C                     ELSE                               Set Date
+     C                     MOVE *BLANKS   S2GADT              Set Date
+     C                     ENDIF                              Set Date
+     C                     MOVE FCDESC    S2DESC              Set Desc
+     C                     EXSR XCPMSQ                        Clr MsgQ
+     C                     MOVEA'11'      *IN,76              Set Protect
+     C                     EXSR XSDFD1                        Set/Dsp Dtl
+     C                     MOVE *BLANKS   SCOPTN              Clr Option
+     C                     ENDIF                             End If
+      *
+     C           SCOPTN    WHEQ 'A '                        When Amend
+     C           SCOPTN    OREQ ' A'                        Or   Amend
+     C                     MOVE SCOPTN    WKOPTN             Set Option
+     C                     MOVELSCPOS1    KREFR              Set Type
+     C                     EXSR XRFAC                        Rtv Criteria
+      *
+     C           *IN20     IFEQ *ON                          If Not Found
+     C***********          MOVEL'LEF0297' WKMSID              Set Err Msg                     180573
+     C                     MOVEL'LEF0317' WKMSID              Set Err Msg                     180573
+     C                     EXSR XSPMSQ                        Snd Err Msg
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVE *ON       *IN54               Set Err Ind
+     C                     MOVE *ON       *IN55               Set Err Ind
+     C                     ELSE                              Else
+      *
+     C                     MOVE FCREFR    S2REFR              Set Ref
+     C                     MOVE FCBRCA    S2BRCA              Set Brch
+     C********** FCCNUM    IFEQ 0                             If Non Spec                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                       If Non Spec                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P          Set to ALL
+     C                     MOVE *BLANKS   S2CUST               Clr Cust
+     C                     ELSE                               Else
+     C                     MOVELFCCNUM    S2CNUM    P          Set Cust
+     C                     MOVE FCCNUM    S2CUST               Set Cust
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCCCY     S2CCY               Set Ccy
+     C           FCFACT    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FACT               Clr Fac Tp
+     C                     ELSE                               Else
+     C                     MOVE FCFACT    S2FACT               Set Fac Tp
+     C                     ENDIF                              End If
+      *
+     C           FCFCNO    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FCNO               Clr Fac No
+     C                     ELSE                               Else
+     C                     MOVE FCFCNO    S2FCNO               Set Fac No
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCGEAK    S2GEAK              Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO              Set Days
+     C                     EXSR ZDATE2                        Convert Dat
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT              Set Date
+     C                     ELSE                               Set Date
+     C                     MOVE *BLANKS   S2GADT              Set Date
+     C                     ENDIF                              Set Date
+     C                     MOVE FCDESC    S2DESC              Set Desc
+     C                     EXSR XCPMSQ                        Clr MsgQ
+     C                     MOVE '1'       *IN76               Set Protect
+     C                     EXSR XSDFD1                        Set/Dsp Dtl
+     C                     MOVE *BLANKS   SCOPTN              Clr Option
+     C                     ENDIF                             End If
+      *
+     C           SCOPTN    WHEQ 'I '                        When Insert
+     C           SCOPTN    OREQ ' I'                        Or Insert
+     C                     MOVE SCOPTN    WKOPTN             Set Option
+     C                     MOVELSCPOS1    KREFR              Set Type
+     C                     EXSR XRFAC                        Rtv Crit
+     C           *IN20     IFEQ *OFF                         If Not Fnd
+     C                     MOVEL'LEF0303' WKMSID              Set Err Ms
+     C                     EXSR XSPMSQ                        Snd Err Ms
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVEA'11'      *IN,54              Set Err In
+     C                     ELSE                              Else
+      *
+     C                     MOVELSCPOS1    S2REFR              Set Ref
+     C                     MOVE *BLANKS   S2BRCA              Clr Brch
+     C                     MOVE *BLANKS   S2CNUM              Clr Cust
+     C                     MOVE *BLANKS   S2CUST              Clr Cust
+     C                     MOVE *BLANKS   S2CCY               Clr Ccy
+     C                     MOVE *BLANKS   S2FACT              Clr Fac Tp
+     C                     MOVE *BLANKS   S2FCNO              Clr Fac No
+     C                     MOVE *BLANKS   S2GEAK              Clr GenA/c
+     C                     MOVE *BLANKS   S2GADT              Clr Date
+     C                     MOVE *BLANKS   S2DESC              Clr Desc
+     C                     EXSR XCPMSQ                        Proc MsgQ
+     C                     MOVE '1'       *IN76               Set Protct
+     C                     EXSR XSDFD1                        Proc Dtl
+     C                     MOVE *BLANKS   SCOPTN              Clr Option
+     C                     ENDIF                             End If
+      *
+     C           SCOPTN    WHEQ 'D '                        When Delete
+     C           SCOPTN    OREQ ' D'                        Or Delete
+     C                     MOVE SCOPTN    WKOPTN             Set Option
+     C                     MOVELSCPOS1    KREFR              Set Ref
+     C                     EXSR XRFAC                        Rtv Criteria
+     C           *IN20     IFEQ *ON                          If Not Found
+     C***********          MOVEL'LEF0297' WKMSID              Set Err Msg                     180573
+     C                     MOVEL'LEF0317' WKMSID              Set Err Msg                     180573
+     C                     EXSR XSPMSQ                        Snd Err Msg
+     C                     ADD  1         WKERR               Adj Errs
+     C                     MOVE *ON       *IN54               Set Err Ind
+     C                     MOVE *ON       *IN55               Set Err Ind
+     C                     ELSE                              Else
+      *
+     C                     MOVE FCREFR    S2REFR              Set Ref
+     C                     MOVE FCBRCA    S2BRCA              Set Brch
+     C********** FCCNUM    IFEQ 0                             If Non Spec                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                       If Non Spec                     CSD027
+     C                     MOVEL'ALL'     S2CNUM    P          Set to ALL
+     C                     MOVE *BLANKS   S2CUST               Clr Cust
+     C                     ELSE                               Else
+     C                     MOVELFCCNUM    S2CNUM    P          Set Cust
+     C                     MOVE FCCNUM    S2CUST               Set Cust
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCCCY     S2CCY               Set Ccy
+     C           FCFACT    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FACT               Clr Fac Typ
+     C                     ELSE                               Else
+     C                     MOVE FCFACT    S2FACT               Set Fac Typ
+     C                     ENDIF                              End If
+      *
+     C           FCFCNO    IFEQ 0                             If Non Spec
+     C                     MOVE *BLANKS   S2FCNO               Clr Fac No
+     C                     ELSE                               Else
+     C                     MOVE FCFCNO    S2FCNO               Set Fac No
+     C                     ENDIF                              End If
+      *
+     C                     MOVE FCGEAK    S2GEAK              Set Gen a/c
+     C                     MOVE FCGADT    ZDAYNO              Set Days
+     C                     EXSR ZDATE2                        Convert Date
+     C           ZDATE     IFNE *ZERO                       Set Date
+     C                     MOVE ZDATE     S2GADT              Set Date
+     C                     ELSE                               Set Date
+     C                     MOVE *BLANKS   S2GADT              Set Date
+     C                     ENDIF                              Set Date
+     C                     MOVE FCDESC    S2DESC              Set Desc
+     C                     EXSR XCPMSQ                        Process MsgQ
+     C                     MOVEA'111'     *IN,75              Set Protect
+     C                     EXSR XSDFD1                        Process Subfl
+     C                     MOVE *BLANKS   SCOPTN              Clr Option
+     C                     ENDIF                             End If
+      *
+     C                     OTHER                            Otherwise
+     C                     MOVE *ON       *IN71              Set Err Ind
+     C                     ADD  1         WKERR              Adj Errs
+     C***********          MOVEL'LEF0296' WKMSID             Set Err Msg                      180573
+     C                     MOVEL'LEF0316' WKMSID             Set Err Msg                      180573
+     C                     EXSR XSPMSQ                       Process MsgQ
+     C                     ENDSL                            End Select
+      *-------------------------------------------------------------------
+      * If no option has been entered i.e. positioning.
+      *
+     C                     ELSE                            Else
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * - Check if Reference # is requested.
+      *
+     C                     SELEC                            Select:
+     C           SCPOS1    WHNE *BLANKS                     When Posn Ent
+     C                     MOVELSCPOS1    KSRFN              Set Start Key
+      *
+     C                     OTHER                            Otherwise
+     C                     MOVEL*BLANKS   SCPOS1             Clr No Pos
+      *
+     C                     ENDSL                            End Select
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If errors have been found redisplay Subfile Control Screen.
+      *
+     C           WKERR     IFGT *ZERO                      If Errors
+     C                     WRITELE3500F1                    Wrt Footer
+     C                     WRITEMSGCTL                      Wrt Msg Ctl
+     C                     WRITELE3500C1                    Wrt SubF Cntl
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSDFS1    BEGSR
+      *===================================================================
+      * XSDFS1: Set Display Format - Subfile Screen (S1).
+      *
+      *-------------------------------------------------------------------
+      * Initialise Data Items & Subfile.
+      *
+     C                     MOVE BJMRDT    SCDATE           Set Date
+      *
+     C                     Z-ADD12        WKS1MX  20       Set Max Elmnts
+     C                     CLEARDSDF10                     Clr Key Fld
+      *
+     C                     MOVEA'01'      *IN,81           Set Ind for Clr
+     C                     WRITELE3500C1                   Wrt Subfile
+     C                     MOVEA'11'      *IN,81           Set Ind for Dsp
+      *-------------------------------------------------------------------
+      * Evaluate File Start Position (DSSKEY). If none of the following
+      * conditions are met then the value of DSSKEY remains the same.
+      *
+      *-------------------------------------------------------------------
+      * Initialise field for positioning.
+     C***********          CLEARSCPOS1                     Clr Reference  143509
+      * (Page Down)
+     C                     SELEC                           Select:
+     C           *IN01     WHEQ *ON                        When Page Down
+     C                     MOVE DSEKEY    DSKITE            Set End Key
+     C                     EXSR XPFAC                       Postn File
+     C                     EXSR XSFAC                       Rtv Rec
+      *
+     C           *IN22     IFEQ *ON                         If End Of File
+     C                     CLEARDSSKEY                       Clr Str Key
+     C                     ELSE                             Else
+     C                     MOVE DSDF10    DSSKEY             Set Str Key
+     C                     ENDIF                            End If
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * (Page Up)
+     C           *IN02     WHEQ *ON                        When Page Up
+     C                     MOVE DSSKEY    DSKITE            Set Str Key
+     C                     EXSR XPFAC                       Postn File
+      *
+     C                     DO   WKS1MX                      Do x Max Elmts
+     C                     MOVE 'P'       WKREAD  1          Set Directn
+     C                     EXSR XSFAC                        Rtv Record
+      *
+     C           *IN22     IFEQ *ON                          If Str Of Fil
+     C                     CLEARDSSKEY                        Clr Key
+     C                     LEAVE                              Exit Loop
+     C                     ENDIF                             End If
+      *
+     C                     MOVE DSDF10    DSSKEY             Set Str Key
+     C                     ENDDO                            End Do
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * Positioning - Reference Number.
+      *
+     C           SCPOS1    WHNE *BLANKS                    When Postion
+     C                     MOVELSCPOS1    FCREFR            Set Reference
+     C                     MOVE DSSKEY    DSKITE            Set Str Pos
+      *
+     C           SCPOS1    WHEQ *BLANKS                                   143509
+     C                     CLEARDSSKEY                                    143509
+      *                                                                   143509
+     C                     ENDSL                           End Select
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * Clear Positioning Fields.
+      *
+     C                     CLEARSCPOS1                     Clr Reference
+      *-------------------------------------------------------------------
+      * Position File to Start Key.
+      *
+     C                     MOVE DSSKEY    DSKITE           Set Str Pos
+     C                     MOVE DSSKEY    KREFR            Set Str Pos
+     C                     EXSR XPFAC                      Postn File
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * Set subfile with the next group of records.
+      * i.e. Read the Criteria and for each Reference
+      * - write details to the subfile
+      *
+     C                     DO   WKS1MX    SCRRN1           Do x Max
+     C                     EXSR XSFAC                       Rtv Record
+      *
+     C           *IN22     IFEQ *ON                         If End Of File
+     C                     LEAVE                             Exit Loop
+     C                     ENDIF                            End If
+      *
+     C                     MOVE *BLANKS   S1OPTN            Clr Option
+     C                     MOVE FCREFR    S1REFR            Set Reference
+     C                     MOVE FCBRCA    S1BRCA            Set Branch
+     C********** FCCNUM    IFEQ 0                           If Non Specif                     CSD027
+     C           FCCNUM    IFEQ *BLANKS                     If Non Specif                     CSD027
+     C                     MOVEL'ALL'     S1CNUM    P        Set to ALL
+     C                     ELSE                             Else
+     C                     MOVE FCCNUM    S1CNUM             Set Customer
+     C                     ENDIF                            End If
+      *
+     C                     MOVE FCCCY     S1CCY             Set Currency
+     C                     MOVE FCDESC    S1DESC            Set Desc
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      * Write Sub File.
+      *
+     C                     WRITELE3500S1                    Wrt Subfl Rec
+      *
+      *-------------------------------------------------------------------
+      * Position File to Start Key.
+      *
+     C           SCRRN1    IFEQ 1                           If 1st Record
+     C                     MOVE DSDF10    DSSKEY             Set Str Key
+     C                     MOVE *OFF      *IN82              Reset Ind
+     C                     ENDIF                            End If
+     C                     ENDDO                           End Do
+      *-------------------------------------------------------------------
+      * Evaluate if last record on file.
+      *
+     C           *IN22     IFEQ *OFF                       If Not EOF
+     C                     EXSR XSFAC                       Rtv Record
+     C                     ENDIF                           End If
+      *
+     C           *IN22     IFEQ *ON                        If End Of File
+     C                     MOVE *OFF      *IN83             Reset Ind
+     C                     ELSE                            Else
+     C                     MOVE *ON       *IN83             Set Ind
+     C                     ENDIF                           End If
+     C                     MOVE DSDF10    DSEKEY           Set End Key
+      *
+     C                     Z-ADD1         SCRRN1           Set RRN
+      *-------------------------------------------------------------------
+      * Display Screen
+     C                     WRITELE3500F1                   Wrt Footer
+     C                     WRITEMSGCTL                     Wrt Msg Ctl
+     C                     WRITELE3500C1                   Wrt Subfile
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSDFD1    BEGSR
+      *===================================================================
+      * XSDFD1: Set Display Format - Detail Screen (D1).
+      *
+      *-------------------------------------------------------------------
+      * Set Criteria Details.
+      *
+     C                     MOVE BJMRDT    SCDATE           Set Date
+      *
+     C                     MOVE *BLANKS   SCPOS1           Clr Positn
+     C                     MOVE *BLANKS   S2BRNM           Clr Bch Desc
+     C                     MOVE *BLANKS   S2CNAM           Clr Cus Desc
+     C                     MOVE *BLANKS   S2CYNM           Clr Ccy Desc
+     C                     MOVE *BLANKS   S2FCNM           Clr Fac Desc
+     C                     MOVE *BLANKS   S2GEAT           Clr Gea Desc
+      *-------------------------------------------------------------------
+      * Set Currency Description
+      *
+     C           S2CCY     IFNE *BLANKS                    If Curr
+     C                     MOVELS2CCY     WKCURR            Set Key
+     C                     EXSR XRCCY                       Rtv Record
+     C           P@RTCD    IFEQ *BLANKS                     If Found
+     C                     MOVELA6CYNM    S2CYNM             Set Desc
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Branch Description
+      *
+     C           S2BRCA    IFNE *BLANKS                    If Bch
+     C           S2BRCA    IFEQ 'ALL'                       If ALL
+     C                     MOVELN@BRCH    S2BRNM    P        Set Brn Name
+     C                     ELSE                             Else
+     C                     MOVELS2BRCA    WKBRCH             Set Key
+     C                     EXSR XRBRCH                       Rtv Record
+     C           P@RTCD    IFEQ *BLANKS                      If Found
+     C                     MOVELA8BRNM    S2BRNM    P         Set Desc
+     C                     ENDIF                             End If
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set To Customer Description
+      *
+     C           S2CNUM    IFNE *BLANKS                    If Cust Not Blk
+     C           S2CNUM    IFEQ 'ALL'                       If Cust ALL
+     C                     MOVELN@CUST    S2CNAM    P        Set Cust Name
+     C                     MOVE *BLANKS   S2CUST             Clr Cust
+     C                     ELSE                             Else
+     C                     MOVELS2CNUM    WKCUST             Set Key
+     C                     EXSR XRCUST                       Rtv Record
+     C           P@RTCD    IFEQ *BLANKS                      If Found
+     C                     MOVELBBCRNM    S2CNAM    P         Set Desc
+     C                     MOVE BBCUST    S2CUST              Set Cust
+     C                     ENDIF                             End If
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Facility Description
+      *
+     C           S2FACT    IFNE *BLANKS                    If To Customer
+     C                     MOVELS2FACT    WKFACT            Set Key
+     C                     EXSR XRFDTL                      Rtv Record
+     C           P@RTCD    IFEQ *BLANKS                     If Found
+     C                     MOVE AMFCNM    S2FCNM             Set Desc
+     C                     ENDIF                            End If
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Generate a/c Key Description
+      *
+     C                     MOVE *BLANKS   S2GEAT           Clr A/c Key Txt
+     C           S2GEAK    IFEQ 'Y'                        If A/c Key
+     C                     MOVE 'Yes'     S2GEAT            Set A/c Txt
+     C                     ENDIF                           End If
+      *
+     C           S2GEAK    IFEQ 'N'                        If A/c Key
+     C                     MOVE 'No '     S2GEAT            Set A/c Txt
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Display Detail Screen.
+      *
+     C                     WRITELE3500F2                   Wrt Footer
+     C                     WRITEMSGCTL                     Wrt Msg Ctl
+     C                     WRITELE3500D1                   Wrt Details
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSFAC     BEGSR
+      *===================================================================
+      * XSFAC : Retrieve Facility Details To Load Subfile.
+      *
+      *-------------------------------------------------------------------
+      *
+     C           WKREAD    IFEQ 'P'                        If Previous
+     C                     READPLEFCONL0            N  2122 Rtv Record ec
+     C                     ELSE                            Else
+     C                     READ LEFCONL0            N  2122 Rtv Record ec
+     C                     ENDIF                           End If
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C           *LOCK     IN   LDA                         Rtv LDA dtara
+     C                     MOVEL'LEFCONL0'DBFILE    P       Set DB File
+     C                     MOVEL*BLANKS   DBKEY     P       Clr DB Key
+     C                     Z-ADD010       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Process PSSR
+     C                     ENDIF                           End If
+      *
+     C                     MOVE *BLANKS   WKREAD           Clr Directn
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XPFAC     BEGSR
+      *===================================================================
+      * XPFAC : Position Key.
+      *
+      *-------------------------------------------------------------------
+      *
+     C           KLEFC     SETLLLEFCONL0                   Postn File
+      *
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XCPMSQ    BEGSR
+      *===================================================================
+      * XCPMSQ: Clear Program Message Queue.
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     CALL 'CLRERMSG'                 Clr messages
+     C                     PARM D@PGMN    WKPGMQ 10        -Msg Q
+     C                     PARM '*SAME'   WKPGRL  5        -Pgm RL
+      *
+     C                     MOVEA'00000000'*IN,40           Set Err Inds
+     C                     MOVEA'000'     *IN,48           Set Err Inds
+     C                     MOVEA'00000000'*IN,53           Set Err Inds
+     C                     MOVEA'000000'  *IN,61           Set Err Inds
+     C                     MOVE '0'       *IN,69           Set Err Inds
+     C                     MOVEA'00000000'*IN,70           Set Err Inds
+     C                     MOVEA'000'     *IN,78           Set Err Inds
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRFAC     BEGSR
+      *===================================================================
+      * XRFAC : Retrieve Facility Criteria.
+      *
+      *-------------------------------------------------------------------
+      *
+     C           KLEFC     CHAINLEFCONL0             2021  Rtv Record
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEFCONL0'DBFILE    P       Set DB File
+     C                     MOVELKREFR     DBKEY     P       Set DB Key
+     C                     Z-ADD020       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRBRCH    BEGSR
+      *===================================================================
+      * XRBRCH: Retrieve/Select Branch Code.
+      *
+      *-------------------------------------------------------------------
+      * Retrieve/Select Branch Code. If the Branch Code field
+      * contains a ? then a selection list is displayed.
+      *
+     C**********           CALL 'AOBRCHR0'             21  Rtv Bch Details                    CGL029
+     C                     CALL 'AOBRCHR1'             21                                     CGL029
+     C                     PARM '*BLANKS' P@RTCD  7        -Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -Option
+     C                     PARM WKBRCH    WKBRCH           -Branch
+     C           DSBRCH    PARM DSBRCH    DSSDY            -Fmt
+      *
+     C           P@RTCD    IFNE *BLANK                     If Error
+     C           P@RTCD    ANDNE'*NOSEL  '                 If No selec
+     C           P@RTCD    ANDNE'*NRF    '                 If No Record
+     C           *IN21     OREQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'SDBRCHPD'DBFILE            Set DbFile
+     C                     MOVELP@OPTN    DBKEY             Set DbKey
+     C                     Z-ADD030       DBASE             Set DbErr
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ELSE                            Else
+     C           P@RTCD    IFEQ '*NOSEL  '                 If Error
+     C                     MOVE *BLANKS   A8BRCD
+     C                     MOVE *BLANKS   A8BRNM
+     C                     MOVE *BLANKS   S2BRCA
+     C                     MOVE *BLANKS   S2BRNM
+     C                     ENDIF                           End If
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRCUST    BEGSR
+      *===================================================================
+      * XRCUST: Retrieve/Select Customer Code
+      *
+      *-------------------------------------------------------------------
+      * Retrieve/Select Customer. If the Customer field
+      * contains a ? then a selection list is displayed.
+      *
+     C                     CALL 'AOCUSTR0'             21  Rtv Cus Details
+     C                     PARM '*BLANKS' P@RTCD  7        -Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -Option
+     C                     PARM WKCUST    WKCUST 10        -Customer
+     C                     PARM           @KYST   7        -Status
+     C           DSCUST    PARM DSCUST    DSSDY            -Fmt
+      *
+     C           P@RTCD    IFNE *BLANK                     If Error
+     C           P@RTCD    ANDNE'*NOSEL  '                 If No selec
+     C           P@RTCD    ANDNE'*NRF    '                 If No Record
+      *                                                                                       190014
+      ** If not an invalid Key                                                                190014
+      *                                                                                       190014
+     C           P@RTCD    ANDNE'*KEY    '                                                    190014
+     C           *IN21     OREQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'SDCUSTPD'DBFILE            Set DbFile
+     C                     MOVELP@OPTN    DBKEY             Set DbKey
+     C                     Z-ADD040       DBASE             Set DbErr
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ELSE                            Else
+     C           P@RTCD    IFEQ '*NOSEL  '                 If Error
+     C                     MOVE *BLANKS   BBCRNM
+     C                     MOVE *BLANKS   BBCUST
+     C                     MOVE *BLANKS   S2CNUM
+     C                     MOVE *BLANKS   S2CNAM
+     C                     ENDIF                           End If
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRCCY     BEGSR
+      *===================================================================
+      * XRCCY: Retrieve Currency Code.
+      *
+      *-------------------------------------------------------------------
+      * Retrieve/Select Currency Code. If the Currency Code field
+      * contains a ? then a selection list is displayed.
+      *
+     C                     CALL 'AOCURRR0'             21  Rtv Ccy Details
+     C                     PARM '*BLANKS' P@RTCD  7        -Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -Option
+     C                     PARM WKCURR    WKCURR           -Currency
+     C           DSCURR    PARM DSCURR    DSSDY            -Fmt
+      *
+     C           P@RTCD    IFNE *BLANK                     If Error
+     C           P@RTCD    ANDNE'*NOSEL  '                 If No selec
+     C           P@RTCD    ANDNE'*NRF    '                 If No Record
+     C           *IN21     OREQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'SDCURRPD'DBFILE            Set DbFile
+     C                     MOVELP@OPTN    DBKEY             Set DbKey
+     C                     Z-ADD050       DBASE             Set DbErr
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ELSE                            Else
+     C           P@RTCD    IFEQ '*NOSEL  '                 If Error
+     C                     MOVE *BLANKS   A6CYCD
+     C                     MOVE *BLANKS   A6CYNM
+     C                     MOVE *BLANKS   S2CCY
+     C                     MOVE *BLANKS   S2CYNM
+     C                     ENDIF                           End If
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XRFDTL    BEGSR
+      *===================================================================
+      * XRFDTL : Retrieve Facility Details
+      *
+      *-------------------------------------------------------------------
+      * Retrieve Facility Details.
+      *
+     C                     CALL 'AOFACTR0'             21  Rtv Ccy Details
+     C                     PARM '*BLANKS' P@RTCD  7        -O:Return Code
+     C                     PARM '*KEY   ' P@PTN   7        -O:Option
+     C                     PARM WKFACT    P@FCTY  3        -O:Facility
+     C           DSFACT    PARM DSFACT    DSFDY            -I:Data Struct
+      *
+     C           P@RTCD    IFNE *BLANK                     If Error
+     C           P@RTCD    ANDNE'*NOSEL  '                 If No selec
+     C           P@RTCD    ANDNE'*NRF    '                 If No Record
+     C           *IN21     OREQ *ON                        If Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'SDFACTPD'DBFILE    P       Set DbFile
+     C                     MOVEL'*FIRST'  DBKEY     P       Set DbKey
+     C                     Z-ADD060       DBASE             Set DbErr
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ELSE                            Else
+     C           P@RTCD    IFEQ '*NOSEL  '                 If Error
+     C                     MOVE *BLANKS   AMFCNM
+     C                     MOVE *BLANKS   AMFCTY
+     C                     MOVE *BLANKS   S2FACT
+     C                     MOVE *BLANKS   S2FCNM
+     C                     ENDIF                           End If
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XUFAC     BEGSR
+      *===================================================================
+      * XUFAC : Update Criteria Details
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     UPDATLEFCOND0               21  Upd Record
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEFCOND0'DBFILE    P       Set DB File
+     C                     MOVEL'UPDATE'  DBKEY     P       Set DB Key
+     C                     Z-ADD070       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XWFAC     BEGSR
+      *===================================================================
+      * XWFAC : Write Facility Criteria Details
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     WRITELEFCOND0               21  Wrt Record
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEFCOND0'DBFILE    P       Set DB File
+     C                     MOVEL'WRITE'   DBKEY     P       Set DB Key
+     C                     Z-ADD080       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XDFAC     BEGSR
+      *===================================================================
+      * XDFAC : Delete Criteria Details
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     DELETLEFCOND0               21  Dlt Record
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEFCOND0'DBFILE    P       Set DB File
+     C                     MOVEL'DELETE'  DBKEY     P       Set DB Key
+     C                     Z-ADD090       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XDSFAC    BEGSR
+      *===================================================================
+      * XDSFAC: CALL LE3510 To Display Facilities.
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     CALL 'LE3510'               21  Call Dsp Fac
+     C                     PARM           S1REFR           -I Reference
+     C                     PARM           S1DESC           -I Description
+     C                     PARM           EXIT    1        -I EXIT
+      *
+     C           *IN21     IFEQ *ON                        If Err on CALL
+     C           P@RTRN    ORNE *BLANKS                    Or Err Return
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LE3510'  DBFILE    P       Set DB File
+     C           'Display' CAT  'Facility'DBKEY             Bld DB Key
+     C                     Z-ADD100       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+     C           EXIT      IFEQ 'Y'                        F3
+     C                     EXSR PFKEXT
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XDSLCR    BEGSR
+      *===================================================================
+      * XDSLCR: CALL LEC3520 To Delete Selected Criteria From LEFCONL0.
+      *
+      *-------------------------------------------------------------------
+      *
+     C           S2BRCA    IFEQ 'ALL'                      If ALL Brnch
+     C                     MOVE *BLANKS   S2BRCA            Clr Brnch
+     C                     ENDIF                           End If
+     C                     MOVE 'D'       P@ACT   1        Set Action
+     C                     MOVE *BLANKS   P@RTRN  2        Clr Return Code
+     C                     CALL 'LEC3520'              21  Call Del Accs
+     C                     PARM           S2REFR           -I Reference
+     C                     PARM           S2BRCA           -I Branch
+     C                     PARM           S2CUST           -I Customer
+     C                     PARM           S2CCY            -I Currency
+     C                     PARM           S2FACT           -I Facility
+     C                     PARM           S2FCNO           -I Fac Number
+     C                     PARM           P@ACT            -I Action
+     C                     PARM           P@RTRN           -O Return Code
+      *
+     C           *IN21     IFEQ *ON                        If Err on CALL
+     C           P@RTRN    ORNE *BLANKS                    Or Err Return
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEC3520' DBFILE    P       Set DB File
+     C           'Delete ' CAT  'Facility'DBKEY             Bld DB Key
+     C                     Z-ADD110       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XWSLCR    BEGSR
+      *===================================================================
+      * XWSLCR: CALL LEC3520 to Write Selection Criteria to LEFCUPPD.
+      *
+      *-------------------------------------------------------------------
+      *
+     C           S2BRCA    IFEQ 'ALL'                      If ALL Brnch
+     C                     MOVE *BLANKS   S2BRCA            Clr Brnch
+     C                     ENDIF                           End If
+     C                     MOVE 'I'       P@ACT            Set Action
+     C                     MOVE *BLANKS   P@RTRN           Clr Return Code
+     C                     CALL 'LEC3520'              21  Call Del Accs
+     C                     PARM           S2REFR           -I Reference
+     C                     PARM           S2BRCA           -I Branch
+     C                     PARM           S2CUST           -I Customer
+     C                     PARM           S2CCY            -I Currency
+     C                     PARM           S2FACT           -I Facility
+     C                     PARM           S2FCNO           -I Fac Number
+     C                     PARM           P@ACT            -I Action
+     C                     PARM           P@RTRN           -O Return Code
+      *
+     C           *IN21     IFEQ *ON                        If Err on CALL
+     C           P@RTRN    ORNE *BLANKS                    Or Err Return
+     C           *LOCK     IN   LDA                         Rtv LDA Dtaara
+     C                     MOVEL'LEC3520' DBFILE    P       Set DB File
+     C           'Generate'CAT  'Facility'DBKEY             Bld DB Key
+     C                     Z-ADD120       DBASE             Set DB No
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Dump
+     C                     ENDIF                           End If
+      *
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSPMSQ    BEGSR
+      *===================================================================
+      * XSPMSQ: Send Messages To Program Message Queue.
+      *
+      *-------------------------------------------------------------------
+      *
+     C                     CALL 'SNDERMSG'                 Snd Message
+     C                     PARM           WKPGMQ 10        -Program queue
+     C                     PARM *BLANKS   WKPGRL  5        -Rel queue
+     C                     PARM           WKMSID  7        -Message Id
+     C                     PARM 'LERMSGF' WKMSGF 10        -Message file
+     C                     PARM *BLANKS   WKMSDA132        -Message data
+     C                     PARM *BLANKS   WKMSTP  7        -Message type
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           *INZSR    BEGSR
+      *===================================================================
+      * *INZSR: Initialization Routine.
+      *
+      *-------------------------------------------------------------------
+      * Clear & Populate Local dataarea with program name.
+      *
+     C           *LOCK     IN   LDA                        Rtv LDA
+     C                     CLEARLDA                        Clr LDA
+     C                     MOVELD@PGMN    DBPGM     P      Set DB Pgm
+     C                     OUT  LDA                        Wrt Record
+      *-------------------------------------------------------------------
+      * Initialise Parameters, Work Fields, Etc.
+      *
+     C                     MOVE *ON       *IN10            Set Subfile
+     C                     MOVEACPY@      MKI@@  80        Set Copyright
+     C                     MOVE D@JNAM    SCWSID           Set Wks ID
+     C                     MOVE D@USRI    SCUSER           Set User ID
+      *-------------------------------------------------------------------
+      * Retrieve Bank Details.
+      *
+     C                     CALL 'AOBANKR0'             2121Access Bank
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return Code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C           DSBANK    PARM DSBANK    DSFDY            -O:Format
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'SDBANKPD'DBFILE    P       Set File
+     C                     MOVELP@OPTN    DBKEY     P       Set Key
+     C                     Z-ADD130       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Retrieve General Ledger Details
+      *
+     C**********           CALL 'AOGELRR0'             2121Rtv GL ICD Dtl                     CGL029
+     C                     CALL 'AOGELRR1'             2121                                   CGL029
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return Code
+     C                     PARM '*FIRST ' P@OPTN  7        -I:Option
+     C********** DSGELR    PARM *BLANK    DSFDY            -O:Format                          CGL029
+     C           DSGELR    PARM *BLANK    DSSDY                                               CGL029
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    ORNE *BLANKS                    Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'SDGELRPD'DBFILE    P       Set File
+     C                     MOVE P@OPTN    DBKEY     P       Set Key
+     C                     Z-ADD140       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------153979
+      * Is the Contingent Facility Accounting enhancement activated?      153979
+      *                                                                   153979
+     C                     CALL 'AOSARDR0'                 Verify CLE007  153979
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code 153979
+     C                     PARM '*VERIFY' P@OPTN  7        -I:Option      153979
+     C                     PARM 'CLE007'  P@SARD  6        -I:Sard        153979
+     C           DSSARD    PARM *BLANKS   DSFDY            -O:Format      153979
+      *                                                                   153979
+     C           P@RTCD    IFEQ *BLANK                     If Rtcd blank  153979
+     C                     MOVE '1'       *IN84             Set *IN84 Y   153979
+     C                     ELSE                            Else           153979
+     C                     MOVE '0'       *IN84             Set *IN84 N   153979
+     C                     ENDIF                           End If         153979
+      *-------------------------------------------------------------------153979
+      *
+     C                     OPEN FDMNTHLL                   Opn
+     C                     READ FDMNTHLL                 86Rtv Record
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           *PSSR     BEGSR
+      *===================================================================
+      * *PSSR: Error Handling.
+      *
+      *-------------------------------------------------------------------
+      * Check To See That *PSSR Has Not Been Called Yet.
+      *
+     C           WKRUN     IFEQ *BLANK                     If Not Exec
+     C                     MOVE 'Y'       WKRUN   1         Set Off Ind
+     C                     DUMP                             Dmp Pgm
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If *PSSR Already Run, Then Just End The Program Here.
+      *
+     C                     MOVE *ON       *INU7            Set U7 Ind
+     C                     MOVE *ON       *INU8            Set U8 Ind
+     C                     MOVE *ON       *INLR            Set EndPgm Ind
+     C                     RETRN                           Exit Program
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           @DEFN     BEGSR
+      *===================================================================
+      * @DEFN: Definition Routine (Not Called).
+      *
+      *-------------------------------------------------------------------
+      * Dataareas...
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+      *-------------------------------------------------------------------
+      * Define Variables.
+      *
+     C           *LIKE     DEFN S1OPTN    WKOPTN           Dfn Option Fld
+     C           *LIKE     DEFN S2BRCA    WKBRCH           Dfn Branch
+     C           *LIKE     DEFN S2CCY     WKCURR           Dfn Currency
+     C           *LIKE     DEFN FCBRCA    SBRCA            Dfn branch                        148063
+     C           *LIKE     DEFN FCCNUM    SCUST            Dfn customer                      148063
+     C           *LIKE     DEFN FCCY      SCCCY            Dfn CURRENCY                      148063
+     C           *LIKE     DEFN FCFACT    SFACT            Dfn facility type                 148063
+     C           *LIKE     DEFN FCFCNO    SFCNO            Dfn facility number               148063
+     C           *LIKE     DEFN FACT      S1FACT           Dfn facility type                 148063
+     C           *LIKE     DEFN FCNO      S1FCNO           Dfn facility number               148063
+     C           *LIKE     DEFN KREFR     WKREFR           Dfn reference                      190014
+      *-------------------------------------------------------------------
+      * Lists...
+      *
+     C           KLEFC     KLIST                           Key: LEFCONL0
+     C                     KFLD           KREFR            -Reference
+      *                                                                                     148063
+     C           KFCON     KLIST                           Key: LEFCONL0                    148063
+     C                     KFLD           SBRCA            -Branch                          148063
+     C                     KFLD           SCUST            -Customer                        148063
+     C                     KFLD           SCCCY            -Currency                        148063
+     C                     KFLD           SFACT            -Facility Type                   148063
+     C                     KFLD           SFCNO            -Facility Number                 148063
+      *                                                                                     148063
+     C           KFCLT     KLIST                           Key: FCLTY0 0                    148063
+     C                     KFLD           SBRCA            -Branch                          148063
+     C                     KFLD           SCUST            -Customer                        148063
+     C                     KFLD           SCCCY            -Currency                        148063
+     C                     KFLD           SFACT            -Facility Type 154313
+     C                     KFLD           SFCNO            -Facility SeqNo154313
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z3
+** CPY@: Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

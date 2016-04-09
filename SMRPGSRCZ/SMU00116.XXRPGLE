@@ -1,0 +1,3860 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*O*R****OVRDBF*FILE(LEACCNA1)*TOFILE(LEACCNL3)*SHARE(*NO)*************                       CLE164
+/*S*D****RPGBASEBND****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  SMU00116 - PDCL Standing Data Validation                     *
+      *                                                               *
+      *           NOTE: THIS PROGRAM IS A COPY OF LE007000 DESIGNED   *
+      *           TO RUN ONLY ONCE AS PART OF THE PDP MIGRATION FROM  *
+      *           RELEASE 1.4 TO BF2.1                                *
+      *                                                               *
+      *           The function of this program is to check whether the*
+      *           PDCL standing data is correct and report on errors. *
+      *                                                               *
+      *           The program reports on issues found with loans, fees*
+      *           and Repayment Priority entries (CLOANCL/LEFEED/     *
+      *           LEACCNPD).                                          *
+      *                                                               *
+      *           Additionally, the Repayment priority file can be    *
+      *           synchronised by adding missing records to the       *
+      *           Repayment Priority file (LEACCNPD).                 *
+      *                                                               *
+      *           Four modes of operation are available;              *
+      *           *REPORT - Report errors on repayments due.          *
+      *           *SYNC   - As above and add/remove LEACCNPD entries. *
+      *           *ALL    - Report errors on all repayments.          *
+      *           *ALLSYNC- As "*ALL" and add/remove LEACCNPD entries.*
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164 *REDUNDANT  Date 18Aug14               *
+      *  Prev Amend No. AR1083670A *CREATE Date 04Apr13               *
+      *                 xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  AR1083670A - Changes in LEPRATPD should be included in       *
+      *               migration program                               *
+      *                                                               *
+      *****************************************************************
+     F/SPACE
+      *****************************************************************
+     FLEACCNA1  UF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNA1F)
+     FCLOANLB   IF   E           K DISK    INFSR(*PSSR) PREFIX(l_)
+     FCLOAN     IF   E           K DISK    INFSR(*PSSR) PREFIX(o_)
+     F                                     RENAME(CLOANCLF:CLOANF)
+     F                                     IGNORE(CLOANHHF)
+     F                                     IGNORE(CLOANCKF)
+     F                                     IGNORE(CLOANZ1F)
+     FLEFEEDLU  IF   E           K DISK    INFSR(*PSSR)
+     FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR) PREFIX(o_)
+     F                                     RENAME(LEFEEDF:LEFEEL1F)
+ 
+     FACCNTL0   IF   E           K DISK    INFSR(*PSSR) PREFIX(ac)
+     FACCNTL1   IF   E           K DISK    INFSR(*PSSR) PREFIX(ac)
+     F                                     RENAME(ACCNTABF:ACCNTL1F)
+ 
+     FFCLTY     IF   E           K DISK    INFSR(*PSSR) PREFIX(f_)
+     F                                     IGNORE(FCLTYHHF)
+     F                                     IGNORE(FCLTYZZF)
+     FLEPRATL1  UF   E           K DISK    INFSR(*PSSR)
+     FLEPDUEL1  IF   E           K DISK    INFSR(*PSSR)
+     FLEPDUFL1  IF   E           K DISK    INFSR(*PSSR)
+ 
+     FLEACCNLA  UF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNLAF)
+     FLEACCNLB  UF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNLBF)
+ 
+     FLEACCNL1  IF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNL1F)
+     FLEACCNL3  IF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(LEACCND0:LEACCNL3F)
+     FACKEY     UF A E           K DISK    INFSR(*PSSR) PREFIX(K_)
+     FLE007000P1O    E             PRINTER INFDS(DSDASP)
+     F                                     OFLIND(*IN81)
+      *****************************************************************
+     D/EJECT
+      *****************************************************************
+ 
+      ** External Definitions...
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+     D/COPY ZACPYSRC,PSDS
+     D/COPY ZACPYSRC,PROCPARMS
+ 
+     D DSDASP        E DS                  EXTNAME(LEDASPPD)
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** Short data structure for access objects.
+ 
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      ** Long data structure for access objects.
+ 
+     D LEALLO        E DS                  EXTNAME(LEALLO)
+      ** DS for calculating PC reference
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** Bank Details
+ 
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
+      ** Branch Details
+ 
+     D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
+      ** Base Rate Details
+ 
+     D SDCLND        E DS                  EXTNAME(SDCLNDPD)
+      ** ICD Details
+ 
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)
+      ** Currency Details
+ 
+     D SDFACT        E DS                  EXTNAME(SDFACTPD)
+      ** Facility Details
+ 
+     D SDFEE         E DS                  EXTNAME(SDFEEPD)
+      ** Fee Details
+ 
+     D SDLOAN        E DS                  EXTNAME(SDLOANPD)
+      ** Loan Details
+ 
+     D SDNOST        E DS                  EXTNAME(SDNOSTPD)
+     D QQACCD2       E                     EXTFLD(QQACCD)
+ 
+      ** Nostro details
+      ** Key Fields...
+ 
+     D KacACNO         S                   INZ LIKE(acACNO)
+ 
+     D KacCNUM         S                   INZ LIKE(acCNUM)
+     D KacCCY          S                   INZ LIKE(acCCY)
+     D KacACOD         S                   INZ LIKE(acACOD)
+     D KacACSQ         S                   INZ LIKE(acACSQ)
+     D KacBRCA         S                   INZ LIKE(acBRCA)
+ 
+     D Kf_CNUM         S                   INZ LIKE(f_CNUM)
+     D Kf_FACT         S                   INZ LIKE(f_FACT)
+     D Kf_FCNO         S                   INZ LIKE(f_FCNO)
+     D Kf_RCTP         S                   INZ LIKE(f_RCTP)
+ 
+     D Kl_LNRF         S                   INZ LIKE(l_LNRF)
+     D Kl_RCDT         S                   INZ LIKE(l_RCDT)
+ 
+     D Ko_FECNUM       S                   INZ LIKE(o_FECNUM)
+     D Ko_FEFACL       S                   INZ LIKE(o_FEFACL)
+     D Ko_FELOAN       S                   INZ LIKE(o_FELOAN)
+     D Ko_FEFSEQ       S                   INZ LIKE(o_FEFSEQ)
+     D Ko_LNRF         S                   INZ LIKE(o_LNRF)
+ 
+     D KB2LNRF         S                   INZ LIKE(B2LNRF)
+ 
+     D KRPBRCA         S                   INZ LIKE(RPBRCA)
+     D KRPACCY         S                   INZ LIKE(RPACCY)
+     D KRPCNUM         S                   INZ LIKE(RPCNUM)
+     D KRPACOD         S                   INZ LIKE(RPACOD)
+     D KRPACSQ         S                   INZ LIKE(RPACSQ)
+     D KRPLNRF         S                   INZ LIKE(RPLNRF)
+     D KRPFCNM         S                   INZ LIKE(RPFCNM)
+     D KRPFLNR         S                   INZ LIKE(RPFLNR)
+     D KRPFACT         S                   INZ LIKE(RPFACT)
+     D KRPFSE1         S                   INZ LIKE(RPFSE1)
+     D KRPFCOD         S                   INZ LIKE(RPFCOD)
+     D KRPFCBR         S                   INZ LIKE(RPFCBR)
+ 
+     D KYPLON          S                   INZ LIKE(YPLON)
+ 
+      ** Passed Parameters...
+     D P@Mode          S             10
+     D P@RTCD          S              7
+     D P@OPTN          S              7
+ 
+     D P@BRCA          S                   LIKE(l_BRCA)
+ 
+     D P@LNTY          S                   LIKE(AYLNTY)
+     D P@LNST          S                   LIKE(AYLNST)
+     D P@LNCL          S                   LIKE(AYLNCL)
+ 
+     D P@PTYP          S                   LIKE(l_PTYP)
+ 
+     D P@FECD          S                   LIKE(AUFECD)
+ 
+     D P@CCY           S                   LIKE(l_CCY)
+ 
+     D P@BRCF          S                   LIKE(BPBRCF)
+     D P@BSR           S                   LIKE(AYPBSR)
+     D P@RSP           S                   LIKE(AYPRSP)
+     D P@RSI           S                   LIKE(AYPRSI)
+     D P@ICB           S                   LIKE(AYPICB)
+ 
+     D P@CAPI          S                   LIKE(AYCAPI)
+     D P@FAMU          S                   LIKE(AYFAMU)
+     D P@SIIN          S                   LIKE(AYSIIN)
+     D KYPORG          S                   LIKE(YPORG)
+     D KYECNUM         S                   LIKE(YECNUM)
+     D KYEFACL         S                   LIKE(YEFACL)
+     D KYESEQ          S                   LIKE(YESEQ)
+     D KYBRCA          S                   LIKE(YBRCA)
+ 
+      ** Arrays/Tables...
+ 
+     D DSXMsg          S             90    DIM(39) CTDATA PERRCD(1)
+ 
+     D DSAtb0          S              1    DIM(20) INZ
+ 
+     D DSClr0          S              1    DIM(20) INZ
+     D DSClr1          S              1    DIM(20) INZ
+ 
+     D DSFrc1          S              1    DIM(20) INZ
+ 
+     D DSFld0X         DS
+     D  DSFld0                       30    DIM(20) INZ
+ 
+     D DSFld1X         DS
+     D  DSFld1                       30    DIM(20) INZ
+ 
+     D DSVal0X         DS
+     D  DSVal0                       35    DIM(20) INZ
+ 
+     D DSVal1X         DS
+     D  DSVal1                       35    DIM(20) INZ
+ 
+     D DSMsg0          S              2  0 DIM(20) INZ
+     D DSMsg1          S              2  0 DIM(20) INZ
+ 
+     D DSMsg0A         S             50    DIM(20) INZ
+     D DSMsg1A         S             50    DIM(20) INZ
+ 
+     D DSFil0          S             21    DIM(20) INZ
+     D DSFil1          S             21    DIM(20) INZ
+ 
+      ** Work Variables...
+     D DSAKEYK         S             14
+     D DSPostR2        S              1    INZ('Y')
+     D WRFound         S              1    INZ('Y')
+     D WACKYUPD        S              1  0
+     D DSBypass1       S              1    INZ('Y')
+     D DSDltRc         S              1    INZ
+     D DSErr0          S              9  0 INZ
+     D DSErr1          S              9  0 INZ
+     D DSFile          S             10    INZ
+     D DSFilNm         S             10    INZ
+     D DSMsg           S             80    INZ
+     D DSMsgId         S              3  0 INZ
+     D DSPgmAct        S              1    INZ
+     D DSPgmErr        S              1    INZ
+     D DSPrtD1         S              1    INZ('N')
+     D DSPrtEOR        S              1    INZ('N')
+     D DSPrtRec        S              9  0 INZ
+     D DSSkip          S              1    INZ
+     D DSType          S              4    INZ
+     D DSVal0Prt       S              1    INZ('N')
+     D UpdateFlag      S              1    INZ('N')
+ 
+      ** Variables for Saving Values...
+     D DSLOAN        E DS                  EXTNAME(SDLOANPD) PREFIX(w_)
+ 
+     D DSBRCA          S                   INZ(*HIVAL) LIKE(l_BRCA)
+ 
+     D DSFld0Sv        S                   INZ LIKE(DSFld0X)
+     D DSFld1Sv        S                   INZ LIKE(DSFld1X)
+ 
+     D DSPayDt         S                   INZ LIKE(BJRDNB)
+ 
+     D DSVal0Sv        S                   INZ LIKE(DSVal0X)
+     D DSVal1Sv        S                   INZ LIKE(DSVal1X)
+ 
+      ** Indexes...
+     D #0              S              9  0 INZ
+     D #0A             S              9  0 INZ
+     D #1              S              9  0 INZ
+     D #1A             S              9  0 INZ
+     D #2              S              9  0 INZ
+     D #2A             S              9  0 INZ
+     D #3              S              9  0 INZ
+     D #3A             S              9  0 INZ
+ 
+     D #E              S              9  0 INZ
+ 
+      ** Feature Flags.
+     D CLE134          S              1    INZ('N')
+ 
+      ** Loan account keys:
+      ** - xxRyy----B
+      ** - xxRyy---XP
+      ** - xxRyy---XI
+      ** - xxVyy---XA
+ 
+     D WAKEYL          DS
+     D WLTYPE                  1      2
+     D WLEVEN                  3      3
+     D WLSUBT                  4      5
+     D WLAKCD                  9     10
+     D WLFILL                 11     14
+ 
+      ** Facility Fee Account Keys:
+      ** - fffR---nnD
+      ** - fffR---nnF
+ 
+     D WAKEYF          DS
+     D WFTYPE                  1      3
+     D WFEVEN                  4      4
+     D WFSTAR                  6      6
+     D WFFECD                  8      9
+     D WFAKCD                 10     10
+     D WFFILL                 11     14
+ 
+      ** Loan Fee Accoutn Key - xxRyy--nnD and xxRyy--nnF
+ 
+     D WAKEYP          DS
+     D WPTYPE                  1      2
+     D WPEVEN                  3      3
+     D WPSUBT                  4      5
+     D WPSTAR                  6      6
+     D WPFECD                  8      9
+     D WPAKCD                 10     10
+     D WPFILL                 11     14
+ 
+      ** Additional Field Definitions
+     D Wackflag        S              1
+     D P@FACT          S              3
+     D KCNUM           S              6
+     D KCCY            S              3
+     D KEYC1           S             10
+     D KEYD            S              2
+     D KNONB           S              2
+     D KEYF            S              3
+     D KEYG            S             10
+     D KEYH            S              1
+     D WAYXBRT         S                   LIKE(AYPBRT)
+ 
+     C/EJECT
+ 
+      *****************************************************************
+      ** Main Processing Control
+      *****************************************************************
+ 
+      ** Retrieve Repayment Priority Details.
+ 
+     C                   READ(E)   LEACCNA1
+ 
+     C                   DOW       NOT %EOF(LEACCNA1)
+     C                   EXSR      xvLEACCNA1
+ 
+     C                   IF        DSSkip     <> 'Y'           OR
+     C                             %SUBST(P@Mode:1:4)  = '*ALL'
+     C                   EXSR      xpLEACCNA1
+     C                   ENDIF
+ 
+     C                   READ(E)   LEACCNA1
+     C                   ENDDO
+ 
+      ** Retrieve Loans Details.
+ 
+     C                   READ(E)   CLOANLB
+ 
+     C                   DOW       NOT %EOF(CLOANLB)
+     C                   IF        L_AUTO = 'C'
+     C                   EXSR      xvCLOANLB
+ 
+     C                   IF        DSSkip     <> 'Y'           OR
+     C                             %SUBST(P@Mode:1:4)  = '*ALL'
+     C                   EXSR      xpCLOANLB
+     C                   ENDIF
+ 
+     C                   ENDIF
+     C                   READ(E)   CLOANLB
+     C                   ENDDO
+ 
+      ** Retrieve Fee Details.
+ 
+     C                   READ(E)   LEFEEDLU
+ 
+     C                   DOW       NOT %EOF(LEFEEDLU)
+     C                   EXSR      xvLEFEEDLU
+ 
+     C                   IF        DSSkip     <> 'Y'           OR
+     C                             %SUBST(P@Mode:1:4)  = '*ALL'
+     C                   EXSR      xpLEFEEDLU
+     C                   ENDIF
+ 
+     C                   READ(E)   LEFEEDLU
+     C                   ENDDO
+ 
+      ** If Errors Detected, Terminate Abnormally without Dump.
+ 
+     C                   IF        DSPgmErr    = 'F'
+     C                   EVAL      *INU7       = *ON
+     C                   EVAL      *INU8       = *ON
+     C                   ENDIF
+ 
+      ** Terminate Program.
+ 
+     C                   EXSR      xwP1T
+ 
+     C                   EVAL      *INLR       = *ON
+     C                   RETURN
+ 
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvLEACCNA1 - Validate Repayment Priority                      *
+      *                                                               *
+      *****************************************************************
+     C     xvLEACCNA1    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSSkip      = 'N'
+     C                   EVAL      DSType      = 'ACCN'
+ 
+      ** Retrieve Origin/PDCL Link Details.
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvCLOANLB - Validate Loan Record                              *
+      *                                                               *
+      *****************************************************************
+     C     xvCLOANLB     BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSSkip      = 'N'
+ 
+     C                   IF        %SUBST(l_LTYP: 1: 1) = 'X'  OR
+     C                             %SUBST(l_LTYP: 1: 1) = 'Y'  OR
+     C                             %SUBST(l_LTYP: 1: 1) = 'Z'
+     C                   EVAL      DSType      = 'PDCL'
+ 
+     C                   ELSE
+     C                   EVAL      DSType      = 'LOAN'
+     C                   ENDIF
+ 
+ 
+      ** If PDCL Loan, Retrieve Origin Loan Details.
+ 
+     C                   IF        DSType      = 'PDCL'
+     C                   IF        %SUBST(l_LTYP: 1: 1) <> 'Z'
+     C                   EVAL      KYPLON      = l_LNRF
+     C     KLEPDUEL1     CHAIN(E)  LEPDUEL1
+ 
+     C                   IF        %FOUND(LEPDUEL1)
+     C                   EVAL      Ko_LNRF     = YPORG
+     C     KCLOAN_o      CHAIN(E)  CLOAN
+     C                   ENDIF
+ 
+      ** Else PDCL Fee, Retrieve Origin Fee Details.
+ 
+     C                   ELSE
+     C                   EVAL      KYPLON      = l_LNRF
+     C     KLEPDUFL1     CHAIN(E)  LEPDUFL1
+ 
+     C                   IF        %FOUND(LEPDUFL1)
+     C                   EVAL      Ko_FECNUM   = YECNUM
+     C                   EVAL      Ko_FEFACL   = YEFACL
+     C                   EVAL      Ko_FELOAN   = YPORG
+     C                   EVAL      Ko_FEFSEQ   = YESEQ
+     C     KLEFEEDL1     CHAIN(E)  LEFEEDL1
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If record not found, check loan next payment date
+ 
+     C                   CLEAR                   DSPayDt
+ 
+     C                   IF        DSType      = 'LOAN'
+     C                   IF        L_NRPD     >= BJRDNB        AND
+     C                             L_NRPD      < BJDNWD
+     C                   EVAL      DSPayDt     = L_NRPD
+     C                   ENDIF
+ 
+     C                   IF        L_NIDT     >= BJRDNB        AND
+     C                             L_NIDT      < BJDNWD
+     C                   EVAL      DSPayDt     = L_NIDT
+     C                   ENDIF
+ 
+     C                   IF        P@Mode    <>  '*SYNC' and
+     C                             P@Mode    <>  '*ALLSYNC'
+     C                   IF        DSPayDt     < BJRDNB        OR
+     C                             DSPayDt    >= BJDNWD
+     C                   EVAL      DSSkip      = 'Y'
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvLEFEEDLU - Validate Fee Record                              *
+      *                                                               *
+      *****************************************************************
+     C     xvLEFEEDLU    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSSkip      = 'N'
+     C                   EVAL      DSType      = 'FEE'
+ 
+ 
+      ** If record not found, check fee next payment date
+ 
+     C                   CLEAR                   DSPayDt
+ 
+     C                   IF        FEPEND      < FENPYD        AND
+     C                             FERECI      = 'D'
+     C                   EVAL      DSPayDt     = BJRDNB
+ 
+     C                   ELSE
+     C                   EVAL      DSPayDt     = FENPYD
+     C                   ENDIF
+ 
+     C                   IF        P@Mode    <>  '*SYNC' and
+     C                             P@Mode    <>  '*ALLSYNC'
+     C                   IF        DSPayDt     < BJRDNB        OR
+     C                             DSPayDt    >= BJDNWD
+     C                   EVAL      DSSkip      = 'Y'
+     C                   ENDIF
+     C                   ENDIF
+ 
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xpLEACCNA1 - Process Repayment Priority Details               *
+      *                                                               *
+      *****************************************************************
+     C     xpLEACCNA1    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      #0          = 1
+     C                   EVAL      DSErr0      = 0
+ 
+     C                   CLEAR                   DSClr0
+     C                   CLEAR                   DSAtb0
+     C                   CLEAR                   DSFld0
+     C                   CLEAR                   DSVal0
+     C                   CLEAR                   DSMsg0
+     C                   CLEAR                   DSMsg0A
+     C                   CLEAR                   DSFil0
+ 
+     C                   EVAL      #1          = 1
+     C                   EVAL      DSErr1      = 0
+ 
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   CLEAR                   DSLOAN
+ 
+     C                   EVAL      DSFile      = 'LEACCNPD'
+     C                   EVAL      DSFilNm     = *BLANKS
+     C                   EVAL      DSClr0(#0)  = 'Y'
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSDltRc     = *BLANK
+ 
+      ** If Branch Changed, Retrieve Description.
+ 
+     C                   IF        DSBRCA     <> RPBRCA
+ 
+     C                   CALL      'AOBRCHR1'
+     C                   PARM      '*MSG   '     P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM      RPBRCA        P@BRCA
+     C     SDBRCH        PARM      SDBRCH        DSSDY
+ 
+     C                   IF        P@RTCD     <> *BLANK
+ 
+     C                   IF        RPBRCA      = *BLANKS       OR
+     C                             RPBRCA      = '000'
+     C                   EVAL      A8BRNM      = '* UNSPECIFIED *'
+ 
+     C                   ELSE
+     C                   EVAL      A8BRNM      = '***ERROR***'
+     C                   ENDIF
+ 
+     C                   ELSE
+     C                   EVAL      DSBRCA      = RPBRCA
+     C                   ENDIF
+ 
+     C                   IF        P1BRNM     <> A8BRNM
+     C                   EVAL      *IN81       = *ON
+     C                   EVAL      P1BRCA      = P@BRCA
+     C                   EVAL      P1BRNM      = A8BRNM
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If No Settlement Account Exist, Use Loan Reference
+      ** or Fee Details
+ 
+     C                   IF        RPCNUM      = *BLANKS       OR
+     C                             RPACCY      = *BLANKS       OR
+     C                             RPACOD      = 0             OR
+     C                             RPACSQ      = 0             OR
+     C                             RPBRCA      = *BLANKS       OR
+     C                             A8BRNM      = '* UNSPECIFIED *' OR
+     C                             A8BRNM      = '***ERROR***'
+ 
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   EVAL      DSPrtRec   -= 1
+     C                   EVAL      DSMsgId     = 32
+     C                   EVAL      DSDltRc     = 'Y'
+ 
+     C                   ELSE
+     C                   EVAL      DSMsgId     = 30
+     C                   ENDIF
+ 
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0)  = 'Settlement Account: '
+     C                   EVAL      DSVal0(#0)  = *BLANKS
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  = %TRIM(DSFile)
+     C                                           + DSFilNm
+     C                   EVAL      DSErr0     += 1
+     C                   EVAL      DSVal0Prt   = 'Y'
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS OR
+     C                             DSVal1(#1) <> *BLANKS OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   IF        DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   IF        RPCNUM     <> *BLANKS
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Customer: '
+     C                   EVAL      DSVal1(#1)  = RPCNUM
+     C                   ENDIF
+ 
+     C                   IF        RPACCY     <> *BLANKS
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Currency: '
+     C                   EVAL      DSVal1(#1)  = RPACCY
+     C                   ENDIF
+ 
+     C                   IF        RPACOD     <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Code:'
+     C                   MOVEL     RPACOD        DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   IF        RPACSQ     <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Sequence:'
+     C                   MOVEL     RPACSQ        DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   IF        RPBRCA     <> *BLANKS
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Branch:'
+     C                   EVAL      DSVal1(#1)  = RPBRCA
+     C                   ENDIF
+ 
+     C                   IF        RPFCOD      = 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Loan Reference:'
+     C                   MOVEL     RPLNRF        DSVal1(#1)
+ 
+     C                   ELSE
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Branch:'
+     C                   EVAL      DSVal1(#1)  = RPFCBR
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Customer:'
+     C                   EVAL      DSVal1(#1)  = RPFCNM
+ 
+     C                   IF        RPFLNR     <> *BLANK
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Loan Number:'
+     C                   MOVEL     RPFLNR        DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   IF        RPFACT     <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Facility:'
+     C                   MOVEL     RPFACT        DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Sequence:'
+     C                   MOVEL     RPFSE1        DSVal1(#1)
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Fee Code:'
+     C                   MOVEL     RPFCOD        DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   EVAL      DSErr1     += #1
+ 
+      ** Retrieve Settlement Account.
+ 
+     C                   ELSE
+     C                   EXSR      xvACNT
+ 
+     C                   IF        DSMsgId     > 0
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0)  = 'Settlement Account: '
+     C                   EVAL      DSVal0(#0)  = *BLANKS
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  = %TRIM(DSFile)
+     C                                           + DSFilNm
+     C                   EVAL      DSErr0     += 1
+     C                   EVAL      DSVal0Prt   = 'Y'
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Customer: '
+     C                   EVAL      DSVal1(#1)  = KacCNUM
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Currency: '
+     C                   EVAL      DSVal1(#1)  = KacCCY
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Code:'
+     C                   MOVEL     KacACOD       DSVal1(#1)
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Sequence:'
+     C                   MOVEL     KacACSQ       DSVal1(#1)
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Branch:'
+     C                   EVAL      DSVal1(#1)  = KacBRCA
+ 
+     C                   EVAL      DSErr1     += #1
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Print Errors.
+ 
+     C                   IF        DSErr0      > 0
+     C                   IF        DSFld0X    <> DSFld0Sv      OR
+     C                             DSVal0X    <> DSVal0Sv      OR
+     C                             DSFld1X    <> DSFld1Sv      OR
+     C                             DSVal1X    <> DSVal1Sv
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** If Synchronise Option, Delete Record.
+ 
+     C                   IF        DSDltRc     = 'Y'
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   DELETE(E) LEACCNA1F
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xpCLOANLB - Process Loan Details                              *
+      *                                                               *
+      *****************************************************************
+     C     xpCLOANLB     BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      #0          = 1
+     C                   EVAL      DSErr0      = 0
+ 
+     C                   CLEAR                   DSClr0
+     C                   CLEAR                   DSAtb0
+     C                   CLEAR                   DSFld0
+     C                   CLEAR                   DSVal0
+     C                   CLEAR                   DSMsg0
+     C                   CLEAR                   DSMsg0A
+     C                   CLEAR                   DSFil0
+ 
+     C                   EVAL      #1          = 1
+     C                   EVAL      DSErr1      = 0
+ 
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   CLEAR                   DSLOAN
+ 
+     C                   EVAL      DSFile      = 'CLOANCL'
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** If Branch Changed, Retrieve Description.
+ 
+     C                   IF        DSBRCA     <> l_BRCA
+     C                   EVAL      DSBRCA      = l_BRCA
+ 
+     C                   CALL      'AOBRCHR1'
+     C                   PARM      '*MSG   '     P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM      l_BRCA        P@BRCA
+     C     SDBRCH        PARM      SDBRCH        DSSDY
+ 
+     C                   IF        P@RTCD     <> *BLANK
+     C                   EVAL      DBPGM       = 'AOBRCHR1'
+     C                   EVAL      DBFILE      = 'SDBRCHPD'
+     C                   EVAL      DBASE       = 2
+     C                   EVAL      DBKEY       = P@BRCA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      *IN81       = *ON
+     C                   EVAL      P1BRCA      = P@BRCA
+     C                   EVAL      P1BRNM      = A8BRNM
+     C                   ENDIF
+ 
+      ** Set Origin Loan Reference & Loan Type.
+ 
+     C                   EVAL      DSClr0(#0)  = 'N'
+     C                   EVAL      DSAtb0(#0)  = 'B'
+     C                   EVAL      DSFld0(#0)  = 'Loan Reference: '
+     C                   EVAL      DSVal0(#0)  = l_LNRF
+ 
+      ** Retrieve Default Penalty Rate Details.
+ 
+     C                   IF        DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      B2LNRF      = l_LNRF
+     C     KPRAT         CHAIN(E)  LEPRATL1
+ 
+     C                   IF        NOT %FOUND(LEPRATL1)
+     C                   ENDIF
+ 
+      ** Validate Loan Type & Save Retrieved Details.
+ 
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSClr0(#0)  = 'N'
+     C                   EVAL      DSFld0(#0)  =
+     C                               'Loan Type/Subtype/Class: '
+     C                   EVAL      DSVal0(#0)  =
+     C                               l_LTYP + ' ' + l_SUTP + ' ' +
+     C                               l_CLAS
+ 
+     C                   EVAL      P@LNTY      = l_LTYP
+     C                   EVAL      P@LNST      = l_SUTP
+     C                   EVAL      P@LNCL      = l_CLAS
+     C                   EXSR      xvLNTY
+ 
+     C                   IF        DSMsgId     > 0
+     C                   EVAL      DSErr0     += 1
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  =
+     C                               %TRIM(DSFile) + DSFilNm
+ 
+     C                   ELSE
+     C                   EVAL      DSLOAN      = SDLOAN
+     C                   ENDIF
+ 
+      ** Validate PDCL Base Rate (PRINCIPAL)
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EVAL      P@BSR       = AYPBSR
+     C                   EVAL      WAYXBRT     = AYPBRT
+     C                   EVAL      DSFile      = 'SDLOANPD'
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate. (INTEREST)
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EVAL      P@BSR       = AYIBSR
+     C                   EVAL      WAYXBRT     = AYIBRT
+     C                   EXSR      xvBSRT
+     C                   EVAL      DSFile      = 'CLOANCL '
+ 
+      ** Validate Original Loan account keys:
+      ** xxRyy----B
+ 
+     C                   IF        %SUBST(l_LTYP: 1: 1) <>'X'  AND
+     C                             %SUBST(l_LTYP: 1: 1) <>'Y'  AND
+     C                             %SUBST(l_LTYP: 1: 1) <>'Z'
+     C                   EVAL      DSPOstR2    = 'Y'
+     C                   EVAL      WAKEYL      = *blanks
+     C                   EVAL      WLTYPE      = L_LTYP
+     C                   EVAL      WLEVEN      = 'R'
+     C                   EVAL      WLSUBT      = L_SUTP
+     C                   EVAL      WLAKCD      = ' B'
+     C                   EVAL      DSAKEYK     = WAKEYL
+     C                   EXSR      xvAKEY
+ 
+      ** Validate Original Loan account keys:
+      ** xxRyy---XP
+ 
+     C                   EVAL      DSPOstR2    = 'N'
+     C                   EVAL      WAKEYL      = *blanks
+     C                   EVAL      WLTYPE      = L_LTYP
+     C                   EVAL      WLEVEN      = 'R'
+     C                   EVAL      WLSUBT      = L_SUTP
+     C                   EVAL      WLAKCD      = 'XP'
+     C                   EVAL      DSAKEYK     = WAKEYL
+     C                   EXSR      xvAKEY
+ 
+      ** xxRyy---XI
+ 
+     C                   EVAL      DSPOstR2    = 'N'
+     C                   EVAL      WLAKCD      = 'XI'
+     C                   EVAL      DSAKEYK     = WAKEYL
+     C                   EXSR      xvAKEY
+ 
+     C                   EVAL      DSFile      = 'CLOANCL'
+     C                   ENDIF
+ 
+      ** Validate Processing Type.
+ 
+     C                   EVAL      P@PTYP      = l_PTYP
+     C                   EXSR      xvPTYP
+ 
+     C                   IF        DSMsgId     > 0
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0)  = 'Processing Type: '
+     C                   EVAL      DSVal0(#0)  = %EDITC(l_PTYP:'X')
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  =
+     C                               %TRIM(DSFile) + DSFilNm
+     C                   EVAL      DSErr0     += 1
+     C                   ENDIF
+ 
+      ** Validate Loan Currency.
+ 
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0)  = 'Loan Currency: '
+     C                   EVAL      DSVal0(#0)  = l_CCY
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EXSR      xvCCY
+ 
+     C                   IF        DSMsgId     > 0
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  =
+     C                               %TRIM(DSFile) + DSFilNm
+     C                   EVAL      DSErr0     += 1
+     C                   ENDIF
+ 
+      ** Retrieve Repayment Priority Record.
+ 
+     C                   EXSR      xvACCN_l
+ 
+     C                   IF        DSMsgId     > 0
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0)  = 'Settlement Account: '
+     C                   EVAL      DSVal0(#0)  = *BLANKS
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  =
+     C                               %TRIM(DSFile) + DSFilNm
+     C                   EVAL      DSErr0     += 1
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Customer: '
+     C                   EVAL      DSVal1(#1)  = KRPCNUM
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Currency: '
+     C                   EVAL      DSVal1(#1)  = KRPACCY
+ 
+     C                   IF        KRPACOD    <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Code:'
+     C                   MOVEL     KRPACOD       DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   IF        KRPACSQ    <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Sequence:'
+     C                   MOVEL     KRPACSQ       DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Branch:'
+     C                   EVAL      DSVal1(#1)  = KRPBRCA
+ 
+     C                   EVAL      DSErr1     += 5
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** Print Errors or Perform Principal & Interest Validation.
+ 
+     C                   IF        DSErr0      > 0
+     C                   EXSR      xwP1D
+ 
+     C                   ELSE
+     C                   IF        DSType      = 'LOAN'
+     C                   EXSR      xvPcplPDCL
+     C                   EXSR      xvIntrPDCL
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xpLEFEEDLU - Process Fee Details                              *
+      *                                                               *
+      *****************************************************************
+     C     xpLEFEEDLU    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      #0          = 1
+     C                   EVAL      DSErr0      = 0
+ 
+     C                   CLEAR                   DSClr0
+     C                   CLEAR                   DSAtb0
+     C                   CLEAR                   DSFld0
+     C                   CLEAR                   DSVal0
+     C                   CLEAR                   DSVal0Sv
+     C                   CLEAR                   DSMsg0
+     C                   CLEAR                   DSMsg0A
+     C                   CLEAR                   DSFil0
+ 
+     C                   EVAL      #1          = 1
+     C                   EVAL      DSErr1      = 0
+ 
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   CLEAR                   DSLOAN
+ 
+     C                   EVAL      DSFile      = 'LEFEED'
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** If Branch Changed, Retrieve Description.
+ 
+     C                   IF        DSBRCA     <> FEBRCA
+     C                   EVAL      DSBRCA      = FEBRCA
+ 
+     C                   CALL      'AOBRCHR1'
+     C                   PARM      '*MSG   '     P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM      FEBRCA        P@BRCA
+     C     SDBRCH        PARM      SDBRCH        DSSDY
+ 
+     C                   IF        P@RTCD     <> *BLANK
+     C                   EVAL      DBPGM       = 'AOBRCHR1'
+     C                   EVAL      DBFILE      = 'SDBRCHPD'
+     C                   EVAL      DBASE       = 2
+     C                   EVAL      DBKEY       = P@BRCA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   EVAL      *IN81       = *ON
+     C                   EVAL      P1BRCA      = P@BRCA
+     C                   EVAL      P1BRNM      = A8BRNM
+     C                   ENDIF
+ 
+      ** Set Origin Fee Reference & Fee Code/Sequence.
+ 
+     C                   EVAL      DSClr0(#0)  = 'N'
+     C                   EVAL      DSAtb0(#0)  = 'B'
+     C                   EVAL      DSFld0(#0)  = 'Fee Customer:'
+     C                   EVAL      DSVal0(#0)  = FECNUM
+ 
+     C                   EVAL      #0         += 1
+     C                   EVAL      DSClr0(#0)  = 'N'
+     C                   EVAL      DSAtb0(#0)  = 'B'
+ 
+     C                   IF        FELOAN      = *BLANK
+     C                   EVAL      DSFld0(#0)  = 'Facility: '
+     C                   EVAL      DSVal0(#0)  = %EDITC(FEFACL:'X')
+ 
+     C                   ELSE
+     C                   EVAL      DSFld0(#0)  = 'Loan Reference: '
+     C                   EVAL      DSVal0(#0)  = FELOAN
+     C                   ENDIF
+ 
+     C                   EVAL      #0         += 1
+     C                   EVAL      DSClr0(#0)  = 'N'
+     C                   EVAL      DSAtb0(#0)  = 'B'
+     C                   EVAL      DSFld0(#0)  = 'Fee Sequence/Code: '
+     C                   EVAL      DSVal0(#0)  =
+     C                               %EDITC(FEFSEQ:'X')    + ' ' +
+     C                               %EDITC(FEFCOD:'X')
+ 
+      ** Validate Fee Code & Retrieved Details.
+ 
+     C                   IF        DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      P@FECD      = %EDITC(FEFCOD:'X')
+     C                   EXSR      xvFCOD
+ 
+     C                   IF        DSMsgId     > 0
+     C                   EVAL      DSMsg0(#0)  = DSMsgId
+     C                   EVAL      DSFil0(#0)  = 'SDFEEPD'
+     C                   EVAL      DSErr0     += 1
+     C                   ENDIF
+ 
+      ** Retrieve Repayment Priority Record.
+ 
+     C                   EXSR      xvACCN_f
+ 
+     C                   IF        DSMsgId     > 0
+     C                   IF        DSFld0(#0) <> *BLANKS       OR
+     C                             DSVal0(#0) <> *BLANKS       OR
+     C                             DSMsg0(#0) <> 0
+     C                   EVAL      #0         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld0(#0) = 'Settlement Account: '
+     C                   EVAL      DSVal0(#0) = *BLANKS
+     C                   EVAL      DSMsg0(#0) = DSMsgId
+     C                   EVAL      DSFil0(#0) = %TRIM(DSFile) + DSFilNm
+     C                   EVAL      DSErr0     += 1
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Customer: '
+     C                   EVAL      DSVal1(#1)  = KRPCNUM
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Currency: '
+     C                   EVAL      DSVal1(#1)  = KRPACCY
+ 
+     C                   IF        KRPACOD    <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Code:'
+     C                   MOVEL     KRPACOD       DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   IF        KRPACSQ    <> 0
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Account Sequence:'
+     C                   MOVEL     KRPACSQ       DSVal1(#1)
+     C                   ENDIF
+ 
+     C                   EVAL      #1         += 1
+     C                   EVAL      DSFld1(#1)  = '- Branch:'
+     C                   EVAL      DSVal1(#1)  = KRPBRCA
+ 
+     C                   EVAL      DSErr1     += 5
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** Validate Loans Fees account keys
+ 
+     C     FELOAN        IFNE      *BLANK
+ 
+      ** account key xxRyy--nnF or xxRyySnnF
+ 
+     C                   EVAL      DSPOstR2    = 'Y'
+     C                   EVAL      WAKEYP      = *blanks
+     C                   EVAL      WPTYPE      = FELTYP
+     C                   EVAL      WPEVEN      = 'R'
+     C                   EVAL      WPSUBT      = FESUTP
+     C                   EVAL      WPSTAR      = *blanks
+     C     FEPYON        IFEQ      'S'
+     C                   EVAL      WPSTAR      = 'S'
+     C                   ENDIF
+     C                   MOVE      FEFCOD        WPFECD
+     C                   EVAL      WPAKCD      = 'F'
+     C                   EVAL      DSAKEYK     = WAKEYP
+     C                   EXSR      xvAKEY
+ 
+      ** account key xxRyy--nnD or xxRyySnnD
+ 
+     C                   EVAL      WPSTAR      = *blanks
+     C                   EVAL      DSPOstR2    = 'N'
+     C     FEPYON        IFEQ      'S'
+     C                   EVAL      WPSTAR      = 'S'
+     C                   ENDIF
+     C                   EVAL      WPAKCD      = 'D'
+     C                   EVAL      DSAKEYK     = WAKEYP
+     C                   EXSR      xvAKEY
+ 
+     C                   ELSE
+ 
+      ** Facility Fees
+ 
+      ** account key nnnR---nnF or nnnR-S-nnF
+ 
+     C                   EVAL      DSPOstR2    = 'Y'
+     C                   EVAL      WAKEYF      = *blanks
+     C                   MOVEL     FEFACL        WFTYPE
+     C                   EVAL      WFEVEN      = 'R'
+     C                   EVAL      WFSTAR      = *blanks
+     C     FEPYON        IFEQ      'S'
+     C                   EVAL      WFSTAR      = 'S'
+     C                   ENDIF
+     C                   MOVE      FEFCOD        WFFECD
+     C                   EVAL      WFAKCD      = 'F'
+     C                   EVAL      DSAKEYK     = WAKEYF
+     C                   EXSR      xvAKEY
+ 
+      ** account key nnnR---nnD or nnnR-SnnD
+ 
+     C                   EVAL      WFSTAR      = *blanks
+     C                   EVAL      DSPOstR2    = 'N'
+     C     FEPYON        IFEQ      'S'
+     C                   EVAL      WFSTAR      = 'S'
+     C                   ENDIF
+     C                   EVAL      WFAKCD      = 'D'
+     C                   EVAL      DSAKEYK     = WAKEYF
+     C                   EXSR      xvAKEY
+ 
+     C                   ENDIF
+ 
+      ** Print Errors or Perform Principal & Interest Validation.
+ 
+     C                   IF        DSErr0      > 0
+     C                   EXSR      xwP1D
+ 
+     C                   ELSE
+     C                   EXSR      xvFeePDCL
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvPcplPDCL - Validate Principal Values for PDCL               *
+      *                                                               *
+      *****************************************************************
+     C     xvPcplPDCL    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSErr1      = 0
+     C                   EVAL      #1          = 2
+ 
+     C                   CLEAR                   DSClr1
+     C                   CLEAR                   DSFrc1
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Set Section.
+ 
+     C                   EVAL      DSFld1(#1)  = 'Principal PDCL'
+     C                   EVAL      DSFrc1(#1)  = 'Y'
+     C                   EVAL      #1         += 1
+ 
+      ** Validate PDCL Loan Type.
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1) = '- Loan Type/Subtype' +
+     C                                          '/Class: '
+     C                   EVAL      DSVal1(#1)  = w_AYPPLT + ' ' +
+     C                                           w_AYPPLS +
+     C                                           ' ' + w_AYPPLC
+ 
+     C                   EVAL      P@LNTY      = w_AYPPLT
+     C                   EVAL      P@LNST      = w_AYPPLS
+     C                   EVAL      P@LNCL      = w_AYPPLC
+     C                   EXSR      xvLNTY
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/SDLOANPD'
+     C                   EVAL      DSErr1     += 1
+ 
+     C                   EXSR      xwP1D
+ 
+      ** Validate PDCL Processing Type.
+ 
+     C                   ELSE
+     C                   EXSR      xvLNPT
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Processing Type:'
+     C                   EVAL      DSVal1(#1)  = %EDITC(AYLNPT:'X')
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** The following checks are bypassed as the values are now taken
+      ** from the origin loan.
+ 
+     C                   IF        DSBypass1  <> 'Y'
+ 
+      ** Validate PDCL Base Rate.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EVAL      P@BSR       = AYPBSR
+     C                   EVAL      WAYXBRT     = AYPBRT
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate Change Flag.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      P@BRCF      = BPBRCF
+     C                   EXSR      xvBRCF
+     C                   ENDIF
+ 
+      ** Validate PDCL Base Currency.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EXSR      xvCYCD
+ 
+      ** Validate PDCL Spread Rate.
+ 
+     C                   EVAL      P@BSR       = AYPBSR
+     C                   EVAL      P@RSP       = AYPRSP
+     C                   EVAL      WAYXBRT     = AYPBRT
+     C                   EXSR      xvRSP
+ 
+      ** Validate PDCL Spread Rate Indicator.
+ 
+     C                   EVAL      P@RSI       = AYPRSI
+     C                   EXSR      xvRSI
+ 
+      ** Validate PDCL Interest Basis.
+ 
+     C                   EVAL      P@ICB       = AYPICB
+     C                   EXSR      xvICB
+ 
+      ** Validate PDCL Capitalisation Indicator.
+ 
+     C                   EVAL      P@SIIN      = AYSIIN
+     C                   EVAL      P@CAPI      = AYCAPI
+     C                   EXSR      xvCAPI
+ 
+     C                   ENDIF
+ 
+      ** Process Default Penalty Rates;
+      ** Validate PDCL Base Rate.
+ 
+     C                   IF        %FOUND(LEPRATL1)
+     C                   EVAL      DSFilNm     = '/LEPRATPD'
+ 
+     C                   EVAL      P@CCY       = l_CCY
+      *
+     C                   EVAL      UpdateFlag = 'N'
+     C                   EVAL      P@LNTY      = l_LTYP
+     C                   EVAL      P@LNST      = l_SUTP
+     C                   EVAL      P@LNCL      = l_CLAS
+     C                   EXSR      xrLOAN
+     C                   IF        B2PBSR = 0 AND AYPBSR <> 0
+     C                   EVAL      B2PBSR = AYPBSR
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2PBRT = 0 AND AYPBRT <> 0
+     C                   EVAL      B2PBRT = AYPBRT
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+      *
+     C                   EVAL      P@BSR       = B2PBSR
+     C                   EVAL      WAYXBRT     = B2PBRT
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate Change Flag.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      P@BRCF      = BPBRCF
+     C                   EXSR      xvBRCF
+     C                   ENDIF
+ 
+      ** Validate PDCL Base Currency.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EXSR      xvCYCD
+ 
+      ** Validate PDCL Spread Rate.
+      *
+     C                   IF        B2PBSR = 0  AND AYPBSR <> 0
+     C                   EVAL      B2PBSR = AYPBSR
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2PBRT = 0 AND AYPBRT <> 0
+     C                   EVAL      B2PBRT = AYPBRT
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2PRSP = 0 AND AYPRSP <> 0
+     C                   EVAL      B2PRSP = AYPRSP
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+      *
+ 
+     C                   EVAL      P@BSR       = B2PBSR
+     C                   EVAL      P@RSP       = B2PRSP
+     C                   EVAL      WAYXBRT     = B2PBRT
+     C                   EXSR      xvRSP
+ 
+      ** Validate PDCL Spread Rate Indicator.
+ 
+     C                   IF        ((B2PBSR <> 0 AND B2PRSP = 0) AND
+     C                             (B2PRAT <> *BLANKS))
+     C                   EVAL      B2PRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2PBSR = 0 AND B2PRSP <> 0
+     C                             AND B2PBRT = 0) AND (B2PRAT <> *BLANKS))
+     C                   EVAL      B2PRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2PBRT <> 0 AND B2PRSP = 0) AND
+     C                             (B2PRAT <> *BLANKS))
+     C                   EVAL      B2PRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2PBRT = 0 AND B2PRSP <> 0
+     C                             AND B2PBSR = 0) AND (B2PRAT <> *BLANKS))
+     C                   EVAL      B2PRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2PBSR <> 0 AND B2PRSP <> 0) AND
+     C                             (B2PRAT =  *BLANKS))
+     C                   EVAL      B2PRAT = AYPRSI
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2PBRT <> 0 AND B2PRSP <> 0) AND
+     C                             (B2PRAT =  *BLANKS))
+     C                   EVAL      B2PRAT = AYPRSI
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   EVAL      P@RSI       = B2PRAT
+     C
+     C                   EXSR      xvRSI
+ 
+      ** Validate PDCL Interest Basis.
+      *
+     C                   IF        (B2PICB < 1 OR B2PICB > 6) AND (AYPICB <> 0)
+     C                   EVAL      B2PICB = AYPICB
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+ 
+     C                   EVAL      P@ICB       = B2PICB
+     C                   EXSR      xvICB
+     C                   IF        UpdateFlag = 'Y'
+     C     KPRAT         CHAIN     LEPRATL1
+     C                   IF        %FOUND(LEPRATL1)
+     C                   UPDATE    LEPRATD0
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvIntrPDCL - Validate Interest Values for PDCL                *
+      *                                                               *
+      *****************************************************************
+     C     xvIntrPDCL    BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSErr1      = 0
+     C                   EVAL      #1          = 2
+ 
+     C                   CLEAR                   DSClr1
+     C                   CLEAR                   DSFrc1
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Set Section.
+ 
+     C                   EVAL      DSFld1(#1)  = 'Interest PDCL'
+     C                   EVAL      DSFrc1(#1)  = 'Y'
+     C                   EVAL      #1         += 1
+ 
+      ** Set PDCL Loan Type/Subtype Headings.
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Loan Type/Subtype' +
+     C                                           '/Class: '
+     C                   EVAL      DSVal1(#1)  = w_AYIPLT + ' ' +
+     C                                           w_AYIPLS +
+     C                                           ' ' + w_AYIPLC
+ 
+      ** Cross-Validate Loan Type/Subtype with Separate Interest
+      ** Indicator.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+     C                   IF        w_AYIPLT    = *BLANKS       AND
+     C                             w_AYIPLS    = *BLANKS
+     C                   IF        w_AYSIIN    = 'Y'
+     C                   EVAL      DSMsgId     = 02
+     C                   ENDIF
+ 
+     C                   ELSE
+     C                   IF        w_AYSIIN   <> 'Y'
+     C                   EVAL      DSMsgId     = 03
+ 
+      ** Else, Validate PDCL Loan Type.
+ 
+     C                   ELSE
+     C                   EVAL      P@LNTY      = w_AYIPLT
+     C                   EVAL      P@LNST      = w_AYIPLS
+     C                   EVAL      P@LNCL      = w_AYIPLC
+     C                   EXSR      xvLNTY
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/SDLOANPD'
+     C                   EVAL      DSErr1     += 1
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** Validate PDCL Processing Type.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EXSR      xvLNPT
+ 
+     C                   IF        DSMsgid    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Processing Type:'
+     C                   EVAL      DSVal1(#1)  = %EDITC(AYLNPT:'X')
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** The following checks are bypassed as the values are now taken
+      ** from the origin loan.
+ 
+     C                   IF        DSBypass1  <> 'Y'
+ 
+      ** Validate PDCL Base Rate.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EVAL      P@BSR       = AYIBSR
+     C                   EVAL      WAYXBRT     = AYIBRT
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate Change Flag.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      P@BRCF      = BPBRCF
+     C                   EXSR      xvBRCF
+     C                   ENDIF
+ 
+      ** Validate PDCL Base Currency.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EXSR      xvCYCD
+ 
+      ** Validate PDCL Spread Rate.
+ 
+     C                   EVAL      P@BSR       = AYIBSR
+     C                   EVAL      P@RSP       = AYIRSP
+     C                   EVAL      WAYXBRT     = AYIBRT
+     C                   EXSR      xvRSP
+ 
+      ** Validate PDCL Spread Rate Indicator.
+ 
+     C                   EVAL      P@RSI       = AYIRSI
+     C                   EXSR      xvRSI
+ 
+      ** Validate PDCL Interest Basis.
+ 
+     C                   EVAL      P@ICB       = AYIICB
+     C                   EXSR      xvICB
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+      ** Process Default Penalty Rates;
+      ** Validate PDCL Base Rate.
+ 
+     C                   IF        %FOUND(LEPRATL1)
+     C                   EVAL      DSFilNm     = '/LEPRATPD'
+ 
+     C                   EVAL      P@CCY       = l_CCY
+      *
+     C                   EVAL      UpdateFlag = 'N'
+     C                   EVAL      P@LNTY      = l_LTYP
+     C                   EVAL      P@LNST      = l_SUTP
+     C                   EVAL      P@LNCL      = l_CLAS
+     C                   EXSR      xrLOAN
+     C                   IF        B2IBSR = 0 AND AYIBSR <> 0
+     C                   EVAL      B2IBSR = AYIBSR
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2IBRT = 0 AND AYIBRT <> 0
+     C                   EVAL      B2IBRT = AYIBRT
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+      *
+     C                   EVAL      P@BSR       = B2IBSR
+     C                   EVAL      WAYXBRT     = B2IBRT
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate Change Flag.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      P@BRCF      = BPBRCF
+     C                   EXSR      xvBRCF
+ 
+      ** Validate PDCL Base Currency.
+ 
+     C                   EVAL      P@CCY       = l_CCY
+     C                   EXSR      xvCYCD
+     C                   ENDIF
+ 
+      ** Validate PDCL Spread Rate.
+      *
+     C                   IF        B2IBSR = 0 AND AYIBSR <> 0
+     C                   EVAL      B2IBSR = AYIBSR
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2IBRT = 0 AND AYIBRT <> 0
+     C                   EVAL      B2IBRT = AYIBRT
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   IF        B2IRSP = 0 AND AYIRSP <> 0
+     C                   EVAL      B2IRSP = AYIRSP
+     C                   ENDIF
+      *
+ 
+     C                   EVAL      P@BSR       = B2IBSR
+     C                   EVAL      P@RSP       = B2IRSP
+     C                   EVAL      WAYXBRT     = B2IBRT
+     C                   EXSR      xvRSP
+ 
+      ** Validate PDCL Spread Rate Indicator.
+ 
+     C                   IF        ((B2IBSR <> 0 AND B2IRSP = 0) AND
+     C                             (B2IRAT <> *BLANKS))
+     C                   EVAL      B2IRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2IBSR = 0 AND B2IRSP <> 0
+     C                             AND B2IBRT = 0) AND (B2IRAT <> *BLANKS))
+     C                   EVAL      B2IRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2IBRT <> 0 AND B2IRSP = 0) AND
+     C                             (B2IRAT <> *BLANKS))
+     C                   EVAL      B2IRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2IBRT = 0 AND B2IRSP <> 0
+     C                             AND B2IBSR = 0) AND (B2IRAT <> *BLANKS))
+     C                   EVAL      B2IRAT = *BLANKS
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2IBSR <> 0 AND B2IRSP <> 0) AND
+     C                             (B2IRAT =  *BLANKS))
+     C                   EVAL      B2IRAT = AYIRSI
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ELSEIF    ((B2IBRT <> 0 AND B2IRSP <> 0) AND
+     C                             (B2IRAT =  *BLANKS))
+     C                   EVAL      B2IRAT = AYIRSI
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+     C                   EVAL      P@RSI       = B2IRAT
+     C                   EXSR      xvRSI
+ 
+      ** Validate PDCL Interest Basis.
+      *
+     C                   IF        (B2IICB < 1 OR B2IICB > 6) AND (AYIICB <> 0)
+     C                   EVAL      B2IICB = AYIICB
+     C                   EVAL      UpdateFlag = 'Y'
+     C                   ENDIF
+ 
+     C                   EVAL      P@ICB       = B2IICB
+     C                   EXSR      xvICB
+     C                   IF        UpdateFlag = 'Y'
+     C     KPRAT         CHAIN     LEPRATL1
+     C                   IF        %FOUND(LEPRATL1)
+     C                   UPDATE    LEPRATD0
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvFeePDCL - Validate Fee                                      *
+      *                                                               *
+      *****************************************************************
+     C     xvFeePDCL     BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSErr1      = 0
+     C                   EVAL      #1          = 2
+ 
+     C                   CLEAR                   DSClr1
+     C                   CLEAR                   DSFrc1
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Set Section.
+ 
+     C                   EVAL      DSFld1(#1)  = 'Fee PDCL'
+     C                   EVAL      DSFrc1(#1)  = 'Y'
+     C                   EVAL      #1         += 1
+ 
+      ** Validate PDCL Loan Type.
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1) = '- Loan Type/Subtype' +
+     C                                           '/Class: '
+     C                   EVAL      DSVal1(#1) = AUCLTY + ' ' + AUCLST +
+     C                                           ' ' + AUCLCL
+ 
+     C                   EVAL      P@LNTY      = AUCLTY
+     C                   EVAL      P@LNST      = AUCLST
+     C                   EVAL      P@LNCL      = AUCLCL
+     C                   EXSR      xvLNTY
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   EVAL      DSVAL1(#1) = 'PDCL data on SDFEEPD:'
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/SDLOANPD'
+     C                   EVAL      DSErr1     += 1
+ 
+     C                   EXSR      xwP1D
+ 
+      ** Validate PDCL Processing Type.
+ 
+     C                   ELSE
+     C                   IF        AYLNPT     <> 61
+     C                   EVAL      DSMsgid     = 06
+ 
+     C                   ELSE
+     C                   EVAL      DSMsgid     = 0
+     C                   ENDIF
+ 
+     C                   IF        DSMsgid    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Processing Type:'
+     C                   EVAL      DSVal1(#1)  = %EDITC(AYLNPT:'X')
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+      ** The following checks are bypassed as the values are now taken
+      ** from the origin loan.
+ 
+     C                   IF        DSBypass1  <> 'Y'
+ 
+      ** Validate PDCL Base Rate.
+ 
+     C                   EVAL      P@CCY       = FEFCCY
+     C                   EVAL      P@BSR       = AUCBSR
+     C                   EVAL      WAYXBRT     = AUCBRT
+     C                   EXSR      xvBSRT
+ 
+      ** Validate PDCL Base Rate Change Flag.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      P@BRCF      = BPBRCF
+     C                   EXSR      xvBRCF
+     C                   ENDIF
+ 
+      ** Validate PDCL Base Currency.
+ 
+     C                   EVAL      P@CCY       = FEFCCY
+     C                   EXSR      xvCYCD
+ 
+      ** Validate PDCL Spread Rate.
+ 
+     C                   EVAL      P@BSR       = AUCBSR
+     C                   EVAL      P@RSP       = AUCRSP
+     C                   EVAL      WAYXBRT     = AUCBRT
+     C                   EXSR      xvRSP
+ 
+      ** Validate PDCL Spread Rate Indicator.
+ 
+     C                   EVAL      P@RSI       = AUCRIN
+     C                   EXSR      xvRSI
+ 
+      ** Validate PDCL Interest Basis.
+ 
+     C                   EVAL      P@ICB       = AUICBS
+     C                   EXSR      xvICB
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvACCN_l - Validate Repayment Priority for Loan               *
+      *                                                               *
+      *****************************************************************
+     C     xvACCN_l      BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+     C                   EVAL      KRPCNUM     = *BLANKS
+     C                   EVAL      KRPACOD     = 0
+     C                   EVAL      KRPACSQ     = 0
+     C                   EVAL      KRPBRCA     = *BLANKS
+     C                   EVAL      KRPACCY     = *BLANKS
+ 
+     C                   EVAL      KRPLNRF     = l_LNRF
+ 
+      ** Set Key from Payable.
+ 
+     C                   IF        l_PTYP      = 66            OR
+     C                             l_PTYP      = 72
+     C                   SELECT
+     C                   WHEN      l_PSTM      = 01            OR
+     C                             l_PSTM      = 08
+     C                   EVAL      KCCY        = l_CCY
+     C                   EVAL      KNONB       = %SUBST(l_PONS:01:02)
+     C                   EVAL      KCNUM       = *BLANKS
+     C                   CALL      'AONOSTR0'    PLIST1
+ 
+     C                   IF        @RTCD       = *BLANKS
+     C                   EVAL      KRPCNUM     = A7CUST
+     C                   EVAL      KRPACOD     = %DEC(A7ACCD:10:0)
+     C                   EVAL      KRPACSQ     = A7ACSN
+     C                   EVAL      KRPBRCA     = A7BRCD
+     C                   EVAL      KRPACCY     = l_CCY
+     C                   ENDIF
+ 
+     C                   WHEN      l_PSTM      = 05
+     C                   EVAL      KRPCNUM     = %SUBST(l_PONS:01:06)
+     C                   EVAL      KRPACOD     = %DEC(%SUBST
+     C                                           (l_PONS:07:10):10:0)
+     C                   EVAL      KRPACSQ     = %DEC(%SUBST
+     C                                           (l_PONS:17:02):02:0)
+     C                   EVAL      KRPBRCA     = l_OSDB
+     C                   EVAL      KRPACCY     = l_CCY
+ 
+     C                   WHEN      l_PSTM      = 14
+     C                   MOVEL     l_PONS        KacACNO
+     C     KACCNTL1      CHAIN(E)  ACCNTL1
+ 
+     C                   IF        %FOUND(ACCNTL1)
+     C                   EVAL      KRPCNUM     = acCNUM
+     C                   EVAL      KRPACOD     = acACOD
+     C                   EVAL      KRPACSQ     = acACSQ
+     C                   EVAL      KRPBRCA     = acBRCA
+     C                   EVAL      KRPACCY     = acCCY
+     C                   ENDIF
+ 
+     C                   WHEN      l_PSTM      = 0             AND
+     C                             l_PONS      = *BLANKS
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Settlement ' +
+     C                                           'Instructions: '
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+     C                   EVAL      DSVal1(#1)  = 'PSTM-PONS not valid'
+ 
+     C                   EVAL      DSMsg1(#1)  = 21
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile)
+     C                   EVAL      DSErr1     += 1
+ 
+     C                   IF        DSType      = 'PDCL'      AND
+     C                             (o_PSTM    <> 0           OR
+     C                              o_PONS    <> *BLANKS)
+     C                   EVAL      DSMsg1A(#1) = '(origin method: ' +
+     C                                           %TRIM(%EDITW
+     C                                           (o_PSTM:'0  ')) +
+     C                                           ' / account: ' +
+     C                                           %TRIM(o_PONS) + ')'
+     C                   ENDIF
+ 
+     C                   EXSR      xwP1D
+     C                   ENDSL
+ 
+      ** Set Key From Receivable.
+ 
+     C                   ELSE
+     C                   IF        l_PTYP      = 61            OR
+     C                             l_PTYP      = 62            OR
+     C                             l_PTYP      = 64            OR
+     C                             l_PTYP      = 68            OR
+     C                             l_PTYP      = 80
+     C                   SELECT
+     C                   WHEN      l_RSTM      = 01            OR
+     C                             l_RSTM      = 08
+     C                   EVAL      KCCY        = l_CCY
+     C                   EVAL      KNONB       = %SUBST(l_RONS:01:02)
+     C                   EVAL      KCNUM       = *BLANKS
+     C                   CALL      'AONOSTR0'    PLIST1
+ 
+     C                   IF        @RTCD       = *BLANKS
+     C                   EVAL      KRPCNUM     = A7CUST
+     C                   EVAL      KRPACOD     = %DEC(A7ACCD:10:0)
+     C                   EVAL      KRPACSQ     = A7ACSN
+     C                   EVAL      KRPBRCA     = A7BRCD
+     C                   EVAL      KRPACCY     = l_CCY
+     C                   ENDIF
+ 
+     C                   WHEN      l_RSTM      = 05
+     C                   EVAL      KRPCNUM     = %SUBST(l_RONS:01:06)
+     C                   EVAL      KRPACOD     = %DEC(%SUBST
+     C                                           (l_RONS:07:10):10:0)
+     C                   EVAL      KRPACSQ     = %DEC(%SUBST
+     C                                           (l_RONS:17:02):02:0)
+     C                   EVAL      KRPBRCA     = l_OMDB
+     C                   IF        KRPBRCA     = *blanks
+     C                   EVAL      KRPBRCA     = l_osdb
+     C                   ENDIF
+     C                   EVAL      KRPACCY     = l_CCY
+ 
+     C                   WHEN      l_RSTM      = 14
+     C                   MOVEL     l_RONS        KacACNO
+     C     KACCNTL1      CHAIN(E)  ACCNTL1
+ 
+     C                   IF        %FOUND(ACCNTL1)
+     C                   EVAL      KRPCNUM     = acCNUM
+     C                   EVAL      KRPACOD     = acACOD
+     C                   EVAL      KRPACSQ     = acACSQ
+     C                   EVAL      KRPBRCA     = acBRCA
+     C                   EVAL      KRPACCY     = acCCY
+     C                   ENDIF
+ 
+     C                   WHEN      l_RSTM      = 0             AND
+     C                             l_RONS      = *BLANKS
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Settlement ' +
+     C                                           'Instructions: '
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+     C                   EVAL      DSVal1(#1)  = 'RSTM-RONS not valid'
+ 
+     C                   EVAL      DSMsg1(#1)  = 21
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile)
+     C                   EVAL      DSErr1     += 1
+ 
+     C                   IF        DSType      = 'PDCL'      AND
+     C                             (o_RSTM    <> 0           OR
+     C                              o_RONS    <> *BLANKS)
+     C                   EVAL      DSMsg1A(#1) = '(origin method: ' +
+     C                                           %TRIM(%EDITW
+     C                                           (o_RSTM:'0  ')) +
+     C                                           ' / account: ' +
+     C                                           %TRIM(o_RONS) + ')'
+     C                   ENDIF
+ 
+     C                   EXSR      xwP1D
+     C                   ENDSL
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Retrieve Repayment Priority.
+ 
+     C     KLEACCNL1     CHAIN(E)  LEACCNL1
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE      = 'LEACCNL1'
+     C                   EVAL      DBKEY       = KRPCNUM +
+     C                                           %CHAR(KRPACOD) +
+     C                                           %CHAR(KRPACSQ) +
+     C                                           KRPBRCA +
+     C                                           KRPACCY
+     C                   EVAL      DBASE       = 200
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** If Not Found, Set Error.
+ 
+     C                   IF        NOT %FOUND(LEACCNL1)
+     C                   EVAL      DSMsgId     = 22
+     C                   EVAL      DSFilNm     = '/LEACCNPD'
+ 
+      ** Retrieve Repayment Priority using Alternate Key.
+ 
+     C     KLEACCNLA     CHAIN(E)  LEACCNLA
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE      = 'LEACCNLA'
+     C                   EVAL      DBKEY       = KRPLNRF
+     C                   EVAL      DBASE       = 201
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        %FOUND(LEACCNLA)
+     C                   EVAL      DSMsgId     = 23
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   DELETE(E) LEACCNLAF
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If Synchronise Option, Write Record.
+ 
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   EVAL      DSMsgId     = 24
+     C                   EVAL      DSPrtRec   -= 1
+ 
+     C                   EXSR      xsACCNL1F
+ 
+     C                   IF        RPCNUM      = *BLANKS       OR
+     C                             RPACCY      = *BLANKS       OR
+     C                             RPACOD      = 0             OR
+     C                             RPACSQ      = 0             OR
+     C                             RPBRCA      = *BLANKS       OR
+     C                             RPBRCA      = *ZEROS
+     C                   EVAL      DSMsgId     = 31
+ 
+     C                   ELSE
+     C                   WRITE(E)  LEACCNL1F
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvACCN_f - Validate Repayment Priority for Fee                *
+      *                                                               *
+      *****************************************************************
+     C     xvACCN_f      BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+     C                   EVAL      KRPCNUM     = *BLANKS
+     C                   EVAL      KRPACOD     = 0
+     C                   EVAL      KRPACSQ     = 0
+     C                   EVAL      KRPBRCA     = *BLANKS
+     C                   EVAL      KRPACCY     = *BLANKS
+ 
+     C                   EVAL      KRPFCNM     = FECNUM
+     C                   EVAL      KRPFLNR     = FELOAN
+     C                   EVAL      KRPFACT     = FEFACL
+     C                   EVAL      KRPFSE1     = FEFSEQ
+     C                   EVAL      KRPFCOD     = FEFCOD
+     C                   EVAL      KRPFCBR     = FEBRCA
+ 
+      ** Set Key from Payable.
+ 
+     C                   IF        PTFI       <> *BLANKS
+     C                   SELECT
+     C                   WHEN      PSTM        = 01            OR
+     C                             PSTM        = 08
+     C                   EVAL      KCCY        = FEFCCY
+     C                   EVAL      KNONB       = %SUBST(PONS:01:02)
+     C                   EVAL      KCNUM       = *BLANKS
+     C                   CALL      'AONOSTR0'    PLIST1
+ 
+     C                   IF        @RTCD       = *BLANKS
+     C                   EVAL      KRPCNUM     = A7CUST
+     C                   EVAL      KRPACOD     = %DEC(A7ACCD:10:0)
+     C                   EVAL      KRPACSQ     = A7ACSN
+     C                   EVAL      KRPBRCA     = A7BRCD
+     C                   EVAL      KRPACCY     = FEFCCY
+     C                   ENDIF
+ 
+     C                   WHEN      PSTM        = 05
+     C                   EVAL      KRPCNUM     = %SUBST(PONS:01:06)
+     C                   EVAL      KRPACOD     = %DEC(%SUBST
+     C                                           (PONS:07:10):10:0)
+     C                   EVAL      KRPACSQ     = %DEC(%SUBST
+     C                                           (PONS:17:02):02:0)
+     C                   EVAL      KRPBRCA     = OMDB
+     C                   EVAL      KRPACCY     = FEFCCY
+ 
+     C                   WHEN      PSTM        = 14
+     C                   MOVEL     PONS          KacACNO
+     C     KACCNTL1      CHAIN(E)  ACCNTL1
+ 
+     C                   IF        %FOUND(ACCNTL1)
+     C                   EVAL      KRPCNUM     = acCNUM
+     C                   EVAL      KRPACOD     = acACOD
+     C                   EVAL      KRPACSQ     = acACSQ
+     C                   EVAL      KRPBRCA     = acBRCA
+     C                   EVAL      KRPACCY     = acCCY
+     C                   ENDIF
+ 
+     C                   WHEN      PSTM        = 0             AND
+     C                             PONS        = *BLANKS
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Settlement ' +
+     C                                           'Instructions: '
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+     C                   EVAL      DSVal1(#1)  = 'PSTM-PONS not valid'
+ 
+     C                   EVAL      DSMsg1(#1)  = 21
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile)
+     C                   EVAL      DSErr1     += 1
+     C                   EXSR      xwP1D
+ 
+     C                   ENDSL
+ 
+      ** Set Key From Receivable.
+ 
+     C                   ELSE
+     C                   SELECT
+     C                   WHEN      RSTM        = 01            OR
+     C                             RSTM        = 08
+     C                   EVAL      KCCY        = FEFCCY
+     C                   EVAL      KNONB       = %SUBST(RONS:01:02)
+     C                   EVAL      KCNUM       = *BLANKS
+     C                   CALL      'AONOSTR0'    PLIST1
+ 
+     C                   IF        @RTCD       = *BLANKS
+     C                   EVAL      KRPCNUM     = A7CUST
+     C                   EVAL      KRPACOD     = %DEC(A7ACCD:10:0)
+     C                   EVAL      KRPACSQ     = A7ACSN
+     C                   EVAL      KRPBRCA     = A7BRCD
+     C                   EVAL      KRPACCY     = A7CYCD
+     C                   ENDIF
+ 
+     C                   WHEN      RSTM        = 05
+     C                   EVAL      KRPCNUM     = %SUBST(RONS:01:06)
+     C                   EVAL      KRPACOD     = %DEC(%SUBST
+     C                                           (RONS:07:10):10:0)
+     C                   EVAL      KRPACSQ     = %DEC(%SUBST
+     C                                           (RONS:17:02):02:0)
+     C                   EVAL      KRPBRCA     = OSDB
+     C                   EVAL      KRPACCY     = FEFCCY
+ 
+     C                   WHEN      RSTM        = 14
+     C                   MOVEL     RONS          KacACNO
+     C     KACCNTL1      CHAIN(E)  ACCNTL1
+ 
+     C                   IF        %FOUND(ACCNTL1)
+     C                   EVAL      KRPCNUM     = acCNUM
+     C                   EVAL      KRPACOD     = acACOD
+     C                   EVAL      KRPACSQ     = acACSQ
+     C                   EVAL      KRPBRCA     = acBRCA
+     C                   EVAL      KRPACCY     = acCCY
+     C                   ENDIF
+ 
+     C                   WHEN      RSTM        = 0             AND
+     C                             RONS        = *BLANKS
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Settlement ' +
+     C                                           'Instructions: '
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+     C                   EVAL      DSVal1(#1)  = 'RSTM-RONS not valid'
+ 
+     C                   EVAL      DSMsg1(#1)  = 21
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile)
+     C                   EVAL      DSErr1     += 1
+     C                   EXSR      xwP1D
+ 
+     C                   ENDSL
+     C                   ENDIF
+ 
+      ** Retrieve Repayment Priority.
+ 
+     C     KLEACCNL3     CHAIN(E)  LEACCNL3
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE      = 'LEACCNL3'
+     C                   EVAL      DBKEY       = KRPCNUM +
+     C                                           %CHAR(KRPACOD) +
+     C                                           %CHAR(KRPACSQ) +
+     C                                           KRPBRCA +
+     C                                           KRPACCY
+     C                   EVAL      DBASE       = 210
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** If Not Found, Set Error.
+ 
+     C                   IF        NOT %FOUND(LEACCNL3)
+     C                   EVAL      DSMsgId     = 22
+     C                   EVAL      DSFilNm     = '/LEACCNPD'
+ 
+      ** Retrieve Repayment Priority using Alternate Key.
+ 
+     C     KLEACCNLB     CHAIN(E)  LEACCNLB
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE      = 'LEACCNLB'
+     C                   EVAL      DBKEY       = KRPFCNM +
+     C                                           KRPFLNR +
+     C                                           %CHAR(KRPFACT) +
+     C                                           %CHAR(KRPFSE1) +
+     C                                           %CHAR(KRPFCOD) +
+     C                                           KRPFCBR
+     C                   EVAL      DBASE       = 211
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        %FOUND(LEACCNLB)
+     C                   EVAL      DSMsgId     = 23
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   DELETE(E) LEACCNLBF
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If Synchronise Option, Write Record.
+ 
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   EVAL      DSMsgId     = 24
+     C                   EVAL      DSPrtRec   -= 1
+ 
+     C                   EXSR      xsACCNL3F
+ 
+     C                   IF        RPCNUM      = *BLANKS       OR
+     C                             RPACCY      = *BLANKS       OR
+     C                             RPACOD      = 0             OR
+     C                             RPACSQ      = 0             OR
+     C                             RPBRCA      = *BLANKS       OR
+     C                             RPBRCA      = *ZEROS
+     C                   EVAL      DSMsgId     = 31
+ 
+     C                   ELSE
+     C                   WRITE(E)  LEACCNL3F
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvACNT - Validate Settlement Account                          *
+      *                                                               *
+      *****************************************************************
+     C     xvACNT        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Retrieve Account Details.
+ 
+     C                   EVAL      KacCNUM     = RPCNUM
+     C                   EVAL      KacCCY      = RPACCY
+     C                   EVAL      KacACOD     = RPACOD
+     C                   EVAL      KacACSQ     = RPACSQ
+     C                   EVAL      KacBRCA     = RPBRCA
+     C     KACCNTL0      CHAIN(E)  ACCNTL0
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE      = 'ACCNTL0'
+     C                   EVAL      DBKEY       = KacCNUM + KacCCY +
+     C                                           %CHAR(KacACOD) +
+     C                                           %CHAR(KacACSQ) +
+     C                                           KacBRCA
+     C                   EVAL      DBASE       = 250
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** If Not Found, Set Error.
+ 
+     C                   IF        NOT %FOUND(ACCNTL0)
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   EVAL      DSMsgId     = 34
+     C                   EVAL      DSDltRc     = 'Y'
+     C                   EVAL      DSPrtRec   -= 1
+ 
+     C                   ELSE
+     C                   EVAL      DSMsgId     = 33
+     C                   ENDIF
+ 
+     C                   EVAL      DSFilNm     = '/ACCNTAB'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvLNTY - Validate Loan Type                                   *
+      *                                                               *
+      *****************************************************************
+     C     xvLNTY        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Retrieve Loan Type.
+ 
+     C                   IF        P@LNTY      = *BLANKS
+     C                   EVAL      DSMsgId     = 02
+ 
+     C                   ELSE
+     C                   CALL(E)   'AOLOANR0'
+     C                   PARM      *BLANKS       P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@LNTY
+     C                   PARM                    P@LNST
+     C                   PARM                    P@LNCL
+     C     SDLOAN        PARM      SDLOAN        DSFDY
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBPGM       = 'AOLOANR0'
+     C                   EVAL      DBFILE      = 'SDLOANPD'
+     C                   EVAL      DBASE       = 101
+     C                   EVAL      DBKEY = P@LNTY + P@LNST + P@LNCL
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   IF        P@RTCD     <> *BLANKS
+     C                   EVAL      DSMsgId     = 03
+     C                   EVAL      DSFilNm     = '/SDLOANPD'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvPTYP - Validate Processing Type                             *
+      *                                                               *
+      *****************************************************************
+     C     xvPTYP        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Validate Processing Type.
+ 
+     C                   IF        P@PTYP      = 0
+     C                   EVAL      DSMsgId     = 04
+ 
+     C                   ELSE
+     C                   IF        P@PTYP      < 61            OR
+     C                             P@PTYP      > 72
+     C                   EVAL      DSMsgId     = 05
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvLNPT - Validate PDCL Principal/Interest Processing Type     *
+      *                                                               *
+      *****************************************************************
+     C     xvLNPT        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Validate Processing Type.
+ 
+     C                   SELECT
+     C                   WHEN      (w_AYLNPT   = 61            OR
+     C                              w_AYLNPT   = 62            OR
+     C                              w_AYLNPT   = 80)           AND
+     C                             AYLNPT     <> 61
+     C                   EVAL      DSMsgId     = 06
+ 
+     C                   WHEN      (w_AYLNPT   = 64            OR
+     C                              w_AYLNPT   = 68)           AND
+     C                             AYLNPT     <> 68
+     C                   EVAL      DSMsgId     = 07
+ 
+     C                   WHEN      (w_AYLNPT   = 66            OR
+     C                              w_AYLNPT   = 69)           AND
+     C                             AYLNPT     <> 69
+     C                   EVAL      DSMsgId     = 08
+     C                   ENDSL
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvBSRT - Validate PDCL Principal/Interest Base Rate           *
+      *                                                               *
+      *****************************************************************
+     C     xvBSRT        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Retrieve Base Rate.
+ 
+     C                   IF        P@BSR      <> 0
+     C                   CALL(E)   'AOBSRTR0'
+     C                   PARM      *BLANKS       P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@CCY
+     C                   PARM                    P@BSR
+     C     SDBSRT        PARM      SDBSRT        DSSDY
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBPGM       = 'AOBSRTR0'
+     C                   EVAL      DBFILE      = 'SDBSRTPD'
+     C                   EVAL      DBASE       = 102
+     C                   EVAL      DBKEY       = P@CCY +
+     C                                           %EDITC(P@BSR:'X')
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        P@RTCD     <> *BLANKS
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Base Rate:'
+     C                   EVAL      DSVal1(#1)  = P@CCY +' '+
+     C                                           %EDITC(P@BSR:'X')
+ 
+     C                   EVAL      DSMsgId     = 09
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/SDBSRTPD'
+ 
+     C                   EXSR      xwP1D
+     C                   ELSE
+ 
+      *** Base rate code and base rate cannot be both have values
+ 
+     C                   IF        WAYXBRT <> 0
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Base Rate Code/Rate:'
+     C                   EVAL      DSVal1(#1)  = %EDITC(P@BSR:'X') + ' ' +
+     C                                           %EDITC(WAYXBRT:'X')
+ 
+     C                   EVAL      DSMsgId     = 39
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/SDBSRTPD'
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvAKEY - Validation removed as requested by the bank          *
+      *                                                               *
+      *****************************************************************
+     C     xvAKEY        BEGSR
+ 
+      ** Initialisation.
+ 
+      ** Validation removed as requested by the bank
+ 
+     C                   MOVE      'N'           Wackflag
+     C                   IF        Wackflag = 'Y'
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      WRFound     = 'Y'
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Retrieve Base Rate.
+ 
+     C     DSAKEYK       IFNE      *BLANKS
+     C     DSAKEYK       CHAIN     ACKEY
+ 
+      ** error if account key not found
+     C                   IF        not %found
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Account key'
+     C                   EVAL      DSVal1(#1)  = DSAKEYK
+ 
+     C                   EVAL      DSMsgId     = 35
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/ACKEYAL '
+     C                   EVAL      WRFound     = 'N'
+ 
+      ** Output ACKEYAL
+ 
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+     C                   EVAL      DSPgmAct    = %SUBST(%TRIM
+     C                                           (DSXMSG(35)):1:1)
+ 
+      ** add missing record
+ 
+     C                   IF        DSPgmACT    = 'R'
+     C                   CLEAR                   ACKEYALF
+     C                   EVAL      K_RECI = 'D'
+     C                   EVAL      K_AKEY = DSAKEYK
+     C                   EVAL      K_LCD  = BJRDNB
+     C                   EVAL      K_CHTP = 'I'
+     C                   EVAL      K_IUSR = 'SMU00116'
+     C                   EVAL      WRFound     = 'A'
+     C                   WRITE     ACKEYALF
+     C                   EVAL      DSMsgId     = 37
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/ACKEYAL '
+ 
+      ** update trailer
+ 
+     C     *LOVAL        SETLL     ACKEYAKF
+     C                   READ      ACKEYAKF
+     C                   IF        %FOUND
+     C                   ADD       1             K_NREC1
+     C                   ADD       1             K_NINS
+     C                   UPDATE    ACKEYAKF
+ 
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** print record
+ 
+     C                   EXSR      xwP1D
+ 
+      ** if found, check posting reference 2
+ 
+     C                   ENDIF
+     C                   IF        WRFound = 'Y' or WRFound = 'A'
+     C                   IF        DSPOSTR2 = 'Y'
+     C                   IF        K_PRF1 <> 2 and K_PRF2 <> 2
+     C                             and K_PRF3 <> 2
+ 
+     C                   EVAL      DSFld1(#1)  = '- Account key'
+     C                   EVAL      DSVal1(#1)  = DSAKEYK
+     C                   EVAL      DSMsgId     = 36
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/ACKEYAL '
+     C
+ 
+      ** Update ACKEYAL
+ 
+     C                   IF        P@Mode      = '*SYNC'       OR
+     C                             P@Mode      = '*ALLSYNC'
+ 
+      ** If Record was added by SMU00116 then chain record in order to
+      ** update it
+ 
+     C                   IF        WRFound  = 'A'
+     C     DSAKEYK       CHAIN     ACKEY
+     C                   ENDIF
+     C                   EVAL      DSPgmAct = %SUBST(%TRIM
+     C                                        (DSXMSG(36)):1:1)
+ 
+      ** add missing record
+ 
+     C                   IF        DSPgmACT    = 'R'
+     C                   Z-ADD     0             WACKYUPD
+ 
+     C                   IF        K_ACD1 = 0 and K_PRF1 = 0 and
+     C                             K_NCD1 = *blanks
+     C                   EVAL      K_PRF1 = 2
+     C                   EVAL      WACKYUPD= 1
+     C                   ENDIF
+ 
+     C                   IF        WACKYUPD = 0
+     C                   IF        K_ACD2 = 0 and K_PRF2 = 0 and
+     C                             K_NCD2 = *blanks
+     C                   EVAL      K_PRF2 = 2
+     C                   EVAL      WACKYUPD  = 1
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   IF        WACKYUPD = 0
+     C                   IF        K_ACD3 = 0 and K_PRF3 = 0 and
+     C                             K_NCD3 = *blanks
+     C                   EVAL      K_PRF3 = 2
+     C                   EVAL      WACKYUPD =1
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** update account keys file
+      ** WRFound = 'A' - record added above, therefore do chain before
+      ** update
+ 
+     C                   IF        WACKYUPD = 1
+     C                   UPDATE    ACKEYALF
+     C                   EVAL      DSMsgId     = 38
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           '/ACKEYAL '
+     C                   ENDIF
+ 
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** print record
+ 
+     C                   EXSR      xwP1D
+ 
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvBRCF - Validate PDCL Base Rate Change Facility Flag         *
+      *                                                               *
+      *****************************************************************
+     C     xvBRCF        BEGSR
+ 
+      **Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+      ** Check whether Base Rate Change Facility flag is equal to 'Y'.
+ 
+     C                   IF        P@BSR      <> 0             AND
+     C                             P@BRCF     <> 'Y'
+     C                   EVAL      DSMsgId     = 10
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Base Rate ' +
+     C                                           'Change Facility:'
+     C                   EVAL      DSVal1(#1)  = P@BRCF
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile)
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvCYCD - Validate PDCL Base Rate Currency                     *
+      *                                                               *
+      *****************************************************************
+     C     xvCYCD        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+      ** Check whether Base Rate Currency Exists/Differs
+      ** from Loan Currency.
+ 
+     C                   IF        P@BSR      <> 0
+     C                   IF        BACYCD      = *BLANKS
+     C                   EVAL      DSMsgId     = 11
+ 
+     C                   ELSE
+     C                   IF        BACYCD     <> P@CCY
+     C                   EVAL      DSMsgId     = 12
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1) = '- Base Rate Currency:'
+     C                   EVAL      DSVal1(#1)  = BACYCD
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvRSP - Validate PDCL Spread Rate                             *
+      *                                                               *
+      *****************************************************************
+     C     xvRSP         BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+      **Check whether Base rate and Spread Rate are both zero.
+ 
+     C                   IF        (P@BSR = 0 AND WAYXBRT = 0)
+     C                             AND P@RSP = 0
+     C                   EVAL      DSMsgId     = 13
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Spread Rate:'
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvRSI - Validate PDCL Spread Rate Indicator                   *
+      *                                                               *
+      *****************************************************************
+     C     xvRSI         BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+      ** Check whether Spread Rate Ind exists but Spread/Base Rate
+      ** zero.
+ 
+ 
+     C                   IF        P@RSI       = 'A'           OR
+     C                             P@RSI       = 'D'
+     C                   IF        P@BSR       = 0             OR
+     C                             P@RSP       = 0
+     C                   EVAL      DSMsgId     = 19
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Check whether Spread Rate Ind equal to 'A' or 'D' when Spread
+      ** Rate Exists.
+ 
+ 
+     C                   IF        P@BSR      <> 0             AND
+     C                             P@RSP      <> 0
+     C                   IF        P@RSI      <> 'A'           AND
+     C                             P@RSI      <> 'D'
+     C                   EVAL      DSMsgId     = 15
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Spread Rate ' +
+     C                                           'Indicator:'
+     C                   EVAL      DSVal1(#1)  = P@RSI
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = DSFile
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvICB - Validate Interest Calculation Basis                   *
+      *                                                               *
+      *****************************************************************
+     C     xvICB         BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+      ** Check whether Interest Calculation Basis must be between
+      ** '1' and '6'.
+ 
+     C                   IF        P@ICB       < 1             OR
+     C                             P@ICB       > 6
+     C                   EVAL      DSMsgId     = 16
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Interest Basis:'
+     C                   EVAL      DSVal1(#1)  = %EDITC(P@ICB:'X')
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           DSFilNm
+ 
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvCAPI - Validate Capitialisation Indicator                   *
+      *                                                               *
+      *****************************************************************
+     C     xvCAPI        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1)  = '- Capitalisation ' +
+     C                                           'Indicator:'
+     C                   EVAL      DSVal1(#1)  = P@CAPI
+ 
+      ** Check whether Capitalisation Ind & Separate Ind both 'Y'.
+ 
+     C                   IF        P@CAPI      = 'Y'           AND
+     C                             P@SIIN      = 'Y'
+     C                   EVAL      DSMsgId     = 17
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1) = '- Separate Indicator:'
+     C                   EVAL      DSVal1(#1)  = P@SIIN
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1) = %TRIM(DSFile) + DSFilNm
+     C                   ENDIF
+ 
+      ** Check whether Capitalisation Ind 'Y' & Facilty Utilisation
+      ** is 'N'.
+ 
+     C                   EVAL      DSMsgId     = 0
+ 
+     C                   IF        P@CAPI      = 'Y'           AND
+     C                             P@FAMU      = 'N'
+     C                   EVAL      DSMsgId     = 18
+     C                   ENDIF
+ 
+      ** If Error, Print Details.
+ 
+     C                   IF        DSMsgId    <> 0
+     C                   IF        DSFld1(#1) <> *BLANKS       OR
+     C                             DSVal1(#1) <> *BLANKS       OR
+     C                             DSMsg1(#1) <> 0
+     C                   EVAL      #1         += 1
+     C                   ENDIF
+ 
+     C                   EVAL      DSFld1(#1) = '- Facility ' +
+     C                                          'Utilisation Flag:'
+     C                   EVAL      DSVal1(#1)  = P@FAMU
+ 
+     C                   EVAL      DSMsg1(#1)  = DSMsgId
+     C                   EVAL      DSFil1(#1)  = %TRIM(DSFile) +
+     C                                           DSFilNm
+     C                   ENDIF
+ 
+      ** If No Error, Clear Arrays.
+ 
+     C                   IF        DSMsgId     = 0
+     C                   EVAL      DSFld1(#1)  = *BLANKS
+     C                   EVAL      DSVal1(#1)  = *BLANKS
+ 
+     C                   ELSE
+     C                   EXSR      xwP1D
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvCCY - Validate Currency Code                                *
+      *                                                               *
+      *****************************************************************
+     C     xvCCY         BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Check whether Currency Exists.
+ 
+     C                   CALL(E)   'AOCURRR0'
+     C                   PARM      *BLANKS       P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@CCY
+     C     SDCURR        PARM      SDCURR        DSSDY
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBPGM       = 'AOCURRR0'
+     C                   EVAL      DBFILE      = 'SDCURRPD'
+     C                   EVAL      DBASE       = 101
+     C                   EVAL      DBKEY       = P@CCY
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        P@RTCD     <> *BLANKS
+     C                   EVAL      DSMsgId     = 26
+     C                   EVAL      DSFilNm     = '/SDCURRPD'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xvFCOD - Validate Fee Code                                    *
+      *                                                               *
+      *****************************************************************
+     C     xvFCOD        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DSMsgId     = 0
+     C                   EVAL      DSFilNm     = *BLANKS
+ 
+      ** Retrieve Loan Type.
+ 
+     C                   IF        P@FECD      = *BLANKS
+     C                   EVAL      DSMsgId     = 28
+     C                   EVAL      DSFilNm     = '/SDFEEPD'
+ 
+     C                   ELSE
+     C                   CALL(E)   'AOFEER0'
+     C                   PARM      *BLANKS       P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@FECD
+     C     SDFEE         PARM      SDFEE         DSSDY
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBPGM       = 'AOLOANR0'
+     C                   EVAL      DBFILE      = 'SDFEEPD'
+     C                   EVAL      DBASE       = 101
+     C                   EVAL      DBKEY       = P@FECD
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   IF        P@RTCD     <> *BLANKS
+     C                   EVAL      DSMsgId     = 29
+     C                   EVAL      DSFilNm     = '/SDFEEPD'
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xsACCNL1F - Set Repayment Priority Details for Loan           *
+      *                                                               *
+      *****************************************************************
+     C     xsACCNL1F     BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   CLEAR                   LEACCNL1F
+ 
+      ** Set Key Fields.
+ 
+     C                   EVAL      RPBRCA      = KRPBRCA
+     C                   EVAL      RPACCY      = KRPACCY
+     C                   EVAL      RPCNUM      = KRPCNUM
+     C                   EVAL      RPACOD      = KRPACOD
+     C                   EVAL      RPACSQ      = KRPACSQ
+ 
+      ** Set Repayment Priority.
+ 
+     C                   EVAL      RPPCK1      = 99999
+     C                   EVAL      RPPCK2      = 99999
+     C                   EVAL      RPPCK3      = 99999
+     C                   EVAL      RPPCKO      = 99999
+ 
+     C                   IF        AYPCKO      > 0
+     C                   EVAL      RPPCK1      = AYPCKO
+     C                   ENDIF
+ 
+      ** RETRIEVE PCN FROM FACILITY TYPE
+ 
+     C                   MOVE      L_FTYP        P@FACT
+     C                   EXSR      xrFACT
+ 
+     C                   IF        AMPCKO      > 0
+     C                   EVAL      RPPCK2      = AMPCKO
+     C                   ENDIF
+ 
+     C                   SELECT
+     C                   WHEN      RPPCK1     <= RPPCK2        AND
+     C                             RPPCK1     <= RPPCK3
+     C                   EVAL      RPPCKO      = RPPCK1
+ 
+     C                   WHEN      RPPCK2     <= RPPCK1        AND
+     C                             RPPCK2     <= RPPCK3
+     C                   EVAL      RPPCKO      = RPPCK2
+ 
+     C                   WHEN      RPPCK3     <= RPPCK1        AND
+     C                             RPPCK3     <= RPPCK2
+     C                   EVAL      RPPCKO      = RPPCK3
+     C                   ENDSL
+ 
+      ** Retrieve Facility Details.
+ 
+     C                   EVAL      Kf_CNUM     = l_FCUS
+     C                   EVAL      Kf_FACT     = l_FTYP
+     C                   EVAL      Kf_FCNO     = l_FSEQ
+     C                   EVAL      Kf_RCTP     = 'A'
+     C     KFCLTY        CHAIN(E)  FCLTY
+ 
+     C                   IF        %FOUND(FCLTY)
+     C                   EVAL      RPFFCB      = f_BRCA
+     C                   ENDIF
+ 
+      ** Set Remaining Fields.
+ 
+     C                   EVAL      RPRECI      = l_RECI
+     C                   EVAL      RPSTDT      = l_VDAT
+ 
+      ** Loan...
+ 
+     C                   EVAL      RPLNRF      = l_LNRF
+     C                   EVAL      RPLCBR      = l_BRCA
+     C                   EVAL      RPLCNU      = l_CNUM
+     C                   EVAL      RPLTYP      = l_LTYP
+     C                   EVAL      RPSUTP      = l_SUTP
+     C                   EVAL      RPLCLS      = l_CLAS
+ 
+      ** Fee...
+ 
+     C                   EVAL      RPFCBR      = *BLANKS
+     C                   EVAL      RPFCNM      = *BLANKS
+     C                   EVAL      RPFLNR      = *BLANK
+     C                   EVAL      RPFACT      = 0
+     C                   EVAL      RPFSE1      = 0
+     C                   EVAL      RPFCOD      = 0
+ 
+      ** Facility...
+ 
+     C                   EVAL      RPFFCN      = l_FCUS
+     C                   EVAL      RPFFAC      = l_FTYP
+     C                   EVAL      RPFFNO      = l_FSEQ
+ 
+      ** Misc...
+ 
+     C                   EVAL      RPFRNT      = l_FRNT
+     C                   EVAL      RPTMST      = l_TMST
+ 
+     C                   EVAL      RPXRFI      = l_XRFI
+     C                   EVAL      RPXRFN      = l_XRFN
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xsACCNL3F - Set Repayment Priority Details for Fee            *
+      *                                                               *
+      *****************************************************************
+     C     xsACCNL3F     BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   CLEAR                   LEACCNL3F
+ 
+      ** Set Key Fields.
+ 
+     C                   EVAL      RPBRCA      = KRPBRCA
+     C                   EVAL      RPACCY      = KRPACCY
+     C                   EVAL      RPCNUM      = KRPCNUM
+     C                   EVAL      RPACOD      = KRPACOD
+     C                   EVAL      RPACSQ      = KRPACSQ
+ 
+     C                   EVAL      RPFCNM      = KRPFCNM
+     C                   EVAL      RPFLNR      = KRPFLNR
+     C                   EVAL      RPFACT      = KRPFACT
+     C                   EVAL      RPFSE1      = KRPFSE1
+     C                   EVAL      RPFCOD      = KRPFCOD
+ 
+      ** Set Repayment Priority.
+ 
+     C                   EVAL      RPPCK1      = 99999
+     C                   EVAL      RPPCK2      = 99999
+     C                   EVAL      RPPCK3      = 99999
+     C                   EVAL      RPPCKO      = 99999
+ 
+     C                   IF        FEFCOD     <> 0
+     C                   MOVE      FEFCOD        P@FECD
+     C                   EXSR      xrFEE
+ 
+     C                   IF        AUPCKO      > 0
+     C                   EVAL      RPPCK1      = AUPCKO
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   SELECT
+     C                   WHEN      FEFACL     <> 0
+     C                   EVAL      P@FACT      = %CHAR(FEFACL)
+     C                   EXSR      xrFACT
+ 
+     C                   IF        AMPCKO      > 0
+     C                   EVAL      RPPCK2      = AMPCKO
+     C                   ENDIF
+ 
+     C                   WHEN      FELOAN     <> *BLANK
+     C                   EVAL      P@LNTY      = FELTYP
+     C                   EVAL      P@LNST      = FESUTP
+     C                   EVAL      P@LNCL      = FECLAS
+     C                   EXSR      xrLOAN
+ 
+     C                   IF        AYPCKO      > 0
+     C                   EVAL      RPPCK2      = AYPCKO
+     C                   ENDIF
+     C                   ENDSL
+ 
+     C                   SELECT
+     C                   WHEN      RPPCK1     <= RPPCK2        AND
+     C                             RPPCK1     <= RPPCK3
+     C                   EVAL      RPPCKO      = RPPCK1
+ 
+     C                   WHEN      RPPCK2     <= RPPCK1        AND
+     C                             RPPCK2     <= RPPCK3
+     C                   EVAL      RPPCKO      = RPPCK2
+ 
+     C                   WHEN      RPPCK3     <= RPPCK1        AND
+     C                             RPPCK3     <= RPPCK2
+     C                   EVAL      RPPCKO      = RPPCK3
+     C                   ENDSL
+ 
+      ** Retrieve Facility Details.
+ 
+     C                   EVAL      Kf_CNUM     = FECNUM
+     C                   MOVEL     FEFACL        Kf_FACT
+     C                   MOVE      FEFACL        Kf_FCNO
+     C                   EVAL      Kf_RCTP     = 'A'
+     C     KFCLTY        CHAIN(E)  FCLTY
+ 
+     C                   IF        %FOUND(FCLTY)
+     C                   EVAL      RPFFCB      = f_BRCA
+     C                   ENDIF
+ 
+      ** Set Remaining Fields.
+ 
+     C                   EVAL      RPRECI      = FERECI
+     C                   EVAL      RPSTDT      = FEPSTD
+ 
+      ** Loan...
+ 
+     C                   EVAL      RPLNRF      = FELOAN
+     C                   EVAL      RPLCBR      = *BLANKS
+     C                   EVAL      RPLCNU      = *BLANKS
+     C                   EVAL      RPLTYP      = FELTYP
+     C                   EVAL      RPSUTP      = FESUTP
+     C                   EVAL      RPLCLS      = FECLAS
+ 
+      ** Fee...
+ 
+     C                   EVAL      RPFCBR      = FEBRCA
+     C                   EVAL      RPFCNM      = FECNUM
+     C                   EVAL      RPFLNR      = FELOAN
+     C                   EVAL      RPFACT      = FEFACL
+     C                   EVAL      RPFSE1      = FEFSEQ
+     C                   EVAL      RPFCOD      = FEFCOD
+ 
+      ** Facility...
+ 
+     C                   EVAL      RPFFCN      = FECNUM
+     C                   MOVEL     FEFACL        RPFFAC
+     C                   MOVE      FEFACL        RPFFNO
+ 
+      ** Misc...
+ 
+     C                   EVAL      RPFRNT      = FRNT
+     C                   EVAL      RPTMST      = STMP
+ 
+     C                   EVAL      RPXRFI      = FEXRFI
+     C                   EVAL      RPXRFN      = FEXRFN
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xrFACT - Retrieve Facility Details                            *
+      *                                                               *
+      *****************************************************************
+     C     xrFACT        BEGSR
+ 
+      ** Retrieve Record.
+ 
+     C                   CALL      'AOFACTR0'
+     C                   PARM      '*BLANKS'     P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@FACT
+     C     SDFACT        PARM      SDFACT        DSFDY
+ 
+     C                   IF        @RTCD      <> *BLANKS
+     C                   EVAL      DBFILE      = 'SDFACTPD'
+     C                   EVAL      DBKEY       = P@FACT
+     C                   EVAL      DBASE       = 205
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xrLOAN - Retrieve Loan Details                                *
+      *                                                               *
+      *****************************************************************
+     C     xrLOAN        BEGSR
+ 
+      ** Retrieve Record.
+ 
+     C                   CALL      'AOLOANR0'
+     C                   PARM      *BLANKS       P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@LNTY
+     C                   PARM                    P@LNST
+     C                   PARM                    P@LNCL
+     C     SDLOAN        PARM      SDLOAN        DSFDY
+ 
+     C                   IF        @RTCD      <> *BLANKS
+     C                   EVAL      DBFILE      = 'SDLOANPD'
+     C                   EVAL      DBKEY       = P@LNST + P@LNST +
+     C                                           P@LNCL
+     C                   EVAL      DBASE       = 206
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xrFEE - Retrieve Fee Code Details                             *
+      *                                                               *
+      *****************************************************************
+     C     xrFEE         BEGSR
+ 
+      ** Retrieve Record.
+ 
+     C                   CALL      'AOFEER0'
+     C                   PARM      '*BLANKS'     P@RTCD
+     C                   PARM      '*KEY   '     P@OPTN
+     C                   PARM                    P@FECD
+     C     SDFEE         PARM      SDFEE         DSFDY
+ 
+     C                   IF        P@RTCD     <> *BLANKS
+     C                   EVAL      DBFILE      = 'SDFEEPD'
+     C                   EVAL      DBKEY       = P@FECD
+     C                   EVAL      DBASE       = 207
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xwP1D - Write Print Detail Line                               *
+      *                                                               *
+      *****************************************************************
+     C     xwP1D         BEGSR
+ 
+      ** Write Report Header & Origin Details before Column Headings.
+ 
+     C                   EVAL      *IN80       = *IN81
+     C                   EVAL      *IN81       = *OFF
+ 
+     C                   IF        *IN80       = *ON
+     C                   WRITE     LE07000H1
+     C                   ENDIF
+ 
+      ** Process Origin Details.
+ 
+     C                   IF        DSVal0Sv   <> DSVal0X         OR
+     C                             DSVal0Prt  <> 'N'             OR
+     C                             *IN80       = *ON
+     C                   EVAL      *IN70       = *ON
+     C                   EVAL      DSVal0Prt   = 'N'
+ 
+     C                   DO        #0            #0A
+ 
+     C                   IF        DSAtb0(#0A) = 'B'
+     C                   EVAL      *IN71       = *ON
+     C                   ENDIF
+ 
+     C                   EVAL      P1FLD0      = DSFld0(#0A)
+     C                   EVAL      P1VAL0      = DSVal0(#0A)
+     C                   EVAL      P1FIL0      = DSFil0(#0A)
+     C                   EVAL      P1MSG0      = *BLANKS
+     C                   EVAL      P1MSG2      = *BLANKS
+ 
+     C                   IF        DSMsg0(#0A) > 0
+     C                   EVAL      #E          = DSMsg0(#0A)
+     C                   EVAL      DSMsg = %SUBST(%TRIM(DSXMSG(#E)):2)
+     C                   EVAL      DSPgmAct = %SUBST(%TRIM(DSXMSG
+     C                                        (#E)):1:1)
+ 
+ 
+     C                   IF        DSPgmErr   <> 'F'
+     C                   EVAL      DSPgmErr    = DSPgmAct
+     C                   ENDIF
+ 
+     C                   EVAL      #E          = 50
+ 
+     C                   DOW       %SUBST(DSMsg:#E:1) <> ' '
+     C                   EVAL      #E         -= 1
+     C                   ENDDO
+ 
+     C                   EVAL      P1MSG0      = %SUBST(DSMsg:01:#E)
+     C                   EVAL      P1MSG2      = %SUBST(DSMsg:#E+1)
+     C                   ENDIF
+ 
+      ** If Values Exist, Write Origin Details.
+ 
+     C                   IF        P1FLD0     <> *BLANKS       OR
+     C                             P1VAL0     <> *BLANKS       OR
+     C                             P1FIL0     <> *BLANKS       OR
+     C                             P1MSG0     <> *BLANKS
+     C                   WRITE     LE07000H2
+     C                   EVAL      DSPrtEOR    = 'Y'
+ 
+     C                   IF        P1MSG2     <> *BLANKS
+     C                   WRITE     LE07000D2
+     C                   ENDIF
+ 
+     C                   IF        DSMsg0A(#0A)<>*BLANKS
+     C                   EVAL      P1MSG2      = DSMsg0A(#0A)
+     C                   WRITE     LE07000D2
+     C                   ENDIF
+     C                   ENDIF
+ 
+      ** Clear Array Elements.
+ 
+     C                   IF        DSClr0(#0A)<> 'N'
+     C                   EVAL      DSVal0(#0A) = *BLANKS
+     C                   ENDIF
+ 
+     C                   EVAL      DSFil0(#0A) = *BLANKS
+     C                   EVAL      DSMsg0(#0A) = 0
+     C                   EVAL      *IN70       = *OFF
+     C                   EVAL      *IN71       = *OFF
+     C                   ENDDO
+     C                   ENDIF
+ 
+      ** Write Detail Line...
+ 
+     C                   DO        #1            #1A
+     C                   EVAL      P1FLD1      = DSFld1(#1A)
+     C                   EVAL      P1VAL1      = DSVal1(#1A)
+     C                   EVAL      P1FIL1      = DSFil1(#1A)
+     C                   EVAL      P1MSG1      = *BLANKS
+     C                   EVAL      P1MSG2      = *BLANKS
+ 
+     C                   IF        DSMsg1(#1A) > 0
+     C                   EVAL      #E          = DSMsg1(#1A)
+     C                   EVAL      DSMsg = %SUBST(%TRIM(DSXMSG(#E)):2)
+     C                   EVAL      DSPgmAct = %SUBST(%TRIM(DSXMSG
+     C                                        (#E)):1:1)
+ 
+ 
+     C                   IF        DSPgmErr   <> 'F'
+     C                   EVAL      DSPgmErr    = DSPgmAct
+     C                   ENDIF
+ 
+     C                   EVAL      #E          = 50
+ 
+     C                   DOW       %SUBST(DSMsg:#E:1) <> ' '
+     C                   EVAL      #E         -= 1
+     C                   ENDDO
+ 
+     C                   EVAL      P1MSG1      = %SUBST(DSMsg:01:#E)
+     C                   EVAL      P1MSG2      = %SUBST(DSMsg:#E+1)
+     C                   ENDIF
+ 
+     C                   IF        P1FLD1     <> *BLANKS       AND
+     C                             DSFrc1(#1A) = 'Y'           OR
+     C                             P1VAL1     <> *BLANKS       OR
+     C                             P1FIL1     <> *BLANKS       OR
+     C                             P1MSG1     <> *BLANKS
+     C                   WRITE     LE07000D1
+     C                   EVAL      DSPrtEOR    = 'Y'
+ 
+     C                   IF        P1MSG2     <> *BLANKS
+     C                   WRITE     LE07000D2
+     C                   ENDIF
+ 
+     C                   IF        DSMsg1A(#1A)<>*BLANKS
+     C                   EVAL      P1MSG2      = DSMsg1A(#1A)
+     C                   WRITE     LE07000D2
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDDO
+ 
+      ** Save Values.
+ 
+     C                   EVAL      DSFld0Sv    = DSFld0X
+     C                   EVAL      DSVal0Sv    = DSVal0X
+ 
+     C                   EVAL      DSFld1Sv    = DSFld1X
+     C                   EVAL      DSVal1Sv    = DSVal1X
+ 
+      ** Reset Values.
+ 
+     C                   EVAL      #1          = 1
+ 
+     C                   CLEAR                   DSClr1
+     C                   CLEAR                   DSFrc1
+     C                   CLEAR                   DSFld1
+     C                   CLEAR                   DSVal1
+     C                   CLEAR                   DSMsg1
+     C                   CLEAR                   DSMsg1A
+     C                   CLEAR                   DSFil1
+ 
+     C                   CLEAR                   LE07000D1
+ 
+      ** Increment Record Count.
+ 
+     C                   EVAL      DSPrtRec   += 1
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * xwP1T - Write Print Total Line                                *
+      *                                                               *
+      *****************************************************************
+     C     xwP1T         BEGSR
+ 
+      ** Write Print Record.
+ 
+     C                   IF        *IN81       = *ON
+     C                   IF        DSPrtRec    = 0
+     C                   EVAL      *IN88       = *ON
+     C                   ENDIF
+ 
+     C                   WRITE     LE07000H1
+     C                   ENDIF
+ 
+     C                   IF        DSPrtEOR   <> 'Y'
+     C                   WRITE     LE07000T1
+ 
+     C                   ELSE
+     C                   WRITE     LE07000T2
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initialisation Rountine                              *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ** Initialisation.
+ 
+     C                   EVAL      DBPGM       = 'SMU00116'
+     C                   EVAL      *IN81       = *ON
+ 
+      ** Default Mode of Processing.
+ 
+     C                   IF        P@Mode      = *BLANKS
+     C                   EVAL      P@Mode      = '*REPORT'
+     C                   ENDIF
+ 
+      ** Determine if 'Past Due Loan Processing' is Active.
+ 
+     C                   CALL      'AOSARDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM      'CLE134'      @SARD
+ 
+     C                   IF        @RTCD       = *BLANKS
+     C                   EVAL      CLE134      = 'Y'
+ 
+     C                   ELSE
+     C                   EVAL      *INLR       = *ON
+     C                   RETURN
+     C                   ENDIF
+ 
+     C/SPACE
+ 
+      ** Access Bank Details.
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*MSG    '    @RTCD
+     C                   PARM      '*FIRST  '    @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+     C                   IF        @RTCD      <> *BLANK
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE      = 'SDBANKPD'
+     C                   EVAL      DBKEY       = '*FIRST'
+     C                   EVAL      DBASE       = 900
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Access Bank Details.
+ 
+     C                   CALL      'AOCLNDR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDCLND        PARM      SDCLND        DSSDY
+ 
+     C                   IF        @RTCD      <> *BLANK
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE      = 'SDCLNDPD'
+     C                   EVAL      DBKEY       = '*FIRST'
+     C                   EVAL      DBASE       = 910
+     C                   OUT       LDA
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/SPACE
+      *****************************************************************
+      *                                                               *
+      * @DEFN - Definition Rountine                                   *
+      *                                                               *
+      *****************************************************************
+     C     @DEFN         BEGSR
+ 
+      ** Entry List...
+     C     *ENTRY        PLIST
+     C                   PARM                    P@Mode
+ 
+ 
+      ** Key List...
+ 
+     C     KACCNTL0      KLIST
+     C                   KFLD                    KacCNUM
+     C                   KFLD                    KacCCY
+     C                   KFLD                    KacACOD
+     C                   KFLD                    KacACSQ
+     C                   KFLD                    KacBRCA
+ 
+     C     KACCNTL1      KLIST
+     C                   KFLD                    KacACNO
+ 
+     C     KCLOAN        KLIST
+     C                   KFLD                    Kl_LNRF
+     C                   KFLD                    Kl_RCDT
+ 
+     C     KCLOAN_o      KLIST
+     C                   KFLD                    Ko_LNRF
+ 
+     C     KFCLTY        KLIST
+     C                   KFLD                    Kf_CNUM
+     C                   KFLD                    Kf_FACT
+     C                   KFLD                    Kf_FCNO
+     C                   KFLD                    Kf_RCTP
+ 
+     C     KLEFEEDL1     KLIST
+     C                   KFLD                    Ko_FECNUM
+     C                   KFLD                    Ko_FEFACL
+     C                   KFLD                    Ko_FELOAN
+     C                   KFLD                    Ko_FEFSEQ
+ 
+     C     KLEACCNLA     KLIST
+     C                   KFLD                    KRPLNRF
+ 
+     C     KLEACCNLB     KLIST
+     C                   KFLD                    KRPFCNM
+     C                   KFLD                    KRPFLNR
+     C                   KFLD                    KRPFACT
+     C                   KFLD                    KRPFSE1
+     C                   KFLD                    KRPFCOD
+     C                   KFLD                    KRPFCBR
+ 
+     C     KLEACCNL1     KLIST
+     C                   KFLD                    KRPBRCA
+     C                   KFLD                    KRPACCY
+     C                   KFLD                    KRPCNUM
+     C                   KFLD                    KRPACOD
+     C                   KFLD                    KRPACSQ
+     C                   KFLD                    KRPLNRF
+ 
+     C     KLEACCNL3     KLIST
+     C                   KFLD                    KRPBRCA
+     C                   KFLD                    KRPACCY
+     C                   KFLD                    KRPCNUM
+     C                   KFLD                    KRPACOD
+     C                   KFLD                    KRPACSQ
+ 
+     C                   KFLD                    KRPFCNM
+     C                   KFLD                    KRPFLNR
+     C                   KFLD                    KRPFACT
+     C                   KFLD                    KRPFSE1
+     C                   KFLD                    KRPFCOD
+ 
+     C     KLEPDUEL1     KLIST
+     C                   KFLD                    KYPLON
+ 
+     C     KLEPDUFL1     KLIST
+     C                   KFLD                    KYPLON
+ 
+     C     KPRAT         KLIST
+     C                   KFLD                    B2LNRF
+ 
+      ** Parameter List...
+ 
+     C     PLIST1        PLIST
+     C                   PARM      '*MSG   '     @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM                    KCNUM
+     C                   PARM                    KCCY
+     C                   PARM                    KEYC1
+     C                   PARM                    KEYD
+     C                   PARM                    KNONB
+     C                   PARM                    KEYF
+     C                   PARM                    KEYG
+     C                   PARM                    KEYH
+     C     SDNOST        PARM      SDNOST        DSFDY
+ 
+      ** Dataareas...
+ 
+     C                   ENDSR
+     C/COPY ZACPYSRC,PSSR_ILEB
+     C/EJECT
+**  CPY@
+(c) MIsys International Banking Systems Ltd. 2012
+**  DSXMsg: Program Action (Action; F=Fail/R=Report/I=Ignore) / Message Text.
+FDefault Penalty Rates not found
+FLoan Type/Subtype/Class not specified
+FLoan Type/Subtype/Class invalid
+FProcessing Type not specified
+FProcessing Type invalid
+FProcessing Type must be 61
+FProcessing Type must be 68
+FProcessing Type must be 69
+FBase Rate not valid
+FBase Rate Change Facility is not 'Y'
+FBase Rate Currency not specified
+FBase Rate Ccy differs from Loan Ccy
+FBase Rate and Spread are both Zero
+FEither the Base Rate or Spread Rate must be input
+FSpread Rate Indicator must be 'A' or 'D'
+FInterest Calculation Basis must be between 1 and 6
+FInterest Capitalisation Indicator and Separator Indicator cannot both be 'Y'
+FIf Interest Capitalisation Indicator is 'Y' then Facility Utilisation Flag must be 'Y'
+FIf Base and Spread Rates are both zero, then the Spread Indicator must not exist
+-
+INo Settlement Instructions
+RRepayment priority record not found
+RRepayment priority record discrepancy
+RRepayment priority record added
+RCurrency not specified
+FCurrency invalid
+-
+FFee Code not specified
+FFee Code invalid
+RAccount not fully specified
+RAccount not fully specified, repayment priority record not added
+RAccount not fully specified, repayment priority record deleted
+RAccount invalid
+RAccount invalid, repayment priority record deleted
+RAccount key does not exist
+RAccount key does not have posting reference 2
+IAccount key added
+IAccount key: Posting reference 2 added
+FBase Rate Code and Base Rate cannot be both have values

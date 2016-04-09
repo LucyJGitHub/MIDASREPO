@@ -1,0 +1,709 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Customer Service Fee Rate Codes Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1971 - Customer Service Fee Rate Codes Report              *
+      *                                                               *
+      *  Function:  This program is called by SDC1971 to print details*
+      *             of the customer service fee rate codes.           *
+      *                                                               *
+      *  Called By: SDC1971 - Customer Service Fee Rate Codes Audit   *
+      *                       Control                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CSD008   *CREATE   Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FSDRTCDL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Rates Codes - File
+      *
+     FSDFCTLL1UF  E           K        DISK         KINFSR *PSSR
+      ** Control file retrieval index
+      *
+     FSD1971AUO   E                    PRINTER      KINFSR *PSSR
+      ** Fee Rates Codes - Audit
+      *
+     F                                              KINFDS SPOOLU
+      *
+     FSD1971P1O   E                    PRINTER      KINFSR *PSSR      UC
+      ** Fee Rates Codes - Report
+      *
+     F                                              KINFDS SPOOL1
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - FULL MODE                                             *
+      *   89  - End of File SDRTCDL0                                  *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRRPRT - Process Report Lines.                               *
+      *  SRTABL - SR to set up the print tables with the field values *
+      *  SRAUDT - Subroutine to output Audit report and end program   *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *  *INZSR - Initial Processing                                  *
+      *  *PSSR - Error control subroutine                             *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZEDIT  - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    FUL        14 15 0
+      ** Upper range limit array used to input into file
+      *
+     E                    FPR        15  9 7
+      ** Percentage array used to input into file
+      *
+     E                    FFC        15 15 0
+      ** Flat charge array used to input into file
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS For Access Programs, Long Data Structure
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for SD1971P1.
+      *
+     I                                       83  92 PFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SD1971AU.
+      *
+     I                                       83  92 PFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+      ** DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+      *
+     I                                        1 210 FULA
+     I                                        1 210 FUL
+      *
+     I            DS
+      ** DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+      *
+     I                                        1 135 FPRA
+     I                                        1 135 FPR
+      *
+     I            DS
+      ** DATA STRUCTURE FOR NUMERIC FIELDS TO NUMERIC ARRAY MOVES
+      *
+     I                                        1 225 FFCA
+     I                                        1 225 FFC
+      *
+     ISTUTAB      DS                            210
+      ** OUTPUT LAYOUT CHARGE RANGE UPPER LIMIT
+      *
+     I                                        1  150F3RG01
+     I                                       16  300F3RG02
+     I                                       31  450F3RG03
+     I                                       46  600F3RG04
+     I                                       61  750F3RG05
+     I                                       76  900F3RG06
+     I                                       91 1050F3RG07
+     I                                      106 1200F3RG08
+     I                                      121 1350F3RG09
+     I                                      136 1500F3RG10
+     I                                      151 1650F3RG11
+     I                                      166 1800F3RG12
+     I                                      181 1950F3RG13
+     I                                      196 2100F3RG14
+      *
+     IPLCTAB      DS                            135
+      ** OUTPUT LAYOUT FOR  PERCENTAGE LEVELS
+      *
+     I                                        1   97F3PC01
+     I                                       10  187F3PC02
+     I                                       19  277F3PC03
+     I                                       28  367F3PC04
+     I                                       37  457F3PC05
+     I                                       46  547F3PC06
+     I                                       55  637F3PC07
+     I                                       64  727F3PC08
+     I                                       73  817F3PC09
+     I                                       82  907F3PC10
+     I                                       91  997F3PC11
+     I                                      100 1087F3PC12
+     I                                      109 1177F3PC13
+     I                                      118 1267F3PC14
+     I                                      127 1357F3PC15
+      *
+     IFCLTAB      DS                            225
+      ** OUTPUT LAYOUT FOR FLAT CHARGES
+      *
+     I                                        1  150F3FL01
+     I                                       16  300F3FL02
+     I                                       31  450F3FL03
+     I                                       46  600F3FL04
+     I                                       61  750F3FL05
+     I                                       76  900F3FL06
+     I                                       91 1050F3FL07
+     I                                      106 1200F3FL08
+     I                                      121 1350F3FL09
+     I                                      136 1500F3FL10
+     I                                      151 1650F3FL11
+     I                                      166 1800F3FL12
+     I                                      181 1950F3FL13
+     I                                      196 2100F3FL14
+     I                                      211 2250F3FL15
+      *
+      /EJECT
+      *****************************************************************
+      *                 M A I N   P R O C E S S I N G                 *
+      *****************************************************************
+      *
+      ** read file for record
+      *
+     C                     READ SDRTCDL0                 89
+      *
+      ** If End of Records, (*IN89), Perform: Audit Reporting (No
+      ** Records).
+      *
+     C           *IN89     IFEQ *OFF
+      *
+     C                     EXSR SRRCFP
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ** If FULL Mode or Last Change Date = Run date
+      ** Process Report Lines
+      *
+     C           PMODE     IFEQ '*FULL'
+     C           F3LCD     OREQ BJRDNB
+     C                     EXSR SRRPRT
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ SDRTCDL0                 89
+      *
+     C                     ENDDO
+      *
+      ** If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDIF
+      *
+      ** Close Output file
+      *
+     C                     CLOSESD1971P1
+      *
+     C                     ENDIF
+      *
+      ** Check control details.
+      *
+     C                     MOVE *BLANKS   WFNAME 10
+     C                     MOVEL'SDRTCDPD'WFNAME
+      *
+     C           WFNAME    CHAINSDFCTLL1             87
+      *
+      ** Database error.
+      *
+     C           *IN87     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SDFCTLPA'DBFILE    P
+     C                     MOVELWFNAME    DBKEY     P
+     C                     MOVEL'SD1970'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDAHNOIN    RINSER
+     C                     Z-ADDAHNOAM    RAMEND
+     C                     Z-ADDAHNODL    RDELET
+     C                     Z-ADDAHNORC    RAUDIT
+      *
+     C           RCOUNT    IFNE RAUDIT
+     C                     MOVE *ON       *IN21
+     C                     ELSE
+     C                     MOVE *OFF      *IN21
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZERO     AHNOIN
+     C                     Z-ADD*ZERO     AHNOAM
+     C                     Z-ADD*ZERO     AHNODL
+     C                     UPDAT@AHREAV
+      *
+      ** Perform audit report and end program.
+      *
+     C                     EXSR SRAUDT
+      *
+      ****************************************************************
+      *         E N D   O F   M A I N   P R O C E S S I N G          *
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRPRT - Process Report Lines.                                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: ZDATE2, ZEDIT, SRTABL                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD7         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Report sub details
+      *
+     C                     MOVE F3RTCD    RRTCD     P
+     C                     MOVE F3CCY     RCCY      P
+     C                     MOVE F3CHMT    RCHMT     P
+     C                     MOVE F3NARR    RNARR     P
+     C                     MOVE F3CALC    RCALC
+      *
+      ** Report last activity
+      *
+     C                     MOVE F3LCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD
+     C                     MOVE F3LCTM    RTIME
+     C                     MOVE *BLANKS   RLCTY
+      *
+      ** If Type = 'I' move 'INSERT', Type = A  move 'AMEND'
+      ** If Type = 'D' move 'DELETE'
+      *
+     C                     MOVEL'INSERT'  RLCTY
+     C           F3CHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RLCTY
+     C                     ENDIF
+     C           F3CHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RLCTY
+     C                     ENDIF
+      *
+      ** Access Currency To write out Amounts with Decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM F3CCY     PCKEY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SDCURRPD'DBFILE    P
+     C                     MOVELPCKEY     DBKEY     P
+     C                     MOVEL'SD1971'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    SDEC    10
+      *
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+      *
+     C           F3MINA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F3MINA    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RMINA     P
+     C                     ELSE
+     C                     MOVE *BLANKS   RMINA
+     C                     ENDIF
+      *
+     C           F3MAXA    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE F3MAXA    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RMAXA     P
+     C                     ELSE
+     C                     MOVE *BLANKS   RMAXA
+     C                     ENDIF
+      *
+      ** Report Details
+      *
+     C                     WRITESUBDET
+     C                     Z-ADD0         RBAND
+     C                     Z-ADD1         Z       20
+     C                     MOVE 'Y'       WWDISP  1
+     C                     MOVE *ZERO     FUL
+     C                     MOVE *ZERO     FPR
+     C                     MOVE *ZERO     FFC
+     C                     MOVELSTUTAB    FULA
+     C                     MOVELPLCTAB    FPRA
+     C                     MOVELFCLTAB    FFCA
+      *
+     C           WWDISP    DOWEQ'Y'
+     C           RBAND     ANDLT15
+      *
+     C                     EXSR SRTABL
+     C                     ADD  1         Z
+      *
+      ** Write out Detail Record.
+      *
+     C           WWDISP    IFEQ 'Y'
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     WRITESUBDET
+     C                     ENDIF
+      *
+     C                     ADD  1         RBAND
+     C                     WRITEDETAIL
+     C                     ENDIF
+      *
+      ** Edit Amounts Standard Subroutine variables
+      *
+     C                     Z-ADDSDEC      ZADEC
+     C           15        SUB  SDEC      ZADIG
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTABL - SR to set up the print tables with the field values  *
+      *          of the upper range limit, percentage and flat charges*
+      *          using the routinr ZEDIT.                             *
+      *                                                               *
+      * Called by: SRRPRT                                             *
+      *                                                               *
+      * Calls: ZEDIT                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTABL    BEGSR
+      *
+      ** Upper range limit not reached
+      *
+     C                     MOVE 'N'       WWDISP
+      *
+     C           Z         IFNE 15
+     C           FUL,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FUL,Z     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   RUPL
+     C                     MOVE ZFIELD    RUPL
+     C                     MOVE 'Y'       WWDISP
+     C                     ELSE
+     C                     MOVE *BLANKS   RUPL
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANKS   RUPL
+     C                     ENDIF
+      *
+      ** Process for flat charge basis
+      *
+     C           FFC,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FFC,Z     ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   RFLC
+     C                     MOVE ZFIELD    RFLC
+     C                     MOVE 'Y'       WWDISP
+     C                     ELSE
+     C                     MOVE *BLANKS   RFLC
+     C                     ENDIF
+      *
+      ** Process for percentage charge basis
+      *
+     C           FPR,Z     IFNE 0
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FPR,Z     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C           9         SUB  7         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   RPER
+     C                     MOVE ZFIELD    RPER
+     C                     MOVE 'Y'       WWDISP
+     C                     ELSE
+     C                     MOVE *BLANKS   RPER
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRAUDT - Subroutine to output Audit report and end the program*
+      *                                                               *
+      * Called by: Main Processing, *PSSR                             *
+      *                                                               *
+      * Calls: None.                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ** Normal audit  exit
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRCFP - Subroutine to register the P1 Printer File via RCF.  *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Open Report file
+      *
+     C                     CLOSESD1971P1
+     C                     OPEN SD1971P1
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    PSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM           PENTY   3
+     C                     PARM           PFILE1
+     C                     PARM           PSNUM
+     C                     PARM           PEROR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PEROR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRCFA - Subroutine to register the AU Printer File via RCF.  *
+      *                                                               *
+      * Called by: *INZSR                                             *
+      *                                                               *
+      * Calls: None.                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    PSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   PENTY
+     C                     PARM           PFILEU
+     C                     PARM           PSNUMU
+     C                     PARM *BLANK    PEROR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           PEROR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initial Processing                                   *
+      *                                                               *
+      * Calls: SRRCFA, *PSSR                                          *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   6
+     C                     PARM           PSEQ    5
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** If Audit Mode, set indicator for Change Type and Change Time
+      *
+     C           PMODE     IFEQ '*FULL '
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'SD1971'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Error control subroutine                              *
+      *                                                               *
+      * Called by: SRRCFP, SRRCFA, *INZSR                             *
+      *                                                               *
+      * Calls: SRAUDT                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

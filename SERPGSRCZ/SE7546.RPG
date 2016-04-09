@@ -1,0 +1,1075 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(SECTYZ1) TOFILE(SECTY) SHARE(*NO)              : *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Position settlements enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7546 - Position Settlements Enquiry                        *
+      *                                                               *
+      *  Function:  This program allows to see details of             *
+      *             Position Settlements.                             *
+      *  (Input Cycle)                                                *
+      *                                                               *
+      *  Called By: SE7545 - Historical Diary Events                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 23Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 07May98               *
+      *                 CSE007   *CREATE   Date 20Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Parameter Mismatch                                  *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     FSE7546DFCF  E                    WORKSTN      KINFSR *PSSR
+      ***  Midas SE Position Settlements Display File.
+      *
+     FSESWHTL0IF  E           K        DISK         KINFSR *PSSR      UC
+      ***  Midas SE Security Withholding Tax Details file.
+      *
+     FSECTYZ1 IF  E           K        DISK         KINFSR *PSSR
+      ***  Midas SE Securities Details
+      *
+     FSECOATL0IF  E           K        DISK                               CSE007
+      ***  Midas SE CO Type
+      *
+     FPOSET1  IF  E           K        DISK         KINFSR *PSSR
+      ***  Midas SE Position Settlements - update.
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  Array used to store action codes user is authorised to.
+     E                    AUTH        4  1
+      *
+      **  Arrays used to convert day number to date format.
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      **  Arrays used to insert decimal point and sign into a numeric
+      **  field and to blank out leading zeros.
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement.
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure.
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     IRUNDAT    E DSRUNDAT
+      ***  Data Area giving Installation Control Details.
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ***  First DS for access programs, long data structure
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer Details.
+      *
+     ISDSECS    E DSSDSECSPD
+      ***  Security Details.
+      *
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACD1                                    CGL029
+      ***  General Ledger Details.
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  Currency Details.
+      *
+     ISDMMOD    E DSSDMMODPD
+      ***  Module Details.
+      *
+     ISDPCAC    E DSSDPCACPD
+      ***  Profit Center Accounting I.C.D. Details.
+      *
+     ISDPORT    E DSSDPORTPD
+      ***  Portfolio Management I.C.D. Details.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details.
+      *
+     IP@DAT1      DS                            128
+      ***  Data structure for the parameters passed to SEZ010.
+     I                                        1   1 P@CLAS
+     I                                        2   2 P@PPRE
+     I                                        3  150P@PAMD
+     I                                       16  280P@PCHA
+     I                                       29  410P@PCAM
+     I                                       42  540P@TASO
+     I                                       55  670P@TAUS
+     I                                       68  808P@PSXR
+     I                                       81  81 P@PMDI
+     I                                       82  84 P@PNCY
+     I                                       85  87 P@PSCU
+     I                                       88 1000P@PSAT
+     I                                      101 1138P@FXMR
+     I                                      114 1260P@MAMT
+     I                                      127 128 P@TDTP
+      *
+     IP@DAT2    E DSSE17DT
+      **  External data structure defined for passing data from this
+      **  program to SE1817.
+      *
+     IWUPOSK      DS
+      **  Data structure used to attribute a sequence number
+      **  to the Position settlement.
+     I                                        1   3 SFPBCA
+     I                                        4  13 SFPSSH
+     I                                       14  190SFPCPY
+     I                                       20  250SFPDUD
+     I                                       26  27 SFPEVT
+     I                                       28  31 SFPTFR
+      *
+     IWWEXRC      DS                           9999                                           222373
+      *                                                                                       222373
+     I/COPY ZSRSRC,ZSEDITZ2
+      **  Data structure used in subroutine ZSEDIT.
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure used in subroutine ZTNLU1.
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+      ***  Clear screen message file
+      *
+     C                     EXSR CLEAR
+      *
+      ***  If key F5 pressed, end program.
+      *
+     C           *INKE     IFEQ *ON
+     C           WFIRST    OREQ 'Y'
+     C                     MOVE 'N'       WFIRST
+     C                     EXSR DETREC
+     C                     ENDIF
+      *
+      ***  Display first display record
+      *
+     C                     WRITE#MSGCTL
+     C                     EXFMTSE7546F1
+      *
+     C                     EXSR CLEAR
+      *
+     C                     SELEC
+      *
+      ***  If key F3 pressed, end program.
+      *
+     C           *INKC     WHEQ *ON
+     C                     MOVE *ON       *IN20
+     C                     MOVE 'Y2U9999' WKRTCD
+      *
+      ***  If key F12 pressed, cancel program.
+      *
+     C           *INKL     WHEQ *ON
+     C                     MOVE *ON       *IN20
+     C                     MOVE 'USR0790' WKRTCD
+      *
+     C           *INKE     WHNE *ON
+      *
+      **  If feature S01401 (MT5xx) is active and either Coupon
+      **  or Dividend settlement with a Portfolio Client, call
+      **  SE1817 to show position settlement extension fields.
+     C           S01401    IFEQ 'Y'                        Begin S01401
+      *
+     C           DEPEVT    IFEQ 'CP'                       Begin DEPEVT
+     C           DEPEVT    OREQ 'DV'
+      *
+     C           BFCLAS    IFEQ 'S'                        Begin BFCLAS
+     C           BFCLAS    OREQ 'D'
+      *
+     C                     MOVEL'E'       PACTN
+     C                     MOVELDEPBCA    PPBCA
+     C                     MOVELDEPSSH    PPSSH
+     C                     MOVELDEPCPY    PPCPY
+     C                     MOVELDEPDUD    PPDUD
+     C                     MOVELDEPEVT    PPEVT
+      *
+     C                     CALL 'SE1817'
+     C                     PARM *BLANKS   P@CMD   2
+     C                     PARM           P@ERRR  1
+     C                     PARM           P@DAT2
+     C                     PARM           P@RTCD  7
+     C                     PARM           WWEXRC                                              222373
+      *
+      **  Determine next process, depending on the action taken by user.
+     C                     SELEC                           Begin SELEC
+      *
+     C           P@CMD     WHEQ '03'
+     C                     MOVE *ON       *INKC
+     C                     MOVE *ON       *IN20
+      *
+     C           P@CMD     WHEQ '12'
+     C                     MOVE *ON       *IN08
+     C                     WRITESE7546F1
+     C                     MOVE *OFF      *IN08
+      *
+     C           P@CMD     WHEQ '05'
+     C                     MOVE *ON       *INKE
+     C                     ENDSL                           End SELEC
+     C                     ENDIF                           End BFCLAS
+     C                     ENDIF                           End DEPEVT
+     C                     ENDIF                           End S01401
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+      **  End Program and Return.
+     C                     SETON                     LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DETREC - Subroutine to process RECDETLS display.             *
+      *                                                               *
+      *  Called By: VALSF2                                            *
+      *                                                               *
+      *  Calls: - FMTENQ                                              *
+      *         - WINDOW                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETREC    BEGSR                           *** DETREC ***
+      *
+     C                     MOVE WKPBCA    KPBCA
+     C                     MOVELWKPSSH    KPSSH     P
+     C                     MOVE WKPCPY    KPCPY
+     C                     MOVE WKPDUD    KPDUD
+     C                     MOVE WKPEVT    KPEVT
+     C                     MOVE WKPTFR    KPTFR
+     C                     MOVE WKTNLU    KTNLU
+      *
+      **  Access to Position Settlement.
+     C           KPOSET    CHAINPOSET1               82
+      *
+      **  If Position Settlement has already been updated by
+      **  another workstation.
+     C           *IN82     IFEQ *ON                        Begin *IN82
+     C                     MOVE *ON       *IN28
+     C                     MOVE *ON       *IN38
+     C                     MOVE *ON       *IN07
+     C                     GOTO ENDDET
+     C                     ENDIF                           END *IN82
+      *
+      **  Load Enquiry record fields.
+     C                     EXSR FMTENQ
+      *
+      **  Display Position settlement record.
+     C           DSPDET    TAG
+      *
+     C                     SELEC                           Begin SELEC
+      *
+      **  If key <F3> pressed, exit program.
+     C           *INKC     WHEQ *ON
+     C                     GOTO ENDDET
+      *
+      **  If key <F12> pressed, return to subfile display.
+     C           *INKL     WHEQ *ON
+     C                     GOTO ENDDET
+     C                     ENDSL                           End SELEC
+      *
+     C           ENDDET    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FMTENQ - Subroutine to set up fields of RECDETLS record.     *
+      *                                                               *
+      *  Called By: DETREC                                            *
+      *                                                               *
+      *  Calls: - *PSSR                                               *
+      *         - ZSEDIT                                              *
+      *         - ZDATE2                                              *
+      *         - CASAMT                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMTENQ    BEGSR                           *** FMTENQ ***
+      *
+      **  Set up of Position Settlement Record Id. narrative.
+     C                     MOVEL*BLANKS   DEPMTR
+     C           S01496    IFEQ 'Y'                        Begin S01496
+     C                     MOVE *OFF      *IN62
+      *
+     C                     SELEC                           Begin SELEC
+      *
+     C           RECI      WHEQ 'M'
+     C                     MOVEL'MATURED 'DEPMTR
+     C                     MOVE *ON       *IN62
+      *
+     C           RECI      WHEQ 'R'
+     C                     MOVEL'REVERSED'DEPMTR
+     C                     MOVE *ON       *IN62
+     C                     ENDSL                           End SELEC
+      *
+      **  Set up of Position Settlement Record Id. narrative.
+     C                     MOVEL*BLANKS   DEDELT
+      *
+     C                     SELEC                           Begin SELEC
+      *
+     C           RECI      WHEQ '*'
+     C                     MOVEL'DELETED' DEDELT
+      *
+     C           RECI      WHEQ 'M'
+     C                     MOVEL'MATURED' DEDELT
+      *
+     C           RECI      WHEQ 'D'
+     C           PAUI      ANDEQ'Y'
+     C                     MOVEL'AUTHORI' DEDELT
+     C                     MOVE 'SED'     DEDELT
+     C                     ENDSL                           End SELEC
+      *
+      **  Set up display record fields.
+      *
+     C                     MOVE PBCA      DEPBCA           Booking Branch
+     C                     MOVE PSSH      DEPSSH           Security
+      *
+     C           WKPSSH    CHAINSECTYZ1              89
+      *
+     C           *IN89     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVELWKPSSH    DBKEY            * DB ERROR 01 *
+     C                     MOVEL'SECTY'   DBFILE    P      ***************
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELSRPN      DESRPN    P      Security Report Name
+     C                     MOVE PCPY      DEPCPY           Counterparty
+      *
+      **  Set up of Customer shortname.
+     C                     MOVE *BLANKS   DECSSN
+     C                     MOVELPCPY      P@KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY'    P@OPTN  7        I:Option
+     C                     PARM           P@KEY1 10        I:Key field
+     C                     PARM *BLANKS   P@KYST  7        O:Key status
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    Begin P@RTCD
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELPCPY      DBKEY     P      * DB ERROR 02 *
+     C                     MOVEL'SDCUSTPD'DBFILE    P      ***************
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           End P@RTCD
+      *
+     C                     MOVE BBCSSN    DECSSN
+     C                     Z-ADDPDUD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DEPDUD           Due Date
+     C                     MOVE PEVT      DEPEVT           Event Type
+     C                     MOVE PTFR      DEPTFR           Portfolio
+      *
+      **  Set up of Nominal Position.
+     C                     MOVE PNMP      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPNMP
+      *
+     C                     MOVE *IN99     WIN99   1                       CSE007
+     C           PEVT      CHAINSECOATL0             99                   CSE007
+     C           *IN99     IFEQ '0'                                       CSE007
+     C                     MOVE MMPTYP    WWPTYP  2                       CSE007
+     C           WWPTYP    IFEQ 'CC'                                      CEU017
+     C           SRRB      ANDNE*BLANKS                                   CEU017
+     C                     Z-ADDNMDP      NMDPOS  10                      CEU017
+     C           SRRB      CHAINSECTYZ1              99                   CEU017
+     C                     ENDIF                                          CEU017
+     C                     ENDIF                                          CSE007
+     C                     MOVE WIN99     *IN99                           CSE007
+      *
+     C                     MOVE NMCY      DENMCY           Nominal Currency
+      *
+      *
+      **  Set up of Payment/Value Date.
+     C                     MOVEL*BLANKS   DEPSVL
+     C           S01512    IFEQ 'Y'                        Begin S01512
+     C                     Z-ADDPSVL      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     DEPSVL
+     C                     ENDIF                           End S01512
+     C                     ENDIF                           End S01496
+      *
+     C                     MOVE PBCD      DEPBCD           Book Code
+      *
+      **  Set up of Profit Center.
+     C                     MOVEL*BLANKS   DEPPFC
+     C           BKPRCU    IFEQ 'Y'                        Begin BKPRCU
+     C                     MOVELPPFC      DEPPFC
+     C                     ENDIF                           End BKPRCU
+      *
+      **  Fetch Payment Currency decimal places, if S01509 is active.
+     C           S01509    IFEQ 'Y'                        Begin S01509
+     C                     MOVE PNCY      P@CURR
+     C                     ELSE
+     C                     MOVE NMCY      P@CURR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           P@CURR  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           *LIKE     DEFN A6NBDP    WUPNDP
+     C                     Z-ADDA6NBDP    WUPNDP
+      *
+      **  Set up of Amount Due.
+     C                     MOVE *BLANKS   DEPAMD
+     C           PAMD      IFNE 0                          Begin PAMD
+     C                     MOVE PAMD      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPAMD
+     C                     ENDIF                           End PAMD
+      *
+     C                     MOVE PPRE      DEPPRE           Pay/Receive indicator
+     C                     MOVE PSCU      DEPSCU           Settlement Currency
+      *
+      **  Set up of Settlement Exchange Rate.
+     C                     MOVE *BLANKS   DEPSXR
+     C           PSXR      IFNE 0                          Begin PSXR
+      *
+      **  Re-calculate exchange rate if Analytical Accounting Module
+      **  is installed, so that what would be shown would be the rate
+      **  entered.
+     C           BGN0ST    IFEQ 'Y'                        Begin BGN0ST
+      *
+     C           PPRE      IFEQ 'R'                        Begin PPRE
+     C           PMDI      ANDEQ'M'
+     C           PPRE      OREQ 'P'
+     C           PMDI      ANDEQ'D'
+     C                     SUB  FXMR      PSXR
+      *
+     C                     ELSE                            Else PPRE
+     C                     ADD  FXMR      PSXR
+     C                     ENDIF                           End PPRE
+     C                     ENDIF                           End BGN0ST
+      *
+     C                     MOVE PSXR      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPSXR
+     C                     ENDIF                           End PSXR
+     C                     MOVE PMDI      DEPMDI
+      *
+      **  Set up of Base Currency Exchange rate.
+     C                     MOVE *BLANKS   DEPBRX
+     C           PBRX      IFNE 0                          Begin PBRX
+     C                     MOVE PBRX      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPBRX
+     C                     ENDIF                           End PBRX
+      *
+     C                     MOVE PSMT      DEPSMT           Settlement Method
+     C                     MOVE PSEA      DEPSEA           Settlement Account
+     C                     MOVE PSEB      DEPSEB           Settlement Branch
+     C                     MOVE PCPN      DEPCPN           Counterparty Bank
+     C                     MOVE PFAC      DEPFAC           For Account Of
+     C                     MOVE PSPI      DEPSPI           Special Instructions
+     C                     MOVE PCHC      DEPCHC           Charge Code
+      *
+      **  Set up of Charge Amount.
+     C                     MOVE *BLANKS   DEPCHA
+     C           PCHA      IFNE 0                          Begin PCHA
+     C                     MOVE PCHA      ZFLD15
+     C                     Z-ADDWUPNDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPCHA
+     C                     ENDIF                           End PCHA
+      *
+     C                     MOVE PCCD      DEPCCD           Commission Code
+      *
+      **  Set up of Commission Amount.
+     C                     MOVE *BLANKS   DEPCAM
+     C           PCAM      IFNE 0                          Begin PCAM
+     C                     MOVE PCAM      ZFLD15
+     C                     Z-ADDWUPNDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPCAM
+     C                     ENDIF                           End PCAM
+      *
+      **  Set up of Settlement Amount.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM PSCU      P@CURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           *LIKE     DEFN A6NBDP    WUSCDP
+     C                     Z-ADDA6NBDP    WUSCDP
+      *
+      **  Translate FX Marge Points and Amount if Analytical
+      **  Accounting Module is installed.
+     C                     MOVE *BLANKS   DEFXMP
+     C                     MOVE *BLANKS   DEMAMT
+      *
+     C           BGN0ST    IFEQ 'Y'                        Begin BGN0ST
+      *
+      **  FX Margin points and amount should not be displayed if
+      **  nominal ccy = settle ccy and action code is 'E'
+      *
+     C           PNCY      IFEQ PSCU                       Begin PNCY
+     C                     MOVE *ON       *IN66
+     C                     ELSE                            Else PNCY
+     C                     MOVE *OFF      *IN66
+      *
+      **  Set up FX Margin Points.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FXMP      ZFLD15
+     C                     Z-ADD2         ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEFXMP
+      *
+      **  Set up FX Margin Amount.
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MAMT      ZFLD15
+     C                     Z-ADDWUSCDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEMAMT
+     C                     ENDIF                           End PNCY
+     C                     ENDIF                           End BGN0ST
+      *
+      ***  Retrieve Customer classification.
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM DEPCPY    P@CUST  6        I:Key field
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    Begin P@RTCD
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVELDEPCPY    DBKEY     P      * DB ERROR 03 *
+     C                     MOVEL'SDSECSPD'DBFILE    P      ***************
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           End P@RTCD
+      *
+     C                     MOVE *BLANKS   DEPSAT
+     C           PSAT      IFNE 0                          Begin PSAT
+     C                     MOVE PSAT      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DEPSAT
+      *
+     C                     ELSE                            Else PSAT
+      *
+      **  If amount is 0, it is possible that it hasn't been computed,
+      **  therefore, calculate the settlement amount for S01512.
+     C           S01512    IFEQ 'Y'                        Begin S01512
+     C                     EXSR CASAMT
+     C                     ENDIF                           End S01512
+     C                     ENDIF                           End PSAT
+      *
+      **  Find and display tax deductible fields if S01447 installed.
+     C                     MOVE *ON       *IN67
+     C                     MOVE *BLANKS   DETASO
+     C                     MOVE *BLANKS   DETASR
+     C                     MOVE *BLANKS   DETAUS
+      *
+     C           S01447    IFEQ 'Y'                        Begin S01447
+      *
+     C           PEVT      IFEQ 'CP'                       Begin PEVT
+     C           PEVT      OREQ 'DV'
+      *
+      **  Access Security Withholding Tax Details file.
+     C           WKPSSH    CHAINSESWHTL0             84
+     C           *IN84     IFEQ *OFF                       Begin *IN84
+     C                     MOVE *OFF      *IN67
+     C                     ENDIF                           End *IN84
+      *
+      **  Set up of Tax deductible at source.
+      *
+     C                     MOVE TASO      ZFLD15
+      *
+      **  If S01509 is active, use the decimal places from position ccy.
+      *
+     C                     Z-ADDWUPNDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DETASO
+      *
+      **  Set up of Tax deductible at source ref.
+     C                     MOVE TASR      ZFLD15
+      *
+      **  If S01509 is active, use the decimal places from position ccy.
+     C                     Z-ADDWUPNDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DETASR
+      *
+      **  Set up of Tax deductible by user.
+     C                     MOVE TAUS      ZFLD15
+      *
+      **  If S01509 is active, use the decimal places from position ccy.
+     C                     Z-ADDWUPNDP    ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DETAUS
+     C                     ENDIF                           End PEVT
+     C                     ENDIF                           End S01447
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  CASAMT - Calculate new Settlement Amount.                    *
+      *  ------                                                       *
+      *  Called By: FMTENQ                                            *
+      *  Calls: - *PSSR                                               *
+      *         - ZSEDIT                                              *
+      *****************************************************************
+      *
+     C           CASAMT    BEGSR                           *** CASAMT ***
+      *
+      ** Set up parameters for call to SEZ010.
+     C                     MOVELBFCLAS    P@CLAS
+     C                     MOVELPPRE      P@PPRE
+     C                     Z-ADDPAMD      P@PAMD
+     C                     Z-ADDPCHA      P@PCHA
+     C                     Z-ADDPCAM      P@PCAM
+     C                     Z-ADDTASO      P@TASO
+     C                     Z-ADDTAUS      P@TAUS
+     C                     Z-ADDPSXR      P@PSXR
+     C                     MOVELPMDI      P@PMDI
+     C                     MOVELPNCY      P@PNCY
+     C                     MOVELPSCU      P@PSCU
+      *
+     C           BGN0ST    IFEQ 'Y'                        Begin BGN0ST
+     C                     Z-ADDFXMR      P@FXMR
+      *
+     C           PPRE      IFEQ 'R'                        Begin PPRE
+     C                     MOVE 'TS'      P@TDTP
+     C                     ELSE                            Else PPRE
+     C                     MOVE 'TP'      P@TDTP
+     C                     ENDIF                           End PPRE
+     C                     ENDIF                           End BGN0ST
+      *
+      **  Call SEZ010 to calculate the settlement amount.
+     C                     CALL 'SEZ010'
+     C                     PARM *BLANKS   P@RCDE  7
+     C                     PARM           P@DAT1
+      *
+     C           P@RCDE    IFEQ *BLANKS                    Begin P@RCDE
+     C                     EXSR *PSSR
+     C                     ENDIF                           End P@RCDE
+      *
+     C                     Z-ADDWUSCDP    ZDECS
+     C                     MOVE P@PSAT    ZFLD15
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANKS   DEPSAT
+     C                     MOVE ZOUT21    DEPSAT
+      *
+      **  Convert marge amount to screen format if Analytical
+      **  Accounting Module is installed.
+     C           BGN0ST    IFEQ 'Y'                        Begin BGN0ST
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MAMT      ZFLD15
+     C                     Z-ADDWUSCDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   DEMAMT
+     C                     MOVE ZOUT21    DEMAMT
+     C                     ENDIF                           End BGN0ST
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           WLRUN     IFEQ *BLANK                     Begin @RUN
+     C                     MOVE 'Y'       WLRUN   1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF                           End WLRUN
+      *
+     C                     MOVE 'Y2U0004' WKRTCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      /TITLE SR/ZASNMS
+      *****************************************************************
+      *  ZASNMS - Send message to program message queue.              *
+      *  ------                                                       *
+      *  Called by:                                                   *
+      *  Calls: None                                                  *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR                           *** ZASNMS ***
+      *
+     C           ZAPGMQ    IFEQ *BLANK                     Begin ZAPGMQ
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF                           End ZAPGMQ
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      /TITLE SR/CLEAR
+      *****************************************************************
+      *                                                               *
+      *  CLEAR  - Clear program message queue.                        *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLEAR     BEGSR                           *** CLEAR ***
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      **  Set up copyright parameter
+     C                     MOVEACPY@      MKI@   80
+      *
+      **  Retrieve run date.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Local Data Area.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE 'SE7546'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WWRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 04 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ***  Set up run date on display file records.
+      *
+     C                     MOVE BJMRDT    SRUNA
+      *
+      **  Set Multibranching Indicator for program.
+      *
+     C                     MOVE *OFF      *IN68
+     C           AGMBIN    IFEQ 'Y'                        Begin AGMBIN
+     C                     MOVE *ON       *IN68
+     C                     ENDIF                           End AGMBIN
+      *
+     C           *ENTRY    PLIST                           Entry List
+     C                     PARM           WKRTCD  7
+     C                     PARM           WKPBCA
+     C                     PARM           WKPSSH
+     C                     PARM           WKPCPY
+     C                     PARM           WKPDUD
+     C                     PARM           WKPEVT
+     C                     PARM           WKPTFR
+     C                     PARM           WKTNLU
+      *
+     C                     MOVE *BLANKS   WKRTCD
+      *                                                                   CSE007
+      ***   Check if Corporate Action feature (CSE007) is installed       CSE007
+      *                                                                   CSE007
+     C                     MOVE 'N'       CSE007                          CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM *BLANKS   @RTCD   7                       CSE007
+     C                     PARM '*VERIFY' @OPTN   7                       CSE007
+     C                     PARM 'CSE007'  @SARD   6                       CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007  1                       CSE007
+     C                     MOVE '1'       *IN73                           CSE007
+     C                     END                                            CSE007
+      *                                                                   CEU017
+      ***   Check if Securities Redenominations is installed              CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017                          CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM *BLANKS   @RTCD                           CEU017
+     C                     PARM '*VERIFY' @OPTN                           CEU017
+     C                     PARM 'CEU017'  @SARD                           CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017  1                       CEU017
+     C                     MOVE '1'       *IN73                           CEU017
+     C                     END                                            CEU017
+      *
+      **  Check if feature S01509 is active.
+     C                     MOVE 'N'       S01509  1
+     C                     MOVE *OFF      *IN64
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'S01509'  P@SARD  6
+      *
+     C           P@RTCD    IFEQ *BLANK                     Begin P@RTCD
+     C                     MOVE 'Y'       S01509
+     C                     MOVE *ON       *IN64
+     C                     ENDIF                           End P@RTCD
+      *
+      **  Check if feature S01512 is active.
+     C                     MOVE 'N'       S01512  1
+     C                     MOVE *OFF      *IN61
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'S01512'  P@SARD
+      *
+     C           P@RTCD    IFEQ *BLANK                     Begin P@RTCD
+     C                     MOVE 'Y'       S01512
+     C                     MOVE *ON       *IN61
+     C                     ENDIF                           End P@RTCD
+      *
+      **  Check if feature S01496 is active.
+     C                     MOVE 'N'       S01496  1
+     C                     MOVE *OFF      *IN69
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'S01496'  P@SARD
+      *
+     C           P@RTCD    IFEQ *BLANK                     Begin P@RTCD
+     C                     MOVE 'Y'       S01496
+     C                     MOVE *ON       *IN69
+     C                     ENDIF                           End P@RTCD
+      *
+      **  Check if feature S01447 is active.
+     C                     MOVE 'N'       S01447  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'S01447'  P@SARD
+      *
+     C           P@RTCD    IFEQ *BLANK                     Begin P@RTCD
+     C                     MOVE 'Y'       S01447
+     C                     OPEN SESWHTL0
+     C                     ENDIF                           End P@RTCD
+      *
+      **  Check if feature S01401 is active.
+     C                     MOVE 'N'       S01401  1
+     C                     MOVE *OFF      *IN41
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*VERIFY' P@OPTN
+     C                     PARM 'S01401'  P@SARD
+      *
+     C           P@RTCD    IFEQ *BLANK                     Begin P@RTCD
+     C                     MOVE 'Y'       S01401
+     C                     ENDIF                           End P@RTCD
+      *
+      **  Access General Ledger details.
+     C                     MOVE *OFF      *IN63
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **  If Profit Center used.
+     C           BKPRCU    IFEQ 'Y'                        Begin BKPRCU
+     C                     MOVE *ON       *IN63
+     C                     ENDIF                           End BKPRCU
+      *
+      **  Access Midas Module Details.
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      **  If Portfolio Management is installed, access SDPORTPD for
+      **  Portfolio reference for '9997'.
+     C           BGPFMG    IFEQ 'Y'                        Begin BGPFMG
+     C                     CALL 'AOPORTR0'
+     C                     PARM '*DBERR ' P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C                     ENDIF                           End BGPFMG
+      *
+      **  If Analytical Accounting Module is installed, access
+      **  the Profit Center Accounting I.C.D. Details File.
+     C                     MOVE *OFF      *IN65
+     C           BGN0ST    IFEQ 'Y'                        Begin BGN0ST
+     C                     MOVE *ON       *IN65
+     C                     CALL 'AOPCACR0'
+     C                     PARM '*DBERR ' P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C                     ENDIF                           End BGN0ST
+      *
+      **  Initialize Message file name.
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+      *
+      **  Define Key lists for access to Position Settlement record.
+     C           *LIKE     DEFN PBCA      KPBCA
+     C           *LIKE     DEFN PSSH      KPSSH
+     C           *LIKE     DEFN PCPY      KPCPY
+     C           *LIKE     DEFN PDUD      KPDUD
+     C           *LIKE     DEFN PEVT      KPEVT
+     C           *LIKE     DEFN PTFR      KPTFR
+     C           *LIKE     DEFN TNLU      KTNLU
+     C           *LIKE     DEFN PBCA      WKPBCA
+     C           *LIKE     DEFN PSSH      WKPSSH
+     C           *LIKE     DEFN PCPY      WKPCPY
+     C           *LIKE     DEFN PDUD      WKPDUD
+     C           *LIKE     DEFN PEVT      WKPEVT
+     C           *LIKE     DEFN PTFR      WKPTFR
+     C           *LIKE     DEFN TNLU      WKTNLU
+      *
+     C           KPOSET    KLIST
+     C                     KFLD           KPBCA
+     C                     KFLD           KPSSH
+     C                     KFLD           KPCPY
+     C                     KFLD           KPDUD
+     C                     KFLD           KPEVT
+     C                     KFLD           KPTFR
+     C                     KFLD           KTNLU
+      *
+     C                     MOVE 'Y'       WFIRST  1
+      *
+      **  Set up valid action codes array.
+     C                     Z-ADD0         A       10
+     C                     Z-ADD0         C       10
+      *
+     C           ENDINI    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+      *****************************************************************
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

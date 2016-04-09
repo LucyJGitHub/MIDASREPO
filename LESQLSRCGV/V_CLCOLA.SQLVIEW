@@ -1,0 +1,243 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_CLCOLA   - Collateral Allocations Enquiry                           */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. AR964281           Date 23Jul12                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 30May08                        */
+/*                      250414             Date 27Sep07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11623           Date 27Jun06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      BUG3644  *CREATE   Date 12Jul04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       AR964281 - Change due to non-compilation at iseries V6.1              */
+/*                  SFDC 00700856 (Child: AR964282)                            */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       250414 - Secured Facility Branch should be included.                  */
+/*       BUG11623 - Sequence No. column should be included (Recompile)         */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG3644 - Serious Error in Collateralised Lending                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  CAZONE ,                                                                      :
+  CACREF ,                                                                      :
+  CACLID ,                                                                      :
+  CACLID2 ,                                                                     :
+  CABRCA ,                                                                      :
+  CACNUM ,                                                                      :
+  PADCACNUM ,                                                                   :
+  CAMODS ,                                                                      :
+  CAFCUS ,                                                                      :
+  PADCAFCUS ,                                                                   :
+  CAFTYP ,                                                                      :
+  PADCAFTYP ,                                                                   :
+  CAFSEQ ,                                                                      :
+  PADCAFSEQ ,                                                                   :
+  CALNLM ,                                                                      :
+  PADCALNLM ,                                                                   :
+  CAABRC ,                                                                      :
+  CAACNM ,                                                                      :
+  PADCAACNM ,                                                                   :
+  CAACCY ,                                                                      :
+  CAACOD ,                                                                      :
+  PADCAACOD ,                                                                   :
+  CAASEQ ,                                                                      :
+  PADCAASEQ ,                                                                   :
+  CAACNO ,                                                                      :
+  PADCAACNO ,                                                                   :
+  CAGNSP ,                                                                      :
+  CACCY ,                                                                       :
+  CAAPCT ,                                                                      :
+  CAPCNT ,                                                                      :
+  CAAMT ,                                                                       :
+  CAPRTY ,                                                                      :
+  CATOTA ,                                                                      :
+***********  CAPCTA )                                                           :             250414
+  CAPCTA ,                                                                      :             250414
+  CAFBRC )                                                                      :             250414
+  AS                                                                            :
+  SELECT DISTINCT                                                               :
+  GLCOLAPD.CAZONE                                                               :
+  ,GLCOLAPD.CACREF                                                              :
+  ,CASE                                                                         :
+       WHEN GLCOLLPD.CDCOPT = 'A' THEN                                          :
+************GLCOLLPD.CDCBRC****DIGITS(CDCCNM)****GLCOLLPD.CDCCCY****************:             CSD027
+**********  GLCOLLPD.CDCBRC***        CDCCNM *** GLCOLLPD.CDCCCY                :    CSD027  BG18886
+**********      *** DIGITS(CDCACD)*** DIGITS(CDCSEQ)                            :            BG18886
+            GLCOLLPD.CDCBRC CONCAT    CDCCNM CONCAT  GLCOLLPD.CDCCCY            :    CSD027  BG18886
+                 CONCAT DIGITS(CDCACD) CONCAT DIGITS(CDCSEQ)                    :            BG18886
+       WHEN GLCOLLPD.CDCOPT = 'D' THEN DIGITS(CDDEAL)                           :
+       WHEN GLCOLLPD.CDCOPT = 'P' THEN                                          :
+            CASE                                                                :
+            WHEN (GLCOLLPD.CDPTFR IS NULL OR GLCOLLPD.CDPTFR = '')              :
+                 AND (GLCOLLPD.CDCSEC IS NULL OR GLCOLLPD.CDCSEC='') THEN       :
+**********************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)*************************:             CSD027
+********************  GLCOLLPD.CDCSBR***        CDCSCN                          :    CSD027  BG18886
+                      GLCOLLPD.CDCSBR CONCAT    CDCSCN                          :    CSD027  BG18886
+            WHEN (GLCOLLPD.CDPTFR IS NULL OR GLCOLLPD.CDPTFR = '') THEN         :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)****GLCOLLPD.CDCSEC***********:             CSD027
+*****************GLCOLLPD.CDCSBR***        CDCSCN *** GLCOLLPD.CDCSEC           :    CSD027  BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN  CONCAT GLCOLLPD.CDCSEC       :    CSD027  BG18886
+            WHEN (GLCOLLPD.CDCSEC IS NULL OR GLCOLLPD.CDCSEC='') THEN           :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)****GLCOLLPD.CDPTFR***********:             CSD027
+**************** GLCOLLPD.CDCSBR***        CDCSCN *** GLCOLLPD.CDPTFR           :    CSD027  BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN CONCAT GLCOLLPD.CDPTFR        :    CSD027  BG18886
+            ELSE                                                                :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)******************************:             CSD027
+***************  GLCOLLPD.CDCSBR***        CDCSCN                               :    CSD027  BG18886
+******************** *** GLCOLLPD.CDPTFR*** GLCOLLPD.CDCSEC                     :            BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN                               :    CSD027  BG18886
+                      CONCAT GLCOLLPD.CDPTFR CONCAT GLCOLLPD.CDCSEC             :            BG18886
+            END                                                                 :
+       ELSE '' END AS CACLID                                                    :
+  ,CASE                                                                         :
+       WHEN GLCOLLPD.CDCOPT = 'A' THEN                                          :
+************GLCOLLPD.CDCBRC****DIGITS(CDCCNM)****GLCOLLPD.CDCCCY****************:             CSD027
+**********  GLCOLLPD.CDCBRC***        CDCCNM *** GLCOLLPD.CDCCCY                :    CSD027  BG18886
+**********      *** DIGITS(CDCACD)*** DIGITS(CDCSEQ)*** DIGITS(CDCACN)          :            BG18886
+            GLCOLLPD.CDCBRC CONCAT    CDCCNM CONCAT GLCOLLPD.CDCCCY             :    CSD027  BG18886
+              CONCAT DIGITS(CDCACD) CONCAT DIGITS(CDCSEQ) CONCAT DIGITS(CDCACN) :           BG18886
+       WHEN GLCOLLPD.CDCOPT = 'D' THEN DIGITS(CDDEAL)                           :
+       WHEN GLCOLLPD.CDCOPT = 'P' THEN                                          :
+            CASE                                                                :
+            WHEN (GLCOLLPD.CDPTFR IS NULL OR GLCOLLPD.CDPTFR = '')              :
+                 AND (GLCOLLPD.CDCSEC IS NULL OR GLCOLLPD.CDCSEC='') THEN       :
+**********************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)*************************:             CSD027
+********************  GLCOLLPD.CDCSBR***        CDCSCN                          :    CSD027  BG18886
+                      GLCOLLPD.CDCSBR CONCAT    CDCSCN                          :    CSD027  BG18886
+            WHEN (GLCOLLPD.CDPTFR IS NULL OR GLCOLLPD.CDPTFR = '') THEN         :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)****GLCOLLPD.CDCSEC***********:             CSD027
+*****************GLCOLLPD.CDCSBR***        CDCSCN *** GLCOLLPD.CDCSEC           :    CSD027  BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN CONCAT GLCOLLPD.CDCSEC        :    CSD027  BG18886
+            WHEN (GLCOLLPD.CDCSEC IS NULL OR GLCOLLPD.CDCSEC='') THEN           :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)****GLCOLLPD.CDPTFR***********:             CSD027
+*****************GLCOLLPD.CDCSBR***        CDCSCN *** GLCOLLPD.CDPTFR           :    CSD027  BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN CONCAT GLCOLLPD.CDPTFR        :    CSD027  BG18886
+            ELSE                                                                :
+*****************GLCOLLPD.CDCSBR****DIGITS(CDCSCN)******************************:             CSD027
+*****************GLCOLLPD.CDCSBR***        CDCSCN                               :    CSD027  BG18886
+******************** *** GLCOLLPD.CDPTFR*** GLCOLLPD.CDCSEC                     :            BG18886
+                 GLCOLLPD.CDCSBR CONCAT    CDCSCN                               :    CSD027  BG18886
+                      CONCAT GLCOLLPD.CDPTFR CONCAT GLCOLLPD.CDCSEC             :            BG18886
+            END                                                                 :
+       ELSE '' END AS CACLID2                                                   :
+  ,GLCOLAPD.CABRCA                                                              :
+  ,GLCOLAPD.CACNUM                                                              :
+**,CASE*WHEN*GLCOLAPD.CACNUM*>*0*THEN*DIGITS(CACNUM)*ELSE*''*END****************:             CSD027
+  ,CASE WHEN GLCOLAPD.CACNUM <> '' THEN        CACNUM  ELSE '' END              :             CSD027
+  ,GLCOLAPD.CAMODS                                                              :
+  ,GLCOLAPD.CAFCUS                                                              :
+**,CASE*WHEN*GLCOLAPD.CAFCUS*>*0*THEN*DIGITS(CAFCUS)*ELSE*''*END****************:             CSD027
+  ,CASE WHEN GLCOLAPD.CAFCUS <> '' THEN        CAFCUS  ELSE '' END              :             CSD027
+  ,GLCOLAPD.CAFTYP                                                              :
+  ,CASE WHEN GLCOLAPD.CAFTYP > 0 THEN DIGITS(CAFTYP) ELSE '' END                :
+  ,GLCOLAPD.CAFSEQ                                                              :
+  ,CASE WHEN GLCOLAPD.CAFSEQ > 0 THEN DIGITS(CAFSEQ) ELSE '' END                :
+  ,GLCOLAPD.CALNLM                                                              :
+**,CASE*WHEN*GLCOLAPD.CALNLM*>*0*THEN*DIGITS(CALNLM)*ELSE*''*END****************:             CLE148
+  ,GLCOLAPD.CALNLM                                                              :             CLE148
+  ,GLCOLAPD.CASBRC                                                              :
+  ,GLCOLAPD.CASCNM                                                              :
+**,CASE WHEN GLCOLAPD.CASCNM > 0 THEN DIGITS(CASCNM) ELSE '' END                :             CSD027
+  ,CASE WHEN GLCOLAPD.CASCNM <> '' THEN        CASCNM  ELSE '' END              :             CSD027
+  ,GLCOLAPD.CASCCY                                                              :
+  ,GLCOLAPD.CASACD                                                              :
+  ,CASE WHEN GLCOLAPD.CASACD > 0 THEN DIGITS(CASACD) ELSE '' END                :
+  ,GLCOLAPD.CASSEQ                                                              :
+  ,CASE WHEN GLCOLAPD.CASSEQ > 0 THEN DIGITS(CASSEQ) ELSE '' END                :
+  ,GLCOLAPD.CASACN                                                              :
+  ,CASE WHEN GLCOLAPD.CASACN > 0 THEN DIGITS(CASACN) ELSE '' END                :
+  ,GLCOLLPD.CDGNSP                                                              :
+  ,GLCOLLPD.CDCCY                                                               :
+  ,GLCOLAPD.CAAPCT                                                              :
+  ,GLCOLAPD.CAPCNT                                                              :
+  ,GLCOLAPD.CAAMT                                                               :
+  ,GLCOLAPD.CAPRTY                                                              :
+  ,DEC(GLCOLLPD.CDTOTA*GLOBRATE.SCALING,31,4)                                   :
+  ,GLCOLLPD.CDPCTA                                                              :
+  ,GLCOLAPD.CAFBRC                                                              :             250414
+  FROM                                                                          :
+  GZGLCOLLPD GLCOLLPD                                                           :
+**,GZGLCOLAPD*GLCOLAPD**********************************************************:           AR964281
+  LEFT JOIN                                                                     :           AR964281
+   GZGLCOLAPD GLCOLAPD                                                          :           AR964281
+  ON  GLCOLLPD.CDCREF = GLCOLAPD.CACREF                                         :           AR964281
+  AND GLCOLLPD.CDZONE = GLCOLAPD.CAZONE                                         :           AR964281
+  LEFT JOIN                                                                     :
+  V_GLOBRATE GLOBRATE                                                           :
+  ON                                                                            :
+  GLOBRATE.CCY=GLCOLLPD.CDCCY                                                   :
+  WHERE                                                                         :
+  GLCOLLPD.CDGNSP = 'G' ;                                                       :           AR964281
+**GLCOLLPD.CDGNSP*=*'G'*********************************************************:           AR964281
+**AND*GLCOLLPD.CDCREF*=*GLCOLAPD.CACREF*****************************************:           AR964281
+**AND*GLCOLLPD.CDZONE*=*GLCOLAPD.CAZONE;****************************************:           AR964281
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+   (CAZONE IS 'Zone' ,                                                          :
+    CACREF IS 'Collateral          Reference' ,                                 :
+    CABRCA IS 'Allocation          Branch Code' ,                               :
+    CACNUM IS 'Collateral          Allocation          Customer' ,              :
+    CAMODS IS 'Module Secured' ,                                                :
+    CAFCUS IS 'Secured Facility    Customer' ,                                  :
+    CAFTYP IS 'Secured Facility    Type' ,                                      :
+    CAFSEQ IS 'Secured Facility    Sequence Number' ,                           :
+    CALNLM IS 'Secured             Loan/Limit' ,                                :
+    CAABRC IS 'Secured Account     Branch' ,                                    :
+    CAACNM IS 'Secured Account     Customer Number' ,                           :
+    CAACCY IS 'Secured Account     Currency' ,                                  :
+    CAACOD IS 'Secured Account     Code' ,                                      :
+    CAASEQ IS 'Secured Account     Sequence Number' ,                           :
+    CAACNO IS 'Secured Retail      Account Number' ,                            :
+    CAGNSP IS 'General/Specific    Indicator' ,                                 :
+    CACCY IS 'Currency' ,                                                       :
+    CAAPCT IS 'Allocation          Amt/Percentage      Indicator' ,             :
+    CAPCNT IS 'Allocation          Percentage' ,                                :
+    CAAMT IS 'Allocation Amount' ,                                              :
+    CAPRTY IS 'Allocation          Priority' ) ;                                :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+   (CAZONE TEXT IS 'Zone' ,                                                     :
+    CACREF TEXT IS 'Collateral Reference' ,                                     :
+    CABRCA TEXT IS 'Allocation Branch Code' ,                                   :
+    CACNUM TEXT IS 'Collateral Allocation Customer' ,                           :
+    CAMODS TEXT IS 'Module Secured' ,                                           :
+    CAFCUS TEXT IS 'Secured Facility Customer' ,                                :
+    CAFTYP TEXT IS 'Secured Facility Type' ,                                    :
+    CAFSEQ TEXT IS 'Secured Facility Sequence Number' ,                         :
+    CALNLM TEXT IS 'Secured Loan/Limit' ,                                       :
+    CAABRC TEXT IS 'Secured Account Branch' ,                                   :
+    CAACNM TEXT IS 'Secured Account Customer Number' ,                          :
+    CAACCY TEXT IS 'Secured Account Currency' ,                                 :
+    CAACOD TEXT IS 'Secured Account Code' ,                                     :
+    CAASEQ TEXT IS 'Secured Account Sequence Number' ,                          :
+    CAACNO TEXT IS 'Secured Retail Account Number' ,                            :
+    CAGNSP TEXT IS 'General/Specific Indicator' ,                               :
+    CACCY TEXT IS 'Currency' ,                                                  :
+    CAAPCT TEXT IS 'Allocation Amount/ Percentage Indicator' ,                  :
+    CAPCNT TEXT IS 'Allocation Percentage' ,                                    :
+    CAAMT TEXT IS 'Allocation Amount' ,                                         :
+    CAPRTY TEXT IS 'Allocation Priority' ) ;                                    :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Collateral Allocations Enquiry           ';                     :
+                                                                                :

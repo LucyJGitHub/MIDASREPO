@@ -1,0 +1,235 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Determine Portfolios Due Statement')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1390 - PM Determine Portfolio Due Statement                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01486             Date 11AUG94               *
+     F*                 B08268             Date 22OCT91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  B08268 - SUNDRY FIXES TO SPEED UP COB GENERATION OF CASHFLOW *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***PREFIX*:*BJ*********************************************         S01486
+     F***********                                   KINFSR *PSSR          S01486
+     FPMCPOSL2UF  E           K        DISK
+     F** PREFIX : QA
+     F                                              KINFSR *PSSR
+     FPM1390AUO   E                    PRINTER
+     F** PREFIX : RR
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       60         WORK INDICATOR
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  ..
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       71  72  73  74  75  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  97  98  99
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     E*=========================================================================
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Midas  Bank details                                          S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure                                            S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - UPDATE NEXT POSITION DATE ON PORTFOLIO POSITIONS      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C**************************************************************************
+      *
+      ** PERFORM SETUP OF STANDARD FIELDS
+      *
+     C                     EXSR #INIT
+      *
+      ** MAIN PROCESSING ROUTINE
+      *
+     C                     EXSR #P01
+      *
+      ** WRITE AUDIT REPORT
+      *
+     C                     WRITEPM1390PP
+     C*                                                                   S01486
+     C           RRNORE    IFEQ *ZERO                                     S01486
+     C                     WRITENODTLS                                    S01486
+     C                     ENDIF                                          S01486
+      *
+      ** TERMINATE PROGRAM
+      *
+     C                     MOVE '1'       *INLR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           **#INIT BSR**
+     C*                                                                   S01486
+     C**  Define local data area                                          S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+      *
+      ** PREPARE LDA
+      *
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     Z-ADD*ZEROS    DBASE                           S01486
+     C                     MOVEL'PM1390'  DBPGM
+     C                     OUT  LDA                                       S01498
+      *
+     C***********          MOVEACPY@      BIS@   80
+     C                     MOVEACPY@      ACT@   80                       S01486
+      *
+      ***GET*INSTALLATION*CONTROL*DATA*RECORD*1******************         S01486
+      ***********                                                         S01486
+     C************LOVAL    SETLLSDBANKL1                                  S01486
+     C***********          READ SDBANKL1                 76               S01486
+      ***********                                                         S01486
+     C************IN76     IFEQ '1'                        - B1           S01486
+     C***********          Z-ADD1         DBASE            ***************S01486
+     C***********          MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**S01486
+     C***********          MOVE *BLANKS   DBKEY            ***************S01486
+     C*                                                                   S01486
+     C**  Access bank details                                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           *DB ERROR 001 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **#INIT ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - UPDATE NEXT POSITION DATE ON PORTFOLIO POSITIONS      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           **#P01  BSR**
+      *
+      ** READ ALL RECORDS FROM PMCPOSL2
+     C                     READ PMCPOSL2                 60
+      *
+     C           *IN60     DOWEQ'0'
+     C                     ADD  1         RRNORE
+     C                     Z-ADD0         QANPDT
+     C                     UPDATPMCPOSP0
+     C                     READ PMCPOSL2                 60
+     C                     END
+      *
+     C                     ENDSR                           **#P01  ESR**
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - DATA BASE ERROR PROCESSING                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           ***PSRR BSR**
+      *
+      ** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+      *
+     C                     WRITEDBERROR                                   S01486
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR                            ***PSRR ESR**
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,2749 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Unauthorised transactions enquiry')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2310 - Unauthorised Transactions Enquiry                   *
+      *                                                               *
+      *  Function:  This program displays all Customer Lending        *
+      *  (I/C)      transactions performed on the day, which are not  *
+      *             authorised.                                       *
+      *                                                               *
+      *  Called By: LEC0308 - Midas LE Unauthorised Transactions      *
+      *                       Enquiry                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CPK027             Date 18Apr07               *
+      *                 243499             Date 08Nov06               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 28Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 225406             Date 04Mar04               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207957             Date 15Aug02               *
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 202531             Date 19Feb02               *
+      *                 194662             Date 04Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 190495             Date 12Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 178980             Date 15May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 171862             Date 10Dec99               *
+      *                 CLE009             Date 11May99               *
+      * Midas DBA 2.10 -----------------------------------------------*
+      *                 158798             Date 12Apr99               *
+      *                 158637 (BT0664)    Date 31Mar98               *
+      *                 147671             Date 25Jan99               *
+      *                 142390             Date 25Feb99               *
+      *                 141453             Date 17Feb99               *
+      * Midas DBA 2.05 -----------------------------------------------*
+      *                 126627             Date 13Feb98               *
+      * Midas DBA 2.04 -----------------------------------------------*
+      *                 128150             Date 29DEC97               *
+      *                 128149             Date 29DEC97               *
+      *                 125187             Date 03NOV97               *
+      *                 124047             Date 15OCT97               *
+      *                 121742             Date 12AUG97               *
+      *                 CLE002 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00083                                 *
+      *             WNCPYSRC,LEH00420                                 *
+      *             WNCPYSRC,LEH00084                                 *
+      *             WNCPYSRC,LEH00085                                 *
+      *             WNCPYSRC,LEH00086                                 *
+      *  CPK027 - Error in 243499 - LKOLNO should now be 6A (Recomp.) *
+      *  243499 - Extend 202531 to cover Fees.                        *
+      *           Applied fix 213370.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  225406 - Large facility amount were truncated & no negative  *
+      *           sign was displayed. Logged on Bugzilla as Bug 887.  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  207957 - Save the value date of the loan amendments so that  *
+      *           it will not be overwritten by the loan's value date.*
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  202531 - If Participations Purch show the customer shortname *
+      *           of the Original Borrower, not the 'Purchased From'. *
+      *  194662 - Repayment schedule amount 0 on unauthorised enq     *
+      *  190495 - Include fee adjustments to the fee settlement line. *
+      *           If adjustment is negative, display minus sign.      *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  178980 - Recompiled only over changes to LE2310DF.           *
+      *  171862 - Recompiled only over changes to LE2310DF.           *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  158798 - Negative manual repayments should have -ve amounts. *
+      *  158637 - LEFEESL1 does not exist, use LEFEEDL3               *
+      *  147671 - Subfile record number updated incorrectly           *
+      *  142390 - Blank description on some loans                     *
+      *  141453 - Recompiled due to changes in PF/LEFEED              *
+      *  126627 - No Principal Transfer/Fee Settlement/Facility       *
+      *           Amendments/Manual Utilisation enquiry screens.      *
+      *  128150 - Output customer shortname on all formats            *
+      *  128149 - If >1 selection made, Enter should take user to     *
+      *           next screen, F12 should return to selection screen  *
+      *  125187 - More than one selection should be allowed           *
+      *  124047 - Unauthorised facilities not on enquiry              *
+      *  121742 - Change Unauthorised Loans and Rollovers enquiry     *
+      *           screens to show customer shortname. Drop new        *
+      *           maturity date from Rollovers sreen.                 *
+      *  CLE002 - Customer Lending Enhancements - Authorisation       *
+      *                                                               *
+      *****************************************************************
+      *
+     F/COPY WNCPYSRC,LE2310F001
+     FLELOANL1IF  E           K        DISK
+      ** Loans requiring authorisations details file
+      *
+     FLELOAML1IF  E           K        DISK
+      ** Loans amendments requiring authorisation
+      *
+     FLELOANL3IF  E           K        DISK
+      ** Unauthorised Rollovers
+      *
+     FLEGTEEL1IF  E           K        DISK
+      ** Unauthorised Guarantees
+      *
+     F***LEFEESL1IF  E           K        DISK                            158637
+     FLEFEEDL3IF  E           K        DISK                               158637
+      ** Unauthorised Fees
+      *
+     F*LEFEEAL3IF**E***********K********DISK                       126627 190495
+      ***Unauthorised Fee Settlements*******                       126627 190495
+      **********                                                   126627 190495
+     FLEFEEAL4IF  E           K        DISK                               190495
+      * Unauthorised Fee Settlements/Adjustments                          190495
+      *                                                                   190495
+     FLEFCAML2IF  E           K        DISK                               126627
+      ** Unauthorised Facility Amendments                                 126627
+      *                                                                   126627
+     FLEMNFUL2IF  E           K        DISK                               126627
+      ** Unauthorised Manual Utilisations                                 126627
+      *                                                                   126627
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCKF                          KRENAMECLOANCK
+     F            CLOANCLF                          KRENAMECLOANCL
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      ** Loans File
+      *
+     FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR          124047
+      **Unauthorised facilities                                           124047
+      *                                                                   124047
+     FLE2310DFCF  E                    WORKSTN                        UC
+     F                                        SRRN  KSFILE LE2310S1
+     F                                        SRRN  KSFILE LE2310S2
+     F                                        SRRN  KSFILE LE2310S3
+     F                                        SRRN  KSFILE LE2310S4
+     F                                        SRRN  KSFILE LE2310S5
+     F                                        SRRN  KSFILE LE2310S7       124047
+     F                                        SRRN  KSFILE LE2310S8       126627
+     F                                        SRRN  KSFILE LE2310S9       126627
+     F                                        SRRN  KSFILE LE2310S0       126627
+     F/COPY WNCPYSRC,LE2310F002
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    21          Invalid entry for Unauthorised Loans menu item *
+      *    22                "                        Amendments "    *
+      *    23                "                        Rollovers  "    *
+      *    24                "                        Guarantees "    *
+      *    25                "                        Fees       "    *
+      *    26                "                        Facilities "    *   124047
+      *    27          Invalid from facility                          *   124047
+      *    28          Used for TESTN                                 *   124047
+      *    31          Unauthorised loans enquiry                     *
+      *    32                "      amendments enquiry                *
+      *    33                "      rollovers enquiry                 *
+      *    34                "      guarantees enquiry                *
+      *    35                "      fees enquiry                      *
+      *    36                "      Facilities enquiry                *   124047
+      *    37                "      fee settlements enquiry           *   126627
+      *    38                "      facility amendments enquiry       *   126627
+      *    39                "      manual utilisations enquiry       *   126627
+      *    42          Invalid customer/loan number                   *
+      *    47          Invalid entry for Unauthorised Fee Settlements *   126627
+      *                menu item                                      *   126627
+      *    48          Invalid entry for Unauthorised Facility        *   126627
+      *                Amendments menu item                           *   126627
+      *    49          Invalid entry for Unauthorised Manual          *   126627
+      *                Utilisation menu item                          *   126627
+      *    70          CLE005 is on                                   *   126627
+      *    74          Roll-up key pressed                            *
+      *    78          Subfile clear                                  *
+      *    77          Subfile display                                *
+      *    79          End of File/subfile                            *
+      *    89          Chain to CLOAN                                 *
+      *    98          Date format is MMDDYY                          *
+      *    U7          Database error                                 *
+      *    U8          Database erorr                                 *
+      *    LR          End of program processing                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Copyright statement
+      *
+     E********************WLDSC   1   3 20                                121742
+     E                    WLDSC   1   3 18                                121742
+      ** Loan description
+      *
+     E********************WACDE   1   9  2   WADSC  20                    128149
+     E                    WACDE   1   9  2                                128149
+      ** Loan description
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZALIGNZ1
+      /EJECT
+      *
+     E/COPY WNCPYSRC,LE2310E001
+     IA@CPY       DS
+      ** Copyright array
+     I                                        1  80 CPY@
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IZMUSER      DS                             17
+      ** Data area of menu user
+     I                                       11  13 DBRN
+     I            DS
+      ** DS to combine input fields SENT1 to SENT5
+      *
+     I                                        1   1 SENT1
+     I                                        2   2 SENT2
+     I                                        3   3 SENT3
+     I                                        4   4 SENT4
+     I                                        5   5 SENT5
+     I                                        6   6 SENT6                 124047
+     I                                        7   7 SENT7                 126627
+     I                                        8   8 SENT8                 126627
+     I                                        9   9 SENT9                 126627
+     I************                            1   5 SENTS                 124047
+     I************                            1   6 SENTS           124047126627
+     I                                        1   9 SENTS                 126627
+     I            DS
+      ** Format amount returned by standard subroutine
+     I                                        1  22 ZOUT22
+     I                                        4  21 ZOUT18
+     I                                        4  20 ZOUT17
+     I                                       21  21 ZNEG
+     I            DS                                                      158798
+      ** Put a space at the end of Rate/Spread fields (from ZEDIT)        158798
+     I                                        1  17 ZSPACE                158798
+     I                                        1  16 ZFIELD                158798
+     I I            ' '                      17  17 ZDUMMY                158798
+     I            DS
+      ** Break facility number into two parts
+     I                                        1   3 WFAC1
+     I                                        4   5 WFAC2
+     I                                        1   50FEFACL
+     I            DS
+      ** Create key to CLOAN
+     I**********                              1   60WCLON                                     CLE148
+     I                                        1   6 WCLON                                     CLE148
+     I                                        7   7 WRCDT
+     I                                        1   7 WCLNK
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCLND    E DSSDCLNDPD
+      ** Customer Lending ICD
+      *
+     ISDCUST    E DSSDCUSTPD                                              121742
+      ** Customer Details                                                 121742
+      *                                                                   121742
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CLE028
+      ** External data structure for SAR Details                                              CLE028
+      *                                                                                       CLE028
+     I/COPY WNCPYSRC,LE2310I001
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRPROC  -  Program processing                                *
+      *  SRINIT  -  Initial processing                                *
+      *  SRREIN  -  Reinitialise variables                            *
+      *  SRVALD  -  Validate menu entry                               *
+      *  SRLOAD  -  Load a subfile page                               *
+      *  SRSUB1  -  Display Unauthorised Loans Enquiry Screen         *
+      *  SRSUB2  -          "            Amendments Enquiry Screen    *
+      *  SRSUB3  -          "            Rollovers Enquiry Screen     *
+      *  SRSUB4  -          "            Guarantees Enquiry Screen    *
+      *  SRSUB5  -          "            Fees Enquiry Screen          *
+      *  SRSUB6  -          "            Facility Enquiry Screen      *   124047
+      *  SRSUB7  -          "            Fee Settlement Enquiry Screen*   126627
+      *  SRSUB8  -          "            Fclty Amendments Enq Screen  *   126627
+      *  SRSUB9  -          "            Manual Utilisations Enq Scrn *   126627
+      *  SRSU11  -  Reinitialise Loans subfile fields                 *
+      *  SRSU21  -          "    Amendments subfile fields            *
+      *  SRSU31  -          "    Rollovers subfile fields             *
+      *  SRSU41  -          "    Guarantees subfile fields            *
+      *  SRSU51  -          "    Fees subfile fields                  *
+      *  SRSU71  -          "    Fee Settlement subfile fields        *   126627
+      *  SRSU81  -          "    Facility Amendments subfile fields   *   126627
+      *  SRSU91  -          "    Manual Utilisations subfile fields   *   126627
+      *  SRSU12  -  Format Loans subfile fields                       *
+      *  SRSU22  -     "   Amendments subfile fields                  *
+      *  SRSU32  -     "   Rollovers subfile fields                   *
+      *  SRSU42  -     "   Guarantees subfile fields                  *
+      *  SRSU52  -     "   Fees subfile fields                        *
+      *  SRSU62  -     "   Facility subfile fields                    *   124047
+      *  SRSU72  -     "   Fee Settlements subfile fields             *   126627
+      *  SRSU82  -     "   Facility Amendments subfile fields         *   126627
+      *  SRSU92  -     "   Manual Utilisations subfile fields         *   126627
+      *  SRLVAL  -  Validate and position the file pointer            *
+      *  SRFVAL  -  Check if facility is valid                        *   124047
+      *  SRCURR  -  Get currency's number of decimal places           *
+      *  SRMCLR  -  Clears message from the program message queue     *
+      *  ZASNMS  -  Send message to the program message queue         *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform different detailed processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** End program processing
+      *
+     C                     MOVE '1'       *INLR
+      *
+      /EJECT
+      *****************************************************************
+      * SRPROC  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : SRMCLR - Clears the message from the pgm msg que   *
+      *            SRREIN - Reinitialise variables                    *
+      *            SRVALD - Validate menu entry                       *
+      *            SRSUB1 - Display unauth. Loans Enquiry screen      *
+      *            SRSUB2 - Display unauth. Amendments Enquiry screen *
+      *            SRSUB3 - Display unauth. Rollovers Enquiry screen  *
+      *            SRSUB4 - Display unauth. Guarantees Enquiry screen *
+      *            SRSUB5 - Display unauth. Fees Enquiry screen       *
+      *****************************************************************
+     C           SRPROC    BEGSR
+      *
+     C           WFMT      DOWEQ'F '
+      *
+     C/COPY WNCPYSRC,LE2310C001
+     C                     WRITELE2310F0
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310F1
+      *
+      ** F3 is pressed, end processing
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE *BLANK    WFMT
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** Reinitialise variables then validate user input.
+      *
+     C                     EXSR SRREIN
+     C                     EXSR SRVALD
+      *
+      ** Check for the selected menu item then execute the
+      ** appropriate enquiry subroutine.
+      *
+     C           WVALD     IFEQ 'Y'
+     C           SENTS     DOWNE*BLANKS                                   125187
+     C           *INKL     ANDNE*ON                                       128149
+     C           *INKC     ANDNE*ON                                       128149
+     C                     MOVE *BLANKS   SLFRM                           125187
+     C                     MOVE *BLANKS   STFRC                           125187
+     C                     MOVE *BLANKS   STFRT                           125187
+     C                     MOVE *BLANKS   STFRS                           125187
+     C                     MOVE *BLANKS   STBRC                           126627
+     C                     SELEC
+     C           SENT6     WHNE ' '                                       125187
+     C                     MOVE 'S6'      WFMT                            125187
+     C                     EXSR SRSUB6                                    125187
+     C           SENT1     WHNE ' '
+     C                     MOVE 'S1'      WFMT
+     C                     EXSR SRSUB1
+     C           SENT2     WHNE ' '
+     C                     MOVE 'S2'      WFMT
+     C                     EXSR SRSUB2
+     C           SENT3     WHNE ' '
+     C                     MOVE 'S3'      WFMT
+     C                     EXSR SRSUB3
+     C           SENT4     WHNE ' '
+     C                     MOVE 'S4'      WFMT
+     C                     EXSR SRSUB4
+     C           SENT5     WHNE ' '
+     C                     MOVE 'S5'      WFMT
+     C                     EXSR SRSUB5
+     C***********SENT6     WHNE ' '                                124047 125187
+     C***********          MOVE 'S6'      WFMT                     124047 125187
+     C***********          EXSR SRSUB6                             124047 125187
+     C           SENT7     WHNE ' '                                       126627
+     C                     MOVE 'S7'      WFMT                            126627
+     C                     EXSR SRSUB7                                    126627
+     C           SENT8     WHNE ' '                                       126627
+     C                     MOVE 'S8'      WFMT                            126627
+     C                     EXSR SRSUB8                                    126627
+     C           SENT9     WHNE ' '                                       126627
+     C                     MOVE 'S9'      WFMT                            126627
+     C                     EXSR SRSUB9                                    126627
+     C/COPY WNCPYSRC,LE2310C002
+     C                     ENDSL
+     C                     ENDDO                                          125187
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRINIT  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : *PSSR  - Error handling subroutine                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define data areas
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Key for file CLOAN
+      *
+     C                     MOVEL'A'       WRCDT
+     C           CLOANK    KLIST
+     C**********           KFLD           WCLON   60                                          CLE148
+     C                     KFLD           WCLON   6                                           CLE148
+     C                     KFLD           WRCDT
+      *                                                                   124047
+      ** Key for file LEFCLTL1                                            124047
+      *                                                                   124047
+     C           FCLTL1    KLIST                                          124047
+     C**********           KFLD           K#CNUM  60                                   124047 CSD027
+     C                     KFLD           K#CNUM  6                                           CSD027
+     C                     KFLD           K#FACT  30                      124047
+     C                     KFLD           K#FCNO  20                      124047
+      *                                                                   126627
+      ** Key for file LEFCAML2/LEMNFUL2                                   126627
+      *                                                                   126627
+     C           FCLTL2    KLIST                                          126627
+     C                     KFLD           K#BRCA  3                       126627
+     C                     KFLD           K#CNUM                          126627
+     C                     KFLD           K#FACT                          126627
+     C                     KFLD           K#FCNO                          126627
+     C/COPY WNCPYSRC,LE2310C003
+      *
+      ** Initialise LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE2310  'DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE *BLANKS   DBTXT
+     C                     OUT  LDA
+      *
+      ** Retrieve bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retrieve lending ICD
+      *
+     C                     CALL 'AOCLNDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C********** SDCLND    PARM SDCLND    DSFDY                                               CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCLNDPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 03 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   126627
+      **  Access Switchable SAR details for the existence of CLE005       126627
+      **  (Tranche 3)                                                     126627
+     C                     CALL 'AOSARDR0'                                126627
+     C                     PARM *BLANK    @RTCD   7                       126627
+     C                     PARM '*VERIFY' @OPTN   7                       126627
+     C                     PARM 'CLE005'  @SARD   6                       126627
+      *                                                                   126627
+     C           @RTCD     IFEQ *BLANK                                    126627
+     C                     MOVE 'Y'       CLE005  1                       126627
+     C                     MOVE *ON       *IN70                           126627
+     C                     ELSE                                           126627
+     C                     MOVE 'N'       CLE005                          126627
+     C                     MOVE *OFF      *IN70                           126627
+     C                     ENDIF                                          126627
+      *                                                                                       CLE028
+      ** Determine if Flat Rate Personal Loans (Rule of 78s) is                               CLE028
+      ** installed                                                                            CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD   7                                           CLE028
+     C                     PARM '*VERIFY' POPTN   7                                           CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD20        DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LE2310C004
+      *
+      ** Open program Display file.
+      *
+     C                     OPEN LE2310DF
+      *
+      ** Set up message file for screen error messages
+      ** Set up fields for screen heading
+      *
+     C                     MOVEL'GB'      ZAMSGF
+     C                     MOVE 'LERMSGF 'ZAMSGF
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+     C                     MOVE BJMRDT    SRUNA
+      *
+     C                     MOVE 'F '      WFMT    2
+     C                     Z-ADD0         WSRRN   40
+     C                     Z-ADD0         WDBSE   20
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRREIN  -  Refresh Screen and work fields                     *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRREIN    BEGSR
+      *
+     C                     MOVE *OFF      *IN21
+     C                     MOVE *OFF      *IN22
+     C                     MOVE *OFF      *IN23
+     C                     MOVE *OFF      *IN24
+     C                     MOVE *OFF      *IN25
+     C                     MOVE *OFF      *IN26                           124047
+     C                     MOVE *OFF      *IN27                           124047
+     C                     MOVE *OFF      *IN47                           126627
+     C                     MOVE *OFF      *IN48                           126627
+     C                     MOVE *OFF      *IN49                           126627
+     C                     MOVE *OFF      *IN77
+     C/COPY WNCPYSRC,LE2310C005
+     C                     Z-ADD0         SRRN    40
+     C                     Z-ADD0         WRCTR   40
+     C                     Z-ADD13        WRMAX   40
+     C                     Z-ADD0         WCCTR   40
+     C                     Z-ADD0         WI      40
+     C                     Z-ADD0         I       40
+     C                     Z-ADD0         J       40
+     C                     MOVE 'Y'       WVALD   1
+     C                     MOVE *BLANKS   WCVAR   1
+     C                     MOVE *BLANKS   WEMSG   1
+     C                     MOVE *BLANKS   SLFRM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRVALD  -  Validate menu entry                                *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : ZASNMS - Sends message to the pgm msg queue        *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+      ** No choice entered.
+      *
+     C/COPY WNCPYSRC,LE2310C006
+     C           SENTS     IFEQ '     '
+     C/COPY WNCPYSRC,LE2310C007
+     C                     MOVE 'N'       WVALD
+     C                     MOVEL'LEE0305' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Choice is not 'Y', '1'  or *Blank.
+      *
+     C                     ELSE
+     C***********1         DO   5         I                               124047
+     C***********1         DO   6         I                         124047126627
+     C/COPY WNCPYSRC,LE2310C008
+     C           1         DO   9         I                               126627
+     C/COPY WNCPYSRC,LE2310C009
+     C                     Z-ADDI         WI
+     C                     SUBSTSENTS:WI  WCVAR                           CLE006
+     C           WCVAR     IFNE 'Y'
+     C           WCVAR     ANDNE'1'
+     C           WCVAR     ANDNE' '
+     C                     ADD  20        WI
+     C                     MOVE '1'       *IN,WI
+     C           WVALD     IFEQ 'Y'
+     C                     MOVE 'N'       WVALD
+     C                     MOVEL'LEE0306' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C           WCVAR     IFEQ 'Y'
+     C           WCVAR     OREQ '1'
+     C                     ADD  1         WCCTR
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Two choices or more are requested.
+      *
+     C***********WCCTR     IFGT 1                                         125187
+     C***********WVALD     ANDEQ'Y'                                       125187
+     C***********          MOVE 'N'       WVALD                           125187
+     C***********          MOVEL'LEE0307' ZAMSID                          125187
+     C***********          EXSR ZASNMS                                    125187
+     C***********1         DO   5         I                               124047
+     C***********1         DO   6         I                        124047 125187
+     C***********          Z-ADDI         WI                              125187
+     C***********          SUBSTSENTS:WI  WCVAR                    CLE006 125187
+     C***********WCVAR     IFEQ 'Y'                                       125187
+     C***********WCVAR     OREQ '1'                                       125187
+     C***********          ADD  20        WI                              125187
+     C***********          MOVE *ON       *IN,WI                          125187
+     C***********          ENDIF                                          125187
+     C***********          ENDDO                                          125187
+     C***********          ENDIF                                          125187
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRLVAL  -  Check if loan number is numeric                    *
+      * Called by: SRSUB1 - Display unauth. Loans Enquiry screen      *
+      *            SRSUB2 - Display unauth. Amendments Enquiry screen *
+      *            SRSUB4 - Display unauth. Guarantees Enquiry screen *
+      *            SRSUB5 - Display unauth. Fees Enquiry screen       *
+      *            SRSUB7 - Display unauth. Fee Settle Enq screen     *   126627
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRLVAL    BEGSR
+      *
+     C********** ' 12345'  CAT  '67890':0 WDGTS  11                                           CSD027
+      *
+     C**********           MOVE SLFRM     WLFRM   60                                          CSD027
+     C                     MOVE SLFRM     WLFRM   6                                           CSD027
+     C**********           MOVE SLFRM     WLFRMN  60                                   CSD027 CLE148
+     C                     MOVE SLFRM     WLFRMN  6                                           CLE148
+     C********** 1         DO   6         J                                                   CSD027
+     C**********           SUBSTSLFRM:J   WCVAR                                               CSD027
+     C********** WCVAR     SCAN WDGTS                    42                                   CSD027
+     C********** *IN42     IFEQ *OFF                                                          CSD027
+     C**********           Z-ADD*ZERO     WLFRM                                               CSD027
+     C**********           LEAVE                                                              CSD027
+     C**********           ENDIF                                                              CSD027
+     C**********           ENDDO                                                              CSD027
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * SRLOAD  -  Load a subfile page                                *
+      * Called by: SRSUB1 - Display unauth. Loans Enquiry screen      *
+      *            SRSUB2 - Display unauth. Amendments Enquiry screen *
+      *            SRSUB3 - Display unauth. Rollovers Enquiry screen  *
+      *            SRSUB4 - Display unauth. Guarantees Enquiry screen *
+      *            SRSUB5 - Display unauth. Fees Enquiry screen       *
+      *            SRSUB6 - Display unauth. Facilitis enquiry screen  *   124047
+      *            SRSUB7 - Display unauth. Fee Settle enquiry screen *   126627
+      *            SRSUB8 - Display unauth. Fclty Amend enquiry screen*   126627
+      *            SRSUB9 - Display unauth. Manual Util enquiry screen*   126627
+      * Calls    : SRSU12 - Format Loans subfile fields               *
+      *            SRSU22 - Format Amendments subfile fields          *
+      *            SRSU32 - Format Rollovers subfile fields           *
+      *            SRSU42 - Format Guarantees subfile fields          *
+      *            SRSU52 - Format Fees subfile fields                *
+      *            SRSU62 - Format Facilities subfile fields          *   124047
+      *            SRSU72 - Format Fee Settlements subfile fields     *   126627
+      *            SRSU82 - Format Fclty Amendments subfile fields    *   126627
+      *            SRSU92 - Format Manual Util subfile fields         *   126627
+      *            ZASNMS - Send message to program message queue     *
+      *****************************************************************
+     C           SRLOAD    BEGSR
+      *
+     C                     Z-ADD0         WRCTR
+     C/COPY WNCPYSRC,LE2310C010
+      *
+      ** Roll-up key not pressed.
+      *
+     C           *IN74     IFEQ *OFF
+     C                     MOVE *ON       *IN78
+     C                     SELEC
+     C           WFMT      WHEQ 'S1'
+     C                     WRITELE2310C1
+     C           WFMT      WHEQ 'S2'
+     C                     WRITELE2310C2
+     C           WFMT      WHEQ 'S3'
+     C                     WRITELE2310C3
+     C           WFMT      WHEQ 'S4'
+     C                     WRITELE2310C4
+     C           WFMT      WHEQ 'S5'
+     C                     WRITELE2310C5
+     C           WFMT      WHEQ 'S6'                                      124047
+     C                     WRITELE2310C7                                  124047
+     C           WFMT      WHEQ 'S7'                                      126627
+     C                     WRITELE2310C8                                  126627
+     C           WFMT      WHEQ 'S8'                                      126627
+     C                     WRITELE2310C9                                  126627
+     C           WFMT      WHEQ 'S9'                                      126627
+     C                     WRITELE2310C0                                  126627
+     C/COPY WNCPYSRC,LE2310C011
+     C                     ENDSL
+     C                     MOVEA'00'      *IN,77
+     C                     Z-ADD0         WSRRN
+     C/COPY WNCPYSRC,LE2310C012
+      *
+     C                     SELEC
+     C           WFMT      WHEQ 'S1'
+     C********** WLFRM     SETLLLELOANL1                                                      CSD027
+     C           WLFRMN    SETLLLELOANL1                                                      CSD027
+     C                     READ LELOANL1                 79
+     C           WFMT      WHEQ 'S2'
+     C********** WLFRM     SETLLLELOAML1                                                      CSD027
+     C           WLFRMN    SETLLLELOAML1                                                      CSD027
+     C                     READ LELOAML1                 79
+     C           WFMT      WHEQ 'S3'
+     C********** WLFRM     SETLLLELOANL3                                                      CSD027
+     C           WLFRMN    SETLLLELOANL3                                                      CSD027
+     C                     READ LELOANL3                 79
+     C           WFMT      WHEQ 'S4'
+     C********** WLFRM     SETLLLEGTEEL1                                                      CSD027
+     C           WLFRMA    SETLLLEGTEEL1                                                      CSD027
+     C                     READ LEGTEEL1                 79
+     C           WFMT      WHEQ 'S5'
+     C***        WLFRM     SETLLLEFEESL1                                  158637
+     C***                  READ LEFEESL1                 79               158637
+     C********** WLFRM     SETLLLEFEEDL3                                               158637 CSD027
+     C           WLFRMA    SETLLLEFEEDL3                                                      CSD027
+     C                     READ LEFEEDL3                 79               158637
+     C           WFMT      WHEQ 'S6'                                      124047
+     C           FCLTL1    SETLLLEFCLTL1                                  124047
+     C                     READ LEFCLTL1                 79               124047
+     C/COPY WNCPYSRC,LEH00083
+     C           WFMT      WHEQ 'S7'                                      126627
+     C********** WLFRM     SETLLLEFEEAL3                           126627 190495
+     C********** WLFRM     SETLLLEFEEAL4                                               190495 CSD027
+     C           WLFRMA    SETLLLEFEEAL4                                                      CSD027
+     C**********           READ LEFEEAL3                 79        126627 190495
+     C                     READ LEFEEAL4                 79               190495
+     C           WFMT      WHEQ 'S8'                                      126627
+     C           FCLTL2    SETLLLEFCAML2                                  126627
+     C                     READ LEFCAML2                 79               126627
+     C/COPY WNCPYSRC,LEH00428
+     C           WFMT      WHEQ 'S9'                                      126627
+     C           FCLTL2    SETLLLEMNFUL2                                  126627
+     C                     READ LEMNFUL2                 79               126627
+     C/COPY WNCPYSRC,LE2310C013
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDWSRRN     SRRN
+     C           *IN79     DOWEQ*OFF
+     C           WRCTR     ANDLTWRMAX
+     C***********AMTP      IFNE 'PT'                               126627 147671
+     C           AMTP      IFEQ 'PT'                                      147671
+     C           WFMT      ANDEQ'S2'                                      147671
+     C                     ELSE                                           147671
+     C                     ADD  1         SRRN
+     C                     ADD  1         WRCTR
+     C                     ENDIF                                          126627
+      *
+     C                     SELEC
+     C           WFMT      WHEQ 'S1'
+     C                     EXSR SRSU12
+     C                     WRITELE2310S1
+     C                     READ LELOANL1                 79
+     C           WFMT      WHEQ 'S2'
+     C           AMTP      IFNE 'PT'                                      126627
+     C                     EXSR SRSU22
+     C                     WRITELE2310S2
+     C                     ENDIF                                          126627
+     C                     READ LELOAML1                 79
+     C           WFMT      WHEQ 'S3'
+     C                     EXSR SRSU32
+     C                     WRITELE2310S3
+     C                     READ LELOANL3                 79
+     C           WFMT      WHEQ 'S4'
+     C                     EXSR SRSU42
+     C                     WRITELE2310S4
+     C                     READ LEGTEEL1                 79
+     C           WFMT      WHEQ 'S5'
+     C                     EXSR SRSU52
+     C                     WRITELE2310S5
+     C***                  READ LEFEESL1                 79               158637
+     C                     READ LEFEEDL3                 79               158637
+     C           WFMT      WHEQ 'S6'                                      124047
+     C                     EXSR SRSU62                                    124047
+     C                     WRITELE2310S7                                  124047
+     C                     READ LEFCLTL1                 79               124047
+     C/COPY WNCPYSRC,LEH00420
+     C           WFMT      WHEQ 'S7'                                      126627
+     C                     EXSR SRSU72                                    126627
+     C                     WRITELE2310S8                                  126627
+     C*********            READ LEFEEAL3                 79        126627 190495
+     C                     READ LEFEEAL4                 79               190495
+     C           WFMT      WHEQ 'S8'                                      126627
+     C                     EXSR SRSU82                                    126627
+     C                     WRITELE2310S9                                  126627
+     C                     READ LEFCAML2                 79               126627
+     C/COPY WNCPYSRC,LEH00429
+     C           WFMT      WHEQ 'S9'                                      126627
+     C                     EXSR SRSU92                                    126627
+     C                     WRITELE2310S0                                  126627
+     C                     READ LEMNFUL2                 79               126627
+     C/COPY WNCPYSRC,LE2310C014
+     C                     ENDSL
+     C                     ENDDO
+      *
+      ** Save last relative record number used.
+      *
+     C                     Z-ADDSRRN      WSRRN
+     C                     Z-ADDSRRN      SRECN
+      *
+      ** Send message if subfile is empty.
+      *
+     C           SRRN      IFEQ 0
+     C                     Z-ADD1         SRECN
+     C                     MOVE *ON       *IN77
+     C                     MOVEL'LEE0308' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSUB1  -  Display Screen for Unauthorised Loans/PP/PS        *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : SRLVAL - Validate and position file pointer        *
+      *            SRMCLR - Clear message from the pgm msg queue      *
+      *            SRLOAD - Load a subfile page for display           *
+      *****************************************************************
+     C           SRSUB1    BEGSR
+      *
+     C                     MOVE *ON       *IN31
+     C           WFMT      DOWEQ'S1'
+      *
+      ** Check if loan number is valid. If not, use *blanks to
+      ** position the file record pointer then load a subfile page.
+      *
+     C                     EXSR SRLVAL
+     C                     EXSR SRLOAD
+      *
+      ** Display Unauthorised Loans/PP/PS screen.
+      *
+     C                     WRITELE2310F0
+     C                     WRITELE2310F2
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310C1
+      *
+      ** If F3 is pressed, exit from program. If F12 is pressed,
+      ** go back to main processing.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE '  '      WFMT
+     C                     LEAVE
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'F '      WFMT
+     C                     LEAVE
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C***********          MOVE *BLANKS   SENTS                           125187
+     C                     MOVE *BLANKS   SENT1                           125187
+     C                     MOVE *OFF      *IN31
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU11  -  Initialise subfile fields                          *
+      * Called by: SRSU12 - Format Loans subfile fields               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRSU11    BEGSR
+      *
+     C                     MOVE *BLANKS   SLLON
+     C                     MOVE *BLANKS   SLCNM
+     C                     MOVE *BLANKS   SLDSC
+     C                     MOVE *BLANKS   SLAMT
+     C                     MOVE *BLANKS   SLCCY
+     C                     MOVE *BLANKS   SLVDT
+     C                     MOVE *BLANKS   SLMDT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU12  -  Move fields to subfile fields                      *
+      * Called by: SRSUB1 - Display unauth. Loans Enquiry screen      *
+      * Calls    : SRSU11 - Initialise subfile fields                 *
+      *            SRCURR - Get currency details                      *
+      *****************************************************************
+     C           SRSU12    BEGSR
+      *
+      ** Initialise subfile fields.
+      *
+     C                     EXSR SRSU11
+      *
+     C                     MOVE LNRF      SLLON
+     C***********          MOVE CNUM      SLCNM                           121742
+     C***********' ':'0'   XLATESLCNM     SLCNM                           121742
+     C                     MOVE CCY       SLCCY
+      *                                                                   121742
+      ** Access the Customer Details file                                 121742
+      *                                                                   121742
+      * Participations Purchased should use the Customer Shortname                            202531
+      * of the Original Borrower, not the 'Purchased From' customer.                          202531
+      *                                                                                       202531
+     C           PTYP      IFEQ 64                                                            202531
+     C           PTYP      OREQ 65                                                            202531
+     C           PTYP      OREQ 68                                                            202531
+     C           PTYP      OREQ 71                                                            202531
+     C                     MOVELOLNO      W#CNUM                                              202531
+     C                     ELSE                                                               202531
+     C                     MOVE CNUM      W#CNUM  6                       121742
+     C                     ENDIF                                                              202531
+      *                                                                                       202531
+     C                     CALL 'AOCUSTR0'                                121742
+     C                     PARM '       ' @RTCD   7        B:Return Code  121742
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       121742
+     C                     PARM W#CNUM    @CNUM  10        O:Format       121742
+     C                     PARM           @CNST   7                       121742
+     C           SDCUST    PARM SDCUST    DSSDY                           121742
+      *                                                                   121742
+     C           @RTCD     IFNE *BLANKS                                   121742
+     C           *LOCK     IN   LDA                                       121742
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************121742
+     C                     Z-ADD4         DBASE            * DBERR 04     121742
+     C                     MOVEL@OPTN     DBKEY            ***************121742
+     C                     OUT  LDA                                       121742
+     C                     EXSR *PSSR                                     121742
+      *                                                                   121742
+     C                     ELSE                                           121742
+      *                                                                   121742
+     C                     MOVE *BLANKS   SLCNM                           121742
+     C                     MOVELBBCSSN    SLCNM                           121742
+     C                     ENDIF                                          121742
+      *
+      ** Convert day number to DDMMYY or MMDDYY
+      *
+     C           VDAT      IFEQ 0
+     C                     MOVE *BLANKS   SLVDT
+     C                     ELSE
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SLVDT
+     C                     ENDIF
+      *
+     C           MDAT      IFEQ 0
+     C                     MOVE *BLANKS   SLMDT
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SLMDT
+     C                     ENDIF
+      *
+      ** Check if record type is 'loan', 'parts sold' or
+      ** 'parts purchased'.
+      *
+     C                     SELEC
+     C           PTYP      WHGE 60
+     C           PTYP      ANDLE63
+     C           PTYP      OREQ 70
+     C           PTYP      OREQ 80                                                            CLE028
+     C           CLE028    ANDEQ'Y'                                                           CLE028
+     C                     MOVE WLDSC,1   SLDSC
+     C           PTYP      WHEQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 69                                        142390
+     C           PTYP      OREQ 72                                        142390
+     C                     MOVE WLDSC,2   SLDSC
+     C           PTYP      WHEQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 68                                        142390
+     C           PTYP      OREQ 71                                        142390
+     C                     MOVE WLDSC,3   SLDSC
+     C                     ENDSL
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the amount afterwards.
+      *
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD3         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CPAM      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+      *                                                                                       CLE028
+      ** For flat rate loans, if the loan hasn't started or just input                        CLE028
+      ** today, add interest and/or charges if these were added on                            CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           VDAT      IFGT BJRDNB                                                        CLE028
+     C           ORED      OREQ BJRDNB                                                        CLE028
+     C           ADIF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  FLTI      ZFLD15                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C           ADCF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  CHGA      ZFLD15                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT17    SLAMT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSUB2  -  Display Screen for Amendments                      *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : SRLVAL - Validate and position file pointer        *
+      *            SRMCLR - Clear message from the pgm msg queue      *
+      *            SRLOAD - Load a subfile page for display           *
+      *****************************************************************
+     C           SRSUB2    BEGSR
+      *
+     C                     MOVE *ON       *IN32
+     C           WFMT      DOWEQ'S2'
+      *                                                                   124047
+      ** Check if loan number is valid. If not, use *blanks to            124047
+      ** position the file record pointer then load a subfile page.       124047
+      *
+     C                     EXSR SRLVAL                                    124047
+     C                     EXSR SRLOAD
+      *
+      ** Display Unauthorised Loans/PP/PS screen.
+      *
+     C                     WRITELE2310F0
+     C                     WRITELE2310F2
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310C2
+      *
+      ** If F3 is pressed, exit from program. If F12 is pressed,
+      ** go back to main processing.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE '  '      WFMT
+     C                     LEAVE
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'F '      WFMT
+     C                     LEAVE
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C***********          MOVE *BLANKS   SENTS                           125187
+     C                     MOVE *BLANKS   SENT2                           125187
+     C                     MOVE *OFF      *IN32
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU21  -  Initialise subfile fields                          *
+      * Called by: SRSU22 - Format Amendments subfile fields          *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRSU21    BEGSR
+      *
+     C                     MOVE *BLANKS   SALON
+     C                     MOVE *BLANKS   SAVDT
+     C                     MOVE *BLANKS   SASEQ
+     C                     MOVE *BLANKS   SAAMT
+     C                     MOVE *BLANKS   SACST
+     C                     MOVE *BLANKS   SAART
+     C                     MOVE *BLANKS   SACCY
+     C                     MOVE *BLANKS   SASAC
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU22  -  Move fields to subfile fields                      *
+      * Called by: SRSUB2 - Display unauth. Amendments Enquiry screen *
+      * Calls    : SRSU21 - Initialise subfile fields                 *
+      *            SRCURR - Get currency details                      *
+      *****************************************************************
+     C           SRSU22    BEGSR
+      *
+      ** Initialise subfile fields.
+      *
+     C                     EXSR SRSU21
+      *
+     C                     MOVE LNRF      SALON
+     C                     MOVE LASN      SASEQ
+     C**********           MOVE CNUM      SACST                                               202531
+      *                                                                   128150
+      ** Access the Customer Details file                                 128150
+      *                                                                   128150
+      ** Check loan file for Original Borrower Number:                                        202531
+     C                     MOVE LNRF      WCLON                                               202531
+     C                     Z-ADDVDAT      WVDAT   50                                          207957
+     C           CLOANK    CHAINCLOAN                89                                       202531
+     C           *IN89     IFEQ *OFF                                                          202531
+      *                                                                                       202531
+     C                     MOVE LNRF      SRLON                                               202531
+      *                                                                                       202531
+      ** Participations Purchased should use the Customer Shortname                           202531
+      ** of the Original Borrower, not the 'Purchased From' customer.                         202531
+      *                                                                                       202531
+     C           PTYP      IFEQ 64                                                            202531
+     C           PTYP      OREQ 65                                                            202531
+     C           PTYP      OREQ 68                                                            202531
+     C           PTYP      OREQ 71                                                            202531
+     C                     MOVELOLNO      SACST                                               202531
+     C                     MOVELOLNO      W#CNUM                                              202531
+     C                     ELSE                                                               202531
+     C                     MOVE CNUM      SACST                                               202531
+     C                     MOVE CNUM      W#CNUM  6                       128150
+     C                     ENDIF                                                              202531
+      *                                                                                       202531
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM '       ' @RTCD   7        B:Return Code  128150
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       128150
+     C                     PARM W#CNUM    @CNUM  10        O:Format       128150
+     C                     PARM           @CNST   7                       128150
+     C           SDCUST    PARM SDCUST    DSSDY                           128150
+      *                                                                   128150
+     C           @RTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************128150
+     C                     Z-ADD13        DBASE            * DBERR 13     128150
+     C                     MOVEL@OPTN     DBKEY            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+      *                                                                   128150
+     C                     ELSE                                           128150
+      *                                                                   128150
+     C                     MOVE *BLANKS   SLCNM                           128150
+     C                     MOVELBBCSSN    SLCNM                           128150
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C                     MOVE CCY       SACCY
+      *
+      ** Check amendment type.
+      *
+     C                     DO   9         I
+     C           AMTP      IFEQ WACDE,I
+     C***********          MOVE WADSC,I   SAAMT                           128149
+     C                     MOVELWACDE,I   SAAMT                           128149
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Convert day number to DDMMYY or MMDDYY
+      *
+     C                     Z-ADDWVDAT     VDAT                                                207957
+     C           VDAT      IFEQ 0
+     C                     MOVE *BLANKS   SAVDT
+     C                     ELSE
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SAVDT
+     C                     ENDIF
+      *
+      ***  Format Amount/Rate
+      *
+     C           AMTP      IFEQ 'SC'
+     C           AMTP      OREQ 'BC'
+     C                     Z-ADD7         ZADEC
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RTSP      ZFIELD
+     C                     EXSR ZEDIT
+     C***********          MOVE ZFIELD    SAART                           158798
+     C                     MOVE ZSPACE    SAART                           158798
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the amount afterwards.
+      *
+     C                     ELSE
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD4         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C           REPT      IFNE 3                                                             194662
+     C                     Z-ADDPRAM      ZFLD15
+     C                     ELSE                                                               194662
+     C                     Z-ADDTAMT      ZFLD15                                              194662
+     C                     ENDIF                                                              194662
+     C                     EXSR ZFRPED
+     C***********          MOVELZOUT17    SAART                           158798
+     C                     MOVELZOUT18    SAART                           158798
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SA'
+     C           AMTP      OREQ 'LS'
+     C                     MOVE *BLANKS   SAART
+     C                     ENDIF
+      *
+     C           STAI      IFEQ 'Y'
+     C                     MOVE 'YES'     SASAC
+     C                     ELSE
+     C                     MOVE 'NO '     SASAC
+     C                     ENDIF
+      *                                                                   126627
+     C           AMTP      IFEQ 'PF'                                      126627
+     C                     MOVE *BLANKS   SASAC                           126627
+     C                     ENDIF                                          126627
+      *
+     C                     ELSE                                                               202531
+      *                                                                                       202531
+      **  Else, Loan not found:                                                               202531
+      **   Database error                                                                     202531
+      *                                                                                       202531
+     C           *LOCK     IN   LDA                                                           202531
+     C                     MOVEL'CLOAN   'DBFILE           ************                       202531
+     C                     Z-ADD20        DBASE            * DBERR 20 *                       202531
+     C                     MOVELWCLNK     DBKEY            ************                       202531
+     C                     OUT  LDA                                                           202531
+     C                     EXSR *PSSR                                                         202531
+     C                     ENDIF                                                              202531
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSUB3  -  Display Screen for Rollovers                       *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : SRLVAL - Validate and position file pointer        *
+      *            SRMCLR - Clear message from the pgm msg queue      *
+      *            SRLOAD - Load a subfile page for display           *
+      *****************************************************************
+     C           SRSUB3    BEGSR
+      *
+     C                     MOVE *ON       *IN33
+     C           WFMT      DOWEQ'S3'
+      *
+      ** Check if loan number is valid. If not, use *blanks to
+      ** position the file record pointer then load a subfile page.
+      *
+     C                     WRITELE2310F0
+     C                     WRITELE2310F2
+     C                     EXSR SRLVAL
+     C                     EXSR SRLOAD
+      *
+      ** Display Unauthorised Loans/PP/PS screen.
+      *
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310C3
+      *
+      ** If F3 is pressed, exit from program. If F12 is pressed,
+      ** go back to main processing.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE '  '      WFMT
+     C                     LEAVE
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'F '      WFMT
+     C                     LEAVE
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C***********          MOVE *BLANKS   SENTS                           125187
+     C                     MOVE *BLANKS   SENT3                           125187
+     C                     MOVE *OFF      *IN33
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU31  -  Initialise subfile fields                          *
+      * Called by: SRSU32 - Format Rollovers subfile fields           *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRSU31    BEGSR
+      *
+     C                     MOVE *BLANKS   SRLON
+     C                     MOVE *BLANKS   SRRDT
+     C                     MOVE *BLANKS   SRACD
+     C                     MOVE *BLANKS   SRSRT
+     C                     MOVE *BLANKS   SRNIN
+     C                     MOVE *BLANKS   SRNBS
+     C                     MOVE *BLANKS   SRNRL
+     C                     MOVE *BLANKS   SRPRN
+     C***********          MOVE *BLANKS   SRMAT                           121742
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU32  -  Move fields to subfile fields                      *
+      * Called by: SRSUB3 - Display unauth. Rollovers Enquiry screen  *
+      * Calls    : SRSU31 - Initialise subfile fields                 *
+      *            SRCURR - Get currency details                      *
+      *****************************************************************
+     C           SRSU32    BEGSR
+      *
+      ** Initialise subfile fields.
+      *
+     C                     EXSR SRSU31
+      *
+     C                     MOVE LNRF      WCLON
+     C           CLOANK    CHAINCLOAN                89
+     C           *IN89     IFEQ *OFF
+      *
+     C                     MOVE LNRF      SRLON
+     C                     MOVE NSIN      SRNIN
+      *                                                                   121742
+      ** Access the Customer Details file                                 121742
+      *                                                                   121742
+      * Participations Purchased should use the Customer Shortname                            202531
+      * of the Original Borrower, not the 'Purchased From' customer.                          202531
+      *                                                                                       202531
+     C           PTYP      IFEQ 64                                                            202531
+     C           PTYP      OREQ 65                                                            202531
+     C           PTYP      OREQ 68                                                            202531
+     C           PTYP      OREQ 71                                                            202531
+     C                     MOVELOLNO      W#CNUM                                              202531
+     C                     ELSE                                                               202531
+     C                     MOVE CNUM      W#CNUM  6                       121742
+     C                     ENDIF                                                              202531
+      *                                                                                       202531
+     C                     CALL 'AOCUSTR0'                                121742
+     C                     PARM '       ' @RTCD   7        B:Return Code  121742
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       121742
+     C                     PARM W#CNUM    @CNUM  10        O:Format       121742
+     C                     PARM           @CNST   7                       121742
+     C           SDCUST    PARM SDCUST    DSSDY                           121742
+      *                                                                   121742
+     C           @RTCD     IFNE *BLANKS                                   121742
+     C           *LOCK     IN   LDA                                       121742
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************121742
+     C                     Z-ADD5         DBASE            * DBERR 05     121742
+     C                     MOVEL@OPTN     DBKEY            ***************121742
+     C                     OUT  LDA                                       121742
+     C                     EXSR *PSSR                                     121742
+      *                                                                   121742
+     C                     ELSE                                           121742
+      *                                                                   121742
+     C                     MOVE *BLANKS   SRCNM                           121742
+     C                     MOVELBBCSSN    SRCNM                           121742
+     C                     ENDIF                                          121742
+      *
+     C           NCAS      IFEQ 0
+     C                     MOVE *BLANKS   SRNBS
+     C                     ELSE
+     C                     MOVE NCAS      SRNBS
+     C                     ENDIF
+      *
+     C           NBRA      IFEQ 0
+     C                     MOVE *BLANKS   SRACD
+     C                     ELSE
+     C                     MOVE NBRA      SRACD
+     C                     ENDIF
+      *
+      ** Format Rollover Date
+      *
+     C           RLDT      IFEQ 0
+     C                     MOVE *BLANKS   SRRDT
+     C                     ELSE
+     C                     Z-ADDRLDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SRRDT
+     C                     ENDIF
+      *
+      ** Format Next Rollover Date
+      *
+     C           NROD      IFEQ 0
+     C                     MOVE *BLANKS   SRNRL
+     C                     ELSE
+     C                     Z-ADDNROD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SRNRL
+     C                     ENDIF
+      *
+      ** Format New Spread/Rate
+      *
+     C                     Z-ADD7         ZADEC
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE NRTS      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SRSRT
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the amount afterwards.
+      *
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD5         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C           PTYP      IFEQ 63
+     C                     Z-ADDNPRAM     ZFLD15
+     C                     ELSE
+     C                     Z-ADDCPAM      ZFLD15
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT17    SRPRN
+      *
+      ***Format*New*Maturity**********************************************121742
+      ********************************************************************121742
+     C***********NMDT      IFEQ 0                                         121742
+     C***********          MOVE *BLANKS   SRMAT                           121742
+     C***********          ELSE                                           121742
+     C***********          Z-ADDNMDT      ZDAYNO                          121742
+     C***********          EXSR ZDATE2                                    121742
+     C***********          MOVE ZDATE     SRMAT                           121742
+     C***********          ENDIF                                          121742
+      *
+      ** Database error
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ***********T
+     C                     Z-ADD10        DBASE            * DBERR 10 *
+     C                     MOVELWCLNK     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSUB4  -  Display Screen for Guarantees                      *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : SRLVAL - Validate and position file pointer        *
+      *            SRMCLR - Clear message from the pgm msg queue      *
+      *            SRLOAD - Load a subfile page for display           *
+      *****************************************************************
+     C           SRSUB4    BEGSR
+      *
+     C                     MOVE *ON       *IN34
+     C           WFMT      DOWEQ'S4'
+      *
+      ***Check*if*loan*number*is*valid.*If*not,*use**blanks*to******                          CSD027
+      ***position*the*file*record*pointer*then*load*a*subfile*page.*                          CSD027
+      * Now that the customer number can be alpha do not validate as numeric.                 CSD027
+     C                     MOVE WLFRM     WLFRMA  6                                           CSD027
+     C**********           EXSR SRLVAL                                                        CSD027
+     C                     EXSR SRLOAD
+      *
+      ** Display Unauthorised Loans/PP/PS screen.
+      *
+     C                     WRITELE2310F0
+     C                     WRITELE2310F2
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310C4
+      *
+      ** If F3 is pressed, exit from program. If F12 is pressed,
+      ** go back to main processing.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE '  '      WFMT
+     C                     LEAVE
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'F '      WFMT
+     C                     LEAVE
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C***********          MOVE *BLANKS   SENTS                           125187
+     C                     MOVE *BLANKS   SENT4                           125187
+     C                     MOVE *OFF      *IN34
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU41  -  Initialise subfile fields                          *
+      * Called by: SRSU42 - Format Guarantees subfile fields          *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRSU41    BEGSR
+      *
+     C                     MOVE *BLANKS   SGLON
+     C                     MOVE *BLANKS   SGCCY
+     C                     MOVE *BLANKS   SGCNM
+     C                     MOVE *BLANKS   SGAMT
+     C                     MOVE *BLANKS   SGIRT
+     C                     MOVE *BLANKS   SGIAC
+     C                     MOVE *BLANKS   SGMAT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU42  -  Move fields to subfile fields                      *
+      * Called by: SRSUB4 - Display unauth. Guarantees Enquiry screen *
+      * Calls    : SRSU41 - Initialise subfile fields                 *
+      *            SRCURR - Get currency details                      *
+      *****************************************************************
+     C           SRSU42    BEGSR
+      *
+      ** Initialise subfile fields.
+      *
+     C                     EXSR SRSU41
+      *
+     C                     MOVE CCY       SGCCY
+     C***********          MOVE CNUM      SGCNM                           128150
+     C***********' ':'0'   XLATESGCNM     SGCNM                           128150
+      *                                                                   128150
+      ** Access the Customer Details file                                 128150
+      *                                                                   128150
+     C                     MOVE CNUM      W#CNUM  6                       128150
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM '       ' @RTCD   7        B:Return Code  128150
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       128150
+     C                     PARM W#CNUM    @CNUM  10        O:Format       128150
+     C                     PARM           @CNST   7                       128150
+     C           SDCUST    PARM SDCUST    DSSDY                           128150
+      *                                                                   128150
+     C           @RTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************128150
+     C                     Z-ADD14        DBASE            * DBERR 14     128150
+     C                     MOVEL@OPTN     DBKEY            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+      *                                                                   128150
+     C                     ELSE                                           128150
+      *                                                                   128150
+     C                     MOVE *BLANKS   SGCNM                           128150
+     C                     MOVELBBCSSN    SGCNM                           128150
+     C                     ENDIF                                          128150
+      *
+      ** Format Loan/Fclty
+      *
+     C                     MOVELFCLN      WFCLN   1
+     C********** WFCLN     IFEQ 'F'                                                           CLE148
+     C           WFCLN     IFEQ ' '                                                           CLE148
+     C                     MOVE FCLN      FEFACL
+     C                     MOVE '   /  '  SGLON
+     C                     MOVELWFAC1     SGLON
+     C                     MOVE WFAC2     SGLON
+     C                     ELSE
+     C                     MOVE FCLN      SGLON
+     C                     ENDIF
+      *
+      ** Format Maturity Date
+      *
+     C           EDDT      IFEQ 0
+     C                     MOVE *BLANKS   SGMAT
+     C                     ELSE
+     C                     Z-ADDEDDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SGMAT
+     C                     ENDIF
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the guaranteed amount afterwards.
+      *
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD6         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDTAMT      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT17    SGAMT
+      *
+     C********** WFCLN     IFEQ 'F'                                                           CLE148
+     C           WFCLN     IFEQ ' '                                                           CLE148
+     C                     MOVE *BLANKS   SGIRT
+     C                     MOVE *BLANKS   SGIAC
+     C                     ELSE
+      *
+     C                     MOVE FCLN      WCLON
+     C           CLOANK    CHAINCLOAN                89
+     C           *IN89     IFEQ *OFF
+      *
+      ** Format interest rate
+      *
+     C                     Z-ADD7         ZADEC
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE INTR      ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SGIRT
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the amount afterwards.
+      *
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD7         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDAIPD      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT17    SGIAC
+      *
+      ** Database error
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLOAN   'DBFILE           ************
+     C                     Z-ADD11        DBASE            * DBERR 11 *
+     C                     MOVELWCLNK     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSUB5  -  Display Screen for Fees                            *
+      * Called by: SRPROC - Program processing                        *
+      * Calls    : SRLVAL - Validate and position file pointer        *
+      *            SRMCLR - Clear message from the pgm msg queue      *
+      *            SRLOAD - Load a subfile page for display           *
+      *****************************************************************
+     C           SRSUB5    BEGSR
+      *
+     C                     MOVE *ON       *IN35
+     C           WFMT      DOWEQ'S5'
+      *
+      ***Check*if*loan*number*is*valid.*If*not,*use**blanks*to******                          CSD027
+      ***position*the*file*record*pointer*then*load*a*subfile*page.*                          CSD027
+      * Now that the customer number can be alpha do not validate as numeric.                 CSD027
+     C                     MOVE WLFRM     WLFRMA                                              CSD027
+     C**********           EXSR SRLVAL                                                        CSD027
+     C                     EXSR SRLOAD
+      *
+      ** Display Unauthorised Loans/PP/PS screen.
+      *
+     C                     WRITELE2310F0
+     C                     WRITELE2310F2
+     C                     WRITELE2310C6
+     C                     EXSR SRMCLR
+     C                     EXFMTLE2310C5
+      *
+      ** If F3 is pressed, exit from program. If F12 is pressed,
+      ** go back to main processing.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVE '  '      WFMT
+     C                     LEAVE
+     C           *INKL     WHEQ *ON
+     C                     MOVE 'F '      WFMT
+     C                     LEAVE
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C***********          MOVE *BLANKS   SENTS                           125187
+     C                     MOVE *BLANKS   SENT5                           125187
+     C                     MOVE *OFF      *IN35
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU51  -  Initialise subfile fields                          *
+      * Called by: SRSU52 - Format Fees subfile fields                *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRSU51    BEGSR
+      *
+     C                     MOVE *BLANKS   SFCNM
+     C                     MOVE *BLANKS   SFFCL
+     C                     MOVE *BLANKS   SFLON
+     C                     MOVE *BLANKS   SFSEQ
+     C                     MOVE *BLANKS   SFCDE
+     C                     MOVE *BLANKS   SFAMT
+     C                     MOVE *BLANKS   SFCCY
+     C                     MOVE *BLANKS   SFSTR
+     C                     MOVE *BLANKS   SFEND
+     C                     MOVE *BLANKS   SFPAY
+     C                     MOVE *BLANKS   SFADV
+     C/COPY WNCPYSRC,LEH00430
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRSU52  -  Move fields to subfile fields                      *
+      * Called by: SRSUB5 - Display unauth. Fees Enquiry screen       *
+      * Calls    : SRSU51 - Initialise subfile fields                 *
+      *            SRCURR - Get currency details                      *
+      *****************************************************************
+     C           SRSU52    BEGSR
+      *
+      ** Initialise subfile fields.
+      *
+     C                     EXSR SRSU51
+      *
+     C           FEFACL    IFEQ 0
+     C                     MOVE *BLANKS   SFFCL
+     C                     ELSE
+     C                     MOVE '   /  '  SFFCL
+     C                     MOVELWFAC1     SFFCL
+     C                     MOVE WFAC2     SFFCL
+     C                     ENDIF
+      *
+     C********** FELOAN    IFEQ 0                                                             CLE148
+     C           FELOAN    IFEQ *BLANKS                                                       CLE148
+     C                     MOVE *BLANKS   SFLON
+     C                     ELSE
+     C                     MOVE FELOAN    SFLON
+     C                     ENDIF
+      *
+     C***********          MOVE FECNUM    SFCNM                           128150
+      *                                                                   128150
+      ** Access the Customer Details file                                 128150
+      *                                                                                       243499
+      ** If a Loan Fee, check loan file for Original Borrower Number:                         243499
+     C********** FELOAN    IFNE 0                                                      243499 CLE148
+     C           FELOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVE FELOAN    WCLON                                               243499
+     C           CLOANK    CHAINCLOAN                89                                       243499
+     C           *IN89     IFEQ *OFF                                                          243499
+      *                                                                                       243499
+      ** Participations Purchased should use the Customer Shortname                           243499
+      ** of the Original Borrower, not the 'Purchased From' customer.                         243499
+      *                                                                                       243499
+     C           PTYP      IFEQ 64                                                            243499
+     C           PTYP      OREQ 65                                                            243499
+     C           PTYP      OREQ 68                                                            243499
+     C           PTYP      OREQ 71                                                            243499
+     C                     MOVELOLNO      W#CNUM                                              243499
+     C                     ELSE                                                               243499
+     C                     MOVE FECNUM    W#CNUM                                              243499
+     C                     ENDIF                                                              243499
+      *                                                                                       243499
+     C                     ELSE                                                               243499
+      *                                                                                       243499
+      **  Else, Loan not found:                                                               243499
+      **   Database error                                                                     243499
+      *                                                                                       243499
+     C           *LOCK     IN   LDA                                                           243499
+     C                     MOVEL'CLOAN   'DBFILE           ************                       243499
+     C                     Z-ADD21        DBASE            * DBERR 21 *                       243499
+     C                     MOVELWCLNK     DBKEY            ************                       243499
+     C                     OUT  LDA                                                           243499
+     C                     EXSR *PSSR                                                         243499
+     C                     ENDIF                                                              243499
+      *                                                                   128150
+     C                     ELSE                                                               243499
+     C                     MOVE FECNUM    W#CNUM  6                       128150
+     C                     ENDIF                                                              243499
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM '       ' @RTCD   7        B:Return Code  128150
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       128150
+     C                     PARM W#CNUM    @CNUM  10        O:Format       128150
+     C                     PARM           @CNST   7                       128150
+     C           SDCUST    PARM SDCUST    DSSDY                           128150
+      *                                                                   128150
+     C           @RTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************128150
+     C                     Z-ADD15        DBASE            * DBERR 15     128150
+     C                     MOVEL@OPTN     DBKEY            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+      *                                                                   128150
+     C                     ELSE                                           128150
+      *                                                                   128150
+     C                     MOVE *BLANKS   SFCNM                           128150
+     C                     MOVELBBCSSN    SFCNM                           128150
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C                     MOVE FEFSEQ    SFSEQ
+     C                     MOVE FEFCOD    SFCDE
+      *
+     C                     MOVE FEFCCY    SFCCY
+     C                     MOVE FEPYON    SFPAY
+     C                     MOVE FEAUTO    SFADV
+      *
+      ** Get the currency's number of decimal places. Format
+      ** the amount afterwards.
+      *
+     C                     MOVE FEFCCY    PCURR
+     C                     Z-ADD8         WDBSE
+     C                     EXSR SRCURR
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FEFAMT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C***********          MOVELZOUT17    SFAMT                           158798
+     C                     MOVELZOUT18    SFAMT                           158798
+      *
+      ** Convert fee start day to DDMMYY or MMDDYY
+      *
+     C           FEPSTD    IFEQ 0
+     C                     MOVE *BLANKS   SFSTR
+     C                     ELSE
+     C                     Z-ADDFEPSTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SFSTR
+     C                     ENDIF
+      *
+      ** Convert fee end day to DDMMYY or MMDDYY
+      *
+     C           FEPEND    IFEQ 0
+     C                     MOVE *BLANKS   SFEND
+     C                     ELSE
+     C                     Z-ADDFEPEND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SFEND
+     C                     ENDIF
+     C/COPY WNCPYSRC,LEH00431
+      *
+     C                     ENDSR
+      /EJECT                                                              124047
+      *****************************************************************   124047
+      * SRSUB6  -  Display Screen for Unauthorised Facilities         *   124047
+      * Called by: SRPROC - Program processing                        *   124047
+      * Calls    : SRLVAL - Validate and position file pointer        *   124047
+      *            SRMCLR - Clear message from the pgm msg queue      *   124047
+      *            SRLOAD - Load a subfile page for display           *   124047
+      *****************************************************************   124047
+     C           SRSUB6    BEGSR                                          124047
+      *                                                                   124047
+     C                     MOVE *ON       *IN36                           124047
+     C           WFMT      DOWEQ'S6'                                      124047
+      *                                                                   124047
+      ** Check if Facility is valid.                                      124047
+     C                     EXSR SRFVAL                                    124047
+      *                                                                   124047
+     C           *IN27     IFEQ *OFF                                      124047
+     C                     EXSR SRLOAD                                    124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      ** Display Unauthorised Loans/PP/PS screen.                         124047
+      *                                                                   124047
+     C                     WRITELE2310F0                                  124047
+     C                     WRITELE2310F2                                  124047
+     C                     WRITELE2310C6                                  124047
+     C                     EXSR SRMCLR                                    124047
+     C                     EXFMTLE2310C7                                  124047
+      *                                                                   124047
+      ** If F3 is pressed, exit from program. If F12 is pressed,          124047
+      ** go back to main processing.                                      124047
+      *                                                                   124047
+     C                     SELEC                                          124047
+     C           *INKC     WHEQ *ON                                       124047
+     C                     MOVE '  '      WFMT                            124047
+     C                     LEAVE                                          124047
+     C           *INKL     WHEQ *ON                                       124047
+     C                     MOVE 'F '      WFMT                            124047
+     C                     LEAVE                                          124047
+      *                                                                   128149
+      * If enter pressed, display next selection if any                   128149
+     C                     OTHER                                          128149
+     C           STFRC     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            128149
+     C                     LEAVE                                          128149
+     C                     ENDIF                                          126627
+     C                     ENDSL                                          124047
+      *                                                                   124047
+     C                     ENDDO                                          124047
+      *                                                                   124047
+     C***********          MOVE *BLANKS   SENTS                    124047 125187
+     C                     MOVE *BLANKS   SENT6                           125187
+     C                     MOVE *OFF      *IN36                           124047
+      *                                                                   124047
+     C                     ENDSR                                          124047
+      /EJECT                                                              124047
+      *****************************************************************   124047
+      * SRSU62  -  Move fields to subfile fields                      *   124047
+      * Called by: SRSUB6 - Display unauth. Loans Enquiry screen      *   124047
+      * Calls    : SRCURR - Get currency details                      *   124047
+      *****************************************************************   124047
+     C           SRSU62    BEGSR                                          124047
+      *                                                                   124047
+      ** Customer number                                                  124047
+     C                     MOVE CNUM      STCNM                           124047
+      *                                                                   124047
+      ** Access the Customer Details file                                 124047
+      *                                                                   124047
+     C                     MOVE CNUM      W#CNUM  6                       124047
+     C                     CALL 'AOCUSTR0'                                124047
+     C                     PARM '       ' @RTCD   7        B:Return Code  124047
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       124047
+     C                     PARM W#CNUM    @CNUM  10        O:Format       124047
+     C                     PARM           @CNST   7                       124047
+     C           SDCUST    PARM SDCUST    DSSDY                           124047
+      *                                                                   124047
+     C           @RTCD     IFNE *BLANKS                                   124047
+     C           *LOCK     IN   LDA                                       124047
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************124047
+     C                     Z-ADD12        DBASE            * DBERR 12     124047
+     C                     MOVEL@OPTN     DBKEY            ***************124047
+     C                     OUT  LDA                                       124047
+     C                     EXSR *PSSR                                     124047
+      *                                                                   124047
+     C                     ELSE                                           124047
+      *                                                                   124047
+     C                     MOVELBBCSSN    STCSN     P                     124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      ** Facility type/sequence                                           124047
+     C                     MOVE '   /  '  STCLT                           124047
+     C                     MOVELFACT      STCLT                           124047
+     C                     MOVE FCNO      STCLT                           124047
+      *                                                                   124047
+      ** Syndicate Type                                                   124047
+     C                     MOVE *BLANKS   STSYT                           124047
+     C           SYIN      IFEQ 'Y'                                       124047
+     C                     SELEC                                          124047
+     C           PRTR      WHEQ *BLANK                                    124047
+     C                     MOVEL'LEF0114' ZAMSID                          124047
+     C           PRTR      WHEQ 'A'                                       124047
+     C                     MOVEL'LEF0115' ZAMSID                          124047
+     C           PRTR      WHEQ 'I'                                       124047
+     C                     MOVEL'LEF0116' ZAMSID                          124047
+     C           PRTR      WHEQ 'P'                                       124047
+     C                     MOVEL'LEF0117' ZAMSID                          124047
+     C           PRTR      WHEQ 'R'                                                           CLE106
+     C                     MOVEL'LEF0433' ZAMSID                                              CLE106
+     C           PRTR      WHEQ 'S'                                                           CLE106
+     C                     MOVEL'LEF0434' ZAMSID                                              CLE106
+     C                     ENDSL                                          124047
+     C                     EXSR SRTEXT                                    124047
+     C                     MOVELZAMSTX    STSYT                           124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      ** Facility amount                                                  124047
+      ** Get the currency's number of decimal places. Format              124047
+      ** the amount afterwards.                                           124047
+      *                                                                   124047
+     C                     MOVE FCCY      PCURR                           124047
+     C                     Z-ADD13        WDBSE                           124047
+     C                     EXSR SRCURR                                    124047
+      *                                                                   124047
+     C                     MOVE *BLANKS   ZFLD15                          124047
+     C                     MOVE FAMT      ZFLD15                          124047
+     C                     Z-ADDA6NBDP    ZDECS                           124047
+     C                     EXSR ZFRPED                                    124047
+     C***********          MOVE ZOUT17    STAMT                           124047              225406
+     C                     MOVE ZOUT18    STAMT                                               225406
+      *                                                                   124047
+      ** Facility Currency                                                124047
+     C                     MOVE FCCY      STCCY                           124047
+      *                                                                   124047
+      ** Start Date                                                       124047
+      *                                                                   124047
+      ** Convert day number to DDMMYY or MMDDYY                           124047
+     C           DTAP      IFEQ 0                                         124047
+     C                     MOVE *BLANKS   STSDT                           124047
+     C                     ELSE                                           124047
+     C                     Z-ADDDTAP      ZDAYNO                          124047
+     C                     EXSR ZDATE2                                    124047
+     C                     MOVE ZDATE     STSDT                           124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+     C           DTEX      IFEQ 0                                         124047
+     C                     MOVE *BLANKS   STEDT                           124047
+     C                     ELSE                                           124047
+     C                     Z-ADDDTEX      ZDAYNO                          124047
+     C                     EXSR ZDATE2                                    124047
+     C                     MOVE ZDATE     STEDT                           124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+     C/COPY WNCPYSRC,LEH00084
+     C                     ENDSR                                          124047
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSUB7  -  Display Screen for Fees Settlements                *   126627
+      * Called by: SRPROC - Program processing                        *   126627
+      * Calls    : SRLVAL - Validate and position file pointer        *   126627
+      *            SRMCLR - Clear message from the pgm msg queue      *   126627
+      *            SRLOAD - Load a subfile page for display           *   126627
+      *****************************************************************   126627
+     C           SRSUB7    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *ON       *IN37                           126627
+     C           WFMT      DOWEQ'S7'                                      126627
+      *                                                                   126627
+      ***Check*if*loan*number*is*valid.*If*not,*use**blanks*to******                   126627 CSD027
+      ***position*the*file*record*pointer*then*load*a*subfile*page.*                   126627 CSD027
+      * Now that the customer number can be alpha do not validate as numeric.                 CSD027
+     C                     MOVE WLFRM     WLFRMA                                              CSD027
+     C**********           EXSR SRLVAL                                                 126627 CSD027
+     C                     EXSR SRLOAD                                    126627
+      *                                                                   126627
+      ** Display Unauthorised Fee Settlements screen.                     126627
+      *                                                                   126627
+     C                     WRITELE2310F0                                  126627
+     C                     WRITELE2310F2                                  126627
+     C                     WRITELE2310C6                                  126627
+     C                     EXSR SRMCLR                                    126627
+     C                     EXFMTLE2310C8                                  126627
+      *                                                                   126627
+      ** If F3 is pressed, exit from program. If F12 is pressed,          126627
+      ** go back to main processing.                                      126627
+      *                                                                   126627
+     C                     SELEC                                          126627
+     C           *INKC     WHEQ *ON                                       126627
+     C                     MOVE '  '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C           *INKL     WHEQ *ON                                       126627
+     C                     MOVE 'F '      WFMT                            126627
+      *                                                                   126627
+      * If enter pressed, display next selection if any                   126627
+     C                     OTHER                                          126627
+     C           SLFRM     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     ENDSL                                          126627
+      *                                                                   126627
+     C                     ENDDO                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SENT7                           126627
+     C                     MOVE *OFF      *IN37                           126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU71  -  Initialise subfile fields                          *   126627
+      * Called by: SRSU72 - Format Fee Settlements subfile fields     *   126627
+      * Calls    : None                                               *   126627
+      *****************************************************************   126627
+     C           SRSU71    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SSCNM                           126627
+     C                     MOVE *BLANKS   SSCNO                           126627
+     C                     MOVE *BLANKS   SSFCL                           126627
+     C                     MOVE *BLANKS   SSLON                           126627
+     C                     MOVE *BLANKS   SSSEQ                           126627
+     C                     MOVE *BLANKS   SSTYP                           126627
+     C                     MOVE *BLANKS   SSAMT                           126627
+     C                     MOVE *BLANKS   SSCCY                           126627
+     C                     MOVE *BLANKS   SSVDT                           126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU72  -  Move fields to subfile fields                      *   126627
+      * Called by: SRSUB7 - Display unauth. Fees Settlement Enq Screen*   126627
+      * Calls    : SRSU71 - Initialise subfile fields                 *   126627
+      *            SRCURR - Get currency details                      *   126627
+      *****************************************************************   126627
+     C           SRSU72    BEGSR                                          126627
+      *                                                                   126627
+      ** Initialise subfile fields.                                       126627
+      *                                                                   126627
+     C                     EXSR SRSU71                                    126627
+      *                                                                   126627
+     C                     MOVE FACNUM    SSCNO                           126627
+     C                     MOVE FAFACL    FEFACL                          126627
+     C                     MOVE '   /  '  SSFCL                           126627
+     C                     MOVELWFAC1     SSFCL                           126627
+     C                     MOVE WFAC2     SSFCL                           126627
+      *                                                                   126627
+     C********** FALOAN    IFEQ 0                                                      126627 CLE148
+     C           FALOAN    IFEQ *BLANKS                                                       CLE148
+     C                     MOVE *BLANKS   SSLON                           126627
+     C                     ELSE                                           126627
+     C                     MOVE FALOAN    SSLON                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Access the Customer Details file                                 126627
+      *                                                                   126627
+     C                     MOVE FACNUM    W#CNUM  6                       126627
+     C                     CALL 'AOCUSTR0'                                126627
+     C                     PARM '       ' @RTCD   7        B:Return Code  126627
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       126627
+     C                     PARM W#CNUM    @CNUM  10        O:Format       126627
+     C                     PARM           @CNST   7                       126627
+     C           SDCUST    PARM SDCUST    DSSDY                           126627
+      *                                                                   126627
+     C           @RTCD     IFNE *BLANKS                                   126627
+     C           *LOCK     IN   LDA                                       126627
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************126627
+     C                     Z-ADD16        DBASE            * DBERR 16     126627
+     C                     MOVEL@OPTN     DBKEY            ***************126627
+     C                     OUT  LDA                                       126627
+     C                     EXSR *PSSR                                     126627
+      *                                                                   126627
+     C                     ELSE                                           126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SSCNM                           126627
+     C                     MOVELBBCSSN    SSCNM                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     MOVE FAFSEQ    SSSEQ                           126627
+     C                     MOVE FAFCCY    SSCCY                           126627
+     C                     MOVE FATYPE    SSTYP                           126627
+      *                                                                   126627
+      ** Get the currency's number of decimal places. Format              126627
+      ** the amount afterwards.                                           126627
+      *                                                                   126627
+     C                     MOVE FAFCCY    PCURR                           126627
+     C                     Z-ADD8         WDBSE                           126627
+     C                     EXSR SRCURR                                    126627
+      * Check if amount should be negative:                               190495
+     C           FASIGN    IFEQ '-'                                       190495
+     C                     Z-SUBFASADJ    FASADJ                          190495
+     C                     ENDIF                                          190495
+      *                                                                   126627
+     C                     MOVE *BLANKS   ZFLD15                          126627
+     C                     MOVE FASADJ    ZFLD15                          126627
+     C                     Z-ADDA6NBDP    ZDECS                           126627
+     C                     EXSR ZFRPED                                    126627
+     C**********           MOVELZOUT17    SSAMT                    126627 190495
+     C                     MOVELZOUT18    SSAMT                           190495
+      *                                                                   126627
+      ** Convert Value date to DDMMYY or MMDDYY                           126627
+      *                                                                   126627
+     C           FAVDAT    IFEQ 0                                         126627
+     C                     MOVE *BLANKS   SSVDT                           126627
+     C                     ELSE                                           126627
+     C                     Z-ADDFAVDAT    ZDAYNO                          126627
+     C                     EXSR ZDATE2                                    126627
+     C                     MOVE ZDATE     SSVDT                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSUB8  -  Display Screen for Facility Amendments             *   126627
+      * Called by: SRPROC - Program processing                        *   126627
+      * Calls    : SRFVAL - Validate facility                         *   126627
+      *            SRMCLR - Clear message from the pgm msg queue      *   126627
+      *            SRLOAD - Load a subfile page for display           *   126627
+      *****************************************************************   126627
+     C           SRSUB8    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *ON       *IN38                           126627
+     C           WFMT      DOWEQ'S8'                                      126627
+      *                                                                   126627
+      ** Check if Facility is valid.If not, use *blanks to                126627
+      ** position the file record pointer then load a subfile page.       126627
+      *                                                                   126627
+     C                     EXSR SRFVAL                                    126627
+      *                                                                   126627
+     C           *IN27     IFEQ *OFF                                      126627
+     C                     EXSR SRLOAD                                    126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Display Unauthorised Facility Amendments screen.                 126627
+      *                                                                   126627
+     C                     WRITELE2310F0                                  126627
+     C                     WRITELE2310F2                                  126627
+     C                     WRITELE2310C6                                  126627
+     C                     EXSR SRMCLR                                    126627
+     C                     EXFMTLE2310C9                                  126627
+      *                                                                   126627
+      ** If F3 is pressed, exit from program. If F12 is pressed,          126627
+      ** go back to main processing.                                      126627
+      *                                                                   126627
+     C                     SELEC                                          126627
+     C           *INKC     WHEQ *ON                                       126627
+     C                     MOVE '  '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C           *INKL     WHEQ *ON                                       126627
+     C                     MOVE 'F '      WFMT                            126627
+     C                     LEAVE                                          126627
+      *                                                                   126627
+      * If enter pressed, display next selection if any                   126627
+     C                     OTHER                                          126627
+     C           STBRC     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     ENDSL                                          126627
+      *                                                                   126627
+     C                     ENDDO                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SENT8                           126627
+     C                     MOVE *OFF      *IN38                           126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU81  -  Initialise subfile fields                          *   126627
+      * Called by: SRSU82 - Format Facility Amendments subfile fields *   126627
+      * Calls    : None                                               *   126627
+      *****************************************************************   126627
+     C           SRSU81    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SVBRC                           126627
+     C                     MOVE *BLANKS   SVCSN                           126627
+     C                     MOVE *BLANKS   SVCNM                           126627
+     C                     MOVE *BLANKS   SVCLT                           126627
+     C                     MOVE *BLANKS   SVATP                           126627
+     C                     MOVE *BLANKS   SVSEQ                           126627
+     C                     MOVE *BLANKS   SVAMT                           126627
+     C                     MOVE *BLANKS   SVCCY                           126627
+     C                     MOVE *BLANKS   SVVDT                           126627
+     C                     MOVE *BLANKS   SVCRT                           126627
+     C/COPY WNCPYSRC,LEH00085
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU82  -  Move fields to subfile fields                      *   126627
+      * Called by: SRSUB8 - Display unauth. Manual Util Enq Screen    *   126627
+      * Calls    : SRSU81 - Initialise subfile fields                 *   126627
+      *            SRCURR - Get currency details                      *   126627
+      *****************************************************************   126627
+     C           SRSU82    BEGSR                                          126627
+      *                                                                   126627
+      ** Initialise subfile fields.                                       126627
+      *                                                                   126627
+     C                     EXSR SRSU81                                    126627
+      *                                                                   126627
+     C                     MOVE BRCA      SVBRC                           126627
+     C                     MOVE CNUM      SVCNM                           126627
+      *                                                                   126627
+      ** Access the Customer Details file                                 126627
+      *                                                                   126627
+     C                     MOVE CNUM      W#CNUM  6                       126627
+     C                     CALL 'AOCUSTR0'                                126627
+     C                     PARM '       ' @RTCD   7        B:Return Code  126627
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       126627
+     C                     PARM W#CNUM    @CNUM  10        O:Format       126627
+     C                     PARM           @CNST   7                       126627
+     C           SDCUST    PARM SDCUST    DSSDY                           126627
+      *                                                                   126627
+     C           @RTCD     IFNE *BLANKS                                   126627
+     C           *LOCK     IN   LDA                                       126627
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************126627
+     C                     Z-ADD18        DBASE            * DBERR 18     126627
+     C                     MOVEL@OPTN     DBKEY            ***************126627
+     C                     OUT  LDA                                       126627
+     C                     EXSR *PSSR                                     126627
+      *                                                                   126627
+     C                     ELSE                                           126627
+      *                                                                   126627
+     C                     MOVELBBCSSN    SVCSN     P                     126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Facility type/sequence                                           126627
+     C                     MOVE '   /  '  SVCLT                           126627
+     C                     MOVELFACT      SVCLT                           126627
+     C                     MOVE FCNO      SVCLT                           126627
+      *                                                                   126627
+      ** Amendment amount                                                 126627
+      ** Get the currency's number of decimal places. Format              126627
+      ** the amount afterwards.                                           126627
+      *                                                                   126627
+     C                     MOVE ACCY      PCURR                           126627
+     C                     Z-ADD13        WDBSE                           126627
+     C                     EXSR SRCURR                                    126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   ZFLD15                          126627
+     C                     MOVE AAMT      ZFLD15                          126627
+     C                     Z-ADDA6NBDP    ZDECS                           126627
+     C                     EXSR ZFRPED                                    126627
+     C                     MOVE ZOUT17    SVAMT                           126627
+      *                                                                   126627
+      ** Facility Currency                                                126627
+     C                     MOVE ACCY      SVCCY                           126627
+      *                                                                   126627
+     C                     MOVE FATP      SVATP                           126627
+     C                     MOVE SQNO      SVSEQ                           126627
+      *                                                                   126627
+      *  Revolving credit                                                 126627
+      *                                                                   126627
+     C           RVCR      IFNE *BLANKS                                   126627
+     C                     MOVE RVCR      SVCRT                           126627
+     C                     ELSE                                           126627
+     C                     MOVE *BLANKS   SVCRT                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Start Date                                                       126627
+      *                                                                   126627
+      ** Convert day number to DDMMYY or MMDDYY                           126627
+     C           VLDT      IFEQ 0                                         126627
+     C                     MOVE *BLANKS   SVVDT                           126627
+     C                     ELSE                                           126627
+     C                     Z-ADDVLDT      ZDAYNO                          126627
+     C                     EXSR ZDATE2                                    126627
+     C                     MOVE ZDATE     SVVDT                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C/COPY WNCPYSRC,LEH00086
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSUB9  -  Display Screen for Manual Utilisations             *   126627
+      * Called by: SRPROC - Program processing                        *   126627
+      * Calls    : SRFVAL - Validate facility                         *   126627
+      *            SRMCLR - Clear message from the pgm msg queue      *   126627
+      *            SRLOAD - Load a subfile page for display           *   126627
+      *****************************************************************   126627
+     C           SRSUB9    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *ON       *IN39                           126627
+     C           WFMT      DOWEQ'S9'                                      126627
+      *                                                                   126627
+      ** Check if Facility is valid.If not, use *blanks to                126627
+      ** position the file record pointer then load a subfile page.       126627
+      *                                                                   126627
+     C                     EXSR SRFVAL                                    126627
+      *                                                                   126627
+     C           *IN27     IFEQ *OFF                                      126627
+     C                     EXSR SRLOAD                                    126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Display Unauthorised Manual Utilisations screen.                 126627
+      *                                                                   126627
+     C                     WRITELE2310F0                                  126627
+     C                     WRITELE2310F2                                  126627
+     C                     WRITELE2310C6                                  126627
+     C                     EXSR SRMCLR                                    126627
+     C                     EXFMTLE2310C0                                  126627
+      *                                                                   126627
+      ** If F3 is pressed, exit from program. If F12 is pressed,          126627
+      ** go back to main processing.                                      126627
+      *                                                                   126627
+     C                     SELEC                                          126627
+     C           *INKC     WHEQ *ON                                       126627
+     C                     MOVE '  '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C           *INKL     WHEQ *ON                                       126627
+     C                     MOVE 'F '      WFMT                            126627
+     C                     LEAVE                                          126627
+      *                                                                   126627
+      * If enter pressed, display next selection if any                   126627
+     C                     OTHER                                          126627
+     C           STBRC     IFEQ *BLANKS                                   126627
+     C           *IN74     ANDEQ*OFF                                      126627
+     C                     MOVE 'F '      WFMT                            126627
+     C                     LEAVE                                          126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     ENDSL                                          126627
+      *                                                                   126627
+     C                     ENDDO                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SENT9                           126627
+     C                     MOVE *OFF      *IN39                           126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU91  -  Initialise subfile fields                          *   126627
+      * Called by: SRSU92 - Format Manual Utilisations subfile fields *   126627
+      * Calls    : None                                               *   126627
+      *****************************************************************   126627
+     C           SRSU91    BEGSR                                          126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   SUCNM                           126627
+     C                     MOVE *BLANKS   SUCNO                           126627
+     C                     MOVE *BLANKS   SUFCL                           126627
+     C                     MOVE *BLANKS   SUAMT                           126627
+     C                     MOVE *BLANKS   SUCCY                           126627
+     C                     MOVE *BLANKS   SUSDT                           126627
+     C                     MOVE *BLANKS   SUEDT                           126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+      /EJECT                                                              126627
+      *****************************************************************   126627
+      * SRSU92  -  Move fields to subfile fields                      *   126627
+      * Called by: SRSUB9 - Display unauth. Fcty Amendments Enq Screen*   126627
+      * Calls    : SRSU91 - Initialise subfile fields                 *   126627
+      *            SRCURR - Get currency details                      *   126627
+      *****************************************************************   126627
+     C           SRSU92    BEGSR                                          126627
+      *                                                                   126627
+      ** Initialise subfile fields.                                       126627
+      *                                                                   126627
+     C                     EXSR SRSU91                                    126627
+      *                                                                   126627
+     C                     MOVE CNUM      SUCNO                           126627
+      *                                                                   126627
+      ** Access the Customer Details file                                 126627
+      *                                                                   126627
+     C                     MOVE CNUM      W#CNUM  6                       126627
+     C                     CALL 'AOCUSTR0'                                126627
+     C                     PARM '       ' @RTCD   7        B:Return Code  126627
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       126627
+     C                     PARM W#CNUM    @CNUM  10        O:Format       126627
+     C                     PARM           @CNST   7                       126627
+     C           SDCUST    PARM SDCUST    DSSDY                           126627
+      *                                                                   126627
+     C           @RTCD     IFNE *BLANKS                                   126627
+     C           *LOCK     IN   LDA                                       126627
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************126627
+     C                     Z-ADD19        DBASE            * DBERR 19     126627
+     C                     MOVEL@OPTN     DBKEY            ***************126627
+     C                     OUT  LDA                                       126627
+     C                     EXSR *PSSR                                     126627
+      *                                                                   126627
+     C                     ELSE                                           126627
+      *                                                                   126627
+     C                     MOVELBBCSSN    SUCNM     P                     126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+      ** Facility type/sequence                                           126627
+     C                     MOVE '   /  '  SUFCL                           126627
+     C                     MOVELFACT      SUFCL                           126627
+     C                     MOVE FCNO      SUFCL                           126627
+      *                                                                   126627
+      ** Utilisation amount                                               126627
+      ** Get the currency's number of decimal places. Format              126627
+      ** the amount afterwards.                                           126627
+      *                                                                   126627
+     C                     MOVE UCCY      PCURR                           126627
+     C                     Z-ADD13        WDBSE                           126627
+     C                     EXSR SRCURR                                    126627
+      *                                                                   126627
+     C                     MOVE *BLANKS   ZFLD15                          126627
+     C                     MOVE UAMT      ZFLD15                          126627
+     C                     Z-ADDA6NBDP    ZDECS                           126627
+     C                     EXSR ZFRPED                                    126627
+     C***********          MOVE ZOUT17    SUAMT                     126627158798
+     C                     MOVE ZOUT18    SUAMT                           158798
+      *                                                                   126627
+      ** Facility Currency                                                126627
+     C                     MOVE UCCY      SUCCY                           126627
+      *                                                                   126627
+     C                     MOVE SQNO      SUSEQ                           126627
+      *                                                                   126627
+      ** Start Date                                                       126627
+      *                                                                   126627
+      ** Convert day number to DDMMYY or MMDDYY                           126627
+     C           STDT      IFEQ 0                                         126627
+     C                     MOVE *BLANKS   SUSDT                           126627
+     C                     ELSE                                           126627
+     C                     Z-ADDSTDT      ZDAYNO                          126627
+     C                     EXSR ZDATE2                                    126627
+     C                     MOVE ZDATE     SUSDT                           126627
+     C                     ENDIF                                          126627
+      ** Expiry Date                                                      126627
+      *                                                                   126627
+      ** Convert day number to DDMMYY or MMDDYY                           126627
+     C           EXDT      IFEQ 0                                         126627
+     C                     MOVE *BLANKS   SUEDT                           126627
+     C                     ELSE                                           126627
+     C                     Z-ADDEXDT      ZDAYNO                          126627
+     C                     EXSR ZDATE2                                    126627
+     C                     MOVE ZDATE     SUEDT                           126627
+     C                     ENDIF                                          126627
+      *                                                                   126627
+     C                     ENDSR                                          126627
+     C/COPY WNCPYSRC,LE2310C015
+      /EJECT                                                              124047
+      *****************************************************************   124047
+      * SRTEXT  -  Set up text from the message file                  *   124047
+      *****************************************************************   124047
+     C           SRTEXT    BEGSR                                          124047
+      *                                                                   124047
+     C                     CALL 'Y2RVMGC'                                 124047
+     C                     PARM *BLANKS   @RTCD                           124047
+     C                     PARM           ZAMSID           Message Id.    124047
+     C                     PARM           ZAMSGF           Message file.  124047
+     C                     PARM           ZAMSDA           Message data.  124047
+     C                     PARM           ZAMSTX132        Messge text    124047
+      *                                                                   124047
+     C                     ENDSR                                          124047
+      /EJECT                                                              124047
+      *****************************************************************   124047
+      * SRFVAL  -  Check if facility is valid                         *   124047
+      * Called by: SRSUB6                                             *   124047
+      *            SRSUB8                                             *   126627
+      *            SRSUB9                                             *   126627
+      * Calls    : None.                                              *   124047
+      *****************************************************************   124047
+     C           SRFVAL    BEGSR                                          124047
+      *                                                                   124047
+     C                     MOVE *OFF      *IN27                           124047
+      *                                                                   124047
+      **  Validate Review from (Customer)                                 124047
+     C           STFRC     IFNE *BLANKS                                   124047
+     C**********           TESTN          STFRC      28                                124047 CSD027
+     C********** *IN28     IFEQ *OFF                                                   124047 CSD027
+     C**********           MOVEL'LEE0309' ZAMSID                                       124047 CSD027
+     C**********           EXSR ZASNMS                                                 124047 CSD027
+     C**********           MOVE *ON       *IN27                                        124047 CSD027
+     C**********           ENDIF                                                       124047 CSD027
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      **  Validate Review from (Facility Type)                            124047
+     C           STFRT     IFNE *BLANKS                                   124047
+     C                     TESTN          STFRT      28                   124047
+     C           *IN28     IFEQ *OFF                                      124047
+     C                     MOVEL'LEE0309' ZAMSID                          124047
+     C                     EXSR ZASNMS                                    124047
+     C                     MOVE *ON       *IN27                           124047
+     C                     ENDIF                                          124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      **  Validate Review from (Facility Seq No.)                         124047
+     C           STFRS     IFNE *BLANKS                                   124047
+     C                     TESTN          STFRS      28                   124047
+     C           *IN28     IFEQ *OFF                                      124047
+     C                     MOVEL'LEE0309' ZAMSID                          124047
+     C                     EXSR ZASNMS                                    124047
+     C                     MOVE *ON       *IN27                           124047
+     C                     ENDIF                                          124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+      ** Setup key to position subfile                                    124047
+     C           *IN27     IFEQ *OFF                                      124047
+     C                     MOVE STBRC     K#BRCA                          126627
+     C                     MOVE STFRC     K#CNUM                          124047
+     C                     MOVE STFRT     K#FACT                          124047
+     C                     MOVE STFRS     K#FCNO                          124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+     C                     ENDSR                                          124047
+      /EJECT
+      *****************************************************************
+      * SRMCLR                                                        *
+      * Called by: SRPROC - Program processing                        *
+      *            SRSUB1 - Display unauth. Loans Enquiry screen      *
+      *            SRSUB2 - Display unauth. Amendments Enquiry screen *
+      *            SRSUB3 - Display unauth. Rollovers Enquiry screen  *
+      *            SRSUB4 - Display unauth. Guarantees Enquiry screen *
+      *            SRSUB5 - Display unauth. Fees Enquiry screen       *
+      * Calls    : Y2CLMSC-                                           *
+      *****************************************************************
+     C           SRMCLR    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     MOVE *BLANK    WERRF   1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRCURR  -  Get currency details                               *
+      * Called by: SRSU12 - Format Loans subfile fields               *
+      *            SRSU22 - Format Amendments subfile fields          *
+      *            SRSU42 - Format Guarantees subfile fields          *
+      *            SRSU52 - Format Fees subfile fields                *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADDWDBSE     DBASE            * DBERR XX *
+     C                     MOVELPCURR     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  ZASNMS - Sends messages to the program's message queue       *
+      *  Called by: SRVALD - Validate menu entry                      *
+      *             SRLOAD - Load a subfile page                      *
+      *  Calls    : Y2SNMGC                                           *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C                     MOVE 'Y'       WERRF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      *
+** CPY@  **      Copyright statement
+(c) Misys International Banking Systems Ltd. 2001
+** WLDSC **      Table of loan description
+LOAN
+PARTS SOLD
+PARTS PURCHASED
+** WADSC **      Table of amendment type description
+MRManual Repayment
+RERepayment Schedule
+PIPrincipal Increase
+SCSpread Rate Change
+BCBase Rate Code
+SAStop/Start Accrual
+LSLoan Sub-type
+PFTransfer From
+PTTransfer To
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

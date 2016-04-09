@@ -1,0 +1,202 @@
+      *****************************************************************
+      *                                                               *
+      * How to use this skeleton                                      *
+      *                                                               *
+      * Scan for '@@@' and this will indicate where lines of code     *
+      * need to be tailored.  Some lines will need to made live and   *
+      * some will need to be deleted.                                 *
+      * Remove this section and @@@ references after carrying out     *
+      * changes.                                                      *
+      *                                                               *
+      * What needs to be known                                        *
+      *                                                               *
+      * Action File physical name - UPddddPD                          *
+      * System file logical name (this will have a unique key)        *
+      *                           - mmddddLn                          *
+      * File field names - ffxxxx                                     *
+      * rename field names - xxxx                                     *
+      * Fields that make up unique key - ffkkkk                       *
+      * Program names - nnnn                                          *
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UPnnnn - Process Action File for mmddddPD                    *               @@@
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *                                                               *
+      *  Last Amend No. Cmmnnn  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Cmmnnn - description of feature                              *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPddddL0  IF   E           K DISK    INFSR(*PSSR)                               @@@
+     FmmddddLn  UF A E           K DISK    INFSR(*PSSR)                               @@@
+     F                                     RENAME(mmddddD0:ddddF) PREFIX(X)           @@@
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     COMP          KLIST
+     C                   KFLD                    ffkkkk                               @@@
+     C                   KFLD                    ffkkkk                               @@@
+      *
+     C     *LOVAL        SETLL     UPddddL0                                           @@@
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     ffACTC        IFEQ      'I'                                                @@@
+     C                   EXSR      SETVAL
+     C                   WRITE     ddddF                                69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     ffACTC        IFEQ      'D'                                                @@@
+     C     COMP          CHAIN     mmddddLn                           3069            @@@
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    ddddF                                69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     ffACTC        IFEQ      'A'                                                @@@
+      * @@@ Move keys to storage fields
+     C*                  MOVEL     ffkkkk        kkkkX            ll                  @@@
+     C*                  MOVEL     ffkkkk        kkkkX            ll                  @@@
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     ffkkkk        IFNE      kkkkX                                              @@@
+     C     ffkkkk        ORNE      kkkkX                                              @@@
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     COMP          CHAIN     mmddddLn                           3069            @@@
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    ddddF                                69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   READ      UPddddL0                             6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+      * @@@ INCLUDE KEY FIELDS
+     C                   MOVEL     ffkkkk        Xffkkkk                              @@@
+     C                   MOVEL     ffxxxx        Xffxxxx                              @@@
+      *                  MOVEL     other fields                                       @@@
+      * @@@ If fields are not to be amended then put these within following IF
+     C     ffACTC        IFEQ      'I'                                                @@@
+     C                   MOVEL     ffxxxx        Xffxxxx                              @@@
+     C                   ENDIF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

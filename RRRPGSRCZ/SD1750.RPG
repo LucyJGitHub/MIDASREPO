@@ -1,0 +1,204 @@
+0001 H                                                                    SD1740
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Prompt Initial set-up of backup mach')
+0002 F********************************************************************
+     F*  Midas - Restart Recovery Module
+0004 F**                                                                **
+0005 F**   SD1750 - PROMPT FOR SETUP OF BACKUP MACHINE                  **
+0006 F**                                                                **
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F**                                                                **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG6521            Date 03May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+0009  *  Prev Amend No. E22985             Date 26Jul90               *
+0009  *                 S01194             Date 04Jan90               *
+0010 F**                                                                **
+0011 F********************************************************************
+     F*                                                                  *
+      *  BUG6521 - Change Volume ID to be unique for each zone.       *
+0010 F**   E22985 - STRIP OUT OLD HELP                                  **
+     F*    S01194 - NEW STANDING DATA                                    *
+     F*                                                                  *
+0011 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+*******: OVRDBF TABLE TABICD                                        : *
+     F*                                                               *
+     F*****************************************************************
+0015 FSD1750FMCF  E                    WORKSTN
+0017 F*ABLE   IF  E           K        DISK                               S01194
+     F**********  TABLETAF                          KIGNORE               S01194
+     F**********  TABLETHF                          KIGNORE               S01194
+     F**********  TABLETXF                          KIGNORE               S01194
+     F**********  TABLETRF                          KIGNORE               S01194
+     F**********  TABTB11F                          KIGNORE               S01194
+     F**********  TABTB20F                          KIGNORE               S01194
+     F**********  TABTB30F                          KIGNORE               S01194
+     F**********  TABTB40F                          KIGNORE               S01194
+     F**********  TABTB50F                          KIGNORE               S01194
+     F**********  TABTB55F                          KIGNORE               S01194
+     F**********  TABTE10F                          KIGNORE               S01194
+     F**********  TABTE20F                          KIGNORE               S01194
+     F**********  TABTG10F                          KIGNORE               S01194
+     F**********  TABTG20F                          KIGNORE               S01194
+     F**********                                                          S01194
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F**01***************HELP KEY PRESSED                                 E22985
+     F* 70               ERROR ON SCREEN
+     F* 71               ERROR ON VOLID OF D.B. SAVE
+     F* 72               ERROR ON MEDIUM FOR D.B. RESTORE
+     F* 73               ERROR ON DEVICE FOR D.B. RESTORE
+     F* 99               STANDARD SUBROUTINE
+     F* U7&U8            DATABASE ERROR
+     F**
+     E                    ECOD        3  4               ERROR CODES
+     E                    CPY@    1   1 80
+     I**
+     I* LOCAL DATA AREA FOR DATABASE ERROR
+     ILDA        UDS                            256
+     I**************                        134 138 DBFILE                S01194
+     I**************                        139 167 DBKEY                 S01194
+     I**************                        168 175 DBPGM                 S01194
+     I**************                        176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I              BJDFIN                          DATF                  S01194
+     IPSDS       SDS
+     I                                      244 246 WSID
+     IDSFDY     E DSDSFDY                                                 S01194
+     C                     MOVEACPY@      BIS@   80
+     C*****************************************************************
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*DBERR ' RTCD    7                       S01194
+     C                     PARM '*FIRST ' OPTN    7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*
+     C** MAIN PROCESSING
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           VOL1
+     C                     PARM           MEDL
+     C                     PARM           DEVL
+     C                     PARM           ENDP    1
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD
+     C                     EXSR ZSYSTM
+     C   99                SETON                     U7U8  NOT FOUND,
+     C   99                MOVE 'SD1750  'DBPGM
+     C***99******          MOVE 'TABLE'   DBFILE                          S01194
+     C   99                MOVE 'SDBANKPD'DBFILE                          S01194
+     C   99                MOVE 01        DBASE
+     C***99******          MOVE *BLANKS   DBKEY                           S01194
+     C***99******          MOVELZTABKY    DBKEY                           S01194
+     C   99                GOTO ENDD                       DATABASE ERROR.
+     C*
+     C* OUTPUT & READ SCREEN UNTIL VALID
+     C*
+     C           *IN70     DOUEQ'0'
+     C                     TIME           FTIME   60
+     C           SCRN      TAG                             ** SCRN **
+     C                     EXFMTSD1750F1
+     C**ALLOW*HELP*********                                               E22985
+     C************IN01*****IFEQ '1'                                       E22985
+     C*********************MOVE *BLANKS   HERCD  80                       E22985
+     C*********************MOVE 'RR1750'  HBPGM   6                       E22985
+     C*********************CALL 'MHELP'                                   E22985
+     C*********************PARM           HBPGM                           E22985
+     C*********************PARM           HERCD                           E22985
+     C*********************GOTO SCRN                                      E22985
+     C*********************END                                            E22985
+     C*
+     C   KC                MOVE '1'       ENDP
+     C   KC                GOTO ENDD
+     C                     EXSR VALID
+     C                     END
+     C*
+     C           ENDD      TAG
+     C                     SETON                         LR
+     C*****************************************************************
+     C*
+     C** SCREEN VALIDATION SUBROUTINE
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C           VALID     BEGSR
+     C                     Z-ADD0         X       10
+     C                     SETOF                     707172
+     C                     SETOF                     73
+     C                     MOVE *BLANKS   ECOD
+     C*
+     C* VALIDATE VOLID OF SAVE
+     C           VOL1      COMP 'DBSUN'              7171
+     C   71      VOL1      COMP 'DBMON'              7171
+     C   71      VOL1      COMP 'DBTUE'              7171
+     C   71      VOL1      COMP 'DBWED'              7171
+     C   71      VOL1      COMP 'DBTHU'              7171
+     C   71      VOL1      COMP 'DBFRI'              7171
+     C   71      VOL1      COMP 'DBSAT'              7171
+     C           *IN71     IFEQ *ON                                                          BUG6521
+     C                     MOVE VOL1      VOL3    3                                          BUG6521
+     C           VOL3      IFEQ 'SUN'                                                        BUG6521
+     C           VOL3      OREQ 'MON'                                                        BUG6521
+     C           VOL3      OREQ 'TUE'                                                        BUG6521
+     C           VOL3      OREQ 'WED'                                                        BUG6521
+     C           VOL3      OREQ 'THU'                                                        BUG6521
+     C           VOL3      OREQ 'FRI'                                                        BUG6521
+     C           VOL3      OREQ 'SAT'                                                        BUG6521
+     C                     MOVE *OFF      *IN71                                              BUG6521
+     C                     ENDIF                                                             BUG6521
+     C                     ENDIF                                                             BUG6521
+     C   71                ADD  1         X
+     C   71                MOVE ' 020'    ECOD,X
+     C   71                SETON                     70
+     C*
+     C* VALIDATE MEDIA FOR RESTORE OF LIBRARIES
+     C           MEDL      COMP 'DKTE'               7272
+     C   72      MEDL      COMP 'TAPE'               7272
+     C   72                ADD  1         X
+     C   72                MOVE ' 021'    ECOD,X
+     C   72                SETON                     70
+     C*
+     C* VALIDATE DEVICE FOR RESTORE OF LIBRARIES
+     C           DEVL      COMP *BLANKS                  73
+     C   73                ADD  1         X
+     C   73                MOVE ' 022'    ECOD,X
+     C   73                SETON                     70
+     C*
+     C   70                MOVEAECOD      ERCDE  36
+     C   70                MOVELERCDE     ERCD   80
+     C*
+     C                     ENDSR
+     C*****************************************************************
+0815 C**
+0816 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0817 C**
+0818 C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+0819 C**
+0820 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0821 C**********           MOVEL'01      'ZTABKY 12                       S01194
+0822 C**********           MOVE '  10'    ZTABKY                          S01194
+0823 C**********                                                          S01194
+0824 C********** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0825 C**N99***** RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0826 C**
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           RTCD      COMP *BLANKS              9999                 S01194
+0827 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0828 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0829 C**
+0830 C                     ENDSR
+0831 C**
+0832 C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

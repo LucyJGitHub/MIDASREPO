@@ -1,0 +1,565 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Book-profit centre matrix listing')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Module                                      *
+      *                                                               *
+      *  SE0316 - Book-Profit Centre Matrix Listing                   *
+      *                                                               *
+      *  Function:  This report program lists the contents of the     *
+      *             Book-Profit Centre Matrix file.  The sequence     *
+      *             of the report is book, profit centre.             *
+      *             The report is available in 3 modes (I, A, L):     *
+      *             1. I - On request during Input Cycle; an interim  *
+      *                    report showing the latest status of the    *
+      *                    book-profit centre combination inserted,   *
+      *                    amended or deleted during the day.         *
+      *             2. A - During Close of Business; a report of all  *
+      *                    book-profit centre combination inserted,   *
+      *                    amended or deleted during the day.         *
+      *             3. L - On request; a report of all live book-     *
+      *                    profit centre combination in the system    *
+      *                                                               *
+      *                                                               *
+      *  Called By: SEC0316 - Book-Profit Centre Matrix Listing       *
+      *             Control Program                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. 188776             Date 16Mar01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. 171453             Date 11Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005  *Create    Date 23Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  188776 - Exclude individual change count fields AHNOIN,      *
+      *           AHNOAM and AHNODL from the file control reporting.  *
+      *           Just take the control count field AHNORC for 'A'    *
+      *           mode (close of business reporting).                 *
+      *  171453 - Audit File Closed when DBERR occurred (CORE ERR)    *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+      *                                                               *
+      *****************************************************************
+     FSDBKPCL4IF  E           K        DISK         KINFSR *PSSR
+     FSDFCTLL1UF  E           K        DISK         KINFSR *PSSR
+     FSE0316P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSE0316AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for AA0015P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for AA0015AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680PRTLNU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs (200 long)
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Records                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: P001 - Main Processing                            *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank Details Access Object             *
+      *                                                               *
+      *****************************************************************
+     C           SRP002    BEGSR
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE0316'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Check system format date, DDMMYY or MMDDYT(98 on)
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ** Input Parameter :
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+     C                     PARM           PSEQ    5
+      *
+      ** Define work fields
+      *
+     C           *LIKE     DEFN PSLCD     ZLCD
+     C           *LIKE     DEFN PSTYLC    ZCHTP
+     C           *LIKE     DEFN NOINS     ZINS
+     C           *LIKE     DEFN NOAMD     ZAMD
+     C           *LIKE     DEFN NODEL     ZDEL
+      *
+      **   Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Set Indicators for Report Heading
+      *
+     C           PMODE     IFEQ 'I'
+     C                     MOVE *ON       *IN11
+     C                     ENDIF
+      *
+     C           PMODE     IFEQ 'A'
+     C                     MOVE *ON       *IN12
+     C                     ENDIF
+      *
+     C           PMODE     IFEQ 'L'
+     C                     MOVE *ON       *IN13
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       W1OPN   1
+     C                     MOVE 'N'       W2OPN   1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Program Records                                     *
+      *                                                               *
+      *  Called by: P001 - Main Processing                            *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRP003    BEGSR
+      *
+     C           *LOVAL    SETLLSDBKPCD0
+     C                     READ SDBKPCD0                 15
+      *
+     C           *IN15     DOWEQ*OFF
+      *
+      ** Move data into work fields
+      *
+     C                     Z-ADDPSLCD     ZLCD
+     C                     MOVE PSTYLC    ZCHTP
+      *
+      ** Maintain Counts as necessary
+      *
+     C           PMODE     IFEQ 'I'
+     C           PMODE     OREQ 'A'
+      *
+      ** If Run Date is the same as last change Date
+      *
+     C           ZLCD      IFEQ BJRDNB
+      *
+      ** I or A Modes - include deleted records
+      *
+     C                     SELEC
+      *
+     C           ZCHTP     WHEQ 'I'
+     C                     ADD  1         ZINS
+      *
+     C           ZCHTP     WHEQ 'A'
+     C                     ADD  1         ZAMD
+      *
+     C           ZCHTP     WHEQ 'D'
+     C                     ADD  1         ZDEL
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+      ** I Mode - Count of Records changed today
+      *
+     C           PMODE     WHEQ 'I'
+      *
+     C           ZLCD      IFEQ BJRDNB
+     C                     ADD  1         ZCHG
+     C                     ELSE
+     C                     GOTO NEXT
+     C                     END
+      *
+      ** A Mode
+      *
+     C           PMODE     WHEQ 'A'
+      *
+      ** A Mode - Count of records read + live records
+      *
+     C           PSTYLC    IFNE 'D'
+     C                     ADD  1         ZLIVE
+     C                     ENDIF
+      *
+     C           ZLCD      IFEQ BJRDNB
+     C                     ADD  1         ZCOUNT
+     C                     ELSE
+      *
+      ** A Mode - ignore if LCD not equal run date
+      *
+     C                     GOTO NEXT
+     C                     END
+      *
+     C           PMODE     WHEQ 'L'
+      *
+      ** L Mode - Count of live records
+      *
+     C           PSTYLC    IFNE 'D'
+     C                     ADD  1         ZLIVE
+     C                     ELSE
+      *
+      ** L mode - Ignore if Deleted records
+      *
+     C                     GOTO NEXT
+     C                     END
+     C                     ENDSL
+      *
+      ** Record to be printed - open output file if required
+      *
+     C           W1OPN     IFEQ 'N'
+     C                     MOVE 'Y'       W1OPN
+     C                     Z-ADD70        LINCNT  20
+     C                     OPEN SE0316P1
+     C                     WRITESE0316H0
+     C                     EXSR RCFP1
+     C                     END
+      *
+      ** Print Page headings
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITESE0316H0
+     C                     END
+      *
+      ** Convert Date
+      *
+     C                     Z-ADDPSLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     PPSLCD
+      *
+     C                     WRITESE0316D1
+      *
+     C           NEXT      TAG
+      *
+     C                     READ SDBKPCD0                 15
+     C                     END
+      *
+      ** End of file - If detail records written - write total line
+      *
+     C           TOTALS    TAG
+      *
+     C           W1OPN     IFEQ 'Y'
+     C           PRTLN1    IFGT 55
+     C                     WRITESE0316H0
+     C                     END
+     C                     WRITESE0316F1
+     C                     WRITESE0316F2
+     C                     ELSE
+     C                     MOVE '1'       *IN36
+     C                     END
+      *
+      ** Read Audit Record
+      *
+     C                     MOVEL'SDBKPCPD'SDBKP  10
+      *
+     C           SDBKP     CHAINSDFCTLL1             16
+     C           *IN16     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBKPCPD'DBKEY            ************
+     C                     Z-ADD1         DBASE            * DBERR  01*
+     C                     MOVEL'SDFCTLPA'DBFILE           ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Open Audit File
+      *
+     C           W2OPN     IFEQ 'N'
+     C                     MOVE 'Y'       W2OPN
+     C                     OPEN SE0316AU
+     C                     EXSR RCFAU
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+      ** 'I' Mode - Print Report
+      *
+     C           PMODE     WHEQ 'I'
+     C                     WRITEHEADAU
+     C                     WRITECONTROLI
+      *
+      * 'A' Mode - Do run controls
+      *
+     C           PMODE     WHEQ 'A'
+     C********** AHNORC    ADD  AHNOIN    ZWORK                           188776
+     C********** ZWORK     SUB  AHNODL    ZWORK                           188776
+     C                     Z-ADDAHNORC    ZWORK                           188776
+     C           ZWORK     IFNE ZLIVE
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN54
+     C                     END
+      *
+      ** - Print Report
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROLA
+      *
+      ** - Update Audit Record
+      *
+     C           *INU8     IFEQ '0'
+     C                     Z-ADD0         AHNOIN
+     C                     Z-ADD0         AHNOAM
+     C                     Z-ADD0         AHNODL
+     C                     UPDAT@AHREAV
+     C                     END
+      *
+      ** 'L' Mode - Do run controls
+      *
+     C           PMODE     WHEQ 'L'
+     C           AHNORC    IFNE ZLIVE
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN54
+     C                     END
+      *
+      ** - Print Report
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROLL
+     C                     ENDSL
+      *
+      ** If no output - Write message to this effect
+      *
+     C           *IN36     IFEQ '1'
+     C                     WRITENONE
+     C                     END
+      *
+     C           ENDPGM    TAG
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR  - Database Error Subroutine                           *
+      *                                                               *
+      *  Called by: SRP003 - Process Details                          *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+      ** Output Header Details for P1
+      *
+     C           W1OPN     IFEQ 'Y'
+     C           PRTLN1    IFGT 55
+     C                     WRITESE0316H0
+     C                     END
+     C                     ELSE
+     C                     WRITESE0316H0
+     C                     END
+      *
+      ** Output Run Control Details for AU
+      *
+      *                                                                   171453
+      ** Open Audit File                                                  171453
+      *                                                                   171453
+     C           W2OPN     IFEQ 'N'                                       171453
+     C                     MOVE 'Y'       W2OPN                           171453
+     C                     OPEN SE0316AU                                  171453
+     C                     ENDIF                                          171453
+      *                                                                   171453
+     C                     WRITEHEADAU
+     C           PMODE     IFEQ 'A'
+     C                     WRITECONTROLA
+     C                     ELSE
+     C                     WRITECONTROLL
+     C                     END
+      *
+      ** Output DB Error details for P1 and AU
+      *
+     C                     WRITEERROR
+      *
+      ** Output 'End of Report' Line for P1
+      *
+     C                     WRITESE0316F2
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     EXSR *PSSR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to Register P1 Printer Via RCF           *
+      *                                                               *
+      *  Called by: SRP003 - Process Details                          *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           RCFP1     BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** Error during ZSFILE Processing
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFPAU - Subroutine to Register AU Printer Via RCF           *
+      *                                                               *
+      *  Called by: SRP003 - Process Details                          *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+      **  Ensure Audit Spool File Recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** Error During ZSFILE processing
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,139 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZDATE8Z3LE - Cvt day nbr to date using s/name                *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA02  *CREATE    Date 16Jul03               *
+      *  Prev Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAAA02 - Converted from OPM to ILE                           *
+      *                                                               *
+      *****************************************************************
+      **
+      **   ZDATE8 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS
+      **              USING THE MONTH SHORTNAMES FILE.
+      **
+      **   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      **
+     C     ZDATE8        BEGSR                                                  *** ZDATE8 ***
+      **
+      **   CLEAR LEAP YEAR WORK FIELD.
+     C                   MOVE      'N'           ZLEAP             1
+      **
+      **   CLEAR DATE FIELDS.
+     C                   Z-ADD     0             ZDATE             6 0
+     C                   MOVEL     '       '     ZADATE            7
+      **
+      **   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
+      **
+      **   DETERMINE YEAR NUMBER.
+      **
+      **   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C     ZDAYNO        SUB       1             ZDAYN1            5 0
+     C     ZDAYN1        IFLT      0                                            B1
+     C                   GOTO      ZDEND6                                       *1
+     C                   END                                                    E1
+      **
+      **   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C     ZDAYN1        DIV       1461          ZLYR              2 0
+     C                   MVR                     ZDAYN1                         SAVE REMAINING
+      **                                                   DAYS
+      **   CALCULATE NUMBER OF REMAINING YEARS.
+     C                   Z-ADD     1             ZWRK2             2 0
+     C     ZZTAG1        TAG                                                    ** ZZTAG1 TAG *
+     C     ZDAYN1        IFGE      ZYDY(ZWRK2)                                  B1
+     C     ZWRK2         ADD       1             ZWRK2                          *1
+     C                   GOTO      ZZTAG1                                       *1
+     C                   END                                                    E1
+      *
+     C     ZWRK2         SUB       1             ZWRK2
+      **
+      **   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C     ZWRK2         IFNE      0                                            B1
+     C     ZDAYN1        SUB       ZYDY(ZWRK2)   ZDAYN1                         *1
+     C                   END                                                    E1
+      **
+      **   CALCULATE ACTUAL YEAR NUMBER.
+     C     ZLYR          MULT      4             ZWRK3             3 0
+     C     ZWRK3         ADD       72            ZWRK3                          BASE IS 1972
+     C                   Z-ADD     ZWRK3         ZYEAR             2 0
+     C     ZYEAR         ADD       ZWRK2         ZYEAR                          YEAR
+      **
+      **   DETERMINE MONTH NUMBER.
+      **
+      **   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C     ZWRK2         IFEQ      0                                            B1
+     C     ZDAYN1        IFEQ      59                                           B*2
+     C                   MOVE      'Y'           ZLEAP                          **2
+     C                   END                                                    E*2
+     C     ZDAYN1        IFGE      59                                           B*2
+     C     ZDAYN1        SUB       1             ZDAYN1                         **2
+     C                   END                                                    E*2
+     C                   END                                                    E1
+      **
+      **   CALCULATE MONTH NUMBER.
+     C                   Z-ADD     2             ZWRK2
+     C     ZZTAG2        TAG                                                    ** ZZTAG2 TAG *
+     C     ZDAYN1        IFGE      ZMDY(ZWRK2)                                  B1
+     C     ZWRK2         ADD       1             ZWRK2                          *1
+     C                   GOTO      ZZTAG2                                       *1
+     C                   END                                                    E1
+      *
+     C     ZWRK2         SUB       1             ZWRK2
+      **
+     C                   Z-ADD     ZWRK2         ZMTH              2 0          MONTH
+      **
+      **   DETERMINE DAY OF MONTH.
+      **
+      **   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C     ZDAYN1        ADD       1             ZDAYN1
+      **
+      **   CALCULATE DAY OF MONTH.
+     C     ZDAYN1        SUB       ZMDY(ZWRK2)   ZDAY              2 0          DAY
+      **
+      **   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C     ZLEAP         IFEQ      'Y'                                          B1
+     C     ZDAY          ADD       1             ZDAY                           *1
+     C                   END                                                    E1
+      **
+      **   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98              MOVEL     ZDAY          ZWRK4             4 0
+     C   98              MOVE      ZDAY          ZWRK4
+     C  N98              MOVE      ZMTH          ZWRK4
+     C   98              MOVEL     ZMTH          ZWRK4
+     C                   MOVEL     ZWRK4         ZDATE
+     C                   MOVE      ZYEAR         ZDATE
+      *
+      ** Format alpha date, DDMMMYY or MMMDDYY as required
+      *
+     C     *IN98         IFEQ      '0'                                          B1
+      *
+     C                   MOVEL     ZDAY          ZWRK5             5            *1
+     C     ZDAY          IFLT      10                                           B*2
+     C                   MOVEL     ' '           ZWRK5                          **2
+     C                   END                                                    E*2
+     C                   MOVE      @MT(ZMTH)     ZWRK5                          *1
+      *
+     C                   ELSE                                                   X1
+      *
+     C                   MOVE      ZDAY          ZWRK5                          *1
+     C                   MOVEL     @MT(ZMTH)     ZWRK5                          *1
+      *
+     C                   END                                                    E1
+      *
+     C                   MOVEL     ZWRK5         ZADATE
+     C                   MOVE      ZYEAR         ZADATE
+      **
+     C     ZDEND6        ENDSR                                                  * ZDEND6 ENDSR*
+      **
+      *****************************************************************
+      * End of /COPY ZDATE8Z3LE                                       *
+      *****************************************************************

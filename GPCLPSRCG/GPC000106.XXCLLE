@@ -1,0 +1,189 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Global Processing                               */
+/*                                                                   */
+/*       GPC000106 - Global Database Save                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CCB023  *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. AR813190           Date 09Aug11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      241912             Date 05Sep06              */
+/*                      B12684             Date 20Nov06              */
+/*                      CPK025             Date 20Jun06              */
+/*                      BUG9863            Date 12Jan06              */
+/*                      BUG8328 *CREATE    Date 30Aug05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Restructure Input Cycle          */
+/*                Termination Restructuring                          */
+/*       AR813190 - Apply fix AR799678 (Child: AR813191)             */
+/*       AR799678 - ICIFINISH failed component at the live system IO.*/
+/*                  Applied fix of 262791. Add no commit boundary    */
+/*                  parameter for SAVOBJ. Handle the problem with    */
+/*                  CPF377F that is preventing the saving of global  */
+/*                  files. (Child: AR799679)                         */
+/*       241912 - Allow saving of objects in *LIB while in use by    */
+/*                another job.                                       */
+/*                Fix applied by 12684.                              */
+/*       B12684 - Don't end global subsystem.  Use 'save while       */
+/*                active' parameter for save instead.                */
+/*       CPK025 - Use non-Bridge System Value and check that it has  */
+/*                value.                                             */
+/*       BUG9863 - Use GXLIB instead of GILIB for DBICG location.    */
+/*       BUG8328- OME Global Data Replication from Live to OME       */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7) VALUE(' ')
+/**********  DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20) +                             */ /*CPK025*/
+/**********               VALUE('BrgMidasGlobalPrefix')                                */ /*CPK025*/
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20) +
+                          VALUE('GlobalSystemPrefix')                                     /*CPK025*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&PRGL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GILIB) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&GSBS) TYPE(*CHAR) LEN(7)                                  */ /*B12684*/
+ 
+             DCL        VAR(&RUNDATE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&GLOBDATE) TYPE(*CHAR) LEN(5)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if global data save is already done for this month */
+ 
+             RTVDTAARA  DTAARA(RUNDAT (3 5)) RTNVAR(&RUNDATE)
+             RTVDTAARA  DTAARA(GLOBSTAT (1 5)) RTNVAR(&GLOBDATE)
+             IF         COND(&RUNDATE *EQ &GLOBDATE) THEN(DO)
+             SNDPGMMSG  MSG('Global Database save is already done +
+                          for this month.') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+/** Retrieve system values */
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK10 &SVAL10)
+/**********  IF         COND(&RTNCDE *NE ' ') THEN(GOTO CMDLBL(ABNOR))                */ /*CPK025*/
+             IF         COND(&RTNCDE *NE ' ' *OR &SVAL1 *EQ ' ') +
+                          THEN(DO)                                                       /*CPK025*/
+                GOTO       CMDLBL(ABNOR)                                                 /*CPK025*/
+             ENDDO                                                                       /*CPK025*/
+             CHGVAR     VAR(&PRGL) VALUE(&SVAL1)
+ 
+/** Initialise constant variables */
+ 
+/**********  CHGVAR     VAR(&GSBS) VALUE('M' *CAT &PRGL *CAT +                        */ /*B12684*/
+/**********               'GSBS')                                                     */ /*B12684*/
+ 
+             CHGVAR     VAR(&GMLIB) VALUE(&PRGL *CAT 'GMLIB')
+             CHGVAR     VAR(&GTALIB) VALUE(&PRGL *CAT 'GTALIB')
+/**********  CHGVAR     VAR(&GILIB) VALUE(&PRGL *CAT 'GILIB')         */                 /*BUG9863*/
+             CHGVAR     VAR(&GILIB) VALUE(&PRGL *CAT 'GXLIB')                            /*BUG9863*/
+ 
+/***End*global*subsystem*to*make*sure*no*jobs*are*running**/ /*                        */ /*B12684*/
+/**********                                                                            */ /*B12684*/
+/*ENDSBS:**  ENDSBS     SBS(&GSBS) OPTION(*IMMED)                                      */ /*B12684*/
+/**********  MONMSG     MSGID(CPF1054) EXEC(GOTO CMDLBL(SAVOBJ))                       */ /*B12684*/
+/**********  MONMSG     MSGID(CPF1034 CPF1035 CPF1055 CPF1056)                         */ /*B12684*/
+/**********                                                                            */ /*B12684*/
+/**********  DLYJOB     DLY(30)                                                        */ /*B12684*/
+/**********  GOTO       CMDLBL(ENDSBS)                                                 */ /*B12684*/
+ 
+ /** Save GP* and T_* files in GMLIB and xxGTALIB */
+ 
+ SAVOBJ:     CLRSAVF    FILE(&GILIB/DBICG)
+             CLRSAVF    FILE(&GILIB/DBICGTA)
+ 
+ /** Monitor message CPF3701 since this program assumed that all     */
+ /** files that are not saved are the universal transaction files    */
+ 
+/**********  SAVOBJ     OBJ(GP* T_*) LIB(&GMLIB) DEV(*SAVF) +                          */ /*B12684*/
+/**********               OBJTYPE(*FILE) SAVF(&GILIB/DBICG) +                          */ /*B12684*/
+/**********               OUTPUT(*PRINT)                                               */ /*B12684*/
+/**********  SAVOBJ     OBJ(GP* T_*) LIB(&GMLIB) DEV(*SAVF) +           */              /*AR799678*/
+/**********               OBJTYPE(*FILE) SAVF(&GILIB/DBICG) +           */              /*AR799678*/
+/**********               SAVACT(*SYNCLIB) OUTPUT(*PRINT)               */   /*B12684*/ /*AR799678*/
+/**********  MONMSG     MSGID(CPF3701)                                  */              /*AR799678*/
+             SAVOBJ     OBJ(GP* T_*) LIB(&GMLIB) DEV(*SAVF) +
+                           OBJTYPE(*FILE) SAVF(&GILIB/DBICG) +
+                           SAVACT(*SYNCLIB) SAVACTWAIT(240 *NOCMTBDY) +
+                           OUTPUT(*PRINT)                                               /*AR799678*/
+             MONMSG     MSGID(CPF3701)                                                  /*AR799678*/
+/**********  SAVOBJ     OBJ(GP* T_*) LIB(&GTALIB) DEV(*SAVF) +                         */ /*B12684*/
+/**********               OBJTYPE(*FILE) SAVF(&GILIB/DBICGTA) +                        */ /*B12684*/
+/**********               OUTPUT(*PRINT)                                               */ /*B12684*/
+/**********  SAVOBJ     OBJ(GP* T_*) LIB(&GTALIB) DEV(*SAVF) +          */              /*AR799678*/
+/**********               OBJTYPE(*FILE) SAVF(&GILIB/DBICGTA) +         */              /*AR799678*/
+/**********               SAVACT(*SYNCLIB) OUTPUT(*PRINT)               */   /*B12684*/ /*AR799678*/
+/**********  MONMSG     MSGID(CPF3701)                                  */              /*AR799678*/
+             SAVOBJ     OBJ(GP* T_*) LIB(&GTALIB) DEV(*SAVF) +
+                           OBJTYPE(*FILE) SAVF(&GILIB/DBICGTA) +
+                           SAVACT(*SYNCLIB) SAVACTWAIT(240 *NOCMTBDY) +
+                           OUTPUT(*PRINT)                                               /*AR799678*/
+             MONMSG     MSGID(CPF3701)                                                  /*AR799678*/
+ 
+/***Ensure*that*Global*subbsytem*is*active**/ /*                                       */ /*B12684*/
+/**********                                                                            */ /*B12684*/
+/**********  STRSBS     SBSD(&GSBS)                                                    */ /*B12684*/
+/**********  MONMSG     MSGID(CPF1010)                                                 */ /*B12684*/
+ 
+/** Update GLOBSTAT */
+ 
+             CHGDTAARA  DTAARA(GLOBSTAT (1 5)) VALUE(&RUNDATE)
+             SNDPGMMSG  MSG('Successful Global Dabatase Save') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDP)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GPC000106 ended Abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDP:       CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+ 
+             ENDPGM

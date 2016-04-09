@@ -1,0 +1,148 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT RMVSRCHEX validity checker')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000012V - Validity checker for RMVSRCHEX                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CUT015  *CREATE    Date 13Jun07              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT015 - New utility.  Part of take on of ClearCase.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILEQ &MBR &CHGINPLC &REPORT &NEWLIB)
+ 
+             DCL        VAR(&FILEQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHGINPLC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REPORT) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILEGEN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBRGEN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Break down file and library fields. */
+             CHGVAR     VAR(&FILE) VALUE(%SST(&FILEQ 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&FILEQ 11 10))
+ 
+/* Check if file contains '*ALL' or is generic. */
+             IF         COND(%SST(&FILE 1 1) *EQ '*' *OR +
+                          %SST(&FILE 2 1) *EQ '*' *OR +
+                          %SST(&FILE 3 1) *EQ '*' *OR +
+                          %SST(&FILE 4 1) *EQ '*' *OR +
+                          %SST(&FILE 5 1) *EQ '*' *OR +
+                          %SST(&FILE 6 1) *EQ '*' *OR +
+                          %SST(&FILE 7 1) *EQ '*' *OR +
+                          %SST(&FILE 8 1) *EQ '*' *OR +
+                          %SST(&FILE 9 1) *EQ '*' *OR +
+                          %SST(&FILE 10 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&FILEGEN) VALUE('Y')
+             ENDDO
+ 
+/* Check if member contains '*ALL' or is generic. */
+             IF         COND(%SST(&MBR 1 1) *EQ '*' *OR +
+                          %SST(&MBR 2 1) *EQ '*' *OR +
+                          %SST(&MBR 3 1) *EQ '*' *OR +
+                          %SST(&MBR 4 1) *EQ '*' *OR +
+                          %SST(&MBR 5 1) *EQ '*' *OR +
+                          %SST(&MBR 6 1) *EQ '*' *OR +
+                          %SST(&MBR 7 1) *EQ '*' *OR +
+                          %SST(&MBR 8 1) *EQ '*' *OR +
+                          %SST(&MBR 9 1) *EQ '*' *OR +
+                          %SST(&MBR 10 1) *EQ '*') THEN(DO)
+                CHGVAR     VAR(&MBRGEN) VALUE('Y')
+             ENDDO
+ 
+/* If a specific file has been selected then check it exists. */
+             IF         COND(&FILEGEN *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(&LIB/&FILE) OBJTYPE(*FILE) +
+                             AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000File' *BCAT &FILE *BCAT 'in' +
+                                *BCAT &LIB *BCAT 'does not exist.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                MONMSG     MSGID(CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000You +
+                                do not have authority to' *BCAT &FILE +
+                                *TCAT '.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+                MONMSG     MSGID(CPF9810) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &LIB *BCAT +
+                                'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+/* If generic or *ALL files are requested then the members must be *ALL too. */
+             IF         COND(&FILEGEN *EQ 'Y' *AND &MBR *NE '*ALL') +
+                          THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Members must be "*ALL" if +
+                             the files are generic or "*ALL"') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check if library exists. */
+             CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB) AUT(*CHANGE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &LIB *BCAT +
+                             'does not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000You do not have authority +
+                          to' *BCAT &LIB *TCAT '.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If a specific member has been selected then check it exists. */
+             IF         COND(&MBRGEN *NE 'Y') THEN(DO)
+                CHKOBJ     OBJ(&LIB/&FILE) OBJTYPE(*FILE) MBR(&MBR) +
+                             AUT(*CHANGE)
+                MONMSG     MSGID(CPF9815) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Member' *BCAT &MBR *BCAT 'in' +
+                                *BCAT &LIB *TCAT '/' *TCAT &FILE *BCAT +
+                                'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+ ABNOR:
+             IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
+                          MSGID(CPF0002) MSGF(QCPFMSG) +
+                          MSGTYPE(*ESCAPE))
+END:
+             ENDPGM

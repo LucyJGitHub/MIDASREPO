@@ -1,0 +1,338 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Extract incoming messages')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - CONFIRMATION MATCHING                                *
+      *                                                               *
+      *   CF0186 - EXTRACT INCOMING MESSAGES                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *   Last Amend No. CMG003            Date 04Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCF003             Date 01Aug96               *
+      *                 S01408             Date 10May96               *
+      *                  090570            Date 24Jul95               *
+      *                  E42976            DATE 30JUL92               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCF003 - SWIFT MT600 Message Generation                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CCF003 - Include MT360 and MT362 Confirmation Matching       *
+      *  S01408 - Addition of core hook CF0186CCP2                    *
+      *            Addition of core hook CF0186CCP1                   *
+      *            Addition of core hook CF0186IIP1                   *
+      *            Addition of core hook CF0186FFP1                   *
+      *  090570 - RECOMPILED FOR CHANGE IN MSIXI2LC                   *
+      *  E42976 - MSIXI2L9 REPLACED WITH MSIXI2LC TO INCLUDE          *
+      *            MT392 & OMIT MT324.                                *
+      *  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+      *                                                               *
+      *****************************************************************
+     FCFBRCHL0IF  E           K        DISK
+     F*MSIXI2L9UF**E           K        DISK                              E42976
+     FMSIXI2LCUF  E           K        DISK                               E42976
+     FMSMSI2LAIF  E           K        DISK
+     FCFWICMPDUF  E                    DISK                      A
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,CF0186FFP1                                           S01408
+     F*                                                                   S01408
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            EOF CFWICMPD
+      *    11            EOF CFBRCHL0
+      *****12************EOF MSIXI2L9                                     E42976
+      *    12            EOF MSIXI2LC                                     E42976
+      *    13            EOF MSMSI2LA
+      *    U7U8LR        DB error
+      *
+     E                    OMSG     4000  1
+     E                    TMSG     4000  1
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,CF0186IIP1                                           S01408
+     I*                                                                   S01408
+     ISCSARD    E DSSCSARDPD                                              CCF003
+      *                                                                   CCF003
+      ** SC Switchable Features Details                                   CCF003
+      *                                                                   CCF003
+     IDSFDY     E DSDSFDY                                                 CCF003
+      *                                                                   CCF003
+      ** Short Data Structure (1 - 200 char)                              CCF003
+      *                                                                   CCF003
+     C           *ENTRY    PLIST
+     C                     PARM           TRID    3        Current TRAM system
+     C                     PARM           T350    1        Select their 350s
+     C                     PARM           MSOF    1        Messages on file
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   WRIT - output record                                        *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           WRIT output record                                  *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Begin processing after TRAM Id received
+     C           TRID      SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 11
+      *
+      **  Process messages for one TRAM Id
+     C           *IN11     DOWEQ'0'                                   1
+      *
+      **  Process messages for all branches within TRAM Id
+     C********** IMBR      CHAINMSIXI2L9             12                   E42976
+     C           IMBR      CHAINMSIXI2LC             12                   E42976
+      *
+     C           *IN12     DOWEQ'0'                                   2
+      *                                                                                       CMG003
+     C           MTPY      IFEQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'N'                                                           CMG003
+     C           IMBR      READEMSIXI2LC                 12                                   CMG003
+     C                     ITER                                                               CMG003
+     C                     ENDIF                                                              CMG003
+      *
+      **  Process their MT350s ?
+     C           MTPY      IFNE '350'                                 3
+     C           T350      OREQ 'Y'
+      *                                                                   CCF003
+      ** Process '360', '361' and '362' only if CCF003 is on              CCF003
+      *                                                                   CCF003
+     C           CCF003    IFEQ 'N'                                       CCF003
+      *                                                                   CCF003
+     C           MTPY      IFEQ '360'                                     CCF003
+     C           MTPY      OREQ '361'                                     CCF003
+     C           MTPY      OREQ '362'                                     CCF003
+      *                                                                   CCF003
+     C           IMBR      READEMSIXI2LC                 12               CCF003
+     C                     ITER                                           CCF003
+      *                                                                   CCF003
+     C                     ENDIF                                          CCF003
+     C                     ENDIF                                          CCF003
+      *
+      **  Process message
+     C           MOR       CHAINMSMSI2LA             13
+      *
+     C           *IN13     IFEQ '1'                                   4
+     C           *LOCK     IN   LDA
+     C                     Z-ADD03        DBASE            * DB ERROR 03 *
+     C                     MOVELMOR       DBKEY
+     C                     MOVE 'MSMSI2LA'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+     C                     MOVEASOH       OMSG,O
+     C                     ADD  1         O
+      *
+      **  Process rest
+     C           *IN13     DOWEQ'0'                                   4
+     C                     MOVEAMDTA      OMSG,O
+     C                     ADD  256       O
+     C           MOR       READEMSMSI2LA                 13
+     C                     END                                       E4
+      *
+     C           OMSG,O    DOWEQ' '                                   4
+     C                     SUB  1         O
+     C                     END                                       E4
+     C                     ADD  1         O
+     C/COPY WNCPYSRC,CF0186C001
+      *
+      **  If ready output records
+     C           O         DOWGT256                                   4
+     C                     EXSR WRIT
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+     C                     MOVE 'Y'       CFPF
+     C                     EXCPT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CF0186CCP2                                           S01408
+     C*                                                                   S01408
+      *
+     C********** IMBR      READEMSIXI2L9                 12               E42976
+     C           IMBR      READEMSIXI2LC                 12               E42976
+     C                     END                                       E2
+      *
+     C           TRID      READECFBRCHL0                 11
+     C                     END                                       E1
+      *
+      **  Output remainder of last record
+     C           O         IFGT 1                                     1
+     C                     EXSR WRIT
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Initial process                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0186'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE *LOVAL    SOH     1
+     C                     BITON'7'       SOH
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CF0186CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      **  If messages already on output file...
+     C           MSOF      IFEQ 'Y'                                   1
+     C           *HIVAL    SETGTCFWICMPD
+     C                     READPCFWICMPD                 10
+      *
+     C           *IN10     IFEQ '1'                                   2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVEL'LAST'    DBKEY
+     C                     MOVEL'CFWICMPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E2
+      *
+     C                     MOVEAIDTA      OMSG,1
+     C                     Z-ADD256       O       40
+      *
+      **  Determine last non-blank byte
+     C           O         DOWGT0                                     2
+     C           OMSG,O    ANDEQ' '
+     C                     SUB  1         O
+     C                     END                                       E2
+      *
+     C                     ELSE                                      X1
+     C                     Z-ADD0         O
+     C                     END                                       E1
+      *
+     C                     ADD  1         O
+      *
+      ** Access switchable feature details                                CCF003
+      *                                                                   CCF003
+     C                     MOVE 'N'       CCF003  1                       CCF003
+      *                                                                   CCF003
+     C                     CALL 'AOSARDR0'                                CCF003
+     C                     PARM *BLANKS   @RTCD   7                       CCF003
+     C                     PARM '*VERIFY '@OPTN   7                       CCF003
+     C                     PARM 'CCF003'  @SRAD   6                       CCF003
+     C           SCSARD    PARM SCSARD    DSFDY                           CCF003
+      *                                                                   CCF003
+     C           @RTCD     IFNE *BLANK                                    CCF003
+     C           @RTCD     ANDNE'*NRF'                                    CCF003
+     C           *LOCK     IN   LDA                                       CCF003
+     C                     Z-ADD003       DBASE            ***************CCF003
+     C                     MOVEL'CCF003  'DBKEY            * DB ERROR 03 *CCF003
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CCF003
+     C                     OUT  LDA                                       CCF003
+     C                     EXSR *PSSR                                     CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                   CCF003
+     C           @RTCD     IFEQ *BLANK                                    CCF003
+     C                     MOVE 'Y'       CCF003                          CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                   CCF003
+      ** Access SAR details to see if CMG003 is switched on                                   CMG003
+      *                                                                                       CMG003
+     C                     MOVE 'N'       CMG003  1                                           CMG003
+     C                     CALL 'AOSARDR0'                                                    CMG003
+     C                     PARM *BLANKS   @RTCD                                               CMG003
+     C                     PARM '*VERIFY' @OPTN                                               CMG003
+     C                     PARM 'CMG003'  @SRAD                                               CMG003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CMG003
+      *                                                                                       CMG003
+     C           @RTCD     IFEQ *BLANKS                                                       CMG003
+     C                     MOVE 'Y'       CMG003                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   WRIT - output record                                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           WRIT      BEGSR
+      *
+      **  If messages already on output file update last record
+     C                     MOVEAOMSG,1    IDTA
+     C           MSOF      IFEQ 'Y'
+     C                     UPDATCFWICMD0
+     C                     MOVE 'N'       MSOF
+     C                     ELSE
+     C                     WRITECFWICMD0
+     C                     END
+      *
+      **  Move remaining data forward in output array
+     C                     MOVEAOMSG,257  TMSG
+     C                     MOVEA*BLANKS   OMSG
+     C                     MOVEATMSG      OMSG,1
+     C                     SUB  256       O
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - ERROR HANDLING                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     O/EJECT
+      *****************************************************************
+      ****Update*of*relevant fields of file MSIXI2L9.                     E42976
+      **  Update of relevant fields of file MSIXI2LC.                     E42976
+      *                                                                   S01310
+     OMSIXI2D0E                                                           S01310
+     O                         CFPF                                       S01310
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

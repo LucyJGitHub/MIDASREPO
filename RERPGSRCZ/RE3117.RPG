@@ -1,0 +1,905 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE - Account Commission Calculation')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3117 - ACCOUNT COMMISSION CALCULATION                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD027016           Date 19May14               *
+      *  Prev Amend No. MD026867           Date 15May14               *
+      *                 CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 135053             Date 02Oct98               *
+      *                 S01413 *CREATE     Date 13Apr93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD027016 - Outstanding interest after delayed capitalisation *
+      *             date is incorrect on accounts with commission for *
+      *             first day accrual.                                *
+      *  MD026867 - Debit Turnover and Minimum Balance commissions    *
+      *             not generated correctly.                          *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+     F*           PF/RECCYD.                                          *
+     F*  135053 - Discrepancy on linked account. Secondary customer   *
+     F*           number (held in field ZZ006) blank on duplicated    *
+     F*           posting. Rename ZZ006 to prevent corruption.        *
+     F*  S01413 - Retail 3 Incorporation.                             *
+     F*           and changes for Release 10 standards.               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F* INDICATOR USAGE
+     F*
+     F*       11       END OF POSTINGS FOR THIS ACCOUNT
+     F*       38       CHAIN FOR THE ACCOUNT IS CAPITALISATION
+     F*       40       READ ALL RETAIL ICD BY CURRENCY
+     F*       42       GROUP SUBJET TO ACCOUNT COMMISSION
+     F*       43       SREVC CHAIN FAIL
+     F*       50       EXEMPT FROM ACCOUNT COMMISSION
+     F*       51       CHAIN FOR THE CUSTOMER OF THE ACCOUNT
+     F*       60       IF THE CUSTOMER GROUP IS SUBJECT TO COMMISSION
+     F*       63       RECOM CHAIN FAIL - DATABASE ERROR
+     F*       64       LOKUP FOR THE CURRENCY RATE
+     F*       70       DO NOT PRINT CURRENCY MESSAGE IN PRTF
+     F*****************************************************************
+     F/EJECT
+     F*
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FREEODPL UF  E           K        DISK
+     FRECCY   IF  E           K        DISK
+     F            RECCYAF                           KIGNORE
+     F            RECCYZF                           KIGNORE
+     FTABLEV4 IF  E                    DISK
+     FTABLETZ IF  E           K        DISK
+     FREHISBL IF  E           K        DISK
+     FRECOM   UF  E           K        DISK
+     FRE3117AUO   E             88     PRINTER
+     FRE3117P1O   E             58     PRINTER
+     F/COPY WNCPYSRC,RE3117F001
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    CURR      150  3               CURRENCY
+     E                    CURX      150  3               CURRENCY, NOT FOUND
+     E                    AMAX      150 13 0             ACCOUNT MAXIMUM
+     E                    AMIN      150 13 0             ACCOUNT MINIMUM
+     E                    ARET      150 10 8             COMMISSION RATE
+     E**
+     E*    STORE THE EIGHT GROUP EACH CUSTOMER IS ASSOCIATED
+     E*
+     E                    CGRP        9  1               CUSTOMER GROUP
+     E                    AGRP        9  1               ACCOUNT COMMISS.
+     E                    WGRP        9  1               ACCOUNT COMMISS.
+     E**
+     E**
+     I/EJECT
+     IREHISPPF
+     I*
+     I** RENAME REHISPBF FORMAT FIELDS - REHISBL FILE
+     I*
+     I              RECI                            BRECI
+     I              BRCA                            BBRCA
+     I              CNUM                            BCNUM
+     I              CCY                             BCCY
+     I              ACOD                            BACOD
+     I              ACSQ                            BACSQ
+     I              HISD                            BHISD
+     I              HISB                            BHISB
+     I              MNBL                            BMNBL
+     I              CHGAR                           BCHGAR
+     I              TCHGAR                          BTHGAR
+     I              CHGAN                           BCHGAN
+     I              TCHGAN                          BTHGAN
+     I              DMVT                            BDMVT
+     I              DICT                            BDICT
+     I              DRCB                            BDRCB
+     I              DRIR                            BDRIR
+     I              DRCD                            BDRCD
+     I              DAID                            BDAID
+     I              MADI                            BMADI
+     I              TMADI                           BTMADI
+     I              PDID                            BPDID
+     I              DMINT                           BDMINT
+     I              CMVT                            BCMVT
+     I              CICT                            BCICT
+     I              CRCB                            BCRCB
+     I              CRIR                            BCRIR
+     I              CRCD                            BCRCD
+     I              CAID                            BCAID
+     I              MACI                            BMACI
+     I              TMACI                           BTMACI
+     I              PCID                            BPCID
+     I              CMINT                           BCMINT
+     I              DRCI                            BDRCI
+     I              CRCI                            BCRCI
+     I              VDTC                            BVDTC
+     I              ADTY                            BADTY
+     I              ALTI                            BALTI
+     I              MNBCP                           BMNBCP
+     I              LGID                            BLGID
+     I              VALL                            BVALL
+     I              LINK                            BLINK
+     I*
+     I*
+     IREEODPFF
+     I              RECI                            RRECI
+     I              CNUM                            XCNUM
+     I              BRCA                            XBRCA
+     I              CCY                             XCCY
+     I              ACOD                            XACOD
+     I              ACSQ                            XACSQ
+     I              ZZ006                           ZZCNUM                135053
+     IRECOMDF
+     I              BRCA                            YBRCA
+     I              CNUM                            YCNUM
+     I              CCY                             YCCY
+     I              ACOD                            YACOD
+     I              ACSQ                            YACSQ
+     IRKEY        DS
+     I                                        1   3 XBRCA
+     I**********                              4  18 AKEY                                      CGL029
+     I                                        4  24 AKEY                                      CGL029
+     I**********                              4   90XCNUM                                     CSD027
+     I                                        4   9 XCNUM                                     CSD027
+     I                                       10  12 XCCY
+     I**********                             13  160XACOD                                     CGL029
+     I**********                             17  180XACSQ                                     CGL029
+     I                                       13  220XACOD                                     CGL029
+     I                                       23  240XACSQ                                     CGL029
+     IRRKEY       DS
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I**********                              4  18 AAKEY                                     CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I                                        4  24 AAKEY                                     CGL029
+     I            DS
+     I                                        1  12 KEY
+     I                                        1   20RECT
+     I                                        3  12 ZZ010
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJDNWD                          DNWD
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+     I              BJRDNB                          RUND
+     I*
+     I** Bank Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I              BKAPDT                          APDA
+     I*
+     I** General Ledger Details
+     I*
+     ISDRETL    E DSSDRETLPD
+     I              BMLDAI                          LDAC
+     I              QQACCD                          QQACC1                                    CGL029
+     I*
+     I** Retail Details
+     I*
+     ISCSARD    E DSSCSARDPD                                                                MD026867
+      *                                                                                     MD026867
+      ** SAR file details accessed via access program AOSARDR0                              MD026867
+      *                                                                                     MD026867
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     I/COPY WNCPYSRC,RE3117I001
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* KLISTS
+     C*
+     C           RCKEY     KLIST
+     C                     KFLD           XBRCA
+     C                     KFLD           XCNUM
+     C                     KFLD           XCCY
+     C                     KFLD           XACOD
+     C                     KFLD           XACSQ
+     C           A1KEY     KLIST
+     C                     KFLD           XBRCA
+     C                     KFLD           XCNUM
+     C                     KFLD           XCCY
+     C                     KFLD           XACOD
+     C                     KFLD           XACSQ
+     C           A2KEY     KLIST
+     C                     KFLD           XCNUM
+     C                     KFLD           XCCY
+     C                     KFLD           XACOD
+     C                     KFLD           XACSQ
+     C                     KFLD           XBRCA
+     C           ACKEY     KLIST
+     C                     KFLD           XBRCA
+     C                     KFLD           XCNUM
+     C                     KFLD           XCCY
+     C                     KFLD           XACOD
+     C                     KFLD           XACSQ
+     C           CL        KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C/EJECT
+     C           *LIKE     DEFN TRAT      XTRAT
+     C*
+     C*
+     C                     EXSR INIT
+     C*
+     C           A1KEY     SETLLREEODPL
+     C                     READ REEODPFF                 LR
+     C           *INLR     IFEQ '0'
+     C                     EXSR MAIN
+     C                     END
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*
+     C* FIRST CYCLE PROCESSING
+     C*
+     C           INIT      BEGSR
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'RE3117  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA                                    ***
+     C*
+     C** Get Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C* STORE ALL RETAIL ICD BY CURRENCY RECORDS
+     C*
+     C                     Z-ADD1         X       30
+     C*
+     C                     READ RECCYDF                  40
+     C*
+     C           *IN40     DOWEQ'0'                        READ UNTIL EOF
+     C           RECI      IFEQ 'D'
+     C                     MOVE KEY       CUR     4
+     C                     MOVELCUR       CURR,X
+     C                     MOVE ACMX      AMAX,X
+     C                     MOVE ACMN      AMIN,X
+     C                     Z-ADDACRT      ARET,X
+     C                     ADD  1         X
+     C                     END
+     C                     READ RECCYDF                  40
+     C                     END
+     C*
+     C* STORE THE EIGHT GROUPS RECORDS FROM THE RETAIL TABLE
+     C*
+     C                     Z-ADD1         Y       10
+     C*
+     C           1         SETLLTABLEV4
+     C*
+     C                     READ TABLEV4                  42
+     C*
+     C           *IN42     DOUEQ'1'                        READ UNTIL EOF
+     C           RECI      IFEQ 'D'
+     C                     MOVE KEY       CGRP,Y
+     C                     MOVE ACMI      AGRP,Y
+     C                     ADD  1         Y
+     C                     READ TABLEV4                  42
+     C                     END
+     C                     END
+     C*
+     C                     Z-ADD1         U       10
+     C                     Z-ADD1         W       10
+     C           W         DOUEQ8
+     C                     MOVE W         W1      1
+     C           W1        LOKUPCGRP                     55
+     C                     MOVEL*BLANKS   WCGRP
+     C                     MOVEL*BLANKS   WAGRP
+     C           *IN55     IFEQ '0'
+     C           *IN56     IFEQ '0'
+     C                     WRITEHEADCG
+     C                     MOVEL'1'       *IN56
+     C                     END
+     C                     MOVELW1        WCGRP
+     C                     MOVEL'N'       WAGRP
+     C                     WRITECCYECG
+     C                     MOVE W         WGRP,U
+     C                     ADD  1         U
+     C                     END
+     C                     ADD  1         W
+     C                     END
+     C*
+     C           *IN56     IFEQ '1'
+     C                     Z-ADD1         U       10
+     C           Y         DOUEQ9
+     C                     MOVE WGRP,U    CGRP,Y
+     C                     MOVE 'N'       AGRP,Y
+     C                     ADD  1         U
+     C                     ADD  1         Y
+     C                     END
+     C                     END
+     C*
+     C** Get General Ledger Details
+     C*
+     C/COPY WNCPYSRC,RE3117C004
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C/COPY WNCPYSRC,RE3117C005
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Get Retail Details
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETLPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 005 *
+     C                     Z-ADD005       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                                     MD026867
+      ** Check if CRE090 is installed                                                       MD026867
+      *                                                                                     MD026867
+     C                     CALL 'AOSARDR0'                                                  MD026867
+     C                     PARM *BLANKS   PRTCD   7                                         MD026867
+     C                     PARM '*VERIFY' POPTN   7                                         MD026867
+     C                     PARM 'CRE090'  PSARD   6                                         MD026867
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD026867
+      *                                                                                     MD026867
+     C           PRTCD     IFEQ *BLANKS                                                     MD026867
+     C                     MOVEL'Y'       CRE090  1                                         MD026867
+     C                     ELSE                                                             MD026867
+     C                     MOVEL'N'       CRE090                                            MD026867
+     C                     ENDIF                                                            MD026867
+     C           RUND      SUB  1         PRDNB   50                                        MD026867
+     C*
+     C/COPY WNCPYSRC,RE3117C001
+     C*  SET LOWER LIMIT FOR FILE ACCESS
+     C*
+     C                     MOVE *BLANKS   XBRCA
+     C**********           Z-ADD*ZERO     XCNUM                                               CSD027
+     C                     MOVE *BLANK    XCNUM                                               CSD027
+     C                     Z-ADD*ZERO     XACOD
+     C                     Z-ADD*ZERO     XACSQ
+     C                     MOVE *BLANK    XCCY
+     C**********           Z-ADD*ZERO     CNUM                                                CSD027
+     C                     MOVE *BLANK    CNUM                                                CSD027
+     C                     Z-ADD*ZERO     ACOD
+     C                     Z-ADD*ZERO     ACSQ
+     C                     MOVE *BLANK    CCY
+     C                     MOVE *BLANK    ACCOM
+     C                     MOVEL'41'      TRKEY  12
+     C                     Z-ADD1         Z       20
+     C*
+     C** INITIALISE CONTROL DATE
+     C*
+     C                     SUB  1         DNWD
+     C           DNWD      IFLE APDA                       - B1
+     C                     Z-ADDDNWD      CTLDAT  50
+     C                     ELSE                            - X1
+     C                     Z-ADDAPDA      CTLDAT
+     C                     END                             - E1
+     C* WRITE CONTROL HEADER
+     C                     WRITEHEADAU
+     C* END OF FIRST CYCLE PROCESSING
+     C*
+     C                     ENDSR                                        **
+     C*
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*
+     C* ACCOUNT PROCESSING
+     C*
+     C           MAIN      BEGSR
+     C*
+     C* ACCESS TO FIRST MOVEMENT FOR WITCH TRANSACTION TYPE IS
+     C* COMMISSION BEARING. BYPASS IF FUTURE POSTING
+     C*
+     C                     EXSR TRATX
+     C*
+     C           *INLR     DOWEQ'0'                            -B1
+     C*
+     C* CHECK IF COMMISSION IS TO BE CALCULATED
+     C* BYPASS IF EXEMPTED OR IF SECONDARY ACCOUNT.
+     C*
+     C           AKEY      IFNE AAKEY                          -B2
+     C                     EXSR GROUP
+     C                     END                                 -E2
+     C           CEXBX     IFNE 'E'                            -B2
+     C           AGRP,Y    ANDEQ'Y'
+     C           LTAC      ANDEQ*ZERO
+     C                     EXSR POSTIN
+     C                     READ REEODPFF                 LR
+     C                     ELSE                                -X2
+     C           A1KEY     SETGTREEODPL
+     C                     READ REEODPFF                 LR
+     C                     END                                 -E2
+     C           *INLR     IFEQ '0'                            -B2
+     C           TRAT      IFNE XTRAT
+     C                     MOVE *BLANK    ACCOM
+     C                     EXSR TRATX
+     C                     END
+     C*
+     C* PROCESS CHANGE OF ACCOUNT TOTAL IF COMMISSION DUE
+     C*
+     C           AKEY      IFNE AAKEY                          -B3
+     C           CEXBX     ANDNE'E'
+     C           AGRP,Y    ANDEQ'Y'
+     C           LTAC      ANDEQ*ZERO
+     C                     EXSR TOTALS
+     C                     END                                 -E3
+     C                     END                                 -E2
+     C                     END                                 -E1
+     C*
+     C* PROCESS END OF FILE TOTAL IF COMMISSION DUE FOR LAST ACCOUNT
+     C*
+     C           AKEY      IFEQ AAKEY
+     C           CEXBX     ANDNE'E'                            -B1
+     C           AGRP,Y    ANDEQ'Y'
+     C           LTAC      ANDEQ*ZERO
+     C                     EXSR TOTALS
+     C                     END                                 -E1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*
+     C           GROUP     BEGSR
+     C*
+     C* CHAIN FOR THE CUSTOMER OF THE ACCOUNT IF NOT ALREADY DONE
+     C*
+     C           XCNUM     IFNE CNUM                               -B1
+     C                     MOVELXCNUM     #CNUM   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM #CNUM     @KEY1  10
+     C                     PARM           @KEYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************
+     C                     MOVEL#CNUM     DBKEY            * DBERROR 009 *
+     C                     Z-ADD009       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C* IF THE CUSTOMER GROUP IS SUBJECT TO COMMISSION
+     C*
+     C                     Z-ADD1         Y
+     C           BBCGRP    LOKUPCGRP,Y                   60
+     C           *IN60     IFEQ '0'
+     C           *LOCK     IN   LDA                            -B2
+     C                     SETON                     U7U8LR
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELBBCGRP    DBKEY
+     C                     Z-ADD10        DBASE            ** DB ERROR 10
+     C                     OUT  LDA                                    ***
+     C                     DUMP
+     C                     RETRN
+     C                     END                                 -E2
+     C                     END                                 -E1
+     C*
+     C*    IF THE ACCOUNT IS EXEMPT FROM COMMISSION IF NOT ALREADY DONE
+     C*
+     C           A2KEY     CHAINACCNTABF             51
+     C           *IN51     IFEQ '1'                            -B1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE 'ACCNT'   DBFILE
+     C                     MOVELAKEY      DBKEY
+     C                     Z-ADD11        DBASE            ** DB ERROR 11
+     C                     OUT  LDA                                    ***
+     C                     DUMP
+     C                     RETRN
+     C                     END                                 -E1
+     C           LDAC      IFNE 'Y'
+     C                     ADD  1         NDID
+     C                     END
+     C*
+     C* ACCESS FROM THE COMMISSION FILE FOR FIELD OVERIDE
+     C*
+     C           ACKEY     CHAINRECOM                51
+     C           *IN51     IFEQ '1'                            -B1
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE 'RECOM'   DBFILE
+     C                     MOVELRKEY      DBKEY
+     C                     Z-ADD98        DBASE            ** DB ERROR 98
+     C                     OUT  LDA                                    ***
+     C                     DUMP
+     C                     RETRN
+     C                     END                                 -E1
+     C                     MOVELCEXB      CEXBX   1
+     C*
+     C* ACCESS FROM THE ACCOUNTS CAPITALISING FILE  REHISB
+     C*
+     C           RCKEY     CHAINREHISBL              51
+     C           *IN51     IFEQ '1'                            -B1
+     C           BRECI     ORNE 'B'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE 'REHIS'   DBFILE
+     C                     MOVELRKEY      DBKEY
+     C                     Z-ADD11        DBASE            ** DB ERROR 11
+     C                     OUT  LDA                                    ***
+     C                     DUMP
+     C                     RETRN
+     C                     END                                 -E1
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*
+     C********************************************************************
+     C/EJECT
+     C*
+     C* CALCULATE TOTALS AND UPDATE RECOM FOR PREVIOUS ACCOUNT
+     C*
+     C           TOTALS    BEGSR
+     C*
+     C           CL        CHAINRECOM                63
+     C           *IN63     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8LR
+     C                     MOVE 'RECOM'   DBFILE
+     C                     MOVELCNUM      TEMP    9
+     C                     MOVE CCY       TEMP
+     C**********           MOVELACOD      TEMP1   6                                           CGL029
+     C                     MOVELACOD      TEMP1  12                                           CGL029
+     C                     MOVE ACSQ      TEMP1
+     C**********           MOVELTEMP      TEMP2  15                                           CGL029
+     C                     MOVELTEMP      TEMP2  21                                           CGL029
+     C                     MOVE TEMP1     TEMP2
+     C                     MOVELTEMP2     DBKEY
+     C                     Z-ADD7         DBASE            ** DB ERROR 07
+     C                     OUT  LDA
+     C                     DUMP
+     C                     RETRN
+     C                     END
+     C*
+     C*    RATE FROM RETAIL ICD BY CURRENCY
+     C*
+     C                     Z-ADD1         X
+     C*
+     C           CCY       LOKUPCURR,X                   64
+     C           *IN64     IFEQ '0'
+     C           CCY       LOKUPCURX,X                   64
+     C*
+     C           *IN64     IFEQ '0'
+     C                     EXSR CCYICD
+     C                     MOVE CCY       CURX,Z
+     C           Z         ADD  1         Z
+     C                     END
+     C*
+     C                     END
+     C*
+     C*    THE ACCOUNT IS AN OVERRIDE
+     C*
+     C           CEXB      IFNE *BLANKS
+     C                     MOVE CEXB      RATE   108
+     C                     ELSE
+     C                     Z-ADDARET,X    RATE
+     C                     END
+     C*
+     C*    PROCESS CAPITALISATION
+     C*
+     C           DICI      IFEQ 'Y'
+     C           DICI      OREQ 'D'
+     C           DICI      OREQ 'C'
+     C                     EXSR CAPITL
+     C                     END
+     C                     ADD  GROSS     GVDPE
+     C*
+     C*    ACCOUNT COMMISSION IS CALCULATED
+     C*
+     C           GVDPE     MULT RATE      TOTAL  150
+     C           TOTAL     DIV  100       TOTAL
+     C*
+     C*    BELOW MINIMUM COMMISSION
+     C*
+     C           *IN64     IFEQ '1'
+     C           TOTAL     IFLE AMIN,X
+     C                     MOVE AMIN,X    ACCEA
+     C/COPY WNCPYSRC,RE3117C002
+     C*
+     C*    ABOVE MAXIMUM COMMISSION
+     C*
+     C                     ELSE
+     C           TOTAL     IFGE AMAX,X
+     C                     MOVE AMAX,X    ACCEA
+     C*
+     C*    NOT BELOW MNIMUM AND NOT ABOVE MAXIMUM COMMISSION
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE TOTAL     ACCEA
+     C                     END
+     C                     END
+     C                     ELSE
+     C*
+     C*    CCY NOT FOUND KEEP TOTAL CALCULATED AS OUSTANDING COMMISSION
+     C*    NO MINIMUM OR MAXIMUM APPLY BUT ACCOUNT OVERIDE MIGHT EXIST.
+     C*
+     C                     MOVE TOTAL     ACCEA
+     C                     END
+     C                     MOVE CDIN      CACDC
+     C*
+     C**         Include any manual adjustments to the enquiry value.
+     C*
+     C                     ADD  CACCC     ACCEA
+     C*
+     C                     UPDATRECOMDF
+     C                     Z-ADD*ZERO     GROSS
+     C                     Z-ADD*ZERO     GROSC
+     C                     Z-ADD*ZERO     TOTAL
+     C                     MOVE *BLANK    CDIN
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+      *****************************************************************
+      **                                                                 *
+      **  CCYICD Subroutine to handle missing currencies on Retail ICD   *
+      **                                                                 *
+      **  Called By:  SR000                                              *
+      **  Calls:      -                                                  *
+      **                                                                 *
+      **  Indicators:                                                    *
+      **  Arrays:                                                        *
+      **                                                                 *
+      **  Fields:                                                        *
+      **                                                                 *
+     C           CCYICD    BEGSR
+      *                                                                  *
+      **         Force no commission to be calculated                    *
+     C           CEXB      IFEQ *BLANK
+     C                     MOVE '00000000'CEXB
+     C                     MOVEL'00000000'CEXB
+     C                     END
+      *                                                                  *
+      **         Check if no overflow.                                   *
+     C           *IN88     IFEQ '1'
+     C                     MOVE '0'       *IN70
+     C                     WRITEHEADAU
+     C                     MOVE '0'       *IN88
+     C                     END
+      *                                                                  *
+      **         Output advice for CCY missing on ICD Account reference  *
+     C                     WRITECCYERR
+     C                     MOVE '1'       *IN70
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C/EJECT
+     C*
+     C*    TRATX    TRANSACTION TYPE PROCESSING
+     C*
+     C           TRATX     BEGSR                           *** POSTIN **
+     C*
+     C*    CHAIN FOR THE TRANSACTION TYPE OF THIS POSTING
+     C*
+     C           ACCOM     DOWNE'Y'                         -B1
+     C           *INLR     ANDEQ'0'
+     C*
+     C           TRAT      IFNE XTRAT                       -B2
+     C*
+     C** Get Transactions Details
+     C*
+     C           TRAT      CHAINTABLETZF             62
+      *
+      *  INSTEAD OF ENDING PROGRAM OUPUT A LIST OF WRONG OR MISSING
+      *  TRANSACTION TYPE.
+      *
+     C           *IN62     IFEQ '1'                         -B3
+     C           RECI      ORNE 'D'
+     C           *IN88     IFEQ '1'
+     C                     MOVE '0'       *IN70
+     C                     WRITEHEADAU
+     C                     MOVE '0'       *IN88
+     C                     END
+     C                     WRITETRATERRF                               11
+     C                     MOVE 'Y'       ACCOM
+     C                     END                             -E3
+     C*
+     C                     END                             -E2
+     C*
+     C                     MOVE TRAT      XTRAT
+     C           ACCOM     IFNE 'Y'                        -B2
+     C                     READ REEODPFF                 LR
+     C                     END                             -E2
+     C                     END                             -E1
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C*
+     C*    POSTIN
+     C*
+     C           POSTIN    BEGSR                           *** POSTIN **
+     C*
+     C*    POSTING INCLUDED IN ACCOUNT COMMISSION
+     C*
+     C/COPY WNCPYSRC,RE3117C006
+     C           VALD      IFLE CTLDAT                     -B1
+     C                     ADD  PSTA      GROSS  130
+     C*
+     C           DICI      IFEQ 'Y'                        -B2
+     C           VALD      ANDLTNDID
+     C********** LDAC      ANDEQ'Y'                                                MD026867 MD027016
+     C********** DICI      OREQ 'Y'                                                MD026867 MD027016
+     C********** VALD      ANDLENDID                                               MD026867 MD027016
+     C********** LDAC      ANDNE'Y'                                                MD026867 MD027016
+     C                     ADD  PSTA      GROSC  130
+     C                     END                             -E2
+     C           DICI      IFEQ 'C'                        -B2
+     C           VALD      ANDLERUND
+     C                     ADD  PSTA      GROSC  130
+     C                     END                             -E2
+     C           DICI      IFEQ 'D'                        -B2
+     C           VALD      ANDLTRUND
+     C                     ADD  PSTA      GROSC  130
+     C                     END                             -E2
+     C                     MOVE 'Y'       TURN
+     C                     UPDATREEODPFF
+     C                     END                             -E1
+     C/COPY WNCPYSRC,RE3117C007
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C*
+     C*    CAPITL   . TO CAPITALISATION PROCESSING
+     C*
+     C           CAPITL    BEGSR                           *** CAPITL **
+     C*
+     C                     MOVE 'D'       CDIN    1
+     C           CRE090    IFEQ 'Y'                                                         MD026867
+     C           NDID      ANDLEPRDNB                                                       MD026867
+     C                     ADD  GROSC     GVDPC                                             MD026867
+     C                     ELSE                                                             MD026867
+     C           GVDPE     ADD  GROSC     GVDPC
+     C                     ENDIF                                                            MD026867
+     C*
+     C*    ACCOUNT COMMISSION IS CALCULATED
+     C*
+     C           GVDPC     MULT RATE      TOTAL
+     C           TOTAL     DIV  100       TOTAL
+     C*
+     C*    BELOW MINIMUM COMMISSION
+     C*
+     C           TOTAL     IFLE AMIN,X
+     C                     MOVE AMIN,X    ACCC
+     C                     MOVE 'MIN'     MMACC
+     C/COPY WNCPYSRC,RE3117C003
+     C*
+     C*    ABOVE MAXIMUM COMMISSION
+     C*
+     C                     ELSE
+     C           TOTAL     IFGE AMAX,X
+     C                     MOVE AMAX,X    ACCC
+     C                     MOVE 'MAX'     MMACC
+     C*
+     C*    NOT BELOW MNIMUM AND NOT ABOVE MAXIMUM COMMISSION
+     C*
+     C                     ELSE
+     C                     MOVE TOTAL     ACCC
+     C                     MOVE *BLANKS   MMACC
+     C                     END
+     C                     END
+     C                     Z-ADDRATE      ACCRA
+     C           CRE090    IFEQ 'N'                                                         MD026867
+     C           CRE090    OREQ 'Y'                                                         MD026867
+     C           NDID      ANDGTPRDNB                                                       MD026867
+     C           GVDPE     SUB  GVDPC     GVDPE
+     C                     ELSE                                                             MD026867
+     C                     SUB  GROSC     GVDPE                                             MD026867
+     C                     ENDIF                                                            MD026867
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C* CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR                           ** *PSSR **
+     O********************************************************************
+** CPY@ OBJECT COPYRIGHT                                               ***
+(c) Misys International Banking Systems Ltd. 2001

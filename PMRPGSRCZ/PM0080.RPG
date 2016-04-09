@@ -1,0 +1,2072 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Industry Groups Maintenance')                 *
+/*OVRF*: OVRDBF FILE(PMPGHDXX) TOFILE(PMPGHDPD) SHARE(*NO)          : *   S01486
+/*OVRF*: OVRDBF FILE(PMPGDDXX) TOFILE(PMPGDDPD) SHARE(*NO)          : *   S01486
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas PORTFOLIO MANAGEMENT                                *
+     F*                                                                  *
+     F*    PM0080  -  INDUSTRY GROUPS MAINTENANCE                        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *S01486
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080199             Date 19DEC94               *
+     F*                 S01486             Date 29JUL94               *
+     F*                 B7656      PA      DATE 02MAY91                  *
+     F*                 R00300             DATE 14AUG90                  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  080199 - Initialise record code of AO to blanks.             *
+     F*   S01486 - Portfolio Management Upgrade to R10                *   S01486
+     F*   B7656  - Display Local Industry Code in Local Industry      *
+     F*            Name field                                         *
+     F*   R00300 - Message file changes                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F***RECORD*ID OF FILE SDBANKPD = 'BJ'                                S01486
+     F**SDBANKL1IF**E           K        DISK                             S01486
+     F**************                                KINFSR *PSSR          S01486
+     F*
+     F***RECORD*ID OF FILE SDINDSPD = 'AO'                                S01486
+     F**SDINDSL1IF**E           K        DISK                             S01486
+     F**************                                KINFSR *PSSR          S01486
+     F**PM0080DDCF  E                    WORKSTN                          S01486
+     FPM0080DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM0080S0
+     F                                        RRN2  KSFILE PM0080S1
+     F*
+     F***RECORD*ID OF FILE PMPGHDPP = 'PL'                                S01486
+     F**PMPGHDPPUF**E           K        DISK         KCOMIT       A      S01486
+     F** RECORD ID OF FILE PMPGHDPD = 'PL'                                S01486
+     FPMPGHDPDUF  E           K        DISK         KCOMIT       A        S01486
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+     F*
+     F***RECORD*ID OF FILE PMPGDDPP = 'PM'                                S01486
+     F**PMPGDDPPUF  E           K        DISK         KCOMIT       A      S01486
+     F** RECORD ID OF FILE PMPGDDPD = 'PM'                                S01486
+     FPMPGDDPDUF  E           K        DISK         KCOMIT       A        S01486
+     F                                              KINFSR *PSSR
+     F*
+     F** RECORD ID OF FILE PMPGHDXX = 'PL'
+     FPMPGHDXXIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMPGHDP0                          KRENAMEPMPGHDPX
+     F*
+     F** RECORD ID OF FILE PMPGDDXX = 'PM'
+     FPMPGDDXXIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMPGDDP0                          KRENAMEPMPGDDPX
+     F*
+     F***RECORD*ID OF FILE PMPGHDZZ = 'PL'                                S01486
+     F**PMPGHDZZUF  E                    DISK         KCOMIT              S01486
+     F** RECORD ID OF FILE PMPGHDPA = 'PL'                                S01486
+     FPMPGHDPAUF  E                    DISK         KCOMIT                S01486
+     F                                              KINFSR *PSSR
+     F*
+      /EJECT
+     F********************************************************************
+     F*
+     F*   INDICATOR      FUNCTION OF INDICATOR
+     F*
+     F*       10         START  SCREEN
+     F*       11         REVIEW SCREEN
+     F*       12         UPDATE SCREEN
+     F*
+     F*       25         ROLLUP
+     F*       26         ROLLDOWN
+     F*
+     F*       30         S/PM0080F1  ERROR-DDACTN
+     F*       31         S/PM0080F1  ERROR-DDLING
+     F*       32         S/PM0080F1  ERROR-DDPKEY
+     F*       33         S/PM0080F1  PROTECT/NON-DISPLAY KEY FIELDS
+     F*       34         S/PM0080S0  ERROR-DDACTN
+     F*       35         S/PM0080S1  ERROR-DDLIND
+     F*       37         S/PM0080S1  PROTECT/NON-DISPLAY DETAIL FIELDS
+     F*       38         S/PM0080C1  ERROR-DDLINN
+     F*       39         S/PM0080C1  PROTECT DDLINN
+     F*       40         S/PM0080C1  POSITION CURSOR
+     F*
+     F*       45         VLDCMDKY INDICATOR FOR DISPLAY FILE
+     F*
+     F*       50         S/PM0080C0  SFLDSP
+     F*       51         S/PM0080C0  SFLDSPCTL
+     F*       52         S/PM0080C0  SFLEND
+     F*       53         S/PM0080C0  ROLLDOWN NOT ALLOWED
+     F*       54         S/PM0080S1  SFLNXTCHG
+     F*       55         S/PM0080C1  SFLCLR
+     F*       56         S/PM0080C1  SFLEND
+     F*       57         S/PM0080F2  SFLEND AUTOMATIC
+     F*
+     F*       70         FILE OPERATIONS INDICATOR
+     F*       71         FILE OPERATIONS INDICATOR
+     F*       72         FILE OPERATIONS INDICATOR
+     F*       73         FILE OPERATIONS INDICATOR
+     F*
+     F*       80         ERROR
+     F*
+     F*       81         USE TO CHECK IF AT LEAST 1 DETAIL RECORD ENTERED
+     F*       82         DETERMINE FROM WHICH SCREEN (ON=REVIEW,OFF=START)
+     F*                  KEY FIELDS VALIDATION IS CALLED
+     F*       83         ADD RECORD
+     F*       84         INDUSTRY DOES NOT EXIST ON INDUSTRY CODES TABLE
+     F*       85         INDICATOR USED ON WRITE/UPDATE OPS TO CONDITION
+     F*                  CALL OF *PSSR
+     F*       86         WORK
+     F*       87         RECORD UPDATED BY ANOTHER WORKSTATION
+     F*
+     F*       98         DATF = MMDDYY
+     F*       99         WORK (RECORD IN TABTB10 NOT PRESENT OR INCORRECT)
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'WWAID' VALUES USED
+     F*
+     F*       03         CA3
+     F*       10         CA10
+     F*       12         CA12
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     F*       HP         HELP PRESSED
+     F*
+     F*                     ** INDICATORS NOT USED **
+     F*
+     F*          01   02   03   04   05   06   07   08   09   ..
+     F*          ..   ..   13   14   15   16   17   18   19   20
+     F*          21   22   23   24   ..   ..   27   28   29   ..
+     F*          ..   ..   ..   ..   ..   ..   ..   ..   ..   ..
+     F*          41   42   43   44   ..   46   47   48   49   ..
+     F*          ..   ..   ..   ..   ..   ..   ..   58   59   60
+     F*          61   62   63   64   65   66   67   68   69   ..
+     F*          ..   ..   ..   74   75   76   77   78   79   ..
+     F*          ..   ..   ..   ..   ..   ..   ..   88   89   90
+     F*          91   92   93   94   95   96   97   ..   ..
+     F*
+     F********************************************************************
+      /EJECT
+     E********************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E********************************************************************
+      /EJECT
+     I********************************************************************
+     I*
+     I** DATA STRUCTURE FOR INITIALIZING A RECORD
+     I*
+     I**DETREC****E DSPMPGHDPP                                            S01486
+     IDETREC    E DSPMPGHDPD                                              S01486
+     I              PLLING                          KEYFX
+     I*
+     I** KEY FIELDS (TAKEN FROM 'KEY' PORTION OF SCREEN)
+     I*
+     ISCRCTL      DS
+     I                                        1   1 WWREVW
+     I                                        2   2 DDACTN
+     I                                        3   4 DDLING
+     I                                        5   6 DDPKEY
+     I                                        7   8 WWPAG1
+     I                                        9  10 WWPAG2
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I**LDA******* UDS                            256                     S01486
+     I************                          132 183 DBLOT                 S01486
+     I************                          132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** DATA STRUCTURE FOR ZTNLU1
+     I*
+     I** MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA STRUCTURE FOR SETUP OF COMMIT TEXT
+     I*
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I*
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I*
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I            DS                                                      S01486
+     I                                        1   3 WWINRY                S01486
+     I                                        1   1 WWINR1                S01486
+     I                                        2   2 WWINR2                S01486
+     I                                        3   3 WWINR3                S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDINDS    E DSSDINDSPD                                              S01486
+     I** EXTERNAL DS FOR INDUSTRIES                                       S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IRUNDT       DS                                                      S01486
+      **  DATA AREA RUNDAT                                                S01486
+     I                                        1   7 RUNA                  S01486
+     I                                    P   8  100RUND                  S01486
+     I                                       11  11 SSF                   S01486
+     I                                       12  12 DATF                  S01486
+     I                                       13  13 MBIN                  S01486
+     IZMUSER      DS                             17                       S01486
+     I** DATA AREA OF MENU USER                                           S01486
+     I                                       11  13 USRBCH                S01486
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I********************************************************************
+      /EJECT
+     C*===================================================================
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C***DEFINE*KEY*LIST*FOR CHAINING TO PMPGHDPP                         S01486
+     C** DEFINE KEY LIST FOR CHAINING TO PMPGHDPD                         S01486
+     C*
+     C           PMFILK    KLIST
+     C                     KFLD           DDLING
+     C*
+     C***DEFINE*KEY*LIST FOR CHAINING TO PMPGDDPP                         S01486
+     C** DEFINE KEY LIST FOR CHAINING TO PMPGDDPD                         S01486
+     C*
+     C           PMSUBK    KLIST
+     C                     KFLD           DDLING
+     C**********           KFLD           WWLIND  30                                          CER020
+     C                     KFLD           WWLOIC  3                                           CER020
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+     C*  P R O G R A M     S T A R T
+     C*===================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR #A
+     C*
+     C** D O    U N T I L   F 3   O R   E R R O R
+     C*
+     C           WWAID     DOUEQ'03'
+     C*
+     C           *IN10     CASEQ'1'       #BA
+     C*
+     C           *IN11     CASEQ'1'       #BB
+     C*
+     C           *IN12     CASEQ'1'       #C
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*===================================================================
+     C*  P R O G R A M     E N D
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      **  I N D E X   O F   S U B R O U T I N E S
+      **
+      **------------------------------------------------------------------
+      **  #A          S/R TO INITIALISE STATIC FIELDS
+      **                  AND ACCESS STANDING DATA
+      **------------------------------------------------------------------
+      **  #BA         S/R TO OUTPUT AND PROCESS KEY FIELDS SCREEN
+      **------------------------------------------------------------------
+      **  #ZBAA       S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD WWAID,
+      **                  DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED
+      **------------------------------------------------------------------
+      **  #ZBAB       S/R TO VALIDATE KEY FIELDS
+      **------------------------------------------------------------------
+      **  #ZBAC       S/R TO INITIALIZE SUBFILE PM0080S1
+      **------------------------------------------------------------------
+      **  #ZBAD       S/R TO READ THE INDUSTRY GROUP DETAILS FILE
+      **                  FOR THE INDUSTRY GROUP SELECTED
+      **                  AND FILL IN THE SUBFILE PM0080S1
+      **------------------------------------------------------------------
+      **  #ZBADA      S/R TO CHAIN TO THE INDUSTRY CODES TABLE FILE
+      **------------------------------------------------------------------
+      **  #BB         S/R TO PROCESS SUBFILE SELECTION SCREEN
+      **------------------------------------------------------------------
+      **  #C          S/R TO PROCESS DETAIL SCREEN AND UPDATE FILES
+      **------------------------------------------------------------------
+      **  #CA         S/R TO INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+      **------------------------------------------------------------------
+      **  #CB         S/R TO FORMAT RECORD FIELDS FOR SCREEN
+      **------------------------------------------------------------------
+      **  #CC         S/R TO VALIDATE DETAIL SCREEN
+      **------------------------------------------------------------------
+      **  #CCA        S/R TO COUNT RECORDS IN AMEND MODE
+      **------------------------------------------------------------------
+      **  #CD         S/R TO UPDATE FILE RECORDS
+      **------------------------------------------------------------------
+      **  #CDA        S/R TO LOCK THE TRANSACTION NUMBER DATA AREA
+      **                  ACCESS THE NEXT AVAILABLE TRANSACTION NUMBER,
+      **                  THEN UPDATE AND RELEASE THE DATA AREA.
+      **------------------------------------------------------------------
+      **  #CDB        S/R TO PROCESS UPDATE BY ANOTHER WORKSTATION
+      **------------------------------------------------------------------
+      **  #CDC        S/R TO SAVE DETAILS ENTERED
+      **------------------------------------------------------------------
+      **  #CDCA       S/R TO INITIALIZE RECORD ON DETAIL FILE TO OVERWRITE
+      **------------------------------------------------------------------
+      **  *PSSR       S/R TO HANDLE FILE EXEPTION/ERROR
+      **------------------------------------------------------------------
+      **  ZASNMS      S/R to send messages                                R00300
+     C********************************************************************R00300
+     C*   EXTERNAL SUBROUTINES                                           *R00300
+     C*   --------------------                                           *R00300
+     C*   Y2CLMSC     Clear program message queue                        *R00300
+     C********************************************************************R00300
+     C*   Y2SNMGC     Send message to message queue                      *R00300
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #A S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      **
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      **                                                                  R00300
+      ** CALLS -  *PSSR  - Handle file exception/error                    R00300
+      **       - Y2CLMSC - Clear program message queue                    R00300
+     C*===================================================================
+     C*
+     C           #A        BEGSR                           ** #A BSR **
+     C*
+     C** INITIALIZE INDICATORS
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*                                                                   R00300
+     C**   Select the program MSGQ for error msg.                         R00300
+     C                     MOVEL'*'       TOPQ   10                       R00300
+     C                     MOVEL'*PRV'    TOPRQ   5                       R00300
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   R00300
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ   10                       R00300
+     C                     PARM           TOPRQ   5                       R00300
+     C**                                                                  S01486
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01486
+     C                     IN   RUNDT                                     S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT                           S01486
+     C                     MOVEL'PM0080'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'PM'      MDID
+     C                     MOVEL'PM0080'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     MOVELUSID      USIDX
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C***********          MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C************         READ SDBANKL1                 99               S01486
+     C************IN99     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           **DB ERROR 01**
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** PROCEED TO START SCREEN
+     C*
+     C************         MOVELBJMRDT    DDRUNA                          S01486
+     C                     MOVE '1'       *IN10
+     C*
+     C           XTINIT    ENDSR                           ** #A ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #BA S/R TO OUTPUT AND PROCESS KEY FIELDS SCREEN
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: #ZBAA, #ZBAB, #ZBAC, #ZBAD
+      **        - Y2CLMSC - Clear program message queue                   R00300
+     C*===================================================================
+     C*
+     C           #BA       BEGSR                           ** #BA BSR **
+     C*
+     C** INITIALISE SCREEN DATA
+     C*
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN87
+     C                     MOVE '0'       *IN82
+     C                     MOVEL*BLANK    SCRCTL
+     C                     MOVE *BLANKS   DDDELT
+     C                     MOVEL'PM90001' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    DDINFO
+     C*
+     C** CLEAR WHOLE SCREEN
+     C*
+     C                     WRITEPM0080F3
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N
+     C*
+     C           WWAID     DOUEQ'03'
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** S T A R T   S C R E E N     O U T P U T
+     C*
+     C                     MOVEL*BLANK    DDLINN
+     C                     WRITEPM0080F2
+     C                     EXFMTPM0080F1
+     C                     MOVE '0'       *IN80
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C** Call S/R to move values into WWAID
+     C*
+     C                     EXSR #ZBAA
+     C*
+     C** ENTER TAKEN VALIDATE KEY INPUT
+     C*
+     C           WWAID     IFEQ 'RA'
+     C                     EXSR #ZBAB
+     C*
+     C** IF NO ERRORS, DETERMINE NEXT SCREEN
+     C*
+     C           *IN80     IFEQ '0'
+     C*
+     C** IF ACTION CODE IS BLANK, NEXT SCREEN IS REVIEW SCREEN,
+     C** OTHERWISE, DISPLAY REQUESTED DETAIL SCREEN AS PER KEY INPUT
+     C*
+     C           DDACTN    IFEQ *BLANK
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVE '1'       *IN12
+     C**********           MOVE *LOVAL    WWLIND                                              CER020
+     C                     MOVE *LOVAL    WWLOIC                                              CER020
+     C                     EXSR #ZBAC
+     C           PMSUBK    SETLLPMPGDDXX
+     C                     EXSR #ZBAD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTSTAR    ENDSR                           ** #BA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBAA S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD WWAID,
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.
+      ** CALLED FROM #BA, #BB, #C
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #ZBAA     BEGSR                           ** #ZBAA BSR **
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C           *IN45     IFEQ '0'
+     C                     MOVE 'RA'      WWAID
+     C                     END
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     END
+     C*
+     C** If F10
+     C*
+     C           *INKJ     IFEQ '1'
+     C                     MOVE '10'      WWAID
+     C                     MOVE '0'       *INKJ
+     C                     END
+     C*
+     C** If F12
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      WWAID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C*
+     C** If ROLLUP pressed
+     C*
+     C           *IN25     IFEQ '1'
+     C                     MOVE 'UP'      WWAID
+     C                     MOVE '0'       *IN25
+     C                     END
+     C*
+     C** If ROLLDOWN pressed
+     C*
+     C           *IN26     IFEQ '1'
+     C                     MOVE 'DN'      WWAID
+     C                     MOVE '0'       *IN26
+     C                     END
+     C*
+     C                     ENDSR                           ** #ZBAA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBAB S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R #BA, #BB
+      ** CALLS - ZASNMS - Send message to message queue                   R00300
+      **
+     C*===================================================================
+     C*
+     C           #ZBAB     BEGSR                           ** #ZBAB BSR **
+     C*
+     C** RESET ERROR INDICATORS
+     C** SET ERROR ARRAY COUNTER TO ZERO
+     C*
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C*
+     C** A C T I O N    C O D E    I N P U T - MUST BE BLANK,I,A,E,D
+     C*
+     C           DDACTN    IFNE *BLANK
+     C           DDACTN    ANDNE'I'
+     C           DDACTN    ANDNE'A'
+     C           DDACTN    ANDNE'E'
+     C           DDACTN    ANDNE'D'
+     C*********************MOVEL'PM08100' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08100' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN80
+     C                     END
+     C** USER SHOULD BE AUTHORISED TO ACTION CODE                         S01486
+     C           DDACTN    IFNE *BLANK                                    S01486
+     C*                                                                   S01486
+     C** WHEN SINGLE BRANCH                                               S01486
+     C           MBIN      IFNE 'Y'                                       S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM           @ERR    10                      S01486
+     C           @ERR      IFNE *ZERO                                     S01486
+     C                     MOVEL'PM02000' ZAMSID                          S01486
+     C                     EXSR ZASNMS                                    S01486
+     C                     MOVE '1'       *IN30                           S01486
+     C                     MOVE '1'       *IN80                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C** WHEN MULTI-BRANCH                                                S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM USRBCH    @ZBR    3                       S01486
+     C                     PARM           @ERR    10                      S01486
+     C           @ERR      IFNE *ZERO                                     S01486
+     C                     MOVEL'PM02000' ZAMSID                          S01486
+     C                     EXSR ZASNMS                                    S01486
+     C                     MOVE '1'       *IN30                           S01486
+     C                     MOVE '1'       *IN80                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C*
+     C** C H E C K   K E Y  F I E L D S
+     C*
+     C** ACTION CODE BLANK BUT KEY INPUT
+     C*
+     C           DDACTN    IFEQ *BLANK
+     C           DDLING    ANDNE*BLANK
+     C*********************MOVEL'PM08101' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08101' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** KEY BLANK BUT ACTION CODE INPUT
+     C*
+     C           DDACTN    IFNE *BLANK
+     C           DDLING    ANDEQ*BLANK
+     C*********************MOVEL'PM08107' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08107' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** IF ACTION CODE ENTERED REVIEW FROM MUST BE BLANK
+     C*
+     C           DDACTN    IFNE *BLANK
+     C           DDPKEY    ANDNE*BLANK
+     C           *IN82     ANDNE'1'
+     C           DDLING    ORNE *BLANK
+     C           DDPKEY    ANDNE*BLANK
+     C           *IN82     ANDNE'1'
+     C*********************MOVEL'PM08108' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08108' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** THE TWO CHARACTERS IF INDUSTRY GROUP, IF ENTERED, MUST BE FILLED
+     C*
+     C           DDLING    IFNE *BLANK
+     C                     MOVE DDLING    WWTES1  1
+     C                     MOVELDDLING    WWTES2  1
+     C           WWTES1    IFEQ *BLANK
+     C           WWTES2    OREQ *BLANK
+     C*********************MOVEL'PM08103' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08103' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+     C*
+     C** IF ACTION CODE D SYSTEM SETUP FLAG MUST BE OFF
+     C*
+     C           DDACTN    IFEQ 'D'
+     C           BJSUC     ANDEQ'Y'
+     C*********************MOVEL'PM08102' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08102' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** N O   E R R O R  O N  K E Y  F I E L D S
+     C*
+     C           *IN80     IFNE '1'
+     C*
+     C** A C T I O N    C O D E    I
+     C*
+     C           DDACTN    IFEQ 'I'
+     C           PMFILK    CHAINPMPGHDPX             73
+     C           *IN73     IFEQ '0'
+     C           PLRECI    COMP '*'                      73
+     C                     END
+     C*
+     C           *IN73     IFEQ '0'
+     C           DDLING    OREQ *BLANK
+     C*********************MOVEL'PM08104' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08104' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C** A C T I O N    C O D E    A , D
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           DDACTN    OREQ 'D'
+     C           PMFILK    CHAINPMPGHDPX             73
+     C           *IN73     IFEQ '0'
+     C           PLRECI    COMP '*'                      73
+     C                     END
+     C*
+     C           *IN73     IFEQ '1'
+     C*********************MOVEL'PM08105' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08105' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C** A C T I O N    C O D E    E
+     C*
+     C           DDACTN    IFEQ 'E'
+     C           PMFILK    CHAINPMPGHDPX             73
+     C*
+     C           *IN73     IFEQ '1'
+     C*********************MOVEL'PM08106' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08106' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #ZBAB ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBAC S/R TO INITIALIZE SUBFILE PM0080S1
+      ** CALLED BY #BA, #BB
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C**
+     C           #ZBAC     BEGSR                           ** #ZBAC BSR **
+     C*
+     C** CLEAR SUBFILE
+     C*
+     C                     MOVE '1'       *IN55
+     C                     WRITEPM0080C1
+     C                     MOVE '0'       *IN55
+     C*
+     C** INITIALIZE SUBFILE RECORD NUMBER
+     C*
+     C                     MOVE '0'       *IN70
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     Z-ADD1         RRN2    40
+     C                     Z-ADD1         WWSAVR  40
+     C                     Z-ADD1         SFLRRN  40
+     C                     Z-ADD0         WWZONE  40
+     C*
+     C                     ENDSR                           ** #ZBAC ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBAD S/R TO READ THE INDUSTRY GROUP DETAILS FILE
+      ** FOR THE INDUSTRY GROUP SELECTED AND FILL IN THE SUBFILE PM0080S1
+      ** CALLED FROM #BA, #BB, #C, VALIDK
+      ** CALLS #ZBADA
+      **
+     C*===================================================================
+     C*
+     C           #ZBAD     BEGSR                           ** #ZBAD BSR **
+     C*
+     C           DDACTN    IFEQ 'E'
+     C           DDACTN    OREQ 'D'
+     C                     MOVE '1'       *IN37
+     C                     ELSE
+     C                     MOVE '0'       *IN37
+     C                     END
+     C*
+     C** RESTORE RECORD NUMBER
+     C*
+     C                     Z-ADDWWSAVR    RRN2
+     C*
+     C** RESTORE ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN71
+     C*
+     C                     Z-ADD0         WWRRN   40
+     C                     Z-ADDRRN2      SFLRRN
+     C*
+     C           PMFILK    READEPMPGDDXX                 71
+     C*
+     C           WWRRN     DOUEQ11
+     C*
+     C           *IN71     IFEQ '0'
+     C*
+     C** FIND SAME HEADER KEY
+     C*
+     C           PMRECI    IFEQ 'D'
+     C*
+     C** IF ACTION = E SHOW ALSO DELETED RECORDS
+     C*
+     C           DDACTN    OREQ 'E'
+     C           PMRECI    ANDEQ'*'
+     C**********           MOVELPMLIND    DDLIND                                              CER020
+     C**********           MOVE PMLIND    DDDTTK                                              CER020
+     C                     MOVELPMLOIC    DDLIND                                              CER020
+     C                     MOVE PMLOIC    DDDTTK                                              CER020
+     C                     EXSR #ZBADA
+     C           *IN84     IFEQ '0'
+     C*********************MOVELAOLICD    DDLIDN                          B7656
+     C*********************MOVELAOLICD    DDDTTL                          B7656
+     C                     MOVELAOLINA    DDLIDN                          B7656
+     C                     MOVELAOLINA    DDDTTL                          B7656
+     C                     ELSE
+     C                     MOVE *BLANKS   DDLIDN
+     C                     MOVE *BLANKS   DDDTTL
+     C                     END
+     C                     ADD  1         WWRRN
+     C                     WRITEPM0080S1
+     C                     ADD  1         RRN2
+     C                     ADD  1         WWZONE
+     C                     END
+     C           PMFILK    READEPMPGDDXX                 71
+     C*
+     C                     ELSE
+     C                     MOVE *BLANK    DDFLAG
+     C                     MOVE *BLANKS   DDLIND
+     C                     MOVE *BLANKS   DDDTTK
+     C                     MOVE *BLANKS   DDLIDN
+     C                     MOVE *BLANKS   DDDTTL
+     C                     ADD  1         WWRRN
+     C                     WRITEPM0080S1
+     C                     ADD  1         RRN2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SAVE SUBFILE RECORD NUMBER
+     C*
+     C                     Z-ADDRRN2      WWSAVR
+     C*
+     C** IF NOT EOF POSITION '+' AT END OF SUBFILE PAGE
+     C*
+     C           *IN71     IFEQ '0'
+     C                     MOVE '0'       *IN56
+     C**********           MOVE PMLIND    WWLIND                                              CER020
+     C                     MOVE PMLOIC    WWLOIC                                              CER020
+     C           PMSUBK    SETLLPMPGDDXX
+     C                     ELSE
+     C                     MOVE '1'       *IN56
+     C                     END
+     C*
+     C** ON INSERT OR AMEND '+' SHOULD ALWAYS BE OUTPUT
+     C           DDACTN    IFEQ 'I'
+     C           DDACTN    OREQ 'A'
+     C                     MOVE '0'       *IN56
+     C                     END
+     C*
+     C                     ENDSR                           ** #ZBAD ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBADA S/R TO CHAIN TO THE INDUSTRY CODES TABLE FILE
+      ** CALLED FROM #ZBAD, #CC
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #ZBADA    BEGSR                           ** #ZBADA BSR**
+     C*
+     C                     MOVE '0'       *IN84
+     C*
+     C           DDLIND    IFNE '   '                      - B1
+     C*
+     C***********DDLIND    IFGE '000'                      - B2           S01486
+     C***********DDLIND    ANDLE'999'                                     S01486
+     C                     MOVELDDLIND    WWINRY                          S01486
+     C                     CALL 'AOINDSR0'                                S01486
+     C***********          PARM '*MSG    'WWRTCD  7                S01486 080199
+     C                     PARM '       ' WWRTCD  7                       080199
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM DDLIND    WWKEY   3                       S01486
+     C           SDINDS    PARM SDINDS    DSFDY                           S01486
+     C***********DDLIND    CHAINSDINDSL1             84                   S01486
+     C           WWRTCD    IFEQ *BLANKS                                   S01486
+     C                     MOVELAOLICD    DDLIND                          S01486
+     C                     MOVELAOLINA    DDLIDN                          S01486
+     C                     ELSE                            - X2           S01486
+     C                     MOVE '1'       *IN84
+     C                     END                             - E2           S01486
+     C***********          END                             - E2           S01486
+     C                     END                             - E1
+     C*
+     C** IF RECORD NOT FOUND CLEAR OUT LOCAL INDUSTRY NARRATIVE
+     C           *IN84     IFEQ '1'
+     C           DDLIND    OREQ '   '
+     C                     MOVE *BLANKS   DDLIDN
+     C*                                                                   S01486
+     C                     END
+     C**                                                                  S01486
+     C** ENSURE SCREEN IS REDISPLAYED IF ? USED                           S01486
+     C**                                                                  S01486
+     C           WWINR1    IFEQ '?'                                       S01486
+     C           WWINR2    OREQ '?'                                       S01486
+     C           WWINR3    OREQ '?'                                       S01486
+     C                     MOVE '1'       *IN80                           S01486
+     C                     END                                            S01486
+     C                     ENDSR                           ** #ZBADA ESR**
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #BB S/R TO PROCESS SUBFILE SELECTION SCREEN
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: #ZBAA, #ZBAB, #ZBAC, #ZBAD
+      **        - Y2CLMSC - Clear program message queue                   R00300
+     C*===================================================================
+     C*
+     C           #BB       BEGSR                           ** #BB BSR **
+     C*
+     C                     MOVE '0'       *IN11
+     C                     MOVE '1'       *IN82
+     C*
+     C** SET PROCESSING FLAG TO FORCE SUBFILE REBUILD
+     C*
+     C                     MOVEL'RA'      WWAID   2
+     C                     MOVEL*BLANK    DDLINN
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N
+     C*
+     C           WWAID     DOUEQ'03'
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** R E B U I L D   S U B F I L E
+     C*
+     C           WWAID     IFEQ 'DN'
+     C           WWAID     OREQ 'UP'
+     C           WWAID     OREQ 'RA'
+     C*
+     C** WRITE CONTROL RECORD
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     Z-ADD*ZERO     RRN     40
+     C                     WRITEPM0080C0
+     C                     MOVE '1'       *IN53
+     C*
+     C** SET FILE POINTER - PAGE BACK
+     C*
+     C           WWAID     IFEQ 'DN'
+     C                     MOVEL*BLANK    DDLING
+     C                     MOVEL*BLANK    WWPAG2
+     C           PMFILK    SETLLPMPGHDPX
+     C*
+     C** OTHERWISE        - PAGE FORWARD
+     C*
+     C                     ELSE
+     C           *IN80     IFEQ '0'
+     C                     MOVELDDPKEY    DDLING
+     C                     MOVELDDPKEY    WWPAG2
+     C                     ELSE
+     C                     MOVELWWPAG2    DDLING
+     C                     END
+     C           PMFILK    SETLLPMPGHDPX
+     C                     END
+     C*
+     C** READ IN DETAILS-FILL UP SUBFILE
+     C*
+     C           RRN       DOUEQ13
+     C           *IN70     OREQ '1'
+     C*
+     C                     MOVE *BLANK    DDACTN
+     C                     MOVE '0'       *IN34
+     C*
+     C** READ DETAILS UNTIL SUBFILE PAGE IS FULL
+     C*
+     C                     READ PMPGHDPX                 70
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C** IF RECORD IS DELETED, FLAG IT AS SO ON SCREEN
+     C*
+     C           PLRECI    IFEQ '*'
+     C                     MOVEL'D'       DDSTAT  1
+     C                     ELSE
+     C                     MOVEL*BLANK    DDSTAT
+     C                     END
+     C*
+     C                     MOVE PLLING    DDLING
+     C                     MOVE PLLINN    DDLINN
+     C                     ADD  1         RRN            53
+     C*
+     C           RRN       IFEQ WWSAV
+     C                     MOVE WWACTN    DDACTN
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C                     WRITEPM0080S0
+     C*
+     C** RECORD NOW WRITTEN TO SUBFILE
+     C*
+     C                     END
+     C*
+     C** PAGE NOW FULL (OR EOF)
+     C*
+     C                     END
+     C*
+     C** READ ONE MORE RECORD FOR NEXT SCREEN
+     C*
+     C           *IN70     IFEQ '0'
+     C                     READ PMPGHDPX                 70
+     C                     END
+     C*
+     C** IF NOT EOF SET NEXT 'REVIEW FROM' KEY ELSE SET IT TO BLANK
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVELPLLING    DDPKEY
+     C                     MOVE '0'       *IN52
+     C                     ELSE
+     C                     MOVEL*BLANK    DDPKEY
+     C                     MOVE '1'       *IN52
+     C                     END
+     C*
+     C** FOR SUBFILE CONTROL
+     C*
+     C           *IN53     IFEQ '1'
+     C                     MOVE '0'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     ELSE
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C                     END
+     C*
+     C** R E V I E W   S C R E E N     O U T P U T
+     C*
+     C                     MOVEL'PM90002' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    DDINFO
+     C                     WRITEPM0080F2
+     C                     EXFMTPM0080C0
+     C                     MOVE '0'       *IN80
+     C                     Z-ADD0         WWSAV
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C** Call S/R to move values into WWAID
+     C*
+     C                     EXSR #ZBAA
+     C*
+     C** CK12- INITIAL SCREEN
+     C*
+     C           WWAID     IFEQ '12'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C** ENTER PRESSED, PROCESS RECORD SELECTION
+     C*
+     C           WWAID     IFEQ 'RA'
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN53     IFEQ '0'
+     C                     READCPM0080S0                 86
+     C                     END
+     C*
+     C** R E C O R D   S E L E C T   V A L I D A T I O N
+     C*
+     C           *IN86     IFEQ '0'
+     C                     EXSR #ZBAB
+     C*
+     C** NO ERRORS, UPDATE SCREEN CAN BE PROCESSED NEXT
+     C*
+     C           *IN80     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     MOVEL'Y'       WWREVW
+     C                     MOVELDDPKEY    WWPAG1
+     C                     MOVEL*BLANKS   DDPKEY
+     C**********           MOVE *LOVAL    WWLIND                                              CER020
+     C                     MOVE *LOVAL    WWLOIC                                              CER020
+     C                     EXSR #ZBAC
+     C           PMSUBK    SETLLPMPGDDXX
+     C                     EXSR #ZBAD
+     C                     ELSE
+     C                     Z-ADDRRN       WWSAV   40
+     C                     MOVE DDACTN    WWACTN  1
+     C                     END
+     C**
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTREVI    ENDSR                           ** #BB ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #C S/R TO PROCESS DETAIL SCREEN AND UPDATE FILES
+      ** CALLED FROM MAIN PROCESSING
+      ** CALLS: #CA, #CB, #ZBAA, #ZBAD, #CC, #CD
+      **        - Y2CLMSC - Clear program message queue                   R00300
+     C*===================================================================
+     C*
+     C           #C        BEGSR                           ** #C BSR **
+     C*
+     C** SET SCREEN INDICATORS - PROTECT KEY, SET OFF ERROR INDS,
+     C** POSITION CURSOR
+     C*
+     C                     MOVE '1'       *IN33
+     C                     MOVE '0'       *IN12
+     C                     MOVE '1'       *IN40
+     C                     MOVE '0'       *IN38
+     C*
+     C** ACCESS FILE RECORD FOR OLD TNLU TO CHECK AT UPDATE TIME
+     C** IF NO RECORD PRESENTLY ON FILE, ZEROISE STORED TNLU
+     C*
+     C                     Z-ADD*ZERO     WWTNLU  50
+     C           PMFILK    CHAINPMPGHDPX             73
+     C*
+     C           *IN73     IFEQ '0'
+     C           *IN87     ANDEQ'0'
+     C                     Z-ADDPLTNLU    WWTNLU
+     C                     END
+     C*
+     C** IF INSERT (NEW OR OVER DELETED RECORD)
+     C** INITIALIZE ALL FIELDS ON THE RECORD (I.E. ZEROIZE/BLANK OUT)
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     EXSR #CA
+     C                     END
+     C*
+     C** IF DELETED RECORD-ENQUIRY ONLY (RECI IS SET TO BLANK FOR INSERTS)
+     C*
+     C           PLRECI    IFEQ '*'
+     C                     MOVEL'DELETED' DDDELT  7
+     C                     ELSE
+     C                     MOVEL*BLANK    DDDELT
+     C                     END
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C                     EXSR #CB
+     C*
+     C** IF DELETE/ENQUIRY PROTECT FIELD INPUT ON S/PM0080F0
+     C*
+     C           DDACTN    IFEQ 'D'
+     C           DDACTN    OREQ 'E'
+     C                     MOVE '1'       *IN39
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N
+     C*
+     C           WWAID     DOUEQ'03'
+     C           *IN10     OREQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C*
+     C** L O A D    U  P    I N F O M E S S A G E S
+     C*
+     C           DDACTN    IFNE 'D'
+     C                     MOVEL'PM90003' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    DDINFO
+     C                     ELSE
+     C                     MOVEL'PM90004' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    DDINFO
+     C                     END
+     C**
+     C** IF DELETE ENQUIRY PROTECT FIELD INPUT ON PM0080C1
+     C**
+     C*
+     C** D E T A I L   S C R E E N     O U T P U T
+     C*
+     C                     WRITEPM0080F2
+     C                     WRITEPM0080F1
+     C**
+     C** RESTORE SUBFILE CHANGES IF ERROR
+     C**
+     C           *IN80     IFEQ '1'
+     C                     MOVE '0'       *IN70
+     C                     END
+     C**
+     C                     EXFMTPM0080C1
+     C                     MOVE '0'       *IN80
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C*
+     C** Call S/R to move values into WWAID
+     C*
+     C                     EXSR #ZBAA
+     C*
+     C** CK12- INITIAL SCREEN
+     C*
+     C           WWAID     IFEQ '12'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C** ROLL UP
+     C*
+     C           WWAID     IFEQ 'UP'
+     C                     EXSR #ZBAD
+     C                     END
+     C*
+     C** V A L I D A T E   D E T A I L   S C R E E N   I N P U T
+     C*
+     C           WWAID     IFNE '03'
+     C           WWAID     ANDNE'12'
+     C           WWAID     ANDNE'UP'
+     C                     EXSR #CC
+     C*
+     C** N O    D E T A I L   S C R E E N    E R R O R S
+     C*
+     C           *IN80     IFEQ '0'
+     C           WWAID     ANDEQ'RA'
+     C*
+     C** DETERMINE WHAT SCREEN TO RETURN TO
+     C*
+     C           WWREVW    IFEQ 'Y'
+     C                     MOVELWWPAG2    DDPKEY
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C**     U  P  D  A  T  E      F  I  L  E  S
+     C*
+     C           DDACTN    IFEQ 'I'
+     C           DDACTN    OREQ 'A'
+     C           DDACTN    OREQ 'D'
+     C                     EXSR #CD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** RESET PROTECT/NON-DISPLAY INDS
+     C*
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN39
+     C*
+     C           XTUPDT    ENDSR                           ** #C ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CA S/R TO INITIALISE ALL FILE FIELDS TO ZERO/BLANK
+      ** CALLED FROM #C
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #CA       BEGSR                           ** #CA BSR **
+     C*
+     C** INITIALIZE ALL DATA ON RECORD DEFINED IN DETREC (KEY EXCLUDED)
+     C*
+     C                     MOVEL*BLANK    DETREC
+     C                     Z-ADD*ZERO     PLLCD
+     C                     Z-ADD*ZERO     PLTNLU
+     C                     MOVE *BLANKS   WWHLUP
+     C*
+     C                     ENDSR                           ** #CA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CB S/R TO FORMAT RECORD FIELDS FOR SCREEN
+      ** CALLED FROM #C
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #CB       BEGSR                           ** #CB BSR **
+     C*
+     C** TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
+     C*
+     C** TRANSLATE DDLINN
+     C*
+     C                     MOVELPLLINN    DDLINN
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CC S/R - TO VALIDATE DETAIL SCREEN
+      ** CALLED FROM #C
+      ** CALLS: #ZBADA, #CCA
+      **        - ZASNMS - Send message to program message queue          R00300
+     C*===================================================================
+     C*
+     C           #CC       BEGSR                           ** #CC BSR **
+     C*
+     C** RESET SCREEN ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN38
+     C                     MOVE '0'       *IN87
+     C*
+     C** ENTER KEY PRESSSED
+     C*
+     C           WWAID     IFEQ 'RA'                       - B1
+     C*
+     C** IF ACTION = D WITH ENTER PRESSED THEN ERROR
+     C*
+     C           DDACTN    IFEQ 'D'                        - B2
+     C                     MOVE '1'       *IN80
+     C*********************MOVEL'PM08300' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08300' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     END                             - E2
+     C*
+     C** ACTION = I OR A
+     C*
+     C           DDACTN    IFEQ 'I'                        - B2
+     C           DDACTN    OREQ 'A'
+     C*
+     C** VALIDATION OF FIELDS FOR INSERT/AMEND
+     C*
+     C** CHECK THAT DDLINN IS VALID
+     C*
+     C           DDLINN    IFEQ *BLANK                     - B3
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN38
+     C*********************MOVEL'PM08200' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08200' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     MOVE '0'       *IN81
+     C*
+     C** CHECK IF ENTRIES OF SUBFILE VALID
+     C*
+     C           *IN70     DOWEQ'0'                        - B2
+     C           DDACTN    ANDNE'D'
+     C           DDACTN    ANDNE'E'
+     C                     READCPM0080S1                 70
+     C*
+     C           *IN70     IFEQ '0'                        - B3
+     C*
+     C                     EXSR #ZBADA
+     C           *IN84     IFNE '0'                        - B4
+     C*********************MOVEL'PM08202' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08202' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN80
+     C                     Z-ADDRRN2      SFLRRN
+     C                     MOVEL*BLANK    DDLIDN
+     C*
+     C                     ELSE                            - X4
+     C                     MOVE '0'       *IN35
+     C           DDLIND    IFNE *BLANKS                    - B5
+     C*********************MOVELAOLICD    DDLIDN                          B7656
+     C                     MOVELAOLINA    DDLIDN                          B7656
+     C                     END                             - E5
+     C*
+     C** CHECK IF AT LEAST ONE RECORD IS FILLED
+     C*
+     C           DDLIND    IFNE '   '                      - B5
+     C                     MOVE '1'       *IN81
+     C                     END                             - E5
+     C*
+     C** IN AMEND MODE CHECK IF NEW DETAILS ENTERED
+     C** AND INCREMENT RECORD COUNTER
+     C*
+     C                     EXSR #CCA
+     C*
+     C                     END                             - E4
+     C                     MOVE '1'       *IN54
+     C           DDLIND    IFNE *BLANKS
+     C           DDACTN    ANDEQ'I'
+     C                     MOVE DDLIND    DDDTTK
+     C                     END                             - E4
+     C                     UPDATPM0080S1
+     C                     ELSE                            - X3
+     C*
+     C** CHECK IF DETAILS ENTERED
+     C** FIRST RECORD MUST BE FILLED (*IN81 ON IF OK)
+     C*
+     C           *IN81     IFNE '1'                        - B4
+     C           DDACTN    IFEQ 'I'                        - B5
+     C           DDACTN    OREQ 'A'
+     C           WWZONE    ANDLE0
+     C           1         CHAINPM0080S1             73
+     C                     MOVE '1'       *IN54
+     C                     MOVE '1'       *IN35
+     C                     MOVE *BLANKS   DDLIDN
+     C                     MOVE *BLANKS   DDDTTL
+     C           WWZONE    IFLE 0                          - B6
+     C                     Z-ADD1         WWZONE
+     C                     END                             - E6
+     C                     UPDATPM0080S1
+     C*********************MOVEL'PM08201' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08201' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD1         SFLRRN
+     C                     END                             - E5
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** ENTER KEY NOT PRESSSED
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** COMMAND 10 TAKEN CORRECTLY WHEN ACTION IS D-FORCE 'RECORD ADVANCE'
+     C** OTHERWISE,COMMAND 10 TAKEN INCORRECTLY WHEN ACTION IS NOT D - ERROR
+     C*
+     C           WWAID     IFEQ '10'                       - B2
+     C*
+     C           DDACTN    IFEQ 'D'                        - B3
+     C                     MOVEL'RA'      WWAID
+     C                     ELSE                            - X3
+     C                     MOVE '1'       *IN80
+     C*********************MOVEL'PM08301' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08301' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           ** #CC ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CCA S/R TO COUNT RECORDS IN AMEND MODE
+      ** CALLED BY #CC
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #CCA      BEGSR                           ** #CCA BSR **
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           DDDTTK    IFEQ ' '
+     C           DDLIND    ANDNE' '
+     C*
+     C                     ADD  1         WWZONE
+     C*
+     C                     END
+     C*
+     C           DDDTTK    IFNE ' '
+     C           DDLIND    ANDEQ' '
+     C*
+     C                     SUB  1         WWZONE
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #CCA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CD S/R TO UPDATE FILE RECORDS
+      ** CALLED FROM #C
+      ** CALLS: #CDA, #CDB, *PSSR, #CDC
+      **
+     C*===================================================================
+     C*
+     C           #CD       BEGSR                           ** #CD BSR **
+     C*
+     C** U P D A T E   F I L E S
+     C*
+     C** RETRIEVE NEXT TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C**               I  N  S  E  R  T  S
+     C*
+     C           DDACTN    IFEQ 'I'                        - B1
+     C           PMFILK    CHAINPMPGHDP0             83
+     C*
+     C** RECORD UPDATED BY ANOTHER WORKSTATION
+     C*
+     C           *IN83     IFEQ '0'                        - B2
+     C           PLTNLU    IFNE WWTNLU                     - B3
+     C                     EXSR #CDB
+     C                     GOTO XTUPDF
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C                     MOVEL'D'       PLRECI
+     C                     MOVELDDLING    PLLING
+     C                     MOVELDDLINN    PLLINN
+     C                     Z-ADDBJRDNB    PLLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PLDLUP
+     C                     MOVE WWMLUP    PLMLUP
+     C                     Z-ADDWWYLUP    PLYLUP
+     C                     TIME           PLTLUP
+     C                     MOVEL'I'       PLCHTP
+     C                     MOVELNATN      PLTNLU
+     C           *IN83     IFEQ '1'                        - B3
+     C                     WRITEPMPGHDP0               85
+     C                     END                             - E3
+     C*
+     C** TEST FOR UPDATE BY ANOTHER W/S, OR A TERMINAL ERROR
+     C*
+     C           *IN85     IFEQ '1'                        - B3
+     C           STATUS    ANDEQ01021
+     C           PMFILK    CHAINPMPGHDPX             85
+     C*
+     C           *IN85     IFEQ '0'                        - B4
+     C                     EXSR #CDB
+     C                     GOTO XTUPDF
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C           *IN85     IFEQ '1'                        - B3
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*
+     C           *IN83     IFEQ '0'                        - B3
+     C                     UPDATPMPGHDP0
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C**               A  M  E  N  D  S
+     C*
+     C           DDACTN    IFEQ 'A'
+     C           PMFILK    CHAINPMPGHDP0             83
+     C*
+     C** RECORD UPDATED BY ANOTHER WORKSTATION
+     C*
+     C           PLTNLU    IFNE WWTNLU
+     C                     EXSR #CDB
+     C                     GOTO XTUPDF
+     C                     END
+     C*
+     C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
+     C*
+     C                     MOVELDDLINN    PLLINN
+     C           BJRDNB    IFNE PLLCD
+     C                     MOVEL'A'       PLCHTP
+     C                     END
+     C                     Z-ADDBJRDNB    PLLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PLDLUP
+     C                     MOVE WWMLUP    PLMLUP
+     C                     Z-ADDWWYLUP    PLYLUP
+     C                     TIME           PLTLUP
+     C                     MOVELNATN      PLTNLU
+     C           *IN83     IFEQ '0'
+     C                     UPDATPMPGHDP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C**               D  E  L  E  T  E  S
+     C*
+     C           DDACTN    IFEQ 'D'
+     C           PMFILK    CHAINPMPGHDP0             83
+     C*
+     C** RECORD UPDATED BY ANOTHER WORKSTATION
+     C*
+     C           PLTNLU    IFNE WWTNLU
+     C                     EXSR #CDB
+     C                     GOTO XTUPDF
+     C                     END
+     C*
+     C                     MOVEL'*'       PLRECI
+     C                     Z-ADDBJRDNB    PLLCD
+     C                     MOVELBJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PLDLUP
+     C                     MOVELWWMLUP    PLMLUP
+     C                     Z-ADDWWYLUP    PLYLUP
+     C                     TIME           PLTLUP
+     C                     MOVEL'D'       PLCHTP
+     C                     MOVELNATN      PLTNLU
+     C           *IN83     IFEQ '0'
+     C                     UPDATPMPGHDP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PROCESS DETAILS FILE
+     C*
+     C                     EXSR #CDC
+     C*
+     C** GET AUDIT RECORD
+     C*
+     C***********1         CHAINPMPGHDZZ             73                   S01486
+     C           1         CHAINPMPGHDPA             73                   S01486
+     C*
+     C** UPDATE AUDIT RECORD IF FOUND
+     C*
+     C           *IN73     IFEQ '0'
+     C*
+     C** FOR INSERT, UPDATE NO. OF LIVE RECORDS
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     ADD  1         PLNORE
+     C                     END
+     C*
+     C** FOR DELETIONS, UPDATE NO. OF LIVE RECS
+     C*
+     C           DDACTN    IFEQ 'D'
+     C                     SUB  1         PLNORE
+     C                     END
+     C*
+     C** FORMAT COMIT TEXT
+     C*
+     C                     TIME           MTIME
+     C                     MOVELDDACTN    ACTNX
+     C*
+     C** UPDATE AUDIT RECORD
+     C*
+     C                     UPDATPMPGHDZ0
+     C*
+     C** C  O  M  I  T
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C** AUDIT RECORD NOT FOUND: DATABASE ERROR
+     C*
+     C                     ELSE
+     C*
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            ***************
+     C***********          MOVEL'PMPGHDZZ'DBFILE           **DB ERROR 02**S01486
+     C                     MOVEL'PMPGHDPA'DBFILE           **DB ERROR 02**S01486
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           XTUPDF    ENDSR                           ** #CD ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CDA S/R - TO LOCK THE TRANSACTION NUMBER DATA AREA
+      ** ACCESS THE NEXT AVAILABLE TRANSACTION NUMBER,
+      ** THEN UPDATE AND RELEASE THE DATA AREA.
+      ** CALLED FROM #CD
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           ZTNLU1    BEGSR                           ** #CDA ESR ##
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR                           ** #CDA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CDB S/R TO PROCESS UPDATE BY ANOTHER WORKSTATION
+      ** CALLED FROM #CD
+      ** CALLS   - ZASNMS - Send message to program message queue         R00300
+      **
+     C*===================================================================
+     C*
+     C           #CDB      BEGSR                           ** #CDB BSR **
+     C*
+     C                     ROLBK
+     C                     MOVE '1'       *IN10
+     C                     MOVE '0'       *IN11
+     C                     MOVE '0'       *IN12
+     C                     MOVE '1'       *IN87
+     C                     MOVE '1'       *IN80
+     C*********************MOVEL'PM08302' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM08302' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C*
+     C                     ENDSR                           ** #CDB ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CDC S/R TO SAVE DETAILS ENTERED
+      ** CALLED BY #CD
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #CDC      BEGSR                           ** #CDC BSR **
+     C*
+     C           DDACTN    IFEQ 'I'
+     C                     READCPM0080S1                 71
+     C*
+     C           *IN71     DOWEQ'0'
+     C*
+     C           DDLIND    IFNE ' '
+     C                     EXSR #CDCA
+     C                     MOVE 'D'       PMRECI
+     C                     MOVELDDLING    PMLING
+     C**********           MOVELDDLIND    PMLIND                                              CER020
+     C                     MOVELDDLIND    PMLOIC                                              CER020
+     C                     Z-ADDBJRDNB    PMLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PMDLUP
+     C                     MOVE WWMLUP    PMMLUP
+     C                     Z-ADDWWYLUP    PMYLUP
+     C                     TIME           PMTLUP
+     C                     MOVELNATN      PMTNLU
+     C                     MOVEL'I'       PMCHTP
+     C*
+     C           *IN70     IFEQ '0'
+     C                     UPDATPMPGDDP0
+     C                     ELSE
+     C                     WRITEPMPGDDP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READCPM0080S1                 71
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF NEW KEY INSERTED WAS A DELETED ONE
+     C** DELETE ALL DETAILS RECORDS WITH '*' RECORD-ID
+     C*
+     C**********           MOVE *LOVAL    WWLIND                                              CER020
+     C                     MOVE *LOVAL    WWLOIC                                              CER020
+     C                     MOVE '0'       *IN70
+     C***********PMSUBK    SETLLPMPGDDPP                                  S01486
+     C           PMSUBK    SETLLPMPGDDPD                                  S01486
+     C*
+     C           *IN70     DOWEQ'0'
+     C***********PMFILK    READEPMPGDDPP                 70               S01486
+     C           PMFILK    READEPMPGDDPD                 70               S01486
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C           PMRECI    IFEQ '*'
+     C                     DELETPMPGDDP0
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C                     END
+     C*
+     C** AMEND
+     C*
+     C           DDACTN    IFEQ 'A'
+     C                     MOVE DDLING    PMLING
+     C                     READCPM0080S1                 71
+     C*
+     C           *IN71     DOWEQ'0'
+     C*
+     C           DDDTTK    IFNE ' '
+     C**********           MOVELDDDTTK    WWLIND                                              CER020
+     C                     MOVELDDDTTK    WWLOIC                                              CER020
+     C                     ELSE
+     C**********           MOVE DDLIND    WWLIND                                              CER020
+     C                     MOVE DDLIND    WWLOIC                                              CER020
+     C                     END
+     C*
+     C********** PMSUBK    CHAINPMPGDDPP             70                   S01486
+     C           PMSUBK    CHAINPMPGDDPD             70                   S01486
+     C*
+     C           *IN70     IFEQ '0'
+     C*
+     C           DDLIND    IFEQ ' '
+     C                     DELETPMPGDDP0
+     C                     ELSE
+     C*
+     C           BJRDNB    IFNE PMLCD
+     C                     MOVE 'A'       PMCHTP
+     C                     END
+     C*
+     C**********           MOVE DDLIND    PMLIND                                              CER020
+     C                     MOVE DDLIND    PMLOIC                                              CER020
+     C                     Z-ADDBJRDNB    PMLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PMDLUP
+     C                     MOVE WWMLUP    PMMLUP
+     C                     Z-ADDWWYLUP    PMYLUP
+     C                     TIME           PMTLUP
+     C                     MOVELNATN      PMTNLU
+     C                     UPDATPMPGDDP0
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           DDLIND    IFNE ' '
+     C                     MOVE 'D'       PMRECI
+     C                     MOVE 'I'       PMCHTP
+     C                     Z-ADDBJRDNB    PMLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PMDLUP
+     C                     MOVE WWMLUP    PMMLUP
+     C                     Z-ADDWWYLUP    PMYLUP
+     C                     TIME           PMTLUP
+     C                     MOVELNATN      PMTNLU
+     C**********           MOVE DDLIND    PMLIND                                              CER020
+     C                     MOVE DDLIND    PMLOIC                                              CER020
+     C                     WRITEPMPGDDP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READCPM0080S1                 71
+     C                     END
+     C*
+     C                     END
+     C*
+     C** DELETE DETAILS FILE
+     C*
+     C           DDACTN    IFEQ 'D'
+     C                     MOVEL*BLANKS   PMLING
+     C**********           MOVEL*BLANKS   PMLIND                                              CER020
+     C                     MOVEL*BLANKS   PMLOIC                                              CER020
+     C                     MOVE '0'       *IN72
+     C***********PMSUBK    SETLLPMPGDDPP                                  S01486
+     C           PMSUBK    SETLLPMPGDDPD                                  S01486
+     C*
+     C           *IN72     DOWEQ'0'
+     C***********PMFILK    READEPMPGDDPP                 72               S01486
+     C           PMFILK    READEPMPGDDPD                 72               S01486
+     C*
+     C           *IN72     IFEQ '0'
+     C                     MOVE '*'       PMRECI
+     C                     MOVE 'D'       PMCHTP
+     C                     Z-ADDBJRDNB    PMLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PMDLUP
+     C                     MOVE WWMLUP    PMMLUP
+     C                     Z-ADDWWYLUP    PMYLUP
+     C                     TIME           PMTLUP
+     C                     MOVELNATN      PMTNLU
+     C                     UPDATPMPGDDP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #CDC ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #CDCA S/R TO INITIALIZE RECORD ON DETAIL FILE TO OVERWRITE
+      ** CALLED FROM #CDC
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #CDCA     BEGSR                           ** #CDCA BSR **
+     C*
+     C**********           MOVELDDLIND    WWLIND                                              CER020
+     C                     MOVELDDLIND    WWLOIC                                              CER020
+     C***********PMSUBK    CHAINPMPGDDPP             70                   S01486
+     C           PMSUBK    CHAINPMPGDDPD             70                   S01486
+     C*
+     C** IF RECORD IS FOUND INITIALIZE IT TO OVERWRITE
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVE *BLANKS   PMRECI
+     C**********           MOVE *BLANKS   PMLIND                                              CER020
+     C                     MOVE *BLANKS   PMLOIC                                              CER020
+     C                     MOVE *BLANKS   PMLING
+     C                     Z-ADD0         PMDLUP
+     C                     MOVE *BLANKS   PMMLUP
+     C                     Z-ADD0         PMYLUP
+     C                     MOVE *BLANKS   PMCHTP
+     C                     Z-ADD0         PMLCD
+     C                     Z-ADD0         PMTNLU
+     C                     END
+     C*
+     C                     ENDSR                           ** #CDCA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*****************************************************************   R00300
+     C*                                                               *   R00300
+     C* ZASNMS    - Send message to program message queue             *   R00300
+     C*                                                               *   R00300
+     C* CALLS     - Y2SNMGC                                           *   R00300
+     C*                                                               *   R00300
+     C* CALLED BY - #ZBAB - Validate key fields                       *   R00300
+     C*           - #CC   - Validate detail screen                    *   R00300
+     C*           - #CDB  - Process update by another workstation     *   R00300
+     C*                                                               *   R00300
+     C*****************************************************************   R00300
+     C           ZASNMS    BEGSR                                          R00300
+     C*                                                                   R00300
+     C                     CALL 'Y2SNMGC'                                 R00300
+     C                     PARM           ZAPGM            Program queue  R00300
+     C                     PARM           ZAPGRL           Rel queue      R00300
+     C                     PARM           ZAMSID           Message Id.    R00300
+     C                     PARM           ZAMSGF           Message file.  R00300
+     C                     PARM           ZAMSDA           Message data.  R00300
+     C                     PARM           ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C** Clear all fields for default mechanism next time.                R00300
+     C                     MOVEL*BLANK    ZAPGM            Message queue  R00300
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C           ZASNM9    ENDSR                           ZASNM9 TAG     R00300
+     C*                                                                   R00300
+      /EJECT                                                              R00300
+     C*===================================================================
+      **
+      ** *PSSR S/R TO HANDLE FILE EXEPTION/ERROR
+      ** CALLED FROM #A, #CD
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR BSR **
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C** ROLL BACK CHANGES
+     C*
+     C                     ROLBK
+     C*
+     C                     DUMP
+     C                     CALL 'DBERRCTL'                                S01486
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           ** *PSSR ESR **
+     C*
+     C*===================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

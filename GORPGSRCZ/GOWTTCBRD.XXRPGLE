@@ -1,0 +1,304 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOWTTCBRD - Write to GPETRAPPD Consumer banking Deals Details*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG14101           Date 19Jun07               *
+      *                 CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  BUG14101 - Background job EQ_ONL_SYN is generated errors     *
+      *             and looping (Recompile)                           *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    XX    - Function of Indicator                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR          -  Program exception error routine            *
+      *  *INZSR         -  Initialisation Subroutine                  *
+      *  TRAP_DEALEQ    - Universal Transaction Updates - Account     *
+      *  SET_TRAPCBRD   - Setup Transaction Index Record For Equation *
+      *                   Deposit Details                             *
+      *  SET_TRAPCBRL   - Setup Transaction Index Record For Equation *
+      *                   Loan Details                                *
+      *  RTV_DEALTYP    - Retrieve Deal Type                          *
+      *  WRITE_TRAP     - Write Transaction Index Record              *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+      **Customer Banking Deals file
+     FGPETRAPPD UF   E           K DISK    INFSR(*PSSR)
+      **Terms Deals Detail file
+     FOT10LF    IF   E           K DISK    INFSR(*PSSR)
+      **
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+ 
+      ** T R A N S A C T I O N    D E T A I L S
+     D T_TRAP        E DS                  EXTNAME(GPETRAPPD)
+ 
+ 
+     D DEALEQ        E DS                  EXTNAME(OSPF)
+ 
+ 
+      *Define Work Variables
+     D W_OTTDT         S              1
+     D W_OTCCY         S              3
+     D W_OTSDTE        S              7  0
+     D W_OTMDT         S              7  0
+ 
+     D I#RTCD          S              7
+     D I#ERMS          S             50
+     D I#BIMG          S           4000
+     D I#AIMG          S           4000
+     D W#RTCD          S              7
+     D W#ERMS          S             50
+     D T_PRRN          S              5  0
+     D I#LOC           S              4
+     D I#CUSTDEFLT     S              1
+      **
+ 
+      * ENTRY PARAMETERS
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+     C                   PARM                    I#BIMG
+     C                   PARM                    I#AIMG
+      *
+      ** Universal Transaction Updates
+      *
+     C                   EXSR      TRAP_DEALEQ
+ 
+     C                   RETURN
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  TRAP_DEALEQ - Universal Transaction Updates - Account        *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     RTV_DEALTYP, WRITE_TRAP, SET_TRAPCBRD,            *
+      *             SET_TRAPCBRL                                      *
+      *****************************************************************
+     C     TRAP_DEALEQ   BEGSR
+ 
+     C                   MOVEL     I#AIMG        DEALEQ
+      *
+      ** Subroutine to Retrive Deal Type (OTTDT) from OTPF file
+      ** New subroutine is being added,
+      *
+     C                   EXSR      RTV_DEALTYP
+      *
+      ** Setup transaction index record
+      *
+     C                   IF          W_OTTDT <> *BLANK AND
+     C                              (W_OTTDT = 'D' OR
+     C                               W_OTTDT = 'L')
+      *
+     C                   IF        W_OTTDT = 'D'
+     C                   EXSR      SET_TRAPCBRD
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SET_TRAPCBRL
+     C                   ENDIF
+      *
+     C                   ELSE
+      *
+     C                   RETURN
+      *
+     C                   ENDIF
+      *
+      ** Write transaction index record
+      *
+     C     W#RTCD        IFNE      '*NOEXT*'
+     C                   EXSR      WRITE_TRAP
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  SET_TRAPCBRD - SETUP TRANSACTION INDEX RECORD FOR EQUATION   *
+      *                 DEPOSIT DETAILS                               *
+      *                                                               *
+      *  Called By: TRAP_DEALEQ                                       *
+      *                                                               *
+      *  Calls:     GOSETCBRD, *PSSR                                  *
+      *****************************************************************
+     C     SET_TRAPCBRD  BEGSR
+ 
+     C                   CALL      'GOSETCBRD'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    DEALEQ
+     C                   PARM                    W_OTCCY
+     C                   PARM                    W_OTSDTE
+     C                   PARM                    W_OTMDT
+      *
+      ** Outputs
+      *
+     C                   PARM                    T_TRAP
+     C                   PARM      *ZERO         T_PRRN
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETCBRD'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  SET_TRAPCBRL - SETUP TRANSACTION INDEX RECORD FOR EQUATION   *
+      *                 LOAN DETAILS                                  *
+      *                                                               *
+      *  Called By: TRAP_DEALEQ                                       *
+      *                                                               *
+      *  Calls:     GOSETCBRL, *PSSR                                  *
+      *****************************************************************
+     C     SET_TRAPCBRL  BEGSR
+ 
+     C                   CALL      'GOSETCBRL'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    DEALEQ
+     C                   PARM                    W_OTCCY
+     C                   PARM                    W_OTSDTE
+     C                   PARM                    W_OTMDT
+      *
+      ** Outputs
+      *
+     C                   PARM                    T_TRAP
+     C                   PARM      *ZERO         T_PRRN
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETCBRL'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  WRITE_TRAP - WRITE TRANSACTION INDEX RECORD                  *
+      *                                                               *
+      *  Called By: TRAP_DEALEQ                                       *
+      *                                                               *
+      *  Calls:     GOWRTTRAPE, *PSSR                                 *
+      *****************************************************************
+     C     WRITE_TRAP    BEGSR
+      *
+      ** Commitment Cycle ID
+      *
+     C                   Z-ADD     0             T_CCID
+     C                   MOVEL     'GLOB'        I#LOC
+     C                   MOVEL     'Y'           I#CUSTDEFLT
+      *
+      ** Write Transaction index Record,
+      *
+     C                   CALL      'GOWRTTRAPE'
+     C                   PARM      *BLANKS       W#RTCD
+     C                   PARM      *BLANKS       W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    I#LOC
+     C                   PARM                    I#CUSTDEFLT
+     C                   PARM                    T_TRAP
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL       I#ERMS = 'ERROR IN CALL TO GOWRTTRAPE'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  RTV_DEALTYP - RETRIEVE DEAL TYPE                             *
+      *                                                               *
+      *  Called By: TRAP_DEALEQ                                       *
+      *                                                               *
+      *  Calls:     None                                              *
+      *****************************************************************
+      *
+      ** Using the Deal Ref number (OTDLR) Access the OT10LF file
+      *
+     C     RTV_DEALTYP   BEGSR
+      *
+     C     OTKEY         KList
+     C                   KFld                    OSBRNM
+     C                   KFld                    OSDLP
+     C                   KFld                    OSDLR
+      *
+     C     OTKEY         CHAIN     OT10LF
+     C                   IF        %FOUND(OT10LF)
+      *
+     C                   EVAL      W_OTTDT = OTTDT
+     C                   EVAL      W_OTCCY = OTCCY
+     C                   EVAL      W_OTSDTE = OTSDTE
+     C                   EVAL      W_OTMDT = OTMDT
+      *
+     C                   ELSE
+     C                   EVAL      W_OTTDT = *BLANKS
+     C                   EVAL      W_OTCCY = *BLANKS
+     C                   EVAL      W_OTSDTE = *ZEROS
+     C                   EVAL      W_OTMDT = *ZEROS
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+ 
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  *INZSR - Initial subroutine                                  *
+      *                                                               *
+      *  Called By: Called automatically at program start             *
+      *                                                               *
+      *  Calls:     None                                              *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      ********************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

@@ -1,0 +1,1405 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE FRN/mortgage rate change generation')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE2105 - Midas SE FRN/Mortgage Rate Change Generation        *
+      *                                                               *
+      *  Program Function: This program will determine whether any    *
+      *                    FRN/Mortgage Backed security linked to a   *
+      *                    base rate is due to be fixed automatically.*
+      *                    Two reports will be produced, one listing  *
+      *                    the rates fixed and one listing the rates  *
+      *                    not fixed.                                 *
+      *                                                               *
+      *  Phase(s): COB - Automatic.                                   *
+      *                                                               *
+      *  Called By: SEC2105 - Midas SE FRN/Mortgage Rate Change       *
+      *                       Generation Ctl.                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1001183          Date 14Jul12               *
+      *  Prev Amend No. AR989170           Date 18Jun12               *
+      *                 AR947093A          Date 04May12               *
+      *                 AR947093           Date 26Apr12               *
+      *                 AR847249           Date 28Jan12               *
+      *                 AR865929           Date 11Dec11               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      *                 210530             Date 22Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031 *CREATE     Date 09Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1001183 - Coupon rate was still used in computation of     *
+      *              interest instead of using the details in FRN tab *
+      *  AR989170 - For securities with Actual Interest Rate of zero, *
+      *             system used the Base Rate in  the computation of  *
+      *             interest                                          *
+      *  AR947093A - Base Rate amendment resulted to 0 interest rate  *
+      *  AR947093 - Base Rate amendment resulted to 0 interest rate   *
+      *  AR847249 - Perform exception handling when Final rate is     *
+      *             negative or zero.                                 *
+      *  AR865929 - Rates were not recalculated based on the details  *
+      *             defined in FRN info tab                           *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  210530 - System generates interest rate changes even for     *
+      *           matured securities. Fix is to ignore securities     *
+      *           unless RECI = 'D'.                                  *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes               *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECTY   UF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Securities
+      *
+     FSEDEV   UF  E           K        DISK         KINFSR *PSSR A
+      ** Midas SE Security Diary Events
+      *
+     FSEDEVA  UF  E                    DISK         KINFSR *PSSR
+      ** Midas SE Security Diary Events - Audit
+      *
+     FSESRNFL0UF  E           K        DISK         KINFSR *PSSR A
+      ** Midas SE Securities Rates Not Fixed file
+      *
+     FSE2105P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+      ** Midas SE FRN/Mortgage Rates Fixed Report
+      *
+     FSE2105P2O   E                    PRINTER
+     F                                              KINFDS SPOOL2
+      ** Midas SE FRN/Mortgage Rates Not Fixed Report
+      *
+     FSE2105AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      ** Midas SE FRN/Mortgage Rate Change Generation Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *                    FUNCTION OF INDICATORS                     *
+      *                    **********************                     *
+      *                                                               *
+      *   50  - No Record to Report                                   *
+      *   51  - Insert blank line so that the same Currency/Base Rate *
+      *         combination are grouped together in the report.       *
+      *   80  - End of File SECTY                                     *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *                      SUBROUTINE INDEX                         *
+      *                      ****************                         *
+      *                                                               *
+      *  SRINIT   - Subroutine to do Program Initialisation.          *
+      *  SRPROC   - Subroutine to do Detail Processing.               *
+      *  SRSFIX   - Subroutine to determine if security is to be      *
+      *             fixed.                                            *
+      *  SRUPDT   - Update SEDEVD and SEDEVA files                    *
+      *  SRCALC   - Subroutine to calculate the Coupon Rate           *
+      *  SRRFIX   - Subroutine to Print detail record for Rates Fixed *
+      *  SRORNF   - Sub to output record to Rates NOT fixed file      *
+      *  SRRNFX   - Subroutine to Print detail record for Rates Not   *
+      *             Fixed.                                            *
+      *  SREND1   - Subroutine to Write End of Report Trailer for     *
+      *             Rates Fixed Report.                               *
+      *  SREND2   - Subroutine to Write End of Report Trailer for     *
+      *             Rates Not Fixed Report.                           *
+      *  SRAUDT   - Subroutine to Output Audit report and End Program *
+      *  SRRCF1   - Subroutine to register SE2105P1 via RCF.          *
+      *  SRRCF2   - Subroutine to register SE2105P2 via RCF.          *
+      *  SRRCFA   - Subroutine to register SE2105AU via RCF.          *
+      *  SRTERM   - Subroutine to Terminate program.                  *
+      *  *PSSR    - Program exception error routine.                  *
+      *                                                               *
+      *  ZDATE2   - To Format a Midas Number in Alpha Date            *
+      *                                                               *
+      *****************************************************************
+      *
+     E/EJECT
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Rates not Fixed Reason narratives
+     E                    RESN    1   2 53
+      *
+     E                    WAD        10  6 0
+     E                    WBR        10  2 0
+     E                    WBS        10 11 7
+     E                    WSI        10  1
+     E                    WCS        10 11 7                                               AR947093A
+     E                    WCI        10  1                                                 AR947093A
+     E                    WRM        10  7               Rounding Method                      CRE073
+     E                    WRF        10  4               Rounding Frac/Dec                    CRE073
+      /COPY ZSRSRC,ZEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZNCDZ1
+      /COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+      ** Rename Fields on SEDEVD
+      *
+     ISEDEVDF
+     I              RECI                            CRECI
+     I              NMCY                            CNMCY
+     I              LCD                             CLCD
+     I              CHTP                            CCHTP
+     I              TNLU                            CTNLU
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      **  Short data structure for access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure to receive Bank Details
+      *
+     ISDBSRT    E DSSDBSRTPD
+      ** Data Structure to receive Base Rate Details
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CAS006
+      ** Switchable features file                                                             CAS006
+      *                                                                                       CAS006
+     IINVTP     E DSINVTPD
+     I              RECI                            INRECI
+     I              LCD                             INLCD
+     I              CHTP                            INCHTP
+     I              TNLU                            INTNLU
+      ** Data Structure to receive Investment Type Details
+      *
+      ***  File Information Data Structure for SE2105P1.
+     ISPOOL1      DS
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ***  File Information Data Structure for SE2105P2.
+     ISPOOL2      DS
+      *
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      *
+      ***  File Information Data Structure for SE2105AU.
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I              'INITIAL VALUE'       C         INAR
+     I              'ZACALCSPRT'          C         SPRDSR                                    CRE073
+      *
+      /COPY ZSRSRC,ZNCDZ2
+      /COPY ZSRSRC,ZHOLI
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Partial KEY to Access SEDEV for Initial Records
+      *
+     C           PSEDEV    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           KEYDT
+     C                     KFLD           SDET
+      /EJECT
+      *================================================================
+      *  M A I N   P R O C E S S I N G                                *
+      *================================================================
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      **  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      **  Perform Termination Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *
+      *****************************************************************
+      *  SRINIT   - Subroutine to do Program Initialisation.          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:     AOBANKR0                                          *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'SE2105'  DBPGM
+      *
+      ** Access Bank details via access program
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01*
+     C                     MOVELPOPTN     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      *                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *                                                                                       CAS006
+      ** Determine if CAS006 (Hedge Accounting Phase B) is installed                          CAS006
+      *                                                                                       CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY' POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANKS                                                       CAS006
+     C           PRTCD     ANDNE'*NRF    '                                                    CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVE 'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD4         DBASE                                               CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006  1                                           CAS006
+     C                     ELSE                                                               CAS006
+     C                     MOVE 'N'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CRE073
+      ** Determine if CRE073 (Interest Rate Rounding) is installed                            CRE073
+      *                                                                                       CRE073
+     C                     CALL 'AOSARDR0'                                                    CRE073
+     C                     PARM *BLANKS   PRTCD                                               CRE073
+     C                     PARM '*VERIFY' POPTN                                               CRE073
+     C                     PARM 'CRE073'  PSARD                                               CRE073
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE073
+      *                                                                                       CRE073
+     C           PRTCD     IFNE *BLANKS                                                       CRE073
+     C           PRTCD     ANDNE'*NRF    '                                                    CRE073
+     C           *LOCK     IN   LDA                                                           CRE073
+     C                     MOVE 'SCSARDPD'DBFILE                                              CRE073
+     C                     Z-ADD5         DBASE                                               CRE073
+     C                     MOVEL'CRE073'  DBKEY                                               CRE073
+     C                     OUT  LDA                                                           CRE073
+     C                     EXSR *PSSR                                                         CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+     C           PRTCD     IFEQ *BLANKS                                                       CRE073
+     C                     MOVE 'Y'       CRE073  1                                           CRE073
+     C                     ELSE                                                               CRE073
+     C                     MOVE 'N'       CRE073                                              CRE073
+     C                     ENDIF                                                              CRE073
+      *
+      ** RCF Processing for Printer File P1
+      *
+     C                     EXSR SRRCF1
+      *
+      ** RCF Processing for Printer File P2
+      *
+     C                     EXSR SRRCF2
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         RQDLN2  30
+     C                     Z-ADD0         DIFLN2  30
+      *
+      ** Initialise working fields
+      *
+     C                     Z-ADD*ZERO     URCNT1  40       No of Rates fixed
+     C                     Z-ADD*ZERO     URCNT2  40       No of Rates not fixed
+      *
+     C           *LIKE     DEFN BASC      UBASC
+     C           *LIKE     DEFN BASS      UBASS
+     C           *LIKE     DEFN SPRI      USPRI
+     C           *LIKE     DEFN RDMT      URDMT                                               CRE073
+     C           *LIKE     DEFN RDFD      URDFD                                               CRE073
+     C           *LIKE     DEFN CNSP      UCNSP                                            AR947093A
+     C           *LIKE     DEFN CNSG      UCNSG                                            AR947093A
+      *
+      ** Write Report header/column headings for Rates Fixed report
+      *
+     C                     WRITEPGHEAD1                    Report header
+     C                     WRITEDTHEAD1                    Columns Header
+      *
+      ** Write Report header/column headings for Rates Not Fixed report
+      *
+     C                     WRITEPGHEAD2                    Report header
+     C                     WRITEDTHEAD2                    Columns Header
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *  SRPROC   - Subroutine to do Detail Processing.               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Read Securities file
+      *
+     C           *LOVAL    SETLLSECTY
+     C                     READ SECTY                    80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           RECI      IFEQ 'D'                                                           210530
+      *
+      ** Access AOINVTR0 to get the processing type
+     C                     CALL 'AOINVTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM SITP      PINVT   3
+     C                     PARM NMCY      PCCYI   3
+     C           INVTP     PARM INVTP     DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELNMCY      WKEY1   7
+     C                     MOVE SITP      WKEY1
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVE 'INVTPD  'DBFILE           *DB ERROR 02*
+     C                     MOVELWKEY1     DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Only process FRN/Mortgage Securites. (i.e. Securities where
+      ** the Investment type has a processing type of 3 or 8.)
+ B1  C           PROT      IFEQ '3'
+     C           PROT      OREQ '8'
+      *
+      ** Only process if Business Day convention is not blanks
+ B2  C           BCNV      IFNE *BLANKS
+      *
+      ** Determine if security is to be fixed
+      *
+     C                     EXSR SRSFIX
+      *
+      ** Generate Security Diary event and Output details to report
+      ** if Security is to be fixed.
+ B3  C           SFIX      IFEQ 'Y'
+      *
+      ** Check if IR record exists for the required date
+     C                     MOVE NCD       KEYDT   50
+     C                     MOVE 'IR'      SDET
+     C           PSEDEV    CHAINSEDEVDF              89
+      *
+      ** Processing applies only to FRNs linked to Base Rates
+      ** with Auto Fix set to 'Y'.
+ B4  C           BASC      IFNE 0
+     C           AUFX      ANDEQ'Y'
+      *
+     C                     ADD  1         URCNT1
+      *
+      ** Generate Security Diary event
+     C                     EXSR SRUPDT
+      *
+      ** Output details to Rates Fixed report
+     C                     EXSR SRRFIX
+      *
+ X4  C                     ELSE
+      *
+      ** If Auto Fix = N and a Manual Security Diary exists do nothing
+      ** Otherwise Output details to Rates Not Fixed file
+ B5  C           AUFX      IFEQ 'N'
+     C           *IN89     ANDEQ*OFF
+      *
+ X5  C                     ELSE
+     C                     EXSR SRORNF
+ E5  C                     ENDIF
+      *
+ E4  C                     ENDIF
+      *
+ E3  C                     ENDIF
+      *
+      ** Update security with the next coupon date
+     C                     UPDATSECTYDF
+ E2  C                     ENDIF
+ E1  C                     ENDIF
+ EX  C                     ENDIF                                                              210530
+      *
+      ** Read next record
+     C                     READ SECTY                    80
+     C                     ENDDO
+      *
+      ** Output details to Rates Not Fixed report
+     C                     EXSR SRRNFX
+      *
+      ** End of file so write trailer for Rates Fixed report
+      *
+     C                     EXSR SREND1
+      *
+      ** End of file so write trailer for Rates Not Fixed report
+      *
+     C                     EXSR SREND2
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRSFIX
+      *****************************************************************
+      *  SRSFIX - Subroutine to Determine if security is to be fixed  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRSFIX    BEGSR
+      *
+      ** Calculate Next Coupon Date
+     C                     Z-ADDBJRDNB    ECD     50
+     C                     EXSR ZNCD
+      *
+      ** Calculate if Fixing Date is Rundate
+      *
+     C                     Z-ADDFIXD      ZNRDYS
+     C                     MOVE VLCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZBKDT
+      *
+     C********** ZDYNBR    IFEQ BJRDNB                                                      AR865929
+     C           ZDYNBR    IFLE BJRDNB                                                      AR865929
+     C                     MOVE NCD       KEYDT                                             AR865929
+     C                     MOVE 'IR'      SDET                                              AR865929
+     C           PSEDEV    CHAINSEDEVDF              89                                     AR865929
+     C           *IN89     IFEQ *ON                                                         AR865929
+     C                     MOVE 'Y'       SFIX    1
+     C                     ELSE                                                             AR865929
+     C                     MOVE 'N'       SFIX                                              AR865929
+     C                     ENDIF                                                            AR865929
+     C                     ELSE
+     C                     MOVE 'N'       SFIX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRUPDT
+      *****************************************************************
+      *  SRUPDT - Update SEDEVD and SEDEVA files                      *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      ** Move file values to work fields
+     C                     Z-ADDBASC      UBASC
+     C                     Z-ADDBASS      UBASS
+     C                     MOVE SPRI      USPRI
+     C                     MOVELCNSP      UCNSP                                            AR947093A
+     C                     MOVELCNSG      UCNSG                                            AR947093A
+     C                     MOVELRDMT      URDMT                                            AR947093A
+     C                     MOVELRDFD      URDFD                                            AR947093A
+      *                                                                                       CRE073
+      ** Initialize work fields                                                               CRE073
+      *                                                                                       CRE073
+     C                     MOVEL*BLANKS   WRM                                                 CRE073
+     C                     MOVEL*BLANKS   WRF                                                 CRE073
+     C**********           MOVEL*BLANKS   URDMT                                     CRE073 AR947093A
+     C**********           MOVEL*BLANKS   URDFD                                     CRE073 AR947093A
+      *
+      ** Calculate new coupon rate
+     C                     EXSR SRCALC
+      *
+      ** Obtain Base Rate info from SDBSRTPD
+     C                     MOVE UBASC     PBSRC   2
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM VLCY      PCCY    3
+     C                     PARM           PBSRC
+     C           SDBSRT    PARM SDBSRT    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELVLCY      WKEY2   5
+     C                     MOVE UBASC     WKEY2
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVE 'INVTPD  'DBFILE           *DB ERROR 03*
+     C                     MOVELWKEY2     DBKEY            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Use new base rate if appropriate, otherwise use current rate
+     C           BAVDNR    IFLE NCD
+     C                     Z-ADDBANBRT    USDNC  117
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDBANBRT    USDNN  117                                          CAS006
+     C                     ADD  CCRK      USDNN                                               CAS006
+     C                     ADD  CLQP      USDNN                                               CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ELSE
+     C                     Z-ADDBACBSR    USDNC
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADDBACBSR    USDNN                                               CAS006
+     C                     ADD  CCRK      USDNN                                               CAS006
+     C                     ADD  CLQP      USDNN                                               CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF
+      *                                                                                     AR865929
+      ** Compute the new spread rate                                                        AR865929
+      *                                                                                     AR865929
+     C           CRE073    IFEQ 'Y'                                                         AR865929
+     C                     CALL SPRDSR                                                      AR865929
+     C                     PARM *BLANKS   PRTCD                                             AR865929
+     C**********           PARM           BANBRT                                  AR865929 AR947093A
+     C**********           PARM           UBASS                                   AR865929 AR947093A
+     C**********           PARM           USPRI                                   AR865929 AR947093A
+     C                     PARM           USDNC                                            AR947093A
+     C                     PARM           UCNSP                                            AR947093A
+     C                     PARM           UCNSG                                            AR947093A
+     C                     PARM           URDMT                                             AR865929
+     C                     PARM           URDFD                                             AR865929
+     C                     PARM *ZERO     NSPRD  117                                        AR865929
+     C                     PARM *ZERO     FRATE  117                                        AR847249
+      *                                                                                     AR865929
+     C           PRTCD     IFNE *BLANK                                                      AR865929
+     C********** FRATE     ORLE 0                                                  AR847249 AR947093
+     C********** URDMT     ANDNE*BLANKS                                            AR847249 AR947093
+     C           *LOCK     IN   LDA                                                         AR865929
+     C                     Z-ADD6         DBASE                                             AR865929
+     C                     MOVELSPRDSR    DBPGM                                             AR865929
+     C                     MOVELBANBRT    DBKEY                                             AR865929
+     C                     OUT  LDA                                                         AR865929
+     C                     EXSR *PSSR                                                       AR865929
+     C                     ENDIF                                                            AR865929
+      *                                                                                     AR865929
+     C                     Z-ADDNSPRD     UBASS                                             AR865929
+     C                     MOVE UCNSG     USPRI                                            AR947093A
+     C           NSPRD     IFLT 0                                                          AR947093A
+     C                     MULT -1        UBASS                                            AR947093A
+     C           UCNSG     IFEQ 'S'                                                        AR947093A
+     C                     MOVE 'A'       USPRI                                            AR947093A
+     C                     ELSE                                                            AR947093A
+     C                     MOVE 'S'       USPRI                                            AR947093A
+     C                     ENDIF                                                           AR947093A
+     C                     ENDIF                                                           AR947093A
+     C                     ENDIF                                                            AR865929
+      *
+      ** Apply spread, if required.
+ B1  C           UBASS     IFNE *ZERO
+ B2  C           USPRI     IFEQ 'S'
+      *
+      ** If spread to be subtracted...
+ X2  C                     SUB  UBASS     USDNC
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     SUB  UBASS     USDNN                                               CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ELSE
+      *
+      ** If spread is a percentage...
+ B3  C           USPRI     IFEQ 'P'
+     C           UBASS     DIV  100       WKBASS 119
+     C                     MULT WKBASS    USDNC     H
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C           UBASS     DIV  100       WKBASS                                              CAS006
+     C                     MULT WKBASS    USDNN     H                                         CAS006
+     C                     ENDIF                                                              CAS006
+ X3  C                     ELSE
+      *
+      ** If spread to be added...
+     C                     ADD  UBASS     USDNC
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     ADD  UBASS     USDNN                                               CAS006
+     C                     ENDIF                                                              CAS006
+ E3  C                     ENDIF
+ E2  C                     ENDIF
+ E1  C                     ENDIF
+      *****************************************************************              CRE073 AR865929
+      ***Compute*the*new*spread*rate***********************************              CRE073 AR865929
+      *****************************************************************              CRE073 AR865929
+     C********** CRE073    IFEQ 'Y'                                                  CRE073 AR865929
+     C**********           CALL SPRDSR                                               CRE073 AR865929
+     C**********           PARM *BLANKS   PRTCD                                      CRE073 AR865929
+     C**********           PARM           BANBRT                                     CRE073 AR865929
+     C**********           PARM           UBASS                                      CRE073 AR865929
+     C**********           PARM           USPRI                                      CRE073 AR865929
+     C**********           PARM           URDMT                                      CRE073 AR865929
+     C**********           PARM           URDFD                                      CRE073 AR865929
+     C**********           PARM *ZERO     NSPRD  117                                 CRE073 AR865929
+      *****************************************************************              CRE073 AR865929
+     C********** PRTCD     IFNE *BLANK                                               CRE073 AR865929
+     C********** *LOCK     IN   LDA                                                  CRE073 AR865929
+     C**********           Z-ADD6         DBASE                                      CRE073 AR865929
+     C**********           MOVELSPRDSR    DBPGM                                      CRE073 AR865929
+     C**********           MOVELBANBRT    DBKEY                                      CRE073 AR865929
+     C**********           OUT  LDA                                                  CRE073 AR865929
+     C**********           EXSR *PSSR                                                CRE073 AR865929
+     C**********           ENDIF                                                     CRE073 AR865929
+      *****************************************************************              CRE073 AR865929
+     C**********           Z-ADDNSPRD     USDNC                                      CRE073 AR865929
+     C**********           ENDIF                                                     CRE073 AR865929
+      *
+      ** Rate must not fall below minimum coupon
+     C           MCPN      IFNE *ZEROS
+     C           USDNC     ANDLTMCPN
+     C                     Z-ADDMCPN      USDNC
+     C                     ENDIF
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C           MCPN      IFNE *ZEROS                                                        CAS006
+     C           USDNN     ANDLTMCPN                                                          CAS006
+     C                     Z-ADDMCPN      USDNN                                               CAS006
+     C                     ENDIF                                                              CAS006
+     C                     Z-ADDUSDNN     SDNN                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *
+      ** Write/Update IR record
+     C********** CRE073    IFEQ 'N'                                               AR989170 AR1001183
+     C                     Z-ADDUSDNC     SDNC
+     C**********           ELSE                                                   AR989170 AR1001183
+     C**********           Z-ADDNSPRD     SDNC                                    AR989170 AR1001183
+     C**********           ENDIF                                                  AR989170 AR1001183
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'D'       CRECI
+     C                     MOVE SESN      SDSN
+     C                     Z-ADDNCD       SDED
+     C                     MOVELINAR      SDNV
+     C                     Z-ADD*ZERO     SDVA
+     C                     Z-ADD*ZERO     SDPD
+     C                     MOVE *BLANKS   SDCV
+     C                     MOVE NMCY      CNMCY
+     C                     Z-ADDECD       SDAD
+     C                     Z-ADD*ZERO     SDDT
+     C                     Z-ADD0         CLCD
+     C                     MOVE *BLANK    CCHTP
+     C                     Z-ADD*ZERO     CTNLU
+     C                     Z-ADD*ZERO     SDCP
+     C                     Z-ADD*ZERO     SRPT
+     C                     Z-ADD*ZERO     SDTR
+     C                     MOVE *BLANK    SRMI
+     C                     Z-ADD*ZERO     SDPD
+     C                     Z-ADD*ZERO     SDPP
+     C                     Z-ADD*ZERO     SDPC
+     C                     Z-ADD*ZERO     SDTA
+     C                     Z-ADD*ZERO     SDTP
+     C                     Z-ADD*ZERO     SDRP
+     C                     MOVE *BLANK    SDCX
+     C                     Z-ADD*ZERO     SDCE
+     C                     MOVE *BLANK    SDMD
+     C                     ENDIF
+      *
+      ** Write the record to SEDEVD via LF/SEDEV
+     C           *IN89     IFEQ '1'
+     C                     WRITESEDEVDF
+     C                     ELSE
+     C                     UPDATSEDEVDF
+     C                     ENDIF
+      *
+      ** Update Audit record for Insert only
+     C           *IN89     IFEQ '1'
+     C           1         CHAINSEDEVAF              U8
+      *
+     C                     ADD  1         NOIN
+     C                     ADD  1         NORE
+     C                     ADD  1         NODE
+      *
+     C                     UPDATSEDEVAF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRCALC
+      *****************************************************************
+      *  SRCALC - Subroutine to calculate the Coupon Rate             *
+      *                                                               *
+      *  Called By: SRUPDT                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRCALC    BEGSR
+      *
+      ** Check if Next coupon date is greater than the Additional
+      ** coupon dates, if it is use the base rate and spread from here.
+      *
+      ** Load Applicable Date into array
+     C                     Z-ADDAD01      WAD,1
+     C                     Z-ADDAD02      WAD,2
+     C                     Z-ADDAD03      WAD,3
+     C                     Z-ADDAD04      WAD,4
+     C                     Z-ADDAD05      WAD,5
+     C                     Z-ADDAD06      WAD,6
+     C                     Z-ADDAD07      WAD,7
+     C                     Z-ADDAD08      WAD,8
+     C                     Z-ADDAD09      WAD,9
+     C                     Z-ADDAD10      WAD,10
+      *
+      ** Load Base Rate into array
+     C                     Z-ADDBR01      WBR,1
+     C                     Z-ADDBR02      WBR,2
+     C                     Z-ADDBR03      WBR,3
+     C                     Z-ADDBR04      WBR,4
+     C                     Z-ADDBR05      WBR,5
+     C                     Z-ADDBR06      WBR,6
+     C                     Z-ADDBR07      WBR,7
+     C                     Z-ADDBR08      WBR,8
+     C                     Z-ADDBR09      WBR,9
+     C                     Z-ADDBR10      WBR,10
+      *
+      ** Load Spread Rate into array
+     C                     Z-ADDBS01      WBS,1
+     C                     Z-ADDBS02      WBS,2
+     C                     Z-ADDBS03      WBS,3
+     C                     Z-ADDBS04      WBS,4
+     C                     Z-ADDBS05      WBS,5
+     C                     Z-ADDBS06      WBS,6
+     C                     Z-ADDBS07      WBS,7
+     C                     Z-ADDBS08      WBS,8
+     C                     Z-ADDBS09      WBS,9
+     C                     Z-ADDBS10      WBS,10
+      *
+      ** Load Spread indicator into array
+     C                     MOVEASI01      WSI,1
+     C                     MOVEASI02      WSI,2
+     C                     MOVEASI03      WSI,3
+     C                     MOVEASI04      WSI,4
+     C                     MOVEASI05      WSI,5
+     C                     MOVEASI06      WSI,6
+     C                     MOVEASI07      WSI,7
+     C                     MOVEASI08      WSI,8
+     C                     MOVEASI09      WSI,9
+     C                     MOVEASI10      WSI,10
+      *                                                                                       CRE073
+      ** Load Contractual Spread into array                                                   CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C**********           Z-ADDCNP01     WBS,1                                     CRE073 AR947093A
+     C**********           Z-ADDCNP02     WBS,2                                     CRE073 AR947093A
+     C**********           Z-ADDCNP03     WBS,3                                     CRE073 AR947093A
+     C**********           Z-ADDCNP04     WBS,4                                     CRE073 AR947093A
+     C**********           Z-ADDCNP05     WBS,5                                     CRE073 AR947093A
+     C**********           Z-ADDCNP06     WBS,6                                     CRE073 AR947093A
+     C**********           Z-ADDCNP07     WBS,7                                     CRE073 AR947093A
+     C**********           Z-ADDCNP08     WBS,8                                     CRE073 AR947093A
+     C**********           Z-ADDCNP09     WBS,9                                     CRE073 AR947093A
+     C**********           Z-ADDCNP10     WBS,10                                    CRE073 AR947093A
+     C                     Z-ADDCNP01     WCS,1                                            AR947093A
+     C                     Z-ADDCNP02     WCS,2                                            AR947093A
+     C                     Z-ADDCNP03     WCS,3                                            AR947093A
+     C                     Z-ADDCNP04     WCS,4                                            AR947093A
+     C                     Z-ADDCNP05     WCS,5                                            AR947093A
+     C                     Z-ADDCNP06     WCS,6                                            AR947093A
+     C                     Z-ADDCNP07     WCS,7                                            AR947093A
+     C                     Z-ADDCNP08     WCS,8                                            AR947093A
+     C                     Z-ADDCNP09     WCS,9                                            AR947093A
+     C                     Z-ADDCNP10     WCS,10                                           AR947093A
+      *                                                                                       CRE073
+      ** Load Contractual Spread indicator into array                                         CRE073
+      *                                                                                       CRE073
+     C**********           MOVEACNG01     WSI,1                                     CRE073 AR947093A
+     C**********           MOVEACNG02     WSI,2                                     CRE073 AR947093A
+     C**********           MOVEACNG03     WSI,3                                     CRE073 AR947093A
+     C**********           MOVEACNG04     WSI,4                                     CRE073 AR947093A
+     C**********           MOVEACNG05     WSI,5                                     CRE073 AR947093A
+     C**********           MOVEACNG06     WSI,6                                     CRE073 AR947093A
+     C**********           MOVEACNG07     WSI,7                                     CRE073 AR947093A
+     C**********           MOVEACNG08     WSI,8                                     CRE073 AR947093A
+     C**********           MOVEACNG09     WSI,9                                     CRE073 AR947093A
+     C**********           MOVEACNG10     WSI,10                                    CRE073 AR947093A
+     C                     MOVEACNG01     WCI,1                                            AR947093A
+     C                     MOVEACNG02     WCI,2                                            AR947093A
+     C                     MOVEACNG03     WCI,3                                            AR947093A
+     C                     MOVEACNG04     WCI,4                                            AR947093A
+     C                     MOVEACNG05     WCI,5                                            AR947093A
+     C                     MOVEACNG06     WCI,6                                            AR947093A
+     C                     MOVEACNG07     WCI,7                                            AR947093A
+     C                     MOVEACNG08     WCI,8                                            AR947093A
+     C                     MOVEACNG09     WCI,9                                            AR947093A
+     C                     MOVEACNG10     WCI,10                                           AR947093A
+      *                                                                                       CRE073
+      ** Load rounding method into array                                                      CRE073
+      *                                                                                       CRE073
+     C                     MOVELRDM01     WRM,1                                               CRE073
+     C                     MOVELRDM02     WRM,2                                               CRE073
+     C                     MOVELRDM03     WRM,3                                               CRE073
+     C                     MOVELRDM04     WRM,4                                               CRE073
+     C                     MOVELRDM05     WRM,5                                               CRE073
+     C                     MOVELRDM06     WRM,6                                               CRE073
+     C                     MOVELRDM07     WRM,7                                               CRE073
+     C                     MOVELRDM08     WRM,8                                               CRE073
+     C                     MOVELRDM09     WRM,9                                               CRE073
+     C                     MOVELRDM10     WRM,10                                              CRE073
+      *                                                                                       CRE073
+      ** Load rounding fraction/decimal into array                                            CRE073
+      *                                                                                       CRE073
+     C                     MOVELRDF01     WRF,1                                               CRE073
+     C                     MOVELRDF02     WRF,2                                               CRE073
+     C                     MOVELRDF03     WRF,3                                               CRE073
+     C                     MOVELRDF04     WRF,4                                               CRE073
+     C                     MOVELRDF05     WRF,5                                               CRE073
+     C                     MOVELRDF06     WRF,6                                               CRE073
+     C                     MOVELRDF07     WRF,7                                               CRE073
+     C                     MOVELRDF08     WRF,8                                               CRE073
+     C                     MOVELRDF09     WRF,9                                               CRE073
+     C                     MOVELRDF10     WRF,10                                              CRE073
+     C                     ENDIF                                                              CRE073
+      *                                                                                       CRE073
+      *
+      ** Check if the Next Coupon Date is greater or equal to any of
+      ** the Additional Coupon Dates. If it is than use the Base rate
+      ** information supplied.
+      *
+     C                     MOVE 'N'       WAPP    1
+     C                     Z-ADD10        X       20
+      *
+     C           X         DOWGT0
+      *
+     C           WAD,X     IFNE *ZERO
+      *
+      ** Convert Date to Day number
+     C                     Z-ADDWAD,X     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C           NCD       IFGE ZDAYNO
+     C                     MOVE 'Y'       WAPP
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     SUB  1         X
+     C                     ENDDO
+      *
+      ** Use Rate from additional coupon date information
+     C           WAPP      IFEQ 'Y'
+      *
+      ** Set New Base Rate
+     C           WBR,X     IFNE *ZERO
+     C                     Z-ADDWBR,X     UBASC
+     C                     ENDIF
+      *
+      ** Set New Spread Rate
+     C           WBS,X     IFNE *ZERO
+     C                     Z-ADDWBS,X     UBASS
+     C                     ENDIF
+      *
+      ** Set New Spread Indicator
+     C                     MOVEAWSI,X     USPRI
+      *                                                                                       CRE073
+      ** Set Rounding Method                                                                  CRE073
+      *                                                                                       CRE073
+     C           CRE073    IFEQ 'Y'                                                           CRE073
+     C                     MOVELWRM,X     URDMT                                               CRE073
+      *                                                                                       CRE073
+      ** Set Rounding Fraction/Decimal                                                        CRE073
+      *                                                                                       CRE073
+     C                     MOVELWRF,X     URDFD                                               CRE073
+      *                                                                                    AR947093A
+      ** Set New Contractual Spread                                                        AR947093A
+      *                                                                                    AR947093A
+     C           WCS,X     IFNE *ZERO                                                      AR947093A
+     C                     Z-ADDWCS,X     UCNSP                                            AR947093A
+     C                     ENDIF                                                           AR947093A
+      *                                                                                    AR947093A
+      ** Set New Contractual Spread Indicator                                              AR947093A
+      *                                                                                    AR947093A
+     C                     MOVEAWCI,X     UCNSG                                            AR947093A
+     C                     ENDIF                                                              CRE073
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRRFIX
+      *****************************************************************
+      *  SRRFIX - Subroutine to write detail record for Rates Fixed   *
+      *           Report (SE2105P1).                                  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRRFIX    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEPGHEAD1                    Page Header
+     C                     WRITEDTHEAD1                    Customer Detail
+     C                     ENDIF
+      *
+      ** Output Security details
+      *
+     C                     MOVE SESN      P1SESN
+     C                     MOVE SRPN      P1SRPN
+     C                     MOVE NMCY      P1NMCY
+     C                     MOVE BASC      P1BASC
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SDNC      ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1EFFR
+      *
+     C                     WRITER1DET1
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRORNF
+      *****************************************************************
+      *  SRORNF - Subroutine to output record to Rates NOT fixed file *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRORNF    BEGSR
+      *
+      ** Output Security details if not already present
+      *
+     C           SESN      CHAINSESRNFL0             82
+      *
+ B1  C           *IN82     IFEQ *ON
+     C                     MOVE SESN      FSESN
+     C                     MOVE SRPN      FSRPN
+     C                     MOVE NMCY      FNMCY
+      *
+     C           BASC      IFEQ *ZERO
+     C                     MOVE *ZEROS    FBASC
+     C                     ELSE
+     C                     MOVE BASC      FBASC
+     C                     ENDIF
+      *
+      ** Output Date Due
+     C                     Z-ADDBJRDNB    FDDUE
+      *
+      ** Output Reason
+     C           AUFX      IFEQ 'N'
+     C                     MOVEARESN,2    FRESN
+     C                     ELSE
+     C                     MOVEARESN,1    FRESN
+     C                     ENDIF
+      *
+      ** Output Rate Change Date
+     C                     Z-ADDNCD       FNCD
+      *
+     C                     WRITESESRNFD0
+ E1  C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRRNFX
+      *****************************************************************
+      *  SRRNFX - Subroutine to write detail record for Rates NOT     *
+      *           Fixed Report (SE2105P2).                            *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRRNFX    BEGSR
+      *
+      ** Read Securities Rates Not Fixed file
+      *
+     C           *LOVAL    SETLLSESRNFL0
+     C                     READ SESRNFL0                 81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ** If Rate Change Date has passed then delete this record
+      ** from the Rates Not Fixed file.
+     C           FNCD      IFLT BJRDNB
+     C                     DELETSESRNFD0
+     C                     GOTO NXTRCD
+     C                     ENDIF
+      *
+      ** If a manual security diary entry exists then delete it
+      ** from the Rates Not Fixed file.
+     C                     MOVE FSESN     SESN
+     C                     MOVE FNCD      KEYDT
+     C                     MOVE 'IR'      SDET
+     C           PSEDEV    CHAINSEDEVDF              89
+      *
+     C           *IN89     IFEQ *OFF
+     C                     DELETSESRNFD0
+     C                     GOTO NXTRCD
+     C                     ENDIF
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     ADD  1         URCNT2
+     C                     Z-ADD1         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEPGHEAD2                    Page Header
+     C                     WRITEDTHEAD2                    Customer Detail
+     C                     ENDIF
+      *
+      ** Output Security details
+      *
+     C                     MOVE FSESN     P1SESN
+     C                     MOVE FSRPN     P1SRPN
+     C                     MOVE FNMCY     P1NMCY
+      *
+     C           FBASC     IFEQ *ZERO
+     C                     MOVE *BLANKS   P1BASC
+     C                     ELSE
+     C                     MOVE FBASC     P1BASC
+     C                     ENDIF
+      *
+      ** Output Date Due in DDMMMYY format
+     C                     Z-ADDFDDUE     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    P1DDUE
+      *
+      ** Output Reason
+     C                     MOVE FRESN     P1RESN
+      *
+     C                     WRITER1DET2
+      *
+     C           NXTRCD    TAG
+     C                     READ SESRNFL0                 81
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SREND1
+      *****************************************************************
+      *  SREND1 - Subroutine to Write End of Report for Rates Fixed   *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *****************************************************************
+      *
+     C           SREND1    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD6         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEPGHEAD1
+     C                     ENDIF
+      *
+      ** If no record processed then write 'NO RECORD TO REPORT'
+      ** on the Rates Fixed report.
+      *
+     C           URCNT1    IFEQ 0
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      ** Write Trailer
+      *
+     C                     WRITETRAIL1
+      *
+      ** Reset Indicator for Rates Not Fixed report
+      *
+     C                     MOVE *OFF      *IN50
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SREND2
+      *****************************************************************
+      *  SREND2 - Subroutine to Write End of Rpt for Rates Not Fixed  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *****************************************************************
+      *
+     C           SREND2    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD6         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEPGHEAD2
+     C                     ENDIF
+      *
+      ** If no record processed then write 'NO RECORD TO REPORT'
+      ** on the Rates Not Fixed report.
+      *
+     C           URCNT2    IFEQ 0
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      ** Write Trailer
+      *
+     C                     WRITETRAIL2
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADERAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+      ** Write Trailer for Audit Report.
+      *
+     C                     WRITEAUTRAIL
+      *
+      ** End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *
+      /TITLE SR/SRRCF1
+      *****************************************************************
+      *  SRRCF1  - Subroutine to register SE2105P1 via RCF.           *
+      *                                                               *
+      *  Called By: SRINIT                                            *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRRCF1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRRCF2
+      *****************************************************************
+      *  SRRCF2  - Subroutine to register SE2105P2 via RCF.           *
+      *                                                               *
+      *  Called By: SRINIT                                            *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRRCF2    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM2    ZSNUM2  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM           PRENT
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM2
+     C                     PARM *BLANKS   ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/SRRCFA
+      *****************************************************************
+      *  SRRCFA - Subroutine to register SE2105AU via RCF.            *
+      *                                                               *
+      *  Called By: SRINIT                                            *
+      *  Calls: None.                                                 *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM           PRENT
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           ULRUN     IFEQ *BLANK
+     C                     MOVE 'Y'       ULRUN   1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     EXSR SRAUDT
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/#LTERM
+      *****************************************************************
+      *  SRTERM   - Subroutine to do Terminate program                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      /EJECT
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  RESN
+No base rate on Security
+Manual rate change diary entry required but not input
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

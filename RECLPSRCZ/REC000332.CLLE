@@ -1,0 +1,106 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas RE Component for enq program RE3361')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       REC000332 - CL Component for History position ENQUIRY       */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. AR316373           Date 03Jun15              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      239964             Date 30Jun06              */
+/*                      239966             Date 08Jun06              */
+/*                      240079  *CREATE    Date 08Jun06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR316373 - Recompile due to change in /COPY MLCOVRDCL and   */
+/*                  MLCOVROVR.                                       */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       239964 - Applied fix 239966.                                */
+/*       239996 - Remove transfer jobs for retail linked enquiry.    */
+/*                Patterned after GEMS 236093.                       */
+/*       240079 - Remove transfer jobs for retail linked enquiry.    */
+/*                Patterned after GEMS 236093.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MBIN)    TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MITEM)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZMUSER)  TYPE(*CHAR) LEN(10)
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                         */
+ 
+/*/COPY WNCPYSRC,GLC442INT                                         */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHKOBJ     OBJ(QTEMP/EMSDS) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/EMSDS) TYPE(*CHAR) LEN(167)
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/EMSDS) VALUE(' ')
+/**/
+             CHKOBJ     OBJ(QTEMP/DLSDS) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/DLSDS) TYPE(*CHAR) LEN(167)
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/DLSDS) VALUE(' ')
+ 
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+ 
+/* Retrieve data areas for Multiple Language Support */
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                    */
+ 
+             CALL       PGM(RE3361)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0000442 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             ENDDO
+ 
+END:
+             ENDPGM

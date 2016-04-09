@@ -1,0 +1,126 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Export Acc. Details Into AML DB Control')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDC000023 - Export Account Details Into AML                 */
+/*                   Database Control                                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSD017  *CREATE    Date 08Nov02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD017 - Midas Compliance Watch - Anti-Money Laundering     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PCOMPNM &PSEQ)
+ 
+             DCL        VAR(&PCOMPNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&PSTAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SDC000023 - Export branch details into +
+                          AML database') TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&PCOMPNM &PSEQ &PSTAT)
+ 
+/* Copy back SDAHOLPD and SDACCTPD from backup if this is a restart */
+ 
+             IF         COND(&PSTAT = 'Y') THEN(DO)
+                  CPYF       FROMFILE(XSDAHOLPD) TOFILE(&DMLIB/SDAHOLPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(XSDACCTPD) TOFILE(&DMLIB/SDACCTPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If this is not a restart */
+ 
+             IF         COND(&PSTAT *NE 'Y') THEN(DO)
+                  DLTF       FILE(&DMLIB/XSDAHOLPD)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(&DMLIB/XSDACCTPD)
+                  MONMSG     MSGID(CPF2105)
+ 
+/* Create a backup copy of SDAHOLPD and SDACCTPD */
+ 
+                  CPYF       FROMFILE(SDAHOLPD) TOFILE(&DMLIB/XSDAHOLPD) +
+                             CRTFILE(*YES)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                  CPYF       FROMFILE(SDACCTPD) TOFILE(&DMLIB/XSDACCTPD) +
+                             CRTFILE(*YES)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/* Call CB0150 with Status Parameter set to 'Y' */
+ 
+                  CALL       PGM(CB0150) PARM(&PCOMPNM &PSEQ 'Y')
+             ENDDO
+ 
+/* Call SD000023 passing a mode parameter = 'C' */
+ 
+             CALL       PGM(SD000023) PARM('C')
+ 
+/* If error occured in the program, report error message as necessary */
+ 
+             IF            COND(%SWITCH(XXXXXX11)) THEN(DO)
+                  RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+/* If no error occured in the program, delete backup files */
+ 
+             IF            COND(%SWITCH(XXXXXX00)) THEN(DO)
+                  CALL       PGM(CB0150) PARM(&PCOMPNM &PSEQ 'N')
+                  DLTF       FILE(XSDAHOLPD)
+                  MONMSG     MSGID(CPF2105)
+                  DLTF       FILE(XSDACCTPD)
+                  MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000023 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

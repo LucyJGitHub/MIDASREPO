@@ -1,0 +1,734 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CA DRS Deal Number Regeneration')                *
+     F****************************************************************
+     F*                                                              *
+     F*     Midas - Common Application Program                   *
+     F*                                                              *
+     F*     CA0050 - DEAL NUMBER REGENERATION.                       *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSC054             Date 23Feb12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 237063             Date 20Nov05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSC024             Date 16Aug05               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 229544             Date 15Sep04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 190336             DATE 27Feb01              *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01444             DATE 24SEP93              *
+     F*                 S01453             DATE 13DEC93              *
+     F*                 042960             DATE 21AUG93              *
+     F*                 040691             DATE 23APR92               *
+     F*                 DT0152             DATE 10MAY91               *
+     F*                    E21005              DATE 09FEB90          *
+     F*                    S01194              DATE 22NOV89          *
+     F*                    E14063              DATE 09/01/89         *
+     F*                    E12308              DATE 17/03/88         *
+     F*                    S01145              DATE 03/12/87         *
+     F*                                                              *
+     F****************************************************************
+     F*
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSC054 - Period End Adjustments                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  237063 - EU Tax fixes upgrade to MP build 103 (Recompile).   *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSC024 - Open Month End                                      *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  229544 - Recompiled due to inserted fields in DLCHISPD.      *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*  CDL010 - Prevent last user that actioned the trade from      *
+     F*           authorising it.Recompile due to changes in FXDEALPP.*
+     F*           ,MMDELDPP, MMDENBPP AND MMDENSPP .
+     F*  190336 - Do not set U7 and U8 on to enable FX0820/MM0089/   *
+     F*           MM5310 to continue                                 *
+     F*  S01444 - Recompiled. (LF/DEALSALL - amended to include       *
+     F*           historic deals files)                               *
+     F* S01453  - Margin and FX Positions/Points and Base currency    *
+     F*           Positions/Points added to FX input (Recompiled)     *
+     F*                                                               *
+     F*  042960 - Replace the use of CAMIDNLL with DEALSALL as that   *
+     F*           file contains all existing deal nos.                *
+     F*     040691 - If no deals available in range then do not dump *    040691
+     F*              but return to calling program to output message.*    040691
+     F*
+     F*     DT0152 - Update the file CANDLNLL correctly              *
+     F*     E21005 - Remove the read to CAMIDNLL since duplicate     *
+     F*              deals numbers are generated, use SETLL.         *
+     F*     S01194 - NEW STANDING DATA FILES, RELEASE 10             *
+     F*     E14063 - IF NEXT DEAL NUMBER = 0 (I.E. NO DEALS YET ON   *
+     F*              SYSTEM) ADD 1 TO 'NEXT DEAL NUMBER'.            *
+     F*
+     F*     E12308 - DCDEALP0,DDDEALP0 & DEDEALP0 MUST BE CHECKED    *
+     F*              OTHERWISE, IF THERE ARE ONLY FX DEALS IN THE    *
+     F*              SYSTEM, MIDAS MM DEALS WILL NOT BE CHECKED.     *
+     F*                                                              *
+     F*     S01145 - DRS ARBITRAGE                                   *
+     F*                                                              *
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       61         CHAIN AND DB ERROR INDICATOR
+     F********62*********RECORD*FOUND*FOR*SETLL*TO*CAMIDNLL******* E21005 042960
+     F*       62         RECORD FOUND FOR SETLL TO DEALSALL           *   042960
+     F*       63         LOCKED RECORD
+     F*       U6         PROGRAM ERROR - *PSSR EXECUTED
+     F*       U7         DATA BASE ERROR
+     F*       U8         DATA BASE ERROR
+     F*
+     F*****************************************************************
+     F*FDICDRLLIF**E********** K        DISK         KINFSR INFSR     UC  S01194
+     F************************                      KINFDS @ICDR          S01194
+     FFDDLNMLLIF  E                    DISK         KINFSR INFSR      UC
+     F/COPY WNCPYSRC,CA0050F001
+     FCANDLNLLUF  E                    DISK         KINFSR INFSR      UC
+     FCADLFKLLO   E           K        DISK         KINFSR INFSR A    UC
+     F                                              KINFDS @DLFK
+     F***CAMIDNLLIF**E        K        DISK         KINFSR INFSR      UC  042960
+     F**********************************************KINFDS @MIDN          042960
+     FDEALSALLIF  E           K        DISK         KINFSR INFSR      UC  042960
+     F*                                                                   042960
+     F** All Deals. DRS and Midas                                         042960
+     F*                                                                   042960
+     F********    DCDEALP0                          KIGNORE               E12308
+     F********    DDDEALP0                          KIGNORE               E12308
+     F********    DEDEALP0                          KIGNORE               E12308
+     E*
+     E                    CPY@    1   1 80
+     I* Copyright statement.
+     I*@ICDR*******DS                                                     S01194
+     I***************                         9   9 @ICDRO                S01194
+     I****DATA*STRUCTURE TO TEST IF LF/FDICDRLL FILE IS OPEN.             S01194
+     I*
+     I@DLFK       DS
+     I                                        9   9 @DLFKO
+     I                                    B 156 1590@NOROF
+     I**  DS TO TEST IF LF/CADLFKLL IS OPEN AND CHECK NO. OF RECORDS.
+     I*
+     I***@MIDN***    DS                                                   042960
+     I**************************************RECORD  @FMT                  042960
+     I**  Data structure to identify record format on CAMIDNLL.
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**  L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.
+     I*
+     IPSDS       SDS
+     I**  Field containing FILE NAME
+     I                                      201 208 @FILE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I*
+     I            DS                              7
+     I                                        1   7 RUNA
+     I                                        1   20FTDLUP
+     I                                        3   5 FTMLUP
+     I                                        6   70FTYLUP
+     I**  DS TO CAPTURE DAY MONTH YEAR OF LAST UPDATE
+     I*
+     IRUNDAT      DS                             13                       S01194
+     I** DATA STRUCTURE FOR MULTIBRANCH INDICATOR USING RUNDAT.           S01194
+     I                                        1   20@DD                   DT0152
+     I                                        3   5 @MM                   DT0152
+     I                                        6   70@YY                   DT0152
+     I                                    P   8  100@RUND                 S01194
+     I*                                                                                       CSC024
+     ISCSARD    E DSSCSARDPD                                                                  CSC024
+     I*                                                                                       CSC024
+     IDSFDY     E DSDSFDY                                                                     CSC024
+     I*                                                                                       CSC024
+     I*I********    'OMEIndicator'            1  20 SYSVAL                             CSC024 CSC054
+     I I            'PEAIndicator'            1  20 SYSVAL                                    CSC054
+     I*                                                                                       CSC024
+     C/EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C**  Initial processing.
+     C                     EXSR #A
+     C*
+     C**  Main processing
+     C           *INLR     CASEQ'0'       #B
+     C                     END
+     C*
+     C**  Termination processing
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - Main processing.                                *
+     C****2.*#BA****- Access*LF/CAMIDNLL.******************************   042960
+     C*   2. #BA    - Access LF/DEALSALL.                             *   042960
+     C*   3. #A     - Initial processing.                             *
+     C*   4. #C     - Termination processing.                         *
+     C*   5. ZA0150 - Accesses ICD file.                              *
+     C*   6. #Z     - File error handling sub- routine.               *
+     C*   7. INFSR  - File open error handling sub- routine.        *
+     C*   8. *PSSR  - Program error handling sub- routine.            *
+     C*                                                               *
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #B CARRIES OUT THE MAIN PROCESSING.                      *
+     C*        CALLED BY  : MAIN PROGRAM.                            *
+     C*        CALLS      : #BA                                      *
+     C*                                                              *
+     C*        WORK FIELDS: @DEALS   - DEAL NUMBERS TO CREATE        *
+     C*                     @FDGA    - FIRST GENERATION ATTEMPTED    *
+     C*                     @NODA    - DEAL NUMBERS ADDED            *
+     C*                     @EOF     - START BACK OFFICE REACHED     *
+     C*                                                              *
+     C****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  IF NUMBER OF RECORDS LEFT TO CREATE IS <= 0 - END PROGRAM
+     C           @DEALS    CABLE*ZERO     #B9
+     C**  DO UNTIL DEAL NUMBERS ADDED IS >= DEAL NUMBERS REQUESTED
+     C           @NODA     DOUGE@DEALS                     B1
+     C*
+     C****IF NEXT AVAILABLE DEAL NUMBER = NEXT AFTER PROPOSED DEAL        E21005
+     C****NO. ADD 1 TO NEXT AVAILABLE DEAL NUMBER & ACCESS LF/CAMIDNLL.   E21005
+     C***********@FMT      IFEQ 'FXDEALP0'                 B*2            E21005
+     C***********FTNDLS    ANDEQFHDN38                     B*2            E21005
+     C***********@FMT      OREQ 'DEALSDBF'                 B*2            E21005
+     C***********FTNDLS    ANDEQDLNO                       B*2            E21005
+     C***********@FMT      OREQ 'DCDEALP0'                 B*2      E12308E21005
+     C***********FTNDLS    ANDEQDLNO                       B*2      E12308E21005
+     C***********@FMT      OREQ 'DDDEALP0'                 B*2      E12308E21005
+     C***********FTNDLS    ANDEQDLNO                       B*2      E12308E21005
+     C***********@FMT      OREQ 'DEDEALP0'                 B*2      E12308E21005
+     C***********FTNDLS    ANDEQDLNO                       B*2      E12308E21005
+     C***********@FMT      OREQ 'MMDELDP0'                 B*2            E21005
+     C***********FTNDLS    ANDEQHKDN38                     B*2            E21005
+     C***********@FMT      OREQ 'MMDENBP0'                 B*2            E21005
+     C***********FTNDLS    ANDEQHLDN38                     B*2            E21005
+     C********** @FMT      OREQ 'MMDENSP0'                 B*2            E21005
+     C***********FTNDLS    ANDEQHMDN38                     B*2            E21005
+     C***********@FMT      OREQ 'ABDEALP1'                 B*2      S01145E21005
+     C***********FTNDLS    ANDEQJPFD38                     B*2      S01145E21005
+     C***********@FMT      OREQ 'ABDEALP2'                 B*2      S01145E21005
+     C***********FTNDLS    ANDEQJPSD38                     B*2      S01145E21005
+     C*********************ADD  1         FTNDLS           **2            E21005
+     C*********************EXSR #BA                        **2            E21005
+     C*********************END                             E*2            E21005
+     C*                                                                   E21005
+     C**Check*the*record*found*indicator*for*file*CAMIDNLL.******* E21005 042960
+     C** Check the record found indicator for file DEALSALL.              042960
+     C*                                                                   E21005
+     C           *IN64     IFEQ '1'                        B*2            E21005
+     C                     EXSR #BA                        **2            E21005
+     C                     END                             E*2            E21005
+     C/COPY WNCPYSRC,CA0050C001
+     C*                                                                                       CSC024
+     C****Check*if*running*on*OME*system.                                              CSC024 CSC054
+     C**  Check if running on PEA system.                                                     CSC054
+     C*                                                                                       CSC024
+     C**********           EXSR CHKOME                                                 CSC024 CSC054
+     C                     EXSR CHKPEA                                                        CSC054
+     C*
+     C**  IF NEXT DEAL NO. >= START BACK OFFICE DEAL NUMBER THEN SET
+     C**  NEXT AVAILABLE DEAL NUMBER TO 1 SET END OF FILE FIELD TO YES
+     C****AND*ACCESS*LF/CAMIDNLL***************************************   042960
+     C**  and access LF/DEALSALL.                                         042960
+     C*                                                                   042960
+     C           FTNDLS    IFGE NORDLN                     B*2
+     C********** CSC024    ANDNE'Y'                                                    CSC024 CSC054
+     C********** WOMEIN    ANDNE'Y'                                                    CSC024 CSC054
+     C           CSC054    ANDNE'Y'                                                           CSC054
+     C           WPEAIN    ANDNE'Y'                                                           CSC054
+      *                                                                   DT0152
+      ** Save the next available deal number first                        DT0152
+      *                                                                   DT0152
+     C                     Z-ADDFTNDLS    SAVNDL  60                      DT0152
+      *                                                                   DT0152
+     C                     Z-ADD1         FTNDLS           **2
+     C/COPY WNCPYSRC,CA0050C002
+     C                     MOVE 'YES'     @EOF    3        **2
+     C                     EXSR #BA                        **2
+     C                     END                             E*2
+     C*
+     C**  IF NO FURTHER NUMBERS AVAILABLE FOR ALLOCATION END S/R
+      *   Restore saved next available deal number first                  DT0152
+     C           @EOF      IFEQ 'YES'                      B*2
+     C           FTNDLS    ANDGE@FDGA                      **2
+     C                     Z-ADDSAVNDL    FTNDLS                          DT0152
+     C                     GOTO #B9                        **2
+     C                     END                             E*2
+     C*
+     C**  WRITE A RECORD TO LF/CADLFKLL (DEAL NUMBERS FOR ALLOCATION)
+     C                     Z-ADDFTNDLS    FKDN38           *1
+     C                     WRITECADLFAP0               61  *1
+     C*
+     C**  ADD 1 TO NUMBER OF DEALS ADDED IF WRITE EXECUTED
+     C           *IN61     IFEQ '0'                        B*2
+     C                     ADD  1         @NODA            **2
+     C                     MOVE '1'       *IN64            **2            E21005
+     C                     END                             E*2
+     C*
+     C**  ADD 1 TO NEXT AVAILABLE DEAL NUMBER & NUMBER OF DEALS ADDED
+     C                     ADD  1         FTNDLS           *1
+     C*
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           ***#B9***
+     C/EJECT
+     C*****************************************************************
+     C*                                                              *
+     C*****#BA*ACCESS*LF/CAMIDNLL*-*FX*DEALS.*************************    042960
+     C*    #BA ACCESS LF/DEALSALL                                    *    042960
+     C*        CALLED BY  : #A #B                                    *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS:                                          *
+     C*                                                              *
+     C****************************************************************
+     C           #BA       BEGSR
+     C*
+     C**  ACCESS LF/CAMIDNLL (MIDAS/DRS DEALS)
+     C***********FTNDLS    SETLLCAMIDNLL                                  E21005
+     C******************** READ CAMIDNLL                 61               E21005
+     C************************                                            E21005
+     C****CONTINUE*TO*ACCESS*LF/CAMIDNLL*UNTIL*NEXT AVAILABLE DEAL NO.    E21005
+     C***********@FMT      DOWEQ'FXDEALP0'                 B1             E21005
+     C***********FTNDLS    ANDEQFHDN38                     B1             E21005
+     C***********@FMT      OREQ 'DEALSDBF'                 B1             E21005
+     C***********FTNDLS    ANDEQDLNO                       B1             E21005
+     C***********@FMT      OREQ 'DCDEALP0'                          E12308E21005
+     C***********FTNDLS    ANDEQDLNO                                E12308E21005
+     C***********@FMT      OREQ 'DDDEALP0'                          E12308E21005
+     C***********FTNDLS    ANDEQDLNO                                E12308E21005
+     C***********@FMT      OREQ 'DEDEALP0'                          E12308E21005
+     C***********FTNDLS    ANDEQDLNO                                E12308E21005
+     C***********@FMT      OREQ 'MMDELDP0'                 B1             E21005
+     C***********FTNDLS    ANDEQHKDN38                     B1             E21005
+     C***********@FMT      OREQ 'MMDENBP0'                 B1             E21005
+     C********** FTNDLS    ANDEQHLDN38                     B1             E21005
+     C***********@FMT      OREQ 'MMDENSP0'                 B1             E21005
+     C***********FTNDLS    ANDEQHMDN38                     B1             E21005
+     C***********@FMT      OREQ 'ABDEALP1'                 B1       S01145E21005
+     C***********FTNDLS    ANDEQJPFD38                     B1       S01145E21005
+     C***********@FMT      OREQ 'ABDEALP2'                 B1       S01145E21005
+     C***********FTNDLS    ANDEQJPSD38                     B1       S01145E21005
+     C*********************ADD  1         FTNDLS           *1             E21005
+     C*********************READ CAMIDNLL                 61*1             E21005
+     C*********************END                             E1             E21005
+     C*                                                                   E21005
+     C* Use the SETLL to check if deal number already used.               E21005
+     C***********FTNDLS    SETLLCAMIDNLL                 62        E21005 042960
+     C           FTNDLS    SETLLDEALSALL                 62               042960
+     C*                                                                   E21005
+     C           *IN62     DOWEQ'1'                        B1             E21005
+     C                     ADD  1         FTNDLS           *1             E21005
+     C***********FTNDLS    SETLLCAMIDNLL                 62*1      E21005 042960
+     C           FTNDLS    SETLLDEALSALL                 62*1             042960
+     C                     END                             E1             E21005
+     C                     MOVE '0'       *IN64                           E21005
+     C*                                                                   E21005
+     C*
+     C           #BA9      ENDSR                           ***#BA9***
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #A CARRIES OUT INITIALISATION PROCESSING.                *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      : #BA                                      *
+     C*                                                              *
+     C*        WORK FIELDS: @DEALS   - DEAL NUMBERS TO CREATE        *
+     C*                     @FDGA    - FIRST GENERATION ATTEMPTED    *
+     C*                     @NODA    - DEAL NUMBERS ADDED            *
+     C*                     @NOROF   - NUMBER OF RECORDS ON FILE     *
+     C*                     @T       - TERMINATION INPUT PARM        *
+     C*                                                              *
+     C****************************************************************
+     C           #A        BEGSR
+     C*
+     C**  RECEIVE INPUT PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           @T      1
+     C                     PARM           @DEALS  60
+     C*
+     C**  DEFINE NUMBER OF DEALS ADDED FIELD LIKE NEXT DEAL NUMBER
+     C           *LIKE     DEFN FTNDLS    @NODA
+     C/COPY WNCPYSRC,CA0050C003
+     C*
+     C**  MOVE PROGRAM NAME INTO STATUS DATA STRUCTURE FIELD.
+     C                     MOVEL'CA0050'  DBPGM
+     C                     MOVE '   '     @EOF
+     C                     Z-ADD*ZERO     @NODA
+     C*
+     C**  IF TERMINATION CODE = T, TERMINATE PROGRAM.
+     C           @T        IFEQ 'T'                        B1
+     C                     MOVE '1'       *INLR            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C**  DEFINE 1ST DEAL GENERATION ATTEMPTED LIKE NEXT AVAILABLE DEAL
+     C           *LIKE     DEFN FTNDLS    @FDGA
+     C*
+     C**  OPEN FILES
+     C********   @ICDRO    IFEQ ' '                        B1             S01194
+     C********             OPEN FDICDRLL                   *1             S01194
+     C********             END                             E1             S01194
+     C                     OPEN FDDLNMLL
+     C/COPY WNCPYSRC,CA0050C004
+     C                     OPEN CANDLNLL
+     C*
+     C**  OPEN CADLFKLL ONLY IF NOT ALREADY OPEN
+     C           @DLFKO    IFEQ ' '                         B1
+     C                     OPEN CADLFKLL                    *1
+     C                     END                              E1
+     C*
+     C***********          OPEN CAMIDNLL                                  042960
+     C                     OPEN DEALSALL                                  042960
+     C*
+     C           1         CHAINCANDLNLL             6163
+     C*
+     C**  IF RECORD IS LOCKED PERFORM ERROR S/R AND EXIT
+     C           *IN63     IFEQ '1'                        B1
+     C                     MOVE 'CANDLNLL'DBFILE           *1**********
+     C                     MOVE '003'     DBASE            *1DB ERR 003
+     C                     EXSR #Z                         *1**********
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C**  DEAL WITH DATA BASE ERROR
+     C           *IN61     IFEQ '1'                        B1
+     C           FTDLTF    OREQ '*'                        *1
+     C                     MOVE 'CANDLNLL'DBFILE           *1**********
+     C                     MOVE '001'     DBASE            *1DB ERR 001
+     C                     EXSR #Z                         *1**********
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C           1         CHAINFDDLNMLL             61
+     C*
+     C**  DEAL WITH DATA BASE ERROR
+     C           *IN61     IFEQ '1'                        B1
+     C           NODLTF    OREQ '*'                        *1
+     C                     MOVE 'FDDLNMLL'DBFILE           *1**********
+     C                     MOVE '002'     DBASE            *1DB ERR 002
+     C                     EXSR #Z                         *1**********
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C/COPY WNCPYSRC,CA0050C005
+     C*********                                                           S01194
+     C***CALL*S/R TO ACCESS ICD FILE                                      S01194
+     C*********            EXSR ZA0150                                    S01194
+     C*********                                                           S01194
+     C****CHECK FOR DATABASE ERROR                                        S01194
+     C********   *IN80     IFEQ '1'                        B1             S01194
+     C********             EXSR #Z                         *1             S01194
+     C********             GOTO #A9                        *1             S01194
+     C********             END                             E1             S01194
+     C*                                                                   S01194
+     C** READ DATA AREA - RUNDAT                                          S01194
+     C           *NAMVAR   DEFN           RUNDAT                          S01194
+     C                     IN   RUNDAT                                    S01194
+     C/COPY WNCPYSRC,CA0050C006
+     C*
+     C**  IF NEXT AVAILABLE DEAL NO. IS >= BACK OFFICE START RANGE
+     C**  RESET TO 1.
+     C           FTNDLS    IFGE NORDLN
+     C                     Z-ADD1         FTNDLS
+     C/COPY WNCPYSRC,CA0050C007
+     C                     END
+     C*
+     C**  SUBTRACT NUMBER OF DETAILS ON LF/CADLFKLL FROM NUMBER OF
+     C**  DEALS TO CREATE
+     C                     SUB  @NOROF    @DEALS
+     C/COPY WNCPYSRC,CA0050C008
+     C*                                                                   E14063
+     C**  ENSURE NEXT DEAL NUMBER > 000000.                               E14063
+     C           FTNDLS    IFEQ 0                          B1             E14063
+     C                     Z-ADD1         FTNDLS           *1             E14063
+     C/COPY WNCPYSRC,CA0050C009
+     C                     END                             E1             E14063
+     C*
+     C**  STORE NEXT AVAILABLE DEAL NUMBER
+     C                     Z-ADDFTNDLS    @FDGA
+     C*
+     C**  ACCESS LF/CAMIDNLL (MIDAS/DRS DEALS)
+     C                     EXSR #BA
+     C*
+     C           #A9       ENDSR                           ***#A9***
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #C CARRIES OUT THE TERMINATION PROCESSING.               *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @NODA - DEAL NUMBERS TO BE ADDED         *
+     C*                                                              *
+     C****************************************************************
+     C           #C        BEGSR
+     C*
+     C**  IF RECORDS HAVE BEEN ADDED TO THE LF/CADLFKLL UPDATE
+     C**  LF/CANDLNLL (AS400 NEXT DEAL NUMBER)
+     C           @NODA     IFGT *ZERO                      B1
+     C*
+     C**  UPDATE FIELDS
+     C******************** MOVE RUND      FTLCD            *1             S01194
+     C                     MOVE @RUND     FTLCD            *1             S01194
+     C                     MOVE CHTP      FTCHTP           *1
+     C                     TIME           FTTLUP           *1
+     C                     MOVEL@JOB      FTLUID           *1
+     C                     Z-ADD@DD       FTDLUP                          DT0152
+     C                     MOVE @MM       FTMLUP                          DT0152
+     C                     Z-ADD@YY       FTYLUP                          DT0152
+     C*
+     C**  UPDATE LF/CANDLNLL (NEXT DEAL NUMBER)
+     C                     UPDATCANDLNP0                   *1
+     C*
+     C                     END                             E1
+     C*
+     C**  IF NO DEALS EXISTED ON FILE AND NO DEAL NUMBERS HAVE BEEN
+     C**  AVAILABLE FOR ALLOCATION PROCESS DATA BASE ERROR
+     C           @NOROF    IFEQ *ZERO                      B1
+     C           @NODA     ANDEQ*ZERO                      *1
+     C*
+     C                     MOVE 'CADLFKLL'DBFILE           *1**********
+     C                     MOVE '004'     DBASE            *1DB ERR 004
+     C                     MOVEL'NO DEALS'DBKEY            *1**********
+     C***********          EXSR #Z                         *1             040691
+     C                     MOVE 'E'       @T               *1             040691
+     C                     MOVE '1'       *INLR            *1             040691
+     C                     RETRN                           *1             040691
+     C*
+     C                     END                             E1
+     C                     CLOSECANDLNLL
+     C***********          CLOSECAMIDNLL                                  042960
+     C                     CLOSEDEALSALL                                  042960
+     C                     CLOSEFDDLNMLL
+     C/COPY WNCPYSRC,CA0050C010
+     C*
+     C                     RETRN
+     C           #C9       ENDSR                           ***#C9***
+     C/EJECT
+     C*****************************************************************
+     C*********                                                       *
+     C***SUBROUTINE ZA0150 - THIS SUBROUTINE CHAINS TO FILE LF/       *
+     C***FDICDRLL TO GET THE INSTALLATION CONTROL DETAILS RECORD 1    *
+     C***(HELD ON PF/TABTB10)                                         *
+     C***INDICATOR 80 IS SET ON IF THE CHAIN FAILS OR THE RECORD IS   *
+     C***FLAGGED FOR DELETION.                                        *
+     C***IF INDICATOR 80 IS SET ON DETAILS OF THE ATTEMPTED ACCESS    *
+     C***ARE PLACED IN THE LDA.                                       *
+     C********                                                        *
+     C***FIELDS USED : SS0150 - KEY USED TO ACCESS FDICDRLL           *
+     C*********                                                       *
+     C*****************************************************************
+     C*********
+     C*********  ZA0150    BEGSR
+     C*********
+     C** Set up key to obtain format TABTB10F '01        10'
+     C********             MOVEL'01'      SS0150 12
+     C********             MOVE '10'      SS0150
+     C********
+     C** CHAIN TO FILE FDICDRLL
+     C********   SS0150    CHAINFDICDRLL             80
+     C********   RECI      IFNE 'D'                        B1
+     C********             MOVE '1'       *IN80            *1
+     C********             END                             E1
+     C********
+     C** DEAL WITH DATA BASE ERROR
+     C********   *IN80     IFEQ '1'                        ***************
+     C********             MOVEL'FDICDRLL'DBFILE           *             *
+     C********             MOVEL'900'     DBASE            * DBERROR 900 *
+     C********             MOVELSS0150    DBKEY            *             *
+     C********             END                             ***************
+     C********
+     C********   ZA0159    ENDSR
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER            *
+     C*   A FILE ERROR OCCURS                             *
+     C*                                                   *
+     C*   SUBROUTINE CALLS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           #Z        BEGSR
+     C*
+     C**********           MOVE '1'       *INU7            *1             190336
+     C**********           MOVE '1'       *INU8            *1             190336
+     C                     MOVE 'E'       @T               *1
+     C*
+     C                     DUMP                            *1
+     C*
+     C**  TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           #Z9       ENDSR                           ***#Z9  ***
+     C/EJECT
+     C*****************************************************                                   CSC024
+     C*                                                   *                                   CSC024
+     C****OME*System*Checking******************************                            CSC024 CSC054
+     C*   PEA System Checking                             *                                   CSC054
+     C*                                                   *                                   CSC024
+     C*****************************************************                                   CSC024
+     C********** CHKOME    BEGSR                                                       CSC024 CSC054
+     C           CHKPEA    BEGSR                                                              CSC054
+     C*                                                                                       CSC024
+      ***Check*if*enhancement*CSC024*(Open*Month*End)*is*ON                            CSC024 CSC054
+      ** Check if enhancement CSC054 (Period End Adjustments) is ON                           CSC054
+     C*                                                                                       CSC024
+     C                     CALL 'AOSARDR0'                                                    CSC024
+     C                     PARM *BLANKS   @RTCD   7                                           CSC024
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC024
+     C**********           PARM 'CSC024'  @SARD   6                                    CSC024 CSC054
+     C                     PARM 'CSC054'  @SARD   6                                           CSC054
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC024
+     C*                                                                                       CSC024
+     C**********           MOVE 'N'       CSC024  1                                    CSC024 CSC054
+     C**********           MOVE 'N'       WOMEIN  1                                    CSC024 CSC054
+     C                     MOVE 'N'       CSC054  1                                           CSC054
+     C                     MOVE 'N'       WPEAIN  1                                           CSC054
+     C*                                                                                       CSC024
+     C           @RTCD     IFEQ *BLANKS                                                       CSC024
+     C**********           MOVE 'Y'       CSC024                                       CSC024 CSC054
+     C                     MOVE 'Y'       CSC054                                              CSC054
+     C*                                                                                       CSC024
+      ***Check*Access*System*Value*for*OMEIndicator                                    CSC024 CSC054
+      ** Check Access System Value for PEAIndicator                                           CSC054
+     C*                                                                                       CSC024
+     C                     CALL 'AOSVALR0'                                                    CSC024
+     C                     PARM *BLANKS   PRTCDE  7                                           CSC024
+     C                     PARM SYSVAL    P@OP01 20                                           CSC024
+     C                     PARM *BLANKS   P@VL01200                                           CSC024
+     C                     PARM *BLANKS   P@OP02 20                                           CSC024
+     C                     PARM *BLANKS   P@VL02200                                           CSC024
+     C                     PARM *BLANKS   P@OP03 20                                           CSC024
+     C                     PARM *BLANKS   P@VL03200                                           CSC024
+     C                     PARM *BLANKS   P@OP04 20                                           CSC024
+     C                     PARM *BLANKS   P@VL04200                                           CSC024
+     C                     PARM *BLANKS   P@OP05 20                                           CSC024
+     C                     PARM *BLANKS   P@VL05200                                           CSC024
+     C                     PARM *BLANKS   P@OP06 20                                           CSC024
+     C                     PARM *BLANKS   P@VL06200                                           CSC024
+     C                     PARM *BLANKS   P@OP07 20                                           CSC024
+     C                     PARM *BLANKS   P@VL07200                                           CSC024
+     C                     PARM *BLANKS   P@OP08 20                                           CSC024
+     C                     PARM *BLANKS   P@VL08200                                           CSC024
+     C                     PARM *BLANKS   P@OP09 20                                           CSC024
+     C                     PARM *BLANKS   P@VL09200                                           CSC024
+     C                     PARM *BLANKS   P@OP10 20                                           CSC024
+     C                     PARM *BLANKS   P@VL10200                                           CSC024
+     C*                                                                                       CSC024
+     C           PRTCDE    IFEQ *BLANKS                                                       CSC024
+     C           P@VL01    ANDEQ'Y'                                                           CSC024
+     C**********           MOVE 'Y'       WOMEIN                                       CSC024 CSC054
+     C                     MOVE 'Y'       WPEAIN                                              CSC054
+     C                     ENDIF                                                              CSC024
+     C*                                                                                       CSC024
+     C                     ENDIF                                                              CSC024
+     C*                                                                                       CSC024
+     C                     ENDSR                                                              CSC024
+     C/EJECT                                                                                  CSC024
+     C***********************************************************************
+     C           INFSR     BEGSR
+     C*
+     C** SET @ERR2 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR2   1        *1
+     C*
+     C**********           MOVE '1'       *INU7            *1             190336
+     C**********           MOVE '1'       *INU8            *1             190336
+     C                     MOVE 'E'       @T               *1
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE @FILE     DBFILE           *1
+     C                     MOVEL'CA0050'  DBPGM            *1
+     C                     MOVE '992'     DBASE            *1
+     C                     DUMP                            *1
+     C                     END                             E1
+     C*
+     C** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN                           ***INFSR***
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************
+     C*                                                   *
+     C*   EXCEPTION ERROR SUBROUTINE                      *
+     C*                                                   *
+     C*   SUBROUTINE CALLED: EXECUTES WHENEVER            *
+     C*   A PROGRAM ERROR OCCURS                          *
+     C*                                                   *
+     C*   SUBROUTINE CALLS : NO OTHER SUBROUTINES         *
+     C*                                                   *
+     C*****************************************************
+     C           *PSSR     BEGSR
+     C*
+     C**  SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C                     MOVE 'E'       @T               *1
+     C*
+     C**  SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'CA0050'  DBPGM            *1
+     C                     MOVE '991'     DBASE            *1
+     C*
+     C                     DUMP                            *1
+     C                     END                             E1
+     C*
+     C**  TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR                           ****PSSR****
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

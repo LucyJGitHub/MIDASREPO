@@ -1,0 +1,1708 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Collateral Details Report')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL3300 - Collateral Details Report                           *
+      *                                                               *
+      *  Function:  This program will generate a new report detailing *
+      *             records in the Collateral Details File, Collateral*
+      *             Narratives File, and Collateral Allocations File. *
+      *             It will be available on request in I/C and COB    *
+      *             to produce a full list of all collateral          *
+      *             locations on the system.  It will also run        *
+      *             automatically during COB to produce an audit list *
+      *             of all collateral details,  inserted, amended,    *
+      *             or deleted that day.                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1008615          Date 25Nov12               *
+      *  Prev Amend No. AR995788           Date 25Nov12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG17000           Date 11Apr08               *
+      *                 250354             Date 28Sep07               *
+      *                 BUG12196           Date 18Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12906           Date 15Dec06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG11631           Date 28Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL018             Date 30Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1008615 - Input 'no. of units' is missing (Child:AR1008618)*
+      *  AR995788 - Unit Amount in Collateral Details Report is not   *
+      *             displayed (Child:AR995974)                        *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  BUG17000 - Incorrect details in Collateral Details Report    *
+      *  250354 - To print the provider customers.                    *
+      *  BUG12196 - Valuation customer and subsequent chargee customer*
+      *           are not mandatory.  Program encounters database     *
+      *           error when these fields are blank.  If customer is  *
+      *           not found, initialize customer shortname with blank.*
+      *  BUG12906 - GLC3300 00001 failed                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG11631 - GLC3300 00001 failed                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *                                                               *
+      *****************************************************************
+     FGLCOLLLDIF  E           K        DISK
+      ** Collateral Details File
+      *
+     FGLCOLNL1IF  E           K        DISK
+      ** Collateral Narratives File
+      *
+     FGLCOLAL1IF  E           K        DISK
+      ** Collateral Allocations File
+     F*                                                                   CGL018
+     FGLORWAL0IF  E           K        DISK                               CGL018
+      * RTW: Collateral Risk Weigted Assets Code/Set                      CGL018
+      *                                                                   CGL018
+     F*                                                                   CGL018
+     FGL3300AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FGL3300P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   20  - AUDIT or FULL Header                                  *
+      *   21  - Output 'Collateral Narratives' Header                 *
+      *   22  - Output 'Collateral Allocations' Header                *
+      *   23  - Display 'Price Feed Link'                             *
+      *   24  - Display 'Income Rate/Amount'                          *
+      *   25  - Display 'Module Secured', 'Facility', 'Loan/Limit',   *
+      *         and 'Retail A/C' fields                               *
+      *   26  - Display 'Collateral Transaction/Account' and          *
+      *         'Inclusive/Exclusive of interest/charges' fields      *
+      *   27  - Display 'Image Reference' and 'Document Reference'    *
+      *   28  - Output 'Branch' on header                             *
+      *   29  - CGL014 is installed                                   *                       CGL014
+      *   37  - Multibranching ON                                     *
+      *   60  - READ Indicator for GLCOLLLD                           *
+      *   61  - READ Indicator for GLCOLNL1                           *
+      *   62  - READ Indicator for GLCOLAL1                           *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    PROV       12  6
+      ** Array containing Provider Customers - Customer Number
+      *
+     E                    IDER       12 10
+      ** Array containing Provider Customers - Customer Shortname
+      *
+     E                    XRWA       90  5               Work Array       CGL018
+      /COPY ZSRSRC,ZDATE2Z1
+      ** Array containing Conversion table for date
+      *
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array containing Conversion table for Amount
+      *
+      /COPY ZSRSRC,ZEDITZ1
+      ** Array containing Conversion table for amount
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Rundate
+      *
+     IPFMDS     ESDSY2PGDSP
+      ** Program Status Data Structure
+      *
+     IINFDS$    E DSY2I$DSP
+      ** Printer file information data structure.
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for GL3300P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for GL3300AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Data Structure to format Date
+      *
+     I            DS
+     I                                        1   7 FDAT1
+     I                                        1   2 FDAY1
+     I                                        3   5 FMON1
+     I                                        6   7 FYER1
+      *
+      ** Data Structure to format Date
+      *
+     I            DS
+     I                                        1   7 FDAT2
+     I                                        1   3 FMON2
+     I                                        4   5 FDAY2
+     I                                        6   7 FYER2
+      *
+      ** Data Structure to format Provider Customers - Number
+      *
+     I            DS
+     I                                        1  72 PROV
+     I**********                              1   60CDPR01                                    CSD027
+     I**********                              7  120CDPR02                                    CSD027
+     I**********                             13  180CDPR03                                    CSD027
+     I**********                             19  240CDPR04                                    CSD027
+     I**********                             25  300CDPR05                                    CSD027
+     I**********                             31  360CDPR06                                    CSD027
+     I**********                             37  420CDPR07                                    CSD027
+     I**********                             43  480CDPR08                                    CSD027
+     I**********                             49  540CDPR09                                    CSD027
+     I**********                             55  600CDPR10                                    CSD027
+     I**********                             61  660CDPR11                                    CSD027
+     I**********                             67  720CDPR12                                    CSD027
+     I                                        1   6 CDPR01                                    CSD027
+     I                                        7  12 CDPR02                                    CSD027
+     I                                       13  18 CDPR03                                    CSD027
+     I                                       19  24 CDPR04                                    CSD027
+     I                                       25  30 CDPR05                                    CSD027
+     I                                       31  36 CDPR06                                    CSD027
+     I                                       37  42 CDPR07                                    CSD027
+     I                                       43  48 CDPR08                                    CSD027
+     I                                       49  54 CDPR09                                    CSD027
+     I                                       55  60 CDPR10                                    CSD027
+     I                                       61  66 CDPR11                                    CSD027
+     I                                       67  72 CDPR12                                    CSD027
+      *
+      ** Data Structure to format Provider Customers - Shortname
+      *
+     I            DS
+     I                                        1 120 IDER
+     I                                        1  10 RPR01
+     I                                       11  20 RPR02
+     I                                       21  30 RPR03
+     I                                       31  40 RPR04
+     I                                       41  50 RPR05
+     I                                       51  60 RPR06
+     I                                       61  70 RPR07
+     I                                       71  80 RPR08
+     I                                       81  90 RPR09
+     I                                       91 100 RPR10
+     I                                      101 110 RPR11
+     I                                      111 120 RPR12
+      *
+      ** Data Structure to format Retail Account Number
+      *
+     I            DS
+     I**********                              1  18 WSACN                                     CGL029
+     I                                        1  24 WSACN                                     CGL029
+     I                                        1   3 CDSBRC
+     I**********                              4   90CDSCNM                                    CSD027
+     I                                        4   9 CDSCNM                                    CSD027
+     I                                       10  12 CDSCCY
+     I**********                             13  160CDSACD                                    CGL029
+     I**********                             17  180CDSSEQ                                    CGL029
+     I                                       13  220CDSACD                                    CGL029
+     I                                       23  240CDSSEQ                                    CGL029
+      *
+      ** Data Structure to format Collateral Transaction/Account
+      *
+     I            DS
+     I**********                              1  18 WCACN                                     CGL029
+     I                                        1  24 WCACN                                     CGL029
+     I                                        1   3 CDCBRC
+     I**********                              4   90CDCCNM                                    CSD027
+     I                                        4   9 CDCCNM                                    CSD027
+     I                                       10  12 CDCCCY
+     I**********                             13  160CDCACD                                    CGL029
+     I**********                             17  180CDCSEQ                                    CGL029
+     I                                       13  220CDCACD                                    CGL029
+     I                                       23  240CDCSEQ                                    CGL029
+      *
+      ** Data Structure to format Collateral Transaction/Account
+      *
+     I            DS
+     I                                        1  19 WSECN
+     I                                        1   3 CDCSBR
+     I                                        4  13 CDCSEC
+     I**********                             14  190CDCSCN                                    CSD027
+     I                                       14  19 CDCSCN                                    CSD027
+      *
+      ** Data Structure to format Account Number
+      *
+     I            DS
+     I**********                              1  18 WACCD                                     CGL029
+     I                                        1  24 WACCD                                     CGL029
+     I                                        1   3 CASBRC
+     I**********                              4   90CASCNM                                    CSD027
+     I                                        4   9 CASCNM                                    CSD027
+     I                                       10  12 CASCCY
+     I**********                             13  160CASACD                                    CGL029
+     I**********                             17  180CASSEQ                                    CGL029
+     I                                       13  220CASACD                                    CGL029
+     I                                       23  240CASSEQ                                    CGL029
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** External data structures for Customer Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          DFACQQ                                    CGL029
+      ** External data structures for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY                                                                     CGL014
+      ** Short data structure for access objects                                              CGL014
+      *                                                                                       CGL014
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     IDSLDY     E DSDSLDY
+      ** Longer data structure for access objects
+      *
+     I*                                                                   CGL018
+     ISCSARD    E DSSCSARDPD                                              CGL018
+     I** MIDAS Switchable Features Accessed Via Access Program            CGL018
+     I*                                                                   CGL018
+      * Datastructure to output RWA details                               CGL018
+      *                                                                   CGL018
+     IRWSECO      DS                          1   5                       CGL018
+     I                                        1   2 #RCODE                CGL018
+     I I            ' '                       3   3 #BLANK                CGL018
+     I                                        4   4 #RSET                 CGL018
+     I I            ','                       5   5 #COMMA                CGL018
+      *                                                                   CGL018
+      /COPY ZSRSRC,ZFRPEDZ2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Main Processing Routine                             *
+      *  SRBRCH - Retrieve Branch and Branch Name of Collateral       *
+      *  SRDETL - Output Collateral Details                           *
+      *  SRCUST - Retrieve Customer Name via AOCUSTR1                 *
+      *  SRDATE - Convert Date to DDMMMYY or MMMDDYY                  *
+      *  SRNARR - Output Collateral Narratives                        *
+      *  SRALOC - Output Collateral Allocations                       *
+      *  SRFMAT - Format Collateral Allocations Details               *
+      *  SRWRIT - Write Narratives and Allocations on Report          *
+      *  SRCHEK - Determine which fields to display                   *
+      *  SR1END - Write End of Report                                 *
+      *  SRAUDT - Output Audit Report and End Program                 *
+      *  *PSSR  - Standard DB Error Processing                        *
+      *  SRCFP1 - Register GL3300P1 via RCF                           *
+      *  SRCFAU - Register GL3300AU via RCF                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output Audit Report and End Program
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Program Initialisation                            *
+      *  Called By: Main Processing                                   *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *             SRCFAU, SRCFP1                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PAURE   1
+     C                     PARM           PRSEQ   5
+      *
+      ** Initialise LDA field
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL3300'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            *DB ERROR 001 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CGL014
+      ** Check if CGL014 is installed                                                         CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL014
+     C                     PARM *BLANKS   PRTCD   7                                           CGL014
+     C                     PARM '*KEY   ' POPTN   7                                           CGL014
+     C                     PARM 'CGL014'  PSAR    6                                           CGL014
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL014
+      *                                                                                       CGL014
+      ** Handle Database Error                                                                CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFNE *BLANKS                                                       CGL014
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL014
+     C           *LOCK     IN   LDA                                                           CGL014
+     C                     MOVELPSAR      DBKEY                                               CGL014
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL014
+     C                     Z-ADD11        DBASE                                               CGL014
+     C                     OUT  LDA                                                           CGL014
+     C                     EXSR *PSSR                                                         CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C           PRTCD     IFEQ *BLANKS                                                       CGL014
+     C                     MOVEL'Y'       CGL014  1                                           CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVEL'N'       CGL014                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *                                                                   CGL018
+      ***  Determine if switchable feature CGL018 is activated            CGL018
+      *                                                                   CGL018
+     C                     CALL 'AOSARDR0'                                CGL018
+     C                     PARM *BLANKS   PRTCD   7                       CGL018
+     C                     PARM '*VERIFY' POPTN   7                       CGL018
+     C                     PARM 'CGL018'  PSARD   6                       CGL018
+     C           SCSARD    PARM SCSARD    DSSDY                           CGL018
+      *                                                                   CGL018
+     C           PRTCD     IFEQ *BLANK                                    CGL018
+     C                     MOVE 'Y'       CGL018  1                       CGL018
+     C                     SETON                     81                   CGL018
+     C                     ELSE                                           CGL018
+     C                     MOVE 'N'       CGL018                          CGL018
+     C                     SETOF                     81                   CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+      *
+      ** Determine which header tp print
+      *
+     C           PAURE     IFEQ 'A'
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRCFAU
+      *
+      ** Report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         STRTLN  30
+     C                     MOVE *BLANKS   WFIRST  1
+      *
+      ** Register GL3300P1 to RCF
+      *
+     C                     CLOSEGL3300P1
+     C                     OPEN GL3300P1
+     C                     EXSR SRCFP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC  -  Main Processing Routine                           *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRAUDT, SRBRCH, SRDETL, SR1END                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     Z-ADDSTRTLN    PRTLN1
+      *
+      ** Establish starting position
+      *
+     C           *LOVAL    SETLLGLCOLLLD
+      *
+      ** Read Collateral Details
+      *
+     C                     READ GLCOLLLD                 60
+      *
+     C           *IN60     IFEQ '1'
+      *
+      ** Generate GL3300AU to report no Collateral Locations found
+      *
+     C                     EXSR SRAUDT
+     C                     ELSE
+      *
+     C           *IN60     DOUEQ'1'
+      *
+      ** Count records read
+      *
+     C                     ADD  1         RCOUNT
+     C                     MOVE 'Y'       W0PFM   1
+      *
+      ** Skip records not accessed today if Audit List is requested
+      *
+     C           PAURE     IFEQ 'A'
+     C           CDLCD     ANDNEBJRDNB
+     C                     MOVE 'N'       W0PFM
+     C                     ENDIF
+      *
+      ** Collateral Reference, Description, and Action
+      *
+     C           W0PFM     IFEQ 'Y'
+     C                     MOVELCDCREF    RCREF
+     C                     MOVELCDDESC    RDESC
+     C                     MOVELCDTYLC    RTYLC
+      *
+      ** Write Header
+      *
+     C                     EXSR SRBRCH
+     C                     WRITEHEADP1
+      *
+      ** Process Report Lines
+      *
+     C                     EXSR SRDETL
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ GLCOLLLD                 60
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Write final records and Totals to Report
+      *
+     C                     EXSR SR1END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBRCH  -  Retrieve Branch and Branch Name of Collateral     *
+      *  Called By: SRPROC                                            *
+      *  Calls    : AOBRCHR0 - Access Branch Details                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR
+      *
+     C                     MOVEL*BLANKS   RBRCA
+     C                     MOVEL*BLANKS   RBRNA
+     C                     MOVEL*BLANKS   RBRCB
+     C                     MOVEL*BLANKS   RBRNB
+      *
+     C           CDBRCA    IFNE *BLANKS
+      *
+     C                     MOVE '1'       *IN28
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM CDBRCA    WBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELCDBRCA    DBKEY
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            *DB ERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C           *IN20     IFEQ '1'
+     C                     MOVELA8BRCD    RBRCA
+     C                     MOVELA8BRNM    RBRNA
+     C                     ELSE
+     C                     MOVELA8BRCD    RBRCB
+     C                     MOVELA8BRNM    RBRNB
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Output Collateral Details                         *
+      *  Called By: SRPROC                                            *
+      *  Calls    : AOCURRR0 - Access Currency Details                *
+      *             SRCUST, SRDATE, ZEDIT, ZFRPED, SRCHEK, SRNARR,    *
+      *             SRALOC                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+     C                     CLEARDETAIL
+      *
+      ** Entity Level, Company, and Collateral Type
+      *
+     C                     MOVELCDENTY    RENTY
+     C                     MOVELCDCMPY    RCMPY
+     C                     MOVELCDCOLT    RCOLT
+      *
+      ** Collateral Customer
+      *
+     C                     MOVELCDCNUM    WCUST
+     C                     Z-ADD3         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RCNUM
+      *
+      ** General/Specific, Cross Reference, and Status
+      *
+     C                     MOVELCDGNSP    RGNSP
+     C                     MOVELCDXREF    RXREF
+     C                     MOVELCDSTAT    RSTAT
+      *
+      ** Signing Date
+      *
+     C                     Z-ADDCDSDAT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RSDAT
+      *
+      ** Value Date
+      *
+     C                     Z-ADDCDVDAT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RVDAT
+      *
+      ** End Date
+      *
+     C                     Z-ADDCDEDAT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    REDAT
+      *
+      ** Renewable Indicator
+      *
+     C                     MOVELCDRNEW    RRNEW
+      *
+      ** Review Date, Frequency, and Day Number
+      *
+     C                     Z-ADDCDRVDT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RRVDT
+     C                     MOVELCDRFRQ    RRFRQ
+     C                     Z-ADDCDRDNO    RRDNO
+      *
+      ** Currency, Amount/Percentage Indicator, and Number of Units
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM           WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM CDCCY     WCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELWCCY      DBKEY
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            *DB ERROR 004 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELCDCCY     RDCCY
+     C                     ENDIF
+      *
+     C                     MOVELCDAPCT    RAPCT
+      *
+     C           CDAPCT    IFEQ 'A'
+     C           CDNAMT    ANDNE0                                                             CGL014
+     C********** CDUNIT    ANDNE0                                                             CGL014
+     C**********           Z-ADDCDUNIT    RUNIT                                               CGL014
+     C**********           Z-ADDCDNAMT    RUNIT                                      CGL014 BUG17000
+     C**********           Z-ADDA6NBDP    ZDECS                                   BUG17000 AR1008615
+     C                     Z-ADD8         ZDECS                                            AR1008615
+     C                     Z-ADD0         CDUPR2                                           AR1008615
+     C           CDUPRC    MULT 100000000 CDUPR2 188                                       AR1008615
+     C**********           Z-ADDCDNAMT    ZFLD15                                   BUG17000 AR995788
+     C**********           Z-ADDCDUPRC    ZFLD15                                  AR995788 AR1008615
+     C                     Z-ADDCDUPR2    ZFLD15                                           AR1008615
+     C                     EXSR ZFRPED                                                      BUG17000
+     C                     MOVELZOUT25    RUNIT                                             BUG17000
+     C                     ENDIF
+      *
+      ** Percentage, Unit Amount, Maximum Amount, Valuation Amount, and Valuer
+      *
+     C           CDAPCT    IFEQ 'P'
+     C                     Z-ADD2         ZADEC
+     C                     MOVE CDPCNT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPCNT
+     C                     ENDIF
+      *
+     C           CDAPCT    IFEQ 'A'
+     C********** CDUAMT    ANDNE0                                                             CGL014
+     C********** CDUPRC    ANDNE0                                                    CGL014 AR995788
+     C           CDNAMT    ANDNE0                                                           AR995788
+     C**********           Z-ADDA6NBDP    ZDECS                                               CGL014
+     C**********           Z-ADDCDUAMT    ZFLD15                                              CGL014
+     C**********           Z-ADD8         ZDECS                                      CGL014 AR995788
+     C                     Z-ADDA6NBDP    ZDECS                                             AR995788
+     C**********           MOVE CDUPRC    ZFLD15                                     CGL014 AR995788
+     C                     Z-ADDCDNAMT    ZFLD15                                            AR995788
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RUAMT
+     C                     ENDIF
+     C                     SETOF                     50                                    AR1008615
+     C           CDUPRC    IFNE 0                                                          AR1008615
+     C                     SETON                     50                                    AR1008615
+     C                     Z-ADD0         ZDECS                                            AR1008615
+     C                     MOVELCDNAMT    WCDNAT 130                                       AR1008615
+     C                     Z-ADDWCDNAT    ZFLD15                                           AR1008615
+     C                     EXSR ZFRPED                                                     AR1008615
+     C                     MOVELZOUT25    RUAMT                                            AR1008615
+     C                     ENDIF                                                           AR1008615
+      *
+     C           CDAPCT    IFEQ 'P'
+     C********** CDMAMT    ANDNE0                                                             CGL014
+     C           CDMXNA    ANDNE0                                                             CGL014
+     C                     Z-ADDA6NBDP    ZDECS
+     C**********           Z-ADDCDMAMT    ZFLD15                                              CGL014
+     C                     Z-ADDCDMXNA    ZFLD15                                              CGL014
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RMAMT
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDVAMT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RVAMT
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDVCNM    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDVCNM    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+     C********** CDVCNM    IFNE 0                                                             CSD027
+     C           CDVCNM    IFNE *BLANKS                                                       CSD027
+     C********** CDVCNM    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDVCNM    WCUST
+     C                     Z-ADD5         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RVCNM
+     C                     ENDIF
+      *                                                                                     BUG17000
+      ** Blocked Collateral and Minimum Amount                                              BUG17000
+      *                                                                                     BUG17000
+     C                     MOVELCDBCOL    RBLCL                                             BUG17000
+     C           CDAPCT    IFEQ 'P'                                                         BUG17000
+     C           CDMNNA    ANDNE0                                                           BUG17000
+     C                     Z-ADDA6NBDP    ZDECS                                             BUG17000
+     C                     Z-ADDCDMNNA    ZFLD15                                            BUG17000
+     C                     EXSR ZFRPED                                                      BUG17000
+     C                     MOVELZOUT25    RMNNA                                             BUG17000
+     C                     ENDIF                                                            BUG17000
+      *
+      ** Valuation Date
+      *
+     C                     Z-ADDCDVLDT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RVLDT
+      *
+      ** Next Valuation Date, Frequency, and Day Number
+      *
+     C                     Z-ADDCDNVDT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RNVDT
+      *
+     C                     MOVELCDVFRQ    RVFRQ
+     C                     Z-ADDCDVDNO    RVDNO
+      *
+      ** Margin
+      *
+     C           CDMARG    IFNE 0
+     C                     Z-ADD2         ZADEC
+     C                     MOVE CDMARG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RMARG
+     C                     ENDIF
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDHCNM    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDHCNM    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+      ** Holding Customer
+      *
+     C********** CDHCNM    IFNE 0                                                             CSD027
+     C           CDHCNM    IFNE *BLANKS                                                       CSD027
+     C********** CDHCNM    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDHCNM    WCUST
+     C                     Z-ADD6         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RHCNM
+     C                     ENDIF
+      *
+      ** Collateral Location
+      *
+     C                     MOVELCDCOLO    RCOLO
+      *
+      ** Lending Value
+      *
+     C           CDLAMT    IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDLAMT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RLAMT
+     C                     ENDIF
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           WCUNM     IFNE *BLANKS                                                     BUG12906
+     C                     MOVE WCUNM     WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+      ** Provider Details
+      *
+     C                     MOVE *BLANKS   IDER
+     C                     Z-ADD1         X       30
+     C           X         DOWLE12
+     C**********           MOVELPROV,X    WCUNM   60                                          CSD027
+     C********** WCUNM     IFNE 0                                                             CSD027
+     C                     MOVELPROV,X    WCUNM   6                                           CSD027
+     C           WCUNM     IFNE *BLANKS                                                       CSD027
+     C********** WCUNM     ANDNE'0     '                                           BUG11631 BUG12906
+     C***********WCUS60    ANDNE0                                                    BUG12906 250354
+     C                     MOVELPROV,X    WCUST
+     C                     Z-ADD7         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    IDER,X
+     C                     ENDIF
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      ** Price Feed Link
+      *
+     C                     MOVELCDPFLK    RPFLK
+      *
+      ** Accrued Interest
+      *
+     C           CDACCR    IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDACCR    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RACCR
+     C                     ENDIF
+      *
+      ** Income Rate/Amount
+      *
+     C           CDIAMT    IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDIAMT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RIAMT
+     C                     ENDIF
+      *
+      ** Module Secured
+      *
+     C                     MOVELCDMODS    RMODS
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDFCUS    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDFCUS    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+      ** Secured Facility and Loan Limit
+      *
+     C********** CDFCUS    IFNE 0                                                             CSD027
+     C           CDFCUS    IFNE *BLANKS                                                       CSD027
+     C********** CDFCUS    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDFCUS    RFCUS
+     C                     ENDIF
+      *
+     C           CDFTYP    IFNE 0
+     C                     MOVELCDFTYP    RFTYP
+     C                     ENDIF
+      *
+     C           CDFSEQ    IFNE 0
+     C                     MOVELCDFSEQ    RFSEQ
+     C                     ENDIF
+      *
+     C********** CDLNLM    IFNE 0                                                             CLE148
+     C                     MOVELCDLNLM    RLNLM
+     C**********           ENDIF                                                              CLE148
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDSCNM    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDSCNM    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+      ** Retail Account
+      *
+     C           CDMODS    IFEQ 'RE'
+     C           CDSACN    IFNE 0
+     C                     MOVELCDSACN    RSACN
+     C                     ELSE
+     C********** CDSCNM    IFNE 0                                                             CSD027
+     C           CDSCNM    IFNE *BLANKS                                                       CSD027
+     C********** CDSCNM    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C           CDSACD    ANDNE0
+     C           CDSSEQ    ANDNE0
+     C                     MOVELWSACN     RSACN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDCCNM    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDCCNM    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *
+      ** Collateral Transaction/Account
+      *
+     C                     SELEC
+     C           CDCOPT    WHEQ 'A'
+     C           CDCACN    IFNE 0
+     C                     MOVELCDCACN    RCACN
+     C                     ELSE
+     C********** CDCCNM    IFNE 0                                                             CSD027
+     C           CDCCNM    IFNE *BLANKS                                                       CSD027
+     C********** CDCCNM    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C           CDCACD    ANDNE0
+     C           CDCSEQ    ANDNE0
+     C                     MOVELWCACN     RCACN
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDCSCN    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDCSCN    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+     C           CDCOPT    WHEQ 'D'
+     C                     MOVELCDDEAL    RCACN
+     C           CDCOPT    WHEQ 'P'
+     C********** CDCSCN    IFNE 0                                                             CSD027
+     C           CDCSCN    IFNE *BLANKS                                                       CSD027
+     C********** CDCSCN    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELWSECN     RCACN
+     C                     ENDIF
+     C                     ENDSL
+      *
+      ** Inclusive/Exclusive if Interest/Charges and Image Reference
+      *
+     C                     MOVELCDINEX    RINEX
+     C                     MOVELCDIRF1    RIRF1
+     C                     MOVELCDIRF2    RIRF2
+     C                     MOVELCDIRF3    RIRF3
+     C                     MOVELCDIRF4    RIRF4
+     C                     MOVELCDIRF5    RIRF5
+     C                     MOVELCDIRF6    RIRF6
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDINSR    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDINSR    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+      *
+      ** Insurer
+      *
+     C********** CDINSR    IFNE 0                                                             CSD027
+     C           CDINSR    IFNE *BLANKS                                                       CSD027
+     C********** CDINSR    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDINSR    WCUST
+     C                     Z-ADD8         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RINSR
+     C                     ENDIF
+      *
+      ** Insurance Policy Reference, Policy Location, Document Reference,
+      ** and Restrictions
+      *
+     C                     MOVELCDIPLY    RIPLY
+     C                     MOVELCDIPLO    RIPLO
+     C                     MOVELCDDORF    RDORF
+     C                     MOVELCDIRST    RIRST
+      *
+      ** Insurance Valuation
+      *
+     C           CDIVAL    IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDIVAL    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RIVAL
+     C                     ENDIF
+      *
+      ** Insurance Date, Frequency, and Day Number
+      *
+     C                     Z-ADDCDINDT    ZDAYNO
+     C                     EXSR SRDATE
+     C                     MOVELW#DATE    RINDT
+      *
+     C                     MOVELCDINFQ    RINFQ
+     C                     Z-ADDCDINDN    RINDN
+      *
+      ** Registered
+      *
+     C                     MOVELCDRGTR    RRGTR
+      *
+      ** Value of Prior Charges
+      *
+     C           CDVPCH    IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCDVPCH    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RVPCH
+     C                     ENDIF
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDSCHC    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDSCHC    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+      *
+      ** Subsequent Chargee
+      *
+     C           CDSCNS    IFEQ *BLANKS
+     C********** CDSCHC    IFNE 0                                                             CSD027
+     C           CDSCHC    IFNE *BLANKS                                                       CSD027
+     C********** CDSCHC    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDSCHC    WCUST
+     C                     Z-ADD9         WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RSCHC
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELCDSCNS    RSCHC
+     C                     ENDIF
+      *                                                                                       CGL014
+     C           CGL014    IFEQ 'Y'                                                           CGL014
+      *                                                                                       CGL014
+      ** Price Type                                                                           CGL014
+      *                                                                                       CGL014
+     C                     MOVELCDPRTP    RXPRT                                               CGL014
+      *                                                                                       CGL014
+      ** Generate Accounting Flag                                                             CGL014
+      *                                                                                       CGL014
+     C                     MOVELCDGENA    RXGAF                                               CGL014
+      *                                                                                       CGL014
+      ** Collateral Purpose                                                                   CGL014
+      *                                                                                       CGL014
+     C                     MOVELCDCPUR    RXCPU                                               CGL014
+      *                                                                                       CGL014
+      ** Weighting Code                                                                       CGL014
+      *                                                                                       CGL014
+     C                     MOVELCDWEIG    RXWEC                                               CGL014
+      *                                                                                       CGL014
+      ** Block Contents                                                                       CGL014
+      *                                                                                       CGL014
+     C                     MOVELCDBCON    RXBCO                                               CGL014
+      *                                                                                       CGL014
+      ** Release Date                                                                         CGL014
+      *                                                                                       CGL014
+     C                     Z-ADDCDRLDT    ZDAYNO                                              CGL014
+     C                     EXSR SRDATE                                                        CGL014
+     C                     MOVELW#DATE    RXRDT                                               CGL014
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CDRCUS    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CDRCUS    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+      *                                                                                       CGL014
+      ** Release Customer                                                                     CGL014
+      *                                                                                       CGL014
+     C********** CDRCUS    IFNE 0                                                      CGL014 CSD027
+     C           CDRCUS    IFNE *BLANKS                                                       CSD027
+     C********** CDRCUS    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCDRCUS    WCUST                                               CGL014
+     C                     Z-ADD12        WBASE                                               CGL014
+     C                     EXSR SRCUST                                                        CGL014
+     C                     MOVE BBCSSN    RXRCU                                               CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVE *BLANKS   RXRCU                                               CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     ENDIF                                                              CGL014
+      *
+      ** Count no of inserts, amends, and deletes
+      *
+     C                     SELEC
+     C           CDTYLC    WHEQ 'I'
+     C                     ADD  1         RINSER
+     C           CDTYLC    WHEQ 'A'
+     C                     ADD  1         RAMEND
+     C           CDTYLC    WHEQ 'D'
+     C                     ADD  1         RDELET
+     C                     ENDSL
+      *
+      ** Check which fields are not to be displayed
+      *
+     C                     EXSR SRCHEK
+      *                                                                   CGL018
+      * Output RWA details for each collateral                            CGL018
+      *                                                                   CGL018
+     C           CGL018    IFEQ 'Y'                                       CGL018
+     C                     EXSR RWADTL                                    CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+      *
+      ** Write out Detail Record
+      *
+     C                     WRITEDETAIL
+      *
+      ** Output Narratives and Allocations
+      *
+     C                     EXSR SRNARR
+     C                     EXSR SRALOC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST  -  Retrieve Customer Name via AOCUSTR1               *
+      *  Called By: SRDETL, SRFMAT                                    *
+      *  Calls    : AOCUSTR1 - Access Customer Details                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCUST    BEGSR
+      *
+     C                     CALL 'AOCUSTR1'
+     C                     PARM '*BLANKS 'WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSLDY
+      *
+     C           WRTCD     IFNE *BLANKS
+      *                                                                                     BUG12196
+     C           WBASE     IFNE 5                                                           BUG12196
+     C           WBASE     ANDNE9                                                           BUG12196
+     C           *LOCK     IN   LDA
+     C                     MOVELWCUST     DBKEY
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     Z-ADDWBASE     DBASE            *DB ERROR 000 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                     BUG12196
+     C           WBASE     IFEQ 5                                                           BUG12196
+     C                     MOVE *BLANKS   RVCNM                                             BUG12196
+     C                     ENDIF                                                            BUG12196
+     C           WBASE     IFEQ 9                                                           BUG12196
+     C                     MOVE *BLANKS   RSCHC                                             BUG12196
+     C                     ENDIF                                                            BUG12196
+      *                                                                                     BUG12196
+     C                     ENDIF                                                            BUG12196
+      *
+     C                     Z-ADD0         WBASE   30
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDATE  -  Convert Date to DDMMMYY or MMMDDYY                *
+      *  Called By: SRDETL                                            *
+      *  Calls    : ZDATE2                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDATE    BEGSR
+      *
+     C                     MOVEL*BLANKS   W#DATE  7
+     C                     MOVEL*BLANKS   FDAT1
+     C                     MOVEL*BLANKS   FDAT2
+      *
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    W#DATE
+      *
+      ** Reformat date if *IN98 is *ON
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVELZADATE    FDAT1
+     C                     MOVELFDAY1     FDAY2
+     C                     MOVELFMON1     FMON2
+     C                     MOVELFYER1     FYER2
+     C                     MOVELFDAT2     W#DATE
+     C                     ENDIF
+      *
+     C                     Z-ADD0         ZDAYNO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNARR  -  Output Collateral Narratives                      *
+      *  Called By: SRDETL                                            *
+      *  Calls    : SRWRIT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNARR    BEGSR
+      *
+      ** Establish starting position
+      *
+     C           CDCREF    SETLLGLCOLNL1
+      *
+      ** Read Collateral Narratives
+      *
+     C           CDCREF    READEGLCOLNL1                 61
+      *
+     C           *IN61     IFEQ '1'
+     C                     GOTO ENARR
+     C                     ELSE
+     C                     MOVE '1'       *IN21
+     C                     WRITEHEADP2
+      *
+     C           *IN61     DOWEQ'0'
+     C                     CLEARNARRATE
+     C                     MOVELCNNARR    RNARR
+     C                     EXSR SRWRIT
+     C           CDCREF    READEGLCOLNL1                 61
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN21
+      *
+     C           ENARR     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRALOC  -  Output Collateral Allocations                     *
+      *  Called By: SRDETL                                            *
+      *  Calls    : SRFMAT, SRWRIT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRALOC    BEGSR
+      *
+      ** Establish starting position
+      *
+     C           CDCREF    SETLLGLCOLAL1
+      *
+      ** Read Collateral Allocations
+      *
+     C           CDCREF    READEGLCOLAL1                 62
+      *
+     C           *IN62     IFEQ '1'
+     C                     GOTO EALOC
+     C                     ELSE
+     C                     MOVE '1'       *IN22
+     C                     WRITEHEADP2
+      *
+     C           *IN62     DOWEQ'0'
+      *
+      ** Format Allocation Details
+      *
+     C                     CLEARALLOCAT
+     C                     EXSR SRFMAT
+      *
+     C                     EXSR SRWRIT
+     C           CDCREF    READEGLCOLAL1                 62
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN22
+      *
+     C           EALOC     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFMAT  -  Format Collateral Allocations Details             *
+      *  Called By: SRALOC                                            *
+      *  Calls    : SRCUST                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFMAT    BEGSR
+      *
+      ** Collateral Allocation Customer
+      *
+     C                     MOVELCACNUM    WCUST
+     C                     Z-ADD10        WBASE
+     C                     EXSR SRCUST
+     C                     MOVE BBCSSN    RCNUMA
+      *
+      ** Module and Priority
+      *
+     C                     MOVELCAMODS    RMODSA
+     C                     Z-ADDCAPRTY    RPRTYA
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CAFCUS    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CAFCUS    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+      *
+      ** Secured Facility and Loan/Limit
+      *
+     C********** CAFCUS    IFNE 0                                                             CSD027
+     C           CAFCUS    IFNE *BLANKS                                                       CSD027
+     C********** CAFCUS    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C                     MOVELCAFCUS    RFCUSA
+     C                     ENDIF
+      *
+     C           CAFTYP    IFNE 0
+     C                     MOVELCAFTYP    RFTYPA
+     C                     ENDIF
+      *
+     C           CAFSEQ    IFNE 0
+     C                     MOVELCAFSEQ    RFSEQA
+     C                     ENDIF
+      *
+     C********** CALNLM    IFNE 0                                                             CLE148
+     C                     MOVELCALNLM    RLNLMA
+     C**********           ENDIF                                                              CLE148
+      *                                                                                     BUG12906
+     C                     Z-ADD*ZERO     WCUS60                                            BUG12906
+     C           CASCNM    IFNE *BLANKS                                                     BUG12906
+     C                     MOVE CASCNM    WCUS60  60                                        BUG12906
+     C                     ENDIF                                                            BUG12906
+      *                                                                                     BUG12906
+      *
+      ** Account Code
+      *
+     C           CAMODS    IFEQ 'RE'
+     C           CASACN    ANDNE0
+     C                     MOVELCASACN    RACCDA
+     C                     ELSE
+     C********** CASCNM    IFNE 0                                                             CSD027
+     C           CASCNM    IFNE *BLANKS                                                       CSD027
+     C********** CASCNM    ANDNE'0     '                                           BUG11631 BUG12906
+     C           WCUS60    ANDNE0                                                           BUG12906
+     C           CASACD    ANDNE0
+     C           CASSEQ    ANDNE0
+     C                     MOVELWACCD     RACCDA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Amount/Percentage
+      *
+     C                     MOVELCAAPCT    RAPCTA
+      *
+      ** Amount
+      *
+     C           CAAMT     IFNE 0
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCAAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RAAMTA
+     C                     ENDIF
+      *
+      ** Percentage
+      *
+     C           CAPCNT    IFNE 0
+     C                     Z-ADD2         ZADEC
+     C                     MOVE CAPCNT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPCNTA
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT  -  Write Narratives and Allocations on Report        *
+      *  Called By: SRNARR, SRALOC                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+     C                     MOVEA'00'      *IN,21
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+      *
+     C                     SELEC
+     C           *IN61     WHEQ '0'
+     C                     MOVE '1'       *IN21
+     C           *IN62     WHEQ '0'
+     C                     MOVE '1'       *IN22
+     C                     ENDSL
+     C                     WRITEHEADP2
+      *
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           *IN61     WHEQ '0'
+     C                     WRITENARRATE
+     C           *IN62     WHEQ '0'
+     C                     WRITEALLOCAT
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHEK  -  Determine which fields to display                 *
+      *  Called By: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHEK    BEGSR
+      *
+     C                     SELEC
+     C           CDCOPT    WHEQ 'P'
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN26
+     C           CDCOPT    WHEQ 'M'
+     C                     MOVE '1'       *IN24
+     C           CDCOPT    WHEQ 'A'
+     C           CDCOPT    OREQ 'D'
+     C                     MOVE '1'       *IN26
+     C           CDCOPT    WHEQ 'C'
+     C           CDCOPT    OREQ 'G'
+     C           CDCOPT    OREQ 'L'
+     C           CDCOPT    OREQ 'O'
+     C                     MOVE '1'       *IN27
+     C                     ENDSL
+      *
+     C           CDGNSP    IFEQ 'S'
+     C                     MOVE '1'       *IN25
+     C                     ENDIF
+      *
+     C           CGL018    IFEQ 'Y'                                       CGL018
+     C                     SETON                     81                   CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                                       CGL014
+     C           CGL014    IFEQ 'Y'                                                           CGL014
+     C                     MOVE *ON       *IN29                                               CGL014
+     C                     ELSE                                                               CGL014
+     C                     MOVE *OFF      *IN29                                               CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                   CGL018
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR1END  -  Write End of Report                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SR1END    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT  -  Output Audit Report and End Program               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+     C                     WRITECONTROL
+      *
+      ** Or, if no records read, Output "No Details" message
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Standard DB Error processing                      *
+      *  Called By: SRINIT, SRREPT                                    *
+      *  Calls    : SRAUDT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1  -  Register GL3300P1 via RCF                         *
+      *  Called By: SRINIT                                            *
+      *  Calls    : ZSFILE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           WFIRST    IFNE 'Y'
+     C                     Z-ADDPRTLN1    STRTLN
+     C                     MOVE 'Y'       WFIRST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU  -  Register GL3300AU via RCF                         *
+      *  Called By: SRINIT                                            *
+      *  Calls    : ZSFILE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * RWA       : Output RWA information from GLORWAPD                * CGL018
+      * ---                                                             * CGL018
+      * Called By : CAPRDT                                              * CGL018
+      * Calls     : None                                                * CGL018
+      ******************************************************************* CGL018
+     C           RWADTL    BEGSR                                          CGL018
+      *                                                                   CGL018
+     C           RCREF     SETLLGLORWAD0                                  CGL018
+     C           RCREF     READEGLORWAD0                 97               CGL018
+     C                     MOVE *BLANKS   XRWA                            CGL018
+     C                     MOVEL*BLANKS   RWASE                           CGL018
+     C                     MOVEL*BLANKS   RWASEC                          CGL018
+     C                     MOVEL*BLANKS   #CONTI                          CGL018
+     C                     Z-ADD0         U       20                      CGL018
+     C           *IN97     DOWEQ'0'                                       CGL018
+      *                                                                   CGL018
+     C                     ADD  1         U                               CGL018
+     C                     MOVE RWCODE    #RCODE                          CGL018
+     C                     MOVE RWSETN    #RSET                           CGL018
+      *                                                                   CGL018
+     C           U         IFGT 18                                        CGL018
+     C           #CONTI    ANDNE'C'                                       CGL018
+     C                     Z-ADD1         U                               CGL018
+     C                     MOVEL'C'       #CONTI  1                       CGL018
+     C                     MOVEL*BLANKS   RWASE                           CGL018
+     C                     MOVEAXRWA      RWASE                           CGL018
+     C                     MOVE *BLANKS   XRWA                            CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+     C                     MOVEARWSECO    XRWA,U                          CGL018
+      *                                                                   CGL018
+     C           RCREF     READEGLORWAD0                 97               CGL018
+     C                     ENDDO                                          CGL018
+      *                                                                   CGL018
+     C           U         IFEQ 0                                         CGL018
+     C                     MOVEL'None'    RWASE                           CGL018
+     C                     ELSE                                           CGL018
+      *                                                                   CGL018
+      * Last one must be without comma, so clear and output again         CGL018
+      *                                                                   CGL018
+     C                     MOVEL*BLANKS   #COMMA                          CGL018
+     C                     MOVEARWSECO    XRWA,U                          CGL018
+      *                                                                   CGL018
+     C           #CONTI    IFEQ 'C'                                       CGL018
+     C                     MOVEAXRWA      RWASEC                          CGL018
+     C                     ELSE                                           CGL018
+     C                     MOVEAXRWA      RWASE                           CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+     C                     MOVEL','       #COMMA                          CGL018
+     C                     ENDIF                                          CGL018
+      *                                                                   CGL018
+     C                     ENDSR                                          CGL018
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

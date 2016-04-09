@@ -1,0 +1,225 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTCUSTLEND production run I/F')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*         MQ531C -  Production Run I/Face for RTCUSTLEND        *
+     F*                                                               *
+     F*       Used to display a status message while Midas/Q is       *
+     F*            interactively producing a report                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Last Amend No. CMQ001             Date 04NOV97               *
+     F*  Prev Amend No.                    Date ddmmmyy               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F* Paramter list :
+     F* ~~~~~~~~~~~~~                                                 User
+     F* Name    Type    Size  Description                            Chang
+     F* ~~~~    ~~~~    ~~~~  ~~~~~~~~~~~                            ~~~~~
+     F* O#SDBK  Struct   n/a  MIDAS/Q system definition block          NO
+     F* O#TCBK  Struct   n/a  MIDAS/Q task / process control block     NO
+     F* O#PIBK  Struct   n/a  MIDAS/Q process information block        NO
+     F* O#IEBK  Struct   n/a  MIDAS/Q information exchange block       NO
+     F* DSP05#  Struct   n/a  MIDAS/Q subset defintion record          NO
+     F* DSP08#  Struct   n/a  MIDAS/Q report defintion record          NO
+     F* O#DDBK  Struct   n/a  MIDAS/Q device defintion block           NO
+     F* O#OTBK  Struct   n/a  MIDAS/Q output tracking block            NO
+     F* @SO@DS  Struct   n/a  MIDAS/Q select / omit values             NO
+     F* @PRTI@  Struct   n/a  MIDAS/Q subtotal warning block           NO
+     F* TPR#RC  Char       1  Return code.                             YES
+     F* TPR#RN  Packed   7,0  Run number assigned to production run    NO
+     F* TPR#PG  Char      10  Name of report module to be called       NO
+     F* TPR#NM  Char      10  Name of report definition (user name)    NO
+     F* TPR#RD  Char      40  Description of report                    NO
+     F* TPR#IA  Char     200  Permanent report interface area          YES
+     F* TPR#UR  Struct   500  Temporary user run interface area        YES
+     F* TPR#IO  Packed  15,0  User count of I/O operations             YES
+     F* TPR#  Ary(5)*chr(75)  User description of production run       YES
+     F*****************************************************************
+     FMQ531CDFO   E                    WORKSTN                        UC
+     F/EJECT
+      **
+      ** TPR#  Ary(5)*chr(75)  User description of production run      YES
+      **
+     E                    TPR#        5 75
+      **
+      ** Copyright insertion.
+      **
+     E                    CPY@    1   1 80
+     E/EJECT
+      **
+      ** Message data Data Structure
+      **
+     I@MSDTA      DS                             50
+     I                                        1  10 $$NAM
+     I                                       11  12 $$SECA
+     I                                       13  15 $$MINA
+      **
+      ** Program Status Data Structure
+      **
+     IPGMDS      SDS
+     I                                        1  10 #PGMQ
+     I@PRTI@      DS                            604
+     I@SO@DS      DS                           6000
+     I*******************************************
+     I* SYSTEM DEFINITION BLOCK - PACKAGE VERSION
+     I*******************************************
+     IO#SDBK      DS                           1000
+     I*********************************************
+     I* SYSTEM TASK CONTROL BLOCK - PACKAGE VERSION
+     I*********************************************
+     IO#TCBK      DS                           1000
+     I****************************************************
+     I* SYSTEM PROGRAM INFORMATION BLOCK - PACKAGE VERSION
+     I****************************************************
+     IO#PIBK      DS                           1000
+     I*****************************************************
+     I* SYSTEM INFORMATION EXCHANGE BLOCK - PACKAGE VERSION
+     I*****************************************************
+     IO#IEBK      DS                           2000
+     I*
+     I* FULL SUBSET DEFINITION RECORD
+     I*
+     IDSP05#    E DSO#XP05
+     I*
+     IDSP08#    E DSO#XP08
+     I*
+     I**************************************************
+     I* SYSTEM DEVICE DEFINITION BLOCK - PACKAGE VERSION
+     I**************************************************
+     IO#DDBK      DS                        003 200
+     I*****************************************************
+     I* SYSTEM OUTPUT FILE TRACKING BLOCK - PACKAGE VERSION
+     I*****************************************************
+     IO#OTBK      DS                        030 100
+     ITPR#UR      DS                            500
+     ITPR#IA      DS                            200
+      **
+      ** Copyright Array for compilation
+      **
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      **
+      ** Commands for QCMDEXC
+      **
+     IXXXXX       DS
+     I I            'CHGJOB STSMSG(*NONE)'    1  20 MSGNON
+     I I            'CHGJOB STSMSG(*USRPR-   21  42 MSGPRF
+     I              'F)'
+     I/EJECT
+     C********************************************************************
+     C* *ENTRY parameter list
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           O#SDBK           SYSTEM DEFINITI
+     C                     PARM           O#TCBK           TASK CONTROL
+     C                     PARM           O#PIBK           PROGRAM INFORMA
+     C                     PARM           O#IEBK           INFORMATION EXC
+     C                     PARM           DSP05#           SUBSET DEFINITI
+     C                     PARM           DSP08#           REPORT DEFINITI
+     C                     PARM           O#DDBK           DEVICE DEFINITI
+     C                     PARM           O#OTBK           OUTPUT TRACKING
+     C                     PARM           @SO@DS           SELECT/OMIT CRI
+     C                     PARM           @PRTI@           PRINT WARNINGS
+     C                     PARM           TPR#RC  1        RETURN CODE
+     C                     PARM           TPR#RN  70       RUN NUMBER
+     C                     PARM           TPR#PG 10        PGM TO BE CALLE
+     C                     PARM           TPR#NM 10        REPORT NAME
+     C                     PARM           TPR#RD 40        REPORT DESCRIPT
+     C                     PARM           TPR#IA           USER REPORT DEF
+     C                     PARM           TPR#UR           USER RUN TIME A
+     C                     PARM           TPR#IO 150       USER I/O COUNT
+     C                     PARM           TPR#             USER RUN DESCRI
+      **
+      ** Attempt to open display file (For INTER mode only)
+      **
+     C                     OPEN MQ531CDF               10
+     C           *IN10     IFEQ '0'
+      **
+      ** Send a status message saying Midas/Q is producing the report
+      **
+      ** But first, calc the estimated time to complete
+      **
+     C           P08#AT    IFGT 0
+     C           P08#AT    DIV  60        $$MIN   30
+     C                     MVR            $$SEC   20
+     C                     MOVE TPR#NM    $$NAM
+     C                     MOVE $$SEC     $$SECA
+     C           $$MIN     IFEQ 0
+     C                     MOVEL'R5S0003' @MSGID
+     C                     ELSE
+     C                     MOVE $$MIN     $$MINA
+     C                     MOVEL'R5S0001' @MSGID
+     C                     END
+     C                     ELSE
+     C                     MOVE TPR#NM    $$NAM
+     C                     MOVEL'R5S0002' @MSGID
+     C                     END
+      **
+     C                     CALL 'MQ501XC'
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 50
+     C                     SETON                     99
+     C                     WRITEMSGCTL
+      **
+      ** Don't allow any more status messages
+      **
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MSGNON
+     C                     PARM 20        LEN    155
+      **
+     C                     END
+      **
+      ** Call Midas/Q Entry program to run the report
+      **
+     C                     CALL TPR#PG
+     C                     PARM           O#SDBK           SYSTEM DEFINITI
+     C                     PARM           O#TCBK           TASK CONTROL
+     C                     PARM           O#PIBK           PROGRAM INFORMA
+     C                     PARM           O#IEBK           INFORMATION EXC
+     C                     PARM           DSP05#           SUBSET DEFINITI
+     C                     PARM           DSP08#           REPORT DEFINITI
+     C                     PARM           O#DDBK           DEVICE DEFINITI
+     C                     PARM           O#OTBK           OUTPUT TRACKING
+     C                     PARM           @SO@DS           SELECT/OMIT CRI
+     C                     PARM           @PRTI@           PRINT WARNINGS
+     C                     PARM           TPR#RC           RETURN CODE
+     C                     PARM           TPR#RN           RUN NUMBER
+     C                     PARM           TPR#PG           PGM TO BE CALLE
+     C                     PARM           TPR#NM           REPORT NAME
+     C                     PARM           TPR#RD           REPORT DESCRIPT
+     C                     PARM           TPR#IA           USER REPORT DEF
+     C                     PARM           TPR#UR           USER RUN TIME A
+     C                     PARM           TPR#IO           USER I/O COUNT
+     C                     PARM           TPR#             USER RUN DESCRI
+      **
+      ** Allow status messages (Back to USRPRF value)
+      **
+     C                     CALL 'QCMDEXC'
+     C                     PARM           MSGPRF
+     C                     PARM 22        LEN
+      **
+      ** End Program
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

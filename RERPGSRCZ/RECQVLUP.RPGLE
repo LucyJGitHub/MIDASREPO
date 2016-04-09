@@ -1,0 +1,212 @@
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  TEXT('Midas RE Cheque Proc Validate and Update Adoption')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Application Programming Interfaces module            *
+      *                                                               *
+      *  RECQVLUP - RE Cheque Processing Validation and Update        *
+      *             Adoption Program                                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CRE067             Date 05Oct10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP204B *CREATE    Date 10Feb10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE067 - Midas Plus/Teller Interface via Bankfusion          *
+      *  CAP204B - Teller Related APIs - Account Transfer             *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **---------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA
+      ** layout and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **---------------------------------------------------------------
+ 
+      **---------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in
+      ** the Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **---------------------------------------------------------------
+ 
+      **---------------------------------------------------------------
+      ** The following /COPY line includes all the definitions of the
+      ** error arrays, including the named constant giving the size of
+      ** the arrays.
+     D/COPY ZACPYSRC,FVAL_ARRAY
+      **---------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      ** Entry Parameters
+     D PSYS            S              2A
+     D PMODE           S              1A
+     D PUPDF           S              1A
+     D PACNT           S             34A
+     D PRACN           S             10A
+     D PCHQN           S              8A
+     D PDRAM           S             13S 0                                                    CRE067
+     D PRTCD           S              1A
+     D PERMSG          S          32000A   VARYING
+ 
+     D Jobd            DS            20
+     D JobDName                1     10    INZ('MIDASIC   ')
+     D System                 11     12
+     D XLib                   13     20    INZ('XLIB    ')
+ 
+     D Parm            DS          1000
+     D OffSetB               361    364B 0
+     D LibCountB             365    368B 0
+ 
+      ** If this Message array needs to increase, a separate parameter
+      ** will need to be added
+     D MsgArrOut       S           9999    INZ(*BLANKS)
+ 
+     D OffLen          S              9  0
+     D OffSet          S              9  0
+     D InLibl          S           2750
+     D Command         S           2764
+     D Format          S             10
+     D Length          S             15  5
+     D Len             S              4B 0 INZ(1000)
+ 
+      ** Error message format for retrieve JOBD *LIBL
+     DQUSEC            DS
+      *                                           Qus EC
+     D QUSBPRV                 1      4B 0
+      *                                           Bytes Provided
+     D QUSBAVL                 5      8B 0
+      *                                           Bytes Available
+     D QUSEI                   9     15
+      *                                           Exception Id
+     D QUSERVED               16     16
+      *                                           Reserved
+     D QUSExcData             17     46
+      *                                           Varying length
+      *                                           field Exception Data
+ 
+      ** +--- Start of main processing -------------------------------+
+ 
+     C     *ENTRY        PLIST
+     C     System        PARM                    PSYS
+     C                   PARM                    PMODE
+     C                   PARM                    PUPDF
+     C                   PARM                    PACNT
+     C                   PARM                    PRACN
+     C                   PARM                    PCHQN
+     C                   PARM                    PDRAM                                        CRE067
+     C                   PARM                    PRTCD
+     C                   PARM                    PERMSG
+ 
+     C                   EVAL      PRTCD = '1'
+      *
+      ** Set up job description library list
+      *
+     C                   CALL      'QWDRJOBD'                           9697
+     C                   PARM                    PARM
+     C                   PARM                    Len
+     C                   PARM      'JOBD0100'    Format
+     C                   PARM                    Jobd
+     C                   PARM                    QUSEC
+      *
+     C                   IF        QUSEI = 'CPF9801' OR
+     C                             QUSEI = 'CPF9810'
+     C                   EVAL      PRTCD = '0'
+     C                   EVAL      PERMSG = ':::Midas system job +
+     C                             description not found:'
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   IF        QUSEI = 'CPF9802' OR
+     C                             QUSEI = 'CPF9820'
+     C                   EVAL      PRTCD = '0'
+     C                   EVAL      PERMSG = ':::Not authorised to +
+     C                             Midas system job description:'
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   EVAL      OffSet = OffSetB + 1
+     C                   EVAL      OffLen = LibCountB * 11
+     C                   EVAL      InLibl = %SUBST(Parm:OffSet:OffLen)
+     C                   EVAL      Command = ('CHGLIBL LIBL(' +
+     C                             InLibl + ')')
+ 
+     C                   CALL      'QCMDEXC'                              92
+     C                   PARM                    Command
+     C                   PARM      2764          Length
+ 
+     C                   CALL      'REC004246'   ParamStr
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initialisation subroutine                            *
+      *                                                               *
+      * Called by: Automatically called upon program execution        *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      **---------------------------------------------------------------
+      ** The following /COPY sets the values of program, module and
+      ** procedure names for database error processing.
+     C/COPY ZACPYSRC,DBFIELDS
+      **---------------------------------------------------------------
+ 
+     C     ParamStr      PLIST
+     C                   PARM                    PMODE
+     C                   PARM                    PUPDF
+     C                   PARM                    PACNT
+     C                   PARM                    PRACN
+     C                   PARM                    PCHQN
+     C                   PARM                    PDRAM                                        CRE067
+     C                   PARM                    PRTCD
+     C                   PARM                    PERMSG
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Program exception error routine                       *
+      *                                                               *
+      * Called by: Automatically called by error handler              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+      ** The following /COPY contains the standard program status
+      ** subroutine, excluding a bound CALL to the DBERRCTL module.
+     C/COPY ZACPYSRC,PSSR_ILENE
+ 
+     C                   EVAL      PRTCD = '0'
+     C                   EVAL      PERMSG = ':::System error has +
+     C                             occurred in Midas. Please inform +
+     C                             a Midas System operator:'
+     C                   RETURN
+ 
+     C                   ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2010

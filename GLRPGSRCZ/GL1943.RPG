@@ -1,0 +1,293 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - LE Holdings Extract')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1943 - Customer Service Fees - Lending Holdings Extract    *
+      *                                                               *
+      *  Function:  This program Evaluate lending Holdings to be      *
+      *  (COB)      able to calculate Safe Custody fees and/or        *
+      *             Management Fees to Accrue. This is being called   *
+      *             after call of LE0450.                             *
+      *                                                               *
+      *  Called By: GLC1943 - Cust. Serv. Fees - LE Holdings Extract  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLCUFEL7IF  E           K        DISK         KINFSR *PSSR
+      ** Customers With SC or MG fees to accrued.
+      *
+     FLELOANLAIF  E           K        DISK         KINFSR *PSSR
+      ** Customer Loans - Only Live Loans
+      *
+     FGLHOLDPDO   E                    DISK         KINFSR *PSSR
+      ** Extract Holding Details, Prefix - F8
+      *
+     FGL1943AUO   E                    PRINTER
+      ** LE Holdings extract - Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   88  - Chain indicator for LF/LELOANLA                       *
+      *   89  - End of File Indicator for LF/GLCUFEL7                 *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM @@PGM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Access Object DS for Bank details file
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Access Object DS For General Ledger Module I.C.D. Details
+      *
+     ISDLOAN    E DSSDLOANPD
+      ** Access Object DS For Loan type/subtype Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Access Object DS Retrieve file details
+      *
+     IDSFDY     E DSDSFDY
+      ** Access Object DS Retrieve file details
+      *
+      /EJECT
+      ***************************************************************
+      *                      M A I N L I N E S                      *
+      ***************************************************************
+      *
+      ** Read GLCUFEL7 until EOF
+      *
+     C                     READ GLCUFED0                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Read LELOANLA until EOF
+      *
+     C**********           MOVE F0CNUM    KCNUM   60                                          CSD027
+     C                     MOVE F0CNUM    KCNUM   6                                           CSD027
+      *
+     C           KCNUM     CHAINCLOANCLF             88
+     C           *IN88     DOWEQ*OFF
+      *
+      ** Process only live Loans at event control date
+      *
+     C           VDAT      IFLE WWCTRL
+      *
+      ** Fill up GLHOLDD0 with loans Details
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE CNUM      F8CNUM
+     C                     MOVE PTFR      F8PTFR
+     C                     MOVEL'LE'      F8SRHO
+     C                     MOVE CCY       F8CCY
+     C                     MOVELLNRF      F8TREF
+      *
+      ** Retrieve Instrument with Loan type/Subtype (AOLOANR0)
+      *
+     C                     CALL 'AOLOANR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           LTYP
+     C                     PARM           SUTP
+     C                     PARM           CLAS                                                CLE042
+     C           SDLOAN    PARM SDLOAN    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDLOANPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C           LTYP      CAT  SUTP:0    DBKEY            ************
+     C                     CAT  CLAS:0    DBKEY                                               CLE042
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELAYINNR    F8INST
+      *
+     C                     Z-ADDCPAM      F8LIMV
+      *
+      ** Fill up Liabilities Accrued on : AIPD+AIMN-IPRD-ICTD-IWOD-PDIN
+      *
+     C                     Z-ADDAIPD      F8LIAC
+     C                     ADD  AIMN      F8LIAC
+     C                     SUB  IPRD      F8LIAC
+     C                     SUB  ICTD      F8LIAC
+     C                     SUB  IWOD      F8LIAC
+     C                     SUB  PDIN      F8LIAC
+      *
+      ** All other fees stay blanks or Zero
+      *
+     C                     WRITEGLHOLDD0
+      *
+     C                     ENDIF
+      *
+      ** Next record
+      *
+     C           KCNUM     READECLOANCLF                 88
+     C                     ENDDO
+      *
+      ** Read next customer
+      *
+     C           F0CNUM    SETGTGLCUFED0
+     C                     READ GLCUFED0                 89
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      ***************************************************************
+      *               E N D    O F    M A I N L I N E S             *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *  *INZSR - Standard initial subroutine                       *
+      *  ------                                                     *
+      *  Called by : automatically                                  *
+      *  Calls     :                                                *
+      ***************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'GL1943'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read SDBANKPD to retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ************
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Read SDGELRPD to retrieve  Accrual Control date BKAPDT
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     Z-ADD002       DBASE            * DBERR 02 *
+     C                     MOVEL'*FIRST ' DBKEY     P      ************
+     C                     MOVEL'GL1943'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Event control date
+      *
+     C           BJDNWD    SUB  1         WWCTRL  50
+     C           BKANWD    IFEQ '2'
+     C           BKAPDT    IFLE WWCTRL
+     C                     Z-ADDBKAPDT    WWCTRL  50
+     C                     ELSE
+     C                     Z-ADDBJRDNB    WWCTRL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------                                                       *
+      * Called by : Automatically or EXSR                             *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

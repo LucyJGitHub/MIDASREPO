@@ -1,0 +1,723 @@
+     C********************************************************************
+     C**
+     C**   ZCCAL1 SR. TO CALCULATE CHARGES/COMMISSIONS
+     C**
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01446             DATE 07OCT93                  *
+     C*  PREV AMEND NO. 052254             DATE 07JAN94                  *
+     C*             NO. E20232             DATE 11DEC89                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+     C*  S01446 - Customer Commissions (Courtage) enhancement:
+     C*           1) Accomodate new charge method 'I'                    *
+     C*           2) Convert charges/commissions from charge to nominal  *
+     C*              currency if charge currency used on SE ICD          *
+     C*           3) New code for accumulation of consideration and      *
+     C*              nominal amounts for adjusting commission for same   *
+     C*              day trades                                          *
+     C*           N.B. SE ICD (SDSTRDPD) file must be defined in the     *
+     C*                program using this subroutine                     *
+     C*                                                                  *
+     C*  052254 - CURRENT FACTOR amended from 9,8 to 10,9                *
+     C*                                                                  *
+     C*  E20232 - Countervalue truncation error.                         *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZCCAL1    BEGSR
+     C*
+     C*  WORK FIELDS
+     C*
+     C                     Z-ADD*ZERO     ZZ      20
+     C                     Z-ADD*ZERO     ZAM0   150
+     C                     Z-ADD*ZERO     ZAM1   151
+     C                     Z-ADD*ZERO     ZAM2   152
+     C                     Z-ADD*ZERO     ZAM3   153
+     C                     Z-ADD*ZERO     ZCON0  150
+     C                     Z-ADD*ZERO     ZCON1  151
+     C                     Z-ADD*ZERO     ZCON2  152
+     C                     Z-ADD*ZERO     ZCON3  153
+     C                     Z-ADD*ZERO     ZCONS  150
+     C                     Z-ADD*ZERO     ZCG0   150
+     C                     Z-ADD*ZERO     ZCG1   151
+     C                     Z-ADD*ZERO     ZCG2   152
+     C                     Z-ADD*ZERO     ZCG3   153
+     C                     Z-ADD*ZERO     ZPRICX 150
+     C                     Z-ADD*ZEROS    ZNOMLX 150
+     C                     MOVEL*BLANK    ZFLAG   1
+     C                     Z-ADD*ZERO     X       20                      S01446
+     C*
+     C*  INPUT PARAMETERS
+     C*
+     C* FROM THE CHARGE TYPES FILE
+     C*
+     C                     MOVE ZCHGB     ZCHGB   1
+     C                     MOVE ZTHRI     ZTHRI   1
+     C                     Z-ADDZRA       ZRA
+     C                     Z-ADDZPC       ZPC
+     C                     Z-ADDZCG       ZCG
+     C                     Z-ADDZMNCH     ZMNCH  150
+     C                     Z-ADDZMXCH     ZMXCH  150
+     C*
+     C* FROM THE TRADE/SECURITY
+     C*
+     C                     Z-ADDZNOML     ZNOML  150                      E20232
+     C*********************Z-ADDZNOML     ZNOML  110                      E20232
+     C                     Z-ADDZPRICE    ZPRICE 158
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     MOVE ZPROT     ZPROT   1
+     C**********           Z-ADDZTCFC     ZTCFC   98                      052254
+     C                     Z-ADDZTCFC     ZTCFC  109                      052254
+     C                     MOVE ZSPBS     ZSPBS   1
+     C*                                                                   S01446
+     C*  New parameters for S01446                                        S01446
+     C*                                                                   S01446
+     C                     Z-ADDZTCON     ZTCON  150                      S01446
+     C                     Z-ADDZTNOM     ZTNOM  150                      S01446
+     C                     Z-ADDZTPI      ZTPI   150                      S01446
+     C                     MOVE S01446    S01446  1                       S01446
+     C*
+     C*  OUTPUT PARAMETERS - CHARGE/COMMISSION AMOUNT CALCULATED
+     C*
+     C                     Z-ADD*ZERO     ZCHGA  150
+      *
+      ** Calculate CONSIDERATION
+      *
+      *
+     C           ZDECS     IFEQ 0
+     C           ZNOML     MULT ZPRICE    ZCON0     H
+      *
+     C** If mortgage backed security then multiply by current factor
+      *
+     C           ZPROT     IFEQ '8'
+     C                     MULT ZTCFC     ZCON0
+     C                     END
+      *
+     C** If price is % basis divide by 100
+      *
+     C           ZSPBS     IFEQ 'P'
+     C                     DIV  100       ZCON0     H
+     C                     END
+      *
+     C*  allow for nominal decimal places of security
+      *
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON0
+     C                     MOVE ZCON0     ZCONS
+      *                                                                   S01446
+      *  Condition the following processing on whether Autocharges is     S01446
+      *  switched on and whether the Customer Commissions (Courtage)      S01446
+      *  enhancement is on the switchable features file                   S01446
+      *                                                                   S01446
+     C           BVACOP    IFEQ 'Y'                                       S01446
+     C           S01446    ANDEQ'Y'                                       S01446
+      *                                                                   S01446
+      *  If morgage backed security, multiply by current factor           S01446
+      *                                                                   S01446
+     C           PROT      IFEQ '8'                                       S01446
+     C           ZTCON     MULT ZTCFC     ZTCON                           S01446
+     C                     END                                            S01446
+      *                                                                   S01446
+      *  Accumulate Total Consideration and Total Nominal                 S01446
+      *                                                                   S01446
+     C           ZTCON     ADD  ZCONS     ZCONS                           S01446
+     C           ZTNOM     ADD  ZNOML     ZNOML                           S01446
+      *                                                                   S01446
+      *  If Charge Basis is 'I' add Total Purchased Interest to           S01446
+      *  consideration and set Charge Basis to 'C'                        S01446
+      *                                                                   S01446
+     C           ZCHGB     IFEQ 'I'                                       S01446
+     C           ZTPI      ADD  ZCONS     ZCONS                           S01446
+     C                     MOVE 'C'       ZCHGB                           S01446
+     C                     END                                            S01446
+     C                     MOVE ZCONS     ZCON0                           S01446
+     C                     END                                            S01446
+     C                     END
+      *
+     C           ZDECS     IFEQ 1
+     C           ZNOML     MULT ZPRICE    ZCON1     H
+     C           ZPROT     IFEQ '8'
+     C                     MULT ZTCFC     ZCON1
+     C                     END
+     C           ZSPBS     IFEQ 'P'
+     C                     DIV  100       ZCON1     H
+     C                     END
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON1
+     C                     MOVE ZCON1     ZCONS
+      *                                                                   S01446
+      *  Condition the following processing on whether Autocharges is     S01446
+      *  switched on and whether the Customer Commissions (Courtage)      S01446
+      *  enhancement is on the switchable features file                   S01446
+      *                                                                   S01446
+     C           BVACOP    IFEQ 'Y'                                       S01446
+     C           S01446    ANDEQ'Y'                                       S01446
+      *                                                                   S01446
+      *  If morgage backed security, multiply by current factor           S01446
+      *                                                                   S01446
+     C           PROT      IFEQ '8'                                       S01446
+     C           ZTCON     MULT ZTCFC     ZTCON                           S01446
+     C                     END                                            S01446
+      *                                                                   S01446
+      *  Accumulate Total Consideration and Total Nominal                 S01446
+      *                                                                   S01446
+     C           ZTCON     ADD  ZCONS     ZCONS                           S01446
+     C           ZTNOM     ADD  ZNOML     ZNOML                           S01446
+      *                                                                   S01446
+      *  If Charge Basis is 'I' add Total Purchased Interest to           S01446
+      *  consideration and set Charge Basis to 'C'                        S01446
+      *                                                                   S01446
+     C           ZCHGB     IFEQ 'I'                                       S01446
+     C           ZTPI      ADD  ZCONS     ZCONS                           S01446
+     C                     MOVE 'C'       ZCHGB                           S01446
+     C                     END                                            S01446
+     C                     MOVE ZCONS     ZCON1                           S01446
+     C                     END                                            S01446
+     C                     END
+      *
+     C           ZDECS     IFEQ 2
+     C           ZNOML     MULT ZPRICE    ZCON2     H
+     C           ZPROT     IFEQ '8'
+     C                     MULT ZTCFC     ZCON2
+     C                     END
+     C           ZSPBS     IFEQ 'P'
+     C                     DIV  100       ZCON2     H
+     C                     END
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON2
+     C                     MOVE ZCON2     ZCONS
+      *                                                                   S01446
+      *  Condition the following processing on whether Autocharges is     S01446
+      *  switched on and whether the Customer Commissions (Courtage)      S01446
+      *  enhancement is on the switchable features file                   S01446
+      *                                                                   S01446
+     C           BVACOP    IFEQ 'Y'                                       S01446
+     C           S01446    ANDEQ'Y'                                       S01446
+      *                                                                   S01446
+      *  If morgage backed security, multiply by current factor           S01446
+      *                                                                   S01446
+     C           PROT      IFEQ '8'                                       S01446
+     C           ZTCON     MULT ZTCFC     ZTCON                           S01446
+     C                     END                                            S01446
+      *                                                                   S01446
+      *  Accumulate Total Consideration and Total Nominal                 S01446
+      *                                                                   S01446
+     C           ZTCON     ADD  ZCONS     ZCONS                           S01446
+     C           ZTNOM     ADD  ZNOML     ZNOML                           S01446
+      *                                                                   S01446
+      *  If Charge Basis is 'I' add Total Purchased Interest to           S01446
+      *  consideration and set Charge Basis to 'C'                        S01446
+      *                                                                   S01446
+     C           ZCHGB     IFEQ 'I'                                       S01446
+     C           ZTPI      ADD  ZCONS     ZCONS                           S01446
+     C                     MOVE 'C'       ZCHGB                           S01446
+     C                     END                                            S01446
+     C                     MOVE ZCONS     ZCON2                           S01446
+     C                     END                                            S01446
+     C                     END
+      *
+     C           ZDECS     IFEQ 3
+     C           ZNOML     MULT ZPRICE    ZCON3     H
+     C           ZPROT     IFEQ '8'
+     C                     MULT ZTCFC     ZCON3
+     C                     END
+     C           ZSPBS     IFEQ 'P'
+     C                     DIV  100       ZCON3     H
+     C                     END
+     C           5         SUB  ZNMDP     ZZ
+     C                     MULT POWER8,ZZ ZCON3
+     C                     MOVE ZCON3     ZCONS
+      *                                                                   S01446
+      *  Condition the following processing on whether Autocharges is     S01446
+      *  switched on and whether the Customer Commissions (Courtage)      S01446
+      *  enhancement is on the switchable features file                   S01446
+      *                                                                   S01446
+     C           BVACOP    IFEQ 'Y'                                       S01446
+     C           S01446    ANDEQ'Y'                                       S01446
+      *                                                                   S01446
+      *  If morgage backed security, multiply by current factor           S01446
+      *                                                                   S01446
+     C           PROT      IFEQ '8'                                       S01446
+     C           ZTCON     MULT ZTCFC     ZTCON                           S01446
+     C                     END                                            S01446
+      *                                                                   S01446
+      *  Accumulate Total Consideration and Total Nominal                 S01446
+      *                                                                   S01446
+     C           ZTCON     ADD  ZCONS     ZCONS                           S01446
+     C           ZTNOM     ADD  ZNOML     ZNOML                           S01446
+      *                                                                   S01446
+      *  If Charge Basis is 'I' add Total Purchased Interest to           S01446
+      *  consideration and set Charge Basis to 'C'                        S01446
+      *                                                                   S01446
+     C           ZCHGB     IFEQ 'I'                                       S01446
+     C           ZTPI      ADD  ZCONS     ZCONS                           S01446
+     C                     MOVE 'C'       ZCHGB                           S01446
+     C                     END                                            S01446
+     C                     MOVE ZCONS     ZCON3                           S01446
+     C                     END                                            S01446
+     C                     END
+      *                                                                   S01446
+      *  Convert upper range limit amounts and flat charge amounts        S01446
+      *  into charge currency if the input currency is not blank          S01446
+      *  Input currency is charge currency from SE ICD                    S01446
+      *  (for switchable feature S01446)                                  S01446
+      *                                                                   S01446
+     C           S01446    IFEQ 'Y'                                       S01446
+     C           ZCCYI     ANDNE*BLANK                                    S01446
+     C                     DO   15        X                               S01446
+     C           ZRA,X     IFNE *ZERO                                     S01446
+     C                     Z-ADDZRA,X     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZRA,X                           S01446
+     C                     END                                            S01446
+     C                     END                                            S01446
+     C                     Z-ADD*ZERO     X                               S01446
+     C                     DO   15        X                               S01446
+     C           ZCG,X     IFNE *ZERO                                     S01446
+     C                     Z-ADDZCG,X     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZCG,X                           S01446
+     C                     END                                            S01446
+     C                     END                                            S01446
+     C                     END                                            S01446
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE FLAT CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'F'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZERO
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  ADD FLAT RATE TO WORK FIELD
+     C*
+     C                     Z-ADDZCG,ZZ    ZCHGA
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE PRICE CHARGE RATE
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'P'
+     C                     Z-ADD*ZEROS    ZZ
+     C                     MOVE ZPRICE    ZPRICX
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  PRICE LESS THAN RANGE LIMIT
+     C*
+     C           ZPRICX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE CONSIDERATION/Threshold BASED CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'C'
+     C           ZTHRI     ANDEQ'Y'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE CONSIDERATION/Tiered BASED CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'C'
+     C           ZTHRI     ANDEQ'N'
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  CONSIDERATION LESS THAN RANGE LIMIT
+     C*
+     C           ZCONS     IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C                     EXSR ZCCAL2
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE NOMINAL/Threshold BASED CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'N'
+     C           ZTHRI     ANDEQ'Y'
+     C*
+     C** ADJUST FOR NOMINAL DEC.PLACES (IMPLICIT 4 D.P.s ON LF/SECGT)
+     C*
+     C           8         SUB  ZNMDP     ZZ
+     C           ZNOML     MULT POWER8,ZZ ZNOMLX
+     C                     MULT 10        ZNOMLX
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  NOMINAL LESS THAN RANGE LIMIT
+     C*
+     C           ZNOMLX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCON0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCON1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCON2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCON3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C*
+     C*  CALCULATE NOMINAL/Tiered BASED CHARGES
+     C*
+     C*------------------------------------------------------------------*
+     C*------------------------------------------------------------------*
+     C           ZCHGB     IFEQ 'N'
+     C           ZTHRI     ANDEQ'N'
+     C*
+     C** ADJUST FOR NOMINAL DEC.PLACES (IMPLICIT 4 D.P.s ON LF/SECGT)
+     C*
+     C           8         SUB  ZNMDP     ZZ
+     C           ZNOML     MULT POWER8,ZZ ZNOMLX
+     C                     MULT 10        ZNOMLX
+     C                     Z-ADD*ZEROS    ZZ
+     C*
+     C*  LOOP UNTIL LIMIT FOUND
+     C*
+     C                     MOVE *BLANK    ZFLAG
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C*
+     C*  RANGE NUMBER REACHES THE LIMIT
+     C*
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  NOMINAL LESS THAN RANGE LIMIT
+     C*
+     C           ZNOMLX    IFLE ZRA,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C*  RANGE LIMIT IS ZERO
+     C*
+     C           ZRA,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CALCULATE AMOUNT
+     C*
+     C                     EXSR ZCCAL2
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZCG,ZZ    ZCG0
+     C                     ADD  ZCG0      ZAM0
+     C                     MOVE ZAM0      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZCG,ZZ    ZCG1
+     C                     ADD  ZCG1      ZAM1
+     C                     MOVE ZAM1      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZCG,ZZ    ZCG2
+     C                     ADD  ZCG2      ZAM2
+     C                     MOVE ZAM2      ZCHGA
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZCG,ZZ    ZCG3
+     C                     ADD  ZCG3      ZAM3
+     C                     MOVE ZAM3      ZCHGA
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01446
+     C*  Convert minimum and maximum amounts to charge currency           S01446
+     C*  if the input currency is not blank.                              S01446
+     C*  Input currency is charge currency from SE ICD                    S01446
+     C*  (for switchable feature S01446)                                  S01446
+     C*                                                                   S01446
+     C           S01446    IFEQ 'Y'                                       S01446
+     C           ZCCYI     ANDNE*BLANK                                    S01446
+     C                     Z-ADDZMNCH     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZMNCH                           S01446
+     C*                                                                   S01446
+     C                     Z-ADDZMXCH     ZAMTCI                          S01446
+     C                     EXSR ZCONV                                     S01446
+     C                     Z-ADDZAMTCO    ZMXCH                           S01446
+     C                     END                                            S01446
+     C*
+     C*  SET MINIMUM AMOUNT
+     C*
+     C           ZCHGA     IFLT ZMNCH
+     C                     Z-ADDZMNCH     ZCHGA
+     C                     END
+     C*
+     C*  SET MAXIMUM AMOUNT
+     C*
+     C           ZMXCH     IFNE *ZERO
+     C           ZCHGA     ANDGTZMXCH
+     C                     Z-ADDZMXCH     ZCHGA
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************

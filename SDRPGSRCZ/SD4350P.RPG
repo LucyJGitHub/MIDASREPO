@@ -1,0 +1,703 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Power of Attorney Audit List')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD4350P - SD Power Of Attorney Audit List                    *
+      *                                                               *
+      *  Function:  This program prints the Power of Attorney         *
+      *  (I/C)      Audit List                                        *
+      *                                                               *
+      *  Called By: SDC4350 - SD Power of Attorney List CLP           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 22Jul96               *
+      *                 S01124             Date 13May94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  S01424 - PBFG/6 - Additional Customer Details                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *   78  - LOKUP Array                                           *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+     F***SDPATTL1IP  E           K        DISK         KINFSR *PSSR       CPM005
+     F***SDBANKL1IF  E           K        DISK         KINFSR *PSSR       CPM005
+     F***SD3160P1O   E             70     PRINTER      KINFSR *PSSR       CPM005
+     FSD4350P1O   E                    PRINTER      KINFSR *PSSR      UC  CPM005
+     F                                              KINFDS SPOOL1         CPM005
+     FSD4350AUO   E                    PRINTER      KINFSR *PSSR      UC  CPM005
+     F                                              KINFDS SPOOLU         CPM005
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3   NUMB    2   ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     I***SDPATTD0    01                                                   CPM005
+     I***********                                   FBCUSTL1              CPM005
+     I*
+     I*    LOCAL DATA AREA- DATABASE ERRORS
+     I*
+     I***LDA*****    DS                            256                    CPM005
+     I***********                           132 183 DBLOT                 CPM005
+     I***********                           132 141 DBFILE                CPM005
+     I***********                           142 170 DBKEY                 CPM005
+     I***********                           171 180 DBPGM                 CPM005
+     I***********                           181 183 DBASE                 CPM005
+     ILDA       E DSLDA                         256                       CPM005
+      *                                                                   CPM005
+      ** Local data area for database error details                       CPM005
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          CPM005
+      ** after each database error handling.                              CPM005
+      **                                                                  CPM005
+      **                                    134 141 DBFILE                CPM005
+      **       Defines:                     142 170 DBKEY                 CPM005
+      **                                    171 180 DBPGM                 CPM005
+      **                                    181 1830DBASE                 CPM005
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR DATES
+     I            DS
+     I                                        1   7 REBIRT
+     I                                        1   2 REBIDD
+     I                                        3   5 REBIMM
+     I                                        6   7 REBIYY
+     I*
+     I*********** DS                                                      CPM005
+     I***********                             1   60FBBIRT                CPM005
+     I***********                             1   2 FBBIDD                CPM005
+     I***********                             3   4 FBBIMM                CPM005
+     I***********                             5   6 FBBIYY                CPM005
+     I*                                                                   CPM005
+     I            DS                                                      CPM005
+     I                                        1   60W2BIRT                CPM005
+     I                                        1   2 F2BIDD                CPM005
+     I                                        3   4 F2BIMM                CPM005
+     I                                        5   6 F2BIYY                CPM005
+     ISPOOL1      DS                                                      CPM005
+      *                                                                   CPM005
+      ** File Information Data Structure for SD4350P1                     CPM005
+      *                                                                   CPM005
+     I                                       83  92 SFILE1                CPM005
+     I                                    B 123 1240SFNUM1                CPM005
+     I                                    B 188 1890OFLLN1                CPM005
+     I                                    B 367 3680PRTLN1                CPM005
+      *                                                                   CPM005
+     ISPOOLU      DS                                                      CPM005
+      *                                                                   CPM005
+      ** File Information Data Structure for SD4350AU                     CPM005
+      *                                                                   CPM005
+     I                                       83  92 SFILEU                CPM005
+     I                                    B 123 1240SFNUMU                CPM005
+      *                                                                   CPM005
+      ** Dummy Data Structures used by Access Programs                    CPM005
+      *                                                                   CPM005
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      *                                                                   CPM005
+      ** External data structures for Bank Details                        CPM005
+      *                                                                   CPM005
+     ISDPATT    E DSSDPATTPD                                              CPM005
+      *                                                                   CPM005
+      ** External data structures for Power of Attorney Details           CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      *                                                                   CPM005
+      **  Short data structure for access objects                         CPM005
+      *                                                                   CPM005
+     I*
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5                       CPM005
+     C                     PARM           REPORT  1
+     C***********                                                         CPM005
+     C**DEFINE*FILE*CONTROL*DATA*AREA**********************************   CPM005
+     C***********                                                         CPM005
+     C************NAMVAR   DEFN           LDA                             CPM005
+     C***********                                                         CPM005
+     C**DEFINE*KEY*LIST************************************************   CPM005
+     C***********                                                         CPM005
+     C***********KEY1      KLIST                                          CPM005
+     C***********          KFLD           KCUST   60                      CPM005
+     C***********          KFLD           KUSID  20                       CPM005
+      **
+     C*
+     C* Main Processing
+     C*
+     C**BREAK*ON*CUSTOMER*NUMBER***************************************   CPM005
+     C***********                                                         CPM005
+     C************INL1     IFEQ *ON                                       CPM005
+     C***********          MOVE FBCUST    RECNUM                          CPM005
+     C************IN70     IFEQ *ON                                       CPM005
+     C***********          WRITEHEADER                                    CPM005
+     C***********          ENDIF                                          CPM005
+     C***********          WRITEDETAI1                 70                 CPM005
+     C***********          ENDIF                                          CPM005
+     C***********                                                         CPM005
+     C**DETAIL*********************************************************   CPM005
+     C***********                                                         CPM005
+     C************IN01     IFEQ *ON                                       CPM005
+     C***********          MOVELFBUSID    REUSID                          CPM005
+     C***********          MOVE FBACHO    REACHO                          CPM005
+     C***********          MOVE FBVECO    REVECO                          CPM005
+     C***********          MOVE FBWRCO    REWRCO                          CPM005
+     C***********          MOVE FBSIGN    RESIGN                          CPM005
+     C***********          MOVE FBPOWA    REPOWA                          CPM005
+     C***********          MOVE FBDOCO    REDOCO                          CPM005
+      *                                                                   CPM005
+      ** Access the Power of Attorney Details file                        CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPATTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C                     PARM '*LOVAL'  W@CUST  6                       CPM005
+     C                     PARM '*LOVAL'  W@USID 20                       CPM005
+     C           SDPATT    PARM SDPATT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           WRTCD     ANDNE'*NRF    '                                CPM005
+     C           WRTCD     ANDNE'*EOF    '                                CPM005
+     C           WRTCD     ANDNE'*EMPTY  '                                CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD002       DBASE            ***************CPM005
+     C                     MOVE 'SDPATTPD'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** If no record found, Print no details to report                   CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFEQ '*NRF    '                                CPM005
+     C           WRTCD     OREQ '*EMPTY  '                                CPM005
+     C                     MOVE 'Y'       WNODTL  1                       CPM005
+     C                     EXSR AUDIT                                     CPM005
+      *                                                                   CPM005
+      ** Else process the records in the file                             CPM005
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+      ** Open the Printer File, Process RCF and Write the Header          CPM005
+      *                                                                   CPM005
+     C                     OPEN SD4350P1                                  CPM005
+     C                     EXSR RCFP1                                     CPM005
+      *                                                                   CPM005
+     C                     WRITEHEADER                                    CPM005
+      *                                                                   CPM005
+      ** Process records until EOF                                        CPM005
+      *                                                                   CPM005
+     C           WRTCD     DOWEQ*BLANKS                                   CPM005
+      *                                                                   CPM005
+     C                     MOVELF2URID    REUSID                          CPM005
+     C                     MOVE F2ACHO    REACHO                          CPM005
+     C                     MOVE F2VECO    REVECO                          CPM005
+     C                     MOVE F2WRCO    REWRCO                          CPM005
+     C                     MOVE F2SIGN    RESIGN                          CPM005
+     C                     MOVE F2POWA    REPOWA                          CPM005
+     C                     MOVE F2DOCI    REDOCO                          CPM005
+      *                                                                   CPM005
+     C                     Z-ADDF2BIRT    W2BIRT                          CPM005
+     C*
+     C***********FBBIRT    IFNE *ZEROS                     B2             CPM005
+     C           W2BIRT    IFNE *ZEROS                     B2             CPM005
+     C                     Z-ADD1         I       20
+     C                     MOVE *OFF      *IN78
+     C                     MOVE *BLANKS   REBIRT
+     C***********FBBIMM    LOKUPNUMB,I                   78               CPM005
+     C           F2BIMM    LOKUPNUMB,I                   78               CPM005
+     C           *IN78     IFEQ *ON                        B3
+     C***********          MOVE FBBIDD    REBIDD                          CPM005
+     C***********          MOVE ZMNM,I    REBIMM                          CPM005
+     C***********          MOVE FBBIYY    REBIYY                          CPM005
+     C                     MOVE F2BIDD    REBIDD                          CPM005
+     C                     MOVE ZMNM,I    REBIMM                          CPM005
+     C                     MOVE F2BIYY    REBIYY                          CPM005
+     C                     END                             E3
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   REBIRT
+     C                     END                             E2
+     C*
+     C***********          MOVE FBPASN    REPASN                          CPM005
+     C                     MOVE F2PASN    REPASN                          CPM005
+     C*
+     C***********          MOVE FBLCD     ZDAYNO                          CPM005
+     C                     MOVE F2LCD     ZDAYNO                          CPM005
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RELCD
+     C*
+     C                     MOVE *BLANKS   RECHTP
+     C***********FBCHTP    IFEQ 'A'                                       CPM005
+     C           F2TYLC    IFEQ 'A'                                       CPM005
+     C                     MOVEL'AMEND '  RECHTP
+     C                     ENDIF
+     C***********FBCHTP    IFEQ 'I'                                       CPM005
+     C           F2TYLC    IFEQ 'I'                                       CPM005
+     C                     MOVEL'INSERT'  RECHTP
+     C                     ENDIF
+     C*
+     C***********          MOVE FBUSER    REUSER                          CPM005
+     C***********          MOVE FBTEXT    RETEXT                          CPM005
+     C                     MOVELF2UTX1    RETEXT                          CPM005
+     C                     MOVE F2UTX2    RETEXT                          CPM005
+      *                                                                   CPM005
+      ** Print the details                                                CPM005
+      *                                                                   CPM005
+     C                     EXSR PRINT                                     CPM005
+      *                                                                   CPM005
+      ** Access the Next Power of Attorney Details file                   CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPATTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*NEXT  ' WOPTN                           CPM005
+     C                     PARM '*NEXT '  W@CUST                          CPM005
+     C                     PARM '*NEXT '  W@USID                          CPM005
+     C           SDPATT    PARM SDPATT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           WRTCD     ANDNE'*NRF    '                                CPM005
+     C           WRTCD     ANDNE'*EOF    '                                CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD003       DBASE            ***************CPM005
+     C                     MOVE 'SDPATTPD'DBFILE           * DB ERROR 03 *CPM005
+     C                     MOVEL'*NEXT '  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDDO                                          CPM005
+      *                                                                   CPM005
+      ** Write End of Report and close the Printer File                   CPM005
+      *                                                                   CPM005
+     C                     Z-ADD4         RQDLN1                          CPM005
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          CPM005
+     C           DIFLN1    IFLE RQDLN1                                    CPM005
+     C                     WRITEHEADER                                    CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     WRITEENDLI                                     CPM005
+     C                     CLOSESD4350P1                                  CPM005
+      *                                                                   CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** End Program                                                      CPM005
+     C                     MOVE '1'       *INLR                           CPM005
+     C                     RETRN                                          CPM005
+     C*
+     C************IN70     IFEQ *ON                                       CPM005
+     C***********          WRITEHEADER                                    CPM005
+     C***********          WRITEDETAI1                 70                 CPM005
+     C***********          ENDIF                                          CPM005
+     C***********          WRITEDETAI2                 70                 CPM005
+     C***********          MOVE 'Y'       WWFLAG                          CPM005
+     C***********          ELSE                                           CPM005
+     C***********          MOVE 'N'       WWFLAG                          CPM005
+     C***********          ENDIF                                          CPM005
+     C***********
+     C***LR******   *IN01     IFEQ *OFF
+     C***LR******   *IN70     ANDEQ*ON
+     C***LR******             WRITEHEADER
+     C***LR******             ENDIF
+     C***LR******   WWFLAG    IFEQ 'N'
+     C***LR******             WRITENODLI                  70
+     C***LR******             ENDIF
+     C***LR******             WRITEENDLI
+     C***LR******             RETRN
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C           *INZSR    BEGSR
+     C*
+     C***PREPARE*LDA***************************************************   CPM005
+     C***********                                                         CPM005
+     C***********          MOVEL'SD3160 ' DBPGM                           CPM005
+     C***********          MOVE *BLANKS   DBLOT                           CPM005
+     C*
+     C* Initialisation.
+     C* Setup fields.
+     C*
+     C***********          MOVE 'N'       WWFLAG  1   One record at least.CPM005
+     C***********                                                         CPM005
+     C**ACCESS*LF/SDBANKL0*TO*OBTAIN*RUN*DATE**************************   CPM005
+     C***********                                                         CPM005
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 44               CPM005
+      ***********                                                         CPM005
+      *****If*record*not*found:****************************************   CPM005
+     C************IN44     IFEQ '1'                                       CPM005
+     C***********          MOVEL'01'      DBASE            ***************CPM005
+     C***********          MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *CPM005
+     C***********          MOVEL'BANK'    DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                                            CPM005
+     C*
+     C           *NAMVAR   DEFN           LDA                             CPM005
+     C                     MOVEL'SD4350P' DBPGM                           CPM005
+      *                                                                   CPM005
+      ** Access the Bank Details                                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD1  7                       CPM005
+     C                     PARM '*FIRST ' WOPTN                           CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD1    IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD001       DBASE            ***************CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+     C*
+     C           REPORT    IFEQ 'F'
+     C                     MOVE *ON       *IN10
+     C                     ELSE
+     C                     MOVE *OFF      *IN10
+     C                     END
+      *
+      ** Report Work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *                                                                   CPM005
+     C                     MOVE *BLANKS   W2CUST  6                       CPM005
+     C***********                                                         CPM005
+     C**Write*header.**************************************************   CPM005
+     C***********                                                         CPM005
+     C***********          WRITEHEADER                                    CPM005
+     C***********                                                         CPM005
+     C           ZAEXIT    ENDSR
+     C*
+      *****************************************************************   CPM005
+      /TITLE SR/PRINT                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  PRINT  - Subroutine to Write a Detail record to the Report.  *   CPM005
+      *                                                               *   CPM005
+      *  Called By: Main Processing                                   *   CPM005
+      *  Calls:                                                       *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           PRINT     BEGSR                                          CPM005
+      *                                                                   CPM005
+      ** Check that sufficient lines remain for the Format. If not,       CPM005
+      ** write out the Main Headings on a new page.                       CPM005
+      *                                                                   CPM005
+     C                     Z-ADD3         RQDLN1                          CPM005
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          CPM005
+     C           DIFLN1    IFLE RQDLN1                                    CPM005
+     C                     WRITEHEADER                                    CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** If change in Customer Identifier                                 CPM005
+      *                                                                   CPM005
+     C           F2CUST    IFNE W2CUST                                    CPM005
+     C                     MOVE F2CUST    RECNUM                          CPM005
+     C                     MOVE F2CUST    W2CUST                          CPM005
+     C                     WRITEDETAI1                                    CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Write out Detail Record                                          CPM005
+      *                                                                   CPM005
+     C                     WRITEDETAI2                                    CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+     C*****************************************************************
+      /TITLE SR/AUDIT                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *   CPM005
+      *                                                               *   CPM005
+      *  Called By: Main Processing, *PSSR                            *   CPM005
+      *  Calls: None.                                                 *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           AUDIT     BEGSR                           *** AUDIT  *** CPM005
+      *                                                                   CPM005
+      ** Open Audit File SD4350AU                                         CPM005
+      *                                                                   CPM005
+     C                     OPEN SD4350AU                                  CPM005
+      *                                                                   CPM005
+      ** RCF Processing for Audit File                                    CPM005
+      *                                                                   CPM005
+     C                     EXSR RCFAU                                     CPM005
+      *                                                                   CPM005
+      ** Output Report Header and File Controls.                          CPM005
+      *                                                                   CPM005
+     C                     WRITEHEADAU                                    CPM005
+      *                                                                   CPM005
+      ** If there is a DB Error, Output the DB Error Information.         CPM005
+      *                                                                   CPM005
+     C           *INU7     IFEQ *ON                                       CPM005
+     C                     WRITEDBERROR                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+      ** Or, if no records read, Output "No Details" message.             CPM005
+      *                                                                   CPM005
+     C           WNODTL    IFEQ 'Y'                                       CPM005
+     C                     WRITENODTLS                                    CPM005
+     C                     ENDIF                                          CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Close Audit File SD4350AU                                        CPM005
+      *                                                                   CPM005
+     C                     CLOSESD4350AU                                  CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+      *****************************************************************   CPM005
+      /TITLE SR/RCFP1                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           RCFP1     BEGSR                            *** RCFP1  ***CPM005
+      *                                                                   CPM005
+      ** Ensure Report Spool File recorded by RCF.                        CPM005
+      *                                                                   CPM005
+     C                     Z-ADDSFNUM1    ZSNUM   60                      CPM005
+      *                                                                   CPM005
+     C                     CALL 'ZSFILE'                                  CPM005
+     C                     PARM PSEQ      SEQ     5                       CPM005
+     C                     PARM           SENTY   3                       CPM005
+     C                     PARM           SFILE1                          CPM005
+     C                     PARM           ZSNUM                           CPM005
+     C                     PARM           ZSERR   1                       CPM005
+      *                                                                   CPM005
+      ** If Error occurs during ZSFILE processing, then return to the     CPM005
+      ** Calling Program.                                                 CPM005
+      *                                                                   CPM005
+     C           ZSERR     IFEQ 'Y'                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+      *****************************************************************   CPM005
+      /TITLE SR/RCFAU                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           RCFAU     BEGSR                            *** RCFAU  ***CPM005
+      *                                                                   CPM005
+      ** Ensure Audit Spool File recorded by RCF.                         CPM005
+      *                                                                   CPM005
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      CPM005
+      *                                                                   CPM005
+     C                     CALL 'ZSFILE'                                  CPM005
+     C                     PARM PSEQ      SEQ                             CPM005
+     C                     PARM *BLANKS   SENTY                           CPM005
+     C                     PARM           SFILEU                          CPM005
+     C                     PARM           ZSNUMU                          CPM005
+     C                     PARM *BLANK    ZSERR                           CPM005
+      *                                                                   CPM005
+      ** If Error occurs during ZSFILE processing, then return to the     CPM005
+      ** Calling Program.                                                 CPM005
+      *                                                                   CPM005
+     C           ZSERR     IFEQ 'Y'                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C* *PSSR  S/R
+     C* ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C*
+      ** Check to see that *PSSR has not already been called              CPM005
+      *                                                                   CPM005
+     C           WRUN      IFEQ *BLANK                                    CPM005
+     C                     MOVE 'Y'       WRUN    1                       CPM005
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR AUDIT                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** If *PSSR already run, then just end the program here.            CPM005
+      *                                                                   CPM005
+     C                     MOVE '1'       *INU7                           CPM005
+     C                     MOVE '1'       *INU8                           CPM005
+     C                     MOVE '1'       *INLR                           CPM005
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C***********                                                         CPM005
+     C*****ZDATE2*SR.*TO*CONVERT*A*DAY*NUMBER*TO*DATE*FORMATS.*********   CPM005
+     C***********                                                         CPM005
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.******   CPM005
+     C***********                                                         CPM005
+     C***********ZDATE2    BEGSR                           *** ZDATE2 *** CPM005
+     C***********                                                         CPM005
+     C*****CLEAR*LEAP*YEAR*WORK*FIELD.*********************************   CPM005
+     C***********          MOVE 'N'       ZLEAP   1                       CPM005
+     C***********                                                         CPM005
+     C*****CLEAR*DATE*FIELDS.******************************************   CPM005
+     C***********          Z-ADD0         ZDATE   60                      CPM005
+     C***********          MOVEL'       ' ZADATE  7                       CPM005
+     C***********                                                         CPM005
+     C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.*********************   CPM005
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*YEAR*NUMBER.**************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.*****************   CPM005
+     C***********ZDAYNO    SUB  1         ZDAYN1  50                      CPM005
+     C***********ZDAYN1    IFLT 0                                         CPM005
+     C***********          GOTO ZDEND2                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.**********   CPM005
+     C***********ZDAYN1    DIV  1461      ZLYR    20                      CPM005
+     C***********          MVR            ZDAYN1           SAVE REMAINING CPM005
+     C***********                                          DAYS           CPM005
+     C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.************************   CPM005
+     C***********          Z-ADD1         ZWRK2   20                      CPM005
+     C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *CPM005
+     C***********ZDAYN1    IFGE ZYDY,ZWRK2                                CPM005
+     C***********ZWRK2     ADD  1         ZWRK2                           CPM005
+     C***********          GOTO ZDTAG1                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***********ZWRK2     SUB  1         ZWRK2                           CPM005
+     C***********                                                         CPM005
+     C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.***************   CPM005
+     C***********ZWRK2     IFNE 0                                         CPM005
+     C***********ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*ACTUAL*YEAR*NUMBER.*******************************   CPM005
+     C***********ZLYR      MULT 4         ZWRK3   30                      CPM005
+     C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   CPM005
+     C***********          Z-ADDZWRK3     ZYEAR   20                      CPM005
+     C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*MONTH*NUMBER.*************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.******   CPM005
+     C***********ZWRK2     IFEQ 0                                         CPM005
+     C***********ZDAYN1    IFEQ 59                                        CPM005
+     C***********          MOVE 'Y'       ZLEAP                           CPM005
+     C***********          END                                            CPM005
+     C***********ZDAYN1    IFGE 59                                        CPM005
+     C***********ZDAYN1    SUB  1         ZDAYN1                          CPM005
+     C***********          END                                            CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*MONTH*NUMBER.*************************************   CPM005
+     C***********          Z-ADD2         ZWRK2                           CPM005
+     C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *CPM005
+     C***********ZDAYN1    IFGE ZMDY,ZWRK2                                CPM005
+     C***********ZWRK2     ADD  1         ZWRK2                           CPM005
+     C***********          GOTO ZDTAG2                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***********ZWRK2     SUB  1         ZWRK2                           CPM005
+     C***********                                                         CPM005
+     C***********          Z-ADDZWRK2     ZMTH    20       MONTH          CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*DAY*OF*MONTH.*************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.***********************   CPM005
+     C***********ZDAYN1    ADD  1         ZDAYN1                          CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*DAY*OF*MONTH.*************************************   CPM005
+     C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            CPM005
+     C***********                                                         CPM005
+     C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.****   CPM005
+     C***********ZLEAP     IFEQ 'Y'                                       CPM005
+     C***********ZDAY      ADD  1         ZDAY                            CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.******************************   CPM005
+     C**N98******          MOVELZDAY      ZWRK4   40                      CPM005
+     C***98******          MOVE ZDAY      ZWRK4                           CPM005
+     C**N98******          MOVE ZMTH      ZWRK4                           CPM005
+     C***98******          MOVELZMTH      ZWRK4                           CPM005
+     C***********          MOVELZWRK4     ZDATE                           CPM005
+     C***********          MOVE ZYEAR     ZDATE                           CPM005
+     C***********                                                         CPM005
+     C*****FORMAT*ALPHA*DATE,*DDMMMYY.*********************************   CPM005
+     C***********          MOVELZDAY      ZWRK5   5                       CPM005
+     C***********ZDAY      IFLT 10                                        CPM005
+     C***********          MOVEL' '       ZWRK5                           CPM005
+     C***********          END                                            CPM005
+     C***********          MOVE ZMNM,ZMTH ZWRK5                           CPM005
+     C***********          MOVELZWRK5     ZADATE                          CPM005
+     C***********          MOVE ZYEAR     ZADATE                          CPM005
+     C***********                                                         CPM005
+     C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*CPM005
+     C**
+     C*****************************************************************
+      /EJECT
+      /TITLE SR/ZDATE2                                                    CPM005
+     C/COPY ZSRSRC,ZDATE2Z2                                               CPM005
+     C*****************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JAN01FEB02MAR03APR04MAY05JUN06JUL07AUG08SEP09OCT10NOV11DEC12
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

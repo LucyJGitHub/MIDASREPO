@@ -1,0 +1,155 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SD FATCA Indicia Search Tool')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000730 - Midas LE Effective Interest Rate Period Split   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD030704           Date 23Sep14              */
+/*       Prev Amend No. MD027669           Date 01Jul14              */
+/*                      CGL132  *CREATE    Date 01Mar13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD030704 - US Indicia Tool locks intermittently             */
+/*                  (Applied fix MD028472)                           */
+/*       MD027669 - Joint Account Principal Wrongly classified       */
+/*                  by the tool                                      */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+             SNDPGMMSG  MSG('SDXXXXXX  - Midas SD FATCA US Indicia +
+                          Search and Update Tool') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CPYF       FROMFILE(SDFTCSPD) TOFILE(&DPLIB/SDFCB2PD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDFTNHPD) TOFILE(&DPLIB/SDFNB2PD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             OVRDBF     FILE(SDFTCSPD) TOFILE(SDFCB2PD) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             OVRDBF     FILE(SDFTCSL0) TOFILE(SDFCB2L0) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             OVRDBF     FILE(SDFTCSL1) TOFILE(SDFCB2L1) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+/*           OVRDBF     FILE(SDFTCSL3) TOFILE(SDFCB2L3) +
+                          OVRSCOPE(*JOB) SHARE(*YES)                */                  /*MD027669*/
+             OVRDBF     FILE(SDFTCSL4) TOFILE(SDFCB2L4) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             OVRDBF     FILE(SDFTNHPD) TOFILE(SDFNB2PD) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             OVRDBF     FILE(SDFTNHL0) TOFILE(SDFNB2L0) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+             OVRDBF     FILE(SDFTNHL1) TOFILE(SDFNB2L1) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+/*           OVRDBF     FILE(SDFTNHL3) TOFILE(SDFNB2L3) +
+                          OVRSCOPE(*JOB) SHARE(*YES)                */                  /*MD027669*/
+             OVRDBF     FILE(SDFTNHL4) TOFILE(SDFNB2L4) +
+                          OVRSCOPE(*JOB) SHARE(*YES)
+ 
+             CLRPFM     (SDFCBKPD)
+             MONMSG     MSGID(CPF2105)
+             CLRPFM     (SDFNBKPD)
+             MONMSG     MSGID(CPF2105)
+ 
+             CPYF       FROMFILE(SDFTCSPD) TOFILE(&DPLIB/SDFCBKPD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDFTNHPD) TOFILE(&DPLIB/SDFNBKPD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/* Call Prompt Program */
+             CALL       PGM(SD000730)
+             RCLACTGRP  ACTGRP(SD000730)
+ 
+             DLCOBJ     OBJ((SDFTCSPD *FILE *EXCL) (SDFTNHPD *FILE +
+                          *EXCL))
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                CPYF       FROMFILE(SDFCBKPD) TOFILE(SDFTCSPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(SDFNBKPD) TOFILE(SDFTNHPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+ 
+             ENDDO
+ 
+/* If no error occured in the program */
+ 
+             DLTOVR     FILE(SDFTCSPD) LVL(*JOB)
+             DLTOVR     FILE(SDFTCSL0) LVL(*JOB)
+             DLTOVR     FILE(SDFTCSL1) LVL(*JOB)
+/**********  DLTOVR     FILE(SDFTCSL3) LVL(*JOB)                    */                  /*MD028472*/
+             DLTOVR     FILE(SDFTCSL4) LVL(*JOB)
+             DLTOVR     FILE(SDFTNHPD) LVL(*JOB)
+             DLTOVR     FILE(SDFTNHL0) LVL(*JOB)
+             DLTOVR     FILE(SDFTNHL1) LVL(*JOB)
+/**********  DLTOVR     FILE(SDFTNHL3) LVL(*JOB)                    */                  /*MD028472*/
+             DLTOVR     FILE(SDFTNHL4) LVL(*JOB)
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000733 Midas SD FATCA Indicia +
+                          Search Tool +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ALLOCFAIL:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000730 Midas SD FATCA Indicia +
+                          Search Tool +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             GOTO       CMDLBL(END)
+ 
+END:
+             ENDPGM

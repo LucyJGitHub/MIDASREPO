@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD CAP210 Initialisation Program')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC002200 - CAP210 Initialisation Program                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1096788 *CREATE  Date 18Mar13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1096788 - DLAA details should be written in core STRANF   */
+/*                   file instead of the new DLSTRANFPD file         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SDC002200 - CAP210 Initialisation +
+                          Program') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Midas SD Initialisation program for CAP210 */
+ 
+             CALL       PGM(SD002200)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('Program SDC002200 ended sucessfully.') +
+                            TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program SDC002200 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

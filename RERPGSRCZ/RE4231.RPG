@@ -1,0 +1,909 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Outward Clearing Cheques Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4231 - List of Outward Clearing Cheques Extract            *
+     F*                                                               *
+     F*  Function:  This program will extract clearing cheque records *
+     F*   (I/C)     of cheques deposited ready for printing of the    *
+     F*   (COB)     Outward Clearing Cheques By Issuing Bank Report.  *
+     F*                                                               *
+     F*  Called By: REC4218 - RTS List of Outward Clearing Cheques    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 091241             Date 01NOV95               *
+     F*                 CRT001  *CREATE    Date 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  091241 - Recompile , as bank code (RBCD) has changed from    *
+     F*           7N to 11N                                           *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCHQDPPH UF  E           K        DISK         KINFSR *PSSR
+     F**  Cheques deposited - File header
+     F*                                             KCOMIT
+     F*
+     FCHQDPPD UF  E           K        DISK         KINFSR *PSSR
+     F**  Cheques deposited - File details
+     F*                                             KCOMIT
+     F*
+     FOTCLRPH O   E                    DISK         KINFSR *PSSR      UC
+     F**  Outward Clearing Extract - File header
+     F*
+     FOTCLRPD O   E                    DISK         KINFSR *PSSR
+     F**  Outward Clearing Extract - File details
+     F*
+     FOTCLRPZ O   E                    DISK         KINFSR *PSSR      UC
+     F**  Outward Clearing Extract - File trailer
+     F*
+     F***RE4231AUO***E             11     PRINTER
+     FRE4231AUO   E             11     PRINTER                        UC
+     F**  Audit report
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    10       Message Subfile End Indicator (SFLEND)            *
+     F*    11       Overflow indicator                                *
+     F*                                                               *
+     F*    20       Normal run indicator                              *
+     F*    21       Recovery run indicator                            *
+     F*    22       Eligible for extract indicator                    *
+     F*                                                               *
+     F*    71       General Indicator Used For CHAIN                  *
+     F*    72       EOF indicator for CHQDPPDF                        *
+     F*                                                               *
+     F*  U7-U8      Set on if database error occurs                   *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  FIRST  - Initial processing                                  *
+     F*  IFLDS  - Initialise                                          *
+     F*                                                               *
+     F*  PROHED - Process header                                      *
+     F*  PRODET - Process details                                     *
+     F*  MLCQEX - Multiple cheque extract                             *
+     F*  SCHQEX - Single cheque extract                               *
+     F*                                                               *
+     F*  UPDHED - Update header                                       *
+     F*  UPDDET - Update details                                      *
+     F*  WREXHD - write extract header                                *
+     F*  WREXDT - write extract details                               *
+     F*  WREXTR - write extract trailer                               *
+     F*  PRCON  - Print controls                                      *
+     F*                                                               *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  ZA0150 - Get Midas Rundate & Setup Indicator                 *
+     F*  ZHASH  - Accumulation of Hash totals                         *
+     F*  *PSSR  - Program error                                       *
+     F*  DBERR  - Database Error Handling :                           *
+     F*           Terminates program                                  *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     E/COPY ZSRSRC,ZHASHZ1
+     E**  Array for SR.ZHASH
+     E*
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ICHQDPPDF
+     I**  Renamed fields in PF/CHQDPPD
+     I*
+     I              RECI                            DRECI
+     I              RBCD                            DRBCD
+     I              TNCY                            DTNCY
+     I              CQNF                            DCQNF
+     I              CQAM                            DCQAM
+     I              TTYP1                           DTTYP1
+     I              ACNO                            DACNO
+     I*
+     I*
+     ICMTTXT      DS                             88
+     I**  Commitment Control Commit Text
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I*
+     I*
+     IENUM        DS                             19
+     I** Data structure for splitting the edited numeric which
+     I** has a value with 2 spaces to the right (CR,-)
+     I*
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     I*
+     I*
+     I            DS                             19
+     I** Data structure for storing the key list for CHQDPPD
+     I*
+     I                                        1  13 @CHQD
+     I                                        1   3 KTBID
+     I                                        4   8 KTBTN
+     I                                        9  13 KSEQN
+     I*
+     I/COPY ZSRSRC,ZHASHZ2
+     I**  Data structure for SR.ZHASH
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I**  Data structure to update last transaction number
+     I*
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I*
+     I                                        1  10 @PGM
+     I**  Field containing Program name
+     I                                      244 253 @JOB
+     I**  Field containing Workstation ID
+     I                                      254 263 @USER
+     I**  Field Containing User ID
+     I*
+     I*
+     ILDA         DS                            256
+     I**  Local data area for database error details
+     I                                      134 183 DBLOT
+     I**  Field combining the following fields
+     I                                      134 141 DBFILE
+     I**  Name of database file in error
+     I                                      142 170 DBKEY
+     I**  Key value causing database error
+     I                                      171 180 DBPGM
+     I**  Name of program causing database error
+     I                                      181 1830DBASE
+     I**  Number of database error
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     ISDTELD    E DSSDTELDPD
+     I**  Midas Teller ID details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access programs (200 long)
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*            MAIN   - Control Processing                        *
+     C*                                                               *
+     C* CALLS      FIRST  - Initial Processing                        *
+     C*            FINAL  - Final Processing                          *
+     C*            PROHED - Process header                            *
+     C*            PRODET - Process details                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Initial Processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  If Input cycle processing (i.e. U1 is on)
+     C*
+     C           *INU1     IFEQ '1'
+     C*
+     C**  If process header
+     C*
+     C                     EXSR PROHED
+     C                     END
+     C*
+     C**  If process details
+     C*
+     C                     EXSR PRODET
+     C*
+     C**  If EOF reached do final processing
+     C*
+     C                     EXSR FINAL
+     C*
+     C                     RETRN
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PROHED            - Process header                            *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling : (01)            *
+      *            UPDHED - Update header                             *
+      *                                                               *
+      * CALLED BY  MAIN  - Control Processing                         *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PROHED    BEGSR                           ** PROHED **
+      *
+     C                     READ CHQDPPHF                 71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQDPPH 'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL'1'       DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** check last extract time with last print time
+     C           LETM      IFLE LPTM
+      *
+      ** Seton normal run indicator
+     C                     SETON                     20
+      *
+      ** Set current extract time to system time
+     C                     TIME           CREXTM  60
+      *
+      ** Set previous extract time to last extract time
+     C                     Z-ADDLETM      PREXTM  60
+      *
+      ** Update header record last extract time to system time
+     C                     EXSR UPDHED
+      *
+     C                     ELSE
+      *
+      ** Recovery run indicator is set on
+     C                     SETON                     21
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRODET - Process Detail                            *
+      *                                                               *
+      * CALLS      MLCQEX - Multiple cheque extract                   *
+      *            SCHQEX - Single cheque extract                     *
+      *            WREXDT - write extract details                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRODET    BEGSR                           ** PRODET **
+      *
+     C           *IN72     DOWEQ'0'
+      *
+     C                     READ CHQDPPDF                 72
+      *
+     C           *IN72     IFEQ '0'
+      *
+      ** If live record
+     C           DRECI     IFNE '*'
+      *
+     C                     ADD  1         NORD
+      *
+      ** If input cycle extract
+     C           *INU1     IFEQ '1'
+      *
+      ** If multiple cheque header
+     C           DRECI     IFEQ 'M'
+     C                     EXSR MLCQEX
+     C                     END
+      *
+      ** If multiple cheque Detail and eligible to print
+     C           DRECI     IFEQ 'D'
+     C           *IN22     ANDEQ'1'
+     C                     EXSR WREXDT
+     C                     END
+      *
+      ** If single cheque
+     C           DRECI     IFEQ 'S'
+     C                     EXSR SCHQEX
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** process for close of business by pass record type 'M'
+     C           DRECI     IFNE 'M'
+     C                     EXSR WREXDT
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MLCQEX - Multiple cheque extract                   *
+      *                                                               *
+      * CALLS      UPDDET - Update details                            *
+      *                                                               *
+      * CALLED BY  PRODET - Process detail                            *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MLCQEX    BEGSR                           ** MLCQEX **
+      *
+      ** if not updated but has been printed
+     C           UPDI      IFNE 'U'
+     C           EPIN      OREQ 'P'
+      *
+      ** Then set of eligible for extract indicator
+     C                     SETOF                     22
+      *
+     C                     ELSE
+      *
+      ** if extraction has been done and is a normal run
+     C           EPIN      IFEQ 'E'
+     C           *IN20     ANDEQ'1'
+      *
+      ** make extract/print indicator to 'P' and update
+     C                     MOVEL'P'       EPIN
+     C                     EXSR UPDDET
+      *
+      ** Then set of eligible for extract indicator
+     C                     SETOF                     22
+      *
+     C                     ELSE
+      *
+      ** if extraction has been done and is a recovery run
+     C           EPIN      IFEQ 'E'
+     C           *IN21     ANDEQ'1'
+      *
+      ** if batch extract time is less than previous extract time
+     C           EXTM      IFLT PREXTM
+      *
+      ** make extract/print indicator to 'P' and update
+     C                     MOVEL'P'       EPIN
+     C                     EXSR UPDDET
+      *
+      ** Then set of eligible for extract indicator
+     C                     SETOF                     22
+     C*
+     C**  if batch extract time is equal to previous extract time
+     C*
+     C                     ELSE
+     C*
+      ** Then set on eligible for extract indicator
+     C                     SETON                     22
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** if extraction has been not been done
+     C           EPIN      IFEQ ' '
+      *
+      ** Then set of eligible for extract indicator
+     C                     SETON                     22
+      *
+      ** End for ' ' (no extract)
+     C                     END
+      *
+      ** End for 'E' and recovery run
+     C                     END
+      *
+      ** End for 'E' and normal run
+     C                     END
+      *
+      ** End for 'U' or 'P'
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SCHQEX - Single cheque extract                     *
+      *                                                               *
+      * CALLS      UPDDET - Update details                            *
+      *            WREXDT - write extract details                     *
+      *                                                               *
+      * CALLED BY  PRODET - Process detail                            *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           SCHQEX    BEGSR                           ** SCHQEX **
+      *
+      ** for normal run and updated
+     C           *IN20     IFEQ '1'
+     C           UPDI      ANDEQ'U'
+      *
+      ** If record has been extracted
+     C           EPIN      IFEQ 'E'
+      *
+      ** make extract/print indicator to 'P' and update
+     C                     MOVEL'P'       EPIN
+     C                     EXSR UPDDET
+      *
+     C                     END
+      *
+      ** If record has not been extracted
+     C           EPIN      IFEQ ' '
+      *
+      ** make extract/print indicator to 'E' and update
+     C                     MOVEL'E'       EPIN
+     C                     EXSR UPDDET
+      *
+      ** write to output extract file
+     C                     EXSR WREXDT
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** for recovery run and updated (extracted but not printed)
+     C           *IN21     IFEQ '1'
+     C           UPDI      ANDEQ'U'
+      *
+      ** If record has been extracted and extract time < previous time
+     C           EPIN      IFEQ 'E'
+     C           EXTM      ANDLTPREXTM
+      *
+      ** make extract/print indicator to 'P' and update
+     C                     MOVEL'P'       EPIN
+     C                     EXSR UPDDET
+      *
+      ** write to output extract file
+     C                     EXSR WREXDT
+      *
+     C                     END
+      *
+      ** If record has been extracted and extract time = previous time
+      ** (record extracted in the last run)
+     C           EPIN      IFEQ 'E'
+     C           EXTM      ANDEQPREXTM
+      *
+      ** write to output extract file
+     C                     EXSR WREXDT
+      *
+     C                     END
+      *
+      ** If record has not been extracted
+     C           EPIN      IFEQ ' '
+      *
+      ** make extract/print indicator to 'E' and update
+     C                     MOVEL'E'       EPIN
+     C                     EXSR UPDDET
+      *
+      ** write to output extract file
+     C                     EXSR WREXDT
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WREXHD - write extract header                      *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WREXHD    BEGSR                           ** WREXHD **
+      *
+     C                     OPEN OTCLRPH
+      *
+     C                     MOVEL'A'       RECI
+      *
+     C                     WRITEOTCLRPHF
+      *
+     C*                    ADD  1         NOEX
+      *
+     C                     CLOSEOTCLRPH
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WREXDT - write extract details                     *
+      *                                                               *
+      * CALLS      ZHASH  - Accumulation of Hash totals               *
+      *                                                               *
+      * CALLED BY  SCHQEX - Single cheque extraction                  *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           WREXDT    BEGSR                           ** WREXDT **
+     C*
+     C**  Access Teller ID details to get the teller branch code
+     C*
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TBID      @TLID   3
+     C           SDTELD    PARM SDTELD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDTELDPD'DBFILE           ***************
+     C                     MOVEL@TLID     DBKEY            *DB ERROR 005 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     MOVEL'D'       RECI
+     C                     MOVELDRBCD     RBCD
+     C                     MOVELDTNCY     TNCY
+     C                     MOVE FRTLBC    TLBC
+     C                     MOVELDCQNF     CQNF
+     C                     MOVELDCQAM     CQAM
+     C                     MOVELDTTYP1    TTYP1
+     C                     MOVELDACNO     ACNO
+     C*
+     C                     WRITEOTCLRPDF
+     C*
+     C                     ADD  1         NOEX
+     C*
+     C**  parameters for hashing subroutine
+     C*
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+     C                     MOVE CQAM      ZZAMT
+     C*
+     C**  Call hashing subroutine to hash cheque amount
+     C*
+     C                     EXSR ZHASH
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WREXTR - write extract trailer                     *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FINAL  - Final Processing                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WREXTR    BEGSR                           ** WREXTR **
+      *
+     C                     OPEN OTCLRPZ
+      *
+     C                     MOVEL'T'       RECI
+     C                     MOVELNOEX      NORE1
+     C                     Z-ADDINT,1     HRWN
+     C                     Z-ADDDEC,1     HRDC
+      *
+     C                     WRITEOTCLRPZF
+      *
+     C*                    ADD  1         NOEX
+      *
+     C                     CLOSEOTCLRPZ
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDDET - Update details                            *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling (02)              *
+      *                                                               *
+      * CALLED BY  MLCQEX - Multiple cheque extraction                *
+      *            SCHQEX - Single cheque extract                     *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           UPDDET    BEGSR                           ** UPDDET **
+      *
+     C                     UPDATCHQDPPDF               71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQDPPD 'DBFILE           ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVEL@CHQD     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ADD  1         NOUP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDHED - Update header                             *
+      *                                                               *
+      * CALLS      DBERR  - Database error handling (03)              *
+      *                                                               *
+      * CALLED BY  PROHED - Process header                            *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           UPDHED    BEGSR                           ** UPDHED **
+      *
+     C                     Z-ADDCREXTM    LETM
+      *
+     C                     UPDATCHQDPPHF               71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CHQDPPH 'DBFILE           ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVEL'1'       DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRCON  - Print controls                            *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FINAL  - Final processing                          *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRCON     BEGSR                           ** PRCON  **
+     C*
+     C**  Move to print feilds
+     C*
+     C                     MOVE INT,1     PINT
+     C                     MOVE DEC,1     PDEC
+     C*
+     C**  Print control totals report.
+     C*
+     C                     OPEN RE4231AU
+     C                     WRITEHEADAU
+     C                     WRITEAUDETL
+     C                     CLOSERE4231AU
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial processing                        *
+      *                                                               *
+      * CALLS -    ZA0150 - Get Midas run date                        *
+      *            IFLDS  - Initialize Work/Screen Flds.              *
+      *            WREXHD - write extract header                      *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+      *
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVE *BLANKS   SMRDT   7
+      *
+      * Initialize program work fields
+     C                     EXSR IFLDS
+      *
+      ** Call subroutine to access ICD file for Midas Run Date.
+     C                     EXSR ZA0150
+      *
+      ** Move midas run date to screen field
+     C                     MOVELBJMRDT    SMRDT
+      *
+      ** output a header record
+     C                     EXSR WREXHD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize work/screen fields             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     SETOF                     202122
+     C                     Z-ADD0         NORD    50
+     C                     Z-ADD0         NOEX    50
+     C                     Z-ADD0         NOUP    50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZA0150 - This subroutine chains to file LF/SDBANKL1           *
+      *            to get Midas Rundate & setup-complete-flag         *
+      *                                                               *
+      *            Indicator 71 is set on if the chain fails          *
+      *                                                               *
+      *            if indicator 71 is on, details of the              *
+      *            attempted access is placed in the LDA              *
+      *                                                               *
+      * CALLS      DBERR  - Database error processing (04)            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZA0150    BEGSR                           ** ZA0150 **
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD04        DBASE
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVELBJSUC     @SCI    1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling : Terminates program       *
+      *                                                               *
+      * CALLED BY  PROHED - Process header                 (01)       *
+      *            UPDDET - Update details                 (02)       *
+      *            UPDHED - Update header                  (03)       *
+      *            ZA0150 - Get Midas rundate and setup    (04)       *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C                     OPEN RE4231AU
+     C                     WRITEHEADAU
+     C*
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C                     WRITEERRORAU
+     C*
+     C**  Roll back to undo all the updates
+     C*
+     C                     ROLBK
+     C*
+     C**  End the program
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Transaction failed.  Re-input necessary.
+     C*                    ROLBK
+     C                     CLOSE*ALL
+     C                     DUMP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Terminate                                 *
+      *                                                               *
+      * CALLS      WREXTR - write extract trailer                     *
+      *            PRCON  - Print controls                            *
+      *                                                               *
+      * CALLED BY  MAIN   - Control processing                        *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+     C                     EXSR WREXTR
+      *
+      ** If close of business print audit control
+     C           *INU2     IFEQ '1'
+     C                     EXSR PRCON
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+      *
+      ** End of commitment cycle
+     C*          CMTTXT    COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+     C/EJECT
+     C/COPY ZSRSRC,ZHASHZ3
+     C**  SR.ZHASH  Subroutine
+     C*
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

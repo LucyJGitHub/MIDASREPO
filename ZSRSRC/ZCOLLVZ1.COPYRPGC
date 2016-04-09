@@ -1,0 +1,298 @@
+      *****************************************************************
+      *                                                               *
+      *  ZCOLLV - STANDARD SUBROUTINE TO CALCULATE COLLATERAL VALUE   *
+      *                                                               *
+      *           TO CALCULATE THE VALUE OF A SECURITY WHICH MAY BE   *
+      *           USED AS COLLATERAL.  THE COLLATERAL VALUE IS        *
+      *           CALCULATED IN NOMINAL CURRENCY AND CONVERTED TO     *
+      *           A SECOND CURRENCY, IF REQUIRED.                     *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. 052254             DATE 07JAN94               *
+      *  PREV AMEND NO. S01117             DATE 11JAN91               *
+      *                 E21287             DATE 26FEB90               *
+      *                 S01232             DATE 22NOV89               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  052254 - CURRENT FACTOR amended from 9,8 to 10,9             *
+      *  S01117 - Use new SD files (Multibranching)                   *
+      *  E21287 - Make ZNOML 13 Long to match the subroutine ZCNSD.   *   E21287
+      *  S01232 - Australian Yield Modification.                      *   S01232
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     C***INPUT**-*ZNOML**(13,0-4)**NOMINAL*****************************   E21287
+     C*  INPUT  - ZNOML  (15,0-4)  NOMINAL                                E21287
+     C*           ZNMDP  (1,0)     NOMINAL DECIMAL PLACES
+     C*           ZPRCE  (15,8)    PRICE
+     C*           ZPRCB  (1A)      PRICE BASIS
+     C*           ZTRDB  (1A)      TRADE BASIS
+     C*           ZCLMG  (3,0)     COLLATERAL MARGIN
+     C*           ZCLCC  (3,0)     COLLATERAL CURRENCY CONVERSION
+     C*           ZNMCY  (3A)      NOMINAL CURRENCY
+     C*           ZCLCY  (3A)      COLLATERAL CURRENCY
+     C************ZCFCT***9,8******CURRENT FACTOR*********************    052254
+     C*           ZCFCT  (10,9)    CURRENT FACTOR                         052254
+     C*           A6NBDP (1,0)     CURRENCY DECIMAL PLACES (SDCURRPD)     S01117
+     C*
+     C*  OUTPUT - ZCLVL  (13,0-3)  COLLATERAL VALUE - IN EITHER
+     C*                              NOMINAL OR COLLATERAL CURRENCY
+     C*
+     C*  CALLS  - ZEVCD
+     C*           ZNCD   (ZDATE1)
+     C*           ZPRCI  (ZDYYR, ZDAYS, ZDATE2, ZYLDI)
+     C*           ZXRATE
+     C*           ZCONV
+     C*           ZYLD   (ZYLDI)                                          S01232
+     C*           ZLCD   (ZLCD)                                           S01232
+     C*           ZYCE   (ZYLD)                                           S01232
+     C*           XDATE  (ZYCE)                                           S01232
+     C*
+     C***CHAINS*TO*TABTG10**WITH*NOMINAL*AND*COLLATERAL*CURRENCIES*****   S01117
+     C*  ACCESSES SDCURRPD  WITH NOMINAL AND COLLATERAL CURRENCIES        S01117
+     C*                     TO OBTAIN SPOT RATE AND M/D IND
+     C*                     *INU7 AND *INU8 SETON IF NOT FOUND
+     C*                     PROGRAM MUST CHECK THESE AFTER CALLING S/R
+     C**********************TABTG10*MUST*BE*DEFINED*IN*THE*PROGRAM*****   S01117
+     C*                     SDCURRPD MUST HAVE AN I-SPEC IN THE PROGRAM   S01117
+     C*
+     C***CALLING*PROGRAM*MUST*HAVE*READ*TABTB10,*TABTB11*&*SECTYD******   S01117
+     C*  CALLING PROGRAM MUST HAVE ACCESSED SDBANKPD  & SECTYD            S01117
+     C*
+     C***USES**IN90*-*NO*ACTIVE*RECORD*FOUND*ON*TABTG10****************   S01117
+     C*  USES *IN90 - NO ACTIVE RECORD FOUND ON SDCURRPD                  S01117
+     C*
+     C******************************************************************
+     C*
+     C           ZCOLLV    BEGSR                           ** ZCOLLV **
+     C*
+     C                     GOTO ZSTRCL
+     C*
+     C*  Define Input Fields and Work Fields
+     C*
+     C***********          Z-ADDZNOML     ZNOML  130                      E21287
+     C                     Z-ADDZNOML     ZNOML  150                      E21287
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZPRCE     ZPRCE  158
+     C                     Z-ADDZCLMG     ZCLMG   30
+     C                     Z-ADDZCLCC     ZCLCC   30
+     C**********           Z-ADDZCFCT     ZCFCT   98                      052254
+     C                     Z-ADDZCFCT     ZCFCT  109                      052254
+     C*
+     C                     MOVE ZPRCB     ZPRCB   1
+     C                     MOVE ZTRDB     ZTRDB   1
+     C                     MOVE ZNMCY     ZNMCY   3
+     C                     MOVE ZCLCY     ZCLCY   3
+     C*
+     C************LIKE     DEFN SPOT      ZRATE1                          S01117
+     C************LIKE     DEFN SPOT      ZRATE2                          S01117
+     C           *LIKE     DEFN A6SPRT    ZRATE1                          S01117
+     C           *LIKE     DEFN A6SPRT    ZRATE2                          S01117
+     C*
+     C           ZSTRCL    TAG                             ** ZSTRCL **
+     C*
+     C*  Clear Output Field
+     C*
+     C                     Z-ADD0         ZCLVL  130
+     C*
+     C***Set*up*Key*for*Currency*Table*-*TABTG10*Access****************   S01117
+     C*
+     C***********          MOVE *BLANKS   TKEY   12                       S01117
+     C***********          MOVEL'20'      TKEY                            S01117
+     C***********          MOVE 1         ZWK4    4                       S01117
+     C*
+     C*  CALCULATE CONSIDERATION
+     C*
+     C***Access*TABTG10*to*obtain*Nominal*Currency*Decimal*Places******   S01117
+     C*  Access SDCURRPD to obtain Nominal Currency Decimal Places        S01117
+     C*       If a Database Error U7 and U8 will be set on
+     C*       and the subroutine will exit
+     C*
+     C***********          MOVELZNMCY     ZWK4                            S01117
+     C***********          MOVE ZWK4      TKEY                            S01117
+     C***********TKEY      CHAINTABTG10F             90                   S01117
+     C**N90******RECI      COMP 'D'                  9090                 S01117
+     C************IN90     IFEQ '1'                                       S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '       ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM ZNMCY     @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     GOTO ZENDCL
+     C                     END
+     C***********          Z-ADDCDP       NCDP    10                S01232S01117
+     C                     Z-ADDA6NBDP    NCDP    10                S01232S01117
+     C                     Z-ADDA6NBDP    ZCDPI   10                      S01117
+     C                     Z-ADDA6NBDP    ZCDP                            S01117
+     C*
+     C*  Convert Nominal to Nominal Currency Decimal Places
+     C*
+     C***********CDP       SUB  ZNMDP     ZI      10                      S01117
+     C           A6NBDP    SUB  ZNMDP     ZI      10                      S01117
+     C           ZI        ADD  5         ZI
+     C           ZNOML     MULT POWER8,ZI ZNOML     H
+     C*
+     C*  If Trade Basis is not P convert Price/Discount/Yield to Price
+     C*
+     C           ZTRDB     IFNE 'P'
+     C                     EXSR ZEVCD
+     C                     EXSR ZNCD
+     C                     Z-ADDZPRCE     ZPRCIN
+     C                     Z-ADDRUND      ZFDATE
+     C*                                                                   S01232
+     C*     Set up parameters for Australian Yields mod                   S01232
+     C*                                                                   S01232
+     C           STBS      IFEQ 'Y'                                       S01232
+     C           SYBS      ANDEQ'AU'                                      S01232
+     C           ZNOML     ANDNE0                                         S01232
+     C                     Z-ADDLCPN      ZDCSDT                          S01232
+     C                     Z-ADDRUND      ZDCEDT                          S01232
+     C                     Z-ADDZNOML     ZAMT                            S01232
+     C                     EXSR ZACCZ                                     S01232
+     C                     Z-ADDRUND      WRKD    50                      S01232
+     C           ZDCINT    DIV  ZNOML     WRKPI                           S01232
+     C                     EXSR ZYCE                                      S01232
+     C*                                                                   S01232
+     C*          IF EX-COUPON THEN PI PASSED IS THE REMAINING INTEREST    S01232
+     C*          TILL NCD AND IS NEGATIVE                                 S01232
+     C*                                                                   S01232
+     C           SCUMEX    IFEQ 'X'                                       S01232
+     C                     Z-ADDLCPN      ZDCSDT                          S01232
+     C                     Z-ADDNCD       ZDCEDT                          S01232
+     C                     EXSR ZACCZ                                     S01232
+     C           ZDCINT    DIV  ZNOML     WKWPI  159                      S01232
+     C           WRKPI     SUB  WKWPI     WRKPI                           S01232
+     C                     END                                            S01232
+     C                     ELSE                                           S01232
+     C                     MOVE 'C'       SCUMEX  1                       S01232
+     C                     Z-ADD0         WRKPI                           S01232
+     C                     END                                            S01232
+     C*                                                                   S01232
+     C                     EXSR ZPRCI
+     C                     Z-ADDZPRCOT    ZPRCE
+     C                     END
+     C*
+     C*  Consideration = Nominal x Price
+     C*
+     C           ZNOML     MULT ZPRCE     ZWORK  152H
+     C*
+     C*  If Price Basis is P divide by 100
+     C*
+     C           ZPRCB     IFEQ 'P'
+     C           ZWORK     DIV  100       ZWORK     H
+     C                     END
+     C*
+     C*  If Current Factor is not zero multiply by it
+     C*
+     C           ZCFCT     IFNE 0
+     C           ZWORK     MULT ZCFCT     ZWORK     H
+     C                     END
+     C*
+     C                     Z-ADDZWORK     ZWRK13 130H
+     C*
+     C*  Calculate Collateral in Nominal Currency
+     C*
+     C           ZWRK13    MULT ZCLMG     ZWRK15 150
+     C           ZWRK15    DIV  100       ZCLVL     H
+     C*
+     C*
+     C*  IF COLLATERAL CURRENCY IS NOT BLANK
+     C*    AND NOT EQUAL TO NOMINAL CURRENCY
+     C*    THEN THE COLLATERAL VALUE WILL BE CONVERTED
+     C*    FROM NOMINAL CURRENCY TO COLLATERAL CURRENCY
+     C*
+     C           ZCLCY     IFNE *BLANKS
+     C           ZCLCY     ANDNEZNMCY
+     C*
+     C***TABTG10*holds*spot*rate*for*conversion*to*Base*Currency**********S01117
+     C*****and*Multiply/Divide*Indicator*which*is*converted*to*alpha******S01117
+     C*****for*ZXRATE*and*ZCONV*use*(0*=*'D'*and*1*=*'M')*****************S01117
+     C*****First*save*that*for*Nominal*Currency*already*accessed*above****S01117
+     C*****and*then*access*for*Collateral*Currency************************S01117
+     C***********                                                         S01117
+     C***********          Z-ADDSPOT      ZRATE1                          S01117
+     C***********                                                         S01117
+     C***********MDIN      IFEQ 0                                         S01117
+     C***********          MOVE 'D'       ZMDI1   1                       S01117
+     C***********          ELSE                                           S01117
+     C***********          MOVE 'M'       ZMDI1                           S01117
+     C***********          END                                            S01117
+     C***********          MOVELZCLCY     ZWK4                            S01117
+     C***********          MOVE ZWK4      TKEY                            S01117
+     C***********TKEY      CHAINTABTG10F             90                   S01117
+     C**N90******RECI      COMP 'D'                  9090                 S01117
+     C************IN90     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C*  SDCURRPD holds spot rate for conversion to Base Currency         S01117
+     C*    and Multiply/Divide Indicator.                                 S01117
+     C*    First save that for Nominal Currency already accessed above    S01117
+     C*    and then access for Collateral Currency                        S01117
+     C*                                                                   S01117
+     C                     Z-ADDA6SPRT    ZRATE1                          S01117
+     C                     MOVE A6MDIN    ZMDI1   1                       S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM '       ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM ZCLCY     @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     GOTO ZENDCL
+     C                     END
+     C*
+     C***********          Z-ADDSPOT      ZRATE2                          S01117
+     C***********                                                         S01117
+     C***********MDIN      IFEQ 0                                         S01117
+     C***********          MOVE 'D'       ZMDI2   1                       S01117
+     C***********          ELSE                                           S01117
+     C***********          MOVE 'M'       ZMDI2                           S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C                     Z-ADDA6SPRT    ZRATE2                          S01117
+     C                     MOVE A6MDIN    ZMDI2   1                       S01117
+     C                     MOVE A6NBDP    ZCDPO   10                      S01117
+     C*
+     C*  Obtain the Cross-Exchange Rate between the two currencies
+     C*
+     C                     EXSR ZXRATE
+     C*
+     C*  Convert from Nominal to Collateral Currency
+     C*
+     C                     Z-ADDZRATEX    ZEXCH
+     C                     MOVE ZMDIX     ZMD
+     C*
+     C                     Z-ADDZCLVL     ZAMTCI
+     C                     MOVE ZNMCY     ZCCYI
+     C                     MOVE ZCLCY     ZCCYO
+     C*
+     C                     EXSR ZCONV
+     C*
+     C*  If there was a Database Error in ZCONV then exit
+     C*
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO ZENDCL
+     C                     END
+     C*
+     C*  Calculate Collateral Value in Collateral Currency
+     C*
+     C           100       SUB  ZCLCC     ZWRK3   30
+     C           ZAMTCO    MULT ZWRK3     ZAMTCO 150
+     C           ZAMTCO    DIV  100       ZCLVL     H
+     C*
+     C                     END
+     C*
+     C           ZENDCL    ENDSR                           ** ZENDCL **
+     C*
+     C*****************************************************************

@@ -1,0 +1,366 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Send message to users')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0526 - Send messages to other users                        *
+      *                                                               *
+      *  Function:  This program is in charge to send messages to     *
+      *             users logged in CoB.                              *
+      *                                                               *
+      *  Called By: CBCMONB - Batch Monitoring                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. S01420             Date 12APR95               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCB0526DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      ** Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      *
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+     ICURDAT      DS                             13
+     I                                        1   7 RUNA
+     I            DS
+     I                                        1  120WWDTTM
+     I                                        1   20WWHOUR
+     I                                        3   40WWMINU
+     I                                        4   60WWSECO
+     I                                        7   80WWDAT1
+     I                                        9  100WWDAT2
+     I                                       11  120WWDAT3
+      *****************************************************************
+      *
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #END
+      *
+      ********************************************************************
+      *
+      ** MAIN SUBROUTINE
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  #END   SUBROUTINE TO END PROGRAM
+      **        #CHECK SUBROUTINE TO VERIFY INPUT                      E
+      *
+      ********************************************************************
+      *
+     C           #MAIN     BEGSR
+      *
+     C           *INKL     DOUEQ'1'
+     C           *INKJ     OREQ '1'
+     C           *IN89     ANDEQ'0'
+      *
+     C                     WRITECB0526C0
+     C                     WRITECB0526F2
+     C                     EXFMTCB0526F1
+     C                     MOVE '0'       *IN89
+     C                     MOVEA'000000'  *IN,48
+     C                     MOVEA'0000'    *IN,56
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVEL'EXIT    'WWRTRN
+     C                     EXSR #END
+     C           *INKL     WHEQ *ON
+     C                     MOVEL'PREVIOUS'WWRTRN
+     C                     EXSR #END
+     C           *INKJ     WHEQ *ON
+     C                     EXSR #CHECK
+     C                     OTHER
+     C                     MOVEL'CBM0135' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ENDSL
+     C                     END
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #INIT SUBROUTINE TO INITIALIZE FIELDS
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWUSER 10
+     C                     PARM           WWMESG 40
+     C                     PARM           WWDLYJ 12
+     C                     PARM           WWSCHD  1
+     C                     PARM           WWTYPE  1
+     C                     PARM           WWPRTY  1
+     C                     PARM           WWFMAT  3
+     C                     PARM           WWJNBR  6
+     C                     PARM           WWRTRN  8
+      *
+     C                     MOVEACPY@      ACT@   80
+     C                     MOVEL*BLANKS   WWMESG
+     C                     MOVEL*BLANK    WWREST  1
+     C                     MOVEL'L'       DDPRTY
+     C                     MOVEL'N'       DDSCHD
+     C                     MOVELWWUSER    DDUSER
+     C                     MOVEL##JOB     SWSID
+     C                     MOVEL##USR     SUSER
+      *
+     C                     MOVE ##JNO     WWNBR   6
+     C           WWJNBR    IFEQ WWNBR
+     C                     MOVEL'R'       WWREST
+     C                     END
+      *
+     C           *NAMVAR   DEFN RUNDAT    CURDAT
+     C                     IN   CURDAT                 99
+     C           *IN99     IFEQ '0'
+     C                     MOVE RUNA      SRUNA
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #CHECK SUBROUTINE TO VERIFY INPUT
+      *
+      ** CALLED FROM #MAIN
+      *
+      ** CALLS  #TIME SUBROUTINE TO CALCULATE TIME ENTERED
+      *
+      ********************************************************************
+      *
+     C           #CHECK    BEGSR
+      *
+      ** TYPE SHOULD BE I, L OR S
+      *
+     C           DDTYPE    IFNE 'I'
+     C           DDTYPE    ANDNE'S'
+     C           DDTYPE    ANDNE'L'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN59
+     C                     MOVEL'CBM0143' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+     C           WWREST    IFEQ 'R'                        Restricted
+     C           DDTYPE    ANDNE'S'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN59
+     C                     MOVEL'CBM0146' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+     C           WWREST    IFEQ 'R'                        Restricted
+     C           DDTYPE    ANDEQ'S'
+     C           DDSCHD    ANDNE'Y'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN59
+     C                     MOVEL'CBM0147' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+      ** If no errors continue checking
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** Message text cannot be blank
+      *
+     C           DDMESG    IFEQ *BLANKS
+     C           DDTYPE    ANDEQ'I'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN49
+     C                     MOVEL'CBM0134' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+      ** If message type is signoff/Lock then severity should be H
+      *
+     C           DDTYPE    IFEQ 'S'
+     C           DDPRTY    ANDNE'H'
+     C           DDTYPE    OREQ 'L'
+     C           DDPRTY    ANDNE'H'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN51
+     C                     MOVEL'CBM0137' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+      ** Severity message should be H or L
+      *
+     C           DDPRTY    IFNE 'H'
+     C           DDPRTY    ANDNE'L'
+     C                     MOVE '1'       *IN89
+     C                     MOVE '1'       *IN51
+     C                     MOVEL'CBM0136' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+      ** If message is to be scheduled then verify time
+      *
+     C           DDSCHD    IFEQ 'Y'
+      *
+      ** Delay time cannot be 0
+      *
+     C           DDTIME    IFEQ 0
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN89
+     C                     MOVEL'CBM0138' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      *
+      ** Message can be delayed up to 16h 39'
+      *
+     C           DDTIME    IFLT 0
+     C           DDTIME    ORGT 999
+     C           *IN99     OREQ '1'
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN89
+     C                     MOVEL'CBM0139' ZAMSID           Message id.
+     C                     MOVEL'CBUSRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+      *
+      ** Compute time
+      *
+     C                     EXSR #TIME
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** If no errors return values to CL program
+      *
+     C           *IN89     IFEQ '0'
+     C                     MOVELDDMESG    WWMESG
+     C                     MOVELDDPRTY    WWPRTY
+     C                     MOVELDDTYPE    WWTYPE
+     C                     MOVELDDSCHD    WWSCHD
+     C                     MOVE WWDTTM    WWDLYJ
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #TIME  SUBROUTINE TO CALCULATE TIME ENTERED
+      *
+      ** CALLED FROM #CHECK
+      *
+      ** CALLS  NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           #TIME     BEGSR
+      *
+     C                     TIME           WWDTTM
+     C                     Z-ADD0         WWSHOR  20
+     C                     Z-ADDDDTIME    WWSMIN  30
+     C           WWSMIN    DOWGE60
+     C           WWSMIN    SUB  60        WWSMIN
+     C           WWSHOR    ADD  1         WWSHOR
+     C                     END
+      *
+     C           WWMINU    ADD  WWSMIN    WWMINU
+     C           WWMINU    DOWGE60
+     C           WWMINU    SUB  60        WWMINU
+     C           WWHOUR    ADD  1         WWHOUR
+     C                     END
+      *
+     C           WWHOUR    ADD  WWSHOR    WWHOUR
+      *
+     C           WWHOUR    IFGE 24
+     C           WWHOUR    SUB  24        WWHOUR
+     C           WWFMAT    IFEQ 'DMY'
+     C                     ADD  1         WWDAT1
+     C                     END
+     C           WWFMAT    IFEQ 'YMD'
+     C                     ADD  1         WWDAT3
+     C                     END
+     C           WWFMAT    IFEQ 'MDY'
+     C                     ADD  1         WWDAT2
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** #END   SUBROUTINE TO END PROGRAM
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  NO OTHER SUBROUTINES
+      *
+      ********************************************************************
+      *
+     C           #END      BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      ** ZASNMS SUBROUTINE TO RETRIEVE APPROPRIATE MESSAGE
+      *
+      ** CALLED FROM MAIN
+      *
+      ** CALLS  Y2SNMGC
+      *
+      ********************************************************************
+     C           ZASNMS    BEGSR
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C           ZAEXIT    ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

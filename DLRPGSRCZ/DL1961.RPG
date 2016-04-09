@@ -1,0 +1,1140 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL MM Rates and Discount Factors Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F*  DL1961 - MM RATES AND DISCOUNT FACTORS REPORT                *
+     F*                                                               *
+     F*  Function: Reports on Money Market Rates and their assosciated*
+     F*    (I/C)   Discount Factors. Run On Request.                  *
+     F*    (COB)                                                      *
+     F*                                                               *
+     F*  Called By: DLC1961 - MM Rates and Discount Factors Report    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR1019269B         Date 26Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01328             Date 11Feb91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR1019269B - Allow printing of negative rate for MM borrow   *
+      *               and lend rate. (Child: AR1019270)               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CPK014 - Release 4 packaging.  Rename of field which is too  *
+      *           long for OPM program.                               *
+     F*  S01328 - FRA/IRS Revaluation - New Program                   *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FDLINTRL1IF  E           K        DISK         KINFSR *PSSR
+     FDLMMDFL1IF  E           K        DISK         KINFSR *PSSR
+     FDL1961P1O   E             20     PRINTER      KINFDS SPOOL      UC
+     FDL1961AUO   E                    PRINTER      KINFDS SPOOLU
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    10  -  Indicate Bid (1) or Offer (0) to Dl1961R2           *
+     F*    15  -  Indicate P1 has been opened                         *
+     F*    20  -  Overflow Indicator for DL1961P1                     *
+     F*    35  -  Rates changed since Discount Factors last Rebuilt   *
+     F*                                                               *
+     F*    70  -  End of file for DLINTRL1                            *
+     F*    71  -  Error on file DLINTRL1                              *
+     F*    72  -  Successful SETLL for DLINTRL1                       *
+     F*    73  -  End of file for DLMMDFL1                            *
+     F*    74  -  Error on file DLMMDFL1                              *
+     F*    75  -  Successful SETLL for DLMMDFL1                       *
+     F*                                                               *
+     F*    85  -  Indicate a database error to DL1961AU               *
+     F*                                                               *
+     F*    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 -  Database error                                      *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Main Processing                                     *
+     F*  LDRT   - Load Rates Arrays in Edited form                    *
+     F*  LDDF   - Load Discount Factors Arrays in Edited form         *
+     F*  JUST   - Left-justify the edited rate                        *
+     F*  WRITE  - Write record to report                              *
+     F*  INIT   - Initial Subroutine                                  *
+     F*  TERM   - Termination Subroutine                              *
+     F*  *PSSR  - Error Subroutine                                    *
+     F*                                                               *
+     F*  ZDATE2 - Convert Midas Day Number into Date                  *
+     F*  ZRATE1 - Edit the rate - 11,7                                *
+     F*  ZRATE3 - Edit the rate - 13,9                                *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E** Array for Copyright Statement
+     E*
+     E                    PRDA       10  7
+     E**   Array to hold Period Dates for the Report.
+     E*
+     E                    BR         10 12
+     E** Array for edited Bid Rates from DLINTRL1
+     E*
+     E                    OR         10 12
+     E** Array for edited Offer Rates from DLINTRL1
+     E*
+     E                    BRD        10 13
+     E** Array for edited Bid Rates from DLINTRL1 as Decimal
+     E*
+     E                    ORD        10 13
+     E** Array for edited Offer Rates from DLINTRL1 as Decimal
+     E*
+     E                    BRDN       10  2 0
+     E** Array for Bid Rate as Decimal - no. of characters
+     E*
+     E                    ORDN       10  2 0
+     E** Array for Offer Rate as Decimal - no. of characters
+     E*
+     E                    BDF        10 15
+     E** Array for edited Bid Discount Factor
+     E*
+     E                    ODF        10 15
+     E** Array for edited Offer Discount Factor
+     E*
+     E                    BIDF       10 15
+     E** Array for edited Bid Inverse Discount Factor
+     E*
+     E                    OIDF       10 15
+     E** Array for edited Offer Inverse Discount Factor
+     E*
+     E                    BCIF       10 15
+     E** Array for edited Bid Cumulative Inverse Discount Factor
+     E*
+     E                    OCIF       10 15
+     E** Array for edited Offer Cumulative Inverse Discount Factor
+     E*
+     E                    BCIL       10 15
+     E** Array for edited Bid Cumul Inverse Disc Factor - left-just
+     E*
+     E                    OCIL       10 15
+     E** Array for edited Offer Cumul Inverse Disc Factor - left-just
+     E*
+     E                    BCIN       10  2 0
+     E** Array for Bid Cumul Inverse Discount Factor - no. of chars
+     E*
+     E                    OCIN       10  2 0
+     E** Array for Offer Cumul Inverse Discount Factor - no. of chars
+     E*
+     E                    WWFC       57  1
+     E** Array for Discount Factor Calculations
+     E*
+     E                    ARRI       15  1
+     E** Array for Input Array to JUST
+     E*
+     E                    ARRO       15  1
+     E** Array for Output Array from JUST
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZRATE1Z1
+     E/COPY ZSRSRC,ZSEDITZ1                                                               AR1019269B
+     E/COPY ZSRSRC,ZRATE3Z1
+     I*****************************************************************
+     I/EJECT
+     I*****************************************************************
+      *                                                                                       CPK014
+     IFDINTRP0                                                                                CPK014
+     I              HWTMESTMP                       HWTMST                                    CPK014
+     ISPOOL       DS
+     I** File Information Data Structure for DL1961P1
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I** File Information Data Structure for DL1961AU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS for access programs, short DS
+     I*
+     IDSSDY     E DSDSSDY
+     I* First DS for access programs, long DS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External DS for Currency details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External DS for Bank details
+     I*
+     IDLMMDF      DS                             16
+     I** Data area for Date/Time of Last Rebuild for Discount Factors
+     I                                        6  160WWDTRB
+     I*
+     IWWDS        DS                             16
+     I** Data structure for Date/Time of Last Rate Change for Currency
+     I                                        1  110WWDTRC
+     I                                        1   50HWLCD
+     I                                        6  110HWTLUP
+     I*
+     IDBERR       DS                            256
+     I** Data structure to hold Database error fields
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/COPY ZSRSRC,ZSEDITZ2                                                               AR1019269B
+     I              10000000              C         WPOWER                                AR1019269B
+     I*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* Main Line Processing                                          *
+     C*                                                               *
+     C* CALLS      -  INIT  - Initial Subroutine                      *
+     C*               MAIN  - Main Processing                         *
+     C*               TERM  - Termination Subroutine                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C** perform the initialisation subroutine
+     C                     EXSR INIT
+     C*
+     C** perform the Main Processing if no error
+     C           *INU7     IFEQ '0'
+     C                     EXSR MAIN
+     C                     END
+     C*
+     C** perform the Termination Subroutine
+     C                     EXSR TERM
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN       - Main Processing                                  *
+     C*                                                               *
+     C* CALLS      - LDRT  - Load Rates Arrays in Edited form         *
+     C*              LDDF  - Load Disc Factors Arrays in Edited form  *
+     C*              WRITE - Write record to report                   *
+     C*                                                               *
+     C* CALLED BY  - Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    *IN70 - End of file for DLINTRL1                 *
+     C*              *IN72 - Successful SETLL for DLINTRL1            *
+     C*              *IN73 - End of file for DLMMDFL1                 *
+     C*              *IN75 - Successful SETLL for DLMMDFL1            *
+     C*              KCCY  - Input parameter - Currency selected      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C** Set lower limits on MM Interest Rates file - Currency will be
+     C** blank if 'ALL' selected.
+     C           KCCY      SETLLDLINTRL1             70  72
+     C*
+     C** if no records found for currency selected or end of file
+     C** then end
+     C           KCCY      IFNE *BLANKS
+     C           *IN72     ANDEQ'0'
+     C           *IN70     OREQ '1'
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C** Set lower limits on MM Discount Factors file - Currency will
+     C** be blank if 'ALL' selected.
+     C           KCCY      SETLLDLMMDFL1             73  75
+     C*
+     C** if no records found for currency selected or end of file
+     C** then end
+     C           KCCY      IFNE *BLANKS
+     C           *IN75     ANDEQ'0'
+     C           *IN73     OREQ '1'
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C** read MM Interest Rates File and MM Discount Factors File for
+     C** first record for this currency
+     C                     READ DLINTRL1                 70
+     C                     READ DLMMDFL1                 73
+     C*
+     C** while not end of file for either file
+     C           *IN70     DOWEQ'0'
+     C           *IN73     OREQ '0'
+     C*
+     C** if end of file for one file and not for the other or if
+     C** currency read from DLMMDFL1 is not the same as the currency
+     C** read from DLINTRL1 then process a database error
+     C           *IN70     IFNE *IN73
+     C           DFCCY     ORNE HWCCY
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'DLMMDFL1'DBFILE           *************
+     C                     MOVE HWCCY     WDBKEY  7        * DBERR 001 *
+     C                     MOVELDFCCY     WDBKEY           *************
+     C                     MOVELWDBKEY    DBKEY
+     C                     EXSR *PSSR
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C** if the MM Interest Rates for this currency have been changed
+     C** since the Last Rebuild for the Discount Factors then set on
+     C** indicator to output warning.
+     C** (Date and Time combined in data structure for easy compare.)
+     C           WWDTRC    IFGT WWDTRB
+     C                     MOVE '1'       *IN35
+     C                     ELSE
+     C                     MOVE '0'       *IN35
+     C                     END
+     C*
+     C** load the rates arrays and the discount factors arrays;
+     C** if error in either of these routines then go to the end of SR
+     C                     EXSR LDRT
+     C           *INU7     IFEQ '1'
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C                     EXSR LDDF
+     C           *INU7     IFEQ '1'
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C** write the details to the report
+     C                     EXSR WRITE
+     C*
+     C** if error in WRITE then go to the end of SR
+     C           *INU7     IFEQ '1'
+     C                     GOTO MAIN9
+     C                     END
+     C*
+     C** if one currency selected then each record for that currency
+     C** should have been read by now - set on end of file indicators
+     C** to drop out of loop
+     C           KCCY      IFNE *BLANKS
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN73
+     C                     ELSE
+     C*
+     C** else 'ALL' currencies selected so read MM Interest Rates File
+     C** and MM Discount Factors File for first record for next ccy
+     C                     READ DLINTRL1                 70
+     C                     READ DLMMDFL1                 73
+     C                     END
+     C*
+     C                     END
+     C**
+     C           MAIN9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* LDRT       - Load Rates Arrays in Edited form                 *
+     C*              (The Bid Rate is the same as the Borrow Rate and *
+     C*               the Offer Rate is the same as the Lend Rate)    *
+     C*                                                               *
+     C* CALLS      - ZDATE2 - Convert Midas Day Number into Date      *
+     C*              ZRATE1 - Edit the rate - 11,7                    *
+     C*              ZRATE3 - Edit the rate - 13,9                    *
+     C*              JUST  - Left-justify the edited rate             *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    WWCCY - Saved currency                           *
+     C*              X     - Array Index                              *
+     C*              BR    - Array for Bid Rate                       *
+     C*              OR    - Array for Offer Rate                     *
+     C*              BRD   - Array for Bid Rate as Deciaml - edited   *
+     C*              ORD   - Array for Offer Rate as Decimal - edited *
+     C*              BRDN  - Array for BRD - number of characters     *
+     C*              ORDN  - Array for ORD - number of characters     *
+     C*              @@INPR- Input rate to ZRATE1                     *
+     C*              @@OUTR- Output field from ZRATE1                 *
+     C*              ZINPR - Input rate to ZRATE3                     *
+     C*              ZOUTR - Output field from ZRATE3                 *
+     C*              ARRI  - Input rate to JUST                       *
+     C*              ARRO  - Output rate from JUST                    *
+     C*              WCHAR - Output field from JUST - number of char  *
+     C*              @RTCD - Parm for Access Program - Return Code    *
+     C*              @OPTN - Parm for Access Program - Option         *
+     C*              @AJCD - Parm for Access Program - Currency Code  *
+     C*              DSSDY - Parm for Access Program - Returned field *
+     C*              SDCURR- Parm for Access Program - Returned DS    *
+     C*              *IN70 - End of file for DLINTRL1                 *
+     C*              *IN71 - Error on DLINTRL1                        *
+     C*              Z     - Dummy index array set to 15              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LDRT      BEGSR
+     C*
+     C** read currency file for text to output to report
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM HWCCY     @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVELHWCCY     DBKEY            * DBERR 002 *
+     C                     EXSR *PSSR                      *************
+     C                     GOTO LDRT9
+     C                     END
+     C*
+     C                     MOVELA6CYCD    RRCYCD
+     C                     MOVELA6CYNM    RRCYNM
+     C*
+     C** save the Currency read for later comparison
+     C                     MOVELHWCCY     WWCCY   3
+     C*
+     C** set array index to zero
+     C                     Z-ADD*ZERO     X       20
+     C*
+     C** do the following for each of the year periods (1 to 10) for
+     C** this currency on DLINTRL1
+     C           X         DOUEQ10
+     C                     ADD  1         X
+     C*
+     C** edit the Period Date from DLINTRL1 and store for the report
+     C*
+     C                     Z-ADDHWPRDN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PRDA,X
+     C*
+     C** edit the Bid Rate from DLINTRL1 - store in array for report
+     C**********           Z-ADDHWBRRT    @@INPR                                          AR1019269B
+     C**********           EXSR ZRATE1                                                    AR1019269B
+     C**********           MOVE @@OUTR    BR,X                                            AR1019269B
+     C                     EXSR FRMTB                                                     AR1019269B
+     C                     MOVE ZOUT21    BR,X                                            AR1019269B
+     C*
+     C** edit the Offer Rate from DLINTRL1 - store in array for report
+     C**********           Z-ADDHWLDRT    @@INPR                                          AR1019269B
+     C**********           EXSR ZRATE1                                                    AR1019269B
+     C**********           MOVE @@OUTR    OR,X                                            AR1019269B
+     C                     EXSR FRMTL                                                     AR1019269B
+     C                     MOVE ZOUT21    OR,X                                            AR1019269B
+     C*
+     C** divide Bid Rate by 100, edit and store in array for report
+     C** (if edited field -ve then place -ve sign at end of field
+     C**  - SR JUST expects -ve sign at end and moves it to the front)
+     C** (because shown in Calculation field it is left-justified)
+     C           HWBRRT    DIV  100       ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVEAZOUTR     ARRI
+     C           HWBRRT    IFLT *ZERO
+     C                     Z-ADD15        Z       20
+     C                     MOVE '-'       ARRI,Z
+     C                     END
+     C                     EXSR JUST
+     C                     MOVEAARRO      BRD,X
+     C                     Z-ADDWCHAR     BRDN,X
+     C*
+     C** divide Offer Rate by 100, edit and store in array for report
+     C** (if edited field negative then place -ve sign at end of field
+     C**  - SR JUST expects -ve sign at end and moves it to the front)
+     C** (because shown in Calculation field it is left-justified)
+     C           HWLDRT    DIV  100       ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVEAZOUTR     ARRI
+     C           HWLDRT    IFLT *ZERO
+     C                     Z-ADD15        Z       20
+     C                     MOVE '-'       ARRI,Z
+     C                     END
+     C                     EXSR JUST
+     C                     MOVEAARRO      ORD,X
+     C                     Z-ADDWCHAR     ORDN,X
+     C*
+     C** if all 10 of the year periods for this currency have not yet
+     C** been read then read the MM Interest Rates file again.
+     C           X         IFLT 10
+     C                     READ DLINTRL1               7170
+     C*
+     C** if error on read, or end of file, or not the same currency
+     C** as before then process an error
+     C           HWCCY     IFNE WWCCY
+     C           *IN70     OREQ '1'
+     C           *IN71     OREQ '1'
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'DLINTRL1'DBFILE           *************
+     C                     MOVELWWCCY     DBKEY            * DBERR 003 *
+     C                     EXSR *PSSR                      *************
+     C                     GOTO LDRT9
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           LDRT9     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* LDDF       - Load Discount Factors Arrays in Edited form      *
+     C*                                                               *
+     C* CALLS        ZRATE1 - Edit the rate - 11,7                    *
+     C*              ZRATE3 - Edit the rate - 13,9                    *
+     C*              JUST   - Left-justify the edited rate            *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    WWCCY - Saved currency                           *
+     C*              X     - Array Index                              *
+     C*              BDF   - Array for Bid Discount Factor            *
+     C*              ODF   - Array for Offer Discount Factor          *
+     C*              BIDF  - Array for Bid Inverse Discount Factor    *
+     C*              OIDF  - Array for Offer Inverse Discount Factor  *
+     C*              BCIF  - Array for Bid Cumulative Inv Disc Fact   *
+     C*              OCIF  - Array for Offer Cumulative Inv Disc Fact *
+     C*              BCIL  - Array for BCIF - left-justified          *
+     C*              OCIL  - Array for OCIF - left-justified          *
+     C*              BCIN  - Array for BCIF - Number of characters    *
+     C*              OCIN  - Array for OCIF - Number of characters    *
+     C*              @@INPR- Input rate to ZRATE1                     *
+     C*              @@OUTR- Output field from ZRATE1                 *
+     C*              ZINPR - Input rate to ZRATE3                     *
+     C*              ZOUTR - Output field from ZRATE3                 *
+     C*              ARRI  - Input rate to JUST                       *
+     C*              ARRO  - Output rate from JUST                    *
+     C*              WCHAR - Output field from JUST - number of char  *
+     C*              *IN73 - End of file for DLMMDFL1                 *
+     C*              *IN74 - Error on read of DLMMDFL1                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LDDF      BEGSR
+     C*
+     C** Save the Currency read for later comparison
+     C                     MOVELDFCCY     WWCCY   3
+     C*
+     C** set array index to zero
+     C                     Z-ADD*ZERO     X       20
+     C*
+     C** set arrays to blanks
+     C                     MOVE *BLANKS   BDF
+     C                     MOVE *BLANKS   BIDF
+     C                     MOVE *BLANKS   BCIF
+     C                     MOVE *BLANKS   ODF
+     C                     MOVE *BLANKS   OIDF
+     C                     MOVE *BLANKS   OCIF
+     C*
+     C** do the following for each of the year periods (1 to 10) for
+     C** this currency on DLMMDFL1
+     C           X         DOUEQ10
+     C                     ADD  1         X
+     C*
+     C** edit the Bid Discount Factor and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFBDF     ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     BDF,X
+     C           DFBDF     IFLT *ZERO
+     C                     MOVE '-'       BDF,X
+     C                     END
+     C*
+     C** edit the Offer Discount Factor and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFODF     ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     ODF,X
+     C           DFODF     IFLT *ZERO
+     C                     MOVE '-'       ODF,X
+     C                     END
+     C*
+     C*
+     C** edit the Bid Inverse Discount Factor and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFBIDF    ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     BIDF,X
+     C           DFBIDF    IFLT *ZERO
+     C                     MOVE '-'       BIDF,X
+     C                     END
+     C*
+     C** edit the Offer Inverse Discount Factor and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFOIDF    ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     OIDF,X
+     C           DFOIDF    IFLT *ZERO
+     C                     MOVE '-'       OIDF,X
+     C                     END
+     C*
+     C** edit the Bid Cumulative Inverse Disc Fact and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFBCIF    ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     BCIF,X
+     C           DFBCIF    IFLT *ZERO
+     C                     MOVE '-'       BCIF,X
+     C                     END
+     C*
+     C**  and left-justify because it is used in the Calculation field
+     C**  (SR JUST expects -ve sign at end and moves it to the front)
+     C                     MOVEABCIF,X    ARRI
+     C                     EXSR JUST
+     C                     MOVEAARRO      BCIL,X
+     C                     Z-ADDWCHAR     BCIN,X
+     C*
+     C** edit the Offer Cumulative Inverse Disc Fact and store in array
+     C** (if edited field negative then place -ve sign at end of field)
+     C                     Z-ADDDFOCIF    ZINPR
+     C                     EXSR ZRATE3
+     C                     MOVELZOUTR     OCIF,X
+     C           DFOCIF    IFLT *ZERO
+     C                     MOVE '-'       OCIF,X
+     C                     END
+     C*
+     C**  and left-justify because it is used in the Calculation field
+     C**  (SR JUST expects -ve sign at end and moves it to the front)
+     C                     MOVEAOCIF,X    ARRI
+     C                     EXSR JUST
+     C                     MOVEAARRO      OCIL,X
+     C                     Z-ADDWCHAR     OCIN,X
+     C*
+     C** if all 10 of the year periods for this currency have not yet
+     C** been read then read the MM Discount Factors File again
+     C           X         IFLT 10
+     C                     READ DLMMDFL1               7473
+     C*
+     C** if error on read, or end of file, or not the same currency
+     C** as before then process an error
+     C           DFCCY     IFNE WWCCY
+     C           *IN73     OREQ '1'
+     C           *IN74     OREQ '1'
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'DLMMDFL1'DBFILE           *************
+     C                     MOVELWWCCY     DBKEY            * DBERR 004 *
+     C                     EXSR *PSSR                      *************
+     C                     GOTO LDDF9
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           LDDF9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* JUST       - Left justify edited field                        *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED  - ARRI  - Array I - Input Rate                     *
+     C*              ARRO  - Array O - Output Rate                    *
+     C*              I     - Array Index to ARRI                      *
+     C*              O     - Array Index to ARRO                      *
+     C*              WCHAR - Output from JUST - Number of characters  *
+     C*              Z     - Dummy index array set to 15              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           JUST      BEGSR
+     C*
+     C** initialise work array indexes
+     C                     Z-ADD1         I       20
+     C                     Z-ADD1         O       20
+     C*
+     C** if input array is negative then place -ve sign at the
+     C** beginning of the output array
+     C           ARRI,15   IFEQ '-'
+     C                     MOVE '-'       ARRO,O
+     C                     ADD  1         O
+     C                     END
+     C*
+     C** find first element of the input array that is not blank
+     C           ARRI,I    DOWEQ*BLANK
+     C           I         ANDLT15
+     C                     ADD  1         I
+     C                     END
+     C*
+     C** move each non-blank element of input array to output array
+     C           ARRI,I    DOWNE*BLANKS
+     C           I         ANDLT15
+     C                     MOVE ARRI,I    ARRO,O
+     C                     ADD  1         I
+     C                     ADD  1         O
+     C                     END
+     C*
+     C** move number of characters in rate to output field
+     C           O         SUB  1         WCHAR   20
+     C*
+     C** initialise input array to blanks ready for next use
+     C                     MOVEA*BLANKS   ARRI
+     C*
+     C           JUST9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* WRITE      - Write record to report                           *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    X     - Array Index                              *
+     C*              Y     - Second Array Index - 1 less than X       *
+     C*              A     - Calculation Field Array Index            *
+     C*              WWFC  - Calculation Field Array                  *
+     C*              BR    - Array for Bid Rate                       *
+     C*              OR    - Array for Offer Rate                     *
+     C*              BRD   - Array for Bid Rate divided by 100        *
+     C*              ORD   - Array for Offer Rate divided by 100      *
+     C*              BDF   - Array for Bid Discount Factor            *
+     C*              ODF   - Array for Offer Discount Factor          *
+     C*              BIDF  - Array for Bid Inverse Discount Factor    *
+     C*              OIDF  - Array for Offer Inverse Discount Factor  *
+     C*              BCIF  - Array for Bid Cumulative Inv Disc Fact   *
+     C*              OIDF  - Array for Offer Cumulative Inv Disc Fact *
+     C*              SEQ   - Parm for ZSFILE - Sequence for RCF       *
+     C*              @ENT  - Parm for ZSFILE - Branch for RCF         *
+     C*              SFILE - Parm for ZSFILE - Spool File Name        *
+     C*              ZSNUM - Parm for ZSFILE - Spool File Number      *
+     C*              ZSERR - Parm for ZSFILE - Error in Program       *
+     C*              *IN10 - Indicate Bid (1) or Offer (0) to DL1961R2*
+     C*              *IN15 - Indicate P1 has been opened              *
+     C*              RRREC - Number of records reported count         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRITE     BEGSR
+     C*
+     C** open the printer file if not already opened
+     C           *IN15     IFEQ '0'
+     C                     OPEN DL1961P1
+     C                     MOVE '1'       *IN15
+     C*
+     C** ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @ENT    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** output the main heading and the currency
+     C                     WRITEDL1961R1
+     C*
+     C** output the side headings for Bid side
+     C                     MOVE '1'       *IN10
+     C                     WRITEDL1961R2
+     C*
+     C** set array index to zero
+     C                     Z-ADD0         X
+     C*
+     C** do the following for each of the year periods (1 to 10)
+     C** for this currency
+     C           X         DOUEQ10
+     C                     ADD  1         X
+     C*
+     C* INDIVIDUAL REPORT FIELDS - BID
+     C* ------------------------------
+     C*
+     C** the Year
+     C                     MOVE X         RRYEAR
+     C*
+     C** the Period Date
+     C                     MOVE PRDA,X    RRDATE
+     C*
+     C** the Bid Rate
+     C                     MOVE BR,X      RRR
+     C*
+     C** the Bid Discount Factor
+     C                     MOVE BDF,X     RRDF
+     C*
+     C** the Bid Inverse Discount Factor
+     C                     MOVE BIDF,X    RRIDF
+     C*
+     C** the Bid Cumulative Inverse Discount Factor
+     C                     MOVE BCIF,X    RRCIF
+     C*
+     C* CALCULATION REPORT FIELD  -  BID
+     C* --------------------------------
+     C*
+     C** set second counter to 1 less than main counter
+     C           X         SUB  1         Y       20
+     C*
+     C** set calculations array index to one
+     C                     Z-ADD1         A       20
+     C*
+     C** if the index is on one then process slightly differently
+     C** ---> ' 1 + ' BRD,X
+     C*
+     C           X         IFEQ 1
+     C*
+     C                     MOVEA' 1 + '   WWFC,A
+     C                     ADD  5         A
+     C*
+     C                     MOVEABRD,X     WWFC,A
+     C                     ADD  BRDN,X    A
+     C*
+     C** else index is 2 to 10
+     C** ---> '(1 + ' BRD,X ')/(1 - (' BRD,X ' x ' OCIL,Y '))'
+     C                     ELSE
+     C*
+     C                     MOVEA'(1 + '   WWFC,A
+     C                     ADD  5         A
+     C*
+     C                     MOVEABRD,X     WWFC,A
+     C                     ADD  BRDN,X    A
+     C*
+     C                     MOVEA')/(1 - ('WWFC,A
+     C                     ADD  8         A
+     C*
+     C                     MOVEABRD,X     WWFC,A
+     C                     ADD  BRDN,X    A
+     C*
+     C                     MOVEA' x '     WWFC,A
+     C                     ADD  3         A
+     C*
+     C                     MOVEAOCIL,Y    WWFC,A
+     C                     ADD  OCIN,Y    A
+     C*
+     C                     MOVEA'))'      WWFC,A
+     C                     ADD  2         A
+     C*
+     C                     END
+     C*
+     C** set the rest of the array to blanks
+     C                     MOVEA*BLANKS   WWFC,A
+     C*
+     C* set up the Discount Factors work field
+     C                     MOVEAWWFC      RRFC
+     C*
+     C* write the Bid record to the printer file
+     C                     WRITEDL1961R3
+     C*
+     C** increment number of records reported count (output to AU)
+     C                     ADD  1         RRREC
+     C*
+     C                     END
+     C*
+     C** output the side headings for Offer side
+     C                     MOVE '0'       *IN10
+     C                     WRITEDL1961R2
+     C*
+     C** set array index to zero
+     C                     Z-ADD0         X
+     C*
+     C** do the following for each of the year periods (1 to 10)
+     C** for this currency
+     C           X         DOUEQ10
+     C                     ADD  1         X
+     C*
+     C* INDIVIDUAL REPORT FIELDS - OFFER
+     C* --------------------------------
+     C*
+     C** the Year
+     C                     MOVE X         RRYEAR
+     C*
+     C** the Period Date
+     C                     MOVE PRDA,X    RRDATE
+     C*
+     C** the Offer Rate
+     C                     MOVE OR,X      RRR
+     C*
+     C** the Offer Discount Factor
+     C                     MOVE ODF,X     RRDF
+     C*
+     C** the Offer Inverse Discount Factor
+     C                     MOVE OIDF,X    RRIDF
+     C*
+     C** the Offer Cumulative Inverse Discount Factor
+     C                     MOVE OCIF,X    RRCIF
+     C*
+     C* CALCULATION REPORT FIELD  -  OFFER
+     C* ----------------------------------
+     C*
+     C** set second counter to 1 less than main counter
+     C           X         SUB  1         Y       20
+     C*
+     C** set calculations array index to one
+     C                     Z-ADD1         A       20
+     C*
+     C** if the index is on one then process slightly differently
+      ** ---> ' 1 + ' ORD,X
+      *
+     C           X         IFEQ 1
+      *
+     C                     MOVEA' 1 + '   WWFC,A
+     C                     ADD  5         A
+     C*
+     C                     MOVEAORD,X     WWFC,A
+     C                     ADD  ORDN,X    A
+     C*
+     C** else index is 2 to 10
+     C** ---> '(1 + ' ORD,X ')/(1 - (' ORD,X ' x ' BCIL,Y '))'
+     C                     ELSE
+     C*
+     C                     MOVEA'(1 + '   WWFC,A
+     C                     ADD  5         A
+     C*
+     C                     MOVEAORD,X     WWFC,A
+     C                     ADD  ORDN,X    A
+     C*
+     C                     MOVEA')/(1 - ('WWFC,A
+     C                     ADD  8         A
+     C*
+     C                     MOVEAORD,X     WWFC,A
+     C                     ADD  ORDN,X    A
+     C*
+     C                     MOVEA' x '     WWFC,A
+     C                     ADD  3         A
+     C*
+     C                     MOVEABCIL,Y    WWFC,A
+     C                     ADD  BCIN,Y    A
+     C*
+     C                     MOVEA'))'      WWFC,A
+     C                     ADD  2         A
+     C*
+     C                     END
+     C*
+     C** set the rest of the array to blanks
+     C                     MOVEA*BLANKS   WWFC,A
+     C*
+     C* set up the Discount Factors work field
+     C                     MOVEAWWFC      RRFC
+     C*
+     C* write the offer record to the printer file
+     C                     WRITEDL1961R3
+     C*
+     C** increment number of records reported count (output to AU)
+     C                     ADD  1         RRREC
+     C*
+     C                     END
+     C*
+     C           WRIT9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INIT       - Initialisation                                   *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    SEQ   - Input parameter - Sequence for RCF       *
+     C*              KCCY  - Input parameter - Currency selected      *
+     C*              RRREC - Number of records reported count         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           KCCY    3
+     C*
+     C** Access Bank details for Report heading
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL*BLANKS   DBKEY            * DBERR 005 *
+     C                     EXSR *PSSR                      *************
+     C                     GOTO INIT9
+     C                     END
+     C*
+     C**   Check System Date Format, DDMMYY (*IN98 off)
+     C**                             MMDDYY (*IN98 on).
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C** Access data area DLMMDF for the Date/Time of the last
+     C** Discount Factors Rebuild.
+     C           *NAMVAR   DEFN           DLMMDF
+     C                     IN   DLMMDF
+     C*
+     C** initialise number of records reported count (output to AU)
+     C                     Z-ADD0         RRREC   50
+     C*
+     C** initialise DBASE to avoid decimal data error on output to AU
+     C                     Z-ADD0         DBASE
+     C*
+     C                     Z-ADD7         ZDECS                                           AR1019269B
+     C           INIT9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+      ****************************************************************                    AR1019269B
+      *                                                              *                    AR1019269B
+      *   FRMTB - Format Borrow Rate                                 *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       CALLED BY:                                             *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       CALLS:       ZSEDIT                                    *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       USES:        WTEMP    RUN TYPE INPUT PARAMETER         *                    AR1019269B
+      *                                                              *                    AR1019269B
+      ****************************************************************                    AR1019269B
+      *                                                                                   AR1019269B
+     C           FRMTB     BEGSR                                                          AR1019269B
+      *                                                                                   AR1019269B
+     C           HWBRRT    MULT WPOWER    ZFLD15                                          AR1019269B
+     C                     EXSR ZSEDIT                                                    AR1019269B
+     C                     ENDSR                                                          AR1019269B
+     C*****************************************************************                   AR1019269B
+      /EJECT                                                                              AR1019269B
+      ****************************************************************                    AR1019269B
+      *                                                              *                    AR1019269B
+      *   FRMTL - Format Lending Rate                                *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       CALLED BY:                                             *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       CALLS:       ZSEDIT                                    *                    AR1019269B
+      *                                                              *                    AR1019269B
+      *       USES:        WTEMP    RUN TYPE INPUT PARAMETER         *                    AR1019269B
+      *                                                              *                    AR1019269B
+      ****************************************************************                    AR1019269B
+      *                                                                                   AR1019269B
+     C           FRMTL     BEGSR                                                          AR1019269B
+      *                                                                                   AR1019269B
+     C           HWLDRT    MULT WPOWER    ZFLD15                                          AR1019269B
+     C                     EXSR ZSEDIT                                                    AR1019269B
+     C                     ENDSR                                                          AR1019269B
+     C*****************************************************************
+     C*                                                               *
+     C* TERM       - Termination Subroutine                           *
+     C*                                                               *
+     C* CALLS      -                                                  *
+     C*                                                               *
+     C* CALLED BY    Main Line Processing                             *
+     C*                                                               *
+     C* FLDS USED    SEQ   - Parm for ZSFILE - Sequence for RCF       *
+     C*              @ENT  - Parm for ZSFILE - Branch for RCF         *
+     C*              SFILE - Parm for ZSFILE - Spool File Name        *
+     C*              ZSNUM - Parm for ZSFILE - Spool File Number      *
+     C*              ZSERR - Parm for ZSFILE - Error in Program       *
+     C*              *IN85 - Indicate a database error to DL1961AU    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TERM      BEGSR
+     C*
+     C** if DL1961P1 has been opened and no database error then output
+     C** 'End of Report' format
+     C           *IN15     IFEQ '1'
+     C           *INU7     ANDEQ'0'
+     C                     WRITEDL1961R4
+     C                     END
+     C*
+     C** if database error then set on *IN85 before outputing headings
+     C** and details for DL1961AU
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN85
+     C                     END
+     C*
+     C                     WRITEDL1961R0
+     C*
+     C** ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @ENT    3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** end the program after closing down open files etc.
+     C                     MOVE '1'       *INLR
+     C*
+     C           TERM9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR      - Error Subroutine                                 *
+     C*                                                               *
+     C* FLDS USED    WWRUN - *PSSR already called - do not re-call    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** if not yet processed then process for a dump
+     C           WWRUN     IFNE 'Y'
+     C                     MOVEL'Y'       WWRUN   1
+     C*
+     C                     MOVEL'DL1961'  DBPGM
+     C*
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVELDBERR     @LDA
+     C                     OUT  @LDA
+     C*
+     C                     MOVEL'1'       *INU7
+     C                     MOVEL'1'       *INU8
+     C                     DUMP
+     C*
+     C                     END
+     C*
+     C           PSSR9     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZRATE1Z2
+     C/EJECT                                                                              AR1019269B
+     C/COPY ZSRSRC,ZSEDITZ3                                                               AR1019269B
+     C/EJECT
+     C/COPY ZSRSRC,ZRATE3Z2
+     C/EJECT
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

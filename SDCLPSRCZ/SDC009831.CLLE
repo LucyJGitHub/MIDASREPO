@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Account Transfer Type/Sub-Type Housekeep')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       SDC009831 - Account Transfer Type/Sub-Type Housekeep        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BUG27394*CREATE    Date 26Apr10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27394 - Add new field Record ID to allow logical         */
+/*                  deletion of this file                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&EMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('SDC009831 - Midas SD Account Transfer +
+                          Type Sub-type Housekeeping') TOMSGQ(MRUNQ)
+ 
+/* Initialise job switches and create data area */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &CSTS)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&CSTS *NE 'Y') THEN(DO)
+ 
+                DLTF       FILE(XSDATSTPD)
+                MONMSG     MSGID(CPF2105 CPF0000)
+ 
+                CPYF       FROMFILE(SDATSTPD) +
+                           TOFILE(&DPLIB/XSDATSTPD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&CSTS *EQ 'Y') THEN(DO)
+ 
+                CPYF       FROMFILE(XSDATSTPD) TOFILE(SDATSTPD) +
+                           MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CHGVAR     VAR(&CSTS) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+ 
+/* Call SD Account Transfer Type Subtype Housekeeping program */
+ 
+             CALL       PGM(SD009831)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&EMSG)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&EMSG) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If no error occured in the program  */
+/*   - change value of restart indicator to 'N' */
+/*   - reorganize SDATSTPD file                */
+ 
+             DLTF       FILE(XSDATSTPD)
+             MONMSG     MSGID(CPF2105 CPF0000)
+ 
+             CALL       PGM(SCC000060) PARM('SDATSTPD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&CSTS) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC009831 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

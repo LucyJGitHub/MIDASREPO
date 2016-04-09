@@ -1,0 +1,739 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Write to UDC data log file')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG9050        - Write data to UDC Archive Data Reference log *
+     F*                                                               *
+     F*  Function:  This program writes data to one of two files,     *
+     F*              according to the state of a commitment flag.     *
+     F*              It is based on CG9030                            *
+     F*                                                               *
+     F*  Called By: Many programs, as required.                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG2330            Date 29Apr04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204987             Date 17Apr02               *
+      *                 CCG015             Date 20Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 086483             DATE 02May95               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  204987 - Create log for all FormsMaster feedback records     *   204987
+     F*           generated for a Correspondence.                     *   204987
+     F*  CCG015 - Correspondence Manager Phase 1                      *
+     F*  086483 - Set time on each call                               *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*                                                               *
+     F*  SROUT  -- Write a record to the appropriate file.            *
+     F*  SRAUD  -- Print the audit report.                            *
+     F*  SRBAD  -- Handle an undefined action.                        *
+     F*  SRINIT -- Provides initialisation and definitions.           *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG9050FPG
+     F*-------------------------------------------------------------------
+     FCGXDCLPDO   E                    DISK         KINFSR SRFILEA    UC
+     F            @UDCLPD                           KRENAME@XDCLPD
+     F                                              KCOMIT
+     FCGXDCLL3UF  E           K        DISK         KINFSR SRFILE         CCG015
+     F                                              KCOMIT                CCG015
+     F* Under commitment control
+     F*-------------------------------------------------------------------
+     FCGXDCLL2IF  E           K        DISK                               CCG015
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG9050EPG
+     E*
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG9050IPG
+     I*
+     I* Copied-in input specifications
+     I*
+     ISCSARD    E DSSCSARDPD                                              CCG015
+      **  Switchable feature details                                      CCG015
+      *                                                                   CCG015
+     I*...................................................................
+     IW0FMT     E DSCGUDCLPD
+     I*
+     I* Record format of CGUDCLPD as an input parameter
+     I*
+     I*
+     I**To*save*W0FMT**                                            CCG015 204987
+     I***W0FMTS******DS                           9999             CCG015 204987
+     I*...................................................................
+     I* Error processing data structures:
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     IDSFDY     E DSDSFDY                                                                     CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+     I*...................................................................
+     I* RUNDAT data area:
+     I*
+     IRUNDAT    E DSRUNDAT
+     I*
+     I*...................................................................
+     IW1DTA       DS                            256
+     I* ______________________________________________
+     I* Data structure for data being sent to CGZAUDIT
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I* Spool file name (if blank, name unchanged)
+     I* N.B. To change name, I#SPLR must be Y
+     I*       unless first call of program:
+     I                                        1  10 I#SPLN
+     I* Repeat open and close of spool file:
+     I                                       11  11 I#SPLR
+     I* Report reference:
+     I                                       12  21 I#REF
+     I* Report title (uses MSGID on CGUSRMSG):
+     I                                       26  32 I#TITL
+     I* Title underline (uses MSGID on CGUSRMSG):
+     I                                       33  39 I#TUL
+     I* Flag to control Report Control Facility:
+     I                                       40  40 I#RCF
+     I* Define fields for line printing:
+     I                                       41  47 I#TEXT
+     I                                       48  57 I#FILE
+     I                                       58  720I#QTY
+     I                                       73  730I#DECS
+     I                                       74  74 I#EDIT
+     I                                       75  770I#EXT
+     I                                       78  78 I#MORE
+     I                                       81 130 I#SUB
+     I*...................................................................
+     I* Data structure for compilation - Copyright insertion:
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I*...................................................................
+     I* Named constant holding the message ID for the audit report:
+     I*
+     I*   > W#ID1 -- Total count of records written to file &1 ...:
+     I*
+     I              'CAD1011'             C         W#ID1
+     I*...................................................................
+     I* Named constants identifying the files for error handling:
+     I*
+     I              'CGXDCLPD  '          C         W#FILE
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                 M A I N L I N E
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           W0FMT
+     C                     PARM           W0TITL  7
+     C                     PARM           W0ULIN  7
+     C                     PARM           W0CMT   3
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C* Initialise program:
+     C*
+     C           W0INIT    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     ENDIF
+      *                                                                   086483
+      * Update time                                                       086483
+      *                                                                   086483
+     C                     TIME           W#TIME  60                      086483
+     C*
+     C* Select the appropriate action:
+     C*
+     C           W0ACT     CASEQ'*WRITE  'SROUT
+     C           W0ACT     CASEQ'*UPDATE 'SROUT                           204987
+     C           W0ACT     CASEQ'*AUDIT  'SRAUD
+     C*
+     C* Copy in optional action processing:
+     C*
+     C/COPY WNCPYSRC,CGZAUDACT
+     C*
+     C                     CAS            SRBAD
+     C                     ENDCS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Return to calling program:
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SROUT writes a record to the appropriate file.     **
+     C********************************************************************
+     C           SROUT     BEGSR                           * S R O U T   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SROUT '  @STK,Q
+      *                                                                   CCG015
+      ** If program is called from Correspondence Manager FTP Log Read    CCG015
+      ** program                                                          CCG015
+      *                                                                   CCG015
+     C                     SELEC                                          CCG015
+     C           CCG015    WHEQ 'Y'                                       CCG015
+     C           DLITEM    ANDEQ0                                         CCG015
+     C                     EXSR SRFTP                                     CCG015
+      *                                                                   CCG015
+      ** If program is called from Correspondence Manager                 CCG015
+      ** Feedback process                                                 CCG015
+      *                                                                   CCG015
+     C           CCG015    WHEQ 'Y'                                       CCG015
+     C           DLPROC    ANDEQ'Y'                                       CCG015
+     C                     EXSR FEEDBK                                    CCG015
+     C                     OTHER                                          CCG015
+     C* Write a record:
+     C*
+     C* Common values:
+     C                     Z-ADDAGRDNB    DLDTAC
+     C                     MOVE 'D'       DLRECI
+     C                     MOVE ##JOB     DLAJOB
+     C                     MOVE ##USR     DLAUSR
+     C                     Z-ADDW#TIME    DLATIM
+     C                     MOVE AGMRDT    DLARDT
+     C                     MOVE 'I'       DLAACT
+     C                     Z-ADDAGRDNB    DLRDNB
+     C*
+     C* Write to the appropriate file:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C                     WRITE@XDCLPD
+     C                     MOVE W#FILE    Y#FILE 10
+     C                     ENDIF
+     C* Count the record:
+     C                     ADD  1         COUNT
+     C*
+     C           *IN90     IFEQ *ON
+     C                     MOVE Y#FILE    W0FILE           ***************
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **
+     C                     Z-ADD1         W0ERNB           ** error 1.  **
+     C                     MOVE 'MEM5002' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDSL                                          CCG015
+     C*
+     C           EXOUT     TAG                             <<<=== EXOUT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRAUD prints the audit report.                     **
+     C********************************************************************
+     C           SRAUD     BEGSR                           * S R A U D   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUD '  @STK,Q
+     C*
+     C* Prepare parameters for the report:
+     C*
+     C                     MOVEL'CG9050  'I#REF
+     C                     MOVE W0TITL    I#TITL
+     C                     MOVE W0ULIN    I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C* Determine the file names:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C                     MOVE W#FILE    Z1FILE 10
+     C                     ENDIF
+     C*
+     C                     MOVE W#ID1     I#TEXT
+     C* Print count:
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVELZ1FILE    I#SUB
+     C                     Z-ADDCOUNT     I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           W1DTA
+     C                     PARM           W1RSQN  5
+     C* Reset the counter:
+     C                     Z-ADD*ZERO     COUNT
+     C*
+     C           EXAUD     TAG                             <<<=== EXAUD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              CCG015
+     C********************************************************************CCG015
+     C**  Subroutine SRFTP logs whether the stream file has been        **CCG015
+     C**  transmitted or not                                            **CCG015
+     C********************************************************************CCG015
+     C           SRFTP     BEGSR                           * S R F T P   *CCG015
+      *                                                                   CCG015
+      * Add subroutine to stack.                                          CCG015
+      *                                                                   CCG015
+     C                     ADD  1         Q                               CCG015
+     C                     MOVEL'SRFTP '  @STK,Q                          CCG015
+      *                                                                   CCG015
+      ** Move message id passed from calling program into work field,     CCG015
+      ** as this will be overwritten when reading LF/CGXDCLL2.            CCG015
+      *                                                                   CCG015
+     C                     MOVE DLMSID    WMSID   7                       CCG015
+      *                                                                   CCG015
+      ** Move stream file number into key field                           CCG015
+      *                                                                   CCG015
+     C                     MOVE DLSTFN    KSTFN                           CCG015
+      *                                                                   CCG015
+      ** Retrieve message id for 'XML data written into stream file'      CCG015
+      *                                                                   CCG015
+     C           KSTFN     SETLLCGXDCLL2                 25               CCG015
+      *                                                                   CCG015
+      ** If stream file number not found, issue database error.           CCG015
+      *                                                                   CCG015
+     C           *IN25     IFEQ *OFF                                      CCG015
+     C                     MOVE 'CGXDCLL2'W0FILE           ***************CCG015
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **CCG015
+     C                     Z-ADD4         W0ERNB           ** error 4.  **CCG015
+     C                     MOVE 'MEM5002' W0MSGD           ***************CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      ** Read a record for this stream file number                        CGC015
+      *                                                                   CGC015
+     C                     READ CGXDCLL2                 26               CCG015
+      *                                                                   CCG015
+      ** Move message ID into key field                                   CCG015
+      *                                                                   CCG015
+     C                     MOVE DLMSID    KMSID                           CCG015
+      *                                                                   CCG015
+      ** Read all records with message id for 'XML Data Written Into      CCG015
+      ** Streamfile' and stream file number passed from calling pgm       CCG015
+      *                                                                   CCG015
+     C           KSTFN     SETLLCGXDCLL2                 25               CCG015
+     C           KUDCL     READECGXDCLL2                 27               CCG015
+      *                                                                   CCG015
+     C           *IN27     DOWEQ*OFF                                      CCG015
+      *                                                                   CCG015
+      * Common values:                                                    CCG015
+      *                                                                   CCG015
+     C                     MOVEL*BLANK    DLMSDT                          CCG015
+     C                     Z-ADDAGRDNB    DLDTAC                          CCG015
+     C                     MOVE 'D'       DLRECI                          CCG015
+     C                     MOVE ##JOB     DLAJOB                          CCG015
+     C                     MOVE ##USR     DLAUSR                          CCG015
+     C                     Z-ADDW#TIME    DLATIM                          CCG015
+     C                     MOVE AGMRDT    DLARDT                          CCG015
+     C                     MOVE 'I'       DLAACT                          CCG015
+     C                     Z-ADDAGRDNB    DLRDNB                          CCG015
+      *                                                                   CCG015
+      ** Message id indicating whether stream file has been transmitted   CCG015
+      ** or not                                                           CCG015
+      *                                                                   CCG015
+     C                     MOVE WMSID     DLMSID                          CCG015
+      *                                                                   CCG015
+      * Write to the appropriate file:                                    CCG015
+      *                                                                   CCG015
+     C           W0CMT     IFEQ 'YES'                                     CCG015
+     C                     WRITE@XDCLPD                90                 CCG015
+     C                     MOVE W#FILE    Y#FILE                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      * Count the record:                                                 CCG015
+      *                                                                   CCG015
+     C                     ADD  1         COUNT                           CCG015
+      *                                                                   CCG015
+     C           *IN90     IFEQ *ON                                       CCG015
+     C                     MOVE Y#FILE    W0FILE           ***************CCG015
+     C                     MOVEL'*WRITE  'W0KEY            ** Database  **CCG015
+     C                     Z-ADD3         W0ERNB           ** error 3.  **CCG015
+     C                     MOVE 'MEM5002' W0MSGD           ***************CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C           KUDCL     READECGXDCLL2                 27               CCG015
+     C                     ENDDO                                          CCG015
+      *                                                                   CCG015
+     C           EXFTP     TAG                             <<<=== EXFTP   CCG015
+      *                                                                   CCG015
+      * Unwind subroutine stack:                                          CCG015
+      *                                                                   CCG015
+     C                     MOVE *BLANKS   @STK,Q                          CCG015
+     C                     SUB  1         Q                               CCG015
+      *                                                                   CCG015
+     C                     ENDSR                                          CCG015
+     C********************************************************************CCG015
+     C/EJECT
+     C********************************************************************CCG015
+     C**  Subroutine FEEDBK logs whether an item has been processed     **CCG015
+     C**  by the Print Server                                           **CCG015
+     C********************************************************************CCG015
+     C           FEEDBK    BEGSR                                          CCG015
+      *                                                                   CCG015
+      * Add subroutine to stack:                                          CCG015
+      *                                                                   CCG015
+     C                     ADD  1         Q                               CCG015
+     C                     MOVEL'FEEDBK'  @STK,Q                          CCG015
+      *                                                                   CCG015
+      ***IMPORTANT*************************************************CCG015 204987
+      ***Save*input*parameters*as*they*will*be*overriden*by*the****CCG015 204987
+      ***CHAIN*statement*******************************************CCG015 204987
+     C***********          MOVELW0FMT     W0FMTS                   CCG015 204987
+      *                                                                   204987
+      ** If Action = *UPDATE, only update DLPROC flag for                 204987
+      ** a Correspondence to indicate that Feedback job has               204987
+      ** finished processing all log record for this Item.                204987
+      *                                                                   204987
+     C           W0ACT     IFEQ '*UPDATE'                                 204987
+      *                                                                   CCG015
+     C                     Z-ADDDLITEM    KITEM                           CCG015
+     C                     MOVELDLDCOR    KDCOR                           CCG015
+      *                                                                   CCG015
+     C           KCORR1    CHAINCGXDCLL3             27                   CCG015
+     C           *IN27     IFEQ '0'                                       CCG015
+      ** Step 1: Update the status for the message                        CCG015
+      ** 'Stream file transmitted'                                        CCG015
+      ** This mean that this item has been processed by                   CCG015
+      ** Print Server                                                     CCG015
+     C                     MOVEL'Y'       DLPROC                          CCG015
+     C                     UPDAT@XDCLL3                90                 CCG015
+     C           *IN90     IFEQ '1'                                       CCG015
+     C                     MOVE W#FILE    W0FILE                          CCG015
+     C                     MOVEL'*UPDATE' W0KEY                           CCG015
+     C                     Z-ADD6         W0ERNB                          CCG015
+     C                     MOVE 'MEM5002' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   204987
+     C                     ENDIF                                          204987
+      *                                                                   204987
+     C                     ENDIF                                          204987
+      *                                                                   CCG015
+      ** Step 2: Write the log event 'feedback received'                  CCG015
+      ***Restaure*the*input*parameters*****************************CCG015 204987
+     C**********           MOVELW0FMTS    W0FMT                    CCG015 204987
+      *                                                                   204987
+      ** If Action = *WRITE, create new log record with                   204987
+      ** action CGD2615 (Item processed by FormsMaster).                  204987
+      ** Blank out DLPROC for these type of action as it                  204987
+      ** is not needed.                                                   204987
+      *                                                                   204987
+     C           W0ACT     IFEQ '*WRITE'                                  204987
+      *                                                                   204987
+     C                     MOVEL*BLANK    DLPROC                          CCG015
+      ** Common values                                                    CCG015
+     C                     Z-ADDAGRDNB    DLDTAC                          CCG015
+     C                     MOVE 'D'       DLRECI                          CCG015
+     C                     MOVE ##JOB     DLAJOB                          CCG015
+     C                     MOVE ##USR     DLAUSR                          CCG015
+     C                     Z-ADDW#TIME    DLATIM                          CCG015
+     C                     MOVE AGMRDT    DLARDT                          CCG015
+     C                     MOVE 'I'       DLAACT                          CCG015
+     C                     Z-ADDAGRDNB    DLRDNB                          CCG015
+     C                     WRITE@XDCLPD                90                 CCG015
+     C           *IN90     IFEQ '1'                                       CCG015
+     C                     MOVE W#FILE    W0FILE                          CCG015
+     C                     MOVEL'*WRITE  'W0KEY                           CCG015
+     C                     Z-ADD7         W0ERNB                          CCG015
+     C                     MOVE 'MEM5002' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C           EXFDBK    TAG                                            CCG015
+      *                                                                   CCG015
+      * Unwind subroutine stack:                                          CCG015
+      *                                                                   CCG015
+     C                     MOVE *BLANKS   @STK,Q                          CCG015
+     C                     SUB  1         Q                               CCG015
+      *                                                                   CCG015
+     C                     ENDSR                                          CCG015
+     C********************************************************************CCG015
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBAD handles an undefined action.                 **
+     C********************************************************************
+     C           SRBAD     BEGSR                           * S R B A D   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBAD '  @STK,Q
+     C*
+     C* Database error -- undefined action:
+     C*
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            ** Database  **
+     C                     Z-ADD2         W0ERNB           ** error 2.  **
+     C                     MOVEL'MEM5006' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C*
+     C           EXBAD     TAG                             <<<=== EXBAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation and definition.     **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Move copyright statement:
+     C*
+     C                     MOVE CPYR@#    ACT@   80
+     C*
+     C* Tag subroutine as executed:
+     C*
+     C                     MOVE 'Y'       W0INIT  1
+     C*
+     C* Open the appropriate file, according to
+     C*  the commitment control status flag:
+     C*
+     C           W0CMT     IFEQ 'YES'
+     C                     OPEN CGXDCLPD
+     C                     ENDIF
+     C*
+     C* Initialise the counter:
+     C*
+     C                     Z-ADD*ZERO     COUNT   90
+     C*
+     C* Get the date (from the RUNDAT data area) and the time:
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     TIME           W#TIME  60
+     C           *LIKE     DEFN DLSTFN    KSTFN                           CCG015
+     C           *LIKE     DEFN DLMSID    KMSID                           CCG015
+     C           *LIKE     DEFN DLITEM    KITEM                           CCG015
+     C           *LIKE     DEFN DLDCOR    KDCOR                           CCG015
+      *                                                                   CCG015
+      ** Key list for CGXDCLL2                                            CCG015
+      *                                                                   CCG015
+     C           KUDCL     KLIST                                          CCG015
+     C                     KFLD           KSTFN                           CCG015
+     C                     KFLD           KMSID                           CCG015
+      *                                                                   CCG015
+      ** Key list for CGXDCLL3                                            CCG015
+      *                                                                   CCG015
+     C           KCORR1    KLIST                                          CCG015
+     C                     KFLD           KITEM                           CCG015
+     C                     KFLD           KDCOR                           CCG015
+      *                                                                   CCG015
+      ** Check if correspondence manager phase 1 is switched on           CCG015
+      *                                                                   CCG015
+     C                     CALL 'AOSARDR0'             91                 CCG015
+     C                     PARM '       ' ##RTCD  7                       CCG015
+     C                     PARM '*VERIFY' ##OPTN  7                       CCG015
+     C                     PARM 'CCG015'  ##SARD  6                       CCG015
+     C           SCSARD    PARM *BLANKS   SCSARD                          CCG015
+      *                                                                   CCG015
+      **  If the Access Object returns an error code, process a           CCG015
+      **  database error.                                                 CCG015
+      *                                                                   CCG015
+     C           ##RTCD    IFNE *BLANK                                    CCG015
+     C           ##RTCD    ANDNE'*NRF   '                                 CCG015
+     C           *IN91     OREQ *ON                                       CCG015
+     C*                                                                   CCG015
+     C                     MOVEL'AOSARDR0'W0FILE           ***************CCG015
+     C                     MOVEL'CCG015'  W0KEY            * DB ERROR 003*CCG015
+     C                     Z-ADD3         W0ERNB           ***************CCG015
+     C                     MOVEL'MEM5003' W0MSGD                          CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                          CCG015
+     C                     EXSR SRERR                                     CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C           ##RTCD    IFEQ *BLANK                                    CCG015
+     C                     MOVEL'Y'       CCG015  1                       CCG015
+     C                     ELSE                                           CCG015
+     C                     MOVEL'N'       CCG015                          CCG015
+     C                     ENDIF                                          CCG015
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   51                                   CSC022
+     C           *IN51     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD21        W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2330
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2330
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG9050CPG
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for error-handling subroutine:
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O* /Copy point for output specifications:
+     O*
+     O/COPY WNCPYSRC,CG9050OPG
+     O*
+     O********************************************************************
+** CPY@ -- Copyright statement
+(c) Misys International Banking Systems Ltd. 2001

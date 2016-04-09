@@ -1,0 +1,1270 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FC Todays reporting enquiry')
+     A**************************************************************
+     A*                                                            *
+     A*  Midas - Report Control Facility Module
+     A*                                                            *
+     A*           DSPF/FC0060DF  -  REVIEW TODAY'S REPORTING       *
+     A*                                                            *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                            *
+      *  NOTE: The lines beginning A*%%WB are webfacing related code  *
+      *        and must NOT be deleted.                               *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     A*     Last Amend No.  CAAA02            DATE  02Dec03        *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*     Prev Amend No.  S01486            DATE  07JUN94        *
+     A*                     E39162            DATE  30MAY92        *
+     A*                     LN1153            DATE  06MAY91        *
+     A*                     LN0986            DATE  03MAY91        *
+     A*                     LN1174            DATE  26FEB91        *
+     A*                     LN1142            DATE  14FEB91        *
+     A*                     LN1133            DATE  12FEB91        *
+     A*                     BHF789            DATE  25JAN91        *
+     A*                     LN0912            DATE  29OCT90        *
+     A*                     LN0851            DATE  15OCT90        *
+     A*                     LN0845            DATE  10OCT90        *
+     A*                     LN0669            DATE  24AUG90        *
+     A*                     LN0366            DATE  13JUN90        *
+     A*                                                            *
+     A**************************************************************
+     A*                                                            *
+     A*     CAAA02 - Added some settings for Webfacing that allow  *
+     A*              output of a link to the screen to view Spool  *
+     A*              files.                                        *
+     A*     S01486 - Private Banking Upgrade to Rel 10.            *
+     A*              Screen Level and Entity should always be shown*
+     A*     E39162 - CHANGE 'PRINT' TO 'PRINT(MPRINT)'.            *
+     A*     LN1153 - 1. DISABLE CF05 ON ALL FORMATS EXCEPT FC0060F2*
+     A*              2. IMPROVE APPEARANCE OF SCREEN               *
+     A*              3. PUT FORMAT LEVEL HELP INTO FORMAT FC0060F3 *
+     A*     LN0986 - IF NO DETAILS EXIST, WRITE OUT A BLANK RECORD *
+     A*              TO SUBFILE IN ORDER TO CLEAR PREVIOUS DETAILS *
+     A*              FROM SCREEN                                   *
+     A*     LN1174 - REPLACE 'SUFFIX' WITH 'PRINT FILE'            *
+     A*     LN1142 - INCREASE SIZE OF TEXT FIELD                   *
+     A*     LN1133 - CORRECT HELP TAG LOCATIONS                    *
+     A*     BHF789 - ALLOW ANYONE TO DELETE HIS OWN REPORT REQUESTS*
+     A*     LN0912 - INSERT NEW FORMAT FOR CHANGE OR DELETE.       *
+     A*     LN0851 - DISPLAY OUTQ INSTEAD OF SPOOL FILE NUMBER.    *
+     A*     LN0845 - AMEND SCREEN LAYOUT FOR FC0065 FORMATS        *
+     A*     LN0669 - STANDARDISE SCREEN APPEARANCE                 *
+     A*     LN0366 - SUPPRESS 'PRINT LIST' IF YESTERDAYS           *
+     A*                                                            *
+     A**************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      MSGLOC(24)
+     A*********        START OF CHANGE                     /E39162/
+     A*********                             PRINT
+     A                                      PRINT(MPRINT)
+     A*                END OF CHANGE                       /E39162/
+     A                                      INDARA
+     A                                      CA03(03 'exit')
+     A*                                                                 /LN0669/
+     A*                                                        /LN1153/
+     A**********                            CF05(05 'refresh')
+     A*                                                        /LN1153/
+     A*                                                                 /LN0669/
+     A          R FC0060F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      CF07(07 'yesterday/today')
+     A*                                                                 /LN0669/
+     A*                                                / START LN1133 /
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0669/
+     A*                                                / END LN1133 /
+     A*                                                                 /LN0669/
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                  1 13'FC0060'
+     A*                                                                 /LN0669/
+     A**51********                      1 30'Today''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A*N51********                      1 28'Yesterday''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A  51                              2 28'Today''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A N51                              2 26'Yesterday''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A            RUNA           7A  O  1 72
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A*                                                                 /LN0669/
+     A************                      3  2'User..:'
+     A                                  4  2'User . . :'
+     A************USER          10A  B  3 10
+     A            USER          10A  B  4 13
+     A*                                                                 /LN0669/
+     A                                      DSPATR(HI)
+     A  30                                  DSPATR(RI)
+     A N30N55                               DSPATR(UL)
+     A  55                                  DSPATR(PR)
+     A*                                                                 /LN0669/
+     A************                      4  2'Branch:'
+     A                                  5  2'Branch . :'
+     A*                                                                 /LN0669/
+     A  50
+     AO 55
+     AO 56                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************BRANCH         3A  B  4 10
+     A            BRANCH         3A  B  5 13
+     A*                                                                 /LN0669/
+     A  50
+     AO 55
+     AO 56                                  DSPATR(ND PR)
+     A                                      DSPATR(HI)
+     A  31                                  DSPATR(RI)
+     A N31                                  DSPATR(UL)
+     A*                                                                 /LN0669/
+     A************                      5  2'Report:'
+     A                                  6  2'Report . :'
+     A************SRPT          10A  B  5 10
+     A            SRPT          10A  B  6 13
+     A                                      CHECK(FE)
+     A*                                                                 /LN0669/
+     A                                      DSPATR(HI)
+     A  32                                  DSPATR(RI)
+     A N32                                  DSPATR(UL)
+     A*                                                                 /LN0669/
+     A*N51********                     23  2'F3=Exit F7=Todays output'
+     A**51********                     23  2'F3=Exit F7=Yesterdays output'
+     A N51                             23  2'F3=Main Menu   F7=Today''s Output'
+     A  51                             23  2'F3=Main Menu   F7=Yesterday''s Out-
+     A                                      put'
+     A*                                                                 /LN0669/
+     A          R FC0060F1
+     A                                      OVERLAY
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                  1 13'FC0060'
+     A*                                                                 /LN0669/
+     A*N51********                      1 28'Yesterday''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A**51********                      1 30'Today''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A N51                              2 26'Yesterday''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A  51                              2 28'Today''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A            RUNA           7A  O  1 72
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A*                                                                 /LN0669/
+     A************                      3  2'User..:'
+     A                                  4  4'User . . :'
+     A************USER          10A  O  3 10
+     A            USER          10A  O  4 15
+     A                                      DSPATR(HI)
+     A************                      4  2'Branch:'
+     A                                  5  4'Branch . :'
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************BRANCH         3A  O  4 10
+     A            BRANCH         3A  O  5 15
+     A N50                                  DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A          R FC0060S1                  SFL
+     A  22                                  SFLNXTCHG
+     A*                                                                 /LN0669/
+     A************SELECT         1A  B  8  2
+     A            SELECT         1A  B 10  2
+     A*                                                                 /LN0669/
+     A                                      DSPATR(HI)
+     A  33                                  DSPATR(RI)
+     A N33                                  DSPATR(UL)
+     A*                                                        /LN0986/
+     A  28                                  DSPATR(PR)
+     A  28                                  DSPATR(ND)
+     A*                                                        /LN0986/
+     A*                                                                 /LN0669/
+     A************SRNAM         10A  O  8  4
+     A            SRNAM         10A  O 10  4
+     A                                      DSPATR(HI)
+     A************SSEQ           5A  O  8 15
+     A            SSEQ           5A  O 10 15
+     A                                      DSPATR(HI)
+     A************SRDY           1A  O  8 21
+     A            SRDY           1A  O 10 21
+     A                                      DSPATR(HI)
+     A************SLVL           1A  O  8 24
+     A            SLVL           1A  O 10 25
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SENTY          3A  O  8 27
+     A            SENTY          3A  O 10 28
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SUSER         10A  O  8 31
+     A            SUSER         10A  O 10 32
+     A                                      DSPATR(HI)
+     A************SUBR           3A  O  8 42
+     A            SUBR           3A  O 10 43
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SOTYP          5A  O  8 47
+     A            SOTYP          5A  O 10 49
+     A                                      DSPATR(HI)
+     A************SOUTP         17A  O  8 53
+     A            SOUTP         17A  O 10 55
+     A                                      DSPATR(HI)
+     A************SDESC         50A  O  9  4
+     A            SDESC         50A  O 11  4
+     A                                      DSPATR(HI)
+     A************SFREQ          9A  O  9 68
+     A            SFREQ          9A  O 11 70
+     A                                      DSPATR(HI)
+     A                                 12  1'  '
+     A*                                                                 /LN0669/
+     A            SCOTT         10   H
+     A            SCSEQ          5   H
+     A            SPRPG         10   H
+     A            SBRTP          1   H
+     A            SDL1           8   H
+     A            SDL2           8   H
+     A            SUSRO         10   H
+     A            SSOID         10   H
+     A            SDRQD          1   H
+     A          R FC0060C1                  SFLCTL(FC0060S1)
+     A  21                                  SFLDSP
+     A  20                                  SFLDSPCTL
+     A**23*******                           SFLCLR
+     A  23                                  SFLDLT
+     A  24                                  SFLEND
+     A*                                                                 /LN0669/
+     A************                          SFLSIZ(0008)
+     A                                      SFLSIZ(0005)
+     A************                          SFLPAG(0007)
+     A                                      SFLPAG(0004)
+     A*                                                                 /LN0669/
+     A                                      OVERLAY
+     A*                                                                 /LN1153/
+     A                                      CF05(05 'refresh')
+     A*                                                                 /LN1153/
+     A                                      CF12(12 'previous')
+     A**                                                                /LN0366/
+     A**********                            CF11(11 'print')
+     A  51                                  CF11(11 'print')
+     A**                                                                /LN0366/
+     A  54                                  CF14(14 'outq')
+     A*                                                                 /LN0669/
+     A*                                                / START LN1133 /
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0669/
+     A*                                                / END LN1133 /
+     A*                                                                 /LN0669/
+     A**                                                                /LN0366/
+     A            SDREC          4  0H      SFLRCDNBR
+     A**                                                                /LN0366/
+     A*                                                                 /LN0669/
+     A*N50********                      5  4'Report     Seq Rdy Lvl Enty User  -
+     A************                              User Output Instructions  Pr-
+     A************                          oduction '
+     A**50********                      5  4'Report     Seq Ready        User  -
+     A************                                   Output Instructions  Pr-
+     A************                          oduction '
+     A**********                                     Begin /*S01486*/
+     A*N50******                        6  4'Report      Seq Rdy Lvl Enty User -
+     A                                  6  4'Report      Seq Rdy Lvl Enty User -
+     A**********                                     End   /*S01486*/
+     A                                           User  Output               Pr-
+     A                                      oduction'
+     A**********                                     Begin /*S01486*/
+     A**50******                        6  4'Report      Seq Ready        User -
+     A                                  6  4'Report      Seq Ready        User -
+     A**********                                     End   /*S01486*/
+     A                                                 Output               Pr-
+     A                                      oduction'
+     A************SRPTS         10A  B  6  4
+     A            SRPTS         10A  B  8  4
+     A                                      DSPATR(HI)
+     A                                  7  4'Description'
+     A************                      6 42'Brch'
+     A                                  7 43'Brch'
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A                                  7 49'Instructions'
+     A************                      6 68'/Frequency'
+     A                                  7 70'/Frequency'
+     A*                                                                 /LN0669/
+     A          R FC0060F2
+     A                                      OVERLAY
+     A*                                                                 /LN0669/
+     A**53*51*****                     22  2'D=Delete, A=Amend Request, R=Repor-
+     A************                          ts Already Produced'
+     A  53 51                          22  2'A=Amend Request   D=Delete   R=Rep-
+     A                                      orts Already Produced'
+     A*N51********
+     A*ON53*******                     22  2'R = Reports Already Produced'
+     A*                                                        /START OF BHF789/
+     A*N51********
+     A*ON53 ******                     22  2'R=Reports Already Produced'
+     A N51                             22  2'R=Reports Already Produced'
+     A  51N53                          22  2'D=Delete   R=Reports Already Produ-
+     A                                      ced'
+     A*                                                          /END OF BHF789/
+     A*                                                                 /LN0669/
+     A**                                                                /LN0366/
+     A**54********                     23  2'F3=Exit, F11=Print List, F12=Previ-
+     A************                          ous, F14=Personal Output Queue'
+     A*N54********                     23  2'F3=Exit, F11=Print List, F12=Previ-
+     A************                          ous'
+     A*                                                                 /LN0669/
+     A**54*51*****                     23  2'F3=Exit, F11=Print List, F12=Previ-
+     A************                          ous, F14=Personal Output Queue'
+     A**54N51*****                     23  2'F3=Exit, F12=Previous, F14=Persona-
+     A************                          l Output Queue'
+     A*N54*51*****                     23  2'F3=Exit, F11=Print List, F12=Previ-
+     A************                          ous'
+     A*N54N51*****                     23  2'F3=Exit, F12=Previous'
+     A**                                                                /LN0366/
+     A*                                                                 /LN1153/
+     A**54*51***                       23  2'F3=Main Menu   F11=Print List   F1-
+     A**********                            2=Previous   F14=Personal Output Qu-
+     A**********                            eue'
+     A**54N51***                       23  2'F3=Main Menu   F12=Previous   F14=-
+     A**********                            Personal Output Queue'
+     A*N54*51***                       23  2'F3=Main Menu   F11=Print List   F1-
+     A**********                            2=Previous'
+     A*N54N51***                       23  2'F3=Main Menu   F12=Previous'
+     A  54 51                          23  2'F3=Main Menu  F5=Refresh  F11=Prin-
+     A                                      t  F12=Previous  F14=Personal Outpu-
+     A                                      t Queue'
+     A  54N51                          23  2'F3=Main Menu   F5=Refresh   F12=Pr-
+     A                                      evious   F14=Personal Output Queue'
+     A N54 51                          23  2'F3=Main Menu   F5=Refresh   F11=P-
+     A                                      rint List   F12=Previous'
+     A N54N51                          23  2'F3=Main Menu   F5=Refresh  F12=Pre-
+     A                                      vious'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A          R FC0060F3
+     A                                      OVERLAY
+     A                                      CF12(12 'previous')
+     A                                      CA10(10 'DELETE')
+     A*                                                                 /LN1153/
+     A*                                                                 /LN1153/
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                  1 13'FC0060'
+     A*                                                                 /LN0669/
+     A*N51********                      1 28'Yesterday''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A**51********                      1 30'Today''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A N51                              2 26'Yesterday''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A  51                              2 28'Today''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A            RUNA           7A  O  1 72
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A*                                                                 /LN0669/
+     A************                      3  2'User.......:'
+     A*                                                                 /LN1153/
+     A**********                        4  2'User . . . :'
+     A                                  4  2'User . . . . . . .:'
+     A*                                                                 /LN1153/
+     A************USER          10A  O  3 15
+     A*                                                                 /LN1153/
+     A**********  USER          10A  O  4 15
+     A            USER          10A  O  4 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                      4  2'Branch.....:'
+     A*                                                                 /LN1153/
+     A**********                        5  2'Branch . . :'
+     A                                  5  2'Branch . . . . . .:'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************BRANCH         3A  O  4 15
+     A*                                                                 /LN1153/
+     A**********  BRANCH         3A  O  5 15
+     A            BRANCH         3A  O  5 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************                      5  2'Report.....:'
+     A*                                                                 /LN1153/
+     A**********                        6  2'Report . . :'
+     A                                  6  2'Report . . . . . .:'
+     A*                                                                 /LN1153/
+     A************SRNAM         10A  O  5 15
+     A*                                                                 /LN1153/
+     A**********  SRNAM         10A  O  6 15
+     A            SRNAM         10A  O  6 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                      6  2'Description:'
+     A*                                                                 /LN1153/
+     A**********                        7  2'Description:'
+     A                                  7  2'Description . . . :'
+     A*                                                                 /LN1153/
+     A************SDESC         50A  O  6 15
+     A*                                                                 /LN1153/
+     A**********  SDESC         50A  O  7 15
+     A            SDESC         50A  O  7 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                      7  2'Sequence...:'
+     A*                                                                 /LN1153/
+     A**********                        8  2'Sequence . :'
+     A                                  8  2'Sequence . . . . .:'
+     A*                                                                 /LN1153/
+     A************SSEQ           5A  O  7 15
+     A*                                                                 /LN1153/
+     A**********  SSEQ           5A  O  8 15
+     A            SSEQ           5A  O  8 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                      8  2'Level......:'
+     A*                                                                 /LN1153/
+     A**********                        9  2'Level  . . :'
+     A                                  9  2'Level  . . . . . .:'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SLVL           1A  O  8 15
+     A*                                                                 /LN1153/
+     A**********  SLVL           1A  O  9 15
+     A            SLVL           1A  O  9 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************                     10  2'Distribute?:'
+     A*                                                                 /LN1153/
+     A**********                       11  2'Distribute :'
+     A                                 11  2'Distribute . . . .:'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SDRQD          1A  O 10 15
+     A*                                                                 /LN1153/
+     A**********  SDRQD          1A  O 11 15
+     A            SDRQD          1A  O 11 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************                      9  2'Entity.....:'
+     A*                                                                 /LN1153/
+     A**********                       10  2'Entity . . :'
+     A                                 10  2'Entity . . . . . .:'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SENTY          3A  O  9 15
+     A*                                                                 /LN1153/
+     A**********  SENTY          3A  O 10 15
+     A            SENTY          3A  O 10 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************                     11  2'User.......:'
+     A*                                                                 /LN1153/
+     A**********                       12  2'User . . . :'
+     A                                 12  2'User . . . . . . .:'
+     A*                                                                 /LN1153/
+     A************SUSER         10A  O 11 15
+     A*                                                                 /LN1153/
+     A**********  SUSER         10A  O 12 15
+     A            SUSER         10A  O 12 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                     14 24'User ID...........:'
+     A*                                                                 /LN1153/
+     A**********                       15 24'User ID . . . . . :'
+     A                                 15  2'User ID . . . . . :'
+     A*                                                                 /LN1153/
+     A************SUSRO         10A  O 14 46
+     A*                                                                 /LN1153/
+     A**********  SUSRO         10A  O 15 46
+     A            SUSRO         10A  O 15 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                     15 24'Distribution List.:'
+     A*                                                                 /LN1153/
+     A                                 16 24'Distribution List :'
+     A                                 16  2'Distribution List :'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A  52                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SDL1           8A  O 15 46
+     A*                                                                 /LN1153/
+     A**********  SDL1           8A  O 16 46
+     A            SDL1           8A  O 16 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  52                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SDL2           8A    16 46
+     A*                                                                 /LN1153/
+     A**********  SDL2           8A    17 46
+     A            SDL2           8A    17 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  52                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************                     17 24'Output Instruction:'
+     A*                                                                 /LN1153/
+     A**********                       18 24'Output Instruction:'
+     A                                 18  2'Output Instruction:'
+     A*                                                                 /LN1153/
+     A************SSOID         10A    17 46
+     A*                                                                 /LN1153/
+     A**********  SSOID         10A    18 46
+     A            SSOID         10A    18 22
+     A*                                                                 /LN1153/
+     A                                      DSPATR(HI)
+     A************                     23  2'F3=Exit, F10=Delete, F12=Previous'
+     A                                 23  2'F3=Main Menu   F10=Delete   F12=Pr-
+     A                                      evious'
+     A*                                                                 /LN0669/
+     A          R FC0060S0                  TEXT('MESSAGE SUBFILE')
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            SSFKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+     A          R FC0060C0                  TEXT('MESSAGE SFL CTL')
+     A                                      OVERLAY
+     A                                      SFLCTL(FC0060S0)
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  60                                  SFLEND
+     A*                                                                 /LN0669/
+     A************                          SFLSIZ(5)
+     A                                      SFLSIZ(3)
+     A*                                                                 /LN0669/
+     A                                      SFLPAG(1)
+     A            SPGMQ                     SFLPGMQ
+     A          R FC0065F1                  OVERLAY
+     A                                      CF12(12 'Previous')
+     A                                      PUTOVR
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                      OVRDTA
+     A                                  1 13'FC0065'
+     A*                                                                 /LN0669/
+     A*N51********                      1 28'Yesterday''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A**51********                      1 30'Today''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A N51                              2 26'Yesterday''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A  51                              2 28'Today''s Reporting Enquiry'
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A            RUNA           7A  O  1 72
+     A                                      OVRDTA
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      3  2'User.......:'
+     A*                                                                 /LN0845/
+     A************                      4  2'User . . . :'
+     A                                  4  2'Selection:'
+     A                                  4 15'User . . . :'
+     A*                                                                 /LN0845/
+     A************@USER         10A  O  3 15
+     A*                                                                 /LN0845/
+     A************@USER         10A  O  4 15
+     A            @USER         10A  O  4 28
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************                      4  2'Branch ....:'
+     A*                                                                 /LN0845/
+     A************                      5  2'Branch . . :'
+     A                                  4 48'Branch . . :'
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************@ETTY          3A  O  4 15
+     A*                                                                 /LN0845/
+     A************@ETTY          3A  O  5 15
+     A            @ETTY          3A  O  4 61
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*
+     A*                                                                 /LN0669/
+     A************                      5  2'Report.....:'
+     A                                  6  2'Report . . :'
+     A************@RNAM         10A  O  5 15
+     A            @RNAM         10A  O  6 15
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      6  2'Description:'
+     A*                                                                 /LN0845/
+     A************                      7  2'Description:'
+     A*                                                                 /LN0845/
+     A************@RDES         50A  O  6 15
+     A*                                                                 /LN0845/
+     A************@RDES         50A  O  7 15
+     A            @RDES         50A  O  6 28
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      7  2'Sequence...:'
+     A*                                                                 /LN0845/
+     A************                      8  2'Sequence . :'
+     A                                  7  2'Sequence . :'
+     A*                                                                 /LN0845/
+     A************@RQSQ          5A  O  7 15
+     A*                                                                 /LN0845/
+     A************@RQSQ          5A  O  8 15
+     A            @RQSQ          5A  O  7 15
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      8  2'Level......:'
+     A*                                                                 /LN0845/
+     A************                      9  2'Level  . . :'
+     A                                  7 28'Level  . . :'
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SLVL           1A  O  8 15
+     A*                                                                 /LN0845/
+     A************SLVL           1A  O  9 15
+     A            SLVL           1A  O  7 41
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      9  2'Entity.....:'
+     A*                                                                 /LN0845/
+     A************                     10  2'Entity . . :'
+     A                                  7 48'Entity . . :'
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SETTY          3A  O  9 15
+     A*                                                                 /LN0845/
+     A************SETTY          3A  O 10 15
+     A            SETTY          3A  O  7 61
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                     11  2'User for Output........:'
+     A*                                                                 /LN0845/
+     A************                     12  2'User for Output . . . . :'
+     A                                  8  2'User for Output . . . . :'
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SUSRR         10A  O 11 29
+     A*                                                                 /LN0845/
+     A************SUSRR         10A  O 12 28
+     A            SUSRR         10A  O  8 28
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                     12  2'Distribution Required..:'
+     A*                                                                 /LN0845/
+     A************                     13  2'Distribution Required . :'
+     A                                  8 48'Distribution Required . :'
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SDRQD          1   O 12 29
+     A*                                                                 /LN0845/
+     A************SDRQD          1   O 13 28
+     A            SDRQD          1   O  8 74
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*
+     A          R FC0065S1                  SFL
+     A  25                                  SFLNXTCHG
+     A*                                                                 /LN0669/
+     A************SSEL           1   B 14  2DSPATR(HI)
+     A*                                                                 /LN0845/
+     A************SSEL           1   B 17  2DSPATR(HI)
+     A            SSEL           1   B 12  2DSPATR(HI)
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A  40                                  DSPATR(RI)
+     A N40                                  DSPATR(UL)
+     A*                                                                 /LN0669/
+     A************SRSFX         10A  O 14  4
+     A*                                                                 /LN0845/
+     A************SRSFX         10A  O 17  4
+     A            SRSFX         10A  O 12  4
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SXETY          3   O 14 15
+     A*                                                                 /LN0845/
+     A************SXETY          3   O 17 18
+     A            SXETY          3   O 12 18
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************@STATS        22   O 14 19
+     A*                                                                 /LN0845/
+     A************@STATS        22   O 17 25
+     A*                                                                 /LN1142/
+     A************@STATS        22   O 12 25
+     A            @STATS        23   O 12 25
+     A*                                                                 /LN1142/
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SSAVE          3A  O 14 44
+     A*                                                                 /LN0845/
+     A************SSAVE          3A  O 17 51
+     A            SSAVE          3A  O 12 51
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SHOLD          3   O 14 50
+     A*                                                                 /LN0845/
+     A************SHOLD          3   O 17 59
+     A*                                                                 /LN0851/
+     A************SHOLD          3   O 12 59
+     A            SHOLD          3   O 12 57
+     A*                                                                 /LN0851/
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SCPYS          5A  O 14 55
+     A*                                                                 /LN0845/
+     A************SCPYS          5A  O 17 66
+     A*                                                                 /LN0851/
+     A************SCPYS          5A  O 12 66
+     A            SCPYS          5A  O 12 62
+     A*                                                                 /LN0851/
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SSFNO          4   O 14 62
+     A*                                                                 /LN0845/
+     A************SSFNO          4   O 17 74
+     A*                                                                 /LN0851/
+     A************SSFNO          4   O 12 74
+     A*                                                                 /LN0912/
+     A** THE FOLLOWING FIELD IS REQUIRED AS PART OF PARM FOR QCMDEXC
+     A            SSFNO          4   H
+     A*                                                                 /LN0912/
+     A            POUTQ         10   O 12 70
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A************SSFTX         50A  O 15  4
+     A*                                                                 /LN0845/
+     A************SSFTX         50A  O 18  4
+     A            SSFTX         50A  O 13  4
+     A*                                                                 /LN0845/
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A*                                                                 /CAAA02/
+     A                                 13 60'Viewer'
+     A*%%WB 12 FLD 9 launchiSeriesforWeb(l<%=zOrder%>_FC0065C1$SPLLNK$<%=rrn%+
+     A*%%WB +>.value)
+     A                                 13 68'PDF'
+     A*%%WB 12 FLD 9 launchiSeriesforWeb(l<%=zOrder%>_FC0065C1$PDFLNK$<%=rrn%+
+     A*%%WB +>.value)
+     A                                 13 73'PCL'
+     A*%%WB 12 FLD 9 launchiSeriesforWeb(l<%=zOrder%>_FC0065C1$PCLLNK$<%=rrn%+
+     A*%%WB +>.value)
+     A*                                                                 /CAAA02/
+     A*                                                                 /LN0845/
+     A                               O 14  4 ' '
+     A*                                                                 /LN0845/
+     A            @ESPL          3   H
+     A            @NUM           6   H
+     A            @JOB          10   H
+     A            @USR          10   H
+     A*                                                                 /CAAA02/
+     A            PDFLNK       150   H      TEXT('Splooled PDF')
+     A*%%WB 19 FLD
+     A            PCLLNK       150   H      TEXT('Splooled PCL')
+     A*%%WB 19 FLD
+     A            SPLLNK       150   H      TEXT('Spooled File')
+     A*%%WB 19 FLD
+     A*                                                                 /CAAA02/
+     A*
+     A          R FC0065C1                  SFLCTL(FC0065S1)
+     A                                      CF12(12 'Previous')
+     A  20                                  SFLDSP
+     A  21                                  SFLDSPCTL
+     A  24                                  SFLINZ
+     A  22                                  SFLEND
+     A  23                                  SFLCLR
+     A*                                                                 /LN0669/
+     A************                          SFLSIZ(0005)
+     A*                                                                 /LN0845/
+     A************                          SFLSIZ(0003)
+     A                                      SFLSIZ(0004)
+     A*                                                                 /LN0845/
+     A************                          SFLPAG(0004)
+     A*                                                                 /LN0845/
+     A************                          SFLPAG(0002)
+     A                                      SFLPAG(0003)
+     A*                                                                 /LN0845/
+     A*                                                                 /LN0669/
+     A                                      OVERLAY
+     A*                                                 /START LN1133/
+     A*                                                                 /LN0669/
+     A*                                                 /END LN1133/
+     A************                     13  2'Sfx'
+     A*                                                                 /LN0845/
+     A************                     15  4'Report Name'
+     A                                 10  4'Report Name'
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 15'Etty'
+     A*                                                                 /LN0845/
+     A************                     15 17'Entity'
+     A                                 10 17'Entity'
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 19'Status'
+     A*                                                                 /LN0845/
+     A************                     15 25'Status'
+     A                                 10 25'Status'
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 43'Saved'
+     A*                                                                 /LN0845/
+     A************                     15 50'Saved'
+     A                                 10 50'Saved'
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 49'Hold'
+     A*                                                                 /LN0845/
+     A************                     15 58'Hold'
+     A*                                                                 /LN0851/
+     A************                     10 58'Hold'
+     A                                 10 57'Hold'
+     A*                                                                 /LN0851/
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 55'Copies'
+     A*                                                                 /LN0845/
+     A************                     15 64'Copies'
+     A*                                                                 /LN0851/
+     A************                     10 64'Copies'
+     A                                 10 62'Copies'
+     A*                                                                 /LN0851/
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A************                     13 62'Splno'
+     A*                                                                 /LN0845/
+     A************                     15 71'Spool No.'
+     A*                                                                 /LN0851/
+     A************                     10 71'Spool No.'
+     A                                 10 69'Output Queue'
+     A*                                                                 /LN0851/
+     A*                                                                 /LN0845/
+     A************                          DSPATR(UL)
+     A*                                                                 /LN0669/
+     A*
+     A*
+     A          R FC0065F2                  OVERLAY
+     A            SINSTR        70   O 22  2
+     A*                                                                 /LN0669/
+     A************                     23  2'F3=Exit, F12=Previous'
+     A                                 23  2'F3=Main Menu   F12=Previous'
+     A*                                                                 /LN0669/
+     A*
+     A          R FC0065F3                  OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A*                                                                 /LN0912/
+     A**33****                              CA10(10 'Delete')
+     A*                                                                 /LN0912/
+     A*                                                 /START LN1133/
+     A*                                                                 /LN1153/
+     A*                                                                 /LN1153/
+     A*                                                 /END LN1133/
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                      OVRDTA
+     A                                  1 13'FC0065'
+     A*                                                                 /LN0669/
+     A*N51********                      1 28'Yesterday''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A**51********                      1 30'Today''s Reporting Enquiry'
+     A************                          DSPATR(UL)
+     A N51                              2 29'Copy Yesterday''s Report'
+     A                                      DSPATR(HI)
+     A  51                              2 31'Copy Today''s Report'
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A            RUNA           7A  O  1 72
+     A                                      OVRDTA
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A                                      OVRDTA
+     A*                                                                 /LN0669/
+     A************                      3  2'User.......:'
+     A                                  4  2'User . . . :'
+     A************@USER         10A  O  3 15
+     A            @USER         10A  O  4 15
+     A                                      DSPATR(HI)
+     A************                      4  2'Branch.....:'
+     A                                  5  2'Branch . . :'
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************@ETTY          3A  O  4 15
+     A            @ETTY          3A  O  5 15
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*
+     A*                                                                 /LN0669/
+     A************                      5  2'Report.....:'
+     A                                  6  2'Report . . :'
+     A************@RNAM         10A  O  5 15
+     A            @RNAM         10A  O  6 15
+     A                                      DSPATR(HI)
+     A************                      6  2'Description:'
+     A                                  7  2'Description:'
+     A************@RDES         50A  O  6 15
+     A            @RDES         50A  O  7 15
+     A                                      DSPATR(HI)
+     A************                      7  2'Sequence...:'
+     A                                  8  2'Sequence . :'
+     A************@RQSQ          5A  O  7 15
+     A            @RQSQ          5A  O  8 15
+     A                                      DSPATR(HI)
+     A************                      8  2'Level......:'
+     A                                  9  2'Level  . . :'
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SLVL           1A  O  8 15
+     A            SLVL           1A  O  9 15
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************                      9  2'Entity.....:'
+     A                                 10  2'Entity . . :'
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**********                                     End   /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN0669/
+     A************SETTY          3A  O  9 15
+     A            SETTY          3A  O 10 15
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                        /LN0669/ /LN1174/
+     A************                     11  2'Suffix.....:'
+     A************                     12  2'Suffix . . :'
+     A                                 12  2'Print File :'
+     A*                                                                 /LN1174/
+     A************SRSFX         10A  O 11 15
+     A            SRSFX         10A  O 12 15
+     A                                      DSPATR(HI)
+     A************SSFTX         50A  O 11 26
+     A            SSFTX         50A  O 12 26
+     A                                      DSPATR(HI)
+     A************                     12  2'Entity.....:'
+     A                                 13  2'Entity . . :'
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SXETY          3A  O 12 15
+     A            SXETY          3A  O 13 15
+     A                                      DSPATR(HI)
+     A*                                                                 /LN0669/
+     A  50                                  DSPATR(ND)
+      *
+     A*                                                                 /LN0669/
+     A************                     13  2'Press F10 To Confirm Delete'
+     A*                                                                 /LN0912/
+     A************                     14  2'Press F10 To Confirm Delete'
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A*N33********                          DSPATR(ND)
+     A************                          OVRATR
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A************                     14  2'User for Output........:'
+     A                                 15  2'User for Output . . . . :'
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A**33********                          DSPATR(ND)
+     A*                                                                 /LN0912/
+     A                                      OVRATR
+     A*                                                                 /LN0669/
+     A************SUSR          10A  B 14 29DSPATR(HI)
+     A            SUSR          10A  B 15 28DSPATR(HI)
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A**33********                          DSPATR(ND PR)
+     A**41N33*****                          DSPATR(RI PC)
+     A*N41N33*****                          DSPATR(UL)
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(UL)
+     A*                                                                 /LN0912/
+     A                                      OVRDTA
+      *
+     A*                                                                 /LN0669/
+     A************                     15  2'Output Queue...........:'
+     A*                                                                 /LN0912/
+     A************                     16  2'Output Queue  . . . . . :'
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A**33********
+     A**31********                          DSPATR(ND)
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A************SOUTQ         10A  B 15 29DSPATR(HI)
+     A*                                                                 /LN0912/
+     A************SOUTQ         10A  B 16 28DSPATR(HI)
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A**33********
+     A**31********                          DSPATR(ND PR)
+     A**43N31N33**                          DSPATR(RI PC)
+     A*N43N33*****                          DSPATR(UL)
+     A************                          OVRDTA
+     A*                                                                 /LN0912/
+      *
+     A*                                                                 /LN0669/
+     A************                     16  2'Distribution List......:'
+     A*                                                                 /LN1153/
+     A**********                       17  2'Distribution List . . . :'
+     A                                 16  2'Distribution List . . . :'
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A  33
+     AO 52                                  DSPATR(ND)
+     A*                                                                 /LN0669/
+     A************SDIS1          8A  B 16 29DSPATR(HI)
+     A*                                                                 /LN1153/
+     A**********  SDIS1          8A  B 17 28DSPATR(HI)
+     A            SDIS1          8A  B 16 28DSPATR(HI)
+     A*                                                                 /LN1153/
+     A*                                                                 /LN0669/
+     A  33
+     AO 52                                  DSPATR(ND PR)
+     A*                                                                 /LN0912/
+     A**42N33N52*******                     DSPATR(RI)
+     A  42N33N52                            DSPATR(RI PC)
+     A*                                                                 /LN0912/
+     A N42N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A*                                                                 /LN0669/
+     A************SDIS2          8A  B 17 29DSPATR(HI)
+     A*                                                                 /LN1153/
+     A**********  SDIS2          8A  B 18 28DSPATR(HI)
+     A            SDIS2          8A  B 17 28DSPATR(HI)
+     A*                                                                 /LN1153/
+     A                                      CHECK(FE)
+     A*                                                                 /LN0669/
+     A  52
+     AO 33                                  DSPATR(ND PR)
+     A  42N33N52                            DSPATR(RI)
+     A N42N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A*                                                                 /LN0669/
+     A*N33********                     23  2'F3=Exit, F12=Previous'
+     A**33********                     23  2'F3=Exit  F10=Delete  F12=Previous'
+     A*                                                                 /LN0912/
+     A*N33********                     23  2'F3=Main Menu   F12=Previous'
+     A**33********                     23  2'F3=Main Menu   F10=Delete   F12=Pr-
+     A************                          evious'
+     A                                 23  2'F3=Main Menu   F12=Previous'
+     A*                                                                 /LN0912/
+     A*                                                                 /LN0669/
+     A*                                                                 /LN0912/
+     A          R FC0065F4                  OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A  33                                  CA10(10 'Delete')
+     A*                                                 /START LN1133/
+     A*                                                 /END LN1133/
+     A            JUSR          10A  O  1  2TEXT('User ID')
+     A                                      OVRDTA
+     A                                  1 13'FC0065'
+     A N33                              2 29'Change Yesterday''s Report'
+     A*                                                 /START LN1133/
+     A                                      DSPATR(HI)
+     A*                                                 /END LN1133/
+     A  33                              2 29'Delete Yesterday''s Report'
+     A                                      DSPATR(HI)
+     A            RUNA           7A  O  1 72
+     A                                      OVRDTA
+     A                                  2 71TIME
+     A            WSID          10A  O  2  2
+     A                                      OVRDTA
+     A                                  4  2'User . . . :'
+     A            @USER         10A  O  4 15
+     A                                      DSPATR(HI)
+     A                                  5  2'Branch . . :'
+     A  50                                  DSPATR(ND)
+     A            @ETTY          3A  O  5 15
+     A                                      DSPATR(HI)
+     A  50                                  DSPATR(ND)
+     A*
+     A                                  6  2'Report . . :'
+     A            @RNAM         10A  O  6 15
+     A                                      DSPATR(HI)
+     A                                  7  2'Description:'
+     A            @RDES         50A  O  7 15
+     A                                      DSPATR(HI)
+     A                                  8  2'Sequence . :'
+     A            @RQSQ          5A  O  8 15
+     A                                      DSPATR(HI)
+     A                                  9  2'Level  . . :'
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A            SLVL           1A  O  9 15
+     A                                      DSPATR(HI)
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A                                 10  2'Entity . . :'
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A            SETTY          3A  O 10 15
+     A                                      DSPATR(HI)
+     A**********                                     Begin /*S01486*/
+     A**50******                            DSPATR(ND)
+     A**********                                     End   /*S01486*/
+     A*                                                                 /LN1174/
+     A************                     12  2'Suffix . . :'
+     A                                 12  2'Print File :'
+     A*                                                                 /LN1174/
+     A            SRSFX         10A  O 12 15
+     A                                      DSPATR(HI)
+     A            SSFTX         50A  O 12 26
+     A                                      DSPATR(HI)
+     A                                 13  2'Entity . . :'
+     A  50                                  DSPATR(ND)
+     A            SXETY          3A  O 13 15
+     A                                      DSPATR(HI)
+     A  50                                  DSPATR(ND)
+      *
+     A                                 15  2'Saved. . . . . :'
+     A  33                                  DSPATR(ND)
+     A                                      OVRATR
+     A            CHSAVE         1A  B 15 19DSPATR(HI)
+     A  33                                  DSPATR(ND PR)
+     A  44N33                               DSPATR(RI PC)
+     A N44N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A                                 16  2'Hold . . . . . :'
+     A  33                                  DSPATR(ND)
+     A            CHHOLD         1A  B 16 19DSPATR(HI)
+     A  33                                  DSPATR(ND PR)
+     A  45N33                               DSPATR(RI PC)
+     A N45N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A                                 17  2'Copies . . . . :'
+     A  33                                  DSPATR(ND)
+     A            CHCPYS         2   B 17 19TEXT('Alpha no. of copies')
+     A                                      DSPATR(HI)
+     A  33                                  DSPATR(ND PR)
+     A  46N33                               DSPATR(RI PC)
+     A N46N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A                                 18  2'Output Queue . :'
+     A  33                                  DSPATR(ND)
+     A            SOUTQ         10A  B 18 19DSPATR(HI)
+     A                                      CHECK(FE)
+     A  33                                  DSPATR(ND PR)
+     A  43N33                               DSPATR(RI PC)
+     A N43N33                               DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A N33                             23  2'F3=Main Menu   F12=Previous'
+     A  33                             23  2'F3=Main Menu   F10=Delete   F12=Pr-
+     A                                      evious'
+     A*                                                                 /LN0912/

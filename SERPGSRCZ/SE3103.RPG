@@ -1,0 +1,1386 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Generate Index Values Hist.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3103  -  EXTEL Index Values History Generation             *
+     F*                                                               *
+     F*  Function: Extel Index values are archived for each Index in  *
+     F*   (COB)    effect at COB in the Index Reference file          *
+     F*                                                               *
+     F*  Called by: SEC3104 - EXTEL Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 11JAN94               *
+     F*                 E29170             Date 14NOV91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F**  EXTEL INDEX REFERENCES - KEYED BY HEADER, INDEX REF.
+     FEXIND   IF  E           K        DISK
+     F*
+     F**  EXTEL HEADER FILES
+     F*
+     FEXTF4E  IF  E                    DISK
+     FEXTF4F  IF  E                    DISK
+     FEXTF4G  IF  E                    DISK
+     FEXTF4H  IF  E                    DISK
+     FEXTF4I  IF  E                    DISK
+     FEXTF4L  IF  E                    DISK
+     F*
+     FTABTB10 IF  E                    DISK
+     F*
+     FEXINDZ  IF  E                    DISK
+     FEXCCYD  IF  E           K        DISK
+     FTABTG10 IF  E                    DISK
+     F*
+     F**  INDEX VALUE HISTORY TRAILER
+     F*
+     FHIINDZ  UF  E                    DISK         KCOMIT
+     F*
+     F**  INDEX VALUE HISTORY DETAIL
+     F*
+     FHIINDD  UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     F*
+     FSE3103AUO   E                    PRINTER
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30 - DATABASE ERROR INDICATOR                               *
+     F*   50 - LOOP INDICATOR                                         *
+     F*   52 - CHAIN FAIL HIINDD                                      *
+     F*   55 - CHAIN FAIL HIINDD - USED IN  INFSR                     *
+     F*   62 - FILES OUT OF BALANCE                                   *
+     F*U7-U8 - DATABASE ERROR OCCURRED                                *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   #A    - INITIAL PROCESSING                                  *
+     F*   #AA   - PROCESS HEADER E + FORMAT DATE                      *
+     F*   #AB   - PROCESS HEADER F                                    *
+     F*   #AC   - PROCESS HEADER G                                    *
+     F*   #AD   - PROCESS HEADER H                                    *
+     F*   #AE   - PROCESS HEADER I                                    *
+     F*   #B    - MAIN PROCESS                                        *
+     F*   #BA   - WRITE EACH HISTORY RECORD                           *
+     F*   #C    - TERMINATION PROCESS                                 *
+     F*   ##ERR - DATABASE ERROR PROCESSING                           *
+     F*   *PSSR - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E* WORK ARRAYS
+     E*
+     E                    CPY@    1   1 80
+     E                    ZUR       150  3   ZEC     1 0
+     E* ZACCY ARRAY of currencies and decimal places
+     E                    ZXVAL       8  1
+     E* ZXVAL ARRAY of EXTEL format values
+     E                    ZA          8  1
+     E                    ZB          8  1
+     E**      Work arrays
+     E                    XCY       150  3 0
+     E**      EXTEL currency codes
+     E                    XDT       150  8
+     E*
+     E**  ARRAY TO HOLD EXTF4E VALUES
+     E*
+     E                    @4E        17 11 0
+     E*
+     E**  ARRAY TO HOLD EXTF4F VALUES
+     E*
+     E                    @4F        17 11 0
+     E*
+     E**  ARRAY TO HOLD EXTF4G VALUES
+     E*
+     E                    @4G        17 11 0
+     E*
+     E**  ARRAY TO HOLD EXTF4H RECORD
+     E*
+     E                    @4H        14 11 0
+     E*
+     E**  ARRAY TO HOLD EXTF4I RECORD
+     E*
+     E                    @4I        20 11 0
+     E*
+     E**  ARRAY TO HOLD EXTF4L VALUE
+     E*
+     E                    @L        164 11 0
+     E*
+     E**  ARRAYS FOR ZDATE1/2
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+     E**  ARRAY TO HOLD DATABASE ERROR KEY
+     E*
+     E                    @DB1    1   4 23
+     E*
+     I/EJECT
+     IEXINDZF
+     I*
+     I**  INTERNAL DEFINITION OF EXINDZ RECORD
+     I*
+     I              NINS                            BINS
+     I              NDEL                            BDEL
+     I              NORE                            BORE
+     I*
+     IRECR      E DSEXTF4L
+     I*
+     I**  DATA STRUCTURE TO HOLD EXT4L RECORD
+     I*
+     I                                    P  14 997 @L
+     IFMT         DS
+     I                                        1   8 ZA
+     I                                        1   8 ZAA
+     I                                        9  16 ZB
+     I                                        9  16 ZBA
+     IXDATA       DS                              8
+     I**
+     I**      DATA STRUCTURE FOR DATA FROM EXCCY
+     I**
+     I                                        1   3 CCY
+     I                                        4   40XINC
+     I                                        5   50XUNC
+     I                                        6   60XDCC
+     I                                        7   70XNMC
+     I                                        8   80XDNC
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE TO HOLD RUN DATE MMDDYY
+     I*
+     I                                        1   60@DS1
+     I                                        1   20@DDS1
+     I                                        3   40@DAY1
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE TO HOLD RUN DATE DDMMYY
+     I*
+     I                                        7  120@DS2
+     I                                        7   80@DAY2
+     I                                        9  100@DDS2
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE TO HOLD EXTEL DATE
+     I*
+     I                                        1   70@FDAT
+     I                                        2   30@YY
+     I                                        4   50@MM
+     I                                        6   70@DD
+     I                                        2   70@XF
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE TO HOLD REFORMATED EXTEL DATE
+     I*
+     I                                        1   20@YY1
+     I                                        3   40@MM1
+     I                                        5   60@DD1
+     I                                        1   60@DATE
+     I*
+     I            DS
+     I*
+     I**  DATA STRUCTURE TO HOLD DATABASE ERROR KEY FOR ERRORS 4 - 9
+     I*
+     I                                        1   1 @A
+     I                                        2   40A
+     I                                        1   4 @KEY
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*  ERROR DATA STRUCTURE FOR LDA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBERR                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBERR                 S01117
+     I*
+     IDNATN       DS                              5
+     I*
+     I**  DATA AREA FOR TRANSACTION NUMBER
+     I*
+     I                                        1   50FNATN
+     I*
+     IINFDS       DS
+     I*
+     I**  DATA STRUCTURE FOR ERROR HANDLING SUBROUTINE
+     I*
+     I                                     *STATUS  STATUS
+     I*
+     IPSDS       SDS
+     I*
+     I*   PROGRAM STATUS DATA STRUCTURE
+     I*
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     ICMTTXT      DS
+     I*
+     I**  DATA AREA FOR COMMITMENT TEXT
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51 250 DATAA
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     C/EJECT
+     C*
+     C**  CONTROL PROCESS
+     C*
+     C                     EXSR #A
+     C*
+     C**  PERFORM MAIN PROCESS
+     C*
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESS
+     C*
+     C                     EXSR #C
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #A     SUB ROUTINE TO PERFORM INITIAL PROCESS                *
+     C*                                                               *
+     C*  INITIAL PROCESS ACCESSES INSTALLATION CONTROL DATA, CHECKS   *
+     C*  FOR END OF MONTH, AND LOADS ARRAYS OF INDICES FOR THE        *
+     C*  HEADERS.                                                     *
+     C*                                                               *
+     C*  CALLED FROM CONTROL                                          *
+     C*                                                               *
+     C*  CALLS - ZDATE2      REFORMATS MIDAS DAY NO. TO 6N FIELD      *
+     C*        - #AA         CONVERTS EXTEL DATE TO 6N + DAY NO.      *
+     C*                      LOADS ARRAY FOR HEADER E INDEX VALUES    *
+     C*        - #AB         LOADS ARRAY FOR HEADER F INDEX VALUES    *
+     C*        - #AC         LOADS ARRAY FOR HEADER G INDEX VALUES    *
+     C*        - #AD         LOADS ARRAY FOR HEADER H INDEX VALUES    *
+     C*        - #AE         LOADS ARRAY FOR HEADER I INDEX VALUES    *
+     C*        - #AF         LOADS ARRAY FOR HEADER L INDEX VALUES    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR                           ** #A **
+     C*
+     C**  SET UP KLIST FOR HIINDD
+     C*
+     C           @HIN      KLIST
+     C                     KFLD           MRIF
+     C                     KFLD           HISD
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  ACCESS MNATN FOR TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C**  MOVE FIELDS TO COMMITMENT TEXT
+     C*
+     C                     MOVE 'SE'      MDID
+     C                     MOVE 'SE3103'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'I'       ACTC    1
+     C                     MOVE USRID     USRIDX
+     C*
+     C**  ACCESS TABTB10 INSTALLATION CONTROL RECORD
+     C*
+     C                     READ TABTB10F                 30
+     C*
+     C**  DATABASE ERROR 01
+     C*
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@DB1,1    DBKEY            ************
+     C                     Z-ADD1         DBERR            * DBERR 01 *
+     C                     MOVEL'TABTB'   DBFILE           ************
+     C                     EXSR ##ERR
+     C                     END
+     C*
+     C**  TEST FOR END OF MONTH
+     C*
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*
+     C**  USE ZDATE2 TO REFORMAT RUN DATE
+     C*
+     C                     Z-ADDRUND      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C**  MOVE DATE INTO DATA STRUCTURE
+     C*
+     C           DATF      IFEQ 'M'
+     C                     Z-ADDZDATE     @DS1
+     C                     ELSE
+     C                     Z-ADDZDATE     @DS2
+     C                     END
+     C*
+     C**  ACCESS HISTORY TRAILER
+     C*
+     C                     READ HIINDZF                  30
+     C*
+     C**  DATABASE ERROR 03
+     C*
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'Z'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@DB1,3    DBKEY            ************
+     C                     Z-ADD3         DBERR            * DBERR 03 *
+     C                     MOVEL'HINDZ'   DBFILE           ************
+     C                     EXSR ##ERR
+     C                     END
+     C*
+     C**  ACCESS EXTEL INDEX TRAILER
+     C*
+     C                     READ EXINDZF                  30
+     C*
+     C**  DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'Z'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@DB1,4    DBKEY            ************
+     C                     Z-ADD10        DBERR            * DBERR 10 *
+     C                     MOVEL'EXNDZ'   DBFILE           ************
+     C                     EXSR ##ERR
+     C                     END
+     C*
+     C**  PERFORM HEADER E PROCESS
+     C*
+     C                     EXSR #AA
+     C*
+     C**  PERFORM HEADER F PROCESS
+     C*
+     C                     EXSR #AB
+     C*
+     C**  PERFORM HEADER G PROCESS
+     C*
+     C                     EXSR #AC
+     C*
+     C**  PERFORM HEADER H PROCESS
+     C*
+     C                     EXSR #AD
+     C*
+     C**  PERFORM HEADER I PROCESS
+     C*
+     C                     EXSR #AE
+     C*
+     C**  PERFORM HEADER L PROCESS
+     C*
+     C                     EXSR #AF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AA    SUB ROUTINE TO LOAD HEADER E ARRAY + FORMAT DATE      *
+     C*                                                               *
+     C*  THIS ROUTINE CHECKS IF NEXT WORKING DAY IS AFTER 5 APRIL,    *
+     C*  REFORMATS EXTEL DATE FROM YYYMMDD TO YYMMDD AND MIDAS DAY NO.*
+     C*  AND LOADS INDEX VALUES ARRAY FOR HEADER E                    *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*  CALLS - ZDATE1      REFORMATS 6N DATE TO MIDAS DAY NO.       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AA       BEGSR                           ** #AA **
+     C*
+     C**  READ HEADER E
+     C*
+     C                     READ EXTF4E                   30
+     C                     Z-ADDXFDAT     @FDAT
+     C*
+     C**  REFORMAT EXTEL DATE TO MIDAS DAY NUMBER
+     C*
+     C           DATF      IFEQ 'M'
+     C                     Z-ADD@YY       @DD1
+     C                     Z-ADD@MM       @YY1
+     C                     Z-ADD@DD       @MM1
+     C                     MOVE '1'       *IN98
+     C                     Z-ADD@DATE     ZDATE
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADD@YY       @DD1
+     C                     Z-ADD@MM       @MM1
+     C                     Z-ADD@DD       @YY1
+     C                     MOVE '0'       *IN98
+     C                     Z-ADD@DATE     ZDATE
+     C*
+     C                     END
+     C*
+     C                     EXSR ZDATE1
+     C*
+     C**  MOVE INDEX VALUES TO ARRAY
+     C*
+     C                     Z-ADDE5        @4E,1
+     C                     Z-ADDE17       @4E,2
+     C                     Z-ADDE29       @4E,3
+     C                     Z-ADDE41       @4E,4
+     C                     Z-ADDE53       @4E,5
+     C                     Z-ADDE65       @4E,6
+     C                     Z-ADDE77       @4E,7
+     C                     Z-ADDE89       @4E,8
+     C                     Z-ADDE101      @4E,9
+     C                     Z-ADDE113      @4E,10
+     C                     Z-ADDE125      @4E,11
+     C                     Z-ADDE137      @4E,12
+     C                     Z-ADDE149      @4E,13
+     C                     Z-ADDE161      @4E,14
+     C                     Z-ADDE173      @4E,15
+     C                     Z-ADDE185      @4E,16
+     C                     Z-ADDE197      @4E,17
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AB    SUB ROUTINE TO PERFORM HEADER F PROCESS               *
+     C*                                                               *
+     C*  LOADS ARRAY WITH INDEX VALUES FROM HEADER F                  *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AB       BEGSR                           ** #AB **
+     C*
+     C**  READ HEADER F
+     C*
+     C                     READ EXTF4F                   30
+     C*
+     C**  MOVE INDEX VALUES TO ARRAY
+     C*
+     C                     Z-ADDF3        @4F,1
+     C                     Z-ADDF15       @4F,2
+     C                     Z-ADDF27       @4F,3
+     C                     Z-ADDF39       @4F,4
+     C                     Z-ADDF51       @4F,5
+     C                     Z-ADDF63       @4F,6
+     C                     Z-ADDF75       @4F,7
+     C                     Z-ADDF87       @4F,8
+     C                     Z-ADDF99       @4F,9
+     C                     Z-ADDF111      @4F,10
+     C                     Z-ADDF123      @4F,11
+     C                     Z-ADDF135      @4F,12
+     C                     Z-ADDF147      @4F,13
+     C                     Z-ADDF159      @4F,14
+     C                     Z-ADDF171      @4F,15
+     C                     Z-ADDF183      @4F,16
+     C                     Z-ADDF195      @4F,17
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AC    SUB ROUTINE TO PERFORM HEADER G PROCESS               *
+     C*                                                               *
+     C*  LOADS ARRAY WITH INDEX VALUES FROM HEADER G                  *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AC       BEGSR                           ** #AC **
+     C*
+     C**  READ HEADER G
+     C*
+     C                     READ EXTF4G                   30
+     C*
+     C**  MOVE INDEX VALUES TO ARRAY
+     C*
+     C                     Z-ADDG3        @4G,1
+     C                     Z-ADDG15       @4G,2
+     C                     Z-ADDG27       @4G,3
+     C                     Z-ADDG39       @4G,4
+     C                     Z-ADDG51       @4G,5
+     C                     Z-ADDG63       @4G,6
+     C                     Z-ADDG75       @4G,7
+     C                     Z-ADDG87       @4G,8
+     C                     Z-ADDG99       @4G,9
+     C                     Z-ADDG111      @4G,10
+     C                     Z-ADDG123      @4G,11
+     C                     Z-ADDG135      @4G,12
+     C                     Z-ADDG147      @4G,13
+     C                     Z-ADDG159      @4G,14
+     C                     Z-ADDG171      @4G,15
+     C                     Z-ADDG183      @4G,16
+     C                     Z-ADDG195      @4G,17
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AD    SUB ROUTINE TO PERFORM HEADER H PROCESS               *
+     C*                                                               *
+     C*  LOADS ARRAY WITH INDEX VALUES FROM HEADER H                  *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AD       BEGSR                           ** #AD **
+     C*
+     C**  READ HEADER H
+     C*
+     C                     READ EXTF4H                   30
+     C*
+     C**  MOVE INDEX VALUES TO ARRAY
+     C*
+     C                     Z-ADDH44       @4H,1
+     C                     Z-ADDH51       @4H,2
+     C                     Z-ADDH58       @4H,3
+     C                     Z-ADDH65       @4H,4
+     C                     Z-ADDH72       @4H,5
+     C                     Z-ADDH79       @4H,6
+     C                     Z-ADDH86       @4H,7
+     C                     Z-ADDH93       @4H,8
+     C                     Z-ADDH100      @4H,9
+     C                     Z-ADDH107      @4H,10
+     C                     Z-ADDH114      @4H,11
+     C                     Z-ADDH121      @4H,12
+     C                     Z-ADDH128      @4H,13
+     C                     Z-ADDH135      @4H,14
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AE    SUB ROUTINE TO PERFORM HEADER I PROCESS               *
+     C*                                                               *
+     C*  LOADS ARRAY WITH INDEX VALUES FROM HEADER I                  *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AE       BEGSR                           ** #AE **
+     C*
+     C**  READ HEADER I
+     C*
+     C                     READ EXTF4I                   30
+     C*
+     C**  MOVE INDEX VALUES TO ARRAY
+     C*
+     C                     Z-ADDI1        @4I,1
+     C                     Z-ADDI2        @4I,2
+     C                     Z-ADDI3        @4I,3
+     C                     Z-ADDI4        @4I,4
+     C                     Z-ADDI5        @4I,5
+     C                     Z-ADDI6        @4I,6
+     C                     Z-ADDI7        @4I,7
+     C                     Z-ADDI8        @4I,8
+     C                     Z-ADDI9        @4I,9
+     C                     Z-ADDI10       @4I,10
+     C                     Z-ADDI11       @4I,11
+     C                     Z-ADDI12       @4I,12
+     C                     Z-ADDI13       @4I,13
+     C                     Z-ADDI14       @4I,14
+     C                     Z-ADDI15       @4I,15
+     C                     Z-ADDI16       @4I,16
+     C                     Z-ADDI17       @4I,17
+     C                     Z-ADDI18       @4I,18
+     C                     Z-ADDI19       @4I,19
+     C                     Z-ADDI20       @4I,20
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #AF    SUB ROUTINE TO PERFORM HEADER L PROCESS               *
+     C*                                                               *
+     C*  LOADS ARRAY WITH INDEX VALUES FROM HEADER L                  *
+     C*                                                               *
+     C*  CALLED FROM #A                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AF       BEGSR                           ** #AF **
+     C*
+     C**  ARRAYS ARE LOADED THROUGH EXTERNAL DATA STRUCTURE
+     C*
+     C                     READ EXTF4L                   30
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B       SUB ROUTINE TO PERFORM MAIN PROCESS                 *
+     C*                                                               *
+     C*  CHECKS THAT INDICES FROM EXIND ARE VALID AND IF THEY ARE     *
+     C*  REFORMATS VALUES USING EX0001                                *
+     C*                                                               *
+     C*  CALLED FROM CONTROL                                          *
+     C*                                                               *
+     C*  CALLS - EX0001   REFORMATS INDEX VALUE                       *
+     C*          #BA      WRITES RECORD TO HISTORY FILE               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR                           ** #B **
+     C*
+     C**  READ INDEX TO REFERENCE INDEX VALUES IN LOADED ARRAYS
+     C*
+     C           *IN50     DOWEQ'0'
+     C                     READ EXIND                    50
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C*
+     C**  INCREMENT FILE CONTROL COUNTER
+     C*
+     C                     ADD  1         @NUM    40
+     C*
+     C**  MOVE INDEX VALUES TO WORKFIELD FOR REFORMATING
+     C*
+     C                     MOVE XINO      A       30
+     C*
+     C**  HEADER RECORD E (EXTF4E) HAS 17 INDICES
+     C*
+     C           EXHD      IFEQ 'E'
+     C*
+     C**  DATABASE ERROR 04 OCCURS IF INDEX REF IS GREATER THAN 17
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 17
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'E'       DBKEY            ************
+     C                     Z-ADD4         DBERR            * DBERR 04 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE @4E,A     ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  HEADER RECORD F (EXTF4F) HAS 17 INDICES
+     C*
+     C           EXHD      IFEQ 'F'
+     C*
+     C**  DATABASE ERROR 05 OCCURS IF INDEX REF IS GREATER THAN 17
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 17
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'F'       DBKEY            ************
+     C                     Z-ADD5         DBERR            * DBERR 05 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C                     MOVE @4F,A     ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  HEADER RECORD G (EXTF4G) HAS 17 INDICES
+     C*
+     C           EXHD      IFEQ 'G'
+     C*
+     C**  DATABASE ERROR 06 OCCURS IF INDEX REF IS GREATER THAN 17
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 17
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'G'       DBKEY            ************
+     C                     Z-ADD6         DBERR            * DBERR 06 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C                     MOVE @4G,A     ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  HEADER RECORD H (EXTF4H) HAS 14 INDICES
+     C*
+     C           EXHD      IFEQ 'H'
+     C*
+     C**  DATABASE ERROR 07 OCCURS IF INDEX REF IS GREATER THAN 14
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 14
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'H'       DBKEY            ************
+     C                     Z-ADD7         DBERR            * DBERR 07 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C                     MOVE @4H,A     ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  HEADER RECORD I (EXTF4I) HAS 20 INDICES
+     C*
+     C           EXHD      IFEQ 'I'
+     C*
+     C**  DATABASE ERROR 08 OCCURS IF INDEX REF IS GREATER THAN 20
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 20
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'I'       DBKEY            ************
+     C                     Z-ADD8         DBERR            * DBERR 08 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C                     MOVE @4I,A     ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  HEADER RECORD L (EXTF4L) HAS 104 INDICES
+     C*
+     C           EXHD      IFEQ 'L'
+     C*
+     C**  DATABASE ERROR 09 OCCURS IF INDEX REF IS GREATER THAN 104
+     C*
+     C           A         IFLT 1
+     C           A         ORGT 164
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE3103'  DBPGM
+     C                     MOVEL@KEY      DBKEY
+     C                     MOVEL'L'       DBKEY            ************
+     C                     Z-ADD9         DBERR            * DBERR 09 *
+     C                     MOVEL'EXTF4'   DBFILE           ************
+     C                     EXSR ##ERR
+     C*
+     C                     ELSE
+     C                     MOVE @L,A      ZEXAMT 11
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  REFORMAT USING EX0001
+     C*
+     C                     EXSR EX0001
+     C*
+     C**  PERFORM WRITE PROCESS
+     C*
+     C                     EXSR #BA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BA     SUB ROUTINE TO WRITE RECORDS TO HISTORY FILE         *
+     C*                                                               *
+     C*  CHECKS FOR END OF MONTH AND IF IT IS END OF MONTH WRITES     *
+     C*  EXTRA RECORD                                                 *
+     C*                                                               *
+     C*  CALLED FROM #B                                               *
+     C*                                                               *
+     C*  CALLS - INFSR   SUBROUTINE FOR WRITE FAIL                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR                           ** #BA **
+     C*
+     C**  CHECK TO SEE IF RECORD EXISTS AND IF SO UPDATE IT
+     C*
+     C                     Z-ADDZDAYNO    HISD
+     C           @HIN      CHAINHIINDD               52
+     C*
+     C           *IN52     IFEQ '0'
+     C                     MOVE 'D'       RECI
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADD@XF       HISA
+     C                     Z-ADDZNMAMT    IVAL
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C                     UPDATHIINDDF
+     C                     END
+     C*
+     C**  WRITE AN INDEX HISTORY RECORD IF NO RECORD
+     C*
+     C           *IN52     IFEQ '1'
+     C                     MOVE 'D'       RECI
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADD@XF       HISA
+     C                     Z-ADDZNMAMT    IVAL
+     C                     Z-ADDZDAYNO    HISD
+     C                     Z-ADDNATN      TNLU
+     C                     Z-ADDRUND      LCD
+     C*
+     C                     WRITEHIINDDF
+     C*
+     C                     ADD  1         @INS    50
+     C                     ADD  1         @NORE   50
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C      SUB ROUTINE TO PERFORM TERMINATION PROCESS           *
+     C*                                                               *
+     C*  UPDATES HISTORY TRAILER AND PRINTS RUN REPORT                *
+     C*                                                               *
+     C*  CALLED FROM CONTROL                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR                           ** #C **
+     C*
+     C                     Z-ADD@NUM      DDNUM
+     C*
+     C                     Z-ADD0         DDNINS
+     C*
+     C**  CHECK FILE EXIND IN BALANCE
+     C*
+     C* CALCULATE ACTUAL INSERTS AS FILE INSERTS MINUS FILE DELETIONS
+     C*
+     C           BINS      SUB  BDEL      BAINS   40
+     C                     Z-ADDBAINS     DDBOR
+     C           @NUM      IFNE BAINS
+     C                     MOVE '1'       *IN62
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C***********          WRITEREPORT                                    E29170
+     C                     ROLBK
+     C                     DUMP
+     C                     SETON                     U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  UPDATE HISTORY TRAILER AND PRINT REPORT
+     C*
+     C                     ADD  @INS      NINS
+     C                     ADD  @NORE     NORE
+     C                     MOVE 'Z'       RECI
+     C*
+     C                     UPDATHIINDZF
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     Z-ADD@INS      DDNINS
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ##ERR       SUB ROUTINE TO PERFORM DATABASE ##ERR PROCESS    *
+     C*                                                               *
+     C*  PRODUCES RUN REPORT, ROLLBACK, DUMPS AND RETURNS TO          *
+     C*  CALLING PROGRAM                                              *
+     C*                                                               *
+     C*  CALLED FROM ALL DATABASE ERROR POINTS                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ##ERR     BEGSR                           ** ##ERR **
+     C*
+     C**  PRODUCE REPORT OF RECORDS PROCESSED
+     C*
+     C                     Z-ADD0         DDNINS
+     C                     Z-ADD@NUM      DDNUM
+     C*
+     C* CALCULATE ACTUAL INSERTS AS FILE INSERTS MINUS FILE DELETIONS
+     C*
+     C           BINS      SUB  BDEL      BAINS   40
+     C                     Z-ADDBAINS     DDBOR
+     C           @NUM      IFNE BAINS
+     C                     MOVE '1'       *IN62
+     C                     END
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C                     WRITEERROR
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     ROLBK
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZTNLU1      SUB ROUTINE TO OBTAIN LAST TRANSACTION NUMBER    *
+     C*                                                               *
+     C*  ACCESSES LAST TRANSACTION NUMBER AND ADDS 1 TO IT            *
+     C*                                                               *
+     C*  CALLED FROM #A - INITIAL PROCESSING                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR                           ** ZTNLU1 **
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  INFSR       SUB ROUTINE TO PERFORM FILE ERROR HANDLING       *
+     C*                                                               *
+     C*  CHAINS TO HISTORY FILE UPDATES IF RECORD EXISTS WRITES IF    *
+     C*  RECORD NOT FOUND                                             *
+     C*                                                               *
+     C*  CALLED FROM FILE ERROR IN #BA                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR                           ** INFSR **
+     C*
+     C**  CHECK STATUS FOR WRITE ERROR
+     C*
+     C           STATUS    IFEQ 01021
+     C*
+     C**  CHECK IF RECORD NOW ON FILE
+     C*
+     C           @HIN      CHAINHIINDD               55
+     C*
+     C**  IF RECORD FOUND UPDATE OTHERWISE WRITE RECORD
+     C*
+     C           *IN55     IFEQ '0'
+     C                     UPDATHIINDDF
+     C                     END
+     C*
+     C           *IN55     IFEQ '1'
+     C                     WRITEHIINDDF
+     C                     END
+     C*
+     C**  RETURN TO START OF DETAIL PROCESSING
+     C*
+     C                     MOVE '*DETC'   EXTTAG  6
+     C*
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   EX0001 - EXTEL Amount Conversion Subroutine                 *
+     C*                                                               *
+     C*   To convert a standard EXTEL amount to a numeric amount(15,8)*
+     C*   and, if applicable, a MIDAS numeric amount(13,0).           *
+     C*                                                               *
+     C*   Parameters to be passed on input:                           *
+     C*               1. 11 alpha field containing extel amount       *
+     C*               2. 3 alpha field containing error               *
+     C*               3. 15,7 Numeric result field                    *
+     C*               4. 13,0 Numeric result field                    *
+     C*   INPUT:                                                      *
+     C*   PF/EXCCYD - EXTEL currency codes keyed by numeric code.     *
+     C*   PF/TABTG10- MIDAS currency codes table file.                *
+     C*                                                               *
+     C*      ZEXAMT - Field containing EXTEL amount to convert        *
+     C*      ZACCY  - Array containing MIDAS currency codes and the   *
+     C*               corresponding number of decimal places.         *
+     C*      ZXVAL  - Array containing EXTEL amount to format         *
+     C*                                                               *
+     C*   OUTPUT:                                                     *
+     C*      ZEXERR - Field containing error code                     *
+     C*      ZNMAMT - Field containing numeric amount(15,8)           *
+     C*      ZMDAMT - Field containing MIDAS numeric amount(13,0)     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           EX0001    BEGSR                           ** EX0001 **
+     C**
+     C**      Set up Midas currencies array
+     C**
+     C                     Z-ADD0         ZC      30
+     C**
+     C           *IN90     DOUEQ'1'                        B1
+     C                     ADD  1         ZC
+     C                     READ TABTG10                  90
+     C           *IN90     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE CCY       ZUR,ZC
+     C                     Z-ADDCDP       ZEC,ZC
+     C                     END                             E2
+     C                     END                             E1
+     C**
+     C                     MOVELZEXAMT    ZXCCY   30
+     C                     MOVE ZEXAMT    ZXAMT   8
+     C**
+     C**   Lokup EXTEL currencies array. If not there access file
+     C**   and place data in array.
+     C**
+     C                     Z-ADD1         ZCY     30
+     C           ZXCCY     LOKUPXCY,ZCY                  95
+     C**
+     C**      If not found access the EXTEL currencies file
+     C**
+     C           *IN95     IFEQ '0'                        B1
+     C           ZXCCY     CHAINEXCCYD               91    *1
+     C**
+     C**      Database error if not found
+     C**
+     C           *IN91     IFEQ '1'                        B*2
+     C           RECI      ORNE 'D'                        **2
+     C                     MOVE '001'     ZEXERR  3        **2
+     C                     GOTO ZENDSR                     **2
+     C                     END                             E*2
+     C**
+     C**      Place data from EXCCY into arrays XCY & XDT
+     C**
+     C                     ADD  1         ZD      30       *1
+     C                     MOVE EXCN      XCY,ZD           *1
+     C                     MOVE XDATA     XDT,ZD           *1
+     C**
+     C                     ELSE                            X1
+     C**
+     C**      If found move data from XDT into data structure XDATA
+     C**
+     C                     MOVEAXDT,ZCY   XDATA            *1
+     C**
+     C                     END                             E1
+     C**
+     C**  IF XDATA IS BLANK DUE TO NO INPUT, SET TO 0 SO THAT THE
+     C**     TESTS FOR NUM FLDS (REDEFINED UNDER XDATA) EQUAL TO 0 ARE
+     C**     SUCCESSFUL
+     C**
+     C           XDATA     IFEQ '        '
+     C                     Z-ADD0         XINC
+     C                     Z-ADD0         XUNC
+     C                     Z-ADD0         XDCC
+     C                     Z-ADD0         XNMC
+     C                     Z-ADD0         XDNC
+     C                     END
+     C**
+     C**      Convert value into a numeric amount(15,8)
+     C**
+     C                     MOVEA*BLANK    ZA
+     C                     MOVEA*BLANK    ZB
+     C                     Z-ADD*ZERO     ZNMAMT
+     C                     Z-ADD*ZERO     ZMDAMT
+     C**
+     C**  If numerators and denominators present convert to decimals
+     C**
+     C           XNMC      IFNE 0                          B1
+     C           XDNC      ANDNE0
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD8         ZX      10
+     C                     Z-ADD8         ZW      10
+     C*
+     C*  Denominator - work field ZA
+     C*
+     C                     DO   XDNC                       B2
+     C                     MOVE ZXVAL,ZX  ZA,ZW
+     C                     SUB  1         ZX
+     C                     SUB  1         ZW
+     C                     END                             E2
+     C*
+     C                     Z-ADD8         ZW      10
+     C*
+     C*  Numerator - work field ZB
+     C*
+     C                     DO   XNMC                       B2
+     C                     MOVE ZXVAL,ZX  ZB,ZW
+     C                     SUB  1         ZX
+     C                     SUB  1         ZW
+     C                     END                             E2
+     C*
+     C*                    MOVEAZA        ZAA     8
+     C                     MOVE ZAA       ZAN     80
+     C*                    MOVEAZB        ZBA     8
+     C                     MOVE ZBA       ZBN     80
+     C*
+     C*  Both numerator and denominator must have a value
+     C*  or both be zero
+     C*
+     C           ZAN       IFNE 0
+     C           ZBN       ANDEQ0
+     C           ZBN       ORNE 0
+     C           ZAN       ANDEQ0                          B2
+     C                     MOVE '002'     ZEXERR
+     C                     GOTO ZENDSR
+     C                     END                             E2
+     C*
+     C*  Convert fractions to decimals and put in result field
+     C*
+     C           ZAN       IFNE 0                          B2
+     C           ZBN       ANDNE0
+     C           ZBN       DIV  ZAN       ZNMAMT 158
+     C                     END                             E2
+     C*
+     C                     Z-ADD0         ZAN
+     C                     Z-ADD0         ZBN
+     C*
+     C                     END                             E1
+     C*
+     C*  If format already decimal ie.decimal counter not zero
+     C*  correct value to decimal places
+     C*
+     C           XDCC      IFNE 0                          B1
+     C                     MOVELZXAMT     ZNMAMT
+     C*
+     C           XDCC      IFGT 1                          B2
+     C           XDCC      SUB  1         XDCC1   10
+     C                     DO   XDCC1                      B3
+     C           ZNMAMT    DIV  10        ZNMAMT
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C                     ELSE                            X1
+     C*
+     C*  Correct value for integer or undercurrency
+     C*
+     C                     MOVE 0         ZA
+     C                     MOVE 0         ZB
+     C                     Z-ADD1         ZW
+     C*
+     C*  Integer - work field ZA
+     C*
+     C           XINC      IFNE 0                          B2
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD1         ZX
+     C*
+     C                     DO   XINC                       B3
+     C                     MOVE ZXVAL,ZX  ZA,ZW
+     C                     ADD  1         ZX
+     C                     ADD  1         ZW
+     C                     END                             E3
+     C*
+     C*                    MOVEAZA        ZAA
+     C                     MOVE ZAA       ZAN
+     C*
+     C* Ensure only valid figures in field, delete blanks carried as
+     C* trailing zeros
+     C*
+     C           8         SUB  XINC      ZPARE   10
+     C*
+     C                     DO   ZPARE
+     C           ZAN       DIV  10        ZAN
+     C                     END
+     C*
+     C                     ADD  ZAN       ZNMAMT
+     C*
+     C                     END                             E2
+     C*
+     C*  Undercurrency - work field ZB
+     C*
+     C           XUNC      IFNE 0                          B2
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD1         ZX
+     C*
+     C                     DO   XUNC                       B3
+     C                     MOVE ZXVAL,ZX  ZB,ZW
+     C                     ADD  1         ZX
+     C                     ADD  1         ZW
+     C                     END                             E3
+     C*
+     C*                    MOVEAZB        ZBA
+     C                     MOVE ZBA       ZBN
+     C*
+     C* Ensure only valid figures in field, delete blanks carried as
+     C* trailing zeros
+     C*
+     C           8         SUB  XUNC      ZPARE
+     C*
+     C                     DO   ZPARE
+     C           ZBN       DIV  10        ZBN
+     C                     END
+     C*
+     C                     ADD  ZBN       ZNMAMT
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C*  If undercurrency used correct decimal places for MIDAS
+     C*
+     C           XUNC      IFNE 0                          B1
+     C           ZXCCY     CHAINEXCCYD               91
+     C*
+     C                     Z-ADD1         ZC
+     C           CCY       LOKUPZUR,ZC                   90
+     C*
+     C* Error if no MIDAS currency
+     C*
+     C           *IN90     IFEQ '0'                        B2
+     C                     MOVE '003'     ZEXERR
+     C                     Z-ADD*ZERO     ZNMAMT
+     C                     GOTO ZENDSR
+     C                     END                             E2
+     C*
+     C                     DO   ZEC,ZC                     B2
+     C           ZNMAMT    DIV  10        ZNMAMT
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C*  If MIDAS ccy then convert amount to MIDAS numeric format
+     C*
+     C           ZXCCY     CHAINEXCCYD               91
+     C                     Z-ADD1         ZC
+     C*
+     C                     SETOF                     90
+     C           CCY       IFNE *BLANK
+     C           CCY       LOKUPZUR,ZC                   90
+     C                     END
+     C           *IN90     IFEQ '0'                        B1
+     C                     Z-ADD0         ZMD
+     C                     ELSE                            X1
+     C                     Z-ADDZNMAMT    ZMD    152
+     C                     DO   ZEC,ZC                     B2
+     C           ZMD       MULT 10        ZMD
+     C                     END                             E2
+     C*
+     C                     Z-ADDZMD       ZMDAMT 130
+     C                     END                             E1
+     C*
+     C           ZENDSR    TAG
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   @DB1 - DATABASE ERROR KEY
+01         10
+01         11
+TRAILER MISSING HIINDZ
+TRAILER MISSING EXINDZ

@@ -1,0 +1,882 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('SE Amortisation by security report')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE9006 - Amortisation by Security Report                     *
+      *                                                               *
+      *  Function: To print Amortised and Unamortised Discount/       *
+      *   (COB)    Premium Amounts for each Security. The sequence of *
+      *            the report is Branch, Currency, Investment Type,   *
+      *            Book and Security.                                 *
+      *                                                               *
+      *  Called by: SEC0616 - Amortisation by Security Report         *
+      *                                                               *
+      *            Frequency:                                         *
+      *            - On request during COB                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. AR745830           Date 30May11               *
+      *  Prev Amend No. AR745874           Date 15Apr11               *
+      *                 CSE105    *CREATE  Date 06Dec10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR745830 - Amortization by Security report not produced for  *
+      *             other branches even though there are records      *
+      *             (Child: AR745831)                                 *
+      *  AR745874 - Incorrect amortisation date and rate and amount to*
+      *           to amortise (Child: AR745875)                       *
+      *  CSE105 - Portuguese Upgrade - Discount/Premium Amortisation  *
+      *           on Trade Date                                       *
+      *                                                               *
+      *           NOTE: Any amendments done on this program must also *
+      *                 be made to SE1140.                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FSE9006AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     FSE9006P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FINVTP   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     F*BKAMT***IF  E           K        DISK                                                AR745874
+     FBKAMTV0 IF  E           K        DISK                                                 AR745874
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Error on CHAIN INVTP and CLINT                        *
+      *   35  - Multibranching                                        *
+      ****80**-*End*of*file*for*BKAMT**********************************                     AR745874
+      *   80  - End of file for BKAMTV0                               *                     AR745874
+      *   81  - Record not found in INVTP                             *
+      *   82  - Record not found in BKPOS                             *
+      *   83  - Record not found in SECTY                             *
+      *                                                               *
+      *   98  - Date Format Flag is 'M' for MMDDYY                    *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      *   U8  - File Controls Out of Balance                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing.                                 *
+      *  PRINT  - Format and Print Detail Lines                       *
+      *  TOTALS - Format and Print Totals Line                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  ERROR  - Output DB Error information to Audit Report         *
+      *  *PSSR  - Error handling                                      *
+      *                                                               *
+      *  ZCNSD  - Calculates Consideration from Nominal and Price     *
+      *  ZDATE2 - Convert a Day Number to Date Formats                *
+      *  7DAYS  - Calculates Number of days between two Dates         *
+      *  ZSEDIT - Convert numeric field into alphanumeric with commas,*
+      *           sign and decimal point                              *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+      *
+     I/EJECT
+     I            DS
+      ** Definition of alphanumeric and signed branch fields.
+      *
+     I                                        1   3 BHBA
+     I                                        1   3 BRANCH
+     ILDA         DS                            256
+      ** Local Data Area for database errors.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IRUNDT       DS
+      ** RUNDAT Data Area.
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ISPOOL       DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long date structure for access objects
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Initial Processing.
+      *
+     C                     EXSR INIT
+      *
+      ** Main Processing.
+      *
+      ** Read first record from Book Position and Book file.
+      *
+     C**********           READ BKAMT                    80                                 AR745874
+     C                     READ BKAMTV0                  80                                 AR745874
+      *
+      ** Check for requested branch for Multibranching.
+      *
+     C********** MBIN      IFEQ 'Y'                                                         AR745830
+     C********** ENT       IFNE 'ALL'                                                       AR745830
+     C********** ENT       ANDNEBHBA                                                        AR745830
+     C**********           SETON                     80                                     AR745830
+     C**********           GOTO ENDSEL                                                      AR745830
+     C**********           ENDIF                                                            AR745830
+     C**********           ENDIF                                                            AR745830
+      *
+      ** Whilst End of File has not been reached.
+      *
+     C           *IN80     DOWNE'1'
+      *
+      ** Change in Keys.
+      *
+     C           ENT       IFEQ BHBA                                                        AR745830
+     C           ENT       OREQ 'ALL'                                                       AR745830
+      *                                                                                     AR745830
+     C           BHBA      IFNE SVBHBR
+     C           NCRY      ORNE SVNCRY
+     C           INVT      ORNE SVINVT
+      *
+      ** Produce Investment Type Totals.
+      *
+     C           RCDDET    IFEQ 'Y'
+     C                     EXSR TOTALS
+     C                     MOVE 'N'       RCDDET
+     C                     ENDIF
+      *
+      ** Initialise Totals fields.
+      *
+     C                     CLEARTTNOM
+     C                     CLEARTTDSC
+     C                     CLEARTTDPFP
+     C                     CLEARTTBUDU
+      *
+      ** Change of Branch.
+      *
+     C           BHBA      IFNE SVBHBR
+      *
+      ** Access Branch file for Branch Name.
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   RTCD
+     C                     PARM '*KEY   ' OPTN
+     C                     PARM BRANCH    BRCD    3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ** Database Error if not found.
+      *
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BRCH'    DBFILE
+     C                     MOVELBRANCH    DBKEY
+     C                     Z-ADD002       DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR ERROR
+     C                     ENDIF
+      *
+      ** Save Branch field.
+      *
+     C                     MOVELBHBA      SVBHBR
+     C                     MOVELA8BRNM    RBRNM
+      *
+      ** Headings are required.
+      *
+     C                     MOVE 'Y'       HEAD
+     C                     ENDIF
+      *
+      ** Change of Currency.
+      *
+     C           NCRY      IFNE SVNCRY
+      *
+      ** Access Currency file for Currency Name.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   RTCD
+     C                     PARM '*KEY   ' OPTN
+     C                     PARM NCRY      CCY     3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CURR'    DBFILE
+     C                     MOVELNCRY      DBKEY
+     C                     Z-ADD003       DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR ERROR
+     C                     ENDIF
+      *
+      ** Save Currency field.
+      *
+     C                     MOVE NCRY      SVNCRY
+     C                     MOVELA6CYNM    RCYNM
+     C                     ENDIF
+      *
+      ** Change of Investment Type.
+      *
+     C           INVT      IFNE SVINVT
+      *
+      ** Access Investment Types file for Investment Name.
+      *
+     C           KLINV     CHAININVTP                81
+      *
+      ** Database Error if not found.
+      *
+     C           *IN81     IFNE '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'INVTP'   DBFILE
+     C                     MOVELNCRY      DBKEY
+     C                     MOVE INVT      DBKEY
+     C                     Z-ADD004       DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR ERROR
+     C                     END
+      *
+      ** Save Investment Type field.
+      *
+     C                     MOVE INVT      SVINVT
+     C                     ENDIF
+      *
+      ** Only process Interest Bearing Securities.
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '6'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'
+      *
+      ** Print Headings if required.
+      *
+     C           HEAD      IFEQ 'Y'
+      *
+      ** If not first time through print trailer and close print file
+      *
+     C           RPTDET    IFEQ 'Y'
+     C                     WRITETRAILP1
+     C                     CLOSESE9006P1
+     C                     ELSE
+     C                     MOVE 'Y'       RPTDET
+     C                     ENDIF
+      *
+     C                     OPEN SE9006P1
+     C                     EXSR RCFP1
+     C                     WRITEHEADP1
+     C                     Z-ADD7         LINCNT  20
+     C                     MOVE 'N'       HEAD
+     C                     ENDIF
+      *
+      ** Check for overflow.
+      *
+     C           LINCNT    IFGE 52
+     C                     WRITEHEADP1
+     C                     Z-ADD7         LINCNT
+     C                     ENDIF
+      *
+      ** Print Subheadings.
+      *
+     C                     WRITESUBHEAD
+     C                     ADD  6         LINCNT
+      *
+      ** END of Interest Bearing Securities.
+     C                     ENDIF
+      *
+      ** END of Change of Keys.
+     C                     ENDIF
+      *---------------------------------------------------------------*
+      *
+      ** Only process Interest Bearing Securities.
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '6'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'
+      *
+      ** Change of Security.
+      *
+     C           BHSC      IFNE SVBHSC
+      *
+      ** Access Security file for various fields needed by Standard
+      ** Subroutines.
+      *
+     C           BHSC      CHAINSECTY                83
+      *
+      ** Database Error if not found.
+      *
+     C           *IN83     IFNE '0'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE
+     C                     MOVELBHSC      DBKEY
+     C                     Z-ADD005       DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR ERROR
+     C                     ENDIF
+      *
+      ** Save Security field.
+      *
+     C                     MOVE BHSC      SVBHSC
+     C                     ENDIF
+      *
+      ** Access Book Position file.
+      *
+     C           KLBKP     CHAINBKPOS                82
+      *
+      ** Note if a record has been found.
+      *
+     C           *IN82     IFEQ '0'
+     C                     MOVE 'Y'       RCDDET
+     C                     MOVE 'Y'       RPTDET
+     C                     EXSR PRINT
+      *
+      ** Accumulate Investment Type Totals.
+      *
+      ** Face Value.
+     C                     ADD  NOMAMT    TTNOM
+      ** Discount/Premium Amount.
+     C                     ADD  DSCAMT    TTDSC
+      ** Amount Amortised to Date.
+     C                     ADD  DPAP      TTDPFP
+      ** Amount to Amortise.
+     C                     ADD  BUDU      TTBUDU
+     C                     ENDIF
+      *
+      ** END of Interest Bearing Securities.
+     C                     ENDIF
+      *
+     C                     ENDIF                                                            AR745830
+      *                                                                                     AR745830
+      ** Read next record.
+      *
+     C**********           READ BKAMT                    80                                 AR745874
+     C                     READ BKAMTV0                  80                                 AR745874
+      *
+      ** Check for requested branch for Multibranching.
+      *
+     C********** MBIN      IFEQ 'Y'                                                         AR745830
+     C********** ENT       IFNE 'ALL'                                                       AR745830
+     C********** ENT       ANDNEBHBA                                                        AR745830
+     C**********           SETON                     80                                     AR745830
+     C**********           GOTO ENDSEL                                                      AR745830
+     C**********           ENDIF                                                            AR745830
+     C**********           ENDIF                                                            AR745830
+      *
+      ** END of Do While NOT End of File.
+      *
+     C                     END
+      *
+     C           ENDSEL    TAG
+      *
+      ** If no Investment Type totals produced for last Investment
+      ** Type and there are no Database Errors then produce totals.
+      *
+     C           *INU7     IFNE '1'
+     C           *INU8     ANDNE'1'
+     C           RCDDET    ANDEQ'Y'
+     C                     EXSR TOTALS
+     C                     ENDIF
+      *
+      ** If details have been written to detail printer file and
+      ** there are no Database Errors then print trailer.
+      *
+     C           *INU7     IFNE '1'
+     C           *INU8     ANDNE'1'
+     C           RPTDET    ANDEQ'Y'
+      *
+      ** Check for overflow.
+      *
+     C           LINCNT    IFGE 55
+     C                     WRITEHEADP1
+     C                     WRITESUBHEAD
+     C                     Z-ADD13        LINCNT
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+     C                     ADD  3         LINCNT
+     C                     ENDIF
+      *
+      ** End of Program.
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+      *
+      ** If no details have been written to detail printer file then
+      ** open audit printer file and say so there.
+      *
+     C           RPTDET    IFNE 'Y'
+     C                     OPEN SE9006AU
+     C                     EXSR RCFAU
+     C                     Z-ADD0         PAGE
+     C                     WRITEHEADAU
+     C                     WRITENONE
+     C                     CLOSESE9006AU
+     C                     ENDIF
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Setup.                     *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Read in RUNDAT Data Area.
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Check system date format DDMMMYY or MMDDYY.
+      *
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Read and set up Local Data Area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE9006'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Set Indicator for Multibranching.
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     35
+     C                     ENDIF
+      *
+      ** Register Spool Entry for AU.
+      *
+      *
+      ** Set up Copyright.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Input Parameter:
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+      *
+      ** Access Bank details for Report Title.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database Error if not found.
+      *
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BANK'    DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD001       DBASE
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     EXSR ERROR
+     C                     ENDIF
+      *
+      ** Key list for INVTP.
+      *
+     C           KLINV     KLIST
+     C                     KFLD           NCRY
+     C                     KFLD           INVT
+      *
+      ** Key list for BKPOS.
+      *
+     C           KLBKP     KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+      *
+      ** Define program variables.
+      *
+     C           *LIKE     DEFN NCRY      SVNCRY
+     C           *LIKE     DEFN INVT      SVINVT
+     C           *LIKE     DEFN BHBA      SVBHBR
+     C           *LIKE     DEFN NPSN      TTNOM
+     C           *LIKE     DEFN APNC      TTDSC
+     C           *LIKE     DEFN DPAP      TTDPFP
+     C           *LIKE     DEFN BUDU      TTBUDU
+     C           *LIKE     DEFN BHSC      SVBHSC
+     C           *LIKE     DEFN APNC      NOMAMT
+     C           *LIKE     DEFN APNC      DSCAMT
+     C           *LIKE     DEFN LPSD      DAYS
+     C           *LIKE     DEFN APNC      RATE
+     C           *LIKE     DEFN A6NBDP    CDP
+      *
+      ** Initialise Saved fields.
+      *
+     C                     CLEARSVBHBR
+     C                     CLEARSVNCRY
+     C                     CLEARSVINVT
+     C                     CLEARSVBHSC
+      *
+      ** Set up Parameters that condition the First Time processing.
+      *
+     C                     MOVE 'N'       RCDDET  1
+     C                     MOVE 'N'       RPTDET  1
+     C                     MOVE 'N'       HEAD    1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRINT  - Subroutine to Format/Print detail records.          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRINT     BEGSR
+      *
+      ** Book.
+     C                     MOVE BHBK      RBHBK
+      ** Security.
+     C                     MOVE BHSC      RBHSC
+      *
+      ** Market.
+     C           BHMK      IFEQ 'S'
+     C                     MOVEL'SEC '    RBHMK
+     C                     ELSE
+     C           BHMK      IFEQ 'P'
+     C                     MOVEL'PRIM'    RBHMK
+     C                     ELSE
+     C                     MOVEL'GREY'    RBHMK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Face Value.
+      *
+      ** Convert Nominal Position to an Amount.
+      *
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADD100       ZPRC
+     C                     Z-ADDA6NBDP    CDP
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     NOMAMT
+      *
+      ** Format Amount field.
+      *
+     C                     Z-ADDNOMAMT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RNOM
+      *
+      ** Discount/Premium Amount.
+      *
+      ** First calculate Amount.
+      *
+     C           NOMAMT    SUB  APNC      DSCAMT
+      *
+      ** Format Amount field.
+      *
+     C                     Z-ADDDSCAMT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDSC
+      *
+      ** Amount Amortised to Date.
+      *
+     C                     Z-ADDDPAP      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDPFP
+      *
+      ** Amount to Amortise.
+      *
+     C                     Z-ADDBUDU      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RBUDU
+      *
+      ** Amortisation Rate.
+      *
+      ** Calculate number of days between last position date and
+      ** Maturity Date.
+      *
+     C                     Z-ADDLPSD      ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     Z-ADD-1        NCD     50                      DBA302
+     C                     MOVE 'N'       DADJN
+     C                     EXSR ZDAYS
+     C                     MOVE ' '       DADJN
+     C                     Z-ADDZDDAYS    DAYS
+      *
+      ** Calculate Rate.
+      *
+     C           DSCAMT    DIV  DAYS      RATE      H
+      *
+      ** Format Rate.
+      *
+     C                     MOVE RATE      ZFLD15
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRATE
+      *
+      ** Check for overflow.
+      *
+     C           LINCNT    IFGE 57
+     C                     WRITEHEADP1
+     C                     WRITESUBHEAD
+     C                     Z-ADD13        LINCNT
+     C                     END
+      *
+      ** Print Detail.
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         LINCNT
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /TITLE SR/TOTALS
+      *****************************************************************
+      *                                                               *
+      *  TOTALS - Subroutine to Format/Print Investment Type Totals   *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TOTALS    BEGSR
+      *
+      ** Face Value.
+      *
+     C                     Z-ADDTTNOM     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TNOM
+      *
+      ** Discount/Premium Amount.
+      *
+     C                     Z-ADDTTDSC     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TDSC
+      *
+      ** Amount Amortised to Date.
+      *
+     C                     Z-ADDTTDPFP    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TDPFP
+      *
+      ** Amount to Amortise.
+      *
+     C                     Z-ADDTTBUDU    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TBUDU
+      *
+      ** Check for overflow.
+      *
+     C           LINCNT    IFGE 54
+     C                     WRITEHEADP1
+     C                     WRITESUBHEAD
+     C                     Z-ADD13        LINCNT
+     C                     END
+      *
+      ** Print Totals.
+      *
+     C                     WRITETOTAL
+     C                     ADD  4         LINCNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ERROR
+      *****************************************************************
+      *                                                               *
+      *  ERROR  - This subroutine prints database error information on*
+      *           the audit printer file and dumps the program.       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ERROR     BEGSR
+      *
+      ** If details have been printed to the detail printer file.
+      *
+     C           RPTDET    IFEQ 'Y'
+     C                     WRITEERRORP1
+     C                     ENDIF
+      *
+      ** Open audit printer file.
+      *
+     C                     OPEN SE9006AU
+     C                     EXSR RCFAU
+     C                     Z-ADD0         PAGE
+     C                     WRITEHEADAU
+     C                     WRITEDBERR
+     C                     CLOSESE9006AU
+      *
+     C                     DUMP
+     C                     GOTO ENDPGM
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register P1 printer file via RCF      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BHBA      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM *BLANKS   ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** Error during ZSFILE Processing, Return to Calling Program.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register AU printer file via RCF.     *
+      *                                                               *
+      *  Called By: INIT                                              *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** Error during ZSFILE Processing, Return to Calling Program.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2010
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

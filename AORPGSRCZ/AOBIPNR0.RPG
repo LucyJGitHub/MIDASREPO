@@ -1,0 +1,287 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Bank Investment Policies        *RDR')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - ACCESS OBJECT                                    *
+     F*                                                               *
+     F*  AOBIPNR0 - BANK INVESTMENT POLICIES                          *
+     F*                                                               *
+     F*  Function: Access record from PMBIPNL0.                       *
+     F*                                                               *
+     F*  Called by:                                                   *
+     F*                                                               *
+     F*  Calls:    PM0091                                             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. PM0027             DATE 16AUG94               *
+     F*  PREV AMEND NO. PM0011             DATE 04AUG94               *
+     F*                 S01486             DATE 23MAY94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  PM0027 - Should ignore deleted records                       *
+     F*  PM0011 - Rename from PM0090S to PM0091                       *
+     F*  S01486 - Create ACCESS OBJECT for Private Banking            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*        D F C H L   FUNCTION INDICATOR                         *
+     F*                                                               *
+     F*        01     INITIALISATION                                  *
+     F*        90     FILE ERROR                                      *
+     F*        91     FILE OPEN ERROR                                 *
+     F*        92     FILE CLOSE ERROR                                *
+     F*        93     FILE EMPTY                                      *
+     F*        94     END OF FILE                                     *
+     F*        95     NO RECORD FOUND                                 *
+     F*        96     OPTION ERROR                                    *
+     F*        97     NO SELECTION                                    *
+     F*********98*****ERROR*ON*CALL*OF*SELECTION*PROGRAM(PM0090S)******   PM0011
+     F*        98     ERROR ON CALL OF SELECTION PROGRAM(PM0091)      *   PM0011
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F/EJECT
+     FPMBIPNL0IF  E           K        DISK                           UC
+     F* IN  - PMBIPNP0 Bank Investment Policy
+     E/EJECT
+     E*
+     E                    @MG     1   1 50
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E                    CPY@    1   1 80               Copyright     arr
+     E*
+     I/EJECT
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     I*
+     IP@MGDA      DS
+     I                                        1  50 @MG
+     I*
+     IPGMDS      SDS
+     I* Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+     I*
+     ID@FMT     E DSPMBIPNPD
+     I* PMBIPNP0 - Bank Investment Policy type format data structure
+     I*
+     IP@FMT     E DSDSFDY
+     I* External Data structure to hold the outgoing record format
+     I* of the file.
+     I*
+     IP@POLC      DS
+     I* Key slicing data structure (for Record Selection)
+     I                                        1   1 W@SL01
+     I                                        2   2 W@SL02
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*
+     C*  Object Copyright code
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@POLC  2        I:Invst Pol
+     C                     PARM           P@FMT            O:Format
+     C*
+     C** Execute Subroutine 'MAIN'.
+     C*
+     C                     EXSR MAIN
+     C*
+     C** Return to caller :
+     C*
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INDEX OF SUBROUTINES                                         *
+     C*                                                               *
+     C*  MAIN - Main Process                                          *
+     C*                                                               *
+     C*  *PSSR  - File Error Handling                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  MAIN - Main Process                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+     C*
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+     C*
+     C* First call - open file :
+     C*
+     C           *IN01     IFEQ '0'                        IF 1 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN PMBIPNL0               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 1
+     C*
+     C* Last call - close file and terminate program :
+     C*
+     C           P@OPTN    IFEQ '*FREE  '                  IF 2 FREE PGM
+     C                     CLOSEPMBIPNL0               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+     C*
+     C* Caller requests first record :
+     C*
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST REC
+     C           *LOVAL    SETLLPMBIPNP0             9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+     C*
+     C* Caller requests next record :
+     C*
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT REC
+     C           PSRECI    DOUNE'*'                                       PM0027
+     C           *IN94     OREQ '1'                                       PM0027
+     C                     READ PMBIPNP0               9094  Read record
+     C                     END                                            PM0027
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+     C*
+     C* Caller requests last record :
+     C*
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST REC
+     C           *HIVAL    SETGTPMBIPNP0               90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+     C*
+     C* Caller requests previous record :
+     C*
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.REC
+     C           PSRECI    DOUNE'*'                                       PM0027
+     C           *IN94     OREQ '1'                                       PM0027
+     C                     READPPMBIPNP0               9094  Read record
+     C                     END                                            PM0027
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+     C*
+     C* Caller requests record indicated by key :
+     C*
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEY ACCESS
+     C           P@OPTN    OREQ '*VERIFY'                   OR
+     C           W@SL01    IFEQ '?'                        IF 8 SELECT
+     C           W@SL02    OREQ '?'                         OR
+     C***********          CALL 'PM0090S'              98    <SELECT>     PM0011
+     C                     CALL 'PM0091'               98    <SELECT>     PM0011
+     C                     PARM *BLANK    P@RTC2  7          B:Return code
+     C                     PARM *BLANK    P@POLC             B:Key
+     C           P@RTC2    COMP *BLANK               97      No selection
+     C           *IN97     CABEQ'1'       T@SKIP             No selection
+     C           *IN98     CABEQ'1'       T@SKIP             Program error
+     C                     END                             FI 8
+     C           P@POLC    CHAINPMBIPNP0             9590    Get record
+     C           PSRECI    IFEQ '*'                                       PM0027
+     C                     SETON                     95                   PM0027
+     C                     END                                            PM0027
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+     C*
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parm error
+     C                     END                             FI 8
+     C*
+     C* No record found or End of file - return error code :
+     C*          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+     C*          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No rec found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+     C*
+     C* Caller requests~message sent to program queue :
+     C*
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Pgm name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA             I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+     C*
+     C* Caller requests DB error handling
+     C*
+     C           W@RTCD    IFEQ '*DBERR '                  IF 10
+     C           P@RTCD    ANDNE*BLANK                      AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI 10
+     C*
+     C           P@OPTN    IFNE '*VERIFY'                  IF 11
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C           P@OPTN    ANDNE'*OPTION'                   AND
+     C                     MOVELD@FMT     P@FMT
+     C                     END                             FI 11
+     C*
+     C                     ENDSR
+     C*
+**
+PMBIPNL0  AOBIPNR0  Instrument type
+** CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

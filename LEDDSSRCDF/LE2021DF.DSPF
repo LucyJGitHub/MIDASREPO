@@ -1,0 +1,544 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Funding Participant Details')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Customer Lending Module                              *
+     A*                                                               *
+     A*  DSPF/LE2021DF - Funding Participant Details Display          *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 29Nov05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 CLE031             Date 03Feb03               *
+      *                 202456             Date 06Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 155147             Date 18Feb99               *
+      *                 141483             Date 18Feb99               *
+      *                 140835             Date 16Feb99               *
+      *                 147261             Date 27Jan99               *
+      *                 153666             Date 22Jan99               *
+      *                 CEU004             Date 02Jan98               *
+     A*                 123857             Date 27OCT97               *
+     A*                 122652             Date 05SEP97               *
+     A*                 CLE004 *Create     Date 10FEB97               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE031 - Lending Enhancements.                               *
+      *  202456 - Participant facilities not closed correctly         *
+      *  155147 - 'Prime' should be set to 'Primary' to avoid         *
+      *           confusion.                                          *
+      *  141483 - Facility Start Date for new syndicate member set    *
+      *  140835 - Funding Participant Enquiry Layout and showing      *
+      *           names could be better.                              *
+      *  147261 - Add Assignment or Participation indicator           *
+      *  153666 - Alt name/address code must be amendable.            *
+      *           before joining date                                 *
+     A*  CEU004 - Customer Lending  Enhancements                      *
+      *  123857 - F12 from subfile should take you to Facilities      *
+      *           Maintenance                                         *
+      *         - F3 should exit facilities maintenance program       *
+     A*  122652 - Percent misspelled                                  *
+     A*  CLE004 - Customer Lending  Enhancements - Syndications       *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      CA03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+     A*=========================================================================
+     A*
+     A* Header format
+     A*
+     A          R LE2021F2
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      KEEP
+     A            S#USER    R        O  1  2REFFLD(USER)
+     A            S#WSID    R        O  2  2REFFLD(JOJOB)
+     A                                  1 14'LE2021'
+     A                                  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A            S#RUNA    R        O  1 72REFFLD(RUNA)
+     A                                  2 29'FUNDING PARTICIPANT DETAILS'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A*=========================================================================
+     A          R LE2021S1                  SFL
+     A  35                                  SFLNXTCHG
+     A            S#SEL          1A  B 12  3
+     A  40                                  DSPATR(RI)
+     A  40                                  DSPATR(PC)
+     A N40                                  DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A            S#CSSN        10A  O 12 16DSPATR(HI)
+     A            S#CNUM         6A  O 12  8DSPATR(HI)
+     A            H#TNLU         5S 0H
+     A            H#INUM         6A  H
+     A            H#FAMT        13S 0H
+     A            H#SHTP         1A  H
+     A            H#RCSI         1A  H
+      *                                              Begin /147261/
+     A            H#PASI         1A  H
+      *                                              End   /147261/
+     A            H#SKIR        11S 7H
+     A            H#SKIS         1A  H
+     A            H#SKFR        11S 7H
+     A            H#SKFS         1A  H
+     A            H#SHPC        15S 0H
+     A            H#RSTM         2S 0H
+     A**Start of change CGL029
+     A**********  H#RONS        12A  H                                                        CGL029
+     A            H#RONS        18A  H
+     A**End of change CGL029
+     A            H#RIBN         8A  H
+     A            H#RIBA        35A  H
+      * Begin /CSD027/
+     A**********  H#ROBN         6S 0H                                                        CSD027
+     A**********  H#ROCN         6S 0H                                                        CSD027
+     A            H#ROBN         6A  H
+     A            H#ROCN         6A  H
+      * End /CSD027/
+     A            H#PSTM         2S 0H
+     A**Start of change CGL029
+     A**********  H#PONS        12A  H                                                        CGL029
+     A            H#PONS        18A  H
+     A**End of change CGL029
+     A            H#PIBN         8A  H
+     A            H#PIBA        35A  H
+      * Begin /CSD027/
+     A**********  H#POBN         6S 0H                                                        CSD027
+     A**********  H#POCN         6S 0H                                                        CSD027
+     A            H#POBN         6A  H
+     A            H#POCN         6A  H
+      * End /CSD027/
+     A            H#CVMR         1A  H
+     A            H#RCRN         8A  H
+     A            H#RCRA        35A  H
+     A            H#RVNO         8A  H
+     A            H#AWBN         8A  H
+     A            H#AWBA        35A  H
+     A            H#BENN         8A  H
+     A            H#BENA        35A  H
+     A            H#DTP1        35A  H
+     A            H#DTP2        35A  H
+     A            H#DTP3        35A  H
+     A            H#DTP4        35A  H
+     A            H#DCHG         3A  H
+     A            H#BTB1        35A  H
+     A            H#BTB2        35A  H
+     A            H#BTB3        35A  H
+     A            H#BTB4        35A  H
+     A            H#BTB5        35A  H
+     A            H#BTB6        35A  H
+     A            H#POBR         3A  H
+     A            H#ROBR         3A  H
+      *                                              Begin /153666/
+     A            H#NACD         1A  H
+      *                                              End   /153666/
+      *                                              Begin /CEU004/
+     A            H#SCCY         3A  H
+     A            H#ICCY         3A  H
+      *                                              End   /CEU004/
+     A            S#FACT         3A  O 12 28DSPATR(HI)
+     A            S#FCNO         2A  O 12 33DSPATR(HI)
+     A            S#SHTP         1A  O 12 59DSPATR(HI)
+     A            S#SHAR        16A  O 12 63DSPATR(HI)
+     A            S#JDTE         6A  O 12 39DSPATR(HI)
+     A            S#VDTC         6A  O 12 48DSPATR(HI)
+      **Start of Change CLE031
+     A            H#REXR        14A  H
+     A            H#REXI         1A  H
+     A            H#PSCY         3A  H
+     A            H#PEXR        14A  H
+     A            H#PEXI         3A  H
+     A            H#COAG         1A  H
+     A            H#FCAG         1A  H
+     A            H#PHAG         1A  H
+     A            H#SCAG         1A  H
+      **End of Change CLE031
+     A*=========================================================================
+     A          R LE2021C1                  SFLCTL(LE2021S1)
+     A                                      SFLSIZ(0036)
+     A                                      SFLPAG(0009)
+     A N61                                  CF09(09 'Add')
+     A*                                      Begin /123857/
+     A                                      CF12(12 'Previous')
+     A*                                      END   /123857/
+     A                                      OVERLAY
+     A  30                                  SFLDSP
+     A  31                                  SFLDSPCTL
+     A N31                                  SFLCLR
+     A  32                                  SFLEND(*MORE)
+     A            ##SFRC         4S 0H      SFLRCDNBR(CURSOR)
+     A                                 10  2'Sel'
+     A                                  4  2'Agent Customer    '
+      *                                              Begin /155147/
+     A***********                       5  2'Prime Facility'
+     A                                  5  2'Primary Facility'
+      *                                              End   /155147/
+     A            S#PMFC         6A  O  5 22DSPATR(HI)
+     A                                  5 29'-'
+     A            S#PMFT         3A  O  5 31DSPATR(HI)
+     A                                  5 35'-'
+     A            S#PMFN         2A  O  5 37DSPATR(HI)
+     A                                  5 66'Currency'
+     A            S#FCCY         3A  O  5 76DSPATR(HI)
+     A                                  4 68'Branch'
+     A            S#BRCA         3A  O  4 76DSPATR(HI)
+     A                                  7 46'Percentage Sold'
+     A  60                                  DSPATR(ND)
+     A                                  7  2'Actions'
+     A                                  8  3'E=Enquire'
+     A                                 10  7'---Participant Facility----'
+     A                                 11  7'Customer Shortname'
+     A                                 11 28'Type No'
+     A                                 10 38'Joining'
+     A                                 11 40'Date'
+     A                                 10 48'Value'
+     A                                 11 49'Date'
+     A                                 11 57'Type'
+     A                                 10 57'---------Share---------'
+     A                                 11 63'Amount/Percentage'
+     A            S#ANUM         6A  O  4 22DSPATR(HI)
+     A            S#CRNM        20A  O  4 30DSPATR(HI)
+     A            S#SOLD        16A  O  7 63DSPATR(HI)
+     A  60                                  DSPATR(ND)
+      *                                              Begin /202456/
+     A**********                        8 17'A=Amend     R=Reverse'
+     A                                  8 17'A=Amend     R=Reverse    C=Close'
+      *                                              End   /202456/
+     A  61                                  DSPATR(ND)
+     A                                  5 41'Amount:'
+     A            S#FAMT        14   O  5 50DSPATR(HI)
+      *                                              Begin /140835/
+     A            S#PRNM        20   O  6 22DSPATR(HI)
+     A            S#PRTN        10   O  6 44DSPATR(HI)
+      *                                              End   /140835/
+     A*=========================================================================
+     A          R LE2021F1
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 14'F5=Refresh'
+      *                                              Begin /202456/
+     A**********                       23 29'F10=Reverse'
+     A                                 23 29'F10=Reverse/Close'
+      *                                              End   /202456/
+     A N56                                  DSPATR(ND)
+     A                                 23 44'F12=Previous'
+     A                                 23 61'F14=Settlements'
+     A*=========================================================================
+     A          R LE2021F3
+     A                                      CF12(12 'Previous')
+      *                                              Begin /202456/
+     A**56******                            CF10(10 'Reverse')
+     A  56                                  CF10(10 'Reverse/Close')
+      *                                              End   /202456/
+     A                                      CF14(14 'Settlement')
+     A                                      OVERLAY
+     A                                      PROTECT
+     A*=========================================================================
+      *                                              Begin /147261/
+      *                                              End   /147261/
+     A*=========================================================================
+      *                                              Begin /140835/
+     A***********                       7 22'Member ............. :'
+     A***********                       9 22'Introduced By ...... :'
+     A***********                      10 22'Joining Date ....... :'
+     A                                  8  3'Member           :'
+     A                                 10  3'Introduced By    :'
+     A                                 11 22'Joining Date ....... :'
+      *                                              End   /140835/
+     A*                                      Begin /122652/
+     A******************************** 13  3'Participant Share: Amount/Perecent-
+      *                                              Begin /140835/
+     A***********                      13  3'Participant Share: Amount/Percent-
+     A                                 14  3'Participant Share: Amount/Percent-
+      *                                              End   /140835/
+     A*                                      End   /122652/
+      *                                              Begin /140835/
+     A***********                            .... :'
+     A***********                      14 22'Share .............. :'
+     A***********                      15 22'Recourse ........... :'
+     A***********                      17  3'Interest Skim    : Rate ..........-
+     A***********                           ..... :'
+     A***********                      18 22'Sign ............... :'
+     A                                       ..... :'
+     A                                 15 22'Share .............. :'
+     A                                 16 22'Recourse ........... :'
+      *                                              Begin /147261/
+     A                                 17 22'Assign/Participation :'
+      *                                              End   /147261/
+      **Start of Change CLE031
+     A**********                       18  3'Interest Skim    : Rate ..........-              CLE031
+     A**********                            ..... :'                                          CLE031
+     A                                 18  3'Interest Skim    : Rate .. :'
+     A**********                       19 22'Sign ............... :'                          CLE031
+     A                                 19 22'Sign .. :'
+      *                                              End   /140835/
+     A**********                       20  3'Fees Skim        : Rate ..........-              CLE031
+     A**********                            ..... :'                                          CLE031
+     A                                 18 46'Fees Skim  Rate .. :'
+     A**********                       21 22'Sign ............... :'                          CLE031
+     A                                 19 57'Sign .. :'
+      **End of Change CLE031
+      *                                              Begin /140835/
+     A*********** S#CSSN        10A  B  7 46
+     A            S#CSSN        10A  B  8 22
+      *                                              End   /140835/
+     A  55
+     AON09                                  DSPATR(PR)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A N55 09                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#INUM        10A  B  9 46
+     A            S#INUM        10A  B 10 22
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N42                                  DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#JDTE         6A  B 10 46
+     A            S#JDTE         6A  B 11 46
+      *                                              End   /140835/
+      *                                              Begin /141483/
+     A**55*******                           DSPATR(PR)
+     A  55
+     AON09                                  DSPATR(PR)
+      *                                              End   /141483/
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+      *                                              Begin /141483/
+     A*N55*******                           DSPATR(UL)
+     A N55 09                               DSPATR(UL)
+      *                                              End   /141483/
+     A N43                                  DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#SHTP         1A  B 13 46
+     A            S#SHTP         1A  B 14 46
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A  44                                  DSPATR(RI)
+     A  44                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N44                                  DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#SHAR        16A  B 14 46
+     A            S#SHAR        16A  B 15 46
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A  45                                  DSPATR(RI)
+     A  45                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N45                                  DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#RCSI         1A  B 15 46
+     A            S#RCSI         1A  B 16 46
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A N55                                  DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A  52                                  DSPATR(RI)
+     A  52                                  DSPATR(PC)
+      *                                              Begin /147261/
+     A            S#PASI         1A  B 17 46
+     A  55                                  DSPATR(PR)
+     A  53                                  DSPATR(RI)
+     A  53                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N53                                  DSPATR(HI)
+      *                                              End   /147261/
+      *                                              Begin /140835/
+     A*********** S#SKIS         1A  B 18 46
+      **Start of Change CLE031
+     A**********  S#SKIS         1A  B 19 46                                                  CLE031
+     A            S#SKIS         1A  B 19 33
+      **End of Change CLE031
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A  47                                  DSPATR(RI)
+     A  47                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N47                                  DSPATR(HI)
+      **Start of Change CLE031
+     A**********  S#SKFR        12A  B 20 46                                                  CLE031
+     A            S#SKFR        12A  B 18 68
+      **End of Change CLE031
+     A  55                                  DSPATR(PR)
+     A  48                                  DSPATR(RI)
+     A  48                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N48                                  DSPATR(HI)
+      **Start of Change CLE031
+     A**********  S#SKFS         1A  B 21 46                                                  CLE031
+     A            S#SKFS         1A  B 19 68
+      **End of Change CLE031
+     A  55                                  DSPATR(PR)
+     A  49                                  DSPATR(RI)
+     A  49                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N49                                  DSPATR(HI)
+      *                                              Begin /155147/
+     A***********                       5  2'Prime Facility'
+     A                                  5  2'Primary Facility'
+      *                                              End   /155147/
+     A                                  5 29'-'
+     A            S#PMFT         3A  O  5 31DSPATR(HI)
+     A                                  5 35'-'
+     A            S#PMFN         2A  O  5 37DSPATR(HI)
+      *                                              Begin /140835/
+     A*********** S#SKIR        12A  B 17 46
+      **Start of Change CLE031
+     A**********  S#SKIR        12A  B 18 46                                                  CLE031
+     A            S#SKIR        12A  B 18 33
+      **End of Change CLE031
+      *                                              End   /140835/
+     A  55                                  DSPATR(PR)
+     A  46                                  DSPATR(RI)
+     A  46                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A            S#PMFC         6A  O  5 22DSPATR(HI)
+     A                                  4  2'Agent Customer'
+     A            S#CRNM        20A  O  4 30DSPATR(HI)
+     A            S#ANUM         6A  O  4 22DSPATR(HI)
+     A                                  5 66'Currency'
+     A            S#FCCY         3A  O  5 76DSPATR(HI)
+     A                                  4 68'Branch'
+     A            S#BRCA         3A  O  4 76DSPATR(HI)
+      *                                              Begin /140835/
+     A***********                       8 22'Facility Type/No.... :'
+     A***********                      11 22'Value Date ......... :'
+     A*********** S#FACT         3A  B  8 46
+     A                                  9  3'Facility Type/No.:'
+     A                                 12 22'Value Date ......... :'
+     A            S#FACT         3A  B  9 22
+      *                                              End   /140835/
+     A N50                                  DSPATR(HI)
+     A  50                                  DSPATR(RI)
+     A N55 09                               DSPATR(UL)
+     A  50                                  DSPATR(PC)
+     A  55
+     AON09                                  DSPATR(PR)
+      *                                              Begin /140835/
+     A*********** S#FCNO         2A  O  8 50DSPATR(HI)
+     A            S#FCNO         2A  O  9 26DSPATR(HI)
+      *                                              End   /140835/
+     A  09                                  DSPATR(ND)
+      *                                              Begin /140835/
+     A*********** S#VDTC         6A  B 11 46
+     A            S#VDTC         6A  B 12 46
+      *                                              End   /140835/
+     A N51                                  DSPATR(HI)
+     A  51                                  DSPATR(RI)
+     A N55N09                               DSPATR(UL)
+     A  51                                  DSPATR(PC)
+     A  55
+     AO 09                                  DSPATR(PR)
+     A  09                                  DSPATR(ND)
+     A                                  5 41'Amount:'
+     A            S#FAMT        14   O  5 50DSPATR(HI)
+      *                                              Begin /153666/
+     A                                  6 67'Alt n/a'
+     A            S#NACD         1   B  6 76
+     A  55                                  DSPATR(PR)
+     A N55                                  DSPATR(UL)
+     A  19                                  DSPATR(RI PC)
+     A N19                                  DSPATR(HI)
+      *                                              End   /153666/
+      *                                              Begin /140835/
+     A            S#PRNM        20   O  6 22DSPATR(HI)
+     A            S#PRTN        10   O  6 44DSPATR(HI)
+     A            S#SRNM        20   O  8 34DSPATR(HI)
+     A            S#SRTN        10   O  8 56DSPATR(HI)
+     A            S#IRNM        20   O 10 34DSPATR(HI)
+     A            S#IRTN        10   O 10 56DSPATR(HI)
+      *                                              End   /140835/
+      **Start of Change CLE031
+     A                                 20  3'Agents:'
+     A                                 20 22'Co-Agent ......... :'
+     A            S#COAG         1A  B 20 43
+     A  55                                  DSPATR(PR)
+     A  62                                  DSPATR(RI)
+     A  62                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N62                                  DSPATR(HI)
+     A N66                                  DSPATR(ND)
+     A                                 20 46'Facility ......... :'
+     A            S#FCAG         1A  B 20 69
+     A  55                                  DSPATR(PR)
+     A  63                                  DSPATR(RI)
+     A  63                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N63                                  DSPATR(HI)
+     A N66                                  DSPATR(ND)
+     A                                 21 22'Paying/Handling .. :'
+     A            S#PHAG         1A  B 21 43
+     A  55                                  DSPATR(PR)
+     A  64                                  DSPATR(RI)
+     A  64                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N64                                  DSPATR(HI)
+     A N66                                  DSPATR(ND)
+     A                                 21 46'Security ......... :'
+     A            S#SCAG         1A  B 21 69
+     A  55                                  DSPATR(PR)
+     A  65                                  DSPATR(RI)
+     A  65                                  DSPATR(PC)
+     A N55                                  DSPATR(UL)
+     A N65                                  DSPATR(HI)
+     A N66                                  DSPATR(ND)
+      **End of Change
+     A*=========================================================================
+     A          R LE2021F4
+     A                                      OVERLAY
+     A                                 13 34'NO RECORDS FOUND'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(RI)
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   SFLCTL(#MSGRCD)
+     A                                      TEXT('Program messages')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  25                                  SFLDSP
+     A  25                                  SFLDSPCTL
+     A  25                                  SFLINZ
+     A  25                                  SFLCLR
+     A  25                                  SFLEND
+     A                                      SFLSIZ(0003)
+     A                                      SFLPAG(0001)
+     A            ##PGM                     SFLPGMQ(10)
+      *
+     A          R LE2021F5
+     A                                      OVERLAY
+     A                                 23  2'F3=Exit'
+     A                                 23 14'F5=Refresh'
+     A                                 23 29'F9=Add'
+     A  61                                  DSPATR(ND)
+     A*                                      Begin /123857/
+     A                                 23 36'F12=Previous'
+     A*                                      END   /123857/

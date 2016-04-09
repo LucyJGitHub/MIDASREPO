@@ -1,0 +1,186 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_IM                                                        *
+/*EXI *  TEXT('Midas DL Expo evts-region (comp lvl) book brch')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Dealing Module
+     A*                                                               *
+     A*   LF/EVLCBR - EXPOSURE EVENTS FOR REGION BY COMPANY OF        *
+     A*               BOOKING BRANCH                                  *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 05Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGP001             Date 23May03               *
+      *                 CGL015             Date 15Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU003             Date 05Nov97               *
+      *                 CDL002             Date 17Sep97               *
+     A*                 CAC001             Date 01Feb96               *
+     A*                 S01486             Date 06Jun94               *
+     A*                 S01461             Date 19Jan94               *
+     A*                      S01437           DATE  8SEP93            *
+     A*                      S01434           DATE 26JUL93            *
+     A*                      S01378           DATE 15OCT92            *
+     A*                      S01393           DATE 30JUL92            *        *
+     A*                      S01392           DATE 20JUL92            *
+     A*                      S01328           DATE 02APR91            *
+     A*                      LN0226           DATE 05JUN90            *
+     A*                      S01157           DATE 19FEB90            *   S01157
+     A*                      E20              DATE 17/11/89           *
+     A*                      E57              DATE 17/11/89           *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CGP001 - Global Processing (recompile)                       *
+      *  CGL015 - Net Amounts on Events by Nostro (Recompiled)        *
+      *  CDL006 - Dealing Fiduciary. Recompiled.                      *
+     A*  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+     A*   CDL002 - FX Netting. Add Deal No.                           *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           Recompiled only.                                    *
+     A*   S01486 - Portfolio Management Upgrade (RECOMPILE)           *
+     A*   S01461 - Recompiled over changed SDCOMPPD.                  *
+     A*                                                               *
+     A*   S01437 - Recompiled over changed SDCOMPPD.                  *
+     A*                                                               *
+     A*   S01434 -  Recompiled - Enhanced Rollovers                   *
+     A*                                                               *
+     A*   S01378 -  NA parcels. Allows partial sale of a parcel
+     A*             of NA's which have previously been entered as
+     A*             a single NA purchased transaction. (was MOF53)
+     A*             Recompile over changed EVNTXED format.
+     A*                                                               *
+     A*     S01393 - Recompiled for Strategic Risk Management         *        *
+     A*     S01392 - RECOMPILED DUE TO JAP.SUB-MODULE INCORPORATION   *
+     A*     S01328 - FRA/IRS Revaluations - New fields added to       *
+     A*              EVNTXED - Recompile all logicals.                *
+     A*     LN0226 - INCORPORATE FURTHER CHANGES MADE FOR             *
+     A*              R10 - FRA/IRS.  S01117, S01194, S01157 ETC.      *
+     A*     S01157 - FRA/IRS ENHANCEMENT                              *   S01157
+     A*     E20    - CHANGE CRT PARM  MAINT TO *DLY                   *
+     A*     E57    - CHANGE KEY FIELD                                 *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DYNSLT
+     A                                      JDFTVAL
+     A          R EVLRF                     JFILE(EVNTXED +
+     A                                      SDRGLMPD SDCOMPPD +
+     A                                      SDLIMTPD SDLIMTPD +
+     A                                      SDREGNPD)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A**
+     A** JOIN REGION TO COMPANY LIMIT
+     A          J                           JOIN(1 2)
+     A                                      JFLD(REGC DYRGCD)
+     A                                      JFLD(ELVC DYLEVL)
+     A                                      JFLD(ENTITY DYBCCD)
+     A** JOIN CO LIMIT TO COMPANY TABLE
+     A          J                           JOIN(1 3)
+     A                                      JFLD(ENTITY APCMCD)
+     A** JOIN CO LIMIT TYPES TO LIMIT TYPES TABLE-FX
+     A          J                           JOIN(2 4)
+     A                                      JFLD(DYFXLT A2LMTY)
+     A** JOIN CO LIMIT TYPES TO LIMIT TYPES TABLE-LENDING
+     A          J                           JOIN(2 5)
+     A                                      JFLD(DYLLTY A2LMTY)
+     A** JOIN REGION OF RISKS TO REGION CODES TABLE
+     A          J                           JOIN(1 6)
+     A                                      JFLD(REGC A3RGCD)
+     A** EVENT FIELDS
+     A***********                                    Begin /CDL002/
+     A            ENTITY                    RENAME(COBB) JREF(1)
+     A***********                                    End   /CDL002/
+     A            REGC                      JREF(1)
+     A            EDAT
+     A            LCEQ
+     A            EXEI
+     A            IBRE
+     A            ICYE
+     A*                                              Begin /CEU003/
+     A            IFXS
+     A            SIAC
+     A*                                              End   /CEU003/
+      *                                                Begin /*CDL002*/
+     A            DLNO
+      *                                                End   /*CDL002*/
+     A*                                                      /**E57*/
+     A*****       ENTITY                    RENAME(ECPY) JREF(1)
+     A***********                                    Begin /CDL002/
+     A*********** ENTITY                    RENAME(COBB) JREF(1)
+     A***********                                    End   /CDL002/
+     A*/COPY WNCPYSRC,EVLCBR001
+     A*                                                      /**E57*/
+     A** REGION TABLE FIELD
+     A            A3RGNM
+     A** COMPANY TABLE FIELD
+     A            ENAM                      RENAME(APCMNM) JREF(3)
+     A** COMPANY LIMIT FIELDS - FX
+     A            DYFXLT
+     A            DYFLAM
+     A            DYFLED
+     A** COMPANY LIMIT FIELDS - LENDING
+     A            DYLLTY
+     A            DYLLAM
+     A            DYLLED
+     A*
+     A*                                                *** S01157 ***
+     A** COMPANY LIMIT FIELDS - FRA
+     A            DYFRLA
+     A            DYFRED
+     A** COMPANY LIMIT FIELDS - IRS
+     A            DYIRLM
+     A            DYIRED
+     A*                                                *** S01157 ***
+     A*
+     A** COMPANY LIMIT TYPES - FX
+     A            FLEP1                     RENAME(A2E1LP) JREF(4)
+     A            FLEP2                     RENAME(A2E2LP) JREF(4)
+     A            FLEP3                     RENAME(A2E3LP) JREF(4)
+     A            FLEP4                     RENAME(A2E4LP) JREF(4)
+     A            FLEP5                     RENAME(A2E5LP) JREF(4)
+     A            FLEP6                     RENAME(A2E6LP) JREF(4)
+     A            FLPC1                     RENAME(A2PL1P) JREF(4)
+     A            FLPC2                     RENAME(A2PL2P) JREF(4)
+     A            FLPC3                     RENAME(A2PL3P) JREF(4)
+     A            FLPC4                     RENAME(A2PL4P) JREF(4)
+     A            FLPC5                     RENAME(A2PL5P) JREF(4)
+     A            FLPC6                     RENAME(A2PL6P) JREF(4)
+     A** COMPANY LIMIT TYPES - LENDING
+     A            LLEP1                     RENAME(A2E1LP) JREF(5)
+     A            LLEP2                     RENAME(A2E2LP) JREF(5)
+     A            LLEP3                     RENAME(A2E3LP) JREF(5)
+     A            LLEP4                     RENAME(A2E4LP) JREF(5)
+     A            LLEP5                     RENAME(A2E5LP) JREF(5)
+     A            LLEP6                     RENAME(A2E6LP) JREF(5)
+     A            LLPC1                     RENAME(A2PL1P) JREF(5)
+     A            LLPC2                     RENAME(A2PL2P) JREF(5)
+     A            LLPC3                     RENAME(A2PL3P) JREF(5)
+     A            LLPC4                     RENAME(A2PL4P) JREF(5)
+     A            LLPC5                     RENAME(A2PL5P) JREF(5)
+     A            LLPC6                     RENAME(A2PL6P) JREF(5)
+     A          K ENTITY
+     A          K REGC
+     A          S EXEI                      COMP(NE ' ')
+     A            IBRE                      COMP(NE 'Y')
+     A            ICYE                      COMP(EQ 'Y')
+     A*/COPY WNCPYSRC,EVLCBR002

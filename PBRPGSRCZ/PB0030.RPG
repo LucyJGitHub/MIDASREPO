@@ -1,0 +1,1386 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PB Instruments Types Maintenance')
+/*OVRF*: OVRDBF FILE(SDPLINXX) TOFILE(SDPLINL0) SHARE(*NO)          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Private Banking Module                               *
+      *                                                               *
+      *  PB0030 - Instruments Types Maintenance                       *
+      *                                                               *
+      *  Function: This program allows the maintenance of             *
+      *            Instruments Types                                  *
+      *                                                               *
+      *  Called By: PBC0030  - Input Cycle Processing                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. 183604             Date 12Sep00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001  *CREATE    Date 29Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  183604 -  Trailer File SDPLINPA not updated                  *
+      *  CPB001 -  'Private Banking' Module                           *
+      *                                                               *
+      *****************************************************************
+     FSDPLINL0IF  E           K        DISK         KINFSR *PSSR
+     F            SDPLINP0                          KRENAMESDPLINX0
+      **  Instrument Type file
+      *
+     FSDPLINXXUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KINFDS FIL1DS
+     F                                              KCOMIT
+      **  Instrument Type file maintenance
+      *
+     FSDPLINPAUF  E                    DISK                      A        183604
+     F                                              KINFSR *PSSR          183604
+     F                                              KCOMIT                183604
+      **  Instrument Type Trailer file                                    183604
+      *                                                                   183604
+     FPB0030DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFLRR2KSFILE PB0030S1
+      **  Display File
+      *
+      ********************************************************************
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTION OF INDICATORS                                       *
+      *  ------------------------                                     *
+      *                                                               *
+      *  26 - SFLEND    }- MESSAGE SUBFILE                            *
+      *                                                               *
+      *  28 - SFLDSP    }                                             *
+      *  29 - SFLDSPCTL }                                             *
+      *  30 - SFLCLR    }- REVIEW FROM SUBFILE                        *
+      *  31 - SFLEND    }                                             *
+      *  33 - SFLNXTCHG }                                             *
+      *                                                               *
+      *  37 - FILE INDICATOR ON SDPLINXX                              *
+      *  38 - FILE INDICATOR ON SDPLINL0                              *
+      *  39 - FILE INDICATOR ON PB0030DF                              *
+      *  42 - WRITE INDICATOR ON SDPLINXX                             *
+      *                                                               *
+      *  56 - DISPLAY STATUS ON REVIEW FROM SCREEN                    *
+      *  57 - DISPLAY 'DELETED' TEXT                                  *
+      *  58 - ENABLE CMD-10                                           *
+      *                                                               *
+      *  61 - ERROR ON ACTION CODE                                    *
+      *  62 - ERROR ON INSTRUMENT TYPE                                *
+      *  63 - ERROR ON REVIEW FROM INSTRUMENT TYPE                    *
+      *  64 - ERROR ON INSTRUMENT TYPE NARRATIVE                      *
+      *  65 - ERROR ON REVIEW FROM INSTRUMENT TYPE                    *
+      *  66 - ERROR ON SUBFILE SELECT                                 *
+      *                                                               *
+      *  99 - FILE ERROR INDICATOR                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  INDEX TO SUBROUTINES                                         *
+      *  ----------------------                                       *
+      *                                                               *
+      *         - MAIN PROCESSING                                     *
+      *  #VLINI - VALIDATION OF INITIAL SCREEN                        *
+      *  #RVSRC - PROCESS REVIEW SCREEN                               *
+      *  #RVENT - PROCESS AN ENTRY ON REVIEW SCREEN                   *
+      *  #RVRFS - VALIDATE SELECTION ON REVIEW FROM SUBFILE           *
+      *  #UPSRC - PROCESS UPDATE SCREEN                               *
+      *  #UPFIL - UPDATE FILES                                        *
+      *  #VLSRC - VALIDATION OF UPDATE SCREEN                         *
+      *  #LDSBF - LOADS A PAGE OF SUBFILE RECORDS                     *
+      *  #PCPRV - PROCESS CMD12                                       *
+      *  ZASNMS - SEND MESSAGE TO PROGRAMS MESSAGE QUEUE              *
+      *  *INZSR - INITIALISATION                                      *
+      *  *PSSR  - PROGRAM ERROR HANDLING ROUTINE                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **  Copyright Array
+      *
+     E                    DSP         3  1
+      **  Array to test display group input
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     I**
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IFIL1DS      DS
+      **  File Information DS
+      *
+     I                                     *STATUS  STATUS
+      *
+     IFIL2DS      DS
+      **  File Information DS
+      *
+     I                                    B 397 4000WWHRRN
+      *
+     ILDA       E DSLDA                         256
+      **  Local Data Area for DB Errors
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDT       DS
+      **  Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IZMUSER      DS                             17
+      **  Data area ZMUSER
+      *
+     I                                       11  13 USRBCH
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  External DS dor MMOD acces object
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long DS
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **  MAIN PROCESSING
+      *
+      **  Do while not CMD-3
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     MOVE *OFF      *IN50
+     C                     WRITEPB0030F1
+      *
+      **  If error, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITEPB0030C2
+     C                     ENDIF
+      *
+      **  Read selection screen
+      *
+     C                     READ PB0030F1                 59
+      *
+      **  If not CMD-3
+      **  perform validation
+      *
+     C           *INKC     IFEQ *OFF
+     C                     EXSR #VLINI
+     C                     ENDIF
+      *
+      **  If valid details
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     MOVE *ON       *IN50
+      *
+      **  Display next screen as necessary
+      *
+     C           WWSFL     IFEQ 'Y'
+      *
+      **  Review from subfile
+      *
+     C                     EXSR #RVSRC
+     C                     ELSE
+      *
+      **  Detail screen
+      *
+     C                     EXSR #UPSRC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      **  End program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #VLINI - VALIDATION OF INITIAL SCREEN              *
+      *                                                               *
+      * CALLS      ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      *****************************************************************
+     C           #VLINI    BEGSR
+      *
+      **  Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      **  Set of error indicators
+      *
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+      *
+      **  Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      **  If all fields blanks - SUBFILE REQUIRED
+      *
+     C           SACT      IFEQ *BLANKS
+     C           S1INNR    ANDEQ*BLANKS
+     C           S1RCRG    ANDEQ*BLANKS
+     C                     MOVE 'Y'       WWSFL   1
+     C                     ELSE
+     C                     MOVE 'N'       WWSFL
+      *
+      **  If review from inserted
+      *
+     C           S1RCRG    IFNE *BLANKS
+      *
+      **  If instrument type not blank - ERROR
+      *
+     C           SACT      IFNE *BLANKS
+     C           S1INNR    ORNE *BLANKS
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00062' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Review from subfile screen required
+      *
+     C                     ELSE
+     C                     MOVE 'Y'       WWSFL
+     C                     ENDIF
+      *
+      **  Review from not entered
+      *
+     C                     ELSE
+      *
+      **  Action is blank => Instrument Type only entered
+      *
+     C           SACT      IFEQ *BLANKS
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      **  Action not blank => Instrument type must be entered
+      *
+     C           S1INNR    IFEQ *BLANKS
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00063' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Action entered & Valed so far
+      *
+     C           SACT      IFNE *BLANKS
+     C           WWVALD    ANDEQ'Y'
+      *
+      **  Action must be  'I', 'A', 'E', or 'D'
+      *
+     C           SACT      IFNE 'I'
+     C           SACT      ANDNE'A'
+     C           SACT      ANDNE'E'
+     C           SACT      ANDNE'D'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      **  Action must be  'I' if PB Module is present and not PM Module
+      *
+     C           *IN84     IFEQ *ON
+     C           SACT      ANDEQ'I'
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00067' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      **  If valid, check SPF
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      **  For Single-Branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM           @ERR    10
+      *
+      **  If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00019' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  For Multi-Branch environment
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM SACT      @ZACTN  1
+     C                     PARM USRBCH    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      **  If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00007' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C           @ERR      IFEQ 2
+     C                     MOVE *ON       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Key cannot contain blank except if revieuw from request
+      **  (ACTION CODE MUST BE BLANK)
+     C                     MOVEAS1INNR    DSP,1
+     C           ' '       LOKUPDSP                      71
+     C           *IN71     IFEQ '1'
+     C           SACT      ANDNE' '
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00066' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      **  If valid so far
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      **  Validate Instrument Type
+      *
+     C           S1INNR    CHAINSDPLINL0             38
+      *
+      **  If record found
+      *
+     C           *IN38     IFEQ *OFF
+      *
+      **  Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      **  If record not flagged as deleted
+      *
+     C           PDRECI    IFNE '*'
+      *
+      **  Live record and therefore cannot be RE-INSERTED
+      *
+     C                     MOVE *ON       *IN61
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00064' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      **  Deleted record so allow RE-INSERTION
+      *
+     C                     MOVE *BLANKS   SISTN
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     ENDIF
+      *
+      **  Action Code = 'A', 'D' OR 'E'
+      *
+     C                     ELSE
+      *
+      **  If Record flagged as deleted
+      *
+     C           PDRECI    IFEQ '*'
+      *
+      **  If Action Code = 'A' OR 'D' - ERROR
+      *
+     C           SACT      IFEQ 'A'
+     C           SACT      OREQ 'D'
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00065' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **  Enquiry on deleted record
+      *
+     C                     ELSE
+     C                     MOVE *ON       *IN57
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Record does not exist
+      *
+     C                     ELSE
+      *
+     C           SACT      IFNE 'I'
+     C                     MOVE *ON       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00065' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C                     Z-ADDWWHRRN    S2RRN
+      *
+      **  Set Format flag depending on type
+      *
+     C           SACT      IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVEL*BLANKS   SISTN
+     C                     ELSE
+     C                     MOVELPDISTN    SISTN
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           SACT      IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #RVSRC - PROCESS REVIEW SCREEN                     *
+      *                                                               *
+      * CALLS      #RVENT - Process an Entry on Review Screen.        *
+      *            #LDSBF - Loads a Page of Subfile records.          *
+      *            #PCPRV - Process F12.                              *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         _                                           *
+      *                                                               *
+      *****************************************************************
+     C           #RVSRC    BEGSR
+      *
+      ** Clear Screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      ** Load first page to subfile
+      *
+     C                     EXSR #LDSBF
+      *
+      ** Do while not CMD-3 and CMD-12
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+      *
+     C                     WRITEPB0030C1
+     C                     WRITEPB0030F3
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITEPB0030C2
+     C                     ENDIF
+      *
+     C                     READ PB0030C1                 59
+      *
+      **   If not CMD-3
+      *
+     C           *INKC     IFEQ *OFF
+     C           *IN27     CASEQ*ON       #LDSBF           Rollup
+     C           *INKL     CASEQ*ON       #PCPRV           CMD-12
+     C                     CAS            #RVENT           ENTER
+     C                     ENDCS
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #RVENT - PROCESS ENTRY ON REVIEW SCREEN            *
+      *                                                               *
+      * CALLS      #RVRFS - Validate Selection on Review From subfile.*
+      *            #UPSRC - Process Update Screen.                    *
+      *            #LDSBF - Loads a Page of Subfile records.          *
+      *            ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLED BY  #RVSRC - Process Review Screen.                    *
+      *                                                               *
+      *****************************************************************
+     C           #RVENT    BEGSR
+      *
+      **   Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      **   Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      **   If blank subfile displayed - ASSUME REVIEW FROM REQUIRED
+      *
+     C           *IN28     IFEQ *OFF
+     C                     MOVE *ON       *IN59
+      *
+      **   Else identify whether 'Review from' or selection required
+      *
+     C                     ELSE
+     C                     READCPB0030S1                 59
+     C                     ENDIF
+      *
+      **   No records changed => 'Review from' required
+      *
+     C           *IN59     IFEQ *ON
+     C                     EXSR #LDSBF
+     C                     ELSE
+      *
+      **   Validate selection
+      *
+     C                     EXSR #RVRFS
+      *
+      **   If valid
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+      **   Process detail screen
+      *
+     C                     EXSR #UPSRC
+      *
+      **   If not CMD-3 or CMD-12
+      *
+     C           *INKC     IFEQ *OFF
+      *
+      **   Chain to subfile to get first record
+      *
+     C           1         CHAINPB0030S1             39
+     C                     MOVELS2INNR    S2RCRG
+     C                     MOVE *OFF      *INKL
+      *
+      **   Rebuild subfile
+      *
+     C                     EXSR #LDSBF
+     C                     ENDIF
+     C                     ELSE
+      *
+      **   Save RRN of changed subfile record
+      *
+     C                     Z-ADDSFLRR2    WWSRRN
+     C                     MOVE S2SEL     WWSSEL
+      *
+      **   Remove reverse image from subfile
+      *
+     C                     Z-ADD0         WWSFLC
+      *
+     C           WWSFLC    DOWLTWWLRRN
+     C                     ADD  1         WWSFLC
+     C           WWSFLC    CHAINPB0030S1             39
+     C                     MOVE *BLANKS   S2SEL
+     C                     MOVE *OFF      *IN66
+     C                     UPDATPB0030S1
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *IN66
+     C                     MOVE 'N'       WWVALD
+     C                     MOVELWWMSGD    ZAMSID
+     C                     EXSR ZASNMS
+     C           WWSRRN    CHAINPB0030S1             39
+     C                     MOVE WWSSEL    S2SEL
+     C                     UPDATPB0030S1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #RVRFS - VALIDATE SELECTION ON REVIEW FROM SUBFILE *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVENT - Process an Entry on Review Screen.        *
+      *                                                               *
+      *****************************************************************
+     C           #RVRFS    BEGSR
+      *
+     C                     MOVE *OFF      *IN57
+      *
+      **  Selection must = 'I' 'A' 'E' or 'D'
+      *
+     C           S2SEL     IFNE 'I'
+     C           S2SEL     ANDNE'A'
+     C           S2SEL     ANDNE'E'
+     C           S2SEL     ANDNE'D'
+      *
+     C                     MOVEL'PB00006' WWMSGD
+     C                     MOVE 'N'       WWVALD
+      *
+     C                     ELSE
+      *
+      **  SPF Check.
+      **  for single-branch environment
+      *
+     C           MBIN      IFNE 'Y'
+     C                     CALL 'ZVACTU'
+     C                     PARM S2SEL     @ZACTN  1
+     C                     PARM           @ERR    10
+      *
+      **  If action invalid for user
+      *
+     C           @ERR      IFNE *ZERO
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00019' WWMSGD
+     C                     ENDIF
+     C                     ELSE
+      *
+      **  FOR MULTI-BRANCH ENVIRONMENT
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM S2SEL     @ZACTN  1
+     C                     PARM USRBCH    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      **  If action invalid for user
+      *
+     C           @ERR      IFEQ 1
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00007' WWMSGD
+     C                     ELSE
+     C           @ERR      IFEQ 2
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00008' WWMSGD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If action = 'I' , Record must be flagged as deleted
+      *
+     C           S2SEL     IFEQ 'I'
+     C           S2TYP     ANDNE'D'
+     C                     MOVEL'PB00064' WWMSGD
+     C                     MOVE 'N'       WWVALD
+     C                     ELSE
+      *
+      **  If record flagged as deleted
+      *
+     C           S2TYP     IFEQ 'D'
+      *
+      **  Action must be  'I' if PB Module is present and not PM Module
+      *
+     C           *IN84     IFEQ *ON
+     C           S2SEL     ANDEQ'I'
+      *
+     C                     MOVE *ON       *IN66
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00067' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVE *ON       *IN57
+     C                     ENDIF
+      *
+      **  Action cannot equal 'A' or 'D'
+      *
+     C           S2SEL     IFEQ 'A'
+     C           S2SEL     OREQ 'D'
+     C                     MOVEL'PB00020' WWMSGD
+     C                     MOVE 'N'       WWVALD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If valid entry
+      *
+     C           WWVALD    IFEQ 'Y'
+      *
+     C                     MOVELS2SEL     SACT
+     C                     MOVELS2INNR    S1INNR
+      *
+      **  Set format flag depending on type
+      *
+     C           S2SEL     IFEQ 'I'
+     C                     MOVEL'IA'      WWFMT
+     C                     MOVE *BLANKS   SISTN
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFEQ 'D'
+     C                     MOVEL'DL'      WWFMT
+     C                     ENDIF
+      *
+     C           S2SEL     IFNE 'I'
+     C                     MOVELS2INNR    S1INNR
+     C                     MOVELS2ISTN    SISTN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #UPSRC - PROCESS UPDATE SCREEN                     *
+      *                                                               *
+      * CALLS      #UPFIL - Update Files.                             *
+      *            #VLSRC - Validation of Update Screen.              *
+      *            #PCPRV - Process F12.                              *
+      *                                                               *
+      * CALLED BY  #B     - Main Processing.                          *
+      *            #RVENT - Process an Entry on Review Screen.        *
+      *                                                               *
+      *****************************************************************
+     C           #UPSRC    BEGSR
+      *
+      **   Set of valid flag
+      *
+     C                     MOVE 'N'       WWVALD
+      *
+      **   Dowhile exit not requested
+      *
+     C           *INKC     DOWEQ*OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'N'
+      *
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN51
+      *
+     C           WWFMT     IFEQ 'EN'
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C           WWFMT     IFEQ 'DL'
+     C                     MOVE *ON       *IN58
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C                     WRITEPB0030F2
+      *
+      **  If error and not help, write message subfile
+      *
+     C           WWVALD    IFEQ 'N'
+     C                     WRITEPB0030C2
+     C                     ENDIF
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      **  Read Screen
+      *
+     C                     READ PB0030F2                 59
+      *
+      ** IF NOT CMD-3
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKJ     CASEQ*ON       #UPFIL           CMD-10
+     C           *INKL     CASEQ*ON       #PCPRV           CMD-12
+     C                     CAS            #VLSRC           ENTER
+     C                     END
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           *INKC     IFEQ *OFF
+     C           *INKL     ANDEQ*OFF
+     C           WWVALD    ANDEQ'Y'
+      *
+     C           SACT      IFEQ 'I'
+     C           SACT      OREQ 'A'
+      *
+      **   Update files
+      *
+     C                     EXSR #UPFIL
+     C                     ENDIF
+      *
+     C           WWVALD    IFEQ 'Y'
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *BLANKS   S1INNR
+     C                     MOVE *BLANKS   S1RCRG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            #UPFIL - UPDATE PROCESSING                         *
+      *                                                               *
+      * CALLS      ZASNMS - Send Message to Program Message Queue.    *
+      *            *PSSR  - Program Error Handling Routine.           *
+      *                                                               *
+      * CALLED BY  #UPSRC - Process Update Screen.                    *
+      *                                                               *
+      *****************************************************************
+     C           #UPFIL    BEGSR
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      **   Action = 'I'
+      *
+     C           SACT      IFEQ 'I'
+      *
+      **   Access Instrument Type
+      *
+     C           S1INNR    CHAINSDPLINXX             37
+      *
+      **   If a record already exists
+      *
+     C           *IN37     IFEQ *OFF
+      *
+      **   If record id is not equal to '*'
+      *
+     C           PDRECI    IFNE '*'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00021' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **   Else - update record
+      *
+     C                     ELSE
+     C                     MOVE 'D'       PDRECI
+     C                     MOVELS1INNR    PDINNR
+     C                     MOVELSISTN     PDISTN
+     C                     Z-ADDBJRDNB    PDLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PDDLUP
+     C                     MOVE WWMLUP    PDMLUP
+     C                     Z-ADDWWYLUP    PDYLUP
+     C                     TIME           PDTLUP
+     C                     MOVE 'A'       PDCHTP
+     C                     UPDATSDPLINP0
+     C                     COMIT
+     C                     ENDIF
+      *
+      **   Else - Record does not exist
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'D'       PDRECI
+     C                     MOVELS1INNR    PDINNR
+     C                     MOVELSISTN     PDISTN
+     C                     Z-ADDBJRDNB    PDLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PDDLUP
+     C                     MOVE WWMLUP    PDMLUP
+     C                     Z-ADDWWYLUP    PDYLUP
+     C                     TIME           PDTLUP
+     C                     MOVE 'I'       PDCHTP
+     C                     WRITESDPLINP0               42
+      *
+      **   If duplicate key error
+      *
+     C           *IN42     IFEQ *ON
+      *
+     C           STATUS    IFEQ 01021
+     C                     ROLBK
+      *
+      **   Clear messages caused by status error
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00021' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+     C           1         CHAINSDPLINPA             37                   183604
+     C           *IN37     IFEQ *OFF                                      183604
+     C                     ADD  1         PDNORE                          183604
+     C                     UPDATSDPLINZ0                                  183604
+     C                     ELSE                                           183604
+     C                     MOVE 'Z'       PDRECI                          183604
+     C                     Z-ADD1         PDNORE                          183604
+     C                     WRITESDPLINZ0                                  183604
+     C                     ENDIF                                          183604
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **   ACTION = 'A'
+      *
+     C           SACT      IFEQ 'A'
+      *
+      **   Access Instrument Type
+      *
+     C           S1INNR    CHAINSDPLINXX             37
+      *
+      **   If a record not found
+      *
+     C           *IN37     IFEQ *ON
+      *
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00021' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **   Else - Update record
+      *
+     C                     ELSE
+      *
+     C                     MOVELS1INNR    PDINNR
+     C                     MOVELSISTN     PDISTN
+     C                     MOVE 'A'       PDCHTP
+     C                     Z-ADDBJRDNB    PDLCD
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PDDLUP
+     C                     MOVE WWMLUP    PDMLUP
+     C                     Z-ADDWWYLUP    PDYLUP
+     C                     TIME           PDTLUP
+     C                     UPDATSDPLINP0
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **   Action = 'D'
+      *
+     C           SACT      IFEQ 'D'
+      *
+      **   Access Instrument Type
+      *
+     C           S1INNR    CHAINSDPLINXX             37
+      *
+      **   If a record not found
+      *
+     C           *IN37     IFEQ *ON
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00021' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      **   Else - delete record
+      *
+     C                     ELSE
+     C                     MOVE '*'       PDRECI
+     C                     MOVE 'D'       PDCHTP
+     C                     Z-ADDBJRDNB    PDLCD
+     C                     UPDATSDPLINP0
+     C           1         CHAINSDPLINPA             37                   183604
+     C           *IN37     IFEQ *OFF                                      183604
+     C                     SUB  1         PDNORE                          183604
+     C                     UPDATSDPLINZ0                                  183604
+     C                     ENDIF                                          183604
+     C                     MOVE *OFF      *IN58
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            #VLSRC - VALIDATE UPDATE SCREEN                    *
+      *                                                               *
+      * CALLS      ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLED BY  #UPSRC - Process Update Screen.                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           #VLSRC    BEGSR
+      *
+      **   Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+      *
+      **   Set of indicators
+      *
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN70
+      *
+      **   Set on valid flag
+      *
+     C                     MOVE 'Y'       WWVALD
+      *
+      **   If Action Code 'D' and CMD-10 not pressed
+      *
+     C           SACT      IFEQ 'D'
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00025' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO ENDVL
+     C                     ENDIF
+      *
+      **   If Action Code 'E'
+      **   Do not process the validation
+      *
+     C           SACT      IFEQ 'E'
+     C                     GOTO ENDVL
+     C                     ENDIF
+      *
+      **   Instrument narrative must be entered
+      *
+     C           SISTN     IFEQ *BLANKS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE *ON       *IN64
+     C                     MOVEL'PB00022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           ENDVL     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #LDSBF - LOAD A PAGE OF SUBFILE RECORDS            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVSRC - Process Review Screen.                    *
+      *            #RVENT - Process an Entry on Review Screen.        *
+      *                                                               *
+      *****************************************************************
+     C           #LDSBF    BEGSR
+      *
+      ***  Roll-up requested
+      *
+     C           *IN27     IFEQ *ON
+     C                     Z-ADDWWLRRN    SFLRR2
+     C                     ELSE
+     C                     MOVELS1RCRG    S2RCRG
+     C                     Z-ADD*ZERO     WWLRRN
+     C                     Z-ADD*ZERO     SFLRR2
+     C                     MOVE *OFF      *IN28
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN56
+      *
+      **   CLEAR SCREEN 2 SUBFILE
+      *
+     C                     MOVEA'001'     *IN,28           OFF 28-29 ON 30
+     C                     WRITEPB0030C1
+     C                     MOVEA'000'     *IN,28           OFF 28-30
+     C                     ENDIF
+     C                     Z-ADD*ZERO     WWSFLC
+      *
+     C           *IN27     IFEQ *ON
+     C           *IN37     ANDEQ*ON
+     C                     ELSE
+     C           S2RCRG    SETLLSDPLINXX
+     C                     READ SDPLINXX                 37
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     MOVE *ON       *IN29            SFLDSPCTL
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'PB00001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+     C                     MOVE *ON       *IN28            SFLDSP
+     C                     MOVE *ON       *IN29            SFLDSPCTL
+      *
+     C           *IN37     DOWEQ*OFF
+     C           WWSFLC    ANDLT13
+      *
+     C                     MOVEL*BLANKS   S2SEL
+     C                     MOVE *OFF      *IN66
+     C           PDRECI    IFEQ '*'
+     C                     MOVEL'D'       S2TYP
+     C                     MOVE *ON       *IN56
+     C                     ELSE
+     C                     MOVEL*BLANKS   S2TYP
+     C                     MOVE *OFF      *IN56
+     C                     ENDIF
+      *
+     C                     MOVELPDINNR    S2INNR
+     C                     MOVELPDISTN    S2ISTN
+     C                     Z-ADDWWHRRN    S2RRN
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         SFLRR2
+     C                     WRITEPB0030S1
+     C                     READ SDPLINXX                 37
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *OFF
+     C                     MOVE *ON       *IN47
+     C                     MOVELPDINNR    S2RCRG
+     C                     ELSE
+     C                     MOVE *OFF      *IN47
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+     C                     MOVEL*BLANKS   S1RCRG
+      *
+     C                     MOVE *OFF      *IN27
+     C                     Z-ADDSFLRR2    WWLRRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #PCPRV - PROCESS F12                               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  #RVSRC  - Process Review Screen.                   *
+      *            #UPSRC  - Process Update Screen.                   *
+      *                                                               *
+      *****************************************************************
+     C           #PCPRV    BEGSR
+      *
+      **   Clear screen message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+      *
+      **   Clear screen error indicators
+      *
+     C                     MOVE *OFF      *IN58
+     C                     MOVE *OFF      *IN61
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+     C                     MOVE *OFF      *IN70
+      *
+      **   INITIALISE FIELDS
+      *
+     C                     MOVEL*BLANKS   SACT
+     C                     MOVEL*BLANKS   S1INNR
+     C                     MOVEL*BLANKS   S1RCRG
+     C                     MOVEL*BLANKS   SISTN
+     C                     MOVEL*BLANKS   S2RRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE   *
+      *                                                               *
+      * CALLS      Y2SNMGC                                            *
+      *                                                               *
+      * CALLED BY  #VLINI - Validation of Initial Screen.             *
+      *            #RVENT - Process an Entry on Review Screen.        *
+      *            #UPFIL - Update Files.                             *
+      *            #VLSRC - Validation of Update Screen.              *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - INITIALISATION                            *
+      *                                                               *
+      * CALLS      *PSSR  - Program Error Handling Routine.           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      @MKI   80
+      *
+      **  LDA DEFINITION.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Read in ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      **  INITIALISE DB ERROR FIELDS ETC, AND STORE PROGRAM NAME FOR
+      **  DB ERROR FIELD.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'PB0030'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     LSTRR2  40
+     C                     Z-ADD*ZERO     SFLRR2  40
+     C                     Z-ADD*ZERO     WWSRRN  40
+     C                     Z-ADD*ZERO     WWSFLC  40
+     C                     Z-ADD*ZERO     WWLRRN  40
+      *
+     C                     MOVE *BLANKS   WWMSGD  7
+     C                     MOVE *BLANKS   WWSSEL  1
+     C                     MOVE *ON       *IN26
+     C                     MOVE 'Y'       WWVALD  1
+      *
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'PBUSRMSG'ZAMSGF
+      *
+      **  Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+      *
+      **   ACCESS PM PRESENTS
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           **DB ERROR 01**
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Sets indacator 84 ON if PB presents
+     C           BGPFMG    IFEQ 'Y'
+     C                     MOVE *ON       *IN84
+     C                     ELSE
+     C                     MOVE *OFF      *IN84
+     C                     ENDIF
+      *
+      **   INITIALISE SCREEN MESSAGE QUEUE
+      *
+     C                     MOVEL'*'       ##PGMQ
+      *
+      **   INITIALISE HEADER SCREEN
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVELRUNA      SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - PROGRAM ERROR HANDLING ROUTINE            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  *INZSR - Initial Processing.                       *
+      *            #UPFIL - Update Processing.                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1081 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Fontis file transfer process')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2806 - Fontis File Transfer Process                        *
+      *                                                               *
+      *  Function - This program is called by GLC2806 or GL2808.      *
+      *             It formats FTP requests for the Fontis interface. *
+      *             Checks and updates the status of the Fontis       *
+      *             Message File.                                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+     F*  Last Amend No. 165719             Date 11Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CGL004 *CREATE     Date 03MAR97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  165719 - For end-of -day statement MT940, use sequence 9000. *
+      *           For intra-day statement MT942, use todays date      *
+      *           rather than the date of last download of MT940, and *
+      *           start sequence at 0001 rather than 0002.            *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+      *****************************************************************
+     F*
+     FGLFREFL0UF  E           K        DISK
+     F            GLFREFD0                          KRENAME@GLFREF0
+     F*
+     FGLFREFL2UF  E           K        DISK
+     F            GLFREFD0                          KRENAME@GLFREF2
+     F*
+     FGL2806AUO   E                    PRINTER                        UC
+     F*
+     FGLFOINPDO   E                    DISK
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F* 80 - Chain of LF/GLFREFL0 unsuccessful                        *
+     F* 81 - Chain of LF/GLFREFL2 unsuccessful                        *
+     F*                                                               *
+     F* U7 - Database error/Job switch 7                              *
+     F* U8 - Database error/Job switch 8                              *
+     F* LR - End of program                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  INIT  - Initial processing                                   *
+     F*  MAIN  - Main detail processing                               *
+     F*  CLOSE - Closedown processing                                 *
+     F*  SEND  - Prepare transfer request                             *
+     F*  DOWNLD- Flag successful transfer                             *
+     F*  FAIL  - Flag unsuccessful transfer                           *
+     F*  CHECK - Check files on server                                *
+     F*  ACCEPT- Flag accepted transfer                               *
+     F*  REJECT- Flag rejected transfer                               *
+     F*  U01   - Update Message file status, successful transfer      *
+     F*  U02   - Update Message file status, unsuccessful transfer    *
+     F*  U04   - Update Data Area                                     *
+     F*  U05   - Update Message file status, accepted transfer        *
+     F*  U06   - Update Message file status, rejected transfer        *
+     F*  WUSRID- Write transfer request user id to PF/GLFOINPD        *
+     F*  WPUT  - Write transfer request user id to PF/GLFOINPD        *
+     F*  WQUIT - Write transfer request to quit to PF/GLFOINPD        *
+     F*  WLIST - Write transfer request to list files PF/GLFOINPD     *
+     F*  WDELET- Write Delete request to remove file from Fontis      *
+     F*          Server.                                              *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80               Copyright     array
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR. ARR 165719
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR. ARR 165719
+     E                    ZMNM   12  12  3               ZDATE SR. ARRAY  165719
+     E                    @FM10     256  1
+     E                    @FM50     256  1
+     E                    @T10      256  1
+     E                    @T50      256  1
+      *
+     IA@CPY       DS
+     I** Copyright Array
+     I*
+     I                                        1  80 CPY@
+      *
+      *
+     I            DS
+      ** Data structure for User ID on PF/GLFOINPD
+      *
+     I                                        1  41 @USRID
+     I                                        1  20 USER
+     I                                       21  21 @1
+     I                                       22  41 PASW
+      *
+     I            DS
+      ** Data Structure for PUT write to PF/GLFOINPD
+      *
+     I                                        1  97 @PUT
+     I                                        1   3 PUT
+     I                                        4   4 @2
+     I                                        5  14 @LIBNM
+     I                                       15  15 @3
+     I                                       16  23 FILENM
+     I                                       24  24 @4
+     I                                       25  31 @MBRNM
+     I                                       25  33 @MNAM
+     I                                       32  32 @5
+     I                                       34  34 @5A
+     I                                       33  82 PATH
+     I                                       35  84 @PTH
+     I                                       83  83 @6
+     I                                       85  85 @6C
+     I                                       84  95 @OUTF
+     I                                       86  97 @OUTFA
+     I                                       84  91 @SEQ
+     I                                       86  93 @SEQA
+     I                                       92  92 @6A
+     I                                       94  94 @6B
+     I                                       95  97 @SUFA
+     I                                       93  95 @SUFX
+      *
+     I            DS
+      ** Data structure for list files on PF/GLFOINPD
+      *
+     I                                        1  53 @LIST
+     I                                        1   2 @LS
+     I                                        3   3 @7
+     I                                        4  53 @PATH
+      *
+     I            DS
+      ** Data structure for delete file to PF/GLFOINPD
+      *
+     I                                        1  74 @DELET
+     I                                        1   3 @DEL
+     I                                        4   4 @8
+     I                                        5  54 @PTH2
+     I                                       55  55 @9
+     I                                       56  63 @FNAM
+     I                                       64  64 @10
+     I                                       65  67 @SUFX2
+     I                                       68  74 @LOAD
+      *
+     I            DS
+      ** Data structure for member name
+      *
+     I                                        1  10 #MNM
+     I                                        1   1 #SS
+     I                                        2   3 #YY
+     I                                        4   5 #MM
+     I                                        6   7 #DD
+      *
+     I            DS
+      ** Data structure for swift date format
+      *
+     I                                        1   6 ZSDATE
+     I                                        1   2 YY
+     I                                        3   4 MM
+     I                                        5   6 DD
+      *
+      *
+     I              'FONTIS942'           C         FONT
+      *
+     IRUNDAT      DS                                                      165719
+      ** Run Date Data Area                                               165719
+     I                                        1   7 RUNA                  165719
+     I                                    P   8  100RUND                  165719
+     I                                       11  11 SSF                   165719
+     I                                       12  12 DATF                  165719
+     I                                       13  13 MBIN                  165719
+      *                                                                   165719
+     ILDA       E DSLDA
+      ** Local data area for database error details
+      *
+     IGLFONT    E DSGLFONTDA                    256
+      ** Fontis Data Area Data Structure
+     I                                       50  53 FLSQ
+     I                                       54  570DNSQ
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDFONT    E DSSDFONTPD
+      ** External DS for Fontis Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access programs, Short Data Structure
+      *
+      *****************************************************************
+      *                                                               *
+      *   M A I N   P R O C E S S I N G                               *
+      *                                                               *
+      *****************************************************************
+     C*
+     C* Recieve Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    7
+     C                     PARM           LIBNAM 10
+     C                     PARM           MNM    10
+     C                     PARM           MSGTYP  3
+     C                     PARM           RTCD    7
+     C                     PARM           RETRY   10
+     C                     PARM           HOST   30
+     C                     PARM           WAITTM  50
+      *
+      * Initial Processing
+     C                     EXSR INIT
+      *
+      * Detail Processing
+     C                     EXSR MAIN
+      *
+      * Closedown processing
+     C                     EXSR CLOSE
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Subroutine for Program Initialisation                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:                                                        *
+      * AOBANKR0  Access Object                                       *
+      * AOFONTR0                                                      *
+      * CLOSE                                                         *
+      * *PSSR                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Set up member name work field.
+      *
+     C                     MOVELMNM       #MNM
+      *
+      ** Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'GL2806'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program to obtain Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      * Database Error.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD001       DBASE             * DBERR 001*
+     C                     OUT  LDA                         ************
+     C                     EXSR *PSSR
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      ** Call Access Program to obtain Fontis Details
+      *
+     C                     CALL 'AOFONTR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDFONT    PARM SDFONT    DSFDY
+      * Database Error.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFONTPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ************
+     C                     Z-ADD002       DBASE             * DBERR 002*
+     C                     OUT  LDA                         ************
+     C                     EXSR *PSSR
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      * Set up return parameters
+      *
+     C                     MOVELF8HOST    HOST
+     C                     MOVELF8RTRY    RETRY
+     C           F8DNFQ    MULT 60        WAITTM
+      *
+      * Retrieve run date                                                 165719
+      *                                                                   165719
+     C           *NAMVAR   DEFN           RUNDAT                          165719
+     C                     IN   RUNDAT                                    165719
+      *                                                                   165719
+      * Retrieve Fontis settings from Data Area.
+      *
+     C           *NAMVAR   DEFN GLFONTDA  GLFONT
+     C           *LOCK     IN   GLFONT
+     C                     OUT  GLFONT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MAIN
+      *****************************************************************
+      *                                                               *
+      * MAIN  - Subroutine for main processing                        *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:                                                        *
+      * CHECK                                                         *
+      * SEND                                                          *
+      * DOWNLD                                                        *
+      * FAIL                                                          *
+      * ACCEPT                                                        *
+      * REJECT                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+      ** Mode is *CHECK, no member name, therefore prepare list.
+     C           MODE      IFEQ '*CHECK'                   B001
+     C                     EXSR CHECK
+     C                     ENDIF                           E001
+     C*
+      * Mode is *SEND, Access record in file.
+     C           MODE      IFEQ '*SEND'                    B001
+     C           MNM       CHAINGLFREFL0             80
+     C*
+      * If record not found, terminate the program.
+     C           *IN80     IFEQ '1'                        B002
+     C                     MOVE 'USR0001' RTCD    7
+     C                     EXSR CLOSE
+      *
+      * Record is found, process transfer request.
+     C                     ELSE                            X002
+     C                     EXSR SEND
+     C                     ENDIF                           E002
+     C                     ENDIF                           E001
+      *
+      * Mode is *DOWNLD, Access record in file.
+     C           MODE      IFEQ '*DOWNLD'                  B001
+     C           MNM       CHAINGLFREFL0             80
+     C*
+      * If record not found, terminate the program.
+     C           *IN80     IFEQ '1'                        B002
+     C                     MOVE 'USR0002' RTCD    7
+     C                     EXSR CLOSE
+      *
+      * Record is found, process successful transfer flag.
+     C                     ELSE                            X002
+     C                     EXSR DOWNLD
+     C                     ENDIF                           E002
+     C                     ENDIF                           E001
+     C*
+      * Mode is *FAIL, Access record in file.
+     C           MODE      IFEQ '*FAIL'                    B001
+     C           MNM       CHAINGLFREFL0             80
+     C*
+      * If record not found, terminate the program.
+     C           *IN80     IFEQ '1'                        B002
+     C                     MOVE 'USR0003' RTCD    7
+     C                     EXSR CLOSE
+      *
+      * Record is found, process unsuccessful transfer flag.
+     C                     ELSE                            X002
+     C                     EXSR FAIL
+     C                     ENDIF                           E002
+     C                     ENDIF                           E001
+      *
+      * Mode is *ACCEPT, Access record in file.
+     C           MODE      IFEQ '*ACCEPT'                  B001
+     C                     MOVELMNM       @MNM    8
+     C           @MNM      CHAINGLFREFL2             81
+     C*
+      * If record not found, terminate the program.
+     C           *IN81     IFEQ '1'                        B002
+     C                     MOVE 'USR0008' RTCD    7
+     C                     EXSR CLOSE
+      *
+      * Record is found, process accepted transfer flag.
+     C                     ELSE                            X002
+     C                     EXSR ACCEPT
+     C                     ENDIF                           E002
+     C                     ENDIF                           E001
+      *
+      * Mode is *REJECT, Access record in file.
+     C           MODE      IFEQ '*REJECT'                  B001
+     C                     MOVELMNM       @MNM    8
+     C           @MNM      CHAINGLFREFL2             81
+     C*
+      * If record not found, terminate the program.
+     C           *IN81     IFEQ '1'                        B002
+     C                     MOVE 'USR0008' RTCD    7
+     C                     EXSR CLOSE
+      *
+      * Record is found, process rejected transfer flag.
+     C                     ELSE                            X002
+     C                     EXSR REJECT
+     C                     ENDIF                           E002
+      *
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SEND
+      *****************************************************************
+      *                                                               *
+      * SEND - Subroutine to prepare Transfer request                 *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * U04                                                           *
+      * WUSER                                                         *
+      * WPUT                                                          *
+      * WQUIT                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SEND      BEGSR
+      *
+      * If record already transmitted, end program.
+      *
+     C           F3DNLS    IFEQ 'N'
+     C                     MOVEL'SENT'    RTCD
+     C                     EXSR CLOSE
+     C                     ENDIF
+      *
+      * If file needs to be transferred, prepare transfer request.
+      *
+     C           F3DNLS    IFEQ 'P'
+     C           F3DNLS    OREQ 'R'
+      *
+      ** Increase seq. no. by one
+      *
+     C           *LOCK     IN   GLFONT
+     C                     EXSR U04
+     C                     OUT  GLFONT
+      *
+     C                     EXSR WUSER
+     C                     EXSR WPUT
+     C                     EXSR WQUIT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DOWNLD
+      *****************************************************************
+      *                                                               *
+      * DOWNLD - Subroutine to flag sucessful transfer                *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * U01                                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DOWNLD    BEGSR
+      *
+      ** Update LF/GLFREFL0
+      *
+     C                     EXSR U01
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FAIL
+      *****************************************************************
+      *                                                               *
+      * FAIL - Subroutine to flag unsucessful transfer                *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * U02                                                           *
+      * CLOSE                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FAIL      BEGSR
+      *
+      ** If status is P or R, update LF/GLFREFL0 status to 'R'
+      *
+     C           F3DNLS    IFEQ 'P'                        B001
+     C           F3DNLS    OREQ 'R'
+     C                     EXSR U02
+     C                     ELSE                            X001
+      *
+      ** Oherwise end program and return to calling program.
+      *
+     C                     MOVEL'USR0004' RTCD
+     C                     EXSR CLOSE
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CHECK
+      *****************************************************************
+      *                                                               *
+      * CHECK - Subroutine to check files on server                   *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * WUSER                                                         *
+      * WLIST                                                         *
+      * WQUIT                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHECK     BEGSR
+      *
+      ** Prepare list request.
+      *
+     C                     EXSR WUSER
+     C                     EXSR WLIST
+     C                     EXSR WQUIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ACCEPT
+      *****************************************************************
+      *                                                               *
+      * ACCEPT - Subroutine to flag accepted transfer                 *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * U05                                                           *
+      * WUSER                                                         *
+      * WDELET                                                        *
+      * WQUIT                                                         *
+      * CLOSE                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACCEPT    BEGSR
+      *
+      ** If Download status is N or J, then update message file
+      ** status on LF/GLFREFL2
+      *
+     C           F3DNLS    IFEQ 'N'                        B001
+     C           F3DNLS    OREQ 'J'
+     C                     EXSR U05
+      *
+      ** If Delete File flag set on, prepare transfer request.
+      *
+     C           F6DLTF    IFEQ 'Y'                        B002
+     C                     EXSR WUSER
+     C                     EXSR WDELET
+     C                     EXSR WQUIT
+     C                     ENDIF                           E002
+      *
+      ** Download Status is not N or J, return to calling program.
+      *
+     C                     ELSE                            X001
+     C                     MOVEL'USR0005' RTCD
+     C                     EXSR CLOSE
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REJECT
+      *****************************************************************
+      *                                                               *
+      * REJECT - Subroutine to flag rejected transfer                 *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      * U06                                                           *
+      * WUSER                                                         *
+      * WDELET                                                        *
+      * WQUIT                                                         *
+      * CLOSE                                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REJECT    BEGSR
+      *
+      ** If Download Status is N update message file LF/GLFREFL2
+      *
+     C           F3DNLS    IFEQ 'N'                        B001
+     C                     EXSR U06
+      *
+      ** If Delete File flag set on, prepare transfer request.
+      *
+     C           F6DLTF    IFEQ 'Y'                        B002
+     C                     EXSR WUSER
+     C                     EXSR WDELET
+     C                     EXSR WQUIT
+     C                     ENDIF                           E002
+      *
+      ** Download Status is not N, return to calling program.
+      *
+     C                     ELSE                            X001
+     C                     MOVEL'USR0006' RTCD
+     C                     EXSR CLOSE
+     C                     ENDIF                           E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/U01
+      *****************************************************************
+      *                                                               *
+      * U01 - Subroutine to Update message file for successful        *
+      *       transfer.                                               *
+      *                                                               *
+      * Called by: DOWNLD                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U01       BEGSR
+      *
+      ** Update LF/GLFREFL0 for successful transfer.
+      *
+     C                     MOVEL'N'       F3DNLS
+     C                     Z-ADDBJRDNB    F3DLDL
+     C                     TIME           F3TDNL
+      *
+     C                     MOVELF6FLSQ    F3DLFN
+      *
+     C                     UPDAT@GLFREF0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/U02
+      *****************************************************************
+      *                                                               *
+      * U02 - Subroutine to Update message file for unsuccessful      *
+      *       transfer.                                               *
+      *                                                               *
+      * Called by: FAIL                                               *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U02       BEGSR
+      *
+      ** Update LF/GLFREFL0 for unsuccessful transfer.
+      *
+     C                     MOVEL'R'       F3DNLS
+     C                     UPDAT@GLFREF0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/U04
+      *****************************************************************
+      *                                                               *
+      * U04 - Subroutine to Update data area GLFONTDA                 *
+      *                                                               *
+      * Called by: DOWNLD                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U04       BEGSR
+      *
+      ** If MT940 message, reset download sequence
+      *
+     C           MNM       IFNE FONT
+     C           #MM       CAT  #DD       #MMDD   4
+     C************         Z-ADD1         DNSQ                            165719
+     C                     Z-ADD9000      DNSQ                            165719
+     C                     MOVEL#MMDD     FLSQ
+      *
+      ** If MT942 message, increase Download sequence number by one.
+      ** Use Run Date in place of MT940 Download Date for MT942 messages. 165719
+      ** If previous message was an MT940, start sequence at 0001 again.  165719
+      *
+     C                     ELSE
+     C                     SETON                     98                   165719
+     C                     MOVE RUND      ZDAYNO                          165719
+     C                     EXSR ZDATE2                                    165719
+     C                     MOVELZDATE     FLSQ                            165719
+     C           DNSQ      IFEQ 9000                                      165719
+     C                     Z-ADD1         DNSQ                            165719
+     C                     ELSE                                           165719
+     C                     ADD  1         DNSQ
+     C                     ENDIF                                          165719
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/U05
+      *****************************************************************
+      *                                                               *
+      * U05 - Subroutine to Update message file for Accepted          *
+      *       transfer.                                               *
+      *                                                               *
+      * Called by: ACCEPT                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U05       BEGSR
+      *
+      ** Update LF/GLFREFL2 for accepted transfer
+      *
+     C                     MOVEL'A'       F3DNLS
+     C                     Z-ADDBJRDNB    F3DLDL
+     C                     TIME           F3TDNL
+      *
+     C                     UPDAT@GLFREF2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/U06
+      *****************************************************************
+      *                                                               *
+      * U06 - Subroutine to Update message file for rejected          *
+      *       transfer.                                               *
+      *                                                               *
+      * Called by: REJECT                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           U06       BEGSR
+      *
+      ** Update LF/GLFREFL2 for rejected transfer.
+      *
+     C                     MOVEL'J'       F3DNLS
+     C                     UPDAT@GLFREF2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WUSER
+      *****************************************************************
+      *                                                               *
+      * WUSER - Subroutine to write transfer requset user id to       *
+      *         PF/GLFOINPD                                           *
+      *                                                               *
+      * Called by: SEND, CHECK, ACCEPT, REJECT                        *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WUSER     BEGSR
+      *
+      ** Write user id for Transfer Request to PF/GLFOINPD
+      *
+     C                     MOVELF8MUFS    USER
+     C                     MOVEL*BLANKS   @1
+     C                     MOVELF8PASW    PASW
+      *
+     C                     CLEARFWFTPI
+     C                     MOVEL@USRID    FWFTPI
+     C                     WRITEGLFOIND0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WPUT
+      *****************************************************************
+      *                                                               *
+      * WPUT - Subroutine to write transfer request userid to         *
+      *        PF/GLFOINPD                                            *
+      *                                                               *
+      * Called by: SEND                                               *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WPUT      BEGSR
+      *
+      ** Set up fields for transfer request to be written.
+      *
+     C                     MOVEL'PUT'     PUT
+     C                     MOVEL*BLANKS   @2
+      *
+      ** Compress blanks from Library name parameter
+      *
+     C                     CLEAR@T10
+     C                     CLEAR@FM10
+     C                     MOVEALIBNAM    @FM10
+     C                     Z-ADD10        T       50
+     C                     Z-ADD10        S       50
+      *
+     C           S         DOWGT0
+     C           @FM10,S   IFNE ' '
+     C                     MOVE @FM10,S   @T10,T
+     C                     SUB  1         T
+     C                     ENDIF
+     C                     SUB  1         S
+     C                     ENDDO
+      *
+     C                     MOVEA@T10      @LIBNM
+      *
+      ** Compress blanks from BTR Path
+      *
+     C           MNM       IFNE FONT
+     C                     CLEAR@T50
+     C                     CLEAR@FM50
+     C                     MOVEAF8PATH    @FM50
+     C                     Z-ADD50        Y       50
+     C                     Z-ADD50        X       50
+      *
+     C           X         DOWGT0
+     C           @FM50,X   IFNE ' '
+     C                     MOVE @FM50,X   @T50,Y
+     C                     SUB  1         Y
+     C                     ENDIF
+     C                     SUB  1         X
+     C                     ENDDO
+      *
+     C                     MOVEA@T50      PATH
+      *
+     C                     MOVELMNM       @MBRNM
+     C                     MOVEL*BLANKS   @5
+      *
+     C                     MOVEL'/'       @3
+     C                     MOVEL'GLFDTAPD'FILENM
+     C                     MOVEL'.'       @4
+     C                     MOVEL'/'       @6
+      *
+      ** Set up outfile filename.
+      *
+     C                     MOVELF6FLSQ    @SEQ
+      *
+     C                     MOVE '.'       @6A
+     C                     MOVELF6SUFX    @SUFX
+      *
+      ** Member is FONTIS942.
+      *
+     C                     ELSE
+     C                     MOVELMNM       @MNAM
+     C                     MOVEL*BLANKS   @5A
+      *
+      ** Compress blanks from BTR Path
+      *
+     C                     CLEAR@T50
+     C                     CLEAR@FM50
+     C                     MOVEAF8PATH    @FM50
+     C                     Z-ADD50        Y       50
+     C                     Z-ADD50        X       50
+      *
+     C           X         DOWGT0
+     C           @FM50,X   IFNE ' '
+     C                     MOVE @FM50,X   @T50,Y
+     C                     SUB  1         Y
+     C                     ENDIF
+     C                     SUB  1         X
+     C                     ENDDO
+      *
+     C                     MOVEA@T50      @PTH
+      *
+     C                     MOVEL'/'       @3
+     C                     MOVEL'GLFDTAPD'FILENM
+     C                     MOVEL'.'       @4
+     C                     MOVEL'/'       @6C
+      *
+      ** Set up outfile filename.
+      *
+     C                     MOVELF6FLSQ    @SEQA
+      *
+     C                     MOVE '.'       @6B
+     C                     MOVELF6SUFX    @SUFA
+     C                     ENDIF
+      *
+      ** Output to file.
+      *
+     C                     CLEARFWFTPI
+     C                     MOVEL@PUT      FWFTPI
+     C                     WRITEGLFOIND0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WQUIT
+      *****************************************************************
+      *                                                               *
+      * WQUIT - Subroutine to write transfer request to quit to       *
+      *         PF/GLFOINPD                                           *
+      *                                                               *
+      * Called by: SEND, CHECK, ACCEPT, REJECT                        *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WQUIT     BEGSR
+      *
+      ** Write quit for transfer request to PF/GLFOINPD
+      *
+     C                     CLEARFWFTPI
+     C                     MOVEL'QUIT'    FWFTPI
+     C                     WRITEGLFOIND0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WLIST
+      *****************************************************************
+      *                                                               *
+      * WLIST - Subroutine to write transfer request to list files to *
+      *         PF/GLFOINPD                                           *
+      *                                                               *
+      * Called by: CHECK                                              *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WLIST     BEGSR
+      *
+      ** Write list request to PF/GLFOINPD.
+      *
+     C                     MOVEL'LS'      @LS
+     C                     MOVEL*BLANKS   @7
+     C                     MOVELF8PATH    @PATH
+      *
+     C                     CLEARFWFTPI
+     C                     MOVEL@LIST     FWFTPI
+     C                     WRITEGLFOIND0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WDELET
+      *****************************************************************
+      *                                                               *
+      * WDELET - Subroutine to write delete request to remove file    *
+      *          from Fontis server.                                  *
+      *                                                               *
+      * Called by: ACCEPT, REJECT                                     *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WDELET    BEGSR
+      *
+      ** Write delete request to PF/GLFOINPD.
+      *
+     C                     MOVEL'DEL'     @DEL
+     C                     MOVEL*BLANK    @8
+     C                     MOVEL'/'       @9
+      *
+      ** Compress blanks from BTR Path
+      *
+     C                     CLEAR@T50
+     C                     CLEAR@FM50
+     C                     MOVEAF8PATH    @FM50
+     C                     Z-ADD50        B       50
+     C                     Z-ADD50        A       50
+      *
+     C           A         DOWGT0
+     C           @FM50,A   IFNE ' '
+     C                     MOVE @FM50,A   @T50,B
+     C                     SUB  1         B
+     C                     ENDIF
+     C                     SUB  1         A
+     C                     ENDDO
+      *
+     C                     MOVEA@T50      @PTH2
+      *
+     C                     MOVELMNM       @FNAM
+     C                     MOVEL'.'       @10
+     C                     MOVELF6SUFX    @SUFX2
+      *
+      ** Depending on whether transfer is accepted or rejected, write
+      ** appropiate ending to filename.
+      *
+     C           MODE      IFEQ '*ACCEPT'
+     C                     MOVEL'_LOADED' @LOAD
+     C                     ENDIF
+      *
+     C           MODE      IFEQ '*REJECT'
+     C                     MOVEL'_ERR'    @LOAD
+     C                     ENDIF
+      *
+     C                     CLEARFWFTPI
+     C                     MOVEL@DELET    FWFTPI
+     C                     WRITEGLFOIND0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      * CLOSE - Subroutine for closedown processing                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls:  NONE                                                  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   165719
+      /TITLE SR/ZDATE2                                                    165719
+     C/COPY ZSRSRC,ZDATE2Z2                                               165719
+      *                                                                   165719
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           *INU7     IFEQ '1'
+     C                     OPEN GL2806AU
+     C                     WRITEGL2806A1
+     C                     CLOSEGL2806AU
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - Years in Days Cumulative. Four Year Span                       165719
+0366073110961461                                                          165719
+**  ZMDY - Months in Days Cumulative through year                         165719
+000031059090120151181212243273304334365                                   165719
+**  ZMNM - Months Short Names                                             165719
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                      165719

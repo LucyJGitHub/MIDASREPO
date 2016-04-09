@@ -1,0 +1,663 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Create End of Day Exposure File')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  EXPOSURE MANAGEMENT MODULE
+     F*                                                                  *
+     F*     EM0451 - CALCULATE COB EXPOSURE FOR FUTURE AND OPTIONS       *
+     F*                                                                  *
+     F*  Function: This program updates a file (EMDEXX5), to contain
+     F*  (COB)     the exposure as at close of business for each unique
+     F*            customer, country, region, industry and account
+     F*            officer combination, split across the business areas
+0008 F*            of Futures and Options.                               *
+0008 F*                                                                  *
+0008 F*            A record is read from the Customer/Broker instrument  *
+0008 F*            positions file (POSTNCD). If positions are taken      *
+0008 F*            gross, as set up on the Exposure Management ICD       *
+0008 F*            (SDEXPMPD), the 'Net Position' is calculated as the   *
+0008 F*            Current Long Open Position PLUS the Current Short     *
+0008 F*            Open Position. Otherwise, it is calculated as the     *
+0008 F*            Current Long Open Position LESS the Current Short     *
+     F*            Open Position.
+0008 F*                                                                  *
+0008 F*            The Exposure amount is calculated as the              *
+0008 F*            Net Position multiplied by the Contingent Amount.     *
+0008 F*                                                                  *
+0008 F*            If the instrument is a Future, the Exposure Amount    *
+0008 F*            is scaled according to the Futures scaling factor on  *
+0008 F*            the Exposure Scaling File (EMEXSCPD), otherwise, the  *
+0008 F*            Options scaling factor from this file is used.        *
+0008 F*                                                                  *
+0008 F*            The COB Exposure file (EMDEXX5) is updated with the   *
+0008 F*            Futures and Options Exposure amounts.                 *
+0008 F*                                                                  *
+     F*  Called By: EM0450
+     F*                                                                  *
+     F*  Calls: None                                                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 23Sep98               *
+      *                 CFF004             Date 02Oct96               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     CTI002 - Recompiled : File SDEXPMPD changed                  *
+     F*     CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                         *
+     F*                                                                  *
+     F*                                                                  *
+     F********************************************************************
+     FPOSTNC  IF  E           K        DISK                           UC
+     FINTYP   IF  E           K        DISK
+     F**  Exposure management scaling file LF/EMEXSCL1
+     F/COPY ZSRSRC,ZEXPSCLZ2
+     FEMDEX   UF  E           K        DISK                      A
+     F/COPY WNCPYSRC,EM0451F001
+     F*
+     F********************************************************************
+     F*   INDICATORS USED                                                *
+     F*                                                                  *
+     F*       60     IF ON EOF FOR POSTNC                                *
+     F*       62     IF ON DATABASE ERROR LF/INTYP                       *
+     F*       63     IF OFF RECORD FOUND ON EMDEXX5F                     *
+     F*                                                                  *
+     F*       U7 & U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.      *
+     F*                                                                  *
+     F********************************************************************
+     E                    CPY@    1   1 80               COPYRIGHTARRAY
+     E                    @QCA    1   1 28               QCMDEXC ARRAY
+     E**  Exposure management scaling arrays.
+     E/COPY ZSRSRC,ZEXPSCLZ3
+     I*
+     IRUNDT       DS                             13
+     I*
+     I** DATA STRUCTURE FOR RUNDAT
+     I*
+     I                                    P   8  100RUND
+     I*
+     ILDA         DS                            256
+     I*
+     I** DATA STRUCTURE FOR DATABASE ERRORS
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IDSFDY     E DSDSFDY
+     I*
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISDEXPM    E DSSDEXPMPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO EM ICD DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CUSTOMER DETAILS
+     I*
+     ISDCTRY    E DSSDCTRYPD
+     I*
+     I* DUMMY RECORD FORMAT FOR ACCESS TO COUNTRY CODE
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO DEALING ICD DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CURRENCY DETAILS
+     I*
+     I/COPY WNCPYSRC,EM0451I001
+      *
+      ** DO INITIALISATION
+      *
+     C                     EXSR INIT
+      *
+      ** DO MAIN PROCESSING
+      *
+     C                     EXSR #B
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *     #B SUBROUTINE - MAIN PROCESSING                              *
+      *                                                                  *
+      *     CALLED FROM :-                                               *
+      *     CALLS SUBROUTINE :- PROCES                                   *
+      *                                                                  *
+      *     USES:-                                                       *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           #B        BEGSR
+      *
+     C           *LOVAL    SETLLPOSTNC
+     C                     READ POSTNC                   6060 ON = EOF
+      *
+      ** Do until end of file.
+      *
+     C           *IN60     DOWEQ'0'                        B1
+      *
+     C                     EXSR PROCES
+      *
+     C                     READ POSTNC                   6060 ON = EOF
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *     PROCES SUBROUTINE                                            *
+      *                                                                  *
+      *     CALLED FROM :-  #B MAIN PROCESSING                           *
+      *     CALLS SUBROUTINE :- SCALE,UPDATE.                            *
+      *     CALLS PROGRAMS   :- AOCUSTR0,AOCTRYR0,AODEALR0,AOCURRR0.     *
+      *                                                                  *
+      *     USES:- CBCD   - CUSTOMER NUMBER                              *
+      *            @CBCD  - STORED CUSTOMER NUMBER                       *
+      *            BBCOLC - COUNTRY CODE                                 *
+      *            ISTT   - INSTRUMENT TYPE                              *
+      *            SETD   - SETTLEMENT DATE                              *
+      *            RUND   - RUN DATE                                     *
+      *            BUFONG - FUTURES/OPTIONS POSITION NET OR GROSS        *
+      *            LOPC   - LONG CURRENT OPEN POSITION                   *
+      *            SOPC   - SHORT CURRENT OPEN POSITION                  *
+      *            @ONETP - NET OPEN POSITION                            *
+      *            CTAM   - CONTINGENT AMOUNT                            *
+      *            @SCAMT - AMOUNT TO SCALE                              *
+      *            ISPT   - INSTRUMENT PROCESSING TYPE                   *
+      *            ISCY   - INSTRUMENT CURRENCY                          *
+      *            @DELTP - DEAL TYPE TO SCALE                           *
+      *            @TDATE - 'TO-DATE' FOR SCALING                        *
+      *            @EXPCY - EXPOSURE MANAGEMENT CURRENCY                 *
+      *            @DLCCY - DEALING CURRENCY                             *
+      *            A6ERLC - EXCHANGE RATE LIMIT CURRRENCY                *
+      *            A6MDIN - MULTIPLY/DIVIDE INDICATOR                    *
+      *            BBACOC - ACCOUNT OFFICER                              *
+      *            BBLICD - LOCAL INDUSTRY CODE                          *
+      *            A4RGCD - REGION CODE                                  *
+      *            BBCOLC - COUNTRY CODE                                 *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** If customer number has changed obtain new details.
+      *
+     C           CBCD      IFNE @CBCD                      B1
+      *
+     C                     MOVELCBCD      @CKEY  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CKEY
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     END                             E1
+      *
+      ** Use country code obtained from call to AOCUSTR0 to call access
+      ** program for country code to obtain region code.If customer has
+      ** changed.
+      *
+     C           CBCD      IFNE @CBCD                      B1
+      *
+     C                     CALL 'AOCTRYR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BBCOLC    @AENA   2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+      *
+     C                     END                             E1
+      *
+      ** Chain to LF/INTYP to obtain settlement type/instrument type
+      ** and settlement date.
+      *
+     C           ISTT      CHAININTYP                62    62 OFF =RECF
+      *
+      ** Database error occured
+      *
+     C           *IN62     IFEQ '1'                        E1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'INTYP   'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     MOVE '*ERROR ' @RTCD1
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END                             E1
+      *
+      ** If settlement date greater or equal to run date.
+      *
+     C           SETD      IFGE RUND                       B1
+     C/COPY WNCPYSRC,EM0451C004
+      *
+      ** Calculate net open position.
+      *
+     C           BUFONG    IFEQ 'G'                        B*2
+     C           LOPC      ADD  SOPC      @ONETP  80
+     C                     ELSE                            X*2
+     C           LOPC      SUB  SOPC      @ONETP
+     C                     END                             E*2
+      *
+      ** Ensure net open position is positive.
+      *
+     C           @ONETP    IFLT *ZERO                      B*2
+     C                     Z-SUB@ONETP    @ONETP
+     C                     END                             E*2
+      *
+      ** Retrieve number of decimal places for instrument currency.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ISCY      @KEYC   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Remove decimal places from Contingent amount.
+      *
+     C           CTAM      IFNE 0                          B*2
+      *
+     C           A6NBDP    IFEQ 0                          B**3
+     C                     Z-ADDCTAM      @CTAM
+     C                     END                             E**3
+      *
+     C           A6NBDP    IFEQ 1                          B**3
+     C           CTAM      DIV  10        @CTAM
+     C                     END                             E**3
+      *
+     C           A6NBDP    IFEQ 2                          B**3
+     C           CTAM      DIV  100       @CTAM
+     C                     END                             E**3
+      *
+     C           A6NBDP    IFEQ 3                          B**3
+     C           CTAM      DIV  1000      @CTAM
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      ** Calculate exposure(Contingent amount X open net position)
+      *
+     C           @CTAM     MULT @ONETP    @SCAMT 130
+      **  Set up scaling parameters.If instrument type = 1,2,3 set key to
+      **  FU(FUTURES) else OP(OPTIONS).
+     C           ISPT      IFEQ 1                          B*2
+     C           ISPT      OREQ 2
+     C           ISPT      OREQ 3
+     C                     MOVE 'FU'      @DELTP  2
+     C                     ELSE                            X*2
+     C                     MOVE 'OP'      @DELTP
+     C                     END                             E*2
+     C/COPY WNCPYSRC,EM0451C001
+      *
+      *   Set up 'To-Date' for exposure scaling.
+      *
+     C           SETD      SUB  RUND      @TDATE  50
+      *
+      *   Execute scaling subroutine.
+      *
+     C                     EXSR SCALE
+     C/COPY WNCPYSRC,EM0451C002
+      *
+      **  Convert amount to Exposure Management currency.
+      *
+      *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      *   There are 3 possible cases.
+      *   1. Record currency = Exposure Management Limit ccy
+      *      - No conversion.
+      *   2. Record currency = Dealing currency
+      *      Convert the record currency from the dealing currency to
+      *      Exposure Management Limit currency.
+      *   3. Record currency <> EM Limit CCY +<> Dealing currency
+      *      Convert the record currency from its currency to the
+      *      Dealing currency and then into the EM Limit currency.
+      *
+      *----------------------------------------------------------------
+     C           @SCAMT    IFNE 0                          B*2
+     C/COPY WNCPYSRC,EM0451C005
+      *
+     C           ISCY      IFNE @EXPCY                     B**3
+      *
+     C           ISCY      IFEQ @DLCCY                     B***4
+      *
+     C           @MDIN     IFEQ 'D'                        B****5
+     C           @SCAMT    DIV  @ERLC     @DCEQA 132
+     C                     ELSE                            X****5
+     C           @SCAMT    MULT @ERLC     @DCEQA
+     C                     END                             E****5
+      *
+     C                     Z-ADD@DCEQA    @SCAMT
+      *
+     C                     ELSE                            X***4
+      *
+     C           A6MDIN    IFEQ 'D'                        B****5
+     C           @SCAMT    DIV  A6ERLC    @DCEQA
+     C                     ELSE                            X****5
+     C           @SCAMT    MULT A6ERLC    @DCEQA
+     C                     END                             E****5
+      *
+     C           @MDIN     IFEQ 'D'                        B****5
+     C           @DCEQA    DIV  @ERLC     @DCEQA
+     C                     ELSE                            X****5
+     C           @DCEQA    MULT @ERLC     @DCEQA
+     C                     END                             E****5
+      *
+     C                     Z-ADD@DCEQA    @SCAMT    H
+      *
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      **  Set up key for chain to LF/EMDEX
+      *
+     C                     MOVE BBACOC    @ACOFF
+     C**********           Z-ADDCBCD      @CNUM                                               CSD027
+     C                     MOVE CBCD      @CNUM                                               CSD027
+     C                     MOVE BBLICD    @INDCD
+     C                     MOVE A4RGCD    @REGN
+     C                     MOVE BBCOLC    @CNTRY
+      *
+      *   Might be add record to EMDEXX5 - set up other fields
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE BBACOC    MACO
+     C**********           Z-ADDCBCD      MCUN                                                CSD027
+     C                     MOVE CBCD      MCUN                                                CSD027
+     C                     MOVE BBLICD    EMIND
+     C                     MOVE A4RGCD    MRGC
+     C                     MOVE BBCOLC    MCNC
+     C                     MOVE BBACOC    MACO
+      *
+     C                     EXSR UPDATE
+      *
+      *  Store customer number/currency.
+      *
+     C**********           Z-ADDCBCD      @CBCD                                               CSD027
+     C                     MOVE CBCD      @CBCD                                               CSD027
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *     CLEAR  SUBROUTINE                                            *
+      *                                                                  *
+      *     CALLED FROM :- UPDATE                                        *
+      *     CALLS PROGRAMS :                                             *
+      *                                                                  *
+      *     THIS SUBROUTINE CLEARS OUT THE EMDEXX5 FIELDS BEFORE A       *
+      *     RECORD IS WRITTEN.(IF A PRIOR RECORD WAS UPDATED THEN        *
+      *     IF A WRITE OCCURS BEFORE THE FIELDS ARE CLEARED THE OLD      *
+      *     VALUES WILL BE DUPLICATED)                                   *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           CLEAR     BEGSR
+      *
+     C                     Z-ADD*ZEROS    MFXE
+     C                     Z-ADD*ZEROS    MFXB
+     C                     Z-ADD*ZEROS    MMME
+     C                     Z-ADD*ZEROS    MMMB
+     C                     Z-ADD*ZEROS    MLEG
+     C                     Z-ADD*ZEROS    MLEE
+     C                     Z-ADD*ZEROS    MLEB
+     C                     Z-ADD*ZEROS    MLAE
+     C                     Z-ADD*ZEROS    MLAB
+     C                     Z-ADD*ZEROS    MREG
+     C                     Z-ADD*ZEROS    MREE
+     C                     Z-ADD*ZEROS    MREB
+     C                     Z-ADD*ZEROS    MFRE
+     C                     Z-ADD*ZEROS    MFRO
+     C                     MOVE *BLANKS   ZZ008
+     C                     Z-ADD*ZEROS    MSTE
+     C                     Z-ADD*ZEROS    MSTB
+     C                     Z-ADD*ZEROS    MSIE
+     C                     Z-ADD*ZEROS    MSCE
+     C                     Z-ADD*ZEROS    MSPO
+     C                     MOVE *BLANKS   CACOC
+     C                     Z-ADD*ZEROS    MIRE
+     C                     Z-ADD*ZEROS    MIRO
+     C                     Z-ADD*ZEROS    MFUE
+     C                     Z-ADD*ZEROS    MFUO
+     C                     Z-ADD*ZEROS    MOPE
+     C                     Z-ADD*ZEROS    MOPO
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *     UPDATE SUBROUTINE                                            *
+      *                                                                  *
+      *     CALLED FROM :- PROCESS                                       *
+      *     CALLS PROGRAMS :                                             *
+      *     CALLS SUBROUTINE: CLEAR                                      *
+      *                                                                  *
+      *     USES:- @DELTP - DEAL TYPE FOR EXPOSURE SCALING               *
+      *            MFUE   - FUTURES EXPOSURE AMOUNT                      *
+      *            MOPE   - OPTIONS EXPOSURE AMOUNT                      *
+      *            @SCAMT - SCALED EXPOSURE AMOUNT                       *
+      *            TOTEXP - TOTAL NUMBER OF RECORDS ADDED TO EMDEX       *
+      *                     (PASSED BACK TO EM0450 FOR REPORT)           *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           UPDATE    BEGSR
+      *
+     C           @KEY      CHAINEMDEXX5F             63    63 OFF =RECF
+      *
+      *  If record found and live update
+      *
+     C           *IN63     IFEQ '0'                        B1
+      *
+     C           @DELTP    IFEQ 'FU'                       B*2
+     C                     ADD  @SCAMT    MFUE
+     C                     ELSE                            X*2
+     C                     ADD  @SCAMT    MOPE
+     C                     END                             E*2
+      *
+     C                     UPDATEMDEXX5F
+      *
+     C                     ELSE                            X1
+      *
+      *  If record does not exist add record.
+      *
+     C                     EXSR CLEAR
+     C           @DELTP    IFEQ 'FU'                       B*2
+     C                     Z-ADD@SCAMT    MFUE
+     C                     ELSE                            X*2
+     C                     Z-ADD@SCAMT    MOPE
+     C                     END                             E*2
+     C                     WRITEEMDEXX5F
+      *
+      *  Add 1 to total number of records added.
+      *
+     C                     ADD  1         TOTEXP
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ** Exposure management scaling subroutine
+      /COPY ZSRSRC,ZEXPSCLZ1
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *     INIT SUBROUTINE                                              *
+      *                                                                  *
+      *     CALLED FROM :-                                               *
+      *     CALLS PROGRAMS :- AOEXPMR0,AOCURRR0                          *
+      *                                                                  *
+      *     USES:- @RTCD1 - RETURN CODE                                  *
+      *            TOTEXP - TOTAL NUMBER OF RECORDS ADDED TO EMDEX       *
+      *            @KEY   - KEY TO LF/EMDEX                              *
+      *            @DLCCY - DEALING CURRENCY                             *
+      *            @EXPCY - EXPOSURE MANAGEMENT CURRENCY                 *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RTCD1  7
+     C                     PARM           TOTEXP  50
+      *
+      **  KEY LIST FOR LF/EMDEX
+      *
+     C           @KEY      KLIST
+     C                     KFLD           @ACOFF  2
+     C**********           KFLD           @CNUM   60                                          CSD027
+     C                     KFLD           @CNUM   6                                           CSD027
+     C                     KFLD           @INDCD  30
+     C                     KFLD           @REGN   2
+     C                     KFLD           @CNTRY  2
+      *
+      ** DEFINE LIKE FIELDS
+      *
+     C           *LIKE     DEFN CBCD      @CBCD
+     C           *LIKE     DEFN CTAM      @CTAM
+     C           *LIKE     DEFN A6MDIN    @MDIN
+     C           *LIKE     DEFN A6ERLC    @ERLC
+     C           *LIKE     DEFN A6NBDP    @NDECP
+      *
+      ** DEFINE DATA AREAS
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDT
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EM0451'  DBPGM
+     C                     OUT  LDA
+      *
+      ** ACCESS SDEXPMPD FOR EM LIMIT CURRENCY
+      *
+     C                     CALL 'AOEXPMR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDEXPM    PARM SDEXPM    DSFDY
+      *
+     C                     MOVE BUCYCD    @EXPCY  3
+      *
+      ** Access SDDEALPD for DL limit currency.
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+     C                     MOVELBNCYCD    @DLCCY  3
+      *
+      ** If Exposure Management Limit currency does not equal Dealing
+      ** Currency retrieve and store EM currency details.
+      *
+     C           @EXPCY    IFNE @DLCCY                     B1
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BUCYCD    @KEYD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     Z-ADDA6ERLC    @ERLC
+     C                     MOVE A6MDIN    @MDIN
+      *
+     C                     ELSE                            X1
+     C                     Z-ADD1         @ERLC
+     C                     MOVE 'M'       @MDIN
+      *
+     C                     END                             E1
+      *
+      * SET UP OVERIDE FROM POSTNC TO MEMBER OTC
+      *
+     C                     Z-ADD28        QCALEN 155
+     C                     CALL 'QCMDEXC'
+     C                     PARM @QCA,1    CMD    50
+     C                     PARM           QCALEN
+      *
+     C                     OPEN POSTNC
+      *
+     C/COPY WNCPYSRC,EM0451C003
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *
+      *                                                               *
+      * CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *
+      *                                                               *
+      * CALLS : NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@  - COPYRIGHT STATEMENT
+(c) Misys International Banking Systems Ltd. 2001
+** CL CMD IN CALL QCMDEXC - @QCA
+OVRDBF FILE(POSTNC) MBR(OTC)

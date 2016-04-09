@@ -1,0 +1,1239 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Daily posting by department report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4216 - Daily Posting by Department Report                  *
+     F*                                                               *
+     F*  Function:  This program produces a list of all daily posting *
+     F*  (COB)      transactions entered through teller transaction   *
+     F*             input.  The report is printed in branch, depart-  *
+     F*             ment, currency, transaction type, retail account  *
+     F*             number.  The report will be printed automatically *
+     F*             at COB and will be available at branch and system *
+     F*             level.                                            *
+     F*                                                               *
+     F*  Called By: REC4214 -  Daily Posting by Dept Extract          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG12867           Date 11Dec06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG8553            Date 04Oct05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 143588             Date  5Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  BUG12867 - Indicator 24 (*IN24) removed so that file out of  *
+      *             balance is always check. Patterned after 229322.  *
+      *             If @RENT is blank, access lf/POSTPL2 so that rcds *
+      *             are grouped by dept/ccy/transaction type.         *
+      *           - Applied fix 241163                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG8553 - F/X transaction sale show on different currency    *
+      *            and not updated the sale currency cash position.   *
+      *            Add new lf POSTPL2 to group by department, currency*
+      *            and transaction type.                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD006 - Use DSSDY for call to AOCURRR0.                     *
+     F*  143588 - Resturcture of main loop.                           *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+     FPOSTPL1 IF  E           K        DISK
+     F            POSTPZF                           KIGNORE
+     FPOSTPL2 IF  E           K        DISK                                                  BUG8553
+     F            POSTPHF                           KRENAMEAPOSTPHF                          BUG8553
+     F            POSTPDF                           KRENAMEAPOSTPDF                          BUG8553
+     F            POSTPZF                           KIGNORE                                  BUG8553
+     FPOSTPZ  IF  E                    DISK
+     FRE4216P1O   E             14     PRINTER      KINFDS SPOOL      UC
+     FRE4216AUO   E                    PRINTER      KINFDS SPOOLU
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    21 - End of file for POSTPL1                               *
+     F*    22 - End of file for other POSTPL1 files                   *
+     F*    23 - File Out of Balance on Run Controls                   *
+     F*****24*-*Suppress Run Control checking when report is by       *                     BUG12867
+     F**********specific branch                                       *                     BUG12867
+     F*    25 - Suppress Branch control checking when report is by    *                      BUG8553
+     F*         system level                                          *                      BUG8553
+     F*    26 - Department Total printed                              *
+     F*    27 - Currency Total printed                                *
+     F*    28 - Subtotal printed                                      *
+     F*                                                               *
+     F*    30 - DR/CR Indicator is 0 (Debit)                          *
+     F*    31 - Account Number 0                                      *
+     F*    32 - At least one detail record is reported                *
+     F*    33 - Cheque Number not 0s                                  *
+     F*    35 - Total has been printed                                *
+     F*    37 - Branch Level Report                                   *
+     F*    38 - System Level Report                                   *
+     F*    39 - Multibranch                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DBERR  -  Database error handling                            *
+     F*  FIRST  -  Initialisation                                     *
+     F*  GLZADD -  To add an amount to the total                      *
+     F*  GLZSUM -  To carry out addition in subroutines               *
+     F*  NEWCCY -  Currency processing on change of currency          *
+     F*  NEWTYP -  Transaction type processing on change of type      *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     I*
+     IPOSTPDF
+     I              DPMT                            DEPT
+     I              ORAMT                           AMT
+     IAPOSTPDF                                                                               BUG8553
+     I              DPMT                            DEPT                                     BUG8553
+     I              ORAMT                           AMT                                      BUG8553
+     IPOSTPZF
+     I              NORE1                           NORE
+     I              HRWN                            HASHI
+     I              HRDC                            HASHD
+     I*
+     I** File Information Data Structure
+     I*
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                        9   9 OPENU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* Currency Details
+     I*
+     ISDRETR    E DSSDRETRPD
+     I* Transaction Types
+     I              A1RTNM                          TRAN
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  Branch Codes
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+     C*
+     C** Initial Processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C                     READ POSTPHF                  22
+     C           *IN22     IFEQ '0'
+     C           RECI      ANDEQ'A'
+     C                     Z-ADD1         NUMREC
+     C                     END
+     C*
+     C**  Check entity for 'ALL', blank or a specific branch
+     C*
+     C           @RENT     IFEQ 'ALL'
+     C********** @RENT     OREQ *BLANKS                                                      BUG8553
+     C           *LOVAL    SETLLPOSTPDF
+     C**********           MOVE '1'       *IN24                                             BUG12867
+     C                     ELSE
+     C           @RENT     IFEQ *BLANKS                                                      BUG8553
+     C           *LOVAL    SETLLAPOSTPDF                                                     BUG8553
+     C                     MOVE '1'       *IN25                                              BUG8553
+     C                     ELSE                                                              BUG8553
+     C           @RENT     SETLLPOSTPDF
+     C                     END
+     C                     ENDIF                                                             BUG8553
+     C*
+     C**********           READ POSTPDF                  21                                  BUG8553
+     C  N25                READ POSTPDF                  21                                  BUG8553
+     C   25                READ APOSTPDF                 21                                  BUG8553
+     C*****************************************************************   143588
+     C*                                                               *   143588
+     C*  Main loop re-structured to make it easier to follow          *   143588
+     C*                                                               *   143588
+     C*  Amend number 143588               DATE 14DEC98               *   143588
+     C*                                                               *   143588
+     C*****************************************************************   143588
+     C**********                                                          143588
+     C***Do*while EOF not reached.                                        143588
+     C**********                                                          143588
+     C********** *IN21     DOWNE'1'                                       143588
+     C**********                                                          143588
+     C**********           MOVE TRAT      TYPE                            143588
+     C**********                                                          143588
+     C********** @FRST     IFEQ '1'                                       143588
+     C**********           EXSR NEWCCY                                    143588
+     C**********           MOVE '0'       @FRST                           143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** BRCA      IFNE @PRBR                                     143588
+     C**********                                                          143588
+     C********** OPEN      IFEQ 'Y'                                       143588
+     C********** @RENT     ANDNE*BLANKS                                   143588
+     C********** *IN28     IFEQ '0'                                       143588
+     C**********           WRITESUBTOT                                    143588
+     C**********           MOVE '1'       *IN28                           143588
+     C**********           END                                            143588
+     C********** *IN27     IFEQ '0'                                       143588
+     C**********           WRITECCYTOT                                    143588
+     C**********           MOVE '1'       *IN27                           143588
+     C**********           END                                            143588
+     C********** *IN26     IFEQ '0'                                       143588
+     C**********           WRITEDEPTOT                                    143588
+     C**********           MOVE '1'       *IN26                           143588
+     C**********           END                                            143588
+     C**********           WRITEENDOFR                                    143588
+     C**********           CLOSERE4216P1                                  143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C***Open*printer file RE4216P1 if entity is not blank or the         143588
+     C***printer file is not yet open                                     143588
+     C**********                                                          143588
+     C********** @RENT     IFNE *BLANKS                                   143588
+     C********** OPEN      ORNE 'Y'                                       143588
+     C**********           OPEN RE4216P1                                  143588
+     C**********           MOVE 'Y'       OPEN                            143588
+     C**********           MOVE '0'       *IN26                           143588
+     C**********           MOVE '0'       *IN27                           143588
+     C**********           MOVE '0'       *IN28                           143588
+     C**********                                                          143588
+     C***Ensure*Report Spool File Recorded by RCF for P1 report           143588
+     C**********                                                          143588
+     C**********           Z-ADDSFNUM     ZSNUM   60                      143588
+     C**********           CALL 'ZSFILE'                                  143588
+     C**********           PARM           SEQ     5                       143588
+     C**********           PARM @RENT     SENTY   3                       143588
+     C**********           PARM           SFILE                           143588
+     C**********           PARM           ZSNUM                           143588
+     C**********           PARM *BLANKS   ZSERR   1                       143588
+     C**********                                                          143588
+     C***Error*During ZSFILE Processing, Return to Calling Program        143588
+     C**********                                                          143588
+     C********** ZSERR     IFEQ 'Y'                                       143588
+     C**********           MOVE '1'       *INU7                           143588
+     C**********           MOVE '1'       *INU8                           143588
+     C**********           MOVE '1'       *INLR                           143588
+     C**********           RETRN                                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C****Get*branch name using access object                             143588
+     C**********                                                          143588
+     C**********           CALL 'AOBRCHR0'                                143588
+     C**********           PARM *BLANKS   @RTCD   7                       143588
+     C**********           PARM '*KEY   ' @OPTN   7                       143588
+     C**********           PARM BRCA      @BRCA   3                       143588
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           143588
+     C**********                                                          143588
+     C****Check*if error occurred                                         143588
+     C**********                                                          143588
+     C********** @RTCD     IFNE *BLANKS                                   143588
+     C********** *LOCK     IN   LDA                                       143588
+     C**********           MOVE 'SDBRCHPD'DBFILE           ***************143588
+     C**********           Z-ADD5         DBASE            * DBERROR 05  *143588
+     C**********           MOVELBRCA      DBKEY            ***************143588
+     C**********           EXSR DBERR                                     143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           MOVE BRCA      PBRCA                           143588
+     C**********           MOVE A8BRNM    PBRNM                           143588
+     C**********                                                          143588
+     C**********           WRITEHEADP1                                    143588
+     C**********           WRITECLMHDG                                    143588
+     C**********           MOVE '0'       *IN35                           143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** *IN14     IFEQ '1'                                       143588
+     C********** *IN35     OREQ '1'                                       143588
+     C**********           WRITEHEADP1                                    143588
+     C**********           WRITECLMHDG                                    143588
+     C**********           MOVE '0'       *IN35                           143588
+     C**********           MOVE '0'       *IN26                           143588
+     C**********           MOVE '0'       *IN27                           143588
+     C**********           MOVE '0'       *IN28                           143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           MOVE '0'       *IN30                           143588
+     C**********           MOVE '0'       *IN31                           143588
+     C**********           MOVE '0'       *IN33                           143588
+     C**********                                                          143588
+     C****Accumulate subtotal Transaction Type total                      143588
+     C****If*DRCR Ind. = 0 (Debit)                                        143588
+     C**********                                                          143588
+     C********** DRCR      IFEQ 0                                         143588
+     C**********           MOVE '1'       *IN30                           143588
+     C********** SUBTOD    ADD  AMT       SUBTOD 150                      143588
+     C********** CCYTOD    ADD  AMT       CCYTOD 150                      143588
+     C********** DEPTOD    ADD  AMT       DEPTOD 150                      143588
+     C**********           ELSE                                           143588
+     C**********                                                          143588
+     C****DRCR*Ind. = 1 (Credit)                                          143588
+     C**********                                                          143588
+     C********** SUBTOC    ADD  AMT       SUBTOC 150                      143588
+     C********** CCYTOC    ADD  AMT       CCYTOC 150                      143588
+     C********** DEPTOC    ADD  AMT       DEPTOC 150                      143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** CHQN      IFEQ 0                                         143588
+     C**********           MOVE '1'       *IN33                           143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** NUMREC    ADD  1         NUMREC                          143588
+     C********** AMT       DIV  1000      ZZAMT                           143588
+     C**********           Z-ADDHSHI      ZZTOTI                          143588
+     C**********           Z-ADDHSHD      ZZTOTD                          143588
+     C**********           EXSR GLZADD                                    143588
+     C**********           Z-ADDZZTOTI    HSHI   150                      143588
+     C**********           Z-ADDZZTOTD    HSHD    30                      143588
+     C**********                                                          143588
+     C****To*indicate at least one detail record is reported              143588
+     C**********                                                          143588
+     C**N32*****           SETON                     32                   143588
+     C**********                                                          143588
+     C****Move*AMT to appropriate dec pos field                           143588
+     C**********                                                          143588
+     C***10*****           Z-ADDAMT       AMT0                            143588
+     C***11*****           Z-ADDAMT       AMT1                            143588
+     C***12*****           Z-ADDAMT       AMT2                            143588
+     C***13*****           Z-ADDAMT       AMT3                            143588
+     C**********                                                          143588
+     C**********           WRITECOMLIN                                    143588
+     C********** *IN30     IFEQ '1'                                       143588
+     C**********           WRITEDEBIT                                     143588
+     C**********           ELSE                                           143588
+     C**********           WRITECREDIT                                    143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           MOVE BRCA      @PRBR   3                       143588
+     C**********           MOVE ACNO      @PRAC  100                      143588
+     C**********           MOVE TYPE      @PRTY   5                       143588
+     C**********           MOVE TRCCY     @PRCY   3                       143588
+     C**********           MOVE DEPT      @PRDP   3                       143588
+     C**********                                                          143588
+     C**********           READ POSTPDF                  21               143588
+     C**********                                                          143588
+     C****For*Branch level, it must be the same as the branch selected    143588
+     C**********                                                          143588
+     C********** @RENT     IFNE 'ALL'                                     143588
+     C********** @RENT     ANDNE*BLANKS                                   143588
+     C********** @RENT     ANDNEBRCA                                      143588
+     C**********           MOVE '1'       *IN21                           143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** ACNO      IFNE @PRAC                                     143588
+     C********** ACNO      IFEQ 0                                         143588
+     C**********           MOVE '1'       *IN31                           143588
+     C**********           END                                            143588
+     C***10*****           Z-ADDSUBTOD    SUBTD0                          143588
+     C***11*****           Z-ADDSUBTOD    SUBTD1                          143588
+     C***12*****           Z-ADDSUBTOD    SUBTD2                          143588
+     C***13*****           Z-ADDSUBTOD    SUBTD3                          143588
+     C***10*****           Z-ADDSUBTOC    SUBTC0                          143588
+     C***11*****           Z-ADDSUBTOC    SUBTC1                          143588
+     C***12*****           Z-ADDSUBTOC    SUBTC2                          143588
+     C***13*****           Z-ADDSUBTOC    SUBTC3                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** TYPE      IFNE @PRTY                                     143588
+     C**********           EXSR NEWTYP                                    143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** TRCCY     IFNE @PRCY                                     143588
+     C***10*****           Z-ADDCCYTOD    CCYTD0                          143588
+     C***11*****           Z-ADDCCYTOD    CCYTD1                          143588
+     C***12*****           Z-ADDCCYTOD    CCYTD2                          143588
+     C***13*****           Z-ADDCCYTOD    CCYTD3                          143588
+     C***10*****           Z-ADDCCYTOC    CCYTC0                          143588
+     C***11*****           Z-ADDCCYTOC    CCYTC1                          143588
+     C***12*****           Z-ADDCCYTOC    CCYTC2                          143588
+     C***13*****           Z-ADDCCYTOC    CCYTC3                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** DEPT      IFNE @PRDP                                     143588
+     C**********           Z-ADD0         DEPTOD                          143588
+     C**********           Z-ADD0         DEPTOC                          143588
+     C***10*****           Z-ADDDEPTOD    DEPTD0                          143588
+     C***11*****           Z-ADDDEPTOD    DEPTD1                          143588
+     C***12*****           Z-ADDDEPTOD    DEPTD2                          143588
+     C***13*****           Z-ADDDEPTOD    DEPTD3                          143588
+     C***10*****           Z-ADDDEPTOC    DEPTC0                          143588
+     C***11*****           Z-ADDDEPTOC    DEPTC1                          143588
+     C***12*****           Z-ADDDEPTOC    DEPTC2                          143588
+     C***13*****           Z-ADDDEPTOC    DEPTC3                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C********** *IN32     IFEQ '1'                                       143588
+     C**********                                                          143588
+     C********** DEPT      IFNE @PRDP                                     143588
+     C**********           WRITESUBTOT                                    143588
+     C**********           WRITECCYTOT                                    143588
+     C**********           WRITEDEPTOT                                    143588
+     C**********           MOVE '1'       *IN35                           143588
+     C**********           MOVE '1'       *IN26                           143588
+     C**********           MOVE '1'       *IN27                           143588
+     C**********           MOVE '1'       *IN28                           143588
+     C**********                                                          143588
+     C**********           ELSE                                           143588
+     C********** TRCCY     IFNE @PRCY                                     143588
+     C**********           WRITESUBTOT                                    143588
+     C**********           WRITECCYTOT                                    143588
+     C**********           EXSR NEWCCY                                    143588
+     C**********           MOVE '1'       *IN35                           143588
+     C**********           MOVE '1'       *IN27                           143588
+     C**********           MOVE '1'       *IN28                           143588
+     C**********                                                          143588
+     C**********           ELSE                                           143588
+     C********** ACNO      IFNE @PRAC                                     143588
+     C**********           WRITESUBTOT                                    143588
+     C**********           MOVE '1'       *IN35                           143588
+     C**********           MOVE '1'       *IN28                           143588
+     C**********           END                                            143588
+     C**********           END                                            143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C**********           END                                            143588
+     C**********                                                          143588
+     C*****************************************************************   143588
+     C*                                                               *   143588
+     C*  Start of restructured main loop                              *   143588
+     C*                                                               *   143588
+     C*  Amend number 143588               DATE 14DEC98               *   143588
+     C*                                                               *   143588
+     C*****************************************************************   143588
+     C*                                                                   143588
+     C**  Store the first transaction type.                               143588
+     C*                                                                   143588
+     C                     MOVE TRAT      TYPE                            143588
+     C*                                                                   143588
+     C**  Do while EOF not reached.                                       143588
+     C*                                                                   143588
+     C           *IN21     DOWNE'1'                                       143588
+     C*                                                                   143588
+     C** If A/C number is zero, produce alternate number.                 143588
+     C*                                                                   143588
+     C           ACNO      IFEQ 0                                         143588
+     C                     MOVE '1'       *IN31                           143588
+     C                     ELSE                                           143588
+     C                     MOVE '0'       *IN31                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C** Begin adding subtotal and currency totals                        143588
+     C*                                                                   143588
+     C   10                Z-ADDSUBTOD    SUBTD0                          143588
+     C   11                Z-ADDSUBTOD    SUBTD1                          143588
+     C   12                Z-ADDSUBTOD    SUBTD2                          143588
+     C   13                Z-ADDSUBTOD    SUBTD3                          143588
+     C   10                Z-ADDSUBTOC    SUBTC0                          143588
+     C   11                Z-ADDSUBTOC    SUBTC1                          143588
+     C   12                Z-ADDSUBTOC    SUBTC2                          143588
+     C   13                Z-ADDSUBTOC    SUBTC3                          143588
+     C*                                                                   143588
+     C   10                Z-ADDCCYTOD    CCYTD0                          143588
+     C   11                Z-ADDCCYTOD    CCYTD1                          143588
+     C   12                Z-ADDCCYTOD    CCYTD2                          143588
+     C   13                Z-ADDCCYTOD    CCYTD3                          143588
+     C   10                Z-ADDCCYTOC    CCYTC0                          143588
+     C   11                Z-ADDCCYTOC    CCYTC1                          143588
+     C   12                Z-ADDCCYTOC    CCYTC2                          143588
+     C   13                Z-ADDCCYTOC    CCYTC3                          143588
+     C*                                                                   143588
+     C**  Set up initial currency fields and transaction type on          143588
+     C**  first run through loop.                                         143588
+     C*                                                                   143588
+     C           @FRST     IFEQ '1'                                       143588
+     C                     EXSR NEWCCY                                    143588
+     C                     EXSR NEWTYP                                    143588
+     C                     MOVE '0'       @FRST                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  On change of branch                                             143588
+     C*                                                                   143588
+     C           BRCA      IFNE @PRBR                                     143588
+     C*                                                                   143588
+     C**  print out totals if appropriate and printer file is open.       143588
+     C*                                                                   143588
+     C           OPEN      IFEQ 'Y'                                       143588
+     C           @RENT     ANDNE*BLANKS                                   143588
+     C           *IN25     ANDEQ'0'                                                          BUG8553
+     C           *IN28     IFEQ '0'                                       143588
+     C                     WRITESUBTOT                                    143588
+     C                     MOVE '1'       *IN28                           143588
+     C                     ENDIF                                          143588
+     C           *IN27     IFEQ '0'                                       143588
+     C                     WRITECCYTOT                                    143588
+     C                     MOVE '1'       *IN27                           143588
+     C                     ENDIF                                          143588
+     C                     WRITEENDOFR                                    143588
+     C                     CLOSERE4216P1                                  143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C** Open printer file RE4216P1 if entity is not blank or the         143588
+     C** printer file is not yet open                                     143588
+     C*                                                                   143588
+     C           @RENT     IFNE *BLANKS                                   143588
+     C           *IN25     ANDEQ'0'                                                          BUG8553
+     C           OPEN      ORNE 'Y'                                       143588
+     C                     OPEN RE4216P1                                  143588
+     C                     MOVE 'Y'       OPEN                            143588
+     C                     MOVE '0'       *IN27                           143588
+     C                     MOVE '0'       *IN28                           143588
+     C*                                                                   143588
+     C** Ensure Report Spool File Recorded by RCF for P1 report           143588
+     C*                                                                   143588
+     C                     Z-ADDSFNUM     ZSNUM   60                      143588
+     C                     CALL 'ZSFILE'                                  143588
+     C                     PARM           SEQ     5                       143588
+     C                     PARM @RENT     SENTY   3                       143588
+     C                     PARM           SFILE                           143588
+     C                     PARM           ZSNUM                           143588
+     C                     PARM *BLANKS   ZSERR   1                       143588
+     C*                                                                   143588
+     C** Error During ZSFILE Processing, Return to Calling Program        143588
+     C*                                                                   143588
+     C           ZSERR     IFEQ 'Y'                                       143588
+     C                     MOVE '1'       *INU7                           143588
+     C                     MOVE '1'       *INU8                           143588
+     C                     MOVE '1'       *INLR                           143588
+     C                     RETRN                                          143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  Get branch name using access object                             143588
+     C*                                                                   143588
+     C**********           CALL 'AOBRCHR0'                                             143588 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       143588
+     C                     PARM '*KEY   ' @OPTN   7                       143588
+     C                     PARM BRCA      @BRCA   3                       143588
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        143588 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   143588
+     C**  Check if error occurred                                         143588
+     C*                                                                   143588
+     C           @RTCD     IFNE *BLANKS                                   143588
+     C           *LOCK     IN   LDA                                       143588
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************143588
+     C                     Z-ADD5         DBASE            * DBERROR 05  *143588
+     C                     MOVELBRCA      DBKEY            ***************143588
+     C                     EXSR DBERR                                     143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C                     MOVE BRCA      PBRCA                           143588
+     C                     MOVE A8BRNM    PBRNM                           143588
+     C*                                                                   143588
+     C**  Get transaction type description using access object.           143588
+     C*                                                                   143588
+     C                     SETOF                     22                   143588
+     C*                                                                   143588
+     C**  Get Transaction Type Details.                                   143588
+     C*                                                                   143588
+     C                     MOVE TYPE      TYPEA   5                       143588
+     C                     CALL 'AORETRR0'                                143588
+     C                     PARM '*BLANKS' @RTCD   7                       143588
+     C                     PARM '*KEY   ' @OPTN   7                       143588
+     C                     PARM TYPEA     @RETR   5                       143588
+     C           SDRETR    PARM SDRETR    DSFDY                           143588
+     C*                                                                   143588
+     C** If record does not exist                                         143588
+     C** Output '*' to Trans. Type Name                                   143588
+     C*                                                                   143588
+     C           @RTCD     IFEQ '*NRF'                                    143588
+     C                     SETON                     22                   143588
+     C                     END                                            143588
+     C*                                                                   143588
+     C                     WRITEHEADP1                                    143588
+     C                     WRITECLMHDG                                    143588
+     C                     MOVE '0'       *IN35                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  Ensure that extra header and footer (along with totals)         143588
+     C**  aren't printed on change of branch.                             143588
+     C*                                                                   143588
+     C           *IN25     IFEQ '0'                                                          BUG8553
+     C                     MOVE '0'       *IN32                           143588
+     C                     ENDIF                                                             BUG8553
+     C*                                                                   143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C*                                                                   143588
+     C*                                                                   143588
+     C**  If at least one detail record is reported                       143588
+     C*                                                                   143588
+     C           *IN32     IFEQ '1'                                       143588
+     C*                                                                   143588
+     C**  Write out totals as appropriate ...                             143588
+     C*                                                                   143588
+     C**  ... on change of department.                                    143588
+     C*                                                                   143588
+     C           DEPT      IFNE @PRDP                                     143588
+     C                     WRITESUBTOT                                    143588
+     C                     WRITECCYTOT                                    143588
+     C*                                                                   143588
+     C**  Zero totals once written out and reset indicators               143588
+     C*                                                                   143588
+     C                     Z-ADD0         CCYTOD                          143588
+     C                     Z-ADD0         CCYTOC                          143588
+     C                     Z-ADD0         SUBTOD                          143588
+     C                     Z-ADD0         SUBTOC                          143588
+     C                     MOVE '1'       *IN35                           143588
+     C                     MOVE '1'       *IN27                           143588
+     C                     MOVE '1'       *IN28                           143588
+     C*                                                                   143588
+     C                     ELSE                                           143588
+     C*                                                                   143588
+     C**  ... on change of currency.                                      143588
+     C*                                                                   143588
+     C           TRCCY     IFNE @PRCY                                     143588
+     C                     WRITESUBTOT                                    143588
+     C                     WRITECCYTOT                                    143588
+     C                     EXSR NEWCCY                                    143588
+     C                     MOVE '1'       *IN35                           143588
+     C                     MOVE '1'       *IN27                           143588
+     C                     MOVE '1'       *IN28                           143588
+     C*                                                                   143588
+     C                     ELSE                                           143588
+     C*                                                                   143588
+     C**  ... or on change of type.                                       143588
+     C*                                                                   143588
+     C           TYPE      IFNE @PRTY                                     143588
+     C                     WRITESUBTOT                                    143588
+     C                     MOVE '1'       *IN35                           143588
+     C                     MOVE '1'       *IN28                           143588
+     C                     ENDIF                                          143588
+     C                     ENDIF                                          143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  If branch has changed, zero currency and sub-totals             143588
+     C*                                                                   143588
+     C           BRCA      IFNE @PRBR                                     143588
+     C           *IN25     ANDEQ'0'                                                          BUG8553
+     C                     Z-ADD0         CCYTOD                          143588
+     C                     Z-ADD0         CCYTOC                          143588
+     C                     Z-ADD0         SUBTOD                          143588
+     C                     Z-ADD0         SUBTOC                          143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  Zero appropriate totals if type changes                         143588
+     C*                                                                   143588
+     C           TYPE      IFNE @PRTY                                     143588
+     C*                                                                   143588
+     C**  Or if department changes                                        143588
+     C*                                                                   143588
+     C           DEPT      ORNE @PRDP                                     143588
+     C*                                                                   143588
+     C**  Or if branch changes                                            143588
+     C*                                                                   143588
+     C           BRCA      ORNE @PRBR                                     143588
+     C           *IN25     ANDEQ'0'                                                          BUG8553
+     C                     EXSR NEWTYP                                    143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C           TRCCY     IFNE @PRCY                                     143588
+     C                     EXSR NEWCCY                                    143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C*                                                                   143588
+     C**  If have just printed a total (IN35=1) or page overflow has      143588
+     C**  occurred (IN14=1) then write a header.                          143588
+     C*                                                                   143588
+     C           *IN14     IFEQ '1'                                       143588
+     C           *IN35     OREQ '1'                                       143588
+     C                     WRITEHEADP1                                    143588
+     C                     WRITECLMHDG                                    143588
+     C                     MOVE '0'       *IN35                           143588
+     C                     MOVE '0'       *IN27                           143588
+     C                     MOVE '0'       *IN28                           143588
+     C                     MOVE '0'       *IN14                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C                     MOVE '0'       *IN30                           143588
+     C                     MOVE '0'       *IN33                           143588
+     C*                                                                   143588
+     C**  Accumulate subtotal Transaction Type total                      143588
+     C**  If DRCR Ind. = 0 (Debit)                                        143588
+     C*                                                                   143588
+     C           DRCR      IFEQ 0                                         143588
+     C                     MOVE '1'       *IN30                           143588
+     C           SUBTOD    ADD  AMT       SUBTOD 150                      143588
+     C           CCYTOD    ADD  AMT       CCYTOD 150                      143588
+     C           DEPTOD    ADD  AMT       DEPTOD 150                      143588
+     C                     ELSE                                           143588
+     C*                                                                   143588
+     C**  DRCR Ind. = 1 (Credit)                                          143588
+     C*                                                                   143588
+     C           SUBTOC    ADD  AMT       SUBTOC 150                      143588
+     C           CCYTOC    ADD  AMT       CCYTOC 150                      143588
+     C           DEPTOC    ADD  AMT       DEPTOC 150                      143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C           CHQN      IFEQ 0                                         143588
+     C                     MOVE '1'       *IN33                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C           NUMREC    ADD  1         NUMREC                          143588
+     C           AMT       DIV  1000      ZZAMT                           143588
+     C                     Z-ADDHSHI      ZZTOTI                          143588
+     C                     Z-ADDHSHD      ZZTOTD                          143588
+     C                     EXSR GLZADD                                    143588
+     C                     Z-ADDZZTOTI    HSHI   150                      143588
+     C                     Z-ADDZZTOTD    HSHD    30                      143588
+     C*                                                                   143588
+     C**  To indicate at least one detail record is reported              143588
+     C*                                                                   143588
+     C  N32                SETON                     32                   143588
+     C*                                                                   143588
+     C**  Move AMT to appropriate dec pos field                           143588
+     C*                                                                   143588
+     C   10                Z-ADDAMT       AMT0                            143588
+     C   11                Z-ADDAMT       AMT1                            143588
+     C   12                Z-ADDAMT       AMT2                            143588
+     C   13                Z-ADDAMT       AMT3                            143588
+     C*                                                                   143588
+     C                     WRITECOMLIN                                    143588
+     C*                                                                   143588
+     C           *IN30     IFEQ '1'                                       143588
+     C                     WRITEDEBIT                                     143588
+     C                     ELSE                                           143588
+     C                     WRITECREDIT                                    143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C**  Copy fields of current record to storage fields                 143588
+     C*                                                                   143588
+     C                     MOVE TRAT      TYPE                            143588
+     C                     MOVE BRCA      @PRBR   3                       143588
+     C                     MOVE ACNO      @PRAC  100                      143588
+     C                     MOVE TYPE      @PRTY   5                       143588
+     C                     MOVE TRCCY     @PRCY   3                       143588
+     C                     MOVE DEPT      @PRDP   3                       143588
+     C*                                                                   143588
+     C**  Read next record                                                143588
+     C*                                                                   143588
+     C**********           READ POSTPDF                  21               143588             BUG8553
+     C  N25                READ POSTPDF                  21               143588             BUG8553
+     C   25                READ APOSTPDF                 21               143588             BUG8553
+     C*                                                                   143588
+     C**  Move new type into a field allowing comparison with @PRTY       143588
+     C*                                                                   143588
+     C                     MOVE TRAT      TYPE                            143588
+     C*                                                                   143588
+     C**  For Branch level, it must be the same as the branch selected.   143588
+     C**  If not, set on IN21 to exit loop.                               143588
+     C*                                                                   143588
+     C           @RENT     IFNE 'ALL'                                     143588
+     C           @RENT     ANDNE*BLANKS                                   143588
+     C           @RENT     ANDNEBRCA                                      143588
+     C                     MOVE '1'       *IN21                           143588
+     C                     ENDIF                                          143588
+     C*                                                                   143588
+     C                     ENDDO                                          143588
+     C*                                                                   143588
+     C           *IN14     IFEQ '1'                                       143588
+     C                     WRITEHEADP1                                    143588
+     C                     END                                            143588
+     C*                                                                   143588
+     C** Move totals into appropriate fields                              143588
+     C*                                                                   143588
+     C   10                Z-ADDSUBTOD    SUBTD0                          143588
+     C   11                Z-ADDSUBTOD    SUBTD1                          143588
+     C   12                Z-ADDSUBTOD    SUBTD2                          143588
+     C   13                Z-ADDSUBTOD    SUBTD3                          143588
+     C   10                Z-ADDSUBTOC    SUBTC0                          143588
+     C   11                Z-ADDSUBTOC    SUBTC1                          143588
+     C   12                Z-ADDSUBTOC    SUBTC2                          143588
+     C   13                Z-ADDSUBTOC    SUBTC3                          143588
+     C*                                                                   143588
+     C   10                Z-ADDCCYTOD    CCYTD0                          143588
+     C   11                Z-ADDCCYTOD    CCYTD1                          143588
+     C   12                Z-ADDCCYTOD    CCYTD2                          143588
+     C   13                Z-ADDCCYTOD    CCYTD3                          143588
+     C   10                Z-ADDCCYTOC    CCYTC0                          143588
+     C   11                Z-ADDCCYTOC    CCYTC1                          143588
+     C   12                Z-ADDCCYTOC    CCYTC2                          143588
+     C   13                Z-ADDCCYTOC    CCYTC3                          143588
+     C*                                                                   143588
+     C           *IN14     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     END
+     C*
+     C**  If printer file is open, print report footer and close file
+     C*
+     C           OPEN      IFEQ 'Y'
+     C*
+     C**  'END OF REPORT' Output
+     C*
+     C           *IN28     IFEQ '0'
+     C                     WRITESUBTOT
+     C                     END
+     C           *IN27     IFEQ '0'
+     C                     WRITECCYTOT
+     C                     END
+     C********** *IN26     IFEQ '0'                                       143588
+     C**********           WRITEDEPTOT                                    143588
+     C**********           END                                            143588
+     C                     WRITEENDOFR
+     C                     CLOSERE4216P1
+     C                     END
+     C*
+     C           1         SETLLPOSTPZF
+     C                     READ POSTPZF                  22
+     C*
+     C                     ADD  1         NUMREC
+     C           HSHI      COMP HASHI                U7U7
+     C  NU7      HSHD      COMP HASHD                U7U7
+     C  NU7      NUMREC    COMP NORE                 U7U7
+     C           *INU7     IFEQ '1'
+     C********** *IN24     ANDEQ'1'                                                         BUG12867
+     C                     MOVE '1'       *IN23
+     C                     ELSE
+     C                     MOVE '0'       *IN23
+     C                     END
+     C*
+     C**  Produce run controls
+     C*
+     C           NUMREC    IFEQ 0
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+     C                     WRITETRAILAU
+     C                     END
+     C                     CLOSERE4216AU
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FIRST  - Initial Processing                                  *
+     C*                                                               *
+     C*  CALLS      DBERR  - Database Error Handling                  *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     MOVE '1'       @FRST   1
+     C**********           MOVE '0'       *IN24                                             BUG12867
+     C                     MOVE '0'       *IN25                                              BUG8553
+     C**********           MOVE '0'       *IN26                           143588
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C                     Z-ADD0         SUBTOD                          143588
+     C                     Z-ADD0         SUBTOC                          143588
+     C                     Z-ADD0         CCYTOD                          143588
+     C                     Z-ADD0         CCYTOC                          143588
+     C                     TIME           TIME                            143588
+     C           @RLEV     IFEQ 'B'
+     C                     MOVE '1'       *IN37
+     C                     ELSE
+     C                     MOVE '1'       *IN38
+     C                     END
+     C*
+     C** Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN39
+     C                     ELSE
+     C*
+     C** Set up appropriate level and entity if not Branch level
+     C*
+     C                     MOVE 'S'       @RLEV
+     C                     MOVE *BLANKS   @RENT
+     C                     MOVE '0'       *IN
+     C                     END
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4216'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY            ** DB ERR 01 **
+     C                     Z-ADD1         DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Set up date format indicator
+     C*
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DBERR - Database Error Handling : Terminates program         *
+     C*                                                               *
+     C*  CALLED BY  FIRST  - Initial Processing                       *
+     C*                                                               *
+     C*  CALLS             -                                          *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C                     MOVEL'RE4216'  DBPGM
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     CLOSERE4216AU
+     C*
+     C           OPEN      IFEQ '1'
+     C                     WRITEERRLINE
+     C                     CLOSERE4216P1
+     C                     END
+     C*
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  NEWCCY - BREAK ON CCY                                        *
+     C*                                                               *
+     C*  CALLS      DBERR  - Database Error Handling                  *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           NEWCCY    BEGSR                           *** NEWCCY  ***
+     C*
+     C**  Reset CCY Total
+     C*
+     C                     Z-ADD0         CCYTOD
+     C                     Z-ADD0         CCYTOC
+     C*                                                                   143588
+     C**  Reset subtotal (Transaction Type Total)                         143588
+     C*                                                                   143588
+     C                     Z-ADD0         SUBTOD                          143588
+     C                     Z-ADD0         SUBTOC                          143588
+     C*
+     C**  Find number of CCY decimal places
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK'  @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TRCCY     @CCY    3
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                           CSD006
+     C*
+     C** If record found
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 4  **
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     MOVELCCY       DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C**  Determine number of CCY decimal places
+     C*
+     C           A6NBDP    COMP 1                      1011
+     C           A6NBDP    COMP 2                    13  12
+     C*
+     C           ENDD      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  NEWTYP - BREAK ON TRANSACTION TYPE                           *
+     C*                                                               *
+     C*  CALLS             -                                          *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           NEWTYP    BEGSR
+     C*
+     C                     SETOF                     22
+     C*
+     C**  Reset subtotal (Transaction Type Total)
+     C*
+     C                     Z-ADD0         SUBTOD
+     C                     Z-ADD0         SUBTOC
+     C*
+     C**  Get Transaction Type Details.
+     C*
+     C                     MOVE TYPE      TYPEA   5
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM TYPEA     @RETR   5
+     C           SDRETR    PARM SDRETR    DSFDY
+     C*
+     C** If record does not exist
+     C** Output '*' to Trans. Type Name
+     C*
+     C********** @RTCD     IFEQ *BLANK                                    143588
+     C           @RTCD     IFEQ '*NRF'                                    143588
+     C                     SETON                     22
+     C                     END
+     C*
+     C           ENDT      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  GLZADD - TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,      *
+     C*           ZZTOTD).  IND '99' IS SET BY AN OVERFLOW ERROR.     *
+     C*                                                               *
+     C*  CALLS      GLZSUM - Addition                                 *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           GLZADD    BEGSR                           *** GLZADD **
+     C*
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* Split ZZAMT into integer and decimal fields
+     C*
+     C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     C                     MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C*
+     C* Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+     C*
+     C                     EXSR GLZSUM
+     C*
+     C           ZZAEND    ENDSR                           ** ZZAEND TAG **
+     C*****************************************************************
+     C*                                                               *
+     C*  GLZSUM - TO CARRY OUT THE ADDITION FOR SUBROUTINES -         *
+     C*                        GLZADD, GLZSUB, GLZCMP.                *
+     C*          PARAMETERS PASSED -                                  *
+     C*                     I/P ZZAMTI ZZAMTD                         *
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.   *
+     C*                                                               *
+     C*  CALLS             -                                          *
+     C*                                                               *
+     C*  CALLED BY  GLZADD - To add an amount to the total.           *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     C                     Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     C                     Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+     C*
+     C**  Determine sign of ZZAMTI & D, 92 if negative.
+     C*
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C**  Determine sign of ZZTOTI & D, 91 if negative.
+     C*
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+     C*
+     C**  If ZZTOTAL is zero, return ZZAMT.
+     C*
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C**  If signs differ, bypass overflow checks.
+     C*
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93    '93' = CARRY
+     C  N93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     C      93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C** If the modulus of ZZWK3 is less than modulus ZZTOTI, O/F has occured.
+     C*
+     C  N92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     C   92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C** If O/F zeroise ZZAMT, *IN99 set and ZZTOT fields left intact.
+     C*
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+     C*
+     C** The 'SIGNS' are different.
+     C*
+     C           ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C*
+     C** If ZZAMT is negative, make it positive to compare with ZZTOT.
+     C*
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C** If ZZTOT is negative, make it positive to compare with ZZAMT.
+     C*
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+     C** Both ZZAMT and ZZTOT are now positive.
+     C*
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* If ZZTOT equal to ZZAMT, return zero.
+     C*
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+     C*
+     C** If ZZTOT greater than ZZAMT.
+     C*
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C** If ZZAMT greater than ZZTOT.
+     C*
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C** Reverse sign of ZZTOT if larger I/P fields are negative.
+     C*
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+     C*
+     C**  Restore sign of ZZAMTI & ZZAMTD if they were reversed.
+     C*
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG                             ** ZZSEND TAG **
+     C*
+     C**  If ZZTOTD is zero and ZZTOTI is neg., set up ZZNEGD.
+     C*
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C*
+     C                     ENDSR                             ** ENDSR **
+     C********************************************************************
+** COPYRIGHT OBJECT **
+(c) Misys International Banking Systems Ltd. 2001

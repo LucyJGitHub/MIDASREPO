@@ -1,0 +1,136 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD End compliance watch engine')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDCENDCW - End Compliance Watch Engine                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. BUG3641            Date 07Jul04              */
+/*       Prev Amend No. 228189             Date 02Jul04              */
+/*                      CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG3641- MMM/Compliance Interface for Global Prcessing      */
+/*       228189 - CWLCHECK loops if library not present              */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)
+             DCL        VAR(&W1MDSR) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&W1OFSR) TYPE(*CHAR) LEN(32)
+             DCL        VAR(&WSDTQ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WLENGTH) TYPE(*DEC) LEN(5) VALUE(3)
+             DCL        VAR(&WMSG) TYPE(*CHAR) LEN(3) VALUE('END')
+             DCL        VAR(&CMPWATCHXX) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&WKLEN) TYPE(*DEC) LEN(3 0) VALUE(2)                         /*BUG3641*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Add Compliance Watch Library */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+             CHGVAR     VAR(&CMPWATCHXX) VALUE('CMPWATCH' *CAT &PREFIX)
+/************ADDLIBLE   LIB(&CMPWATCHXX) POSITION(*LAST)                                  /*228189*/
+             RMVLIBLE   LIB(&CMPWATCHXX)                                                  /*228189*/
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&CMPWATCHXX) POSITION(*LAST)                                  /*228189*/
+ 
+/** Access compliance watch configuration file */
+ 
+               CHGVAR     VAR(&PRTCD) VALUE('       ')
+               CHGVAR     VAR(&POPTN) VALUE('*FIRST')
+               CALL       PGM(AOCWCDR0) PARM(&PRTCD &POPTN &DSSDY)
+ 
+               CHGVAR     VAR(&W1MDSR) VALUE(%SUBSTRING(&DSSDY 4 50))
+               CHGVAR     VAR(&W1OFSR) VALUE(%SUBSTRING(&DSSDY 54 32))
+ 
+               IF         COND((&PRTCD *NE ' ') *OR (&W1MDSR *EQ ' ') +
+                            *OR (&W1OFSR *EQ ' ')) THEN(GOTO +
+                            CMDLBL(ABNOR))
+ 
+               ELSE
+ 
+                   ALCOBJ     OBJ((SDWLMENG *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('SDCWMDTQ  ' '*LIBL     ' +
+                                &WLENGTH &WMSG)
+                   GOTO       CMDLBL(ELMENG)
+                   ENDDO
+                   DLCOBJ     OBJ((SDWLMENG *DTAARA *EXCL))
+ 
+ ELMENG:
+ 
+                   ALCOBJ     OBJ((SDWLENGN *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('SDCWEDTQ  ' '*LIBL     ' +
+                                &WLENGTH &WMSG)
+                   GOTO       CMDLBL(ELENGN)
+                   ENDDO
+                   DLCOBJ     OBJ((SDWLENGN *DTAARA *EXCL))
+ 
+ ELENGN:
+ 
+                   ALCOBJ     OBJ((COMPWTCH *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(SDCWSHDN) PARM(&W1MDSR &W1OFSR)
+                   GOTO       CMDLBL(EWATCH)
+                   ENDDO
+                   DLCOBJ     OBJ((COMPWTCH *DTAARA *EXCL))
+ 
+ EWATCH:
+                   ALCOBJ     OBJ((SDWLSENG *DTAARA *EXCL)) WAIT(1)
+                   MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('SDCWSDTQ  ' '*LIBL     ' +
+                                &WLENGTH &WMSG)
+/**********        GOTO       CMDLBL(ELSENG) */                                          /*BUG3641*/
+                   GOTO       CMDLBL(TOCOMP)                                             /*BUG3641*/
+                   ENDDO
+                   DLCOBJ     OBJ((SDWLSENG *DTAARA *EXCL))
+ 
+ TOCOMP:                                                                                 /*BUG3641*/
+                   ALCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL)) WAIT(1)                      /*BUG3641*/
+                   MONMSG     MSGID(CPF1002) EXEC(DO)                                    /*BUG3641*/
+                   CALL       PGM(QSNDDTAQ) PARM('SDTOCOMP  ' '*LIBL     ' +
+                                &WLENGTH &WMSG &WKLEN &PREFIX)                           /*BUG3641*/
+                   GOTO       CMDLBL(ELSENG)                                             /*BUG3641*/
+                   ENDDO                                                                 /*BUG3641*/
+                   DLCOBJ     OBJ((SDTOCOMP *DTAARA *EXCL))                              /*BUG3641*/
+                                                                                         /*BUG3641*/
+ ELSENG:
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCENDCW ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+             ENDPGM

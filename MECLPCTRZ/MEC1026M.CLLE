@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ME Check job activity                *MODULE')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Message Management Module                        */
+/*                                                                   */
+/*       MEC1026M - Check job activity                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*    This source is centrally supported and must ONLY be            */
+/*    amended by Core Development Personnel                          */
+/*                                                                   */
+/*    /COPY, Client or Country amendments must not be                */
+/*    applied to this source.                                        */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Last amend no. CSW008 *CREATE     DATE 29JUL96              */
+/*       Prev amend no. Xnnnnn             DATE nnXXXnn              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This module is a component of service program MEC102NS.           */
+/*                                                                   */
+/* This program is responsible for starting the Incoming Message     */
+/* Management process, or prompting the process if it is already     */
+/* active.                                                           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSW008 - Create ILE module based on MEC1026                 */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RTN_CODE &JOB_INFO &FORMAT &JOB +
+                          &INT_JOB_ID)
+ 
+/* Declare variables */
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&JOB_INFO) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&RTN_INFO) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&RTN_BIN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global Monitor Message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+ 
+/* Send Message to MRUNQ */
+             SNDPGMMSG  MSG('MEC1026M - Check job activity') +
+                          TOMSGQ(MRUNQ)
+             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+             CHGVAR     VAR(&JOB_INFO) VALUE(' ')
+             CHGVAR     VAR(&RTN_BIN) VALUE(X'00000200')
+ 
+/* Call IBM API to obtain information */
+/* Note error code not coded to allow API to send diagonistics */
+             CALL       PGM(QUSRJOBI) PARM(&RTN_INFO &RTN_BIN +
+                          &FORMAT &JOB &INT_JOB_ID)
+             MONMSG     MSGID(CPF3C53 CPF3C55) EXEC(DO)
+ 
+/* Job not found or does not exist */
+             CHGVAR     VAR(&RTN_CODE) VALUE('MIN0125')
+             ENDDO
+ 
+/* Set up return information */
+             CHGVAR     VAR(&JOB_INFO) VALUE(&RTN_INFO)
+ 
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+/* Abnormal termination processing                       */
+/* Terminate with escape message */
+ABNORMAL:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             SNDPGMMSG  MSG('Program MEC102NS (module MEC1026M) +
+                          ended abnormally') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC102NS ended abnormally') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ ENDCLPGM:   RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDPGM

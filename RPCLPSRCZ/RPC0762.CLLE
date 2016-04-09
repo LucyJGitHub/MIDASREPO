@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RP Retrieve last position in journal')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Replication                                           */
+/*                                                                   */
+/*       RPC0762 - Retrieve Last Position in Journal.                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. 240771  *CREATE    Date 01Jul16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       240771 - To take in account Replication V3R6M0 changes and  */
+/*                more specially new Feeder Sequence Number file and */
+/*                new data areas. Applied fix for AR995681.          */
+/*                (Child:AR995682)                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/**  DECLARE VARIABLE TO HOLD INITIAL LIBRARY LIST                   */
+ 
+             DCL        VAR(&LASTPOS) TYPE(*DEC) LEN(10 0) VALUE(0)
+             DCL        VAR(&LASTPOSA) TYPE(*CHAR) LEN(10) VALUE('0000000001')
+             DCL        VAR(&LASTRCV) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&REPBASE) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&JDDTA) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&JDEND) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&JDFDR) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&JDOSC) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(2) VALUE(' ')
+ 
+             DCLF       FILE(X4PF)
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+ 
+/* Retrieve last sequence of the journal */
+ 
+             RTVJRNE    JRN(ICJRN) FROMENT(*LAST) +
+                          RTNSEQNBR(&LASTPOS) RTNRCV(&LASTRCV)
+ 
+/* Retrieve system id and build REPBASExx variable */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ID)
+ 
+             CHGVAR     VAR(&REPBASE) VALUE('REPBASE' *CAT &ID)
+             CHGVAR     VAR(&LASTPOSA) VALUE(&LASTPOS)
+ 
+             IF   COND(&LASTPOSA *EQ '0000000000') THEN(DO)
+                CHGVAR     VAR(&LASTPOSA) VALUE('0000000001')
+             ENDDO
+ 
+             OVRDBF     FILE(X4PF) TOFILE(&REPBASE/X4PF)
+ 
+RCVF:        RCVF       RCDFMT(X4PFR)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(RP0762))
+ 
+/* Build data area names from corresponding feeder. */
+             CHGVAR     VAR(&JDDTA) VALUE('JD' *CAT &X4UNIT *CAT 'SEQ' *CAT &X4FDNM)
+             CHGVAR     VAR(&JDEND) VALUE('JD' *CAT &X4UNIT *CAT 'END' *CAT &X4FDNM)
+             CHGVAR     VAR(&JDOSC) VALUE('JD' *CAT &X4UNIT *CAT 'OSC' *CAT &X4FDNM)
+             CHGVAR     VAR(&JDFDR) VALUE('JDFDR' *CAT &X4UNIT *CAT &X4FDNM)
+ 
+/* Update dataarea JDxx1SEQ1 in REPBASExx */
+ 
+             CHGDTAARA  DTAARA(&REPBASE/&JDDTA (1 10)) VALUE(&LASTPOSA)
+/* Data area JDxx1SEQ1 is no more used. */
+             MONMSG     MSGID(CPF1015) EXEC(GOTO CMDLBL(JDSEQ))
+ 
+             DSPDTAARA  DTAARA(&REPBASE/&JDDTA)
+ 
+JDSEQ:
+/* Update dataarea JDxx1END1 in REPBASExx */
+ 
+             CHGDTAARA  DTAARA(&REPBASE/&JDEND (1 10)) VALUE(&LASTPOSA)
+/* Data area JDxx1END1 is no more used. */
+             MONMSG     MSGID(CPF1015) EXEC(GOTO CMDLBL(JDOSC))
+ 
+             DSPDTAARA  DTAARA(&REPBASE/&JDEND)
+ 
+JDOSC:
+/* Update dataarea JDxx1OSC1 in REPBASExx */
+ 
+             CHGDTAARA  DTAARA(&REPBASE/&JDOSC (1 10)) VALUE('0000000000')
+/* Data area JDxx1OSC1 is no more used. */
+             MONMSG     MSGID(CPF1015) EXEC(GOTO CMDLBL(JDFDR))
+ 
+             DSPDTAARA  DTAARA(&REPBASE/&JDOSC)
+ 
+JDFDR:
+/* Update dataarea JDFDRxx11 in REPBASExx */
+ 
+/* Data area JDFDRxx11 (mode *FAST) is not yet used. */
+             CHGDTAARA  DTAARA(&REPBASE/&JDFDR (1 10)) VALUE(&LASTPOSA)
+             MONMSG     MSGID(CPF1015) EXEC(GOTO CMDLBL(NEXT))
+ 
+             DSPDTAARA  DTAARA(&REPBASE/&JDFDR)
+ 
+NEXT:        GOTO       CMDLBL(RCVF)
+ 
+RP0762:
+/* Update Feeder Sequence file REPBASExx/RPFEEDSQNO (mode *SECURE). */
+             CHKOBJ     OBJ(&REPBASE/RPFEEDSQNO) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+ 
+             OVRDBF     FILE(RPFEEDSQNO) TOFILE(&REPBASE/RPFEEDSQNO)
+ 
+             CALL       RP0762  &LASTPOSA
+ 
+             DLTOVR     FILE(RPFEEDSQNO)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+ END:
+ 
+             ENDPGM

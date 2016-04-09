@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM CPP for RELEASELVL command')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000070 - CPP for RELEASELVL command                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27791  *CREATE  Date 28May10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27791 - Identify 'from' release more easily              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&KEYPARM &PRODUCT &REL &SUBRLS)
+ 
+             DCL        VAR(&KEYPARM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBRLS) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&SYSTEMVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Set up variable for System Value. */
+             CHGVAR     VAR(&SYSTEMVAL) VALUE(&PRODUCT *CAT &REL +
+                          *CAT &SUBRLS)
+             CALL       PGM(GP009510) PARM('BrgOldSystemRlsLvl' +
+                          &SYSTEMVAL ' ')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ ENDPGM:
+             ENDPGM

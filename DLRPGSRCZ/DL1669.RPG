@@ -1,0 +1,1043 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL OIS Deal Settlement Control - Prompt Pgm')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1669 - OIS Deal Settlement Control - Prompt Program        *
+      *                                                               *
+      *  Function:  This program presents a list of deals for pre-    *
+      *             selected branch and selected currency which are   *
+      *             eligible for first time pay/receive processing.   *
+      *             User may select deals individually or select      *
+      *             every deal in the subfile.                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007   *CREATE   Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FDLOISSL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FDL1669DFCF  E                    WORKSTN
+     F                                        #0RRN KSFILE DL1669S0
+     F                                        RRN1  KSFILE DL1669S1
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F   I N D I C A T O R S                 *
+      *                                                               *
+      *   03      Function key 3 (Exit)                               *
+      *   05      Function key 5 (Refresh)                            *
+      *   12      Function key 12 (Initial screen)                    *
+      *   33      Function key 13 (Select all)                        *
+      *   41      End of subfile (READC & CHAIN)                      *
+      *   52      Error in currency code                              *
+      *   70      End of file on READ DLOISSL0.                       *
+      *   71      Record not found CHAIN DEALS.                       *
+      *   73      Record not found CHAIN DLOISSL0.                    *
+      *   74      End of File on READ DLOISSPD.                       *
+      *  N75      Subfile display  (SFLDSP)                           *
+      *  N75      Subfile dispaly control (SFLDSPCTL)                 *
+      *   75      Subfile clear (SFLCLR)                              *
+      *   95      Subfile next change (SFLNXTCHG)& riverse image      *
+      *   96      Subfile (#0SEL field) protect                       *
+      *   U7      Database error                                      *
+      *   U8      Databse error                                       *
+      *   LR      Exit program                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initialisation process                              *
+      *  SRVALD - Input validation process                            *
+      *  SRMSGQ - Clear program message queue                         *
+      *  SRSCRN - Subfile screen process                              *
+      *  SRLOAD - Subfile load process                                *
+      *  SRUPDF - File update process                                 *
+      *  SRPSFL - Process all subfile records                         *
+      *  SRPSEL - Process selected subfile records                    *
+      *  SRVSEL - Validate Select field (Must be 'X')                 *
+      *  SREND  - End program process                                 *
+      *  ZEDIT  - Put decimal point currency                          *
+      *  ZDATE1 - Convert charater date to numeric   (5,0)            *
+      *  ZDATE2 - Convert numeric date to character  (DDMMMYY-7A)     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     I/SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     I            DS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+     I                                        1   60ZDATE
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM #2PGM
+     I                                      244 253 #0WSID
+     I                                      254 263 #0USER
+      *
+      ** SD Customer Details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** SD Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** SD Customer Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      /EJECT
+      /TITLE Main Processing
+      *****************************************************************
+      * P R O G R A M    S T A R T
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Write header
+      *
+     C                     WRITEDL1669F0
+      *
+      ** Do until F3 is pressed.
+      *
+     C           *IN03     DOUEQ'1'
+      *
+     C                     WRITEDL1669C2
+     C                     EXFMTDL1669F1
+     C                     EXSR SRMSGQ
+      *
+      ** F5 is pressed (Refresh), Clear Currency Code field.
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE *BLANKS   #0CCY
+     C                     ENDIF
+      *
+      ** If F3 is pressed, end transaction completely.
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       PCMD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If F12 is pressed, return to FCC0201.
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'F'       PCMD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If Enter is pressed, Validate First Screen Input.
+      *
+     C           *IN05     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR SRVALD
+      *
+     C           WDTAOK    IFEQ 'Y'
+     C                     EXSR SRSCRN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SREND
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALD - Validate Input                                      *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls: AOCURRR0, ZASNMS                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Reset Error Field.
+      *
+     C                     MOVE 'Y'       WDTAOK
+      *
+      ** Currency Code must be entered.
+      *
+     C           #0CCY     IFEQ *BLANKS
+     C                     MOVEL'MMA1192' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN52
+     C                     MOVE 'N'       WDTAOK
+     C                     ENDIF
+      *
+      ** 2. Currency Code must be valid.
+      *
+     C           #0CCY     IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY 'POPTN   7
+     C                     PARM           #0CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'MMA1193' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN52
+     C                     MOVE 'N'       WDTAOK
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCRN - Subfile Screen Process                              *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls    : SRLOAD, SRMSGQ, SRPSFL, SRPSEL                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSCRN    BEGSR
+      *
+      ** Clear first subfile.
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL1669C0
+     C                     MOVE '0'       *IN75
+      *
+      ** Initialise RRN fields for first subfile.
+      *
+     C                     Z-ADD0         #0RRN   40
+     C                     Z-ADD0         WSVRRN  40
+      *
+      ** Enable  'F13=Select All' and 'F13' key.
+      *
+     C                     MOVE '1'       *IN33
+      *
+      ** Build key list for DLOISSL0.
+      *
+     C                     MOVEL#0CCY     L5CURR
+     C           PENT      IFEQ 'ALL'
+     C                     MOVEL*BLANKS   L5BRCA
+     C                     ELSE
+     C                     MOVELPENT      L5BRCA
+     C                     ENDIF
+      *
+      ** Position in file PF/DLOISSPD - OIS Settlement Control File.
+      ** LF/DLOISSL4 key is CURR/BRCH/DLNO selecting only records
+      ** where L5RFIN(Rate Fixed Indicator) is 'Y' and L5SRUN
+      ** (Settlement Runs) is zero.
+      *
+     C           KOISS2    SETLLDLOISSL0
+      *
+      ** Read first record from file (no lock).
+      *
+     C                     READ DLOISSL0            N    70
+      *
+      ** Check if record found matches our search criteria.
+      *
+     C           PENT      IFEQ 'ALL'
+     C           L5CURR    IFNE #0CCY
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+     C                     ELSE
+     C           L5CURR    IFNE #0CCY
+     C           L5BRCA    ORNE PENT
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Continue while the record found matches the search criteria.
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+      ** Load the details into the subfile record and write.
+      *
+     C                     EXSR SRLOAD
+      *
+      ** Read the next record (no lock).
+      *
+     C                     READ DLOISSL0            N    70
+      *
+      ** Check if record found matches our search criteria.
+      *
+     C           *IN70     IFEQ *OFF
+      *
+     C           PENT      IFEQ 'ALL'
+     C           L5CURR    IFNE #0CCY
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+     C                     ELSE
+     C           L5CURR    IFNE #0CCY
+     C           L5BRCA    ORNE PENT
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End Read Loop.
+      *
+     C                     ENDDO
+      *
+      ** Initialise RRN to 1 to display the first page of the subfile.
+      *
+     C           WSVRRN    IFGT 1
+     C                     Z-ADD1         #0RRN
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN12
+      *
+      ** Continue until F3 or F12 is pressed.
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+      *
+      ** Display Screen Header, Footer & Messages.
+      *
+     C                     WRITEDL1669F2
+     C                     WRITEDL1669F4
+     C                     WRITEDL1669C2
+      *
+      ** If the subfile is empty, display 'No Details' screen.
+      *
+     C           WSVRRN    IFEQ 0
+     C                     EXFMTDL1669F3
+     C                     ENDIF
+      *
+      ** If the subfile is not empty, display the contents.
+      *
+     C           WSVRRN    IFNE 0
+     C                     EXFMTDL1669C0
+     C                     ENDIF
+      *
+      ** Clear program message queue.
+      *
+     C                     EXSR SRMSGQ
+      *
+      ** If F12 is taken revert to initial screen processing.
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVE *BLANKS   #0CCY
+     C                     MOVE *BLANKS   #0SEL
+     C                     MOVE '0'       *IN02
+     C                     ITER
+     C                     ENDIF
+      *
+      ** If F3 is pressed, end transaction completely.
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       PCMD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If F13 is taken (Select All).
+      *
+     C           *IN13     IFEQ '1'
+     C                     EXSR SRPSFL
+     C           #0RRN     IFGT *ZERO
+     C                     Z-ADD1         #0RRN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Enter is pressed.
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           *IN13     ANDEQ'0'
+     C                     EXSR SRPSEL
+      *
+      ** If subfile is not empty.
+      *
+     C           WSVRRN    IFGT *ZERO
+      *
+      ** If one of the select fields has an incorrect value.
+      *
+     C           WRNREC    IFNE *ZERO
+     C                     Z-ADDWRNREC    #0RRN
+     C                     ELSE
+     C                     Z-ADDWSVRRN    #0RRN
+     C                     ENDIF
+      *
+      ** If no record was selected.
+      *
+     C           WSLCTD    IFNE 'Y'
+     C                     Z-ADD1         #0RRN
+     C                     ENDIF
+      *
+      ** If one of the select fields has an incorrect value.
+      *
+     C           WSLERR    IFEQ '1'
+     C                     MOVE 'MMA1194' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Subfile Load Process                                *
+      *                                                               *
+      *  Called by: SRSCRN                                            *
+      *                                                               *
+      *  Calls    : AOCUSTR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Move fields from the OIS Settlement Control File record
+      ** into the subfile record.
+      *
+     C                     MOVELL5DLNO    #0DLNO
+     C                     MOVELL5BRCA    #0BRCH
+     C                     MOVELL5CURR    #0CCYS
+      *
+      ** Chain to DEALS to get Customer Number.
+      *
+     C           L5DLNO    CHAINDEALS                71
+      *
+      ** Now read customer file for customer report name.
+      *
+     C                     MOVEL*BLANKS   #0CNAM
+      *
+     C           *IN71     IFEQ '0'
+      *
+     C                     MOVE CNUM      WCNUM   6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WCNUM     PKEY   10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCUSTPD'DBFILE
+     C                     MOVELPKEY      DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELBBCRNM    #0CNAM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         #0RRN
+     C                     ADD  1         WSVRRN
+      *
+     C                     WRITEDL1669S0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPSFL - Process all record(s)                               *
+      *                                                               *
+      *  Called by: SRSCRN                                            *
+      *                                                               *
+      *  Calls    : SRTRAN, SRCNFI                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPSFL    BEGSR
+      *
+     C                     MOVE '0'       *IN33
+      *
+      ** Update Subfile 1, setting all records to selected.
+      *
+     C                     Z-ADD1         Z       40
+     C           Z         DOWLEWSVRRN
+      *
+     C           Z         CHAINDL1669S0             41
+     C           *IN41     IFEQ '0'
+     C                     MOVE 'X'       #0SEL
+     C                     UPDATDL1669S0
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+      ** Transfer all selected records to Subfile 2 for confirmation.
+      *
+     C                     EXSR SRTRAN
+      *
+      ** Display confirmation screen
+      *
+     C           WCTR      IFGT *ZERO
+     C                     EXSR SRCNFI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPSEL- Process select records(s)                            *
+      *                                                               *
+      *  Called by: SRSCRN                                            *
+      *                                                               *
+      *  Calls    : ZASNMS, SRVSEL                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPSEL    BEGSR
+      *
+     C                     MOVE '0'       WSLERR  1
+      *
+      ** Validate if 'SELECT' field is 'X'.
+      *
+     C                     EXSR SRVSEL
+      *
+     C           WSLERR    IFEQ '0'
+      *
+      ** Transfer all selected records to Subfile 2 for confirmation.
+      *
+     C                     EXSR SRTRAN
+      *
+      ** Display confirmation screen.
+      *
+     C           WCTR      IFGT *ZERO
+     C                     EXSR SRCNFI
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVSEL- Validate Select Field                                *
+      *                                                               *
+      *  Called by: SRPSEL                                            *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVSEL    BEGSR
+      *
+     C                     MOVE 'N'       WSLCTD  1
+     C                     MOVE 'N'       WERROR  1
+     C                     Z-ADD*ZERO     WRNREC
+      *
+     C                     Z-ADD1         Z       40
+      *
+     C           Z         DOWLEWSVRRN
+      *
+      ** Read next records from Subfile 1.
+      *
+     C           Z         CHAINDL1669S0             41
+      *
+     C                     MOVE '0'       #0SERR
+     C                     MOVE '0'       *IN02
+      *
+      ** Check selection field for valid entry.
+      *
+     C           #0SEL     IFNE *BLANK
+     C           #0SEL     ANDNE'X'
+      *
+      ** Invalid entry.
+      *
+     C                     MOVE '1'       #0SERR
+     C                     MOVE '1'       *IN02
+     C           WERROR    IFNE 'Y'
+     C                     Z-ADD#0RRN     WRNREC  40
+     C                     MOVE '1'       WSLERR
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set WSLCTD to show that at least one record has been selected.
+      *
+     C           #0SEL     IFEQ 'X'
+     C           WSLCTD    ANDNE'Y'
+     C                     MOVEL'Y'       WSLCTD
+     C                     ENDIF
+      *
+     C                     UPDATDL1669S0
+      *
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTRAN - Transfer selected records from first subfile        *
+      *           to second subfile for confirmation                  *
+      *                                                               *
+      *  Called by: SRPSFL, SRPSEL                                    *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAN    BEGSR
+      *
+      ** Clear Subfile 2.
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL1669C1
+     C                     MOVE '0'       *IN75
+      *
+     C                     Z-ADD*ZERO     RRN1    40
+     C                     Z-ADD*ZERO     WCTR    40
+     C                     Z-ADD1         Z       40
+     C                     MOVE 'Y'       WSTSEL  1
+      *
+      ** Copy selected Subfile 1 records to Subfile 2.
+      *
+     C           Z         DOWLEWSVRRN
+      *
+     C           Z         CHAINDL1669S0             41
+      *
+      ** Record has been selected.
+      *
+     C           *IN41     IFEQ '0'
+     C           #0SEL     ANDEQ'X'
+      *
+     C           WSTSEL    IFEQ 'Y'
+     C                     Z-ADDZ         WRNREC
+     C                     MOVE 'N'       WSTSEL
+     C                     ENDIF
+      *
+      ** Copy fields to Subfile 2 record.
+      *
+     C                     ADD  1         RRN1
+     C                     MOVE #0SEL     #1SEL
+     C                     MOVE #0DLNO    #1DLNO
+     C                     MOVE #0CNAM    #1CNAM
+     C                     MOVE #0BRCH    #1BRCH
+     C                     MOVE #0CCYS    #1CCYS
+     C                     MOVE #0WARN    #1WARN
+     C                     MOVE #0RFIN    #1RFIN
+     C                     MOVE #0SERR    #1SERR
+      *
+     C                     WRITEDL1669S1
+      *
+     C                     ADD  1         WCTR
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCNFI - Display process confirmation screen                 *
+      *                                                               *
+      *  Called by: SRPSFL, SRPSEL                                    *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCNFI    BEGSR
+      *
+     C                     EXSR SRMSGQ
+     C                     WRITEDL1669C2
+      *
+      ** Display Confirmation Screen until F3 or F12 or Enter is pressed.
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+      *
+     C                     WRITEDL1669F5
+     C                     EXFMTDL1669C1
+      *
+      ** Enter is pressed. Update PF/DLOISSPD records.
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR SRUPDF
+     C                     EXSR SREND
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** If F3 is pressed, end transaction completely.
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       PCMD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN12
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDF - File Update PF/DEALSDG                              *
+      *                                                               *
+      *  Called by: SRCNFI                                            *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDF    BEGSR
+      *
+     C                     Z-ADD1         Z       40
+      *
+      ** Read sequentially through Subfile 1.
+      *
+     C           Z         DOWLEWSVRRN
+      *
+     C           Z         CHAINDL1669S0             41
+      *
+      ** Subfile record has been selected.
+      *
+     C           #0SEL     IFEQ 'X'
+      *
+      ** Build key for chain to LF/DLOISSL0.
+      *
+     C                     MOVEL#0CCYS    L5CURR
+     C                     MOVEL#0BRCH    L5BRCA
+     C                     MOVEL#0DLNO    L5DLNO
+      *
+     C           KOISS1    CHAINDLOISSL0             73
+      *
+     C           *IN73     IFEQ *OFF
+     C                     MOVE 'Y'       L5SFST
+     C                     UPDATDLOISSD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation process                              *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls    : *PSSR, AOBANKR0                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PPARM 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL1669  'DBPGM
+     C                     OUT  LDA
+      *
+      ** Define message file to be used
+      *
+     C                     MOVEL'DRSMM   'ZAMSGF 10
+     C                     MOVEL#2PGM     ZAPGMQ 10
+      *
+      ** Initialise Work Fields.
+      *
+     C                     MOVE *BLANKS   #0CCY
+     C           *LIKE     DEFN #0CCY     SVCCY
+     C                     MOVE '0'       *IN52
+      *
+      ** Set on indicator for SFLEND
+      *
+     C                     MOVE '1'       *IN40
+      *
+      ** Access Bank Details (SDBANKPD).
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Setup Midas Run Date
+      *
+     C                     MOVE BJMRDT    #0RUNA
+      *
+     C                     MOVEL*BLANKS   ZAPGRL  5
+     C                     MOVEL*BLANKS   ZAMSID  7
+     C                     MOVEL*BLANKS   ZAMSDA132
+     C                     MOVEL*BLANKS   ZAMSTP  7
+      *
+     C                     MOVE *BLANK    WDTAOK  1
+      *
+      ** Set up key lists.
+      *
+     C           KOISS1    KLIST
+     C                     KFLD           L5CURR
+     C                     KFLD           L5BRCA
+     C                     KFLD           L5DLNO
+      *
+     C           KOISS2    KLIST
+     C                     KFLD           L5CURR
+     C                     KFLD           L5BRCA
+      *
+      ** Set on *IN98 according to date format.
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE *OFF      *IN98
+     C                     ELSE
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Read through the OIS Settlement Control File, PF/DLOISSPD,
+      ** Setting all fields L5SFST(Select For Settlement) to 'N'.
+      *
+     C                     READ DLOISSL0                 74
+     C           *IN74     DOWEQ'0'
+     C                     MOVEL'N'       L5SFST
+     C                     UPDATDLOISSD0
+     C                     READ DLOISSL0                 74
+     C                     ENDDO
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND - End Program Subroutine                               *
+      *                                                               *
+      *  Called by: Main Processing Routine                           *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+      ** 1st byte of 100 byte parameter passed back to FCC0201 is set
+      ** to 'N' to indicate that Pay/Receive for these deals is being
+      ** done for the first time (ie it is not being rerun).
+      *
+     C                     MOVEL'N'       PPARM
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send Message on subfile message queue               *
+      *                                                               *
+      *  Called by: SRVALD, SRSCRN                                    *
+      *                                                               *
+      *  Calls:     Y2SNMGC                                           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ
+     C                     PARM           ZAPGRL
+     C                     PARM           ZAMSID
+     C                     PARM           ZAMSGF
+     C                     PARM           ZAMSDA
+     C                     PARM           ZAMSTP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMSGQ     : Clear message subfile and set off indicators    *
+      *                                                               *
+      *  Called by  : Main Progcessing Routine                        *
+      *                                                               *
+      *  Calls      : Y2CLMSC                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMSGQ    BEGSR
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #2PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Set off error indicator for Currency Code field.
+      *
+     C                     MOVE '0'       *IN52
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

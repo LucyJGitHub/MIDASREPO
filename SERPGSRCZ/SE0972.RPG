@@ -1,0 +1,294 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security Ledger Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0972 - MONTHLY TRADES FILE EXTRACT                         *
+     F*                                                               *
+     F*  Function: Produce extract for use in Security Ledger Report  *
+     F*   (COB)    showing all Trades for the current month.          *
+     F*                                                               *
+     F*  Called by: SEC0908 - Security Ledger Report                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CPK024             Date 13Feb06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01502             Date 08JUL94               *
+     F*                 052254             Date 10JAN94               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01271             DATE 19JUN90               *
+     F*                 E21621             DATE 03APR90               *
+     F*                 E20160             DATE 09NOV89               *
+     F*                 E20125             DATE 09NOV89               *
+     F*                 E18009             DATE 27/04/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK024 - Packaging for MPLUS 1.2.1. EUTX from data structure *
+      *           SESTAT was renamed to EUTXB                         *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E21970 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E21621 - Interest is now held on the file with the correct   *   E21621
+     F*           sign in all cases, so E20160 is no longer necessary *   E21621
+     F*           and has been reversed.                              *   E21621
+     F*  E20160 - Ex-Coupon and Ex-Dividend Interest Amount should be *   E20160
+     F*           made negative for extract (to show on SE0975P1).    *   E20160
+     F*  E20125 - Extract Trades valued this month, but entered in    *   E20125
+     F*           a previous month.                                   *   E20125
+     F*  E18009 - RECOMPILE OVER CORRECT SESTAT, 128 LONG.            *   E18009
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F***TRADDT**IF**E***        K        DISK                            E20125
+     FTRDLC   IF  E           K        DISK                               E20125
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F* ICD       TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F**HOL*******TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     FMTRADD  O   E                    DISK
+     FSE0972AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F***XDATE3*-*Calculate*any*number*of*working*days*back*in*a*******   E20125
+     F************currency*********************************************   E20125
+     F***ZICD2**-*Access*ICD*record*2**********************************   E20125
+     F*  ZSYSTM - ACCESS ICD RECORD                                   *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E***********         XCCY       25  3                                E20125
+      /SPACE 3
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ***  Local Data area for DB Error Information
+     I*DA********UDS                            256                       S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ISESTAT    E DSSESTAT
+     I              EUTX                            EUTXB                                     CPK024
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C*  FIRST TIME PROCESSING
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0972'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* Get installation Control data record 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* Error in ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'                        ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            * DB ERROR 01 *S01117
+     C                     Z-ADD1         DBASE                        1 *S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   e29170
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+     C**Get*Installation*Control*data*record*2*************************   E20125
+     C***********                                                         E20125
+     C***********          EXSR ZICD2                                     E20125
+     C***********                                                         E20125
+     C**Error*in*ZICDSE************************************************   E20125
+     C***********                                                         E20125
+     C************IN99     IFEQ '1'                        ***************E20125
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**E20125
+     C***********          MOVEL'TABLE'   DBFILE           ***************E20125
+     C***********          MOVELZTABKY    DBKEY                           E20125
+     C***********          WRITEHEADAU                                    E20125
+     C***********          WRITEERROR                                     E20125
+     C***********          WRITETRAILAU                                   E20125
+     C***********          SETON                     U7U8LR               E20125
+     C***********          RETRN                                          E20125
+     C***********          END                                            E20125
+     C*
+     C* Fetch SESTAT for date of last working day in previous month
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C***********          MOVE EOPM      ZDAYNO                          E20125
+     C***********          MOVE LOCY      ZCCY                            E20125
+     C***********          Z-ADD1         ZNRDYS                          E20125
+     C***********          EXSR XDATE3                                    E20125
+     C***********                                                         E20125
+     C**Read*all*trade*records*from*this*point*************************   E20125
+     C* Old method missed trades entered last month but valued this month.E20125
+     C*
+     C                     MOVE EOPM      EOPMNO  50                      E20125
+     C***********ZDAYNO    SETGTTRADSDF                                   E20125
+     C           *INLR     DOWEQ'0'
+     C                     READ TRADSDF                  LR
+     C           *INLR     IFEQ '0'
+     C*
+     C**Only*process*live,*non-matured,*complete*records***************   E20125
+     C** This selection process is now performed by LF/TRDLC.             E20125
+     C*
+     C***********RECI      IFNE '*'                                       E20125
+     C***********RECI      ANDNE'M'                                       E20125
+     C***********TINC      ANDEQ'C'                                       E20125
+     C*                                                                   E20125
+     C* Extract if entered/changed this month or valued this month.       E20125
+     C           TDVD      IFGT EOPMNO                                    E20125
+     C           LCD       ORGT EOPMNO                                    E20125
+     C*
+     C* Output record to extract file
+     C*
+     C                     MOVE TDSS      MSEC
+     C                     MOVE TDRF      MTRF
+     C                     MOVE TDTP      MTTP
+     C                     Z-ADDTDDT      MTRD
+     C                     Z-ADDTDVD      MVAD
+     C                     MOVE TPDY      MPDY
+     C                     MOVE TNMC      MNCY
+     C***********ACIN      IFEQ 'X'                                E20160 E21621
+     C***********          Z-SUBITRA      MPHI                     E20160 E21621
+     C***********          ELSE                                    E20160 E21621
+     C                     Z-ADDITRA      MPHI
+     C***********          END                                     E20160 E21621
+     C                     Z-ADDTCTR      MCTV
+     C                     MOVE PCOD      MPCD
+     C                     MOVE TINC      INCI
+     C***********          MOVE TDBR      MBRA                            S01117
+     C                     MOVE TDBA      MBRA                            S01117
+     C                     MOVE TCNR      MCPA
+     C                     MOVE TDMI      CDMK
+     C                     MOVE DELF      MDFR
+     C                     MOVE DELT      MDTO
+     C                     MOVE NOML      BCNL
+     C                     WRITEMTRADDF
+     C*
+     C* Keep count of records written
+     C*
+     C                     ADD  1         COUNT
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C* Last record read - print Audit Report
+     C*
+     C                     WRITEHEADAU
+     C                     WRITEDETLAU
+     C***********          WRITETRAILAU                                   E29170
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     RT
+      *                                                               *
+      *================================================================
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*   *PSSR -- ERROR HANDLING SUBROUTINE                              S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C           *PSSR     BEGSR                                          S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     SETON                     LR                   S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+      ***/EJECT******************                                         E20125
+     C***/COPY*ZSRSRC,XDATE3Z1***                                         E20125
+      ***/EJECT*****************                                          E20125
+     C***/COPY*ZSRSRC,ZICD2Z1***                                          E20125
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ER Account Codes Decision Table List')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module                           */
+/*                                                                   */
+/*       ERC000175 - Midas ER Account Codes Decision Table List      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CER045  *CREATE    Date 20Jul09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER045 - German Features - Reporting Bundesbank             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PMODE &PSEQ &PLEV &PENT)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PSEQ)  TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PLEV)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PENT)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ERC000175 - Midas ER Account Codes +
+                          Decision Table List') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* ER Account Codes Decision Table List */
+ 
+             CALL       PGM(ER000175) PARM(&PMODE &PSEQ)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ERC000175 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

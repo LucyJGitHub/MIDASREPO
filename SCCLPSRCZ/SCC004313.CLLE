@@ -1,0 +1,266 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Save master library to MAINDB')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - System Control Module                            */
+/*                                                                   */
+/*       SCC004313 -  Save Master Library to MAINDB                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*       Prev Amend No. 207764             Date 23Jul02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       207764 - Change all SAV* and RST* commands to print a       */
+/*                report of objects saved or restored.               */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&COMP_NAM &COMP_SEQ)
+ 
+/** Declare variables */
+ 
+             DCL        VAR(&COMP_NAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMP_SEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RTNC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CSC001) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&CSC003) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&AUTOCOB) TYPE(*CHAR) LEN(111)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYS_DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYS_DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYS_DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&ASP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SMSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 +
+                          'IASPgroup' &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)                         /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+ 
+/** Check if CSC001 is installed */
+ 
+             CHGVAR     VAR(&RTNC) VALUE('       ')
+             CHGVAR     VAR(&SARD) VALUE('CSC001')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SARD &SFMT)
+ 
+/** Database error */
+ 
+             IF         COND(&RTNC *NE '       ' *AND &RTNC *NE +
+                          '*NRF   ') THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                            TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                          VAR(&CSC001) VALUE('Y'))
+ 
+/** Check if CSC003 is installed */
+ 
+             CHGVAR     VAR(&RTNC) VALUE('       ')
+             CHGVAR     VAR(&SARD) VALUE('CSC003')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CALL       PGM(AOSARDR0) PARM(&RTNC &OPTN &SARD &SFMT)
+ 
+/** Database error */
+ 
+             IF         COND(&RTNC *NE '       ' *AND &RTNC *NE +
+                          '*NRF   ') THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                            TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&RTNC *EQ '       ') THEN(CHGVAR +
+                          VAR(&CSC003) VALUE('Y'))
+ 
+/** Check component sequence against SAR CSC001 */
+ 
+             IF         COND((&COMP_SEQ *EQ 1 +
+                          *AND &CSC001 *EQ 'Y') +
+                          *OR (&COMP_SEQ *EQ 2 +
+                          *AND &CSC001 *NE 'Y')) +
+                            THEN(GOTO CMDLBL(END))
+ 
+/** Call CB0602X to retrieve auto COB information */
+ 
+             CHGVAR     VAR(%SST(&AUTOCOB 1 10)) VALUE('*TODAY    ')
+             CALL       PGM(CB0602X) PARM(&RTNC &AUTOCOB)
+ 
+/** Database error */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                            TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** If option to save the next day database on autocob is *DISK */
+ 
+             IF         COND(%SST(&AUTOCOB 36 5) *EQ '*DISK') +
+               THEN(GOTO CMDLBL(END))
+ 
+/** Access SDSTAT to get the current system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&SYS_DILIB) VALUE(&PREFIX *CAT 'DILIB')
+             CHGVAR     VAR(&SYS_DMLIB) VALUE(&PREFIX *CAT 'DMLIB')
+             CHGVAR     VAR(&SYS_DTALIB) VALUE(&PREFIX *CAT 'DTALIB')
+ 
+/** Check if save file MAINDB exists */
+ 
+             CHKOBJ     OBJ(&SYS_DILIB/MAINDB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT)
+             CHGVAR     VAR(&TEXT) VALUE(%SST(&RUNDAT 1 7) *CAT +
+                          ' - Master Library savefile')
+             CHGVAR     VAR(&ASP) VALUE(%SST(&AUTOCOB 51 2))
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             CRTSAVF    FILE(&SYS_DILIB/MAINDB) TEXT(&TEXT) +
+                          ASP(*LIBASP) AUT(*LIBCRTAUT)                                    /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             CRTSAVF    FILE(&SYS_DILIB/MAINDB) TEXT(&TEXT) +
+                          ASP(&ASP) AUT(*LIBCRTAUT)
+             ENDDO                                                                        /*CSC043*/
+             ENDDO
+ 
+/** Save master library to savefile MAINDB      */
+/** and Data Area library to savefile MAINDBDTA */
+ 
+             IF         COND(&CSC003 *EQ 'Y') THEN(DO)
+/**********    SAVLIB     LIB(&SYS_DMLIB) DEV(*SAVF) +            */                      /*207764*/
+/**********                 SAVF(&SYS_DILIB/MAINDB) CLEAR(*ALL) + */                      /*207764*/
+/**********                   ACCPTH(*YES)                        */                      /*207764*/
+               SAVLIB     LIB(&SYS_DMLIB) DEV(*SAVF) +
+                            SAVF(&SYS_DILIB/MAINDB) CLEAR(*ALL) +
+                            ACCPTH(*YES) OUTPUT(*PRINT)                                   /*207764*/
+ 
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated - library ' +
+                          *CAT &PREFIX *CAT 'DMLIB' *CAT ' NOT +
+                            saved')
+               SNDMSG     MSG(&SMSG) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+               ENDDO
+ 
+/**********    SAVLIB     LIB(&SYS_DTALIB) DEV(*SAVF) +              */                   /*207764*/
+/**********                 SAVF(&SYS_DILIB/MAINDBDTA) CLEAR(*ALL) + */                   /*207764*/
+/**********                   ACCPTH(*YES)                           */                   /*207764*/
+               SAVLIB     LIB(&SYS_DTALIB) DEV(*SAVF) +
+                            SAVF(&SYS_DILIB/MAINDBDTA) CLEAR(*ALL) +
+                            ACCPTH(*YES) OUTPUT(*PRINT)                                   /*207764*/
+ 
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated - library ' +
+                          *CAT &PREFIX *CAT 'DTALIB' *CAT ' NOT +
+                            saved')
+               SNDMSG     MSG(&SMSG) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+               ENDDO
+ 
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/**********    SAVLIB     LIB(&SYS_DMLIB) DEV(*SAVF) +            */                      /*207764*/
+/**********                 SAVF(&SYS_DILIB/MAINDB) CLEAR(*ALL) + */                      /*207764*/
+/**********                   ACCPTH(*NO)                         */                      /*207764*/
+               SAVLIB     LIB(&SYS_DMLIB) DEV(*SAVF) +
+                            SAVF(&SYS_DILIB/MAINDB) CLEAR(*ALL) +
+                              ACCPTH(*NO) OUTPUT(*PRINT)                                  /*207764*/
+ 
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated - library ' +
+                          *CAT &PREFIX *CAT 'DMLIB' *CAT ' NOT +
+                            saved')
+               SNDMSG     MSG(&SMSG) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+               ENDDO
+ 
+/**********    SAVLIB     LIB(&SYS_DTALIB) DEV(*SAVF) +              */                   /*207764*/
+/**********                 SAVF(&SYS_DILIB/MAINDBDTA) CLEAR(*ALL) + */                   /*207764*/
+/**********                   ACCPTH(*NO)                            */                   /*207764*/
+               SAVLIB     LIB(&SYS_DTALIB) DEV(*SAVF) +
+                            SAVF(&SYS_DILIB/MAINDBDTA) CLEAR(*ALL) +
+                              ACCPTH(*NO) OUTPUT(*PRINT)                                  /*207764*/
+ 
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('Job terminated - library ' +
+                          *CAT &PREFIX *CAT 'DTALIB' *CAT ' NOT +
+                            saved')
+               SNDMSG     MSG(&SMSG) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+               ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination - batch job */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC004313 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End of program */
+ 
+ END:
+             ENDPGM

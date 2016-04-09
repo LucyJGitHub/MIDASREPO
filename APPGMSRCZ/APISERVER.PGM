@@ -1,0 +1,173 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(APCSERVENT) ACTGRP(APISERVER)                         *                       CPK016
+/*EXI *  TEXT('Midas AP Incoming transactions server')                *
+/*E*I ***MODULE(APCSERVENT)********************************************                       CPK016
+/*E*I ***BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(APISERVER)**************                       CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas  - APIs module                                         *
+      *                                                               *
+      *  APISERVER - Incoming transaction server                      *
+      *                                                               *
+      *  Function:  This program processes incoming messages to Midas *
+      *             from external sources.                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 262992             Date 01Aug12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 261166             Date 17Jul09               *
+      *                 259935B            Date 14May09               *
+      *                 259935A            Date 07May09               *
+      *                 259935             Date 04May09               *
+      *                 260509             Date 29May09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248669             Date 25Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 CGL032             Date 05Jul04               *
+      *                 CAP084             Date 26Feb04               *
+      *                 CSE045             Date 24Mar03               *
+      *                 CPK016             Date 29Jul03               *
+      *                 CAP083             Date 20Feb03               *
+      *                 CSE040             Date 28Mar03               *
+      *                 CSE039             Date 07Mar03               *
+      *                 CDL010             Date 02Aug02               *
+      *                 CAP084             Date 25Aug03               *
+      *                 CAP078             Date 19Aug03               *
+      *                 CSE045             Date 24Mar03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209905             Date 25Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP055             Date 13Mar02               *
+      *                 CAP072             Date 02Apr02               *
+      *                 CAP166             Date  5Mar02               *
+      *                 CAS001             Date 23Nov01               *
+      *                 201429             Date 14Jan02               *
+      *                 CAP067             Date 24Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 175715             Date 08May01               *
+      *                 175717             Date 08May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 24Feb00               *
+      *                 CAP060             Date 02May01               *
+      *                 CAP057             Date 02May01               *
+      *                 CAP038             Date 02May01               *
+      *                 CAP058             Date 02May01               *
+      *                 CAP059             Date 02May01               *
+      *                 CAP042             Date 08Jan01               *
+      *                 CAP140             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP039             Date 17JUL00               *
+      *                 CAP137             Date 07Feb00               *
+      *                 CAP136             Date 15Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CDL007             Date 05Oct99               *
+      *                 CAP051             Date 17Nov99               *
+      *                 CAP032             Date 08Sep99               *
+      *                 CAP033             Date 07Sep99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CAP030             Date 15Mar99               *
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 154477             Date 29Jan99               *
+      *                 CAP005             Date 15Oct98               *
+      *                 CAP004             Date 01Oct98               *
+      *                 CAP003             Date 30Jul98               *
+      *                 CAP002  *CREATE    Date 11Feb98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  262992 - Invalid length of RIDT & BIDT fields in APIIDT      *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *           (Recompile)                                         *
+      *  261166 - Change logging and enable back ENDAPISVR            *
+      *           and make sure APISERVER runs right after COB        *
+      *           if there are any extra SHUTDOWN message sent.       *
+      *         - Recompiled due to changes in APCSERVENT.            *
+      *  259935B- APISERVER occasionally failed. Reverse 259935A      *
+      *           referring to Close and Open of the queue.           *
+      *           (Recompile)                                         *
+      *  259935A- RC2037 frequently occurs. Close and Open back the   *
+      *           queue. (Recompile)                                  *
+      *  259935 - RC2037 Frequently occurs. Retry. (Recompile).       *
+      *  260509 - Increase allocation time. (Recompile)               *
+      *  248669 - Recompiled due to changes in ZACDELAY.              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CGL032 - Automatic Exchange of Information (Recompile)       *
+      *  CAP084 - API wrapper project - prevent APISERVER jobs        *
+      *           being submitted when already active.                *
+      *  CSE045 - API for Extended Settlement for Trade Input and     *
+      *           Depot Movement (Recompiled)                         *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  CAP083 - APISERVER File Adapter                              *
+      *           Recompiled over changed APINCOMMSG                  *
+      *  CSE040 - Securities Statement Processing                     *
+      *           Recompiled over changed APINCOMMSG (SP4AP0001)      *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *           Recompiled over changed APINCOMMSG (SP4AP0001)      *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.                                     *
+      *           Recompile due to changes to APINCOMMSG.             *
+      *  CAP084 - Thin Client API Wrappers                            *
+      *           Recompiled over changed FTIPY6PD.                   *
+      *  CAP078 - Lending API enhancements - Fee input                *
+      *  CSE045 - API for Extended Settlement for Trade Input and     *
+      *           Depot Movement (Recompiled)                         *
+      *  209905 - Fiduciary API Enhancement (Recompile)               *
+      *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors (Recompiled)   *
+      *  CAP072 - Recompiled.                                         *
+      *  CAP166 - API for Non-Currency OTC (Recompile)                *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *           (Recompile)                                         *
+      *  201429 - Recompile over changed APCSERVENT.                  *
+      *  CAP067 - Repurchase Agreements API. (Recompile).             *
+      *  175715 - Recompile over changed APINCOMMSG.                  *
+      *  175717 - Recompile over changed APINCOMMSG.                  *
+      *  CSD006 - Market Data Feeds.                                  *
+      *           Recompile over change APINCOMMSG.                   *
+      *  CAP060 - Security Prices Full API                            *
+      *  CAP057 - Spot Rates Full API                                 *
+      *  CAP038 - Base Rates Full API                                 *
+      *  CAP058 - Money Market Interest Rates API                     *
+      *  CAP059 - Forward Rates API                                   *
+      *  CAP042 - Conversion of Internal Funding Deal inputs into     *
+      *           modular structure to use as APIs. (Recompile)       *
+      *  CAP140 - Conversion of SE Security Diary Event inputs into   *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed module(s).                  *
+      *  CAP039 - Conversion of Security Customer Details  into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompile over change APINCOMMSG and APCCALLCTL     *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs.                           *
+      *           Recompiled over changed module(s).                  *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed module(s).                  *
+      *  CAP051 - Automatic Authorisation                             *
+      *           Recompile over change APINCOMMSG and APCCALLCTL     *
+      *  CDL007 - Deposit Breakdown Penalty                           *
+      *           Recompile over change APINCOMMSG and APCCALLCTL     *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs. Recompiled        *
+      *           over changed module(s).                             *
+      *  CAP033 - Conversion of PM inputs into modular structure to   *
+      *           use as APIs.  Recompiled over changed module(s).    *
+      *  CAP030 - Recompiled over changed module(s).                  *
+      *  CDL006 - Dealing Fiduciary (Recompile)                       *
+      *  CPL002 - Midas-Plato Interface (recompiled)                  *
+      *  154477 - Recompile for change to MMVLDNIPD.                  *
+      *  CAP005 - Recompiled over changed module(s).                  *
+      *  CAP004 - Recompiled over changed modules, and text corrected *
+      *  CAP003 - Recompiled over changed module(s).                  *
+      *  CAP002 - Conversion of Midas inputs to modular API structure *
+      *                                                               *
+      *****************************************************************

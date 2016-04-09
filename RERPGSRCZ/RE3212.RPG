@@ -1,0 +1,926 @@
+     H              J
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas VAT & TAUX Effectif Global Maint.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   Retail  Module
+     F*                                                               *
+     F*  RE3212  -  VAT AND TAUX EFFECTIF GLOBAL MAINTENANCE          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BG2487             Date 21May04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 11Apr95               *
+      *                 S01413  *CREATE    Date 13Apr93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BG2487 - Validate all fields including 10-digit Account      *
+      *           Code.                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01408 - Hook RE3212IIPG added.                              *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*             and changes to Release 10 standards.              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FRFTD102 UF  E                    DISK                      A
+      *                                Main codes detail 2
+     FABSFI101UF  E                    DISK                      A
+      *                                Bank's description
+     FABSFAC01UF  E           K        DISK                      A
+      *                                Account keys
+     FTABTBRE IF  E                    DISK
+      *                                Retail 3 table file
+     FACCNT   IF  E           K        DISK                                                   BG2487
+     F            ACCNTAAF                          KIGNORE                                   BG2487
+     F            ACCNTACF                          KIGNORE                                   BG2487
+      *                                Account Master file                                    BG2487
+     FRE3212DFCF  E                    WORKSTN
+      *                                VAT & TAUX display file setup
+      /EJECT
+      *----------------------------------------------------------------
+     E                    IEMN        3  2                Registered bank
+     E                    INMN        3  2                Banque d'emission
+     E                    ABRN        3  2                Credit pop./mut.
+     E                    AOFN        3  2                Organ. fin.fran.
+     E                    EFFN        3  2                Etab. fin. fran.
+     E                    SCN         3  2                Head office
+     E                    AGN         3  2                Agence
+     E                    SOCN        3  2                Societes
+     E                    PARN        3  2                Particuliers
+     E                    DIVN        3  2                Divers
+     E                    INVN        3  2                Soc. investiss.
+     E                    CAPN        3  2                Org. assurances
+     E                    ABNN        6  2                Foreign corr.
+     E                    DIRN        3  2                Dir. bqe
+      *
+     E                    CPY@    1   1 80                Copyright insert.
+     E/COPY ZSRSRC,ZEDITZ1                                                                    BG2487
+      /EJECT
+     IACCNTABF                                                                                BG2487
+     I              CNUM                            CNUMX                                     BG2487
+     I              ACOD                            ACODX                                     BG2487
+     I              ACSQ                            ACSQX                                     BG2487
+     I*----------------------------------------------------------------
+     I*
+     I**   Data structure to split NC15 Field
+     I*
+     INC15        DS
+     I                                        1   6 CNUM
+     I                                        7   9 CCY
+     I**********                             10  13 ACOD                                      CGL029
+     I**********                             14  15 ACSQ                                      CGL029
+     I                                       10  19 ACOD                                      CGL029
+     I                                       20  21 ACSQ                                      CGL029
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,RE3212IIPG                                           S01408
+     I*                                                                   S01408
+     I*
+     I**   Data Area Rundat
+     I*
+     ILDA       E DSLDA                         256                                           BG2487
+      *                                                                                       BG2487
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SETF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**   System Data Structure
+     I*
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM                                     BG2487
+     I                                      244 253 JOB
+     I                                      244 253 WSID                                      BG2487
+     I                                      254 263 USER
+     ISDBANK    E DSSDBANKPD                                                                  BG2487
+      ** SD Bank Details                                                                      BG2487
+     ISDBRCH    E DSSDBRCHPD                                                                  BG2487
+      ** SD Branch Code Details                                                               BG2487
+     ISDCUST    E DSSDCUSTPD                                                                  BG2487
+     I              QQDFAC                          QQDFC1                                    BG2487
+      ** SD Customer Details                                                                  BG2487
+     ISDACOD    E DSSDACODPD                                                                  BG2487
+     I              QQACCD                          QQACC2                                    BG2487
+      ** SD Account Code Details                                                              BG2487
+     ISDCURR    E DSSDCURRPD                                                                  BG2487
+      ** SD Currency Details                                                                  BG2487
+     IDSFDY     E DSDSFDY                                                                     BG2487
+      ** Short Data Structure - used as parameter to access programs                          BG2487
+      *                                                                                       BG2487
+     IDSSDY     E DSDSSDY                                                                     BG2487
+      ** Second DS for Access programs, Long Data Structure                                   BG2487
+      /EJECT
+      *----------------------------------------------------------------
+      **   Main processing
+      *----------------------------------------------------------------
+     C*
+     C**   Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C**
+     C           KAKEY     KLIST
+     C                     KFLD           GAKEY
+     C                     KFLD           SGAKEY
+     C*
+     C**   In the Data Area RUNDAT
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     EXSR SRINIT
+      *
+      **   Access TABTBRE to know if TVA & TEG apply
+      *
+     C           1         SETLLTABTBRE
+     C                     READ TABTBRE                  04
+      *
+      **   If record found
+      *
+     C           *IN04     IFNE '1'
+      *
+     C           VATP      IFNE *BLANKS
+     C           TEGP      ORNE *BLANKS
+      *
+      **   If TVA apply, seton *IN05
+      *
+     C           VATP      IFEQ 'Y'
+     C                     MOVE '1'       *IN05
+     C                     END
+      *
+      **   If TEG apply, seton *IN06
+      *
+     C           TEGP      IFEQ 'Y'
+     C                     MOVE '1'       *IN06
+     C                     EXSR SRINZA
+     C                     END
+      *
+      **   Prepare the fields of the display file
+      *
+     C                     EXSR SRFTOS
+     C                     Z-ADD0         WHLPN   10                                          BG2487
+      *
+      **   While not CF3 pressed or general error condition (*IN75 on)
+      *
+     C           *INKC     DOUEQ'1'
+     C           *IN75     OREQ '0'
+      *                                                                                       BG2487
+      ** Display Error Message                                                                BG2487
+     C                     WRITERE3212C0                                                      BG2487
+      *                                                                                       BG2487
+      ** Write and read essage                                                                BG2487
+     C                     EXFMTRE3212F1
+      *                                                                                       BG2487
+      ** Clear program messages queue                                                         BG2487
+     C                     EXSR CLEAR                                                         BG2487
+     C           *INKC     IFEQ '0'
+     C                     MOVE '0'       *IN75
+     C                     EXSR SRVALD
+      *
+     C           *IN75     IFEQ '0'
+     C                     EXSR SRSTOF
+     C                     EXSR SRUPD
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **   End of program
+      *
+     C                     MOVE '1'       *INLR
+      *
+      /EJECT
+      *------------------------------------------------------------------
+      ** SRINIT subroutine to verify that at least one record exists on
+      **        each files and to create one if it is not already there
+      **
+      **     Called by       Main processing
+      *------------------------------------------------------------------
+      *
+     C           SRINIT    BEGSR
+     C           *NAMVAR   DEFN           LDA                                                 BG2487
+      *
+      **   System access record on ABSFI101
+      *
+     C           1         SETLLABSFI101
+     C                     READ ABSFI101                 01
+      *
+      **   If not found, the record is created
+      *
+     C           *IN01     IFEQ '1'
+     C                     WRITEABSFI1F1
+     C           1         SETLLABSFI101
+     C                     READ ABSFI101                 01
+     C                     END
+      *
+      **   System access record on ABSFAC01
+      *
+     C           *LOVAL    SETLLABSFAC01
+     C*
+     C**   ACCESS ABSFAC01  RECUP DE :
+     C**          ACOD    POUR VAT
+     C                     MOVEL'TVA 18.6'GAKEY
+     C                     MOVEL'A PAYER 'SGAKEY
+     C           KAKEY     CHAINABSFACF1             02
+      *
+      **   If not found, the record is created
+      *
+     C           *IN02     IFEQ '1'
+     C                     WRITEABSFACF1
+     C           KAKEY     CHAINABSFACF1             02    ERROR ACCES
+     C                     END
+      *
+      **   System access record on RFTD102
+      *
+     C           1         SETLLRFTD102
+     C                     READ RFTD102                  03
+      *
+      **   If not found, the record is created
+      *
+     C           *IN03     IFEQ '1'
+     C                     WRITERFTD102F
+     C           1         SETLLRFTD102
+     C                     READ RFTD102                  03
+     C                     END
+     C                     MOVE *BLANKS   @MSGID  7                                           BG2487
+     C                     MOVEL'RTSMSGF' @MSGF  10                                           BG2487
+     C           KLACNT    KLIST                                                              BG2487
+     C                     KFLD           #KCNUM                                              BG2487
+     C                     KFLD           #1CCY                                               BG2487
+     C                     KFLD           #KACOD                                              BG2487
+     C                     KFLD           #KACSQ                                              BG2487
+     C                     KFLD           #1BRCA                                              BG2487
+     C                     MOVE '1'       *IN10                                               BG2487
+      ** Initialize screen message queue                                                      BG2487
+     C                     MOVEL'*'       SPGMQ                                               BG2487
+      *                                                                                       BG2487
+     C                     CALL 'AOBANKR0'                                                    BG2487
+     C                     PARM *BLANKS   @RTCD   7                                           BG2487
+     C                     PARM '*FIRST  '@OPTN   7                                           BG2487
+     C           SDBANK    PARM SDBANK    DSFDY                                               BG2487
+      *                                                                                       BG2487
+      ** Data base error in file (SDBANKPD)                                                   BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFNE *BLANKS                                                       BG2487
+     C           *LOCK     IN   LDA                                                           BG2487
+     C                     SETON                     U7U8LR                                   BG2487
+     C                     Z-ADD1         DBASE            ************                       BG2487
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *                       BG2487
+     C                     MOVEL'*FIRST  'DBKEY            ************                       BG2487
+     C                     OUT  LDA                                                           BG2487
+     C                     EXSR *PSSR                                                         BG2487
+     C                     ENDIF                                                              BG2487
+      *
+     C                     ENDSR
+      /EJECT
+      *------------------------------------------------------------------
+      ** SRUPD subroutine to update the fields of the file(s)
+      **
+      **     Called by       Main processing
+      *------------------------------------------------------------------
+      *
+     C           SRUPD     BEGSR
+      *
+     C                     UPDATABSFI1F1
+     C   05                UPDATABSFACF1
+     C   06                UPDATRFTD102F
+      *
+     C                     ENDSR
+      /EJECT
+      *------------------------------------------------------------------
+      ** SRVALD subroutine to validate the fields of the display
+      **
+      **     Called by       Main processing
+      *------------------------------------------------------------------
+      *
+     C           SRVALD    BEGSR
+      *
+      ** Setof error indicators                                                               BG2487
+     C                     MOVEA'0000000' *IN,11                                              BG2487
+      *                                                                                       BG2487
+      ** Validate Branch Code                                                                 BG2487
+      ** If multi-branching, this is mandatory.                                               BG2487
+      *                                                                                       BG2487
+     C           #1BRCA    IFEQ *BLANKS                                                       BG2487
+     C           MBIN      ANDEQ'Y'                                                           BG2487
+     C                     MOVE '1'       *IN11                                               BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE 'USR0145' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C           MBIN      IFEQ 'N'                                                           BG2487
+     C                     MOVE BJSBRC    #1BRCA                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Check if '?' is present in Branch Code entered                                       BG2487
+      **    (WHELP will be greater than *ZERO if it does)                                     BG2487
+      *                                                                                       BG2487
+     C           '?'       SCAN #1BRCA:1  WHELP   10                                          BG2487
+     C                     ADD  WHELP     WHLPN   10                                          BG2487
+      *                                                                                       BG2487
+     C           MBIN      IFEQ 'Y'                                                           BG2487
+     C           #1BRCA    ANDNE*BLANKS                                                       BG2487
+     C                     CALL 'AOBRCHR1'                                                    BG2487
+     C                     PARM *BLANKS   @RTCD   7                                           BG2487
+     C                     PARM '*KEY    '@OPTN   7                                           BG2487
+     C                     PARM           #1BRCA                                              BG2487
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               BG2487
+     C           @RTCD     IFNE *BLANKS                                                       BG2487
+     C                     MOVE '1'       *IN11                                               BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE 'USR0095' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C           *IN75     IFEQ '0'                                                           BG2487
+     C           WHELP     ANDGT*ZERO                                                         BG2487
+     C                     MOVE A8BRCD    #1BRCA                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Check if the user is authorised to insert under the branch                           BG2487
+      *                                                                                       BG2487
+     C           MBIN      IFEQ 'Y'                                                           BG2487
+     C           *IN75     ANDEQ'0'                                                           BG2487
+     C                     CALL 'ZVACTBU'                                                     BG2487
+     C                     PARM 'Z'       @ZACTN  1                                           BG2487
+     C                     PARM #1BRCA    @ZBR    3                                           BG2487
+     C                     PARM           @ERR    10                                          BG2487
+      *                                                                                       BG2487
+      ** If not valid for user, display error message                                         BG2487
+      *                                                                                       BG2487
+     C           @ERR      IFNE *ZERO                                                         BG2487
+      *                                                                                       BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN11                                               BG2487
+     C           @ERR      IFEQ 1                                                             BG2487
+     C                     MOVE 'USR1205' @MSGID                                              BG2487
+     C                     ELSE                                                               BG2487
+     C                     MOVE 'USR1206' @MSGID                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+      *                                                                                       BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Validate customer no.                                                                BG2487
+      *                                                                                       BG2487
+     C           #1CNUM    IFEQ *ZEROS                                                        BG2487
+     C           #1CNUM    OREQ *BLANKS                                                       BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN12                                               BG2487
+     C                     MOVE 'USR0083' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           #1CNUM    IFNE *BLANKS                                                       BG2487
+     C           '?'       SCAN #1CNUM:1  WHELP                                               BG2487
+     C                     ADD  WHELP     WHLPN                                               BG2487
+     C           WHELP     IFLE 0                                                             BG2487
+     C**********           MOVE #1CNUM    WNUM7   70                                   BG2487 CSD027
+     C**********           MOVE WNUM7     WALP6   6                                    BG2487 CSD027
+     C                     MOVE #1CNUM    WALP6   6                                           CSD027
+     C           #1CNUM    IFNE WALP6                                                         BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN12                                               BG2487
+     C                     MOVE 'USR1025' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           *IN12     IFEQ '0'                                                           BG2487
+     C                     CALL 'AOCUSTR0'                                                    BG2487
+     C                     PARM *BLANKS   @RTCD   7                                           BG2487
+     C                     PARM '*KEY    '@OPTN   7                                           BG2487
+     C                     PARM #1CNUM    @KEY    6                                           BG2487
+     C                     PARM *BLANKS   @KYST   7                                           BG2487
+     C           SDCUST    PARM SDCUST    DSSDY                                               BG2487
+      *                                                                                       BG2487
+      ** Send error message if return code not blank                                          BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFNE *BLANK                                                        BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN12                                               BG2487
+     C                     MOVEL'USR2401 '@MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** No error occured in AOCUSTR0 and                                                     BG2487
+      ** '?' is present in Cust. No. entered,                                                 BG2487
+      ** get Cust. No. from Access Program                                                    BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFEQ *BLANK                                                        BG2487
+     C           WHELP     ANDGT*ZERO                                                         BG2487
+     C                     MOVE BBCUST    #1CNUM                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Validate currency                                                                    BG2487
+      *                                                                                       BG2487
+     C           #1CCY     IFEQ *BLANKS                                                       BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN13                                               BG2487
+     C                     MOVE 'USR0076' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           #1CCY     IFNE *BLANKS                                                       BG2487
+     C           '?'       SCAN #1CCY:1   WHELP                                               BG2487
+     C                     ADD  WHELP     WHLPN                                               BG2487
+      *                                                                                       BG2487
+     C                     CALL 'AOCURRR0'                                                    BG2487
+     C                     PARM *BLANKS   @RTCD   7                                           BG2487
+     C                     PARM '*KEY    '@OPTN   7                                           BG2487
+     C                     PARM           #1CCY                                               BG2487
+     C           SDCURR    PARM SDCURR    DSSDY                                               BG2487
+      *                                                                                       BG2487
+      ** Send error message if return code not blank                                          BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFNE *BLANK                                                        BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN13                                               BG2487
+     C                     MOVEL'USR2402 '@MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** No error occured in AOCURRR0 and  '?' is present                                     BG2487
+      ** in Currency Code entered get Currency Code                                           BG2487
+      ** from access program                                                                  BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFEQ *BLANK                                                        BG2487
+     C           WHELP     ANDGT*ZERO                                                         BG2487
+     C                     MOVE A6CYCD    #1CCY                                               BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** a/c code must not be blanks                                                          BG2487
+      *                                                                                       BG2487
+     C           #1ACOD    IFEQ *ZEROS                                                        BG2487
+     C           #1ACOD    OREQ *BLANKS                                                       BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN14                                               BG2487
+     C                     MOVEL'USR0079' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           #1ACOD    IFNE *BLANKS                                                       BG2487
+     C                     MOVE #1ACOD    WACOD  110                                          BG2487
+     C                     MOVE WACOD     WACD   10                                           BG2487
+     C           #1ACOD    IFNE WACD                                                          BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN14                                               BG2487
+     C                     MOVE 'USR2403' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C           *IN14     IFEQ '0'                                                           BG2487
+     C           '?'       SCAN #1ACOD:1  WHELP                                               BG2487
+     C                     ADD  WHELP     WHLPN                                               BG2487
+      *                                                                                       BG2487
+     C                     CALL 'AOACODR0'                                                    BG2487
+     C                     PARM *BLANKS   @RTCD   7                                           BG2487
+     C                     PARM '*KEY    '@OPTN   7                                           BG2487
+     C                     PARM           #1ACOD                                              BG2487
+     C           SDACOD    PARM SDACOD    DSSDY                                               BG2487
+      *                                                                                       BG2487
+      ** Error occured in AOACODR0 Access Program                                             BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFNE *BLANK                                                        BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN14                                               BG2487
+     C                     MOVEL'USR2404 '@MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** No error occured in AOACODR0 and '?' is present in                                   BG2487
+      ** Account Code entered get selected Account Code from                                  BG2487
+      ** from access program                                                                  BG2487
+      *                                                                                       BG2487
+     C           @RTCD     IFEQ *BLANK                                                        BG2487
+     C           WHELP     ANDGT*ZERO                                                         BG2487
+     C                     MOVE A5ACCD    #1ACOD                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Validate account sequence                                                            BG2487
+      *                                                                                       BG2487
+     C           #1ACSQ    IFEQ *ZEROS                                                        BG2487
+     C           #1ACSQ    OREQ *BLANKS                                                       BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN15                                               BG2487
+     C                     MOVEL'USR2405 '@MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C           #1ACSQ    IFNE *BLANKS                                                       BG2487
+     C                     MOVE #1ACSQ    WACSQ   30                                          BG2487
+     C                     MOVE WACSQ     WACQ    2                                           BG2487
+     C           #1ACSQ    IFNE WACQ                                                          BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN15                                               BG2487
+     C                     MOVE 'USR2406' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C           *IN75     IFEQ '0'                                                           BG2487
+     C           #1ACSQ    ANDNE*BLANKS                                                       BG2487
+     C           WACSQ     IFLT 1                                                             BG2487
+     C           WACSQ     ORGT 99                                                            BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN15                                               BG2487
+     C                     MOVE 'USR2407' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C**********           MOVE #1CNUM    #KCNUM  60                                   BG2487 CSD027
+     C                     MOVE #1CNUM    #KCNUM  6                                           CSD027
+     C                     MOVE #1ACOD    #KACOD 100                                          BG2487
+     C                     MOVE #1ACSQ    #KACSQ  20                                          BG2487
+      *                                                                                       BG2487
+     C           *IN75     IFEQ '0'                                                           BG2487
+      *                                                                                       BG2487
+      ** Access lf/accnt for account number                                                   BG2487
+      *                                                                                       BG2487
+     C           KLACNT    CHAINACCNTABF             70                                       BG2487
+      *                                                                                       BG2487
+      ** If no live record found                                                              BG2487
+      *                                                                                       BG2487
+     C           *IN70     IFEQ '1'                                                           BG2487
+     C           RECI      ORNE 'D'                                                           BG2487
+     C                     MOVE '1'       *IN11                                               BG2487
+     C                     MOVE '1'       *IN12                                               BG2487
+     C                     MOVE '1'       *IN13                                               BG2487
+     C                     MOVE '1'       *IN14                                               BG2487
+     C                     MOVE '1'       *IN15                                               BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     SETON                       75                                     BG2487
+     C                     MOVEL'USR0050' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+      *                                                                                       BG2487
+     C                     ENDIF                                                              BG2487
+     C           *IN70     IFEQ '0'                                                           BG2487
+     C           ACST      ANDEQ'C'                                                           BG2487
+     C           *IN75     ANDEQ'0'                                                           BG2487
+     C                     MOVE '1'       *IN11                                               BG2487
+     C                     MOVE '1'       *IN12                                               BG2487
+     C                     MOVE '1'       *IN13                                               BG2487
+     C                     MOVE '1'       *IN14                                               BG2487
+     C                     MOVE '1'       *IN15                                               BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     SETON                       75                                     BG2487
+     C                     MOVEL'USR0051' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+      ** Validate VAT Indicator                                                               BG2487
+      *                                                                                       BG2487
+     C           #1BTVA    IFNE 'Y'                                                           BG2487
+     C           #1BTVA    ANDNE'N'                                                           BG2487
+     C                     MOVE '1'       *IN16                                               BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     SETON                       75                                     BG2487
+     C                     MOVEL'USR0003' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           #1XTVA    IFEQ *ZEROS                                                        BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN17                                               BG2487
+     C                     MOVEL'USR2408 '@MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C           #1XTVA    IFNE *ZEROS                                                        BG2487
+     C           *IN17     ANDEQ'0'                                                           BG2487
+     C                     MOVE *BLANK    ZFIELD                                              BG2487
+     C                     MOVE #1XTVA    ZFIELD                                              BG2487
+     C                     MOVE 2         ZADEC                                               BG2487
+     C           10        SUB  5         ZADIG                                               BG2487
+     C                     EXSR ZALIGN                                                        BG2487
+     C           *IN99     IFEQ '1'                                                           BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     MOVE '1'       *IN17                                               BG2487
+     C                     MOVE 'USR2409' @MSGID                                              BG2487
+     C                     EXSR SNDMSG                                                        BG2487
+     C                     ENDIF                                                              BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C           WHLPN     IFGT 0                                                             BG2487
+     C           *IN75     ANDEQ'0'                                                           BG2487
+     C                     MOVE '1'       *IN75                                               BG2487
+     C                     Z-ADD0         WHLPN                                               BG2487
+     C                     ENDIF                                                              BG2487
+     C           WHLPN     IFEQ 9                                                             BG2487
+     C                     Z-ADD0         WHLPN                                               BG2487
+     C                     ENDIF                                                              BG2487
+      *                                                                                       BG2487
+     C                     ENDSR
+      /EJECT                                                                                  BG2487
+      *****************************************************************                       BG2487
+      *                                                               *                       BG2487
+      * SNDMSG - Send program message parameters                      *                       BG2487
+      *                                                               *                       BG2487
+      * CALLS - None                                                  *                       BG2487
+      *                                                               *                       BG2487
+      * CALLED BY  SRVALD - Validate fields                           *                       BG2487
+      *                                                               *                       BG2487
+      *****************************************************************                       BG2487
+     C           SNDMSG    BEGSR                                                              BG2487
+      *                                                                                       BG2487
+     C                     CALL 'SCC0240'                                                     BG2487
+     C                     PARM           @MSGID                                              BG2487
+     C                     PARM           @MSGF                                               BG2487
+      *                                                                                       BG2487
+     C                     ENDSR                                                              BG2487
+      /EJECT                                                                                  BG2487
+      *****************************************************************                       BG2487
+      *                                                               *                       BG2487
+      *  CLEAR - Clear message on program message queue               *                       BG2487
+      *                                                               *                       BG2487
+      *  Called by: Main                                              *                       BG2487
+      *                                                               *                       BG2487
+      *  Calls    : None                                              *                       BG2487
+      *                                                               *                       BG2487
+      *****************************************************************                       BG2487
+      *                                                                                       BG2487
+     C           CLEAR     BEGSR                                                              BG2487
+      *                                                                                       BG2487
+     C                     CALL 'Y2CLMSC'                                                     BG2487
+     C                     PARM ##PGM     ZAPGMQ 10                                           BG2487
+     C                     PARM '*SAME'   ZAPGRL  5                                           BG2487
+      *                                                                                       BG2487
+     C                     ENDSR                                                              BG2487
+      *                                                                                       BG2487
+      /EJECT                                                                                  BG2487
+      *****************************************************************                       BG2487
+      *                                                               *                       BG2487
+      * *PSSR  - Program exception error routine                      *                       BG2487
+      *          Called automatically if a program error occurs,      *                       BG2487
+      *          or directly by the program code using EXSR.          *                       BG2487
+      *          This subroutine DUMPs the program just once.         *                       BG2487
+      *                                                               *                       BG2487
+      * Called by: SRINIT - Initial processing                        *                       BG2487
+      *                                                               *                       BG2487
+      * Calls    : None                                               *                       BG2487
+      *                                                               *                       BG2487
+      *****************************************************************                       BG2487
+      *                                                                                       BG2487
+     C           *PSSR     BEGSR                                                              BG2487
+      *                                                                                       BG2487
+     C           @RUN      IFEQ *BLANK                                                        BG2487
+     C                     MOVE 'Y'       @RUN    1                                           BG2487
+     C                     DUMP                                                               BG2487
+     C                     CALL 'DBERRCTL'                                                    BG2487
+     C                     END                                                                BG2487
+     C                     RETRN                                                              BG2487
+      *                                                                                       BG2487
+     C                     ENDSR                                                              BG2487
+      /EJECT
+      *------------------------------------------------------------------
+      ** SRFTOS subroutine to place the fields of the files on the
+      **        display file
+      **
+      **     Called by       Main processing
+      *------------------------------------------------------------------
+      *
+     C           SRFTOS    BEGSR
+      *
+      **   If TVA apply
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE BQCTVA    #1BTVA
+     C                     MOVE XTVA      #1XTVA
+     C                     MOVE CNUM      #1CNUM
+     C                     MOVE CCY       #1CCY
+     C                     MOVE ACOD      #1ACOD
+     C                     MOVE ACSQ      #1ACSQ
+     C                     MOVE BRCA      #1BRCA
+     C                     END
+      *
+      **   If TEG apply
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVE TXUSUR    #1USUR
+      *
+     C                     MOVEAIEMN,1    #1RGB1
+     C                     MOVEAIEMN,2    #1RGB2
+     C                     MOVEAIEMN,3    #1RGB3
+      *
+     C                     MOVEAINMN,1    #1BMS1
+     C                     MOVEAINMN,2    #1BMS2
+     C                     MOVEAINMN,3    #1BMS3
+      *
+     C                     MOVEAABRN,1    #1CPM1
+     C                     MOVEAABRN,2    #1CPM2
+     C                     MOVEAABRN,3    #1CPM3
+      *
+     C                     MOVEAAOFN,1    #1ORG1
+     C                     MOVEAAOFN,2    #1ORG2
+     C                     MOVEAAOFN,3    #1ORG3
+      *
+     C                     MOVEAEFFN,1    #1ETA1
+     C                     MOVEAEFFN,2    #1ETA2
+     C                     MOVEAEFFN,3    #1ETA3
+      *
+     C                     MOVEASCN,1     #1HEA1
+     C                     MOVEASCN,2     #1HEA2
+     C                     MOVEASCN,3     #1HEA3
+      *
+     C                     MOVEAAGN,1     #1AGC1
+     C                     MOVEAAGN,2     #1AGC2
+     C                     MOVEAAGN,3     #1AGC3
+      *
+     C                     MOVEASOCN,1    #1SOC1
+     C                     MOVEASOCN,2    #1SOC2
+     C                     MOVEASOCN,3    #1SOC3
+      *
+     C                     MOVEAPARN,1    #1PAR1
+     C                     MOVEAPARN,2    #1PAR2
+     C                     MOVEAPARN,3    #1PAR3
+      *
+     C                     MOVEADIVN,1    #1DIV1
+     C                     MOVEADIVN,2    #1DIV2
+     C                     MOVEADIVN,3    #1DIV3
+      *
+     C                     MOVEAINVN,1    #1INV1
+     C                     MOVEAINVN,2    #1INV2
+     C                     MOVEAINVN,3    #1INV3
+      *
+     C                     MOVEACAPN,1    #1ASS1
+     C                     MOVEACAPN,2    #1ASS2
+     C                     MOVEACAPN,3    #1ASS3
+      *
+     C                     MOVEAABNN,1    #1FOR1
+     C                     MOVEAABNN,2    #1FOR2
+     C                     MOVEAABNN,3    #1FOR3
+     C                     MOVEAABNN,4    #1FOR4
+     C                     MOVEAABNN,5    #1FOR5
+     C                     MOVEAABNN,6    #1FOR6
+      *
+     C                     MOVEADIRN,1    #1DIR1
+     C                     MOVEADIRN,2    #1DIR2
+     C                     MOVEADIRN,3    #1DIR3
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      ** SRSTOF subroutine to prepare the fields of the file for update
+      **
+      **     Called by       Main processing
+      *-------------------------------------------------------------------
+      *
+     C           SRSTOF    BEGSR
+      *
+      **   If TVA apply
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE #1BTVA    BQCTVA
+     C                     MOVE #1XTVA    XTVA
+     C                     MOVE #1CNUM    CNUM
+     C                     MOVE #1CCY     CCY
+     C                     MOVE #1ACOD    ACOD
+     C                     MOVE #1ACSQ    ACSQ
+     C                     MOVE #1BRCA    BRCA
+     C                     END
+      *
+      **   If TEG apply
+      *
+     C           *IN06     IFEQ '1'
+     C                     MOVE #1USUR    TXUSUR
+      *
+     C                     MOVEA#1RGB1    IEMN,1
+     C                     MOVEA#1RGB2    IEMN,2
+     C                     MOVEA#1RGB3    IEMN,3
+      *
+     C                     MOVEA#1BMS1    INMN,1
+     C                     MOVEA#1BMS2    INMN,2
+     C                     MOVEA#1BMS3    INMN,3
+      *
+     C                     MOVEA#1CPM1    ABRN,1
+     C                     MOVEA#1CPM2    ABRN,2
+     C                     MOVEA#1CPM3    ABRN,3
+      *
+     C                     MOVEA#1ORG1    AOFN,1
+     C                     MOVEA#1ORG2    AOFN,2
+     C                     MOVEA#1ORG3    AOFN,3
+      *
+     C                     MOVEA#1ETA1    EFFN,1
+     C                     MOVEA#1ETA2    EFFN,2
+     C                     MOVEA#1ETA3    EFFN,3
+      *
+     C                     MOVEA#1HEA1    SCN,1
+     C                     MOVEA#1HEA2    SCN,2
+     C                     MOVEA#1HEA3    SCN,3
+      *
+     C                     MOVEA#1AGC1    AGN,1
+     C                     MOVEA#1AGC2    AGN,2
+     C                     MOVEA#1AGC3    AGN,3
+      *
+     C                     MOVEA#1SOC1    SOCN,1
+     C                     MOVEA#1SOC2    SOCN,2
+     C                     MOVEA#1SOC3    SOCN,3
+      *
+     C                     MOVEA#1PAR1    PARN,1
+     C                     MOVEA#1PAR2    PARN,2
+     C                     MOVEA#1PAR3    PARN,3
+      *
+     C                     MOVEA#1DIV1    DIVN,1
+     C                     MOVEA#1DIV2    DIVN,2
+     C                     MOVEA#1DIV3    DIVN,3
+      *
+     C                     MOVEA#1INV1    INVN,1
+     C                     MOVEA#1INV2    INVN,2
+     C                     MOVEA#1INV3    INVN,3
+      *
+     C                     MOVEA#1ASS1    CAPN,1
+     C                     MOVEA#1ASS2    CAPN,2
+     C                     MOVEA#1ASS3    CAPN,3
+      *
+     C                     MOVEA#1FOR1    ABNN,1
+     C                     MOVEA#1FOR2    ABNN,2
+     C                     MOVEA#1FOR3    ABNN,3
+     C                     MOVEA#1FOR4    ABNN,4
+     C                     MOVEA#1FOR5    ABNN,5
+     C                     MOVEA#1FOR6    ABNN,6
+      *
+     C                     MOVEA#1DIR1    DIRN,1
+     C                     MOVEA#1DIR2    DIRN,2
+     C                     MOVEA#1DIR3    DIRN,3
+      *
+     C                     MOVEAIEMN      IEM
+     C                     MOVEAINMN      INM
+     C                     MOVEAABRN      ABR
+     C                     MOVEAAOFN      AOF
+     C                     MOVEAEFFN      EFF
+     C                     MOVEASCN       SC
+     C                     MOVEAAGN       AG
+     C                     MOVEASOCN      SOC
+     C                     MOVEAPARN      PAR
+     C                     MOVEADIVN      DIV
+     C                     MOVEAINVN      INV
+     C                     MOVEACAPN      CAP
+     C                     MOVEAABNN      ABN
+     C                     MOVEADIRN      DIR
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------
+      ** SRINZA subroutine to initialise the arrays
+      **
+      **     Called by       Main processing
+      *-------------------------------------------------------------------
+      *
+     C           SRINZA    BEGSR
+      *
+     C                     MOVEAIEM       IEMN
+     C                     MOVEAINM       INMN
+     C                     MOVEAABR       ABRN
+     C                     MOVEAAOF       AOFN
+     C                     MOVEAEFF       EFFN
+     C                     MOVEASC        SCN
+     C                     MOVEAAG        AGN
+     C                     MOVEASOC       SOCN
+     C                     MOVEAPAR       PARN
+     C                     MOVEADIV       DIVN
+     C                     MOVEAINV       INVN
+     C                     MOVEACAP       CAPN
+     C                     MOVEAABN       ABNN
+     C                     MOVEADIR       DIRN
+      *
+     C                     ENDSR
+      *----------------------------------------------------------------***
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2                                                                   BG2487
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,358 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cheque number input Prompt')
+      ***************************************************************
+      **                                                           **
+      *  Midas - Dealing Module                                       *
+      **                                                           **
+      *     DL9025 - CHEQUE NUMBER INPUT                           **
+      **                                                           **
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      **                                                           **
+      ** PROGRAM INFORMATION                                       **
+      **                                                           **
+      ****The*purpose*of*this*program*is*to*prompt*for*the*range*****
+      ****of*cheque*numbers*used*and*to*verify*that*the*number*******
+      ****of*cheques*printed*match*the*number*of*cheques*printed.****
+      ****To*update*the*cheque*detail*file*with*the*cheque*detail****
+      ****file*with*the*current*cheque*number*used,*and*update*the***
+      ****cheque*control*file*with*the*number*of*cheques*printed.****
+      **  The purpose of this program is to prompt for the cheque  **
+      **  number with which to start numbering the cheques   r     **
+      **                                                           **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 048547             Date 18MAR93               *
+      *                 S01390             Date 10AUG92               *
+      *                   AUS006      DATE 18DEC90                  *
+      **                                                           **
+      *-------------------------------------------------------------*
+      *                                                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  048547 - Recompiled to reflect changes made in DL9025FM.   *
+      *                                                             *
+      *  S01390 - Release 10 Changes for Australianisation          *
+      *  AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY             *     AUS006
+      *                                                             *
+      ***************************************************************     S01390
+      ***/EJECT*****/                                                     S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+     F*
+     F* INPUT FILES
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***CHQNOZZ*UF**E                    DISK                            S01390
+     FCHQNOZZ IF  E                    DISK                               S01390
+     F***TABTB10*IF**E                    DISK                            S01390
+     F*
+     F**UPDATE*FILES******************************************************S01390
+     F***CHQNOAA*UF**E                    DISK                            S01390
+     F*
+     F* DISPLAY FILES
+     FDL9025FMCF  E                    WORKSTN
+      /EJECT
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E*
+     E                    CPY@    1   1 80                                S01390
+      ***/EJECT*****                                                      S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I*
+     IRPTPM       DS                            100                       S01390
+     I                                        1   6 STRNB                 S01390
+     I*                                                                   S01390
+     IPSDS       SDS                                                      S01390
+     I                                      244 253 WKSTN                 S01390
+     I                                      254 263 USER                  S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   PS0040
+      ***/EJECT*****                                                      S01390
+     C***************CCCCCCCCCCCCCC                                       S01390
+     C***************CCCCCCCCCCCCCC                                       S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C*
+     C                     EXSR #INIT                      INITIALISATION
+     C*
+     C           NFW       DOWEQ'SCRN01'
+     C*
+     C                     EXFMTSCRN01
+     C*                                                                LS
+     C* Setof error indicators
+     C                     MOVEA'000000'  *IN,50
+     C*
+     C**Cmd/1*to*end*program**********************************************S01390
+     C************IN01     CABEQ#ON       #END                            S01390
+     C**   IF CMD/3 IS PRESSED, RETURN TO CALLING PROGRAM                 S01390
+     C**                                                                  S01390
+     C           *IN03     IFEQ '1'                                       S01390
+     C                     MOVE 'E'       CMD                             S01390
+     C                     SETON                     LR                   S01390
+     C                     GOTO #END                                      S01390
+     C                     END                                            S01390
+     C**                                                                  S01390
+     C**   IF CMD/12 IS PRESSED, RETURN TO CALLING PROGRAM                S01390
+     C**                                                                  S01390
+     C           *IN12     IFEQ '1'                                       S01390
+     C                     MOVE 'F'       CMD                             S01390
+     C                     SETON                     LR                   S01390
+     C                     GOTO #END                                      S01390
+     C                     END                                            S01390
+     C**                                                                  S01390
+     C**   IF CMD/10 IS PRESSED, RETURN TO CALLING PROGRAM                S01390
+     C**                                                                  S01390
+     C           *IN10     IFEQ '1'                                       S01390
+     C                     MOVE 'D'       CMD                             S01390
+     C                     SETON                     LR                   S01390
+     C                     GOTO #END                                      S01390
+     C                     END                                            S01390
+     C*
+     C* Validate screen 1
+     C                     CAS            VALSC1
+     C                     END
+     C***********                                                         S01390
+     C**If*the*screen*is*valid*process*the*information*on*it.*************S01390
+     C***********NFW       CASNE'SCRN01'  PROCES                          S01390
+     C***********          END                                            S01390
+     C*
+     C                     END
+     C***********                                                         S01390
+     C**If*record*was*found*on*CHQNOZZ*in*#INIT*then*update*the*record****S01390
+     C************IN99     IFEQ #OFF                                      S01390
+     C***********          Z-ADDNCHQ      LCHQ                            S01390
+     C***********          UPDATCHQNOZZF                                  S01390
+     C***********          END                                            S01390
+     C*
+     C* End program
+     C           #END      TAG
+     C                     MOVELSTRNO     STRNB                           E245
+     C                     MOVE #ON       *INLR
+      /TITLE INITIALISACTION ROUTINE
+     C           #INIT     BEGSR
+      **--------------------------------------------------------#INIT
+      **                                                           **
+      ** #INIT - INITIALISATION ROUTINE.                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C* Setup #ON and #OFF parameters
+     C                     MOVE '1'       #ON     1
+     C                     MOVE '0'       #OFF    1
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*
+     C* Setup time for display on screen
+     C                     TIME           TIME    60
+     C*
+     C* Read table file for bank title
+     C***********          READ TABTB10                  H1               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*
+     C* Read the cheque number control file
+     C                     READ CHQNOZZ                  99
+     C***********                                                         S01390
+     C**Calculate*the*number*of*cheques*to*be*printed*********************S01390
+     C***********NCHQ      SUB  LCHQ      NOCHQ                           S01390
+     C*
+     C                     MOVE 'SCRN01'  NFW     6
+     C*                                                                   E245
+     C**   INITIALISE SCREEN FIELDS                                       E245
+     C**  ACTION CODES I,A ALLOW INPUT TO SCREEN FIELDS                   E245
+     C           ACT       IFEQ 'I'                                       E245
+     C                     MOVE *BLANKS   STRNO
+     C                     ELSE                                           E245
+     C*                                                                   E245
+     C**  ACTION CODES E,D DO NOT ALLOW INPUT TO SCREEN FIELDS            E245
+     C**  ACTION CODES D ALLOW F10                                        E245
+     C                     MOVELSTRNB     STRNO                           E245
+     C           ACT       COMP 'D'                      46               E245
+     C           ACT       COMP 'D'                      45               E245
+     C  N45      ACT       COMP 'E'                      45               E245
+     C                     END                                            E245
+     C*
+     C                     ENDSR
+     C*
+      /TITLE VALIDATE SCREEN TWO
+     C           VALSC1    BEGSR
+      **-------------------------------------------------------VALSC1
+      **                                                           **
+      ** VALSC1 - VALIDATE SCREEN ONE.                             **
+      **                                                           **
+      ****51******First*cheque*number*may*not*be*blank***************     S01390
+      **  51      Cheque number may not be blank                   **     S01390
+      ****52******Last*cheque*number*may*not*be*blank****************     S01390
+      ****53******Last*cheque*printed*number*may*not*be*blank********     S01390
+      ****54******Last*cheque*number*must*be*greater*than*first******     S01390
+      ************cheque*number**************************************     S01390
+      **  54      Cheque number must be greater than last cheque   **     S01390
+      **          number used                                      **     S01390
+      **  77      Common error indicator                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C* SETOF COMMON ERROR INDICATOR
+     C                     MOVE #OFF      *IN77
+     C*
+     C*
+     C***********FCHQ      IFEQ '      '                                  S01390
+     C                     MOVELSTRNO     STRNP                           S01390
+     C           STRNO     IFEQ '      '                                  S01390
+     C                     MOVE #ON       *IN51
+     C                     MOVE #ON       *IN77
+     C                     ELSE
+     C*
+     C***********LCHQ1     IFEQ '      '                                  S01390
+     C***********          MOVE #ON       *IN52                           S01390
+     C***********          MOVE #ON       *IN77                           S01390
+     C***********          ELSE                                           S01390
+     C***********                                                         S01390
+     C***********LPCHQ     IFEQ '      '                                  S01390
+     C***********          MOVE #ON       *IN53                           S01390
+     C***********          MOVE #ON       *IN77                           S01390
+     C***********          ELSE                                           S01390
+     C***********                                                         S01390
+     C***********LCHQ1     IFLT FCHQ                                      S01390
+     C           STRNP     IFLE LCHQ                                      S01390
+     C                     MOVE #ON       *IN54
+     C                     MOVE #ON       *IN77
+     C***********          ELSE                                           S01390
+     C***********                                                         S01390
+     C***********LPCHQ     IFLT FCHQ                                      S01390
+     C***********          MOVE #ON       *IN55                           S01390
+     C***********          MOVE #ON       *IN77                           S01390
+     C                     END
+     C*
+     C***********          END                                            S01390
+     C***********          END                                            S01390
+     C***********          END                                            S01390
+     C                     END
+     C*
+     C           *IN77     IFEQ #OFF
+     C                     MOVE 'PROCES'  NFW
+     C                     END
+     C*
+     C                     ENDSR
+      /TITLE
+     C***********PROCES****BEGSR******************************************S01390
+      **-------------------------------------------------------PROCES     S01390
+      ***********                                                  **     S01390
+      ** PROCES*-*Process*valid*information*******************************S01390
+      ***********                                                  **     S01390
+      **-----------------------------------------------------------**     S01390
+      ***********                                                         S01390
+     C***********                                                         S01390
+     C***********          MOVE #OFF      *IN98                           S01390
+     C***********          Z-ADD0         XX                              S01390
+     C***********          MOVE LCHQ1     LCHQ2                           S01390
+     C***********          MOVE LPCHQ     LPCHQ1                          S01390
+     C***********                                                         S01390
+     C**Calculate*the*number*of*line*cheques******************************S01390
+     C***********LPCHQ1    SUB  LCHQ2     XX                              S01390
+     C***********NOCHQ     IFNE XX                                        S01390
+     C***********          MOVE #ON       *IN50                           S01390
+     C***********          MOVE 'SCRN01'  NFW                             S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C***********NFW       IFEQ 'PROCES'                                  S01390
+     C***********LCHQ2     ADD  1         XX2                             S01390
+     C***********LCHQ      ADD  1         XX1                             S01390
+     C***********XX1       CHAINCHQNOAA              98                   S01390
+     C************IN98     DOWEQ#OFF                                      S01390
+     C***********          Z-ADDXX2       CQNO                            S01390
+     C***********          UPDATCHQNOAAF                                  S01390
+     C***********          READ CHQNOAA                  98               S01390
+     C***********          ADD  1         XX2                             S01390
+     C***********          END                                            S01390
+     C**Initiate*end*of*program*******************************************S01390
+     C***********          MOVE 'ENDJOB'  NFW                             S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C***********          ENDSR                                          S01390
+     C***********                                                         S01390
+      /TITLE DEFINITION ROUTINE
+     C           #DEFN     BEGSR
+      **--------------------------------------------------------#DEFN
+      **                                                           **
+      ** #DEFN - DEFINITION ROUTINE.                               **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C************LIKE     DEFN CQNO      LCHQ2                           S01390
+     C************LIKE     DEFN CQNO      XX                              S01390
+     C************LIKE     DEFN CQNO      LPCHQ1                          S01390
+     C************LIKE     DEFN CQNO      XX1                             S01390
+     C************LIKE     DEFN CQNO      XX2                             S01390
+     C           *LIKE     DEFN LCHQ      STRNP                           S01390
+     C*
+     C           *ENTRY    PLIST
+     C***********          PARM           WKSTN                           S01390
+     C***********          PARM           USER                            S01390
+     C                     PARM           SEQ     5                       S01390
+     C                     PARM           LEV     1                       S01390
+     C                     PARM           ENT     3                       S01390
+     C                     PARM           RPTPM                           S01390
+     C                     PARM           ACT     1                       S01390
+     C                     PARM           CMD     1                       S01390
+     C*
+     C                     ENDSR
+      ***/EJECT*****                                                      S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOO********OOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***************OOOOOOOOOOOOOO***************************************S01390
+     O***********                                                         S01390
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

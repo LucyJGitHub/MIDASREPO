@@ -1,0 +1,823 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Funding window input')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA1000 - Funding Window Input                                *
+      *                                                               *
+      *  Function : This program allows input of funding information  *
+      *   (I/C)     for each loan or deal.                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. CDE002             Date 14Dec99               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CAC001 *CREATE     Date 01Feb96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CDE002 - Revenue Analysis                                    *
+      *  CAC001  -  Profit Centre Accounting Development              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *          F U N C T I O N   O F   I N D I C A T O R S          *
+      *                                                               *
+      *   03  - F3  was pressed - Exit from the program               *
+      *   05  - F5  was pressed - Redisplay the screen                *
+      *   12  - F12 was pressed - Goto previous screen                *
+      *   20  - Protect fields in Enquire/Delete mode                 *
+      *   21  - Protect fields in Amend mode                          *
+      *   22  - Protect Funding Spread Sign for NA Purchased          *
+      *   23  - Some Fields are defaulted                             *
+      *   24  - A Warning Message was displayed                       *
+      *   25  - Protect Funding Profit centre for Rollover Loans      *
+      *   30  - Redisplay the screen                                  *
+      *   50  - Error in fields                                       *
+      *   51  - Funding Spread/Rate in error                          *
+      *   52  - Funding Spread Sign in error                          *
+      *   53  - Funding Profit Centre in error                        *
+      *                                                               *
+      *****************************************************************
+     F*
+     F/COPY WNCPYSRC,AA1000F001
+     FAA1000DFCF  E                    WORKSTN      KINFSR *PSSR
+     F** Funding Window Display
+     F*
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Copyright Statement
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E*
+     I/EJECT
+     I*
+     ICPYR@#      DS
+     I** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     IWSPRE       DS                            256
+     I                                        1   1 PACTN
+     I                                        2   2 PDSTS
+     I                                    P   3   87PEFIN
+     I                                        9  12 PTPFC
+     I                                    P  13  187PFSRP
+     I                                       19  19 PFSGN
+     I                                       20  23 PFPRC
+     I                                       24  26 PCCY
+     I                                       27  29 PLCCY
+     I                                       30  30 PRATF
+     I                                       31  31 PMAND
+     I                                       32  35 PLPRF                 CAC001
+     I*
+     IDATA        DS                           1024
+     I/COPY WNCPYSRC,AA1000I002
+     I*
+     ILDA       E DSLDA
+     I*
+     I** Local data area for database error details
+     I** *LOCK IN LDA immediately before and OUT LDA immediately
+     I** after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure - gives Job/Workstation name and
+     I** User ID.
+     I*
+     I                                     *PROGRAM SPGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Data Structure for Bank Details Access Program
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** Data Structure for Module Details Access Program
+     I*
+     ISDPCAC    E DSSDPCACPD
+     I** Data Structure for Profit Centre Accounting Access Program
+     I*
+     ISDPRFC    E DSSDPRFCPD
+     I** Data Structure for Profit Centre Access Program
+     I*
+     ISCSARD    E DSSCSARDPD                                              CDE002
+      ** External DS for SAR Details                                      CDE002
+      *                                                                   CDE002
+     IDSFDY     E DSDSFDY
+     I** Short Data Structure for Access Programs
+     I/COPY WNCPYSRC,AA1000I001
+     C/EJECT
+     C*
+     C**  Copyright statement.
+     C*
+     C                     MOVEACPY@      MKI@   80
+     C*
+     C**  Standard *ENTRY parameter list for window manager.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           WSPRE 256
+     C*
+     C**  Initial subroutine.
+     C*
+     C                     EXSR SRINIT
+     C*
+     C                     WRITEAA1000F1
+     C                     WRITEAA1000F0
+     C*
+     C**  Continue to redisplay the screen if *IN30 remains off.
+     C*
+     C           *IN30     DOUEQ'1'
+     C*
+     C           *IN24     IFEQ '0'
+     C           *IN50     OREQ '1'
+     C*
+     C                     WRITEAA1000C0
+     C                     EXFMTAA1000F0
+     C                     EXSR SRMCLR
+     C                     MOVEA'0000'    *IN,50
+     C*
+     C**  If action code is Enquire/Delete or Amend and Deal Status = A
+     C**  Exit from program .
+     C*
+     C           *IN20     IFEQ '1'
+     C           *IN21     OREQ '1'
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           *IN03     CASEQ'1'       SREXIT
+     C           *IN05     CASEQ'1'       SRESET
+     C           *IN12     CASEQ'1'       SRPREV
+     C                     CAS            SRVALD
+     C                     ENDCS
+     C*
+     C                     ENDIF
+     C*
+     C**  Prompt the user to accept the details if fields are defaulted
+     C**  or if a warning message was displayed.
+     C*
+     C           *IN23     IFEQ '1'
+     C           *IN50     ANDEQ'0'
+     C           *IN24     OREQ '1'
+     C           *IN50     ANDEQ'0'
+     C*
+     C           *IN24     IFEQ '1'
+     C                     MOVEL'AAM0014' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'AAM0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVEL'AAM0012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C*
+     C                     WRITEAA1000C0
+     C                     EXFMTAA1000F0
+     C                     EXSR SRMCLR
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     ENDIF
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *IN50     ANDEQ'0'
+     C                     Z-ADDWFSRP     PFSRP
+     C                     MOVE SFSGN     PFSGN
+     C                     MOVE SFPRC     PFPRC
+     C                     SETON                     30
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C**  Exit from program.
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRINIT                                        *
+     C*  Function    :  Initial Subroutine                            *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  SRMOVF - Move data to screen fields           *
+     C*                 SRVALD - Validate Screen Fields               *
+     C*                 AOBANKR0 - Bank details access object         *
+     C*                 AOMMODR0 - Module details access object       *
+     C*                 AOPCACR0 - Profit Centre Account access object*
+     C*                 SDRTVTXT - Retrive Text                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C**  Parameter list for program 'AOBANKR0'.
+     C*
+     C           PBANK     PLIST
+     C                     PARM '*DBERR  'WRTCD   7
+     C                     PARM '*FIRST  'WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Parameter list for program 'AOMMODR0'.
+     C*
+     C           PMMOD     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*FIRST  'WOPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C**  Parameter list for program 'AOPCACR0'.
+     C*
+     C           PPCAC     PLIST
+     C                     PARM '*DBERR  'WRTCD
+     C                     PARM '*FIRST  'WOPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C*
+     C**  Parameter list for program 'AOPRFCR0'.
+     C*
+     C           PPRFC     PLIST
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY'    WOPTN
+     C                     PARM           WPFCT   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C*
+     C**  Define the LDA for error handling.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Access Bank Details File.
+     C*
+     C                     CALL 'AOBANKR0'PBANK
+     C*
+     C**  Check System Date Format, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+     C*
+     C**  Access Module Details File.
+     C*
+     C                     CALL 'AOMMODR0'PMMOD
+      *                                                                   CDE002
+      ** Access SAR details file to determine if CDE002 is switched on    CDE002
+      *                                                                   CDE002
+     C                     CALL 'AOSARDR0'                                CDE002
+     C                     PARM *BLANKS   PRTCD   7                       CDE002
+     C                     PARM '*VERIFY' POPTN   7                       CDE002
+     C                     PARM 'CDE002'  PSARD   6                       CDE002
+     C           SCSARD    PARM SCSARD    DSFDY                           CDE002
+      *                                                                   CDE002
+     C                     MOVE 'N'       CDE002  1                       CDE002
+     C           PRTCD     IFEQ *BLANKS                                   CDE002
+     C                     MOVE 'Y'       CDE002                          CDE002
+     C                     ENDIF                                          CDE002
+     C*
+     C**  If Analytical Accounting Module is switched off, return to
+     C**  the calling program.
+      **  and Revenue Analysis is switched off, return to calling pgm     CDE002
+     C*
+     C           BGN0ST    IFNE 'Y'
+     C           CDE002    ANDNE'Y'                                       CDE002
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Access Profit Centre Accounting details.
+      **  only if Analytical Accounting module is installed               CDE002
+     C*
+     C           BGN0ST    IFEQ 'Y'                                       CDE002
+     C                     CALL 'AOPCACR0'PPCAC
+     C                     ENDIF                                          CDE002
+     C*
+     C**  Define window position.
+     C*
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+     C*
+     C**  Retrieve title for window.
+     C*
+     C                     MOVEL'WNMSGF  'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+     C/COPY WNCPYSRC,AA1000C002
+     C*
+     C**  Protect input fields if enquiry/delete mode.
+     C*
+     C           ACTN      IFNE 'I'
+     C           ACTN      ANDNE'A'
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C                     MOVE '0'       *IN20
+     C                     ENDIF
+     C*
+     C**  Protect input fields if amend mode and deal is authorised.
+     C*
+     C           ACTN      IFEQ 'A'
+     C           PDSTS     ANDEQ'A'
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C                     MOVE '0'       *IN21
+     C                     ENDIF
+     C*
+     C**  Protect Funding Spread Sign for NA Purchased.
+     C*
+     C           PRATF     IFEQ 'Y'
+     C                     MOVE '1'       *IN22
+     C                     ELSE
+     C                     MOVE '0'       *IN22
+     C                     ENDIF
+     C*
+     C**  Protect Funding Profit Centre for Rollover Loans.
+     C*
+     C           PLPRF     IFNE *BLANKS
+     C/COPY WNCPYSRC,AA1000C003
+     C                     MOVE '1'       *IN25
+     C                     ELSE
+     C                     MOVE '0'       *IN25
+     C                     ENDIF
+     C*
+     C**  Move data into screen fields.
+     C*
+     C                     EXSR SRMOVF
+     C*
+     C**  If call is being forced in Insert/Amend, revalidate fields.
+     C*
+     C           PMAND     IFEQ 'Y'
+     C           ACTN      ANDEQ'I'
+     C           PMAND     OREQ 'Y'
+     C           ACTN      ANDEQ'A'
+     C*
+     C                     EXSR SRVALD
+     C*
+     C**  If data are all valid, return to the calling program.
+     C*
+     C           *IN24     IFEQ '0'
+     C           *IN50     ANDEQ'0'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMOVF                                        *
+     C*  Function    :  Move Data to Screen Fields                    *
+     C*                                                               *
+     C*  Called by   :  SRINIT - Initial Subroutine                   *
+     C*                 SRESET - Reset/Refresh Screen if F5 Pressed   *
+     C*  Calls       :  ZEDIT  - Format Numeric Field                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMOVF    BEGSR                           ** SRMOVF **
+     C*
+     C                     MOVEL*BLANKS   SFSRP
+     C                     MOVEL*BLANKS   SFSGN
+     C                     MOVEL*BLANKS   SFPRC
+     C*
+     C**  Format Funding Spread/Rate.
+     C*
+     C           PFSRP     IFNE 0
+     C           PFSGN     ORNE *BLANKS
+     C           PFPRC     ORNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PFSRP     ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SFSRP
+     C                     ENDIF
+     C*
+     C**  Funding Spread Sign and Funding Profit Centre.
+     C*
+     C                     MOVELPFSGN     SFSGN
+     C                     MOVELPFPRC     SFPRC
+     C*
+     C**  Funding Profit Centre for Rollover Loans.
+     C*
+     C           PLPRF     IFNE *BLANKS
+     C                     MOVE PLPRF     SFPRC
+     C                     ENDIF
+     C*
+     C           SRMOV9    ENDSR                           ** SRMOV9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRVALD                                        *
+     C*  Function    :  Validate Screen Fields                        *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*                 SRINIT - Initial Subroutine                   *
+     C*  Calls       :  ZALIGN - Validate and Right-align Numeric Fld *
+     C*                 ZASNMS - Send Message to program Message Queue*
+     C*                 AOPRFCR0 - Profit Centre access object        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRVALD    BEGSR                           ** SRVALD **
+     C*
+     C**  If all fields are blank, return to the calling program.
+     C*
+     C           SFSRP     IFEQ *BLANKS
+     C           SFSGN     ANDEQ*BLANKS
+     C           SFPRC     ANDEQ*BLANKS
+     C           SFSRP     OREQ *BLANKS
+     C           SFSGN     ANDEQ*BLANKS
+     C           PLPRF     ANDNE*BLANKS
+     C                     Z-ADD0         PFSRP
+     C                     MOVE *BLANKS   PFSGN
+     C                     MOVE *BLANKS   PFPRC
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C**  Validate Funding Spread Sign.
+     C*
+     C           *IN22     IFEQ '0'
+     C*
+     C           SFSGN     IFNE *BLANKS
+     C*
+     C**  If the Funding Spread/Rate field has not been entered,display
+     C**  error message 'Funding Spread Sign entry invalid if no
+     C**  Funding Spread/Rate entered."
+     C*
+     C           SFSRP     IFEQ *BLANKS
+     C**********           MOVEL'AAM0015' ZAMSID                          CDE002
+     C                     MOVEL'AAM0018' ZAMSID                          CDE002
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN52
+     C*
+     C                     ELSE
+     C*
+     C**  If the Spread Sign is not '+', '-' or blank, display error
+     C**  message "Funding Spread Sign must be '+', '-' or blank".
+     C*
+     C           SFSGN     IFNE '+'
+     C           SFSGN     ANDNE'-'
+     C                     MOVEL'AAM0001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Validate Funding Spread/Rate.
+     C**      If Funding Spread/Rate is not valid, display error
+     C**      message "Funding Spread/Rate is not a valid numeric rate"
+     C*
+     C                     Z-ADD0         WFSRP
+     C           SFSRP     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SFSRP     ZFIELD
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WFSRP  117
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'AAM0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  If the Funding Spread/Rate and Sign are both valid, determine
+     C**  the actual funding rate.
+     C*
+     C           *IN51     IFEQ '0'
+     C           *IN52     ANDEQ'0'
+     C           SFSRP     ANDNE*BLANKS
+     C*
+     C           SFSGN     IFEQ *BLANKS
+     C                     Z-ADDWFSRP     WAFSRP 117
+     C                     ENDIF
+     C*
+     C           SFSGN     IFEQ '+'
+     C           PEFIN     ADD  WFSRP     WAFSRP
+     C                     ENDIF
+     C*
+     C           SFSGN     IFEQ '-'
+     C           PEFIN     SUB  WFSRP     WAFSRP
+     C                     ENDIF
+     C*
+     C**  Compute the maximum and minimum allowable amount based on the
+     C**  tolerance for Funding Rate.
+     C*
+     C           BGN0ST    IFEQ 'Y'                                       CDE002
+     C           FTTFRT    DIV  100       WTRATE  32
+     C*
+     C           1         ADD  WTRATE    WMAXTL  42
+     C           PEFIN     MULT WMAXTL    WMAXRT 117H
+     C*
+     C           1         SUB  WTRATE    WMINTL  42
+     C           PEFIN     MULT WMINTL    WMINRT 117
+     C*
+     C**  If the Actual Funding Rate is greater the the maximum or less
+     C**  than the minimum amount, display warning message "Warning -
+     C**  Effective deal funding rate must be within tolerance level
+     C**  defined."
+     C*
+     C           WAFSRP    IFGT WMAXRT
+     C           WAFSRP    ORLT WMINRT
+     C                     MOVE '1'       *IN24
+     C                     ENDIF
+     C                     ENDIF                                          CDE002
+     C*
+     C                     ENDIF
+     C*
+     C**  Validate Funding Profit Centre.
+     C*
+     C           PLPRF     IFEQ *BLANKS
+     C*
+     C           SFPRC     IFNE *BLANKS
+     C*
+     C**  If the Funding Spread/Rate is blank, display error message
+     C**  "Entry on Funding Profit Centre is prohibited if no Funding
+     C**  Spread/Rate has been defined."
+     C*
+     C           SFSRP     IFEQ *BLANKS
+     C                     MOVEL'AAM0004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C*
+     C                     ELSE
+     C*
+     C**  If the Funding Spread/Rate is non-blank, check if the entry
+     C**  is a valid profit centre. If not, display error message
+     C**  "Profit Centre entered is not defined on the system".
+     C*
+     C                     MOVE SFPRC     WPFCT
+     C                     CALL 'AOPRFCR0'PPRFC
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'AAM0005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE DSPCCD    SFPRC
+     C*
+     C**  If the Direct Funding Indicator is 'N', display error message
+     C**  "Profit Centre entered is not capable of direct funding".
+     C*
+     C           DSDFPR    IFEQ 'N'
+     C                     MOVEL'AAM0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C*
+     C**  If Funding Profit Centre is not entered... and the Funding
+     C**  Spread/Rate has been entered...
+     C*
+     C           SFSRP     IFNE *BLANKS
+     C*
+     C**  If the Transaction Profit Centre is not entered, display
+     C**  error message 'Funding Profit Centre should be entered."
+      **  only if analytical accounting module is installed.              CDE002
+     C*
+     C           PTPFC     IFEQ *BLANKS
+     C           BGN0ST    IFEQ 'Y'                                       CDE002
+     C                     MOVEL'AAM0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN53
+     C                     ENDIF                                          CDE002
+     C*
+     C                     ELSE
+     C*
+     C**  Default the value of the Funding Profit Centre.
+     C*
+     C                     MOVE PTPFC     WPFCT
+     C                     CALL 'AOPRFCR0'PPRFC
+     C*
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE           ************
+     C                     MOVELWPFCT     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           PCCY      IFEQ PLCCY
+     C                     MOVE DSLFPC    SFPRC
+     C                     ELSE
+     C                     MOVE DSFFPC    SFPRC
+     C                     ENDIF
+     C*
+     C                     MOVE '1'       *IN23
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C/COPY WNCPYSRC,AA1000C001
+     C           *IN50     IFEQ '1'
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     ENDIF
+     C*
+     C           SRVAL9    ENDSR                           ** SRVAL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRPREV                                        *
+     C*  Function    :  Exit From Program If F12 has been Pressed     *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPREV    BEGSR                           ** SRPREV **
+     C*
+     C                     MOVE 'USR0790' W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           SRPRE9    ENDSR                           ** SRPRE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRESET                                        *
+     C*  Function    :  Reset/Refresh Screen If F5 has been Pressed   *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  SRMOVF - Move data to screen fields           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRESET    BEGSR                           ** SRESET **
+     C*
+     C**  Move data into screen fields.
+     C*
+     C                     EXSR SRMOVF
+     C*
+     C           SRESE9    ENDSR                           ** SRESE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMCLR                                        *
+     C*  Function    :  Clear Message Subfile                         *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  Y2CLMSC - Clear Program Message Queue         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMCLR    BEGSR                           ** SRMCLR **
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C           SRMCL9    ENDSR                           ** SRMCL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SREXIT                                        *
+     C*  Function    :  Exit From Program If F3 has been Pressed      *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*  Calls       :  -                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SREXIT    BEGSR                           ** SREXIT **
+     C*
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           SREXI9    ENDSR                           ** SREXI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  ZASNMS                                        *
+     C*  Function    :  Send Message to Program Message Queue         *
+     C*                                                               *
+     C*  Called by   :  MAIN - Main Controlling Subroutine            *
+     C*                 SRVALD - Validate Screen Fields               *
+     C*  Calls       :  Y2SNMGC - Send a Message                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+     C*
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELSPGM      ZAPGMQ
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C           #PSSR9    ENDSR                           ** *PSSR9 **
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+     C/EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,309 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Nostros  Background Update Progam')
+      *****************************************************************
+      *                                                               *
+      *  Midas STANDING DATA MODULE                                   *
+      *                                                               *
+      *     TABLETL - BACKGROUND UPDATE OF TABLETL FILE               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. B07400             Date 17May06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 210796             Date 27Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01251             Date 03Feb90               *                       S0125
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  B07400 - Nostro Codes maintenance not updating TABLETL.      *
+      *           Amended WOANN length from 14 to 35 char long.       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     210796  -  ONAC field now redundant.                      *
+      *     S01251  -  SYNON FIELD NAME CHANGES                       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       30      CHAIN TABLETL FAILED/ERROR                      *
+      *       31      ERROR ON TABLETL FILE                           *
+      *       32      CHAIN TABLETX FAILED/ERROR                      *
+      *                                                               *
+      *****************************************************************
+     FTABLETL UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+      /EJECT
+     C*
+     C           KKEY      KLIST
+     C                     KFLD           KCCY
+     C                     KFLD           KNOSN
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*********************PARM           WCCY    3        CURRENCY       S01251
+     C*********************PARM           WNOSN   2        NOSTRO NO.     S01251
+     C*********************PARM           WACOD   4        A/C CODE       S01251
+     C*********************PARM           WCNUM   6        CUSTOMER NO.   S01251
+     C*********************PARM           WACSQ   20       A/C SEQUENCE   S01251
+     C*********************PARM           WONAC  14        OUR A/C @ NOSTRS01251
+     C                     PARM           WCYCD   3        CURRENCY       S01251
+     C                     PARM           WNONB   2        NOSTRO NO.     S01251
+     C**********           PARM           WACCD   4        A/C CODE                    S01251 CGL029
+     C                     PARM           WACCD  10                                           CGL029
+     C                     PARM           WCUST   6        CUSTOMER NO.   S01251
+     C                     PARM           WACSN   20       A/C SEQUENCE   S01251
+     C                     PARM           WNOSN  10        CUSTOMER S'NAMES01251
+     C*************        PARM           WOANN  14        OUR A/C @ NOSTR             S01251 B07400
+     C                     PARM           WOACN  35        OUR A/C @ NOSTR                    B07400
+     C                     PARM           WORAC  25        OUR RECEIVE A/C
+     C                     PARM           WPNOI   1        PRIME NOSTRO IND
+     C                     PARM           WBRCA   3        BRANCH CODE    S01251
+     C*********************PARM           WCSNM  10        CUSTOMER S'NAMES01251
+     C*********************PARM           WCHTP   1        LAST CHANGE TYPS01251
+     C                     PARM           WTYLC   1        LAST CHANGE TYPS01251
+     C                     PARM           WLCD    50       LAST CHANGE DATE
+     C           *LIKE     DEFN CCY       KCCY             KEY TO FILE
+     C           *LIKE     DEFN NOSN      KNOSN            KEY TO FILE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO TABLETL TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01251
+     C*********************MOVE WCCY      KCCY                            S01251
+     C*********************MOVE WNOSN     KNOSN                           S01251
+     C           WTYLC     IFEQ 'I'                                       S01251
+     C                     MOVE WCYCD     KCCY                            S01251
+     C                     MOVE WNONB     KNOSN                           S01251
+     C           KKEY      CHAINTABLETL              30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD70        RECT
+     C*********************MOVE WCCY      CCY              CURRENCY       S01251
+     C*********************MOVE WNOSN     NOSN             BASE RATE CO   S01251
+     C*********************MOVE WACOD     ACOD             A/C CODE       S01251
+     C*********************MOVE WCNUM     CNUM             CUSTOMER NO.   S01251
+     C*********************Z-ADDWACSQ     ACSQ             A/C SEQUENCE   S01251
+     C*********************MOVE WONAC     ONAC             OUR A/C @ NOSTRS01251
+     C                     MOVE WCYCD     CCY              CURRENCY       S01251
+     C                     MOVE WNONB     NOSN             BASE RATE CO   S01251
+     C                     MOVE WACCD     ACOD             A/C CODE       S01251
+     C                     MOVE WCUST     CNUM             CUSTOMER NO.   S01251
+     C                     Z-ADDWACSN     ACSQ             A/C SEQUENCE   S01251
+     C                     MOVE WBRCA     BRCA             BRANCH CODE    S01251
+     C**********           MOVE WOANN     ONAC             OUR A/C @ NOSTRO            S01251 210796
+     C                     MOVE WORAC     ORAC             OUR RECEIVE A/C
+     C                     MOVE WPNOI     PNOI             PRIME NOSTRO IND
+     C*********************MOVE WCSNM     CSNM             CUSTOMER S'NAMES01251
+     C*********************MOVE WCHTP     CHTP                            S01251
+     C                     MOVE WNOSN     CSNM             CUSTOMER S'NAMES01251
+     C                     MOVE WTYLC     CHTP                            S01251
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETABLETLF               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATTABLETLF               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01251
+     C*********************MOVE WCCY      KCCY                            S01251
+     C*********************MOVE WNOSN     KNOSN                           S01251
+     C           WTYLC     IFEQ 'A'                                       S01251
+     C                     MOVE WCYCD     KCCY                            S01251
+     C                     MOVE WNONB     KNOSN                           S01251
+     C           KKEY      CHAINTABLETLF             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C*********************MOVE WCCY      CCY              CURRENCY       S01251
+     C*********************MOVE WNOSN     NOSN             BASE RATE CO   S01251
+     C*********************MOVE WACOD     ACOD             A/C CODE       S01251
+     C*********************MOVE WCNUM     CNUM             CUSTOMER NO.   S01251
+     C*********************Z-ADDWACSQ     ACSQ             A/C SEQUENCE   S01251
+     C*********************MOVE WONAC     ONAC             OUR A/C @ NOSTRS01251
+     C                     MOVE WCYCD     CCY              CURRENCY       S01251
+     C                     MOVE WNONB     NOSN             BASE RATE CO   S01251
+     C                     MOVE WACCD     ACOD             A/C CODE       S01251
+     C                     MOVE WCUST     CNUM             CUSTOMER NO.   S01251
+     C                     Z-ADDWACSN     ACSQ             A/C SEQUENCE   S01251
+     C                     MOVE WBRCA     BRCA             BRANCH CODE    S01251
+     C**********           MOVE WOANN     ONAC             OUR A/C @ NOSTRO            S01251 210796
+     C                     MOVE WORAC     ORAC             OUR RECEIVE A/C
+     C                     MOVE WPNOI     PNOI             PRIME NOSTRO IND
+     C*********************MOVE WCSNM     CSNM             CUSTOMER S'NAMES01251
+     C*********************MOVE WCHTP     CHTP                            S01251
+     C                     MOVE WNOSN     CSNM             CUSTOMER S'NAMES01251
+     C                     MOVE WTYLC     CHTP                            S01251
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLETLF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABLETL
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01251
+     C*********************MOVE WCCY      KCCY                            S01251
+     C*********************MOVE WNOSN     KNOSN                           S01251
+     C           WTYLC     IFEQ 'D'                                       S01251
+     C                     MOVE WCYCD     KCCY                            S01251
+     C                     MOVE WNONB     KNOSN                           S01251
+     C           KKEY      CHAINTABLETLF             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01251
+     C                     MOVE WTYLC     CHTP                            S01251
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLETLF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABLETL UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '70'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         INSN
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01251
+     C           WTYLC     IFEQ 'I'                                       S01251
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01251
+     C           WTYLC     IFEQ 'A'                                       S01251
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01251
+     C           WTYLC     IFEQ 'D'                                       S01251
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*

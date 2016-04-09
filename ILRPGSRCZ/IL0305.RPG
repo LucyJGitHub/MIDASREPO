@@ -1,0 +1,313 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 ICD record - Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0305  - IBLC 2002 ICD Record - Report                  *
+      *                                                               *
+      *  Function: Print IBLC 2002 Parameters                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX043             Date 04Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILICDRPDIF  E                    DISK         KINFSR *PSSR
+      ***  ICD RECORD             Retrieval index          Prefix IC
+      *
+     FIL0305AUO   E                    PRINTER
+      ***  Audit printer file
+      *
+     FIL0305P1O   E             70     PRINTER
+      ***  Detail printer file
+      *
+      /EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+     E                    MODU    1   9 30                 Modules
+      *
+      ***  Standard Subroutine Arrays
+      *
+      /COPY ZSRSRC,ZDATE2Z1                              Std ZDATE1/2
+      /COPY ZSRSRC,ZFRPEDZ1                              Std ZFRPED
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+      ***  DS For Standard Subroutines
+      *
+      /COPY ZSRSRC,ZFRPEDZ2                              Std ZFRPED
+      *
+     I            DS
+      ***  Data structure for bits test
+     I                                        1   1 CHR1
+     I                                        2   2 CHR2
+     I                                        1   2 ICINTF
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Initialize INTF zone with '00000000-00000000' value
+      *
+     C                     BITOF'01234567'CHR1
+     C                     BITOF'01234567'CHR2
+      *
+      ***  Read IBLC 2002 ICD Parameters
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 30
+      *
+      ***  Hzndle database Error
+      *
+     C           *IN30     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            *****************
+     C                     MOVEL'ILICDRPD'DBFILE           * DB ERROR 002 **
+     C                     MOVEL'ICD   '  DBKEY            *****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill printer fields
+      *
+     C           ICFLDP    IFNE *BLANKS                    FOLDER PATH
+     C                     MOVE ICFLDP    RFLDP
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   RLIMR
+     C           ICLIMR    IFNE 0
+      *
+      ***  FORMAT MAOUNT IN EURO (WITH 2 DECIMALS)
+      *
+     C                     Z-ADDICLIMR    ZFLD15
+     C                     Z-ADD2         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RLIMR
+     C                     ENDIF
+      *
+     C           ICPRID    IFNE *BLANKS                    PRINT RK FOUND
+     C                     MOVE ICPRID    RPRID
+     C                     ENDIF
+      *
+     C           ICDMIS    IFNE *BLANKS                    DUMMY ISSUER
+     C                     MOVE ICDMIS    RDMIS
+     C                     ENDIF
+      *
+     C           ICACTD    IFNE 0                          ACTIVATION DATE
+     C                     Z-ADDICACTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RACTD
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+     C                     WRITEDETAIL
+      *
+      ***  CHECK ICINTF TO KNOW ACTIF MODULES
+      *
+     C           ICINTF    IFNE *BLANKS
+     C                     TESTB'0'       CHR1           10
+     C           *IN10     IFEQ '1'                        General ledger
+     C                     MOVEAMODU,1    RMODU
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'1'       CHR1           10
+     C           *IN10     IFEQ '1'                        Retail
+     C                     MOVEAMODU,2    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'2'       CHR1           10
+     C           *IN10     IFEQ '1'                        Dealing/Forex
+     C                     MOVEAMODU,3    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'3'       CHR1           10
+     C           *IN10     IFEQ '1'                        Cust. Lending
+     C                     MOVEAMODU,4    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'4'       CHR1           10Sec. Trading
+     C           *IN10     IFEQ '1'
+     C                     MOVEAMODU,5    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF                           - E1
+      *
+     C                     TESTB'5'       CHR1           10
+     C           *IN10     IFEQ '1'                        Funds Transfer
+     C                     MOVEAMODU,6    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'6'       CHR1           10
+     C           *IN10     IFEQ '1'                        Futures & Options
+     C                     MOVEAMODU,7    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'1'       CHR2           10
+     C           *IN10     IFEQ '1'                        Portfolio Mngt
+     C                     MOVEAMODU,8    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     TESTB'7'       CHR2           10
+     C           *IN10     IFEQ '1'                        COB Run component
+     C                     MOVEAMODU,9    RMODU     P
+     C                     WRITEMODP1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     WRITEENDP1
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      ******************************************************************
+      *                E N D    O F    M A I N L I N E S               *
+      ******************************************************************
+      /EJECT
+      ****************************************************************
+      *  *INZSR - Initial processing : Reset static fields           *
+      *  ------                        access standing data          *
+      *  Called by : First RPG Cycle                                 *
+      *  Calls     : *PSSR                                           *
+      ****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE PGM       DBPGM
+      *
+      ***  *ENTRY PLIST - NOT USED
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTYPE   1
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+     C                     ENDSR                           ** *INZSR **
+     C/EJECT
+      ****************************************************************
+      *  *PSSR  - error Subroutine                                   *
+      *  -------                                                     *
+      *  Called by : on FILE error                                   *
+      *              *INZSR                                          *
+      ****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+      ***  Print error message in Audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C                     WRITEENDAU
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      /EJECT
+      /COPY ZSRSRC,ZFRPEDZ3                              Std ZFRPED
+      /COPY ZSRSRC,ZDATE2Z2
+**  MODU
+GENERAL LEDGER
+RETAIL
+DEALING
+CUSTOMER LENDING
+SECURITIES TRADING
+FUNDS TRANSFER
+FUTURE AND OPTIONS
+PORTFOLIO MANAGEMENT
+COB run components
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

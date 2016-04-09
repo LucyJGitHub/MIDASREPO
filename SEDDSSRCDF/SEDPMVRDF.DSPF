@@ -1,0 +1,179 @@
+      *****************************************************************
+/*STD *  DSPFDFRWN                                                   *
+/*EXI *  TEXT('Midas SE Invalid depot movement transaction browse')
+      *****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module                            *
+     A*                                                               *
+     A*  SEDPMVRDF - Invalid Depot Movement Browse function.          *
+     A*              ("REPAIR" FUNCTION)                              *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Last Amend No. 166907             Date 27Dec99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. CAP014             Date 29Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP006             Date 17Mar99               *
+     A*                 CAP004             Date 01Sep98               *
+     A*                 CAP003  *CREATE    Date 25May98               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+     A*  166907 - Show 'Deal No. 999999 successfully inserted'        *
+     A*           message on screen.                                  *
+     A*  CAP014 - Repair function enhancements                        *
+     A*  CAP006 - Show error message on screen                        *
+     A*  CAP004 - API's phase 3.                                      *
+     A*           Enable delete of invalid transactions               *
+     A*  CAP003 - Conversion of SE inputs into modular structure to   *
+     A*           use as APIs.                                        *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A          R SEDPMVRS1                 TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SFL
+     A            DDOPT          1   B  8  2TEXT('Select Option')
+     A                                      DSPATR(UL)
+     A            DDACTN         1A     8  5TEXT('Action Code')
+     A                                      DSPATR(HI)
+     A            DDFRONTID     20A     8  7TEXT('Front Office Id')
+     A                                      DSPATR(HI)
+     A            DDDPSS        10A     8 28
+     A                                      TEXT('Security')
+     A                                      DSPATR(HI)
+     A            DDDPRN         6A     8 39
+     A                                      TEXT('Reference')
+     A                                      DSPATR(HI)
+     A            DDDEPOT       10A     8 46
+     A                                      TEXT('In/Out Depot')
+     A            DDDATE         6A     8 57
+     A                                      TEXT('In/Out Date')
+     A            DDDPBA         3A     8 64
+     A                                      TEXT('Booking Branch')
+     A            DDDPBK         2A     8 68
+     A                                      TEXT('Book')
+     A            DDDPBN        10A     8 71
+     A                                      TEXT('Customer')
+     A            DDFOASOCIDR        H      REFFLD(FOTRNID)
+     A            D@TMESTMP R   26A  H      REFFLD(TIMESTMP)
+      * Start CAP004
+     A            DDDPNA        12A  H
+     A            DDMKTP        16A  H
+      * End CAP004
+      * Start CAP014
+     A            DDBRSN    R        H      REFFLD(BRSN)
+      * End CAP014
+     A*
+     A* -------------------------------------------------------------------*
+     A* * SELECT SCREEN CONTROL                                            *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R SEDPMVRS0                 SFLCTL(SEDPMVRS1)
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0014)
+     A                                      TEXT('SELECT SCREEN CONTROL')
+     A                                      CF03
+     A                                      CF12
+     A                                      SFLDSP
+     A                                      SFLDSPCTL
+     A  96                                  SFLEND
+     A  97                                  SFLCLR
+     A N96                                  ROLLUP(98)
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      BLINK
+     A            DDSFRN         4S 0H      SFLRCDNBR
+     A                                  1  2'SEDPMVRPB'
+     A                                  1 26'            Midas            '
+     A                                  3 10'Invalid Depot Movement Transaction-
+     A                                       Maintenance - Enquiry'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            RUNDATE        7A  O  1 63
+     A            DDTIME         6Y 0O  1 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+     A                                      TEXT('Current Time')
+     A            DDWID         10A  O  2 70TEXT('Workstation ID')
+     A                                  6  1'Sel'
+     A                                  6  5'Act'
+     A                                  6 10'Front Office'
+      * Start CAP004
+      * Start CAP014
+     A**********************************7  1'A,D'
+      * End CAP014
+     A                                  7 10'    ID      '
+     A********************************  7  9'Transmission ID'
+      * End CAP004
+     A                                  6 28'Security'
+     A                                  7 28'Shortname'
+     A                                  6 39'Ref.'
+     A                                  7 39'No.'
+     A                                  6 46'Depot'
+     A                                  6 57'Date'
+     A                                  6 62'Branch'
+     A                                  7 67'Book'
+     A                                  6 71'Customer'
+      *
+      * -------------------------------------------------------------------*
+      * * SELECT SCREEN FOOTER                                             *
+      * -------------------------------------------------------------------*
+      *
+     A          R SEDPMVRF1                 TEXT('SELECT SCREEN FOOTER')
+     A                                      CF03
+     A                                      CF12
+     A                                      BLINK
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                 23  2'Rollup/Rolldown for further record+
+     A                                      s'
+     A                                 24  2'F3=Exit F12=Cancel'
+      *
+      * Start of CAP006
+     A            ERRORMSG      56     24 24
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+      * End of CAP006
+     A*
+      **-------------------------------------------------------------------*
+      ** * END MESSAGE                                                     *
+      **-------------------------------------------------------------------*
+      *
+     A          R SEDPMVREND                TEXT('END MESSAGE')
+     A                                      CF03
+     A                                      CF12
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                  1  2'SEDPMVRPB'
+     A                                  1 26'            Midas            '
+     A                                      DSPATR(HI)
+     A            RUNDATE        7A  O  1 63
+     A            DDTIME         6Y 0O  1 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+     A                                      TEXT('Current Time')
+     A            DDWID         10A  O  2 70TEXT('Workstation ID')
+     A                                  3 10'Invalid Depot Movement Transaction-
+     A                                       Maintenance - Enquiry'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                 11 26'NO INVALID TRANSACTIONS +
+     A                                      PRESENT'
+     A                                      DSPATR(HI)
+     A                                 23  2'Press enter to end this function'
+      * Start of 166907
+     A            DDFOTX        40A    24 24
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+      * End of 166907

@@ -1,0 +1,1649 @@
+     H        1   Y
+      *****************************************************************
+/*OVR *  OVRDBF FILE(GZSDBANK) TOFILE(GZSDBANKL2)                     *                       CSD031
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Add holidays for year')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0161V - Midas SD Holidays                                  *
+      *                                                               *
+      *  Function:  This program allows the user to add holidays for  *
+      *             the year.                                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG13704           Date 03May07               *
+      *                 BG12014            Date 05Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSD012             Date 15Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 LN0662             DATE 24JAN91               *
+      *                 S01212             DATE 14SEP89               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BUG13704 - The trigger program to update the Equation        *
+      *             holiday table from the Midas Holiday              *
+      *             Maintenance does not appear to work.              *
+      *  BG12014 - Holiday updates are not replicated into equation.  *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD012 - Standing Data Authorisation.                        *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  LN0662 - REGENERATE DUE TO CHANGE IN SDCURRPD                *
+      *  S01212 - /COPIES                                             *
+      *                                                               *
+      *****************************************************************
+     F*00/Copy Member SD0161V   Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0161VFPG
+     FSD0161V#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Add Holidays for Year
+      *
+     FSDHOLL8 IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Holidays test access path
+      *
+     FSDCURRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Currency codes retrieval
+      *
+     FSDLOCNL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Location codes retrieval index
+      *                                                                                       CSD012
+     FSDAULGL0IF  E           K        DISK                                                   CSD012
+      * RTV : Authorisation Log - by Key                                                      CSD012
+      *                                                                                      BG12014
+      * RTV : MIDAS SD Branch codes retrieval for location codes                             BG12014
+     FSDBRCL10IF  E           K        DISK                                                  BG12014
+      * Logical file for retriEving location in a branch                                     BG12014
+      *                                                                                      BG12014
+     FTGZSDBL1IF  E           K        DISK                                                  BG12014
+     F            T_GZSDBRCB                        KRENAMEGZSDBR                            BG12014
+      *
+     FGPHOLIL1IF  E           K        DISK                           UC                      CSD031
+     F                                              KINFDS ID0004                             CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      * RTV : Central Holidays                                                                CSD031
+      *                                                                                       CSD031
+     FGPLOCNL1IF  E           K        DISK                                                   CSD031
+     F                                              KINFSR *PSSR                              CSD031
+      * RTV : Midas SD Location codes retrieval index                                         CSD031
+      *                                                                                       CSD012
+     FGZSDBANKIF  E           K        DISK                           UC                      CSD031
+      * RTV : Bank Details                                                                    CSD031
+      *                                                                                       CSD031
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E                    OVRC    1   1 80                                                    CSD031
+     E*00/Copy Member SD0161V   Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0161VEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*00/Copy Member SD0161V   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0161VIPG
+      /EJECT
+      *FILE STRUCTURE RENAME
+     IGZSDBR                                                                                 BG12014
+     I              A8BRCD                          A8BRCD                                   BG12014
+     I              A8MNBR                          A8MNBR                                   BG12014
+     I              A8BRTY                          A8BRTY                                   BG12014
+     I              A8BRNM                          A8BRNM                                   BG12014
+     I              A8BRTN                          A8BRTN                                   BG12014
+     I              A8BRZN                          A8BRZN                                   BG12014
+     I              A8LCCD                          A8LCCD                                   BG12014
+     I              A8STCD                          A8STC                                    BG12014
+     I              A8BSWT                          A8BSWT                                   BG12014
+     I              A8BNCB                          A8BNCB                                   BG12014
+      * Data structures:
+     ILDA       E DSLDA                         256                                           CSD012
+     I              SPARE                           SPAREX                                    CSD012
+      ** Local data area for database error details                                           CSD012
+      *                                                                                       CSD012
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+      * Outward parameters
+     IPARC        DS                             10
+      * KEY : Midas SD Holidays test access path
+      * I : RST Currency Code
+     I                                        1   3 PACYCD
+      * I : RST Location Code
+     I                                        4   6 PALCCD
+      * I : RST Year Number
+     I                                        7  10 PAYRNB
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528                                           CSD031
+      * File information data structure                                                       CSD031
+      *                                                                                       CSD031
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Currency Code Mandatory'
+      * Currency Code
+     I                                        1   3 ZA0001
+      * Message data for 'Currency invalid'
+      * Currency Code
+     I                                        1   3 ZA0002
+      * Message data for 'Invalid Location Code'
+      * Location Code
+     I                                        1   3 ZA0003
+      * Message data for 'Unable to add non-global'
+      * Location Code
+     I                                        1   3 ZA0004
+      * Message data for 'Location invalid'
+      * Location Code
+     I                                        1   3 ZA0005
+      * Message data for 'Year number mandatory'
+      * Year Number
+     I                                        1   4 ZA0006
+      * Message data for 'Year is not numeric'
+      * Year Number
+     I                                        1   4 ZA0007
+      * Message data for 'Year can't be before 1972'
+      * Year Number
+     I                                        1   4 ZA0008
+      * Message data for 'Year can't be after 2071'
+      * Year Number
+     I                                        1   4 ZA0009
+      * Message data for 'Update Error in Insert'
+      * Currency Code
+     I                                        1   3 ZA0010
+      * Location Code
+     I                                        4   6 ZA0011
+      * Year Number
+     I                                        7  10 ZA0012
+      *                                                                                       CSD012
+     I***K1HOL**     DS                             20                                 CSD012 CGL029
+     IK1HOL       DS                             26                                           CGL029
+     I                                        1   3 K1CYCD                                    CSD012
+     I                                        4   6 K1LCCD                                    CSD012
+     I                                        7  10 K1YRNB                                    CSD012
+      *                                                                                       CSD012
+      * Data structure for AOSVALR0 string                                                    CSD012
+     I            DS                                                                          CSD012
+     I                                        1 200 SVAL1                                     CSD012
+     I                                        1   1 SVAL11                                    CSD012
+      *                                                                                       CSD012
+      * System Value                                                                          CSD012
+     I            DS                                                                          CSD012
+     I I            'AuthReqHolidaysMaint'    1  20 SVALK1                                    CSD012
+      *                                                                                       CSD012
+      * Function Description                                                                  CSD012
+     I            DS                                                                          CSD012
+     I I            'HOLIDAY DETAILS '        1  21 FUNCD                                     CSD012
+     I I            'ZoneSystemName'         22  41 ZONEST                                   BG12014
+      *                                                                                       CSD012
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * CASE: DTL.*CMD key is CF12
+     C           *IN12     IFEQ '1'                        *IF
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VPCK - Holidays  *
+     C*00/Copy Member SD0161V   Process Command Keys
+     C/COPY WNCPYSRC,SD0161VPCK
+     C                     END                             *FI
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VUDA - Holidays  *
+     C*00/Copy Member SD0161V   User Defined Action
+     C/COPY WNCPYSRC,SD0161VUDA
+     C                     END                             *FI
+      * Exit program
+     C                     EXSR ZXEXPG
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      * check that holiday doesn't already exist
+      * Check if Record Exists - Holidays  *
+      *                                                                                       CSD012
+      * Check if unathorised record exists for this Holiday                                   CSD012
+      * on the Authorisation Log.                                                             CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+     C           SVAL11    ANDEQ'Y'                                                           CSD012
+      *                                                                                       CSD012
+     C                     MOVEL#1CYCD    K1CYCD                                              CSD012
+     C           #1LCCD    IFEQ *BLANKS                                                       CSD012
+     C                     MOVE '***'     K1LCCD                                              CSD012
+     C                     ELSE                                                               CSD012
+     C                     MOVEL#1LCCD    K1LCCD                                              CSD012
+     C                     ENDIF                                                              CSD012
+     C                     MOVEL#1YRNB    K1YRNB                                              CSD012
+     C           KAULG     CHAINSDAULGL0             90                                       CSD012
+      *                                                                                       CSD012
+      * If record exists then prevent insert                                                  CSD012
+     C           *IN90     IFEQ *OFF                                                          CSD012
+     C                     MOVEL'USR9265' ZAMSID                                              CSD012
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD012
+     C                     EXSR ZASNMS                                                        CSD012
+     C                     SETON                     99                                       CSD012
+     C                     GOTO DBEXIT                                                        CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Send message '*Record already exists'
+     C                     MOVEL'Y2U0003' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO DBEXIT                     *QUIT
+     C                     END                             *FI
+      * Validation of Currency Codes
+      * CASE: DTL.Currency Code is blank
+     C           #1CYCD    IFEQ *BLANK                     *IF
+      * Currency code must be entered
+      * Setup message data for message
+     C                     MOVEL#1CYCD    ZA0001           Currency Code
+      * Send message 'Currency Code Mandatory'
+     C                     MOVEL'USR0738' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: DTL.Currency Code is Select Request
+     C           #1CYCD    IFEQ '?'                        *IF
+      * If '?' is entered the select record should be called
+      * Select Currency Codes - Currency Codes  *
+     C                     CALL 'SD0020S'              90  Select Currency
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CYCD    PARM #1CYCD    WQ0001  3        Currency Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0020S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check to make sure that the currency code exists
+      * Get Currency Code - Currency Codes  *
+     C                     EXSR SBRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1CYCD    ZA0002           Currency Code
+      * Send message 'Currency invalid'
+     C                     MOVEL'USR0794' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Validation of Location Codes
+      * CASE: DTL.Location Code is Blank
+     C           #1LCCD    IFEQ *BLANK                     *IF
+      * Entry of a global holiday so need to move *** into the location c
+      * check to make sure it doesn't exist already
+     C                     MOVEL'***'     WULCCD           Location Code
+      * Check if Record Exists - Holidays  *
+     C                     EXSR SCRVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Send message '*Record already exists'
+     C                     MOVEL'Y2U0003' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: DTL.Location Code is Equal '?'
+     C           #1LCCD    IFEQ '?'                        *IF
+      * call the select record for the location codes
+      * Select Location Codes - Location Codes  *
+     C                     CALL 'SD0550S'              90  Select Location
+     C                     PARM *BLANK    W0RTN   7
+     C           #1LCCD    PARM #1LCCD    WQ0002  3        Location Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0550S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9932  *
+     C                     END
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: DTL.Location Code is Global Value
+     C           #1LCCD    IFEQ '***'                      *IF
+      * Setup message data for message
+     C                     MOVEL#1LCCD    ZA0003           Location Code
+      * Send message 'Invalid Location Code'
+     C                     MOVEL'USR0703' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * non-global holiday entered, first must check to see if it already
+      * if it doesn't then must check to see if there is already a global
+      * (only able to add a non-global holiday if the global holiday exis
+      * Check if Record Exists - Holidays  *
+     C                     EXSR SDRVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Send message '*Record already exists'
+     C                     MOVEL'Y2U0003' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check for Global Holiday
+      * Check if Record Exists - Holidays  *
+     C                     EXSR SERVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1LCCD    ZA0004           Location Code
+      * Send message 'Unable to add non-global'
+     C                     MOVEL'USR0700' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * check that the location code is valid
+      * Retrieve Location Codes - Location Codes  *
+     C                     EXSR SFRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1LCCD    ZA0005           Location Code
+      * Send message 'Location invalid'
+     C                     MOVEL'USR0795' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+     C                     MOVEL#1LCCD    WULCCD           Location Code
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     EXSR VLDLCR                                                       BG12014
+      * Validation of Year number must be numeric and >=1972
+      * CASE: DTL.Year Number is Blank
+     C           #1YRNB    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#1YRNB    ZA0006           Year Number
+      * Send message 'Year number mandatory'
+     C                     MOVEL'USR0813' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#1YRNB    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0003  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0004 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0005  10       ZALIGN No Of De
+     C                     PARM 4         WQ0006  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0007 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0008 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0009  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1YRNB    ZA0007           Year Number
+      * Send message 'Year is not numeric'
+     C                     MOVEL'USR0709' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Set up Year from ZALIGN - Holidays  *
+      * MOVE ZALIGNED CHARACTER YEAR TO YEAR FIELD ON SCREEN
+     C                     MOVE WUZASF    #1YRNB
+      * MOVE CHARACTER YEAR INTO NUMERIC YEAR FIELD
+     C                     MOVE WUZASF    WUYRNF
+      * CASE: WRK.Year - Numeric Field is Before 1972
+     C           WUYRNF    IFLT 1972                       *IF
+      * Setup message data for message
+     C                     MOVEL#1YRNB    ZA0008           Year Number
+      * Send message 'Year can't be before 1972'
+     C                     MOVEL'USR0711' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     ELSE
+      * CASE: WRK.Year - Numeric Field is After 2071
+     C           WUYRNF    IFGT 2071                       *IF
+      * Setup message data for message
+     C                     MOVEL#1YRNB    ZA0009           Year Number
+      * Send message 'Year can't be after 2071'
+     C                     MOVEL'USR0841' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9933  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VVFI - Holidays  *
+     C*00/Copy Member SD0161V   Validate Fields
+     C/COPY WNCPYSRC,SD0161VVFI
+     C                     END                             *FI
+      *                                                                                       CSD031
+      ** If called from central level                                                         CSD031
+      *                                                                                       CSD031
+     C           CSD041    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+      *                                                                                       CSD031
+      ** - Validate Accept to zone                                                            CSD031
+      *                                                                                       CSD031
+     C           #1AZON    IFEQ *BLANKS                                                       CSD031
+     C                     MOVEL'N'       #1AZON                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C           #1AZON    IFNE 'Y'                                                           CSD031
+     C           #1AZON    ANDNE'N'                                                           CSD031
+     C                     MOVEL'CSD0033' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     SETON                     9934                                     CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      ** - Validate effective date                                                            CSD031
+      **  : May only be entered if accept to zone is 'N'                                      CSD031
+      **  : Must be valid                                                                     CSD031
+      *                                                                                       CSD031
+     C           #1EDTE    IFNE *BLANK                                                        CSD031
+     C           #1AZON    IFEQ 'Y'                                                           CSD031
+     C                     MOVEL'CSD0001' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     SETON                     9935                                     CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     MOVE #1EDTE    ZDATE                                               CSD031
+     C                     CALL 'ZDATE1'                                                      CSD031
+     C                     PARM *BLANKS   ZERR    7                                           CSD031
+     C                     PARM           ZDATE   60                                          CSD031
+     C                     PARM           BJDFIN                                              CSD031
+     C                     PARM           ZDAYNO  50                                          CSD031
+     C           ZERR      IFNE *BLANKS                                                       CSD031
+     C                     MOVEL'CSD0015' ZAMSID                                              CSD031
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD031
+     C                     EXSR ZASNMS                                                        CSD031
+     C                     SETON                     9935                                     CSD031
+     C                     ENDIF                                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+     C                     ENDIF                                                              CSD031
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * Select existing record
+     C                     EXSR VACKRL
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VSFI - Holidays  *
+     C*00/Copy Member SD0161V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0161VSFI
+     C                     END                             *FI
+      * USER: Validate relations
+      * CASE: PGM.*Defer confirm is Proceed to confirm
+     C           W0DCF     IFEQ 'N'                        *IF
+      * Only call the edit record if defer confirm is no. If it is yes
+      * then there is either an error or a select record has been called.
+      * Amend Holidays - Holidays  *
+     C                     CLEARPARC
+     C                     MOVEL#1CYCD    PACYCD           Currency Code
+     C                     MOVELWULCCD    PALCCD           Location Code
+     C                     MOVEL#1YRNB    PAYRNB           Year Number
+      *
+     C                     CALL 'SD0160X'              90  Amend Holidays
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Holidays
+     C                     PARM 'I'       WQ0013  1        Action Code
+     C           WUDRTC    PARM *BLANK    WQ0014  7        Duplicate Retur
+     C                     PARM *BLANKS   WMODE   1                                           CSD031
+     C                     PARM           #1AZON                                              CSD031
+     C                     PARM           #1EDTE                                              CSD031
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0160X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     993133*
+     C                     END
+      * CASE: WRK.Duplicate Return Code is *User QUIT requested
+     C           WUDRTC    IFEQ 'Y2U9999'                  *IF
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *Previous Screen
+     C           WUDRTC    IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *Normal
+     C           WUDRTC    IFEQ *BLANK                     *IF
+      * DTL = CON By name
+     C                     MOVEL*BLANK    #1CYCD           Currency Code
+     C                     MOVEL*BLANK    #1LCCD           Location Code
+     C                     MOVEL*BLANK    #1YRNB           Year Number
+     C           CSD041    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     MOVEL*BLANK    #1AZON                                              CSD031
+     C                     MOVEL*BLANK    #1EDTE                                              CSD031
+     C                     ENDIF                                                              CSD031
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *ROLLBACK required
+     C           WUDRTC    IFEQ 'Y2U0018'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1CYCD    ZA0010           Currency Code
+     C                     MOVEL#1LCCD    ZA0011           Location Code
+     C                     MOVEL#1YRNB    ZA0012           Year Number
+      * Send message 'Update Error in Insert'
+     C                     MOVEL'USR0812' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VVRE - Holidays  *
+     C*00/Copy Member SD0161V   Validate Screen Relations
+     C/COPY WNCPYSRC,SD0161VVRE
+     C                     END                             *FI
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+      *================================================================                      BG12014
+      *VALIDATE LOCATION IF CRE026 IS ON                                                     BG12014
+     CSR         VLDLCR    BEGSR                                                             BG12014
+      * VALIDATION OF LOCATION CODE IF CRE026 IS ON                                          BG12014
+      * IF CRE026 IS INSTALLED AND LOCATION CODE NOT BLANKS                                  BG12014
+     C           CRE026    IFEQ 'Y'                                                          BG12014
+     C           #1LCCD    ANDNE*BLANKS                                                      BG12014
+     C           #1LCCD    ANDNE'***'                                                       BUG13704
+     C           *LIKE     DEFN #1LCCD    KLCCD                                              BG12014
+     C           *LIKE     DEFN #1LCCD    KLCCD1                                             BG12014
+     C                     MOVELP@VL01    KZONE
+     C                     MOVELP@VL01    KZONE1
+     C* KLIST FOR BRANCH CODE                                                                BG12014
+     C           KSDBRC    KLIST                                                             BG12014
+     C                     KFLD           KLCCD                                              BG12014
+     C                     KFLD           KZONE  10                                          BG12014
+     C           KSDBL1    KLIST                                                             BG12014
+     C                     KFLD           KLCCD1                                             BG12014
+     C                     KFLD           KZONE1 10                                          BG12014
+     C                     MOVEL#1LCCD    KLCCD                                              BG12014
+     C                     MOVEL#1LCCD    KLCCD1                                             BG12014
+     C                     MOVELP@VL01    KZONE                                              BG12014
+     C                     MOVELP@VL01    KZONE1                                             BG12014
+      *          CHAIN BRANCH FILE                                                           BG12014
+      *                                                                                      BG12014
+     C           KSDBRC    CHAINSDBRCHD0             90    *                                 BG12014
+      *                                                                                      BG12014
+     C           *IN90     IFEQ '1'                                                          BG12014
+     C*                                                                                      BG12014
+     C           KSDBL1    SETLLGZSDBR                                                       BG12014
+     C           KSDBL1    READEGZSDBR                   91                                  BG12014
+     C           *IN91     IFEQ '0'                                                          BG12014
+     C           A8MNBR    ANDEQ*BLANKS                                                      BG12014
+     C                     MOVE 'N'       CEND    1                                          BG12014
+     C           CEND      DOWEQ'Y'                                                          BG12014
+     C                     READ GZSDBR                   90                                  BG12014
+     C           *IN90     IFEQ '0'                                                          BG12014
+     C           A8MNBR    IFNE *BLANKS                                                      BG12014
+     C           A8LCCD    ANDEQKLCCD1                                                       BG12014
+     C           A8BRZN    ANDEQKZONE1                                                       BG12014
+     C                     MOVEL'Y'       CEND                                               BG12014
+     C                     MOVE *OFF      *IN90                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           *IN90     IFEQ '1'                                                          BG12014
+     C                     MOVEL'Y'       CEND                                               BG12014
+     C                     MOVE *ON       *IN90                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C                     ENDIF                                                             BG12014
+     C                     ENDDO                                                             BG12014
+     C                     ENDIF                                                             BG12014
+     C* ERROR MESSAGE                                                                        BG12014
+     C           *IN90     IFEQ '1'                                                          BG12014
+     C           *IN91     OREQ '1'                                                          BG12014
+     C                     MOVEL'USR9992' ZAMSID                                             BG12014
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                             BG12014
+     C                     EXSR ZASNMS                                                       BG12014
+     C                     SETON                     9932                                    BG12014
+     C                     ENDIF                                                             BG12014
+     C                     ENDIF                                                             BG12014
+     C                     ENDIF                                                             BG12014
+     C           LCREXT    ENDSR                                                             BG12014
+      *================================================================                      BG12014
+      /EJECT                                                                                 BG12014
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     MOVEL*BLANK    #1CYCD           Currency Code
+     C                     MOVEL*BLANK    #1LCCD           Location Code
+     C                     MOVEL*BLANK    #1YRNB           Year Number
+     C           CSD041    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     MOVEL*BLANK    #1AZON                                              CSD031
+     C                     MOVEL*BLANK    #1EDTE                                              CSD031
+     C                     ENDIF                                                              CSD031
+      * CALC: Screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VSFI - Holidays  *
+     C*00/Copy Member SD0161V   Calculate Function Flds
+     C/COPY WNCPYSRC,SD0161VSFI
+     C                     END                             *FI
+      * USER: Load screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VLSR - Holidays  *
+     C*00/Copy Member SD0161V   Load Screen
+     C/COPY WNCPYSRC,SD0161VLSR
+     C                     END                             *FI
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Check if Record Exists - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN DGCYCD    WQSA01           Currency Code
+     C           *LIKE     DEFN DGLCCD    WQSA02           Location Code
+     C           *LIKE     DEFN DGYRNB    WQSA03           Year Number
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           WQSA01           Currency Code
+     C                     KFLD           WQSA02           Location Code
+     C                     KFLD           WQSA03           Year Number
+      * Move fields to key list
+     C                     MOVEL#1CYCD    WQSA01           Currency Code
+     C                     MOVEL#1LCCD    WQSA02           Location Code
+     C                     MOVEL#1YRNB    WQSA03           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSA     SETLLGPHOLIL1                   *                                  CSD031
+     C           KRSSA     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSA     SETLL@HOLPH0                    *
+     C           KRSSA     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0657' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSA     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSA     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get Currency Code - Currency Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Move fields to key list
+     C                     MOVEL#1CYCD    A6CYCD           Currency Code
+     C           KRSSB     CHAIN@A6REA3              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0071' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Check if Record Exists - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN DGCYCD    WQSC01           Currency Code
+     C           *LIKE     DEFN DGLCCD    WQSC02           Location Code
+     C           *LIKE     DEFN DGYRNB    WQSC03           Year Number
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           WQSC01           Currency Code
+     C                     KFLD           WQSC02           Location Code
+     C                     KFLD           WQSC03           Year Number
+      * Move fields to key list
+     C                     MOVEL#1CYCD    WQSC01           Currency Code
+     C                     MOVELWULCCD    WQSC02           Location Code
+     C                     MOVEL#1YRNB    WQSC03           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSC     SETLLGPHOLIL1                   *                                  CSD031
+     C           KRSSC     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSC     SETLL@HOLPH0                    *
+     C           KRSSC     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0657' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSC     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSC     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Check if Record Exists - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN DGCYCD    WQSD01           Currency Code
+     C           *LIKE     DEFN DGLCCD    WQSD02           Location Code
+     C           *LIKE     DEFN DGYRNB    WQSD03           Year Number
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           WQSD01           Currency Code
+     C                     KFLD           WQSD02           Location Code
+     C                     KFLD           WQSD03           Year Number
+      * Move fields to key list
+     C                     MOVEL#1CYCD    WQSD01           Currency Code
+     C                     MOVEL#1LCCD    WQSD02           Location Code
+     C                     MOVEL#1YRNB    WQSD03           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSD     SETLLGPHOLIL1                   *                                  CSD031
+     C           KRSSD     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSD     SETLL@HOLPH0                    *
+     C           KRSSD     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0657' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSD     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSD     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SERVGN    BEGSR
+      *================================================================
+      * Check if Record Exists - Holidays  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN DGCYCD    WQSE01           Currency Code
+     C           *LIKE     DEFN DGLCCD    WQSE02           Location Code
+     C           *LIKE     DEFN DGYRNB    WQSE03           Year Number
+      * Define keylist
+     C           KRSSE     KLIST
+     C                     KFLD           WQSE01           Currency Code
+     C                     KFLD           WQSE02           Location Code
+     C                     KFLD           WQSE03           Year Number
+      * Move fields to key list
+     C                     MOVEL#1CYCD    WQSE01           Currency Code
+     C                     MOVEL'***'     WQSE02           Location Code
+     C                     MOVEL#1YRNB    WQSE03           Year Number
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSE     SETLLGPHOLIL1                   *                                  CSD031
+     C           KRSSE     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSE     SETLL@HOLPH0                    *
+     C           KRSSE     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0657' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C           KRSSE     READEGPHOLIL1                 90*                                  CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSE     READE@HOLPH0                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFRVGN    BEGSR
+      *================================================================
+      * Retrieve Location Codes - Location Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSF     KLIST
+     C                     KFLD           DVLCCD           Location Code
+      * Move fields to key list
+     C                     MOVEL#1LCCD    DVLCCD           Location Code
+     C           CSD041    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           KRSSF     CHAINSDLOCND0             90                                       CSD031
+     C                     ELSE                                                               CSD031
+     C           KRSSF     CHAIN@DVREHH              90    *
+     C                     ENDIF                                                              CSD031
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0653' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SFEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1CYCD    WK1X01  1
+     C                     MOVEL#1LCCD    WK1X02  1
+     C                     MOVEL#1YRNB    WK1X03  1
+     C           WK1X01    IFEQ '?'                        Currency Code
+     C           WK1X02    OREQ '?'                        Location Code
+     C           WK1X03    OREQ '?'                        Year Number
+     C                     CALL 'SD0160S'              90  Select Holidays
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CYCD    PARM #1CYCD    WQ0010  3        Currency Code
+     C           #1LCCD    PARM #1LCCD    WQ0011  3        Location Code
+     C           #1YRNB    PARM #1YRNB    WQ0012  4        Year Number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0160S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VEPP - Holidays  *
+     C*00/Copy Member SD0161V   Exit Program Processing
+     C/COPY WNCPYSRC,SD0161VEPP
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           *NAMVAR   DEFN           LDA                                                 CSD012
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Location Code
+     C                     MOVEL*BLANK    WULCCD  3
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Define work field Year - Numeric Field
+     C                     Z-ADD*ZERO     WUYRNF  40
+      * Define work field Duplicate Return Code
+     C                     MOVEL*BLANK    WUDRTC  7
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0161V#
+     C                     OPEN SDHOLL8
+     C                     OPEN SDCURRL1
+     C                     OPEN SDLOCNL1
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C           CSD041    ANDEQ'Y'                                                           CSD031
+     C                     OPEN GPLOCNL1                                                      CSD031
+     C                     ENDIF                                                              CSD031
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0161V PRECOMPILER - Holidays  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD0161VFPG - Holidays  *
+      * 00/Copy Member SD0161VEPG - Holidays  *
+      * 00/Copy Member SD0161VIPG - Holidays  *
+      * 00/Copy Member SD0161VCPG - Holidays  *
+     C*00/Copy Member SD0161V   Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0161VCPG
+      * 00/Copy Member SD0161VOPG - Holidays  *
+     C                     END                             *FI
+      * Load screen
+     C                     EXSR MALDSC
+      *                                                                                       CSD012
+      * Define keylist for SDAULGL0                                                           CSD012
+     C           KAULG     KLIST                                                              CSD012
+     C**********           KFLD           K1HOL  20                                    CSD012 CGL029
+     C                     KFLD           K1HOL                                               CGL029
+      *                                                                                       CSD012
+      * Check if CSD012 is switched on                                                        CSD012
+     C                     CALL 'AOSARDR0'                                                    CSD012
+     C                     PARM           PRTCD   7                                           CSD012
+     C                     PARM '*VERIFY' POPTN   7                                           CSD012
+     C                     PARM 'CSD012'  PSARD   6                                           CSD012
+      *                                                                                       CSD012
+     C           PRTCD     IFEQ *BLANKS                                                       CSD012
+     C                     MOVE 'Y'       CSD012  1                                           CSD012
+     C                     ELSE                                                               CSD012
+     C                     MOVE 'N'       CSD012                                              CSD012
+     C                     ENDIF                                                              CSD012
+     C                     MOVE 'N'       CRE026  1                                          BG12014
+      * Check if CRE026 is switched on                                                       BG12014
+     C                     CALL 'AOSARDR0'                                                   BG12014
+     C                     PARM           PRTCD                                              BG12014
+     C                     PARM '*VERIFY' POPTN                                              BG12014
+     C                     PARM 'CRE026'  PSARD                                              BG12014
+      *                                                                                      BG12014
+     C           PRTCD     IFEQ *BLANKS                                                      BG12014
+     C                     MOVE 'Y'       CRE026                                             BG12014
+     C                     ELSE                                                              BG12014
+     C                     MOVE 'N'       CRE026                                             BG12014
+     C                     ENDIF                                                             BG12014
+      *                                                                                       CSD012
+      * Check if Holiday Authorisation is on                                                  CSD012
+     C           CSD012    IFEQ 'Y'                                                           CSD012
+      *                                                                                       CSD012
+     C                     CALL 'AOSVALR0'                                                    CSD012
+     C                     PARM *BLANKS   RTNCDE  7                                           CSD012
+     C                     PARM           SVALK1 20                                           CSD012
+     C                     PARM           SVAL1 200                                           CSD012
+     C                     PARM           SVALK2 20                                           CSD012
+     C                     PARM           SVAL2 200                                           CSD012
+     C                     PARM           SVALK3 20                                           CSD012
+     C                     PARM           SVAL3 200                                           CSD012
+     C                     PARM           SVALK4 20                                           CSD012
+     C                     PARM           SVAL4 200                                           CSD012
+     C                     PARM           SVALK5 20                                           CSD012
+     C                     PARM           SVAL5 200                                           CSD012
+     C                     PARM           SVALK6 20                                           CSD012
+     C                     PARM           SVAL6 200                                           CSD012
+     C                     PARM           SVALK7 20                                           CSD012
+     C                     PARM           SVAL7 200                                           CSD012
+     C                     PARM           SVALK8 20                                           CSD012
+     C                     PARM           SVAL8 200                                           CSD012
+     C                     PARM           SVALK9 20                                           CSD012
+     C                     PARM           SVAL9 200                                           CSD012
+     C                     PARM           SVALK0 20                                           CSD012
+     C                     PARM           SVAL10200                                           CSD012
+      *                                                                                       CSD012
+     C           RTNCDE    IFNE *BLANKS                                                       CSD012
+     C           SVAL10    IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK0    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL9     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK9    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL8     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK8    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL7     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK7    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL6     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK6    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL5     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK5    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL4     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK4    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL3     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK3    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL2     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK2    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           SVAL1     IFEQ '*NRF'                                                        CSD012
+     C                     MOVE SVALK1    DBKEY                                               CSD012
+     C                     ENDIF                                                              CSD012
+     C           *LOCK     IN   LDA                                                           CSD012
+     C                     Z-ADD1         DBASE                                               CSD012
+     C                     MOVE 'SDSVALPD'DBFILE                                              CSD012
+     C                     MOVE 'SD0161V' DBPGM                                               CSD012
+     C                     OUT  LDA                                                           CSD012
+     C                     EXSR *PSSR                                                         CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD012
+     C                     ENDIF                                                              CSD012
+      *                                                                                       CSD031
+      ** Check if CSD041 is switched on                                                       CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM           PRTCD   7                                           CSD031
+     C                     PARM '*VERIFY' POPTN   7                                           CSD031
+     C                     PARM 'CSD041'  PSARD   6                                           CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD041  1                                           CSD031
+     C                     OPEN GPHOLIL1                                                      CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD041                                              CSD031
+     C                     ENDIF                                                              CSD031
+     C                     MOVE *INU1     *IN50                                               CSD031
+      *                                                                                       CSD031
+      ** Retrieve bank details if central level                                               CSD031
+      *                                                                                       CSD031
+     C           *INU1     IFEQ *ON                                                           CSD031
+     C                     Z-ADD80        PLEN   155                                          CSD031
+     C                     MOVE OVRC,1    PCMD   80                                           CSD031
+     C                     CALL 'QCMDEXC'                                                     CSD031
+     C                     PARM           PCMD                                                CSD031
+     C                     PARM           PLEN                                                CSD031
+      *                                                                                       CSD031
+     C                     OPEN GZSDBANK                                                      CSD031
+     C                     READ GZSDBANK                 90                                   CSD031
+     C           *IN90     IFEQ *ON                                                           CSD031
+     C                     MOVEL'GZSDBANK'DBFILE                                              CSD031
+     C                     Z-ADD2         DBASE                                               CSD031
+     C                     EXSR *PSSR                                                         CSD031
+     C                     ENDIF                                                              CSD031
+     C                     CLOSEGZSDBANK                                                      CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD012
+      *                                                                                      BG12014
+      * RETRIEVE CURRENT ZONE VALUES FOR VALIDATION.                                         BG12014
+     C                     MOVELZONEST    PZONE  20                                          BG12014
+     C                     CALL 'AOSVALR0'                                                   BG12014
+     C                     PARM *BLANKS   P@RTCD  7                                          BG12014
+     C                     PARM PZONE     P@OP01 20                                          BG12014
+     C                     PARM *BLANKS   P@VL01200                                          BG12014
+     C                     PARM *BLANKS   P@OP02 20                                          BG12014
+     C                     PARM *BLANKS   P@VL02200                                          BG12014
+     C                     PARM *BLANKS   P@OP03 20                                          BG12014
+     C                     PARM *BLANKS   P@VL03200                                          BG12014
+     C                     PARM *BLANKS   P@OP04 20                                          BG12014
+     C                     PARM *BLANKS   P@VL04200                                          BG12014
+     C                     PARM *BLANKS   P@OP05 20                                          BG12014
+     C                     PARM *BLANKS   P@VL05200                                          BG12014
+     C                     PARM *BLANKS   P@OP06 20                                          BG12014
+     C                     PARM *BLANKS   P@VL06200                                          BG12014
+     C                     PARM *BLANKS   P@OP07 20                                          BG12014
+     C                     PARM *BLANKS   P@VL07200                                          BG12014
+     C                     PARM *BLANKS   P@OP08 20                                          BG12014
+     C                     PARM *BLANKS   P@VL08200                                          BG12014
+     C                     PARM *BLANKS   P@OP09 20                                          BG12014
+     C                     PARM *BLANKS   P@VL09200                                          BG12014
+     C                     PARM *BLANKS   P@OP10 20                                          BG12014
+     C                     PARM *BLANKS   P@VL10200                                          BG12014
+      *                                                                                      BG12014
+     C           P@RTCD    IFNE *BLANKS                                                      BG12014
+     C           P@VL10    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP10    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL09    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP09    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL08    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP08    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL07    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP07    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL06    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP06    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL05    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP05    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL04    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP04    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL03    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP03    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL02    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP02    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           P@VL01    IFEQ '*NRF'                                                       BG12014
+     C                     MOVE P@OP01    DBKEY                                              BG12014
+     C                     ENDIF                                                             BG12014
+     C           *LOCK     IN   LDA                                                          BG12014
+     C                     Z-ADD1         DBASE                                              BG12014
+     C                     MOVE 'SDSVALPD'DBFILE                                             BG12014
+     C                     MOVE 'SD0161V' DBPGM                                              BG12014
+     C                     OUT  LDA                                                          BG12014
+     C                     EXSR *PSSR                                                        BG12014
+     C                     ENDIF                                                             BG12014
+      *                                                                                      BG12014
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0161VPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0161VPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0161VPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*00/Copy Member SD0161V   Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0161VOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001
+** OVRC                                                                                       CSD031
+OVRDBF FILE(GZSDBANK) TOFILE(GZSDBANKL2)                                                      CSD031

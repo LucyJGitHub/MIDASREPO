@@ -1,0 +1,126 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_LOANLERI  -  Rollover Details                                       */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      246676             Date 27Mar07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      240950             Date 11Jul06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027A            Date 09May06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CLE036             Date 22Sep03                        */
+/*                      CAS011             Date 16May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG5722            Date 08Feb05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG3408            Date 01Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG019             Date 26Apr04                        */
+/*                      CAP084  *CREATE    Date 09Jan04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference (Recompile)                             */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CLE143 - Original Loan Contract Date & Effective Interest             */
+/*                Rate (Recompile)                                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       246676 - Loan even screen crashes during refresh if rollovers,        */
+/*                 interest adj or margin adj are highlighted.(Recompile)      */
+/*       240950 - Default to CCY if NCCY not used (Recompile)                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027A - Conversion Of Customer Number to Alpha (recompile)          */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CLE106 - Syndications Manager                                         */
+/*       CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2:          */
+/*                Allow specific base rates (Recompile)                        */
+/*       CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)                 */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG5722- Performance Enhancement (Recompile)                          */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG3408- Removed unnecessary fields. (recompile)                      */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG019 - New LERI front end suite.  Redeliver updated source.         */
+/*       CAP084 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT V_#LOANLER.*,                                                         :
+***CASE*WHEN*PTYP*IN*(66,67,69,72)*THEN*'PS'*WHEN*PTYP*IN*(64,65,68,71)*********:              BUG19
+***THEN*'PP'*ELSE*'LN'*END*AS*LOANCLASS,****************************************:              BUG19
+***CASE*WHEN*PTYP*IN*(66,67,69,72)*THEN*DIGITS(OLNO)*ELSE*''*END*AS*SALELOAN,***:              BUG19
+***CASE*WHEN*PTYP*IN*(64,65,68,71)*THEN*DIGITS(OLNO)*ELSE*''*END*AS*ORIGBRWR,***:              BUG19
+***CASE*WHEN*PTYP*IN*(61,68,69)*THEN*'CALL'*************************************:              BUG19
+********WHEN*PTYP*IN*(62,64,66)*THEN*'TERM'*************************************:              BUG19
+********WHEN*PTYP*IN*(63,65,67)*THEN*'DISC'*************************************:              BUG19
+********WHEN*PTYP*IN*(70)*THEN*'GUAR'*******************************************:              BUG19
+********WHEN*PTYP*IN*(71,72)*THEN*'RISK'****************************************:              BUG19
+********ELSE*'OTHR'*END*AS*LOANCAT**********************************************:              BUG19
+***FROM*V_#LOANLER**************************************************************:              BUG19
+   CASE WHEN PADPTYP IN ('66','67','69','72') THEN 'PS'                         :              BUG19
+        WHEN PADPTYP IN ('64','65','68','71') THEN 'PP'                         :              BUG19
+        ELSE 'LN' END AS LOANCLASS,                                             :              BUG19
+   CASE WHEN PADPTYP IN ('66','67','69','72') THEN PADOLNO                      :              BUG19
+        ELSE '' END AS SALELOAN,                                                :              BUG19
+   CASE WHEN PADPTYP IN ('64','65','68','71') THEN PADOLNO                      :              BUG19
+        ELSE '' END AS ORIGBRWR,                                                :              BUG19
+   CASE WHEN PADPTYP IN ('61','68','69') THEN 'CALL'                            :              BUG19
+        WHEN PADPTYP IN ('62','64','66') THEN 'TERM'                            :              BUG19
+        WHEN PADPTYP IN ('63','65','67') THEN 'DISC'                            :              BUG19
+        WHEN PADPTYP IN ('70') THEN 'GUAR'                                      :              BUG19
+        WHEN PADPTYP IN ('71','72') THEN 'RISK'                                 :              BUG19
+********ELSE 'OTHR' END AS LOANCAT**********************************************:   /*BUG19*CLE106*/
+        ELSE 'OTHR' END AS LOANCAT,                                             :         /*CLE106*/
+   '' AS PADLASN                                                                :         /*CLE106*/
+   FROM V_#LOANLER;                                                             :              BUG19
+                                                                                :              BUG19
+   LABEL ON COLUMN **********/**********                                        :              BUG19
+    (LOANCLASS    IS 'Loan                Class',                               :              BUG19
+     SALELOAN     IS 'Sale                Loan',                                :              BUG19
+     ORIGBRWR     IS 'Original            Borrower',                            :              BUG19
+     LOANCAT      IS 'Loan                Category                     ');      :              BUG19
+                                                                                :              BUG19
+   LABEL ON COLUMN **********/**********                                        :              BUG19
+    (LOANCLASS    TEXT IS 'Loan Class',                                         :              BUG19
+     SALELOAN     TEXT IS 'Sale Loan',                                          :              BUG19
+     ORIGBRWR     TEXT IS 'Original Borrower',                                  :              BUG19
+     LOANCAT      TEXT IS 'Loan Category');                                     :              BUG19
+/********************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Rollovers                                ';                     :
+                                                                                :

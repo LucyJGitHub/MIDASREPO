@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD EC Types maintenance')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000816 - Midas SD Exemption Certificate Types Maintenance*/
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. AR797240           Date 30Jun11              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR797240 - New standing data tables available in the        */
+/*                  maintenance menu are not available in the        */
+/*                  enquiry menu                                     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM */                                                                     /*AR797240*/
+             PGM        PARM(&MODE)                                                     /*AR797240*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2008')
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)                                   /*AR797240*/
+ 
+/*** Monitor for Error Messages from System. */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(DUMP))
+ 
+/*** Set external switches off. */
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/*** Call program. */
+/**********  CALL       PGM(SD000816) */                                                /*AR797240*/
+/** Mode of display 'M'=Mainteanance 'E'=Enquiry */                                     /*AR797240*/
+             CALL       PGM(SD000816) PARM(&MODE)                                       /*AR797240*/
+ 
+/*** Monitor for Database Errors (U7 and U8 on). */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(DBE0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+ 
+/*** U7 on : program or file error. */
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/*** No errors. */
+             GOTO       CMDLBL(NORMAL)
+ 
+/*** Errors within SD000816. */
+ DUMP:       DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+ 
+/*** Send error message to screen. */
+ ABNORMAL:   SNDPGMMSG  MSG('Transaction failed, re-input necessary. +
+                          ENTER to continue.') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000)
+ 
+/*** Reclaim resources, delete overrides and terminate component. */
+ NORMAL:     RCLRSC
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+             ENDPGM

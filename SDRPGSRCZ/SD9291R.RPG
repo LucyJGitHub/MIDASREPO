@@ -1,0 +1,948 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Treasury management ICD maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9291R - Midas SD Treasury management                       *
+      *                                                               *
+      *  Function:  This program allows the user to maintain details  *
+      *             on treasury management                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CSD003             Date 01Jul99               *
+      *  Prev Amend No. S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01339            Date: 28MAY92               *
+     F*                 E24517            Date: 18SEP91               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+     F*  S01339 - Program runs from MITEM, Remove F12 from screen     *
+     F*  E24517 - UPDATE STANDING DATA FILE CONTROLS                  *
+     F*****************************************************************
+     F*00/COPY member SD9291R   Initialise Program F-spec
+     F/COPY WNCPYSRC,SD9291RFPG
+     FSD9291R#CF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+      * DSP: Midas Edit Treasury Management
+      *
+     FSDTRMAL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV : Midas Treasury Management Data  Retrv indx
+      *
+     FSDMMODL1IF  E           K        DISK
+      * RTV : MIDAS Modules             Retrieval index
+      *
+     FSDTRMAL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+      * UPD : Midas Treasury Management Data  Updte indx
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+      * UPD : Standing Data Controls    Update index
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     E*00/COPY member SD9291R   Initialise Program E-spec
+     E/COPY WNCPYSRC,SD9291REPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD9290GDTA                                           S01229
+     I*00/COPY member SD9291R   Initialise Program I-spec
+     I/COPY WNCPYSRC,SD9291RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDTRMAL0
+      * Current/previous master file format fields for change control
+      *
+     I#1DBRC      DS                             19
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas Treasury Management Data  Retrv indx
+      * I : RST Treasury Management Data
+     I                                        1  10 P1TRMA
+     IP2PARM      DS
+      * O : MAP *Return code
+     I                                        1   7 P2RTN
+     IP3PARM      DS
+      * B : MAP Work Return code
+     I                                        1   5 P3WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Short P/L period end date'
+      * Short P/L Period End Date
+     I                                        1   4 ZA0001
+      * Message data for 'Option deals displayed'
+      * FX Options on Value Date
+     I                                        1   1 ZA0002
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Treasury M
+     C           P2RTN     PARM P2RTN     WP0001  7        *Return code
+     C           P3WRTC    PARM P3WRTC    WP0002  5        Work Return cod
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialise key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'R'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1TRMA    IFEQ *BLANK                     Treasury Manage
+      * One or more key fields is blank
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           ERTRMA           Treasury Manage
+      * Setup key
+     C                     MOVEL#1TRMA    ERTRMA           Treasury Manage
+     C           KRTV      CHAIN@ERRELN              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Treasury Management Da NF'
+     C                     MOVEL'USR1762' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/COPY Member SD9291RSFF - Treasury Management Data  *
+     C*00/COPY member SD9291R   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9291RSFF
+      * USER: Initialise detail screen (existing record)
+      * 00/COPY Member SD9291RISE - Treasury Management Data  *
+     C*00/COPY member SD9291R   Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD9291RISE
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * 00/COPY Member SD9291RVKS - Treasury Management Data  *
+     C*00/COPY member SD9291R   Validate Key Screen
+     C/COPY WNCPYSRC,SD9291RVKS
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+     C                     MOVEL'N'       W0HLP   1
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/COPY Member SD9291RPKR - Treasury Management Data  *
+     C*00/COPY member SD9291R   Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9291RPKR
+      * Bypass KEY screen, if F12 is pressed on detail screen
+     C                     MOVEL*BLANK    P3WRTC           Work Return cod
+     C                     MOVEL'PREV'    P3WRTC           Work Return cod
+     C                     MOVEL'PREV'    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     MOVEL'R'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * Validate Short P/L Period End Date
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1SPRE    W0NSRQ  1        Short P/L Perio
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1163355   Y2LSNO  70
+     C           #1SPRE    PARM #1SPRE    W0EXVL 20        Short P/L Perio
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * Validate FX Options on Value Date
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1OVDI    W0NSRQ  1        FX Options on V
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1163357   Y2LSNO  70
+     C           #1OVDI    PARM #1OVDI    W0EXVL 20        FX Options on V
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      * USER: Validate detail screen fields
+      * Short Profit/Loss period end date
+      * CASE: DTL.Short P/L Period End Date is valid values
+     C           #1SPRE    IFEQ 'OVR'                      *IF
+     C           #1SPRE    OREQ 'SP'
+     C           #1SPRE    OREQ 'SPN'
+     C           #1SPRE    OREQ 'TOMN'
+     C           #1SPRE    OREQ 'SP1M'
+     C           #1SPRE    OREQ 'SP1W'
+     C           #1SPRE    OREQ 'SP1Y'
+     C           #1SPRE    OREQ 'SP2M'
+     C           #1SPRE    OREQ 'SP2W'
+     C           #1SPRE    OREQ 'SP3M'
+     C           #1SPRE    OREQ 'SP3W'
+     C           #1SPRE    OREQ 'SP6M'
+     C           #1SPRE    OREQ 'SP9M'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1SPRE    ZA0001           Short P/L Perio
+      * Send message 'Short P/L period end date'
+     C                     MOVEL'USR1768' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+      * CASE: DTL.FX Options on Value Date is valid values
+     C           #1OVDI    IFEQ 'N'                        *IF
+     C           #1OVDI    OREQ 'Y'
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1OVDI    ZA0002           FX Options on V
+      * Send message 'Option deals displayed'
+     C                     MOVEL'USR1769' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+      * 00/COPY Member SD9291RVSF - Treasury Management Data  *
+     C*00/COPY member SD9291R   Validate Detail Screen
+     C/COPY WNCPYSRC,SD9291RVSF
+      * CALC: Detail screen function fields
+      * 00/COPY Member SD9291RSFF - Treasury Management Data  *
+     C*00/COPY member SD9291R   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9291RSFF
+      * USER: Validate detail screen relations
+      * 00/COPY Member SD9291RVSR - Treasury Management Data  *
+     C*00/COPY member SD9291R   Validate Screen Relns
+     C/COPY WNCPYSRC,SD9291RVSR
+      * Short P/L Period End Date required
+     C           #1SPRE    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      * FX Options on Value Date required
+     C           #1OVDI    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * 00/COPY Member SD9291RPCK - Treasury Management Data  *
+     C*00/COPY member SD9291R   Process Command Keys
+     C/COPY WNCPYSRC,SD9291RPCK
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change Treasury Managemen - Treasury Management Data  *
+     C                     EXSR SACHRC
+     C           W0RTN     IFNE *BLANK
+      * DBF update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields
+      *================================================================
+     C                     MOVEL*BLANK    #PRTN            *Return code
+     C                     MOVELP3WRTC    #PWRTC           Work Return cod
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1SPRE           Short P/L Perio
+     C                     MOVEL*BLANK    #1OVDI           FX Options on V
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @ERRELN fields to screen
+      *================================================================
+     C                     MOVELERTRMA    #1TRMA           Treasury Manage
+     C                     Z-ADDERLCD     #1LCD            Last Change Dat
+     C                     MOVELERTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELERSPRE    #1SPRE           Short P/L Perio
+     C                     MOVELEROVDI    #1OVDI           FX Options on V
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialise key screen
+      *================================================================
+     C                     MOVEL*BLANK    #PRTN            *Return code
+     C                     MOVELP3WRTC    #PWRTC           Work Return cod
+     C                     MOVELP1TRMA    #1TRMA           Treasury Manage
+      * USER: Initialise key screen
+      * 00/COPY Member SD9291RIKS - Treasury Management Data  *
+     C*00/COPY member SD9291R   Initialise Key Screen
+     C/COPY WNCPYSRC,SD9291RIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACHRC    BEGSR
+      *================================================================
+      * Change Treasury Managemen - Treasury Management Data  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @ERRELM
+     C                     MOVEL#1TRMA    ERTRMA           Treasury Manage
+      *
+     C           KLCHSA    KLIST
+     C                     KFLD           ERTRMA           Treasury Manage
+     C           KLCHSA    CHAIN@ERRELM              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Use SETLL to release record lock
+     C           KLCHSA    SETLL@ERRELM              9091  *
+     C                     GOTO SAEXIT
+     C                     END                             FI #1DBRC
+      * USER: Processing after DBF read
+      * start E24517
+      * save Last Change Date from record
+     C                     Z-ADDERLCD     WULCD            Last Change Dat
+      * end E24517
+      * Move non-key fields to @ERRELM
+     C                     MOVEL#1SPRE    ERSPRE           Short P/L Perio
+     C                     MOVEL#1OVDI    EROVDI           FX Options on V
+     C                     Z-ADDWURDNB    ERLCD            Last Change Dat
+     C                     MOVEL'A'       ERTYLC           Type of Last Ch
+      *
+      * USER: Processing before DBF update
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/COPY Member SD9291RBUW - Treasury Management Data  *
+     C*00/COPY member SD9291R   Before Update, Window on
+     C/COPY WNCPYSRC,SD9291RBUW
+     C                     END                             *FI
+      * 00/COPY Member SD9291RDBU - Treasury Management Data  *
+     C*00/COPY member SD9291R   Processing Before Delete
+     C/COPY WNCPYSRC,SD9291RDBU
+     C                     UPDAT@ERRELM                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * USER: Processing after DBF update
+      * start E24517 - update standing data file controls
+      * CASE: WRK.Last Change Date NE WRK.Run day number
+     C           WULCD     IFNE WURDNB                     *IF
+      * only update file controls if record has not been updated already today
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOAM           No. of Amends
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SBCHRC
+     C                     END                             *FI
+      * end E24517
+      * 00/COPY Member SD9291RADU - Treasury Management Data  *
+     C*00/COPY member SD9291R   Processing After Update
+     C/COPY WNCPYSRC,SD9291RADU
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDICDRPD'AHFLNM           Filename
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSB    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * USER: Processing after DBF read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * DBF record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'**CMD**' P2RTN            *Return code
+     C                     MOVEL'CMD01'   P3WRTC           Work Return cod
+     C                     END                             *FI
+      * 00/COPY Member SD9291REPP - Treasury Management Data  *
+     C*00/COPY member SD9291R   Exit Program Processing
+     C/COPY WNCPYSRC,SD9291REPP
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Last Change Date
+     C                     Z-ADD*ZERO     WULCD   50
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     OPEN SDTRMAL0
+     C                     OPEN SDFCTLL0
+      * Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Last Amend Box SD9291R - Treasury Management Data  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT           RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement - Standard Functions  * copyright
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Data Struct. Treasry Mgmt - Treasury Management Data  *
+      * 00/COPY Member SD9291RFPG - Treasury Management Data  *
+      * 00/COPY Member SD9291REPG - Treasury Management Data  *
+      * 00/COPY Member SD9291RIPG - Treasury Management Data  *
+      * 00/COPY Member SD9291RCPG - Treasury Management Data  *
+     C*00/COPY member SD9291R   Initialise Program C-spec
+     C/COPY WNCPYSRC,SD9291RCPG
+      * 00/COPY Member SD9291ROPG - Treasury Management Data  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     O*00/COPY member SD9291R   Initialise Program O-spec
+     O/COPY WNCPYSRC,SD9291ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

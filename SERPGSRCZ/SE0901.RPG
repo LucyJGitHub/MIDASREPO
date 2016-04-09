@@ -1,0 +1,2186 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Interest accruals extract')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE0901 - EXTRACT FOR INTEREST ACCRUALS REPORT                *
+     F*                                                               *
+     F*  Function: To extract Interest Accrual data for Book Positions*
+     F*   (COB)    in Interest-Bearing Securities, pre-report.        *
+     F*                                                               *
+     F*  Called by: SEC0901 - Interest Accruals Report                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. 226449             Date 24Jun15               *
+      *  Prev Amend No. AR865929           Date 11Dec11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 245721             Date 14Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 194370             Date 12Jul01               *
+      *                 211407             Date 07Jan03               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 140272             Date 20Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 102506             Date 18Oct98               *
+     F*                 130863             Date 11Oct98               *
+     F*                 151945             Date 06Jan99               *
+     F*                 CSE005             Date 04Feb97               *
+     F*                 S01408             Date 22Aug96               *
+     F*                 100228             DATE 31MAY96               *
+     F*                 102043             DATE 24MAY96               *
+     F*                 102004             DATE 16MAY96               *
+     F*                 S01408             DATE 15MAY96               *
+     F*                 099886             DATE 17APR96               *
+     F*                 100017             DATE 17APR96               *
+     F*                 097563             DATE 11JAN96               *
+     F*                 096083             DATE 16JUL95               *
+     F*                 086699             DATE 25OCT95               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 090128             DATE 19OCT95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 073485             DATE 04NOV94               *
+     F*                 065301             DATE 05MAY94               *
+     F*                 052254             DATE 25NOV93               *
+     F*                 052030             DATE 25NOV93               *
+     F*                 051106             DATE 25NOV93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 E03354             DATE 09MAR93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37531             DATE 30MAR92               *
+     F*                 E37048             DATE 16MAR92               *
+     F*                 E36259             DATE 02MAR92               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 E27934             DATE 22OCT91               *
+     F*                 E29350             DATE 10OCT91               *
+     F*                 E29353             DATE 10OCT91               *
+     F*                 E27092             DATE 04SEP91               *
+     F*                 S01117             DATE 17MAY91               *
+     F*                 E23115             DATE 11AUG90               *
+     F*                 E21515             DATE 06APR90               *
+     F*                 E21616             DATE 03APR90               *
+     F*                 E21272             DATE 26FEB90               *
+     F*                 E21074             DATE 08FEB90               *
+     F*                 E20908             DATE 25JAN90               *
+     F*                 E20895             DATE 25JAN90               *
+     F*                 E20894             DATE 25JAN90               *
+     F*                 E20633             DATE 14DEC89               *
+     F*                 E20627             DATE 12DEC89               *
+     F*                 E20473             DATE 11DEC89               *
+     F*                 E20532             DATE 05DEC89               *
+     F*                 E20508             DATE 04DEC89               *
+     F*                 E20450             DATE 04DEC89               *
+     F*                 E20085             DATE 06NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  AR865929 - Rates were not recalculated based on the details  *
+      *             defined in FRN info tab                           *
+      *  245721 - Full amount of processing type 8 transaction is     *
+      *           listed.                                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+     F*  140272   Recompiled over changed ZYLDZ2                      *
+     F*  102506 - Accrue 30 days interest over February for day basis *
+     F*           '1' & '5'. Removed fix 086491 in ZDAYSZ2 and        *
+     F*  130863 - Incorrect Coupon Rate being used to calculate       *
+     F*           Accrued Interest Receivable and Interest Due        *
+     F*           Adjusted for report SE0905P1.                       *
+     F*           Applied fix 107691.                                 *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  S01408 - Core hook SE0901CP33 added.                         *
+     F*  100228 - RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  102043 - PP% is not being reported.  When the diary event    *
+     F*           is PP, set IAPP to SDTP.                            *
+     F*  102004 - No. of days being acumulated instead of calculated  *
+     F*           due to incomplete fix 086699, because field ZDDAYS  *
+     F*           not being zeroised properly.                        *
+     F*  S01408 - Core hook SE0901FFP5 added.                         *
+     F*           Core hook SE0901FFP4 added.                         *
+     F*           Core hook SE0901FFP3 added.                         *
+     F*           Core hook SE0901FFP2 added.                         *
+     F*           Core hook SE0901FFP1 added.                         *
+     F*           Core hook SE0901IIP1 added.                         *
+     F*           Core hook SE0901CP32 added.                         *
+     F*           Core hook SE0901CP31 added.                         *
+     F*           Core hook SE0901CP30 added.                         *
+     F*           Core hook SE0901CP29 added.                         *
+     F*           Core hook SE0901CP28 added.                         *
+     F*           Core hook SE0901CP27 added.                         *
+     F*           Core hook SE0901CP26 added.                         *
+     F*           Core hook SE0901CP25 added.                         *
+     F*           Core hook SE0901CP24 added.                         *
+     F*           Core hook SE0901CP23 added.                         *
+     F*           Core hook SE0901CP22 added.                         *
+     F*           Core hook SE0901CP21 added.                         *
+     F*           Core hook SE0901CP20 added.                         *
+     F*           Core hook SE0901CP19 added.                         *
+     F*           Core hook SE0901CP18 added.                         *
+     F*           Core hook SE0901CP17 added.                         *
+     F*           Core hook SE0901CP16 added.                         *
+     F*           Core hook SE0901CP15 added.                         *
+     F*           Core hook SE0901CP14 added.                         *
+     F*           Core hook SE0901CP13 added.                         *
+     F*           Core hook SE0901CP12 added.                         *
+     F*           Core hook SE0901CP11 added.                         *
+     F*           Core hook SE0901CP10 added.                         *
+     F*           Core hook SE0901CCP9 added.                         *
+     F*           Core hook SE0901CCP8 added.                         *
+     F*           Core hook SE0901CCP7 added.                         *
+     F*           Core hook SE0901CCP6 added.                         *
+     F*           Core hook SE0901CCP5 added.                         *
+     F*           Core hook SE0901CCP4 added.                         *
+     F*           Core hook SE0901CCP3 added.                         *
+     F*           Core hook SE0901CCP2 added.                         *
+     F*           Core hook SE0901CCP1 added.                         *
+     F*  099886 - Rounding problem for partly paid securities.        *
+     F*           Changed routine to use 15,1 work field for calc.    *
+     F*           and then round up to 15,0 - based on SR/ZACCZ.      *
+     F*  100017 - Position settlement unable to pick up day adj. on   *
+     F*           SECTYD. Change subroutine to use DADJN to stop      *
+     F*           interest day adjustment being used for amortisation,*
+     F*           and recompile over amended subroutine ZDAYS.        *
+     F*  097563 - Incorrect incorporation of 090128 - should be in    *
+     F*           subroutine W021 not W01                             *
+     F*  096083 - 052030 causes problems if ACLD = 'N'.               *
+     A*  086699 - Fix to Manage SCHULDSCHEIN bonds - New fields need  *
+     A*           to be set up;                                       *
+     A*           No. of days in Period                               *
+     A*           Security Report name                                *
+     A*           Last record read                                    *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  090128 - Reset Adjustments to zero when writing first record *
+     F*           for security with processing type 1,3,5,8 & 9.      *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  073485 - Ignore book position header if processing type is   *
+     F*           not 6 (Schuldschein).                               *
+     F*  065301 - Recompiled over changed copy source ZACCR subr.     *
+     F*           with ZAMT increased to 15,0.                        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  052030 - SE0905 is next coupon date for a security purchased *
+     F*           on a coupon date. Since none was purchased, it should
+     F*           be zero                                             *
+     F*  051106 - Change to extract the actual Coupon Rate instead of *
+     F*           the Effective Rate for reporting by SE0905.         *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*           - Recompiled due to changes to files.               *
+     F*  E03354 - The coupon rate output to the extract file for the  *
+     F*           INITIAL record for securitiy processing types 1,3,  *
+     F*           5, 8, & 9 should be the rate BEFORE it was changed. *
+     F*           This is an amendment to E29353.                     *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*           - Recompiled due to changes to files.               *
+     F*  E37531 - Recompiled for minor correction to Audit Print File.*
+     F*  E37048 - Schuldschein Start Date should be able to be value  *
+     F*           date of purchase as well as the last coupon date    *
+     F*  E36259 - Partly paid event doesn't get amended coupon rate   *
+     F*  E29170 - Report Control Facilty changes                      *
+     F*  E27934 - Recompiled over the changed version of ZACCRZ1      *
+     F*  E29350 - System accrues on ex-coupon position after          *
+     F*           coupon date                                         *
+     F*  E29353 - Accruals on part payments/frns not starting from    *
+     F*           correct partly paid price/interest rate for period  *
+     F*  E27092 - Recompiled over changed SR/ZLCD                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E23115 - If Security has zero position, program does not     *
+     F*           chain to INVTP to find processing type; if next     *
+     F*           record is same security, program assumes chain to   *
+     F*           INVTP has already been done, and may erroneously    *
+     F*           include proc. type 4 (Equities) records on report.  *
+     F*           Chain to Currencies file also skipped - CDP may     *
+     F*           be incorrect so interest amount may be incorrect.   *
+     F*  E21515 - Database error on Matured Security.                 *
+     F*  E21616 - Recompiled over changed SR/ZLCD.                    *
+     F*  E21272 - Total Removal of Fix E21074  (Below)                *
+     F*  E21074 - When Accrue To Date, and LPSD equals Last CPN date  *
+     F*           or if on LAST DAY ACCRUALS, the Previous BOOK       *
+     F*           position and Historic header should be used         *
+     F*  E20908 - On Schuldscheins, Accrued Interest needs to be      *
+     F*           calculated for each Position, starting with Last    *
+     F*           Coupon Date or Value Date. Check which is first     *
+     F*           record on BKPOSD and set up first date accordingly. *
+     F*  E20895 - Ex-Coupon Nominal Position should be zeroised along *
+     F*           with Interest fields if Last Position Date is before*
+     F*           Last Coupon Date.                                   *
+     F*  E20894 - Purchased Interest should not be zeroised if Last   *
+     F*           Position Date before Last Coupon Date. Also LCPN    *
+     F*           field is referenced before SECTY read, so contents  *
+     F*           of field unpredictable.                             *
+     F*  E20633 - NMCY from Security is corrupted by reads of the     *
+     F*           Diary file. Diary Nominal Currency needs renaming.  *
+     F*  E20627 - Zero Coupon/Interest details are being reported.    *
+     F*           FRNs report Rate Changes with zero details before   *
+     F*           a position exists.                                  *
+     F*  E20473 - Schuldschein Interest not reported correctly.       *
+     F*           Each period's details should be reported separately *
+     F*           as per the Functional Specification.                *
+     F*  E20532 - Extract for  report SE0905 to show Interest Adjust- *
+     F*           ments to Purchased Interest separately and to       *
+     F*           write an Adjusted Interest Due figure.              *
+     F*  E20508 - Program loops on Ex-Coupon Processing for Schuld-   *
+     F*           scheins. Rewrite of processing to remove PACCRX Sr. *
+     F*  E20450 - Recompile over external subroutines rewrite.        *
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *
+     F*           - Program rewritten to perform Interest Accrual     *
+     F*             calculations correctly.                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBKPHV   IF  E           K        DISK
+     F            BKPHDDF                           KRENAMEBKPHHDF
+     FBKPOS   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F************SNDEVDF                           KIGNORE               E29353
+     F            SNDEVDF                           KRENAMESNDEVDO        E29353
+     FIACEXD  O   E                    DISK         KINFDS IACDS
+     F                                              KINFSR IACSR
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0901FFP1                                           S01408
+     F*                                                                   S01408
+     FIACEXA  O   E                    DISK         KINFDS IAADS
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0901FFP2                                           S01408
+     F*                                                                   S01408
+     F                                              KINFSR IAASR
+     FSE0901AUO   E                    PRINTER
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0901FFP3                                           S01408
+     F*                                                                   S01408
+     F            TABTB36F                          KIGNORE
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0901FFP4                                           S01408
+     F*                                                                   S01408
+     F            TABTB40F                          KIGNORE
+     F* CURRENCY  TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0901FFP5                                           S01408
+     F*                                                                   S01408
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Error on Chain.                                       *
+     F*   23  - Previous Record not found on Book Positions.          *
+     F*   24  - No more Records for this Key on Book Positions.       *
+     F*   40  - Security Change.                                      *
+     F*   86  - Read fail on SEDEVD.                                  *
+     F*   89  - End of File on BKPHV.                                 *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - Accesses ICD Information and calculates the Accrual *
+     F*           Control Date.                                       *
+     F*  IACCDC - Outputs Extract Records for PROT = 1, 3, 5, 8 and 9.*
+     F*  IACC6  - Outputs Extract Records for PROT = 6.               *
+     F***PACCRX*-*Ex-Coupon*Accrual*for*PROT*=*6*ONLY.*****************   E20508
+     F*  AUDIT  - Outputs Audit Record IACEXA and the Control Report  *
+     F*           and Terminates the Program.                         *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  W01    - Writes Extract Record for IACCDC Single Period.     *
+     F*  W021   - Writes First Extract Record for IACCDC.             *
+     F*  W022   - Writes Intermediate Extract Record for IACCDC.      *
+     F*  W023   - Writes Last Extract Record for IACCDC.              *
+     F*  W031   - Writes First Extract Record for IACC6.              *
+     F*  W032   - Writes Intermediate Extract Record for IACC6.       *
+     F*  W033   - Writes Last Extract Record for IACC6.               *
+     F*                                                               *
+     F*  IACSR  - Error Handling for IACEXD.                          *
+     F*  IAASR  - Error Handlibg for IACEXA.                          *
+     F*  ZACCR  - Calculates Interest Accrued.                        *
+     F*  ZDATE1 - Converts Date to Days.                              *
+     F*  ZDATE2 - Converts Days to Date.                              *
+     F*  ZDAYS  - Calculates the Number of Days between Two Dates.    *
+     F*  ZDYYR  - Calculates the Number of Days in the Interest Year. *
+     F*  ZD5DYS - Calculates Number of Days in Int. Year for DVBS = 5.*
+     F*  ZICD2  - Obtains ICD2.                                       *
+     F*  ZLCD   - Calculates Last Coupon Date.                        *
+     F*  ZNCD   - Calculates Next Coupon Date.                        *
+     F*  ZRATE  - Calculates the Effective Interest Rate.             *
+     F*  ZSYSTM - Obtains ICD1.                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDAYSZ1                               29TH FEB ARRAY
+     E/COPY ZSRSRC,ZDATE2Z1                              ZYDY/ZMDY & ZM
+     E/COPY ZSRSRC,ZPOWER8Z1                             POWER8 ARRAY
+     E                    RPI        12  1               RATE/PAYMT IND
+     E/COPY ZSRSRC,ZNCDZ1                                CD AND CR
+     E                    CPY@    1   1 80                                S01117
+      /EJECT
+     ISEDEVDF                                                             E20633
+     I              NMCY                            NMCYSD                E20633
+     ISEDEVDO                                                             E20633
+     I              NMCY                            NMCYSD                E20633
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     I            DS
+      ***  Data Structure for Investment File Key.
+     I                                        1   6 IKEY
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+     I            DS
+      ***  Data Structure for Book Position Key.
+     I                                        1  20 BPKEY
+     I                                        1  10 BHSC
+     I***********                            11  130BHBR                  S01117
+     I                                       11  13 BHBA                  S01117
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                    P  18  200WKPD
+      *
+     I            DS
+      ***  Data Structure for Table File Key.
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                       11  120RCDE
+      *
+     IIACDS       DS                            366
+     I                                     *STATUS  STSIAC
+      *
+     IIAADS       DS                            366
+     I                                     *STATUS  STSIAA
+      *
+     I            DS
+      ***  Data Structure for Interest Accrual Extract Record Key.
+     I                                        1  21 IACKEY
+     I***********                             1   30IABR                  S01117
+     I                                        1   3 IABA                  S01117
+     I                                        4   5 IABK
+     I                                        6   8 IACY
+     I                                        9  11 IAIT
+     I                                       12  21 IASS
+      *
+     I            DS
+      ***  Data Structure for Book Position Record Key.
+     I                                        1  17 SBPKEY
+     I                                        1  10 BPSC
+     I***********                            11  130BPBR                  S01117
+     I                                       11  13 BPBA                  S01117
+     I                                       14  15 BPBK
+     I                                       16  16 BPMK
+     I                                       17  17 BPTV
+      *
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,SE0901IIP1                                           S01408
+     I*                                                                   S01408
+      *                                                                                       CSE075
+      ** Short data structure for access programs                                             CSE075
+      *                                                                                       CSE075
+     IDSFDY     E DSDSFDY                                                                     CSE075
+      *                                                                                       CSE075
+     ISCSARD    E DSSCSARDPD                                                                  CSE075
+      *                                                                                       CSE075
+      ** External DS for Switchable feature details                                           CSE075
+      *                                                                                       CSE075
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Keylists for Chaining to Files.
+      *
+      ***  Investment Type.
+      *
+     C           INVKEY    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ***  Book Position (with Position Date).
+      *
+     C           BKPKEY    KLIST
+     C                     KFLD           BHSC
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           WKPD
+      *
+      ***  Book Position (without Position Date).
+      *
+     C           BKPKY2    KLIST
+     C                     KFLD           BHSC
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+      *
+      ***  Security Diary in 'Security/Date/Event Type' Order.
+      *
+     C           KISEDF    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           ZZLCD
+     C                     KFLD           SDET
+      *
+      ***  Security Diary in 'Security/Event Type/REVERSE Date' Order.
+      *
+     C           KISEDO    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           SDET
+     C                     KFLD           ZZLCD
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP3                                           S01408
+     C*                                                                   S01408
+      *
+      ***  Set Up Program Information.
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE0901  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+      *
+      ***  Define and clear work fields.
+      *
+     C           *LIKE     DEFN SESN      WKSC
+     C           *LIKE     DEFN APDA      ECD
+     C           *LIKE     DEFN BPPD      WBPPD
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP1                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANK    WKSC
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         OREC    50
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP2                                           S01408
+     C*                                                                   S01408
+      *
+      ***  Read Book Positions Header - Value Date Positions File.
+      *
+     C                     READ BKPHV                    89
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP4                                           S01408
+     C*                                                                   S01408
+     C           *IN89     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  Process all the Records on the File.
+      *
+     C           *IN89     DOUEQ'1'
+      *
+      ** SETOF *IN40 only after file INVTP read for this Security.        E23115
+     C**********           SETOF                     40                   E23115
+     C                     ADD  1         IREC
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP5                                           S01408
+     C*                                                                   S01408
+      *
+      ***  Chain to the Book Position File. Placed here so that a zero
+      ***  position can be checked for if the Security isn't found.
+      *
+     C                     Z-ADDLPSD      WKPD
+     C           BKPKEY    CHAINBKPOS                10
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPOS'   DBFILE           ***************
+     C                     MOVELBPKEY     DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP6                                           S01408
+     C*                                                                   S01408
+      *
+      ******If*the*Last*Position*Date*is*Less*Than*the*Last*Coupon*Date   E20894
+      ******then*the*Ex-Coupon*Nominal*is*zero.************************   E20894
+      ***********                                                         E20894
+     C***********LPSD      IFLE LCPN                                      E20894
+     C***********          Z-ADD0         ECNP                            E20894
+     C***********          Z-ADD0         PILP                            E20894
+     C***********          END                                            E20894
+      *
+      ***  Check for change in the Security Shortname.
+      *
+     C           WKSC      IFNE BHSC
+     C                     SETON                     40
+     C                     MOVE BHSC      WKSC
+      *
+      ***  Chain to the Security File.
+      *
+     C           BHSC      CHAINSECTY                10
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+      *
+      ***  If the Nominal and Ex-Coupon Positions are both zero then
+      ***  don't produce a DB Error, just ignore the record.
+      ***  This doesn't cater for Schuldscheins.
+      *** (If there is a position but no live security then DBase Error).
+      *
+     C           NPSN      IFEQ *ZEROS
+     C           ECNP      ANDEQ*ZEROS
+     C           PROT      ANDNE'6'                                       073485
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP7                                           S01408
+     C*                                                                   S01408
+      *                                                                   E21515
+      ***  Also ignore Matured instruments.                               E21515
+     C           RECI      OREQ 'M'                                       E21515
+      *                                                                   E21515
+     C                     GOTO ENDCHG
+     C                     ELSE
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP33                                           S01408
+     C*                                                                   S01408
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELBHSC      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C                     END
+     C                     END
+      *                                                                   E20627
+      ***  If both nominal and ex-coupon nominal positions are zero       E20627
+      ***     do not extract the record for reporting.                    E20627
+      *                                                                   E20627
+     C           NPSN      IFEQ *ZEROS                                    E20627
+     C           ECNP      ANDEQ*ZEROS                                    E20627
+     C           PROT      ANDNE'6'                                       073485
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP32                                           S01408
+     C*                                                                   S01408
+     C                     GOTO ENDCHG                                    E20627
+     C                     END                                            E20627
+      *
+      ***  Ignore Book Position Header if Day Basis = 4, or the Initial
+      ***  Date is Greater Than or Equal To the Accrual Control Date.
+      *
+     C           DYBS      IFEQ '4'
+     C           ITLD      ORGE ECD
+     C                     GOTO ENDCHG
+     C                     END
+      *
+      ***  If New Security
+      *
+     C           *IN40     IFEQ '1'
+      *
+      ***  Chain to the Investment Type File.
+      *
+     C           INVKEY    CHAININVTP                10
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE           ***************
+     C                     MOVELIKEY      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,SE0901C031
+      *
+      ***  Ignore the Book Position Header if the Processing Type = 2,
+      ***  4 or 7, OR (PROT NOT= 3 AND Coupon Rate = 0).
+      *
+     C           PROT      IFEQ '2'
+     C           PROT      OREQ '4'
+     C           PROT      OREQ '7'
+      *
+     C                     GOTO ENDCHG
+     C                     END
+     C* DO NOT PROCESS IF CURRENT FACTOR = 0 FOR MORTGAGE BACKED SEC.                         245721
+     C           PROT      IFEQ '8'                                                           245721
+     C           CFCT      ANDEQ*ZEROS                                                        245721
+     C                     GOTO ENDCHG                                                        245721
+     C                     END                                                                245721
+      *                                                                                       245721
+      **  This processing will always be bypassed due to effect of fix    E23115
+      **  E20627 - the function it carried out has been replaced by       E23115
+      **  error fix E23115.                                               E23115
+      *                                                                   E23115
+      *****Ignore*the*Book*Position*Header*if*the*Processing*Type*is      E23115
+      *****NOT=*6*and*Nominal*Position*and*Ex-Nominal*Position*are**      E23115
+      *****both*Equal*To*Zero.                                            E23115
+     C***********NPSN******IFEQ 0                                         E23115
+     C***********ECNP******ANDEQ0                                         E23115
+     C***********PROT******ANDNE'6'                                       E23115
+      *
+      *****If*the*first*record*for*a*Security*is*ignored*due*to*having    E23115
+      *****a*Zero*Position,*Blank*WKSC*so*that*the*Program*will*obtain    E23115
+      *****Coupon*Data*on*the*next*Cycle*if*the*next*record*shows*a***    E23115
+      *****Non-Zero*Position*for*the*same*Security.                       E23115
+      *
+     C************IN40*****IFEQ '1'                                       E23115
+     C*********************MOVE *BLANKS   WKSC                            E23115
+     C*********************END                                            E23115
+     C*********************END                                            E23115
+      *
+      ***  If New Security, obtain Nominal Currency Decimal Places.
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVEL'20      'TABKEY 12
+     C                     MOVELNMCY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      TABKEY
+      *
+     C           TABKEY    CHAINTABTG10F             10
+     C           *IN10     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABTG10' DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  Determine the Last Coupon Date. (Returns ZZLCD).
+      ***  NB: Must get Last Coupon Date BEFORE today.
+     C***********ECD       SUB  1         ZECD                            052030
+     C           ACLD      IFEQ 'N'                                       096083
+     C           ECD       SUB  1         ZECD                            096083
+     C                     ELSE                                           096083
+     C                     Z-ADDECD       ZECD                            052030
+     C                     END                                            096083
+     C                     EXSR ZLCD
+      *
+      ***  Determine the Next Coupon Date. (Returns NCD).
+      *
+     C           ACLD      IFEQ 'Y'                                       096083
+     C                     ADD  1         ECD                             052030
+     C                     END                                            096083
+     C                     EXSR ZNCD
+     C           ACLD      IFEQ 'Y'                                       096083
+     C                     SUB  1         ECD                             052030
+     C                     END                                            096083
+      *
+     C                     END
+      *                                                                   102506
+      ***  Set Accrual Type for ZDAYS subroutine                          102506
+      *                                                                   102506
+     C                     MOVE 'I'       ZACLT                           102506
+      *
+      ***  Output Extract Records according to Proceessing Type.
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'
+     C                     EXSR IACCDC
+     C                     ELSE
+      *
+     C           PROT      IFEQ '6'
+     C                     EXSR IACC6
+     C                     END
+      *
+     C                     END
+     C*                                                                   102506
+     C***  Reset Accrual Type                                             102506
+     C*                                                                   102506
+     C                     MOVE *BLANK    ZACLT                           102506
+      *
+      ***  *IN40 should be set off only if INVTP has been read for        E23115
+      ***    changed security - if INVTP not read leave *IN40 on          E23115
+      ***    until next cycle.                                            E23115
+     C                     SETOF                     40                   E23115
+      *
+     C           ENDCHG    TAG                             *** ENDCHG ***
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP8                                           S01408
+     C*                                                                   S01408
+      *
+     C                     READ BKPHV                    89
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CCP9                                           S01408
+     C*                                                                   S01408
+      *
+      ***  End of Do Until 'Process all records on File'.
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP10                                           S01408
+     C*                                                                   S01408
+      *
+      *================================================================
+      *                                                               *
+      ***  Output the Run Control Report and Terminate the Program.   *
+      *                                                               *
+     C                     EXSR AUDIT
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST - Subroutine to access the ICD Information and to      *
+      *          calculate the Accrual Control Date, (ECD).           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST ***
+      *
+      ***  Access ICD1 Record.
+      *
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABTB10' DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  Access ICD2 Record.
+      *
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABTB11' DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR AUDIT
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP11                                           S01408
+     C*                                                                   S01408
+      *
+      ***  Calculate the Accrual Control Date.
+      *
+     C           APDA      IFLT DNWD
+      *
+     C           ACLD      IFEQ 'Y'
+     C                     Z-ADDAPDA      ECD
+     C                     ELSE
+     C           APDA      ADD  1         ECD
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           ACLD      IFEQ 'Y'
+     C           DNWD      SUB  1         ECD
+     C                     ELSE
+     C                     Z-ADDDNWD      ECD
+     C                     END
+      *
+     C                     END
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD   7                                           CSE035
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP12                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CSE075
+      ** Access SAR details file to see if Enhanced Treasury                                  CSE075
+      ** switchable feature is installed.                                                     CSE075
+      *                                                                                       CSE075
+     C                     CALL 'AOSARDR0'                                                    CSE075
+     C                     PARM '       ' @RTCD                                               CSE075
+     C                     PARM '*VERIFY' @OPTN                                               CSE075
+     C                     PARM 'CSE075'  @SARD                                               CSE075
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE075
+      *                                                                                       CSE075
+     C           @RTCD     IFEQ *BLANK                                                        CSE075
+     C                     MOVE 'Y'       CSE075  1                                           CSE075
+     C                     ENDIF                                                              CSE075
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  IACCDC - Subroutine to calculate and Output Interest         *
+      *           Accruals for Processing Types 1, 3, 5, 8 and 9.     *
+      *           (BASED ON SR/ZACCZ and SR/ZPCINT).                  *
+      *                                                               *
+      *  Calls  - ZRATE  (Calculate Effective Interest Rate)          *
+      *           ZACCR  (Calculate Accrued Interest)                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IACCDC    BEGSR                           *** IACCDC ***
+      *
+      ***  Define and zeroize the Accrued Interest Output fields.
+      *
+     C                     Z-ADD*ZEROS    ZDCINT 130
+     C                     Z-ADD*ZEROS    ZDCEXI 130
+     C                     Z-ADD*ZEROS    WNODYS  50                      102004
+     C                     Z-ADD*ZEROS    ZDDAYS                          102004
+     C                     Z-ADD*ZEROS    ZDXINT 151                      099886
+     C                     Z-ADD*ZEROS    ZDXEXI 151                      099886
+      *
+      ***  Initialize the fields that won't change that are required by
+      ***  other Standard SRs that are called.
+      *
+     C                     MOVE PPDI      ZPPDI
+     C                     MOVE PROT      ZPROT
+     C                     Z-ADDSFPP      ZSFPP
+      *
+      ***  Calculate the Purchased Interest, and Adjustment.
+      *
+      ***   If the Last Position Date is before the Last Coupon Date      E20985
+      ***   then zeroise interest and ex-Coupon Nominal.                  E20985
+      *                                                                   E20985
+     C           LPSD      IFLT ZZLCD
+     C                     Z-ADD0         WPINT  150
+     C                     Z-ADD0         WINDO  150
+     C                     Z-ADD0         ECNP                            E20895
+      *                                                                   E20508
+     C                     ELSE
+      *                                                                   E20508
+      ***  Purchased Interest is Cum-Coupon plus Ex-Coupon Amount         E20508
+      *                                                                   E20508
+     C                     Z-ADDPILP      WPINT
+     C***********          Z-SUBIACP      WPINT                           E20508
+     C***********          ADD  IACP      WPINT                    E20508 E29350
+      *
+      ***  Due to a fix to SE2220, the Interest Discrepancy field is no
+      ***  longer dependent on Long/Short Position.
+      *
+     C                     Z-ADDINDO      WINDO
+      *
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      ***  If the Security has no interest changes ...
+      *
+     C           CPNR      IFNE *ZEROS
+     C           PPDI      ANDEQ'N'
+     C           PROT      ANDNE'3'
+     C           PROT      ANDNE'5'
+     C           PROT      ANDNE'8'
+     C/COPY WNCPYSRC,SE0901C024
+      *
+      ***  Set up the Interest Rate
+      *
+     C                     Z-ADDCPNR      IRATE
+      *
+      ***  Calculate the Total Interest on the Total Nominal Position.
+      *
+     C                     Z-ADDNPSN      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+      *
+     C/COPY WNCPYSRC,SE0901C004
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C005
+     C                     Z-ADDZACCRD    ZDCINT
+     C                     Z-ADDZDDAYS    WNODYS  50                      086699
+      *
+      ***  Calculate the Total Coupon as at the Next Coupon Date on the
+      ***  Ex-Coupon Nominal Position.
+      *
+     C                     Z-ADDECNP      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDNCD       ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+      *
+     C/COPY WNCPYSRC,SE0901C006
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C007
+     C                     Z-ADDZACCRD    ZDCEXI
+      *
+      ***  Calculate the Interest Due, for Extract.
+      *
+     C           ZDCINT    SUB  ZDCEXI    WINTD  150
+     C***********          ADD  WINDO     WINTD                           E20532
+     C           WINDO     IFNE *ZEROS                                    E20532
+     C                     Z-ADDWINTD     ZADINT 130                      E20532
+     C                     ADD  WINDO     ZADINT                          E20532
+     C                     ELSE                                           E20532
+     C                     Z-ADD*ZEROS    ZADINT                          E20532
+     C                     END                                            E20532
+      *
+      ***  Calculate the Accrued Interest Receivable, for Extract.
+      *
+     C           WINTD     SUB  WPINT     WAIR   150
+     C           WINDO     IFNE *ZEROS                                    E20532
+     C                     ADD  WINDO     WAIR                            E20532
+     C                     END                                            E20532
+     C/COPY WNCPYSRC,SE0901C001
+      *
+      ***  Write Extract Record.
+      *
+     C                     EXSR W01
+      *
+      *---------------------------------------------------------------*
+      ***  ELSE the Security may have Interest changes ...
+      *
+     C                     ELSE
+      *                                                                   E20627
+      ***  If there are Coupon details to report ...                      E20627
+      *                                                                   E20627
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP13                                           S01408
+     C*                                                                   S01408
+     C           CPNR      IFNE *ZEROS                                    E20627
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP14                                           S01408
+     C*                                                                   S01408
+      *
+      ***  Initialize with the values from SECTYD.
+      *
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDCFCT      ZCFCT
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE CPDP      ZPPCP
+      *
+      ***  Defaults: The values on the Security File may have been
+      ***  changed since the Start Date, so check the Security Diary
+      ***  Events File for each one.
+      *
+     C                     Z-ADD0         SAVDT                           E29353
+     C                     MOVE 'CP'      SDET                            E29353
+     C           KISEDO    SETLLSNDEVDO                                   E29353
+     C                     READ SNDEVDO                  96               E29353
+     C           *IN96     IFEQ '0'                                       E29353
+     C           SNSN      ANDEQSESN                                      E29353
+     C           SNET      ANDEQ'CP'                                      E29353
+     C                     Z-ADDSNDT      SAVDT   50                      E29353
+     C**********           Z-ADDSNCR      ZCPNR                                      E29353 AR865929
+     C                     Z-ADDSNCF      ZCFCT                           E29353
+     C                     MOVE SNCP      ZPPCP                           E29353
+     C***********          END                                      E29353E03354
+     C                     ELSE                                           E03354
+     C*                                                                   E29353
+      ***  Defaults: If no last coupon record exists then read            E29353
+      ***  initial records from diary events file.                        E29353
+      *                                                                   E29353
+     C                     MOVE 'IR'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'IR'
+     C           SDDT      ANDGESAVDT                                     E29353
+     C                     Z-ADDSDNC      ZCPNR
+     C/COPY WNCPYSRC,SE0901C025
+     C                     END
+     C                     END                                            E03354
+      *
+     C           PROT      IFEQ '8'
+     C                     MOVE 'MP'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C           SDDT      ANDGESAVDT                                     E29353
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C                     END
+      *
+     C           PPDI      IFEQ 'Y'
+     C                     MOVE 'PP'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'PP'
+     C***********SDDT      ANDGESAVDT                              E29353 102043
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+     C                     END
+      *
+      ***  Calculate the Effective Starting Interest Rate
+      *
+     C                     EXSR ZRATE
+      *
+      *---------------------------------------------------------------*
+      ***  Access the Security Diary Events File to accumulate interest
+      ***  over the period from the Previous Coupon Date to the Accrual
+      ***  Control Date, taking account of Event Types IR/MP/PP.
+      *
+     C                     Z-ADDNPSN      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KISEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  86
+     C*                                                                   130863
+     C           *IN86     IFEQ '1'                                       130863
+     C                     MOVE 'IR'      SDET                            130863
+     C           KISEDO    SETLLSEDEVDO                                   130863
+     C                     READ SEDEVDO                  87               130863
+     C           *IN87     IFEQ '0'                                       130863
+     C           SDSN      ANDEQSESN                                      130863
+     C           SDET      ANDEQ'IR'                                      130863
+      *                                                                                     AR865929
+     C           SDED      IFEQ 0                                                           AR865929
+     C           SDNC      ANDNECPNR                                                        AR865929
+     C                     Z-ADDCPNR      ZCPNR                                             AR865929
+     C                     ELSE                                                             AR865929
+     C                     Z-ADDSDNC      ZCPNR                           130863
+     C                     ENDIF                                                            AR865929
+      *                                                                                     AR865929
+     C                     EXSR ZRATE                                     130863
+     C                     END                                            130863
+     C                     END                                            130863
+      *
+     C/COPY WNCPYSRC,SE0901C029
+     C           *IN86     DOWEQ'0'
+     C           SDED      ANDLTECD
+     C/COPY WNCPYSRC,SE0901C030
+      *
+     C           SDET      IFEQ 'IR'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ***  Calculate the Accrued Interest UP TO the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C008
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C009
+     C                     ADD  ZACCRD    ZDCINT
+     C                     ADD  ZACCXD    ZDXINT                          099886
+     C***********          ADD  ZDDAYS    WNODYS                   086699 102004
+     C                     Z-ADDZDDAYS    WNODYS                          102004
+      *
+      ***  Output the First Extract Record if the Start of the Period
+      ***  is the Last Coupon Date.
+      *
+     C           ZSDATE    IFEQ ZZLCD
+     C                     EXSR W021
+      *
+      ***  ELSE Output an Intermediate Extract Record.
+      *
+     C                     ELSE
+     C                     EXSR W022
+     C                     END
+      *
+      ***  Set the fields to the new values and calculate new Rate.
+      ***  NOTE: New Rate affects the Period FROM the Event Date.
+      ***  Only update the relevant field to the Event Type.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C/COPY WNCPYSRC,SE0901C026
+     C                     END
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ***  END of Event Types IR/MP/PP
+     C                     END
+      *
+     C           SESN      READESEDEVDF                  86
+     C                     END
+      *
+      ***  Calculate the last bit of the Total Nominal Position Accrued
+      ***  Interest up to the Accrual Control Date.
+      *
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C010
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C011
+     C*********************ADD  ZACCRD    ZDCINT                          099886
+     C                     Z-ADDZDDAYS    WNODYS                          102004
+     C                     ADD  ZACCXD    ZDXINT                          099886
+     C                     Z-ADDZDXINT    ZDCINT    H                     099886
+     C/COPY WNCPYSRC,SE0901C028
+      *
+      ***  Now calculate the Total Coupon as at the Next Coupon Date on
+      ***  the Ex-Coupon Nominal Position, IF there IS a position.
+      *
+     C           ECNP      IFNE *ZEROS
+     C                     Z-ADDECNP      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KISEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  86
+      *
+     C           *IN86     DOWEQ'0'
+     C           SDED      ANDLTNCD
+      *
+     C           SDET      IFEQ 'IR'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ***  Calculate the Accrued Interest up to the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C012
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C013
+     C                     ADD  ZACCRD    ZDCEXI
+     C                     ADD  ZACCXD    ZDXEXI                          099886
+      *
+      ***  Set the fields to the new values and calculate new Rate.
+      ***  NOTE: New Rate affects the Period AFTER the Event Date.
+      ***  Only update the relevant field to the Event Type as all the
+      ***  other fields will be set to zero.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C/COPY WNCPYSRC,SE0901C027
+     C                     END
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ***  END of Event Types IR/MP/PP
+     C                     END
+      *
+     C           SESN      READESEDEVDF                  86
+     C                     END
+      *
+      ***  When all Events before Next Coupon Date have been processed,
+      ***  calculate the last bit of Accrued Interest up to NCD.
+      *
+     C                     Z-ADDNCD       ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C014
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C015
+     C*********************ADD  ZACCRD    ZDCEXI                          099886
+     C                     ADD  ZACCXD    ZDXEXI                          099886
+     C                     Z-ADDZDXEXI    ZDCEXI    H                     099886
+     C*                                                                   099886
+      ***  END of EX-Coupon calculation.
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      ***  Calculate the Interest Due, for extract.
+      *
+     C           ZDCINT    SUB  ZDCEXI    WINTD
+     C***********          SUB  WINDO     WINTD                           E20532
+     C           WINDO     IFNE *ZEROS                                    E20532
+     C                     Z-ADDWINTD     ZADINT                          E20532
+     C                     ADD  WINDO     ZADINT                          E20532
+     C                     ELSE                                           E20532
+     C                     Z-ADD*ZEROS    ZADINT                          E20532
+     C                     END                                            E20532
+      *
+      ***  Calculate the Accrued Interest Receivable, for extract.
+      *
+     C           WINTD     SUB  WPINT     WAIR
+     C           WINDO     IFNE *ZEROS                                    E20532
+     C                     ADD  WINDO     WAIR                            E20532
+     C                     END                                            E20532
+     C/COPY WNCPYSRC,SE0901C002
+      *
+     C                     EXSR W023
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP15                                           S01408
+     C*                                                                   S01408
+      *                                                                   E20627
+     C                     END                                            E20627
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP16                                           S01408
+     C*                                                                   S01408
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP17                                           S01408
+     C*                                                                   S01408
+      *****************************************************************
+      *                                                               *
+      *  IACC6   - SUBROUTINE TO OUTPUT EXTRACT RECORDS FOR PROCESSING*
+      *            TYPE 6 (SCHULDSCHEIN) FOR MULTIPLE INTEREST PERIODS*
+      *                                                               *
+      *****************************************************************
+      *
+     C           IACC6     BEGSR                           ** P03 **
+      *
+      * INITIALISE TOTAL FIELD
+      *
+     C                     Z-ADD0         ZDCINT
+     C                     Z-ADD0         WNODYS                          086699
+      *
+      * ACCESS FIRST NOMINAL POSITION FOR THIS COUPON PERIOD
+      *
+     C                     Z-ADDZZLCD     WKPD
+     C           BKPKEY    SETGTBKPOSDF
+      *
+      * FIND BOOK POSITION LESS THAN OR EQUAL TO LAST COUPON DATE
+      *
+     C                     READPBKPOSDF                2323
+     C           *IN23     IFEQ '0'
+     C                     MOVELBPKEY     WBPKEY 17                       E21074
+     C           WBPKEY    IFNE SBPKEY
+     C                     SETON                     23
+      *                                                                   E20908
+     C**No book pos found LE last coupon, so start date will be last      E20908
+     C**coupon date                                                       E20908
+     C                     ELSE                                           E20908
+     C                     Z-ADDZZLCD     WEARL                           E20908
+     C                     END
+     C                     END
+      *
+      * IF RECORD NOT FOUND - ACCESS FOLLOWING BOOK POSITION RECORDS
+      *
+     C           *IN23     IFEQ '1'
+     C           BKPKY2    READEBKPOSDF                  23
+     C           *IN23     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPOS'   DBFILE           ***************
+     C                     MOVELBPKEY     DBKEY            * DB ERROR 07 *
+     C                     Z-ADD07        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     GOTO EIACC6
+     C                     END
+      *                                                                   E20908
+     C**Position date will be start date                                  E20908
+      *                                                                   E20908
+     C                     Z-ADDBPPD      WEARL   50                      E20908
+     C                     END
+      *
+     C                     Z-ADDNPSN      WNPSN  150
+     C***********          Z-ADDBPPD      WEARL   50                      E20908
+     C           BKPKY2    READEBKPOSDF                  24
+     C           *IN24     IFEQ '0'
+     C                     Z-ADDBPPD      W1PDT   50
+     C                     ELSE
+     C                     Z-ADD0         W1PDT
+     C                     END
+      *
+      * CALCULATE INTEREST FOR FIRST NOMINAL PERIOD
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDCPNR      IRATE
+     C                     Z-ADDWEARL     ZSDATE
+     C           W1PDT     IFNE 0
+     C                     Z-ADDW1PDT     ZEDATE
+     C                     ELSE
+     C                     Z-ADDECD       ZEDATE
+     C                     END
+     C                     Z-ADDCDP       ZCDP                            S01117
+      *
+     C/COPY WNCPYSRC,SE0901C016
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C017
+      **********                                                          E20473
+      **ACCUMULATE*INTEREST*CALCULATED*FOR*ALL*PERIODS*****************   E20473
+      **********                                                          E20473
+     C**********           ADD  ZACCRD    ZDCINT                          E20473
+     C                     Z-ADDZACCRD    ZDCINT                          E20473
+     C                     Z-ADDZDDAYS    WNODYS  50                      086699
+      *
+      * OUTPUT FIRST EXTRACT RECORD
+      *
+     C                     EXSR W031
+      *
+     C           W1PDT     IFEQ 0
+     C                     GOTO EIACC6
+     C                     END
+      *
+     C           *IN24     DOUEQ'1'
+     C                     Z-ADDBPPD      WBPPD
+     C                     Z-ADDNPSN      WNPSN
+     C           BKPKY2    READEBKPOSDF                2424
+     C           *IN24     IFEQ '0'
+     C           WBPPD     IFNE LPSD
+      *
+      * CALCULATE INTEREST FOR PERIOD
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDCPNR      IRATE
+     C                     Z-ADDWBPPD     ZSDATE
+     C                     Z-ADDBPPD      ZEDATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C018
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C019
+      **********                                                          E20473
+      **ACCUMULATE*TOTAL*INTEREST*FOR*ALL*PERIODS**********************   E20473
+      **********                                                          E20473
+     C**********           ADD  ZACCRD    ZDCINT                          E20473
+     C                     Z-ADDZACCRD    ZDCINT                          E20473
+     C                     Z-ADDZDDAYS    WNODYS                          086699
+      *
+      * OUTPUT INTERMEDIATE EXTRACT RECORDS
+      *
+     C                     EXSR W032
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      * CALCULATE INTEREST FOR LAST INTEREST PERIOD
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDWBPPD     ZSDATE
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDCPNR      IRATE
+     C                     Z-ADDCDP       ZCDP                            S01117
+     C/COPY WNCPYSRC,SE0901C020
+     C                     EXSR ZACCR
+     C/COPY WNCPYSRC,SE0901C021
+      **********                                                          E20473
+      **ACCUMULATE*TOTAL*INTEREST*FOR*ALL*PERIODS**********************   E20473
+      **********                                                          E20473
+     C**********           ADD  ZACCRD    ZDCINT                          E20473
+     C                     Z-ADDZACCRD    WAIR                            E20473
+     C                     Z-ADDZDDAYS    WNODYS                          086699
+      *
+      **CALCULATE*TOTAL*COUPON*****************************************   E20528
+      ***********                                                         E20508
+     C***********          EXSR PACCRX                                    E20508
+      ***********                                                         E20508
+      **CALCULATE*INTEREST*DUE*AND*ACCRUED*INTEREST*RECEIVABLE*********   E20508
+      ***********                                                         E20508
+     C***********ZDCINT    SUB  ZDCEXI    WAIR                            E20508
+     C**********           Z-ADDZDCINT    WAIR                            E20473
+     C/COPY WNCPYSRC,SE0901C003
+      *
+      * OUTPUT LAST EXTRACT RECORD
+      *
+     C                     EXSR W033
+      *
+     C           EIACC6    ENDSR                           ** EP03 **
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **********                                                      *   E20508
+      ***PACCRX*  -  SUBROUTINE TO CALCULATE EX-COUPON ACCRUAL        *   E20508
+      ***************FOR PROCESSING TYPE 6 ONLY.                      *   E20508
+      **********                                                      *   E20508
+      *****************************************************************   E20508
+      **********                                                          E20508
+     C***********PACCRX    BEGSR                           *** PACCRX *** E20508
+      **********                                                          E20508
+      **DEFINE*WORK FIELDS                                                E20508
+      **********                                                          E20508
+     C********** *LIKE     DEFN CPDP      PSDTP                           E20508
+     C********** *LIKE     DEFN SDCP      PSDCP                           E20508
+     C********** *LIKE     DEFN SDNC      PSDNC                           E20508
+     C********** *LIKE     DEFN SDED      PSDED                           E20508
+     C********** *LIKE     DEFN LCPN      WSTDT                           E20508
+     C********** *LIKE     DEFN CPDP      WSDTP                           E20508
+     C********** *LIKE     DEFN SDCP      WSDCP                           E20508
+     C********** *LIKE     DEFN SDNC      WSDNC                           E20508
+     C**********           Z-ADD0         WTCPN  150                      E20508
+      **********                                                          E20508
+      **SECURITY DIARY EVENTS                                             E20508
+     C********** SEDKEY    KLIST                                          E20508
+     C**********           KFLD           SESN                            E20508
+     C**********           KFLD           EDTE    50                      E20508
+     C**********           KFLD           ETYP    2                       E20508
+      **********                                                          E20508
+      **SECURITY DIARY EVENTS                                             E20508
+     C********** SEDKY2    KLIST                                          E20508
+     C**********           KFLD           SESN                            E20508
+      **********                                                          E20508
+      ***DETERMINE WHETHER THERE ARE INTEREST CHANGES BETWEEN START OF    E20508
+      ***COUPON*PERIOD AND NEXT COUPON DATE                               E20508
+      **********                                                          E20508
+     C**********           Z-ADDWSTDT     EDTE                            E20508
+     C**********           MOVE '  '      ETYP                            E20508
+     C********** SEDKEY    SETGTSEDEVDF                                   E20508
+      **********                                                          E20508
+     C********** *IN88     DOUEQ'1'                                       E20508
+     C********** *IN30     OREQ '1'                                       E20508
+     C********** SEDKY2    READESEDEVDF                  88               E20508
+      **********                                                          E20508
+     C********** *IN88     IFEQ '0'                                       E20508
+      **********                                                          E20508
+     C********** SDED      IFGT WSTDT                                     E20508
+      **********                                                          E20508
+     C********** SDET      IFEQ 'PP'                                      E20508
+     C********** SDET      OREQ 'IR'                                      E20508
+     C********** SDET      OREQ 'MP'                                      E20508
+      **********                                                          E20508
+     C********** SDED      IFLE NCD                                       E20508
+     C**********           SETON                     30                   E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+      ****-**IF*THERE ARE NO INTEREST CHANGES - CALCULATE ACCRUED         E20508
+      **********                                                          E20508
+     C********** *IN30     IFEQ '0'                                       E20508
+      **********                                                          E20508
+      **CALCULATE CURRENT RATE                                            E20508
+      **********                                                          E20508
+     C**********           Z-ADDWSDNC     ZCPNR                           E20508
+     C**********           Z-ADDWSDTP     ZPPCP                           E20508
+     C**********           Z-ADDWSDCP     ZCFCT                           E20508
+     C**********           MOVE PROT      ZPROT                           E20508
+     C**********           MOVE PPDI      ZPPDI                           E20508
+     C**********           Z-ADDSFPP      ZSFPP                           E20508
+     C**********           EXSR ZRATE                                     E20508
+      **********                                                          E20508
+      **CALCULATE INTEREST FOR PERIOD                                     E20508
+      **********                                                          E20508
+     C**********           Z-ADDECNP      ZAMT                            E20508
+     C**********           Z-ADDWSTDT     ZSDATE                          E20508
+     C**********           Z-ADDNCD       ZEDATE                          E20508
+     C**********           EXSR ZACCR                                     E20508
+     C**********           Z-ADDZACCRD    WTCPN                           E20508
+     C**********           GOTO EACCRX                                    E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+      ****-***STORE DETAILS AT START OF PERIOD                            E20508
+      **********                                                          E20508
+     C**********           Z-ADDWSDNC     PSDNC                           E20508
+     C**********           Z-ADDWSDCP     PSDCP                           E20508
+     C**********           Z-ADDWSDTP     PSDTP                           E20508
+     C**********           Z-ADDWSTDT     PSDED                           E20508
+      **********                                                          E20508
+     C**********           SETOF                     88                   E20508
+      **********                                                          E20508
+      ****-**IF*EVENT RECORD FOUND - SET IND TO BYPASS FIRST READ         E20508
+      **********                                                          E20508
+     C********** SDED      IFGT WSTDT                                     E20508
+     C**********           SETON                     31                   E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+      ****-**READ THROUGH ALL EVENTS FOR THIS SECURITY UNTIL EVENT DATE   E20508
+      ********GREATER THAN NEXT COUPON DATE                               E20508
+      **********                                                          E20508
+     C********** *IN88     DOUEQ'1'                                       E20508
+      **********                                                          E20508
+     C********** *IN31     IFEQ '0'                                       E20508
+     C********** SEDKY2    READESEDEVDF                  88               E20508
+     C**********           ELSE                                           E20508
+     C**********           SETOF                     31                   E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+     C********** *IN88     IFEQ '0'                                       E20508
+     C********** SDED      ANDGENCD                                       E20508
+     C**********           SETON                     88                   E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+      ***-**PROCESS TYPE 'MP','IR' AND 'PP' EVENTS ONLY                   E20508
+      **********                                                          E20508
+     C********** SDET      IFEQ 'MP'                                      E20508
+     C********** SDET      OREQ 'IR'                                      E20508
+     C********** SDET      OREQ 'PP'                                      E20508
+     C********** *IN88     OREQ '1'                                       E20508
+      **********                                                          E20508
+      ***-**DETERMINE RATE FOR THIS PERIOD                                E20508
+      **********                                                          E20508
+     C**********           MOVE PROT      ZPROT                           E20508
+     C**********           MOVE PPDI      ZPPDI                           E20508
+     C**********           Z-ADDPSDNC     ZCPNR                           E20508
+     C**********           Z-ADDPSDCP     ZCFCT                           E20508
+     C**********           Z-ADDPSDTP     ZPPCP                           E20508
+     C**********           Z-ADDSFPP      ZSFPP                           E20508
+     C**********           EXSR ZRATE                                     E20508
+      **********                                                          E20508
+      ***-**CALCULATE INTEREST FOR THIS PERIOD                            E20508
+      **********                                                          E20508
+     C**********           Z-ADDECNP      ZAMT                            E20508
+     C**********           Z-ADDPSDED     ZSDATE                          E20508
+     C********** *IN88     IFEQ '0'                                       E20508
+     C********** SDED      IFLT NCD                                       E20508
+     C**********           Z-ADDSDED      ZEDATE                          E20508
+     C**********           ELSE                                           E20508
+     C**********           Z-ADDNCD       ZEDATE                          E20508
+     C**********           END                                            E20508
+     C**********           ELSE                                           E20508
+     C**********           Z-ADDNCD       ZEDATE                          E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+     C**********           EXSR ZACCR                                     E20508
+     C**********           ADD  ZACCRD    WTCPN                           E20508
+      **********                                                          E20508
+      ***-**STORE CURRENT DETAILS FOR NEXT START PERIOD                   E20508
+      **********                                                          E20508
+     C********** SDET      IFEQ 'PP'                                      E20508
+     C**********           Z-ADD0         PSDTP                           E20508
+     C**********           MOVE SDTP      PSDTP                           E20508
+     C**********           ELSE                                           E20508
+     C********** SDET      IFEQ 'IR'                                      E20508
+     C**********           Z-ADDSDNC      PSDNC                           E20508
+     C**********           ELSE                                           E20508
+     C********** SDET      IFEQ 'MP'                                      E20508
+     C**********           Z-ADDSDCP      PSDCP                           E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+     C**********           Z-ADDSDED      PSDED                           E20508
+      **********                                                          E20508
+     C**********           END                                            E20508
+     C**********           END                                            E20508
+      **********                                                          E20508
+     C********** EACCRX    ENDSR                           *** EACCRX *** E20508
+      **********
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to update Book Position Header and to    *
+      *           output the control report.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output the Control Report
+      *
+     C                     WRITEHEADR
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+      *
+     C***********OREC      IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C***********          END                                            E29170
+      *
+     C                     END
+      ***********                                                         E29170
+     C***********          WRITETRAIL                                     E29170
+      *
+      ***  Output Control Record to IACEXA.
+      *
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDOREC      NORE
+     C                     WRITEIACEXAF
+     C                     END
+      *
+      ***  Terminate the Program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W01    - Subroutine to Output an Extract Record for a        *
+      *           Single Interest Period.                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           ***  W01   ***
+      *
+      ***  Set Up fields in Record for IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZZLCD     IASP
+     C                     Z-ADDECD       IAEP
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP18                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDNPSN      IANM
+     C           PROT      IFEQ '8'                                                           245721
+     C                     MULT CFCT      IANM                                                245721
+     C                     END                                                                245721
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP19                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDCPNR      IACN
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP20                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDWPINT     IAPI
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP21                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDCPDP      IAPP
+     C                     Z-ADDCFCT      IACF
+     C                     Z-ADDWAIR      IARC
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP22                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDWINTD     IAID
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP23                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDWNODYS    IAND                            086699
+     C                     MOVE 'N'       IALR                            086699
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     Z-ADDWINDO     IPIA                            097563
+     C                     Z-ADDZADINT    IIDA                            097563
+     C***********          Z-ADDWINDO     IPIA                    E20532  090128
+     C***********          Z-ADDZADINT    IIDA                    E20532  090128
+     C***********          Z-ADD*ZEROS    IPIA                    090128  097563
+     C***********          Z-ADD*ZEROS    IIDA                    090128  097563
+      *
+     C                     EXSR WRITED
+     C/COPY WNCPYSRC,SE0901C022
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W021   - Subroutine to write the First record for Security   *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W021      BEGSR                           ***  W021  ***
+      *
+      ***  Set Up fields in Record for IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZZLCD     IASP
+     C                     Z-ADDZEDATE    IAEP
+     C                     Z-ADD0         IANM
+     C***********          Z-ADDIRATE     IACN                            051106
+     C                     Z-ADDZCPNR     IACN                            051106
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     Z-ADD0         IARC
+     C                     Z-ADD0         IAID
+     C           SDET      IFEQ 'PP'                                      102043
+     C                     Z-ADDZPPCP     IAPP                            102043
+     C                     ENDIF                                          102043
+     C***********          Z-ADD0         IAND                     086699 102004
+     C                     Z-ADDWNODYS    IAND                            102004
+     C                     MOVE 'N'       IALR                            086699
+     C           SDET      IFEQ 'PP'                                      102043
+     C           SDTP      MULT 1000      IAPP                            102043
+     C                     ENDIF                                          102043
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C***********          Z-ADDWINDO     IPIA                     E20532 097563
+     C***********          Z-ADDZADINT    IIDA                     E20532 097563
+     C                     Z-ADD*ZEROS    IPIA                            097563
+     C                     Z-ADD*ZEROS    IIDA                            097563
+      *
+     C                     EXSR WRITED
+     C/COPY WNCPYSRC,SE0901C023
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W022   - Subroutine to write the Intermediate record for     *
+      *           Security Processing Types 1, 3, 5, 8 and 9.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W022      BEGSR                           ***  W022  ***
+      *
+      ***  Set Up fields in Record for IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDZSDATE    IASP
+     C                     Z-ADDZEDATE    IAEP
+     C                     Z-ADD0         IANM
+     C***********          Z-ADDIRATE     IACN                            051106
+     C                     Z-ADDZCPNR     IACN                            051106
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     Z-ADD0         IARC
+     C                     Z-ADD0         IAID
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C***********          Z-ADD0         IAND                     086699 102004
+     C                     Z-ADDWNODYS    IAND                            102004
+     C                     MOVE 'N'       IALR                            086699
+      *
+     C                     EXSR WRITED
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  W023   - Subroutine to write the Last record for Security    *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W023      BEGSR                           ** W023 **
+      *
+      ***  Set Up fields in Record for IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZSDATE    IASP
+     C                     Z-ADDECD       IAEP
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP24                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDNPSN      IANM
+     C           PROT      IFEQ '8'                                                           245721
+     C                     MULT CFCT      IANM                                                245721
+     C                     END                                                                245721
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP25                                           S01408
+     C*                                                                   S01408
+     C***********          Z-ADDZCPNR     IACN                            E36259
+     C***********          Z-ADDIRATE     IACN                     E36259 051106
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP26                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDZCPNR     IACN                            051106
+     C                     Z-ADDWPINT     IAPI
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP27                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDZPPCP     IAPP
+     C                     Z-ADDZCFCT     IACF
+     C                     Z-ADDWAIR      IARC
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP28                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDWINTD     IAID
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP29                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDWNODYS    IAND                            086699
+     C                     MOVE 'N'       IALR                            086699
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     Z-ADDWINDO     IPIA                            E20532
+     C                     Z-ADDZADINT    IIDA                            E20532
+      *
+     C                     EXSR WRITED
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * W031     - SUBROUTINE TO WRITE FIRST EXTRACT RECORD FOR
+      *            SCHULDSCHEIN FOR MULTIPLE INTEREST PERIODS
+      *
+      *****************************************************************
+      *
+     C           W031      BEGSR                           ** W031 **
+      *
+      * SET UP FIELDS IN RECORD FOR IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C***********          Z-ADDZZLCD     IASP                            E37048
+     C                     Z-ADDWEARL     IASP                            E37048
+      *
+     C********** W1PDT     IFEQ 0                                         E20532
+     C**********           Z-ADDECD       IAEP                            E20532
+     C                     Z-ADDZDCINT    IARC
+     C                     Z-ADDZDCINT    IAID
+     C           W1PDT     IFEQ 0                                         E20532
+     C                     Z-ADDECD       IAEP                            E20532
+     C                     MOVE 'Y'       IALR                            086699
+     C                     ELSE                                           E20532
+     C                     Z-ADDW1PDT     IAEP
+     C                     MOVE 'N'       IALR                            086699
+     C                     END                                            E20532
+     C**********           Z-ADD0         IARC                            E20532
+     C**********           Z-ADD0         IAID                            E20532
+     C**********           END                                            E20532
+      *
+     C**********           Z-ADDNPSN      IANM                            E20473
+     C                     Z-ADDWNODYS    IAND                            086699
+     C                     Z-ADDWNPSN     IANM                            E20473
+     C           PROT      IFEQ '8'                                                           245721
+     C                     MULT CFCT      IANM                                                245721
+     C                     END                                                                245721
+     C                     Z-ADDCPNR      IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+      *
+     C                     EXSR WRITED
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * W032     - SUBROUTINE TO WRITE INTERMEDIATE EXTRACT RECORDS FOR
+      *            SCHULDSCHEIN FOR MULTIPLE INTEREST PERIODS
+      *
+      *****************************************************************
+      *
+     C           W032      BEGSR                           ** W032 **
+      *
+      * SET UP FIELDS IN RECORD FOR IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDWBPPD     IASP
+     C                     Z-ADDBPPD      IAEP
+     C                     Z-ADDZDCINT    IARC                            086699
+     C                     Z-ADDZDCINT    IAID                            086699
+     C**********           Z-ADDNPSN      IANM                            E20473
+     C                     Z-ADDWNPSN     IANM                            E20473
+     C           PROT      IFEQ '8'                                                           245721
+     C                     MULT CFCT      IANM                                                245721
+     C                     END                                                                245721
+     C***                  Z-ADD0         IACN                            086699
+     C                     Z-ADDIRATE     IACN                            086699
+     C                     Z-ADD0         IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C***                  Z-ADD0         IARC                            086699
+     C***                  Z-ADD0         IAID                            086699
+     C                     Z-ADDZDCINT    IARC                            086699
+     C                     Z-ADDZDCINT    IAID                            086699
+     C                     Z-ADDWNODYS    IAND                            086699
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C                     MOVE 'N'       IALR                            086699
+      *
+     C                     EXSR WRITED
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * W033     - SUBROUTINE TO WRITE LAST EXTRACT RECORD FOR
+      *            SCHULDSCHEIN FOR MULTIPLE INTEREST PERIODS
+      *
+      *****************************************************************
+      *
+     C           W033      BEGSR                           ** W033 **
+      *
+      * SET UP FIELDS IN RECORD FOR IACEXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDWBPPD     IASP
+     C                     Z-ADDECD       IAEP
+     C                     Z-ADDNPSN      IANM
+     C           PROT      IFEQ '8'                                                           245721
+     C                     MULT CFCT      IANM                                                245721
+     C                     END                                                                245721
+     C**********           Z-ADD0         IACN                            E20473
+     C                     Z-ADDCPNR      IACN                            E20473
+     C                     Z-ADD0         IAPI
+     C                     Z-ADDCPDP      IAPP
+     C                     Z-ADDCFCT      IACF
+     C                     Z-ADDWAIR      IARC
+     C                     Z-ADDWAIR      IAID
+     C                     Z-ADDWNODYS    IAND                            086699
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     MOVE 'Y'       IALR                            086699
+      *
+     C                     EXSR WRITED
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WRITED - Subroutine to Set Up the Common fields on IACEXD    *
+      *           and write the Record.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITED    BEGSR                           *** WRITED ***
+      *
+      ***  Set Up the Key Fields.
+      *
+     C                     MOVE 'D'       RECI
+     C***********          MOVE BHBR      IABR                            S01117
+     C                     MOVE BHBA      IABA                            S01117
+     C                     MOVE BHBK      IABK
+     C                     MOVE NMCY      IACY
+     C                     MOVE SITP      IAIT
+     C                     MOVE BHSC      IASS
+     C                     MOVE SRPN      IARN                            086699
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP30                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+      *                                                                                       CSE075
+      ** Note: Since CPDP may now hold an MBS repay rate rather than a                        CSE075
+      ** partly-paid price, zeroize IAPP unless PPDI = 'Y'.                                   CSE075
+      *                                                                                       CSE075
+     C           PPDI      IFNE 'Y'                                                           CSE075
+     C                     Z-ADD0         IAPP                                                CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C                     WRITEIACEXDF
+      *
+     C                     ADD  1         OREC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0901CP31                                           S01408
+     C*                                                                   S01408
+      *****************************************************************
+      *                                                               *
+      *  IACSR  - Subroutine for Error Handling of IACEXD.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IACSR     BEGSR                           *** IACSR  ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'IACEXD'  DBFILE           ***************
+     C                     MOVELIACKEY    DBKEY            * DB ERROR 90 *
+     C                     Z-ADD90        DBASE            ***************
+     C                     MOVE STSIAC    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  IAASR  - Subroutine for Error Handling of IACEXA.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           IAASR     BEGSR                           *** IAASR  ***
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'IACEXA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 91 *
+     C                     Z-ADD91        DBASE            ***************
+     C                     MOVE STSIAA    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     87U7U8
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,153 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CG Stamp Tax Average Balance advices')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - User Defined Correspondence                         */
+/*                                                                   */
+/*       CGC002300 - Stamp Tax Retail Average Balance Advices        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&COMP_NAME &COMP_SEQ &EXTRACT &MEMBER +
+                          &COMMIT_OPT)
+/* */
+             DCL        VAR(&CPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT Misys International Banking +
+                          Systems Ltd 2010')
+/* */
+/* Declare variables */
+/* */
+             DCL        VAR(&COMP_NAME)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMP_SEQ)   TYPE(*DEC)  LEN(5)
+             DCL        VAR(&COMP_SEQA)  TYPE(*CHAR) LEN(5)
+             DCL        VAR(&EXTRACT)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMMIT_OPT) TYPE(*CHAR) LEN(3)
+/* */
+             DCL        VAR(&RTN_CODE)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STATUS)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DATA)       TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSG_DATA)   TYPE(*CHAR) LEN(256)
+/* */
+/* Declare variable CCB009 - flag for switchable feature */
+/* */
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+ 
+/* */
+/* Global Monitor Message */
+/* */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+ 
+/* */
+/* Send Message to MRUNQ and standard processing parameters */
+/* */
+             SNDPGMMSG  MSG('CGC002300 - Stamp Tax Retail Average +
+                          Balance advices') TOMSGQ(MRUNQ)
+/* */
+/** Check for Switchable feature CCB009. */
+/* */
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)
+/* */
+             CHGJOB     SWS(XXXXX000)
+ 
+             CHGVAR     VAR(&RTN_CODE) VALUE(' ')
+ 
+/* */
+/* Create data LDA in QTEMP  */
+/* */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                        MONMSG     MSGID(CPF1023)
+ 
+/* */
+/* If Feature CCB009 is NOT 'on' (close of business journaling) */
+/* */
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+/* */
+/* Journal Files to CGCOBJRN */
+/* */
+             STRJRNPF   FILE(SDSTMDPD) JRN(CGCOBJRN) IMAGES(*BOTH)
+             ENDDO
+/* */
+/* Override database file */
+/* */
+             OVRDBF     FILE(SDSTMDX2) TOFILE(SDSTMDL2) SHARE(*NO)
+/* */
+/* Run Extract Component */
+/* */
+             CHGVAR     VAR(&COMP_SEQA) VALUE(&COMP_SEQ)
+             CHGVAR     VAR(&MSG_DATA) VALUE(&COMP_NAME *CAT +
+                          &COMP_SEQA *CAT &EXTRACT *CAT &MEMBER +
+                          *CAT &COMMIT_OPT)
+             SNDPGMMSG  MSGID(CGD1271) MSGF(CGUSRMSG) +
+                          MSGDTA(&MSG_DATA) TOPGMQ(*PRV)
+             CALL       PGM(CG002300) PARM(&RTN_CODE &COMMIT_OPT N N)
+             ROLLBACK
+                 MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* */
+/* Check for Database errors trapped by program */
+/* */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+/**/
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+/* */
+/* Report Database errors trapped by program */
+/* */
+ DBERR:
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+ 
+/**/
+/* Abnormal termination processing                       */
+/**/
+ABNORMAL:
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/* */
+/* If Feature CCB009 is NOT 'on' (close of business journaling) */
+/* */
+             IF         COND(&CCB009 *NE '       ') THEN(DO)
+             ENDJRNPF   FILE(SDSTMDPD) JRN(CGCOBJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+             SNDPGMMSG  MSG('Program CGC002300 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          CGC002300 ended abnormally') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/**/
+ ENDCLPGM:   RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDJRNPF   FILE(SDSTMDPD) JRN(CGCOBJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ ENDPGM:
+             CHGVAR     VAR(&CPY) VALUE('(C) Copyright Misys +
+                          International Banking Systems Ltd. 2010')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/* */
+             ENDPGM

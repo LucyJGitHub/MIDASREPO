@@ -1,0 +1,679 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Items by user maintenance')
+/*OVRF*: OVRDBF (HFUSERX) (HFUSERPD)                                : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0130 - HF Items by User Maintenance                        *
+     F*                                                               *
+     F*  Function:  This program maintains the Items Available by     *
+     F*  (I/C Int)  User file.  It prompts for Action Code and User,  *
+     F*             and then displays a subfile of all Items          *
+     F*             available in the system.  The User can then       *
+     F*             enter 'Y' against those Items he/she wishes to    *
+     F*             use.                                              *
+     F*                                                               *
+     F*  Called By: HFC0130 - HF Items by User Maintenance            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 065338             Date 04Nov94               *
+      *                 S01379             Date 22Sep92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*  065338 - Check that Item has not been deleted before         *
+     F*           displaying it.                                      *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FHF0130DFCF  E                    WORKSTN
+     F                                        RECNO KSFILE HF0130F1
+     FHFFILEL0IF  E           K        DISK
+     FHFUSERX IF  E           K        DISK
+     F            HFUSERP0                          KRENAMEHFUSERX0
+     FHFUSERPDUF  E           K        DISK                      A
+     F                                              KINFSR INFSR
+     F                                              KINFDS INFDS
+     FMUSER   IF  E           K        DISK
+      /EJECT
+     F*****************************************************************
+     F*
+     F*  F U N C T I O N   O F   I N D I C A T O R S
+     F*
+     F*  01       CMD KEY 3 - EXIT PROGRAM
+     F*  04       ACTION =  DELETE
+     F*  05       CMD KEY 12 - PREVIOUS SCREEN
+     F*  10       CMD KEY 10 - CONFIRM DELETE
+     F*  19       SCR FORMAT1 PROCESS CONTROL
+     F*  30       CHAIN FAIL ON HFUSERPD
+     F*  31       END OF FILE ON HFFILEL0
+     F*  32       WRITE ERROR ON HFUSERPD
+     F*  33       CHAIN FAIL ON MUSER
+     F*  35       SFLNXTCHG INDICATOR
+     F*  50       SCREEN ERROR ON ACTION
+     F*  51       SCREEN ERROR ON USER
+     F*  52       PROTECT FORM1, INPUT FIELDS
+     F*  53       PROTECT ALL INPUT FIELDS, ACTION = ENQUIRY
+     F*  54       SCREEN ERROR ON OPTION
+     F*  60       DSP SUBFILE
+     F*  61       CLR SUBFILE
+     F*  80       GENERAL ERROR INDICATOR
+     F*  85       READ CHANGE INDICATOR ON SUBFILE
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*
+     F*  S U B R O U T I N E   I N D E X
+     F*
+     F*  FORM1  -  FILL AND VALIDATE FIRST SCREEN
+     F*  FORM2  -  SUBFILE PROCESSING
+     F*  SRUSR  -  UPDATE HFUSERPD
+     F*  CLEAR  -  CLEAR SUBFILE
+     F*  INFSR  -  FILE ERROR HANDLING
+     F*  UPDOWS -  UPDATE BY ANOTHER WORKSTATION
+     F*  *PSSR  -  ERROR PROCESSING
+     F*
+     F*****************************************************************
+      /EJECT
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*-----------------------------------------------------------------
+     E**
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    ITAB      999  1               ITEM-TAB
+     I/EJECT
+     I**---------------------------------------------------------------
+     I**         D A T A  -  A R E A
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I** Local data area for database error details
+     I*
+     IPSDS       SDS
+     I*
+     I** Program status data structure
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I*
+     IRUNDAT    E DSRUNDAT
+     I*
+     I** Data Area giving Installation Control Details
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N N I N G    O F    M A I N    P R O G R A M
+     C*****************************************************************
+     C*
+     C** SET UP COPYRIGHT PARAMETER
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** READ IN INSTALLATION DATA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA
+     C*
+     C                     MOVE WSID      SWSID
+     C                     MOVE USER      SUSER
+     C*
+     C                     MOVEL'HF0130'  SPGMQ
+     C                     MOVE *BLANKS   SSFKY
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'HFMSGF'  WUMSGF 10
+     C*
+     C** DO WHILE F3 NOT TAKEN
+     C*
+     C           *IN01     DOWEQ'0'                        B1 START DO
+     C                     MOVE *BLANKS   SACT
+     C                     MOVE *BLANKS   SUSR
+     C                     SETOF                     04
+     C                     CALL 'SCC0250'
+     C                     EXSR FORM1
+     C           *IN01     IFEQ '0'
+     C           *IN05     ANDEQ'0'
+     C                     WRITEHF0130F3
+     C                     EXSR FORM2
+     C                     END
+     C                     END                             E1 END DO
+     C*
+     C           ENDPGM    TAG                             * ENDPGM TAG
+     C*
+     C   U7 U8             DUMP
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+     C** E N D    O F    M A I N    P R O G R A M
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  FORM1 : FILL AND CHECK 1ST SCREEN
+     C*----------------------------------------------------------------
+     C*
+     C           FORM1     BEGSR
+     C*
+     C** INPUT SCREEN FORMAT-1
+     C*
+     C                     SETOF                     19
+     C           *IN19     DOWEQ'0'                        B1 START DO
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C                     CALL 'SCC0250'
+     C                     SETOF                     505180
+     C                     SETOF                     5354
+     C*
+     C** END ?
+     C*
+     C           *IN01     IFEQ '1'                          B2
+     C                     GOTO FORM1E
+     C                     END                               E2
+     C*
+     C** INIT ?
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVEL*BLANKS   SACT
+     C                     MOVEL*BLANKS   SUSR
+     C                     SETOF                     0560
+     C                     GOTO FORM1A
+     C                     END
+     C*
+     C** VALIDATE ACTION
+     C*
+     C           SACT      IFNE 'I'                          B2
+     C           SACT      ANDNE'A'
+     C           SACT      ANDNE'D'
+     C           SACT      ANDNE'E'
+     C                     SETON                     5080
+     C                     MOVEL'HAF0108' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END                               E2
+     C           SACT      IFEQ 'E'
+     C                     SETON                     53
+     C                     END
+     C*
+     C** VALIDATE USER
+     C*
+     C           SUSR      IFEQ *BLANKS                      B2
+     C                     SETON                     5180
+     C                     MOVEL'HAF0006' WUMSID           Message Identifer
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     ELSE                              X2
+     C*
+     C** ELSE, CHECK IF USER IS VALID MIDAS USER
+     C*
+     C           SUSR      CHAINMUSER                33
+     C*
+     C           *IN33     IFEQ '0'                            B3
+     C           RECI      ANDNE'D'
+     C                     SETON                     33
+     C                     END                                 E3
+     C*
+     C           *IN33     IFEQ '1'                            B3
+     C                     SETON                     5180
+     C                     MOVEL'HAF0118' WUMSID           Message Identifer
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identifer
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Name
+     C                     ELSE                                X3
+     C*
+     C** AMEND OR DELETE, READ HFUSERPD
+     C*
+     C                     MOVELSUSR      USNAM
+     C           USNAM     CHAINHFUSERX              30
+     C           *IN30     IFEQ '1'                              B4
+     C           SACT      IFEQ 'A'                                B5
+     C           SACT      OREQ 'D'
+     C           SACT      OREQ 'E'
+     C                     SETON                     5180
+     C                     MOVEL'HAF0022' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END                                     E5
+     C                     ELSE                                  X4
+     C           SACT      IFEQ 'I'                                B5
+     C                     SETON                     5180
+     C                     MOVEL'HAF0024' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END                                     E5
+     C                     END                                   E4
+     C                     END                                 E3
+     C                     END                               E2
+     C*
+     C** INPUT / AMEND / DELETE
+     C*
+     C           *IN80     IFEQ '0'                          B2
+     C           SACT      IFEQ 'I'                            B3
+     C                     DO   999       Y       40             B4
+     C                     MOVE 'N'       ITAB,Y
+     C                     END                                   E4
+     C                     ELSE                                X3
+     C                     MOVEAUIT       ITAB
+     C           SACT      IFEQ 'D'
+     C                     SETON                     04
+     C                     END
+     C                     END                                 E3
+     C                     END                               E2
+     C*
+     C** ERRORS IN SCREEN FORMAT-1 ?
+     C*
+     C           *IN80     IFEQ '0'                          B2
+     C                     SETON                     19
+     C                     END                               E2
+     C*
+     C           FORM1A    TAG
+     C                     END                             E1 END DO
+     C*
+     C           FORM1E    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  FORM2 : SUBFILE PROCESSING
+     C*----------------------------------------------------------------
+     C*
+     C           FORM2     BEGSR                           * FORM2
+     C*
+     C                     SETOF                     35
+     C                     SETON                     52
+     C                     WRITEHF0130F4
+     C*
+     C** CLEAR SUBFILE/SUBFILE-COUNTER
+     C*
+     C                     EXSR CLEAR
+     C*
+     C** READ ALL HFFILEPD RECORDS
+     C** WRITE SUBFILE
+     C*
+     C                     MOVE *LOVAL    LITEM   30
+     C                     SETOF                     31
+     C           LITEM     SETLLHFFILEP0
+     C                     READ HFFILEP0                 31
+     C           *IN31     DOWEQ'0'                        * START DO
+      *                                                                   065338
+     C           HFDATE    IFEQ *BLANKS                    * START IF     065338
+     C                     Z-ADDITEM      Y
+     C                     MOVELITAB,Y    OPTION
+     C                     Z-ADDITEM      SITEM
+     C                     MOVE *BLANKS   SLOGI
+     C                     MOVE FFILE     SLOGI
+     C                     MOVELTEXT      STEXT
+     C                     ADD  1         RECNO
+     C                     WRITEHF0130F1
+     C                     END                             * END IF       065338
+      *                                                                   065338
+     C                     READ HFFILEP0                 31
+     C                     END                             * END DO
+     C                     Z-ADD1         PRRN1
+     C*
+     C** I/O SUBFILE
+     C*
+     C           RECNO     IFNE 0
+     C                     SETON                     60    * SFLDSP
+     C                     SETON                     80
+     C           *IN80     DOWEQ'1'
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F2
+     C                     CALL 'SCC0250'
+     C           *IN01     CABEQ'1'       FORM3E
+     C           *IN05     CABEQ'1'       FORM2E
+     C                     SETOF                     80
+     C*
+     C** CHECK FOR ACTION CODE 'D'
+     C*
+     C           SACT      IFEQ 'D'
+     C           *IN10     IFNE '1'
+     C                     MOVEL'HAF0019' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     SETON                     80
+     C                     ELSE
+     C                     SETOF                     0410
+     C                     GOTO UPDATE
+     C                     END
+     C                     END
+     C*
+     C** LOOK FOR CHANGED RECORDS
+     C*
+     C                     Z-ADD*ZERO     PRRN1
+     C                     READCHF0130F1                 85
+     C           *IN85     DOWEQ'0'
+     C*
+     C** INVALID OPTION
+     C*
+     C           OPTION    IFNE 'Y'
+     C           OPTION    ANDNE'N'
+     C                     SETON                     355480
+     C           PRRN1     IFEQ *ZERO
+     C                     Z-ADDRECNO     PRRN1
+     C                     END
+     C                     ELSE
+     C                     SETOF                     3554
+     C                     END
+     C*
+     C** UPDATE SUBFILE
+     C*
+     C                     UPDATHF0130F1
+     C                     Z-ADDSITEM     Z       30
+     C                     MOVELOPTION    ITAB,Z
+     C                     READCHF0130F1                 85
+     C                     END
+     C*
+     C           PRRN1     IFEQ *ZERO
+     C                     Z-ADD1         PRRN1
+     C                     END
+     C*
+     C** ERROR IN ANY OF THE CHANGED RECORDS
+     C*
+     C           *IN54     IFEQ '1'
+     C                     MOVEL'HAF0023' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ELSE, NO RECORDS TO DISPLAY IN SUBFILE
+     C*
+     C                     ELSE
+     C                     SETOF                     60    * SFLDSP
+     C           SACT      IFNE 'D'
+     C                     SETON                     52
+     C                     MOVEL'HAF0110' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C           *IN01     DOWEQ'0'
+     C           *IN05     ANDEQ'0'
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C                     END
+     C                     GOTO FORM2E
+     C                     ELSE
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C           *IN01     CABEQ'1'       FORM3E
+     C           *IN05     CABEQ'1'       FORM2E
+     C           *IN10     IFEQ '0'
+     C                     MOVEL'HAF0019' WUMSID           Message Identif
+     C*
+     C** RETRIEVE MSGF MESSAGE
+     C*
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     END
+     C           *IN10     DOWEQ'0'
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C           *IN01     CABEQ'1'       FORM3E
+     C           *IN05     CABEQ'1'       FORM2E
+     C                     END
+     C                     GOTO UPDATE
+     C                     END
+     C                     END
+     C*
+     C** WRITE OR DELETE OR UPDATE HFUSERPD-FILE
+     C** CLEAR SCROLL-VALUES
+     C*
+     C           UPDATE    TAG
+     C                     EXSR SRUSR
+     C           FORM2E    TAG
+     C                     EXSR CLEAR
+     C                     MOVE '0'       *IN60            * SFLDSP
+     C                     WRITEHF0130F2
+     C*
+     C           FORM3E    TAG
+     C                     SETOF                     52
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  SRUSR : UPDATE HFUSERPD
+     C*----------------------------------------------------------------
+     C*
+     C           SRUSR     BEGSR
+     C*
+     C           SUSR      CHAINHFUSERPD             30
+     C*
+     C                     MOVELSUSR      USNAM
+     C                     MOVEAITAB      UIT
+     C*
+     C** DELETION
+     C*
+     C           SACT      IFEQ 'D'                        B1
+     C*
+     C** IF RECORD DOES NOT EXIST, DISPLAY 'UPDATE BY ANOTHER
+     C** WORKSTATION' MESSAGE
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVEL'HAF0111' WUMSID           Message Identif
+      *
+      ** RETRIEVE MSGF MESSAGE
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+     C*
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C                     CALL 'SCC0250'                              F m
+     C*
+     C** OTHERWISE, DELETE THE RECORD
+     C*
+     C                     ELSE
+     C                     DELETHFUSERP0
+     C                     END
+     C*
+     C** INSERTION
+     C*
+     C                     ELSE
+     C           SACT      IFEQ 'I'                          B2
+     C                     WRITEHFUSERP0               32
+     C*
+     C** IF ERROR OCCURRED ON WRITE, PERFORM CHECK FOR UPDATE BY
+     C** ANOTHER WORKSTATION
+     C*
+     C           *IN32     IFEQ '1'
+     C                     EXSR INFSR
+     C                     END
+     C*
+     C                     ELSE
+     C           SACT      IFEQ 'A'                            B3
+     C                     UPDATHFUSERP0
+     C                     END                                 E3
+     C                     END                               E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  SUBROUTINE  CLEAR : CLEAR SUBFILE
+     C*----------------------------------------------------------------
+     C*
+     C           CLEAR     BEGSR
+     C                     MOVE '1'       *IN61            * SFLCLR
+     C                     WRITEHF0130F2
+     C                     Z-ADD0         RECNO   40
+     C                     MOVE '0'       *IN61            * SFLCLR
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine INFSR  : File error handling.
+     C*----------------------------------------------------------------
+     C           INFSR     BEGSR                           * INFSR
+      *
+      ** Compare status field to 'duplicate key' code
+      *
+     C           STATUS    IFEQ 1021
+      *
+      ** Attempt to retrieve record which gave error
+      *
+     C           SUSR      CHAINHFUSERPD             30
+      *
+      ** If chain suceeds Update by other W/s
+      *
+     C           *IN30     IFEQ '0'
+     C                     EXSR UPDOWS
+     C                     ELSE
+      *
+      ** Otherwise Std error routine
+      *
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Any other error Std error routine
+      *
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine UPDOWS : Update by another Workstation
+     C*----------------------------------------------------------------
+     C           UPDOWS    BEGSR                           * UPDOWS
+      *
+      ** Access record for display to user, from main transaction
+      ** file of current input function
+      *
+     C           SUSR      CHAINHFUSERPD             30
+      *
+      ** If no record found perform database error processing
+      *
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+      *
+      ** Load standard fields
+      *
+     C                     MOVEL'HFUSERPD'DBFILE
+     C                     MOVELSUSR      DBKEY
+     C                     MOVEL'HF0130'  DBPGM
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+      *
+      ** Set error switches and exit program via error routine
+      *
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Display screen to user with 'update by other w/s' message
+      *
+     C                     MOVEL'HAF0111' WUMSID           Message Identif
+      *
+      * Retrieve MSGF message - Standard Functions  *
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+     C*
+     C                     WRITEHF0130F3
+     C                     WRITEHF0130C0
+     C                     EXFMTHF0130F4
+     C                     CALL 'SCC0250'                              F m
+      *
+      * Perform EXCPT to HFUSERPD to release record previously locked
+      *
+     C                     EXCPTEXUSER
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine *PSSR  : Program error handling subroutine
+     C*----------------------------------------------------------------
+     C           *PSSR     BEGSR                             *PSSR
+      *
+      ** Prevents multiple dumps in the event of possible recursive
+      ** calls
+      *
+     C           FLAG      IFEQ *BLANK
+     C                     MOVE 'Y'       FLAG    1
+     C                     DUMP
+     C                     END
+      *
+      ** Call error processing
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDSR
+     C*****************************************************************
+     OHFUSERP0E                EXUSER
+     O                         USNAM
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

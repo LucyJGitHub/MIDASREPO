@@ -1,0 +1,350 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*O*R****OVRDBF*FILE(CLOANA1)**TOFILE(CLOAN)****SHARE(*NO)*************                       CLE164
+/*O*R****OVRDBF*FILE(LEFEEDA1)*TOFILE(LEFEEDL1)*SHARE(*NO)*************                       CLE164
+/*S*D****RPGBASEMOD****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE000482 - Reset Extension Reference on Loans and Fees       *
+      *                                                               *
+      *           This program runs just before the rebuild           *
+      *           of Shadow Postings.                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 18Aug14               *
+      *  Prev Amend No. CLE134  *CREATED   Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+     FCLOAN     UP   E           K DISK    INCLUDE(CLOANCLF)
+     F                                     INFSR(*PSSR)
+     FLEFEEDL1  US   E           K DISK
+     F                                     INFSR(*PSSR)
+ 
+     FCLOANA1   UF   E           K DISK    INCLUDE(CLOANCLF)
+     F                                     RENAME(CLOANCLF:CLOANCA1F)
+     F                                     INFSR(*PSSR)
+     FLEFEEDA1  UF   E           K DISK    RENAME(LEFEEDF:LEFEEDA1F)
+     F                                     INFSR(*PSSR)
+ 
+     FLEACCNL1  UF   E           K DISK    RENAME(LEACCND0:LEACCNL1F)
+     F                                     INFSR(*PSSR)
+      ** Repayment Party - All
+ 
+     FLEACCNLA  UF   E           K DISK    RENAME(LEACCND0:LEACCNLAF)
+     F                                     INFSR(*PSSR)
+      ** Repayment Party - Loans
+ 
+     FLEACCNLB  UF   E           K DISK    RENAME(LEACCND0:LEACCNLBF)
+     F                                     INFSR(*PSSR)
+      ** Repayment Party - Fees
+ 
+     FGLAPNAPD  UF A E           K DISK
+     F                                     INFSR(*PSSR)
+      ** Account Postings Next Available Number file
+ 
+      *****************************************************************
+     D/EJECT
+      *****************************************************************
+ 
+      ** Key Definitions
+ 
+     D KGLNARI         S                   INZ LIKE(GLNARI)
+ 
+     D KRPBRCA         S                   INZ LIKE(RPBRCA)
+     D KRPACCY         S                   INZ LIKE(RPACCY)
+     D KRPCNUM         S                   INZ LIKE(RPCNUM)
+     D KRPACOD         S                   INZ LIKE(RPACOD)
+     D KRPACSQ         S                   INZ LIKE(RPACSQ)
+     D KRPLNRF         S                   INZ LIKE(RPLNRF)
+     D KRPFCNM         S                   INZ LIKE(RPFCNM)
+     D KRPFLNR         S                   INZ LIKE(RPFLNR)
+     D KRPFACT         S                   INZ LIKE(RPFACT)
+     D KRPFSE1         S                   INZ LIKE(RPFSE1)
+     D KRPFCOD         S                   INZ LIKE(RPFCOD)
+     D KRPFCBR         S                   INZ LIKE(RPFCBR)
+ 
+      ** External Definitions
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+     D/COPY ZACPYSRC,PROCPARMS
+ 
+      ** Work Variables
+ 
+     D DSCLI_C         S             15  0 INZ
+     D DSFEE_C         S             15  0 INZ
+ 
+     I/EJECT
+      *****************************************************************
+     ICLOANCLF      01
+     ILEFEEDF       02
+ 
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * Main Processing Control                                       *
+      *****************************************************************
+ 
+      ** Process Request
+ 
+     C   01              EXSR      SRPCLOANCL
+     C   02              EXSR      SRPLEFEED
+ 
+     CLR                 EXSR      SRPLRT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPCLOANCL - Process Loan Details                            *
+      *                                                               *
+      *****************************************************************
+     C     SRPCLOANCL    BEGSR
+ 
+      ** Set Extension Reference
+ 
+     C                   EVAL      XRFI = 'CLI'
+     C                   EVAL      DSCLI_C += 1
+     C                   EVAL      XRFN = DSCLI_C
+ 
+      ** If Auto-settlement;
+      ** - Retrieve/Update Repayment Priority Details
+ 
+     C                   EVAL      KRPLNRF = LNRF
+     C     KLEACCNLA     CHAIN(E)  LEACCNLA
+ 
+     C                   IF        NOT %FOUND(LEACCNLA)
+     C                   EVAL      XRFI = 'CL?'
+ 
+     C                   ELSE
+     C                   EVAL      RPXRFI = XRFI
+     C                   EVAL      RPXRFN = XRFN
+ 
+     C                   UPDATE(E) LEACCNLAF
+     C                   ENDIF
+ 
+      ** Update Loan Details
+ 
+     C                   UPDATE(E) CLOANCLF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPLEFEED - Process Fee Details                              *
+      *                                                               *
+      *****************************************************************
+     C     SRPLEFEED     BEGSR
+ 
+      ** Set Extension Reference
+ 
+     C                   EVAL      FEXRFI = 'FEE'
+     C                   EVAL      DSFEE_C += 1
+     C                   EVAL      FEXRFN = DSFEE_C
+ 
+      ** If Auto-settlement
+      ** Retrieve/Update Repayment Priority Details
+ 
+     C                   EVAL      KRPFCNM = FECNUM
+     C                   EVAL      KRPFLNR = FELOAN
+     C                   EVAL      KRPFACT = FEFACL
+     C                   EVAL      KRPFSE1 = FEFSEQ
+     C                   EVAL      KRPFCOD = FEFCOD
+     C                   EVAL      KRPFCBR = FEBRCA
+     C     KLEACCNLB     CHAIN(E)  LEACCNLB
+ 
+     C                   IF        NOT %FOUND(LEACCNLB)
+     C                   EVAL      FEXRFI = 'FE?'
+ 
+     C                   ELSE
+     C                   EVAL      RPXRFI = FEXRFI
+     C                   EVAL      RPXRFN = FEXRFN
+ 
+     C                   UPDATE(E) LEACCNLBF
+     C                   ENDIF
+ 
+      ** Update Fee Details
+ 
+     C                   UPDATE(E) LEFEEDF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPLRT - Process Last Record at Total Time                   *
+      *                                                               *
+      *****************************************************************
+     C     SRPLRT        BEGSR
+ 
+      ** Retrieve/Update Next Available Reference (Loan)
+ 
+     C                   EVAL      KGLNARI = 'CLI'
+     C                   EXSR      SRXRAPNA
+ 
+     C                   EVAL      GLNARI = KGLNARI
+     C                   EVAL      GLNARN = DSCLI_C + 1
+ 
+     C                   IF        NOT %FOUND(GLAPNAPD)
+     C                   WRITE(E)  GLAPNAPF
+ 
+     C                   ELSE
+     C                   UPDATE(E) GLAPNAPF
+     C                   ENDIF
+ 
+      ** Retrieve/Update Next Available Reference (Fee)
+ 
+     C                   EVAL      KGLNARI = 'FEE'
+     C                   EXSR      SRXRAPNA
+ 
+     C                   EVAL      GLNARI = KGLNARI
+     C                   EVAL      GLNARN = DSFEE_C + 1
+ 
+     C                   IF        NOT %FOUND(GLAPNAPD)
+     C                   WRITE(E)  GLAPNAPF
+ 
+     C                   ELSE
+     C                   UPDATE(E) GLAPNAPF
+     C                   ENDIF
+ 
+      ** Delete Repayment Priority Records that werent Updated
+ 
+     C                   IF        *INU1 = *ON
+     C     *LOVAL        SETLL     LEACCNL1
+     C                   READ(E)   LEACCNL1
+ 
+     C                   DOW       NOT %EOF(LEACCNL1)
+     C                   IF        RPXRFI = *BLANK
+     C                   DELETE(E) LEACCNL1F
+     C                   ENDIF
+ 
+     C                   READ(E)   LEACCNL1
+     C                   ENDDO
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRXRAPNA - Retrieve Extension Reference Index/Number         *
+      *                                                               *
+      *****************************************************************
+     C     SRXRAPNA      BEGSR
+ 
+      ** Retrieve Next Available Key
+ 
+     C     KAPNAPD       CHAIN(E)  GLAPNAPD
+ 
+     C                   IF        %ERROR
+     C                   EVAL      DBFILE = 'GLAPNAPD'
+     C                   EVAL      DBKEY = KGLNARI
+     C                   EVAL      DBASE = 210
+     C                   DUMP
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Initialisation Rountine                             *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ** Reset Extension Reference on all Repayment Priority Records
+ 
+     C     *LOVAL        SETLL     LEACCNL1
+     C                   READ(E)   LEACCNL1
+ 
+     C                   DOW       NOT %EOF(LEACCNL1)
+     C                   EVAL      RPXRFI = *BLANK
+     C                   EVAL      RPXRFN = 0
+ 
+     C                   UPDATE(E) LEACCNL1F
+ 
+     C                   READ(E)   LEACCNL1
+     C                   ENDDO
+ 
+      ** Reset Extension Reference on all Loan Records
+ 
+     C     *LOVAL        SETLL     CLOANA1
+     C                   READ(E)   CLOANA1
+ 
+     C                   DOW       NOT %EOF(CLOANA1)
+     C                   EVAL      XRFI = *BLANK
+     C                   EVAL      XRFN = 0
+ 
+     C                   UPDATE(E) CLOANCA1F
+ 
+     C                   READ(E)   CLOANA1
+     C                   ENDDO
+ 
+     C     *LOVAL        SETLL     CLOANA1
+ 
+      ** Reset Extension Reference on all Fee Records
+ 
+     C     *LOVAL        SETLL     LEFEEDA1
+     C                   READ(E)   LEFEEDA1
+ 
+     C                   DOW       NOT %EOF(LEFEEDA1)
+     C                   EVAL      FEXRFI = *BLANK
+     C                   EVAL      FEXRFN = 0
+ 
+     C                   UPDATE(E) LEFEEDA1F
+ 
+     C                   READ(E)   LEFEEDA1
+     C                   ENDDO
+ 
+     C     *LOVAL        SETLL     LEFEEDA1
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  @DEFN - Definition Rountine                                  *
+      *                                                               *
+      *****************************************************************
+     C     @DEFN         BEGSR
+ 
+      ** Key List
+ 
+      ** Next Available Reference
+ 
+     C     KAPNAPD       KLIST
+     C                   KFLD                    KGLNARI
+ 
+     C     KLEACCNLA     KLIST
+     C                   KFLD                    KRPLNRF
+ 
+     C     KLEACCNLB     KLIST
+     C                   KFLD                    KRPFCNM
+     C                   KFLD                    KRPFLNR
+     C                   KFLD                    KRPFACT
+     C                   KFLD                    KRPFSE1
+     C                   KFLD                    KRPFCOD
+     C                   KFLD                    KRPFCBR
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      /EJECT
+** CPY@ Object Copyright
+(c) MIsys International Banking Systems Ltd. 2012

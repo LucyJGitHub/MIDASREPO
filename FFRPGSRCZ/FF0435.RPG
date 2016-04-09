@@ -1,0 +1,675 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Consolidate New Book Posn Changes')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0435 - CONSOLIDATE NEW BOOK POSITION CHANGES                 *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *  Prev Amend No. 171172             Date 25Nov99               *
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                  CFF004             DATE  12SEP96                *
+     F*                  S01411             DATE  16APR93                *
+     F*                  S01117             DATE  23JAN90                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  171172 - Recompile over changed POSTNCD/POSTNKD             *
+      *  170520 - Recompile over changed TRANSD file                  *
+     F*   CFF004 - Increase in size of Price Fields                      *
+     A*   S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN     *
+     A*            ADDED TO TRANSD.                                      *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPOCHG3  UP  E           K        DISK
+     F*
+     FPOSTNK  UF  E           K        DISK                      A
+     F*
+     FTRANS   IF  E           K        DISK
+      /SPACE 2
+     F********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*             L7   CHANGE OF BRANCH CODE OF TRADE ON POCHG3.
+     F*             L6   CHANGE OF BOOK CODE ON POCHG3.
+     F*             L5   CHANGE OF INSTRUMENT TYPE ON POCHG3.
+     F*             L4   CHANGE OF YEAR NUMBER ON POCHG3.
+     F*             L3   CHANGE OF MONTH NUMBER ON POCHG3.
+     F*             L2   CHANGE OF PUT/CALL ON POCHG3.
+     F*             L1   CHANGE OF STRIKE PRICE ON POCHG3.
+     F*
+     F*    01            POCHGCK RECORD
+     F*    02            POCHGRK RECORD
+     F*    03            POCHGTK RECORD
+     F*
+     F*     80-89        Reserved for Standard FF Subroutines
+     F*
+     F*     90-99        Reserved for Standard MIDAS Subroutines
+     F*
+     F*        99        GENERAL CHAIN/READ FAIL INDICATOR FOR DB ERRORS
+     F*
+     F*     U7+U8        Database Errors
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80
+     IPOCHGCKF    01
+     I***********                                   BRCD  L7              S01117
+     I                                              BRCA  L7              S01117
+     I                                              BOKC  L6
+     I                                              ISTT  L5
+     I                                              YRNO  L4
+     I                                              MTHN  L3
+     I                                              PCAL  L2
+     I                                              STRP  L1
+     IPOCHGRKF    02
+     I***********                                   BRCD  L7              S01117
+     I                                              BRCA  L7              S01117
+     I                                              BOKC  L6
+     I                                              ISTT  L5
+     I                                              YRNO  L4
+     I                                              MTHN  L3
+     I                                              PCAL  L2
+     I                                              STRP  L1
+     IPOCHGTKF    03
+     I***********                                   BRCD  L7              S01117
+     I                                              BRCA  L7              S01117
+     I                                              BOKC  L6
+     I                                              ISTT  L5
+     I                                              YRNO  L4
+     I                                              MTHN  L3
+     I                                              PCAL  L2
+     I                                              STRP  L1
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database handling.                                    S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     I* POSTNK KEY TO PUT IN LDA FOR DATABASE ERRORS.
+     IPOSKEY      DS
+     I***********                             1   30BRCD                  S01117
+     I                                        1   3 BRCA                  S01117
+     I                                        4   5 BOKC
+     I                                        6  10 ISTT
+     I                                       11  120YRNO
+     I                                       13  140MTHN
+     I                                       15  15 PCAL
+     I***********                            16  267STRP                  CFF004
+     I                                       16  308STRP                  CFF004
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*
+      ** DEFINE KEY FOR POSTNK FILE
+     C*
+     C           POSNKY    KLIST
+     C***********          KFLD           BRCD                            S01117
+     C                     KFLD           BRCA                            S01117
+     C                     KFLD           BOKC
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+     C*
+      ** SET UP PROGRAM NAME IN LDA ON FIRST CYCLE
+     C*
+     C           CYCLE     IFNE 'NOTFIRST'
+     C                     MOVE 'NOTFIRST'CYCLE   8
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FF0435  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     END
+     C*
+     C                     ADD  1         RECS    60
+     C*
+      ** PROCESS POCHG3 RECORD TYPES
+     C*
+     C           *IN01     CASEQ'1'       POCGCP
+     C*
+     C           *IN02     CASEQ'1'       POCGRP
+     C*
+     C           *IN03     CASEQ'1'       POCGTP
+     C*
+     C                     END
+     C********************************************************************
+      /EJECT
+     C*
+      ** UPDATE POSTNK FILE
+     C*
+     CL1         RECS      IFGE 1
+     CL1                   EXSR CHGKEY
+     CL1                   END
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R POCGCP TO PROCESS POCHGCK RECORDS (CLOSURE REALISED P/L)
+     C*
+      ** CALLED FROM  MAIN
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           POCGCP    BEGSR
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE REALIZED PROFIT/LOSS TO
+      **  THE TOTAL OF REALIZED PROFIT/LOSS THIS MONTH
+      **  ELSE
+      **  SUBTRACT THE REALIZED PROFIT/LOSS FROM
+      **  THE TOTAL OF REALIZED PROFIT/LOSS THIS MONTH
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  RLPL      RPLMT
+     C                     ELSE
+     C                     SUB  RLPL      RPLMT
+     C                     END
+     C*
+      ** IF HEDGING AMORTISATION INDICATOR EQUAL TO 'Y',
+      **   IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **     ADD THE REALIZED PROFIT/LOSS TO
+      **     THE TOTAL REALIZED PROFIT/LOSS
+      **   ELSE
+      **     SUBTRACT THE REALIZED PROFIT/LOSS FROM
+      **     THE TOTAL REALIZED PROFIT/LOSS
+     C*
+     C           HDGA      IFEQ 'Y'
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  RLPL      TOPLT
+     C                     ELSE
+     C                     SUB  RLPL      TOPLT
+     C                     END
+     C*
+     C                     END
+     C*
+      ** SET THE POSITION UPDATE INDICATOR TO 'Y'
+      ** AND UPDATE THIS FIELD ON THE FORMAT.
+     C*
+     C                     MOVE 'Y'       PUPI
+     C*
+     C                     EXCPTRPOCHC
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R POCGRP TO PROCESS POCHGRK RECORDS (REVALUATION UNREALISED P/L)
+     C*
+      ** CALLED FROM  MAIN
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C           POCGRP    BEGSR
+     C*
+      **  ADD THE UNREALIZED PROFIT/LOSS TO
+      **  THE TOTAL OF UNREALIZED PROFIT/LOSS CHANGES FOR THE POSITION
+     C*
+     C                     ADD  ULPL      UPLMT
+     C*
+      ** SET THE POSITION UPDATE INDICATOR TO 'Y'
+      ** AND UPDATE THIS FIELD ON THE FORMAT.
+     C*
+     C                     MOVE 'Y'       PUPI
+     C*
+     C                     EXCPTRPOCHR
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R POCGTP TO PROCESS POCHGTK RECORDS (TRANSACTION CHANGES)
+     C*
+      ** CALLED FROM  MAIN
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           POCGTP    BEGSR
+     C*
+      ** POSITION CHANGE TYPE IS BLANK (QUANTITY CHANGE)
+     C*
+     C           PCGT      IFEQ ' '
+     C*
+      ** ACCESS TRANS FILE FOR TRANSACTION TYPE
+     C*
+     C           TNBR      CHAINTRANS                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRANS'   DBFILE
+     C                     MOVELTNBR      DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** IF TRANSACTION TYPE IS 'P'
+      ** AND POSITION CHANGE QTY IS GREATER THAN 0.
+     C*
+     C           TRTY      IFEQ 'P'
+     C           POCQ      ANDGT0
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE QTY TO
+      **  THE TOTAL OF CONTRACTS PURCHASED CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE QTY FROM
+      **  THE TOTAL OF CONTRACTS PURCHASED CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  POCQ      TOTPT
+     C                     ELSE
+     C                     SUB  POCQ      TOTPT
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF TRANSACTION TYPE IS 'S'
+      ** AND POSITION CHANGE QTY IS GREATER THAN 0.
+     C*
+     C           TRTY      IFEQ 'S'
+     C           POCQ      ANDGT0
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE QTY TO
+      **  THE TOTAL OF CONTRACTS SOLD CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE QTY FROM
+      **  THE TOTAL OF CONTRACTS SOLD CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  POCQ      TOTST
+     C                     ELSE
+     C                     SUB  POCQ      TOTST
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** POSITION CHANGE TYPE IS 'A'  (CHARGES)
+     C*
+     C           PCGT      IFEQ 'A'
+     C*
+     C           CCPR      IFEQ 'P'
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE AMOUNT TO
+      **  THE TOTAL OF CHARGES PAID CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE AMOUNT FROM
+      **  THE TOTAL OF CHARGES PAID CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  PCGA      CPTMT
+     C                     ELSE
+     C                     SUB  PCGA      CPTMT
+     C                     END
+     C*
+     C                     END
+     C*
+      ** ACCUMULATE CHARGES RECEIVED PAID THIS MONTH.
+     C*
+     C           CCPR      IFEQ 'R'
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE AMOUNT TO
+      **  THE TOTAL OF CHARGES RECEIVED CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE AMOUNT FROM
+      **  THE TOTAL OF CHARGES PAID CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  PCGA      CRTMT
+     C                     ELSE
+     C                     SUB  PCGA      CRTMT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** POSITION CHANGE TYPE IS 'B' (COMMISSIONS)
+     C*
+     C           PCGT      IFEQ 'B'
+     C*
+     C*
+      ** ACCUMULATE COMMISION PAID THIS MONTH.
+     C*
+     C           CCPR      IFEQ 'P'
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE AMOUNT TO
+      **  THE TOTAL OF COMMISSION PAID CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE AMOUNT FROM
+      **  THE TOTAL OF COMMISSION PAID CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  PCGA      CMSPT
+     C                     ELSE
+     C                     SUB  PCGA      CMSPT
+     C                     END
+     C*
+     C                     END
+     C*
+      ** ACCUMULATE COMMISSION RECEIVED THIS MONTH.
+     C*
+     C           CCPR      IFEQ 'R'
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE AMOUNT TO
+      **  THE TOTAL OF COMMISSION RECEIVED CHANGES FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE AMOUNT FROM
+      **  THE TOTAL OF COMMISSION RECEIVED CHANGES FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C                     ADD  PCGA      CMSRT
+     C                     ELSE
+     C                     SUB  PCGA      CMSRT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** POSITION CHANGE TYPE IS 'C' (PREMIUMS)
+     C*
+     C           PCGT      IFEQ 'C'
+     C*
+      ** ACCESS TRANS FILE FOR TRANSACTION TYPE
+     C*
+     C           TNBR      CHAINTRANS                99
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TRANS'   DBFILE
+     C                     MOVELTNBR      DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+      ** IF THE REVERSAL INDICATOR ON POCHG3 IS 0
+      **  ADD THE POSITION CHANGE AMOUNT TO ( IF NECESSARY )
+      **  THE TOTAL OF PREMIUM CHANGE AMOUNTS FOR THE POSITION
+      **  THE TOTAL OF REALISED PROFIT/LOSS AMOUNTS FOR THE POSITION
+      **  ELSE
+      **  SUBTRACT THE POSITION CHANGE AMOUNT FROM ( IF NECESSARY )
+      **  THE TOTAL OF PREMIUM CHANGE AMOUNTS FOR THE POSITION
+      **  THE TOTAL OF REALISED PROFIT/LOSS AMOUNTS FOR THE POSITION
+     C*
+     C           REVI      IFEQ 0
+     C*
+     C** IF THE APPEARED ON STATEMENT IND IS 'N'
+     C*
+     C           AOSI      IFEQ 'N'
+     C                     ADD  PCGA      PMTMT
+     C                     END
+     C*
+     C** IF THE TRANSACTION IS AN EXERCISE THIS IS ALSO REALISED P/L
+     C*
+     C           TRTY      IFEQ 'E'
+     C                     ADD  PCGA      RPLMT
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** IF THE APPEARED ON STATEMENT IND IS 'N'
+     C*
+     C           AOSI      IFEQ 'N'
+     C                     SUB  PCGA      PMTMT
+     C                     END
+     C*
+     C** IF THE TRANSACTION IS AN EXERCISE THIS IS ALSO REALISED P/L
+     C*
+     C           TRTY      IFEQ 'E'
+     C                     SUB  PCGA      RPLMT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** SET THE POSITION UPDATE INDICATOR TO 'Y'
+      ** AND UPDATE THIS FIELD ON THE FORMAT.
+     C*
+     C                     MOVE 'Y'       PUPI
+     C*
+     C                     EXCPTRPOCHT
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+      ** S/R CHGKEY TO UPDATE POSTNK FILE ON CHANGE OF KEY
+     C*
+      ** CALLED FROM MAINLINE
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           CHGKEY    BEGSR
+     C*
+      ** IF AT LEAST ONE POCHG3 RECORD PROCESSED
+      **      ACCESS RELEVANT POSTNK RECORD.
+      **      ADD ACCUMULATED TOTALS INTO CORRESPONDING POSTNK FIELDS
+      **      UPDATE POSTNK RECORD.
+      **      RESET PROGRAM ACCUMULATOR FIELDS TO ZERO.
+     C*
+     C*
+     C           POSNKY    CHAINPOSTNK               50
+     C*
+     C           *IN50     IFEQ '1'
+     C*
+      ** MISSING RECORD IS A DATABASE ERROR UNLESS
+      ** CHARGES/COMMISSIONS HAVE BEEN PAID/RECEIVED BY A BOOK
+     C*
+     C           CMSPT     IFEQ *ZERO
+     C           CMSRT     ANDEQ*ZERO
+     C           CPTMT     ANDEQ*ZERO
+     C           CRTMT     ANDEQ*ZERO
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'POSTNK'  DBFILE
+     C                     MOVELPOSKEY    DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************S01117
+     C                     EXSR DBERR                      ***************
+     C*
+     C                     ELSE
+     C*
+      ** INITIALISE ALL POSTNKD FIELDS
+     C*
+     C                     MOVEL'D'       RECI
+     C                     Z-ADD*ZERO     TOPL
+     C                     Z-ADD*ZERO     TOTP
+     C                     Z-ADD*ZERO     TOTS
+     C                     Z-ADD*ZERO     CMSP
+     C                     Z-ADD*ZERO     CMSR
+     C                     Z-ADD*ZERO     CPTM
+     C                     Z-ADD*ZERO     CRTM
+     C                     Z-ADD*ZERO     PMTM
+     C                     Z-ADD*ZERO     UPLM
+     C                     Z-ADD*ZERO     RPLM
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *LIKE     DEFN TOTP      TOTPT
+     C           *LIKE     DEFN TOTS      TOTST
+     C           *LIKE     DEFN CMSP      CMSPT
+     C           *LIKE     DEFN CMSR      CMSRT
+     C           *LIKE     DEFN CPTM      CPTMT
+     C           *LIKE     DEFN CRTM      CRTMT
+     C           *LIKE     DEFN PMTM      PMTMT
+     C           *LIKE     DEFN UPLM      UPLMT
+     C           *LIKE     DEFN RPLM      RPLMT
+     C           *LIKE     DEFN TOPL      TOPLT
+     C*
+     C                     ADD  TOPLT     TOPL
+     C*
+     C                     ADD  TOTPT     TOTP
+     C                     ADD  TOTST     TOTS
+     C                     ADD  CMSPT     CMSP
+     C                     ADD  CMSRT     CMSR
+     C                     ADD  CPTMT     CPTM
+     C                     ADD  CRTMT     CRTM
+     C                     ADD  PMTMT     PMTM
+     C                     ADD  UPLMT     UPLM
+     C                     ADD  RPLMT     RPLM
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXCPTRPOSTU
+     C                     ELSE
+     C                     EXCPTRPOSTA
+     C                     END
+     C*
+     C                     Z-ADD0         TOTPT
+     C                     Z-ADD0         TOTST
+     C                     Z-ADD0         CMSPT
+     C                     Z-ADD0         CMSRT
+     C                     Z-ADD0         CPTMT
+     C                     Z-ADD0         CRTMT
+     C                     Z-ADD0         PMTMT
+     C                     Z-ADD0         UPLMT
+     C                     Z-ADD0         RPLMT
+     C                     Z-ADD0         TOPLT
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+     C*
+      ** CALLED FROM
+     C*
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+     C*
+     C           DBERR     BEGSR
+     C*
+      ** Seton U7 U8 LR
+      ** Return
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+      /EJECT
+     O*
+      ** SET POSITION UPDATE INDICATOR TO 'Y' ON PROCESSED POCHG3 RECS.
+     O*
+     OPOCHGCKFE                RPOCHC
+     O*
+     O                         PUPI
+     O*
+     OPOCHGRKFE                RPOCHR
+     O*
+     O                         PUPI
+     O*
+     OPOCHGTKFE                RPOCHT
+     O*
+     O                         PUPI
+     O*
+      ** ADD POSTNK RECORD WITH NEW TOTALS.
+     O*
+     OPOSTNKDFEADD             RPOSTA
+     O*
+     O                         RECI
+     O***********              BRCD                                       S01117
+     O                         BRCA                                       S01117
+     O                         BOKC
+     O                         ISTT
+     O                         YRNO
+     O                         MTHN
+     O                         PCAL
+     O                         STRP
+     O                         ISCY
+     O*
+     O                         CMSP
+     O                         CMSR
+     O                         CPTM
+     O                         CRTM
+     O*
+      ** UPDATE POSTNK RECORD WITH NEW TOTALS.
+     O*
+     OPOSTNKDFE                RPOSTU
+     O*
+     O                         TOPL
+     O                         TOTP
+     O                         TOTS
+     O                         CMSP
+     O                         CMSR
+     O                         CPTM
+     O                         CRTM
+     O                         PMTM
+     O                         UPLM
+     O                         RPLM
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

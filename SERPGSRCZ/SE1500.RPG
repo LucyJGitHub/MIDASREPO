@@ -1,0 +1,518 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Project Fwd User/Depot Positions')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1500 - PROJECT FORWARD USER DEPOT POSITIONS                *
+     F*                                                               *
+     F*  Function: This program projects forward the Bank's Positions *
+     F*   (COB)    by Branch/Security/Book/Depot/Date using forward-  *
+     F*            valued Trades (TREVED).The data held is as for     *
+     F*            current positions, with only two fields projected; *
+     F*            Nominal-Value Date Basis, and Ex-Coupon Nominal.   *
+     F*            The current position if it exists, is used as a    *
+     F*            starting point for these two nominal balances.     *
+     F*                                                               *
+     F*  Called by: SEC1110 - Project Forward User/Depot Positions    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 17May06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 10Jan94               *
+      *                 E34034             Date  7Jan92               *
+     F*                 E33951             DATE  6JAN92               *  *
+     F*                 S01117             DATE 02NOV90               *  *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  E33951 - Should not be using depot positions, PF/DMEVED is   *
+     F*           no longer part of the logical UDPEV.                *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FUDPEV   IPE E           K        DISK
+     FUDEPP   IF  E           K        DISK
+     F*TABSE**IF**E           K        DISK                               S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FTREVEA  IF  E                    DISK
+     F***DMEVEA**IF  E                    DISK                            E33951
+     FUDEPFD  O   E                    DISK
+     F            UDEPPDF                           KRENAMEUDEPFDF
+     FUDEPFA  O   E                    DISK
+     FSE1500AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   L1  - Branch/Security/Book/Depot/Mkt/Date combination change*
+     F*   L2  - Branch/Security/Book/Depot/Market combination change  *
+     F*                                                               *
+     F****11**-*Trade*Events*File*read*********************************   E33951
+     F****12**-*Depot*Movement*Events*File*read************************   E33951
+     F*                                                               *
+     F****40**-*Trade/Depot*Movement*Event*first*record****************   E33951
+     F*   40  - Trade Movement Event first record                     *   E33951
+     F*   50  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines                          *
+     F*                                                               *
+     F*   U7  - Database Error                                        *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  DATARA - Extract Data Area from Rundat                           S01117
+     F*                                                               *
+     F*  L2DET  - Access User Depot Positions (Current)               *
+     F*                                                               *
+     F*  TITLE  - Extract Title from AOBANKRO                             S01117
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F***ZSYSTM*-*Access*ICD*record*********************************** ***S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     I***TREVEDF*****11                                                   E33951
+     ITREVEDF                                                             E33951
+     I***********                                   TRBN  L2              S01117
+     I                                              TRBA  L2              S01117
+     I                                              TRSS  L2
+     I                                              TRBK  L2
+     I                                              TROD  L2
+     I                                              TRMK  L2
+     I                                              TRVD  L1
+     I***DMEVEDF**** 12                                                   E33951
+     I***********                                   DMBR  L2              S01117
+     I***********                                   DMBA  L2        S01117E33951
+     I***********                                   DMSS  L2              E33951
+     I***********                                   DMBO  L2              E33951
+     I***********                                   DMDP  L2              E33951
+     I***********                                   DMMK  L2              E33951
+     I***********                                   DMMD  L1              E33951
+     IUDEPPDF
+     I              UDNT                            XUDNT
+     I              UDNS                            XUDNS
+     I              UNRT                            XUNRT
+     I              UNRV                            XUNRV
+     I              UDTP                            XUDTP
+     I              UDTS                            XUDNT
+     I              UDPV                            XUDTS
+     I              UDSV                            XUDSV
+     I              USNT                            XUSNT
+     I              USNR                            XUSNR
+     I              USNV                            XUSNV
+     I              USRV                            XUSRV
+     I              TNLU                            XTNLU
+     ITREVEAF
+     I              NORE                            TRIN
+     I***DMEVEAF****                                                      E33951
+     I***********   NORE                            DMIN                  E33951
+     I*LDA*******UDS                            256                       S01117
+     I***********                           134 177 #DBLOT                S01117
+     I*********** DS                                                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      ** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T  - Initial Processing
+      *================================================================
+      *
+     C           *IN40     IFEQ '0'
+      *
+      * Prepare LDA for the database error output
+      *
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C***********          MOVEL'SE1500'  DBPGM                           S01117
+     C                     EXSR DATARA                                    S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     EXSR TITLE                                     S01117
+      ********************************************************************S01117
+      **Access*the*I.C.D.*record*(PF/TABTB10)*****************************S01117
+      ********************************************************************S01117
+     C***********          EXSR ZSYSTM                                    S01117
+      **Error*in*ZSYSTM***************************************************S01117
+      ********************************************************************S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INLR            End of job     S01117
+     C***********          ELSE                                           S01117
+      ********************************************************************S01117
+      **ICD*record*found.*************************************************S01117
+      ********************************************************************S01117
+     C                     MOVE '1'       *IN40
+     C***********          END                                            S01117
+     C                     END
+      /EJECT
+      *================================================================
+      *
+      *  M A I N L I N E   P R O C E S S I N G
+      *
+      *================================================================
+      *
+     C           *IN40     IFEQ '1'
+      *
+      * At change of Br/Sec/Book/Depot/Mkt set up initial values
+      *  of the accumulator fields  1. Nominal - Value Date Basis (UDNV)
+      *                             2. Ex-Coupon Nominal.         (UECN)
+      *
+     C           *INL2     CASEQ'1'       L2DET
+     C                     END
+      *
+      * For each event record add/sub event nominal to Nominal-Vdat basis.
+      *  (Trade Events   - Trade type   TP : add,  TS : sub.)
+      ***(Depot*Movement*-*I/O*Ind******I**:*add,**O**:*sub.)*************E33951
+      **-*TRADE*EVENT*****************************************************E33951
+      *
+     C************IN11     IFEQ '1'                                       E33951
+      *
+      * Set up output fields.
+      *
+     C                     Z-ADDTRVD      UDDT
+     C                     ADD  1         TRCNT   50
+      *
+      *   Update : Nominal - Value Date Basis
+      *
+     C           TRTT      IFEQ 'TS'
+     C                     Z-SUBTRON      TRON
+     C                     END
+      *
+     C                     ADD  TRON      UDNV
+      *
+      *   Update : Ex-Coupon Nominal
+      *
+     C           TRED      IFEQ 'X'
+     C                     ADD  TRON      UECN
+     C                     END
+     C***********          ELSE                                           E33951
+      ***********                                                         E33951
+      **-*DEPOT*MOVEMENT*EVENT********************************************E33951
+      **Set*up*output*fileds.*********************************************E33951
+      ***********                                                         E33951
+     C***********          Z-ADDDMMD      UDDT                            E33951
+     C***********          ADD  1         DMCNT   50                      E33951
+      ***********                                                         E33951
+      ****Update*:*Nominal*-*Value*Date*Basis*****************************E33951
+      ***********                                                         E33951
+     C***********DMIO      IFEQ 'O'                                       E33951
+     C***********          Z-SUBDMAN      DMAN                            E33951
+     C***********          END                                            E33951
+      ***********                                                         E33951
+     C***********          ADD  DMAN      UDNV                            E33951
+     C***********          END                                            E33951
+     C                     END
+      /EJECT
+      *================================================================
+      *
+      *  T O T A L   T I M E   P R O C E S S I N G
+      *
+      *================================================================
+      *
+      * Output Projected Positions record at value date change.
+      *
+     CL1         *IN40     IFEQ '1'
+      *
+     CL1                   ADD  1         OUTREC
+     CL1                   MOVE 'D'       RECI
+     CL1                   WRITEUDEPFDF
+     CL1                   END
+      *
+      *================================================================
+      *
+      *  E.O.J. - C O N T R O L   P R O C E S S I N G
+      *
+      *================================================================
+      *
+     CLR                   EXSR SRLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **                                                              *
+      **  L2DET SR. To access the User Depot Positions (Current) file *
+      **            and set up the initial values for the accumulator *
+      **            fields :  Nominal - Value Date Basis  (UDNV)      *
+      **                      Ex-Coupon Nominal           (UECN)      *
+      **                                                              *
+      *****************************************************************
+      **
+     C           L2DET     BEGSR                           *** L2DET ***
+      *
+      * Set up Key/Output fields.
+      *
+      **If*Trade*Event****************************************************E33951
+      ***********                                                         E33951
+     C************IN11     IFEQ '1'                                       E33951
+     C***********          Z-ADDTRBN      UDBR                            S01117
+     C                     MOVE TRBA      UDBA                            S01117
+     C                     MOVELTRSS      UDSN
+     C**********           Z-ADDTROD      UDPT                                               CSD027A
+     C                     MOVE TROD      UDPT                                               CSD027A
+     C                     MOVELTRBK      UDBK
+     C                     MOVELTRMK      UDMK
+      *
+     C***********          ELSE                                           E33951
+      ***********                                                         E33951
+      ***else*Depot*Movement*Event****************************************E33951
+      ***********                                                         E33951
+     C***********          Z-ADDDMBR      UDBR                            S01117
+     C***********          MOVE DMBA      UDBA                      S01117E33951
+     C***********          MOVELDMSS      UDSN                            E33951
+     C***********          Z-ADDDMDP      UDPT                            E33951
+     C***********          MOVELDMBO      UDBK                            E33951
+     C***********          MOVELDMMK      UDMK                            E33951
+     C***********          END                                            E33951
+      *
+      * Zero the initial accumulator values.
+      *
+     C                     Z-ADD0         UDNV
+     C                     Z-ADD0         UECN
+      *
+      * Access the User Depot Positions (Current) file  - LF/UDEPP
+      * Set up output fileds.
+      *
+     C           KEY01     KLIST
+     C***********          KFLD           UDBR                            S01117
+     C                     KFLD           UDBA                            S01117
+     C                     KFLD           UDSN
+     C                     KFLD           UDPT
+     C                     KFLD           UDBK
+     C                     KFLD           UDMK
+      *
+     C           KEY01     CHAINUDEPP                50
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  E.O.J. - C O N T R O L   P R O C E S S I N G                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLR      BEGSR
+      ********************************************************************S01117
+      **If*no*records read,***********************************************S01117
+      ***access*the*I.C.D.*record*(PF/TABTB10)****************************S01117
+      ********************************************************************S01117
+     C************IN40     IFEQ '0'                                       S01117
+     C************IN99     ANDEQ'0'                                       S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********          END                                            S01117
+      ********************************************************************S01117
+     C*                                                                   S01117
+      **   Update Dataarea LDA & Access Run Date From Dataarea RUNDAT     S01117
+     C*                                                                   S01117
+     C                     EXSR DATARA                                    S01117
+     C*                                                                   S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C*                                                                   S01117
+     C                     EXSR TITLE                                     S01117
+     C*                                                                   S01117
+      * Write control report headings
+      *
+      * Print Page Header
+      *
+     C                     WRITEHEADAU
+      *
+      **Error*in*ZSYSTM***************************************************S01117
+      ********************************************************************S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          WRITEERROR                                     S01117
+      ********************************************************************S01117
+     C***********          END                                            S01117
+      *
+      ***Access*AUDIT*records*for*Trades*and*Depot*Movements.*************E33951
+      *  Access AUDIT record for Trade Movements.                         E33951
+      *
+     C                     READ TREVEAF                  50
+     C***********          READ DMEVEAF                  50               E33951
+      *
+     C                     WRITETRTOT
+     C***********          WRITEDMTOT                                     E33951
+      *
+      *          - WRITE Audit record
+      *
+     C                     Z-ADDOUTREC    NORE
+     C                     WRITEUDEPFAF
+      *
+      ***IF*NO*OUTPUT/EMPTY*FILES*-*Print*a*message*to*this*effect********S01117
+      ********************************************************************S01117
+     C************IN40     IFEQ '0'                                       S01117
+     C***********          WRITENONE                                      S01117
+      ********************************************************************S01117
+      **********ELSE****-*Print*Records*Written*Total*********************S01117
+      ********************************************************************S01117
+     C***********          ELSE                                           S01117
+      *
+      *  In/Out - Totals
+      *
+     C                     WRITECONTROL
+      ********************************************************************S01117
+     C***********          END                                            S01117
+      ********************************************************************S01117
+      ***END*OF*PROGRAM***************************************************S01117
+      ********************************************************************S01117
+     C***********          WRITETRAILAU                                   S01117
+      ********************************************************************S01117
+      ***If*Database*Erorrs*found,*update*LDA*****************************S01117
+      ********************************************************************S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+      ********************************************************************S01117
+     C************INU8     IFEQ '1'                                       S01117
+      ********************************************************************S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVELDBLOT     #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  TITLE  - Subroutine to access bank details                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           TITLE     BEGSR                                          S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 011 *S01117
+     C                     Z-ADD11        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     WRITEHEADAU                                    S01117
+     C                     WRITEERROR                                     S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      **                                                                  S01117
+     C*****************************************************************   S01117
+      /EJECT                                                              S01117
+     C*****************************************************************   S01117
+      *                                                               *   S01117
+      *  DATARA - Subroutine to initialize LDA and read RUNDAT        *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      **                                                                  S01117
+     C           DATARA    BEGSR                                          S01117
+      **                                                                  S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE1500'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+      *In the data area RUNDAT                                            S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      **                                                                  S01117
+     C                     ENDSR                                          S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *****************************************************************   S01117
+      */EJECT                                                             S01117
+     C*/COPY*ZSRSRC,ZSYSTMZ1***                                           S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

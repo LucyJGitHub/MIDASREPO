@@ -1,0 +1,602 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_DL                                                        *
+/*EXI *  TEXT('Midas DL Evnts-extrct reg exps/lmts report')           *
+     A**************************************************************
+     A*                                                            *
+     A*  Midas - Dealing Module                                    *
+     A*                                                            *
+     A*     LF/EVLSR - EVENTS-EXTR.FILE FOR REG.EXPOS/LMTS RPRT    *
+     A*                USED BY DL0800                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                            *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 218582             Date 06Jun06               *
+      *                 236334             Date 06Jan06               *
+      *                 CSD027             Date 05Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 218992             Date 17Jul03               *
+      *                 CGL015             Date 15Apr02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 13Oct99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU004             Date 02Feb98               *
+      *                 CEU003             Date 05Nov97               *
+     A*                 CLE004             Date 02Dec96               *
+     A*                 CAC001             Date 01Feb96               *
+     A*                 S01486             Date 06Jun94               *
+     A*                 S01433             Date 15Sep93               *
+     A*                    S01434             DATE 27JUL93         *
+     A*                    S01378             DATE 15OCT92         *
+     A*                    S01393             DATE 29JUL92         *
+     A*                    S01392             DATE 20JUL92         *
+     A*                    S01354             DATE 09JAN92         *
+     A*                    E25515             DATE 08AUG91         *
+     A*                    E28817             DATE 24SEP91         *
+     A*                    S01328             DATE 02APR91         *
+     A*                    BHF420             DATE 04SEP90
+     A*                    S01243             DATE 06MAR90         *
+     A*                      E57              DATE 17/11/89        *
+     A*                    S01157             DATE 30/10/89        *
+     A*                    S01117             DATE 23/05/89        *
+     A*                    E12072             DATE 06/05/88        *
+     A*                    S01119             DATE 15/10/86        *
+     A*                    S0630              DATE 10/07/84        *
+     A*                    S0600              DATE 05/01/84        *
+     A*                    S0300              DATE 02/12/82        *
+     A*                                                            *
+     A*------------------------------------------------------------*
+     A*                                                            *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  218582 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  236334 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  218992 - Add Extended settlement fields in LVENTEL(recompile)*
+      *  CGL015 - Net Amounts on Events by Nostro (Recompiled)        *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  163486 - Added IFXC and new SIAC field in LVENTEL.           *
+      *  CDL006 - Dealing Fiduciary. Recompiled.                      *
+     A*  CEU004 - LE Settlement Ccy Conversion Upgrade to DBA R2.0    *
+     A*           Recompiled due to changes in file LVENTEL.          *
+     A*  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+     A*  CLE004 - Customer Lending Enhancements - Syndications        *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           Recompiled only.                                    *
+     A*   S01486 -  Portfolio Management Upgrade                   *
+     A*   S01433 -  Recompiled - Customer limit processing         *
+     A*   S01434 -  Recompiled - Enhanced Rollovers                *
+     A*                                                            *
+     A*   S01378 -  NA parcels. Allows partial sale of a parcel
+     A*             of NA's which have previously been entered as
+     A*             a single NA purchased transaction. (was MOF53)
+     A*             Recompile over changed EVNTXED format.
+     A*     S01393 - Recompiled for Strategic Risk Management      *
+     A*     S01392 - RECOMPILED DUE TO JAP.SUB-MODULE INCORPORATION*
+     A*     S01354 - Ignore Internal Funding Deals                 *
+     A*     E25515 - REMOVAL OF SYNDICATED LOANS                   *
+     A*     E28817 - STEVEAB and STEVEFC are redundant (Old ST files)
+     A*     S01328 - FRA/IRS Revaluations - New fields added to    *
+     A*            EVNTXED.Remove ZZ005 and recompile all logicals.*
+     A*     BHF420 - RECOMPILE FOR LVENTEL
+     A*     S01243 -  INCLUDE EVENTS FOR PRINCIPAL INCREASES ON    *S01243
+     A*               TERM LOANS                                   *S01243
+     A*     E57    - ERROR IN SELECT/OMIT                          *
+     A*     S01157 - RECOMPILED FOR FRA/IRS ENHANCEMENTS           *
+     A*     S01117 - MULTI BRANCHING +CHANGE MAINT OPTION          *
+     A*     E12072 - A LOAN SHOWED AN EXPOSURE IN THE REPORT       *
+     A*              (DL0800) BEFORE THE VALUE DATE WAS REACHED.   *
+     A*     S01119 - FRA/IRS INCORPORATION.                        *
+     A*                                                            *
+     A**************************************************************
+     A          R EVLXCECF                  PFILE(EVLXCEC)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A          K RECI
+     A*
+     A          R EVLXCEEF                  PFILE(EVLXCEE)
+      **Start of change CLE148
+     A            RECI
+     A            DLNO
+     A            DLNO2              I      SST(DLNO 1 6)
+     A            CUNR
+     A            ETYP
+     A            EDAT
+     A            FLTY
+     A            FLAM
+     A            FLED
+     A            FLVD
+     A            FLRF
+     A            RLAM
+     A            LLTY
+     A            LLAM
+     A            LLED
+     A            LLRD
+     A            LLRF
+     A            LLSE
+     A            FRAM
+     A            FRED
+     A            FRRD
+     A            FRRF
+     A            IRAM
+     A            IRED
+     A            IRRD
+     A            IRRF
+     A            ZZ048
+     A            PARI
+     A            CRNM
+     A            CTWN
+     A            CASK
+     A            ZZ150
+     A            BRCA
+     A            LIPLTY
+     A            LIPFAM
+     A            LIPSAM
+     A            LIPLED
+     A            LIPLVD
+     A            LIPLRF
+     A            LIPLAM
+     A            FAMM
+      **End of change CLE148
+     A          K *NONE
+     A          K *NONE
+     A          K EDAT
+      **Start of change CLE148
+     A**********K DLNO                                                                        CLE148
+     A          K DLNO2
+      **End of change CLE148
+     A          K ETYP
+     A*
+     A          R EVLXCEDF                  PFILE(EVLXCED)
+     A            RECI
+     A            DLNO
+      **Start of change CLE148
+     A            DLNO2              I      SST(DLNO 1 6)
+      **End of change CLE148
+     A************CNUM                                                    S01117
+     A            CUNR
+     A            ETYP
+     A            EDAT
+     A            EAMT
+     A            ECCY
+     A            ECSS
+     A            DTYP
+     A            DLST
+     A*                                                  /S01117/
+     A*********** BRCD
+     A            BRCA
+     A*                                                  /S01117/
+     A            EXRT
+     A            NGII
+     A            NOTD
+     A            OTHD
+     A            OTHA
+     A            OTHC
+     A            DBCE
+     A            BCEQ
+     A            DBCR
+     A            LCEQ
+     A            SETP
+     A            OSAC                      CONCAT(OSAC1 OSAC2)
+     A            TSEN
+     A            ZZ003
+     A            FIPI
+     A            INOI
+     A            FCTI
+     A            RLVI
+     A*                                                  /S01117/
+     A************CPAR
+     A            PTNU
+     A*                                                  /S01117/
+     A            PARI
+     A            CRNM
+     A            CTWN
+     A            CASK
+     A            PRNM
+     A            PTWN
+     A            PASK
+     A            CCTZ
+     A            CLOC
+     A            REGC
+     A            DASN
+     A            FFVD
+     A            FFIN
+     A            FACT
+     A            FCNO
+     A            FACO
+     A            SPI
+     A            CPCN
+     A            FSLI
+     A            ICIR
+     A            ICAM
+     A            RBDA
+     A            OCFF
+     A            ZZ023
+     A            TAXI
+     A          K *NONE
+     A          K REGC
+     A          K EDAT
+      **Start of change CLE148
+     A**********K DLNO                                                                        CLE148
+     A          K DLNO2
+      **End of change CLE148
+     A          K ETYP
+     A*
+     A          R EVNTXEDF                  PFILE(EVNTXED)
+     A            RECI
+     A            DLNO
+      **Start of change CLE148
+     A            DLNO2              I      SST(DLNO 1 6)
+      **End of change CLE148
+     A            CUNR
+     A*********** CNUM                                                    S01117
+     A            ETYP
+     A            EDAT
+     A            EAMT
+     A            ECCY
+     A            ECSS
+     A            DTYP
+     A            DLST
+     A*                                                  /S01117/
+     A*********** BRCD
+     A*                                                  /S01117/
+     A**********  BRCA
+     A            EBRC
+     A*                                                  /S01117/
+     A*                                                  /S01117/
+     A            EXRT
+     A            NGII
+     A            NOTD
+     A            OTHD
+     A            OTHA
+     A            OTHC
+     A            DBCE
+     A            BCEQ
+     A            DBCR
+     A            LCEQ
+     A            SETP
+     A            OSAC                      CONCAT(OSAC1 OSAC2)
+     A            TSEN
+     A            ZZ003
+     A            FIPI
+     A            INOI
+     A            FCTI
+     A            RLVI
+     A            PTNU
+     A*********** CPAR                                                    S01117
+     A            PARI
+     A            CRNM
+     A            CTWN
+     A            CASK
+     A            PRNM
+     A            PTWN
+     A            PASK
+     A            CCTZ
+     A            CLOC
+     A            REGC
+     A            DASN
+     A            FFVD
+     A            FFIN
+     A            FACT
+     A            FCNO
+     A            FACO
+     A            SPI
+     A            CPCN
+     A            FSLI
+     A            ICIR
+     A            ICAM
+     A            RBDA
+     A            OCFF
+     A*                                                    /S01117/
+     A            ORBR
+     A**********  COBB
+     A            COOB
+     A            ECPY
+     A            IBRE
+     A            ICYE
+      *                                                                   S01117
+     A            EXEI
+     A            ELVB
+     A            ELVC
+     A            ELVS
+      *                                                                   S01117
+     A            OSBR
+     A**********  ZZ007
+     A*                                              START /S01328/
+     A************ZZ005
+     A*                                              END   /S01328/
+      *                                                                   S01117
+     A************ZZ023
+      *                                                                   S01117
+     A*                                                    /S01117/
+     A            TAXI
+      *                                              Begin /S01486/
+     A            PTFR
+      *                                              End   /S01486/
+     A*                                              Begin /CEU003/
+     A            IFXS
+     A            SIAC
+     A*                                              End   /CEU003/
+     A*/COPY WNCPYSRC,EVLSR001
+     A          K *NONE
+     A          K REGC
+     A          K EDAT
+      **Start of change CLE148
+     A**********K DLNO                                                                        CLE148
+     A          K DLNO2
+      **End of change CLE148
+     A          K ETYP
+     A          S ETYP                      VALUES('11V1' '12V1' '13V1' '14V1' +
+     A**************************************'15M1' '17M1' '17S1')*******/S01119/
+     A                                      '15M1' '17M1' '17S1' '21E1' '22E1' +
+     A**************************************'23E1' '24E1')*****/S01119/ /E12072/
+     A                                      '23E1' '24E1' '15V1' '17V1')
+     A**                                                  /E12072/
+     A*                                              BEGIN /S01354/
+     A            DTYP                      COMP(NE 'IL')
+     A*                                              END   /S01354/
+     A*                                                      /**E57*/
+     A            IBRE                      COMP(EQ 'N')
+     A*/COPY WNCPYSRC,EVLSR002
+     A          O                           ALL
+     A*                                                      /**E57*/
+     A***********                                              /E25515/
+     A***********
+     A**********R CEVNXCCF                  PFILE(CEVNXCC)
+     A**********K *NONE
+     A**********K REGC
+     A**********K EDAT
+     A**********K LNNO
+     A**********K *NONE
+     A**********K DDNO
+     A**********K ETYP
+     A**********S ETYP                      VALUES('41M1' '41M3' '41R1' '41R3' +
+     A***********                           '41R4' '42M1')
+     A***********
+     A***********                                              /E25515/
+     A*                                                    /S0300/
+     A          R LVENTELF                  PFILE(LVENTEL)
+     A            RECI
+     A            LNRF
+     A*                                                  /S01117/
+     A************CNUM
+     A            CUNR
+     A*                                                  /S01117/
+     A            ETYP
+     A            EDAT
+     A            EAMT
+     A            ECCY
+     A            ECSS
+     A            LTYP
+     A            SUTP
+     A*                                                  /S01117/
+     A*********** BRCD
+     A*                                                  /S01117/
+     A**********  BRCA
+     A            EBRC
+     A*                                                  /S01117/
+     A*                                                  /S01117/
+     A            OTHD
+     A            OTHA
+     A            BCEQ
+     A            DFCE
+     A            NGII
+     A            INTR
+     A            SETP
+     A            OSAC
+     A            TSEN
+     A            ECDP
+     A            CRNM
+     A            CTWN
+     A            CASK
+     A            PRNM
+     A            PTWN
+     A            PASK
+     A            INOI
+     A            CRSK
+     A            CDOM
+     A            REGC
+     A            PARI
+     A*                                                  /S01117/
+     A************CPAR
+     A            PTNU
+     A*                                                  /S01117/
+     A            RCSI
+     A*                                                      /**E57*/
+     A            IBRE
+     A*                                                      /**E57*/
+      *                                              Begin /S01486/
+     A            PTFR
+     A            RDEL
+      *                                              End   /S01486/
+      *                                                  Begin /163486/
+     A            IFXC
+     A            SIAC
+      *                                                    End /163486/
+     A          K *NONE
+     A          K REGC
+     A          K EDAT
+     A          K LNRF
+     A          K ETYP
+     A          S ETYP                      VALUES('61R1' '61M1' '62M1' '62R1' +
+     A                                      '63M1' '64R1' '64M1' '65M1' '66R1' +
+     A*                                                               /S01243/
+     A************                          '66M1' '67M1' '61V3')
+     A                                      '66M1' '67M1' '61V3' '62V3' '64V3' +
+      *                                              Begin /CLE004/
+     A***********                           '66V3')
+     A                                      '66V3' '68V3' '68R1' '68M1' +
+     A                                      '69V3' '69R1' '69M1' '72V3' +
+     A                                      '72R1' '72M1' '61R7' '61V5' +
+     A                                      '61R9' '61V7' '62R7' '62V5' +
+     A                                      '62R9' '62V7' '63R7' '63V5' +
+     A                                      '63R9' '63V7' '64R7' '64V5' +
+     A                                      '64R9' '64V7' '65R7' '65V5' +
+     A                                      '65R9' '65V7' '66R7' '66V5' +
+     A                                      '66R9' '66V7' '67R7' '67V5' +
+      * Start of change CLE028
+     A**********                            '67R9' '67V7')
+     A                                      '67R9' '67V7' '80R1' '80M1')
+      * End of change CLE028
+      *                                              End   /CLE004/
+     A*                                                               /S01243/
+     A*                                                      /**E57*/
+     A            IBRE                      COMP(EQ 'N')
+     A          O                           ALL
+     A*                                                      /**E57*/
+     A*                                                    /S0300/
+     A* LC EVENTS                                          /S0600/
+     A*******   R BVNTXEDF
+     A*******                               TEXT('BILLS & CREDITS EVENT DETAIL')
+     A*******                               PFILE(BVNTXED)
+     A*******     RECI
+     A*******     DLNO
+     A*******     CNUM
+     A*******     ETYP
+     A*******     EDAT
+     A*******     EAMT
+     A*******     ECCY
+     A*******     ECSS
+     A*******     DTYP
+     A*******     DLST
+     A*******     BRCD
+     A*******     OTHD
+     A*******     OTHA
+     A*******     OTHC
+     A*******     DBCE
+     A*******     BCEQ
+     A*******     DBCR
+     A*******     SETP
+     A*******     OSAC                      CONCAT(OSAC1 OSAC2)
+     A*******     TSEN
+     A*******     FACO
+     A*******     SPI
+     A*******     FIPI
+     A*******     INOI
+     A*******     CPCN
+     A*******     CPAR
+     A*******     PARI
+     A*******     CRNM
+     A*******     CTWN
+     A*******     CASK
+     A*******     PRNM
+     A*******     PTWN
+     A*******     PASK
+     A*******     CCTZ
+     A*******     CLOC
+     A*******     REGC
+     A*******     FFIN
+     A*******     LCEQ
+     A*******     ZZ073
+     A*******   K *NONE
+     A*******   K REGC
+     A*******   K EDAT
+     A*******   K DLNO
+     A*******   K ETYP
+     A*******   S ETYP                      VALUES('80M1' '81D1' '81M1' '81M3' +
+     A*******                               '82A1' '82M1' '84V1' '84V2')
+     A*******                                              /S0600/
+     A*                                                    /S0630/
+     A**********                                     Begin /E28817/
+     A**********R STEVEABF                  PFILE(STEVEAB)
+     A**********                            TEXT('SEC. TRADING EVENT DETAIL')
+     A**********  RECI
+     A**********  SECS
+     A**********  MARK
+     A**********  TRDR
+     A************CNUM                                                    S01117
+     A**********  CUNR
+     A**********  ETYP
+     A**********  EDAT
+     A**********  EAMT
+     A**********  ECCY
+     A**********  ECSS
+     A**********  TRTE
+     A**********  TRSE
+     A**********  BRCS
+     A**********  CRAT
+     A**********  NGII
+     A**********  ODTE
+     A**********  OAME
+     A**********  NOMC
+     A**********  NCSC
+     A**********  ECDP
+     A**********  NCDP
+     A**********  DBEE
+     A**********  SBEE
+     A**********  DBRT
+     A**********  DNEE
+     A**********  SNEE
+     A**********  DNRT
+     A**********  FIPI
+     A**********  SETL
+     A**********  OURE                      CONCAT(OSAC1 OSAC2)
+     A**********  THRE
+     A**********  FACE
+     A**********  SPI
+     A**********  STCL
+     A**********  PYCD
+     A**********  PRCD
+     A**********  IOIN
+     A*                                                  /S01117/
+     A************CPAR
+     A**********  PTNU
+     A*                                                  /S01117/
+     A**********  PARI
+     A**********  CRNM
+     A**********  CTWN
+     A**********  CASK
+     A**********  PRNM
+     A**********  PTWN
+     A**********  PASK
+     A**********  NOMT
+     A**********  CRSK
+     A**********  REGR
+     A**********  CLOC
+     A**********  REGD
+     A**********  WTYP
+     A**********  WRAT
+     A**********  ASIN
+     A**********  ACCF
+     A*                                                   /S01117/
+     A*********   BRCD
+     A**********  BRCA
+     A*                                                   /S01117/
+     A**********  DSAM
+     A**********  AIND
+     A**********  PURI
+     A*                                                   /S01117/
+     A*********   ZZ005
+     A**********  ZZ002
+     A**********  CMPYM
+     A*                                                   /S01117/
+     A**********K *NONE
+     A**********K REGR
+     A**********K EDAT
+     A**********K TRDR
+     A**********K ETYP
+     A**********S ETYP                      VALUES('30P1' '30S1' '30C1' '30C2' +
+     A**********                            '30A1' '30D1' '30D2' '30M1' '30M2')
+     A**********                                     End   /E28817/
+     A*                                                    /S0630/
+     A          R EVLXCEGF                  PFILE(EVLXCEG)
+     A          K RECI

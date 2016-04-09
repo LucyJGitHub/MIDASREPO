@@ -1,0 +1,784 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP CPP for CMPDBA')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000005 - CPP for CMPDBA                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK025  *CREATE    Date 25May06              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK025 - New utility.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BASE &COMP &TYPE &MISSFILE)
+ 
+             DCL        VAR(&BASE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&COMP) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(58)
+             DCL        VAR(&MISSFILE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&BASEFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BASEFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COMPFILEL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SELTYPE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&DIFFILNAM) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&DIFFFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SELECT) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SELECTPOS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NBRTYPE) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&NBRTYPEB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(3 0) VALUE(10)
+             DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&TYPENO) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&NUMFOUND) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&REPORTHDR) TYPE(*CHAR) LEN(59)
+             DCL        VAR(&USRDTA) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create temporary file to hold messages for UP008010. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
+                          file for holding msg from CMPDBA')
+ 
+/* Break down the parameters for the libraries. */
+             CHGVAR     VAR(&BASEFILE) VALUE(%SST(&BASE 1 10))
+             CHGVAR     VAR(&BASEFILEL) VALUE(%SST(&BASE 11 10))
+             CHGVAR     VAR(&COMPFILE) VALUE(%SST(&COMP 1 10))
+             CHGVAR     VAR(&COMPFILEL) VALUE(%SST(&COMP 11 10))
+ 
+/* Check if the Base file is generic or *ALL by scanning the field for '*'. */
+             CALL       PGM(QCLSCAN) PARM(&BASEFILE &LENGTH +
+                          &STARTPOS '*' &PATLEN '0' '0' '' &RESULT)
+/* If it is not generic or *ALL then set flag if file names are different. */
+             IF         COND(&RESULT *EQ 0) THEN(DO)
+                IF         COND(&BASEFILE *NE &COMPFILE *AND &COMPFILE +
+                             *NE '*BASEFILE') THEN(DO)
+                   CHGVAR     VAR(&DIFFILNAM) VALUE(*YES)
+/* An SQL statement will need to be run as well so build the source file now. */
+                   DLTF       FILE(QTEMP/RUNSQLSTM)
+                   MONMSG     MSGID(CPF0000)
+                   DLTF       FILE(QTEMP/RUNSQL)
+                   MONMSG     MSGID(CPF0000)
+                   CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                                MBR(RUNSQLSTM)
+                   RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                                NEWOBJ(RUNSQL)
+                ENDDO
+             ENDDO
+ 
+/* If the Comparison file or library is *BASEFILE then change the values to */
+/*  those of the Base file and library.                                     */
+             IF         COND(&COMPFILE *EQ '*BASEFILE') THEN(DO)
+                CHGVAR     VAR(&COMPFILE) VALUE(&BASEFILE)
+             ENDDO
+             IF         COND(&COMPFILEL *EQ '*BASEFILE') THEN(DO)
+                CHGVAR     VAR(&COMPFILEL) VALUE(&BASEFILEL)
+             ENDDO
+ 
+/* Set up generic header for report. */
+             CHGVAR     VAR(&REPORTHDR) VALUE(&BASEFILEL *TCAT '/' +
+                          *TCAT &BASEFILE *BCAT 'v' *BCAT +
+                          &COMPFILEL *TCAT '/' *TCAT &COMPFILE)
+ 
+/* Delete the file field description outfile just in case. */
+             DLTF       FILE(QTEMP/UPDFFDPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Find out number of comparison types. */
+             CHGVAR     VAR(&NBRTYPEB) VALUE(%SST(&TYPE 1 2))
+             CHGVAR     VAR(&NBRTYPE) VALUE(%BIN(&NBRTYPEB))
+ 
+/* Check what comparison types have been selected (if not *ALL).  This is done */
+/*  in a systematic way to make it easier to add future comparisons.           */
+             CHGVAR     VAR(&TYPENO) VALUE(0)
+             CHGVAR     VAR(&NUMFOUND) VALUE(0)
+TYPELOOP:
+             CHGVAR     VAR(&TYPENO) VALUE(&TYPENO + 1)
+             CHGVAR     VAR(&SELECTPOS) VALUE(&TYPENO - 1)
+/* If at the end of the comparison types then begin processing. */
+             IF         COND(&TYPENO *GT 9 *OR &NUMFOUND *EQ +
+                          &NBRTYPE) THEN(DO)
+                GOTO       CMDLBL(ACCPTH)
+             ENDDO
+             IF         COND(&TYPENO *EQ 1) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*ALL)
+             ENDDO
+             IF         COND(&TYPENO *EQ 2) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*ACCPTH)
+             ENDDO
+             IF         COND(&TYPENO *EQ 3) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*DBR)
+             ENDDO
+             IF         COND(&TYPENO *EQ 4) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*FLDATR)
+             ENDDO
+             IF         COND(&TYPENO *EQ 5) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*FLDTXT)
+             ENDDO
+             IF         COND(&TYPENO *EQ 6) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*JOIN)
+             ENDDO
+             IF         COND(&TYPENO *EQ 7) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*MBR)
+             ENDDO
+             IF         COND(&TYPENO *EQ 8) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*SELECT)
+             ENDDO
+             IF         COND(&TYPENO *EQ 9) THEN(DO)
+                CHGVAR     VAR(&SELTYPE) VALUE(*TRG)
+             ENDDO
+/* Reset TYPELOOP2 controls. */
+             CHGVAR     VAR(&COUNT) VALUE(1)
+             CHGVAR     VAR(&STARTPOS) VALUE(3)
+TYPELOOP2:
+             IF         COND(&COUNT *LE &NBRTYPE) THEN(DO)
+                IF         COND(%SST(&TYPE &STARTPOS 7) *EQ &SELTYPE) +
+                             THEN(DO)
+                   IF         COND(&TYPENO *EQ 1) THEN(DO)
+                      CHGVAR     VAR(%SST(&SELECT &TYPENO 8)) VALUE('YYYYYYYY')
+                      GOTO       CMDLBL(ACCPTH)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(%SST(&SELECT &SELECTPOS 1)) VALUE('Y')
+                      CHGVAR     VAR(&NUMFOUND) VALUE(&NUMFOUND + 1)
+                      GOTO       CMDLBL(TYPELOOP)
+                   ENDDO
+                ENDDO
+                CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                CHGVAR     VAR(&STARTPOS) VALUE(&STARTPOS + 7)
+                GOTO       CMDLBL(TYPELOOP2)
+             ENDDO
+             ELSE       CMD(DO)
+                GOTO       CMDLBL(TYPELOOP)
+             ENDDO
+ 
+ACCPTH:
+             IF         COND(%SST(&SELECT 1 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPACCPPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *ACCPTH')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QAFDACCP) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFD      FILE(&BASEFILEL/&BASEFILE) TYPE(*ACCPTH) +
+                             OUTPUT(*OUTFILE) OUTFILE(UPACCPTPD) +
+                             OUTMBR(BASE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &BASEFILEL *BCAT 'for *ACCPTH +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(DBR)
+                ENDDO
+                DSPFD      FILE(&COMPFILEL/&COMPFILE) TYPE(*ACCPTH) +
+                             OUTPUT(*OUTFILE) OUTFILE(UPACCPTPD) +
+                             OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &COMPFILEL *BCAT 'for *ACCPTH +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(DBR)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPACCPTPD SET +
+                                APFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPACCPTPD) TOFILE(UPACCPTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPACCPTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPACCPTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPACCPTPD) MBR(COMPARE)
+                CALL       PGM(UP000030) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000030 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(DBR)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPACCPTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPACCPTPD) MBR(COMPARE)
+                CALL       PGM(UP000030) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000030 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(DBR)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000031) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000031.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(DBR)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*ACCPTH)
+             ENDDO
+ 
+DBR:
+             CHGJOB     SWS(00000000)
+             IF         COND(%SST(&SELECT 2 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPDBRLPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *DBR   ')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QADSPDBR) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPDBR     FILE(&BASEFILEL/&BASEFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(UPDBRLTPD) OUTMBR(BASE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &BASEFILEL *BCAT 'for *DBR +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(FIELD)
+                ENDDO
+                DSPDBR     FILE(&COMPFILEL/&COMPFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(UPDBRLTPD) OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &COMPFILEL *BCAT 'for *DBR +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(FIELD)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPDBRLTPD SET +
+                                WHRFI =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPDBRLTPD) TOFILE(UPDBRLTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPDBRLTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPDBRLTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPDBRLTPD) MBR(COMPARE)
+                CALL       PGM(UP000032) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000032 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(FIELD)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPDBRLTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPDBRLTPD) MBR(COMPARE)
+                CALL       PGM(UP000032) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000032 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(FIELD)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000033) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000033.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(FIELD)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*DBR)
+             ENDDO
+ 
+FIELD:
+             IF         COND(%SST(&SELECT 3 1) *EQ 'Y' *OR +
+                          %SST(&SELECT 4 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPFFDSPD)
+/* Change report header for specific selection. */
+                IF         COND(%SST(&SELECT 3 2) *EQ 'YY') THEN(DO)
+                   CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *FIELD ')
+                   CHGVAR     VAR(&USRDTA) VALUE('*FIELD ')
+                ENDDO
+                IF         COND(%SST(&SELECT 3 2) *EQ 'Y ') THEN(DO)
+                   CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *FLDATR')
+                   CHGVAR     VAR(&USRDTA) VALUE('*FLDATR')
+                ENDDO
+                IF         COND(%SST(&SELECT 3 2) *EQ ' Y') THEN(DO)
+                   CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *FLDTXT')
+                   CHGVAR     VAR(&USRDTA) VALUE('*FLDTXT')
+                ENDDO
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QADSPFFD) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFFD     FILE(&BASEFILEL/&BASEFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(UPFFDSTPD) OUTMBR(BASE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &BASEFILEL *BCAT 'for *FIELD +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(JOIN)
+                ENDDO
+                DSPFFD     FILE(&COMPFILEL/&COMPFILE) OUTPUT(*OUTFILE) +
+                             OUTFILE(UPFFDSTPD) OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &COMPFILEL *BCAT 'for *FIELD +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(JOIN)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPFFDSTPD SET +
+                                WHFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPFFDSTPD) TOFILE(UPFFDSTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPFFDSTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPFFDSTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPFFDSTPD) MBR(COMPARE)
+                CALL       PGM(UP000034) PARM('I' &MISSFILE &USRDTA)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000034 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(JOIN)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPFFDSTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPFFDSTPD) MBR(COMPARE)
+                CALL       PGM(UP000034) PARM('D' &MISSFILE &USRDTA)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000034 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(JOIN)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000035) PARM(&REPORTHDR &DIFFFILE +
+                          &USRDTA)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000035.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(JOIN)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(&USRDTA)
+             ENDDO
+ 
+JOIN:
+             IF         COND(%SST(&SELECT 5 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPJOINPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *JOIN  ')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QAFDJOIN) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFD      FILE(&BASEFILEL/&BASEFILE) TYPE(*JOIN) +
+                             OUTPUT(*OUTFILE) FILEATR(*LF) +
+                             OUTFILE(UPJOINTPD) OUTMBR(BASE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &BASEFILEL *BCAT 'for +
+                                *JOIN compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(MBR)
+                ENDDO
+                DSPFD      FILE(&COMPFILEL/&COMPFILE) TYPE(*JOIN) +
+                             OUTPUT(*OUTFILE) FILEATR(*LF) +
+                             OUTFILE(UPJOINTPD) OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &COMPFILEL *BCAT 'for +
+                                *JOIN compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(MBR)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPJOINTPD SET +
+                                JNFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPJOINTPD) TOFILE(UPJOINTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPJOINTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPJOINTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPJOINTPD) MBR(COMPARE)
+                CALL       PGM(UP000036) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000036 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(MBR)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPJOINTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPJOINTPD) MBR(COMPARE)
+                CALL       PGM(UP000036) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000036 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(MBR)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000037) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000037.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(MBR)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*JOIN)
+             ENDDO
+ 
+MBR:
+             IF         COND(%SST(&SELECT 6 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPMBRLPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *MBR   ')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QAFDMBRL) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFD      FILE(&BASEFILEL/&BASEFILE) TYPE(*MBRLIST) +
+                             OUTPUT(*OUTFILE) OUTFILE(UPMBRLTPD) +
+                             OUTMBR(BASE)
+                MONMSG     MSGID(CPF3012) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &BASEFILEL *BCAT 'for *MBR +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(SELECT)
+                ENDDO
+                DSPFD      FILE(&COMPFILEL/&COMPFILE) TYPE(*MBRLIST) +
+                             OUTPUT(*OUTFILE) OUTFILE(UPMBRLTPD) +
+                             OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('No files were found +
+                                in' *BCAT &COMPFILEL *BCAT 'for *MBR +
+                                compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(SELECT)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPMBRLTPD SET +
+                                MLFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPMBRLTPD) TOFILE(UPMBRLTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPMBRLTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPMBRLTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPMBRLTPD) MBR(COMPARE)
+                CALL       PGM(UP000038) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000038 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(SELECT)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPMBRLTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPMBRLTPD) MBR(COMPARE)
+                CALL       PGM(UP000038) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000038 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(SELECT)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000039) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000039.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(SELECT)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*MBR)
+             ENDDO
+ 
+SELECT:
+             IF         COND(%SST(&SELECT 7 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPSLCTPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *SELECT')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QAFDSELO) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFD      FILE(&BASEFILEL/&BASEFILE) TYPE(*SELECT) +
+                             OUTPUT(*OUTFILE) FILEATR(*LF) +
+                             OUTFILE(UPSLCTTPD) OUTMBR(BASE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &BASEFILEL *BCAT 'for +
+                                *SELECT compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(TRG)
+                ENDDO
+                DSPFD      FILE(&COMPFILEL/&COMPFILE) TYPE(*SELECT) +
+                             OUTPUT(*OUTFILE) FILEATR(*LF) +
+                             OUTFILE(UPSLCTTPD) OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &COMPFILEL *BCAT 'for +
+                                *SELECT compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(TRG)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPSLCTTPD SET +
+                                SOFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPSLCTTPD) TOFILE(UPSLCTTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPSLCTTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPSLCTTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPSLCTTPD) MBR(COMPARE)
+                CALL       PGM(UP000040) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000040 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(TRG)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPSLCTTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPSLCTTPD) MBR(COMPARE)
+                CALL       PGM(UP000040) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000040 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(TRG)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000041) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000041.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(TRG)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*SELECT)
+             ENDDO
+ 
+TRG:
+             IF         COND(%SST(&SELECT 8 1) *EQ 'Y') THEN(DO)
+/* Clear Action File. */
+                CLRPFM     FILE(UPFDTRPD)
+/* Change report header for specific selection. */
+                CHGVAR     VAR(%SST(&REPORTHDR 50 9)) VALUE('- *TRG   ')
+/* Display list of fields of IBM outfile so that they can be displayed on report. */
+                DSPFFD     FILE(QAFDTRG) OUTPUT(*OUTFILE) +
+                             OUTFILE(QTEMP/UPDFFDPD)
+                CHGVAR     VAR(&DIFFFILE) VALUE(' ')
+                DSPFD      FILE(&BASEFILEL/&BASEFILE) TYPE(*TRG) +
+                             OUTPUT(*OUTFILE) FILEATR(*PF) +
+                             OUTFILE(UPFDTRTPD) OUTMBR(BASE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &BASEFILEL *BCAT 'for +
+                                *TRG compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                DSPFD      FILE(&COMPFILEL/&COMPFILE) TYPE(*TRG) +
+                             OUTPUT(*OUTFILE) FILEATR(*PF) +
+                             OUTFILE(UPFDTRTPD) OUTMBR(COMPARE)
+                MONMSG     MSGID(CPF3011 CPF3012 CPF3020) EXEC(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('Unable to process any +
+                                files in' *BCAT &COMPFILEL *BCAT 'for +
+                                *TRG compare')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* If the utility has different file names then call program to reset file */
+/*  name on Compare member. */
+                IF         COND(&DIFFILNAM *EQ '*YES') THEN(DO)
+                   CHGVAR     VAR(&SQLSTM) VALUE('UPDATE UPFDTRTPD SET +
+                                TRFILE =' *BCAT &QUOTE *TCAT &BASEFILE +
+                                *TCAT &QUOTE)
+                   CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')
+                   OVRDBF     FILE(UPFDTRTPD) TOFILE(UPFDTRTPD) MBR(COMPARE)
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   DLTOVR     FILE(UPFDTRTPD)
+                   CHGVAR     VAR(&DIFFFILE) VALUE(&COMPFILE)
+                ENDDO
+/* Run first pass of program to build Action File. */
+                OVRDBF     FILE(OVR2) TOFILE(UPFDTRTPD) MBR(BASE)
+                OVRDBF     FILE(OVR1) TOFILE(UPFDTRTPD) MBR(COMPARE)
+                CALL       PGM(UP000042) PARM('I' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000042 in Insert mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+/* Run second pass of program to build Action File. */
+                OVRDBF     FILE(OVR1) TOFILE(UPFDTRTPD) MBR(BASE)
+                OVRDBF     FILE(OVR2) TOFILE(UPFDTRTPD) MBR(COMPARE)
+                CALL       PGM(UP000042) PARM('D' &MISSFILE)
+                DLTOVR     FILE(*ALL)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000042 in Delete mode.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                CHGVAR     VAR(&MISSFILE) VALUE('*NO ')
+/* Run program to produce report. */
+                CALL       PGM(UP000043) PARM(&REPORTHDR &DIFFFILE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRORMSG) VALUE('There was an error in +
+                                UP000043.  Check dump.')
+                   CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+                   CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                CHGSPLFA   FILE(UP0799P1) SPLNBR(*LAST) USRDTA(*TRG)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&ERRORMSG) VALUE('There has been a +
+                          general error when running CMPDBA.  Check +
+                          the joblog.')
+             CHGVAR     VAR(&ERRORFLAG) VALUE(Y)
+             CALL       PGM(UP008010) PARM('*WRITE' 'CMPDBA' &ERRORMSG)
+             MONMSG     MSGID(CPF0000)
+ENDPGM:
+/* Call program to produce report UP008010P1. */
+             IF         COND(&ERRORFLAG *EQ 'Y') THEN(DO)
+                CALL       PGM(UP008010) PARM('*REPORT' 'CMPDBA' ' ')
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             ENDPGM

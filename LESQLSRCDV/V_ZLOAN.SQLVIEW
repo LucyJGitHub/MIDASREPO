@@ -1,0 +1,96 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_ZLOAN - Loan View                                                   */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. AR1074315          Date 03Jan13                        */
+/*       Prev Amend No. CLE134             Date 01Aug12                        */
+/*                      CLE148             Date 23Jul12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD027             Date 10Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      BUG9970            Date 19Jan06                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CLE036             Date 22Sep03                        */
+/*                      CAS011             Date 16May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CGP001 *CREATE     Date 19Oct03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       AR1074315 - error encountered during database upgrade for GC system   */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       CSF011 - Customer Name on Inputs                                      */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CLE143 - Original Loan Contract Date & Effective Interest             */
+/*                Rate (Recompile)                                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       BUG9970- Add PADPTFC to prevent SQL0205 error.                        */
+/*       CLE106 - Syndications Manager                                         */
+/*       CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2:          */
+/*                Allow specific base rates (Recompile)                        */
+/*       CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)                 */
+/*       CAP086 - Introduce Auto Authorisation to the API's          */
+/*                without it. (Recompile)                            */
+/*       CGP001 - Global Processing.                                           */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+    L.*,                                                                        :
+****DIGITS(L.LNRF)*as*PADLNRF,**************************************************:             CLE148
+           L.LNRF  as PADLNRF,                                                  :             CLE148
+******DIGITS(L.CNUM)*as*PADCNUM,************************************************:             CSD027
+******DIGITS(L.FCUS)*as*PADFCUS,************************************************:             CSD027
+             L.CNUM  as PADCNUM,                                                :             CSD027
+             L.FCUS  as PADFCUS,                                                :             CSD027
+      DIGITS(L.FTYP) as PADFTYP,                                                :
+      DIGITS(L.FSEQ) as PADFSEQ,                                                :
+      DIGITS(L.PTYP) as PADPTYP,                                                :
+******DIGITS(L.PTFC)*as*PADPTFC,************************************************: /*BUG9970*/ CSF011
+             L.PTFC  as PADPTFC,                                                :             CSF011
+    CASE                                                                        :
+     WHEN L.PTYP in (66,67,69,72) THEN 'PS' WHEN L.PTYP IN (64,65,68,71)        :
+     THEN 'PP' ELSE 'LN' END AS LOANCLASS,                                      :
+*****CASE*WHEN*L.PTYP*IN*(66,67,69,72)*THEN*DIGITS(L.OLNO)**********************:             CSD027
+     CASE WHEN L.PTYP IN (66,67,69,72) THEN        L.OLNO                       :             CSD027
+       ELSE '' END AS SALELOAN,                                                 :
+*****CASE*WHEN*L.PTYP*IN*(64,65,68,71)*THEN*DIGITS(L.OLNO)**********************:             CSD027
+     CASE WHEN L.PTYP IN (64,65,68,71) THEN        L.OLNO                       :             CSD027
+       ELSE '' END AS ORIGBRWR                                                  :
+    , PRTR, SYIN, MCCY                                                          :         /*CLE106*/
+    , SD.BBCSSN, SD.BBCRNM, SD.BBCRTN                                           :             CSF011
+****FROM*CLOANCL*AS*L***********************************************************:          AR1074315
+****,FCLTYFM*F******************************************************************:   CLE106 AR1074315
+    FROM CLOANCL AS L CROSS JOIN                                                :          AR1074315
+    FCLTYFM F                                                                   :          AR1074315
+    LEFT JOIN SDCUSTPD AS SD                                                    :             CSF011
+     ON L.CNUM = SD.BBCUST                                                      :             CSF011
+     AND L.BRCA = SD.BBBRCD                                                     :             CSF011
+   WHERE L.RECI IN ('D','M','R')                                                :
+   AND L.FCUS = F.CNUM AND L.FTYP = F.FACT AND L.FSEQ = F.FCNO                  :         /*CLE106*/
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Zone loan view                           ';                     :
+                                                                                :

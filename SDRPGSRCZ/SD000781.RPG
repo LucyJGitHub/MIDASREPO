@@ -1,0 +1,234 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE
+/*EXI *  TEXT('Midas SD Country of Tax to N')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD000781 - Country of Tax changed from Yes to No             *
+      *                                                               *
+      *  Function:  This program is dependant to CGL032 feature       *
+      *             It is called by SD Country Codes Maintenance      *
+      *             when user change Country of Tax from Y to N       *
+      *             All the records from LF/SDCTTXL0 with a           *
+      *             country of tax equal to the amended country       *
+      *             are deleted. The customer tax status of all       *
+      *             the customers from LF/SDACTXL5 and                *
+      *             LF/SDNHTXL2 with a country of tax equal to        *
+      *             the country amended is set                        *
+      *             to  C  (Cancelled)                                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG10767           Date 15Mar06               *
+      *                 236137  *CREATE    Date 21Sep05               *
+      * Midas Release 4.04 -------------------------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  BUG10767 - Country of Tax defaults should not be deleted     *
+      *             because they are setup items (i.e. required by    *
+      *             the system).                                      *
+      *  236137 - Change Control for CGL031                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      ** SD Country of Tax Codes
+     FSDCTTXL0UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      ** SD Customer Details by Country of Tax
+     FSDACTXL5UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+      ** SD Non Account Holder  Details by Country of Tax
+     FSDNHTXL2UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     E* DESCRIPTION     : COPYRIGHT NOTICE FOR INCLUSION IN ALL PROGRAMS
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               COPYRIGHT ARRAY
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--- Start of Main processing -------------------------------+
+      ** ¦                                                            ¦
+      ** ¦ *InzSR is executed at program activation.                  ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+      *
+      *
+      ** Delete Country Tax Record
+      *
+     C                     EXSR DLCTRY
+      *
+      ** Change the Customer Tax Status to C (Cancelled)
+      *
+     C                     EXSR CHGCST
+      *
+      ** Change the Non Account Holderr Tax Status to C (Cancelled)
+      *
+     C                     EXSR CHGNAH
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DLCTRY      Delete record for country Tax                    *
+      *                                                               *
+      *****************************************************************
+     C           DLCTRY    BEGSR
+      *
+      ** Set file pointer to first record for related country
+      *
+     C           KEY1      SETLLSDCTTXL0
+      *
+     C           KEY1      READESDCTTXL0                 01
+      *
+      ** Read Country of Tax Codes until end of file
+      *
+     C           *IN01     DOWEQ'0'
+      *
+      ** Finally Delete Tax record for that Country
+      *
+     C           EWCTRR    IFNE *BLANKS                                                     BUG10767
+     C                     DELETSDCTTXD0
+     C                     ENDIF                                                            BUG10767
+     C*
+     C           KEY1      READESDCTTXL0                 01
+     C*
+     C                     ENDDO
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHGCST      Change Customer Tax Status Routine               *
+      *                                                               *
+      *****************************************************************
+     C           CHGCST    BEGSR
+      *
+     C           KEY1      SETLLSDACTXL5
+     C           KEY1      READESDACTXL5                 01
+      *
+     C           *IN01     DOWEQ'0'
+     C                     MOVE 'C'       AXCSTS
+      *
+      ** Update customer record
+      *
+     C                     UPDATSDACTXD0
+      *
+     C           KEY1      READESDACTXL5                 01
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   CHGNAH     - Change Non Account Holder Tax Status Routine   *
+      *                                                               *
+      *****************************************************************
+     C           CHGNAH    BEGSR
+      *
+     C           KEY1      SETLLSDNHTXL2
+     C           KEY1      READESDNHTXL2                 01
+      *
+     C           *IN01     DOWEQ'0'
+     C                     MOVE 'C'       NXNSTS
+      *
+      ** Update customer record
+      *
+     C                     UPDATSDNHTXD0
+      *
+     C           KEY1      READESDNHTXL2                 01
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *InzSr - Program Initialisation routine                      *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *****************************************************************
+      *
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM *BLANKS   P0RTN   7
+     C                     PARM           PCTRTX  2
+      *
+     C           KEY1      KLIST
+     C                     KFLD           PCTRTX
+      *****************************************************************
+      *
+     C*    *DTAARA       DEFINE                  LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  Calls:          None                                         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

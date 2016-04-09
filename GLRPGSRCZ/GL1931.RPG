@@ -1,0 +1,618 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Check Fee Control Dates')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1931 - Check Fee Control Dates                             *
+      *                                                               *
+      *  Function:  This program checks whether any Customer Service  *
+      *  (COB)      Fee process is due for this COB and calculates    *
+      *             the next due dates.                               *
+      *                                                               *
+      *  Called By: GLC1931 - Retrieve Customer Service Fees to       *
+      *                       Process Control                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 192176             Date 07Mar02               *
+      *                 CSD011             Date 04Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  192176 - Accrual date calculated in the past. Also CSD008    *
+      *           does a special case for BKANWD='2'catch-up accruals *
+      *           which will be wrong when month end is a Sunday.     *
+      *  CSD011 - Performance Incentive Fees.                         *
+      *  CSD008 - Cutomer Service Fees Enhancement                    *
+      *                                                               *
+      *****************************************************************
+     FSDCFTPL0UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Service Fee Types/Charge Groups
+      *
+     FGL1931AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** Customer Service Fees control dates - Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRTERM - Program Termination                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report                                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZFRQA  - Increment day number by a set period                *
+      *  ZBKDT  - Find nth working day back                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZFRQAZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for GL1931AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+     I/COPY ZSRSRC,ZHOLDS
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSD011
+      ** External data structures for Switchable features                                     CSD011
+      *                                                                                       CSD011
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** External data structures for General Ledger ICD
+      *
+     IGLCSFS    E DSGLCSFSTAT
+      ** Midas Customer Service Fees enhancement - Control EOD Processing
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Termination Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  - Access Program for Bank Details                  *
+      *  AOGELRR0  - Access Program for GL ICD                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Set up Program Name.
+      *
+     C                     MOVEL'GL1931'  DBPGM     P
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise data area GLCSFS as a named variable
+      ** obtain data area message file.
+      *
+     C           *NAMVAR   DEFN GLCSFSTAT GLCSFS
+     C           *LOCK     IN   GLCSFS
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'GL1931'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Call Access Program for GL ICD.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'GL1931'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set event control date equal to the lesser of accrual
+      ** profit date and (Date of next working day - 1).
+      *
+     C           *LIKE     DEFN BJDNWD    WWECD
+     C           BJDNWD    SUB  1         WWECD
+     C********** BKANWD    IFEQ '2'                                                           192176
+     C           BKAPDT    IFLT WWECD
+     C                     Z-ADDBKAPDT    WWECD
+     C**********           ELSE                                                               192176
+     C**********           Z-ADDBJRDNB    WWECD                                               192176
+     C                     ENDIF
+     C**********           ENDIF                                                              192176
+      *
+     C                     MOVE ' '       WWCFAC
+     C                     MOVE ' '       WWCFFG
+      *
+      * Determine if switchable feature CSD011 is switched ON.                                CSD011
+      *                                                                                       CSD011
+     C                     CALL 'AOSARDR0'                                                    CSD011
+     C                     PARM *BLANKS   PRTCD   7                                           CSD011
+     C                     PARM '*KEY   ' POPTN   7                                           CSD011
+     C                     PARM 'CSD011'  PSARD   6                                           CSD011
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD011
+     C           PRTCD     IFEQ *BLANKS                                                       CSD011
+     C                     MOVE 'Y'       CSD011  1                                           CSD011
+     C                     ELSE                                                               CSD011
+     C                     MOVE 'N'       CSD011                                              CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZFRQA    - Increment day number by a set period              *
+      *  ZBKDT    - Find nth working day back                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      ** The default "Fee type" has a "Charge group" equal to blank.
+      ** As, the file LF/SDCFTPL0 is sorted by "Fee type", "Charge
+      ** group" and "Fee processing type", the default "Fee type"
+      ** will be always processed before its corresponding "Fee type/
+      ** Charge group".
+      *
+     C           *LOVAL    SETLLSDCFTPL0
+      *
+      ** Read *ALL live record from "Fee Types File"
+      *
+     C                     READ SDCFTPL0                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      ** If record isn't deleted, then perform it
+      *
+     C           F1RECI    IFNE '*'
+      *
+      ** Any customer fees charge with fee processing type equal to                           CSD011
+      *  'PP'is bypassed in this program as it will be processed in                           CSD011
+      *  a new seperate RPG program called GL1993.                                            CSD011
+      *                                                                                       CSD011
+     C           CSD011    IFEQ 'Y'                                                           CSD011
+     C           F1PRTP    ANDNE'PP'                                                          CSD011
+      *                                                                                       CSD011
+      ** If Main fee definition (charge group is blank), then keep de
+      ** tails.
+      *
+     C           F1CHGR    IFEQ *BLANKS
+     C                     Z-ADDF1CADT    WFCADT  50
+     C                     Z-ADDF1ACDT    WFACDT  50
+     C                     Z-ADDF1STDT    WFSTDT  50
+     C                     Z-ADDF1STGE    WFSTGE  20
+     C                     MOVE F1CCCY    WFCCCY  3
+     C                     ENDIF
+      *
+      ** Initialize Control Fields:
+      ** - Accrual Process Required
+      ** - Fee Generation Required
+      *
+     C                     MOVE ' '       F1CFAC
+     C                     MOVE ' '       F1CFFG
+     C                     Z-ADDF1STDT    WWSTDT  50
+      *
+      ** Current Accrual Date:  - Accrual Process Required Work Field = "Y".
+      *
+     C           F1ACDT    IFLE WWECD
+     C           F1ACDT    ANDNE*ZERO
+     C                     Z-ADDF1CADT    F1LADT
+     C                     Z-ADDF1ACDT    F1CADT
+      *
+      *** Use normal Midas Accrual date for Daily frequency                                   192176
+     C           F1ACFR    IFEQ 'D'                                                           192176
+     C                     Z-ADDWWECD     F1CADT                                              192176
+     C                     Z-ADDWWECD     F1ACDT                                              192176
+     C                     ENDIF                                                              192176
+      *                                                                                       192176
+     C                     MOVE F1ACFR    ZFREQ
+     C                     Z-ADDF1ACDT    ZDAYNO
+     C                     Z-ADDF1ACDM    ZMDAY
+     C                     MOVE WFCCCY    ZCCY
+      *
+      ** Now call The sub-routine with set up parameters
+      ** And Set Up, "Next Accrual Date".
+      *
+     C                     EXSR ZFRQA
+     C                     Z-ADDZDAYNO    F1ACDT
+     C                     MOVE 'Y'       F1CFAC
+      *
+     C                     ELSE
+      *
+      ** If record isn't main fee details and Accrual date is Blank
+      ** and main fee accrual is LE WWECD, change details to take
+      ** accrual period from the Last accrual date (F1CADT) to Default
+      ** Accrual to date.
+      *
+     C           F1CHGR    IFNE *BLANKS
+     C           F1ACDT    ANDEQ0
+     C           WFACDT    ANDLEWWECD
+      *
+      ** If the current accrual date has never been settled
+      ** load the Default accrual date into the Last Accrual Date
+      *
+     C           F1ACDT    IFEQ 0
+     C                     Z-ADDWFCADT    F1LADT
+     C                     ELSE
+     C                     Z-ADDF1CADT    F1LADT
+     C                     ENDIF
+      *
+      ** Fee current accrual date (Accrual period - Start date)
+      ** Default Accrual to date (Accrual period - End date)
+      *
+     C                     Z-ADDWFACDT    F1CADT
+     C                     MOVE 'Y'       F1CFAC
+     C                     ELSE
+      *
+      ** Accrual Process Required Work Field=" ".
+      *
+     C                     MOVE *BLANK    F1CFAC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check to see if next settlement date needs to be updated or not.
+      ** Calculate the nth working day back from settlement date
+      *
+     C           F1STDT    IFNE *ZERO
+     C                     Z-ADDF1STDT    ZDAYNO
+     C                     MOVE WFCCCY    ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C           F1STGE    IFNE 0
+     C                     Z-ADDF1STGE    ZNRDYS
+     C                     ELSE
+     C                     Z-ADDWFSTGE    ZNRDYS
+     C                     ENDIF
+     C                     EXSR ZBKDT
+     C                     Z-ADDZDYNBR    WWSTDT
+      *
+      ** Keep generation date When Main fee definition is processed
+      *
+     C           F1CHGR    IFEQ *BLANKS
+     C                     Z-ADDWWSTDT    DFGENS  50
+     C                     ENDIF
+      *
+     C           WWSTDT    IFLE WWECD
+     C                     Z-ADDF1CSTD    F1LSTD
+     C                     Z-ADDF1STDT    F1CSTD
+      *
+     C                     MOVE F1STFR    ZFREQ
+     C                     Z-ADDF1STDT    ZDAYNO
+     C                     Z-ADDF1STDM    ZMDAY
+     C                     MOVE WFCCCY    ZCCY
+      *
+      ** Now call the sub-routine with set up parameters
+      ** work out "Next Settlement Date in the Month"
+      *
+     C                     EXSR ZFRQA
+     C                     Z-ADDZDAYNO    F1STDT
+     C                     MOVE 'Y'       F1CFFG
+     C                     ELSE
+     C                     MOVE *BLANK    F1CFFG
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** When Record is specific Fee and Settlement date isn't define
+      ** and Default Fee gen. date is >= Control date then use Default
+      ** detail.
+      *
+     C           F1CHGR    IFNE *BLANKS
+     C           DFGENS    ANDLEWWECD
+     C           F1STDT    ANDEQ0
+      *
+      ** If the current Settlement date has never been settled
+      ** load the Default Settlement date into the Last settlement
+      ** date.
+      *
+     C           F1STDT    IFEQ 0
+     C                     Z-ADDWFSTDT    F1LSTD
+     C                     ELSE
+     C                     Z-ADDF1CSTD    F1LSTD
+     C                     ENDIF
+      *
+      ** Fee current Settl. date (Settl. period - Start date)
+      ** Default Settl. to date  (Settl. period - End date)
+      *
+     C                     Z-ADDWFSTDT    F1CSTD
+     C                     MOVE 'Y'       F1CFFG
+     C                     ELSE
+     C                     MOVE *BLANK    F1CFFG
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update Customer Fee Types file - SDCFTPL0
+      *
+     C                     UPDATSDCFTPD0
+      *
+      ** Set up Control Fields for each Processing Type
+      *
+     C                     SELEC
+     C           F1CFAC    WHEQ 'Y'
+     C                     MOVE F1CFAC    WWCFAC  1
+     C           F1CFFG    WHEQ 'Y'
+     C                     MOVE F1CFFG    WWCFFG  1
+     C                     ENDSL
+      *
+     C                     SELEC
+      *
+      ** SC=Safe Custody
+      *
+     C           F1PRTP    WHEQ 'SC'
+     C           F0SCAC    IFNE 'Y'
+     C                     MOVE WWCFAC    F0SCAC
+     C                     ENDIF
+     C           F0SCFG    IFNE 'Y'
+     C                     MOVE WWCFFG    F0SCFG
+     C                     ENDIF
+      *
+      ** MG=Portfolio Management
+      *
+     C           F1PRTP    WHEQ 'MG'
+     C           F0MGAC    IFNE 'Y'
+     C                     MOVE WWCFAC    F0MGAC
+     C                     ENDIF
+     C           F0MGFG    IFNE 'Y'
+     C                     MOVE WWCFFG    F0MGFG
+     C                     ENDIF
+      *
+      ** HM=Hold Mail
+      *
+     C           F1PRTP    WHEQ 'HM'
+     C           F0HMAC    IFNE 'Y'
+     C                     MOVE WWCFAC    F0HMAC
+     C                     ENDIF
+     C           F0HMFG    IFNE 'Y'
+     C                     MOVE WWCFFG    F0HMFG
+     C                     ENDIF
+      *
+      ** NA=Number Account
+      *
+     C           F1PRTP    WHEQ 'NA'
+     C           F0NAAC    IFNE 'Y'
+     C                     MOVE WWCFAC    F0NAAC
+     C                     ENDIF
+     C           F0NAFG    IFNE 'Y'
+     C                     MOVE WWCFFG    F0NAFG
+     C                     ENDIF
+      *
+      ** FI=Fixed
+      *
+     C           F1PRTP    WHEQ 'FI'
+     C           F0FIAC    IFNE 'Y'
+     C                     MOVE WWCFAC    F0FIAC
+     C                     ENDIF
+     C           F0FIFG    IFNE 'Y'
+     C                     MOVE WWCFFG    F0FIFG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *                                                                                       CSD011
+     C                     ENDIF                                                              CSD011
+      *                                                                                       CSD011
+     C                     ENDIF
+      *
+      ** Read Next Record.
+      *
+     C                     READ SDCFTPL0                 89
+     C                     ENDDO
+      *
+     C                     OUT  GLCSFS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Termination Processing                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report                   *
+      *                                                               *
+      *  Called By: *PSSR                                             *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WWRUN     IFEQ *BLANK
+     C                     MOVE 'Y'       WWRUN   1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *
+      ** Now copy in the routine to calculate next Accrual Date,
+      ** plus the two subordinate routines it uses - ZDATE1Z2,2Z2.
+      *
+     C/COPY ZSRSRC,ZFRQAZ2
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZCHKH
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZBKDT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

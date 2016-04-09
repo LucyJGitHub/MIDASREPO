@@ -1,0 +1,841 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO On-line update of DL Fees position files')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Access Objects Module                                *
+      *                                                               *
+      *  AOOUDFU0 - On-line Update of DL Fees Positions files         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP205             Date 03Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CAS011             Date 16May05               *
+      *                 CAS009  *CREATE    Date 04May04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *                                                               *
+      *****************************************************************
+      ** Subroutine stack
+     E                    @STK       20 10
+      *
+      ** Copyright array.
+     E                    ##CPY   1   1 80
+     I/SPACE 5
+      *
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+      *
+     IDFEED     E DSDLFEED
+      *
+     I##PAYD      DS
+     I                                        1   1 ##PAY
+     I                                        2   3 ##PAYM
+     I**********                              4  15 ##PAYA                                    CAS011
+     I**********                             16  18 ##PAYB                                    CAS011
+     I                                        4  21 ##PAYA                                    CAS011
+     I                                       22  24 ##PAYB                                    CAS011
+     I##RECD      DS
+     I                                        1   1 ##REC
+     I                                        2   3 ##RECM
+     I**********                              4  15 ##RECA                                    CAS011
+     I**********                             16  18 ##RECB                                    CAS011
+     I                                        4  21 ##RECA                                    CAS011
+     I                                       22  24 ##RECB                                    CAS011
+     I##INTS      DS
+     I                                        1   1 ##INPR
+     I                                        2   3 ##INTM
+     I**********                              4  15 ##INTA                                    CAS011
+     I**********                             16  18 ##INTB                                    CAS011
+     I                                        4  21 ##INTA                                    CAS011
+     I                                       22  24 ##INTB                                    CAS011
+     I##SETD      DS
+      ** Pay/Receive (P/R)
+     I                                        1   1 ##PYRC
+      ** Settlement method
+     I                                        2   3 ##SETM
+      ** Settlement account
+     I**********                              4  15 ##SETA                                    CAS011
+     I                                        4  21 ##SETA                                    CAS011
+     I                                        4   5 ##NOSN
+     I                                        4  13 ##ACNO
+     I                                        4   9 ##CNUM
+     I**********                             10  13 ##ACOD                                    CAS011
+     I**********                             14  15 ##ACSQ                                    CAS011
+      ** Settlement branch
+     I**********                             16  18 ##BRCA                                    CAS011
+     I                                       10  19 ##ACOD                                    CAS011
+     I                                       20  21 ##ACSQ                                    CAS011
+     I                                       22  24 ##BRCA                                    CAS011
+      *
+      ** Calling parameter data structure for AOSPOSU0
+      *
+     IC#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number  X= no settlement
+     I                                        1   1 C#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 C#ACCT
+     I                                        2   70C#CNU1
+     I                                        8  10 C#CCY1
+     I**********                             11  140C#ACO1                                    CAS011
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1
+      *               Nostro number
+     I                                        2   30C#NOSN
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 C#NOS
+      *               Retail Number
+     I                                        2  110C#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I                                        2   70C#CNUM
+     I**********                              8  110C#ACOD                                    CAS011
+     I                                       12  130C#ACSQ
+      *               Branch of account if Partial                      '
+     I                                       14  16 C#BRCA
+      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
+      *                     ' ' no OLPOS update
+     I                                       24  24 C#IO
+      *               Currency of transaction
+     I                                       25  27 C#CCY
+      *               Transaction Type
+     I                                       28  29 C#TRYP
+      *               Transaction Narrative
+     I                                       30  59 C#NARR
+      *               Cheque Number
+     I                                       60  670C#CHQN
+      *               FT transaction reference
+     I                                       68  82 C#PREF
+      *               DL/LE/GL/RE transaction reference
+     I                                       83  88 C#TRN
+      *               Movement amount
+     I                                    P  89  960C#AMT
+      *               Processing indicators Not blank = no update
+      *                                     ' ' = Update
+      *               Prono update indicator
+     I                                       97  97 C#PRON
+      *               Olpos update indicator
+     I                                       98  98 C#OLPS
+      *               Memos update indicator
+     I                                       99  99 C#MEMS
+      *               Rsacmtpd write indicator
+     I                                      100 100 C#RSAC
+      *               Module
+     I                                      101 102 C#MOD
+      *               Olpos record number to update
+      *                     '02' for Interest movements
+      *                     '03' for loans
+     I                                      103 104 C#OLRC
+      *               FT Memos ledger balance override
+      *                        'Y' update ledger balance irrespective of
+      *                        posting date
+     I                                      105 105 C#FTOV
+      *               Value date and posting date
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+      *               Override posting date correction
+      *                        for forward valued items
+      *                        'Y' prevents date being changed
+     I                                      112 112 C#PSTO
+      *               Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 C#RPST
+      *               Removal set number
+     I                                      114 1160C#RPNB
+      *               Removal type "C" = Credit entries
+      *                            "D" = Debit entries
+     I                                      117 117 C#RTYP
+      *               Booking branch
+     I                                      118 120 C#BBRN
+     I                                      121 1300C#ACO1                                    CAS011
+     I                                      131 1400C#ACOD                                    CAS011
+      *               Other Transaction Reference                                             CAP204
+     I                                      141 160 C#OTR1                                    CAP204
+      *                                                                                       CAP205
+      ** Movement type                                                                        CAP205
+      *                                                                                       CAP205
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+      *
+     I##NARR      DS                             30
+      ** Narrative, composed of fee sequence and fee code desc
+     I                                        1   2 ##NSEQ
+     I                                        3  28 ##NDES
+      *
+     ICPYR        DS
+      ** Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDFEE     E DSSDFEEPD
+      ** Fee Codes detail
+      *
+     ISCSARD    E DSSCSARDPD
+      ** External DS for Switchable Features Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access object
+      *
+     C/EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      ** Initial processing - Once Only
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Terminate program
+      *
+     C                     RETRN
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRCLR  - Clear all postings in store           *
+      *                SRFEED - Fees Input detail                     *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Clear down all shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVELZ#BSTS    #BRCID  2
+     C                     MOVELZ#ASTS    #ARCID  2
+      *
+      *-------------------------------------------------------------------
+      *
+      ** GENERATE 'BEFORE STATUS' ACCOUNT MOVEMENTS
+      ** (if not insertion, when __RCID will be blank)
+      *
+     C           #BRCID    IFNE *BLANK
+      *
+     C                     MOVEL'YES'     ##REVI  3
+      *
+      ** Fees input detail
+      *
+     C                     MOVELZ#BSTS    DFEED
+     C                     EXSR SRFEED
+      *
+     C                     ENDIF                           * Z#BSTS
+      *-------------------------------------------------------------------
+      *
+      ** GENERATE 'AFTER STATUS' ACCOUNT MOVEMENTS
+      ** (if not deletion, when __CHTP will be 'R')
+      *
+     C                     MOVEL*BLANK    ##REVI
+      *
+      ** Fees input detail
+      *
+     C                     MOVELZ#ASTS    DFEED
+     C           DFLCDT    IFNE 'D'
+     C                     EXSR SRFEED
+     C                     ENDIF
+      *
+      ** Update database with shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRUPD
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SRFEED                                         *
+      * Function    :  Fees Input Processing                          *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  AOSPOSU0 - On-line Positions Update            *
+      *****************************************************************
+     C           SRFEED    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRFEED'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Store pay and receive settlement methods, accounts & branches
+      *
+     C           DFDTYP    IFEQ 'IT'
+     C           DFDTYP    OREQ 'TD'
+     C           DFDTYP    OREQ 'CI'
+     C           DFDTYP    OREQ 'CD'
+      ** For deposits
+      *
+     C                     MOVELDFPSTM    ##PAYM           * pay method
+     C                     MOVELDFPONS    ##PAYA           * pay account
+     C                     MOVELDFOMDB    ##PAYB           * pay branch
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     MOVE *BLANKS   ##RECM           * rec method
+     C                     MOVE *BLANKS   ##RECA           * rec account
+     C                     MOVE *BLANKS   ##RECB           * rec branch
+     C                     ELSE
+      ** For loans and neg. assets purchased
+      *
+     C                     MOVE *BLANKS   ##PAYM           * pay method
+     C                     MOVE *BLANKS   ##PAYA           * pay account
+     C                     MOVE *BLANKS   ##PAYB           * pay branch
+     C                     MOVELDFRSTM    ##RECM           * rec method
+     C                     MOVELDFRONS    ##RECA           * rec account
+     C                     MOVELDFOSDB    ##RECB           * rec branch
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     ENDIF
+      *
+      ** Store basic fee details
+      *
+     C                     Z-ADDDFFAMT    ##FAMT 150       * fee amount
+      *
+     C           CEU003    IFEQ 'Y'
+     C           DFSCCY    ANDNE*BLANKS
+     C                     MOVE DFSCCY    ##CCY   3        * currency
+     C                     ELSE
+     C                     MOVE DFFCCY    ##CCY   3        * currency
+     C                     ENDIF
+      *
+     C                     MOVE DFBRCA    ##BBRN  3        * branch
+      *
+     C                     MOVE 'F1'      ##TRYP  2        * trans type
+     C                     MOVE DFDLNO    ##TRN   6        * transact #
+      *
+      ** Initialize work fields
+      *
+     C                     Z-ADD*ZERO     ##VDAT  50       * event value dte
+     C                     Z-ADD*ZERO     ##AMT  150       * amount
+     C                     MOVEL*BLANK    ##NARR           * narrative
+      *
+      ** Generate VALUE DATE account movement
+      ** ====================================
+      *
+      ** Value date should be settlement date
+      *
+     C           DFPYON    IFEQ ' '
+     C           DFPYON    OREQ 'S'
+     C                     Z-ADDDFPSTD    ##VDAT             Midas day no.
+     C                     ELSE
+      *
+     C           DFNPYD    IFGT 0
+     C                     Z-ADDDFNPYD    ##VDAT
+     C                     ELSE
+     C                     Z-ADDDFPEND    ##VDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADD##FAMT    ##AMT            * fee amount
+      *
+      ** Get fee code description from Fee Codes File
+      *
+     C                     MOVE DFFCOD    O#FCD
+     C                     CALL 'AOFEER0'              9090
+     C                     PARM *BLANKS   O#RTN
+     C                     PARM '*KEY   ' O#OPT   8
+     C                     PARM           O#FCD   2
+     C           SDFEE     PARM SDFEE     DSFDY
+     C           O#RTN     IFNE *BLANKS
+     C                     MOVEL'AOFEER0 'W0FILE
+     C                     MOVELO#FCD     W0KEY
+     C                     Z-ADD905       W0ERNB
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     Z-ADD001       ##RPNB  30       * 1=value date
+      *
+      ** Set up narrative as fee sequence and fee code description
+      *
+     C                     MOVE DFFSEQ    ##NSEQ
+     C                     MOVE AUFENV    ##NDES
+      *
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP  1                                           CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMOVE                                         *
+      * Function    :  Pass Movement To Write Program                 *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMOVE    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMOVE'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Bypass if no amount to post
+      *
+     C           ##AMT     CABEQ*ZERO     EXMOVE
+      *
+      ** Determine account movement settlement details
+      *
+     C                     CLEARC#DTA
+      *
+     C           ##SETM    IFEQ '01'
+     C           ##SETM    OREQ '02'
+     C           ##SETM    OREQ '07'
+     C           ##SETM    OREQ '08'
+     C           ##SETM    OREQ '12'
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVEL##NOSN    C#NOSN
+     C                     ELSE
+     C           ##SETM    IFEQ '14'
+     C                     MOVEL'R'       C#ATYP
+     C                     MOVEL##ACNO    C#ACNO
+     C                     ELSE
+     C           ##SETM    IFEQ '04'
+     C           ##SETM    OREQ '05'
+     C                     MOVEL'P'       C#ATYP
+     C                     MOVEL##CNUM    C#CNUM
+     C                     MOVEL##ACOD    C#ACOD
+     C                     MOVEL##ACSQ    C#ACSQ
+     C                     MOVEL##BRCA    C#BRCA
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** OLPOS Incoming/Outgoing Indicator 'I' or 'O'
+      *
+     C           ##PYRC    IFEQ 'P'
+     C                     MOVEL'O'       C#IO             * outgoing
+     C                     ELSE
+     C                     MOVEL'I'       C#IO             * incoming
+     C                     END
+      *
+      ** Currency of transaction
+      *
+     C                     MOVEL##CCY     C#CCY
+      *
+      ** Transaction type
+      *
+     C                     MOVEL##TRYP    C#TRYP
+      *
+      ** Transaction Narrative
+      *
+     C                     MOVEL##NARR    C#NARR
+      *
+      ** DL transaction reference
+      *
+     C                     MOVEL##TRN     C#TRN
+      *
+      ** Movement amount
+      *
+     C           CEU003    IFEQ 'Y'
+     C           DFSCCY    ANDNE*BLANKS
+     C           DFSCCY    ANDNEDFFCCY
+     C                     MOVE *BLANKS   PRTCD
+     C                     Z-ADD##AMT     PFRAM
+     C                     MOVE DFFCCY    PFRCY
+     C                     MOVE DFSCCY    PTOCY
+     C                     Z-ADD0         POUTA
+     C                     Z-ADD0         PINTA
+     C                     Z-ADD0         PEXRT
+     C                     MOVE *BLANKS   PMDIN
+      *
+     C                     CALL 'EU0200'
+     C                     PARM           PRTCD   7
+     C                     PARM           PFRAM  183
+     C                     PARM           PFRCY   3
+     C                     PARM           PTOCY   3
+     C                     PARM           POUTA  150
+     C                     PARM           PINTA  183
+     C                     PARM           PEXRT  159
+     C                     PARM           PMDIN   1
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     Z-ADDPOUTA     ##AMT
+     C                     ELSE
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'EU0200  'W0KEY
+     C                     Z-ADD904       W0ERNB
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           ##PYRC    IFEQ 'P'
+     C           ##REVI    ANDNE'YES'
+     C           ##PYRC    OREQ 'R'
+     C           ##REVI    ANDEQ'YES'
+     C                     Z-SUB##AMT     C#AMT            * pay ie credit
+     C                     ELSE
+     C                     Z-ADD##AMT     C#AMT            * rec ie debit
+     C                     END
+      *
+      ** Module
+      *
+     C                     MOVEL'DL'      C#MOD
+      *
+      ** Olpos record number to update
+      ** '01' for FX (not used here)
+      ** '02' for Interest movements
+      ** '03' for Loans and deposits
+      *
+     C           ##RPNB    IFEQ 2
+     C                     MOVE '02'      C#OLRC
+     C                     ELSE
+     C                     MOVE '03'      C#OLRC
+     C                     END
+      *
+      ** Value date and posting date
+      *
+     C                     Z-ADD##VDAT    C#VDAT
+     C                     Z-ADD##VDAT    C#PSTD
+      *
+      ** Indicator to show if removal allowed Y, N or " "
+      *
+     C                     MOVEL'Y'       C#RPST
+      *
+      ** Removal set number
+      *
+     C                     Z-ADD##RPNB    C#RPNB
+      *
+      ** Removal type "C" = Credit entries
+      **              "D" = Debit entries
+      *
+     C                     MOVEL'C'       C#RTYP
+      *
+      ** Booking branch
+      *
+     C                     MOVEL##BBRN    C#BBRN
+      *
+      ** If settlement details are present
+      ** AOSPOSU0 will be called to update PRONO, MEMOS, RSACMTPD, OLPOS
+      **
+      ** OTHERWISE
+      **
+      ** If no settlement details are present
+      ** AOSPOSU0 will be called to only update OLPOS
+      *
+     C           C#ATYP    IFEQ *BLANK
+      *
+      ** Set account type indicator to signify no settlement
+      *
+     C                     MOVEL'X'       C#ATYP
+      *
+      ** Set update indicators for no update
+      *
+     C                     MOVE 'N'       C#PRON
+     C                     MOVE 'N'       C#MEMS
+     C                     MOVE 'N'       C#RSAC
+     C                     ENDIF
+      *                                                                                       CAP205
+      ** Set C#MTYP to ##MTYP                                                                 CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL##MTYP    C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      ** Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM ##RTCD    O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     OREQ '*ERROR*'
+     C                     MOVEL'*CALL   'W0FILE  8
+     C                     MOVEL'AOSPOSU0'W0KEY  29
+     C                     Z-ADD902       W0ERNB  30
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXMOVE    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPD    : Update database with shadow postings in store     *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRUPD     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPD'   @STK,Q
+      *
+      *................................................................
+      *
+      ** Call AOSPOSU0 to update database
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM ##RTCD    O#RTN
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     OREQ '*ERROR*'
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD903       W0ERNB
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      *................................................................
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR    : Clear all postings in store                       *
+      *                                                               *
+      *  CALLED BY: Mainline                                          *
+      *             UPDATE - Update database                          *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLR'   @STK,Q
+      *
+      *................................................................
+      *
+      ** Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM ##RTCD    O#RTN
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     OREQ '*ERROR*'
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD901       W0ERNB
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      *................................................................
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRERR     BEGSR
+      *
+      ** Dump program
+      *
+     C                     DUMP
+     C           ##RTCD    IFNE '*DLBTCH'
+     C                     ROLBK
+     C                     ENDIF
+      *
+      ** Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' ##RTCD
+     C                     RETRN
+      *
+     C           EXERR     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Determine if EMU LE Settlement Ccy Coversion Upgrade
+      ** feature is Installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM 'CEU003  '@SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CEU003  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU003
+     C           WRTCD     IFNE '*NRF    '
+     C                     MOVEL'SCSARDPD'W0FILE           ************
+     C                     Z-ADD1         W0ERNB           * DBERR 01 *
+     C                     MOVEL'CEU003'  W0KEY            ************
+     C                     SETON                     U7U8LR
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                       CAP205
+      ** Check if CAP205 is installed                                                         CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   WRTCD                                               CAP205
+     C                     PARM '*KEY    'WOPTN                                               CAP205
+     C                     PARM 'CAP205  '@SARD                                               CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+     C           WRTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C           WRTCD     IFNE '*NRF    '                                                    CAP205
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
+     C                     Z-ADD2         W0ERNB                                              CAP205
+     C                     MOVEL'CAP205'  W0KEY                                               CAP205
+     C                     SETON                     U7U8LR                                   CAP205
+     C                     EXSR SRERR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Initialise work fields
+      *
+     C                     MOVEL'P'       ##PAY
+     C                     MOVEL'R'       ##REC
+     C                     MOVEL*BLANKS   R#RTN   7
+     C                     MOVE '0'       *IN98
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Copyright
+      *
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2004

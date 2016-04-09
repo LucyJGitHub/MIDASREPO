@@ -1,0 +1,343 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Interim merge of accrd int&chrge fl')
+0001 H***********
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0379 - INTERIM MERGE OF ACCRUED INTEREST AND CHARGES FILES *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990, 1993                                               *
+0009 F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG6404            Date 21Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 087097             Date 21Jun96               *
+      *                 S01413             Date 13Apr93               *
+0010 F*                 S01117             DATE 29NOV89               *
+0011 F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG6404 - Ensure correct match field indicator processing.   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  087097  -  Interim Accrued Int. Adj. report does not have    *
+     F*             correct accrued interest if system is on monthly  *
+     F*             accruals. Pgm RE3380 calculates interest from     *
+     F*             last accrual date up to today if LCD is *NE RUND; *
+     F*             this pgm needs to output LCD from REACRD to       *
+     F*             REAIXD.                                           *
+     F*  S01413  -  Retail 3 Incorporation                            *
+0011 F*  S01117  -  Multibranching                                    *
+0011 F*                                                               *
+0012 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F*EACR   IP AF     128 15AI     2 DISK                               S01117
+     F*REACR   IP AF     128 18AI     2 DISK                        S01117S01413
+     F***REACR** IP AF     142 18AI     2 DISK                                         S01413 CGL029
+     FREACR   IP AF     191 24AI     2 DISK                                                   CGL029
+0014 F*EIAC   IS AF     128 15AI     2 DISK                               S01117
+     F*REIAC   IS AF     128 18AI     2 DISK                        S01117S01413
+     F***REIAC** IS AF     143 18AI     2 DISK                                         S01413 CGL029
+     FREIAC   IS AF     218 24AI     2 DISK                                                   CGL029
+0015 FTABLE   IF  F      96 12AI     2 DISK                               RE0379
+0016 FREAIXA  O   F     160            DISK                               RE0379
+0016 FREAIXD  O   F     160            DISK                               RE0379
+0016 FREAIXZ  O   F     160            DISK                               RE0379
+     FRE0379AUO   F     132     OA     PRINTER                            S01117
+0017 F*E0379P1O   F     132            PRINTER                      S01124S01117
+0018 F*                                                                   RE0379
+0019 F* I  F  C  H  L    FUNCTION OF INDICATORS                           RE0379
+0020 F* 01            REACR DETAIL                                        RE0379
+0021 F* 02            REIAC DETAIL                                        RE0379
+0022 F*       40      FIRST CYCLE CALCULATIONS.                           RE0379
+0023 F*       98-99   ZSYSTM SUBROUTINE.                                  RE0379
+0024 F*          1P   REAIX HEADER OUTPUT                                 RE0379
+0025 F*          MR   MATCH BETWEEN RECORD ON REACR AND REIAC.            RE0379
+     F/EJECT
+     E                    CPY@    1   1 80
+     E/EJECT
+0026 I********************************************************************RE0379
+0027 I* REACR - ACCRUED INTEREST DETAILS.                                 RE0379
+0028 IREACR   NS  01   1 CD                                               RE0379
+0029 I                                        1   1 RECI                  RE0379
+0030 I**********                              2   70CNUM                               RE0379 CSD027
+0030 I                                        2   7 CNUM                                      CSD027
+0031 I                                        8  10 ACCY                  RE0379
+     I**********                              2  10 THEKEY  M2                        CGL029 BUG6404
+     I                                        2  10 THEKEY  M4                               BUG6404
+0032 I**********                             11  140ACOD                               RE0379 CGL029
+0033 I**********                             15  160ASEQ                               RE0379 CGL029
+     I**********                             15  160ASEQ    M4                        CGL029 BUG6404
+     I                                       15  160ASEQ    M2                               BUG6404
+0034 I*****                                   2  16 THEKEY  M1            S01117
+0035 I***********                            17  190BRCD                  S01117
+0035 I                                       17  19 BRCA                  S01117
+     I**********                              2  16 THEKEY  M2                         S01117 CGL029
+     I                                       17  19 BRCDKY  M1            S01117
+     I                                    P  37  390LCD                   087097
+0036 I* DEBIT INTEREST DETAILS                                            RE0379
+0037 I                                    P  41  470DAIC                  RE0379
+0038 I                                    P  48  540MADI                  RE0379
+0039 I                                    P  55  610GADI                  RE0379
+0040 I* CREDIT INTEREST DETAILS                                           RE0379
+0041 I                                    P  62  680CAIC                  RE0379
+0042 I                                    P  69  750MACI                  RE0379
+0043 I                                    P  76  820GACI                  RE0379
+0044 I                                    P  83  900HISB                  RE0379
+     I                                      182 1910ACOD    M3                                CGL029
+0045 I***********                             1 128 LOTAC                 S01413
+0046 I* CATCHALL                                                          RE0379
+0047 I        NS                                                          RE0379
+0048 I********************************************************************RE0379
+0049 I* REIAC - RETAIL INTEREST AND CHARGES                               RE0379
+0050 IREIAC   NS  02   1 CD                                               RE0379
+0051 I*****                                   2  16 THEKEY  M1            S01117
+     I**********                              2  16 THEKEY  M2                         S01117 CGL029
+     I**********                              2  10 THEKEY  M2                        CGL029 BUG6404
+     I**********                             15  160ASEQ    M4                        CGL029 BUG6404
+     I                                        2  10 THEKEY  M4                               BUG6404
+     I                                       15  160ASEQ    M2                               BUG6404
+     I                                       17  180DICT
+     I                                       19  230DCST
+     I                                       41  420CICT
+     I                                       43  470CCST
+0052 I                                       65  660CHCT                  RE0379
+0053 I                                       67  710CHST                  RE0379
+0054 I                                    P  89  950NRCA                  RE0379
+0055 I                                    P  96 1020RCA                   RE0379
+     I                                      111 113 BRCDKY  M1            S01117
+     I                                      146 1550ACOD    M3                                CGL029
+0056 I* CATCHALL                                                          RE0379
+0057 I        NS                                                          RE0379
+0058 I*                                                                   RE0379
+0059 I********************************************************************RE0379
+0060 I*                                                                   RE0379
+0061 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               RE0379
+0062 I*                                                                   RE0379
+0063 ITABLE   NS       2 C0   3 C1  12 C1                                 RE0379
+0064 I       AND      13 C0                                               RE0379
+0065 I                                        1   1 RECI                  RE0379
+0066 I                                        2   30RECT2                 RE0379
+0067 I                                       12  130RCDE                  RE0379
+0068 I                                       14  66 TITL                  RE0379
+0069 I                                       67  67 DATF                  RE0379
+0070 I***********                            68  700DFBR                  S01117
+0070 I                                       68  70 DFBM                  S01117
+0071 I                                       74  74 MODI1                 RE0379
+0072 I                                       75  75 MODI2                 RE0379
+0073 I                                       76  76 MODI3                 RE0379
+0074 I                                    P  77  790RUND                  RE0379
+0075 I                                       80  86 RUNA                  RE0379
+0076 I                                       87  870SFLG                  RE0379
+0077 I***********                         P  90  920LCD             RE0379087097
+0077 I                                    P  90  920TLCD                  087097
+0078 I                                       93  93 CHTP                  RE0379
+0079 I                                    P  94  960TNLU                  RE0379
+0080 I*                                                                   RE0379
+0081 I**   CATCHALL                                                       RE0379
+0082 I        NS                                                          RE0379
+0083 I*                                                                   RE0379
+0084 I**   STANDARD LOCAL DATA AREA FIELDS.                               RE0379
+0085 I*                                                                   RE0379
+0086 ILDA        UDS                            256                       RE0379
+0087 I***********                           134 138 LFILE                 S01117
+0088 I***********                           139 167 LKEY                  S01117
+0089 I***********                           168 175 LPROG                 S01117
+0090 I***********                           176 1770LDBNO                 S01117
+     I                                      134 141 LFILE                 S01117
+     I                                      142 170 LKEY                  S01117
+     I                                      171 180 LPROG                 S01117
+     I                                      181 1830LDBNO                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+0091 C*                                                                   RE0379
+0092 C**   FIRST CYCLE CALS.                                              RE0379
+0093 C*                                                                   RE0379
+0094 C   40                GOTO DETAIL                                    RE0379
+0095 C                     SETON                     40                   RE0379
+0096 C                     MOVE ' '       BLK200200                       RE0379
+0097 C                     Z-ADD0         QREAIX  50                      RE0379
+0098 C                     Z-ADD0         QREACR  50                      RE0379
+0099 C                     Z-ADD0         QREIAC  50                      RE0379
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C                     MOVE *BLANK    DBKEY                           S01117
+     C                     MOVE *BLANK    DBASE                           S01117
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVEL'RE0379'  LPROG
+0100 C                     EXSR ZSYSTM                                    RE0379
+0101 C   99                SETON                     U7LR                 RE0379
+0102 C   99                MOVE 'TABLE'   LFILE                           RE0379
+0103 C   99                MOVE BLK200    LKEY                            RE0379
+0104 C   99                MOVELZTABKY    LKEY                            RE0379
+0105 C   99                Z-ADD90        LDBNO            ** DB ERROR 90 RE0379
+0106 C   99                GOTO END                                       RE0379
+0107 C*                                                                   RE0379
+0108 C**   MAIN PROCESSING                                                RE0379
+0109 C*                                                                   RE0379
+0110 C           DETAIL    TAG                             ** DETAIL TAG *RE0379
+0111 C*                                                                   RE0379
+0112 C   01      QREACR    ADD  1         QREACR                          RE0379
+0113 C   02      QREIAC    ADD  1         QREIAC                          RE0379
+0114 C   02 MR   QREAIX    ADD  1         QREAIX                          RE0379
+0115 C   01NMR             SETON                     U7LR                 RE0379
+0116 C   U7                MOVE 'REACR'   LFILE                           RE0379
+0117 C   U7                MOVE BLK200    LKEY                            RE0379
+0118 C***U7                MOVELTHEKEY    LKEY                            S01117
+     C***U7*****           MOVELTHEKEY    PART1  18                                    S01117 CGL029
+     C   U7                MOVELTHEKEY    PART2  21                                           CGL029
+     C   U7                MOVELACOD      PART3  12                                           CGL029
+     C   U7                MOVE ASEQ      PART3                                               CGL029
+     C   U7                MOVE PART3     PART2                                               CGL029
+     C   U7                MOVELPART2     PART1  24                                           CGL029
+     C   U7                MOVE BRCDKY    PART1                           S01117
+     C   U7                MOVELPART1     LKEY                            S01117
+0119 C   U7                Z-ADD1         LDBNO            ** DB ERROR 01 RE0379
+0120 C*                                                                   RE0379
+0121 C           END       TAG                             ** END  TAG ** RE0379
+0122 C*                                                                   RE0379
+     CLR    U7             EXSR *PSSR                                     S01117
+0479 C/EJECT                                                              S01117
+0123 C********************************************************************RE0379
+0124 C**                                                                  RE0379
+0125 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   RE0379
+0126 C**                                                                  RE0379
+0127 C           ZSYSTM    BEGSR                           *** ZSYSTM *** RE0379
+0128 C**                                                                  RE0379
+0129 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    RE0379
+0130 C                     MOVEL'01      'ZTABKY 12                       RE0379
+0131 C                     MOVE '  10'    ZTABKY                          RE0379
+0132 C**                                                                  RE0379
+0133 C           ZTABKY    CHAINTABLE                99    ON NOT THERE   RE0379
+0134 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED RE0379
+0135 C**                                                                  RE0379
+0136 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    RE0379
+0137 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  RE0379
+0138 C**                                                                  RE0379
+0139 C                     ENDSR                                          RE0379
+0140 C**                                                                  RE0379
+0141 C**                                                                  RE0379
+0142 C********************************************************************RE0379
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+0143 O*                                                                   RE0379
+0144 O**   REAIX - MERGE OF REACR AND REIAC.                              RE0379
+0145 O*                                                                   RE0379
+0146 OREAIXA  H        1P                                                 RE0379
+0147 O                                    1 'A'                           RE0379
+0148 OREAIXD  D        MR 02                                              RE0379
+     O                         RECI       1
+     O**********               THEKEY    16                                                   CGL029
+     O                         THEKEY    10                                                   CGL029
+     O                         ASEQ      16                                                   CGL029
+     O***********              BRCD      19                               S01117
+     O                         BRCA      19                               S01117
+     O                         DAIC      26P
+     O                         MADI      33P
+     O                         GADI      40P
+     O                         CAIC      47P
+     O                         MACI      54P
+     O                         GACI      61P
+     O                         HISB      69P
+     O                         DICT      71
+     O                         DCST      76
+     O                         CICT      78
+     O                         CCST      83
+0150 O                         CHCT      85                               RE0379
+0151 O                         CHST      90                               RE0379
+0152 O                         NRCA      97P                              RE0379
+0153 O                         RCA      104P                              RE0379
+     O                         LCD      107P                              087097
+     O                         ACOD     131                                                   CGL029
+0154 OREAIXZ  T        LR                                                 RE0379
+0155 O                                    1 'Z'                           RE0379
+0156 O*E0379P1T  203   LR                                           S01124S01117
+     ORE0379AUT  203   LR                                                 S01117
+0157 O***********                        18 'REFERENCE RE0379'            S01117
+0157 O                                   20 'REFERENCE RE0379AU'          S01117
+0158 O                         TITL      89                               RE0379
+0159 O                                  106 'DATE'                        RE0379
+0160 O                         RUNA     114                               RE0379
+0161 O                                  124 'PAGE'                        RE0379
+0162 O                         PAGE     128                               RE0379
+0163 O        T  1     LR                                                 RE0379
+0164 O                                   53 'INTERIM MERGE OF ACCRUED'    RE0379
+0165 O                                   78 'INTEREST AND CHARGES FIL'    RE0379
+0166 O                                   97 'ES - CONTROL REPORT'         RE0379
+0167 O        T  2     LR                                                 RE0379
+0168 O                                   53 '------------------------'    RE0379
+0169 O                                   54 '-'                           RE0379
+0170 O                                   78 '------------------------'    RE0379
+0171 O                                   97 '-------------------'         RE0379
+0172 O********T**220   LRNU7                                              S01117
+0172 O        T  220   LR                                                 S01117
+0173 O                                   30 'NUMBER OF RECORDS'           RE0379
+0174 O                                   41 'ON S/REACR'                  RE0379
+0175 O                         QREACR3   59                               RE0379
+0176 O********T**2     LRNU7                                              S01117
+0176 O        T  2     LR                                                 S01117
+0177 O                                   30 'NUMBER OF RECORDS'           RE0379
+0178 O                                   41 'ON S/REIAC'                  RE0379
+0179 O                         QREIAC3   59                               RE0379
+0180 O********T**      LRNU7                                              S01117
+0180 O        T        LR                                                 S01117
+0181 O                                   30 'NUMBER OF RECORDS'           RE0379
+0182 O                                   49 'WRITTEN TO S/REAIX'          RE0379
+0183 O                         QREAIX3   59                               RE0379
+0184 O********T**220   LR U7                                              S01117
+0184 O        T  2     LR U7                                              S01117
+     O                                   66 'DATABASE ERROR '             S01117
+     O                         DBASE     69                               S01117
+     O                                   83 'IN PROGRAM '                 S01117
+     O                         DBPGM     93                               S01117
+     O        T  2     LR U7                                              S01117
+     O                                   56 'FILE '                       S01117
+     O                         DBFILE    64                               S01117
+     O                                   70 ', KEY '                      S01117
+     O                         DBKEY     99                               S01117
+0185 O***********                        55 '*** DATABASE ERROR *** N'    S01117
+0186 O***********                        57 'O.'                          S01117
+0187 O***********              LDBNO     59                               S01117
+0188 O***********                        67 'FILE S/'                     S01117
+0189 O***********              LFILE     72                               S01117
+0190 O***********                        77 'KEY.'                        S01117
+0191 O***********              LKEY     106                               S01117
+0192 O********T*2      LR                                                 S01117
+0193 O***********                        76 '*** END OF REPORT ***'       S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

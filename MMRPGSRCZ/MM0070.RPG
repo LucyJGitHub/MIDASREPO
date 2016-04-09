@@ -1,0 +1,2472 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Unauthorised deals enquiry')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - MM Dealer Module                                     *
+      *                                                               *
+      *  MM0070    - Unauthorised Deals Enquiry                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL022             Date 03Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 215500             Date 16Apr03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      *                 198899             Date 29Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 119685             Date 17Feb98               *
+      *                 S01408             Date 08Oct97               *
+      *                 087340             DATE 04MAY95               *
+      *                 079460             DATE 01DEC94               *
+      *                 066872 *CREATE     DATE 30JUN94               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL022 - Deal Amendment Changes (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  215500 - When a single deal amendment is left unauthorised,  *
+      *           the booking branch is not retrieved properly thus   *
+      *           causing it not to be displayed.  Correct some       *
+      *           codings made by 198899.                             *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in MMDEAMPP *
+      *           , MMDELDPP, MMDENBPP AND MMDENSPP.                  *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *           (Recompile)                                         *
+      *  198899 - Database error 001 occurs when an unauthorized deal *
+      *           amendment tried to chain on a deal which is not     *
+      *           authorized (i.e. not in DEALS) to find booking      *
+      *           branch.  Applied fix 182173.                        *
+      *  119685 - Unauthorised and deleted deal appears on screen     *
+      *           for unauthorised deals/deams .                      *
+      *           Apply fix 107198                                    *
+      *  S01408 - Move hook MM0070C028 to match position in R10.6     *
+      *           Move hook MM0070C055 to match position in R10.6     *
+      *           Add hook MM0070CP28.                                *
+      *           Add hook MM0070CP55.                                *
+      *  087340 - If database error occurs, produce a dump.           *
+      *  079460 - Check that user is authorised to booking branch     *
+      *           only if system is multi branched.                   *
+      *  066872 - Include FX/MM Unauthorised Deals Enquiries.         *
+      *           Program created.                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FFDICDRLLIF  E           K        DISK         KINFSR *PSSR      UC
+     F            TABTB20F                          KIGNORE
+     F*DEALS***IF**E***********K********DISK**       KINFSR *PSSR                             198899
+     FMMDELDL7IF  E           K        DISK         KINFSR *PSSR                              198899
+     F            MMDELDP0                          KRENAMEMMALLDP0                           198899
+     F            MMDENBP0                          KRENAMEMMALNBP0                           198899
+     F            MMDENSP0                          KRENAMEMMALNSP0                           198899
+     FMMUNATL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @UNAT
+     F/COPY WNCPYSRC,MM0070F001
+     FMMCMPLLLIF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @CMPL
+     F            MMDELDP0                          KRENAMEMMCMLDP0
+     F            MMDENBP0                          KRENAMEMMCMNBP0
+     F            MMDENSP0                          KRENAMEMMCMNSP0
+     F            MMDEAMP0                          KRENAMEMMCMAMP0
+     FMMINCPL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @INCP
+     F            MMDELDP0                          KRENAMEMMINLDP0
+     F            MMDENBP0                          KRENAMEMMINNBP0
+     F            MMDENSP0                          KRENAMEMMINNSP0
+     F            MMDEAMP0                          KRENAMEMMINAMP0
+     FMMICRDLLIF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @ICRD
+     F            MMDELDP0                          KRENAMEMMICLDP0
+     F            MMDENBP0                          KRENAMEMMICNBP0
+     F            MMDENSP0                          KRENAMEMMICNSP0
+     F            MMDEAMP0                          KRENAMEMMICAMP0
+     FMMCPLDL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @CPLD
+     F            MMDELDP0                          KRENAMEMMCPLDP0
+     F            MMDENBP0                          KRENAMEMMCPNBP0
+     F            MMDENSP0                          KRENAMEMMCPNSP0
+     F            MMDEAMP0                          KRENAMEMMCPAMP0
+     FMMICPDL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F                                              KINFDS @ICPD
+     F            MMDELDP0                          KRENAMEMMIPLDP0
+     F            MMDENBP0                          KRENAMEMMIPNBP0
+     F            MMDENSP0                          KRENAMEMMIPNSP0
+     F            MMDEAMP0                          KRENAMEMMIPAMP0
+     F/COPY WNCPYSRC,MM0070F003
+     FMM0070DDCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        @RRN  KSFILE MM0070S3
+     F/COPY WNCPYSRC,MM0070F002
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   KC  - F3 pressed                                            *
+     F*   KL  - F12 pressed                                           *
+     F*                                                               *
+     F*   10  - Subfile end on message subfile                        *
+     F*                                                               *
+     F*   20  - Error on complete/incomplete indicator                *
+     F*   21  - Invalid dealer entered                                *
+     F*   22  - No records on file for this deal number               *
+     F*   29  - General error indicator for invalid input data        *
+     F*                                                               *
+     F*   31  - Eof on MMIODLLL                                       *
+     F*   32  - Eof on MMCODLLL                                       *
+     F*   33  - Eof on MMUNATL0                                       *
+     F*   34  - Eof on MMICPDL0                                       *
+     F*   35  - Eof on MMCPLDL0                                       *
+     F*   36  - Eof on MMICRDLL                                       *
+     F*                                                               *
+     F*   41  - Subfile clear indicator                               *
+     F*   43  - Subfile display indicator                             *
+     F*   46  - F12 display narrative indicator                       *
+     F*                                                               *
+     F*   50  - Program rollup indicator                              *
+     F*   51  - Program rolldown indicator                            *
+     F*   52  - Read of main screen format                            *
+     F*                                                               *
+     F*   60  - Read/Chain fail causing d/b error                     *
+     F*   61  - Error in deal                                         *
+     F*   62  - Error on initial screen                               *
+     F*                                                               *
+     F*   70  - Subfile end on main subfile                           *
+     F*   71  - Global eof indicator                                  *
+     F*   73  - Global eof indicator                                  *
+     F*   76  - F12 pressed on initial screen                         *
+     F*                                                               *
+     F*   U6  - Program error                                         *
+     F*   U7  - Data base or exception error                          *
+     F*   U8  - Data base or exception error                          *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  #A     -  Initial processing                                 *
+     F*                                                               *
+     F*  #B     -  Main processing                                    *
+     F*  #BA    -  Program rollup processing                          *
+     F*  #BB    -  Program rolldown processing                        *
+     F*  #BC    -  Cmd12 processing                                   *
+     F*  #BD    -  <Enter) processing                                 *
+     F*  #BDA   -  New subfile processing                             *
+     F*                                                               *
+     F*  #ZA    -  Load record into subfile                           *
+     F*  #ZB    -  Position on relevant record                        *
+     F*  #ZC    -  Read next relevant record                          *
+     F*  #ZD    -  Read previous relevant record                      *
+     F*  #ZE    -  Save required data into a common work area         *
+     F*  #ZCA   -  Check user authority on booking branch             *
+     F*  DLCHN  -  Chain to deals file                                *
+     F*                                                               *
+     F*  #C     -  Final processing                                   *
+     F*                                                               *
+     F*  *PSSR  -  Program exception/error subroutine                 *
+     F*  INFSR  -  File exception/error routine                       *
+     F*                                                               *
+     F*  MM1017 -  Edit interest rate for display on AS400            *
+     F*  ZA0660 -  Convert date from yyyymmdd to ddmmmyy/mmmddyy      *
+     F*  ZA0750 -  Edit full amount for display on AS400              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E                    CPY@    1   1 80               Copyright Statement
+     E                    @MN    12  12  5               Used by SR. ZA0660
+     E*
+     E                    @D         15  1               Amount Input Array
+     E*
+     E                    @E         21  1               Display Amount Array
+     E*
+     E                    @C         21  1               Work Array
+     E*
+     E                    @W         13  1               SR. MM1017 Work Array
+     E/COPY WNCPYSRC,MM0070E001
+     E*
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     IMMDELDP0
+     I*
+     I** Rename fields for MMDELDP0
+     I*
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I001
+     I*
+     IMMDENBP0
+     I*
+     I** Rename fields for MMDENBP0
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I002
+     I*
+     IMMDENSP0
+     I*
+     I** Rename fields for MMDENSP0
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I003
+     I*
+     IMMDEAMP0
+     I*
+     I** Rename fields for MMDEAMP0
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I004
+     I*
+     IMMCMLDP0
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I005
+     I*
+     IMMCMNBP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I006
+     I*
+     IMMCMNSP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I007
+     I*
+     IMMCMAMP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I008
+     I*
+     IMMINLDP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I009
+     I*
+     IMMINNBP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I010
+     I*
+     IMMINNSP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I011
+     I*
+     IMMINAMP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I012
+     I*
+     IMMICLDP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I013
+     I*
+     IMMICNBP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I014
+     I*
+     IMMICNSP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I015
+     I*
+     IMMICAMP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I016
+     I*
+     IMMCPLDP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I017
+     I*
+     IMMCPNBP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I018
+     I*
+     IMMCPNSP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I019
+     I*
+     IMMCPAMP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I020
+     I*
+     IMMIPLDP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HKDDLT                          @DDLT
+     I              HKLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I021
+     I*
+     IMMIPNBP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HLDDLT                          @DDLT
+     I              HLLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I022
+     I*
+     IMMIPNSP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HMDDLT                          @DDLT
+     I              HMLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I023
+     I*
+     IMMIPAMP0
+     I*
+     I** Rename fields of renamed formats
+     I*
+     I              HNDDLT                          @DDLT
+     I              HNLCD                           @LCD
+     I/COPY WNCPYSRC,MM0070I024
+     I*
+     IMMALLDP0                                                                                198899
+      *                                                                                       198899
+      ** Rename fields of renamed formats                                                     198899
+      *                                                                                       198899
+     I              HKBRCA                          WWBRCA                                    198899
+      *                                                                                       198899
+     IMMALNBP0                                                                                198899
+      *                                                                                       198899
+      ** Rename fields of renamed formats                                                     198899
+      *                                                                                       198899
+     I              HLBRCA                          WWBRCA                                    198899
+      *                                                                                       198899
+     IMMALNSP0                                                                                198899
+      *                                                                                       198899
+      ** Rename fields of renamed formats                                                     198899
+      *                                                                                       198899
+     I              HMBRCA                          WWBRCA                                    198899
+      *                                                                                       198899
+     I@UNAT       DS
+     I*
+     I** File in. ds. to test if file MMUNATL0 is open.
+     I*
+     I                                     *STATUS  @UNST
+     I                                        9   9 @UNOPN
+     I                                      261 270 @UNRCD
+     I                                      265 266 @UNRID
+     I*
+     I@CMPL       DS
+     I*
+     I** File in. ds. to test if file MMCMPLLL is open.
+     I*
+     I                                     *STATUS  @CMST
+     I                                        9   9 @CMOPN
+     I                                      261 270 @CMRCD
+     I                                      265 266 @CMRID
+     I*
+     I@INCP       DS
+     I*
+     I** File in. ds. to test if file MMINCPL0 is open.
+     I*
+     I                                     *STATUS  @INST
+     I                                        9   9 @INOPN
+     I                                      261 270 @INRCD
+     I                                      265 266 @INRID
+     I*
+     I@ICRD       DS
+     I*
+     I** File in. ds. to test if file MMICRDLL is open.
+     I*
+     I                                     *STATUS  @ICST
+     I                                        9   9 @ICOPN
+     I                                      261 270 @ICRCD
+     I                                      265 266 @ICRID
+     I*
+     I@CPLD       DS
+     I*
+     I** File in. ds. to test if file MMCPLDL0 is open.
+     I*
+     I                                     *STATUS  @CPST
+     I                                        9   9 @CPOPN
+     I                                      261 270 @CPRCD
+     I                                      265 266 @CPRID
+     I*
+     I@ICPD       DS
+     I*
+     I** File in. ds. to test if file MMICPDL0 is open.
+     I*
+     I                                     *STATUS  @IPST
+     I                                        9   9 @IPOPN
+     I                                      261 270 @IPRCD
+     I                                      265 266 @IPRID
+     I*
+     I            DS
+     I*
+     I** Used by sr. ZA0660 - Date input in yyyymmdd format
+     I*
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I*
+     I            DS
+     I*
+     I** Datastructure for System Time
+     I*
+     I                                        1   60@TIME
+     I                                        1   40DDTIME
+     I*
+     I            DS
+     I*
+     I** Datastructure for Deal Status Indicators
+     I*
+     I                                        1   2 DDSTAT
+     I                                        1   1 @DDLT
+     I                                        2   2 HKDSTS
+     I                                        2   2 HLDSTS
+     I                                        2   2 HMDSTS
+     I                                        2   2 HNDSTS
+     I*
+     I            DS
+     I*
+     I** Datastructure for first record key on subfile
+     I*
+     I                                        1  20 @FKEY
+     I                                        1   60@FDN38
+     I*
+     I            DS
+     I*
+     I** Datastructure for last record key on subfile
+     I*
+     I                                        1  20 @LKEY
+     I                                        1   60@LDN38
+     I*
+     I            DS
+     I*
+     I** Datastructure for current file pointer
+     I*
+     I/COPY WNCPYSRC,MM0070I028
+     I                                        1  20 @CKEY
+     I                                        1  50 @CDATA
+     I                                        1   60@CDN38
+     I                                        7   9 @CDUSC
+     I                                       10  130@CVDYY
+     I                                       14  150@CVDMM
+     I                                       16  170@CVDDD
+     I                                       18  200@CDS38
+     I                                    P  21  280@CAMNP
+     I                                    P  29  347@CINTR
+     I                                       35  37 @CCCY
+     I                                       38  410@CMDYY
+     I                                       42  430@CMDMM
+     I                                       44  450@CMDDD
+     I                                       46  47 @CTYPE
+     I                                       48  49 @CSTAT
+     I                                       50  500@CCYDP
+     I/COPY WNCPYSRC,MM0070I025
+     I*
+     I@KEY        DS                             12
+     I*
+     I** Datastructure for CHAIN key fields
+     I*
+     I                                        1   2 @KEY1
+     I                                        9  11 @KEY2
+     I                                       12  12 @KEY3
+     I*
+     I@@AMDS      DS                             15
+     I*
+     I** Datastructure to convert @@IAMT decimal field to alpha field
+     I*
+     I                                        1  150@@IAMT
+     I*
+     I/COPY WNCPYSRC,MM0070I029
+     I@WKSFL      DS                         16
+     I*
+     I** Work area occurs 16 times, to store roll back information
+     I*
+     I                                        1  50 @DDATA
+     I/COPY WNCPYSRC,MM0070I026
+     I           UDS
+     I*
+     I** Local data area for data base errors.
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I/COPY WNCPYSRC,MM0070I027
+     I*
+     IRUNDT       DS                                                      079460
+     I** DATA AREA RUNDAT                                                 079460
+     I                                       13  13 MBIN                  079460
+      **                                                                  079460
+     IPSDS       SDS
+     I*
+     I** Program status data structure.
+     I*
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I*
+     I** Use SDDEAL for system status information.
+     I** Dealing details accessed via access programs.
+     I*
+     IDSFDY     E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*
+     I** DS for access programs, short data structure
+     I*
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C** Unauthorised deals enquiry
+     C** Version
+     C*
+     C                     MOVE '01.00.00'@VERS   8
+     C                     MOVEACPY@      ACT@   80
+     C*****************************************************************
+     C**                                                              *
+     C** Control Processing routine to control the whole program.     *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Called by:  -                                                *
+     C**                                                              *
+     C** Calls:      #A                                               *
+     C**             #B                                               *
+     C**             #C                                               *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C** Initial processing
+     C*
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C*
+     C                     EXSR #B
+     C*
+     C** Final processing
+     C*
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #A subroutine to perform initial processing.                 *
+     C**                                                              *
+     C** Uses:       @KEY  - 12 char key field                        *
+     C**             @KEY1 - subfield of @KEY                         *
+     C**             @KEY3 - subfield of @KEY                         *
+     C**             @JOB  - posns 244 - 253 of program status        *
+     C**                     data structure                           *
+     C**                                                              *
+     C** Called by:  Control Processing                               *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           #A        BEGSR                           ** #A     *
+     C*
+     C** Set up program name in *LDA in case of d/b error
+     C*
+     C                     MOVEL'MM0070'  DBPGM
+     C*
+     C** IN THE DATAAREA RUNDAT & ZMUSER                                  079460
+     C*                                                                   079460
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           079460
+     C                     IN   RUNDT                                     079460
+     C/COPY WNCPYSRC,MM0070C004
+     C*                                                                   079460
+     C** Set program roll key indicators
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C*
+     C** Open single record files
+     C*
+     C                     OPEN FDICDRLL
+     C*
+     C** Open files used by all access paths
+     C*
+     C                     OPEN MMUNATL0
+     C/COPY WNCPYSRC,MM0070C005
+     C*
+     C** Read system status indicator file.
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 002*
+     C                     MOVEL'SDDEALPD'DBFILE           *             *
+     C                     MOVEL'002'     DBASE            ***************
+     C                     DUMP                                           087340
+     C                     GOTO #A9
+     C                     END
+     C/COPY WNCPYSRC,MM0070C006
+     C*
+     C** Read installation control data file TABTB10
+     C*
+     C                     MOVE *BLANKS   @KEY
+     C                     MOVE '10'      @KEY
+     C                     MOVEL'01'      @KEY
+     C           @KEY      CHAINFDICDRLL             60
+     C*
+     C** If I.C.D. record not found or logically deleted, this is a
+     C** data base error.
+     C*
+     C           *IN60     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 003*
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVEL@KEY      DBKEY
+     C                     DUMP                                           087340
+     C                     GOTO #A9
+     C                     END
+     C*
+     C** Read installation control data file TABTB11
+     C*
+     C                     MOVE *BLANKS   @KEY
+     C                     MOVE '11'      @KEY
+     C                     MOVEL'01'      @KEY
+     C           @KEY      CHAINFDICDRLL             60
+     C*
+     C** If I.C.D. record not found or logically deleted, this is a
+     C** data base error.
+     C*
+     C           *IN60     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 004*
+     C                     MOVEL'FDICDRLL'DBFILE           *             *
+     C                     MOVEL'004'     DBASE            ***************
+     C                     MOVEL@KEY      DBKEY
+     C                     DUMP                                           087340
+     C                     GOTO #A9
+     C                     END
+     C*
+     C** Close single record files
+     C*
+     C                     CLOSEFDICDRLL
+     C/COPY WNCPYSRC,MM0070C007
+     C*
+     C** Set up currency file key
+     C*
+     C                     MOVE *BLANKS   @KEY
+     C                     MOVE '20'      @KEY1
+     C                     MOVE '1'       @KEY3
+     C*
+     C** Set up display fields which remain constant
+     C*
+     C/COPY WNCPYSRC,MM0070C008
+     C                     MOVEL@JOB      DDWID
+     C                     MOVE RUNA      DDDATE
+     C/COPY WNCPYSRC,MM0070C009
+     C*
+     C** Initialize display deal number
+     C*
+     C                     Z-ADD0         DDDN38
+     C*
+     C** Setup message subfile information
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '1'       *IN10
+     C*
+     C** Initialize SFLEND indicator on main subfile
+     C*
+     C                     MOVE '1'       *IN70
+     C*
+     C** Set global bof/eof indicators
+     C*
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN73
+     C*
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #B subroutine performs main processing control.              *
+     C**                                                              *
+     C** Uses:       @TIME  - system time                             *
+     C**                                                              *
+     C** Called by:  Control Processing                               *
+     C**                                                              *
+     C** Calls:      #BA                                              *
+     C**             #BB                                              *
+     C**             #BC                                              *
+     C**             #BD                                              *
+     C**             ZA0250 - clear message subfile                   *
+     C**                                                              *
+     C           #B        BEGSR                           ** #B     *
+     C*
+     C** Perform main processing loop until either cmd3 is pressed
+     C** or cmd12 is pressed from the initial screen.
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C** If data base error has occurred, no further processing.
+     C*
+     C           *INU7     CABEQ'1'       #B9
+     C*
+     C** Output and read the screen file
+     C*
+     C                     TIME           @TIME
+     C/COPY WNCPYSRC,MM0070C010
+     C                     WRITEMM0070S2
+     C                     WRITEMM0070S0
+     C                     READ MM0070S2                 52
+     C/COPY WNCPYSRC,MM0070C011
+     C*
+     C** Reset subfile display indicator
+     C*
+     C                     MOVE '0'       *IN43
+     C*
+     C** Clear message subfile
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C** If cmd3 pressed, no further processing
+     C*
+     C           *INKC     CABEQ'1'       #B9
+     C*
+     C** Cmd12 processing
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR #BC
+     C           *IN76     CABEQ'1'       #B9
+     C                     ELSE
+     C*
+     C** Program rollup indicator set
+     C*
+     C           *IN50     IFEQ '1'
+     C                     EXSR #BA
+     C                     ELSE
+     C*
+     C** Program rolldown indicator set
+     C*
+     C           *IN51     IFEQ '1'
+     C                     EXSR #BB
+     C                     ELSE
+     C*
+     C** <ENTER> key processing
+     C*
+     C                     EXSR #BD
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           #B9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BA subroutine performs program controlled rollup            *
+     C** processing. It is invoked when all the following conditions  *
+     C** hold:                                                        *
+     C**                                                              *
+     C**     1. The rollup key has been pressed                       *
+     C**     2. The last page of the current subfile is being         *
+     C**        displayed                                             *
+     C**     3. There are more forward records on the relevant file   *
+     C**                                                              *
+     C** In all other cases, rollup is handled automatically by CPF.  *
+     C**                                                              *
+     C** Uses:       @FKEY - first subfile deal key pointer           *
+     C**             @LKEY - last subfile deal key pointer            *
+     C**             @RRN  - relative record number of subfile        *
+     C**             @X    - general purpose index                    *
+     C**                                                              *
+     C** Called by:  #B                                               *
+     C**                                                              *
+     C** Calls:      #ZA                                              *
+     C**             #ZB                                              *
+     C**             #ZC                                              *
+     C**                                                              *
+     C           #BA       BEGSR                           ** #BA    *
+     C*
+     C** Reset program rollup indicator
+     C*
+     C                     MOVE '0'       *IN50
+     C*
+     C** Set first deal number on page to (last subfile deal number
+     C** + 1)
+     C*
+     C                     MOVEL@LKEY     @CKEY
+     C           @CDS38    IFEQ *ZERO
+     C                     ADD  1         @CDN38
+     C                     END
+     C/COPY WNCPYSRC,MM0070C012
+     C*
+     C** Position at the relevant data file record
+     C*
+     C                     EXSR #ZB
+     C*
+     C** Set cmd12 display narrative indicator
+     C*
+     C                     MOVE '1'       *IN46
+     C*
+     C** Set main subfile display indicator
+     C*
+     C                     MOVE '1'       *IN43
+     C*
+     C** Read forward thru the relevant file, and for each record
+     C** read, output a subfile record.
+     C*
+     C/COPY WNCPYSRC,MM0070C013
+     C           1         DO   16        @X
+     C/COPY WNCPYSRC,MM0070C014
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BA9
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN70
+     C                     GOTO #BA9
+     C                     END
+     C                     ADD  1         @RRN
+     C                     MOVEL@CKEY     @LKEY
+     C/COPY WNCPYSRC,MM0070C015
+     C                     EXSR #ZA
+     C*
+     C** If a data base error has occurred, no further processing
+     C** in this routine
+     C*
+     C           *INU7     CABEQ'1'       #BA9
+     C                     END
+     C*
+     C** Read the next relevant file record. If it exists,
+     C** reset the SFLEND indicator so that the '+' will
+     C** be displayed on this screen.
+     C** If a record does not exist rollup will be inhibited.
+     C*
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BA9
+     C                     END
+     C           *IN71     IFEQ '0'
+     C                     MOVE '0'       *IN70
+     C                     ELSE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C           #BA9      ENDSR                           ** #BA9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BB routine performs program controlled rolldown processing. *
+     C** It is invoked when all the following conditions hold:        *
+     C**                                                              *
+     C**     1. The rolldown key has been pressed                     *
+     C**     2. The first page of the current subfile is being        *
+     C**        displayed                                             *
+     C**     3. There are more previous records on the relevant file  *
+     C**                                                              *
+     C** In all other cases, rolldown is handled automatically by     *
+     C** CPF.                                                         *
+     C**                                                              *
+     C** Uses:       @FKEY - first subfile deal key pointer           *
+     C**             @LKEY - last subfile deal key pointer            *
+     C**             @RRN  - relative record number of subfile        *
+     C**             @X    - general purpose index                    *
+     C**                                                              *
+     C** Called by:  #B                                               *
+     C**                                                              *
+     C** Calls:      #ZA                                              *
+     C**             #ZB                                              *
+     C**             #ZC                                              *
+     C**             #ZD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C           #BB       BEGSR                           ** #BB    *
+     C*
+     C** Reset program rolldown indicator
+     C*
+     C                     MOVE '0'       *IN51
+     C*
+     C** Position on relevant data file record
+     C*
+     C                     MOVEL@FKEY     @CKEY
+     C/COPY WNCPYSRC,MM0070C016
+     C                     EXSR #ZB
+     C*
+     C** Read the previous relevant data file record
+     C*
+     C                     EXSR #ZD
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BB9
+     C                     END
+     C*
+     C** Clear subfile
+     C*
+     C                     Z-ADD1         @RRN
+     C                     MOVE '1'       *IN41
+     C/COPY WNCPYSRC,MM0070C017
+     C                     WRITEMM0070S2
+     C/COPY WNCPYSRC,MM0070C018
+     C                     MOVE '0'       *IN41
+     C*
+     C** Clear multiple occurrence data structure which temporarily
+     C** holds subfile details for program controlled rolldown.
+     C*
+     C/COPY WNCPYSRC,MM0070C019
+     C                     DO   16        @X
+     C/COPY WNCPYSRC,MM0070C020
+     C           @X        OCUR @WKSFL
+     C                     MOVE *BLANKS   @WKSFL
+     C                     END
+     C*
+     C** Set subfile display indicator
+     C*
+     C                     MOVE '1'       *IN43
+     C*
+     C** Set cmd12 narrative display indicator
+     C*
+     C                     MOVE '1'       *IN46
+     C*
+     C** Reset last subfile deal numbers
+     C*
+     C                     MOVEL@CKEY     @LKEY
+     C*
+     C** Reposition relevant file to where it was before the read
+     C** in this subroutine
+     C*
+     C                     MOVEL@FKEY     @CKEY
+     C/COPY WNCPYSRC,MM0070C021
+     C                     EXSR #ZB
+     C*
+     C** Read backwards thru the relevant data file and output
+     C** details to a multiple occurrence data structure. If bof
+     C** is reached before 16 records have been read, then
+     C** continue with first page processing for a new subfile.
+     C*
+     C/COPY WNCPYSRC,MM0070C022
+     C           1         DO   16        @X
+     C/COPY WNCPYSRC,MM0070C023
+     C                     EXSR #ZD
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BB9
+     C                     END
+     C           *IN73     IFEQ '0'
+     C*
+     C** Bof not reached - load record details into the appropriate
+     C** element of the multiple occurrence data structure.
+     C** Reset first subfile deal number pointer.
+     C*
+     C                     MOVEL@CKEY     @FKEY
+     C/COPY WNCPYSRC,MM0070C024
+     C           @X        OCUR @WKSFL
+     C/COPY WNCPYSRC,MM0070C025
+     C*
+     C                     MOVEL@CDATA    @DDATA
+     C*
+     C                     ELSE
+     C*
+     C** Bof reached - perform first page processing; zeroize
+     C** subfile deal number pointers.
+     C*
+     C                     MOVE *ZEROS    @CKEY
+     C/COPY WNCPYSRC,MM0070C026
+     C                     EXSR #BDA
+     C                     GOTO #BB9
+     C                     END
+     C                     END
+     C*
+     C** Bof not reached - load retrieved data to the subfile
+     C*
+     C                     MOVEL@CKEY     @FKEY
+     C                     Z-ADD0         @RRN
+     C/COPY WNCPYSRC,MM0070C027
+     C           1         DO   16        @RRN
+     C/COPY WNCPYSRC,MM0070C028                                           S01408
+     C           17        SUB  @RRN      @X
+     C*COPY*WNCPYSRC*MM0070C028****************************************   S01408
+     C/COPY WNCPYSRC,MM0070CP28                                           S01408
+     C           @X        OCUR @WKSFL
+     C*
+     C                     MOVEL@DDATA    @CDATA
+     C/COPY WNCPYSRC,MM0070C029
+     C*
+     C                     EXSR #ZA
+     C*
+     C** If a data base error has occurred, no further processing in
+     C** this routine.
+     C*
+     C           *INU7     CABEQ'1'       #BB9
+     C                     END
+     C                     MOVEL@CKEY     @LKEY
+     C                     SUB  1         @RRN
+     C*
+     C** Read previous relevant record to inhibit further rolldown if
+     C** record does not exist.
+     C*
+     C                     EXSR #ZD
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BB9
+     C                     END
+     C*
+     C** Read next relevant data file record to determine if SFLEND
+     C** indicator should be set.
+     C*
+     C                     MOVEL@LKEY     @CKEY
+     C           @CDS38    IFEQ *ZERO
+     C                     ADD  1         @CDN38
+     C                     END
+     C/COPY WNCPYSRC,MM0070C030
+     C*
+     C** Position at relevant data record
+     C*
+     C                     EXSR #ZB
+     C*
+     C** Read next relevant file record
+     C*
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BB9
+     C                     END
+     C*
+     C** Determine if SFLEND indicator to be set
+     C*
+     C           *IN71     IFEQ '0'
+     C                     MOVE '0'       *IN70
+     C                     ELSE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C           #BB9      ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BC subroutine performs processing for when cmd12 is pressed.*
+     C**                                                              *
+     C** Uses:       @FDN38 - first subfile deal number pointer       *
+     C**             @LDN38 - last subfile deal number pointer        *
+     C**             @RRN   - relative record number of subfile       *
+     C**                                                              *
+     C** Called by:  #B                                               *
+     C**                                                              *
+     C** Calls:      #ZA                                              *
+     C**             #ZB                                              *
+     C**             #ZC                                              *
+     C**             #ZD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C           #BC       BEGSR                           ** #BC    *
+     C*
+     C** If cmd12 pressed from initial screen, exit from program
+     C*
+     C           @FDN38    IFEQ 0
+     C           @LDN38    ANDEQ0
+     C/COPY WNCPYSRC,MM0070C031
+     C                     MOVE '1'       *IN76
+     C                     GOTO #BC9
+     C                     END
+     C*
+     C** Initialize all fields on the subfile control record
+     C*
+     C                     MOVE *BLANKS   DDDSTS
+     C                     MOVE *BLANKS   DDDUSC
+     C                     Z-ADD0         DDDN38
+     C/COPY WNCPYSRC,MM0070C032
+     C*
+     C** Clear the main subfile
+     C*
+     C                     Z-ADD1         @RRN
+     C                     MOVE '1'       *IN41
+     C/COPY WNCPYSRC,MM0070C033
+     C                     WRITEMM0070S2
+     C/COPY WNCPYSRC,MM0070C034
+     C                     MOVE '0'       *IN41
+     C*
+     C** Reset cmd12 narrative indicator
+     C*
+     C                     MOVE '0'       *IN46
+     C*
+     C** Reset first and last subfile deal numbers
+     C*
+     C                     MOVE *ZEROS    @FKEY
+     C                     MOVE *ZEROS    @LKEY
+     C/COPY WNCPYSRC,MM0070C035
+     C*
+     C** Set global bof/eof indicators
+     C*
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN73
+     C*
+     C** Reset specific eof indicators
+     C*
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C/COPY WNCPYSRC,MM0070C036
+     C*
+     C           #BC9      ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BD subroutine performs processing for when <ENTER> is       *
+     C** pressed.                                                     *
+     C**                                                              *
+     C** Uses:       @FKEY  - first subfile deal number pointer       *
+     C**             @LKEY  - last subfile deal number pointer        *
+     C**             @RRN   - relative record number of subfile       *
+     C**             @FDN38 - 'First deal on page' pointer            *
+     C**             @MSGID - error message number                    *
+     C**                                                              *
+     C** Called by:  #B                                               *
+     C**                                                              *
+     C** Calls:      #ZB                                              *
+     C**             #ZC                                              *
+     C**             #ZD                                              *
+     C**             #BDA                                             *
+     C**             ZA0240 - send message to message subfile         *
+     C**                                                              *
+     C           #BD       BEGSR                           ** #BD    *
+     C*
+     C** Reset cmd12 display narrative indicator
+     C*
+     C                     MOVE '0'       *IN46
+     C*
+     C** Clear the main screen subfile
+     C*
+     C                     MOVE '1'       *IN41
+     C                     Z-ADD1         @RRN
+     C/COPY WNCPYSRC,MM0070C037
+     C                     WRITEMM0070S2
+     C/COPY WNCPYSRC,MM0070C038
+     C                     MOVE '0'       *IN41
+     C*
+     C** Reset validation error indicators
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C/COPY WNCPYSRC,MM0070C039
+     C                     MOVE '0'       *IN29
+     C*
+     C** Reset specific eof indicators
+     C*
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C*
+     C** Reset first and last deal number in subfile
+     C*
+     C                     MOVE *ZEROS    @FKEY
+     C                     MOVE *ZEROS    @LKEY
+     C                     MOVE *ZEROS    @CKEY
+     C                     MOVELDDDUSC    @CDUSC
+     C                     Z-ADDDDDN38    @CDN38
+     C/COPY WNCPYSRC,MM0070C040
+     C*
+     C** Set bof/eof indicators to inhibit roll in case of
+     C** validation error
+     C*
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN73
+     C*
+     C** Complete/incomplete indicator must be 'I', 'C' or blank
+     C*
+     C           DDDSTS    IFNE 'I'
+     C           DDDSTS    ANDNE'C'
+     C           DDDSTS    ANDNE*BLANK
+     C                     CALL 'ZA0240'
+     C                     PARM 'MMM0271' @MSGID 10
+     C                     MOVE '1'       *IN29
+     C                     MOVE '1'       *IN20
+     C                     END
+     C*
+     C** Complete/incomplete indicator may not be 'C' if no
+     C** back-office authorisations in the system
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C           BNMMAU    ANDEQ'N'
+     C                     CALL 'ZA0240'
+     C                     PARM 'MMM0274' @MSGID
+     C                     MOVE '1'       *IN29
+     C                     MOVE '1'       *IN20
+     C                     END
+     C/COPY WNCPYSRC,MM0070C041
+     C*
+     C** If any errors have occurred in the calidation so far,
+     C** no further processing for this input.
+     C*
+     C           *IN29     CABEQ'1'       #BD9
+     C*
+     C** Reset first and last subfile deal numbers to the input
+     C** deal number.
+     C*
+     C                     MOVEL@CKEY     @FKEY
+     C                     MOVEL@CKEY     @LKEY
+     C/COPY WNCPYSRC,MM0070C042
+     C*
+     C** Reset bof/eof indicators
+     C*
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN73
+     C/COPY WNCPYSRC,MM0070C043
+     C*
+     C** Check if there is a relevant record greater than or equal
+     C** to the first subfile deal number. If no record is found,
+     C** this is a validation error.
+     C*
+     C** Position on first relevant data file record.
+     C*
+     C                     EXSR #ZB
+     C*
+     C** Read next relevant data file record.
+     C*
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BD9
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN29
+     C                     MOVE '1'       *IN22
+     C/COPY WNCPYSRC,MM0070C044
+     C                     MOVE *ZEROS    @FKEY
+     C                     MOVE *ZEROS    @LKEY
+     C                     MOVE '1'       *IN71
+     C                     MOVE '1'       *IN73
+     C           *IN31     IFEQ '1'
+     C                     MOVEL'MMM0511' @MSGID
+     C                     END
+     C           *IN32     IFEQ '1'
+     C                     MOVEL'MMM0512' @MSGID
+     C                     END
+     C           *IN33     IFEQ '1'
+     C                     MOVEL'MMM0513' @MSGID
+     C                     END
+     C           *IN34     IFEQ '1'
+     C                     MOVEL'MMM0514' @MSGID
+     C                     END
+     C           *IN35     IFEQ '1'
+     C                     MOVEL'MMM0515' @MSGID
+     C                     END
+     C           *IN36     IFEQ '1'
+     C                     MOVEL'MMM0516' @MSGID
+     C                     END
+     C/COPY WNCPYSRC,MM0070C045
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C/COPY WNCPYSRC,MM0070C046
+     C                     GOTO #BD9
+     C                     END
+     C*
+     C** Check if there is a relevant record prior to the first
+     C** subfile deal number. If no record exists rolldown key is
+     C** inhibited.
+     C*
+     C** Position on first relevant data file record
+     C*
+     C                     MOVEL@FKEY     @CKEY
+     C                     EXSR #ZB
+     C*
+     C** Read previous data file record
+     C*
+     C                     EXSR #ZD
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BD9
+     C                     END
+     C*
+     C** Perform new subfile processing
+     C*
+     C                     MOVEL@FKEY     @CKEY
+     C                     EXSR #BDA
+     C*
+     C           #BD9      ENDSR                           ** #BD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BDA subroutine controls the output of the first page of a   *
+     C** new subfile. There are 2 cases where this routine will be    *
+     C** used:                                                        *
+     C**                                                              *
+     C**     1. <ENTER> is pressed (new enauiry)                      *
+     C**     2. Rollback reaches the beginning of the relevant file   *
+     C**        and the subfile page is not full.                     *
+     C**                                                              *
+     C** Uses:       @FKEY  - first subfile deal key pointer          *
+     C**             @LKEY  - last subfile deal key pointer           *
+     C**             @FDN38 - first deal on page pointer              *
+     C**             @RRN   - relative record number of subfile       *
+     C**             @X     - general purpose index                   *
+     C**                                                              *
+     C** Called by:  #BB                                              *
+     C**             #BD                                              *
+     C**                                                              *
+     C** Calls:      #ZA                                              *
+     C**             #ZB                                              *
+     C**             #ZC                                              *
+     C**                                                              *
+     C           #BDA      BEGSR                           ** #BDA   *
+     C/COPY WNCPYSRC,MM0070C047
+     C*
+     C** Position on first relevant data file record
+     C*
+     C                     EXSR #ZB
+     C*
+     C** Read first relevant data file record
+     C*
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BDA9
+     C                     END
+     C*
+     C** Set cmd12 display narrative indicator
+     C*
+     C                     MOVE '1'       *IN46
+     C*
+     C** Set subfile display indicator
+     C*
+     C                     MOVE '1'       *IN43
+     C*
+     C** Set first and last subfile deal numbers to deal number field
+     C** of file just read.
+     C*
+     C                     MOVEL@CKEY     @SKEY  16
+     C                     MOVEL@CKEY     @LKEY
+     C/COPY WNCPYSRC,MM0070C048
+     C*
+     C** Reposition the relevant file at its position before the read.
+     C*
+     C                     MOVEL@FKEY     @CKEY
+     C                     EXSR #ZB
+     C                     MOVEL@SKEY     @FKEY
+     C*
+     C** Read thru the relevant file and for each record read output
+     C** a subfile record.
+     C*
+     C/COPY WNCPYSRC,MM0070C049
+     C           1         DO   16        @X      20
+     C/COPY WNCPYSRC,MM0070C050
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BDA9
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN70
+     C                     GOTO #BDA9
+     C                     END
+     C                     Z-ADD@X        @RRN
+     C                     MOVEL@CKEY     @LKEY
+     C/COPY WNCPYSRC,MM0070C051
+     C                     EXSR #ZA
+     C*
+     C** If a data base error has occurred, no further processing in
+     C** this routine.
+     C*
+     C           *INU7     CABEQ'1'       #BDA9
+     C                     END
+     C*
+     C** Read the next relevant file record. If ti exists, reset the
+     C** SFLEND indicator so that the '+' will be displayed on this
+     C** screen.
+     C*
+     C** If a record does not exist rollup will be inhibited.
+     C*
+     C                     EXSR #ZC
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #BDA9
+     C                     END
+     C           *IN71     IFEQ '0'
+     C                     MOVE '0'       *IN70
+     C                     ELSE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C           #BDA9     ENDSR                           ** #BDA9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZA subroutine outputs a subfile record.                     *
+     C**                                                              *
+     C** Uses:       @@IAMT - input amount to ZA0750                  *
+     C**             @@CCY  - input ccy to ZA0750                     *
+     C**             @@CRET - input no. of char. to return from ZA0750*
+     C**             @@CDP  - input ccy decimal places to ZA0750      *
+     C**             @@ADSP - output display amt. from ZA0750         *
+     C**             @@INPR - input rate array to MM1017              *
+     C**             @@OUTR - output rate array from MM1017           *
+     C**             @@DAY  - input day to ZA0660                     *
+     C**             @@MTH  - input month to ZA0660                   *
+     C**             @@YYYY - input year to ZA0660                    *
+     C**             @@DATE - output from ZA0660                      *
+     C**                                                              *
+     C** Called by:  #BA                                              *
+     C**             #BB                                              *
+     C**             #BD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C** Calls:      ZA0750                                           *
+     C**             MM1017                                           *
+     C**             ZA0660                                           *
+     C**                                                              *
+     C           #ZA       BEGSR                           ** #ZA    *
+     C*
+     C                     MOVEL@CDN38    DDDNO2
+     C                     MOVEL@CDS38    DDDS38
+     C                     MOVEL@CCCY     DDCCY
+     C                     MOVEL@CTYPE    DDTYPE
+     C                     MOVEL@CDUSC    DDDLR2
+     C*
+     C** Edit amount 1, using subroutine ZA0750
+     C*
+     C                     MOVEL@CAMNP    @@IAMT 150
+     C                     MOVEL@CCCY     @@CCY   3
+     C                     Z-ADD18        @@CRET  20
+     C                     Z-ADD@CCYDP    @@CDP   10
+     C                     EXSR ZA0750
+     C                     MOVE @@ADSP    DDAMNT
+     C*
+     C** Edit the Interest rate, using subroutine MM1017
+     C*
+     C                     Z-ADD@CINTR    @@INPR
+     C                     EXSR MM1017
+     C                     MOVEL@@OUTR    DDINTR
+     C*
+     C** Edit the dates, using subroutine ZA0660
+     C*
+     C                     Z-ADD@CVDDD    @@DAY
+     C                     Z-ADD@CVDMM    @@MTH
+     C                     Z-ADD@CVDYY    @@YYYY
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    DDVDAT
+     C*
+     C                     MOVE *BLANKS   DDMDDT
+     C           @CMDDD    IFNE *ZERO
+     C                     Z-ADD@CMDDD    @@DAY
+     C                     Z-ADD@CMDMM    @@MTH
+     C                     Z-ADD@CMDYY    @@YYYY
+     C                     EXSR ZA0660
+     C                     MOVE @@DATE    DDMDDT
+     C                     END
+     C/COPY WNCPYSRC,MM0070C052
+     C*
+     C** Write subfile record
+     C*
+     C                     WRITEMM0070S3
+     C/COPY WNCPYSRC,MM0070C053
+     C*
+     C           #ZA9      ENDSR                           ** #ZA9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZB subroutine positions on the relevant deal record         *
+     C** depending on the screen input and the value of the 'First    *
+     C** deal on page' pointer field.                                 *
+     C**                                                              *
+     C** Uses:       @FKEY  - 'First dela on page' key                *
+     C**             @LKEY  - 'Last deal on page' key                 *
+     C**             @INOPN - File status d/s indicator for MMINCPL0  *
+     C**                      open                                    *
+     C**             @CMOPN - File status d/s indicator for MMCMPLLL  *
+     C**                      open                                    *
+     C**             @UNOPN - File status d/s indicator for MMUNATL0  *
+     C**                      open                                    *
+     C**             @ICOPN - File status d/s indicator for MMICDRLL  *
+     C**                      open                                    *
+     C**             @CPOPN - File status d/s indicator for MMCPLDL0  *
+     C**                      open                                    *
+     C**             @IPOPN - File status d/s indicator for MMICPDL0  *
+     C**                      open                                    *
+     C**                                                              *
+     C** Called by:  #BA                                              *
+     C**             #BB                                              *
+     C**             #BD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           #ZB       BEGSR                           ** #ZB    *
+     C*
+     C** Define composite key for files MMICRDLL
+     C**                                MMCPLDL0
+     C**                                MMICPDL0
+     C*
+     C           @KDUD1    KLIST
+     C                     KFLD           @CDN38
+     C*
+     C           @KDUD2    KLIST
+     C                     KFLD           @CDN38
+     C                     KFLD           @CVDYY
+     C                     KFLD           @CVDMM
+     C                     KFLD           @CVDDD
+     C                     KFLD           @CDS38
+     C*
+     C           @KDUD3    KLIST
+     C                     KFLD           @CDUSC
+     C                     KFLD           @CDN38
+     C*
+     C           @KDUD4    KLIST
+     C                     KFLD           @CDUSC
+     C                     KFLD           @CDN38
+     C                     KFLD           @CVDYY
+     C                     KFLD           @CVDMM
+     C                     KFLD           @CVDDD
+     C                     KFLD           @CDS38
+     C*
+     C** Processing for input dealer = blanks
+     C*
+     C           DDDUSC    IFEQ *BLANKS
+     C*
+     C** Use MMINCPL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C           @INOPN    IFEQ *BLANK
+     C                     OPEN MMINCPL0
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD1    SETLLMMINCPL0
+     C                     ELSE
+     C           @KDUD2    CHAINMMINAMP0             31
+     C                     END
+     C                     ELSE
+     C*
+     C** Use MMCMPLLL
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C           @CMOPN    IFEQ *BLANK
+     C                     OPEN MMCMPLLL
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD1    SETLLMMCMPLLL
+     C                     ELSE
+     C           @KDUD2    CHAINMMCMAMP0             32
+     C                     END
+     C                     ELSE
+     C*
+     C** Use MMUNATL0
+     C*
+     C           @UNOPN    IFEQ *BLANK
+     C                     OPEN MMUNATL0
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD1    SETLLMMUNATL0
+     C                     ELSE
+     C           @KDUD2    CHAINMMDEAMP0             33
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MM0070C054
+     C*
+     C** Processing for input dealer not = blanks
+     C*
+     C           DDDUSC    IFNE *BLANKS
+     C*
+     C** Use MMICPDL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C           @IPOPN    IFEQ *BLANK
+     C                     OPEN MMICPDL0
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD3    SETLLMMICPDL0
+     C                     ELSE
+     C           @KDUD4    CHAINMMIPAMP0             34
+     C                     END
+     C                     ELSE
+     C*
+     C** Use MMCPLDL0
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C           @CPOPN    IFEQ *BLANK
+     C                     OPEN MMCPLDL0
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD3    SETLLMMCPLDL0
+     C                     ELSE
+     C           @KDUD4    CHAINMMCPAMP0             35
+     C                     END
+     C                     ELSE
+     C*
+     C** Use MMICRDLL
+     C*
+     C           @ICOPN    IFEQ *BLANK
+     C                     OPEN MMICRDLL
+     C                     END
+     C           @CDS38    IFEQ *ZERO
+     C           @KDUD3    SETLLMMICRDLL
+     C                     ELSE
+     C           @KDUD4    CHAINMMICAMP0             36
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           #ZB9      ENDSR                           ** #ZB9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZC subroutine reads the next relevant deal record depending *
+     C** on the screen input.                                         *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Called by:  #BA                                              *
+     C**             #BB                                              *
+     C**             #BD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C** Calls:      #ZCA                                             *
+     C**             #ZE                                              *
+     C**                                                              *
+     C           #ZC       BEGSR                           ** #ZC    *
+     C*
+     C           #ZC1      TAG
+     C*COPY*WNCPYSRC*MM0070C055****************************************   S01408
+     C/COPY WNCPYSRC,MM0070CP55                                           S01408
+     C*
+     C** Reset global eof indicator
+     C*
+     C                     MOVE '0'       *IN71
+     C*
+     C** Processing for input dealer = blanks
+     C*
+     C           DDDUSC    IFEQ *BLANKS
+     C/COPY WNCPYSRC,MM0070C055                                           S01408
+     C*
+     C** Use MMINCPL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C                     READ MMINCPL0                 31
+     C                     MOVEL@INRID    @@RCID  2
+     C                     ELSE
+     C*
+     C** Use MMCMPLLL
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C                     READ MMCMPLLL                 32
+     C                     MOVEL@CMRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMUNATL0
+     C*
+     C                     READ MMUNATL0                 33
+     C                     MOVEL@UNRID    @@RCID
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MM0070C056
+     C                     END
+     C*
+     C** Processing for input dealer not = blanks
+     C*
+     C           DDDUSC    IFNE *BLANKS
+     C*
+     C** Use MMICPDL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C           DDDUSC    READEMMICPDL0                 34
+     C                     MOVEL@IPRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMCPLDL0
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C           DDDUSC    READEMMCPLDL0                 35
+     C                     MOVEL@CPRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMICRDLL
+     C*
+     C           DDDUSC    READEMMICRDLL                 36
+     C                     MOVEL@ICRID    @@RCID
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** If eof on one of the above files, set global eof indicator.
+     C*
+     C           *IN31     IFEQ '1'
+     C           *IN32     OREQ '1'
+     C           *IN33     OREQ '1'
+     C           *IN34     OREQ '1'
+     C           *IN35     OREQ '1'
+     C           *IN36     OREQ '1'
+     C/COPY WNCPYSRC,MM0070C057
+     C                     MOVE '1'       *IN71
+     C                     ELSE
+     C           @DDLT     IFEQ 'D'
+     C           @LCD      ANDNERUND
+     C           @DDLT     OREQ 'D'                                      119685
+     C           HKDSTS    ANDEQ'C'                                      119685
+     C           @DDLT     OREQ 'D'                                      119685
+     C           HKDSTS    ANDEQ'R'                                      119685
+     C                     GOTO #ZC1
+     C                     END
+     C*
+     C** Check if user can access the record for the booking branch
+     C*
+     C                     EXSR #ZCA
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #ZC9
+     C                     END
+     C           @ERR      IFNE 0
+     C                     GOTO #ZC1
+     C                     END
+     C/COPY WNCPYSRC,MM0070C001
+     C                     END
+     C/COPY WNCPYSRC,MM0070C002
+     C*
+     C** Save required data from current record
+     C*
+     C                     EXSR #ZE
+     C*
+     C           #ZC9      ENDSR                           ** #ZC9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZD subroutine reads the previous relevant deal record       *
+     C** depending on the screen input.                               *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Called by:  #BB                                              *
+     C**             #BD                                              *
+     C**             #BDA                                             *
+     C**                                                              *
+     C** Calls:      #ZE                                              *
+     C**                                                              *
+     C           #ZD       BEGSR                           ** #ZD    *
+     C*
+     C** Processing for input dealer = blanks
+     C*
+     C           DDDUSC    IFEQ *BLANKS
+     C/COPY WNCPYSRC,MM0070C058
+     C*
+     C** Use MMINCPL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C                     READPMMINCPL0                 73
+     C                     MOVEL@INRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMCMPLLL
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C                     READPMMCMPLLL                 73
+     C                     MOVEL@CMRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMUNATL0
+     C*
+     C                     READPMMUNATL0                 73
+     C                     MOVEL@UNRID    @@RCID
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MM0070C059
+     C                     END
+     C*
+     C           #ZD1      TAG
+     C*
+     C** Processing for input dealer not = nblanks
+     C*
+     C           DDDUSC    IFNE *BLANKS
+     C*
+     C** Use MMICPDL0
+     C*
+     C           DDDSTS    IFEQ 'I'
+     C                     READPMMICPDL0                 73
+     C                     MOVEL@IPRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMCPLDLL
+     C*
+     C           DDDSTS    IFEQ 'C'
+     C                     READPMMCPLDL0                 73
+     C                     MOVEL@CPRID    @@RCID
+     C                     ELSE
+     C*
+     C** Use MMICRDLL
+     C*
+     C                     READPMMICRDLL                 73
+     C                     MOVEL@ICRID    @@RCID
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MM0070C060
+     C*
+     C** Save required data from current record
+     C*
+     C                     EXSR #ZE
+     C*
+     C** For dealer enquiries, restirct to deals for dealer only.
+     C*
+     C           DDDUSC    IFNE *BLANKS
+     C           *IN73     IFEQ '0'
+     C           DDDUSC    ANDNE@CDUSC
+     C                     MOVE '1'       *IN73
+     C                     END
+     C                     END
+     C*
+     C           *IN73     IFEQ '0'
+     C           @DDLT     ANDEQ'D'
+     C           @LCD      ANDNERUND
+     C                     GOTO #ZD1
+     C                     END
+     C*
+     C** Check if user can access the record for the booking branch
+     C*
+     C           *IN73     IFEQ '0'
+     C                     EXSR #ZCA
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #ZD9
+     C                     END
+     C           @ERR      IFNE 0
+     C                     GOTO #ZD1
+     C                     END
+     C/COPY WNCPYSRC,MM0070C003
+     C                     END
+     C*
+     C           #ZD9      ENDSR                           ** #ZD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZE subroutine saves the required date from the current      *
+     C** DEALS/DEAM record into a common storage area.                *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Called by:  #ZC                                              *
+     C**             #ZD                                              *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           #ZE       BEGSR                           ** #ZE    *
+     C*
+     C** Save required date from current record
+     C*
+     C           @@RCID    IFEQ 'LD'
+     C/COPY WNCPYSRC,MM0070C061
+     C                     Z-ADDHKDN38    @CDN38
+     C                     MOVELHKDUSC    @CDUSC
+     C                     Z-ADDHKVDYY    @CVDYY
+     C                     Z-ADDHKVDMM    @CVDMM
+     C                     Z-ADDHKVDDD    @CVDDD
+     C                     Z-ADD*ZERO     @CDS38
+     C                     Z-ADDHKAMNP    @CAMNP
+     C                     Z-ADDHKINTR    @CINTR
+     C                     MOVELHKCCY     @CCCY
+     C                     MOVELHKMTYP    @CTYPE
+     C                     Z-ADDHKMDYY    @CMDYY
+     C                     Z-ADDHKMDMM    @CMDMM
+     C                     Z-ADDHKMDDD    @CMDDD
+     C                     MOVELDDSTAT    @CSTAT
+     C                     Z-ADDHKCYDP    @CCYDP
+     C                     ELSE
+     C           @@RCID    IFEQ 'NB'
+     C                     Z-ADDHLDN38    @CDN38
+     C                     MOVELHLDUSC    @CDUSC
+     C                     Z-ADDHLVDYY    @CVDYY
+     C                     Z-ADDHLVDMM    @CVDMM
+     C                     Z-ADDHLVDDD    @CVDDD
+     C                     Z-ADD*ZERO     @CDS38
+     C                     Z-ADDHLAMNP    @CAMNP
+     C                     Z-ADDHLINTR    @CINTR
+     C                     MOVELHLCCY     @CCCY
+     C                     MOVELHLMTYP    @CTYPE
+     C                     Z-ADDHLMDYY    @CMDYY
+     C                     Z-ADDHLMDMM    @CMDMM
+     C                     Z-ADDHLMDDD    @CMDDD
+     C                     MOVELDDSTAT    @CSTAT
+     C                     Z-ADDHLCYDP    @CCYDP
+     C                     ELSE
+     C           @@RCID    IFEQ 'NS'
+     C                     Z-ADDHMDN38    @CDN38
+     C                     MOVELHMDUSC    @CDUSC
+     C                     Z-ADDHMVDYY    @CVDYY
+     C                     Z-ADDHMVDMM    @CVDMM
+     C                     Z-ADDHMVDDD    @CVDDD
+     C                     Z-ADD*ZERO     @CDS38
+     C                     Z-ADDHMAMNP    @CAMNP
+     C                     Z-ADDHMINTR    @CINTR
+     C                     MOVELHMCCY     @CCCY
+     C                     MOVELHMMTYP    @CTYPE
+     C                     Z-ADDHMMDYY    @CMDYY
+     C                     Z-ADDHMMDMM    @CMDMM
+     C                     Z-ADDHMMDDD    @CMDDD
+     C                     MOVELDDSTAT    @CSTAT
+     C                     Z-ADDHMCYDP    @CCYDP
+     C                     ELSE
+     C                     Z-ADDHNDA38    @CDN38
+     C                     MOVELHNDUSC    @CDUSC
+     C                     Z-ADDHNVDYY    @CVDYY
+     C                     Z-ADDHNVDMM    @CVDMM
+     C                     Z-ADDHNVDDD    @CVDDD
+     C                     Z-ADDHNDS38    @CDS38
+     C                     Z-ADDHNAMNP    @CAMNP
+     C                     Z-ADDHNINTR    @CINTR
+     C                     MOVELHNCCY     @CCCY
+     C                     MOVELHNMTYP    @CTYPE
+     C                     Z-ADD*ZERO     @CMDYY
+     C                     Z-ADD*ZERO     @CMDMM
+     C                     Z-ADD*ZERO     @CMDDD
+     C                     MOVELDDSTAT    @CSTAT
+     C                     Z-ADDHNCYDP    @CCYDP
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           #ZE9      ENDSR                           ** #ZE9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #ZCA subroutine checks if user has the authority to access   *
+     C** the deal record for the booking branch.                      *
+     C**                                                              *
+     C** Output:     @ERR    (Accessibility of user to record)        *
+     C**                                                              *
+     C** Called by:  #ZC                                              *
+     C**             #ZD                                              *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           #ZCA      BEGSR                           ** #ZCA   *
+     C*
+     C** IF MBIN = Y,VALIDATE BOOKING BRANCH FOR USER                     079460
+     C**                                                                  079460
+     C           MBIN      IFEQ 'Y'                                       079460
+     C                     SELEC
+     C           @@RCID    WHEQ 'LD'
+     C                     MOVE HKBRCA    ZBRCDX
+     C           @@RCID    WHEQ 'NB'
+     C                     MOVE HLBRCA    ZBRCDX
+     C           @@RCID    WHEQ 'NS'
+     C                     MOVE HMBRCA    ZBRCDX
+     C                     OTHER
+     C                     EXSR DLCHN
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *INLR     ANDEQ'1'
+     C                     GOTO #ZCA9
+     C                     END
+      **********                                                                       198899 215500
+      ***Move*done*directly in #ZCA.                                                   198899 215500
+      **********                                                                       198899 215500
+     C**********           MOVE BRCA      ZBRCDX                                              198899
+     C                     MOVE WWBRCA    ZBRCDX                                              215500
+     C                     ENDSL
+     C*
+     C                     CALL 'ZVBBU'
+     C                     PARM           ZBRCDX  3
+     C                     PARM           @ERR    10
+     C*
+     C                     END                                            079460
+     C*                                                                   079460
+     C           #ZCA9     ENDSR                           ** #ZCA9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** DLCHN subroutine finds the associated deal record for the    *
+     C** deal amendment record.                                       *
+     C**                                                              *
+     C** Called by:  #ZCA                                             *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           DLCHN     BEGSR                           ** DLCHN  *
+     C*
+     C********** HNDA38    CHAINDEALS                60                                       198899
+     C           HNDA38    CHAINMMDELDL7             60                                       198899
+     C*
+     C** If deal record not found, this is a database error.
+     C*
+     C           *IN60     IFEQ '1'
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *             *
+     C                     MOVE '1'       *INLR            * DB ERROR 001*
+     C**********           MOVEL'DEALS   'DBFILE           *             *                    198899
+     C                     MOVEL'MMDELDL7'DBFILE           *             *                    198899
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVEL*BLANK    DBKEY
+     C                     MOVELHNDA38    DBKEY
+     C                     DUMP                                           087340
+      **********                                                                       198899 215500
+     C**********           ELSE                                                        198899 215500
+      **********                                                                       198899 215500
+      ****Move*right branch code if record found in MM file.                           198899 215500
+      **********                                                                       198899 215500
+     C**********           SELEC                                                       198899 215500
+     C********** @UNRID    WHEQ 'LD'                                                   198899 215500
+     C**********           MOVE HKBRCA    ZBRCDX                                       198899 215500
+     C********** @UNRID    WHEQ 'NB'                                                   198899 215500
+     C**********           MOVE HLBRCA    ZBRCDX                                       198899 215500
+     C********** @UNRID    WHEQ 'NS'                                                   198899 215500
+     C**********           MOVE HMBRCA    ZBRCDX                                       198899 215500
+     C**********           OTHER                                                       198899 215500
+     C**********           ENDSL                                                       198899 215500
+     C                     END
+     C*
+     C           DLCHN9    ENDSR                           ** DLCHN9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #C performs final processing.                                *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Called by:  Control Processing                               *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           #C        BEGSR                           ** #C     *
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           #C9       ENDSR                           ** #C9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** *PSSR subroutine that handles program error.                 *
+     C**                                                              *
+     C** Uses:       -                                                *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C** Called by:  -                                                *
+     C**                                                              *
+     C           *PSSR     BEGSR                           ** *PSSR  *
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR9    ENDSR                           ** #PSSR9 **
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** MM1017 subroutine converts a rate to display, no sign.       *
+     C**                                                              *
+     C** Input:      @@INPR - rate to be edited                       *
+     C**                                                              *
+     C** Output:     @@OUTR - edited output rate                      *
+     C**                                                              *
+     C** Uses:       @@INPR - rate to be edited                       *
+     C**             @@OUTR - edited output rate                      *
+     C**             @@DECS - decimal digits of input rate            *
+     C**             @@INTS - integers of input rate                  *
+     C**             @@N    - counter field                           *
+     C**             @@Q    - second counter field                    *
+     C**             @@STRP - rate start posn after zero suppression  *
+     C**             @W     - work array                              *
+     C**                                                              *
+     C** Called by:  #ZA                                              *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           MM1017    BEGSR                           ** MM1017 *
+     C*
+     C** Define fields used.
+     C*
+     C                     Z-ADD@@INPR    @@INPR 117
+     C                     MOVE *BLANKS   @@OUTR 13
+     C                     MOVE *BLANKS   @@DECS  7
+     C                     MOVE *BLANKS   @@INTS  4
+     C                     Z-ADD0         @@N     20
+     C                     Z-ADD0         @@Q     20
+     C                     Z-ADD0         @@STRP  20
+     C*
+     C** Initialise work array.
+     C*
+     C                     MOVEA*BLANKS   @W
+     C*
+     C** If the rate is negative reverse the sign.
+     C*
+     C           @@INPR    IFLT 0
+     C                     Z-SUB@@INPR    @@INPR
+     C                     END
+     C*
+     C** Separate integers and decimal digits into two fields.
+     C*
+     C                     MOVE @@INPR    @@DECS
+     C                     MOVEL@@INPR    @@INTS
+     C*
+     C** Move integers, decimal seperator and decimal digits into
+     C** work array.
+     C*
+     C                     MOVEA@@INTS    @W
+     C                     MOVE BNDCSP    @W,5
+     C                     MOVEA@@DECS    @W,6
+     C*
+     C** Remove leading zeros from the rate and replace with blanks.
+     C*
+     C                     Z-ADD1         @@N
+     C           @@N       DOWLE3
+     C           @W,@@N    ANDEQ'0'
+     C                     MOVE *BLANK    @W,@@N
+     C                     ADD  1         @@N
+     C                     END
+     C*
+     C                     Z-ADD@@N       @@STRP
+     C*
+     C** Truncate trailing zeros and replace with blanks. If rate is
+     C** an integer a single zero after the decimal place should be
+     C** displayed.
+     C*
+     C                     Z-ADD12        @@N
+     C           @@N       DOWGE7
+     C           @W,@@N    ANDEQ'0'
+     C                     MOVE *BLANK    @W,@@N
+     C                     SUB  1         @@N
+     C                     END
+     C*
+     C** Right justify the array.
+     C*
+     C                     Z-ADD12        @@Q
+     C           @@N       IFNE @@Q
+     C           @@N       DOWGE@@STRP
+     C                     MOVE @W,@@N    @W,@@Q
+     C                     MOVE *BLANK    @W,@@N
+     C                     SUB  1         @@N
+     C                     SUB  1         @@Q
+     C                     END
+     C                     END
+     C*
+     C** Move the final array into the output field.
+     C*
+     C                     MOVEA@W        @@OUTR
+     C*
+     C           M10179    ENDSR                           ** M10179 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** ZA0660 subroutine converts date format yyyymmdd to ddmmmyy   *
+     C** format.                                                      *
+     C**                                                              *
+     C** Input:   @@DTIN date input (yyyymmdd) - in data structure    *
+     C**                                                              *
+     C** Output:  @@DATE date output (ddmmmyy)                        *
+     C**                                                              *
+     C** Uses:    @@MTH  - month number                               *
+     C**          @@MNM  - month shortname                            *
+     C**          @@DAY  - day number                                 *
+     C**          @@YYYY - year (4 sharacter)                         *
+     C**          @@DAT5 - 5A workfield                               *
+     C**          @MN    - array of month shortnames                  *
+     C**                                                              *
+     C** Called by:  -                                                *
+     C**                                                              *
+     C** Calls:      -                                                *
+     C**                                                              *
+     C           ZA0660    BEGSR                           ** ZA0660 *
+     C*
+     C           @@DTIN    IFNE 0
+     C                     MOVE @@YYYY    @@DATE  7
+     C                     MOVE @MN,@@MTH @@DAT5  5
+     C                     MOVEL@@DAY     @@DAT5
+     C                     MOVEL@@DAT5    @@DATE
+     C                     ELSE
+     C                     MOVE *BLANKS   @@DATE
+     C                     END
+     C*
+     C           ZA0669    ENDSR                              ** ZA0669 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C**                                                             *
+     C** ZA0750 subroutine converts amount to display                *
+     C**                                                             *
+     C** Input:      @@IAMT 15,0 - input amount                      *
+     C**             @@CCY  3A   - input currency                    *
+     C**             @@CRET 2,0  - number of characters to return    *
+     C**             @@CDP  1,0  - currency decimal places           *
+     C**                                                             *
+     C** Output:     @@ADSP 21A  - amount to display                 *
+     C**                                                             *
+     C** Uses:       -                                               *
+     C**                                                             *
+     C** Called by:  -                                               *
+     C**                                                             *
+     C** Calls:      -                                               *
+     C**                                                             *
+     C           ZA0750    BEGSR                           ** ZA0750*
+     C*
+     C** Initialise arrays
+     C*
+     C                     MOVEA*BLANKS   @E
+     C                     MOVEA*BLANKS   @C
+     C*
+     C** Move sign to display amount
+     C*
+     C           @@IAMT    IFGT 0
+     C                     MOVE '+'       @E,21
+     C                     END
+     C*
+     C** After '-' sign placed in @E change @@IAMT to positive
+     C*
+     C           @@IAMT    IFLT 0
+     C                     MOVE '-'       @E,21
+     C                     Z-SUB@@IAMT    @@IAMT
+     C                     END
+     C*
+     C           @@IAMT    IFEQ 0
+     C                     MOVE ' '       @E,21
+     C                     END
+     C*
+     C** Move input amount to @D
+     C*
+     C                     MOVEA@@AMDS    @D
+     C*
+     C** Move decimal portion of amount to @E
+     C*
+     C                     Z-ADD15        @@C     20
+     C                     Z-ADD20        @@D     20
+     C*
+     C           20        SUB  @@CDP     @@MAX   20
+     C           @@D       DOWGT@@MAX
+     C                     MOVE @D,@@C    @E,@@D
+     C                     SUB  1         @@C
+     C                     SUB  1         @@D
+     C                     END
+     C*
+     C** Move decimal separator to @E
+     C*
+     C           @@CDP     IFNE 0
+     C                     MOVE BNDCSP    @E,@@D
+     C                     SUB  1         @@D
+     C                     END
+     C*
+     C** Find position of last character to be moved
+     C*
+     C                     Z-ADD1         @@E     20
+     C*
+     C           @@E       DOWLT15
+     C           @D,@@E    ANDEQ'0'
+     C                     ADD  1         @@E
+     C                     END
+     C*
+     C** Move integer portion of amount to @E
+     C*
+     C                     Z-ADD0         @@CNT1  20
+     C                     Z-ADD0         @@CNT2  20
+     C*
+     C           @@C       DOWGT@@E
+     C                     MOVE @D,@@C    @E,@@D
+     C                     ADD  1         @@CNT1
+     C                     SUB  1         @@C
+     C                     SUB  1         @@D
+     C*
+     C** Insert thousand separators
+     C*
+     C           @@CNT1    DIV  3         @@RES   20
+     C                     MVR            @@REMD  10
+     C           @@REMD    IFEQ 0
+     C           @@CNT2    ANDLT5
+     C                     MOVE BNTHSP    @E,@@D
+     C                     ADD  1         @@CNT2
+     C                     Z-ADD@@D       @@F     20
+     C                     SUB  1         @@D
+     C                     END
+     C                     END
+     C*
+     C** Move last character
+     C*
+     C                     MOVE @D,@@C    @E,@@D
+     C*
+     C** If number of characters moved is greater than number to be
+     C** returned, drop thousand separators till satisfied.
+     C*
+     C           22        SUB  @@D       @@CMOV  20
+     C           @@CMOV    SUB  @@CRET    @@DIFF  20
+     C           @@DIFF    IFGT 0
+     C                     DO   @@DIFF
+     C                     Z-ADD1         @@G     20
+     C                     Z-ADD2         @@H     20
+     C           @@G       DOWLE21
+     C                     MOVE @E,@@G    @C,@@H
+     C                     ADD  1         @@G
+     C                     ADD  1         @@H
+     C           @@G       IFEQ @@F
+     C                     ADD  1         @@G
+     C                     END
+     C                     END
+     C                     MOVEA@C        @E
+     C                     ADD  4         @@F
+     C                     END
+     C                     END
+     C*
+     C** Move @E to display field
+     C*
+     C                     MOVEA@E        @@ADSP 21
+     C*
+     C           ZA0759    ENDSR                           ** ZA0759 **
+     C*
+     C*****************************************************************
+      /EJECT
+** CPY@   **  Object Copyright
+(c) Misys International Banking Systems Ltd. 2001
+**   @MN   - Used by sr. ZA0660 - Month Shortnames
+  JAN  FEB  MAR  APR  MAY  JUN  JUL  AUG  SEP  OCT  NOV  DEC

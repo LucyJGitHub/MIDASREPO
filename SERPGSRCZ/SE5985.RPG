@@ -1,0 +1,1426 @@
+     H**********  D                                                       165667
+     H        1   D
+      *                                                                   165667
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Telekurs extract and exception report')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE5985 - Telekurs Extract and Exception Report               *
+     F*                                                               *
+     F*  Function: This program creates an extract file containing the*
+     F*   (I/C)    securities whose price will be updated by Telekur. *
+     F*                                                               *
+     F*  Called By: SEC5977 - Input Cycle Processing                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 227267             Date 10Jun04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 191125             Date 19Mar01               *
+      *                 165667             Date 28Dec00               *
+      *                 152732             Date 29Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 173774             Date 31Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE009             Date 16Mar99               *
+     F*                 152330             Date 07Jan99               *
+     F*                 122093             DATE 24Feb98               *
+     F*                 119664             DATE 24FEB98               *
+     F*                 118925             DATE 14AUG97               *
+     F*                 S01408             DATE 21OCT97               *
+     F*                 089261             DATE 23OCT95               *
+     F*                 088723             DATE 08JUN95               *
+     F*                 088434             DATE 01JUN95               *
+     F*                 S01502  *CREATE    DATE 08JUL94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  227267 - POSITION BLOCKED ALTHOUGH NO BLOCK FOR ALLOCATION   *
+     F*           USE SE7572A INSTEAD OF SE7572 AS SE7572 HAS BEEN    *
+     F*           AMENDED TO PASS THE CUSTOMER NUMBER AS PARAMETER    *
+     F*  191125 - Recompile over change to SE5985CCPG.                *
+      *  165667 - DB error in SDCURRPD. SR/AVRPRC doesn't consider    *
+      *           that old prices are deleted (CUR set to blanks and  *
+      *           BRS set to 0) + add dump in case of error.          *
+      *  152732 - SE Telekurs extract audit report values are being   *
+      *           truncated. Recompiled due to changes in SE5985AU.   *
+     F*  173774 - Y2K problem : date from telekurs is unit and 1997   *
+     F*           is transformed to 2007                              *
+     F*  CSE009 - Telekurs Changes                                    *
+     F*  152330 - AFTER REDENOMINATION FOR EMU, DO NOT CONSIDER OLD   *
+     F*           SECURITIES IN 'IN' CURRENCIES WHICH HAVE BEEN       *
+     F*           BLOCKED. PRICE UPDATE IS NO MORE MANDATORY FOR THESE*
+     F*           ONES                                                *
+     F*  122093 - Fix made by BLILUX. Verifying report: OK            *
+     F*           (Initialize Stock Exch. Code correctly)             *
+     F*  119664 - Change processing of SECPRO to get correct Telekurs *
+     F*           Stock Exchange Code. And calculate average price    *
+     F*           (if more than one price is given by Telekurs for    *
+     F*           the same secturity) instead of minimun price.       *
+     F*           (SEMKCD is accessed earlier than in old version)    *
+     F*  118925 - INSTALL CORRECTION 39114 TO PRODUCE TELKXPF FOR LIVE*
+     F*           SECURITY ONLY                                       *
+     F*  S01408 - 2 WNCPYSRC lines in R10.6 should have been in
+     F*           SECPYSRC.                                           *
+     F*           Addition core hook SE5985C001.                      *
+     F*           Addition core hook SE5985C002.                      *
+     F*  089261 - Market Centre and Bourse Codes informations are     *
+     F*           wrong.  Change field to proper fields.              *
+     F*  088723 - Include Last Price Update in the report for those   *
+     F*           securities with prices that cannot be amended       *
+     F*  088434 - Recompiled Due to changes in SE5985P1 & SE5985P2    *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,SE5985F001
+     F***TELEKR2 IP  E           K        DISK                                                CSE009
+     FTELEKR2 IP  F      45            DISK                                                   CSE009
+     FSECTK   IF  E           K        DISK
+     FSETKSCL0IF  E           K        DISK                                                   CSE009
+     F            SECTYDF                           KRENAMESECTYDF1                           CSE009
+     FINVTO   IF  E           K        DISK
+     F*SEMKCL0 IF  E           K        DISK                              089261
+     FSEMKC   IF  E           K        DISK                               089261
+     FSDCURRL5IF  E           K        DISK
+     FSDBRCHL0IF  E           K        DISK                               152330
+     FTELKXPF2O   E                    DISK
+     F/COPY WNCPYSRC,SE5985F002
+     FSE5985P1O   E             31     PRINTER      KINFDS SPOOL1     UC
+     FSE5985P2O   E             32     PRINTER      KINFDS SPOOL2     UC
+     FSE5985P3O   E             33     PRINTER      KINFDS SPOOL3     UC
+     FSE5985AUO   E                    PRINTER      KINFDS SPOOLU
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       20      FIRST CYCLE INDICATOR                           *
+     F*       21      MARKET PRICE IS EITHER 1 OR 100                 *
+     F*       25      TELEKURS UPDATED                                *
+     F*       26      SE5985P1 WAS OPENED                             *
+     F*       27      SE5985P2 WAS OPENED                             *
+     F*       28      SE5985P3 WAS OPENED                             *
+     F*       30      NEW SECURITY/CURRENCY                           *
+     F*       31      OVERFLOW INDICATOR (SE5985P1)                   *
+     F*       32      OVERFLOW INDICATOR (SE5985P2)                   *
+     F*       33      OVERFLOW INDICATOR (SE5985P3)                   *
+     F*       36      CONVERT PRICE TO NOMINAL CURRECY                *
+     F*       41      PRICE BASIS IS PERCENTAGE                       *
+     F*       42      SPOT RATE CALCULATED                            *
+     F*       81      CHAIN FAIL INDICATOR                            *
+     F*       73      WORK INDICATOR                                  *
+     F*       74      AVERAGE PRICE IS USED                           *   119664
+     F*       80      WORK INDICATOR                                  *
+     F*       84      WORK INDICATOR                                  *
+     F*       98      DATE FORMAT INDICATOR USED IN STANDARD SUBR.    *
+     F*       L5      CHANGE IN TELEKUR NUMBER                        *
+     F*       L4      CHANGE IN TELEKUR CURRENCY                      *
+     F*       L3      CHANGE IN YEAR                                  *
+     F*       L2      CHANGE IN MONTH                                 *
+     F*       L1      CHANGE IN DAY                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZSERPT1
+     E                    PBP    10  10  2 0                                                  CSE009
+     E                    PBU    10  10  2 0                                                  CSE009
+     E                    CUR        50  3               CURRENCY
+     E                    CVL        50 15 8             AVERAGE PRICE
+     E                    BAS        50  2 0             PRICE BASIS
+     E                    DAT        50  6 0             DATE
+     E                    TDT        50  7 0             DATE- IYYMMDD
+     E                    BRS        50  3 0             BOURSE
+     E*****               DEC        16  1               DECIMAL PLACES                       CSE009
+     E                    DEC        18  1               DECIMAL PLACES                       CSE009
+     E/COPY ZSRSRC,ZSEDITZ1
+     I/COPY WNCPYSRC,SE5985I001
+     I*
+     I*****TELEKURS                                                                           CSE009
+     I/COPY WNCPYSRC,SE5985I002
+     I*****                                         TELKPML5                                  CSE009
+     I*****                                         TCCYPML4                                  CSE009
+     I*****                                         VYERPML3                                  CSE009
+     I*****                                         VMONPML2                                  CSE009
+     I*****                                         VDAYPML1                                  CSE009
+      *                                                                                       CSE009
+     ITELEKR2 NS                                                                              CSE009
+     I                                        1   1 RECI                                      CSE009
+     I                                        2   3 ZZ002                                     CSE009
+      *                                                                                       CSE009
+     I                                        4   60ZERO3                                     CSE009
+     I                                        7  120TELKPM                                    CSE009
+     I                                        4  120TELKP2L5                                  CSE009
+      *                                                                                       CSE009
+     I                                       13  130ZERO1                                     CSE009
+     I                                       14  160TLSTPM                                    CSE009
+     I                                       17  190STEXPM                                    CSE009
+     I                                       20  20 RECIPM                                    CSE009
+     I                                       21  210CDP                                       CSE009
+     I                                       22  270CVLPPM                                    CSE009
+     I                                       28  28 EXTPPM                                    CSE009
+     I                                       29  290EOPPPM                                    CSE009
+     I                                       30  310RATTPM                                    CSE009
+     I                                       32  330VDAYPML1                                  CSE009
+     I                                       34  350VMONPML2                                  CSE009
+     I                                       36  360VYERPML3                                  CSE009
+     I                                       37  370EVCDPM                                    CSE009
+     I                                       38  400TCCYPML4                                  CSE009
+     I                                       41  420PBASPM                                    CSE009
+     I                                       43  450ZERO3A                                    CSE009
+      *                                                                                       CSE009
+     ISECTYDF1                                                                                CSE009
+     I              TVRF                            TVRF9                                     CSE009
+     I*
+     ISEMKCDF
+     I              RECI                            RECIM
+     I              TKSECD                          TKSECM                119664
+     I*
+     I**  CURRENT VALUE/PRICE
+     I*
+     I            DS
+     I                                        1   60CVLPPM
+     I                                        1   61CVLPP1
+     I                                        1   62CVLPP2
+     I                                        1   63CVLPP3
+     I                                        1   64CVLPP4
+     I                                        1   65CVLPP5
+     I                                        1   66CVLPP6
+     I*
+     I**  TELEKURS KEY
+     I*
+     I            DS
+     I/COPY WNCPYSRC,SE5985I005
+     I                                        1   6 TELEKN
+     I                                        1   60TELKPM
+     I/COPY WNCPYSRC,SE5985I006
+     I            DS                                                                          CSE009
+     I                                        1   9 TELEK2                                    CSE009
+     I                                        1   90TELKP2                                    CSE009
+     I*
+     I**  VALUE DATE - MMDDYY
+     I*
+     I            DS
+     I                                        1   60VDATMN
+     I                                        1   20VMONMN
+     I                                        3   40VDAYMN
+     I                                        5   50VDECMN
+     I                                        6   60VYERMN
+     I*
+     I**  VALUE DATE - DDMMYY
+     I*
+     I            DS
+     I                                        1   60VDATPM
+     I                                        1   20VDAYPM
+     I                                        3   40VMONPM
+     I                                        5   50VDECPM
+     I/COPY WNCPYSRC,SE5985I003
+     I                                        6   60VYERPM
+     I/COPY WNCPYSRC,SE5985I004
+     I*
+     I**  VALUE DATE - YYMMDD
+     I*
+     I            DS
+     I                                        1   70TDATPM
+     I                                        1   10TDECIN
+     I                                        2   20TDECPM
+     I                                        3   30TYERPM
+     I                                        4   50TMONPM
+     I                                        6   70TDAYPM
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I**  LOCAL DATA AREA FOR DATABASE RECORD
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** INFORMATIONAL DATA STRUCTURE
+     I*
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     ISPOOL3      DS
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** ACCESS PROGRAM DATA STRUCTURE
+     I*
+     ISDBANK    E DSSDBANKPD
+     ISDCURR    E DSSDCURRPD
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     C*                                                                ***
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** MAIN PROCESSING                                               ***
+     C*
+     C  N20                EXSR INITSR
+     C                     SETON                     20
+     C*
+     C           STEXPM    IFEQ 0
+     C                     MOVE '*'       ASTRSK
+     C                     ELSE
+     C                     MOVE ' '       ASTRSK
+     C                     END
+     C*
+     C** IF SAME CCY DATE THEN ACCUMULATE
+     C*
+     C           *IN30     IFEQ '1'
+     C           CDP       IFEQ 0
+     C                     Z-ADDCVLPPM    CVLTZZ 158
+     C                     END
+     C           CDP       IFEQ 1
+     C                     Z-ADDCVLPP1    CVLTZZ
+     C                     END
+     C           CDP       IFEQ 2
+     C                     Z-ADDCVLPP2    CVLTZZ
+     C                     END
+     C           CDP       IFEQ 3
+     C                     Z-ADDCVLPP3    CVLTZZ
+     C                     END
+     C           CDP       IFEQ 4
+     C                     Z-ADDCVLPP4    CVLTZZ
+     C                     END
+     C           CDP       IFEQ 5
+     C                     Z-ADDCVLPP5    CVLTZZ
+     C                     END
+     C           CDP       IFEQ 6
+     C                     Z-ADDCVLPP6    CVLTZZ
+     C                     END
+     C*
+     C**    SAVE PRICE BASIS/BOURSE CODE FROM RECORDS WITH THE LATEST
+     C**    DATE SO THAT IT CAN BE RESTORED LATER SINCE IT WILL BE
+     C**    OVERWRITTEN BY RECORDS WITH EARLIER DATES.
+     C*
+     C           YY        IFEQ 99
+     C                     Z-ADD0         TDECIN
+     C                     ELSE
+     C           YY        IFEQ 0
+     C                     Z-ADD1         TDECIN
+     C                     END
+     C                     END
+     C*
+     C***********VYERPM    IFEQ 0                                         173774
+     C***********RUNYER    ANDEQ9                                         173774
+     C***********RUNDEC    IFEQ 9                                         173774
+     C***********          Z-ADD1         TDECIN                          173774
+     C***********          END                                            173774
+     C***********RUNDEC    ADD  1         VDECPM                          173774
+     C***********          ELSE                                           173774
+     C***********                                                         173774
+     C***********VYERPM    IFEQ 9                                         173774
+     C***********RUNYER    ANDEQ0                                         173774
+     C***********RUNDEC    IFEQ 0                                         173774
+     C***********          Z-ADD0         TDECIN                          173774
+     C***********          Z-ADD9         VDECPM                          173774
+     C***********          ELSE                                           173774
+     C***********RUNDEC    SUB  1         VDECPM                          173774
+     C***********          END                                            173774
+     C***********                                                         173774
+     C***********          ELSE                                           173774
+     C***********          Z-ADDRUNDEC    VDECPM                          173774
+     C***********          END                                            173774
+     C***********          END                                            173774
+     C*                                                                   173774
+     C           RUNYER    IFLT VYERPM                                    173774
+     C                     Z-ADD0         TDECIN                          173774
+     C           RUNDEC    SUB  1         VDECPM                          173774
+     C                     ELSE                                           173774
+     C                     Z-ADDRUNDEC    VDECPM                          173774
+     C                     END                                            173774
+     C*                                                                   173774
+     C           VDECPM    IFLT 0                                         173774
+     C           VDECPM    ADD  10        VDECPM                          173774
+     C                     END                                            173774
+     C*                                                                   173774
+     C/COPY WNCPYSRC,SE5985C003
+     C*
+     C                     Z-ADDVDECPM    TDECPM
+     C/COPY WNCPYSRC,SE5985C004
+     C                     Z-ADDVYERPM    TYERPM
+     C                     Z-ADDVMONPM    TMONPM
+     C                     Z-ADDVDAYPM    TDAYPM
+     C*
+     C** SAVE LOWEST PRICE FOR THE SECURITY
+     C*
+     C           CVLTOT    IFEQ *ZERO
+     C                     Z-ADDCVLTZZ    CVLTOT
+     C                     Z-ADDTDATPM    TDATXX  70
+     C                     Z-ADDVDATPM    VDATQQ  60
+     C                     Z-ADDSTEXPM    STEXQQ  30
+     C                     Z-ADDPBASPM    PBASQQ  20
+     C                     ELSE
+     C*
+     C** SAVE PRICE IF DATE IS LATER THAN PREVIOUS SAVED DATE
+     C*
+     C           TDATPM    IFGT TDATXX
+     C           CVLTZZ    ANDNE*ZERO
+     C                     Z-ADDCVLTZZ    CVLTOT
+     C                     Z-ADDTDATPM    TDATXX
+     C                     Z-ADDVDATPM    VDATQQ
+     C                     Z-ADDSTEXPM    STEXQQ
+     C                     Z-ADDPBASPM    PBASQQ
+     C                     END
+     C*
+     C** SAVE PRICE IF DATE IS EQUAL TO PREVIOUS SAVED DATE
+     C** AND PRICE IS LESS THAN PREVIOUS SAVED PRICE
+     C*
+     C           TDATPM    IFEQ TDATXX
+     C           CVLTZZ    ANDLTCVLTOT
+     C           CVLTZZ    ANDNE*ZERO
+     C                     Z-ADDCVLTZZ    CVLTOT
+     C                     Z-ADDTDATPM    TDATXX
+     C                     Z-ADDVDATPM    VDATQQ
+     C                     Z-ADDSTEXPM    STEXQQ
+     C                     Z-ADDPBASPM    PBASQQ
+     C                     END
+     C                     END
+     C*
+     C                     ADD  1         COUNT
+     C                     END
+     C*
+     C** LEVEL BREAK PROCESSING
+     C*
+     C** L4 ON THEN STORE AVERAGE PRICE/RATE AND CCY
+     C*
+     CL4 20                EXSR STORE
+     C*
+     C** L5 - NEW SECURITY
+     C*
+     CL5 20      CUR,1     IFNE *BLANKS
+     CL5                   EXSR SECPRO
+     CL5                   END
+     C*
+     C** LR PROCESSING
+     C*
+     CLR         *IN20     IFEQ '0'
+     CLR                   EXSR INITSR
+     CLR                   END
+     C*
+     CLR                   EXSR RCFAU
+     CLR                   WRITESE5985AH
+     CLR                   WRITESE5985AT
+     C*
+     CLR         *IN26     IFEQ '1'
+     CLR                   WRITESE985P13
+     CLR                   CLOSESE5985P1
+     CLR                   END
+     C*
+     CLR         *IN27     IFEQ '1'
+     CLR                   WRITESE985P23
+     CLR                   CLOSESE5985P2
+     CLR                   END
+     C*
+     CLR         *IN28     IFEQ '1'
+     CLR                   WRITESE985P33
+     CLR                   CLOSESE5985P3
+     CLR                   END
+     C*
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  SECPRO - OUTPUT NEW PRICE DETAILS TO EXTRACT FILE OR ON
+     C*           EXCEPTION REPORT
+     C*
+     C*  CALLED FROM   L1 PROCESSING
+     C*  CALLS         CONVT, CHKDAT, PRINT
+     C*****************************************************************
+     C*
+     C           SECPRO    BEGSR                           ** SECPRO SR***
+     C/COPY WNCPYSRC,SE5985C005
+     C*
+     C** POSITION KEY
+     C*
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C           TELEKN    SETLLSECTK                    84 FOUND
+     C                     ELSE                                                               CSE009
+     C           TELEK2    SETLLSETKSCL0                 84 FOUND                             CSE009
+     C                     ENDIF                                                              CSE009
+     C           *IN84     IFEQ '1'
+     C*
+     C** ACCESS SECURITY DETAILS
+     C*
+     C                     SETOF                         80
+     C           *IN80     DOWEQ'0'
+     C                     SETOF                     4142
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C           TELEKN    READESECTK                    80
+     C                     ELSE                                                               CSE009
+     C           TELEK2    READESETKSCL0                 80                                   CSE009
+     C                     ENDIF                                                              CSE009
+     C                     SETOF                     43                   152330
+     C/COPY WNCPYSRC,SE5985C006
+     C*
+     C           *IN80     IFEQ '0'
+     C*                                                                   152330
+     C           CSE007    IFEQ 'Y'                                       152330
+     C           CEU017    OREQ 'Y'                                       152330
+      *                                                                   152330
+      ***  Search if there is Corporate Actions General Block for         152330
+      ***  Security.                                                      152330
+      *                                                                   152330
+     C*******              CALL 'SE7572'                           152330 227267
+     C                     CALL 'SE7572A'                                 227267
+     C                     PARM           @PBRCD                          152330
+     C                     PARM SESN      @PSESN 10                       152330
+     C                     PARM           @PPGB   1                       152330
+     C                     PARM           @PSGB   1                       152330
+      *                                                                   152330
+     C           @PPGB     IFEQ 'Y'                                       152330
+     C           @PSGB     ANDEQ'Y'                                       152330
+     C                     SETON                     43                   152330
+     C                     ELSE                                           152330
+     C                     SETOF                     43                   152330
+     C                     END                                            152330
+     C                     END                                            152330
+     C*                                                                   152330
+     C****       RECI      ANDNE'M'                                 039114152330
+     C           RECI      IFNE 'M'                                       152330
+     C           RECI      ANDNE'C'                                       039114
+     C           RECI      ANDNE'*'                                       039114
+     C           *IN43     ANDNE'1'                                       152330
+     C*                                                                   119664
+     C** ACCESS MARKET CENTRE FILE FOR MARKET CENTRE NAME                 119664
+     C** AND RETRIEVE TELEKURS MARKET CENTRE CODE                         119664
+     C*                                                                   119664
+     C                     MOVE *BLANKS   DDPLCE                          119664
+     C                     Z-ADD0         TKSECM                          119664
+     C***********STEXPM    CHAINSEMKCL0              81                   119664
+     C************IN81     IFEQ '0'                                       119664
+     C***********RECIM     ANDNE'*'                                       119664
+     C           SMCC      CHAINSEMKC                81                   119664
+     C           *IN81     IFEQ '0'                                       119664
+     C           RECIM     ANDNE'*'                                       119664
+     C                     MOVELMKTN      DDPLCE                          119664
+     C                     MOVE TKSECM    TKSECD                          122093
+     C                     ELSE                                           119664
+     C                     MOVE STEXPM    TKSECD                          119664
+     C                     END                                            119664
+     C*
+     C** CHECK IF PRICE TYPE 1
+     C*
+     C                     SETOF                     36
+     C                     Z-ADD1         X
+     C*
+     C** CHECK FOR LATEST DATE
+     C*
+     C                     Z-ADD1         X
+     C                     Z-ADD0         DATEST  70
+     C           TDT,X     DOWNE0
+     C           TDT,X     IFGT DATEST
+     C                     Z-ADDTDT,X     DATEST
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** KILL ALL PRICES FOR DATES LESS THAN LATEST
+     C*
+     C                     Z-ADD1         X
+     C           TDT,X     DOWNE0
+     C           TDT,X     IFLT DATEST
+     C                     Z-ADD0         BRS,X                           119664
+     C                     Z-ADD0         BAS,X
+     C                     Z-ADD0         CVL,X
+     C                     MOVE '   '     CUR,X
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** SAVE X FOR CONDITIONING CONVERT-LOOP
+     C*
+     C                     Z-ADDX         B       50
+     C                     SETOF                     74                   119664
+     C*
+     C** IF NOT FOUND THEN CHECK IF PRICE BASIS PERCENTAGE
+     C*
+     C                     Z-ADD1         X
+     C*****      01        LOKUPBAS,X                    73                                   CSE009
+     C                     MOVE '0'       *IN73                                               CSE009
+     C                     Z-ADD1         P       20                                          CSE009
+     C           PBP,P     DOWNE0                                                             CSE009
+     C           *IN73     ANDEQ'0'                                                           CSE009
+     C           PBP,P     LOKUPBAS,X                    73                                   CSE009
+     C           *IN73     IFEQ '0'                                                           CSE009
+     C                     Z-ADD1         X                                                   CSE009
+     C                     ADD  1         P                                                   CSE009
+     C                     END                                                                CSE009
+     C                     END                                                                CSE009
+      *                                                                                       CSE009
+     C           *IN73     IFEQ '1'
+     C                     SETON                     41
+     C                     Z-ADDCVL,X     CVLPXX
+     C                     Z-ADDBAS,X     PBASPM
+     C                     Z-ADDDAT,X     VDATPM
+     C                     Z-ADDBRS,X     STEXPM
+     C                     Z-ADDZSPOT     ZSPOTX 158
+     C                     ELSE
+     C********************************************************************119664
+     C***IF*UNIT*PRICE*THEN*CONVERT*LOWEST*PRICE**************************119664
+     C********************************************************************119664
+     C***********                                                         119664
+     C***********          Z-ADD0         CVLSAV 158                      119664
+     C***********          Z-ADD1         A       50                      119664
+     C***********          DO   B                                         119664
+     C***********CVL,A     IFNE 0                                         119664
+     C***********          EXSR CONVT                                     119664
+     C***********          SETON                     3642                 119664
+     C***********CVLSAV    IFEQ 0                                         119664
+     C***********          Z-ADDCVLPXX    CVLSAV                          119664
+     C***********          Z-ADDBAS,A     PBASPM                          119664
+     C***********          Z-ADDDAT,A     VDATPM                          119664
+     C***********          Z-ADDBRS,A     STEXPM                          119664
+     C***********          Z-ADDZSPOT     ZSPOTX                          119664
+     C***********          Z-ADDA         X                               119664
+     C***********          ELSE                                           119664
+     C***********CVLPXX    IFLT CVLSAV                                    119664
+     C***********          Z-ADDCVLPXX    CVLSAV                          119664
+     C***********          Z-ADDBAS,A     PBASPM                          119664
+     C***********          Z-ADDDAT,A     VDATPM                          119664
+     C***********          Z-ADDBRS,A     STEXPM                          119664
+     C***********          Z-ADDZSPOT     ZSPOTX                          119664
+     C***********          Z-ADDA         X                               119664
+     C***********          END                                            119664
+     C***********          END                                            119664
+     C***********          END                                            119664
+     C***********          ADD  1         A                               119664
+     C***********                                                         119664
+     C***********          END                                            119664
+     C***********          Z-ADDCVLSAV    CVLPXX                          119664
+     C*                                                                   119664
+     C** REMOVE OLD PROCESSING (SEARCH MINIMUM PRICE) AND REPLACE IT BY   119664
+     C** CALCULATION OF AVERAGE PRICE.                                    119664
+     C*                                                                   119664
+     C           TKSECM    IFNE 0                                         119664
+     C           SMCC      ANDNE*BLANKS                                   119664
+     C           *IN81     ANDEQ'0'                                       119664
+     C                     Z-ADD1         X                               119664
+     C           TKSECM    LOKUPBRS,X                    73               119664
+     C           *IN73     IFEQ '0'                                       119664
+     C*                                                                   119664
+     C** IF CODE BOURSE NOT FOUND THEN NEW PRICE IS AN AVERAGE PRICE      119664
+     C** OF ALL RECORD WITH SAME REFERENCE TELEKURS.                      119664
+     C*                                                                   119664
+     C                     EXSR AVRPRC                                    119664
+     C*                                                                   119664
+     C                     ELSE                                           119664
+     C** IF SECURITY MARKET CENTRE MATCH WITH STOCK EXCHANGE OF TELEKURS  119664
+     C** THEN TAKE PRICE ASSOCIATED IN ARRARY AND CONVERT TO NMCY TO      119664
+     C** OBTAIN NEW PRICE ( IF SAME CCY USE 1 FOR SPOT RATE TO AVOID      119664
+     C** PROBLEM OF ROUNDED).                                             119664
+     C                     Z-ADDX         A       50                      119664
+     C           CUR,A     IFEQ NMCY                                      119664
+     C                     SETON                     3642                 119664
+     C                     Z-ADDCVL,A     CVLPXX                          119664
+     C                     Z-ADDBAS,A     PBASPM                          119664
+     C                     Z-ADDDAT,A     VDATPM                          119664
+     C                     Z-ADDBRS,A     STEXPM                          119664
+     C                     Z-ADD1         ZSPOTX                          119664
+     C                     ELSE                                           119664
+     C                     EXSR CONVT                                     119664
+     C                     SETON                     3642                 119664
+     C                     Z-ADDCVLPXX    CVLSAV 158                      119664
+     C                     Z-ADDBAS,A     PBASPM                          119664
+     C                     Z-ADDDAT,A     VDATPM                          119664
+     C                     Z-ADDBRS,A     STEXPM                          119664
+     C                     Z-ADDZSPOT     ZSPOTX                          119664
+     C                     ENDIF                                          119664
+     C                     ENDIF                                          119664
+     C                     ELSE                                           119664
+     C*                                                                   119664
+     C** IF MARKET CENTRE (SECTYD) IS BLANK OR TELEKURS STOCK EXCHANGE    119664
+     C** IS EQUAL TO ZERO IN MIDAS (SEMKCD) THEN CALCULATE  AN AVERAGE    119664
+     C** PRICE                                                            119664
+     C*                                                                   119664
+     C                     EXSR AVRPRC                                    119664
+     **                                                                   119664
+     C                     END                                            119664
+     C                     END
+     C*
+     C** CHECK PRICE BASIS IS THE SAME
+     C*
+     C*****      PBASPM    IFEQ 0                                                             CSE009
+     C           PBASPM    LOKUPPBU                      73                                   CSE009
+     C           *IN73     IFEQ '1'                                                           CSE009
+     C           SPBS      IFNE 'U'
+     C           CVLPXX    MULT 100       CVLPXX
+     C                     END
+     C                     ELSE
+     C           SPBS      IFNE 'P'
+     C           STEXQQ    IFNE 012
+     C           CVLPXX    DIV  100       CVLPXX
+     C                     END
+     C                     END
+     C                     END
+     C*                                                                                       CSE009
+     C           PBASPM    IFEQ 60                                                            CSE009
+     C           CVLPXX    MULT 1000      CVLPXX                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C** SETUP FIELDS FOR OUTPUT
+     C** PRICE BASIS
+     C*
+     C                     MOVE *BLANKS   PBASPM                                              CSE009
+     C           *IN41     IFEQ '1'
+     C                     MOVE 'P'       PBASPM
+     C                     ELSE
+     C                     MOVE ' '       PBASPM
+     C                     END
+     C*
+     C** CURRENCY
+     C*
+     C** IF AVERAGE PRICE FILL CCY WITH BLANKS                            119664
+     C*                                                                   119664
+     C           *IN74     IFEQ '1'                                       119664
+     C                     MOVE *BLANKS   TCCY                            119664
+     C                     ELSE                                           119664
+     C                     MOVE CUR,X     TCCY
+     C                     ENDIF                                          119664
+     C*
+     C** TYPE
+     C*
+     C                     MOVELTCCY      TCCYCH  3        CE14 GB
+     C           TCCYCH    IFEQ 'DEM'                      CE14 GB
+     C                     MOVE '9'       EXTPPM
+     C                     ELSE
+     C                     MOVE '1'       EXTPPM
+     C                     END
+     C*
+     C** PRICE BASIS
+     C*
+     C           *IN42     IFEQ '1'
+     C                     Z-ADDZSPOTX    SPOTPM
+     C                     ELSE
+     C                     Z-ADD0         SPOTPM
+     C                     END
+     C                     Z-ADDCVLPXX    CVLPTL 158
+     C************                                                        119664
+     C***ACCESS*MARKET*CENTRE*FILE*FOR*MARKET*CENTRE*NAME**************   119664
+     C************                                                        119664
+     C************         MOVE *BLANKS   DDPLCE                          119664
+     C***********STEXPM    CHAINSEMKCL0              81                   089261
+     C************IN81     IFEQ '0'                                       089261
+     C***********RECIM     ANDNE'*'                                       089261
+     C***********SMCC      CHAINSEMKC                81             089261119664
+     C************IN81     IFEQ '0'                                 089261119664
+     C***********RECIM     ANDNE'*'                                 089261119664
+     C************         MOVELMKTN      DDPLCE                          119664
+     C************         ELSE                                     089261119664
+     C************         MOVE STEXPM    TKSECD                    089261119664
+     C************         END                                            119664
+     C*
+     C** IF EQUAL - OUTPUT REPORTING REORD ONLY
+     C*
+     C                     MOVE 'D'       RECI
+     C*
+     C** CHECK NOT EQUAL TO ZERO
+     C*
+     C                     Z-ADDMKPR      CVLPSC 158
+     C           MKPR      IFEQ 0
+     C                     Z-ADD100       MKPR
+     C           SPBS      IFNE 'P'
+     C                     Z-ADD1         MKPR
+     C                     END
+     C                     END
+     C*
+     C** IF MKPR EQUAL TO 1 FOR UNITS OR 100% FOR PERCENTAGE
+     C*
+     C           SPBS      IFNE 'P'
+     C           MKPR      COMP 1                        21
+     C                     ELSE
+     C           MKPR      COMP 100                      21
+     C                     END
+     C*
+     C** FORMAT DATE FOR "M" FOR OUTPUT AND CHKDAT.
+     C*
+     C           ZDATFM    IFEQ 'M'
+     C                     MOVE VDAYPM    VDAYMN
+     C                     MOVE VMONPM    VMONMN
+     C                     MOVE VYERPM    VYERMN
+     C                     MOVE VDECPM    VDECMN
+     C                     END
+     C*
+      /COPY SECPYSRC,SE5985CBDU
+      /COPY WNCPYSRC,SE5985C001                                           S01408
+     C*
+     C           UPDATE    IFEQ '1'
+     C/COPY WNCPYSRC,SE5985C007
+     C                     WRITETELKXPFS
+     C/COPY WNCPYSRC,SE5985C008
+     C                     SETON                         25
+     C                     ADD  1         PCNTUP
+     C                     EXSR PRINT
+     C                     ELSE
+     C/COPY WNCPYSRC,SE5985C009
+     C                     SETOF                     25
+     C                     EXSR PRINT
+     C                     ADD  1         PCNTNU
+     C                     END
+     C                     END
+     C                     END                                            152330
+     C*
+     C                     END
+     C                     END
+     C*
+     C** CLEAR ARRAYS FOR NEXT SECURITY
+     C*
+     C                     Z-ADD0         X       50
+     C                     Z-ADD0         CVL
+     C                     MOVE *BLANKS   CUR
+     C                     Z-ADD0         BAS
+     C                     Z-ADD0         DAT
+     C                     Z-ADD0         TDT
+     C                     Z-ADD0         BRS
+     C                     Z-ADD0         TDATXX
+     C*
+     C                     ENDSR
+     C*****************************************************************   119664
+      /EJECT                                                              119664
+     C*****************************************************************   119664
+     C*  AVRPRC- CALCULATE AVERAGE PRICE IN NOMINAL CCY                   119664
+     C*                                                                   119664
+     C*  CALLED FROM   SECPRO                                             119664
+     C*  CALLS                                                            119664
+     C*****************************************************************   119664
+     C*                                                                   119664
+     C           AVRPRC    BEGSR                                          119664
+     C*                                                                   119664
+     C********** CUR,2     IFEQ *BLANKS                            119664 165667
+     C*****IF*ONLY*ONE*PRICE*THEN*SETUP*SPOT*RATE*AND************* 119664 165667
+     C*****TELEKURS*CCY*FOR*OUTPUT*IN*TELKXPF2******************** 119664 165667
+     C**********           Z-ADD1         A                        119664 165667
+     C**********           SETON                     3642          119664 165667
+     C**********           EXSR CONVT                              119664 165667
+     C**********           Z-ADDZSPOT     ZSPOTX                   119664 165667
+     C**********           Z-ADDBAS,A     PBASPM                   119664 165667
+     C**********           Z-ADDDAT,A     VDATPM                   119664 165667
+     C**********           Z-ADDBRS,A     STEXPM                   119664 165667
+     C**********                                                   119664 165667
+     C**********           ELSE                                    119664 165667
+     C*                                                                   119664
+     C**  IF SEVERAL PRICES FOR SAME CCY THEN CONVERT ALL TELEKURS PRICES,119664
+     C**  FILL TELEKURS CCY WITH BLANKS AND SPOT RATE TO 0.00             119664
+     C**  AND CALCULATE AVERAGE PRICE FOR OUTPUT FILE TELKXPF2.           119664
+     C*                                                                   119664
+     C                     SETON                     74                   119664
+     C                     Z-ADD0         CVLSAV                          119664
+     C                     Z-ADD0         CVLTO1 158                      119664
+     C                     Z-ADD1         A                               119664
+     C                     DO   B                                         119664
+     C           CVL,A     IFNE 0                                         119664
+     C                     EXSR CONVT                                     119664
+     C                     SETON                     3642                 119664
+     C                     ADD  CVLPXX    CVLSAV                          119664
+     C                     ADD  1         A                               119664
+     C                     END                                            119664
+     C                     END                                            119664
+     C                     SUB  1         A                               119664
+     C           A         IFNE 0                                         119664
+     C           CVLSAV    DIV  A         CVLPXX 158H                     119664
+     C                     ENDIF                                          119664
+     C                     Z-ADD0         ZSPOTX                          119664
+     C                     MOVEL*BLANKS   TCCY                            119664
+     C**********           ENDIF                                   119664 165667
+     C                     ENDSR                                          119664
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  STORE - STORE AVERAGE PRICE/CCY
+     C*
+     C*  CALLED FROM   L4 PROCESSING
+     C*  CALLS
+     C*****************************************************************
+     C*
+     C           STORE     BEGSR                           ** STORE  SR **
+     C*                                                                                       CSE009
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C                     MOVELTELKPM    WTELKP    P                                         CSE009
+     C                     ELSE                                                               CSE009
+     C                     MOVE TELKP2    WTELKP                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C           COUNT     IFGT 0
+     C*
+     C** IF CONVERTABLE CCY THEN CHANGE TO FINANCIAL CCY
+     C*
+     C           TCCYPM    IFEQ 577
+     C                     Z-ADD576       TCCYPM
+     C                     END
+     C           TCCYPM    IFEQ 122
+     C                     Z-ADD120       TCCYPM
+     C                     END
+     C           TCCYPM    IFEQ 21
+     C                     Z-ADD20        TCCYPM
+     C                     END
+     C*
+     C** ACCESS TELEKURS CURRENCY FOR MIDAS CCY CODE
+     C*
+     C           TCCYPM    CHAINSDCURRL5             81
+     C*
+     C** IF NOT FOUND - MISSING TELEKURS CURRENCY REPORT
+     C*
+     C           *IN81     IFEQ '1'
+     C                     ADD  1         PCNTCY
+     C*
+     C           *IN28     IFEQ '0'
+     C                     OPEN SE5985P3
+     C                     EXSR RCFP3
+     C                     SETON                     28
+     C                     WRITESE985P31
+     C                     END
+     C*
+     C                     WRITESE985P32
+     C           *IN33     IFEQ '1'
+     C                     WRITESE985P31
+     C                     SETOF                     33
+     C                     END
+     C                     SETOF                     80
+     C                     ELSE
+     C*
+     C** ELSE - SETUP DATE FOR TESTING AND LOAD INTO ARRAY
+     C*
+     C                     Z-ADDVDATQQ    VDATPM
+     C                     ADD  1         X       50
+     C                     Z-ADDCVLTOT    CVL,X
+     C                     MOVEAA6CYCD    CUR,X
+     C                     Z-ADDPBASQQ    BAS,X
+     C                     Z-ADDVDATQQ    DAT,X
+     C                     Z-ADDTDATXX    TDT,X
+     C                     Z-ADDSTEXQQ    BRS,X
+     C                     END
+     C                     END
+     C*
+     C** CLEAR COUNTS AND TOTALS FOR NEXT CCY
+     C*
+     C                     Z-ADD0         CVLTOT 158
+     C                     Z-ADD0         COUNT   50
+     C                     SETON                     30
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  CONVT - CONVERT PRICE TO NOMINAL CCY
+     C*
+     C*  CALLED FROM   SECPRO
+     C*  CALLS
+     C*****************************************************************
+     C*
+     C           CONVT     BEGSR                           ** CONVT  SR **
+     C*
+     C** RECOVER TELEKURS CURRENCY SPOT RATES
+     C*
+     C                     MOVE CUR,A     KCCY    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM 'BLANKS'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           KCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELKCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C** SAVE TELEKURS CCY DETAILS
+     C*
+     C                     MOVE A6MDIN    ZMULD1  1
+     C                     MOVE A6SPRT    ZSPOT1 158
+     C*
+     C**  RECOVER SECURITY CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM 'BLANKS'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           NMCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELNMCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C**   STORE  NOMINAL  CURRENCY DETAILS
+     C*
+     C                     MOVE A6MDIN    ZMULD2  1
+     C                     MOVE A6SPRT    ZSPOT2 158
+     C*
+     C** CALCULATE SPOT RATE
+     C*
+     C           ZMULD1    IFNE 'M'
+     C           1         DIV  ZSPOT1    ZSPOTA 158H
+     C                     ELSE
+     C                     Z-ADDZSPOT1    ZSPOTA
+     C                     END
+     C           ZMULD2    IFEQ 'M'
+     C           1         DIV  ZSPOT2    ZSPOTB 158H
+     C                     ELSE
+     C                     Z-ADDZSPOT2    ZSPOTB
+     C                     END
+     C           ZSPOTA    MULT ZSPOTB    ZSPOT  158H
+     C*
+     C** CALCULATE NEW AMOUNT
+     C*
+     C           CVL,A     MULT ZSPOT     CVLPXX 158H
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  PRINT -  PRINT DETAILS OF PRICES
+     C*
+     C*  CALLED FROM   SECPRO
+     C*  CALLS         ZDATE2, ZSERPT, ZSEDIT, DECSR
+     C*****************************************************************
+     C*
+     C           PRINT     BEGSR                           ** PRINT  SR **
+     C*                                                                                       CSE009
+     C           CSE009    IFEQ 'N'                                                           CSE009
+     C                     MOVELTELKPM    WTELKP    P                                         CSE009
+     C                     ELSE                                                               CSE009
+     C                     MOVE TELKP2    WTELKP                                              CSE009
+     C                     ENDIF                                                              CSE009
+     C*
+     C           ZDATFM    IFEQ 'M'
+     C                     MOVELVDATMN    PVDATE
+     C                     ELSE
+     C                     MOVELVDATPM    PVDATE
+     C                     END
+     C*
+     C           MATY      IFGT 0
+     C                     Z-ADDMATY      ZDAYNO
+     C                     Z-ADD0         ZDATE
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50       DAY NUMBER
+     C                     PARM           ZDATFM  1        DATE FORMAT IND
+     C                     PARM           ZDATE   60       DATE-DDMMYY
+     C                     PARM           WQ0004  7        DATE-DDMMMYY
+     C                     Z-ADDZDATE     ZMADAT
+     C                     ELSE
+     C                     Z-ADD0         ZMADAT
+     C                     END
+     C*                                                                   088723
+     C** Format last price update for P1 report                           088723
+     C*                                                                   088723
+     C                     MOVE *BLANKS   RLPRU                           088723
+     C           LPRU      IFGT 0                                         088723
+     C                     Z-ADDLPRU      ZDAYNO                          088723
+     C                     Z-ADD0         ZDATE                           088723
+     C                     CALL 'ZDATE2'                                  088723
+     C                     PARM           ZDAYNO  50                      088723
+     C                     PARM           ZDATFM  1                       088723
+     C                     PARM           ZDATE   60                      088723
+     C                     PARM           WQ0004  7                       088723
+     C                     Z-ADDZDATE     RLPRU                           088723
+     C                     ENDIF                                          088723
+     C*
+     C                     MOVE *BLANKS   SECNAM
+     C                     MOVELSRPN      ZTITLE
+     C                     Z-ADDCPNR      ZCPRAT
+     C                     EXSR ZSERPT
+     C                     MOVELZRPNAM    SECNAM
+     C*
+     C** EDIT PRICES
+     C*
+     C                     Z-ADD8         ZDECS
+     C                     MOVE *BLANKS   ZFLD15                                              CSE009
+     C                     MOVE CVLPSC    ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C*****                MOVE ZOUT21    XCVLP  16                                           CSE009
+     C                     MOVE ZOUT21    XCVLP  18                                           CSE009
+     C                     MOVEAXCVLP     DEC
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLXSC
+     C*
+     C                     MOVE *BLANKS   ZFLD15                                              CSE009
+     C                     MOVE CVLPTL    ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XCVLP
+     C                     MOVEAXCVLP     DEC
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLXTL
+     C*
+     C           *IN25     IFEQ '0'
+     C*
+     C           *IN26     IFEQ '0'
+     C                     OPEN SE5985P1
+     C                     EXSR RCFP1
+     C                     SETON                     26
+     C                     WRITESE985P11
+     C                     END
+     C*
+     C                     WRITESE985P12
+     C           *IN31     IFEQ '1'
+     C                     WRITESE985P11
+     C                     SETOF                     31
+     C                     END
+     C                     END
+     C*
+     C           *IN25     IFEQ '1'
+     C*
+     C           *IN27     IFEQ '0'
+     C                     OPEN SE5985P2
+     C                     EXSR RCFP2
+     C                     SETON                     27
+     C                     WRITESE985P21
+     C                     END
+     C*
+     C                     WRITESE985P22
+     C           *IN32     IFEQ '1'
+     C                     WRITESE985P21
+     C                     SETOF                     32
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  INITSR - INITIAL PROCESSING SUBROUTINE
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           INITSR    BEGSR                           ** INITSR SR **
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5985  'DBPGM
+     C                     OUT  LDA
+     C                     Z-ADD0         X       50
+     C                     Z-ADD0         CVL
+     C                     Z-ADD0         BAS
+     C                     Z-ADD0         DAT
+     C                     Z-ADD0         TDT
+     C                     Z-ADD0         PCNTUP
+     C                     Z-ADD0         PCNTNU
+     C                     Z-ADD0         PCNTCY
+     C                     Z-ADD0         TDECIN
+     C                     MOVE *BLANKS   CUR
+     C                     SETON                     30
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C** GET YEAR FROM THE SYSTEM RUN DATE
+     C*
+     C                     MOVE BJMRDT    YY      20
+     C                     MOVELYY        RUNDEC  10
+     C                     MOVE YY        RUNYER  10
+     C*
+     C** SET DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     MOVE 'M'       ZDATFM
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     MOVE 'D'       ZDATFM
+     C                     END
+     C           *LOVAL    SETLLSDBRCHL0                                  152330
+     C                     READ SDBRCHL0                 40               152330
+     C                     MOVE A8BRCD    @PBRCD  3                       152330
+      ***  Access Switchable features file for Corporate Actions.         152330
+      *                                                                   152330
+     C                     MOVE 'N'       CSE007  1                       152330
+     C                     CALL 'AOSARDR0'                                152330
+     C                     PARM '       ' @RTCD                           152330
+     C                     PARM '*VERIFY' @OPTN                           152330
+     C                     PARM 'CSE007'  @SARD   6                       152330
+      *                                                                   152330
+     C           @RTCD     IFEQ *BLANKS                                   152330
+      *                                                                   152330
+      ***  If Corporate Actions feature is installed.                     152330
+      *                                                                   152330
+     C                     MOVE 'Y'       CSE007                          152330
+     C                     END                                            152330
+      *                                                                   152330
+      ***  Access Switchable features file for Securities Redenomination  152330
+      *                                                                   152330
+     C                     MOVE 'N'       CEU017  1                       152330
+     C                     CALL 'AOSARDR0'                                152330
+     C                     PARM '       ' @RTCD                           152330
+     C                     PARM '*VERIFY' @OPTN                           152330
+     C                     PARM 'CEU017'  @SARD                           152330
+      *                                                                   152330
+     C           @RTCD     IFEQ *BLANKS                                   152330
+      *                                                                   152330
+      ***  If Securities Redenomination feature is installed.             152330
+      *                                                                   152330
+     C                     MOVE 'Y'       CEU017                          152330
+     C                     END                                            152330
+      *                                                                                       CSE009
+      ***  Access Switchable features file for Telekurs Changes                               CSE009
+      *                                                                                       CSE009
+     C                     MOVE 'N'       CSE009  1                                           CSE009
+     C                     CALL 'AOSARDR0'                                                    CSE009
+     C                     PARM '       ' @RTCD                                               CSE009
+     C                     PARM '*VERIFY' @OPTN                                               CSE009
+     C                     PARM 'CSE009'  @SARD                                               CSE009
+      *                                                                                       CSE009
+     C           @RTCD     IFEQ *BLANKS                                                       CSE009
+     C           BJRDNB    ORGE 09978                                                         CSE009
+      *                                                                                       CSE009
+     C**  Set indicator if installed or run date > or = than 26 April 99                      CSE009
+      *                                                                                       CSE009
+     C                     MOVE 'Y'       CSE009                                              CSE009
+     C                     END                                                                CSE009
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  DECSR - FIND NO OF DECIMAL PLACES
+     C*
+     C*  CALLED FROM   PRINT
+     C*  CALLS
+     C*****************************************************************
+     C*
+     C           DECSR     BEGSR                           *** DECSR   ***
+     C*
+     C*****                Z-ADD15        D       20                                          CSE009
+     C                     Z-ADD17        D       20                                          CSE009
+     C                     Z-ADD8         ZDECS
+     C                     DO   8
+     C           DEC,D     IFEQ '0'
+     C                     MOVE ' '       DEC,D
+     C                     SUB  1         D
+     C                     ELSE
+     C                     GOTO EDECSR
+     C                     END
+     C                     END
+     C           EDECSR    TAG
+     C*****      D         IFEQ 7                                                             CSE009
+     C*****                Z-ADD6         D                                                   CSE009
+     C*****                MOVE ' '       DEC,7                                               CSE009
+     C           D         IFEQ 9                                                             CSE009
+     C                     Z-ADD8         D                                                   CSE009
+     C                     MOVE ' '       DEC,9                                               CSE009
+     C                     END
+     C*
+     C           SPBS      IFEQ 'P'
+     C                     ADD  1         D
+     C                     MOVE '%'       DEC,D
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      /COPY SECPYSRC,SE5985CCPG
+      /COPY WNCPYSRC,SE5985C002                                           S01408
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM1    SFNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           SFNUM
+     C                     PARM           ZSERR   1
+     C*
+     C** ERROR IN ZSFILE PROCESSING
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP2 -- SUBROUTINE TO REGISTER P2 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP2     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM2    SFNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE2
+     C                     PARM           SFNUM
+     C                     PARM           ZSERR
+     C*
+     C** ERROR IN ZSFILE PROCESSING
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP3 -- SUBROUTINE TO REGISTER P3 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP3     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM3    SFNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE3
+     C                     PARM           SFNUM
+     C                     PARM           ZSERR
+     C*
+     C** ERROR IN ZSFILE PROCESSING
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  RETSR -  END OF PROGRAM PROCESSING
+     C*
+     C*  CALLED FROM   MAIN PROCESSING, INITSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     DUMP                                           165667
+     C                     SETON                     U7U8LR
+     C           *IN26     IFEQ '1'
+     C                     CLOSESE5985P1
+     C                     END
+     C           *IN27     IFEQ '1'
+     C                     CLOSESE5985P2
+     C                     END
+     C           *IN28     IFEQ '1'
+     C                     CLOSESE5985P3
+     C                     END
+     C*
+     C                     EXSR RCFAU
+     C                     WRITESE5985AH
+     C                     WRITESE5985AE
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C*
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZSERPT2
+     C/COPY ZSRSRC,ZDATE1Z3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   PBP  - Price basis Percentage                                                            CSE009
+0111213141                                                                                    CSE009
+**   PBU  - Price basis Unit                                                                  CSE009
+001020305160                                                                                  CSE009

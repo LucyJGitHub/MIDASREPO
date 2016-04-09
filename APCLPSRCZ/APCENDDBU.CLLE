@@ -1,0 +1,983 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CPK015*/
+/*STD    CLPBASEMOD                                                  */                   /*CPK015*/
+/*EXI    TEXT('Midas AP End the API database updaters')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APCENDDBU - End the database updaters                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. AR1075857          Date 11Jan13              */
+/*       Prev Amend No. AR787620           Date 10Jun11              */
+/*                      CER059             Date 19Jul10              */
+/*                      BUG26855           Date 17Dec09              */
+/*                      CER034A            Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CAS009             Date 04May04              */
+/*                      BUG8154            Date 16Aug05              */
+/*                      CSE039             Date 07Mar03              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      211152             Date 30Oct02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CAP055             Date 13Mar02              */
+/*                      CAP072             Date 27Mar02              */
+/*                      CAP069             Date 22Mar02              */
+/*                      CAP071             Date 22Mar02              */
+/*                      CAP068             Date 22Mar02              */
+/*                      CAP070             Date 11Mar02              */
+/*                      CAS001             Date 23Nov01              */
+/*                      CPK015             Date 29May02              */
+/*                      CAP067             Date 24Sep01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CAP042             Date 08Jan01              */
+/*                      CAP038             Date 21NOV00              */
+/*                      CAP057             Date 21NOV00              */
+/*                      CAP140             Date 17Oct00              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CAP039             Date 14Jul00              */
+/*                      CAP137             Date 07Feb00              */
+/*                      CAP136             Date 15Nov99              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CAP034             Date 14Apr99              */
+/*                      CAP035             Date 14Apr99              */
+/*                      CAP031             Date 14Apr99              */
+/*                      CAP032             Date 26Apr99              */
+/*                      CAP033             Date 26Apr99              */
+/*                      173227             Date 05Jan00              */
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CAP030             Date 16Mar99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP005             Date 15Oct98              */
+/*                      CAP004             Date 11Aug98              */
+/*                      CAP003             Date 27Jul98              */
+/*                      CAP002  *CREATE    Date 01May98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1075857 - DBU_MVTS job not ended during COB start causing */
+/*                   an error at SCKOBJLCB                           */
+/*       AR787620 - Hooks Incorporation                              */
+/*                  WNCPYSRC,APH00027                                */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG26855 - SCKOBJLCB 00001                                  */
+/*       CER034A - German Features - New Fields and Enquiries        */
+/*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
+/*       BUG8154- The parameters for BSRT and SPTR are in the        */
+/*                wrong order                                        */
+/*       CSE039 - Automatic Settlement of Trades                     */
+/*       211152 - Allow database updater DBU_LDNI to be ended        */
+/*                without setting FUND flag to 'Y' if Internal       */
+/*                Dealing APIs are not switched on.                  */
+/*       CAP055 - APIs for FRA/IRS Caps/Collars/Floors               */
+/*       CAP072 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Fee Settlement and Adjustment input   */
+/*       CAP071 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Facility Amendment.                   */
+/*       CAP068 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Funding Participants.                 */
+/*       CAP069 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs. Risk Participants.                    */
+/*       CAP070 - Conversion of LE inputs into modular structure to  */
+/*                use as APIs.                                       */
+/*       CAP042 - Conversion of Internal Funding Deal inputs into    */
+/*                modular structure to use as APIs.                  */
+/*       CAS001 - Net Present Value (NPV) Accounting                 */
+/*       CPK015 - Converted to ILE.                                  */
+/*                - *UPC data areas replaced by *LCK.                */
+/*       CAP067 - Repurchase Agreements API.                         */
+/*       CAP038 - Midas APIs Base Rates                              */
+/*       CAP057 - Midas APIs Spot Rates                              */
+/*       CAP140 - Conversion of SE Security Diary Event inputs into  */
+/*                modular structure to use as APIs.                  */
+/*       CAP039 - Add processing for SD SECURITY CUSTOMER DETAILS    */
+/*       CAP137 - Conversion of SE Security inputs into modular      */
+/*                structure to use as APIs.                          */
+/*       CAP136 - Conversion of FT Incoming Payment inputs into      */
+/*                modular structure to use as APIs.                  */
+/*       CAP035 - Add processing for G/L ACCOUNTS MAINTENANCE        */
+/*       CAP034 - Add processing for SD CUSTOMERS DETAILS            */
+/*       CAP031 - Add processing for FT Outgoing Payments            */
+/*       CAP032 - Conversion of Journal Batch Entry inputs into      */
+/*                modular structure to use as APIs.                  */
+/*       CAP033 - Conversion of PM inputs into modular structure to  */
+/*                use as APIs.                                       */
+/*       173227 - Reinstate CAP005                                   */
+/*       CAP030 - APIs for SE Price Input                            */
+/*       CAP005 - Conversion of Midas inputs to modular API structure*/
+/*                Phase 4 - Add rates imports                        */
+/*       CAP004 - Conversion of Midas inputs to modular API structure*/
+/*                Phase 3                                            */
+/*       CAP003 - Conversion of Midas inputs to modular API structure*/
+/*                Phase 2                                            */
+/*       CAP002 - Conversion of transaction inputs into modular      */
+/*                structure to use as APIs.                          */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL) */                    /*CAP003*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*CAP004*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD)                        /*CAP003*/ /*CAP004*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*CAP005*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC)            /*CAP004*/ /*CAP005*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +
+/***********              &FWRT &INTR)                              /*CAP005*/ /*CAP030*/ /*173227*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*173227*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                      /*173227*/
+/***********              &PRCS)                                               /*CAP030*/ /*173227*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL + */        /*173227*/ /*CAP033*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC + */        /*173227*/ /*CAP033*/
+/**********               &FWRT &INTR &PRCS)                         */        /*173227*/ /*CAP033*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL + */
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC + */
+/***********              &FWRT &INTR &PRCS &PFDM)                   */        /*CAP033*/ /*CAP032*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL + */
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC + */
+/***********              &FWRT &INTR &PRCS &PFDM &BITH &BITP)       */        /*CAP032*/ /*CAP035*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL+*/ /*CAP136*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC+*/ /*CAP136*/
+/***********              &FWRT &INTR &PRCS &PFDM &BITH &BITP +    */ /*CAP136*/
+/***********              &OPAY &CUSD &AMAD)                */ /*CAP035 CAP136*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL+*/ /*CAP137*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC+*/ /*CAP137*/
+/***********              &FWRT &INTR &PRCS &PFDM &BITH &BITP +    */ /*CAP137*/
+/***********              &OPAY &CUSD &AMAD &IPAY)          */ /*CAP136 CAP137*/
+/*********** PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +*/ /*CAP039*/
+/***********              &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +*/ /*CAP039*/
+/***********             &FWRT &INTR &PRCS &PFDM &BITH &BITP +      */ /*CAP039*/
+/***********              &OPAY &CUSD &AMAD &IPAY &SECS)            */ /*CAP137*/ /*CAP039*/
+/*/COPY WNCPYSRC,APCENDDB01                                          */
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL+*/                     /*CAP140*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC+*/                     /*CAP140*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +    */                     /*CAP140*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD)     */              /*CAP039 CAP140*/
+/**********                                                           */                  /*CAP038*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP038*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP038*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP038*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP038*/
+/**********               &SEDE)                                      */       /*CAP140*/ /*CAP038*/
+/**********                                                           */                  /*CAP038*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP057*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP057*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP057*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP057*/
+/**********               &SEDE &BSRT)                                */       /*CAP038*/ /*CAP057*/
+/**********                                                           */                  /*CAP057*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP042*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP042*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP042*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP042*/
+/**********               &SEDE &BSRT &STPR)                          */       /*CAP057*/ /*CAP042*/
+/**********                                                           */                  /*CAP042*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP067*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP067*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP067*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP067*/
+/**********               &SEDE &BSRT &SPTR &FUND)                    */       /*CAP042*/ /*CAP067*/
+                                                                                          /*CAP067*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAS001*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAS001*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAS001*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAS001*/
+/**********               &SEDE &BSRT &SPTR &FUND &REPO &BYSL)        */       /*CAP067*/ /*CAS001*/
+                                                                                          /*CAS001*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*CAP068*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                      /*CAP068*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +                           /*CAP068*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +                           /*CAP068*/
+/**********               &SEDE &BSRT &SPTR &FUND &REPO &BYSL &YRAT)           /*CAS001*/ /*CAP068*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP070*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP070*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP070*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP070*/
+/**********               &SEDE &BSRT &SPTR &FUND &REPO &BYSL &YRAT + */                  /*CAP070*/
+/**********               &ASGN)                                      */       /*CAP070*/ /*CAP069*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP068*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP068*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP +       */                  /*CAP068*/
+/**********               &OPAY &CUSD &AMAD &IPAY &SECS &SECD +       */                  /*CAP068*/
+/**********               &SEDE &BSRT &SPTR &FUND &REPO &BYSL &YRAT + */                  /*CAP068*/
+/**********               &ASGN &RPRT)                                */       /*CAP069*/ /*CAP068*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP071*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP071*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY + */                  /*CAP071*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &BSRT + */                  /*CAP071*/
+/**********               &SPTR &FUND &REPO &BYSL &YRAT +             */                  /*CAP071*/
+/**********               &ASGN &RPRT &FPRT)                          */       /*CAP068*/ /*CAP071*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */                  /*CAP072*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */                  /*CAP072*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY + */                  /*CAP072*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &BSRT + */                  /*CAP072*/
+/**********               &SPTR &FUND &REPO &BYSL &YRAT +             */                  /*CAP072*/
+/**********               &ASGN &RPRT &FPRT &FAMD)                    */       /*CAP071*/ /*CAP072*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */       /*CAP072*/ /*CAP055*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */       /*CAP072*/ /*CAP055*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY + */       /*CAP072*/ /*CAP055*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &BSRT + */       /*CAP072*/ /*CAP055*/
+/**********               &SPTR &FUND &REPO &BYSL &YRAT +             */       /*CAP072*/ /*CAP055*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST)        */       /*CAP072*/ /*CAP055*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +  */       /*CAP055*/ /*CSE039*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +  */       /*CAP055*/ /*CSE039*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY + */       /*CAP055*/ /*CSE039*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &BSRT + */       /*CAP055*/ /*CSE039*/
+/**********               &SPTR &FUND &REPO &BYSL &YRAT +             */       /*CAP055*/ /*CSE039*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF)  */       /*CAP055*/ /*CSE039*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*CAS009*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                      /*CAS009*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY +                     /*CAS009*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &BSRT +                     /*CAS009*/
+/**********               &SPTR &FUND &REPO &BYSL &YRAT +                                 /*CAS009*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF +                     /*CAS009*/
+/**********               &MVTS)                                               /*CSE039*/ /*CAS009*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                      /*CAS009*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                      /*CAS009*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY +                     /*CAS009*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &SPTR +                     /*CAS009*/
+/**********               &BSRT &FUND &REPO &BYSL &YRAT +                                 /*CAS009*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF +                     /*CAS009*/
+/**********               &MVTS)                                              /*BUG8154*/ /*CAS009*/
+ 
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                     /*CER034A*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                     /*CER034A*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY +                    /*CER034A*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &SPTR +                    /*CER034A*/
+/**********               &BSRT &FUND &REPO &BYSL &YRAT +                                /*CER034A*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF +                    /*CER034A*/
+/**********               &MVTS &DLFE)                                        /*CAS009*/ /*CER034A*/
+                                                                                         /*CER034A*/
+/**********  PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +                     /*CER034A*/
+/**********               &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +                     /*CER034A*/
+/**********               &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY +                    /*CER034A*/
+/**********               &CUSD &AMAD &IPAY &SECS &SECD &SEDE &SPTR +                    /*CER034A*/
+/**********               &BSRT &FUND &REPO &BYSL &YRAT +                                /*CER034A*/
+/**********               &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF +                    /*CER034A*/
+/**********               &MVTS &DLFE)                                        /*CAS009*/ /*CER034A*/
+ 
+             PGM        PARM(&SYSTEM &LDNI &DEAM &NASP &NASS &FXDL +
+                          &FRA &SIRS &CIRS &DPMV &TRAD &TRAN &INTC +
+                          &FWRT &INTR &PRCS &PFDM &BITH &BITP &OPAY +
+                          &CUSD &AMAD &IPAY &SECS &SECD &SEDE &SPTR +
+                          &BSRT &FUND &REPO &BYSL &YRAT +
+                          &ASGN &RPRT &FPRT &FAMD &FEAD &FEST &CACF +
+                          &MVTS &DLFE &CUAH)                                             /*CER034A*/
+                                                                                         /*CER034A*/
+/*/COPY WNCPYSRC,APCENDDB02                                          */
+ 
+             DCL        VAR(&LDNI) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEAM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NASP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NASS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FXDL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FRA ) TYPE(*CHAR) LEN(1)                 /*CAP003*/
+             DCL        VAR(&SIRS) TYPE(*CHAR) LEN(1)                 /*CAP003*/
+             DCL        VAR(&CIRS) TYPE(*CHAR) LEN(1)                 /*CAP003*/
+             DCL        VAR(&DPMV) TYPE(*CHAR) LEN(1)                 /*CAP003*/
+             DCL        VAR(&TRAD) TYPE(*CHAR) LEN(1)                 /*CAP003*/
+             DCL        VAR(&TRAN) TYPE(*CHAR) LEN(1)                 /*CAP004*/
+             DCL        VAR(&INTC) TYPE(*CHAR) LEN(1)                 /*CAP004*/
+             DCL        VAR(&FWRT) TYPE(*CHAR) LEN(1)                 /*CAP005*/
+             DCL        VAR(&INTR) TYPE(*CHAR) LEN(1)                 /*CAP005*/
+             DCL        VAR(&PRCS) TYPE(*CHAR) LEN(1)                 /*CAP030*/
+             DCL        VAR(&PFDM) TYPE(*CHAR) LEN(1)                 /*CAP033*/
+             DCL        VAR(&BITH) TYPE(*CHAR) LEN(1)                 /*CAP032*/
+             DCL        VAR(&BITP) TYPE(*CHAR) LEN(1)                 /*CAP032*/
+             DCL        VAR(&OPAY) TYPE(*CHAR) LEN(1)                 /*CAP031*/
+             DCL        VAR(&CUSD) TYPE(*CHAR) LEN(1)                 /*CAP034*/
+             DCL        VAR(&AMAD) TYPE(*CHAR) LEN(1)                 /*CAP035*/
+             DCL        VAR(&IPAY) TYPE(*CHAR) LEN(1)                 /*CAP136*/
+             DCL        VAR(&SECS) TYPE(*CHAR) LEN(1)                 /*CAP137*/
+             DCL        VAR(&SECD) TYPE(*CHAR) LEN(1)                 /*CAP039*/
+             DCL        VAR(&SEDE) TYPE(*CHAR) LEN(1)                                     /*CAP140*/
+             DCL        VAR(&SPTR) TYPE(*CHAR) LEN(1)                                     /*CAP057*/
+             DCL        VAR(&BSRT) TYPE(*CHAR) LEN(1)                                     /*CAP038*/
+             DCL        VAR(&FUND) TYPE(*CHAR) LEN(1)                                     /*CAP042*/
+             DCL        VAR(&REPO) TYPE(*CHAR) LEN(1)                                     /*CAP067*/
+             DCL        VAR(&BYSL) TYPE(*CHAR) LEN(1)                                     /*CAP067*/
+             DCL        VAR(&YRAT) TYPE(*CHAR) LEN(1)                                     /*CAS001*/
+             DCL        VAR(&ASGN) TYPE(*CHAR) LEN(1)                                     /*CAP070*/
+             DCL        VAR(&RPRT) TYPE(*CHAR) LEN(1)                                     /*CAP070*/
+             DCL        VAR(&FPRT) TYPE(*CHAR) LEN(1)                                     /*CAP068*/
+             DCL        VAR(&FAMD) TYPE(*CHAR) LEN(1)                                     /*CAP071*/
+             DCL        VAR(&FEAD) TYPE(*CHAR) LEN(1)                                     /*CAP072*/
+             DCL        VAR(&FEST) TYPE(*CHAR) LEN(1)                                     /*CAP072*/
+             DCL        VAR(&CACF) TYPE(*CHAR) LEN(1)                                     /*CAP055*/
+             DCL        VAR(&MVTS) TYPE(*CHAR) LEN(1)                                     /*CSE039*/
+             DCL        VAR(&DLFE) TYPE(*CHAR) LEN(1)                                     /*CAS009*/
+             DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)                                    /*211152*/
+             DCL        VAR(&SOPTN) TYPE(*CHAR) LEN(7)                                    /*211152*/
+             DCL        VAR(&SSARD) TYPE(*CHAR) LEN(6)                                    /*211152*/
+             DCL        VAR(&SSCSARD) TYPE(*CHAR) LEN(200)                                /*211152*/
+             DCL        VAR(&CAP042) TYPE(*CHAR) LEN(1)                                   /*211152*/
+ 
+             DCL        VAR(&DTQNAM) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ')
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE('xxDPLIB   ')
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&CUAH) TYPE(*CHAR) LEN(1)                                    /*CER034A*/
+             DCL        VAR(&CAP020) TYPE(*CHAR) LEN(1)                                 /*BUG26855*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*  Check if the AB FUND API Switchable Feature is on                                     /*211152*/
+                                                                                          /*211152*/
+             CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                                      /*211152*/
+             CHGVAR     VAR(&SSARD) VALUE('CAP042')                                       /*211152*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
+                                &SSCSARD)                                                 /*211152*/
+             IF         COND(&SRTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CAP042) VALUE('Y'))                                        /*211152*/
+                                                                                          /*211152*/
+             CHGVAR     VAR(%SST(&DPLIB 1 2)) VALUE(&SYSTEM)
+ 
+/*  Check if the MM LDNI/DEAM API Switchable Feature is on                              /*BUG26855*/
+                                                                                        /*BUG26855*/
+             CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                                    /*BUG26855*/
+             CHGVAR     VAR(&SSARD) VALUE('CAP020')                                     /*BUG26855*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
+                                &SSCSARD)                                               /*BUG26855*/
+             IF         COND(&SRTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CAP020) VALUE('Y'))                                      /*BUG26855*/
+/* +
+   For each database updater requested:  +
+     Allocate the locking data area to determine if it is  +
+     active.  Only stop it if it is.  +
+     If the allocation was successful, deallocate the data area.  +
+*/
+             IF         COND(&FXDL *EQ 'Y') THEN(DO)
+/**********     ALCOBJ     OBJ((&DPLIB/FXFXDLUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */                     /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FXFXDLLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('APFXDLDTQ' &DPLIB +
+                                X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP1)
+                ENDDO
+/**********     DLCOBJ     OBJ((&DPLIB/FXFXDLUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FXFXDLLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO
+SKIP1:
+/**********  IF         COND(&LDNI *EQ 'Y') THEN(DO)   */                                 /*CAP042*/
+/**********  IF         COND(&CAP042 *EQ 'Y') THEN(DO)                       /*211152*/ /*BUG26855*/
+/**********  IF         COND((&LDNI *EQ 'Y') *AND (&FUND *EQ 'Y')) THEN(DO)  /*CAP042*/ /*BUG26855*/
+             IF         COND((&LDNI *EQ 'Y' *AND &CAP020 *EQ 'Y') +
+                         *OR (&FUND *EQ 'Y' *AND &CAP042 *EQ 'Y')) THEN(DO)             /*BUG26855*/
+/**********     ALCOBJ     OBJ((&DPLIB/MMLDNIUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */                     /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/MMLDNILCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('APLDNIDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP2)
+                ENDDO
+/**********     DLCOBJ     OBJ((&DPLIB/MMLDNIUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/MMLDNILCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO
+/**********  ENDDO                                                           /*211152*/ /*BUG26855*/
+/**********  ELSE       DO                                                   /*211152*/ /*BUG26855*/
+/**********  IF         COND(&LDNI *EQ 'Y') THEN(DO)                         /*211152*/ /*BUG26855*/
+/**********     ALCOBJ     OBJ((&DPLIB/MMLDNILCK *DTAARA *EXCL)) +
+/**********                WAIT(0)                                           /*211152*/ /*BUG26855*/
+/**********     MONMSG     MSGID(CPF1002) EXEC(DO)                           /*211152*/ /*BUG26855*/
+/**********        CALL       PGM(QSNDDTAQ) PARM('APLDNIDTQ' &DPLIB +
+/**********                   X'00010F' 'END')                               /*211152*/ /*BUG26855*/
+/**********        GOTO       CMDLBL(SKIP2)                                  /*211152*/ /*BUG26855*/
+/**********     ENDDO                                                        /*211152*/ /*BUG26855*/
+/**********     DLCOBJ     OBJ((&DPLIB/MMLDNILCK *DTAARA *EXCL))             /*211152*/ /*BUG26855*/
+/**********  ENDDO                                                           /*211152*/ /*BUG26855*/
+/**********  ENDDO                                                           /*211152*/ /*BUG26855*/
+SKIP2:
+             IF         COND(&DEAM *EQ 'Y') THEN(DO)
+/**********     ALCOBJ     OBJ((&DPLIB/MMDEAMUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */                     /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/MMDEAMLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('APDEAMDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP3)
+                ENDDO
+/**********     DLCOBJ     OBJ((&DPLIB/MMDEAMUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/MMDEAMLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO
+SKIP3:
+             IF         COND(&NASP *EQ 'Y') THEN(DO)
+/**********     ALCOBJ     OBJ((&DPLIB/MMNASPUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */                     /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/MMNASPLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('APNASPDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP4)
+                ENDDO
+/**********     DLCOBJ     OBJ((&DPLIB/MMNASPUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/MMNASPLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO
+SKIP4:
+             IF         COND(&NASS *EQ 'Y') THEN(DO)
+/**********     ALCOBJ     OBJ((&DPLIB/MMNASSUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */                     /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/MMNASSLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)
+                   CALL       PGM(QSNDDTAQ) PARM('APNASSDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP5)
+                ENDDO
+/**********     DLCOBJ     OBJ((&DPLIB/MMNASSUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/MMNASSLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO
+SKIP5:
+             IF         COND(&FRA *EQ 'Y') THEN(DO)                   /*CAP003*/
+/**********     ALCOBJ     OBJ((&DPLIB/IRFRAUPC *DTAARA *EXCL)) +  */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP003*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/IRFRALCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP003*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFRADTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP003*/
+                   GOTO       CMDLBL(SKIP6)                           /*CAP003*/
+                ENDDO                                                 /*CAP003*/
+/**********     DLCOBJ     OBJ((&DPLIB/IRFRAUPC *DTAARA *EXCL))    */          /*CAP003*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/IRFRALCK *DTAARA *EXCL))                           /*CPK015*/
+             ENDDO                                                    /*CAP003*/
+                                                                      /*CAP003*/
+SKIP6:                                                                /*CAP003*/
+             IF         COND(&SIRS *EQ 'Y') THEN(DO)                  /*CAP003*/
+/**********     ALCOBJ     OBJ((&DPLIB/IRSIRSUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP003*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/IRSIRSLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP003*/
+                   CALL       PGM(QSNDDTAQ) PARM('APSIRSDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP003*/
+                   GOTO       CMDLBL(SKIP7)                           /*CAP003*/
+                ENDDO                                                 /*CAP003*/
+/**********     DLCOBJ     OBJ((&DPLIB/IRSIRSUPC *DTAARA *EXCL))   */          /*CAP003*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/IRSIRSLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP003*/
+                                                                      /*CAP003*/
+SKIP7:                                                                /*CAP003*/
+             IF         COND(&CIRS *EQ 'Y') THEN(DO)                  /*CAP003*/
+/**********     ALCOBJ     OBJ((&DPLIB/IRCIRSUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP003*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/IRCIRSLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP003*/
+                   CALL       PGM(QSNDDTAQ) PARM('APCIRSDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP003*/
+                   GOTO       CMDLBL(SKIP8)                           /*CAP003*/
+                ENDDO                                                 /*CAP003*/
+/**********     DLCOBJ     OBJ((&DPLIB/IRCIRSUPC *DTAARA *EXCL))   */          /*CAP003*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/IRCIRSLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP003*/
+SKIP8:                                                                /*CAP003*/
+             IF         COND(&DPMV *EQ 'Y') THEN(DO)                  /*CAP003*/
+/**********     ALCOBJ     OBJ((&DPLIB/SEDPMVUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP003*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SEDPMVLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP003*/
+                   CALL       PGM(QSNDDTAQ) PARM('APDPMVDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP003*/
+                   GOTO       CMDLBL(SKIP9)                           /*CAP003*/
+                ENDDO                                                 /*CAP003*/
+/**********     DLCOBJ     OBJ((&DPLIB/SEDPMVUPC *DTAARA *EXCL))   */          /*CAP003*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SEDPMVLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP003*/
+SKIP9:                                                                /*CAP003*/
+             IF         COND(&TRAD *EQ 'Y') THEN(DO)                  /*CAP003*/
+/**********     ALCOBJ     OBJ((&DPLIB/SETRADUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP003*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SETRADLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP003*/
+                   CALL       PGM(QSNDDTAQ) PARM('APTRADDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP003*/
+                   GOTO       CMDLBL(SKIP10)                          /*CAP003*/
+                ENDDO                                                 /*CAP003*/
+/**********     DLCOBJ     OBJ((&DPLIB/SETRADUPC *DTAARA *EXCL))   */          /*CAP003*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SETRADLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP003*/
+SKIP10:                                                               /*CAP003*/
+ 
+             IF         COND(&TRAN *EQ 'Y') THEN(DO)                  /*CAP004*/
+/**********     ALCOBJ     OBJ((&DPLIB/FFTRANUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP004*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FFTRANLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP004*/
+                   CALL       PGM(QSNDDTAQ) PARM('APTRANDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP004*/
+                   GOTO       CMDLBL(SKIP11)                          /*CAP004*/
+                ENDDO                                                 /*CAP004*/
+/**********     DLCOBJ     OBJ((&DPLIB/FFTRANUPC *DTAARA *EXCL))   */          /*CAP004*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FFTRANLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP004*/
+SKIP11:
+             IF         COND(&INTC *EQ 'Y') THEN(DO)                  /*CAP004*/
+/**********     ALCOBJ     OBJ((&DPLIB/ABINTCUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP004*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/ABINTCLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP004*/
+                   CALL       PGM(QSNDDTAQ) PARM('APINTCDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP004*/
+                   GOTO       CMDLBL(SKIP12)                          /*CAP004*/
+                ENDDO                                                 /*CAP004*/
+/**********     DLCOBJ     OBJ((&DPLIB/ABINTCUPC *DTAARA *EXCL))   */          /*CAP004*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/ABINTCLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP004*/
+SKIP12:                                                               /*CAP004*/
+             IF         COND(&FWRT *EQ 'Y') THEN(DO)                  /*CAP005*/
+/**********     ALCOBJ     OBJ((&DPLIB/FDFWRTUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP005*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FDFWRTLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP005*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFWRTDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP005*/
+                   GOTO       CMDLBL(SKIP13)                          /*CAP005*/
+                ENDDO                                                 /*CAP005*/
+/**********     DLCOBJ     OBJ((&DPLIB/FDFWRTUPC *DTAARA *EXCL))   */          /*CAP005*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FDFWRTLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP005*/
+SKIP13:                                                               /*CAP005*/
+             IF         COND(&INTR *EQ 'Y') THEN(DO)                  /*CAP005*/
+/**********     ALCOBJ     OBJ((&DPLIB/FDINTRUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP005*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FDINTRLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP005*/
+                   CALL       PGM(QSNDDTAQ) PARM('APINTRDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP005*/
+                   GOTO       CMDLBL(SKIP14)                          /*CAP005*/
+                ENDDO                                                 /*CAP005*/
+/**********     DLCOBJ     OBJ((&DPLIB/FDINTRUPC *DTAARA *EXCL))   */          /*CAP005*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FDINTRLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP005*/
+SKIP14:                                                               /*CAP005*/
+ 
+             IF         COND(&PRCS *EQ 'Y') THEN(DO)                  /*CAP030*/
+/**********     ALCOBJ     OBJ((&DPLIB/SEPRCSUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP030*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SEPRCSLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP030*/
+                   CALL       PGM(QSNDDTAQ) PARM('APPRCSDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP030*/
+                   GOTO       CMDLBL(SKIP15)                          /*CAP030*/
+                ENDDO                                                 /*CAP030*/
+/**********     DLCOBJ     OBJ((&DPLIB/SEPRCSUPC *DTAARA *EXCL))   */          /*CAP030*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SEPRCSLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP030*/
+SKIP15:                                                               /*CAP030*/
+                                                                      /*CAP033*/
+             IF         COND(&PFDM *EQ 'Y') THEN(DO)                  /*CAP033*/
+/**********     ALCOBJ     OBJ((&DPLIB/PMPFDMUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP033*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/PMPFDMLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP033*/
+                   CALL       PGM(QSNDDTAQ) PARM('APPFDMDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP033*/
+                   GOTO       CMDLBL(SKIP16)                          /*CAP033*/
+                ENDDO                                                 /*CAP033*/
+/**********     DLCOBJ     OBJ((&DPLIB/PMPFDMUPC *DTAARA *EXCL))   */          /*CAP033*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/PMPFDMLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP033*/
+SKIP16:                                                               /*CAP033*/
+             IF         COND(&BITH *EQ 'Y') THEN(DO)                  /*CAP032*/
+/**********     ALCOBJ     OBJ((&DPLIB/GLBITHUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP032*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/GLBITHLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP032*/
+                   CALL       PGM(QSNDDTAQ) PARM('APBITHDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP032*/
+                   GOTO       CMDLBL(SKIP17)                          /*CAP032*/
+                ENDDO                                                 /*CAP032*/
+/**********     DLCOBJ     OBJ((&DPLIB/GLBITHUPC *DTAARA *EXCL))   */          /*CAP032*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/GLBITHLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP032*/
+SKIP17:                                                               /*CAP032*/
+             IF         COND(&BITP *EQ 'Y') THEN(DO)                  /*CAP032*/
+/**********     ALCOBJ     OBJ((&DPLIB/GLBITPUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP032*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/GLBITPLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP032*/
+                   CALL       PGM(QSNDDTAQ) PARM('APBITPDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP032*/
+                   GOTO       CMDLBL(SKIP18)                          /*CAP032*/
+                ENDDO                                                 /*CAP032*/
+/**********     DLCOBJ     OBJ((&DPLIB/GLBITPUPC *DTAARA *EXCL))   */          /*CAP032*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/GLBITPLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP032*/
+SKIP18:                                                               /*CAP032*/
+             IF         COND(&OPAY *EQ 'Y') THEN(DO)                  /*CAP031*/
+/**********     ALCOBJ     OBJ((&DPLIB/FTOPAYUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP031*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FTOPAYLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP031*/
+                   CALL       PGM(QSNDDTAQ) PARM('APOPAYDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP031*/
+                   GOTO       CMDLBL(SKIP19)                          /*CAP031*/
+                ENDDO                                                 /*CAP031*/
+/**********     DLCOBJ     OBJ((&DPLIB/FTOPAYUPC *DTAARA *EXCL))   */          /*CAP031*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FTOPAYLCK *DTAARA *EXCL)) +
+                                                                      /*CAP031*/
+             ENDDO                                                    /*CAP031*/
+SKIP19:                                                               /*CAP031*/
+ 
+             IF         COND(&CUSD *EQ 'Y') THEN(DO)                  /*CAP034*/
+/**********     ALCOBJ     OBJ((&DPLIB/SDCUSDUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP034*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SDCUSDLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP034*/
+                   CALL       PGM(QSNDDTAQ) PARM('APCUSDDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP034*/
+                   GOTO       CMDLBL(SKIP20)                          /*CAP034*/
+                ENDDO                                                 /*CAP034*/
+/**********     DLCOBJ     OBJ((&DPLIB/SDCUSDUPC *DTAARA *EXCL)) + */          /*CAP034*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SDCUSDLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP034*/
+SKIP20:                                                               /*CAP034*/
+ 
+             IF         COND(&AMAD *EQ 'Y') THEN(DO)                  /*CAP035*/
+/**********     ALCOBJ     OBJ((&DPLIB/GLAMADUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP035*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/GLAMADLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP035*/
+                   CALL       PGM(QSNDDTAQ) PARM('APAMADDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP035*/
+                   GOTO       CMDLBL(SKIP21)                          /*CAP035*/
+                ENDDO                                                 /*CAP035*/
+/**********     DLCOBJ     OBJ((&DPLIB/GLAMADUPC *DTAARA *EXCL))   */                     /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/GLAMADLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP035*/
+ 
+SKIP21:                                                               /*CAP035*/
+                                                                      /*CAP136*/
+             IF         COND(&IPAY *EQ 'Y') THEN(DO)                  /*CAP136*/
+/**********     ALCOBJ     OBJ((&DPLIB/FTIPAYUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP136*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/FTIPAYLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP136*/
+                   CALL       PGM(QSNDDTAQ) PARM('APIPAYDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP136*/
+                   GOTO       CMDLBL(SKIP22)                          /*CAP136*/
+                ENDDO                                                 /*CAP136*/
+/**********     DLCOBJ     OBJ((&DPLIB/FTIPAYUPC *DTAARA *EXCL))   */          /*CAP136*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/FTIPAYLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP136*/
+SKIP22:                                                               /*CAP136*/
+                                                                      /*CAP137*/
+             IF         COND(&SECS *EQ 'Y') THEN(DO)                  /*CAP137*/
+/**********     ALCOBJ     OBJ((&DPLIB/SESECSUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP137*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SESECSLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP137*/
+                   CALL       PGM(QSNDDTAQ) PARM('APSECSDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP137*/
+                   GOTO       CMDLBL(SKIP23)                          /*CAP137*/
+                ENDDO                                                 /*CAP137*/
+/**********     DLCOBJ     OBJ((&DPLIB/SESECSUPC *DTAARA *EXCL))   */          /*CAP137*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SESECSLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP137*/
+SKIP23:                                                               /*CAP137*/
+ 
+             IF         COND(&SECD *EQ 'Y') THEN(DO)                  /*CAP039*/
+/**********     ALCOBJ     OBJ((&DPLIB/SDSECDUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP039*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SDSECDLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP039*/
+                   CALL       PGM(QSNDDTAQ) PARM('APSECDDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP039*/
+                   GOTO       CMDLBL(SKIP24)                          /*CAP039*/
+                ENDDO                                                 /*CAP039*/
+/**********     DLCOBJ     OBJ((&DPLIB/SDSECDUPC *DTAARA *EXCL))   */          /*CAP039*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SDSECDLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP039*/
+ 
+SKIP24:                                                               /*CAP039*/
+ 
+             IF         COND(&SPTR *EQ 'Y') THEN(DO)                  /*CAP057*/
+/**********     ALCOBJ     OBJ((&DPLIB/SDSPTRUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP057*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SDSPTRLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP057*/
+                   CALL       PGM(QSNDDTAQ) PARM('APSPTRDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP057*/
+                   GOTO       CMDLBL(SKIP25)                          /*CAP057*/
+                ENDDO                                                 /*CAP057*/
+/**********     DLCOBJ     OBJ((&DPLIB/SDSPTRUPC *DTAARA *EXCL))   */          /*CAP057*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SDSPTRLCK *DTAARA *EXCL))                          /*CPK015*/
+                                                                      /*CAP057*/
+             ENDDO                                                    /*CAP057*/
+ 
+SKIP25:                                                               /*CAP038*/
+ 
+             IF         COND(&BSRT *EQ 'Y') THEN(DO)                  /*CAP038*/
+/**********     ALCOBJ     OBJ((&DPLIB/SDBSRTUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP038*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SDBSRTLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                    /*CAP038*/
+                   CALL       PGM(QSNDDTAQ) PARM('APBSRTDTQ' &DPLIB +
+                              X'00010F' 'END')                        /*CAP038*/
+                   GOTO       CMDLBL(SKIP26)                          /*CAP038*/
+                ENDDO                                                 /*CAP038*/
+/**********     DLCOBJ     OBJ((&DPLIB/SDBSRTUPC *DTAARA *EXCL))   */          /*CAP038*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SDBSRTLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                    /*CAP038*/
+ 
+SKIP26:                                                               /*CAP038*/
+/*/COPY WNCPYSRC,APCENDDB03                                          */
+ 
+             IF         COND(&SEDE *EQ 'Y') THEN(DO)                                      /*CAP140*/
+/**********     ALCOBJ     OBJ((&DPLIB/SESEDEUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP140*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SESEDELCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP140*/
+                   CALL       PGM(QSNDDTAQ) PARM('APSEDEDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAP140*/
+                   GOTO       CMDLBL(SKIP27)                                              /*CAP140*/
+                ENDDO                                                                     /*CAP140*/
+/**********     DLCOBJ     OBJ((&DPLIB/SESEDEUPC *DTAARA *EXCL))   */          /*CAP140*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SESEDELCK *DTAARA *EXCL))                          /*CPK015*/
+                                                                                          /*CAP140*/
+             ENDDO                                                                        /*CAP140*/
+                                                                                          /*CAP140*/
+SKIP27:                                                                                   /*CAP140*/
+ 
+             IF         COND(&REPO *EQ 'Y') THEN(DO)                                      /*CAP067*/
+/**********     ALCOBJ     OBJ((&DPLIB/MMREPOUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP067*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/MMREPOLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP067*/
+                   CALL       PGM(QSNDDTAQ) PARM('APREPODTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAP067*/
+                   GOTO       CMDLBL(SKIP28)                                              /*CAP067*/
+                ENDDO                                                                     /*CAP067*/
+/**********     DLCOBJ     OBJ((&DPLIB/MMREPOUPC *DTAARA *EXCL))   */          /*CAP067*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/MMREPOLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                                        /*CAP067*/
+                                                                                          /*CAP067*/
+SKIP28:
+             IF         COND(&BYSL *EQ 'Y') THEN(DO)                                      /*CAP067*/
+/**********     ALCOBJ     OBJ((&DPLIB/SEBYSLUPC *DTAARA *EXCL)) + */                     /*CPK015*/
+/**********                WAIT(0)                                 */          /*CAP067*/ /*CPK015*/
+                ALCOBJ     OBJ((&DPLIB/SEBYSLLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CPK015*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP067*/
+                   CALL       PGM(QSNDDTAQ) PARM('APBYSLDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAP067*/
+                   GOTO       CMDLBL(SKIP29)                                              /*CAP067*/
+                ENDDO                                                                     /*CAP067*/
+/**********     DLCOBJ     OBJ((&DPLIB/SEBYSLUPC *DTAARA *EXCL))   */          /*CAP067*/ /*CPK015*/
+                DLCOBJ     OBJ((&DPLIB/SEBYSLLCK *DTAARA *EXCL))                          /*CPK015*/
+             ENDDO                                                                        /*CAP067*/
+                                                                                          /*CAP067*/
+SKIP29:                                                                                   /*CAP067*/
+             IF         COND(&YRAT *EQ 'Y') THEN(DO)                                      /*CAS001*/
+                ALCOBJ     OBJ((&DPLIB/SDYRATLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CAS001*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAS001*/
+                   CALL       PGM(QSNDDTAQ) PARM('APYRATDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAS001*/
+                   GOTO       CMDLBL(SKIP30)                                              /*CAS001*/
+                ENDDO                                                                     /*CAS001*/
+                DLCOBJ     OBJ((&DPLIB/SDYRATLCK *DTAARA *EXCL))                          /*CAS001*/
+             ENDDO                                                                        /*CAS001*/
+                                                                                          /*CAS001*/
+SKIP30:                                                                                   /*CAP070*/
+                                                                                          /*CAP070*/
+             IF         COND(&ASGN *EQ 'Y') THEN(DO)                                      /*CAP070*/
+                ALCOBJ     OBJ((&DPLIB/LEASGNLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP070*/
+                   CALL       PGM(QSNDDTAQ) PARM('APASGNDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP31)                                              /*CAP070*/
+                ENDDO                                                                     /*CAP070*/
+                DLCOBJ     OBJ((&DPLIB/LEASGNLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP070*/
+             ENDDO                                                                        /*CAP070*/
+                                                                                          /*CAP070*/
+SKIP31:                                                                                   /*CAP070*/
+                                                                                          /*CAP070*/
+             IF         COND(&RPRT *EQ 'Y') THEN(DO)                                      /*CAP070*/
+                ALCOBJ     OBJ((&DPLIB/LERPRTLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP070*/
+                   CALL       PGM(QSNDDTAQ) PARM('APRPRTDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP32)                                              /*CAP070*/
+                ENDDO                                                                     /*CAP070*/
+                DLCOBJ     OBJ((&DPLIB/LERPRTLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP070*/
+             ENDDO                                                                        /*CAP070*/
+                                                                                          /*CAP070*/
+SKIP32:                                                                                   /*CAP070*/
+                                                                                          /*CAP068*/
+             IF         COND(&FPRT *EQ 'Y') THEN(DO)                                      /*CAP068*/
+                ALCOBJ     OBJ((&DPLIB/LEFPRTLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP068*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFPRTDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP33)                                              /*CAP068*/
+                ENDDO                                                                     /*CAP068*/
+                DLCOBJ     OBJ((&DPLIB/LEFPRTLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP068*/
+             ENDDO                                                                        /*CAP068*/
+                                                                                          /*CAP068*/
+SKIP33:                                                                                   /*CAP068*/
+ 
+                                                                                          /*CAP071*/
+             IF         COND(&FAMD *EQ 'Y') THEN(DO)                                      /*CAP071*/
+                ALCOBJ     OBJ((&DPLIB/LEFAMDLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP071*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFAMDDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP34)                                              /*CAP071*/
+                ENDDO                                                                     /*CAP071*/
+                DLCOBJ     OBJ((&DPLIB/LEFAMDLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP071*/
+             ENDDO                                                                        /*CAP071*/
+                                                                                          /*CAP071*/
+SKIP34:                                                                                   /*CAP071*/
+                                                                                          /*CAP072*/
+             IF         COND(&FEAD *EQ 'Y') THEN(DO)                                      /*CAP072*/
+                ALCOBJ     OBJ((&DPLIB/LEFEADLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP072*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFEADDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP35)                                              /*CAP072*/
+                ENDDO                                                                     /*CAP072*/
+                DLCOBJ     OBJ((&DPLIB/LEFEADLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP072*/
+             ENDDO                                                                        /*CAP072*/
+                                                                                          /*CAP072*/
+SKIP35:                                                                                   /*CAP072*/
+                                                                                          /*CAP072*/
+             IF         COND(&FEST *EQ 'Y') THEN(DO)                                      /*CAP072*/
+                ALCOBJ     OBJ((&DPLIB/LEFESTLCK *DTAARA *EXCL)) +
+                           WAIT(0)
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP072*/
+                   CALL       PGM(QSNDDTAQ) PARM('APFESTDTQ' &DPLIB +
+                              X'00010F' 'END')
+                   GOTO       CMDLBL(SKIP36)                                              /*CAP072*/
+                ENDDO                                                                     /*CAP072*/
+                DLCOBJ     OBJ((&DPLIB/LEFESTLCK *DTAARA *EXCL)) +
+                                                                                          /*CAP072*/
+             ENDDO                                                                        /*CAP072*/
+                                                                                          /*CAP072*/
+SKIP36:                                                                                   /*CAP072*/
+             IF         COND(&CACF *EQ 'Y') THEN(DO)                                      /*CAP055*/
+                ALCOBJ     OBJ((&DPLIB/IRCACFUPC *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CAP055*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAP055*/
+                   CALL       PGM(QSNDDTAQ) PARM('APCACFDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAP055*/
+                   GOTO       CMDLBL(SKIP37)                                              /*CAP055*/
+                ENDDO                                                                     /*CAP055*/
+                DLCOBJ     OBJ((&DPLIB/IRCACFUPC *DTAARA *EXCL))                          /*CAP055*/
+                                                                                          /*CAP055*/
+             ENDDO                                                                        /*CAP055*/
+                                                                                          /*CAP055*/
+SKIP37:                                                                                   /*CAP055*/
+                                                                                          /*CSE039*/
+             IF         COND(&MVTS *EQ 'Y') THEN(DO)                                      /*CSE039*/
+/**********     ALCOBJ     OBJ((&DPLIB/SEMVTSLCK *DTAARA *EXCL)) + */                  /*AR1075857*/
+/**********                WAIT(0)                                 */           /*CSE039 AR1075857*/
+                ALCOBJ     OBJ((&DPLIB/SEMVTSUPC *DTAARA *EXCL)) +
+                           WAIT(0)                                                     /*AR1075857*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CSE039*/
+                   CALL       PGM(QSNDDTAQ) PARM('APMVTSDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CSE039*/
+                   GOTO       CMDLBL(SKIP38)                                              /*CSE039*/
+                ENDDO                                                                     /*CSE039*/
+                DLCOBJ     OBJ((&DPLIB/SEMVTSLCK *DTAARA *EXCL))                          /*CSE039*/
+             ENDDO                                                                        /*CSE039*/
+                                                                                          /*CSE039*/
+SKIP38:                                                                                   /*CSE039*/
+                                                                                          /*CAP055*/
+             IF         COND(&DLFE *EQ 'Y') THEN(DO)                                      /*CAS009*/
+                ALCOBJ     OBJ((&DPLIB/DLDLFELCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                        /*CAS009*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                        /*CAS009*/
+                   CALL       PGM(QSNDDTAQ) PARM('APDLFEDTQ' &DPLIB +
+                              X'00010F' 'END')                                            /*CAS009*/
+                   GOTO       CMDLBL(SKIP39)                                              /*CAS009*/
+                ENDDO                                                                     /*CAS009*/
+                DLCOBJ     OBJ((&DPLIB/DLDLFELCK *DTAARA *EXCL))                          /*CAS009*/
+                                                                                          /*CAS009*/
+             ENDDO                                                                        /*CAS009*/
+                                                                                          /*CAS009*/
+SKIP39:                                                                                   /*CAS009*/
+/*/COPY WNCPYSRC,APH00027                                            */
+                                                                                          /*CAS009*/
+             IF COND(&CUAH *EQ 'Y') THEN(DO)                                             /*CER034A*/
+                ALCOBJ     OBJ((&DPLIB/SDCUAHLCK *DTAARA *EXCL)) +
+                           WAIT(0)                                                       /*CER034A*/
+                MONMSG     MSGID(CPF1002) EXEC(DO)                                       /*CER034A*/
+                   CALL       PGM(QSNDDTAQ) PARM('APCUAHDTQ' &DPLIB +
+                              X'00010F' 'END')                                           /*CER034A*/
+             GOTO       CMDLBL(SKIP40)                                                   /*CER034A*/
+             ENDDO                                                                       /*CER034A*/
+             DLCOBJ     OBJ((&DPLIB/SDCUAHUPC *DTAARA *EXCL))                            /*CER034A*/
+             ENDDO                                                                       /*CER034A*/
+SKIP40:                                                                                  /*CER034A*/
+             GOTO       CMDLBL(END)
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination                                             */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ENDAPIDBU ended abnormally - see job log')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

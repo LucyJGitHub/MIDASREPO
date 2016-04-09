@@ -1,0 +1,199 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1732 - Process Action File for TABLETV                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. BUG27793  *CREATE  Date 16Jun10               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  BUG27793 - New action file.                                  *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPTBV4L0  IF   E           K DISK    INFSR(*PSSR)
+     FTABCGU1   UF A E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(TABLEV4F:TBV4F) PREFIX(X)
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     COMP          KLIST
+     C                   KFLD                    RECT
+     C                   KFLD                    ZZ010
+      *
+     C     *LOVAL        SETLL     UPTBV4L0
+      *
+     C                   READ      UPTBV4L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     V4ACTC        IFEQ      'I'
+     C                   EXSR      SETVAL
+     C                   WRITE     TBV4F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     V4ACTC        IFEQ      'D'
+     C     COMP          CHAIN     TABCGU1                            3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    TBV4F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     V4ACTC        IFEQ      'A'
+      * Move keys to storage fields
+     C                   Z-ADD     RECT          RECTX             2 0
+     C                   MOVEL     ZZ010         ZZ010X           10
+     C                   READ      UPTBV4L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     RECT          IFNE      RECTX
+     C     ZZ010         ORNE      ZZ010X
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     COMP          CHAIN     TABCGU1                            3069
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    TBV4F                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   READ      UPTBV4L0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+     C                   MOVEL     RECI          XRECI
+     C                   Z-ADD     RECT          XRECT
+     C                   MOVEL     ZZ010         XZZ010
+     C                   MOVEL     GRPN          XGRPN
+     C                   MOVEL     MDBI          XMDBI
+     C                   MOVEL     ACMI          XACMI
+     C                   MOVEL     DINI          XDINI
+     C                   MOVEL     INAI          XINAI
+     C                   MOVEL     MINI          XMINI
+     C                   MOVEL     DYSI          XDYSI
+     C                   MOVEL     FIXI          XFIXI
+     C                   Z-ADD     TNLU          XTNLU
+     C                   Z-ADD     MDBA          XMDBA
+     C                   Z-ADD     ACMA          XACMA
+     C                   Z-ADD     DINA          XDINA
+     C                   Z-ADD     INAA          XINAA
+     C                   Z-ADD     MINA          XMINA
+     C                   Z-ADD     DYSA          XDYSA
+     C                   Z-ADD     FIXA          XFIXA
+     C                   MOVEL     AACC          XAACC
+     C                   Z-ADD     EACC          XEACC
+     C                   MOVEL     GPDT          XGPDT
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

@@ -1,0 +1,173 @@
+.**********************************************************************
+.*STD    PNLGRP                                                       *
+.*EXI *  TEXT('Midas UT Retrieve user space init. command help')
+.**********************************************************************
+.*
+.*  Midas Utilities module
+.*
+.*  RTVUSRSPCI (Retrive user space initialisation) command help.
+.*
+.*  (c) Misys International Banking Systems Ltd. 2001
+.*
+.* Bank Fusion Midas 1.4 Base -----------------------------------------
+.* Midas Plus 1.4 Base 04 ---------------------------------------------
+.* Midas Plus 1.4 Base ------------------------------------------------
+.* Midas Plus 1.3 ---------------- Base -------------------------------
+.* Midas Release 4 --------------- Base -------------------------------
+.* Midas DBA 3.00 ---------------- Base -------------------------------
+.*  Last Amend No. CAA002 *CREATE     Date 31OCT95
+.*
+.*-------------------------------------------------------------------
+.*
+.*  CAA002 - Development of utility to save, edit and restore
+.*           spooled files.
+.*
+.********************************************************************
+:PNLGRP.
+.*
+:HELP name='RTVUSRSPCI'.
+Retrieve user space initialisation (RTVUSRSPCI) - Help
+:P.
+This function, and the following description of it, are lifted directly
+from the supplied library of specimen tools, QUSRTOOL.
+:p.
+The Retrieve User Space Initialisation command has a special purpose to
+work with the system provided APIs that provide lists (eg lists of
+members or objects) in user spaces.
+:p.
+The steps required to use a list are:
+:p.
+:ol.
+:li.Create a user space (See the QUSCRTUS program or the TAA tool
+CRTUSRSPC).
+.*
+:li.Fill the space with a list by using a CALL to a system program such
+as QUSLOBJ.
+.*
+:li.Retrieve the initialisation information from the list (See the
+QUSRTVUS program or the command provided by this tool RTVUSRSPCI).
+.*
+:li.Retrieve one entry at a time from the list (See the QUSRTVUS program
+or the TAA tool RTVUSRSPCE).
+.*
+:li.In some cases, the entry you receive is only enough to identify the
+job, the object etc that you really want information on. In this case you
+must do another call to retrieve the specific information.
+.*
+:eol.
+:p.
+Many functions that want to use an API list use a CL program to begin
+processing.  The first three steps can be done from CL. Step 4 and 5
+(retrieving of an entry and specific information) can be done from either
+CL or an HLL program.  Depending on what is to be done with the
+information, you can use either either approach.
+:p.
+For example, if you are going to perform a CL command on each entry of
+the list, it is probably easier to perform the retrieve step in CL. If
+you are going to print the information, it is probably easier to use a
+HLL program.
+:p.
+Each of the API list functions produces a standard heading set of
+information in the user space. Following this information is the list.
+The offset of where the list starts and the length of each entry may
+change on a future release. The heading area contains an offset to where
+the list starts and the length of each entry. To protect your program
+against future release changes, this information should be accessed as an
+initialisation step rather than hard coding the offset and entry length
+into your program.
+:p.
+The purpose of RTVUSRSPCI is to access the initialisation information and
+return it so it is ready to be used in the next step. The next step can
+be either in CL or the values may be passed to an HLL program.
+The initialisation information you need to process a list is:
+:ul compact.
+:li.The offset (start position) to where the list starts.
+:li.The number of entries in the list.
+:li.The length of each entry (Each entry is normally multiple fields.
+These are passed as a data structure. The entry length is the length of
+the data structure).
+:eul.
+:p.
+A typical command is entered as:
+:lines.
+        RTVUSRSPCI    USRSPC(QTEMP/SPACE1) STRPOS(&STRPOS) +
+                        NBRENT(&NBRENT) ENTLEN(&ENTLEN)
+:elines.
+:p.
+The last three parameters are 'return values' where the information is
+passed back to your CL program.
+:p.
+The RTVUSRSPCI command calls the QUSRTVUS program with the proper
+parameters to access the information needed for initialisation.
+:p.
+A few important points:
+:p.
+:ul.
+:li.The STRPOS field must be declared as *CHAR LEN(4). It holds a binary
+value. Unlike the QUSRTVUS program, the value returned is not the offset,
+but the actual start position. You do not need to add 1 to the value to
+begin processing.
+.*
+:li.The NBRENT field must be declared as *DEC LEN(9 0).  It is returned
+in decimal format to allow a simple count and compare in CL or an HLL to
+determine when the end of list has occurred.
+.*
+:li.The ENTLEN field must be declared as *CHAR LEN(4). It holds a binary
+value which describes the length of each entry.
+:eul.
+.*
+:ehelp.
+.*
+:help name='RTVUSRSPCI/USRSPC'.
+User space (USRSPC) - Help
+:xh3.
+User space (USRSPC)
+:p.
+The name of the user space whose initialisation details are to be
+retrived.
+:p.
+The possible library values are:
+:P.
+:H2.*LIBL
+:P.
+All libraries in the job's library list are searched for the user space.
+:P.
+:H3.*CURLIB
+:P.
+The user's current library is searched for the user space.
+:h3.library-name
+:p.
+The specified library is searched for the user space.
+:EHELP.
+.*
+:help name='RTVUSRSPCI/STRPOS'.
+Start position of the list (STRPOS) - Help
+:xh3.
+Start position of the list (4) (STRPOS)
+:p.
+Specifies, if the user space is found, a variable to hold the position
+within the space at which the list data starts.  The variable must be a
+character field with a length of 4.  It holds a binary value. Unlike the
+QUSRTVUS program, the value returned is not the offset, but the actual
+start position. You do not need to add 1 to the value to begin processing.
+:ehelp.
+:help name='RTVUSRSPCI/NBRENT'.
+Number of entries (9 0) (NBRENT) - Help
+:xh3.Number of entries (9 0) (NBRENT)
+:p.
+Specifies, if the user space is found, a variable to hold the number of
+entries in the list section.  The variable must be a character field of
+length 4.  It holds a binary value which describes the length of each
+entry.  (Each entry is normally multiple fields. These are passed as a
+data structure. The entry length is the length of the data structure)
+:ehelp.
+:help name='RTVUSRSPCI/ENTLEN'.
+Entry length (ENTLEN) - Help
+:xh3.Entry length (ENTLEN)
+:p.
+Specifies, if the user space is found, a variable to hold the length of
+each entry.  The variable must be a character field of length 4.  It
+holds a binary value which describes the length of each entry.
+:ehelp.
+.*
+:epnlgrp.

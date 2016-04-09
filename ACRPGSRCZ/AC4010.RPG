@@ -1,0 +1,171 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AC To set ECS details at ACT s/b at ACT')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - System Control Module                            *
+     F*                                                               *
+     F*  AC4010  - Start ECS details at office                        *
+     F*                                                               *
+     F*  Function: This program sets ECS dtls at office submitted at  *
+     F*    (COB)                                                      *
+     F*                                                               *
+     F*  Called By: ACC4010 - Control of starting ECS at office       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*  Note: This program must be recompiled in library             *
+     F*        AUTOLIB on the office machine.                         *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 101930             DATE 08JUL96               *
+     F*  PREV AMEND NO. S01491 *CREATE     DATE 01OCT94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  101930 - Recompile over ICF file AC401XCM.                   *
+     F*           Program should exist in lib. AUTOLIB on office m/c. *
+     F*           Communications file AC401XCM is dependent on the    *
+     F*           line used. One ICF file cannot be used because      *
+     F*           the remote location is *REQUESTER, and only one     *
+     F*           *REQUESTER location may be defined per ICF file.    *
+     F*           AC401XCM is overriden to one of the following       *
+     F*           files in CLP/ACC4010 : AC4010CM                     *
+     F*                                  AC4011CM                     *
+     F*                                  AC4012CM                     *
+     F*                                  AC4013CM                     *
+     F*                                  AC4014CM                     *
+     F*                                  AC4015CM                     *
+     F*                                  AC4016CM                     *
+     F*                                  AC4017CM                     *
+     F*                                  AC4018CM                     *
+     F*                                  AC4019CM                     *
+     F*           The evoking program is AC4000.                      *
+     F*  S01491 - Autocall.                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*C4010CMCF  E                    WORKSTN                            101930
+     FAC401XCMCF  E                    WORKSTN                            101930
+     F                                              KINFSR INFSR
+     F                                              KINFDS INFDS
+     FQPRINT  O   F     132            PRINTER                        UC
+     F*
+      /EJECT
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20  - Detach                                                *
+     F*   30  - Error detected                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+     E***  Array for Object Copyright Statement.
+     E*
+     E                    CMDS    1   1 80
+     E                    CA         80  1
+      /EJECT
+     IINFDS       DS
+     I                                     *STATUS  ERR
+     I                                      273 282 PGMDEV
+     I                                      401 402 MAJCOD
+     I                                      403 404 MINCOD
+     I************DS                                                      101930
+     I************                            1   8 RMDTA                 101930
+     I************                            1   6 RMTL                  101930
+     I************                            7   8 RMTR                  101930
+      /EJECT
+     C/TITLE Main Processing
+     C*
+     C***  Copyright Statement.
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***  Read start record from local site
+     C*
+     C                     READ START                    30
+     C*
+     C***  Call QCMDEXC to update ECSRMTXX
+     C*
+     C                     MOVEACMDS      CA,1
+     C*********************MOVE LINE      LINA    2                       101930
+     C                     MOVEALINA      CA,31
+     C                     MOVEARMTUSR    CA,48
+     C*
+     C***  Add ')' to end of file name
+     C*
+     C                     Z-ADD48        X       20
+     C                     MOVEACA,X      Z       1
+     C*
+     C           Z         DOWNE' '
+     C                     ADD  1         X
+     C                     MOVEACA,X      Z
+     C                     END
+     C*
+     C                     MOVEA')'       CA,X
+     C*
+     C                     MOVEACA        QCMD   80
+     C                     Z-ADD80        LEN    155
+     C                     OPEN QPRINT
+     C                     EXCPTTRC
+     C                     CLOSEQPRINT
+     C*                                                                   101930
+     C** Loop until ECSRMTxx is cleared by calling ACC4011.               101930
+     C** (ECSRMTxx is cleared by user by taking a 'C' on ECS screen)      101930
+     C*                                                                   101930
+     C                     CALL 'ACC4011'                                 101930
+     C                     PARM           LINA    2                       101930
+     C*
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCMD
+     C                     PARM           LEN
+     C*
+     C***  Write verification record back to client site
+     C*
+     C                     MOVE 'OKOK'    FAIL
+     C                     WRITEVERIF
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+     C/TITLE SR/INFSR
+     C********************************************************************
+     C*
+     C           INFSR     BEGSR
+     C*
+     C                     OPEN QPRINT
+     C                     EXCPTERROR
+     C                     DUMP
+     C                     CLOSEQPRINT
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     OQPRINT  E                ERROR
+     O                                   10 'STATUS'
+     O                         ERR       20
+     O                                   30 'MAJOR '
+     O                         MAJCOD    40
+     O                                   50 'MINOR '
+     O                         MINCOD    60
+     O        E                TRC
+     O                                   10 'COMMND'
+     O                         QCMD     120
+      /EJECT
+** CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   CMDS
+CHGDTAARA DTAARA(ECSLIB/ECSRMT0  (1 10)) VALUE(          )

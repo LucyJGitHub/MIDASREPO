@@ -1,0 +1,410 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       V_#FEEMAST - Global Fee Details                                       */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE139             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      CAS019             Date 24Mar07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BG12450            Date 04Nov06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      BUG10976           Date 30Mar06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG5679            Date 26Jan05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      BUG3411            Date 15Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG1100            Date 28Apr04                        */
+/*                      CGP001  *CREATE    Date 16Feb04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CLE143 - Original Loan Contract Date & Effective Interest             */
+/*                Rate (Recompile)                                             */
+/*       CLE139 - Lending Fee Capitalisation (Recompile)                       */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CAS019 - Upgrade of CAS016 to Midas Plus (Recompile)                  */
+/*       BG12450 - Opening Fee Browser is crashing the Application             */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       BUG10976 - Add hidden facility fields.                                */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type                                       */
+/*       CLE106  - Syndications Manager                                        */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG5679 - Performance Enhancements                                    */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG3411 - If a field is empty it should be left as blank instead of   */
+/*                 zeroes for fields like loan reference, seq. number, customer*/
+/*                 number fields and last swift confirm seq. fields.           */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG1100 - Increase size for all amount fields.                        */
+/*       CGP001 - Global processing.                                           */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  FERECI, FEBRCA, FEACOF, FEFCCY, FEPYON, FEAUTO, FESTTL, FEOURS, FETHER,       :
+  FECALT, FEFRT1, FEFRT2, FEFRT3, FEFRT4, FEFRT5, FECALC, FEERAT, FEMDIN,       :
+**FEFREQ,*FEDYIM,*FEPIND,*FEDIND,*FELTYP,*FESUTP,*FESPTI,*FEPPTI,*FEEPTI,*******:             CLE042
+  FEFREQ, FEDYIM, FEPIND, FEDIND, FELTYP, FESUTP,FECLAS,FESPTI,FEPPTI,FEEPTI,   :             CLE042
+**FESBTI,*FEPBTI,*FEEBTI,*FELCHT,*FEOSBR,*FETNLU,*FSTS,*IUSR,*AUSR,*XUSR,*******: /*CLE106*/
+**PCRF,*PTFI,*SHFI,*OSDB,*OMDB,*RSTM,*RONS,*RIBN,*RIBA,*ROBN,*ROCN,*PSTM,*******: /*CLE106*/
+**PONS,*PIBN,*PIBA,*POBN,*POCN,*RCRN,*RCRA,*RVNO,*AWBN,*AWBA,*BENN,*BENA,*******: /*CLE106*/
+**DTP1,*DTP2,*DTP3,*DTP4,*DCHG,*BTB1,*BTB2,*BTB3,*BTB4,*BTB5,*BTB6,*CVMR,*******: /*CLE106*/
+**GFPT,*PTAI,*SMAC,*PCOB,*FEPRFC,*LSWC,*LSWS,*FESCCY,*FEICCY,*FEINDC,***********: /*CLE106*/
+**FESWRI,*FEREXR,*FEREXI,*FEPSCY,*FEPEXR,*FEPEXI,*FRNT,*AFRT,*REPA,*STMP,*******: /*CLE106*/
+**FESTAL,***********************************************************************: /*CLE106*/
+  FESBTI, FEPBTI, FEEBTI, FELCHT, FEOSBR, FETNLU, A.FSTS, A.IUSR, A.AUSR,       : /*CLE106*/
+  A.XUSR, A.PCRF, PTFI, SHFI, A.OSDB, A.OMDB, A.RSTM, A.RONS, A.RIBN, A.RIBA,   : /*CLE106*/
+  A.ROBN, A.ROCN, A.PSTM, A.PONS, A.PIBN, A.PIBA, A.POBN, A.POCN, A.RCRN,       : /*CLE106*/
+  A.RCRA, A.RVNO, A.AWBN, A.AWBA, A.BENN, A.BENA, A.DTP1, A.DTP2, A.DTP3,       : /*CLE106*/
+  A.DTP4, A.DCHG, A.BTB1, A.BTB2, A.BTB3, A.BTB4, A.BTB5, A.BTB6, A.CVMR,       : /*CLE106*/
+  GFPT, PTAI, SMAC, A.PCOB, FEPRFC, A.LSWC, A.LSWS, FESCCY, FEICCY, FEINDC,     : /*CLE106*/
+  FESWRI, FEREXR, FEREXI, FEPSCY,  FEPEXR, FEPEXI, A.FRNT, A.AFRT, A.REPA,      : /*CLE106*/
+  A.STMP, FESTAL, FEMASF,                                                       : /*CLE106*/
+**DIGITS(FECNUM)*AS*PADCNUM,****************************************************:             CSD027
+         FECNUM  AS PADCNUM,                                                    :             CSD027
+  DIGITS(FEFACL) AS PADFACL,                                                    :
+**DIGITS(FELOAN)*AS*PADLOAN,****************************************************:            BUG3411
+  DIGITS(FEFSEQ) AS PADFSEQ,                                                    :
+  DIGITS(FEFCOD) AS PADFCOD,                                                    :
+  DIGITS(FESTTL) AS PADSTTL,                                                    :
+  DIGITS(FEDYIM) AS PADDYIM,                                                    :
+  DIGITS(FETNLU) AS PADTNLU,                                                    :
+**DIGITS(RSTM)***AS*PADRSTM,****************************************************: /*CLE106*/
+  DIGITS(A.RSTM) AS PADRSTM,                                                    : /*CLE106*/
+**DIGITS(ROBN)***AS*PADROBN,****************************************************:            BUG3411
+**DIGITS(ROCN)***AS*PADROCN,****************************************************:            BUG3411
+**DIGITS(PSTM)***AS*PADPSTM,****************************************************: /*CLE106*/
+  DIGITS(A.PSTM) AS PADPSTM,                                                    : /*CLE106*/
+**DIGITS(POBN)***AS*PADPOBN,****************************************************:            BUG3411
+**DIGITS(POCN)***AS*PADPOCN,****************************************************:            BUG3411
+**DIGITS(SMAC)***AS*PADSMAC,****************************************************:            BUG3411
+**DIGITS(LSWC)***AS PADLSWC,****************************************************:            BUG3411
+**DIGITS(LSWS)***AS PADLSWS,****************************************************:            BUG3411
+**SUBSTR(DIGITS(FEFACL),1,3) AS FCLTYTYPE,**************************************: /*CLE106*/
+  CASE SUBSTR(DIGITS(FEFACL),1,3) WHEN '000' THEN ' ' ELSE                      : /*CLE106*/
+    SUBSTR(DIGITS(FEFACL),1,3) END AS FCLTYTYPE,                                : /*CLE106*/
+**SUBSTR(DIGITS(FEFACL),4,2)*AS*FCLTYNO,****************************************:            BUG3411
+  CASE WHEN SUBSTR(DIGITS(FEFACL),4,2)= '00' THEN ' ' ELSE                      :            BUG3411
+    SUBSTR(DIGITS(FEFACL),4,2) END AS FCLTYNO,                                  :            BUG3411
+**CASE*WHEN*FELOAN*=*0*THEN*'*'*ELSE*DIGITS(FELOAN)*END*AS*PADLOAN,*************:     BUG3411 CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.BRCA*ELSE*K.BRCA*END*AS*FBRC,*********************:    BUG10976 CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.CNUM*ELSE*K.CNUM*END*AS*FCUS,*********************:    BUG10976 CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.FACT*ELSE*K.FACT*END*AS*FTYP,*********************:    BUG10976 CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.FCNO*ELSE*K.FCNO*END*AS*FSQN,*********************:    BUG10976 CLE148
+  FELOAN AS PADLOAN,                                                            :             CLE148
+  CASE WHEN FELOAN = '' THEN F.BRCA ELSE K.BRCA END AS FBRC,                    :             CLE148
+  CASE WHEN FELOAN = '' THEN F.CNUM ELSE K.CNUM END AS FCUS,                    :             CLE148
+  CASE WHEN FELOAN = '' THEN F.FACT ELSE K.FACT END AS FTYP,                    :             CLE148
+  CASE WHEN FELOAN = '' THEN F.FCNO ELSE K.FCNO END AS FSQN,                    :             CLE148
+**CASE*WHEN*ROBN*=*0*THEN*'*'*ELSE*DIGITS(ROBN)*END*AS*PADROBN,*****************:BUG3411 /*CLE106*/
+**CASE*WHEN*ROCN*=*0*THEN*'*'*ELSE*DIGITS(ROCN)*END*AS*PADROCN,*****************:BUG3411 /*CLE106*/
+**CASE*WHEN*POBN*=*0*THEN*'*'*ELSE*DIGITS(POBN)*END*AS*PADPOBN,*****************:BUG3411 /*CLE106*/
+**CASE*WHEN*POCN*=*0*THEN*'*'*ELSE*DIGITS(POCN)*END*AS*PADPOCN,*****************:BUG3411 /*CLE106*/
+**CASE*WHEN*A.ROBN*=*0*THEN*' '*ELSE*DIGITS(A.ROBN)*END*AS*PADROBN,*************: /*CLE106*/  CSD027
+**CASE*WHEN*A.ROCN*=*0*THEN*' '*ELSE*DIGITS(A.ROCN)*END*AS*PADROCN,*************: /*CLE106*/  CSD027
+**CASE*WHEN*A.POBN*=*0*THEN*' '*ELSE*DIGITS(A.POBN)*END*AS*PADPOBN,*************: /*CLE106*/  CSD027
+**CASE*WHEN*A.POCN*=*0*THEN*' '*ELSE*DIGITS(A.POCN)*END*AS*PADPOCN,*************: /*CLE106*/  CSD027
+  CASE WHEN A.ROBN = '' THEN ' ' ELSE      A.ROBN  END AS PADROBN,              :             CSD027
+  CASE WHEN A.ROCN = '' THEN ' ' ELSE      A.ROCN  END AS PADROCN,              :             CSD027
+  CASE WHEN A.POBN = '' THEN ' ' ELSE      A.POBN  END AS PADPOBN,              :             CSD027
+  CASE WHEN A.POCN = '' THEN ' ' ELSE      A.POCN  END AS PADPOCN,              :             CSD027
+**CASE*WHEN*SMAC*=*0*THEN*' '*ELSE*DIGITS(SMAC)*END*AS*PADSMAC,*****************:     BUG3411 CSD027
+  CASE WHEN SMAC = '' THEN ' ' ELSE        SMAC  END AS PADSMAC,                :             CSD027
+**CASE*WHEN*LSWC*=*0*THEN*'*'*ELSE*DIGITS(LSWC)*END*AS*PADLSWC,*****************:BUG3411 /*CLE106*/
+**CASE*WHEN*LSWS*=*0*THEN*'*'*ELSE*DIGITS(LSWS)*END*AS*PADLSWS,*****************:BUG3411 /*CLE106*/
+  CASE WHEN A.LSWC = 0 THEN ' ' ELSE DIGITS(A.LSWC) END AS PADLSWC,             : /*CLE106*/ BUG3411
+  CASE WHEN A.LSWS = 0 THEN ' ' ELSE DIGITS(A.LSWS) END AS PADLSWS,             : /*CLE106*/ BUG3411
+  CASE WHEN FEPSTD=0 THEN NULL ELSE DATE(FEPSTD+719892) END AS FFEPSTD,         :
+  CASE WHEN FEPEND=0 THEN NULL ELSE DATE(FEPEND+719892) END AS FFEPEND,         :
+  CASE WHEN FENPYD=0 THEN NULL ELSE DATE(FENPYD+719892) END AS FFENPYD,         :
+  CASE WHEN FESDAT=0 THEN NULL ELSE DATE(FESDAT+719892) END AS FFESDAT,         :
+  CASE WHEN FELPDT=0 THEN NULL ELSE DATE(FELPDT+719892) END AS FFELPDT,         :
+  CASE WHEN FELADT=0 THEN NULL ELSE DATE(FELADT+719892) END AS FFELADT,         :
+  CASE WHEN FEDDAT=0 THEN NULL ELSE DATE(FEDDAT+719892) END AS FFEDDAT,         :
+  CASE WHEN FEORED=0 THEN NULL ELSE DATE(FEORED+719892) END AS FFEORED,         :
+  CASE WHEN FEPLPD=0 THEN NULL ELSE DATE(FEPLPD+719892) END AS FFEPLPD,         :
+  CASE WHEN FELCHD=0 THEN NULL ELSE DATE(FELCHD+719892) END AS FFELCHD,         :
+  CASE WHEN CGDTDL=0 THEN NULL ELSE DATE(CGDTDL+719892) END AS FCGDTDL,         :
+**DEC(FEFAMT*C1.SCALING,17,4)*AS*SFEFAMT,***************************************:            BUG1100
+**DEC(FEFAMT*C1.SCALING*C1.RATE,17,4)*AS*BSFEFAMT,******************************:            BUG1100
+**DEC(FEAMT1*C1.SCALING,15,4)*AS*SFEAMT1,***************************************:            BUG1100
+**DEC(FEAMT1*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMT1,******************************:            BUG1100
+**DEC(FEAMT2*C1.SCALING,15,4)*AS*SFEAMT2,***************************************:            BUG1100
+**DEC(FEAMT2*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMT2,******************************:            BUG1100
+**DEC(FEAMT3*C1.SCALING,15,4)*AS*SFEAMT3,***************************************:            BUG1100
+**DEC(FEAMT3*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMT3,******************************:            BUG1100
+**DEC(FEAMT4*C1.SCALING,15,4)*AS*SFEAMT4,***************************************:            BUG1100
+**DEC(FEAMT4*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMT4,******************************:            BUG1100
+**DEC(FEAMT5*C1.SCALING,15,4)*AS*SFEAMT5,***************************************:            BUG1100
+**DEC(FEAMT5*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMT5,******************************:            BUG1100
+**DEC(FEAMTP*C1.SCALING,15,4)*AS*SFEAMTP,***************************************:            BUG1100
+**DEC(FEAMTP*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMTP,******************************:            BUG1100
+**DEC(FEAMTA*C1.SCALING,15,4)*AS*SFEAMTA,***************************************:            BUG1100
+**DEC(FEAMTA*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMTA,******************************:            BUG1100
+**DEC(FEAMTS*C1.SCALING,15,4)*AS*SFEAMTS,***************************************:            BUG1100
+**DEC(FEAMTS*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMTS,******************************:            BUG1100
+**DEC(FEADAT*C1.SCALING,15,4)*AS*SFEADAT,***************************************:            BUG1100
+**DEC(FEADAT*C1.SCALING*C1.RATE,15,4)*AS*BSFEADAT,******************************:            BUG1100
+**DEC(FEAMTO*C1.SCALING,15,4)*AS*SFEAMTO,***************************************:            BUG1100
+**DEC(FEAMTO*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMTO,******************************:            BUG1100
+**DEC(FELPAM*C1.SCALING,15,4)*AS*SFELPAM,***************************************:            BUG1100
+**DEC(FELPAM*C1.SCALING*C1.RATE,15,4)*AS*BSFELPAM,******************************:            BUG1100
+**DEC(FEPAMS*C1.SCALING,15,4)*AS*SFEPAMS,***************************************:            BUG1100
+**DEC(FEPAMS*C1.SCALING*C1.RATE,15,4)*AS*BSFEPAMS,******************************:            BUG1100
+**DEC(FEPAMP*C1.SCALING,15,4)*AS*SFEPAMP,***************************************:            BUG1100
+**DEC(FEPAMP*C1.SCALING*C1.RATE,15,4)*AS*BSFEPAMP,******************************:            BUG1100
+**DEC(FEADBP*C1.SCALING,15,4)*AS*SFEADBP,***************************************:            BUG1100
+**DEC(FEADBP*C1.SCALING*C1.RATE,15,4)*AS*BSFEADBP,******************************:            BUG1100
+**DEC(FETADJ*C1.SCALING,15,4)*AS*SFETADJ,***************************************:            BUG1100
+**DEC(FETADJ*C1.SCALING*C1.RATE,15,4)*AS*BSFETADJ,******************************:            BUG1100
+**DEC(FEWOFF*C1.SCALING,15,4)*AS*SFEWOFF,***************************************:            BUG1100
+**DEC(FEWOFF*C1.SCALING*C1.RATE,15,4)*AS*BSFEWOFF,******************************:            BUG1100
+**DEC(FEAMTW*C1.SCALING,15,4)*AS*SFEAMTW,***************************************:            BUG1100
+**DEC(FEAMTW*C1.SCALING*C1.RATE,15,4)*AS*BSFEAMTW,******************************:            BUG1100
+**DEC(FEFAMT*C1.SCALING,31,4) AS SFEFAMT,***************************************:   BUG1100  BUG5679
+**DEC(FEFAMT*C1.SCALING*C1.RATE,31,4) AS BSFEFAMT,******************************:   BUG1100  BUG5679
+**DEC(FEAMT1*C1.SCALING,31,4) AS SFEAMT1,***************************************:   BUG1100  BUG5679
+**DEC(FEAMT1*C1.SCALING*C1.RATE,31,4) AS BSFEAMT1,******************************:   BUG1100  BUG5679
+**DEC(FEAMT2*C1.SCALING,31,4) AS SFEAMT2,***************************************:   BUG1100  BUG5679
+**DEC(FEAMT2*C1.SCALING*C1.RATE,31,4) AS BSFEAMT2,******************************:   BUG1100  BUG5679
+**DEC(FEAMT3*C1.SCALING,31,4) AS SFEAMT3,***************************************:   BUG1100  BUG5679
+**DEC(FEAMT3*C1.SCALING*C1.RATE,31,4) AS BSFEAMT3,******************************:   BUG1100  BUG5679
+**DEC(FEAMT4*C1.SCALING,31,4) AS SFEAMT4,***************************************:   BUG1100  BU5679
+**DEC(FEAMT4*C1.SCALING*C1.RATE,31,4) AS BSFEAMT4,******************************:   BUG1100  BUG5679
+**DEC(FEAMT5*C1.SCALING,31,4) AS SFEAMT5,***************************************:   BUG1100  BUG5679
+**DEC(FEAMT5*C1.SCALING*C1.RATE,31,4) AS BSFEAMT5,******************************:   BUG1100  BUG5679
+**DEC(FEAMTP*C1.SCALING,31,4) AS SFEAMTP,***************************************:   BUG1100  BUG5679
+**DEC(FEAMTP*C1.SCALING*C1.RATE,31,4) AS BSFEAMTP,******************************:   BUG1100  BUG5679
+**DEC(FEAMTA*C1.SCALING,31,4) AS SFEAMTA,***************************************:   BUG1100  BUG5679
+**DEC(FEAMTA*C1.SCALING*C1.RATE,31,4) AS BSFEAMTA,******************************:   BUG1100  BUG5679
+**DEC(FEAMTS*C1.SCALING,31,4) AS SFEAMTS,***************************************:   BUG1100  BUG5679
+**DEC(FEAMTS*C1.SCALING*C1.RATE,31,4) AS BSFEAMTS,******************************:   BUG1100  BUG5679
+**DEC(FEADAT*C1.SCALING,31,4) AS SFEADAT,***************************************:   BUG1100  BUG5679
+**DEC(FEADAT*C1.SCALING*C1.RATE,31,4) AS BSFEADAT,******************************:   BUG1100  BUG5679
+**DEC(FEAMTO*C1.SCALING,31,4) AS SFEAMTO,***************************************:   BUG1100  BUG5679
+**DEC(FEAMTO*C1.SCALING*C1.RATE,31,4) AS BSFEAMTO,******************************:   BUG1100  BUG5679
+**DEC(FELPAM*C1.SCALING,31,4) AS SFELPAM,***************************************:   BUG1100  BUG5679
+**DEC(FELPAM*C1.SCALING*C1.RATE,31,4) AS BSFELPAM,******************************:   BUG1100  BUG5679
+**DEC(FEPAMS*C1.SCALING,31,4) AS SFEPAMS,***************************************:   BUG1100  BUG5679
+**DEC(FEPAMS*C1.SCALING*C1.RATE,31,4) AS BSFEPAMS,******************************:   BUG1100  BUG5679
+**DEC(FEPAMP*C1.SCALING,31,4) AS SFEPAMP,***************************************:   BUG1100  BUG5679
+**DEC(FEPAMP*C1.SCALING*C1.RATE,31,4) AS BSFEPAMP,******************************:   BUG1100  BUG5679
+**DEC(FEADBP*C1.SCALING,31,4) AS SFEADBP,***************************************:   BUG1100  BUG5679
+**DEC(FEADBP*C1.SCALING*C1.RATE,31,4) AS BSFEADBP,******************************:   BUG1100  BUG5679
+**DEC(FETADJ*C1.SCALING,31,4) AS SFETADJ,***************************************:   BUG1100  BUG5679
+**DEC(FETADJ*C1.SCALING*C1.RATE,31,4) AS BSFETADJ,******************************:   BUG1100  BUG5679
+**DEC(FEWOFF*C1.SCALING,31,4) AS SFEWOFF****************************************:   BUG1100  BUG5679
+**DEC(FEWOFF*C1.SCALING*C1.RATE,31,4) AS BSFEWOFF,******************************:   BUG1100  BUG5679
+**DEC(FEAMTW*C1.SCALING,31,4) AS SFEAMTW,***************************************:   BUG1100  BUG5679
+**DEC(FEAMTW*C1.SCALING*C1.RATE,31,4) AS BSFEAMTW,******************************:   BUG1100  BUG5679
+  FEFAMT AS SFEFAMT,                                                            :            BUG5679
+  FEAMT1 AS SFEAMT1,                                                            :            BUG5679
+  FEAMT2 AS SFEAMT2,                                                            :            BUG5679
+  FEAMT3 AS SFEAMT3,                                                            :            BUG5679
+  FEAMT4 AS SFEAMT4,                                                            :            BUG5679
+  FEAMT5 AS SFEAMT5,                                                            :            BUG5679
+  FEAMTP AS SFEAMTP,                                                            :            BUG5679
+  FEAMTA AS SFEAMTA,                                                            :            BUG5679
+  FEAMTS AS SFEAMTS,                                                            :            BUG5679
+  FEADAT AS SFEADAT,                                                            :            BUG5679
+  FEAMTO AS SFEAMTO,                                                            :            BUG5679
+  FELPAM AS SFELPAM,                                                            :            BUG5679
+  FEPAMS AS SFEPAMS,                                                            :            BUG5679
+  FEPAMP AS SFEPAMP,                                                            :            BUG5679
+  FEADBP AS SFEADBP,                                                            :            BUG5679
+  FETADJ AS SFETADJ,                                                            :            BUG5679
+  FEWOFF AS SFEWOFF,                                                            :            BUG5679
+  FEAMTW AS SFEAMTW,                                                            :            BUG5679
+  CASE WHEN FEFACL=0 THEN 'LF' ELSE 'FF' END AS FEECLASS,                       :
+  CASE WHEN TRIM(FECALT)='' THEN 'F' ELSE 'C' END AS FEETYPE,                   : /*CLE106*/
+  CASE WHEN A.PCRF LIKE '%0001' OR TRIM(A.PCRF)='' THEN 'N' ELSE 'Y' END        : /*CLE106*/
+  AS AUTGEN,                                                                    : /*CLE106*/
+  A8ZONE AS CUSTZONE,                                                           :
+**V_GPGLCUSL.*******************************************************************:            BUG5679
+  GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,                :            BUG5679
+  GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,                :            BUG5679
+**GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE*******************************: BUG5679 /*CLE106*/
+  GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE,                              : /*CLE106*/
+  F.PCRF AS FPCRF, L.PCRF AS LPCRF, F.LAID AS LAID,                             : /*CLE106*/
+**CASE WHEN F.SYIN IS NULL THEN K.SYIN ELSE F.SYIN END AS SYIN,*****************: /*CLE106*/
+**CASE WHEN F.PRTR IS NULL THEN K.PRTR ELSE F.PRTR END AS PRTR******************: /*CLE106*/
+**CASE*WHEN*FELOAN*=*0**THEN*F.SYIN*********************************************:  /*CLE106*/ CLE148
+  CASE WHEN FELOAN = '' THEN F.SYIN                                             :             CLE148
+**WHEN (L.PTFC = 0 AND L.PTFT = 0 AND L.PTFN = 0) THEN K.SYIN*******************: /*CLE106*/ BG12450
+  WHEN ((L.PTFC = '' AND L.PTFT = 0 AND L.PTFN = 0) OR                          :            BG12450
+  (L.PTFC = '000000' AND L.PTFT = 0 AND L.PTFN = 0)) THEN K.SYIN                :            BG12450
+**WHEN (L.PTFC <> 0 AND L.PTFT<> 0 AND L.PTFN <> 0) THEN Z.SYIN*****************: /*CLE106*/ BG12450
+  WHEN ((L.PTFC <> '' AND L.PTFT<> 0 AND L.PTFN <> 0) OR                        :            BG12450
+  (L.PTFC <> '000000' AND L.PTFT<> 0 AND L.PTFN <> 0)) THEN Z.SYIN              :            BG12450
+  END AS SYIN,                                                                  : /*CLE106*/
+**CASE*WHEN*FELOAN*=*0**THEN*F.PRTR*********************************************:  /*CLE106*/ CLE148
+  CASE WHEN FELOAN = '' THEN F.PRTR                                             :             CLE148
+**WHEN (L.PTFC = 0 AND L.PTFT = 0 AND L.PTFN = 0) THEN K.PRTR*******************: /*CLE106*/ BG12450
+  WHEN ((L.PTFC = '' AND L.PTFT = 0 AND L.PTFN = 0) OR                          :            BG12450
+  (L.PTFC = '000000' AND L.PTFT = 0 AND L.PTFN = 0)) THEN K.PRTR                :            BG12450
+**WHEN (L.PTFC <> 0 AND L.PTFT<> 0 AND L.PTFN <> 0) THEN Z.PRTR*****************: /*CLE106*/ BG12450
+  WHEN ((L.PTFC <> '' AND L.PTFT<> 0 AND L.PTFN <> 0) OR                        :            BG12450
+  (L.PTFC <> '000000' AND L.PTFT<> 0 AND L.PTFN <> 0)) THEN Z.PRTR              :            BG12450
+  END AS PRTR                                                                   : /*CLE106*/
+*FROM*GZLEFEED******************************************************************: /*CLE106*/
+  FROM GZLEFEED A                                                               : /*CLE106*/
+ LEFT JOIN GZSDBRCHPD ON FEBRCA = A8BRCD                                        :
+*LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(FECNUM)************:BUG1912
+*LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = FECNUM***********:    BUG1912 BUG5679
+*LEFT*JOIN*GPGLCUSL*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*FECNUM;************:BUG5679 /*CLE106*/
+ LEFT JOIN GPGLCUSL GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = FECNUM             : /*CLE106*/
+*LEFT JOIN V_GLOBRATE C1 ON C1.CCY=FEFCCY;**************************************:            BUG5679
+  LEFT JOIN                                                                     : /*CLE106*/
+  GZFCLTYFM F ON FEBRCA = F.BRCA AND FECNUM = F.CNUM AND                        : /*CLE106*/
+  SUBSTR(DIGITS(FEFACL),1,3) = DIGITS(F.FACT) AND                               : /*CLE106*/
+  SUBSTR(DIGITS(FEFACL),4,5) = DIGITS(F.FCNO)                                   : /*CLE106*/
+  LEFT JOIN GZCLOANCL L ON FELOAN = L.LNRF AND FEBRCA=L.BRCA                    : /*CLE106*/
+  LEFT JOIN GZFCLTYFM K ON L.FCUS = K.CNUM                                      : /*CLE106*/
+  AND L.FTYP = K.FACT                                                           : /*CLE106*/
+  AND L.FSEQ = K.FCNO                                                           : /*CLE106*/
+**AND FEBRCA = K.BRCA;**********************************************************: /*CLE106*/
+  AND FEBRCA = K.BRCA                                                           : /*CLE106*/
+  LEFT OUTER JOIN GZFCLTYFM Z                                                   : /*CLE106*/
+  ON  Z.BRCA = L.BRCA AND Z.CNUM = L.PTFC                                       : /*CLE106*/
+  AND Z.FACT = L.PTFT AND Z.FCNO = L.PTFN;                                      : /*CLE106*/
+                                                                                :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FCLTYTYPE    IS 'Facility            Type',                                :
+     FCLTYNO      IS 'Facility            Number',                              :
+     FFEPLPD      IS 'Previous Last       Payment Date',                        :
+     FESPTI       IS 'Start pay/receive   telex               indicator',       :
+     FEPPTI       IS 'Payment pay/receive telex               indicator',       :
+     FEEPTI       IS 'End pay/receive     telex               indicator',       :
+     FESBTI       IS 'Start customer      bill/telex          indicator',       :
+     FEPBTI       IS 'Paument customer    bill/telex          indicator',       :
+     FEEBTI       IS 'End Customer        bill/telex          indicator',       :
+*****FEECLASS*****IS*'Fee*****************class************************');******: /*CLE106*/
+     FEECLASS     IS 'Fee                 Class',                               : /*CLE106*/
+     FEETYPE      IS 'Fee                 Type',                                : /*CLE106*/
+     AUTGEN       IS 'Auto                Generated                    ');      : /*CLE106*/
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FCLTYTYPE    TEXT IS 'Facility Type',                                      :
+     FCLTYNO      TEXT IS 'Facility Number',                                    :
+     FFEPLPD      TEXT IS 'Previous Last Payment Date',                         :
+     FESPTI       TEXT IS 'Start pay/receive telex indicator',                  :
+     FEPPTI       TEXT IS 'Payment pay/receive telex indicator',                :
+     FEEPTI       TEXT IS 'End pay/receive telex indicator',                    :
+     FESBTI       TEXT IS 'Start customer bill/telex indicator',                :
+     FEPBTI       TEXT IS 'Paument customer bill/telex indicator',              :
+     FEEBTI       TEXT IS 'End Customer bill/telex indicator',                  :
+*****FEECLASS*****TEXT*IS*'Fee*Class');*****************************************: /*CLE106*/
+     FEECLASS     TEXT IS 'Fee Class',                                          : /*CLE106*/
+     FEETYPE      TEXT IS 'Fee Type',                                           : /*CLE106*/
+     AUTGEN       TEXT IS 'Auto Generated');                                    : /*CLE106*/
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADCNUM    AS FECNUM     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADFACL    AS FEFACL     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADLOAN    AS FELOAN     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADFSEQ    AS FEFSEQ     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADFCOD    AS FEFCOD     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADSTTL    AS FESTTL     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADDYIM    AS FEDYIM     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADTNLU    AS FETNLU     USING GZLEFEED                        :
+ * DESCRIBEFIELD PADRSTM    AS RSTM       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADROBN    AS ROBN       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADROCN    AS ROCN       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADPSTM    AS PSTM       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADPOBN    AS POBN       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADPOCN    AS POCN       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADSMAC    AS SMAC       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADLSWC    AS LSWC       USING GZLEFEED                        :
+ * DESCRIBEFIELD PADLSWS    AS LSWS       USING GZLEFEED                        :
+ * DESCRIBEFIELD FFEPSTD    AS FEPSTD     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFEPEND    AS FEPEND     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFENPYD    AS FENPYD     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFESDAT    AS FESDAT     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFELPDT    AS FELPDT     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFELADT    AS FELADT     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFEDDAT    AS FEDDAT     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFEORED    AS FEORED     USING GZLEFEED                        :
+ * DESCRIBEFIELD FFELCHD    AS FELCHD     USING GZLEFEED                        :
+ * DESCRIBEFIELD FCGDTDL    AS CGDTDL     USING GZLEFEED                        :
+ * DESCRIBEFIELD SFEFAMT    AS FEFAMT     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEFAMT   AS FEFAMT     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMT1    AS FEAMT1     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMT1   AS FEAMT1     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMT2    AS FEAMT2     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMT2   AS FEAMT2     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMT3    AS FEAMT3     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMT3   AS FEAMT3     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMT4    AS FEAMT4     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMT4   AS FEAMT4     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMT5    AS FEAMT5     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMT5   AS FEAMT5     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMTP    AS FEAMTP     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMTP   AS FEAMTP     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMTA    AS FEAMTA     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMTA   AS FEAMTA     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMTS    AS FEAMTS     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMTS   AS FEAMTS     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEADAT    AS FEADAT     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEADAT   AS FEADAT     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMTO    AS FEAMTO     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMTO   AS FEAMTO     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFELPAM    AS FELPAM     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFELPAM   AS FELPAM     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEPAMS    AS FEPAMS     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEPAMS   AS FEPAMS     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEPAMP    AS FEPAMP     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEPAMP   AS FEPAMP     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEADBP    AS FEADBP     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEADBP   AS FEADBP     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFETADJ    AS FETADJ     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFETADJ   AS FETADJ     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEWOFF    AS FEWOFF     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEWOFF   AS FEWOFF     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD SFEAMTW    AS FEAMTW     USING GZLEFEED                        :
+***DESCRIBEFIELD BSFEAMTW   AS FEAMTW     USING GZLEFEED   (BASECCY)************:            BUG5679
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Fee Details - GZLEFEED                   ';                     :
+                                                                                :

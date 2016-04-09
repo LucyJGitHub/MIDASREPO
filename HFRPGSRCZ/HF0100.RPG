@@ -1,0 +1,2427 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Items maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - History and Audit Facility Module
+     F*                                                               *
+     F*  HF0100 - HF Items Maintenance                                *
+     F*                                                               *
+     F*  Function:  This program allows the user to maintain the      *
+     F*  (I/C INT)  HF items.                                         *
+     F*                                                               *
+     F*  Called By: HFC0100 - Reporting Groups Maintenance            *
+     F*                                                               *
+     F*  Calls: HFC0110 - Check physical file.                        *
+     F*         HFC0111 - Journal file J...... file.                  *
+     F*         HFC0112 - Layout description F...... file.            *
+     F*         HFC0113 - Check object in library.                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CAAA03             Date 28Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 099961             Date 16JUL96               *
+     F*                 098797             DATE 09JUL96               *
+     F*                 085730             DATE  3APR96               *
+     F*                 083164             DATE  3APR96               *
+     F*                 091863             DATE 19OCT95               *
+     F*                 084645             DATE 19OCT95               *
+     F*                 S01379             DATE 18SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes. Recompile due to changes in      *
+      *           HF0100DF.                                           *
+     F*  099961 - If an item is deleted, the files are still treated  *
+     F*           as live by HAF programs.  If an item is deleted,    *
+     F*           flag all files linked to the item as deleted.       *
+     F*  098797 - Duplicate record written to HFFILEPD when an        *
+     F*           intermediary file is removed from selection as pgm  *
+     F*           updates HFFILEPD with details of next record.       *
+     F*           Change pgm to not supress blank file line.          *
+     F*  085730 - Item name should not contain special characters     *
+     F*  083164 - Any incorrect value entered in item field is        *
+     F*           defaulted to zero then error message saying that    *
+     F*           the field cannot be zero is diplayed.               *
+     F*  091863 - Correction of 084645. Record length of last file    *
+     F*           is used instead of length of longest file           *
+     F*  084645 - Adjust Length(To Save Disk Space)                   *
+     F*  S01379 - New program for HAF.                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*  01       CMD KEY 1 - EXIT PROGRAM
+     F*  03       PREV
+     F*  05       UPDT
+     F*  10 - 15  LOKUP
+     F*  19       SCR 1 PROCESS CONTROL
+     F*  20       SCR 2 PROCESS CONTROL
+     F*  31       SFLEND  HFFILEL3
+     F*  32       HFFILEPD
+     F*  40       SFLDSP
+     F*  41       SFLCLR
+     F*  50       ACTION FIELD
+     F*  51       ITEM FIELD
+     F*  52       FFILE FIELD
+     F*  61       RET.PERIOD
+     F*  62       ST.POS. BUFF
+     F*  63       LEN. IN BUFF.
+     F*  64       ITEM TEXT
+     F*  65       KEY TEXT
+     F*  66       AUDIT
+     F*  71 - 76  PHYSICAL FILES 1 - 6
+     F*  80       ERROR MSG
+     F*  81       UPDT FUNCTION
+     F*
+     F*  90 - 99  ACT-SUBROUTINES
+     F*
+     F*  U7,U8    STANDARD-MIDAS ERROR
+     F*----------------------------------------------------------------
+     FHF0100DFCF  E                    WORKSTN
+      *   Initial screen
+     F                                        RECNO KSFILE HF0100F3
+     F*
+     FHFFILEL3IF  E           K        DISK
+      *   HAF File headers
+     F            HFFILEP0                          KRENAMEFILEZF
+     F*
+     F*
+     FHFFILEPDUF  E           K        DISK                      A
+      *   HAF file details
+     F*
+     E*-----------------------------------------------------------------
+     E**                  T A B L E S
+     E*
+     E                    CPY@    1   1 80
+     E                    VCHAR  41  41  1                                085730
+     E*
+     E** Array containing Copyright statement
+     E*
+     E                    WKV         9  1
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    FOLD        6 10               FILES OLD
+     E                    FIL1        6 10               FILE-NAMES 1
+     E                    FIL2        6 10               FILE-NAMES 2
+     E                    FCHK        6 10               F.NAME CHECK
+     E                    ENA1        6  1               FILE-ENAB  1
+     E                    ENA2        6  1               FILE-ENAB  2
+     E                    RECL        6  5 0             REC-LENGTH
+     E*-----------------------------------------------------------------
+     IFILEZF
+     I              ENAB                            ENABI
+     I              FFILE                           FFILI
+     I              FFORM                           FFORI
+     I              ITEM                            ITEMI
+     I              HEADER                          HEADI
+     I              RETAIN                          RETAI
+     I              STRPOS                          STRPI
+     I              LENBUF                          LENBI
+     I              TEXT                            TEXTI
+     I              TEXK                            TEXKI
+     I              AUDIT                           AUDII
+     I              HFJOB                           HFJOBI
+     I              HFUSER                          HFUSRI
+     I              HFNUMB                          HFNUMI
+     I              HFDATE                          HFDATI
+     I              HFTIME                          HFTIMI
+     I*
+     IHFFILEP0
+     I**---------------------------------------------------------------
+     I            DS
+     I                                        1  10 LFNAM
+     I                                        1   1 POS1
+     I*
+     I*  D.S. TO BLANK PHYS. FILE  ENABLE/NAME
+     ISCRENA      DS
+     I                                        1   6 SPEN
+     I                                        1   1 SFE1
+     I                                        2   2 SFE2
+     I                                        3   3 SFE3
+     I                                        4   4 SFE4
+     I                                        5   5 SFE5
+     I                                        6   6 SFE6
+     ISCRPHY      DS
+     I                                        1  60 SPHY
+     I                                        1  10 SFI1
+     I                                       11  20 SFI2
+     I                                       21  30 SFI3
+     I                                       31  40 SFI4
+     I                                       41  50 SFI5
+     I                                       51  60 SFI6
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     I*
+     IPSDS       SDS
+     I*
+     I** Program status data structure
+     I                                      244 253 #JOB
+     I                                      254 263 #USER
+     I                                      264 2690#NUMB
+      *
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     I                                        1   7 #DATE
+     I*---------------------------------------------------------------
+     C/EJECT
+     C*****************************************************************
+     C** B E G I N   O F    M A I N   P R O G R A M
+     C*****************************************************************
+     C*
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE #USER     SUSER
+     C                     MOVEL#JOB      SWSID
+      *
+     C                     MOVEL'HF0100'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+      *
+     C* HFFILEPD KEY
+     C           JRNFK     KLIST
+     C                     KFLD           KFILE
+     C                     KFLD           KHEAD
+     C                     MOVEL*BLANKS   KFILE  10
+     C                     MOVEL'0'       KHEAD   1
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+     C*
+     C*----------MAIN CYCLE  START---
+     C           *IN01     DOWEQ'0'                        B1 DO
+      *
+      *   Repeat until F3 taken
+     C                     WRITEHF0100F5
+      *
+      *   Write subfile of all files set up
+     C                     EXSR SRSUB                      * WRITE SUBF.
+     C                     WRITEHF0100F4
+     C                     WRITEHF0100F6
+      *
+      *   Display first screen
+     C                     EXSR SRINI1                     * INIT SCR1
+      *
+      *   Validate first screen
+     C                     EXSR SRINP1                     * INPUT SCR1
+      *
+      *   If not F3 then continue
+     C           *IN01     IFEQ '0'
+      *
+      *   Display second screen
+     C                     EXSR SRINI2                     * INIT SCR2
+      *
+      *
+      *   Load screen for Amend, Delete and Enquiry processing
+     C           SACT      IFEQ 'A'
+     C           SACT      OREQ 'E'
+     C           SACT      OREQ 'D'
+     C                     EXSR SRLOA2                     * LOAD SCR2
+     C                     END
+      *
+      *   Clear screen for insert processing
+     C                     EXSR SRINP2                     * INPUT SCR2
+     C                     END
+     C*
+     C                     END                             E1 DO
+      *
+     C*----------MAIN CYCLE  END-----
+     C           ENDPGM    TAG                             * ENDPGM TAG
+     C*
+     C                     CALL 'SCC0250'
+     C*
+      *   DUMP program on error
+     C   U7 U8             DUMP
+     C*
+      *   Terminate with LR on
+     C                     SETON                     LR
+     C*****************************************************************
+     C** E N D    O F    M A I N   P R O G R A M M
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRINI1: Initialise the first screen fields
+     C*----------------------------------------------------------------
+     C           SRINI1    BEGSR
+      *
+      *   Reset screen indicators and screen fields
+     C                     MOVEA'0000'    *IN,25
+     C                     SETOF                     505152
+     C                     SETOF                     80
+     C                     MOVEL*BLANKS   SACT
+     C***********          MOVEL*BLANKS   SITEM                           083164
+     C                     MOVEL*ZEROS    SITEM                           083164
+     C                     MOVEL*BLANKS   SFFILE
+     C                     MOVEL*BLANKS   WSFILE
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  Subroutine SRINI2: Initialise the second screen fields
+     C*----------------------------------------------------------------
+     C           SRINI2    BEGSR
+      *
+      *   Reset screen indicators and screen fields
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     66
+     C                     SETOF                     717273
+     C                     SETOF                     747576
+     C                     SETOF                     8081
+     C                     MOVE '0'       SCHM    1
+     C                     MOVEL*BLANKS   STEXT
+     C                     MOVEL*BLANKS   STEXK
+     C                     MOVEL*BLANKS   SAUDI
+     C*
+     C                     MOVEL*BLANKS   SPHY
+     C                     MOVEL*BLANKS   SPEN
+     C                     MOVEL*BLANKS   STX1
+     C                     MOVEL*BLANKS   STX2
+     C                     MOVEL*BLANKS   STX3
+     C                     MOVEL*BLANKS   STX4
+     C                     MOVEL*BLANKS   STX5
+     C                     MOVEL*BLANKS   STX6
+     C*
+     C                     MOVEL*ZEROS    SRETA
+     C                     MOVEL*ZEROS    SSTRP
+     C                     MOVEL*ZEROS    SLENB
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  Subroutine SRLOA2: Complete second screen details
+     C*----------------------------------------------------------------
+     C           SRLOA2    BEGSR
+      *
+      *   Reset screen indicators and screen fields
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     66
+     C                     SETOF                     717273
+     C                     SETOF                     747576
+     C                     SETOF                     80
+     C                     SETON                     81
+     C                     MOVEA*ZEROS    RECL
+     C                     MOVEA*BLANKS   FOLD
+      *
+     C*   Read all the records from the list of set up files for the
+      *   HAF file name entered by the user
+     C                     SETOF                     32
+     C                     Z-ADD0         ZAEHL   20
+     C                     MOVELSFFILE    KFILE
+     C                     MOVE SFFILE    WSFILE
+     C                     MOVEL'0'       KHEAD
+     C           JRNFK     SETLLHFFILEPD
+     C                     READ HFFILEPD                 32
+      *
+      *   DO until EOF or until records for the next file found
+     C           *IN32     DOWEQ'0'                        * B1 DO
+     C           FFILE     ANDEQSFFILE                     * START DO
+      *
+      *   If this is the header and has been selected for deletion
+      *   then put out message.
+     C           HEADER    IFEQ '0'
+     C           HFJOB     ANDNE*BLANKS
+     C                     SETON                     28
+     C                     END
+      *
+      *   Increment counter
+     C                     ADD  1         ZAEHL
+      *
+      *   If this is the first physical file for the HAF file entered
+      *   then set up the header fields
+     C           ZAEHL     IFEQ 1
+     C                     Z-ADDRETAIN    SRETA
+     C                     Z-ADDSTRPOS    SSTRP
+     C                     Z-ADDLENBUF    SLENB
+     C                     MOVELTEXT      STEXT
+     C                     MOVELTEXK      STEXK
+     C                     MOVELAUDIT     SAUDI
+     C                     MOVELENAB      SFE1
+     C                     MOVELFFORM     SFI1
+     C                     MOVELFFORM     PHYNAM 10
+     C                     MOVELFFORM     FOLD,1
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX1
+     C                     MOVE PHYRL     RECL,1
+     C                     ELSE
+     C                     SETOF                     81
+      *
+      *   If file does not exist then put out blank object description
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX1
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Second physical file associated with this HAF file
+     C           ZAEHL     IFEQ 2
+     C                     MOVELENAB      SFE2
+     C                     MOVELFFORM     SFI2
+     C                     MOVELFFORM     PHYNAM
+     C                     MOVELFFORM     FOLD,2
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX2
+     C                     MOVE PHYRL     RECL,2
+     C                     ELSE
+      *
+      *   If file does not exist then put out blank object description
+     C                     SETOF                     81
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX2
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Third physical file associated with this HAF file
+     C           ZAEHL     IFEQ 3
+     C                     MOVELENAB      SFE3
+     C                     MOVELFFORM     SFI3
+     C                     MOVELFFORM     PHYNAM
+     C                     MOVELFFORM     FOLD,3
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX3
+     C                     MOVE PHYRL     RECL,3
+     C                     ELSE
+      *
+      *   If file does not exist then put out blank object description
+     C                     SETOF                     81
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX3
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Fourth physical file associated with this HAF file
+     C           ZAEHL     IFEQ 4
+     C                     MOVELENAB      SFE4
+     C                     MOVELFFORM     SFI4
+     C                     MOVELFFORM     PHYNAM
+     C                     MOVELFFORM     FOLD,4
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX4
+     C                     MOVE PHYRL     RECL,4
+     C                     ELSE
+      *
+      *   If file does not exist then put out blank object description
+     C                     SETOF                     81
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX4
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Fifth physical file associated with this HAF file
+     C           ZAEHL     IFEQ 5
+     C                     MOVELENAB      SFE5
+     C                     MOVELFFORM     SFI5
+     C                     MOVELFFORM     PHYNAM
+     C                     MOVELFFORM     FOLD,5
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX5
+     C                     MOVE PHYRL     RECL,5
+     C                     ELSE
+      *
+      *   If file does not exist then put out blank object description
+     C                     SETOF                     81
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX5
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Sixth physical file associated with this HAF file
+     C           ZAEHL     IFEQ 6
+     C                     MOVELENAB      SFE6
+     C                     MOVELFFORM     SFI6
+     C                     MOVELFFORM     PHYNAM
+     C                     MOVELFFORM     FOLD,6
+      *
+      *   Check that the physical file associated with this HAF file
+      *   exists and user authorised
+     C                     EXSR SRPHYT
+      *
+      *   If file exists and user authorised then put out object
+      *   description
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX6
+     C                     MOVE PHYRL     RECL,6
+     C                     ELSE
+      *
+      *   If file does not exist then put out blank object description
+     C                     SETOF                     81
+     C           PHYOK     IFEQ 'N'
+     C                     MOVEL*BLANKS   STX6
+     C                     ELSE
+      *
+      *   If user not authorised then put out message
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Read next record from HFFILEPD
+     C                     READ HFFILEPD                 32
+     C                     END                             * E1 DO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRINP1 : Write, read and validate first screen
+     C*----------------------------------------------------------------
+     C           SRINP1    BEGSR
+     C*
+     C                     SETOF                     19
+      *   Repeat unti screen validates as correct or until pgm is
+      *   cancelled by the user
+     C           *IN19     DOWEQ'0'                        B1 START DO
+     C                     WRITEHF0100F6
+     C                     WRITEHF0100C0
+     C                     EXFMTHF0100F5
+     C                     CALL 'SCC0250'
+     C                     SETOF                     80
+     C                     SETOF                     505152
+     C*   F3 End program
+     C           *IN01     IFEQ '1'                          B2
+     C                     SETON                     19
+     C                     GOTO INP1E
+     C                     END                               E2
+     C*
+     C** Add 'J' to start of item name.
+     C*
+     C                     MOVE *BLANKS   SFFILE 10
+     C                     MOVEL'J'       SFFILE
+     C                     MOVE WSFILE    SFFILE
+      *
+      * Validate action code
+      *
+      *   Set *in25 on if D or E, otherwise set *in25 off
+      *   *in25 will protect the screen fields
+     C           SACT      IFEQ 'D'                          B2
+     C           SACT      OREQ 'E'                          B2
+     C                     SETON                     25
+     C                     ELSE
+     C                     SETOF                     25
+     C                     END
+      *
+      *   *in26 will allow the delete command key if action code is D
+     C           SACT      IFEQ 'D'                          B2
+     C                     SETON                     26
+     C                     ELSE
+     C                     SETOF                     26
+     C                     END
+      *
+     C                     MOVELSACT      DACT    1
+      *
+      *   Action code must be I A D or E
+     C           SACT      IFNE 'I'                          B2
+     C           SACT      ANDNE'A'
+     C           SACT      ANDNE'D'
+     C           SACT      ANDNE'E'
+      *
+     C                     SETON                     5080
+      *
+     C                     MOVEL'HAF0108' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+      * Ensure that user leaves the HAF file name blank for amend
+      * delete and enquiry
+     C           SACT      IFEQ 'A'
+     C           SACT      OREQ 'D'
+     C           SACT      OREQ 'E'
+     C           *IN80     IFEQ '0'
+     C           WSFILE    ANDNE*BLANKS
+      *
+     C                     MOVEL'HAF0018' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     5280
+     C                     END
+     C                     END
+      *
+     C* Validate HAF item number
+     C                     MOVELSITEM     DITEM   30
+      *
+      *   Error if field not entered
+     C***********SITEM     IFEQ *ZEROS                       B2           083164
+     C           DITEM     IFEQ *ZEROS                       B2           083164
+     C                     SETON                     5180
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     MOVEL*ZEROS    SITEM                           083164
+     C                     END                               E2
+     C*                                                                   083164
+     C** NUMERIC CHECK FOR ITEM NUMBER ENTRY                              083164
+     C           *IN80     IFEQ '0'                                       083164
+     C*                                                                   083164
+     C                     MOVEL*BLANK    ZFIELD 16                       083164
+     C                     MOVELSITEM     ZFIELD                          083164
+     C                     Z-ADD0         ZADEC   10                      083164
+     C                     Z-ADD3         ZADIG   20                      083164
+     C                     EXSR ZALIGN                                    083164
+     C           *IN99     IFEQ '1'                                       083164
+     C                     SETON                     5180                 083164
+      *                                                                   083164
+     C                     MOVEL'HAF0117' WUMSID           Message Identif083164
+      * Retrieve MSGF message - Standard Functions  *                     083164
+     C                     CALL 'SCC0240'                  Retrieve MSGF m083164
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif083164
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na083164
+      *                                                                   083164
+     C                     ELSE                                           083164
+     C                     MOVE ZFIELD    SRETA                           083164
+     C                     END                                            083164
+     C*                                                                   083164
+     C                     END                                            083164
+      *
+      * Ensure that HAF file name is not blank for insert
+      *
+     C           SACT      IFEQ 'I'
+     C           WSFILE    ANDEQ*BLANKS
+     C           *IN80     IFEQ '0'
+      *
+     C                     MOVEL'HAF0006' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     5280
+     C                     END
+     C                     END
+      *
+      *   If HAF item has been entered, check there are no embedded
+      *   blanks
+      *
+     C           SACT      IFEQ 'I'
+     C           WSFILE    ANDNE*BLANKS
+     C           *IN80     IFEQ '0'
+     C                     MOVEAWSFILE    WKV
+     C                     EXSR VALCHR
+     C           VERR      IFEQ 'E'
+      *
+     C                     MOVEL'HAF0120' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     5280
+     C                     END
+     C                     END
+     C                     END
+      *
+     C*   Execute SRITEM to cross check item number and action code
+     C           *IN80     IFEQ '0'
+     C                     EXSR SRITEM
+     C                     END
+      *
+     C*   Validate the HAF file name
+     C           *IN80     IFEQ '0'                          B2
+     C           SACT      IFEQ 'I'                            B3
+     C                     MOVELSFFILE    DFFILE 10
+     C                     MOVELSFFILE    LFNAM
+      *
+      *   Check that whether the HAF file exists
+     C                     MOVELSFFILE    FOBJ   10
+     C                     MOVEL'*LIBL'   FLIB   10
+     C                     MOVEL'*FILE'   FTYP   10
+     C                     MOVEL'Y'       FOK     1
+     C                     CALL 'HFC0113'
+     C                     PARM           FOBJ
+     C                     PARM           FLIB
+     C                     PARM           FTYP
+     C                     PARM           FOK
+      *
+      *   If file exists then error for insert
+      *   If file does not exist for other action codes then error
+     C           FOK       IFEQ 'Y'                              B4
+      *
+     C                     MOVEL'HAF0003' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     5280
+     C                     ELSE                                  X4
+      *
+      *   Check for file on HFFILEPD
+     C                     EXSR SRLOGI
+     C                     END                                   E4
+     C                     END                                 E3
+     C                     END                               E2
+      *
+     C*   Can only insert 999 items
+     C           *IN80     IFEQ '0'                          B2
+     C           *IN53     ANDEQ'1'
+     C           SACT      ANDEQ'I'
+     C                     SETON                     80
+      *
+     C                     MOVEL'HAF0004' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+      *   Set indicator to exit loop if validation passed
+     C           *IN80     IFEQ '0'                          B2
+     C                     SETON                     19
+     C                     END                               E2
+     C*
+     C           INP1E     TAG
+      *
+     C                     END                             E1 END DO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRINP2 : Write, read and validate second screen
+     C*----------------------------------------------------------------
+     C*
+     C           SRINP2    BEGSR
+     C*
+     C                     SETOF                     20
+      *
+      *   Repeat until valid or end program requested
+     C           *IN20     DOWEQ'0'                        B1 START DO
+     C*
+     C*   If action code is D or E then disable F5
+     C           SACT      IFEQ 'D'
+     C           SACT      OREQ 'E'
+     C                     SETOF                     81
+     C                     END
+      *
+     C                     WRITEHF0100F2
+     C                     WRITEHF0100C0
+     C                     EXFMTHF0100F1
+     C                     CALL 'SCC0250'
+     C                     MOVEL*BLANKS   STX1
+     C                     MOVEL*BLANKS   STX2
+     C                     MOVEL*BLANKS   STX3
+     C                     MOVEL*BLANKS   STX4
+     C                     MOVEL*BLANKS   STX5
+     C                     MOVEL*BLANKS   STX6
+     C                     MOVEA*ZEROS    RECL
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     66
+     C                     SETOF                     717273
+     C                     SETOF                     747576
+     C                     SETOF                     8081
+      *
+      *   F3 or F12 requested then exit loop
+     C           *IN01     IFEQ '1'                          B2
+     C           *IN03     OREQ '1'                          B2
+     C                     SETON                     20
+     C                     GOTO INP2E
+     C                     END                               E2
+      *
+      *   If Delete or Enquiry then bypass screen checking
+     C           *IN25     IFEQ '1'
+      *
+      *   If action code is E then exit loop.
+     C           SACT      IFEQ 'E'
+     C                     SETON                     20
+     C                     END
+      *
+      *   If action code is D and F10 pressed then update the file
+     C           SACT      IFEQ 'D'
+     C           *IN27     IFEQ '1'
+     C                     EXSR SRFIL
+     C                     SETON                     20
+     C                     ELSE
+      *   If action code is D and F10 not pressed then error
+      *
+     C                     MOVEL'HAF0019' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     80
+     C                     END
+     C                     END
+      *
+      *   For either D or E then go to end of loop
+     C                     GOTO INP2E
+     C                     END                               E2
+     C*
+     C** NUMERIC CHECK FOR RETENTION PERIOD ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSRETA     ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD4         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SRETA
+     C           *IN99     IFEQ '1'
+     C                     SETON                     6180
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+      *
+      *   Start length in buffer
+     C           SSTRP     IFEQ *ZEROS                       B2
+     C                     SETON                     6280
+      *
+     C                     MOVEL'HAF0007' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+     C*
+     C           *IN62     IFEQ '0'
+     C*
+     C** NUMERIC CHECK FOR START LENGTH ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSSTRP     ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD4         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SSTRP
+     C           *IN99     IFEQ '1'
+     C                     SETON                     6280
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *   Length in Buffer
+     C           SLENB     IFGT 25
+     C                     SETON                     6380
+      *
+     C                     MOVEL'HAF0012' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+     C*
+     C           *IN63     IFEQ '0'
+     C*
+     C** NUMERIC CHECK FOR LENGTH IN BUFFER ENTRY
+     C                     MOVEL*BLANK    ZFIELD 16
+     C                     MOVELSLENB     ZFIELD
+     C                     Z-ADD0         ZADEC   10
+     C                     Z-ADD4         ZADIG   20
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    SLENB
+     C           *IN99     IFEQ '1'
+     C                     SETON                     6380
+      *
+     C                     MOVEL'HAF0117' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001           Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002           Message File Na
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *   Item text must not be blanks
+     C           STEXT     IFEQ *BLANKS                      B2
+     C                     SETON                     6480
+      *
+     C                     MOVEL'HAF0006' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+      *   Key text must be entered
+     C           STEXK     IFEQ *BLANKS                      B2
+     C                     SETON                     6580
+      *
+     C                     MOVEL'HAF0006' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+      *   Audit flag must be Y or N
+     C           SAUDI     IFNE 'Y'                          B2
+     C           SAUDI     ANDNE'N'
+     C                     SETON                     6680
+      *
+     C                     MOVEL'HAF0013' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+     C* Move PF-File name ito array for further check
+     C                     MOVEA*BLANKS   FIL1
+     C                     MOVEA*BLANKS   FIL2
+     C                     MOVEASPHY      FIL1
+     C                     MOVEA*BLANKS   ENA1
+     C                     MOVEA*BLANKS   ENA2
+     C                     MOVEASPEN      ENA1
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         Y       20
+      *
+     C* Delete blank lines
+     C           X         DOWLE6                            B2
+     C***********FIL1,X    IFNE *BLANKS                        B3        098797
+     C                     MOVE FIL1,X    FIL2,Y
+     C                     MOVE ENA1,X    ENA2,Y
+     C                     ADD  1         Y
+     C***********          END                                 E3        098797
+     C                     ADD  1         X
+     C                     END                               E2
+      *
+     C                     MOVEAFIL2      SPHY
+     C                     MOVEAENA2      SPEN
+     C                     MOVEAFIL2      FCHK
+      *
+     C* Check file name not entered twice
+     C                     DO   6         X
+     C           FIL2,X    IFNE *BLANK
+     C                     MOVEL*BLANK    FCHK,X
+     C                     Z-ADD1         Y
+     C           FIL2,X    LOKUPFCHK,Y                   10
+     C           *IN10     IFEQ '1'
+      *
+     C                     MOVEL'HAF0009' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     80
+     C                     END
+     C                     END
+     C                     END
+      *
+     C*  Check all six phsical files in reverse order
+      *
+      *   Sixth physical file
+     C           SFI6      IFNE *BLANKS
+     C           SFE6      IFNE 'E'
+     C           SFE6      ANDNE'D'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7680
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI6      PHYNAM
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX6
+     C                     MOVE PHYRL     RECL,6
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7680
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Fifth physical file
+     C           SFI5      IFNE *BLANKS
+     C           SFE5      IFNE 'E'
+     C           SFE5      ANDNE'D'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7580
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI5      PHYNAM
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX5
+     C                     MOVE PHYRL     RECL,5
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7580
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Fourth physical file
+     C           SFI4      IFNE *BLANKS
+     C           SFE4      IFNE 'E'
+     C           SFE4      ANDNE'D'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7480
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI4      PHYNAM
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX4
+     C                     MOVE PHYRL     RECL,4
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7480
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Third physical file
+     C           SFI3      IFNE *BLANKS
+     C           SFE3      IFNE 'E'
+     C           SFE3      ANDNE'D'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7380
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI3      PHYNAM
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX3
+     C                     MOVE PHYRL     RECL,3
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7380
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Second physical file
+     C           SFI2      IFNE *BLANKS
+     C           SFE2      IFNE 'E'
+     C           SFE2      ANDNE'D'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7280
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI2      PHYNAM
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX2
+     C                     MOVE PHYRL     RECL,2
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7280
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   First physical file
+     C                     MOVE 'E'       SFE1
+     C           SFE1      IFNE 'E'
+      *
+      *   If file entered but not enabled or disabled then error
+     C                     SETON                     7180
+      *
+     C                     MOVEL'HAF0008' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+     C                     MOVELSFI1      PHYNAM 10
+      *
+      *   Check physical file
+     C                     EXSR SRPHYT
+      *
+      *   If physical does not exist for insert
+      *   If physical file does not exist for other action codes
+     C           PHYOK     IFEQ 'Y'
+     C                     MOVELPHYTXT    STX1
+     C                     MOVE PHYRL     RECL,1
+     C                     ELSE
+      *
+      *   Error if file exists for insert
+      *   Error if file does not exist for other action codes
+     C                     SETON                     7180
+     C           PHYOK     IFEQ 'N'
+      *
+     C                     MOVEL'HAF0005' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ELSE
+      *
+      *   Not authorised to file
+      *
+     C                     MOVEL'HAF0010' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *   Check record length in buffer against file details
+     C           *IN80     IFEQ '0'
+     C                     EXSR SRRECL
+     C                     END
+      *
+      *   End of validation tag
+     C           INP2A     TAG
+      *
+      *   Set loop indicator if validation passed
+     C           *IN80     IFEQ '0'                          B2
+     C                     SETON                     81
+     C                     WRITEHF0100F2
+      *
+      *   create layout descriptions file
+     C           *IN05     IFEQ '1'                            B3
+     C                     EXSR SRLDF
+      *
+      *   If program fails send error message
+     C           POK       IFEQ 'N'                                B5
+      *
+     C                     MOVEL'HAF0017' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     80
+     C                     SETOF                     81
+     C                     WRITEHF0100F2
+     C                     WRITEHF0100C0
+     C                     ELSE                                  X4
+      *
+      *   Create journal file
+     C                     EXSR SRJRNT
+      *
+      *   If program fails send error message
+     C           UOK       IFEQ 'N'                              B4
+      *
+     C                     MOVEL'HAF0015' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     SETON                     80
+     C                     SETOF                     81
+     C                     WRITEHF0100F2
+     C                     WRITEHF0100C0
+     C                     ELSE                                    X5
+      *
+      * Write HFFILEPD details
+     C                     EXSR SRFIL
+     C                     SETON                     20
+     C                     END                                     E5
+     C                     END                                   E4
+     C                     END                                 E3
+     C                     END                               E2
+     C*
+     C           INP2E     TAG
+     C                     END                             E1 END DO
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  SRITEM : Check item record
+     C*----------------------------------------------------------------
+     C*
+     C           SRITEM    BEGSR                           * SRITEM
+     C*
+     C                     SETOF                     31
+      *
+      *   Chain file for details
+     C***********          Z-ADDSITEM     KITEM                           083164
+     C                     MOVEL*ZEROS    KITEM                           083164
+     C                     MOVE SITEM     KITEM                           083164
+     C           KITEM     CHAINFILEZF               31
+      *
+      *   If action code is amend delete enquire
+     C           SACT      IFEQ 'A'                        B1
+     C           SACT      OREQ 'D'                        B1
+     C           SACT      OREQ 'E'                        B1
+      *
+      *   Record not found
+     C           *IN31     IFEQ '0'                          B2
+      *
+      *   If action code is not delete
+     C           SACT      IFNE 'D'
+      *
+      *   Or if action code is D and the file has not been flagged
+      *   for deletion then process.
+     C           SACT      OREQ 'D'
+     C           HFJOBI    ANDEQ*BLANKS
+     C                     MOVELFFILI     SFFILE
+     C                     WRITEHF0100F5
+     C                     ELSE
+      *   Action code was D and but the file had already been flagged
+      *   for deletion. => error
+     C                     SETON                     8051
+      *
+     C                     MOVEL'HAF0020' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C                     ELSE                              X2
+     C                     SETON                     8051
+      *
+     C                     MOVEL'HAF0002' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+      *
+      *   Action code is Insert
+     C                     ELSE                            X1
+      *
+      *   Record not found => error
+     C           *IN31     IFEQ '0'                          B2
+     C                     SETON                     8051
+      *
+     C                     MOVEL'HAF0003' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END                               E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  Subroutine  SRLOGI : Check logiocal file record
+     C*----------------------------------------------------------------
+     C           SRLOGI    BEGSR                           * SRLOGI
+     C*
+     C                     SETOF                     32
+      *
+      *   Chain file for details
+     C                     MOVELSFFILE    KFILE
+     C                     MOVEL'0'       KHEAD
+     C           JRNFK     CHAINHFFILEP0             32
+      *
+      *   File not found
+     C           *IN32     IFEQ '0'
+     C                     SETON                     8052
+      *
+     C                     MOVEL'HAF0003' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  SRSUB : Subfile processing
+     C*----------------------------------------------------------------
+     C*
+     C           SRSUB     BEGSR                           * SRSUB
+     C*
+     C                     SETOF                     40    * SFLDSP
+      *
+      *   Initialise the subfile pointer
+     C                     MOVE '1'       *IN41            * SFLCLR
+     C                     WRITEHF0100F4
+     C                     Z-ADD0         RECNO   40
+     C                     MOVE '0'       *IN41            * SFLCLR
+      *
+      *   Read all HFFILEPD header records
+      *   Write records to subfile
+     C                     SETOF                     31
+     C                     Z-ADD0         KITEM   30
+     C           KITEM     SETLLHFFILEL3
+     C                     READ HFFILEL3                 31
+     C           *IN31     DOWEQ'0'                        * START DO
+     C                     Z-ADDITEMI     XITEM
+     C                     MOVE FFILI     XFFILE
+     C                     MOVELTEXTI     XTEXT
+      *
+      *   Check for a deleted file header
+     C           HFJOBI    IFNE *BLANKS
+     C                     MOVEL'* DELETE'XDELET
+     C                     MOVE 'D *'     XDELET
+     C                     SETON                     29
+     C                     ELSE
+     C                     SETOF                     29
+     C                     END
+      *
+      *   Keep a count of records output
+     C                     ADD  1         RECNO
+     C                     WRITEHF0100F3
+     C                     READ HFFILEL3                 31
+     C                     END                             * END DO
+     C*
+     C           RECNO     IFNE 0
+     C                     SETON                     40    * SFLDSP
+     C                     END
+      *
+      * Max. 999 items allowed
+     C           RECNO     IFGE 999
+     C                     SETON                     53
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRPHYT : Check physical file
+     C*----------------------------------------------------------------
+     C           SRPHYT    BEGSR                           * SRPHYT
+     C*
+     C                     MOVEL*BLANKS   PHYTXT 50
+     C                     MOVEL*BLANKS   PHYOK   1
+     C                     Z-ADD0         PHYRL   50
+      *
+      *   Call HFC0110 to check file existance/authorities
+     C                     CALL 'HFC0110'
+     C                     PARM           PHYNAM
+     C                     PARM           PHYTXT
+     C                     PARM           PHYRL
+     C                     PARM           PHYOK
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRJRNT : Check Journal file
+     C*----------------------------------------------------------------
+     C           SRJRNT    BEGSR                           * SRJRNT
+     C*
+     C           SCHM      IFEQ '1'
+     C                     GOTO SRJRNE
+     C                     END
+      *
+      *   Send user the journal file check starting message
+     C                     MOVEL'Y'       UOK
+      *
+      * Retrieve MSGF message - Standard Functions  *
+      *
+     C                     MOVEL'HFM0001' WUMSID           Message Identif
+     C                     MOVEL*BLANKS   WUMSSV 10
+      *
+     C                     CALL 'HFC0012'
+     C           WUMSID    PARM WUMSID    WQ0001
+     C           WUMSSV    PARM WUMSSV    WQ0003 10
+      *
+     C                     MOVEL'HF0100'  WUMSPG 10
+     C                     MOVEL'MIDASMSG'WUMSFM 10
+     C                     MOVE *BLANKS   WUMSRP  1
+      *
+     C                     CALL 'HFC0010'
+     C           WUMSPG    PARM WUMSPG    WQ0006 10
+     C           WUMSFM    PARM WUMSFM    WQ0007 10
+     C           WUMSRP    PARM WUMSRP    WQ0008  1
+      *
+     C                     MOVELSACT      UACT    1
+     C                     MOVELSFFILE    ULFN   10
+     C                     MOVEL*BLANK    UOK     1
+      *
+      *   Call HFC0111 to create/amend journal file
+     C                     CALL 'HFC0111'
+     C                     PARM           UACT
+     C                     PARM           ULEN
+     C                     PARM           ULFN
+     C                     PARM           UOK
+     C                     PARM           FIL2,1
+     C                     PARM           FIL2,2
+     C                     PARM           FIL2,3
+     C                     PARM           FIL2,4
+     C                     PARM           FIL2,5
+     C                     PARM           FIL2,6
+     C                     PARM           STEXT
+     C*
+     C           SRJRNE    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*****************************************************************
+     C*  Subroutine SRLDF  : Layout description file
+     C*----------------------------------------------------------------
+     C           SRLDF     BEGSR                           * SRLDF
+      *
+      *   Initialise fields
+     C                     SETOF                     101112
+     C                     SETOF                     131415
+     C                     Z-ADD0         COU1    20
+     C                     Z-ADD0         COU2    20
+     C                     MOVEL*BLANKS   PHY1   10
+     C                     MOVEL*BLANKS   PHY2   10
+     C                     MOVEL*BLANKS   PHY3   10
+     C                     MOVEL*BLANKS   PHY4   10
+     C                     MOVEL*BLANKS   PHY5   10
+     C                     MOVEL*BLANKS   PHY6   10
+      *
+      *   Set up all relevent files
+     C           FIL2,1    IFNE *BLANKS
+     C                     MOVELFIL2,1    PHY1
+     C                     END
+     C           FIL2,2    IFNE *BLANKS
+     C                     MOVELFIL2,2    PHY2
+     C                     END
+     C           FIL2,3    IFNE *BLANKS
+     C                     MOVELFIL2,3    PHY3
+     C                     END
+     C           FIL2,4    IFNE *BLANKS
+     C                     MOVELFIL2,4    PHY4
+     C                     END
+     C           FIL2,5    IFNE *BLANKS
+     C                     MOVELFIL2,5    PHY5
+     C                     END
+     C           FIL2,6    IFNE *BLANKS
+     C                     MOVELFIL2,6    PHY6
+     C                     END
+      *
+      * For amend need to update/remove old physical files if files
+      * changed/deleted
+      *   Calculate number of physical files before/after update
+     C           SACT      IFEQ 'A'
+     C                     DO   6         X
+     C           FIL2,X    IFNE *BLANKS
+     C                     ADD  1         COU1
+     C                     END
+     C           FOLD,X    IFNE *BLANKS
+     C                     ADD  1         COU2
+     C                     END
+     C                     END
+      *
+      *   Physical file 1
+     C           FIL2,1    IFEQ FOLD,1
+     C                     SETON                         10
+     C                     ELSE
+     C           FIL2,1    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,1    LOKUPFOLD,Y                   10
+     C                     ELSE
+     C                     SETON                         10
+     C                     END
+     C                     END
+      *
+      *   Physical file 2
+     C           FIL2,2    IFEQ FOLD,2
+     C                     SETON                         11
+     C                     ELSE
+     C           FIL2,2    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,2    LOKUPFOLD,Y                   11
+     C                     ELSE
+     C                     SETON                         11
+     C                     END
+     C                     END
+      *
+      *   Physical file 3
+     C           FIL2,3    IFEQ FOLD,3
+     C                     SETON                         12
+     C                     ELSE
+     C           FIL2,3    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,3    LOKUPFOLD,Y                   12
+     C                     ELSE
+     C                     SETON                         12
+     C                     END
+     C                     END
+     C*
+      *   Physical file 4
+     C           FIL2,4    IFEQ FOLD,4
+     C                     SETON                         13
+     C                     ELSE
+     C           FIL2,4    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,4    LOKUPFOLD,Y                   13
+     C                     ELSE
+     C                     SETON                         13
+     C                     END
+     C                     END
+      *
+      *   Physical file 5
+     C           FIL2,5    IFEQ FOLD,5
+     C                     SETON                         14
+     C                     ELSE
+     C           FIL2,5    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,5    LOKUPFOLD,Y                   14
+     C                     ELSE
+     C                     SETON                         14
+     C                     END
+     C                     END
+      *
+      *   Physical file 6
+     C           FIL2,6    IFEQ FOLD,6
+     C                     SETON                         15
+     C                     ELSE
+     C           FIL2,6    IFNE *BLANKS
+     C                     Z-ADD1         Y
+     C           FIL2,6    LOKUPFOLD,Y                   15
+     C                     ELSE
+     C                     SETON                         15
+     C                     END
+     C                     END
+     C*
+     C                     END
+      *
+      *   If a different number of files entered from previously
+      *   set on indicator
+     C           COU1      IFLT COU2
+     C                     SETOF                     10
+     C                     END
+      *
+      *   Decide if parms changed
+     C           *IN10     IFEQ '1'
+     C           *IN11     ANDEQ'1'
+     C           *IN12     ANDEQ'1'
+     C           *IN13     ANDEQ'1'
+     C           *IN14     ANDEQ'1'
+     C           *IN15     ANDEQ'1'
+     C                     MOVE '1'       SCHM
+     C                     ELSE
+      *
+      *   Send user the journal file check starting message
+     C                     MOVE '0'       SCHM
+     C                     MOVEL'Y'       POK
+      *
+      * Retrieve MSGF message - Standard Functions  *
+      *
+      *
+     C                     MOVEL'HFM0002' WUMSID           Message Identif
+     C                     MOVEL*BLANKS   WUMSSV
+      *
+     C                     CALL 'HFC0012'
+     C           WUMSID    PARM WUMSID    WQ0001
+     C           WUMSSV    PARM WUMSSV    WQ0003
+      *
+     C                     MOVEL'HF0100'  WUMSPG
+     C                     MOVEL'MIDASMSG'WUMSFM
+     C                     MOVE *BLANKS   WUMSRP
+      *
+     C                     CALL 'HFC0010'
+     C           WUMSPG    PARM WUMSPG    WQ0006
+     C           WUMSFM    PARM WUMSFM    WQ0007
+     C           WUMSRP    PARM WUMSRP    WQ0008
+     C                     MOVELSACT      UACT    1
+     C                     MOVELSFFILE    FLGL   10
+     C                     MOVEL*BLANK    POK     1
+      *
+      *   Call HFC0112 to create/recreate F files
+     C                     CALL 'HFC0112'
+     C                     PARM           UACT
+     C                     PARM           FLGL
+     C                     PARM           FIL2,1
+     C                     PARM           FIL2,2
+     C                     PARM           FIL2,3
+     C                     PARM           FIL2,4
+     C                     PARM           FIL2,5
+     C                     PARM           FIL2,6
+     C                     PARM           POK
+     C                     PARM           STEXT
+     C                     END
+     C*
+     C           SRLDFE    TAG
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine SRRECL : Check record lnegth and buffer
+     C*----------------------------------------------------------------
+     C           SRRECL    BEGSR                           * SRRECL
+     C*
+     C                     Z-ADD0         RLBUF   50
+      *
+      *   Use smallest record length
+      *   Save first record length
+     C                     Z-ADDRECL,1    RLTST   50
+      *
+      *   If record length 2 is not zero and smaller than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,2    IFNE 0
+     C           RECL,2    IFLT RECL,1
+     C                     Z-ADDRECL,2    RLTST
+     C                     END
+     C                     END
+      *
+      *   If record length 3 is not zero and smaller than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,3    IFNE 0
+     C           RECL,3    IFLT RECL,1
+     C                     Z-ADDRECL,3    RLTST
+     C                     END
+     C                     END
+      *
+      *   If record length 4 is not zero and smaller than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,4    IFNE 0
+     C           RECL,4    IFLT RECL,1
+     C                     Z-ADDRECL,4    RLTST
+     C                     END
+     C                     END
+      *
+      *   If record length 5 is not zero and smaller than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,5    IFNE 0
+     C           RECL,5    IFLT RECL,1
+     C                     Z-ADDRECL,5    RLTST
+     C                     END
+     C                     END
+      *
+      *   If record length 6 is not zero and smaller than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,6    IFNE 0
+     C           RECL,6    IFLT RECL,1
+     C                     Z-ADDRECL,6    RLTST
+     C                     END
+     C                     END
+      *
+      *   Calculate key end position as start pos plus length minus 1
+     C                     ADD  SSTRP     RLBUF
+     C                     ADD  SLENB     RLBUF
+     C                     SUB  1         RLBUF
+      *
+      *   If key end is greater than record length => error
+     C           RLBUF     IFGT RLTST
+     C                     SETON                     626380
+      *
+     C                     MOVEL'HAF0011' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     END
+      *
+      *   Find greatest record length
+      ****Set*record*length*to*9874*****************                      084645
+     C*******              Z-ADD9874      RECL,1                          084645
+     C                     Z-ADDRECL,1    ULEN    50
+      *
+      *   If record length 2 is not zero and greater than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,2    IFNE 0
+     C*******    RECL,2    IFGT RECL,1                                    091863
+     C           RECL,2    IFGT ULEN                                      091863
+     C                     Z-ADDRECL,2    ULEN
+     C                     END
+     C                     END
+      *
+      *   If record length 3 is not zero and greater than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,3    IFNE 0
+     C*******    RECL,3    IFGT RECL,1                                    091863
+     C           RECL,3    IFGT ULEN                                      091863
+     C                     Z-ADDRECL,3    ULEN
+     C                     END
+     C                     END
+      *
+      *   If record length 4 is not zero and greater than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,4    IFNE 0
+     C*******    RECL,4    IFGT RECL,1                                    091863
+     C           RECL,4    IFGT ULEN                                      091863
+     C                     Z-ADDRECL,4    ULEN
+     C                     END
+     C                     END
+      *
+      *   If record length 5 is not zero and greater than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,5    IFNE 0
+     C*******    RECL,5    IFGT RECL,1                                    091863
+     C           RECL,5    IFGT ULEN                                      091863
+     C                     Z-ADDRECL,5    ULEN
+     C                     END
+     C                     END
+      *
+      *   If record length 6 is not zero and greater than the saved
+      *   record length then overwrite the saved record length with
+      *   this record length
+     C           RECL,6    IFNE 0
+     C*******    RECL,6    IFGT RECL,1                                    091863
+     C           RECL,6    IFGT ULEN                                      091863
+     C                     Z-ADDRECL,6    ULEN
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  SRFIL : ADD/AME RECORDS
+     C*----------------------------------------------------------------
+     C           SRFIL     BEGSR
+     C*
+     C* Prepare HFFILEPD records
+     C* Write or update the header record
+     C                     MOVELSFFILE    KFILE
+     C                     MOVEL'0'       KHEAD
+     C                     SETOF                     32
+     C           JRNFK     CHAINHFFILEP0             32
+      *
+     C           SACT      IFEQ 'D'
+      *
+      *   Flag the record as deletion requested
+     C                     MOVEL#JOB      HFJOB
+     C                     MOVEL#USER     HFUSER
+     C                     MOVEL#NUMB     HFNUMB
+     C                     TIME           #TIME   60
+     C                     MOVEL#TIME     HFTIME
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    HFDATE           RUN DATE
+     C*********************UPDATHFFILEP0                                 099961
+      * Flag as deleted all files linked with this item                  099961
+     C                     MOVEL'1'       KHEAD                          099961
+     C           *IN32     DOWNE*ON                                      099961
+     C                     MOVEL'D'       ENAB                           099961
+     C                     UPDATHFFILEP0                                 099961
+     C           JRNFK     READEHFFILEP0                 32              099961
+     C                     ENDDO                                         099961
+     C                     MOVEL'0'       KHEAD                          099961
+      *
+     C                     ELSE
+      *
+      *   Action code I or A
+     C                     MOVELSFE1      ENAB
+     C                     MOVELSFFILE    FFILE
+     C                     MOVELSFI1      FFORM
+     C***********          Z-ADDSITEM     ITEM                            083164
+     C                     Z-ADD0         ITEM                            083164
+     C                     MOVE SITEM     ITEM                            083164
+     C                     MOVEL'0'       HEADER
+     C                     Z-ADDSRETA     RETAIN
+     C                     Z-ADDSSTRP     STRPOS
+     C                     Z-ADDSLENB     LENBUF
+     C                     MOVELSTEXT     TEXT
+     C                     MOVELSTEXK     TEXK
+     C                     MOVELSAUDI     AUDIT
+      *
+     C                     MOVEL*BLANKS   HFJOB
+     C                     MOVEL*BLANKS   HFUSER
+     C                     MOVEL*BLANKS   HFNUMB
+     C                     MOVEL*BLANKS   HFDATE
+     C                     MOVEL*BLANKS   HFTIME
+      *
+     C           *IN32     IFEQ '1'
+      *
+      *   Record does not exist so write it
+     C                     WRITEHFFILEP0
+     C                     ELSE
+      *
+      *   Record exists so update it
+     C                     UPDATHFFILEP0
+     C                     END
+      *
+     C* Update or delete any non-header records
+     C                     MOVEL'1'       KHEAD            * KEY
+     C                     MOVELSFFILE    KFILE            * KEY
+     C                     Z-ADD1         ZAEHL   20
+     C                     SETOF                     32
+      *
+      *   Read all records for this HAF file
+     C           JRNFK     SETLLHFFILEPD
+     C                     READ HFFILEPD                 32
+      *
+      *   Reapeat until all physical files for this HAF file are
+      *   processed
+     C           *IN32     DOWEQ'0'                        * B1 DO
+     C           FFILE     ANDEQSFFILE                     * START DO
+     C                     MOVELSFE1      ENAB
+     C                     MOVELSFFILE    FFILE
+     C***********          Z-ADDSITEM     ITEM                            083164
+     C                     Z-ADD0         ITEM                            083164
+     C                     MOVE SITEM     ITEM                            083164
+     C                     MOVEL'1'       HEADER
+     C                     Z-ADD0         RETAIN
+     C                     Z-ADD0         STRPOS
+     C                     Z-ADD0         LENBUF
+     C                     MOVEL*BLANKS   TEXT
+     C                     MOVEL*BLANKS   TEXK
+     C                     MOVEL*BLANKS   AUDIT
+     C                     ADD  1         ZAEHL
+      *
+      *   If there are 2 physicals in this HAF file since update or
+      *   or if there were 2 physicals in this HAF file prior to
+      *   update then update HFFILEPD
+     C           ZAEHL     IFEQ 2
+     C           SFI2      IFEQ *BLANKS
+      *
+      *   Physical file 2 now blank so delete
+     C                     DELETHFFILEP0
+     C                     ELSE
+      *
+      *   Physical file 2 now non-blank so update
+     C                     MOVELSFE2      ENAB
+     C                     MOVELSFI2      FFORM
+     C                     UPDATHFFILEP0
+     C                     END
+     C                     END
+      *
+      *   If there are 3 physicals in this HAF file since update or
+      *   or if there were 3 physicals in this HAF file prior to
+      *   update then update HFFILEPD
+     C           ZAEHL     IFEQ 3
+     C           SFI3      IFEQ *BLANKS
+      *
+      *   Physical file 3 now blank so delete
+     C                     DELETHFFILEP0
+     C                     ELSE
+      *
+      *   Physical file 3 now non-blank so update
+     C                     MOVELSFE3      ENAB
+     C                     MOVELSFI3      FFORM
+     C                     UPDATHFFILEP0
+     C                     END
+     C                     END
+      *
+      *   If there are 4 physicals in this HAF file since update or
+      *   or if there were 4 physicals in this HAF file prior to
+      *   update then update HFFILEPD
+     C           ZAEHL     IFEQ 4
+     C           SFI4      IFEQ *BLANKS
+      *
+      *   Physical file 4 now blank so delete
+     C                     DELETHFFILEP0
+     C                     ELSE
+      *
+      *   Physical file 4 now non-blank so update
+     C                     MOVELSFE4      ENAB
+     C                     MOVELSFI4      FFORM
+     C                     UPDATHFFILEP0
+     C                     END
+     C                     END
+      *
+      *   If there are 5 physicals in this HAF file since update or
+      *   or if there were 5 physicals in this HAF file prior to
+      *   update then update HFFILEPD
+     C           ZAEHL     IFEQ 5
+     C           SFI5      IFEQ *BLANKS
+      *
+      *   Physical file 5 now blank so delete
+     C                     DELETHFFILEP0
+     C                     ELSE
+      *
+      *   Physical file 5 now non-blank so update
+     C                     MOVELSFE5      ENAB
+     C                     MOVELSFI5      FFORM
+     C                     UPDATHFFILEP0
+     C                     END
+     C                     END
+      *
+      *   If there are 6 physicals in this HAF file since update or
+      *   or if there were 6 physicals in this HAF file prior to
+      *   update then update HFFILEPD
+     C           ZAEHL     IFEQ 6
+     C           SFI6      IFEQ *BLANKS
+      *
+      *   Physical file 6 now blank so delete
+     C                     DELETHFFILEP0
+     C                     ELSE
+      *
+      *   Physical file 6 now non-blank so update
+     C                     MOVELSFE6      ENAB
+     C                     MOVELSFI6      FFORM
+     C                     UPDATHFFILEP0
+     C                     END
+     C                     END
+      *
+      *   Process next record on HFFILEPD
+     C                     READ HFFILEPD                 32
+     C                     END                             * E1 DO
+     C*
+     C* Write Non-header records
+     C                     MOVELSFE1      ENAB
+     C                     MOVELSFFILE    FFILE
+     C***********          Z-ADDSITEM     ITEM                            083164
+     C                     Z-ADD0         ITEM                            083164
+     C                     MOVE SITEM     ITEM                            083164
+     C                     MOVEL'1'       HEADER
+     C                     Z-ADD0         RETAIN
+     C                     Z-ADD0         STRPOS
+     C                     Z-ADD0         LENBUF
+     C                     MOVEL*BLANKS   TEXT
+     C                     MOVEL*BLANKS   TEXK
+     C                     MOVEL*BLANKS   AUDIT
+     C                     MOVEL'1'       KHEAD            * KEY
+     C                     MOVELSFFILE    KFILE            * KEY
+     C                     ADD  1         ZAEHL
+      *
+      *   If at least 2 physical files entered and second physical file
+      *   is not blank then write a record to HFFILEPD
+     C           ZAEHL     IFLE 2
+     C           SFI2      ANDNE*BLANKS
+     C                     MOVELSFE2      ENAB
+     C                     MOVELSFI2      FFORM
+     C                     WRITEHFFILEP0
+     C                     END
+      *
+      *   If at least 3 physical files entered and third physical file
+      *   is not blank then write a record to HFFILEPD
+     C           ZAEHL     IFLE 3
+     C           SFI3      ANDNE*BLANKS
+     C                     MOVELSFE3      ENAB
+     C                     MOVELSFI3      FFORM
+     C                     WRITEHFFILEP0
+     C                     END
+      *
+      *   If at least 4 physical files entered and fourth physical file
+      *   is not blank then write a record to HFFILEPD
+     C           ZAEHL     IFLE 4
+     C           SFI4      ANDNE*BLANKS
+     C                     MOVELSFE4      ENAB
+     C                     MOVELSFI4      FFORM
+     C                     WRITEHFFILEP0
+     C                     END
+      *
+      *   If at least 5 physical files entered and fifth physical file
+      *   is not blank then write a record to HFFILEPD
+     C           ZAEHL     IFLE 5
+     C           SFI5      ANDNE*BLANKS
+     C                     MOVELSFE5      ENAB
+     C                     MOVELSFI5      FFORM
+     C                     WRITEHFFILEP0
+     C                     END
+      *
+      *   If at least 6 physical files entered and sixth physical file
+      *   is not blank then write a record to HFFILEPD
+     C           ZAEHL     IFLE 6
+     C           SFI6      ANDNE*BLANKS
+     C                     MOVELSFE6      ENAB
+     C                     MOVELSFI6      FFORM
+     C                     WRITEHFFILEP0
+     C                     END
+      *
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C           VALCHR    BEGSR
+     C*
+     C* VALIDATE CHARACTER FIELD
+     C*       'E' RETURNED IF EMBEDDED BLANK.
+     C*
+     C                     MOVEL*BLANK    VERR    1
+     C                     Z-ADD1         V1      20
+     C*
+     C           V1        DOUGT9
+     C*                                                                   085730
+     C** Check for special characters                                     085730
+     C*                                                                   085730
+     C           WKV,V1    LOKUPVCHAR                    23               085730
+     C           *IN23     IFEQ '0'                                       085730
+     C           WKV,V1    ANDNE*BLANK                                    085730
+     C                     MOVEL'E'       VERR                            085730
+     C                     Z-ADD9         V1                              085730
+     C                     ELSE                                           085730
+     C*                                                                   085730
+     C           V1        IFGT 1
+     C                     SUB  1         V1
+     C                     MOVELWKV,V1    VWK     1
+     C                     ADD  1         V1
+     C           WKV,V1    IFNE *BLANK
+     C           VWK       ANDEQ*BLANK
+     C                     MOVEL'E'       VERR
+     C                     Z-ADD9         V1
+     C                     END
+     C                     END
+     C                     END                                            085730
+     C                     ADD  1         V1
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**
+     C**   CHECK FOR 'M' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'M'                      96
+     C   96                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 9                    99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CHECK FOR 'T' CONSTANT. ERROR IF NOT LAST CHARACTER ENTERED
+     C           ZA1,ZX    COMP 'T'                      97
+     C   97                DO
+     C           ZX        COMP 15                   99  99
+     C   99                GOTO ZAEND
+     C           ZX        ADD  1         ZX
+     C           ZA1,ZX    COMP ' '                  9999
+     C   99                GOTO ZAEND
+     C           ZX        SUB  1         ZX
+     C           ZX        COMP 12                   99
+     C   99                GOTO ZAEND
+     C                     END
+     C**
+     C**   CLEAR ALPHAMERIC CONSTANT FROM ZA1
+     C   96
+     COR 97                MOVE ' '       ZA1,ZX
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER A DIGIT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF 'M' SPECIFIED, MULTIPLY ZA1 BY 1 MILLION
+     C   96      ZZ        ADD  6         ZZ
+     C**
+     C**   IF 'T' SPECIFIED, MULTIPLY ZA1 BY 1 THOUSAND
+     C   97      ZZ        ADD  3         ZZ
+     C**
+     C**   FILL IN ZEROS IN ANY BLANKS LEFT OF DECIMAL POINT
+     C   96 93
+     COR 97 93   ZZ        DOWGTZY
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF CONSTANT SPECIFIED WITH NO DECIMAL POINT ZEROISE BLANKS
+     C   96N93             DO   6
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C   97N93             DO   3
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C                     END
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92             MOVEAZA1,ZX    ZFIELD
+     C   91 92   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C                     SETOF                     9697
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  VCHAR                                                                 085730
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@_.

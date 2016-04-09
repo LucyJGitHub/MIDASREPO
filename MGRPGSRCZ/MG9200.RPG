@@ -1,0 +1,1121 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Deletion/cancellation control pgm')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *  MG9200 - DELETION/CANCELLATION PROCESSING                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CGL165             Date 17Feb15               *
+      *  Prev Amend No. MD028094           Date 25Nov14               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 01Sep14               *
+      *                 MD027599A          Date 20Aug14               *
+      *                 AR927179           Date 20Aug14               *
+      *                 MD027599           Date 19Aug14               *
+      *                 AR923287           Date 19Jun13               *
+      *                 AR916823           Date 12Jun13               *
+      *                 AR582922           Date 30Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260363             Date 25May09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209555             Date 07Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 191709             Date 28Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 169025             Date 05Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT013             Date 25May00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 095293             Date 23May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 157756             Date 16Apr99               *
+      *                 141572             Date 21Sep98               *
+      *                 113352             Date 13Feb97               *
+      *                 CSW096             DATE 02AUG96               *
+      *                 085620             DATE 21JUN95               *
+      *                 085380             DATE 06JUN95               *
+      *                 082908             DATE 14FEB95               *
+      *                 077555             DATE 20DEC94               *
+      *                 059061             DATE 22JUN94               *
+      *                 E40242             DATE 25JUN92               *
+      *                 E33656             DATE 20DEC91               *
+      *                 E32362             DATE 22NOV91               *
+      *                 E31878             DATE 13NOV91               *
+      *                 E31801             DATE 25OCT91               *
+      *                 E29592             DATE 25OCT91               *
+      *                 E29588             DATE 07OCT91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  MD028094 - Deleted FXDN transaction created a cancellation   *
+      *             entry on MGF300TR archive file                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  MD027599A - Reverse change from MD027599.                    *
+      *  AR927179 - Rollover cancellation msg not being produced      *
+      *             for trades that are being rolled on maturity date *
+      *             to another trade reference. Partial removal of    *
+      *             SC#260363. (Child: AR927180)                      *
+      *           - Applied fix for MD027599A.                        *
+      *  MD027599 - Generate necessary cancellation message after     *
+      *             rollover of the deal                              *
+      *  AR923287 - Generate necessary cancellation message for       *
+      *             IRS Interest Adjustments. (Child: AR923289)       *
+      *  AR916823 - MT202 was not generated after an Interest         *
+      *             Adjustment. Generate necessary cancellation       *
+      *             message for Interest Adjustment.                  *
+      *             (Child: AR916824)                                 *
+      *  AR582922 - DL: MMM payments was not generated after          *
+      *             settlement account. Generate pay/recieve messages *
+      *             when Maturity Date is amended and it is within    *
+      *             telex notice days. (Child: AR582923)              *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  260363 - SWIFT messages generation error.                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  209555 - Save TRNO sa it is changed by called programs       *
+      *  191709 - Amend MG9200 to pass a return code of 'C' to DL6305 *
+      *           whenever it sees a message type other than MT300,   *
+      *           MT320 or MT330 for the deleted deal. This would     *
+      *           result to a cancel confirmation being produced.     *
+      *  169025 - Remove fix 157756 as it is causing problems under   *
+      *           the dealing module. (Includes correction 187448).   *
+      *  CFT013 - Allow deletion of MT103s                            *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *     095293 - Error in msg cancellation when the first 6 char  *
+      *              of TRNO of multiple MT210 is a deal number.      *
+      *              When doing a READP to select the record to       *
+      *              cancel exclude MTRN is blank (ie. header of      *
+      *              mult MT210 and MT950's).                         *
+      *  157756 - Allows deletion of the previous message if a new -  *
+      *           one will be generated (Applied fix 074225).         *
+      *  141572 - Recompile over changes in MGOREFPD                  *
+      *  113352 - Recompile over changes in MGOREFPD                  *
+      *  CSW096 - Swift changes 1996.                                 *
+      *  085620 - For a rollover deal only need to cancel the         *
+      *           maturity message, rather than all messages.         *
+      *           In this case, the program type will be pay/receive  *
+      *           ie PR and the deal amendment value date will        *
+      *           contain a date. Only messages for this deal on this *
+      *           value date should be cancelled.                     *
+      *  085380 - DTAARA MPHAS not allocated for output               *
+      *  082908 - Allow only confirmations to be deleted/cancelled    *
+      *           for Deal Amendments in COB - Pay/Receives are done  *
+      *           in input cycle.                                     *
+      *  077555 - Error fix 059061 should only be used when           *
+      *           Confirmation Matching is on                         *
+      *  059061 - Amendments not cancelling for confirmation.         *
+      *  E40242 - RE-COMPILED FOR CHANGE TO ASEQ                      *
+      *  E33656 - A 'CANCEL' CONFIRMATION WASN'T GENERATED.           *
+      *  E32362 - 'RSND' SHOULD BE TREATED AS IF THE MESSAGE          *
+      *           HAS BEEN SENT.                                      *
+      *  E31878 - NO 'CANCEL' CONFIRMATION GENERATED FOR MESSAGE      *
+      *           STATUS OF 'PRTD' (PRINTED 'PAPER' MESSAGE).         *
+      *  E31801 - 'CANCEL' CONFIRMATION GENERATED FOR UNSENT MSGS     *
+      *  E29592 - PART DELETED MESSAGES WERE BEING PROCESSED FOR      *
+      *           CANCELLATION, WHEN THE MULTIPLE MESSAGE HAD BEEN    *
+      *           SENT.                                               *
+      *  E29588 - POST COLLECTION SWIFT RATIONALISATION FIXES         *
+      *  RE-WRITTEN FOR S01344 - SWIFT RATIONALISATION PHASE 2        *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0IF  E           K        DISK
+     FMGOREFLWIF  E           K        DISK
+     F            MGOREFD0                          KRENAMENOSTROTX
+     FDTRIXL7 IF  E           K        DISK                                                   260363
+     FDEALS   IF  E           K        DISK                                                   260363
+     F                                              KCOMIT                                  AR582922
+      *
+      *****************************************************************
+      * Function of indicators                                        *
+      *    10    EOF MGOREFL0                                         *
+      *    11    MG9205 not  found                                    *
+      *    12    MG9210 not  found                                    *
+      *****45****Allow*delete*of*P/R*messages********************* 157756 169025
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE1Z1                                                                 AR582922
+     E/COPY ZSRSRC,ZDATE9Z1                                               085620
+      *                                                                                       260363
+      **                                                                                      260363
+     IDEALSDBF    30                                                                          260363
+     IDEALSDCF    31                                                                          260363
+     IDEALSDDF    32                                                                          260363
+     IDEALSDEF    33                                                                          260363
+     IDEALSDGF    34                                                                          260363
+      *
+     INOSTROTX
+     I              MODI                            NXMODI
+     I              MTRN                            NXMTRN
+     I              TRNO                            NXTRNO
+     I              MGSG                            NXMGSG
+     I              MTPY                            NXMTPY
+     I              CLSS                            NXCLSS                CDL008
+      **  Rename fields for MT200 check
+      *
+     I            DS
+     I                                        1  16 @TRNO
+     I                                        1   2 @MODI
+     I                                        3   8 @MTRN
+     I                                        9  110@SEQN
+      **  Data structure for transaction number field
+      *
+     I            DS
+     I                                        1  15 MTRN
+     I**********                              1   60MTRNN                                     CLE148
+     I                                        1   6 MTRNN                                     CLE148
+      **  Data structure to redefine MTRN as 6 long numeric field
+      *                                                                                     AR582922
+     IDYMYR       DS                              6                                         AR582922
+     I                                        1   2 DY1                                     AR582922
+     I                                        3   4 MT1                                     AR582922
+     I                                        5   6 YR1                                     AR582922
+      *
+     ISDMMOD    E DSSDMMODPD                                              077555
+     I** Data Structure for Module details                                077555
+      *                                                                   CDL008
+     ISCSARD    E DSSCSARDPD                                              CDL008
+      ** Data Structure for Switchable Features file                      CDL008
+      *                                                                   CDL008
+     I/COPY WNCPYSRC,MG9200I001
+     I*                                                                   077555
+     IDSFDY     E DSDSFDY                                                 077555
+     I** DATA STRUCTURE FOR ACCESS PROGRAMS                               077555
+     I*                                                                   077555
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     I***MPHAS**     DS                           1                                    082908 CCB020
+     I**********                              1   1 COB                                082908 CCB020
+      ****Midas*Phase*Data*area.***************************************                082908 CCB020
+      *                                                                                       CCB020
+      ** Constant for calling program CBC001001                                               CCB020
+      *                                                                                       CCB020
+     I              'CBC001001'           C         PGNME                                     CCB020
+      *                                                                   082908
+     I/COPY ZSRSRC,ZDATE9Z2                                               085620
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   INIT  - initial process                                     *
+      *   HEADR - access header reference record                      *
+      *   CALL  - call cancellation / deletion programs               *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls   INIT  - Initial process                             *
+      *           HEADR - Access header reference record              *
+      *           CALL  - Call cancellation / deletion programs       *
+      *****************************************************************
+      *
+      ** Parameters passed from extraction program
+      *
+     C           *ENTRY    PLIST
+     C**********           PARM           TNUM    60       midas trans. no                    CLE148
+     C                     PARM           TNUM    6                                           CLE148
+     C                     PARM           PROG    2        calling prog id
+     C                     PARM           MODI    2        module id
+     C                     PARM           @AVDT   50       amendment vdateE29588
+     C                     PARM           @ASEQ   30       amendment seq. E29588
+     C                     PARM           NOTF    1        nostro transfer
+     C                     PARM           @RTNC   1        return code
+     C***********          PARM           @TYPE   3        message 157756 169025
+     C                     PARM           @CLSS   1        CLS Settlement CDL008
+      *
+      **  Perform initial process
+      *
+     C                     EXSR INIT
+      *
+      **  Do while transaction no. of LF/MGOREFL0 is equal to
+      **  transaction no. of calling program
+      *
+      ** Processing should only be done for the counterparty transaction                    MD028094
+      *                                                                                     MD028094
+     C                     MOVEL*BLANKS   WMTRN                                             MD028094
+     C                     MOVELMTRN      WMTRN  15                                         MD028094
+      *                                                                                     MD028094
+     C           MTRNN     DOWEQTNUM                                  1
+     C           MTRN      ANDNE*BLANKS
+     C           *IN10     ANDEQ'0'
+     C           MTRN      ANDEQWMTRN                                                       MD028094
+      *                                                                                     MD028094
+      *
+      **  Only do the main processing if not a cancellation message
+      **  (ie. '192' or '292')
+      *
+     C                     MOVE MTPY      @WL2    3                       082908
+     C                     MOVE '**'      @WL2                            082908
+     C                     MOVE MTPY      @WLD    3
+     C                     MOVEL'*'       @WLD
+     C           @WLD      IFNE '*92'                                 2
+     C/COPY WNCPYSRC,MG9200C002
+      ************************************************************ 157756 169025
+      ****If*payment*message*is*to*be*generated,*then*only*delete* 157756 169025
+      ****existing*payment*messages,*else*if*receive*message*is*to 157756 169025
+      ****to*be*generated,*then*only*delete*receive*messages.***** 157756 169025
+      ************************************************************ 157756 169025
+     C***********          MOVE *OFF      *IN45                    157756 169025
+      ************************************************************ 157756 169025
+     C***********PROG      IFEQ 'PR'                               157756 169025
+     C***********PROG      OREQ 'PA'                               157756 169025
+     C***********@TYPE     IFEQ '100'                              157756 169025
+     C***********@TYPE     OREQ '103'                              CFT013 169025
+     C***********@TYPE     OREQ '202'                              157756 169025
+     C***********@TYPE     OREQ '203'                              157756 169025
+     C***********@TYPE     OREQ '200'                              157756 169025
+     C/COPY WNCPYSRC,MG9200C007
+     C***********MTPY      IFEQ '100'                              157756 169025
+     C***********MTPY      OREQ '103'                              CFT013 169025
+     C***********MTPY      OREQ '202'                              157756 169025
+     C***********MTPY      OREQ '203'                              157756 169025
+     C***********MTPY      OREQ '200'                              157756 169025
+     C/COPY WNCPYSRC,MG9200C008
+     C***********          MOVE *ON       *IN45                    157756 169025
+     C***********          ENDIF                                   157756 169025
+     C***********          ELSE                                    157756 169025
+     C***********@TYPE     IFEQ '210'                              157756 169025
+     C***********MTPY      ANDEQ'210'                              157756 169025
+     C***********          MOVE *ON       *IN45                    157756 169025
+     C***********          ENDIF                                   157756 169025
+     C***********          ENDIF                                   157756 169025
+     C***********          ENDIF                                   157756 169025
+      *
+      **  Access header reference record if multiple record
+      *
+     C                     EXSR HEADR
+      *
+      **  If parameter passed is 'CE'/'CA' must be confirmations          E29588
+      **  extract. Else, must be a pay/receive extract                    E29588
+      *
+      ****If*parameter*passed*is*'CE'/'CA',*only*delete*confirmatio157756 169025
+      ****messages.*Else,*if*parameter*passed*is*'PR'/'PA',*only** 157756 169025
+      ****delete*pay/receive*messages.**************************** 157756 169025
+      ************************************************************ 157756 169025
+     C           PROG      IFEQ 'CE'                                  3
+     C           PROG      OREQ 'CA'                                      E29588
+     C***********MTPY      IFNE '100'                              157756 169025
+     C***********MTPY      ORNE '103'                              CFT013 169025
+     C***********MTPY      ANDNE'200'                              157756 169025
+     C***********MTPY      ANDNE'202'                              157756 169025
+     C***********MTPY      ANDNE'203'                              157756 169025
+     C***********MTPY      ANDNE'210'                              157756 169025
+     C/COPY WNCPYSRC,MG9200C009
+      **  If COB, and a DEAM is being processed then only process         082908
+      **  Confirmations, as pay/receives for Deams are done in I/C.       082908
+      *                                                                   082908
+     C           PROG      IFEQ 'CA'                                      082908
+      *                                                                   082908
+      * TYPE 'CA'                                                         082908
+     C           @WL2      IFEQ '3**'                                     082908
+     C********** COB       ANDEQ'C'                                                    082908 CCB020
+     C           COBST     ANDEQ'*YES'                                                        CCB020
+     C                     EXSR CALL
+     C                     END                                            082908
+     C                     ELSE                                           082908
+      * TYPE 'CE'                                                         082908
+     C                     EXSR CALL                                      082908
+     C                     END                                            082908
+     C***********          ENDIF                                   157756 169025
+     C*                                                                   082908
+     C                     ELSE                                      X3
+      *
+      ** If transaction related message is a Pay/receive message
+      *
+     C           MTPY      IFEQ '100'                                 4
+     C           MTPY      OREQ '103'                                     CFT013
+     C           MTPY      OREQ '200'
+     C           MTPY      OREQ '202'
+     C           MTPY      OREQ '203'
+     C           MTPY      OREQ '210'
+     C/COPY WNCPYSRC,MG9200C010
+     C***********PROG      IFEQ 'PR'                               157756 169025
+     C***********PROG      OREQ 'PA'                               157756 169025
+     C************IN45     IFEQ '1'                                157756 169025
+     C/COPY WNCPYSRC,MG9200C001
+     C                     EXSR CALL
+     C***********          ENDIF                                   157756 169025
+     C***********          ENDIF                                   157756 169025
+     C                     END                                       E4
+      *
+     C/COPY WNCPYSRC,MG9200C011
+     C                     END                                       E3
+      *
+      ** Re-access reference file using saved transaction ref. no.
+      *
+     C           STRNO     CHAINMGOREFD0             10                                       209555
+     C***********@TRNO     CHAINMGOREFD0             10                                       209555
+      *
+      **  If database error set up LDA and return
+      *
+     C           *IN10     IFEQ '1'                                   3
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL@TRNO     DBKEY            *  DBERR 001  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E3
+      *
+     C                     END                                       E2
+      *
+      ** Read previous message on reference file
+      *
+     C                     READPMGOREFD0                 10
+      *
+     C                     END                                       E1
+      *
+      ** If a sent confirmation message was found indicate 'Cancel'
+      *
+     C           PROG      IFEQ 'CE'                                                          191709
+     C           MODI      ANDEQ'DL'                                                          191709
+     C           @ASEQ     ANDNE0                                                             191709
+     C           *IN22     ANDEQ'0'                                                           191709
+     C                     MOVE 'C'       @RTNC                                               191709
+     C                     ENDIF                                                              191709
+     C           MT3XX     IFEQ 'C'
+     C***********          MOVE 'C'       @RTNC                           157756
+     C                     MOVE 'C'       @RTNC                           169025
+     C************IN50     IFEQ *OFF                               157756 169025
+     C***********          MOVE 'C'       @RTNC                    157756 169025
+     C***********          ENDIF                                   157756 169025
+     C                     END
+      *                                                                   CDL008
+      ** If CDL008 is on and deal was amended from CLS Settlement 'Y'     CDL008
+      ** to 'N', set return parameter to 'Y' to satisfy condition for     CDL008
+      ** generating new MT300 with codeword NEWT and MT392 cancellation   CDL008
+      *                                                                   CDL008
+     C           CDL008    IFEQ 'Y'                                       CDL008
+     C           WCLSS     ANDEQ'Y'                                       CDL008
+     C           @CLSS     ANDEQ'N'                                       CDL008
+     C                     MOVE 'Y'       @CLSS                           CDL008
+     C                     ENDIF                                          CDL008
+      *
+      ** End program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *   INIT - initial process                                      *
+      *   Called by - main process                                    *
+      *   Calls                                                       *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   082908
+      **  Check if COB or not                                             082908
+      *                                                                   082908
+     C********** *NAMVAR   DEFN           MPHAS                                        082908 CCB020
+     C**********           IN   MPHAS                                                  082908 CCB020
+     C***********          OUT  MPHAS                              082908 085380
+      *                                                                                       CCB020
+      ** Call program CBC001001 to check if system in COB or IC                               CCB020
+      ** If the return value is *YES, system is in COB                                        CCB020
+      *                                                                                       CCB020
+     C                     CALL PGNME                                                         CCB020
+     C                     PARM           COBST   4                                           CCB020
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'MG9200'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *                                                                   CDL008
+      ** Check if CDL008 (Continuous Linked Settlement) is installed      CDL008
+      *                                                                   CDL008
+     C                     MOVE 'N'       CDL008  1                       CDL008
+     C                     CALL 'AOSARDR0'                                CDL008
+     C                     PARM *BLANKS   @RTCD                           CDL008
+     C                     PARM '*VERIFY' @OPTN                           CDL008
+     C                     PARM 'CDL008'  @SARD   6                       CDL008
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL008
+      *                                                                   CDL008
+     C           @RTCD     IFNE *BLANKS                                   CDL008
+     C           @RTCD     ANDNE'*NRF   '                                 CDL008
+     C           *LOCK     IN   LDA                                       CDL008
+     C                     Z-ADD007       DBASE             ************* CDL008
+     C                     MOVEL'SCSARDPD'DBFILE            * DBERR 007 * CDL008
+     C                     MOVEL@SARD     DBKEY             ************* CDL008
+     C                     OUT  LDA                                       CDL008
+     C                     EXSR *PSSR                                     CDL008
+     C                     ENDIF                                          CDL008
+     C           @RTCD     IFEQ *BLANK                                    CDL008
+     C                     MOVEL'Y'       CDL008                          CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+      ** Initialise work field                                            CDL008
+      *                                                                   CDL008
+     C           CDL008    IFEQ 'Y'                                       CDL008
+     C                     MOVE *ON       WFIRST  1                       CDL008
+     C                     ENDIF                                          CDL008
+      *
+      **  Set up key for Nostro transfer/MT200 check
+     C           KNX       KLIST
+     C                     KFLD           KMODI   2
+     C                     KFLD           KMTRN  15
+     C                     KFLD           KTRNO  16
+     C                     MOVE *HIVAL    KTRNO
+     C/COPY WNCPYSRC,MG9200C005
+      *
+      **  Set up key field for access of MGOREFL0 with values from
+      **  calling program.
+      *
+     C                     MOVE MODI      @MODI
+     C/COPY WNCPYSRC,MG9200C006
+     C                     MOVE TNUM      @MTRN
+     C                     MOVE *HIVAL    @SEQN
+      *
+      **  Access last generated message for transaction number
+      *
+     C           @TRNO     SETGTMGOREFD0               10
+      *                                                                   095293
+      **  Exclude header of Mult MT210 and MT950's.                       095293
+      *                                                                   095293
+     C           MTRN      DOUNE*BLANKS                                   095293
+     C           *IN10     OREQ '1'                                       095293
+     C                     READPMGOREFD0                 10
+     C                     END                                            095293
+      *
+      **  If beginning of file or database error set up LDA and return
+      *
+     C           *IN10     IFEQ '1'                                   1
+     C           TNUM      ORNE MTRNN
+      *                                                                   CSW096
+      **  For DL module and CE calling program.                           CSW096
+      **  If LSWC is not equal to 0 and previous message not found, it    CSW096
+      **  means that the previous message was dropped. Setup return code  CSW096
+      **  to generate new confo. with codeword 'CANCEL'.                  CSW096
+      *                                                                   CSW096
+     C           PROG      IFEQ 'CE'                                      CSW096
+     C           MODI      ANDEQ'DL'                                      CSW096
+     C           @ASEQ     ANDNE0                                         CSW096
+     C                     MOVE 'C'       @RTNC                           CSW096
+     C                     END                                            CSW096
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                                   CDL008
+      ** Else CDL008 is on and most recently generated confirmation is    CDL008
+      ** found, save CLS Settlement field.                                CDL008
+      *                                                                   CDL008
+     C                     ELSE                                           CDL008
+     C           CDL008    IFEQ 'Y'                                       CDL008
+     C           MTPY      IFEQ '300'                                     CDL008
+     C                     MOVE CLSS      WCLSS   1                       CDL008
+     C                     MOVE *ON       WINDI   1                       CDL008
+     C                     ELSE                                           CDL008
+     C                     MOVE *OFF      WINDI                           CDL008
+     C                     ENDIF                                          CDL008
+     C                     ENDIF                                          CDL008
+     C                     END                                       E1
+      *
+     C                     MOVE *BLANKS   MT3XX   1
+     C                     MOVE *BLANKS   HOLD1   1
+      *
+     C** Read AOMMODR0 to retrieve moduie information                     077555
+     C*                                                                   077555
+     C                     CALL 'AOMMODR0'                                077555
+     C                     PARM '*MSG   ' @RTCD   7                       077555
+     C                     PARM '*FIRST ' @OPTN   7                       077555
+     C           SDMMOD    PARM SDMMOD    DSFDY                           077555
+     C*                                                                   077555
+     C** If a DB error , set up LDA and return to calling program         077555
+     C*                                                                   077555
+     C           @RTCD     IFNE *BLANKS                                   077555
+     C           *LOCK     IN   LDA                                       077555
+     C                     Z-ADD6         DBASE            * * * * * * * *077555
+     C                     MOVEL*BLANKS   DBKEY            *  DBERR 006  *077555
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *077555
+     C                     OUT  LDA                                       077555
+     C                     EXSR *PSSR                                     077555
+     C                     END                                            077555
+     C*                                                                   077555
+     C** If there is a deal amendment value date, change it to YYMMDD     085620
+     C** format to check against message value date by changing it to     085620
+     C** YYYYMMDD format first.                                           085620
+     C*                                                                   085620
+     C           @AVDT     IFNE 0                                         085620
+     C                     Z-ADD@AVDT     @@DAYN  50                      085620
+     C                     EXSR ZDATE9                                    085620
+     C           @@RTN     IFNE '1'                                       085620
+     C                     MOVE @@VDT     WVDT    6                       085620
+     C                     END                                            085620
+     C                     END                                            085620
+     C/COPY WNCPYSRC,MG9200C004
+     C*                                                                   085620
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   HEADR - Access header reference record if part of a         *
+      *           multiple message                                    *
+      *   Called by - main process                                    *
+      *   Calls                                                       *
+      *****************************************************************
+     C           HEADR     BEGSR
+      *
+      ** Save transaction reference no., cancellation requested
+      ** and part deleted status of the message being processed
+      *
+     C                     MOVE TRNO      @TRNO
+     C                     MOVE TRNO      STRNO  16                                           209555
+     C                     MOVE CARQ      @CARQ   1
+     C                     MOVE PTST      @PTST   1
+     C                     MOVELMTRN      KMTRN
+     C                     MOVELMODI      KMODI
+      *
+      ** Check if a multiple message
+      *
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+      *
+      ** Determine whether file pointer is on header reference record
+      ** and set up key for chain to LF/MGOREFL0
+      *
+     C           TRNF      IFEQ *BLANKS
+     C                     MOVELTRNO      @TRNH  16
+     C                     ELSE
+     C                     MOVELTRNF      @TRNH
+     C                     END
+      *
+      ** Chain to header reference record
+      *
+     C           @TRNH     CHAINMGOREFD0             10
+      *
+      ** If a DB error , set up LDA and return to calling program
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL@TRNH     DBKEY            *  DBERR 002  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   CALL  - Call cancellation or deletion program               *
+      *   Called by - main process                                    *
+      *   Calls                                                       *
+      *****************************************************************
+     C           CALL      BEGSR
+      *
+      ** Check if message relates to a NX transaction whose latest 200
+      ** message has already been sent --- if it does do not cancel
+      ** the associated 210.
+      *
+      ** (nb. NOSTROTX is the renamed record format of MGOREFLW, a
+      ** logical file over MGOREFPD which selects only MT200 (nostro
+      ** transfer) messages. This LF is keyed on Module/Midas trans/-
+      ** TRN, where TRN is in descending order, so accessing it should
+      ** select the LATEST MT200 for this transaction. If the message
+      ** has already been sent, Message status group (MGSG) will be 3)
+     C                     SETOF                     21
+     C           MTPY      IFEQ '210'                                 1
+     C           KNX       SETLLNOSTROTX
+     C                     READ NOSTROTX                 20
+      *
+     C           *IN20     IFEQ '0'                                   2
+      *
+     C           NXMODI    IFEQ KMODI
+     C           NXMTRN    ANDEQKMTRN
+     C           NXMGSG    ANDEQ'3'                                   3
+     C                     SETON                     21
+     C                     END                                       E3
+      *
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  NOTE: When calling the deletion/cancellation programs, if       E29588
+      **        the message was produced by a deal amendment then only    E29588
+      **        process the messages relating to that deal amendment,     E29588
+      **        denoted by the event type being non-blank.                E29588
+      **        If the message was produced by the deal, then only        E29588
+      **        process the messages related to the deal (non-deal        E29588
+      **        amendment), denoted by the event type being blank.        E29588
+      **                                                                  E29588
+      **  Deletion/Cancellation processing on a message occurs when:-     E29588
+      *                                                                   E29588
+     C                     MOVE 'N'       VALID   1                       E29588
+      *                                                                   E29588
+      **  i.  deal/loan amendment message with the event type non-blank   E29588
+     C           PROG      IFEQ 'CA'                                      E29588
+     C           PROG      OREQ 'PA'                                      E29588
+      *                                                                   E29588
+     C           EVTP      IFNE *BLANKS                                   E29588
+     C           AVDT      ANDEQ@AVDT                                     E29588
+     C           ASEQ      ANDEQ@ASEQ                                     E29588
+     C                     MOVE 'Y'       VALID                           E29588
+     C                     END                                            E29588
+      *                                                                   E29588
+      ****ii.*non-amendement*transaction*message*with*event*type*blE29588 157756
+      ************************************************************ 157756 169025
+      ***Non-amendment*transaction******************************** 157756 169025
+      ************************************************************ 157756 169025
+     C                     ELSE                                           E29588
+     C***********EVTP      IFEQ *BLANKS                            E29588 157756
+     C           EVTP      IFEQ *BLANKS                                   169025
+     C                     MOVE 'Y'       VALID                           E29588
+     C***********          END                                     E29588 157756
+     C                     END                                            169025
+     C*                                                                   085620
+     C** When there is an amendment value date, only delete those         085620
+     C** messages whose value date matches this date.                     085620
+     C*                                                                   085620
+     C           @AVDT     IFNE 0                                         085620
+     C           WVDT      ANDNESVDT                                      085620
+     C                     MOVE 'N'       VALID                           085620
+     C                     END                                            085620
+     C*                                                                   085620
+     C                     END                                            E29588
+      *                                                                   E29588
+      *
+     C           *IN21     IFEQ '0'                                  sl
+     C           VALID     ANDEQ'Y'                                       E29588
+      *
+      ** If a live message
+      *
+     C           MGST      IFEQ 'CRTD'                                1
+     C           MGST      OREQ 'AMND'
+     C***********MGST      OREQ 'RSND'                                    E32362
+      *
+     C/COPY WNCPYSRC,MG9200C003
+      ** If message not already deleted
+      *
+     C           @PTST     IFNE 'D'                                   2
+      *
+      ** Call Deletion program
+      *
+     C                     CALL 'MG9205'               11
+     C                     PARM           @TRNO
+     C                     PARM           MODI
+     C                     PARM *BLANKS   @RTNC   1
+      *
+      ** If MG9205 not found , set up LDA and return to calling program
+      *
+     C           *IN11     IFEQ '1'                                   3
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE
+     C                     MOVEL'MG9205 N'KEY16
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *
+     C                     MOVELKEY16     DBKEY            *  DBERR 003  *
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E3
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           @RTNC     IFNE *BLANKS                               3
+     C                     EXSR *PSSR
+     C                     END                                       E3
+     C*
+     C** Call cancellation of confirmations                               059061
+     C*                                                                   059061
+     C                     MOVELMTPY      #MTPY1  1                       059061
+     C***********          MOVE *OFF      *IN50                    157756 169025
+     C           #MTPY1    IFEQ '3'                                   3   059061
+     C           BGCFMT    ANDEQ'Y'                                       077555
+     C***********MGSG      ANDNE'2'                                157756 169025
+     C***********          MOVE *ON       *IN50                    157756 169025
+     C                     CALL 'MG9210'               12                 059061
+     C                     PARM           @TRNO                           059061
+     C                     PARM           MODI                            059061
+     C                     PARM *BLANKS   @RTNC   1                       059061
+     C*                                                                   059061
+     C** If MG9210 not found, set up LDA and return to calling program    059061
+     C*                                                                   059061
+     C           *IN12     IFEQ '1'                                   4   059061
+     C           *LOCK     IN   LDA                                       059061
+     C                     MOVE '005'     DBASE                           059061
+     C                     MOVEL'MG9210 N'KEY16                           059061
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *059061
+     C                     MOVELKEY16     DBKEY            *  DBERR 005  *059061
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *059061
+     C                     OUT  LDA                                       059061
+     C                     EXSR *PSSR                                     059061
+     C                     END                                       E4   059061
+     C*                                                                   059061
+     C** If database error in MG9210 return control to calling program    059061
+     C*                                                                   059061
+     C           @RTNC     IFNE *BLANKS                               4   059061
+     C                     EXSR *PSSR                                     059061
+     C                     END                                       E4   059061
+     C*                                                                   059061
+     C                     END                                       E3   059061
+      *                                                                                       191709
+      ** No MT330 Cancel conf should be generated if MT330 MGST                               191709
+      ** found is 'CRTD' or 'AMND'                                                            191709
+      *                                                                                       191709
+     C           MTPY      IFEQ '300'                                                         191709
+     C           MTPY      OREQ '320'                                                         191709
+     C           MTPY      OREQ '330'                                                         191709
+     C                     MOVEL'1'       *IN22                                               191709
+     C                     ENDIF                                                              191709
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      ** If message already sent or logically acknowledged ...
+      ** ('PEND', 'TRAN', 'LACK', 'PRTD', 'RRTD'....)                     E31878
+      ** Use the message group codes for the above.                       E31878
+      *
+     C***********MGST      IFEQ 'PEND'                                1   E31878
+     C***********MGST      OREQ 'TRAN'                                    E31878
+     C***********MGST      OREQ 'LACK'                                    E31878
+      *                                                                   E31878
+     C           MGSG      IFEQ '2'                                       E31878
+     C           MGSG      OREQ '3'                                       E31878
+      *
+     C                     MOVELMTPY      HOLD1   1
+      *
+      ** If a message type is '200' , must be nostro transfer
+      *
+     C           MTPY      IFEQ '200'                                 2
+     C                     MOVE 'Y'       NOTF
+     C                     ELSE                                      X2
+      *                                                                   CDL008
+      ** If CDL008 is on and current record is the most recently          CDL008
+      ** generated confirmation, save CLS Settlement field.               CDL008
+      *                                                                   CDL008
+     C           CDL008    IFEQ 'Y'                                       CDL008
+     C           MTPY      ANDEQ'300'                                     CDL008
+     C           WINDI     ANDEQ*OFF                                      CDL008
+     C                     MOVE CLSS      WCLSS                           CDL008
+     C                     MOVE *ON       WINDI                           CDL008
+     C                     ENDIF                                          CDL008
+      *                                                                   CDL008
+      ** If CDL008 is on and CLS Settlement was changed from Y to N,      CDL008
+      ** generate MT392 cancellation.                                     CDL008
+      *                                                                   CDL008
+     C           CDL008    IFEQ 'Y'                                       CDL008
+     C           @CARQ     ANDNE'Y'                                       CDL008
+     C           @PTST     ANDNE'D'                                       CDL008
+     C           MTPY      ANDEQ'300'                                     CDL008
+     C           WCLSS     ANDEQ'Y'                                       CDL008
+     C           @CLSS     ANDEQ'N'                                       CDL008
+     C           WFIRST    ANDEQ*ON                                       CDL008
+     C                     MOVE 'Y'       WCANC   1                       CDL008
+     C                     MOVE *OFF      WFIRST                          CDL008
+     C                     ELSE                                           CDL008
+     C                     MOVE 'N'       WCANC                           CDL008
+     C                     ENDIF                                          CDL008
+      *
+      ***If*cancellation*not*already*requested*and*message*is*not*a****
+      ***confirmation*(MT392*should*not*be*generated).*****************
+      *
+      ***If*cancellation*not*already*requested*and*message*is*not* 157756 169025
+      ***yet*deleted*-*generate*message*cancellation.************* 157756 169025
+      ************************************************************ 157756 169025
+      *                                                                                       260363
+      ** Check if pay or rec side was amended to cancel previously generated                  260363
+      ** pay/rec messages                                                                     260363
+     C                     MOVE ' '       PAYSD   1                                           260363
+     C                     MOVE ' '       RECSD   1                                           260363
+     C                     MOVE ' '       MSPAY   1                                           260363
+     C                     MOVE ' '       MSREC   1                                           260363
+     C                     MOVE ' '       FIPRI   1                                         AR923287
+      *                                                                                     AR923287
+     C           MODI      IFEQ 'DL'                                                          260363
+     C                     EXSR PAYREC                                                        260363
+     C                     ENDIF                                                              260363
+      *                                                                                       260363
+      ** IRS Int Adjustment check                                                           AR923287
+      *                                                                                     AR923287
+     C           MODI      IFEQ 'FI'                                                        AR923287
+     C                     EXSR FICHEK                                                      AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C           @CARQ     IFNE 'Y'                                   3
+     C           HOLD1     ANDNE'3'
+     C           @PTST     ANDNE'D'
+     C           WCANC     OREQ 'Y'                                       CDL008
+     C********** PAYSD     IFEQ ' '                                                  260363 AR927179
+     C********** RECSD     ANDEQ' '                                                  260363 AR927179
+     C********** MSREC     ANDEQ' '                                                  260363 AR927179
+     C********** MSPAY     ANDEQ' '                                                  260363 AR927179
+     C           MODI      ANDNE'FI'                                                        AR923287
+     C********** MSREC     OREQ 'Y'                                                  260363 AR927179
+     C********** RECSD     ANDEQ'Y'                                                  260363 AR927179
+     C********** MSPAY     OREQ 'Y'                                                  260363 AR927179
+     C********** PAYSD     ANDEQ'Y'                                                  260363 AR927179
+     C           FIPRI     OREQ 'Y'                                                         AR923287
+     C           MODI      ANDEQ'FI'                                                        AR923287
+     C***********          MOVE *ON       *IN50                    157756 169025
+     C                     CALL 'MG9210'               12                 E29592
+     C                     PARM           @TRNO
+     C                     PARM           MODI
+     C                     PARM *BLANKS   @RTNC   1
+      *
+      ** If MG9210 not found , set up LDA and return to calling program
+      *
+     C           *IN12     IFEQ '1'                                   4
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE
+     C                     MOVEL'MG9210 N'KEY16
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *
+     C                     MOVELKEY16     DBKEY            *  DBERR 004  *
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+      ** If database error in MG9210 return control to calling program
+      *
+     C           @RTNC     IFNE *BLANKS                               4
+     C                     EXSR *PSSR
+     C                     END                                       E4
+      *
+     C                     END                                       E3
+     C**********           ENDIF                                                     260363 AR927179
+      *
+      ** First MT3xx message found was sent (need 'CANCEL' message)       E31801
+      *                                                                   E31801
+     C           MTPY      IFEQ '300'                                     E31801
+     C           MTPY      OREQ '320'                                     E31801
+     C           MTPY      OREQ '330'                                     E31801
+     C                     MOVEL'1'       *IN22                                               191709
+     C           MT3XX     IFEQ *BLANKS                                   E31801
+     C                     MOVE 'C'       MT3XX
+     C                     END
+     C                     END
+      *
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      ** First MT3xx message, stop processing MT3xx.
+      *
+     C********** MTPY      IFEQ '300'                                     E33656
+     C********** MTPY      OREQ '320'                                     E33656
+     C********** MTPY      OREQ '330'                                     E33656
+     C********** MT3XX     IFEQ *BLANKS                                   E33656
+     C**********           MOVE 'T'       MT3XX                           E33656
+     C**********           END                                            E33656
+     C**********           END                                            E33656
+      *
+     C                     END                                      Esl
+      *
+     C                     ENDSR
+     C/EJECT                                                                                  260363
+      *****************************************************************                       260363
+      *   PAYREC                                                                              260363
+      *****************************************************************                       260363
+      *                                                                                       260363
+     C           PAYREC    BEGSR                                                              260363
+      *                                                                                       260363
+     C                     MOVE @MTRN     KDLNO   60                                          260363
+     C           KDLNO     SETGTDTRIXL7                                                       260363
+     C           KDLNO     REDPEDTRIXL7                  19                                   260363
+     C  N19      KDLNO     CHAINDEALS                19                                       260363
+     C           *IN19     IFEQ '0'                                                           260363
+      *                                                                                       260363
+     C           PRI1      IFEQ 1                                                             260363
+     C           *IN31     IFEQ '1'                                                           260363
+     C           RCDC      ANDNE16                                                            260363
+     C           *IN32     OREQ '1'                                                           260363
+     C           *IN33     OREQ '1'                                                           260363
+     C                     MOVE 'Y'       PAYSD                                               260363
+     C                     ELSE                                                               260363
+     C                     MOVE 'Y'       RECSD                                               260363
+     C                     ENDIF                                                              260363
+     C                     ENDIF                                                              260363
+      *                                                                                       260363
+     C                     MOVE *BLANKS   DYMYR                                             AR582922
+     C                     MOVELSVDT      YR1                                               AR582922
+     C                     MOVE SVDT      DY1                                               AR582922
+     C                     MOVE SVDT      MDY     40                                        AR582922
+     C                     MOVELMDY       MT1                                               AR582922
+     C                     MOVE DYMYR     ZDATE                                             AR582922
+     C                     MOVE '0'       *IN98                                             AR582922
+     C                     EXSR ZDATE1                                                      AR582922
+     C                     Z-ADDZDAYNO    VALDT   50                                        AR582922
+      *                                                                                     AR582922
+     C           VDAT      IFNE VALDT                                                       AR582922
+     C           PRI3      OREQ 1                                                           AR582922
+     C           *IN30     ANDEQ'1'                                                         AR582922
+     C           PRI3      IFEQ 1                                                             260363
+     C           NIDT      ANDNEVALDT                                                       AR582922
+     C           NIDT      ANDNE0                                                           AR916823
+     C           PRI2      OREQ 1                                                           AR582922
+     C           MDAT      ANDNEVALDT                                                       AR582922
+     C           MDAT      ANDNE0                                                           AR916823
+     C           NIDT      ORNE VALDT                                                       AR582922
+     C           MDAT      ANDNEVALDT                                                       AR582922
+     C           PRI3      OREQ 1                                                           AR916823
+     C           *IN30     ANDEQ'1'                                                         AR916823
+     C           *IN31     IFEQ '1'                                                           260363
+     C           RCDC      ANDNE16                                                            260363
+     C           *IN32     OREQ '1'                                                           260363
+     C           *IN33     OREQ '1'                                                           260363
+     C                     MOVE 'Y'       RECSD                                               260363
+     C                     ELSE                                                               260363
+     C                     MOVE 'Y'       PAYSD                                               260363
+     C                     ENDIF                                                              260363
+     C                     ENDIF                                                              260363
+     C                     ENDIF                                                            AR582922
+      *                                                                                     AR916823
+      ** If Pay or Rec side of deal was amended                                             AR916823
+      *                                                                                     AR916823
+     C           PAYSD     IFNE 'Y'                                                         AR916823
+     C           RECSD     ANDNE'Y'                                                         AR916823
+     C           VDAT      ANDNEVALDT                                                       AR916823
+     C           EVTP      ANDEQ*BLANKS                                                     AR916823
+     C           *IN31     ANDEQ'1'                                                         AR916823
+      *                                                                                     AR916823
+     C           PRI3      IFEQ 1                                                           AR916823
+     C           MDAT      ANDEQVALDT                                                       AR916823
+     C           PRI2      OREQ 1                                                           AR916823
+     C           NIDT      ANDEQVALDT                                                       AR916823
+     C********** MTPY      OREQ '103'                                             MD027599 MD027599A
+     C********** MDAT      ANDEQVALDT                                             MD027599 MD027599A
+     C********** RBDN      ANDNE0                                                 MD027599 MD027599A
+     C           RCDC      IFEQ 16                                                          AR916823
+     C                     MOVE 'Y'       PAYSD                                             AR916823
+     C                     ELSE                                                             AR916823
+     C                     MOVE 'Y'       RECSD                                             AR916823
+     C                     ENDIF                                                            AR916823
+     C                     ENDIF                                                            AR916823
+     C                     ENDIF                                                            AR916823
+      *                                                                                     AR916823
+     C                     ENDIF                                                              260363
+      *                                                                                       260363
+     C           MTPY      IFEQ '100'                                                         260363
+     C           MTPY      OREQ '103'                                                         260363
+     C           MTPY      OREQ '200'                                                         260363
+     C           MTPY      OREQ '202'                                                         260363
+     C           MTPY      OREQ '203'                                                         260363
+     C                     MOVE 'Y'       MSPAY                                               260363
+     C                     ENDIF                                                              260363
+     C           MTPY      IFEQ '210'                                                         260363
+     C                     MOVE 'Y'       MSREC                                               260363
+     C                     ENDIF                                                              260363
+      *                                                                                       260363
+     C                     ENDSR                                                              260363
+     C/EJECT                                                                                AR923287
+      *****************************************************************                     AR923287
+      *   FICHEK                                                                            AR923287
+      *****************************************************************                     AR923287
+      *                                                                                     AR923287
+     C           FICHEK    BEGSR                                                            AR923287
+      *                                                                                     AR923287
+     C                     MOVE @MTRN     KDLNO                                             AR923287
+     C           KDLNO     CHAINDEALS                19                                     AR923287
+     C           *IN19     IFEQ '0'                                                         AR923287
+     C           DTYP      IFEQ 'RS'                                                        AR923287
+     C           DTYP      OREQ 'RX'                                                        AR923287
+      *                                                                                     AR923287
+     C           UNIPD     IFNE 0                                                           AR923287
+     C                     Z-ADDUNIPD     UEDAT   50                                        AR923287
+     C                     ELSE                                                             AR923287
+     C                     Z-ADDMDAT      UEDAT                                             AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C           TNIPD     IFNE 0                                                           AR923287
+     C                     Z-ADDTNIPD     TEDAT   50                                        AR923287
+     C                     ELSE                                                             AR923287
+     C                     Z-ADDMDAT      TEDAT                                             AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C                     MOVE *BLANKS   DYMYR                                             AR923287
+     C                     MOVELSVDT      YR1                                               AR923287
+     C                     MOVE SVDT      DY1                                               AR923287
+     C                     MOVE SVDT      MDY     40                                        AR923287
+     C                     MOVELMDY       MT1                                               AR923287
+     C                     MOVE DYMYR     ZDATE                                             AR923287
+     C                     MOVE '0'       *IN98                                             AR923287
+     C                     EXSR ZDATE1                                                      AR923287
+     C                     Z-ADDZDAYNO    VALDT   50                                        AR923287
+      *                                                                                     AR923287
+     C           DTYP      IFEQ 'RX'                                                        AR923287
+     C           DTYP      OREQ 'RS'                                                        AR923287
+     C           UEDAT     ANDNETEDAT                                                       AR923287
+      *                                                                                     AR923287
+     C           UAIAN     IFNE 0                                                           AR923287
+     C           UEDAT     ANDEQVALDT                                                       AR923287
+     C           MTPY      IFEQ '202'                                                       AR923287
+     C           MTPY      OREQ '203'                                                       AR923287
+     C           MTPY      OREQ '103'                                                       AR923287
+     C                     MOVE 'Y'       FIPRI   1                                         AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C           TAIAN     IFNE 0                                                           AR923287
+     C           TEDAT     ANDEQVALDT                                                       AR923287
+     C           MTPY      ANDEQ'210'                                                       AR923287
+     C                     MOVE 'Y'       FIPRI                                             AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C           DTYP      IFEQ 'RS'                                                        AR923287
+     C           UEDAT     ANDEQTEDAT                                                       AR923287
+     C           UEDAT     ANDEQVALDT                                                       AR923287
+     C           TAIAN     IFNE 0                                                           AR923287
+     C           UAIAN     ORNE 0                                                           AR923287
+     C           MTPY      IFEQ '103'                                                       AR923287
+     C           MTPY      OREQ '202'                                                       AR923287
+     C           MTPY      OREQ '203'                                                       AR923287
+     C           MTPY      OREQ '210'                                                       AR923287
+     C                     MOVE 'Y'       FIPRI                                             AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDIF                                                            AR923287
+      *                                                                                     AR923287
+     C                     ENDIF                                                            AR923287
+     C                     ENDSR                                                            AR923287
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'E'       @RTNC
+     C                     SETON                         LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE9Z3                                               085620
+     C/COPY ZSRSRC,ZDATE1Z2                                                                 AR582922
+     C/EJECT                                                              085620
+      *****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** ZYDY - Years in days cumulative, four year span                                          AR582922
+0366073110961461                                                                            AR582922
+** ZMDY - Months in days cumulative through year                                            AR582922
+000031059090120151181212243273304334365                                                     AR582922
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

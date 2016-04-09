@@ -1,0 +1,1818 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Funding Maintenance')
+/*OVRF*: OVRDBF FILE(FUND1) TOFILE(FUNDS) SHARE(*NO)                : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas       Securities Trading Module.
+     F*                                                               *
+     F*  SE0150 - FUNDING MAINTENANCE                                 *
+     F*                                                               *
+     F*  Function:  This program enables funding information to be    *
+     F*   (I/C)     entered and updated.                              *
+     F*                                                               *
+     F*  Called By: SEC02 - Input Cycle Processing                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104633             Date 08Nov96               *
+     F*                 078676  JB2956     Date 08AUG96               *
+     F*                 S01502             DATE 08JUL94               *
+     F*                 052254             DATE 23NOV93               *
+     F*                 051285             DATE 23NOV93               *
+     F*                 S01117             DATE 29NOV90               *
+     F*                 S01195             DATE 29NOV90               *
+     F*                 E20889             DATE 09FEB90               *
+     F*                 E18114             DATE 20JUL89               *
+     F*                 S01199             DATE 03/08/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  104633 - GUI Amendments to DSPF with non-standard footers    *
+     F*  078676 - Ensure that previous rate is used where possible.   *
+     F*           On automatic create of 'first of month' record, use *
+     F*           previous values where possible.                     *
+     F*           Allow amendment to 'first of month' record.         *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  051285 - Error on backvalued value date.                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01195 - Holidays Amendment                                  *
+     F*  E22805 - Holiday warning should not appear on enquiry        *   E22805
+     F*  E20889 - Prevent First of the Month Position being written   *   E20889
+     F*           when no previous record exists.                     *   E20889
+     F*  E18114 - No warning code highlighted for a Value Date Equal  *   E18114
+     F*           To a Holiday Date. Amendment/Deletion of a First    *   E18114
+     F*           of Month record should not be allowed.              *   E18114
+     F*           Error Codes 710 and 711 should be highlighted       *   E18114
+     F*           respectively.                                       *   E18114
+     F*  S01199 -  Help System.                                    *   E18114
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F*SE0150FM**CF  F     266            WORKSTN                         S01117
+     FSE0150DFCF  F     266            WORKSTN                            S01117
+     FFUNDS   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFSR INFSR
+     F                                              KINFDS INFDS
+     FFUND1   IF  E           K        DISK
+     F            FUNDSABF                          KRENAMEFUNDSXBF
+     F            FUNDSACF                          KRENAMEFUNDSXCF
+     F**TABSE***IF**E*****      K        DISK                             S01117
+     F************TABLETAF                          KIGNORE               S01117
+     F************TABTB36F                          KIGNORE               S01117
+     F************TABTB40F                          KIGNORE               S01117
+     F************TABTE10F                          KIGNORE               S01117
+     F************TABTE20F                          KIGNORE               S01117
+     F************TABTG20F                          KIGNORE               S01117
+     F************TABLETHF                          KIGNORE               S01117
+     F************TABLETLF                          KIGNORE               S01117
+     F************TABLETPF                          KIGNORE               S01117
+     F************TABLETRF                          KIGNORE               S01117
+     F************TABLETXF                          KIGNORE               S01117
+     F************TABLET2F                          KIGNORE               S01117
+     F************TABLET5F                          KIGNORE               S01117
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    01        S/SE0150DF, SCREEN ID 'SF'                       *   S01117
+     F*    02        S/SE0150DF, SCREEN ID 'SI'                       *   S01117
+     F*    03        S/SE0150DF, SCREEN ID 'SA'                       *   S01117
+     F*    04        S/SE0150DF, SCREEN ID 'SD'                       *   S01117
+     F*    05        S/SE0150DF, SCREEN ID 'SE'                       *   S01117
+     F*    06        S/SE0150DF, SCREEN ID CATCHALL                   *   S01117
+     F*****01****    S/SE0150FM, SCREEN ID 'SF'                       *   S01117
+     F*****02****    S/SE0150FM, SCREEN ID 'SI'                       *   S01117
+     F*****03****    S/SE0150FM, SCREEN ID 'SA'                       *   S01117
+     F*****04****    S/SE0150FM, SCREEN ID 'SD'                       *   S01117
+     F*****05****    S/SE0150FM, SCREEN ID 'SE'                       *   S01117
+     F*****06****    S/SE0150FM, SCREEN ID CATCHALL                   *   S01117
+     F*    07        S/FUNDS, FORMAT FUNDSABF                         *
+     F*    08        S/FUNDS, FORMAT FUNDSACF                         *
+     F*                                                               *
+     F*    16        S/TABLE, FORMAT TABTB10F                         *
+     F*    17        S/TABLE, FORMAT TABTG10F                         *
+     F*                                                               *
+     F*    20        'HELP' FACILITY SELECTED                         *
+     F*                                                               *
+     F*    21        INVALID CURRENCY                                 *
+     F*    22        INVALID VALUE DATE                               *
+     F*    23        INVALID ACTION CODE                              *
+     F*    24        INVALID EARNINGS RATE                            *
+     F*    25        INVALID COST OF FUNDS RATE                       *
+     F*    26        INVALID DAY BASIS                                *
+     F*    27        INVALID DIVISOR BASIS                            *
+     F*    28        VALUE DATE ID A HOL - WARNING ERROR ONLY         *
+     F*    29        ACCEPT WARNING ERROR                             *
+     F*    30        PREVIOUS CURRENCY RECORD EXISTS ON S/FUND1       *
+     F*    31        RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION   *
+     F*    35        DATE FIELD IS NUMERIC                            *
+     F*    45        1ST OF MONTH RECORD TO BE INSERTED               *
+     F*                                                               *
+     F*    50        ACTION IS INSERT                                 *
+     F*    51        ACTION IS AMEND                                  *
+     F*    52        ACTION IS DELETE                                 *
+     F*    53        ACTION IS ENQUIRE                                *
+     F*                                                               *
+     F*    60        WORK IND. IN SR. PRVREC                          *
+     F*    61        WORK IND. IN SR. PRVREC                          *
+     F*    62        CURRENCY NOT SELECTED                            *   S01117
+     F*    68        CHECK TO SEE IF ERROR MESSAGE FIELD IS BLANK     *
+     F*    78        SCREEN ERROR                                     *
+     F*    84        OUTPUT DETAIL OF S/FUNDS,AB                      *
+     F*    85        OUTPUT DETAIL OF S/FUNDS,AC                      *
+     F*    88        RECI NOT 'D'                                     *
+     F*    89        READ/CHAIN/LOKUP INDICATOR                       *
+     F*                                                               *
+     F* 90-97 - MIDAS STANDARD SUBROUTINE USE                         *
+     F*   98  - ON = MMDDYY DATE FORMAT                               *
+     F*   99  - MIDAS STANDARD SUBROUTINE ERROR                       *
+     F*                                                               *
+     F*   KJ  - F/10 SELECTED - ONLY FOR DELETE 2ND. SCREEN           *
+     F*   KL  - F/12 SELECTED - ONLY FOR 2ND. SCREEN                  *
+     F*   KC  - F/3  SELECTED - EITHER SCREEN                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/SPACE 6
+     E                    ERMG    1   2 76               ERROR MESSAGES
+     E                    ERCD       19  4               ERROR CODES
+     E/COPY ZSRSRC,ZDATE2Z1
+     E***/COPY*ZSRSRC,ZDATE6Z1                                            S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E/COPY ZSRSRC,ZALIGNZ1
+      /EJECT
+     ISE0150DFNS  01   1 CS   2 CF                                        S01117
+     I*                                                                   S01117
+     I*   S/SE0150DF                                                      S01117
+     I*                                                                   S01117
+     I***********SE0150FMNS  01   1 CS   2 CF                             S01117
+     I***********                                                         S01117
+     I***********S/SE0150FM                                               S01117
+     I***********                                                         S01117
+     I                                        1   2 SCID
+     I                                        3   5 SCCY
+     I                                        6  11 SVADT
+     I                                       12  12 SACT
+     I                                       12  12 ACTCOD
+     I                                        1  12 SCRN1
+     I        NS  02   1 CS   2 CI
+     I       OR   03   1 CS   2 CA
+     I       OR   04   1 CS   2 CD
+     I       OR   05   1 CS   2 CE
+     I                                        1   2 SCID
+     I                                        3  14 SEARR
+     I                                       15  26 SFUNC
+     I                                       27  27 SDAYB
+     I                                       28  28 SDIVB
+     I                                       29  31 SCCY
+     I                                       32  37 SVADT
+     I                                       38  38 SACT
+     I                                        1  38 SCRN2
+     I        NS  06
+     IFUNDSABF    07
+     I*
+     I*   S/FUNDS
+     I*
+     IFUNDSACF    08
+     I*
+     I*    S/FUNDS, - TRAILER
+     I*
+     I              RECI                            RECIC
+     I              CCY                             CCYC
+     I              ADAT                            ADATC
+     I              LCD                             LCDC
+     I              CHTP                            CHTPC
+     I              TNLU                            TNLUC
+     IFUNAB1    E DSFUNDSAB                   1 200
+     I*
+     I*   DATA STRUCTURE FOR S/FUNDS,AB BEFORE UPDATE
+     I*
+     IFUNAC1    E DSFUNDSAC                   1 200
+     I              RECI                            RECIC
+     I              CCY                             CCYC
+     I              ADAT                            ADATC
+     I              LCD                             LCDC
+     I              CHTP                            CHTPC
+     I              TNLU                            TNLUC
+     I*
+     I*   DATA STRUCTURE FOR S/FUNDS,AC BEFORE UPDATE
+     I*
+     ISESTAT    E DS
+     IPSDS       SDS
+     I*
+     I*   PROGRAM STATUS DATA STRUCTURE.
+     I*
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I**
+     I**  DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I**
+     I/COPY ZSRSRC,ZTNLU1Z1
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I**   CMTTXT DATASTRUCTURE
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCOD
+     I                                       26  35 USRIDX
+     I                                       51  62 SCRN1
+     I                                       63 100 SCRN2X
+      *
+      **  LOCAL DATA AREA
+      *
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   S01117
+      ** Data area RUNDAT                                                 S01117
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+      ** Data area of menu user                                           S01117
+      *                                                                   S01117
+     IZMUSER      DS                             17                       S01117
+     I                                       11  13 USRBCH                S01117
+      *                                                                   S01117
+      ** Bank Details                                                     S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I*                                                                   S01117
+      *                                                                   S01117
+      ** Currency Details                                                 S01117
+      *                                                                   S01117
+     ISDCURR    E DSSDCURRPD                                              S01117
+     I*                                                                   S01117
+     IFUNAB2      DS                          1 200
+     I                                        1   1 RECIWF
+     I                                        2   4 CCYWF
+     I                                        5   90ADATWF
+     I                                    P  10  150EARRWF
+     I                                    P  16  210FUNCWF
+     I                                       22  22 DAYBWF
+     I                                       23  23 DIVBWF
+     I                                    P  24  260OREDWF
+     I                                    P  27  290LCDWF
+     I                                       30  30 CHTPWF
+     I                                    P  31  330TNLUWF
+     IFUNAC2      DS                          1 200
+     I                                        1   1 RECIAC
+     I                                        2   4 CCYAC
+     I                                        5   90ADATAC
+     I                                    P  10  120NOREAC
+     I                                    P  13  150LCDAC
+     I                                       16  16 CHTPAC
+     I                                    P  17  190TNLUAC
+     I*
+     I            DS
+     I                                        1 200 SCREEN
+     I                                        1  38 SCRN2
+     I*
+     I            DS
+     I                                        1   8 FUNDDS
+     I                                        1   3 KCCY
+     I                                        4   80KVADT
+      *
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   E18114
+     I*****DATA*STRUCTURE FOR ZDATE5 ROUTINE                        E18114S01195
+     I**********  DS                                                E18114S01195
+     I**********                              1  75 HCCY            E18114S01195
+     I**********                              1  75 XCCY            E18114S01195
+     I*                                                                   S01195
+     I*                                                                   S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS                                 S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I*                                                                   S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS AND ACCESS OBJECTS              S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      *
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*                                                                   S01117
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     EXSR STRLOG
+     C                     GOTO MAIN03
+     C                     END
+     C*
+     C*    S/FUNDS Key List
+     C*
+     C           FUNKEY    KLIST
+     C                     KFLD           KCCY    3
+     C                     KFLD           KVADT   50
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*  M A I N   P R O C E S S I N G                                *
+     C*                                                               *
+     C*  CALLS : FIRST, SCR1WT, SCR1RD, SCR1VL, SCR2WT, SCR2RD, SCR2VL*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C*     DO INITIAL PROCESSING
+     C*
+     C                     EXSR FIRST
+     C   LR                GOTO END
+     C*
+     C           MAIN01    TAG                             *** MAIN01 ***
+     C*
+     C*     WRITE, READ & VALIDATE INITIAL SCREEN.
+     C*
+     C                     SETOF                     62                   S01117
+     C                     EXSR SCR1WT
+     C                     EXSR SCR1RD
+     C   LR                GOTO END
+     C*
+     C           MAIN02    TAG                             *** MAIN02 ***
+     C*
+     C                     EXSR SCR1VL
+     C*
+     C*    IF CURRENCY SELECTION USED REDISPLAY SCREEN                    S01117
+     C*                                                                   S01117
+     C   62                GOTO MAIN01                                    S01117
+     C*                                                                   S01117
+     C   LR                GOTO END
+     C   78                GOTO MAIN01
+     C*
+     C           MAIN03    TAG                             *** MAIN03 ***
+     C*
+     C**  WRITE, READ & VALIDATE MAIN SCREEN
+     C*
+     C                     EXSR SCR2WT
+     C                     EXSR SCR2RD
+     C   LR                GOTO END
+     C*
+     C**  F/12 ENTERED OR IF UPDATE BY ANOTHER WORKSTATION,
+     C**  GO BACK TO INITIAL SCREEN.
+     C*
+     C   31
+     COR KL                EXSR BLKSCR
+     C   31
+     COR KL                GOTO MAIN01
+     C*
+     C**  ENQUIRY SCREEN READ. VALIDATE AS IF INITIAL SCREEN.
+     C*
+     C   05                GOTO MAIN02
+     C*
+     C                     EXSR SCR2VL
+     C   LR                GOTO END
+     C*
+     C   78                GOTO MAIN03
+     C*
+     C**  UPDATE FILES AS REQUIRED
+     C*
+     C                     EXSR STRLOG
+     C  NLR 31             GOTO MAIN03
+     C  NLR                GOTO MAIN01
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C           END       TAG                             ***  END   ***
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  ERROR  - SR TO SET ERROR CODES/MESSAGES & INDICATORS
+     C*
+     C*  CALLED FROM: SCR1VL(10), SCR2VL(3)
+     C*
+     C*****************************************************************
+     C*
+     C           ERROR     BEGSR                           *** ERROR  ***
+     C*
+     C           ECODE     COMP '    '                   41
+     C  N41                MOVE ECODE     ERCD,X
+     C  N41      X         ADD  1         X
+     C  N41                SETON                     78
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  BLKSCR  - SR TO SET UP A BLANK INITIAL SCREEN
+     C*
+     C*  CALLED FROM: FIRST
+     C*
+     C*****************************************************************
+     C*
+     C           BLKSCR    BEGSR                           *** BLKSCR ***
+     C*
+     C                     MOVE 'SF'      SCID
+     C                     MOVE ' '       SACT
+     C                     MOVE BLK06     SVADT
+     C                     MOVE BLK03     SCCY
+     C*
+     C                     TIME           MTIME
+     C*
+     C                     SETOF                     212223
+     C                     SETOF                     78
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  NUMCHK  - SR TO CHECK FOR NUMERIC DAY/DIVISOR BASIS
+     C*
+     C*  CALLED FROM:  SCR1VL
+     C*
+     C*****************************************************************
+     C*
+     C           NUMCHK    BEGSR                           *** NUMCHK ***
+     C*
+     C                     MOVE WRK1      WRK1N   10
+     C                     MOVE WRK1N     WRK1A   1
+     C           WRK1      COMP WRK1A                9999
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  FIRST  - SR TO DO THE INITIALISATION PROCESSING
+     C*
+     C*  CALLED FROM: MAIN
+     C***CALLS:*******ZSYSTM,*ZICD2,*BLKSCR                               S01117
+     C*  CALLS:       ZICD2, BLKSCR                                       S01117
+     C*
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           *** FIRST  ***
+     C*
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE0150'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C***********          MOVE 'SE0150  'DBPGM                           S01117
+     C                     MOVE ' '       BLK03   3
+     C                     MOVE ' '       BLK06   6
+     C                     MOVE ' '       BLK07   7
+     C                     MOVE ' '       BLK012 12
+     C                     MOVE ' '       BLK016 16
+     C                     MOVE ' '       BLK076 76
+     C                     MOVE ' '       BLK200200
+     C                     Z-ADD0         ZERO05  50
+     C*
+     C****GET*I.C.D.R.*1***                                               S01117
+     C*
+     C************         EXSR ZSYSTM                                    S01117
+     C**N99*******         GOTO FIRT01                                    S01117
+     C************                                                        S01117
+     C***DB*ERROR*IF NOT FOUND                                            S01117
+     C************                                                        S01117
+     C************         SETON                     U7U8LR               S01117
+     C***********          MOVE 'TABSE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY            * DB ERROR 02 *S01117
+     C***********          Z-ADD02        DBASE            ***************S01117
+     C***********          GOTO FIRT99                                    S01117
+     C***********                                                         S01117
+     C***********FIRT01    TAG                             *** FIRT01 *** S01117
+     C*
+     C****GET*I.C.D.2 FOR LOCAL CURRENCY                                  S01117
+     C***********                                                         S01117
+     C***********          EXSR ZICD2                                     S01117
+     C***********                                                         S01117
+      *                                                                   S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+      ** Check system date format  DDMMYY or MMDDYY.                      S01117
+      *                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+      *                                                                   S01117
+      ** Read in ZMUSER data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+      *                                                                   S01117
+      ** Access bank details                                              S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR  '@RTCD   7                       S01117
+     C                     PARM '*FIRST  '@OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+      *                                                                   S01117
+     C*
+     C*   SET UP BLANK INITIAL SCREEN
+     C*
+     C                     EXSR BLKSCR
+     C*
+      *
+     C****ACCESS**ST*FUNDS RECORD FOR ACTION DATE (LAST WORKING DAY)      S01117
+     C*
+     C*
+     C************IN99     IFNE '1'
+     C************         MOVE LOCY      KCCY                            S01117
+     C***********          MOVE BJLCCY    KCCY                     S01117 051285
+     C***********          Z-ADD0         KVADT                           051285
+     C***********FUNKEY    SETLLFUND1                                     051285
+     C***********LOCY      READEFUND1                    89               S01117
+     C***********BJLCCY    READEFUND1                    89        S01117 051285
+     C************IN89     IFNE '1'                                       051285
+     C***********          Z-ADDADAT      LWDM    50                      051285
+     C***********          ELSE                                           051285
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C                     MOVE EOPM      LWDM    50                      051285
+     C                     ADD  1         LWDM                            051285
+     C***********          MOVE EOPM      LWDM                            051285
+     C***********          END                                            051285
+     C**N99*******         GOTO FIRT02                                    S01117
+     C************                                                        S01117
+     C****DB*ERROR IF NOT FOUND                                           S01117
+     C************                                                        S01117
+     C************         SETON                     U7U8LR               S01117
+     C************         MOVE 'TABSE'   DBFILE           ***************S01117
+     C************         MOVELZTABKY    DBKEY            * DB ERROR 03 *S01117
+     C************         Z-ADD03        DBASE            ***************S01117
+     C************         GOTO FIRT99                                    S01117
+     C************                                                        S01117
+     C***********FIRT02    TAG                             *** FIRT02 *** S01117
+     C************
+     C           FIRT99    ENDSR                           *** FIRT99 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR1WT  - SR TO WRITE THE INITIAL SCREEN
+     C*
+     C*  CALLED FROM: MAIN
+     C*
+     C*****************************************************************
+     C*
+     C           SCR1WT    BEGSR                           *** SCR1WT ***
+     C*
+     C                     MOVE 'SF'      SCID
+     C                     TIME           MTIME   60
+     C*
+     C                     EXCPTINTSCR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR1RD  - SR TO READ THE INITIAL SCREEN
+     C*
+     C*  CALLED FROM: MAIN
+     C*
+     C*****************************************************************
+     C*
+     C           SCR1RD    BEGSR                           *** SCR1RD ***
+     C*
+     C**  READ WORKSTATION FILE / HELP FACILITY
+     C*
+     C           *IN20     DOUEQ'0'
+     C*
+     C                     SETOF                     010203
+     C                     SETOF                     0405
+     C*
+     C***********          READ SE0150FM                 20               S01117
+     C                     READ SE0150DF                 20               S01117
+     C*
+     C********** *IN20     IFEQ '1'                                       S01199
+     C**********           MOVEAERCD      HERCD 160                       S01199
+     C**********           MOVEL'SE0150  'HBPGM   6                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           END                                            S01199
+     C                     END
+     C*
+     C   KC                SETON                     LR
+     C*
+     C           SC1T99    ENDSR                           *** SC1T99 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR1VL  - SR TO VALIDATE THE INITIAL SCREEN
+     C*
+     C*  CALLED FROM: MAIN
+     C*  CALLS      : ERROR(10), SECCHN, SENCHN(2), PRFCHN, CCYDP
+     C*
+     C*****************************************************************
+     C*
+     C           SCR1VL    BEGSR                           *** SCR1VL ***
+     C*
+     C                     SETOF                     29
+     C*
+     C**   WARNING ERROR RESET
+     C*
+     C   28      SCCY      COMP OCCY                     29
+     C   28 29   SVADT     COMP OVADT                    29
+     C   28 29   SACT      COMP OACT                     29
+     C*
+     C**   RESET ERROR INDICATORS
+     C*
+     C                     SETOF                     212223
+     C                     SETOF                     242526
+     C                     SETOF                     272831
+     C                     SETOF                     4078
+     C                     SETOF                     89                   S01117
+     C*
+     C**  SAVE FIELDS FOR WARNING VALIDATION
+     C*
+     C                     MOVE SCCY      OCCY    3
+     C                     MOVE SACT      OACT    1
+     C                     MOVE SVADT     OVADT   6
+     C*
+     C                     MOVEABLK076    ERCD
+     C                     MOVE BLK076    ERRMSG
+     C                     Z-ADD1         X       20
+     C*
+     C                     MOVE BLK012    SEARRP
+     C                     MOVE BLK012    SFUNCP
+     C                     MOVE BLK07     PRVDAT  7
+     C                     MOVE ' '       SDAYBP
+     C                     MOVE ' '       SDIVBP
+     C                     MOVE BLK012    SEARR
+     C                     MOVE BLK012    SFUNC
+     C                     MOVE BLK012    SEARRN
+     C                     MOVE BLK012    SFUNCN
+     C                     MOVE ' '       SDAYB
+     C                     MOVE ' '       SDIVB
+     C*
+     C**  IF ENTER OF WARNING ERROR, VALID DATA
+     C*
+     C   29                GOTO SCR110
+     C*
+     C**  CURRENCY CODE - MANDATORY
+     C*
+     C           SCCY      COMP BLK03                    21
+     C  N21                GOTO SCR101
+     C*
+     C                     MOVE ' 702'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR102
+     C*
+     C           SCR101    TAG                             *** SCR101 ***
+     C*
+     C** CHECK IF SELECTION IS REQUESTED                                  S01117
+     C                     MOVELSCCY      SCCY1   1                       S01117
+     C           SCCY1     IFEQ '?'                                       S01117
+     C*    ACCESS CURRENCY FILE SDCURRPD                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SCCY      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFEQ *BLANKS                                   S01117
+     C                     MOVE '0'       *IN,21                          S01117
+     C                     MOVE A6CYCD    SCCY                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   SCCY                            S01117
+     C                     MOVE BLK03     SCCY                            S01117
+     C                     END                                            S01117
+     C                     SETON                     62                   S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C**  CURRENCY CODE - MUST BE ON DATABASE
+     C*
+     C                     EXSR CURCHN
+     C*
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C   62                GOTO ENDTAG                                    S01117
+     C*                                                                   S01117
+     C   89                SETON                     21
+     C  N21                GOTO SCR102
+     C*
+     C***********          MOVE ' 702'    ECODE                           S01117
+     C                     EXSR ERROR                                     S01117
+     C*
+     C           SCR102    TAG                             *** SCR102 ***
+     C*
+     C**  VALUE DATE - MANDATORY
+     C*
+     C           SVADT     COMP BLK06                    22
+     C  N22                GOTO SCR103
+     C*
+     C                     MOVE ' 705'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR105
+     C*
+     C           SCR103    TAG                             *** SCR103 ***
+     C*
+     C**   MUST BE VALID DATE
+     C*
+     C                     TESTN          SVADT      35
+     C*
+     C   35                MOVE *BLANKS   ZDATE
+     C   35                MOVE SVADT     ZDATE
+     C   35                EXSR ZDATE1
+     C*
+     C  N99 35             GOTO SCR104
+     C                     SETON                     22
+     C*
+     C                     MOVE ' 705'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR105
+     C*
+     C           SCR104    TAG                             *** SCR104 ***
+     C*
+     C**  FOR A VALID DATE CHECK TO SEE IF IT IS AFTER OR EQUAL TO
+     C**  THE DATE OF THE LAST WORKING DAY OF MONTH + 1.
+     C*
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SVADT7  7
+     C*
+     C           ZDAYNO    COMP LWDM                   22
+     C  N22                GOTO SCR105
+     C*
+     C                     MOVE ' 709'    ECODE
+     C                     EXSR ERROR
+     C*
+     C           SCR105    TAG                             *** SCR105 ***
+     C*
+     C**  ACTION CODE - MUST BE 'I', 'A', 'D' OR 'E'
+     C*
+     C                     SETOF                     505152
+     C                     SETOF                     53
+     C           SACT      COMP 'I'                  232350
+     C   23      SACT      COMP 'A'                  232351
+     C   23      SACT      COMP 'D'                  232352
+     C   23      SACT      COMP 'E'                  232353
+     C  N23                GOTO SCR106
+     C*
+     C                     MOVE ' 002'    ECODE   4
+     C                     EXSR ERROR
+     C*
+     C           SCR106    TAG                             *** SCR106 ***
+     C*
+     C**  IF ANY ERRORS - NO FURTHER VALIDATION POSSIBLE.
+     C*
+     C   78                GOTO SCR199
+     C*
+     C**   IF SINGLE BRANCH ENVIRONMENT                                   S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SACT      @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         X                               S01117
+     C                     MOVEA' 302'    ERCD,X                          S01117
+     C                     SETON                     78                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   IF MULTIBRANCHING ENVIRONMENT                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM SACT      @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFEQ 2                                         S01117
+     C                     ADD  1         X                               S01117
+     C                     MOVEA' 304'    ERCD,X                          S01117
+     C                     SETON                     78                   S01117
+     C                     END                                            S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     ADD  1         X                               S01117
+     C                     MOVEA' 303'    ERCD,X                          S01117
+     C                     SETON                     78                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C   78                GOTO SCR199                                    S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C**  ACCESS THE S/FUNDS RECORD
+     C*
+     C                     MOVE SCCY      KCCY
+     C                     Z-ADDZDAYNO    KVADT
+     C                     MOVE SCCY      CCYWF
+     C                     Z-ADDZDAYNO    ADATWF
+     C*
+     C                     SETOF                     8889
+     C                     Z-ADD0         TNLU05  50
+     C           FUNKEY    CHAINFUNDS                89
+     C  N89                EXCPTFUNREL
+     C  N89      RECI      COMP 'D'                  8888
+     C  N89N88             Z-ADDTNLU      TNLU05
+     C*
+     C**  FOR AN INSERT, RECORD MUST NOT EXIST ON FILE.
+     C*
+     C  N89 50             SETON                     23
+     C  N23                GOTO SCR107
+     C*
+     C                     MOVE ' 003'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR199
+     C*
+     C           SCR107    TAG                             *** SCR107 ***
+     C*
+     C**  FOR AN ENQUIRY, AMEND OR DELETE, RECORD MUST EXIST.
+     C**  DELETED RECORDS CAN ONLY BE ACCESSED BY AN ENQUIRY.
+     C*
+     C  N89 88 53          SETON                     40
+     C*
+     C   89 51
+     CORN89 51 88
+     COR 89 52
+     CORN89 52 88
+     COR 89 53             SETON                     23
+     C*
+     C  N23                GOTO SCR108
+     C*
+     C                     MOVE ' 004'    ECODE
+     C**N89*88**           MOVE ' 710'    ECODE                           E18114
+     C                     EXSR ERROR
+     C                     GOTO SCR199
+     C*
+     C           SCR108    TAG                             *** SCR108 ***
+     C*
+     C**  CANNOT DELETE THE 1ST OF THE MONTH RECORD
+     C*
+     C**N52******          GOTO SCR109                                    E18114
+     C***53****************GOTO SCR109                              E18114E22805
+     C   53                GOTO SCR110                                    E22805
+     C           ADATWF    COMP LWDM                     23
+     C  N23                GOTO SCR109
+     C*
+     C********** *IN50     IFNE '1'                                 051285078676
+     C***********          MOVE ' 711'    ECODE                           E18114
+     C***52*****           MOVE ' 711'    ECODE                     E18114078676
+     C**N52*****           MOVE ' 710'    ECODE                     E18114078676
+     C**********           EXSR ERROR                                     078676
+     C**********           END                                      051285078676
+     C**********           GOTO SCR199                                    078676
+      *                                                                   078676
+      * Error if attempting to delete 'first of month' record             078676
+     C           *IN52     IFEQ *ON                                       078676
+     C                     MOVE ' 711'    ECODE                           078676
+     C                     EXSR ERROR                                     078676
+     C                     GOTO SCR199                                    078676
+     C                     ENDIF                                          078676
+     C*
+     C           SCR109    TAG                             *** SCR109 ***
+     C*
+     C**  FOR A VALID DATE CHECK TO SEE IF IT IS A HOLIDAY
+     C*
+     C                     MOVE SCCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZCHKH                                     S01195
+     C           ZIND      IFEQ 'H'                                       S01195
+     C***99******          SETON                     2228                 S01195
+     C**N22******          GOTO SCR110                                    S01195
+     C*
+     C                     SETON                     2228                 S01195
+     C                     MOVE ' W31'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR199
+     C                     END                                            S01195
+     C*
+     C           SCR110    TAG                             *** SCR110 ***
+     C*
+     C**  MOVE DETAILS OF RECORD INTO SCREEN OUTPUT FIELDS.
+     C*
+     C  N50                EXSR SCROUT
+     C*
+     C**  ACCESS THE DETAILS OF THE PREVIOUS RECORD.
+     C*
+     C                     EXSR PRVREC
+     C   LR                GOTO SCR199
+     C*
+     C**  SAVE FIELDS FOR OUTPUT
+     C*
+     C                     MOVE SACT      VACT    1
+     C                     MOVE SCCY      VSCCY   3
+     C*
+     C           SCR199    TAG                             *** SCR199 ***
+     C*
+     C           X         COMP 1                    78
+     C*
+     C***********          ENDSR                                          S01117
+     C           ENDTAG    ENDSR                                          S01117
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  CURCHN  - SR TO CHAIN TO THE CURRENCIES FILE
+     C*
+     C*  CALLED FROM:  SCR1VL
+     C*
+     C*****************************************************************
+     C*
+     C           CURCHN    BEGSR                           *** CURCHN ***
+     C*
+     C***********                                                         S01117
+     C***********          MOVE BLK012    ZTABKY 12                       S01117
+     C***********          MOVEL'20'      ZTABKY                          S01117
+     C***********          MOVELSCCY      WRK004  4                       S01117
+     C***********          MOVE '1'       WRK004                          S01117
+     C***********          MOVE WRK004    ZTABKY                          S01117
+     C***********                                                         S01117
+     C***********ZTABKY    CHAINTABSE                89                   S01117
+     C**N89******RECI      COMP 'D'                  8989                 S01117
+     C**N89******          GOTO CURT01                                    S01117
+     C***********                                                         S01117
+     C*
+     C*    ACCESS CURRENCY FILE SDCURRPD                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCURRR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM SCCY      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+     C*
+     C*
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     SETON                     89                   S01117
+     C*                                                                   S01117
+     C** INVALID CURRENCY                                                 S01117
+     C*                                                                   S01117
+     C***********          MOVEL' 102'    ERCD,X                          S01117
+     C                     MOVEL' 702'    ECODE                           S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*
+     C           CURT01    ENDSR                           *** CURT01 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRVREC  - SR OBTAINS INFO FROM PREVIOUS RECORD WITH
+     C*                 THE SAME CURRENCY.
+     C*
+     C*  CALLED FROM: SCR1RD
+     C*
+     C*****************************************************************
+     C*
+     C           PRVREC    BEGSR                           *** PRVREC  ***
+     C*
+     C** SETOF 45 - INDICATES A 1ST OF THE MONTH RECORD IS TO BE INSERTED
+     C** SETOF 30 - INDICATES THERE IS A PREVIOUS CURRENCY RECORD.
+     C*
+     C                     SETOF                     3045
+     C*
+     C** IF DAY IS THE 1ST OF THE MONTH THEN BY-PASS FURTHER PROCESSING.
+     C*
+     C           ADATWF    COMP LWDM                     60
+     C   60                GOTO ENDPRV
+     C*
+     C**  SET LOWER LIMITS ON S/FUND1 AND READ NEXT RECORD
+     C**  USING DATE OF THE 1ST OF THE MONTH
+     C*
+     C                     Z-ADDLWDM      KVADT
+     C                     MOVE CCYWF     KCCY
+     C*
+     C           FUNKEY    SETLLFUND1
+     C                     SETOF                     6061
+     C                     SETOF                     88
+     C*
+     C*   *IN30 INDICATES THAT A RECORD HAS BEEN READ FROM S/FUND1.
+     C*
+     C           PRV01     TAG                             *** PRV01 ***
+     C*
+     C                     READ FUND1                    60
+     C  N60      RECI      COMP 'D'                  8888
+     C  N60 88             GOTO PRV01
+     C*
+     C           LWDM      IFEQ 0                                         E20889
+     C                     MOVE ADAT      KVADT                           E20889
+     C                     END                                            E20889
+     C*                                                                   E20889
+     C  N60      SCCY      COMP CCY                  6060
+     C  N30N60   KVADT     COMP ADAT                 6161
+     C*
+     C*  DATABASE ERROR IF THE 1ST RECORD READ IS NOT THE 1ST
+     C*  OF THE MONTH FOR THE CURRENCY INPUT. BY-PASS IF FIRST
+     C*  RECORD READ HAS A DIFFERENT CURRENCY.
+     C*
+     C   30
+     CORN61                GOTO PRV02
+     C*
+     C***********          SETON                     U7U8LR               S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FUND1'   DBFILE           ***************
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     MOVELFUNDDS    DBKEY            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPRV
+     C*
+     C           PRV02     TAG                             *** PRV02 ***
+     C*
+     C* IF CURRENCY IS DIFFERENT ON 1ST READ, OUTPUT A 1ST OF MONTH RECORD
+     C*
+     C   60N30             SETON                     45
+     C   45                GOTO PRV03
+     C*
+     C*  READ S/FUND1 UNTIL CHANGE IN CURRENCY OR UNTIL DATE ON
+     C*  FILE EXCEEDS DATE INPUT TO SCREEN.
+     C*
+     C  N60      ADAT      COMP ADATWF               60  60
+     C   60                GOTO ENDPRV
+     C*
+     C                     EXSR PRVSAV
+     C                     SETON                     30
+     C                     GOTO PRV01
+     C*
+     C           PRV03     TAG                             *** PRV03 ***
+     C*
+     C                     Z-ADD0         SEARRP
+     C                     Z-ADD0         SFUNCP
+     C                     MOVE SDAYB     SDAYBP
+     C                     MOVE SDIVB     SDIVBP
+     C*
+     C***********ENDPRV****ENDSR***********                *** ENDPRV *** 078676
+     C           ENDPRV    TAG                             *** ENDPRV *** 078676
+      *                                                                   078676
+      * If 'previous' details not displayed (*IN30 off), then attempt     078676
+      * to get record previous to date entered on screen.                 078676
+     C           *IN30     IFEQ *OFF                       --- B001       078676
+     C                     Z-ADDADATWF    KVADT                           078676
+     C                     MOVELCCYWF     KCCY                            078676
+     C           FUNKEY    SETLLFUND1                                     078676
+     C           CCYWF     REDPEFUND1                    60               078676
+      *                                                                   078676
+      * If found, then store details and display                          078676
+     C           *IN60     IFEQ *OFF                       --- B002       078676
+     C                     SETON                     30                   078676
+     C                     EXSR PRVSAV                                    078676
+     C                     ENDIF                           --- E002       078676
+     C                     ENDIF                           --- E001       078676
+      *                                                                   078676
+     C                     ENDSR                                          078676
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRVSAV  - SR TO SAVE FIELDS FOR 'PREVIOUS RECORD'
+     C*
+     C*  CALLED FROM: PRVREC
+     C*
+     C*****************************************************************
+     C*
+     C           PRVSAV    BEGSR                           *** PRVSAV  ***
+     C*
+     C                     Z-ADDADAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PRVDAT
+     C*
+     C                     Z-ADDEARR      SEARRP 110
+     C                     Z-ADDFUNC      SFUNCP 110
+     C                     MOVE DAYB      SDAYBP  1
+     C                     MOVE DIVB      SDIVBP  1
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCROUT  - SR TO SAVE FIELDS IN 'CURRENT RECORD' FOR OUTPUT
+     C*            TO SCREEN
+     C*
+     C*  CALLED FROM : SCR1VL
+     C*
+     C*****************************************************************
+     C*
+     C           SCROUT    BEGSR                           *** SCROUT  ***
+     C*
+     C                     Z-ADDEARR      SEARRN 110
+     C                     Z-ADDFUNC      SFUNCN 110
+     C                     MOVE DAYB      SDAYB
+     C                     MOVE DIVB      SDIVB
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR2WT  - SR TO WRITE THE MAIN SCREEN
+     C*
+     C*  CALLED FROM : MAIN
+     C*
+     C*****************************************************************
+     C*
+     C           SCR2WT    BEGSR                           *** SCR2WT  ***
+     C*
+     C                     MOVEL'S'       SCID
+     C                     MOVE VACT      SCID
+     C                     TIME           MTIME   60
+     C*
+     C**  OUTPUT SCREEN MESSAGE IF ENQUIRING ON A DELETED RECORD.
+     C*
+     C   40                MOVEAERMG,1    ERRMSG 76
+     C   40                SETON                     78
+     C   40                MOVEABLK076    ERCD
+     C*
+     C**  BLANK OUT INITIAL SCREEN FIELDS
+     C*
+     C                     MOVE BLK03     SCCY
+     C                     MOVE BLK06     SVADT
+     C                     MOVE ' '       SACT
+     C*
+     C                     EXCPTDETSCR
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR2RD  - SR TO READ THE MAIN SCREEN
+     C*
+     C*  CALLED FROM : MAIN
+     C*
+     C*****************************************************************
+     C*
+     C           SCR2RD    BEGSR                           *** SCR2RD  ***
+     C*
+     C**  READ WORKSTATION FILE / HELP FACILITY
+     C*
+     C           *IN20     DOUEQ'0'
+     C*
+     C                     SETOF                     010203
+     C                     SETOF                     0405
+     C*
+     C***********          READ SE0150FM                 20               S01117
+     C                     READ SE0150DF                 20               S01117
+     C*
+     C********** *IN20     IFEQ '1'                                       S01199
+     C**********           MOVEAERCD      HERCD 160                       S01199
+     C**********           MOVEL'SE0150  'HBPGM   6                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           EXCPTDETSCR                                    S01199
+     C**********           END                                            S01199
+     C                     END
+     C*
+     C   KC                SETON                     LR
+     C*
+     C           SC2T99    ENDSR                           *** SC2T99 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SCR2VL  - SR TO VALIDATE THE MAIN SCREEN FOR AN INSERT OR
+     C*            AN AMEND.
+     C*
+     C*  CALLED FROM : MAIN
+     C*  CALLS       : ERROR, ZALIGN, NUMCHK
+     C*
+     C*****************************************************************
+     C*
+     C           SCR2VL    BEGSR                           *** SCR2VL  ***
+     C*
+     C**   RESET ERROR INDICATORS
+     C*
+     C                     SETOF                     242526
+     C                     SETOF                     274078
+     C*
+     C                     MOVEABLK076    ERCD
+     C                     MOVE BLK076    ERRMSG
+     C                     Z-ADD1         X       20
+     C*
+     C*    IF 'DELETE' SCREEN & F/10 NOT TAKEN, NO PROCESSING
+     C*
+     C   04NKJ             SETON                     78
+     C*  78                Z-ADD10        E
+     C   78                MOVEAERMG,2    ERRMSG
+     C   78                MOVEABLK076    ERCD
+     C   78                GOTO SCR299
+     C*
+     C**  IF 'DELETE' SCREEN & F/10 TAKEN, GO TO UPDATE PROCESSING
+     C*
+     C   04 KJ             GOTO SCR299
+     C*
+     C**  EARNINGS RATE - MANDATORY
+     C*
+     C           SEARR     COMP BLK012                   24
+     C*
+     C  N24                GOTO SCR201
+     C*
+     C                     MOVE ' 726'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR203
+     C*
+     C           SCR201    TAG                             *** SCR201 ***
+     C*
+     C**  EARNINGS RATE MUST BE VALID RATE
+     C*
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     MOVE BLK016    ZFIELD
+     C                     MOVE SEARR     ZFIELD
+     C                     EXSR ZALIGN
+     C*
+     C  N99                GOTO SCR202
+     C*
+     C                     SETON                     24
+     C                     MOVE ' 726'    ECODE
+     C**********           Z-ADD15        E
+     C                     EXSR ERROR
+     C                     GOTO SCR203
+     C*
+     C           SCR202    TAG                             *** SCR202 ***
+     C*
+     C                     MOVE ZFIELD    EARRWF
+     C                     MOVE ZFIELD    SEARRN
+     C*
+     C           SCR203    TAG                             *** SCR203 ***
+     C*
+     C*   COST OF FUNDS RATE - MANDATORY
+     C*
+     C           SFUNC     COMP BLK012                   25
+     C*
+     C  N25                GOTO SCR204
+     C*
+     C                     MOVE ' 727'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR206
+     C*
+     C           SCR204    TAG                             *** SCR204 ***
+     C*
+     C**  COST OF FUNDS RATE MUST BE VALID RATE
+     C*
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     MOVE BLK016    ZFIELD
+     C                     MOVE SFUNC     ZFIELD
+     C                     EXSR ZALIGN
+     C*
+     C  N99                GOTO SCR205
+     C*
+     C                     SETON                     25
+     C                     MOVE ' 727'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR206
+     C*
+     C           SCR205    TAG                             *** SCR205 ***
+     C*
+     C                     MOVE ZFIELD    FUNCWF
+     C                     MOVE ZFIELD    SFUNCN
+     C*
+     C           SCR206    TAG                             *** SCR206 ***
+     C*
+     C**  DAY BASIS - MANDATORY
+     C*
+     C           SDAYB     COMP ' '                      26
+     C*
+     C  N26                GOTO SCR207
+     C*
+     C                     MOVE ' 728'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR209
+     C*
+     C           SCR207    TAG                             *** SCR207 ***
+     C*
+     C**  DAY BASIS MUST BE NUMERIC AND MUST BE EITHER 1,2,OR 3
+     C*
+     C                     MOVE SDAYB     WRK1    1
+     C                     EXSR NUMCHK
+     C*
+     C**  IF ERROR IN NUMCHK (IE 99 ON) OR IF DAY BASIS IS NOT 1, 2
+     C**  OR 3, SET ON 26 AND DO ERROR PROCESSING
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     ELSE
+     C           SDAYB     IFNE '1'
+     C           SDAYB     ANDNE'2'
+     C           SDAYB     ANDNE'3'
+     C                     MOVE '1'       *IN26
+     C                     END
+     C                     END
+     C  N26                GOTO SCR208
+     C*
+     C                     MOVE ' 728'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR209
+     C*
+     C           SCR208    TAG                             *** SCR208 ***
+     C*
+     C                     MOVE SDAYB     DAYBWF  1
+     C*
+     C           SCR209    TAG                             *** SCR209 ***
+     C*
+     C**  DIVISOR BASIS - MANDATORY
+     C*
+     C           SDIVB     COMP ' '                      27
+     C*
+     C  N27                GOTO SCR210
+     C*
+     C                     MOVE ' 729'    ECODE
+     C                     EXSR ERROR
+     C                     GOTO SCR298
+     C*
+     C           SCR210    TAG                             *** SCR210 ***
+     C*
+     C**  DIVISOR BASIS MUST BE NUMERIC AND MUST BE EITHER 1,2 OR 3
+     C*
+     C                     MOVE SDIVB     WRK1    1
+     C                     EXSR NUMCHK
+     C*
+     C** IF  ERROR IN NUMCHK,99 IS ALREADY ON. IF DIV BASIS IS NOT 1
+     C**  NOR 2 SET ON 27, IF NOT 27 (IE. IT IS OK) IT SKIPS PAST ERROR
+     C**  CODE TO SCR211.
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN27
+     C                     ELSE
+     C           SDIVB     IFNE '1'
+     C           SDIVB     ANDNE'2'
+     C                     MOVE '1'       *IN27
+     C                     END
+     C                     END
+     C  N27                GOTO SCR211
+     C*
+     C                     MOVE ' 729'    ECODE
+     C*                    Z-ADD18        E
+     C                     EXSR ERROR
+     C                     GOTO SCR298
+     C*
+     C           SCR211    TAG                             *** SCR211 ***
+     C*
+     C                     MOVE SDIVB     DIVBWF  1
+     C*
+     C           SCR298    TAG                             *** SCR298 ***
+     C*
+     C           X         COMP 1                    78
+     C*
+     C           SCR299    ENDSR                           *** SCR299 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  STRLOG  - SR TO CHAIN TO FILES FOR UPDATE
+     C*
+     C*  CALLED FROM : MAIN
+     C*  CALLS       :
+     C*
+     C*****************************************************************
+     C*
+     C           STRLOG    BEGSR                           *** STRLOG  ***
+     C*
+     C**   RPG ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS  50
+     C                     GOTO INFTAG
+     C                     END
+     C*
+     C           STRL01    TAG                             *** STRL01 ***
+     C*
+     C**  CHECK THERE HAS BEEN NO UPDATE SINCE LAST ACCESS
+     C**  CHAIN TO S/FUNDS (NO RELEASE)
+     C*
+     C                     Z-ADDADATWF    KVADT
+     C                     MOVE CCYWF     KCCY
+     C                     Z-ADD0         TNLU
+     C           FUNKEY    CHAINFUNDS                89
+     C*
+     C  N89
+     COR 50                GOTO STRL02
+     C*
+     C*
+     C***********          SETON                     U7U8LR               S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FUNDS'   DBFILE           ***************
+     C                     MOVELFUNDDS    DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO STRL99
+     C*
+     C           STRL02    TAG                             *** STRL02 ***
+     C*
+     C**  CHECK TRANSACTION NUMBER OF LAST UPDATE, IF OK SAVE 'BEFORE'
+     C*
+     C                     SETOF                     31
+     C           TNLU      COMP TNLU05               3131
+     C           INFTAG    TAG                             *** INFTAG ***
+     C*
+     C**  IF NOT OK, SEND MESSAGE AND RELEASE FILES
+     C*
+     C  N31                GOTO STRL03
+     C*
+     C                     SETON                     78
+     C                     MOVE ' 730'    ECODE
+     C                     EXSR ERROR
+     C  N89                EXCPTFUNREL
+     C                     GOTO STRL99
+     C*
+     C           STRL03    TAG                             *** STRL03 ***
+     C*
+     C**  SET UP BLANK INITIAL SCREEN
+     C*
+     C                     EXSR BLKSCR
+     C*
+     C**  COMMENCE UPDATE PROCEDURE
+     C*
+     C                     EXSR LOGGIN
+     C*
+     C           STRL99    ENDSR                           *** STRL99 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  LOGGIN  - SR TO DO THE UPDATE PROCESSING
+     C*
+     C*  CALLED FROM : STRLOG
+     C*  CALLS       : PRFCHN, SECCHN
+     C*
+     C*****************************************************************
+     C*
+     C           LOGGIN    BEGSR                           *** LOGGIN  ***
+     C*
+     C**  OBTAIN LAST TRANSACTION NUMBER  AND SET UP STANDARD OUTPUT
+     C**  INFORMATION
+     C                     EXSR ZTNLU1
+     C                     MOVE 'SE'      MDID    2
+     C                     MOVEL'SE0150'  PGMN    8
+     C                     MOVE WSID      WSIDX
+     C                     MOVE USRID     USRIDX
+     C                     MOVE SCRN2     SCRN2X
+     C*
+     C**  DO UPDATE FOR AMENDMENT/DELETION OF EXISTING S/FUNDS,        AB
+     C**  RECORD
+     C*
+     C   50                GOTO LOGT03
+     C*
+     C   51                MOVE 'D'       RECIWF
+     C   52                MOVE 'C'       RECIWF
+     C                     Z-ADDRUND      LCDWF
+     C                     MOVE VACT      CHTPWF
+     C                     Z-ADDNATN      TNLUWF
+     C*
+     C                     MOVELFUNAB2    FUNAB1
+     C                     EXCPTUFUNAB
+     C*
+     C                     GOTO LOGT07
+     C*
+     C           LOGT03    TAG                             *** LOGT03 ***
+     C*
+     C**  DO UPDATE FOR AMENDMENT OF 'NEW' S/FUNDS,AB RECORD
+     C*
+     C**  OUTPUT A 1ST OF THE MONTH RECORD IF REQUIRED (*IN45 ON)
+     C*
+     C  N50                GOTO LOGT07
+     C  N45                GOTO LOGT06
+     C           *IN45     IFEQ '1'                                       E20889
+     C           LWDM      ANDEQ0                                         E20889
+     C                     GOTO LOGT06                                    E20889
+     C                     END                                            E20889
+     C*
+     C**  SAVE THE VALUES OF EARRWF, FUNCWF & ADATWF.
+     C*
+     C                     Z-ADDEARRWF    EARRSV 110
+     C                     Z-ADDFUNCWF    FUNCSV 110
+     C                     Z-ADDADATWF    ADATSV  50
+     C                     MOVELDAYBWF    DAYBSV  1                       078676
+     C                     MOVELDIVBWF    DIVBSV  1                       078676
+     C*
+     C                     MOVE 'D'       RECIWF
+     C                     Z-ADDLWDM      ADATWF
+      *                                                                   078676
+      * If no previous details exist then set rates to 0, else use        078676
+      * previous values.                                                  078676
+     C           *IN30     IFEQ *OFF                                      078676
+     C                     Z-ADD0         EARRWF
+     C                     Z-ADD0         FUNCWF
+     C                     ELSE                                           078676
+     C                     Z-ADDSEARRP    EARRWF                          078676
+     C                     Z-ADDSFUNCP    FUNCWF                          078676
+     C                     MOVELSDAYBP    DAYBWF                          078676
+     C                     MOVELSDIVBP    DIVBWF                          078676
+     C                     ENDIF                                          078676
+      *                                                                   078676
+     C                     Z-ADDRUND      OREDWF
+     C                     Z-ADDRUND      LCDWF
+     C                     MOVE 'I'       CHTPWF
+     C                     Z-ADDNATN      TNLUWF
+     C*
+     C                     MOVELFUNAB2    FUNAB1
+     C                     EXCPTFUNDAB
+     C*
+     C                     Z-ADDEARRSV    EARRWF
+     C                     Z-ADDFUNCSV    FUNCWF
+     C                     Z-ADDADATSV    ADATWF
+     C                     MOVELDAYBSV    DAYBWF  1                       078676
+     C                     MOVELDIVBSV    DIVBWF  1                       078676
+     C*
+     C                     GOTO LOGT07
+     C*
+     C           LOGT06    TAG                             *** LOGT06 ***
+     C*
+     C                     SETOF                     45
+     C*
+     C                     MOVE 'D'       RECIWF
+     C                     Z-ADDRUND      OREDWF
+     C                     Z-ADDRUND      LCDWF
+     C                     MOVE 'I'       CHTPWF
+     C                     Z-ADDNATN      TNLUWF
+     C*
+     C                     MOVELFUNAB2    FUNAB1
+     C                     EXCPTFUNDAB
+     C*
+     C           LOGT07    TAG                             *** LOGT07 ***
+     C*
+     C**  DO UPDATE FOR AMENDMENT OF S/FUNDS,AC RECORD
+     C*
+     C**  NO PROCESSING REQ'D ON TRAILER IF AMEND OF EXISTING RECORD
+     C*
+     C   51                GOTO LOG621
+     C*
+     C**  CHAIN TO TRAILER
+     C*
+     C                     MOVE '999'     KCCY
+     C                     Z-ADD99999     KVADT
+     C           FUNKEY    CHAINFUNDS                89
+     C*
+     C  N89                GOTO LOG061
+     C*
+     C***********          SETON                     U7U8LR               S01117
+     C                     MOVE 'FUNDS'   DBFILE
+     C           *LOCK     IN   LDA                        ***************S01117
+     C                     MOVELFUNDDS    DBKEY            * DB ERROR 08 *
+     C                     Z-ADD08        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO LOGT99
+     C*
+     C           LOG061    TAG                             *** LOG061 ***
+     C*
+     C*  SAVE 'BEFORE' STATUS OF TRAILER
+     C*
+     C                     MOVELFUNAC1    FUNAC2
+     C*
+     C*   ADD 1 FOR INSERT
+     C*
+     C   50      NORE      ADD  1         NOREAC
+     C*
+     C*   SUBTRACT 1 FOR DELETE
+     C*
+     C   52      NORE      SUB  1         NOREAC
+     C*
+     C                     Z-ADDRUND      LCDAC
+     C                     MOVE 'A'       CHTPAC
+     C                     Z-ADDNATN      TNLUAC
+     C*
+     C                     MOVELFUNAC2    FUNAC1
+     C                     EXCPTFUNDAC
+     C*
+     C*   OUTPUT ANOTHER DETAIL RECORD IF 1ST OF MONTH RECORD WRITTEN
+     C*
+     C   45 50             GOTO LOGT06
+     C*
+     C           LOG621    TAG                             *** LOG621 ***
+     C*
+     C**    END COMMITMENT CYCLE
+     C           CMTTXT    COMIT
+     C*
+     C           LOGT99    ENDSR                           *** LOGT99 ***
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  FILE EXCEPTION/ERROR HANDLING SUBROUTINE
+     C*
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR
+     C*
+     C**   CHECK ERROR TYPE
+     C           STATUS    IFEQ 01021
+     C*
+     C**   CHAIN TO FILE TO GET CURRENT DETAILS
+     C           FUNKEY    CHAINFUNDS                89
+     C                     MOVE 01021     STATUS
+     C**
+     C           *IN89     IFEQ '0'
+     C**
+     C**   ROLLBACK UPDATES ALREADY DONE
+     C                     ROLBK
+     C**
+     C**   SET ON 'RECORD UPDATED....' INDICATOR
+     C                     SETON                     31
+     C                     MOVE '*DETC '  EXTTAG  6
+     C                     ELSE
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C                     MOVE '*CANCL'  EXTTAG
+     C                     END
+     C*
+     C                     ENDSREXTTAG
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************   S01117
+     C*                                                               *   S01117
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *   S01117
+     C*                                                               *   S01117
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *   S01117
+     C*                                                               *   S01117
+     C* CALLS : NOTHING                                               *   S01117
+     C*                                                               *   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      ***/EJECT***************                                            S01195
+     C***/COPY*ZSRSRC,ZDATE6Z2                                            S01195
+      ***/EJECT***************                                            S01195
+     C***/COPY*ZSRSRC,ZICD2Z1                                             S01195
+      ***/EJECT***************                                            S01117
+     C***/COPY*ZSRSRC,ZSYSTMZ1                                            S01117
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     O/EJECT
+     O********************************************************************
+     O************                                                        S00117
+     O************ S/SE0150FM                                             S01117
+     O************                                                        S01117
+     O************SE0150FME                INTSCR                         S01117
+     O*                                                                   S01117
+     O*   S/SE0150DF                                                      S01117
+     O*                                                                   S01117
+     OSE0150DFE                INTSCR                                     S01117
+     O                                   K8 'SE0150F1'
+     O                         SCID       2
+     O                         RUNA       9
+     O                         MTIME     17 '  .  .  '
+     O                         WSID      20
+     O                         ERCD      96
+     O                         ERRMSG   172
+     O                         SCCY     175
+     O                         SVADT    181
+     O                         SACT     182
+     O*
+     O************SE0150FME                DETSCR                         S01117
+     OSE0150DFE                DETSCR                                     S01117
+     O                                   K8 'SE0150F2'
+     O                         SCID       2
+     O                         RUNA       9
+     O                         MTIME     17 '  .  .  '
+     O                         WSID      20
+     O                         VSCCY     23
+     O***********              CCNM      37
+     O                         A6CYNM    37                               S01117
+     O                         SVADT7    44                               S01117
+     O                         VACT      45
+     O                         PRVDAT    52
+     O                         SEARRP    64 '  0 .       '
+     O                         SFUNCP    76 '  0 .       '
+     O                         SDAYBP    77
+     O                         SDIVBP    78
+     O                   N24N50SEARRN    90 '  0 .       '
+     O                    24   SEARR     90
+     O                   N24 50SEARR     90
+     O                   N25N50SFUNCN   102 '  0 .       '
+     O                    25   SFUNC    102
+     O                   N25 50SFUNC    102
+     O                         SDAYB    103
+     O                         SDIVB    104
+     O                         ERCD     180
+     O                         ERRMSG   256
+     O                    53   SCCY     259
+     O                    53   SVADT    265
+     O                    53   SACT     266
+     O*
+     OFUNDSABFEADD             FUNDAB
+     O*
+     O*    S/FUNDS,AB  - ADD A NEW REORD
+     O*
+     O                         *ALL
+     O*
+     OFUNDSABFE                UFUNAB
+     O*
+     O*    S/FUNDS,AB  - UPDATE
+     O*
+     O                         *ALL
+     OFUNDSACFE                FUNDAC
+     O*
+     O*   S/FUNDS,AC
+     O*
+     O                         *ALL
+     OFUNDSABFE                FUNREL
+     O*
+     O*****************************************************************
+      /EJECT
+      ***
+      * /104633/  Change
+      *ERCD,2 ENTER F/10 TO DELETE
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ERCD - ERROR MESSAGES
+THIS IS A DELETED RECORD
+ENTER:F10=Delete
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

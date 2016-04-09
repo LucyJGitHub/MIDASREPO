@@ -1,0 +1,385 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas¦ABS Restricted Accounts Security Control')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF0932 - RESTRICTED ACCOUNT SECURITY CONTROL REPORT          *
+      *                                                               *
+      *  Function:  This program reports all attempts by unauthorised *
+      *             users to access restricted account codes.         *
+      *                                                               *
+      *  Called By: SDC541P - SD Pgm to Control List Production I/C   *
+      *             SFC0932 - Restricted Accounts Security Control COB*
+      *                                                               *
+      *  (C) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG11679           Date 05Jul06               *
+      *  Prev Amend No. CRE024   *CREATE   Date 07Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG11679 - Additional Conversion of Customer Number to Alpha.*
+      *  CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                  *
+      *           SECURITY FEATURES FOR RESTRICTED ACCOUNTS           *
+      *                                                               *
+      *****************************************************************
+      *
+     FSFRAUAPAIF  E           K        DISK         KINFSR *PSSR
+     FSF0932P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     FSF0932AUO   E                    PRINTER      KINFDS SPOOLU
+      *-------------------------------------------------------------------
+     E                    CPY@    1   1 80               MKI Copyright array
+     E************        TABPGM  1   5  6   TABNAR 45
+     E                    TABPGM  1   6 10   TABNAR 40
+      *-------------------------------------------------------------------
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      * Data Structure to pass parameters to Access programs
+     IAOFMTS    E DSDSFDY
+      *
+      * Data Structure to receive SDBANKPD details
+     IAOBANK    E DSSDBANKPD
+      *
+      * Data Structure to receive MITEMDD details
+     I********AOMITM    E DSMITEMDD
+      *
+     ILDA       EUDSLDA                         256
+      *
+      * Data Structure for program name
+     I*********** DS
+     I***********                             1   2 MITM
+     I***********                             3   8 MPGNM
+     I***********                             1   4 MICDE
+     I***********                             5   80MMGRP
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTCD  7        Return code
+     C                     PARM           P0MODE  1        Mode
+     C                     PARM           P0SEQ   5        Sequence number
+     C                     PARM           P0LVL   1        Level
+     C                     PARM           P0ENTY  3        Entity
+      *
+     C                     EXSR #INIT
+     C  N90                EXSR #REPT
+     C                     EXSR #AUDT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * #REPT - Report Processing Subroutine                            *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #REPT     BEGSR
+      *
+     C                     READ SFRAUAP0                 90
+      *
+     C           *IN90     DOWEQ'0'
+     C                     EXSR #PROC
+     C                     READ SFRAUAP0                 90
+     C                     END
+      *
+      * Write Trailer
+     C           RCOUNT    IFNE 0
+     C                     EXSR #TRL1
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #PROC - Process Report Details                                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #PROC     BEGSR
+      *
+      * Place user and range fields into report fields and set
+      * indicators
+     C           MJUSR     IFNE R1JUSR
+     C                     MOVE MJUSR     R1JUSR
+     C                     MOVE MFRAC     R1FRAC
+     C                     MOVE MTOAC     R1TOAC
+     C                     MOVEA'00'      *IN,30
+     C                     ELSE
+     C           MFRAC     IFNE R1FRAC
+     C                     MOVE MFRAC     R1FRAC
+     C                     MOVE MTOAC     R1TOAC
+     C                     MOVE '0'       *IN31
+     C                     END
+     C                     END
+      *
+     C                     MOVE *BLANKS   R1INAR
+     C                     MOVE *BLANKS   R1CNUM
+     C                     MOVE *BLANKS   R1ACSQ
+      *
+      **Call*Access*program*AOMITMR0 to obtain menu item narrative
+      **if*not*program*name*
+     C***********MITM      IFNE *BLANKS
+     C***********          MOVE MMGRP     P2MGRP
+     C***********          CALL 'AOMITMR0'
+     C***********          PARM *BLANK    P2RTCD
+     C***********          PARM '*KEY'    P2OPTN
+     C***********          PARM           P2MGRP
+     C***********          PARM MICDE     P2ICDE
+     C***********AOMITM    PARM *BLANKS   AOFMTS
+     C***********          MOVE INAR      R1INAR
+     C***********          ELSE
+      *
+      * Else obtain narrative from table
+     C           MPGNM     LOKUPTABPGM    TABNAR         90
+     C                     MOVE TABNAR    R1INAR
+     C***********          END
+      *
+      * Place account and job fields in report fields
+     C                     MOVE MBRCA     R1BRCA
+     C********** MCNUM     IFNE 0                                                           BUG11679
+     C           MCNUM     IFNE *BLANKS                                                     BUG11679
+     C                     MOVE MCNUM     R1CNUM
+     C                     END
+     C                     MOVE MCCY      R1CCY
+     C                     MOVE MACOD     R1ACOD
+     C           MACSQ     IFNE 0
+     C                     MOVE MACSQ     R1ACSQ
+     C                     END
+     C                     MOVE MTIME     R1TIME
+     C                     MOVE MJNAM     R1JNAM
+     C                     MOVE MJNOM     R1JNOM
+      *
+      * Output detail line
+     C                     ADD  1         RCOUNT
+     C                     EXSR #DET1
+     C                     MOVEA'11'      *IN,30
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #DET1 - Output P1 Details                                       *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DET1     BEGSR
+      *
+      * Check for line overflow
+     C           OFLLN1    SUB  PRTLN1    DIFLN
+     C           DIFLN     IFLE 2
+     C                     WRITESF0932H1
+     C                     WRITESF0932S1
+     C                     MOVEA'00'      *IN,30
+     C                     END
+      *
+      * Write detail line
+     C                     WRITESF0932D1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #TRL1 - Output P1 Tralier details                               *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #TRL1     BEGSR
+      *
+      * Check for line overflow
+     C           OFLLN1    SUB  PRTLN1    DIFLN
+     C           DIFLN     IFLE 4
+     C                     WRITESF0932H1
+     C                     END
+      *
+      * Output Trailer
+     C                     WRITESF0932T1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #AUDT - Output Audit report details                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #AUDT     BEGSR
+      *
+      * Process RCF
+     C                     EXSR #RCFAU
+      *
+      * Output Audit Header
+     C                     WRITESF0932HA
+      *
+      * If there is a DB Error, Output the DB Error Information
+     C           *INU7     IFEQ '1'
+     C                     WRITESF0932EA
+     C                     ELSE
+      *
+      * Output "No Details" message or File Controls
+     C           RCOUNT    IFEQ 0
+     C                     WRITESF0932NA
+     C                     ELSE
+     C                     WRITESF0932CA
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #RCFP1 - P1 Report Control Facility processing                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #RCFP1    BEGSR
+      *
+      * Ensure P1 Spool File recorded by RCF.
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     UNLCKLDA
+     C                     CALL 'ZSFILE'
+     C                     PARM P0SEQ     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #RCFAU - AU Report Control Facility processing                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #RCFAU    BEGSR
+      *
+      * Ensure Audit Spool File recorded by RCF.
+     C                     Z-ADDSFNUMU    ZSNUM
+      *
+     C                     UNLCKLDA
+     C                     CALL 'ZSFILE'
+     C                     PARM P0SEQ     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INIT - Initial Program Subroutine                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      * Define program work fields
+     C                     MOVE *BLANKS   P1RTCD  7
+     C                     MOVE *BLANKS   P1OPTN  7
+     C***********          MOVE *BLANKS   P2RTCD  7
+     C***********          MOVE *BLANKS   P2OPTN  7
+     C***********          MOVE *BLANKS   P2ICDE  4
+     C***********          MOVE *BLANKS   P2MGRP  4
+     C                     MOVE *BLANKS   SEQ     5
+     C                     MOVE *BLANKS   SENTY   3
+     C                     MOVE *BLANKS   ZSERR   1
+      *
+     C                     Z-ADD0         ZSNUM   60
+     C                     Z-ADD0         RCOUNT  50
+     C                     Z-ADD0         DIFLN   30
+      *
+      * Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      * Set indicator to output Time if not close of business
+     C           P0MODE    IFNE 'A'
+     C                     MOVE '1'       *IN40
+     C                     END
+      *
+      * Access SDBANKPD to obtain Report Title and Run Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P1RTCD
+     C                     PARM '*FIRST ' P1OPTN
+     C           AOBANK    PARM *BLANKS   AOFMTS
+      *
+     C           P1RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+      * Check if any records on file
+     C           *LOVAL    SETLLSFRAUAP0             90
+      *
+      * If records to report, open P1 report file and process RCF
+     C           *IN90     IFEQ '0'
+     C                     OPEN SF0932P1
+     C                     EXSR #RCFP1
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SF0932'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     EXSR #AUDT
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *
+** CPY@     : Copyright notice for inclusion in all MKI programs
+(C) Misys International Banking Systems Ltd. 2005
+** TABPGM/TABNAR Table of program names and narratives
+GL4441    Account Details
+GL4442    Account Movements
+GL4443    Projected Account Movements
+GL4444    Items in Clearing
+GL4610    Account Code Balance Enquiry
+RE3360    Outstanding Interest/Charges

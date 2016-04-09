@@ -1,0 +1,358 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AC Call and Send message to the Pager')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - System Control Module                            *
+     F*                                                               *
+     F*  AC0070 - Call and Send Message to Autocall pagers            *
+     F*                                                               *
+     F*  Function: This program calls and send message to up to 4     *
+     F*            pagers specified in Autocall Control Data. (COB)   *
+     F*                                                               *
+     F*  For Information only:                                        *
+     F*  Current VODAPAGE UK telephone numbers                        *
+     F*       VODAFONE Bureau Tel No.   013991200                     *
+     F*       CSC London Pager 1 Ref.   0399727768                    *
+     F*       CSC London Pager 2 Ref.   0399727769                    *
+     F*       CSC London Pager 3 Ref.   0399727770                    *
+     F*  Note - prefix for pager reference is '0399', not '01399'     *
+     F*                                                               *
+     F*  Called By: ACC0070 - AC Autocall to Beeper                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 098705 *REWRITE    DATE 01FEB96               *
+     F*  PREV AMEND NO. S01491 *CREATE     DATE 01OCT94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  098705 - Select extended result codes for maximum help       *
+     F*         - Check correctly for connection                      *
+     F*         - Retry twice if no connection.                       *
+     F*         - Issue message if invalid pager reference            *
+     F*         - If pager reference invalid, try next pager reference*
+     F*         - This pgm has been rewritten - changes not annotated *
+     F*  S01491 - Autocall.                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FAC0070CMCF  E                    WORKSTN
+     F                                              KINFDS FEEDBK
+     F                                              KNUM        2
+     F                                              KID    ID
+     FACTRACPDO   E                    DISK
+     F*
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    PAGN        4 15
+     E                    ERR     1   9 75
+     E                    WRK        20  1
+     E*
+      /EJECT
+     IFEEDBK      DS
+     I                                     *STATUS  STS
+     I                                     *OPCODE  OP
+     I                                      273 282 PGMDEV
+     I                                      401 404 MAJMIN
+     I                                      401 402 MAJCOD
+     I                                      403 404 MINCOD
+     I*
+     IDSDATA      DS                           1024
+     I*
+     ILDA       E DSLDA
+     I** Local data area for database error details
+     I*
+     ISDCOBP    E DSSDCOBPPD
+     I                                       36  95 PAGN
+     I** COB Processing Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** DS for access programs, short data structure
+     I*
+      /EJECT
+     C/TITLE Main Processing
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TEXT   75
+     C                     PARM           RTNCDE  1
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'AC0070'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C** Initialisation
+     C**
+     C** Carriage return character
+     C*
+     C                     BITOF'01236'   CR      1        HEX '0D'
+     C                     BITON'457'     CR
+     C*
+     C** Initialise Hayes AT command line as follows
+     C**   M1  Enable loudspeaker until carrier is detected
+     C**   L3  Set high speaker volume
+     C**   X4  Select extended result codes
+     C                     Z-ADD1         REREAD  20
+     C                     MOVE 'N'       RTNCDE
+     C                     MOVEL*BLANKS   ATM1
+     C                     MOVEL'AT M1 '  @ATM   11
+     C                     MOVE 'L3 X4'   @ATM
+     C                     MOVEL@ATM      ATM1
+     C                     MOVE 'ATDT'    ATD
+     C                     MOVE 'ATH'     ATH
+     C*
+     C** Acquire
+     C*
+     C                     MOVEL'1S'      ID
+     C           ID        ACQ  AC0070CM
+     C*
+     C** Modem initialisation
+     C*
+     C                     WRITEINIT
+     C*
+     C** Receive the acknowledge from the modem (OK),
+     C** otherwise exit
+     C*
+     C                     MOVEL*BLANKS   RCVRCD
+     C*
+     C                     READ RECEIV                   50
+     C                     MOVELRCVRCD    DSDATA
+     C                     MOVELRCVRCD    ACDATA
+     C                     WRITEACTRACD0
+     C*
+     C           'OK'      SCAN DSDATA                   98
+     C           *IN98     IFEQ '0'
+     C                     MOVELERR,1     ACDATA
+     C                     WRITEACTRACD0
+     C                     GOTO END
+     C                     END
+     C*
+     C** Get bureau telephone number on ICD
+     C*
+     C                     CALL 'AOCOBPR0'
+     C                     PARM           @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDCOBP    PARM SDCOBP    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCOBPPD'DBFILE           *************
+     C                     MOVEL@OPTN     DBKEY            * DBASE 001 *
+     C                     Z-ADD1         DBASE            *************
+     C                     OUT  LDA
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C** Set up Bureau Telephone number
+     C                     MOVE DOTNB1    PHNO
+     C*
+     C** Dial the Bureau Telephone number, retry 2 times if no connection
+     C*
+     C                     Z-ADD1         REREAD  20
+     C           REREAD    DOUGT3
+     C           *IN98     OREQ '1'
+     C*
+     C                     WRITEPHONE
+     C*
+     C** In verbose mode, the following should be received from the modem
+     C**   Read 1     Number dialled
+     C**   Read 2     Carrier status
+     C**   Read 3     Connect status
+     C** so need to read 3 times to confirm connection
+     C*
+     C                     Z-ADD1         READ    20
+     C           READ      DOUGT3
+     C           *IN98     OREQ '1'
+     C                     READ RECEIV                   50
+     C                     MOVELRCVRCD    DSDATA
+     C                     MOVELRCVRCD    ACDATA
+     C                     WRITEACTRACD0
+     C*
+     C           'CONNECT' SCAN DSDATA                   98
+     C                     ADD  1         READ
+     C*
+     C                     END
+     C*
+     C*  Output 'DIAL NOT SUCCESFUL - REDIAL' to trace file
+     C           *IN98     IFEQ '0'
+     C                     MOVELERR,2     ACDATA
+     C                     WRITEACTRACD0
+     C                     END
+     C*
+     C* Delay for 20 seconds and redial
+     C           *IN98     IFEQ '0'
+     C                     CALL 'ACDEL20'
+     C                     ADD  1         REREAD
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  Output 'NUMBER DIALLED 3 TIMES UNSUCCESFULLY' to trace file
+     C*  and end.
+     C           *IN98     IFEQ '0'
+     C           DOTNB1    CAT  ERR,4:1   ACDATA
+     C                     WRITEACTRACD0
+     C                     GOTO END
+     C                     END
+     C*
+     C/EJECT
+     C*------------------------------------------------------------
+     C*
+     C** Wait for vodapage to respond and check for welcome banner
+     C** Retry 2 times if no response
+     C*
+     C                     Z-ADD1         REREAD
+     C           REREAD    DOUGT3
+     C           *IN98     OREQ '1'
+     C                     CALL 'ACDEL20'
+     C                     READ RECEIV                   50
+     C                     MOVELRCVRCD    DSDATA
+     C                     MOVELRCVRCD    ACDATA
+     C                     WRITEACTRACD0
+     C*
+     C           'RECT INP'SCAN DSDATA                   98
+     C           *IN98     IFEQ '0'
+     C*
+     C           REREAD    IFLT 3
+     C                     MOVELERR,6     ACDATA
+     C                     WRITEACTRACD0
+     C                     ELSE
+     C                     MOVELERR,7     ACDATA
+     C                     WRITEACTRACD0
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         REREAD
+     C                     END
+     C/EJECT
+     C*------------------------------------------------------------
+     C*
+     C** Connect received - then send message block   FCFC...
+     C*
+     C                     MOVE 'ZCZC'    START
+     C                     MOVE CR        CR1
+     C                     Z-ADD1         X       10
+     C*
+     C** Send a message to the 4 pagers specified on Control Data.
+     C*
+     C           X         DOWLE4
+     C           PAGN,X    IFNE *BLANKS
+     C*
+     C** Setup pager refs
+     C*
+     C                     MOVELPAGN,X    PAGER
+     C                     MOVE CR        CR2
+     C                     MOVE TEXT      WORDS
+     C                     MOVE CR        CR3
+     C                     MOVE 'NNNN'    ENDBLO
+     C                     MOVE CR        CR4
+     C*
+     C                     WRITEDIALOG
+     C*
+     C** Read 3 times, or until 'Message accepted' or 'Invalid Pager No'
+     C*
+     C                     Z-ADD1         REREAD
+     C           REREAD    DOUGT3
+     C           *IN98     OREQ '1'
+     C           *IN97     OREQ '1'
+     C                     READ RECEIV                   50
+     C*
+     C           MAJMIN    IFEQ '0310'
+     C                     WRITEDIALOG
+     C                     READ RECEIV                   50
+     C                     END
+     C*
+     C                     MOVELRCVRCD    DSDATA
+     C                     MOVELRCVRCD    ACDATA
+     C                     WRITEACTRACD0
+     C*
+     C** Look for 'Paging Message Accepted'
+     C*
+     C           'age Acce'SCAN DSDATA                   98
+     C*
+     C** If call successful, update return code
+     C           *IN98     IFEQ '1'
+     C                     MOVE 'Y'       RTNCDE
+     C*
+     C*  Else, if message not accepted
+     C                     ELSE
+     C*
+     C*  If Invalid Pager Reference, output message and go to next pager
+     C           'Invalid' SCAN DSDATA                   97
+     C   97      'Pager'   SCAN DSDATA                   97
+     C   97      'Number'  SCAN DSDATA                   97
+     C           *IN97     IFEQ '1'
+     C                     MOVE *BLANKS   ACDATA
+     C           ERR,9     CAT  PAGN,X:1  ACDATA
+     C                     WRITEACTRACD0
+     C*
+     C*  else write message to trace file
+     C                     ELSE
+     C           REREAD    IFLT 3
+     C                     ADD  1         REREAD
+     C                     MOVELERR,5     ACDATA
+     C                     WRITEACTRACD0
+     C                     ELSE
+     C                     MOVELERR,8     ACDATA
+     C                     WRITEACTRACD0
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** Loop back for next pager
+     C*
+     C           X         ADD  1         X
+     C                     END
+     C*
+     C/EJECT
+     C*------------------------------------------------------------
+     C*
+     C** Disconnect modem
+     C*
+     C                     MOVE '+++'     ATH
+     C                     WRITEDETACH
+     C*
+     C                     MOVE 'ATH'     ATH
+     C                     WRITEDETACH
+     C*
+     C           END       TAG
+     C                     SETON                     LR
+      *-------------------------------------------------------------------
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** ERROR MESSAGES TO GENERATE
+MODEM INITIALISATION ERROR
+DIAL NOT SUCCESSFUL - REDIAL
+DLYJOB DLY(05)
+NUMBER DIALLED 3 TIMES UNSUCCESSFULLY - NUMBER IS
+NO RESPONSE FROM BUREAU - REREAD
+WAITING FOR VODAPAGE TO RESPOND
+VODAPAGE NOT RESPONDING
+MESSAGE NOT ACCEPTED
+INVALID PAGER NUMBER

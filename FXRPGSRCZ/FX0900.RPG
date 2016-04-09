@@ -1,0 +1,343 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Netting initialisation program')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - (FX Dealing) Module                                  *
+      *                                                               *
+      *  FX0900 - FX Netting Initialisation program                   *
+      *                                                               *
+      *  Function:  This program initialises netting fields as 'N'    *
+      *             on ICD,SD and FX deals.                           *
+      *  (phase(s)) Next day setup.                                   *
+      *                                                               *
+      *  Called By: FXC0900                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CDL010             Date 02Aug02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002   *CREATE   Date 12MAY97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+      *  CSD007 - Customer Closing (Recompiled SDCUSTPD)              *
+      *  CDL008 - Continuous Linked Settlement (Recompiled DEALSDG/   *
+      *           SDCUSTPD)                                           *
+      *  CDL002 - FX Netting                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FDEALSDB UF  E                    DISK
+     FLBDEABPDUF  E                    DISK
+     F            DEALSDBF                          KRENAMEXDEALSBF
+     FFXDEALPPUF  E                    DISK
+     FSDCGRPPDUF  E                    DISK
+     FSDCUSTPDUF  E                    DISK
+     FSDDEALPDUF  E                    DISK
+     FSDEXPMPDUF  E                    DISK
+      *
+      /EJECT
+     F*****************************************************************
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*****************************************************************
+     F*                                                               *
+     F*    80  - READ EOF                                             *
+     F*                                                               *
+     F*****************************************************************
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*****************************************************************
+     F*                                                               *
+     F*  FLAG#N - Set netting flag to 'N'                             *
+     F*  NOFLAG - Set netting flag to ' '                             *
+     F*  *INZSR - Routine to handle initial processing                *
+     F*  *PSSR  - Routine to handle database errors                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *
+     I**   Rename fields on LBDEABPD.
+     IXDEALSBF
+     I              RECI                            RECIX
+     I              NETBY                           NETBYX
+     I              NETSL                           NETSLX
+     I              MATCH                           MATCHX
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Either flag as 'N'
+     C                     SELEC
+     C           MODE      WHEQ '1'
+     C           MODE      OREQ '2'
+     C                     EXSR FLAG#N
+      ** Or flag as ' '.
+     C           MODE      WHEQ '3'
+     C                     EXSR NOFLAG
+     C                     ENDSL
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FLAG#N - Flag as 'N' - No.                                    *
+      *                                                               *
+      ********************************************************************
+      *
+     C           FLAG#N    BEGSR
+      *
+      * FX Deals Master File(Live Deals)
+     C                     READ DEALSDB                  80
+     C           *IN80     DOWEQ*OFF
+     C           RECI      IFEQ 'D'
+     C                     MOVE 'N'       NETBY
+     C                     MOVE 'N'       NETSL
+     C                     MOVE 'N'       MATCH
+     C                     UPDATDEALSDBF
+     C                     ENDIF
+     C                     READ DEALSDB                  80
+     C                     ENDDO
+      *
+      * LB Portfolio Lending Deals Master File(Live Deals)
+     C                     READ LBDEABPD                 80
+     C           *IN80     DOWEQ*OFF
+     C           RECIX     IFEQ 'D'
+     C                     MOVE 'N'       NETBYX
+     C                     MOVE 'N'       NETSLX
+     C                     MOVE 'N'       MATCHX
+     C                     UPDATXDEALSBF
+     C                     ENDIF
+     C                     READ LBDEABPD                 80
+     C                     ENDDO
+      *
+      * FX Deals File(Live Deals)
+     C                     READ FXDEALPP                 80
+     C           *IN80     DOWEQ*OFF
+     C           FHDDLT    IFNE 'D'
+     C                     MOVE 'N'       FHNBUY
+     C                     MOVE 'N'       FHNSEL
+     C                     MOVE 'N'       FHMTCH
+     C                     UPDATFXDEALP0
+     C                     ENDIF
+     C                     READ FXDEALPP                 80
+     C                     ENDDO
+      *
+      * Customer Groups Master File
+     C                     READ SDCGRPPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE 'N'       D6NETG
+     C                     UPDATSDCGRPD0
+     C                     READ SDCGRPPD                 80
+     C                     ENDDO
+      *
+      * Customer Details Master File(Live Records)
+     C                     READ SDCUSTPD                 80
+     C           *IN80     DOWEQ*OFF
+     C           BBDTDL    IFEQ 0
+     C                     MOVE 'N'       BBNET
+     C                     UPDATSDCUSTD0
+     C                     ENDIF
+     C                     READ SDCUSTPD                 80
+     C                     ENDDO
+      *
+      * MIDAS SD Dealing ICD Data
+     C                     READ SDDEALPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE 'N'       BNNTCE
+     C                     MOVE 'N'       BNNMAM
+     C                     MOVE *BLANKS   BNNEAC
+     C                     MOVE 'N'       BNNESB
+     C                     UPDATSDDEALD0
+     C                     READ SDDEALPD                 80
+     C                     ENDDO
+      *
+      * MIDAS SD Exposure Management Data
+     C                     READ SDEXPMPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE 'N'       BUNTEM
+     C                     UPDATSDEXPMD0
+     C                     READ SDEXPMPD                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * NOFLAG - Flag as ' '.                                         *
+      *                                                               *
+      ********************************************************************
+      *
+     C           NOFLAG    BEGSR
+      *
+      * FX Deals Master File(Live Deals)
+     C                     READ DEALSDB                  80
+     C           *IN80     DOWEQ*OFF
+     C           RECI      IFEQ 'D'
+     C                     MOVE *BLANKS   NETBY
+     C                     MOVE *BLANKS   NETSL
+     C                     MOVE *BLANKS   MATCH
+     C                     UPDATDEALSDBF
+     C                     ENDIF
+     C                     READ DEALSDB                  80
+     C                     ENDDO
+      *
+      * LB Portfolio Lending Deals Master File(Live Deals)
+     C                     READ LBDEABPD                 80
+     C           *IN80     DOWEQ*OFF
+     C           RECIX     IFEQ 'D'
+     C                     MOVE *BLANKS   NETBYX
+     C                     MOVE *BLANKS   NETSLX
+     C                     MOVE *BLANKS   MATCHX
+     C                     UPDATXDEALSBF
+     C                     ENDIF
+     C                     READ LBDEABPD                 80
+     C                     ENDDO
+      *
+      * FX Deals File(Live Deals)
+     C                     READ FXDEALPP                 80
+     C           *IN80     DOWEQ*OFF
+     C           FHDDLT    IFNE 'D'
+     C                     MOVE *BLANKS   FHNBUY
+     C                     MOVE *BLANKS   FHNSEL
+     C                     MOVE *BLANKS   FHMTCH
+     C                     UPDATFXDEALP0
+     C                     ENDIF
+     C                     READ FXDEALPP                 80
+     C                     ENDDO
+      *
+      * Customer Groups Master File(Live Deals)
+     C                     READ SDCGRPPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE *BLANKS   D6NETG
+     C                     UPDATSDCGRPD0
+     C                     READ SDCGRPPD                 80
+     C                     ENDDO
+      *
+      * Customer Details Master File(Live Deals)
+     C                     READ SDCUSTPD                 80
+     C           *IN80     DOWEQ*OFF
+     C           BBDTDL    IFEQ 0
+     C                     MOVE *BLANKS   BBNET
+     C                     UPDATSDCUSTD0
+     C                     ENDIF
+     C                     READ SDCUSTPD                 80
+     C                     ENDDO
+      *
+      * MIDAS SD Dealing ICD Data
+     C                     READ SDDEALPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE 'N'       BNNTCE
+     C                     MOVE 'N'       BNNMAM
+     C                     MOVE *BLANKS   BNNEAC
+     C                     MOVE 'N'       BNNESB
+     C                     UPDATSDDEALD0
+     C                     READ SDDEALPD                 80
+     C                     ENDDO
+      *
+      * MIDAS SD Exposure Management Data
+     C                     READ SDEXPMPD                 80
+     C           *IN80     DOWEQ*OFF
+     C                     MOVE 'N'       BUNTEM
+     C                     UPDATSDEXPMD0
+     C                     READ SDEXPMPD                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Routine to handle initial processing.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCDE  7
+     C                     PARM           MODE    1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE '*ERROR ' RTNCDE
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,370 @@
+     H            D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Sec. W/out Telekur Market Price rep.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE5982 - Securities W/out Telekur Market Price Report        *
+     F*                                                               *
+     F*  Function: This program generates a report containing all     *
+     F*   (I/C)    securities w/out telekur reference w/c means it    *
+     F*            doesn't have a telekur market price.               *
+     F*                                                               *
+     F*  Called By: SEC5982 - Input Cycle Processing                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 11Oct01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE009             Date 16Mar99               *
+     F*                 S01502  *CREATE    Date 08Jul94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CPK014 - Cannot have two primary files defined in the same   *
+     F*           program. Make one secondary.                        *
+     F*  CSE009 - Telekurs Changes                                    *
+     F*  S01502 - BLI Telekurs Processing.                            *
+     F*                                                               *
+     F*****************************************************************
+     F***SECTK***IP  E           K        DISK                                                CSE009
+     FSECTK   IP  E           K        DISK                           U1                      CSE009
+     F***SETKSCL0IP**E**         K        DISK                        U2               CSE009 CPK014
+     FSETKSCL0IS  E           K        DISK                           U2                      CPK014
+     F            SECTYDF                           KRENAMESECTYDF1                           CSE009
+     FSE5982P1O   E             31     PRINTER      KINFDS SPOOL      UC
+     FSE5982AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       21      FIRST CYCLE INDICATOR                           *
+     F*       25      P1 WAS OPENED                                   *
+     F*       31      OVERFLOW INDICATOR                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E/COPY ZSRSRC,ZSERPT1
+     E                    CPY@    1   1 80
+     E                    DEC        16  1               DECIMAL PLACES
+     E/COPY ZSRSRC,ZSEDITZ1
+     ISECTYDF1                                                            CSE009
+     I              TVRF                            TVRF1                 CSE009
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I@SARD     E DSSCSARDPD                                              CSE009
+     ISDBANK    E DSSDBANKPD
+     IDSFDY     E DSDSFDY
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C*
+     C** MAIN PROCESSING
+     C*
+     C  N21                EXSR INITSR
+     C                     SETON                     21
+     C*
+     C** SELECT SECURITIES W/OUT TELEKUR REFERENCE
+     C*
+     C           T2RF      IFEQ *BLANKS
+     C*
+     C** FORMAT SECURITY DETAILS
+     C*
+     C           *IN21     IFEQ '1'
+     C                     EXSR PRINT
+     C*
+     C** OUTPUT TO REPORT
+     C*
+     C           *IN25     IFEQ '0'
+     C                     OPEN SE5982P1
+     C                     EXSR RCFP1
+     C                     SETON                     25
+     C                     WRITESE5982H1
+     C                     END
+     C*
+     C                     WRITESE5982D1
+     C           *IN31     IFEQ '1'
+     C                     WRITESE5982H1
+     C                     SETOF                     31
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     CLR         *IN21     IFEQ '0'
+     CLR         *IN25     OREQ '0'
+     C*
+     CLR         *IN21     IFEQ '0'
+     CLR                   EXSR INITSR
+     CLR                   END
+     C*
+     CLR                   OPEN SE5982AU
+     CLR                   EXSR RCFAU
+     CLR                   WRITESE5982AH
+     CLR                   WRITESE5982AN
+     CLR                   CLOSESE5982AU
+     CLR                   END
+     C*
+     CLR         *IN25     IFEQ '1'
+     CLR                   WRITESE5982D2
+     CLR                   CLOSESE5982P1
+     CLR                   END
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   PRINT -  PRINT DETAILS OF PRICES
+     C*
+     C*   CALLED FROM   MAIN PROCESSING
+     C*   CALLS SR
+     C*****************************************************************
+     C           PRINT     BEGSR                           ** PRINT  SR **
+     C*                                                                   CSE009
+     C           CSE009    IFEQ 'N'                                       CSE009
+     C                     MOVELTVRF      WTVRF     P                     CSE009
+     C                     ELSE                                           CSE009
+     C                     MOVE TVRF1     WTVRF                           CSE009
+     C                     ENDIF                                          CSE009
+     C*
+     C           MATY      IFGT 0
+     C                     Z-ADDMATY      ZDAYNO
+     C                     Z-ADD0         ZDATE
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50       DAY NUMBER
+     C                     PARM ' '       ZDATFM  1        DATE FORMAT IND
+     C                     PARM           ZDATE   60       DATE-DDMMYY
+     C                     PARM           WQ0004  7        DATE-DDMMMYY
+     C                     Z-ADDZDATE     ZMADAT
+     C                     ELSE
+     C                     Z-ADD0         ZMADAT
+     C                     END
+     C*
+     C                     MOVE *BLANKS   SECNAM
+     C                     MOVELSRPN      ZTITLE
+     C                     MOVE '0'       *IN98
+     C                     Z-ADDCPNR      ZCPRAT
+     C                     EXSR ZSERPT
+     C*
+     C                     MOVELZRPNAM    SECNAM
+     C*
+     C**  EDIT PRICES
+     C*
+     C                     MOVE MKPR      ZFLD15
+     C                     MOVE *BLANK    ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XCVLP  16
+     C                     MOVEAXCVLP     DEC
+     C                     EXSR DECSR
+     C                     MOVEADEC       XCVLP
+     C                     MOVE XCVLP     CVLPWF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*   DECSR SR TO FIND NO OF DECIMAL PLACES
+     C*
+     C*   CALLED FROM   PRINT
+     C*   CALLS SR
+     C*****************************************************************
+     C*
+     C           DECSR     BEGSR                           *** DECSR   ***
+     C*
+     C                     Z-ADD15        D       20
+     C                     DO   8
+     C           DEC,D     IFEQ '0'
+     C                     MOVE ' '       DEC,D
+     C                     SUB  1         D
+     C                     ELSE
+     C                     GOTO EDECSR
+     C                     END
+     C                     END
+     C           EDECSR    TAG
+     C           D         IFEQ 7
+     C                     Z-ADD6         D
+     C                     MOVE ' '       DEC,7
+     C                     END
+     C*
+     C           SPBS      IFEQ 'P'
+     C                     ADD  1         D
+     C                     MOVE '%'       DEC,D
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C* INITSR - INITIAL PROCESSING SUBROUTINE
+     C*
+     C*  CALLED FROM   MAIN PROCESSING
+     C*  CALLS SR
+     C*
+     C*****************************************************************
+     C*
+     C           INITSR    BEGSR                           *** INITSR **
+     C*
+     C** INITIALISE FIELDS.
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE5982  'DBPGM
+     C                     OUT  LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM 'BLANKS'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR RETSR
+     C                     END
+     C*                                                                   CSE009
+     C** Check if SAR CSE009 is ON.                                       CSE009
+     C*                                                                   CSE009
+     C                     CALL 'AOSARDR0'                                CSE009
+     C                     PARM *BLANKS   @RTCD                           CSE009
+     C                     PARM '*VERIFY' @OPTN                           CSE009
+     C                     PARM 'CSE009'  @SARC   6                       CSE009
+     C           @SARD     PARM @SARD     DSFDY                           CSE009
+     C*                                                                   CSE009
+     C**  Set indicator if installed or run date > or = than 26 April 99  CSE009
+     C*                                                                   CSE009
+     C           @RTCD     IFEQ *BLANKS                                   CSE009
+     C           BJRDNB    ORGE 09978                                     CSE009
+     C                     MOVE 'Y'       CSE009  1                       CSE009
+     C                     ELSE                                           CSE009
+     C                     MOVE 'N'       CSE009                          CSE009
+     C                     END                                            CSE009
+     C*
+     C                     Z-ADD8         ZDECS
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C*****************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C** ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  RETSR -  END OF PROGRAM PROCESSING
+     C*
+     C*  CALLED FROM   MAIN PROCESSING, INITSR
+     C*  CALLS SR
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     SETON                     LR
+     C*
+     C                     OPEN SE5982AU
+     C                     EXSR RCFAU
+     C                     WRITESE5982AH
+     C                     WRITESE5982AE
+     C                     CLOSESE5982AU
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZSERPT2
+     C/COPY ZSRSRC,ZSERPT3
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
